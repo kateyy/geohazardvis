@@ -1,14 +1,15 @@
 
 set( TARGET vtk_qt_testing )
-message(STATUS ${TARGET})
+message( STATUS ${TARGET} )
 
-set( SOURCES
+set ( SOURCES
     main.cpp )
 
 add_executable ( ${TARGET} ${SOURCES} )
 
-target_link_libraries( ${PROJECTNAME}
-    ${VTK_LIBRARIES}
+qt5_use_modules( ${TARGET} Widgets )
+
+target_link_libraries( ${TARGET}
     gui)
     
 set_target_properties( ${TARGET}
