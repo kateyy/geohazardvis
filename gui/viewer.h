@@ -6,6 +6,7 @@
 
 class Ui_Viewer;
 class vtkQtTableView;
+class vtkRenderer;
 class vtkRenderWindowInteractor;
 
 class Viewer : public QMainWindow
@@ -16,12 +17,18 @@ public:
     Viewer();
     virtual ~Viewer();
 
-public slots:
-    virtual void slotExit();
-
 private:
     Ui_Viewer *m_ui;
+
+    vtkSmartPointer<vtkRenderer> m_mainRenderer;
+    vtkSmartPointer<vtkRenderer> m_infoRenderer;
     vtkSmartPointer<vtkRenderWindowInteractor> m_interactor;
+
+    void setupRenderer();
+    void setupInteraction();
+    void loadInputs();
+
+    void addLabels();
 
     vtkSmartPointer<vtkQtTableView> m_tableView;
 };
