@@ -40,6 +40,7 @@ qt5_use_modules( ${TARGET} Core Gui Widgets )
 
 target_link_libraries( ${TARGET}
     ${VTK_LIBRARIES}
+    core
 )
     
 include_directories(

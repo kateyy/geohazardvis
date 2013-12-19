@@ -24,6 +24,21 @@ set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 set(CMAKE_MODULE_PATH 
     ${CMAKE_MODULE_PATH}
     ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
+
+
+
+# PLATFORM AND ARCHITECTURE
+
+# Architecture (32/64 bit)
+set(X64 OFF)
+if(CMAKE_SIZEOF_VOID_P EQUAL 8)
+    set(X64 ON)
+endif()
+
+# Check for linux
+if(UNIX AND NOT APPLE)
+    set(LINUX 1)
+endif()
     
     
 # Setup platform specifics (compile flags, etc., ...)

@@ -15,7 +15,7 @@
 vtkStandardNewMacro(PickingInteractionStyle);
 
 PickingInteractionStyle::PickingInteractionStyle()
-: m_pickingInfo(PickingInfo())
+: m_pickingInfo()
 {
 }
 
