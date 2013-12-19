@@ -4,7 +4,9 @@ message( STATUS ${TARGET} )
 
 set ( SOURCES
     viewer.cpp
-    viewer.h )
+    viewer.h
+    pickinginteractionstyle.cpp
+    pickinginteractionstyle.h )
     
 set ( UIs
     viewer.ui )
