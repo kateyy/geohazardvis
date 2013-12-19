@@ -132,7 +132,7 @@ void Viewer::addLabels()
 
     /** create text with filter, mapper and actor */
     vtkSmartPointer<vtkVectorText> text = vtkSmartPointer<vtkVectorText>::New();
-    text->SetText("vtk-qt-testing");
+    text->SetText("Geohazard Visualization");
 
     vtkSmartPointer<vtkElevationFilter> elevation = vtkSmartPointer<vtkElevationFilter>::New();
     elevation->SetInputConnection(text->GetOutputPort());
