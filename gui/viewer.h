@@ -10,13 +10,17 @@ class vtkRenderer;
 class vtkRenderWindowInteractor;
 class vtkPolyDataMapper;
 
+class vtkPointPicker;
+
 class Viewer : public QMainWindow
 {
     Q_OBJECT
 
 public:
     Viewer();
-    virtual ~Viewer();
+
+public slots:
+    void ShowInfo(QString info);
 
 private:
     Ui_Viewer *m_ui;
@@ -36,6 +40,4 @@ private:
     void addInfos();
 
     void addLabels();
-
-    vtkSmartPointer<vtkQtTableView> m_tableView;
 };

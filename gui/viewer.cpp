@@ -28,10 +28,10 @@
 #include <vtkInteractorStyleTrackballCamera.h>
 #include "pickinginteractionstyle.h"
 #include <vtkBoxWidget.h>
-// gui
-#include <vtkQtTableView.h>
-#include <vtkDataObjectToTable.h>
+#include <vtkPointPicker.h>
+// gui/qt
 #include <QVTKWidget.h>
+#include <QTreeView>
 
 
 #include "core/datagenerator.h"
@@ -68,23 +68,7 @@ Viewer::Viewer()
 
     addLabels();
 
-    m_tableView = vtkSmartPointer<vtkQtTableView>::New();
-    m_ui->infoSplitter->addWidget(m_tableView->GetWidget());
-
-    /** pass infos to qt gui */
-    //vtkSmartPointer<vtkDataObjectToTable> toTable = vtkSmartPointer<vtkDataObjectToTable>::New();
-    //toTable->SetInputConnection(elevation->GetOutputPort());
-    //toTable->SetFieldType(vtkDataObjectToTable::POINT_DATA);
-
-    /*m_tableView->SetRepresentationFromInputConnection(toTable->GetOutputPort());
-    m_tableView->Update();*/
-
     m_mainRenderer->ResetCamera();
-}
-
-Viewer::~Viewer()
-{
-
 }
 
 void Viewer::setupRenderer()
@@ -102,46 +86,17 @@ void Viewer::setupInteraction()
     /** setup interaction */
     vtkSmartPointer<PickingInteractionStyle> interactStyle = vtkSmartPointer<PickingInteractionStyle>::New();
     interactStyle->SetDefaultRenderer(m_mainRenderer);
+    interactStyle->setViewer(*this);
     m_mainInteractor = vtkSmartPointer<vtkRenderWindowInteractor>::New();
     m_mainInteractor->SetInteractorStyle(interactStyle);
     m_mainInteractor->SetRenderWindow(m_ui->qvtkMain->GetRenderWindow());
 
     m_mainInteractor->Initialize();
-
-
-    //m_infoInteractor = vtkSmartPointer<vtkRenderWindowInteractor>::New();
-    //m_infoInteractor->SetInteractorStyle(interactStyle);
-    //m_infoInteractor->SetRenderWindow(m_ui->qvtkMain->GetRenderWindow());
-    //
-    //m_infoInteractor->Initialize();
-
-    //vtkSmartPointer<vtkBoxWidget> boxWidget = vtkSmartPointer<vtkBoxWidget>::New();
-    //boxWidget->SetInteractor(m_interactor);
-    //boxWidget->SetPlaceFactor(1.25);
-
-    //boxWidget->SetProp3D(cone1Actor);
-    //boxWidget->PlaceWidget();
-    //vtkSmartPointer<TransformCallback> callback = vtkSmartPointer<TransformCallback>::New();
-    //boxWidget->AddObserver(vtkCommand::InteractionEvent, callback);
-
-
-    //boxWidget->On();
 }
 
 void Viewer::loadInputs()
 {
-    /** create "volcano" with mapper and actor */
-    /*vtkSmartPointer<vtkConeSource> volcano = vtkSmartPointer<vtkConeSource>::New();
-    volcano->SetResolution(50);
-    volcano->SetDirection(0, 1, 0);
-    volcano->SetHeight(4.0);
-    volcano->SetRadius(5.0);
-
-    m_volcanoMapper = vtkSmartPointer<vtkPolyDataMapper>::New();*/
-    // alternative: setInputData(..->getOutputData())
-    //m_volcanoMapper->SetInputConnection(volcano->GetOutputPort());
-
-    m_volcanoMapper = DataGenerator().generate(3, 3, 0.5f);
+    m_volcanoMapper = DataGenerator().generate(5, 3, 0.5f);
 
     vtkSmartPointer<vtkSphereSource> volcanoCore = vtkSmartPointer<vtkSphereSource>::New();
     volcanoCore->SetRadius(0.6);
@@ -168,7 +123,6 @@ void Viewer::addInfos()
 {
     vtkSmartPointer<vtkActor> infoActor = vtkSmartPointer<vtkActor>::New();
     infoActor->SetMapper(m_volcanoCoreMapper);
-    //infoActor->GetProperty()->SetRepresentationToWireframe();
 
     m_infoRenderer->AddActor(infoActor);
 }
@@ -195,4 +149,11 @@ void Viewer::addLabels()
 
     m_mainRenderer->AddActor(textActor);
 
+}
+
+void Viewer::ShowInfo(QString info)
+{
+    m_ui->infoBox->clear();
+
+    m_ui->infoBox->addItem(info);
 }

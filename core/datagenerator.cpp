@@ -1,6 +1,7 @@
 #include "datagenerator.h"
 
-//#include <vtkFloatArray.h>
+#include <cassert>
+
 #include <vtkPoints.h>
 #include <vtkPolyData.h>
 #include <vtkDelaunay2D.h>
@@ -26,7 +27,6 @@ vtkSmartPointer<vtkPolyDataMapper> DataGenerator::generate(uint32_t gridSize, fl
         double x = int32_t(a) - offset;
         double z = int32_t(b) - offset;
         double y = offsetSq - (x*x + z*z);
-        std::cout << "Add: " << x << ":" << y << ":" << z << std::endl;
         points->InsertNextPoint(x * xzScale, y * yScale, z * xzScale);
     }
 

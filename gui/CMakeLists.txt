@@ -6,7 +6,9 @@ set ( SOURCES
     viewer.cpp
     viewer.h
     pickinginteractionstyle.cpp
-    pickinginteractionstyle.h )
+    pickinginteractionstyle.h
+    pickinginfo.h
+    pickinginfo.cpp )
     
 set ( UIs
     viewer.ui )
