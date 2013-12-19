@@ -33,6 +33,9 @@
 #include <vtkDataObjectToTable.h>
 #include <QVTKWidget.h>
 
+
+#include "core/datagenerator.h"
+
 class TransformCallback : public vtkCommand
 {
 public:
@@ -75,6 +78,8 @@ Viewer::Viewer()
 
     /*m_tableView->SetRepresentationFromInputConnection(toTable->GetOutputPort());
     m_tableView->Update();*/
+
+    m_mainRenderer->ResetCamera();
 }
 
 Viewer::~Viewer()
@@ -85,7 +90,7 @@ Viewer::~Viewer()
 void Viewer::setupRenderer()
 {
     m_mainRenderer = vtkSmartPointer<vtkRenderer>::New();
-    //m_renderer->SetBackground(1, 1, 1);
+    m_mainRenderer->SetBackground(1, 1, 1);
     m_ui->qvtkMain->GetRenderWindow()->AddRenderer(m_mainRenderer);
 
     m_infoRenderer = vtkSmartPointer<vtkRenderer>::New();
@@ -126,15 +131,17 @@ void Viewer::setupInteraction()
 void Viewer::loadInputs()
 {
     /** create "volcano" with mapper and actor */
-    vtkSmartPointer<vtkConeSource> volcano = vtkSmartPointer<vtkConeSource>::New();
+    /*vtkSmartPointer<vtkConeSource> volcano = vtkSmartPointer<vtkConeSource>::New();
     volcano->SetResolution(50);
     volcano->SetDirection(0, 1, 0);
     volcano->SetHeight(4.0);
     volcano->SetRadius(5.0);
 
-    m_volcanoMapper = vtkSmartPointer<vtkPolyDataMapper>::New();
+    m_volcanoMapper = vtkSmartPointer<vtkPolyDataMapper>::New();*/
     // alternative: setInputData(..->getOutputData())
-    m_volcanoMapper->SetInputConnection(volcano->GetOutputPort());
+    //m_volcanoMapper->SetInputConnection(volcano->GetOutputPort());
+
+    m_volcanoMapper = DataGenerator().generate(3, 3, 0.5f);
 
     vtkSmartPointer<vtkSphereSource> volcanoCore = vtkSmartPointer<vtkSphereSource>::New();
     volcanoCore->SetRadius(0.6);

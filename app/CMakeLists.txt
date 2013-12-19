@@ -10,7 +10,8 @@ add_executable ( ${TARGET} ${SOURCES} )
 qt5_use_modules( ${TARGET} Widgets )
 
 target_link_libraries( ${TARGET}
-    gui)
+    core
+    gui )
     
 set_target_properties( ${TARGET}
     PROPERTIES
