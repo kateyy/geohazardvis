@@ -26,6 +26,8 @@ set(CMAKE_MODULE_PATH
     ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
 
+include(cmake/Custom.cmake)
+
 
 # PLATFORM AND ARCHITECTURE
 
@@ -55,30 +57,29 @@ endif()
     
 
 find_package(VTK COMPONENTS
-  vtkCommonCore
-  vtkFiltersSources     # for the cone
-  vtkInteractionWidgets # vtkBoxWidget
-  vtkRenderingCore      # vtkPlyDataMapper
-  vtkRenderingOpenGL    # not loading this simply causes seg faults
-  vtkViewsQt
-  vtkFiltersCore
-  vtkInfovisCore
-  vtkInteractionStyle
-  vtkRenderingFreeTypeOpenGL
+    vtkCommonCore
+    vtkFiltersSources     # for the cone
+    vtkInteractionWidgets # vtkBoxWidget
+    vtkRenderingCore      # vtkPlyDataMapper
+    vtkRenderingOpenGL    # not loading this simply causes seg faults
+    vtkViewsQt
+    vtkFiltersCore
+    vtkInfovisCore
+    vtkInteractionStyle
+    vtkRenderingFreeTypeOpenGL
 )
 include(${VTK_USE_FILE})
-
-set(CMAKE_AUTOMOC ON)
-set(AUTOMOC_MOC_OPTIONS PROPERTIES FOLDER CMakeAutomocTargets)
-
-set_property(GLOBAL PROPERTY AUTOMOC_FOLDER CMakeAutomocTargets)
 
 if("${VTK_QT_VERSION}" STREQUAL "")
     message(FATAL_ERROR "VTK was not built with Qt")
 endif()
 
+set(CMAKE_AUTOMOC ON)
+set(CMAKE_INCLUDE_CURRENT_DIR ON)
+
+find_package(Qt5Widgets REQUIRED)
+
 include_directories(
-    ${CMAKE_CURRENT_BINARY_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}
 )
 

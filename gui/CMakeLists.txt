@@ -36,7 +36,7 @@ source_group("Generated" FILES
 add_library ( ${TARGET}
     ${SOURCES} ${UI_Srcs} )
 
-qt5_use_modules( ${TARGET} Core Gui Widgets )
+qt5_use_modules( ${TARGET} Core Gui Widgets OpenGL OpenGLExtensions )
 
 target_link_libraries( ${TARGET}
     ${VTK_LIBRARIES}

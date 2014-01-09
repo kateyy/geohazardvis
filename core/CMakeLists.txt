@@ -4,12 +4,14 @@ message( STATUS ${TARGET} )
 
 set ( SOURCES
     datagenerator.cpp
-    datagenerator.h )
-
-
-source_group("Source Files" FILES
-    ${SOURCES}
+    datagenerator.h
+    common/ebem3d_common.h
+    common/file_parser.h
+    common/file_parser.cpp
 )
+
+source_group_by_path(${CMAKE_CURRENT_SOURCE_DIR} "\\\\.cpp$|\\\\.c$|\\\\.h$|\\\\.hpp$|\\\\.ui$|\\\\.inl$"
+    "Source Files" ${SOURCES})
 
 add_library ( ${TARGET}
     ${SOURCES} )
