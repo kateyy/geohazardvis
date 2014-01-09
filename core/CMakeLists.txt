@@ -7,7 +7,6 @@ set ( SOURCES
     datagenerator.h
     loader.h
     loader.cpp
-    points.cpp
     common/ebem3d_common.h
     common/file_parser.h
     common/file_parser.cpp

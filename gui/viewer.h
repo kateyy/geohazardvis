@@ -1,6 +1,7 @@
 #pragma once
 
 #include <list>
+#include <memory>
 
 #include <QMainWindow>
 
@@ -13,9 +14,10 @@ class vtkRenderWindowInteractor;
 class vtkActor;
 class vtkPolyDataMapper;
 
-class vtkPointPicker;
-
 class QStringList;
+
+class vtkPointPicker;
+struct Input;
 
 class Viewer : public QMainWindow
 {
@@ -35,15 +37,7 @@ private:
     vtkSmartPointer<vtkRenderWindowInteractor> m_mainInteractor;
     vtkSmartPointer<vtkRenderWindowInteractor> m_infoInteractor;
 
-    struct Input {
-        vtkSmartPointer<vtkPolyDataMapper> inputDataMapper;
-        double color[3];
-
-        vtkSmartPointer<vtkActor> createActor();
-        void setColor(double r, double g, double b);
-    };
-
-    std::list<Input> m_inputs;
+    std::list<std::shared_ptr<Input>> m_inputs;
 
     void setupRenderer();
     void setupInteraction();

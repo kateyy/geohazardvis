@@ -4,34 +4,38 @@
 #include <vtkPolyData.h>
 #include <vtkDelaunay2D.h>
 #include <vtkPolyDataMapper.h>
+#include <vtkActor.h>
+#include <vtkProperty.h>
 
 #include <vtkCellArray.h>
 
 #include "common/file_parser.h"
 
-vtkSmartPointer<vtkPolyDataMapper> Loader::loadFileAsPoints(const std::string & filename, t_UInt nbColumns, t_UInt firstToTake)
+std::shared_ptr<Input> Loader::loadFileAsPoints(const std::string & filename, t_UInt nbColumns, t_UInt firstToTake)
 {
-    vtkSmartPointer<vtkPolyData> polyData = loadData(filename, nbColumns, firstToTake);
+    std::shared_ptr<Input> input = std::make_shared<Input>();
+    input->polyData = loadData(filename, nbColumns, firstToTake);
 
-    vtkSmartPointer<vtkPolyDataMapper> mapper = vtkSmartPointer<vtkPolyDataMapper>::New();
-    mapper->SetInputData(polyData);
+    input->dataMapper = vtkSmartPointer<vtkPolyDataMapper>::New();
+    input->dataMapper->SetInputData(input->polyData);
 
-    return mapper;
+    return input;
 }
 
-vtkSmartPointer<vtkPolyDataMapper> Loader::loadFileTriangulated(const std::string & filename, t_UInt nbColumns, t_UInt firstToTake)
+std::shared_ptr<Input> Loader::loadFileTriangulated(const std::string & filename, t_UInt nbColumns, t_UInt firstToTake)
 {
-    vtkSmartPointer<vtkPolyData> polyData = loadData(filename, nbColumns, firstToTake);
+    std::shared_ptr<Input> input = std::make_shared<Input>();
+    input->polyData = loadData(filename, nbColumns, firstToTake);
 
     // create triangles from vertex list
-    vtkSmartPointer<vtkDelaunay2D> delauney2D = vtkSmartPointer<vtkDelaunay2D>::New();
-    delauney2D->SetInputData(polyData);
-    delauney2D->Update();
+    input->algorithm = vtkSmartPointer<vtkDelaunay2D>::New();
+    input->algorithm->SetInputData(input->polyData);
+    input->algorithm->Update();
 
-    vtkSmartPointer<vtkPolyDataMapper> mapper = vtkSmartPointer<vtkPolyDataMapper>::New();
-    mapper->SetInputConnection(delauney2D->GetOutputPort());
+    input->dataMapper = vtkSmartPointer<vtkPolyDataMapper>::New();
+    input->dataMapper->SetInputConnection(input->algorithm->GetOutputPort());
 
-    return mapper;
+    return input;
 }
 
 vtkSmartPointer<vtkPolyData> Loader::loadData(const std::string & filename, t_UInt nbColumns, t_UInt firstToTake)
@@ -69,4 +73,13 @@ vtkSmartPointer<vtkPolyData> Loader::loadData(const std::string & filename, t_UI
     polyData->SetVerts(vertices);
 
     return polyData;
+}
+
+vtkSmartPointer<vtkActor> Input::createActor()
+{
+    vtkSmartPointer<vtkActor> actor = vtkSmartPointer<vtkActor>::New();
+    actor->SetMapper(dataMapper);
+    actor->GetProperty()->SetRepresentationToWireframe();
+
+    return actor;
 }

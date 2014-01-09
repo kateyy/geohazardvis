@@ -8,6 +8,10 @@
 #include <vtkTransform.h>
 #include <vtkProperty.h>
 
+// inputs
+#include <vtkPolyDataAlgorithm.h>
+// filters
+#include <vtkElevationFilter.h>
 // mappers
 #include <vtkPolyDataMapper.h>
 // actors
@@ -71,7 +75,6 @@ void Viewer::setupRenderer()
 
 void Viewer::setupInteraction()
 {
-    /** setup interaction */
     vtkSmartPointer<PickingInteractionStyle> interactStyle = vtkSmartPointer<PickingInteractionStyle>::New();
     interactStyle->SetDefaultRenderer(m_mainRenderer);
     interactStyle->setViewer(*this);
@@ -84,18 +87,28 @@ void Viewer::setupInteraction()
 
 void Viewer::loadInputs()
 {
-    Input input;
+    m_inputs.push_back(Loader::loadFileTriangulated("data/Tcoord_topo.txt", 4, 1));
+    m_inputs.push_back(Loader::loadFileAsPoints("data/Tvert.txt", 6, 0));
 
-    input.inputDataMapper = Loader::loadFileTriangulated("data/Tcoord_topo.txt", 4, 1);
-    input.setColor(0, 0, 1);
-    m_inputs.push_back(input);
+    std::shared_ptr<Input> input1 = m_inputs.front();
+    std::shared_ptr<Input> input2 = m_inputs.back();
 
-    input.inputDataMapper = Loader::loadFileTriangulated("data/Tvert.txt", 6, 0);
-    input.setColor(1, 0, 0);
-    m_inputs.push_back(input);
+    // use the elevation for colorized visualization
+    vtkSmartPointer<vtkElevationFilter> elevation = vtkSmartPointer<vtkElevationFilter>::New();
+    elevation->SetInputConnection(input1->algorithm->GetOutputPort());
+    elevation->SetLowPoint(0, 0, 4);
+    elevation->SetHighPoint(0, 0, 0);
 
-    m_mainRenderer->AddActor(m_inputs.front().createActor());
-    m_infoRenderer->AddActor(m_inputs.back().createActor());
+    vtkSmartPointer<vtkPolyDataMapper> mapper = vtkSmartPointer<vtkPolyDataMapper>::New();
+    mapper->SetInputConnection(elevation->GetOutputPort());
+
+    vtkSmartPointer<vtkActor> actor = vtkSmartPointer<vtkActor>::New();
+    actor->SetMapper(mapper);
+
+    m_mainRenderer->AddActor(actor);
+    vtkSmartPointer<vtkActor> actor2 = input2->createActor();
+    actor2->GetProperty()->SetColor(0, 1, 0);
+    m_infoRenderer->AddActor(actor2);
 }
 
 void Viewer::ShowInfo(const QStringList & info)
@@ -103,19 +116,4 @@ void Viewer::ShowInfo(const QStringList & info)
     m_ui->infoBox->clear();
 
     m_ui->infoBox->addItems(info);
-}
-
-void Viewer::Input::setColor(double r, double g, double b)
-{
-    color[0] = r; color[1] = g; color[2] = b;
-}
-
-vtkSmartPointer<vtkActor> Viewer::Input::createActor()
-{
-    vtkSmartPointer<vtkActor> actor = vtkSmartPointer<vtkActor>::New();
-    actor->SetMapper(inputDataMapper);
-    actor->GetProperty()->SetRepresentationToWireframe();
-    actor->GetProperty()->SetColor(color);
-
-    return actor;
 }
