@@ -8,18 +8,10 @@
 #include <vtkTransform.h>
 #include <vtkProperty.h>
 
-
-// sources
-#include <vtkConeSource.h>
-#include <vtkSphereSource.h>
-#include <vtkVectorText.h>
-// filters
-#include <vtkElevationFilter.h>
 // mappers
 #include <vtkPolyDataMapper.h>
-#include <vtkPolyDataMapper2D.h>
 // actors
-#include <vtkActor2D.h>
+#include <vtkActor.h>
 // rendering
 #include <vtkRenderer.h>
 #include <vtkRenderWindow.h>
@@ -33,8 +25,6 @@
 #include <QVTKWidget.h>
 #include <QTreeView>
 
-
-//#include "core/datagenerator.h"
 #include "core/loader.h"
 
 class TransformCallback : public vtkCommand
@@ -65,10 +55,6 @@ Viewer::Viewer()
 
     loadInputs();
 
-    addInfos();
-
-    addLabels();
-
     m_mainRenderer->ResetCamera();
 }
 
@@ -79,6 +65,7 @@ void Viewer::setupRenderer()
     m_ui->qvtkMain->GetRenderWindow()->AddRenderer(m_mainRenderer);
 
     m_infoRenderer = vtkSmartPointer<vtkRenderer>::New();
+    m_infoRenderer->SetBackground(1, 1, 1);
     m_ui->qvtkInfo->GetRenderWindow()->AddRenderer(m_infoRenderer);
 }
 
@@ -97,78 +84,38 @@ void Viewer::setupInteraction()
 
 void Viewer::loadInputs()
 {
-    //m_volcanoMapper = DataGenerator().generate(5, 3, 0.5f);
-
-    //vtkSmartPointer<vtkSphereSource> volcanoCore = vtkSmartPointer<vtkSphereSource>::New();
-    //volcanoCore->SetRadius(0.6);
-    //volcanoCore->SetCenter(0, 0.6, 0);
-
-    //m_volcanoCoreMapper = vtkSmartPointer<vtkPolyDataMapper>::New();
-    //m_volcanoCoreMapper->SetInputConnection(volcanoCore->GetOutputPort());
-
-    //vtkSmartPointer<vtkActor> volcanoActor = vtkSmartPointer<vtkActor>::New();
-    //volcanoActor->SetMapper(m_volcanoMapper);
-    //volcanoActor->GetProperty()->SetRepresentationToWireframe();
-
-    //vtkSmartPointer<vtkActor> volcanoCoreActor = vtkSmartPointer<vtkActor>::New();
-    //volcanoCoreActor->SetMapper(m_volcanoCoreMapper);
-    //volcanoCoreActor->GetProperty()->SetRepresentationToWireframe();
-
     Input input;
+
     input.inputDataMapper = Loader::loadFileTriangulated("data/Tcoord_topo.txt", 4, 1);
     input.setColor(0, 0, 1);
     m_inputs.push_back(input);
 
     input.inputDataMapper = Loader::loadFileTriangulated("data/Tvert.txt", 6, 0);
     input.setColor(1, 0, 0);
+    m_inputs.push_back(input);
 
-    for (auto input : m_inputs) {
-        vtkSmartPointer<vtkActor> actor = vtkSmartPointer<vtkActor>::New();
-        actor->SetMapper(input.inputDataMapper);
-        actor->GetProperty()->SetRepresentationToWireframe();
-        actor->GetProperty()->SetPointSize(5);
-        actor->GetProperty()->SetColor(input.color);
-
-        m_mainRenderer->AddActor(actor);
-    }
+    m_mainRenderer->AddActor(m_inputs.front().createActor());
+    m_infoRenderer->AddActor(m_inputs.back().createActor());
 }
 
-void Viewer::addInfos()
-{
-    vtkSmartPointer<vtkActor> infoActor = vtkSmartPointer<vtkActor>::New();
-    infoActor->SetMapper(m_inputs.front().inputDataMapper);
-    infoActor->GetProperty()->SetPointSize(20);
-
-    m_infoRenderer->AddActor(infoActor);
-}
-
-void Viewer::addLabels()
-{
-
-    /** create text with filter, mapper and actor */
-    vtkSmartPointer<vtkVectorText> text = vtkSmartPointer<vtkVectorText>::New();
-    text->SetText("Geohazard Visualization");
-
-    vtkSmartPointer<vtkElevationFilter> elevation = vtkSmartPointer<vtkElevationFilter>::New();
-    elevation->SetInputConnection(text->GetOutputPort());
-    elevation->SetLowPoint(0, 0, 0);
-    elevation->SetHighPoint(10, 0, 0);
-
-    vtkSmartPointer<vtkPolyDataMapper> textMapper = vtkSmartPointer<vtkPolyDataMapper>::New();
-    //textMapper->ImmediateModeRenderingOn();
-    textMapper->SetInputConnection(elevation->GetOutputPort());
-
-    vtkSmartPointer<vtkActor> textActor = vtkSmartPointer<vtkActor>::New();
-    textActor->SetMapper(textMapper);
-    textActor->SetPosition(-6.0, 3.0, 0.0);
-
-    //m_mainRenderer->AddActor(textActor);
-
-}
-
-void Viewer::ShowInfo(QString info)
+void Viewer::ShowInfo(const QStringList & info)
 {
     m_ui->infoBox->clear();
 
-    m_ui->infoBox->addItem(info);
+    m_ui->infoBox->addItems(info);
+}
+
+void Viewer::Input::setColor(double r, double g, double b)
+{
+    color[0] = r; color[1] = g; color[2] = b;
+}
+
+vtkSmartPointer<vtkActor> Viewer::Input::createActor()
+{
+    vtkSmartPointer<vtkActor> actor = vtkSmartPointer<vtkActor>::New();
+    actor->SetMapper(inputDataMapper);
+    actor->GetProperty()->SetRepresentationToWireframe();
+    actor->GetProperty()->SetColor(color);
+
+    return actor;
 }

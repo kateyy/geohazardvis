@@ -10,9 +10,12 @@ class Ui_Viewer;
 class vtkQtTableView;
 class vtkRenderer;
 class vtkRenderWindowInteractor;
+class vtkActor;
 class vtkPolyDataMapper;
 
 class vtkPointPicker;
+
+class QStringList;
 
 class Viewer : public QMainWindow
 {
@@ -22,7 +25,7 @@ public:
     Viewer();
 
 public slots:
-    void ShowInfo(QString info);
+    void ShowInfo(const QStringList &info);
 
 private:
     Ui_Viewer *m_ui;
@@ -35,21 +38,14 @@ private:
     struct Input {
         vtkSmartPointer<vtkPolyDataMapper> inputDataMapper;
         double color[3];
-        void setColor(double r, double g, double b) {
-            color[0] = r; color[1] = g; color[2] = b;
-        }
+
+        vtkSmartPointer<vtkActor> createActor();
+        void setColor(double r, double g, double b);
     };
 
     std::list<Input> m_inputs;
 
-    //vtkSmartPointer<vtkPolyDataMapper> m_volcanoMapper;
-    //vtkSmartPointer<vtkPolyDataMapper> m_volcanoCoreMapper;
-
     void setupRenderer();
     void setupInteraction();
     void loadInputs();
-
-    void addInfos();
-
-    void addLabels();
 };

@@ -5,6 +5,8 @@
 
 class vtkPointPicker;
 
+class QStringList;
+
 class PickingInfo : public QObject
 {
     Q_OBJECT
@@ -13,5 +15,5 @@ public:
     void sendPointInfo(vtkSmartPointer<vtkPointPicker> picker) const;
 
 signals:
-    void infoSent(QString info) const;
+    void infoSent(const QStringList &info) const;
 };
