@@ -10,10 +10,10 @@
 
 #include "ebem3d_common.h"
 
-bool populateIOVectors(const string inputFileName,
-					   vector<vector<t_FP> > &ioVectors);
-bool parseIOFile(const string inputFileName, vector<t_FP> &parsedData);
-void populateVectorsFromData(const vector<t_FP> &parsedData,
-							 vector<vector<t_FP> > &vectorizedData);
+bool populateIOVectors(const std::string inputFileName,
+					   std::vector<std::vector<t_FP> > &ioVectors);
+bool parseIOFile(const std::string inputFileName, std::vector<t_FP> &parsedData);
+void populateVectorsFromData(const std::vector<t_FP> &parsedData,
+							 std::vector<std::vector<t_FP> > &vectorizedData);
 
 #endif /* FILE_PARSER_H_ */

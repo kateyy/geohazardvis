@@ -34,7 +34,8 @@
 #include <QTreeView>
 
 
-#include "core/datagenerator.h"
+//#include "core/datagenerator.h"
+#include "core/loader.h"
 
 class TransformCallback : public vtkCommand
 {
@@ -96,33 +97,47 @@ void Viewer::setupInteraction()
 
 void Viewer::loadInputs()
 {
-    m_volcanoMapper = DataGenerator().generate(5, 3, 0.5f);
+    //m_volcanoMapper = DataGenerator().generate(5, 3, 0.5f);
 
-    vtkSmartPointer<vtkSphereSource> volcanoCore = vtkSmartPointer<vtkSphereSource>::New();
-    volcanoCore->SetRadius(0.6);
-    volcanoCore->SetCenter(0, 0.6, 0);
+    //vtkSmartPointer<vtkSphereSource> volcanoCore = vtkSmartPointer<vtkSphereSource>::New();
+    //volcanoCore->SetRadius(0.6);
+    //volcanoCore->SetCenter(0, 0.6, 0);
 
-    m_volcanoCoreMapper = vtkSmartPointer<vtkPolyDataMapper>::New();
-    m_volcanoCoreMapper->SetInputConnection(volcanoCore->GetOutputPort());
+    //m_volcanoCoreMapper = vtkSmartPointer<vtkPolyDataMapper>::New();
+    //m_volcanoCoreMapper->SetInputConnection(volcanoCore->GetOutputPort());
 
-    vtkSmartPointer<vtkActor> volcanoActor = vtkSmartPointer<vtkActor>::New();
-    volcanoActor->SetMapper(m_volcanoMapper);
-    volcanoActor->GetProperty()->SetRepresentationToWireframe();
+    //vtkSmartPointer<vtkActor> volcanoActor = vtkSmartPointer<vtkActor>::New();
+    //volcanoActor->SetMapper(m_volcanoMapper);
+    //volcanoActor->GetProperty()->SetRepresentationToWireframe();
 
-    vtkSmartPointer<vtkActor> volcanoCoreActor = vtkSmartPointer<vtkActor>::New();
-    volcanoCoreActor->SetMapper(m_volcanoCoreMapper);
-    volcanoCoreActor->GetProperty()->SetRepresentationToWireframe();
+    //vtkSmartPointer<vtkActor> volcanoCoreActor = vtkSmartPointer<vtkActor>::New();
+    //volcanoCoreActor->SetMapper(m_volcanoCoreMapper);
+    //volcanoCoreActor->GetProperty()->SetRepresentationToWireframe();
 
+    Input input;
+    input.inputDataMapper = Loader::loadFileTriangulated("data/Tcoord_topo.txt", 4, 1);
+    input.setColor(0, 0, 1);
+    m_inputs.push_back(input);
 
-    /** add actors to the renderer */
-    m_mainRenderer->AddActor(volcanoActor);
-    m_mainRenderer->AddActor(volcanoCoreActor);
+    input.inputDataMapper = Loader::loadFileTriangulated("data/Tvert.txt", 6, 0);
+    input.setColor(1, 0, 0);
+
+    for (auto input : m_inputs) {
+        vtkSmartPointer<vtkActor> actor = vtkSmartPointer<vtkActor>::New();
+        actor->SetMapper(input.inputDataMapper);
+        actor->GetProperty()->SetRepresentationToWireframe();
+        actor->GetProperty()->SetPointSize(5);
+        actor->GetProperty()->SetColor(input.color);
+
+        m_mainRenderer->AddActor(actor);
+    }
 }
 
 void Viewer::addInfos()
 {
     vtkSmartPointer<vtkActor> infoActor = vtkSmartPointer<vtkActor>::New();
-    infoActor->SetMapper(m_volcanoCoreMapper);
+    infoActor->SetMapper(m_inputs.front().inputDataMapper);
+    infoActor->GetProperty()->SetPointSize(20);
 
     m_infoRenderer->AddActor(infoActor);
 }
@@ -147,7 +162,7 @@ void Viewer::addLabels()
     textActor->SetMapper(textMapper);
     textActor->SetPosition(-6.0, 3.0, 0.0);
 
-    m_mainRenderer->AddActor(textActor);
+    //m_mainRenderer->AddActor(textActor);
 
 }
 

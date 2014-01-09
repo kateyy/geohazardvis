@@ -1,5 +1,7 @@
 #pragma once
 
+#include <list>
+
 #include <QMainWindow>
 
 #include <vtkSmartPointer.h>
@@ -30,8 +32,18 @@ private:
     vtkSmartPointer<vtkRenderWindowInteractor> m_mainInteractor;
     vtkSmartPointer<vtkRenderWindowInteractor> m_infoInteractor;
 
-    vtkSmartPointer<vtkPolyDataMapper> m_volcanoMapper;
-    vtkSmartPointer<vtkPolyDataMapper> m_volcanoCoreMapper;
+    struct Input {
+        vtkSmartPointer<vtkPolyDataMapper> inputDataMapper;
+        double color[3];
+        void setColor(double r, double g, double b) {
+            color[0] = r; color[1] = g; color[2] = b;
+        }
+    };
+
+    std::list<Input> m_inputs;
+
+    //vtkSmartPointer<vtkPolyDataMapper> m_volcanoMapper;
+    //vtkSmartPointer<vtkPolyDataMapper> m_volcanoCoreMapper;
 
     void setupRenderer();
     void setupInteraction();

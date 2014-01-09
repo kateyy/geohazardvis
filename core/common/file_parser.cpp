@@ -11,6 +11,8 @@
 #include <limits>
 #include <stdlib.h>
 
+using namespace std;
+
 bool populateIOVectors(const string inputFileName,
 						vector<vector<t_FP> > &ioVectors) {
 	vector<t_FP> parsedData;

@@ -20,8 +20,6 @@
 	#include <conio.h>
 #endif
 
-using namespace std;
-
 typedef double t_FP;
 typedef unsigned int t_UInt;
 
