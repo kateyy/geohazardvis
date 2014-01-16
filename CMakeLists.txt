@@ -58,15 +58,16 @@ endif()
 
 find_package(VTK COMPONENTS
     vtkCommonCore
-    vtkFiltersSources     # for the cone
+    #vtkFiltersSources     # for the cone
     vtkInteractionWidgets # vtkBoxWidget
-    vtkRenderingCore      # vtkPlyDataMapper
+    vtkRenderingCore      # vtkPolyDataMapper
     vtkRenderingOpenGL    # not loading this simply causes seg faults
     vtkViewsQt
     vtkFiltersCore
-    vtkInfovisCore
+    # vtkInfovisCore
     vtkInteractionStyle
-    vtkRenderingFreeTypeOpenGL
+    # vtkRenderingFreeTypeOpenGL
+    vtkRenderingAnnotation  # for the axis actor
 )
 include(${VTK_USE_FILE})
 

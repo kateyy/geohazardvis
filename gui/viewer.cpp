@@ -16,6 +16,7 @@
 #include <vtkPolyDataMapper.h>
 // actors
 #include <vtkActor.h>
+#include <vtkAxisActor.h>
 // rendering
 #include <vtkRenderer.h>
 #include <vtkRenderWindow.h>
@@ -109,6 +110,19 @@ void Viewer::loadInputs()
     vtkSmartPointer<vtkActor> actor2 = input2->createActor();
     actor2->GetProperty()->SetColor(0, 1, 0);
     m_infoRenderer->AddActor(actor2);
+
+    double bounds[6];
+    actor->GetBounds(bounds);
+    for (int i = 0; i < 6; ++i)
+        std::cout << bounds[i] << " ";
+    std::cout << std::endl;
+}
+
+void Viewer::setupAxis()
+{
+    vtkSmartPointer<vtkAxisActor> axisActor = vtkSmartPointer<vtkAxisActor>::New();
+
+
 }
 
 void Viewer::ShowInfo(const QStringList & info)

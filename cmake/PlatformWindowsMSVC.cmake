@@ -65,7 +65,7 @@ set(DEFAULT_COMPILE_FLAGS_RELEASE "/MD /Ot /Ob2 /Ox /GS- /GL" )
 
 
 set(WIN32_LINKER_FLAGS
-	"/NOLOGO /NXCOMPAT /DYNAMICBASE:NO"
+	"/NOLOGO /NXCOMPAT"
 	# NOLOGO 											-> suppress logo
 	# INCREMENTAL:NO 									-> enable incremental linking: no
 	# MANIFEST 											-> generate manifest: yes
