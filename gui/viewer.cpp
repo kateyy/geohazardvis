@@ -105,6 +105,13 @@ void Viewer::loadInputs()
 
     vtkSmartPointer<vtkActor> actor = vtkSmartPointer<vtkActor>::New();
     actor->SetMapper(mapper);
+    vtkProperty & prop = *actor->GetProperty();
+    prop.SetOpacity(0.6);
+    prop.SetInterpolationToGouraud();
+    prop.SetEdgeVisibility(true);
+    prop.SetEdgeColor(0, 0, 0);
+    prop.SetBackfaceCulling(false);
+    prop.SetLighting(false);
 
     m_mainRenderer->AddActor(actor);
     vtkSmartPointer<vtkActor> actor2 = input2->createActor();
