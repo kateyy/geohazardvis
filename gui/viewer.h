@@ -42,5 +42,5 @@ private:
     void setupRenderer();
     void setupInteraction();
     void loadInputs();
-    void setupAxis();
+    void setupAxis(const Input & input);
 };

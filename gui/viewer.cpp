@@ -7,6 +7,8 @@
 #include <vtkSmartPointer.h>
 #include <vtkTransform.h>
 #include <vtkProperty.h>
+#include <vtkTextProperty.h>
+#include <vtkCamera.h>
 
 // inputs
 #include <vtkPolyDataAlgorithm.h>
@@ -17,6 +19,7 @@
 // actors
 #include <vtkActor.h>
 #include <vtkAxisActor.h>
+#include <vtkCubeAxesActor.h>
 // rendering
 #include <vtkRenderer.h>
 #include <vtkRenderWindow.h>
@@ -65,6 +68,8 @@ Viewer::Viewer()
 
 void Viewer::setupRenderer()
 {
+    m_ui->qvtkMain->GetRenderWindow()->SetAAFrames(4);
+
     m_mainRenderer = vtkSmartPointer<vtkRenderer>::New();
     m_mainRenderer->SetBackground(1, 1, 1);
     m_ui->qvtkMain->GetRenderWindow()->AddRenderer(m_mainRenderer);
@@ -72,6 +77,13 @@ void Viewer::setupRenderer()
     m_infoRenderer = vtkSmartPointer<vtkRenderer>::New();
     m_infoRenderer->SetBackground(1, 1, 1);
     m_ui->qvtkInfo->GetRenderWindow()->AddRenderer(m_infoRenderer);
+
+    vtkCamera & camera = *m_mainRenderer->GetActiveCamera();
+
+    camera.SetPosition(0.3, -1, 0.3);
+    camera.SetViewUp(0, 0, 1);
+
+    m_mainRenderer->ResetCamera();
 }
 
 void Viewer::setupInteraction()
@@ -118,18 +130,45 @@ void Viewer::loadInputs()
     actor2->GetProperty()->SetColor(0, 1, 0);
     m_infoRenderer->AddActor(actor2);
 
-    double bounds[6];
-    actor->GetBounds(bounds);
-    for (int i = 0; i < 6; ++i)
-        std::cout << bounds[i] << " ";
-    std::cout << std::endl;
+    setupAxis(*input1);
 }
 
-void Viewer::setupAxis()
+void Viewer::setupAxis(const Input & input)
 {
-    vtkSmartPointer<vtkAxisActor> axisActor = vtkSmartPointer<vtkAxisActor>::New();
+    vtkSmartPointer<vtkCubeAxesActor> cubeAxes = vtkSmartPointer<vtkCubeAxesActor>::New();
+    cubeAxes->SetBounds(input.polyData->GetBounds());
+    cubeAxes->SetCamera(m_mainRenderer->GetActiveCamera());
+    cubeAxes->SetFlyModeToOuterEdges();
+    cubeAxes->SetEnableDistanceLOD(1);
+    cubeAxes->SetEnableViewAngleLOD(1);
+    cubeAxes->SetGridLineLocation(VTK_GRID_LINES_FURTHEST);
 
+    double axesColor[3] = {0, 0, 0};
+    double gridColor[3] = {0.7, 0.7, 0.7};
 
+    cubeAxes->GetXAxesLinesProperty()->SetColor(axesColor);
+    cubeAxes->GetYAxesLinesProperty()->SetColor(axesColor);
+    cubeAxes->GetZAxesLinesProperty()->SetColor(axesColor);
+    cubeAxes->GetXAxesGridlinesProperty()->SetColor(gridColor);
+    cubeAxes->GetYAxesGridlinesProperty()->SetColor(gridColor);
+    cubeAxes->GetZAxesGridlinesProperty()->SetColor(gridColor);
+
+    for (int i = 0; i < 3; ++i) {
+        cubeAxes->GetTitleTextProperty(i)->SetColor(axesColor);
+        cubeAxes->GetLabelTextProperty(i)->SetColor(axesColor);
+    }
+
+    cubeAxes->SetXAxisMinorTickVisibility(0);
+    cubeAxes->SetYAxisMinorTickVisibility(0);
+    cubeAxes->SetZAxisMinorTickVisibility(0);
+
+    cubeAxes->DrawXGridlinesOn();
+    cubeAxes->DrawYGridlinesOn();
+    cubeAxes->DrawZGridlinesOn();
+
+    cubeAxes->SetRebuildAxes(true);
+
+    m_mainRenderer->AddActor(cubeAxes);
 }
 
 void Viewer::ShowInfo(const QStringList & info)
