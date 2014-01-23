@@ -65,6 +65,7 @@ Viewer::Viewer()
     loadInputs();
 
     m_mainRenderer->ResetCamera();
+    m_infoRenderer->ResetCamera();
 }
 
 void Viewer::setupRenderer()
@@ -204,4 +205,6 @@ void Viewer::ShowInfo(const QStringList & info)
     m_ui->infoBox->clear();
 
     m_ui->infoBox->addItems(info);
+
+    setToolTip(info.join('\n'));
 }

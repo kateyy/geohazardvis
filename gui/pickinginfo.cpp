@@ -26,6 +26,7 @@ void PickingInfo::sendPointInfo(vtkSmartPointer<vtkPointPicker> picker) const
     vtkAbstractMapper3D * mapper = picker->GetMapper();
 
     if (!mapper) {
+        emit infoSent(QStringList());
         return;
     }
     

@@ -19,7 +19,19 @@ PickingInteractionStyle::PickingInteractionStyle()
 {
 }
 
+void PickingInteractionStyle::OnMouseMove()
+{
+    pick();
+    vtkInteractorStyleTrackballCamera::OnMouseMove();
+}
+
 void PickingInteractionStyle::OnLeftButtonDown()
+{
+    pick();
+    vtkInteractorStyleTrackballCamera::OnLeftButtonDown();
+}
+
+void PickingInteractionStyle::pick()
 {
     int* clickPos = this->GetInteractor()->GetEventPosition();
 
@@ -29,9 +41,6 @@ void PickingInteractionStyle::OnLeftButtonDown()
     picker->Pick(clickPos[0], clickPos[1], 0, this->GetDefaultRenderer());
 
     m_pickingInfo.sendPointInfo(picker);
-
-    // Forward events
-    vtkInteractorStyleTrackballCamera::OnLeftButtonDown();
 }
 
 void PickingInteractionStyle::setViewer(const Viewer & viewer)

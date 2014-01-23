@@ -13,11 +13,14 @@ public:
     static PickingInteractionStyle* New();
     vtkTypeMacro(PickingInteractionStyle, vtkInteractorStyleTrackballCamera);
 
+    virtual void OnMouseMove() override;
     virtual void OnLeftButtonDown() override;
    
     void setViewer(const Viewer & viewer);
 
 protected:
+    void pick();
+
     const Viewer * m_viewer;
 
     const PickingInfo m_pickingInfo; // qt object used to create qt events for vtk pick events
