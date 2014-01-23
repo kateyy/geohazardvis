@@ -68,7 +68,7 @@ Viewer::Viewer()
 
 void Viewer::setupRenderer()
 {
-    m_ui->qvtkMain->GetRenderWindow()->SetAAFrames(4);
+    //m_ui->qvtkMain->GetRenderWindow()->SetAAFrames(2);
 
     m_mainRenderer = vtkSmartPointer<vtkRenderer>::New();
     m_mainRenderer->SetBackground(1, 1, 1);
@@ -78,12 +78,10 @@ void Viewer::setupRenderer()
     m_infoRenderer->SetBackground(1, 1, 1);
     m_ui->qvtkInfo->GetRenderWindow()->AddRenderer(m_infoRenderer);
 
-    vtkCamera & camera = *m_mainRenderer->GetActiveCamera();
-
+    vtkCamera & camera = *m_infoRenderer->GetActiveCamera();
     camera.SetPosition(0.3, -1, 0.3);
     camera.SetViewUp(0, 0, 1);
-
-    m_mainRenderer->ResetCamera();
+    m_infoRenderer->ResetCamera();
 }
 
 void Viewer::setupInteraction()
@@ -100,15 +98,22 @@ void Viewer::setupInteraction()
 
 void Viewer::loadInputs()
 {
-    m_inputs.push_back(Loader::loadFileTriangulated("data/Tcoord_topo.txt", 4, 1));
-    m_inputs.push_back(Loader::loadFileAsPoints("data/Tvert.txt", 6, 0));
+    std::shared_ptr<Input> indexedSphere = Loader::loadIndexedTriangles(
+        "data/Spcoord.txt", 4, 0, 1,
+        "data/Svert.txt", 6, 0);
+    m_inputs.push_back(indexedSphere);
 
-    std::shared_ptr<Input> input1 = m_inputs.front();
-    std::shared_ptr<Input> input2 = m_inputs.back();
+    vtkSmartPointer<vtkActor> sphereActor = indexedSphere->createActor();
+    sphereActor->GetProperty()->SetColor(1.0, 0.0, 0.0);
+    m_mainRenderer->AddActor(sphereActor);
+
+
+    std::shared_ptr<ProcessedInput> processedVolcano = Loader::loadFileTriangulated("data/Tcoord_topo.txt", 4, 1);
+    m_inputs.push_back(processedVolcano);
 
     // use the elevation for colorized visualization
     vtkSmartPointer<vtkElevationFilter> elevation = vtkSmartPointer<vtkElevationFilter>::New();
-    elevation->SetInputConnection(input1->algorithm->GetOutputPort());
+    elevation->SetInputConnection(processedVolcano->algorithm->GetOutputPort());
     elevation->SetLowPoint(0, 0, 4);
     elevation->SetHighPoint(0, 0, 0);
 
@@ -125,15 +130,11 @@ void Viewer::loadInputs()
     prop.SetBackfaceCulling(false);
     prop.SetLighting(false);
 
-    m_mainRenderer->AddActor(actor);
-    vtkSmartPointer<vtkActor> actor2 = input2->createActor();
-    actor2->GetProperty()->SetColor(0, 1, 0);
-    m_infoRenderer->AddActor(actor2);
-
-    setupAxis(*input1);
+    m_infoRenderer->AddActor(actor);
+    setupAxis(*processedVolcano, *m_infoRenderer);
 }
 
-void Viewer::setupAxis(const Input & input)
+void Viewer::setupAxis(const Input & input, vtkRenderer & renderer)
 {
     vtkSmartPointer<vtkCubeAxesActor> cubeAxes = vtkSmartPointer<vtkCubeAxesActor>::New();
     cubeAxes->SetBounds(input.polyData->GetBounds());
@@ -168,7 +169,7 @@ void Viewer::setupAxis(const Input & input)
 
     cubeAxes->SetRebuildAxes(true);
 
-    m_mainRenderer->AddActor(cubeAxes);
+    renderer.AddActor(cubeAxes);
 }
 
 void Viewer::ShowInfo(const QStringList & info)
