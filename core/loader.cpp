@@ -6,19 +6,17 @@
 #include <vtkTriangle.h>
 #include <vtkPolyData.h>
 #include <vtkDelaunay2D.h>
-#include <vtkPolyDataMapper.h>
-#include <vtkActor.h>
 #include <vtkProperty.h>
-
 #include <vtkCellArray.h>
 
+#include "input.h"
 #include "common/file_parser.h"
 
 std::shared_ptr<Input> Loader::loadFileAsPoints(const std::string & filename, t_UInt nbColumns, t_UInt firstToTake)
 {
-    std::shared_ptr<Input> input = std::make_shared<Input>();
+    std::shared_ptr<Input> input = std::make_shared<Input>(filename);
     ParsedData * parsedData = loadData(filename, nbColumns);
-    input->polyData = parsePoints(*parsedData, firstToTake);
+    input->setPolyData(parsePoints(*parsedData, firstToTake));
     delete parsedData;
 
     return input;
@@ -26,14 +24,14 @@ std::shared_ptr<Input> Loader::loadFileAsPoints(const std::string & filename, t_
 
 std::shared_ptr<ProcessedInput> Loader::loadFileTriangulated(const std::string & filename, t_UInt nbColumns, t_UInt firstToTake)
 {
-    std::shared_ptr<ProcessedInput> input = std::make_shared<ProcessedInput>();
+    std::shared_ptr<ProcessedInput> input = std::make_shared<ProcessedInput>(filename);
     ParsedData * parsedData = loadData(filename, nbColumns);
-    input->polyData = parsePoints(*parsedData, firstToTake);
+    input->setPolyData(parsePoints(*parsedData, firstToTake));
     delete parsedData;
 
     // create triangles from vertex list
     input->algorithm = vtkSmartPointer<vtkDelaunay2D>::New();
-    input->algorithm->SetInputData(input->polyData);
+    input->algorithm->SetInputData(input->polyData());
     input->algorithm->Update();
 
     return input;
@@ -43,13 +41,13 @@ std::shared_ptr<Input> Loader::loadIndexedTriangles(
     const std::string & vertexFilename, t_UInt nbVertexFileColumns, t_UInt vertexIndexColumn, t_UInt firstVertexColumn,
     const std::string & indexFilename, t_UInt nbIndexFileColumns, t_UInt firstIndexColumn)
 {
-    std::shared_ptr<Input> input = std::make_shared<Input>();
+    std::shared_ptr<Input> input = std::make_shared<Input>(vertexFilename);
     ParsedData * vertexData = loadData(vertexFilename, nbVertexFileColumns);
     ParsedData * indexData = loadData(indexFilename, nbIndexFileColumns);
 
-    input->polyData = parseIndexedTriangles(
+    input->setPolyData(parseIndexedTriangles(
         *vertexData, vertexIndexColumn, firstVertexColumn,
-        *indexData, firstIndexColumn);
+        *indexData, firstIndexColumn));
 
     return input;
 }
@@ -133,31 +131,4 @@ vtkSmartPointer<vtkPolyData> Loader::parseIndexedTriangles(
     polyData->SetPolys(triangles);
 
     return polyData;
-}
-
-vtkSmartPointer<vtkActor> Input::createActor()
-{
-    vtkSmartPointer<vtkActor> actor = vtkSmartPointer<vtkActor>::New();
-    actor->SetMapper(dataMapper());
-    actor->GetProperty()->SetRepresentationToWireframe();
-
-    return actor;
-}
-
-vtkSmartPointer<vtkPolyDataMapper> Input::dataMapper()
-{
-    if (m_dataMapper == nullptr) {
-        m_dataMapper = vtkSmartPointer<vtkPolyDataMapper>::New();
-        m_dataMapper->SetInputData(polyData);
-    }
-    return m_dataMapper;
-}
-
-vtkSmartPointer<vtkPolyDataMapper> ProcessedInput::dataMapper()
-{
-    if (m_dataMapper == nullptr) {
-        m_dataMapper = vtkSmartPointer<vtkPolyDataMapper>::New();
-        m_dataMapper->SetInputConnection(algorithm->GetOutputPort());
-    }
-    return m_dataMapper;
 }

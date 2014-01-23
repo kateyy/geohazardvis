@@ -12,22 +12,8 @@ class vtkPolyData;
 class vtkActor;
 class vtkPolyDataAlgorithm;
 
-
-struct Input {
-    vtkSmartPointer<vtkPolyData> polyData;
-
-    virtual vtkSmartPointer<vtkPolyDataMapper> dataMapper();
-
-    vtkSmartPointer<vtkActor> createActor();
-
-protected:
-    vtkSmartPointer<vtkPolyDataMapper> m_dataMapper;
-};
-
-struct ProcessedInput : public Input {
-    vtkSmartPointer<vtkPolyDataAlgorithm> algorithm;
-    virtual vtkSmartPointer<vtkPolyDataMapper> dataMapper() override;
-};
+class Input;
+class ProcessedInput;
 
 class Loader
 {

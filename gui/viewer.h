@@ -17,7 +17,7 @@ class vtkPolyDataMapper;
 class QStringList;
 
 class vtkPointPicker;
-struct Input;
+class Input;
 
 class Viewer : public QMainWindow
 {

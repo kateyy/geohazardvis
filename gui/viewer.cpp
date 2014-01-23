@@ -34,6 +34,7 @@
 #include <QTreeView>
 
 #include "core/loader.h"
+#include "core/input.h"
 
 class TransformCallback : public vtkCommand
 {
@@ -78,10 +79,10 @@ void Viewer::setupRenderer()
     m_infoRenderer->SetBackground(1, 1, 1);
     m_ui->qvtkInfo->GetRenderWindow()->AddRenderer(m_infoRenderer);
 
-    vtkCamera & camera = *m_infoRenderer->GetActiveCamera();
+    vtkCamera & camera = *m_mainRenderer->GetActiveCamera();
     camera.SetPosition(0.3, -1, 0.3);
     camera.SetViewUp(0, 0, 1);
-    m_infoRenderer->ResetCamera();
+    m_mainRenderer->ResetCamera();
 }
 
 void Viewer::setupInteraction()
@@ -94,50 +95,76 @@ void Viewer::setupInteraction()
     m_mainInteractor->SetRenderWindow(m_ui->qvtkMain->GetRenderWindow());
 
     m_mainInteractor->Initialize();
+
+
+    vtkSmartPointer<PickingInteractionStyle> interactStyleInfo = vtkSmartPointer<PickingInteractionStyle>::New();
+    interactStyleInfo->SetDefaultRenderer(m_infoRenderer);
+    interactStyleInfo->setViewer(*this);
+    m_infoInteractor = vtkSmartPointer<vtkRenderWindowInteractor>::New();
+    m_infoInteractor->SetInteractorStyle(interactStyleInfo);
+    m_infoInteractor->SetRenderWindow(m_ui->qvtkInfo->GetRenderWindow());
+
+    m_infoInteractor->Initialize();
 }
 
 void Viewer::loadInputs()
 {
-    std::shared_ptr<Input> indexedSphere = Loader::loadIndexedTriangles(
-        "data/Spcoord.txt", 4, 0, 1,
-        "data/Svert.txt", 6, 0);
-    m_inputs.push_back(indexedSphere);
+    {
+        std::shared_ptr<Input> indexedSphere = Loader::loadIndexedTriangles(
+            "data/Spcoord.txt", 4, 0, 1,
+            "data/Svert.txt", 6, 0);
+        m_inputs.push_back(indexedSphere);
 
-    vtkSmartPointer<vtkActor> sphereActor = indexedSphere->createActor();
-    sphereActor->GetProperty()->SetColor(1.0, 0.0, 0.0);
-    m_mainRenderer->AddActor(sphereActor);
+        vtkSmartPointer<vtkActor> sphereActor = indexedSphere->createActor();
+        vtkProperty & prop = *sphereActor->GetProperty();
+        prop.SetColor(1, 1, 0);
+        prop.SetOpacity(0.9);
+        prop.SetInterpolationToGouraud();
+        prop.SetEdgeVisibility(true);
+        prop.SetEdgeColor(0, 0, 0);
+        prop.SetLineWidth(1.5);
+        prop.SetBackfaceCulling(false);
+        prop.SetLighting(true);
 
+        vtkSmartPointer<vtkActor> sphereActorInfo = indexedSphere->createActor();
+        sphereActorInfo->ShallowCopy(sphereActor);
 
-    std::shared_ptr<ProcessedInput> processedVolcano = Loader::loadFileTriangulated("data/Tcoord_topo.txt", 4, 1);
-    m_inputs.push_back(processedVolcano);
+        m_mainRenderer->AddActor(sphereActor);
+        m_infoRenderer->AddActor(sphereActor);
+    }
 
-    // use the elevation for colorized visualization
-    vtkSmartPointer<vtkElevationFilter> elevation = vtkSmartPointer<vtkElevationFilter>::New();
-    elevation->SetInputConnection(processedVolcano->algorithm->GetOutputPort());
-    elevation->SetLowPoint(0, 0, 4);
-    elevation->SetHighPoint(0, 0, 0);
+    {
+        std::shared_ptr<ProcessedInput> processedVolcano = Loader::loadFileTriangulated("data/Tcoord_topo.txt", 4, 1);
+        m_inputs.push_back(processedVolcano);
 
-    vtkSmartPointer<vtkPolyDataMapper> mapper = vtkSmartPointer<vtkPolyDataMapper>::New();
-    mapper->SetInputConnection(elevation->GetOutputPort());
+        // use the elevation for colorized visualization
+        vtkSmartPointer<vtkElevationFilter> elevation = vtkSmartPointer<vtkElevationFilter>::New();
+        elevation->SetInputConnection(processedVolcano->algorithm->GetOutputPort());
+        elevation->SetLowPoint(0, 0, 4);
+        elevation->SetHighPoint(0, 0, 0);
 
-    vtkSmartPointer<vtkActor> actor = vtkSmartPointer<vtkActor>::New();
-    actor->SetMapper(mapper);
-    vtkProperty & prop = *actor->GetProperty();
-    prop.SetOpacity(0.6);
-    prop.SetInterpolationToGouraud();
-    prop.SetEdgeVisibility(true);
-    prop.SetEdgeColor(0, 0, 0);
-    prop.SetBackfaceCulling(false);
-    prop.SetLighting(false);
+        vtkSmartPointer<vtkPolyDataMapper> mapper = processedVolcano->createMapper(
+            elevation->GetOutputPort());
 
-    m_infoRenderer->AddActor(actor);
-    setupAxis(*processedVolcano, *m_infoRenderer);
+        vtkSmartPointer<vtkActor> actor = vtkSmartPointer<vtkActor>::New();
+        actor->SetMapper(mapper);
+        vtkProperty & prop = *actor->GetProperty();
+        prop.SetOpacity(0.6);
+        prop.SetInterpolationToFlat();
+        prop.SetEdgeVisibility(true);
+        prop.SetEdgeColor(0, 0, 0);
+        prop.SetBackfaceCulling(false);
+        prop.SetLighting(false);
+
+        m_mainRenderer->AddActor(actor);
+        setupAxis(*processedVolcano, *m_mainRenderer);
+    }
 }
 
 void Viewer::setupAxis(const Input & input, vtkRenderer & renderer)
 {
     vtkSmartPointer<vtkCubeAxesActor> cubeAxes = vtkSmartPointer<vtkCubeAxesActor>::New();
-    cubeAxes->SetBounds(input.polyData->GetBounds());
+    cubeAxes->SetBounds(input.polyData()->GetBounds());
     cubeAxes->SetCamera(m_mainRenderer->GetActiveCamera());
     cubeAxes->SetFlyModeToOuterEdges();
     cubeAxes->SetEnableDistanceLOD(1);
