@@ -6,6 +6,7 @@
 
 class vtkDataSet;
 class vtkMapper;
+class vtkDataSetMapper;
 class vtkPolyData;
 class vtkPolyDataMapper;
 class vtkActor;
@@ -37,9 +38,15 @@ public:
     DataSetInput(const std::string & name);
     virtual void setDataSet(vtkDataSet & dataSet);
     virtual vtkDataSet * dataSet() const;
+    virtual vtkDataSetMapper * dataSetMapper();
+    virtual void setMinMaxValue(double min, double max);
+    virtual double * minMaxValue();
+    virtual const double * minMaxValue() const;
 
 protected:
+    double m_minMaxValue[2];
     virtual vtkMapper * createDataMapper() const override;
+    friend class Loader;
 };
 
 class PolyDataInput : public Input {

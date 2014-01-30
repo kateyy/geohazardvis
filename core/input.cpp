@@ -67,11 +67,34 @@ vtkDataSet * DataSetInput::dataSet() const
     return dataSet;
 }
 
+vtkDataSetMapper * DataSetInput::dataSetMapper()
+{
+    vtkDataSetMapper * _dataSetMapper = dynamic_cast<vtkDataSetMapper*>(mapper());
+    assert(_dataSetMapper);
+    return _dataSetMapper;
+}
+
 vtkMapper * DataSetInput::createDataMapper() const
 {
     vtkDataSetMapper * mapper = vtkDataSetMapper::New();
     mapper->SetInputData(dataSet());
     return mapper;
+}
+
+void DataSetInput::setMinMaxValue(double minValue, double maxValue)
+{
+    m_minMaxValue[0] = minValue;
+    m_minMaxValue[1] = maxValue;
+}
+
+double * DataSetInput::minMaxValue()
+{
+    return m_minMaxValue;
+}
+
+const double * DataSetInput::minMaxValue() const
+{
+    return m_minMaxValue;
 }
 
 void PolyDataInput::setPolyData(vtkPolyData & data)

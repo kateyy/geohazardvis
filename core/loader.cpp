@@ -12,6 +12,8 @@
 #include <vtkCellArray.h>
 #include <vtkStructuredGrid.h>
 #include <vtkBoundingBox.h>
+#include <vtkStructuredGridGeometryFilter.h>
+#include <vtkDataSetMapper.h>
 
 #include "input.h"
 #include "common/file_parser.h"
@@ -74,17 +76,37 @@ std::shared_ptr<DataSetInput> Loader::loadGrid(const std::string & gridFilename,
     //vtkSmartPointer<vtkFloatArray> values = vtkSmartPointer<vtkFloatArray>::New();
     vtkSmartPointer<vtkPoints> points = vtkSmartPointer<vtkPoints>::New();
 
-    for (int c = 0; c < dimensions[1]; ++c) {
-        vtkIdType cOffset = c * dimensions[0];
-        for (int r = 0; r < dimensions[0]; ++r) {
-            vtkIdType offset = r + cOffset;
-            points->InsertPoint(offset, xDimensions->at(c).at(r), yDimensions->at(c).at(r), observation->at(c).at(r));
+    float minValue = std::numeric_limits<float>::max();
+    float maxValue = std::numeric_limits<float>::lowest();
+
+    for (int r = 0; r < dimensions[1]; ++r) {
+        vtkIdType rOffset = r * dimensions[0];
+        for (int c = 0; c < dimensions[0]; ++c) {
+            vtkIdType offset = c + rOffset;
+            float value = observation->at(c).at(r);
+            if (value < minValue)
+                minValue = value;
+            if (value > maxValue)
+                maxValue = value;
+            points->InsertPoint(offset, xDimensions->at(c).at(r), yDimensions->at(c).at(r), value);
         }
     }
 
     sgrid->SetPoints(points);
 
+    vtkSmartPointer<vtkStructuredGridGeometryFilter> filter = vtkSmartPointer<vtkStructuredGridGeometryFilter>::New();
+    filter->SetInputData(sgrid);
+    filter->SetExtent(0, dimensions[0] - 1, 1, dimensions[1] - 1, 0, 0);
+    filter->Update();
+
     input->setDataSet(*sgrid);
+
+    // explicity create mapper, to use the filter as input instead of the grid directly
+    vtkDataSetMapper * mapper = vtkDataSetMapper::New();
+    mapper->SetInputData(filter->GetOutput());
+    input->m_mapper = mapper;
+
+    input->setMinMaxValue(minValue, maxValue);
 
     return input;
 }

@@ -9,6 +9,7 @@
 #include <vtkProperty.h>
 #include <vtkTextProperty.h>
 #include <vtkCamera.h>
+#include <vtkLookupTable.h>
 
 // inputs
 #include <vtkPolyDataAlgorithm.h>
@@ -130,41 +131,49 @@ void Viewer::loadInputs()
         vtkSmartPointer<vtkActor> sphereActorInfo = indexedSphere->createActor();
         sphereActorInfo->ShallowCopy(sphereActor);
 
-        m_mainRenderer->AddActor(sphereActor);
+        //m_mainRenderer->AddActor(sphereActor);
         m_infoRenderer->AddActor(sphereActor);
     }
 
     {
-        std::shared_ptr<ProcessedInput> processedVolcano = Loader::loadFileTriangulated("data/Tcoord_topo.txt", 1);
-        m_inputs.push_back(processedVolcano);
+        //std::shared_ptr<ProcessedInput> processedVolcano = Loader::loadFileTriangulated("data/Tcoord_topo.txt", 1);
+        //m_inputs.push_back(processedVolcano);
 
-        // use the elevation for colorized visualization
-        vtkSmartPointer<vtkElevationFilter> elevation = vtkSmartPointer<vtkElevationFilter>::New();
-        elevation->SetInputConnection(processedVolcano->algorithm->GetOutputPort());
-        elevation->SetLowPoint(0, 0, 4);
-        elevation->SetHighPoint(0, 0, 0);
+        //// use the elevation for colorized visualization
+        //vtkSmartPointer<vtkElevationFilter> elevation = vtkSmartPointer<vtkElevationFilter>::New();
+        //elevation->SetInputConnection(processedVolcano->algorithm->GetOutputPort());
+        //elevation->SetLowPoint(0, 0, 4);
+        //elevation->SetHighPoint(0, 0, 0);
 
-        vtkSmartPointer<vtkPolyDataMapper> mapper = processedVolcano->createAlgorithmMapper(
-            elevation->GetOutputPort());
+        //vtkSmartPointer<vtkPolyDataMapper> mapper = processedVolcano->createAlgorithmMapper(
+        //    elevation->GetOutputPort());
 
-        vtkSmartPointer<vtkActor> actor = vtkSmartPointer<vtkActor>::New();
-        actor->SetMapper(mapper);
-        vtkProperty & prop = *actor->GetProperty();
-        prop.SetOpacity(0.6);
-        prop.SetInterpolationToFlat();
-        prop.SetEdgeVisibility(true);
-        prop.SetEdgeColor(0, 0, 0);
-        prop.SetBackfaceCulling(false);
-        prop.SetLighting(false);
+        //vtkSmartPointer<vtkActor> actor = vtkSmartPointer<vtkActor>::New();
+        //actor->SetMapper(mapper);
+        //vtkProperty & prop = *actor->GetProperty();
+        //prop.SetOpacity(0.6);
+        //prop.SetInterpolationToFlat();
+        //prop.SetEdgeVisibility(true);
+        //prop.SetEdgeColor(0, 0, 0);
+        //prop.SetBackfaceCulling(false);
+        //prop.SetLighting(false);
 
-        m_mainRenderer->AddActor(actor);
-        setupAxis(*processedVolcano, *m_mainRenderer);
+        //m_mainRenderer->AddActor(actor);
+        //setupAxis(*processedVolcano, *m_mainRenderer);
     }
 
     {
-        /*std::shared_ptr<Input> heatMap = Loader::loadGrid("data/observation.txt", "data/X.txt", "data/Y.txt");
+        std::shared_ptr<DataSetInput> heatMap = Loader::loadGrid("data/observation.txt", "data/X.txt", "data/Y.txt");
         m_inputs.push_back(heatMap);
-        m_mainRenderer->AddActor(heatMap->createActor());*/
+
+        vtkSmartPointer<vtkLookupTable> lut = vtkSmartPointer<vtkLookupTable>::New();
+        lut->SetHueRange(0.66667, 0.0);
+        lut->Build();
+
+        heatMap->mapper()->SetScalarRange(heatMap->minMaxValue());
+        heatMap->mapper()->SetLookupTable(lut);
+
+        m_mainRenderer->AddActor(heatMap->createActor());
     }
 }
 
