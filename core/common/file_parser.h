@@ -12,7 +12,7 @@
 
 bool populateIOVectors(const std::string inputFileName,
 					   std::vector<std::vector<t_FP> > &ioVectors);
-bool parseIOFile(const std::string inputFileName, std::vector<t_FP> &parsedData);
+bool parseIOFile(const std::string inputFileName, std::vector<t_FP> &parsedData, t_UInt & nbColumns);
 void populateVectorsFromData(const std::vector<t_FP> &parsedData,
 							 std::vector<std::vector<t_FP> > &vectorizedData);
 

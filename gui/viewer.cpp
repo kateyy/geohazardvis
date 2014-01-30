@@ -112,8 +112,8 @@ void Viewer::loadInputs()
 {
     {
         std::shared_ptr<Input> indexedSphere = Loader::loadIndexedTriangles(
-            "data/Spcoord.txt", 4, 0, 1,
-            "data/Svert.txt", 6, 0);
+            "data/Spcoord.txt", 0, 1,
+            "data/Svert.txt", 0);
         m_inputs.push_back(indexedSphere);
 
         vtkSmartPointer<vtkActor> sphereActor = indexedSphere->createActor();
@@ -135,7 +135,7 @@ void Viewer::loadInputs()
     }
 
     {
-        std::shared_ptr<ProcessedInput> processedVolcano = Loader::loadFileTriangulated("data/Tcoord_topo.txt", 4, 1);
+        std::shared_ptr<ProcessedInput> processedVolcano = Loader::loadFileTriangulated("data/Tcoord_topo.txt", 1);
         m_inputs.push_back(processedVolcano);
 
         // use the elevation for colorized visualization
@@ -144,7 +144,7 @@ void Viewer::loadInputs()
         elevation->SetLowPoint(0, 0, 4);
         elevation->SetHighPoint(0, 0, 0);
 
-        vtkSmartPointer<vtkPolyDataMapper> mapper = processedVolcano->createMapper(
+        vtkSmartPointer<vtkPolyDataMapper> mapper = processedVolcano->createAlgorithmMapper(
             elevation->GetOutputPort());
 
         vtkSmartPointer<vtkActor> actor = vtkSmartPointer<vtkActor>::New();
@@ -160,12 +160,18 @@ void Viewer::loadInputs()
         m_mainRenderer->AddActor(actor);
         setupAxis(*processedVolcano, *m_mainRenderer);
     }
+
+    {
+        /*std::shared_ptr<Input> heatMap = Loader::loadGrid("data/observation.txt", "data/X.txt", "data/Y.txt");
+        m_inputs.push_back(heatMap);
+        m_mainRenderer->AddActor(heatMap->createActor());*/
+    }
 }
 
 void Viewer::setupAxis(const Input & input, vtkRenderer & renderer)
 {
     vtkSmartPointer<vtkCubeAxesActor> cubeAxes = vtkSmartPointer<vtkCubeAxesActor>::New();
-    cubeAxes->SetBounds(input.polyData()->GetBounds());
+    cubeAxes->SetBounds(input.data()->GetBounds());
     cubeAxes->SetCamera(m_mainRenderer->GetActiveCamera());
     cubeAxes->SetFlyModeToOuterEdges();
     cubeAxes->SetEnableDistanceLOD(1);

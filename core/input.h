@@ -4,6 +4,8 @@
 
 #include <vtkSmartPointer.h>
 
+class vtkDataSet;
+class vtkMapper;
 class vtkPolyData;
 class vtkPolyDataMapper;
 class vtkActor;
@@ -14,25 +16,50 @@ class vtkAlgorithmOutput;
 class Input {
 public:
     Input(const std::string & name);
+    virtual ~Input();
     const std::string name;
 
-    virtual vtkSmartPointer<vtkPolyData> polyData() const;
-    virtual void setPolyData(const vtkSmartPointer<vtkPolyData> & polyData);
-    virtual vtkSmartPointer<vtkActor> createActor();
-    virtual vtkSmartPointer<vtkPolyDataMapper> dataMapper();
+    virtual vtkActor * createActor();
+    virtual vtkMapper * mapper();
+    virtual vtkDataSet * data() const;
 
     static vtkInformationStringKey * NameKey();
 
 protected:
-    vtkSmartPointer<vtkPolyData> m_polyData;
-    vtkSmartPointer<vtkPolyDataMapper> m_dataMapper;
+    /** subclass should override this to create a vtkMapper mapping to specific input data */
+    virtual vtkMapper * createDataMapper() const = 0;
+    vtkSmartPointer<vtkDataSet> m_data;
+    vtkSmartPointer<vtkMapper> m_mapper;
 };
 
+class DataSetInput : public Input {
+public:
+    DataSetInput(const std::string & name);
+    virtual void setDataSet(vtkDataSet & dataSet);
+    virtual vtkDataSet * dataSet() const;
 
-class ProcessedInput : public Input {
+protected:
+    virtual vtkMapper * createDataMapper() const override;
+};
+
+class PolyDataInput : public Input {
+public:
+    PolyDataInput(const std::string & name);
+
+    virtual vtkPolyData * polyData() const;
+    virtual void setPolyData(vtkPolyData & polyData);
+    virtual vtkPolyDataMapper * polyDataMapper();
+
+protected:
+    virtual vtkMapper * createDataMapper() const override;
+};
+
+class ProcessedInput : public PolyDataInput {
 public:
     ProcessedInput(const std::string & name);
     vtkSmartPointer<vtkPolyDataAlgorithm> algorithm;
-    virtual vtkSmartPointer<vtkPolyDataMapper> dataMapper() override;
-    virtual vtkSmartPointer<vtkPolyDataMapper> createMapper(vtkAlgorithmOutput * mapperInput) const;
+    virtual vtkPolyDataMapper * createAlgorithmMapper(vtkAlgorithmOutput * mapperInput) const;
+
+protected:
+    virtual vtkMapper * createDataMapper() const override;
 };

@@ -2,6 +2,7 @@
 
 #include <vtkInformationStringKey.h>
 #include <vtkActor.h>
+#include <vtkDataSetMapper.h>
 #include <vtkPolyDataMapper.h>
 #include <vtkPolyDataAlgorithm.h>
 
@@ -13,52 +14,102 @@ Input::Input(const std::string & name)
 {
 }
 
-ProcessedInput::ProcessedInput(const std::string & name)
+Input::~Input()
+{
+}
+
+PolyDataInput::PolyDataInput(const std::string & name)
 : Input(name)
 {
 }
 
-vtkSmartPointer<vtkPolyData> Input::polyData() const
+ProcessedInput::ProcessedInput(const std::string & name)
+: PolyDataInput(name)
 {
-    return m_polyData;
 }
 
-void Input::setPolyData(const vtkSmartPointer<vtkPolyData> & polyData)
+vtkDataSet * Input::data() const
 {
-    m_polyData = polyData;
+    return m_data;
 }
 
-vtkSmartPointer<vtkActor> Input::createActor()
+vtkActor * Input::createActor()
 {
-    vtkSmartPointer<vtkActor> actor = vtkSmartPointer<vtkActor>::New();
-    actor->SetMapper(dataMapper());
+    vtkActor * actor = vtkActor::New();
+    actor->SetMapper(mapper());
 
     return actor;
 }
 
-vtkSmartPointer<vtkPolyDataMapper> Input::dataMapper()
+vtkMapper * Input::mapper()
 {
-    if (m_dataMapper == nullptr) {
-        m_dataMapper = vtkSmartPointer<vtkPolyDataMapper>::New();
-        m_dataMapper->SetInputData(m_polyData);
-        NameKey()->Set(m_dataMapper->GetInformation(), name.c_str());
+    if (m_mapper == nullptr) {
+        m_mapper = createDataMapper();
+        NameKey()->Set(m_mapper->GetInformation(), name.c_str());
     }
-    return m_dataMapper;
+    return m_mapper;
 }
 
-vtkSmartPointer<vtkPolyDataMapper> ProcessedInput::dataMapper()
+DataSetInput::DataSetInput(const std::string & name)
+: Input(name)
 {
-    if (m_dataMapper == nullptr) {
-        m_dataMapper = vtkSmartPointer<vtkPolyDataMapper>::New();
-        m_dataMapper->SetInputConnection(algorithm->GetOutputPort());
-        NameKey()->Set(m_dataMapper->GetInformation(), name.c_str());
-    }
-    return m_dataMapper;
 }
 
-vtkSmartPointer<vtkPolyDataMapper> ProcessedInput::createMapper(vtkAlgorithmOutput * mapperInput) const
+void DataSetInput::setDataSet(vtkDataSet & dataSet)
 {
-    vtkSmartPointer<vtkPolyDataMapper> mapper = vtkSmartPointer<vtkPolyDataMapper>::New();
+    m_data = &dataSet;
+}
+
+vtkDataSet * DataSetInput::dataSet() const
+{
+    vtkDataSet * dataSet = dynamic_cast<vtkDataSet*>(m_data.Get());
+    assert(dataSet);
+    return dataSet;
+}
+
+vtkMapper * DataSetInput::createDataMapper() const
+{
+    vtkDataSetMapper * mapper = vtkDataSetMapper::New();
+    mapper->SetInputData(dataSet());
+    return mapper;
+}
+
+void PolyDataInput::setPolyData(vtkPolyData & data)
+{
+    m_data = &data;
+}
+
+vtkPolyData * PolyDataInput::polyData() const
+{
+    vtkPolyData * polyData = dynamic_cast<vtkPolyData*>(m_data.Get());
+    assert(polyData);
+    return polyData;
+}
+
+vtkMapper * PolyDataInput::createDataMapper() const
+{
+    vtkPolyDataMapper * mapper = vtkPolyDataMapper::New();
+    mapper->SetInputData(polyData());
+    return mapper;
+}
+
+vtkPolyDataMapper * PolyDataInput::polyDataMapper()
+{
+    vtkPolyDataMapper * polyMapper = dynamic_cast<vtkPolyDataMapper*>(mapper());
+    assert(polyMapper);
+    return polyMapper;
+}
+
+vtkMapper * ProcessedInput::createDataMapper() const
+{
+    vtkPolyDataMapper * mapper = vtkPolyDataMapper::New();
+    mapper->SetInputConnection(algorithm->GetOutputPort());
+    return mapper;
+}
+
+vtkPolyDataMapper * ProcessedInput::createAlgorithmMapper(vtkAlgorithmOutput * mapperInput) const
+{
+    vtkPolyDataMapper * mapper = vtkPolyDataMapper::New();
     NameKey()->Set(mapper->GetInformation(), name.c_str());
     mapper->SetInputConnection(mapperInput);
     return mapper;

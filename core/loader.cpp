@@ -2,31 +2,35 @@
 
 #include <cmath>
 
+#include <vtkFloatArray.h>
 #include <vtkPoints.h>
+#include <vtkPointData.h>
 #include <vtkTriangle.h>
 #include <vtkPolyData.h>
 #include <vtkDelaunay2D.h>
 #include <vtkProperty.h>
 #include <vtkCellArray.h>
+#include <vtkStructuredGrid.h>
+#include <vtkBoundingBox.h>
 
 #include "input.h"
 #include "common/file_parser.h"
 
-std::shared_ptr<Input> Loader::loadFileAsPoints(const std::string & filename, t_UInt nbColumns, t_UInt firstToTake)
+std::shared_ptr<PolyDataInput> Loader::loadFileAsPoints(const std::string & filename, t_UInt firstDataColumn)
 {
-    std::shared_ptr<Input> input = std::make_shared<Input>(filename);
-    ParsedData * parsedData = loadData(filename, nbColumns);
-    input->setPolyData(parsePoints(*parsedData, firstToTake));
+    std::shared_ptr<PolyDataInput> input = std::make_shared<PolyDataInput>(filename);
+    ParsedData * parsedData = loadData(filename);
+    input->setPolyData(*parsePoints(*parsedData, firstDataColumn));
     delete parsedData;
 
     return input;
 }
 
-std::shared_ptr<ProcessedInput> Loader::loadFileTriangulated(const std::string & filename, t_UInt nbColumns, t_UInt firstToTake)
+std::shared_ptr<ProcessedInput> Loader::loadFileTriangulated(const std::string & filename, t_UInt firstDataColumn)
 {
     std::shared_ptr<ProcessedInput> input = std::make_shared<ProcessedInput>(filename);
-    ParsedData * parsedData = loadData(filename, nbColumns);
-    input->setPolyData(parsePoints(*parsedData, firstToTake));
+    ParsedData * parsedData = loadData(filename);
+    input->setPolyData(*parsePoints(*parsedData, firstDataColumn));
     delete parsedData;
 
     // create triangles from vertex list
@@ -37,39 +41,68 @@ std::shared_ptr<ProcessedInput> Loader::loadFileTriangulated(const std::string &
     return input;
 }
 
-std::shared_ptr<Input> Loader::loadIndexedTriangles(
-    const std::string & vertexFilename, t_UInt nbVertexFileColumns, t_UInt vertexIndexColumn, t_UInt firstVertexColumn,
-    const std::string & indexFilename, t_UInt nbIndexFileColumns, t_UInt firstIndexColumn)
+std::shared_ptr<PolyDataInput> Loader::loadIndexedTriangles(
+    const std::string & vertexFilename, t_UInt vertexIndexColumn, t_UInt firstVertexColumn,
+    const std::string & indexFilename, t_UInt firstIndexColumn)
 {
-    std::shared_ptr<Input> input = std::make_shared<Input>(vertexFilename);
-    ParsedData * vertexData = loadData(vertexFilename, nbVertexFileColumns);
-    ParsedData * indexData = loadData(indexFilename, nbIndexFileColumns);
+    std::shared_ptr<PolyDataInput> input = std::make_shared<PolyDataInput>(vertexFilename);
+    ParsedData * vertexData = loadData(vertexFilename);
+    ParsedData * indexData = loadData(indexFilename);
 
-    input->setPolyData(parseIndexedTriangles(
+    input->setPolyData(*parseIndexedTriangles(
         *vertexData, vertexIndexColumn, firstVertexColumn,
         *indexData, firstIndexColumn));
 
     return input;
 }
 
-Loader::ParsedData * Loader::loadData(const std::string & filename, t_UInt nbColumns)
+std::shared_ptr<DataSetInput> Loader::loadGrid(const std::string & gridFilename, const std::string & xFilename, const std::string & yFilename)
 {
-    assert(nbColumns > 0);
+    std::shared_ptr<DataSetInput> input = std::make_shared<DataSetInput>(gridFilename);
+    ParsedData * observation = loadData(gridFilename);
+    ParsedData * xDimensions = loadData(xFilename);
+    ParsedData * yDimensions = loadData(yFilename);
 
+    assert(observation->size() > 0);
+    assert(observation->at(0).size() > 0);
+
+    int dimensions[3] = {observation->size(), static_cast<int>(observation->at(0).size()), 1};
+
+    vtkStructuredGrid * sgrid = vtkStructuredGrid::New();
+    sgrid->SetDimensions(dimensions);
+
+    //vtkSmartPointer<vtkFloatArray> values = vtkSmartPointer<vtkFloatArray>::New();
+    vtkSmartPointer<vtkPoints> points = vtkSmartPointer<vtkPoints>::New();
+
+    for (int c = 0; c < dimensions[1]; ++c) {
+        vtkIdType cOffset = c * dimensions[0];
+        for (int r = 0; r < dimensions[0]; ++r) {
+            vtkIdType offset = r + cOffset;
+            points->InsertPoint(offset, xDimensions->at(c).at(r), yDimensions->at(c).at(r), observation->at(c).at(r));
+        }
+    }
+
+    sgrid->SetPoints(points);
+
+    input->setDataSet(*sgrid);
+
+    return input;
+}
+
+Loader::ParsedData * Loader::loadData(const std::string & filename)
+{
     Loader::ParsedData * parsedData = new ParsedData();
-    parsedData->resize(nbColumns);
 
     // load input file
     populateIOVectors(filename, *parsedData);
 
-    assert(parsedData->size() == nbColumns);
-
+    assert(parsedData->size() > 0);
     assert(parsedData->at(0).size() > 0);
 
     return parsedData;
 }
 
-vtkSmartPointer<vtkPolyData> Loader::parsePoints(const ParsedData & parsedData, t_UInt firstColumn)
+vtkPolyData * Loader::parsePoints(const ParsedData & parsedData, t_UInt firstColumn)
 {
     assert(parsedData.size() > firstColumn);
 
@@ -88,14 +121,14 @@ vtkSmartPointer<vtkPolyData> Loader::parsePoints(const ParsedData & parsedData, 
 
     vertices->InsertNextCell(nbRows, pointIds.data());
 
-    vtkSmartPointer<vtkPolyData> polyData = vtkSmartPointer<vtkPolyData>::New();
+    vtkPolyData * polyData = vtkPolyData::New();
     polyData->SetPoints(points);
     polyData->SetVerts(vertices);
 
     return polyData;
 }
 
-vtkSmartPointer<vtkPolyData> Loader::parseIndexedTriangles(
+vtkPolyData * Loader::parseIndexedTriangles(
     const ParsedData & parsedVertexData, t_UInt vertexIndexColumn, t_UInt firstVertexColumn,
     const ParsedData & parsedIndexData, t_UInt firstIndexColumn)
 {
@@ -126,7 +159,7 @@ vtkSmartPointer<vtkPolyData> Loader::parseIndexedTriangles(
         triangles->InsertNextCell(triangle);    // this copies the triangle data into the list
     }
 
-    vtkSmartPointer<vtkPolyData> polyData = vtkSmartPointer<vtkPolyData>::New();
+    vtkPolyData * polyData = vtkPolyData::New();
     polyData->SetPoints(points);
     polyData->SetPolys(triangles);
 
