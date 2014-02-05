@@ -13,6 +13,8 @@ class vtkActor;
 class vtkInformationStringKey;
 class vtkPolyDataAlgorithm;
 class vtkAlgorithmOutput;
+class vtkContextItem;
+class vtkContextActor;
 
 class Input {
 public:
@@ -69,4 +71,13 @@ public:
 
 protected:
     virtual vtkMapper * createDataMapper() const override;
+};
+
+class Context2DInput {
+public:
+    virtual void setContextItem(vtkContextItem & item);
+    virtual vtkContextItem * contextItem() const;
+
+protected:
+    vtkSmartPointer<vtkContextItem> m_contextItem;
 };

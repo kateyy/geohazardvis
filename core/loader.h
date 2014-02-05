@@ -16,6 +16,7 @@ class Input;
 class DataSetInput;
 class PolyDataInput;
 class ProcessedInput;
+class Context2DInput;
 
 class Loader
 {
@@ -28,6 +29,7 @@ public:
         const std::string & vertexFilename, t_UInt vertexIndexColumn, t_UInt firstVertexColumn,
         const std::string & indexFilename, t_UInt firstIndexColumn);
     static std::shared_ptr<DataSetInput> loadGrid(const std::string & gridFilename, const std::string & xFilename, const std::string & yFilename);
+    static std::shared_ptr<Context2DInput> loadGrid2DScene(const std::string & gridFilename, const std::string & xFilename, const std::string & yFilename);
 
 protected:
     static ParsedData * loadData(const std::string & filename);

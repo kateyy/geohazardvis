@@ -34,6 +34,11 @@
 #include <QVTKWidget.h>
 #include <QTreeView>
 
+// vtk 2D scene
+#include <vtkContextActor.h>
+#include <vtkContextScene.h>
+#include <vtkHeatmapItem.h>
+
 #include "core/loader.h"
 #include "core/input.h"
 
@@ -131,8 +136,8 @@ void Viewer::loadInputs()
         vtkSmartPointer<vtkActor> sphereActorInfo = indexedSphere->createActor();
         sphereActorInfo->ShallowCopy(sphereActor);
 
-        //m_mainRenderer->AddActor(sphereActor);
-        m_infoRenderer->AddActor(sphereActor);
+        //m_mainRenderer->AddViewProp(sphereActor);
+        m_infoRenderer->AddViewProp(sphereActor);
     }
 
     {
@@ -163,17 +168,26 @@ void Viewer::loadInputs()
     }
 
     {
-        std::shared_ptr<DataSetInput> heatMap = Loader::loadGrid("data/observation.txt", "data/X.txt", "data/Y.txt");
-        m_inputs.push_back(heatMap);
+        //std::shared_ptr<DataSetInput> heatMap = Loader::loadGrid("data/observation.txt", "data/X.txt", "data/Y.txt");
+        //m_inputs.push_back(heatMap);
 
-        vtkSmartPointer<vtkLookupTable> lut = vtkSmartPointer<vtkLookupTable>::New();
-        lut->SetHueRange(0.66667, 0.0);
-        lut->Build();
+        //vtkSmartPointer<vtkLookupTable> lut = vtkSmartPointer<vtkLookupTable>::New();
+        //lut->SetHueRange(0.66667, 0.0);
+        //lut->Build();
 
-        heatMap->mapper()->SetScalarRange(heatMap->minMaxValue());
-        heatMap->mapper()->SetLookupTable(lut);
+        //heatMap->mapper()->SetScalarRange(heatMap->minMaxValue());
+        //heatMap->mapper()->SetLookupTable(lut);
 
-        m_mainRenderer->AddActor(heatMap->createActor());
+        //m_mainRenderer->AddViewProp(heatMap->createActor());
+
+        vtkSmartPointer<vtkContextScene> contextScene = vtkSmartPointer<vtkContextScene>::New();
+        vtkSmartPointer<vtkContextActor> contextActor = vtkSmartPointer<vtkContextActor>::New();
+        contextActor->SetScene(contextScene);
+        m_mainRenderer->AddViewProp(contextActor);
+
+        std::shared_ptr<Context2DInput> gridInput = Loader::loadGrid2DScene("data/observation.txt", "data/X.txt", "data/Y.txt");
+
+        contextScene->AddItem(gridInput->contextItem());
     }
 }
 
@@ -212,7 +226,7 @@ void Viewer::setupAxis(const Input & input, vtkRenderer & renderer)
 
     cubeAxes->SetRebuildAxes(true);
 
-    renderer.AddActor(cubeAxes);
+    renderer.AddViewProp(cubeAxes);
 }
 
 void Viewer::ShowInfo(const QStringList & info)

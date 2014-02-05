@@ -61,10 +61,11 @@ find_package(VTK COMPONENTS
     #vtkFiltersSources     # for the cone
     vtkInteractionWidgets # vtkBoxWidget
     vtkRenderingCore      # vtkPolyDataMapper
-    vtkRenderingOpenGL    # not loading this simply causes seg faults
+    vtkRenderingOpenGL
+    vtkRenderingContext2D
     vtkViewsQt
     vtkFiltersCore
-    # vtkInfovisCore
+    vtkViewsInfovis         # heatmap item: 2D scene
     vtkInteractionStyle
     # vtkRenderingFreeTypeOpenGL
     vtkRenderingAnnotation  # for the axis actor

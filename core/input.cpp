@@ -5,6 +5,7 @@
 #include <vtkDataSetMapper.h>
 #include <vtkPolyDataMapper.h>
 #include <vtkPolyDataAlgorithm.h>
+#include <vtkContextItem.h>
 
 // macro defining the information key to access the name of the input in the mapper
 vtkInformationKeyMacro(Input, NameKey, String);
@@ -95,6 +96,16 @@ double * DataSetInput::minMaxValue()
 const double * DataSetInput::minMaxValue() const
 {
     return m_minMaxValue;
+}
+
+void Context2DInput::setContextItem(vtkContextItem & item)
+{
+    m_contextItem = &item;
+}
+
+vtkContextItem * Context2DInput::contextItem() const
+{
+    return m_contextItem;
 }
 
 void PolyDataInput::setPolyData(vtkPolyData & data)

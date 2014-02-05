@@ -14,6 +14,10 @@
 #include <vtkBoundingBox.h>
 #include <vtkStructuredGridGeometryFilter.h>
 #include <vtkDataSetMapper.h>
+#include <vtkHeatmapItem.h>
+#include <vtkTable.h>
+#include <vtkVariant.h>
+#include <vtkVariantArray.h>
 
 #include "input.h"
 #include "common/file_parser.h"
@@ -68,7 +72,7 @@ std::shared_ptr<DataSetInput> Loader::loadGrid(const std::string & gridFilename,
     assert(observation->size() > 0);
     assert(observation->at(0).size() > 0);
 
-    int dimensions[3] = {observation->size(), static_cast<int>(observation->at(0).size()), 1};
+    int dimensions[3] = { static_cast<int>(observation->size()), static_cast<int>(observation->at(0).size()), 1 };
 
     vtkStructuredGrid * sgrid = vtkStructuredGrid::New();
     sgrid->SetDimensions(dimensions);
@@ -107,6 +111,40 @@ std::shared_ptr<DataSetInput> Loader::loadGrid(const std::string & gridFilename,
     input->m_mapper = mapper;
 
     input->setMinMaxValue(minValue, maxValue);
+
+    return input;
+}
+
+std::shared_ptr<Context2DInput> Loader::loadGrid2DScene(const std::string & gridFilename, const std::string & xFilename, const std::string & yFilename)
+{
+    std::shared_ptr<Context2DInput> input = std::make_shared<Context2DInput>();
+    ParsedData * observation = loadData(gridFilename);
+    ParsedData * xDimensions = loadData(xFilename);
+    ParsedData * yDimensions = loadData(yFilename);
+
+    assert(observation->size() > 0);
+    assert(observation->at(0).size() > 0);
+
+    vtkSmartPointer<vtkTable> table = vtkSmartPointer<vtkTable>::New();
+    
+    int dimensions[3] = { static_cast<int>(observation->size()), static_cast<int>(observation->at(0).size()), 1 };
+
+
+    for (int c = 0; c < dimensions[0]; ++c) {
+        vtkSmartPointer<vtkVariantArray> columnData = vtkSmartPointer<vtkVariantArray>::New();
+        columnData->SetName(std::to_string(c).c_str());
+        for (int r = 0; r < dimensions[1]; ++r) {
+            columnData->InsertNextValue(observation->at(c).at(r));
+        }
+        table->AddColumn(columnData);
+    }
+
+    vtkSmartPointer<vtkHeatmapItem> heatmap = vtkSmartPointer<vtkHeatmapItem>::New();
+    heatmap->SetCellHeight(3);
+    heatmap->SetCellWidth(3);
+    heatmap->SetTable(table);
+
+    input->setContextItem(*heatmap);
 
     return input;
 }
