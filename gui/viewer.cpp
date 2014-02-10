@@ -173,27 +173,24 @@ void Viewer::loadInputs()
     }
 
     {
-        std::shared_ptr<DataSetInput> heatMap = Loader::loadGrid("data/observation.txt", "data/X.txt", "data/Y.txt");
+        std::shared_ptr<GridDataInput> heatMap = Loader::loadGrid("data/observation.txt", "data/X.txt", "data/Y.txt");
         m_inputs.push_back(heatMap);
 
-        m_mainRenderer->AddViewProp(heatMap->prop);
+        m_mainRenderer->AddViewProp(heatMap->createTexturedPolygonActor());
 
         vtkScalarBarActor * heatBars = vtkScalarBarActor::New();
         heatBars->SetTitle("observation");
         heatBars->SetLookupTable(heatMap->lookupTable);
         m_mainRenderer->AddViewProp(heatBars);
 
-        ((vtkActor*) heatMap->prop.Get())->GetTexture()->Load(m_mainRenderer);
-/*
-        vtkSmartPointer<vtkCubeAxesActor> heatMapAxis = vtkSmartPointer<vtkCubeAxesActor>::New();
-        heatMapAxis->SetBounds(heatMap->)*/
+        setupAxis(heatMap->bounds, *m_mainRenderer);
     }
 }
 
-void Viewer::setupAxis(const Input & input, vtkRenderer & renderer)
+void Viewer::setupAxis(double bounds[6], vtkRenderer & renderer)
 {
     vtkSmartPointer<vtkCubeAxesActor> cubeAxes = vtkSmartPointer<vtkCubeAxesActor>::New();
-    cubeAxes->SetBounds(input.data()->GetBounds());
+    cubeAxes->SetBounds(bounds);
     cubeAxes->SetCamera(m_mainRenderer->GetActiveCamera());
     cubeAxes->SetFlyModeToOuterEdges();
     cubeAxes->SetEnableDistanceLOD(1);

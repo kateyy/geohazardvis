@@ -7,19 +7,15 @@
 class vtkDataSet;
 class vtkAbstractMapper;
 class vtkMapper; // 3d mapper
-class vtkDataSetMapper;
 class vtkPolyData;
 class vtkPolyDataMapper;
-class vtkPolyDataMapper2D;
 class vtkActor;
-class vtkActor2D;
 class vtkInformationStringKey;
 class vtkPolyDataAlgorithm;
 class vtkAlgorithmOutput;
 class vtkContextItem;
-class vtkContextActor;
 class vtkLookupTable;
-class vtkProp3D;
+class vtkTexture;
 
 class Input {
 public:
@@ -37,26 +33,26 @@ protected:
     vtkSmartPointer<vtkDataSet> m_data;
 };
 
-class DataSetInput : public Input {
+class GridDataInput : public Input {
 public:
-    DataSetInput(const std::string & name);
+    GridDataInput(const std::string & name);
     void setData(vtkDataSet & data);
-    vtkSmartPointer<vtkPolyDataMapper2D> mapper2D;
-    vtkSmartPointer<vtkPolyDataMapper> mapper3D;
-    vtkSmartPointer<vtkDataSetMapper> dataSetMapper;
     virtual void setMinMaxValue(double min, double max);
     virtual double * minMaxValue();
     virtual const double * minMaxValue() const;
 
-    virtual vtkActor2D * createActor2D();
-    virtual vtkActor * createActor3D();
-    virtual vtkActor * createDataActor3D();
+    virtual void setMapper(vtkPolyDataMapper & mapper);
+    virtual void setTexture(vtkTexture & texture);
 
-    vtkSmartPointer<vtkProp3D> prop;
+    virtual vtkActor * createTexturedPolygonActor() const;
+
+    double bounds[6];
 
     vtkSmartPointer<vtkLookupTable> lookupTable;
 
 protected:
+    vtkSmartPointer<vtkPolyDataMapper> m_mapper;
+    vtkSmartPointer<vtkTexture> m_texture;
     double m_minMaxValue[2];
 };
 
@@ -94,13 +90,4 @@ public:
 
 protected:
     virtual vtkMapper * createDataMapper() const override;
-};
-
-class Context2DInput {
-public:
-    virtual void setContextItem(vtkContextItem & item);
-    virtual vtkContextItem * contextItem() const;
-
-protected:
-    vtkSmartPointer<vtkContextItem> m_contextItem;
 };

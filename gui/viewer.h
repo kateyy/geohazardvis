@@ -42,5 +42,5 @@ private:
     void setupRenderer();
     void setupInteraction();
     void loadInputs();
-    void setupAxis(const Input & input, vtkRenderer & renderer);
+    void setupAxis(double bounds[6], vtkRenderer & renderer);
 };

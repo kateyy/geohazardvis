@@ -10,22 +10,9 @@
 #include <vtkDelaunay2D.h>
 #include <vtkProperty.h>
 #include <vtkCellArray.h>
-#include <vtkStructuredGrid.h>
-#include <vtkBoundingBox.h>
-#include <vtkStructuredGridGeometryFilter.h>
-#include <vtkDataSetMapper.h>
 #include <vtkPolyDataMapper.h>
-#include <vtkHeatmapItem.h>
-#include <vtkTable.h>
-#include <vtkVariant.h>
-#include <vtkVariantArray.h>
 #include <vtkLookupTable.h>
-#include <vtkPolyDataMapper2D.h>
-#include <vtkVertexGlyphFilter.h>
 #include <vtkImageData.h>
-#include <vtkImageSlice.h>
-#include <vtkImageSliceMapper.h>
-#include <vtkActor.h>
 #include <vtkPlaneSource.h>
 #include <vtkExtractVOI.h>
 #include <vtkInformationStringKey.h>
@@ -73,9 +60,9 @@ std::shared_ptr<PolyDataInput> Loader::loadIndexedTriangles(
     return input;
 }
 
-std::shared_ptr<DataSetInput> Loader::loadGrid(const std::string & gridFilename, const std::string & xFilename, const std::string & yFilename)
+std::shared_ptr<GridDataInput> Loader::loadGrid(const std::string & gridFilename, const std::string & xFilename, const std::string & yFilename)
 {
-    std::shared_ptr<DataSetInput> input = std::make_shared<DataSetInput>(gridFilename);
+    std::shared_ptr<GridDataInput> input = std::make_shared<GridDataInput>(gridFilename);
     ParsedData * observation = loadData(gridFilename);
     ParsedData * xDimensions = loadData(xFilename);
     ParsedData * yDimensions = loadData(yFilename);
@@ -84,6 +71,13 @@ std::shared_ptr<DataSetInput> Loader::loadGrid(const std::string & gridFilename,
     assert(observation->at(0).size() > 0);
 
     int dimensions[3] = { static_cast<int>(observation->size()), static_cast<int>(observation->at(0).size()), 1 };
+
+    input->bounds[0] = xDimensions->at(0).at(0);    // minX
+    input->bounds[1] = xDimensions->at(xDimensions->size() - 1).at(0); // maxX
+    input->bounds[2] = yDimensions->at(0).at(0);    // minY
+    input->bounds[3] = yDimensions->at(0).at(yDimensions->at(0).size() - 1);    // maxY
+    input->bounds[4] = 0;
+    input->bounds[5] = 0;
 
     vtkSmartPointer<vtkImageData> grid = vtkSmartPointer<vtkImageData>::New();
     grid->SetExtent(0, dimensions[0] - 1, 0, dimensions[1] - 1, 0, 0);
@@ -136,60 +130,21 @@ std::shared_ptr<DataSetInput> Loader::loadGrid(const std::string & gridFilename,
     texture->InterpolateOn();
     texture->SetQualityTo32Bit();
 
+    double xExtend = input->bounds[1] - input->bounds[0];
+    double yExtend = input->bounds[3] - input->bounds[2];
 
     vtkSmartPointer<vtkPlaneSource> plane = vtkSmartPointer<vtkPlaneSource>::New();
     plane->SetXResolution(dimensions[0]);
     plane->SetYResolution(dimensions[1]);
-    float minXValue = xDimensions->at(0).at(0);
-    float maxXValue = xDimensions->at(xDimensions->size() - 1).at(0);
-    float minYValue = yDimensions->at(0).at(0);
-    float maxYValue = yDimensions->at(0).at(yDimensions->at(0).size() - 1);
-    plane->SetOrigin(0, 0, 0);
-    plane->SetPoint1(-minXValue + maxXValue, 0, 0);
-    plane->SetPoint2(0, -minYValue + maxYValue, 0);
+    plane->SetOrigin(input->bounds[0], input->bounds[2], 0);
+    plane->SetPoint1(input->bounds[0] + xExtend, input->bounds[2], 0);
+    plane->SetPoint2(input->bounds[0], input->bounds[2] + yExtend, 0);
+
     vtkSmartPointer<vtkPolyDataMapper> planeMapper = vtkSmartPointer<vtkPolyDataMapper>::New();
     planeMapper->SetInputConnection(plane->GetOutputPort());
 
-    vtkSmartPointer<vtkActor> texturedPlane = vtkSmartPointer<vtkActor>::New();
-
-    texturedPlane->SetMapper(planeMapper);
-    texturedPlane->SetTexture(texture);
-
-    input->prop = texturedPlane;
-
-    return input;
-}
-
-std::shared_ptr<Context2DInput> Loader::loadGrid2DScene(const std::string & gridFilename, const std::string & xFilename, const std::string & yFilename)
-{
-    std::shared_ptr<Context2DInput> input = std::make_shared<Context2DInput>();
-    ParsedData * observation = loadData(gridFilename);
-    ParsedData * xDimensions = loadData(xFilename);
-    ParsedData * yDimensions = loadData(yFilename);
-
-    assert(observation->size() > 0);
-    assert(observation->at(0).size() > 0);
-
-    vtkSmartPointer<vtkTable> table = vtkSmartPointer<vtkTable>::New();
-    
-    int dimensions[3] = { static_cast<int>(observation->size()), static_cast<int>(observation->at(0).size()), 1 };
-
-
-    for (int c = 0; c < dimensions[0]; ++c) {
-        vtkSmartPointer<vtkVariantArray> columnData = vtkSmartPointer<vtkVariantArray>::New();
-        columnData->SetName(std::to_string(c).c_str());
-        for (int r = 0; r < dimensions[1]; ++r) {
-            columnData->InsertNextValue(observation->at(c).at(r));
-        }
-        table->AddColumn(columnData);
-    }
-
-    vtkSmartPointer<vtkHeatmapItem> heatmap = vtkSmartPointer<vtkHeatmapItem>::New();
-    heatmap->SetCellHeight(3);
-    heatmap->SetCellWidth(3);
-    heatmap->SetTable(table);
-
-    input->setContextItem(*heatmap);
+    input->setMapper(*planeMapper);
+    input->setTexture(*texture);
 
     return input;
 }

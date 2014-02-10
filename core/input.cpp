@@ -2,13 +2,8 @@
 
 #include <vtkInformationStringKey.h>
 #include <vtkActor.h>
-#include <vtkActor2D.h>
-#include <vtkDataSetMapper.h>
 #include <vtkPolyDataMapper.h>
-#include <vtkPolyDataMapper2D.h>
 #include <vtkPolyDataAlgorithm.h>
-#include <vtkContextItem.h>
-#include <vtkProperty2D.h>
 
 // macro defining the information key to access the name of the input in the mapper
 vtkInformationKeyMacro(Input, NameKey, String);
@@ -68,65 +63,51 @@ vtkMapper * Input3D::mapper()
     return m_mapper;
 }
 
-DataSetInput::DataSetInput(const std::string & name)
+GridDataInput::GridDataInput(const std::string & name)
 : Input(name)
 {
 }
 
-void DataSetInput::setData(vtkDataSet & data)
+void GridDataInput::setData(vtkDataSet & data)
 {
     m_data = &data;
 }
 
-void DataSetInput::setMinMaxValue(double minValue, double maxValue)
+void GridDataInput::setMinMaxValue(double minValue, double maxValue)
 {
     m_minMaxValue[0] = minValue;
     m_minMaxValue[1] = maxValue;
 }
 
-double * DataSetInput::minMaxValue()
+double * GridDataInput::minMaxValue()
 {
     return m_minMaxValue;
 }
 
-const double * DataSetInput::minMaxValue() const
+const double * GridDataInput::minMaxValue() const
 {
     return m_minMaxValue;
 }
 
-vtkActor2D * DataSetInput::createActor2D()
+void GridDataInput::setMapper(vtkPolyDataMapper & mapper)
 {
-    assert(mapper2D);
-    vtkActor2D * _actor = vtkActor2D::New();
-    _actor->SetMapper(mapper2D);
-    _actor->GetProperty()->SetPointSize(3);
-    return _actor;
+    m_mapper = &mapper;
+    setMapperInfo(m_mapper);
 }
 
-vtkActor * DataSetInput::createActor3D()
+void GridDataInput::setTexture(vtkTexture & texture)
 {
-    assert(mapper3D);
-    vtkActor * _actor = vtkActor::New();
-    _actor->SetMapper(mapper3D);
-    return _actor;
+    m_texture = &texture;
 }
 
-vtkActor * DataSetInput::createDataActor3D()
+vtkActor * GridDataInput::createTexturedPolygonActor() const
 {
-    assert(dataSetMapper);
-    vtkActor * _actor = vtkActor::New();
-    _actor->SetMapper(dataSetMapper);
-    return _actor;
-}
-
-void Context2DInput::setContextItem(vtkContextItem & item)
-{
-    m_contextItem = &item;
-}
-
-vtkContextItem * Context2DInput::contextItem() const
-{
-    return m_contextItem;
+    assert(m_mapper);
+    assert(m_texture);
+    vtkActor * actor = vtkActor::New();
+    actor->SetMapper(m_mapper);
+    actor->SetTexture(m_texture);
+    return actor;
 }
 
 void PolyDataInput::setPolyData(vtkPolyData & data)
