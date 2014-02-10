@@ -14,10 +14,21 @@
 #include <vtkBoundingBox.h>
 #include <vtkStructuredGridGeometryFilter.h>
 #include <vtkDataSetMapper.h>
+#include <vtkPolyDataMapper.h>
 #include <vtkHeatmapItem.h>
 #include <vtkTable.h>
 #include <vtkVariant.h>
 #include <vtkVariantArray.h>
+#include <vtkLookupTable.h>
+#include <vtkPolyDataMapper2D.h>
+#include <vtkVertexGlyphFilter.h>
+#include <vtkImageData.h>
+#include <vtkImageSlice.h>
+#include <vtkImageSliceMapper.h>
+#include <vtkActor.h>
+#include <vtkPlaneSource.h>
+#include <vtkExtractVOI.h>
+#include <vtkInformationStringKey.h>
 
 #include "input.h"
 #include "common/file_parser.h"
@@ -74,43 +85,77 @@ std::shared_ptr<DataSetInput> Loader::loadGrid(const std::string & gridFilename,
 
     int dimensions[3] = { static_cast<int>(observation->size()), static_cast<int>(observation->at(0).size()), 1 };
 
-    vtkStructuredGrid * sgrid = vtkStructuredGrid::New();
-    sgrid->SetDimensions(dimensions);
-
-    //vtkSmartPointer<vtkFloatArray> values = vtkSmartPointer<vtkFloatArray>::New();
-    vtkSmartPointer<vtkPoints> points = vtkSmartPointer<vtkPoints>::New();
+    vtkSmartPointer<vtkImageData> grid = vtkSmartPointer<vtkImageData>::New();
+    grid->SetExtent(0, dimensions[0] - 1, 0, dimensions[1] - 1, 0, 0);
 
     float minValue = std::numeric_limits<float>::max();
     float maxValue = std::numeric_limits<float>::lowest();
 
+    vtkSmartPointer<vtkFloatArray> dataArray = vtkSmartPointer<vtkFloatArray>::New();
+    dataArray->SetNumberOfComponents(1);
+    dataArray->SetNumberOfTuples(grid->GetNumberOfPoints());
     for (int r = 0; r < dimensions[1]; ++r) {
         vtkIdType rOffset = r * dimensions[0];
         for (int c = 0; c < dimensions[0]; ++c) {
-            vtkIdType offset = c + rOffset;
+            vtkIdType id = c + rOffset;
             float value = observation->at(c).at(r);
             if (value < minValue)
                 minValue = value;
             if (value > maxValue)
                 maxValue = value;
-            points->InsertPoint(offset, xDimensions->at(c).at(r), yDimensions->at(c).at(r), value);
+            dataArray->SetValue(id, value);
         }
     }
 
-    sgrid->SetPoints(points);
-
-    vtkSmartPointer<vtkStructuredGridGeometryFilter> filter = vtkSmartPointer<vtkStructuredGridGeometryFilter>::New();
-    filter->SetInputData(sgrid);
-    filter->SetExtent(0, dimensions[0] - 1, 1, dimensions[1] - 1, 0, 0);
-    filter->Update();
-
-    input->setDataSet(*sgrid);
-
-    // explicity create mapper, to use the filter as input instead of the grid directly
-    vtkDataSetMapper * mapper = vtkDataSetMapper::New();
-    mapper->SetInputData(filter->GetOutput());
-    input->m_mapper = mapper;
-
     input->setMinMaxValue(minValue, maxValue);
+
+    grid->GetPointData()->SetScalars(dataArray);
+
+    input->setData(*grid);
+
+    vtkSmartPointer<vtkLookupTable> lut = vtkSmartPointer<vtkLookupTable>::New();
+    lut->SetTableRange(minValue, maxValue);
+    lut->SetNumberOfColors(static_cast<vtkIdType>(std::ceil(maxValue - minValue)) * 10);
+    lut->SetHueRange(0.66667, 0.0);
+    lut->SetValueRange(0.9, 0.9);
+    lut->SetSaturationRange(1.0, 1.0);
+    lut->SetAlphaRange(1.0, 1.0);
+    lut->Build();
+
+    input->lookupTable = lut;
+
+    vtkSmartPointer<vtkExtractVOI> voi = vtkSmartPointer<vtkExtractVOI>::New();
+    voi->SetInputData(grid);
+    voi->SetVOI(0, dimensions[0] - 1, 0, dimensions[1] - 1, 0, 0);
+    voi->Update();
+
+    vtkSmartPointer<vtkTexture> texture = vtkSmartPointer<vtkTexture>::New();
+    texture->SetLookupTable(lut);
+    texture->SetInputData(voi->GetOutput());
+    texture->MapColorScalarsThroughLookupTableOn();
+    texture->InterpolateOn();
+    texture->SetQualityTo32Bit();
+
+
+    vtkSmartPointer<vtkPlaneSource> plane = vtkSmartPointer<vtkPlaneSource>::New();
+    plane->SetXResolution(dimensions[0]);
+    plane->SetYResolution(dimensions[1]);
+    float minXValue = xDimensions->at(0).at(0);
+    float maxXValue = xDimensions->at(xDimensions->size() - 1).at(0);
+    float minYValue = yDimensions->at(0).at(0);
+    float maxYValue = yDimensions->at(0).at(yDimensions->at(0).size() - 1);
+    plane->SetOrigin(0, 0, 0);
+    plane->SetPoint1(-minXValue + maxXValue, 0, 0);
+    plane->SetPoint2(0, -minYValue + maxYValue, 0);
+    vtkSmartPointer<vtkPolyDataMapper> planeMapper = vtkSmartPointer<vtkPolyDataMapper>::New();
+    planeMapper->SetInputConnection(plane->GetOutputPort());
+
+    vtkSmartPointer<vtkActor> texturedPlane = vtkSmartPointer<vtkActor>::New();
+
+    texturedPlane->SetMapper(planeMapper);
+    texturedPlane->SetTexture(texture);
+
+    input->prop = texturedPlane;
 
     return input;
 }

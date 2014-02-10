@@ -5,16 +5,21 @@
 #include <vtkSmartPointer.h>
 
 class vtkDataSet;
-class vtkMapper;
+class vtkAbstractMapper;
+class vtkMapper; // 3d mapper
 class vtkDataSetMapper;
 class vtkPolyData;
 class vtkPolyDataMapper;
+class vtkPolyDataMapper2D;
 class vtkActor;
+class vtkActor2D;
 class vtkInformationStringKey;
 class vtkPolyDataAlgorithm;
 class vtkAlgorithmOutput;
 class vtkContextItem;
 class vtkContextActor;
+class vtkLookupTable;
+class vtkProp3D;
 
 class Input {
 public:
@@ -22,36 +27,54 @@ public:
     virtual ~Input();
     const std::string name;
 
-    virtual vtkActor * createActor();
-    virtual vtkMapper * mapper();
     virtual vtkDataSet * data() const;
 
     static vtkInformationStringKey * NameKey();
-
+    
 protected:
-    /** subclass should override this to create a vtkMapper mapping to specific input data */
-    virtual vtkMapper * createDataMapper() const = 0;
+    void setMapperInfo(vtkAbstractMapper * mapper) const;
+
     vtkSmartPointer<vtkDataSet> m_data;
-    vtkSmartPointer<vtkMapper> m_mapper;
 };
 
 class DataSetInput : public Input {
 public:
     DataSetInput(const std::string & name);
-    virtual void setDataSet(vtkDataSet & dataSet);
-    virtual vtkDataSet * dataSet() const;
-    virtual vtkDataSetMapper * dataSetMapper();
+    void setData(vtkDataSet & data);
+    vtkSmartPointer<vtkPolyDataMapper2D> mapper2D;
+    vtkSmartPointer<vtkPolyDataMapper> mapper3D;
+    vtkSmartPointer<vtkDataSetMapper> dataSetMapper;
     virtual void setMinMaxValue(double min, double max);
     virtual double * minMaxValue();
     virtual const double * minMaxValue() const;
 
+    virtual vtkActor2D * createActor2D();
+    virtual vtkActor * createActor3D();
+    virtual vtkActor * createDataActor3D();
+
+    vtkSmartPointer<vtkProp3D> prop;
+
+    vtkSmartPointer<vtkLookupTable> lookupTable;
+
 protected:
     double m_minMaxValue[2];
-    virtual vtkMapper * createDataMapper() const override;
-    friend class Loader;
 };
 
-class PolyDataInput : public Input {
+class Input3D : public Input {
+public:
+    Input3D(const std::string & name);
+    virtual ~Input3D();
+
+    virtual vtkActor * createActor();
+    virtual vtkMapper * mapper();
+
+protected:
+    /** subclass should override this to create a vtkMapper mapping to specific input data */
+    virtual vtkMapper * createDataMapper() const = 0;
+    vtkSmartPointer<vtkMapper> m_mapper;
+};
+
+class PolyDataInput : public Input3D {
 public:
     PolyDataInput(const std::string & name);
 

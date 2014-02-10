@@ -21,6 +21,7 @@
 #include <vtkActor.h>
 #include <vtkAxisActor.h>
 #include <vtkCubeAxesActor.h>
+#include <vtkScalarBarActor.h>
 // rendering
 #include <vtkRenderer.h>
 #include <vtkRenderWindow.h>
@@ -38,6 +39,10 @@
 #include <vtkContextActor.h>
 #include <vtkContextScene.h>
 #include <vtkHeatmapItem.h>
+
+#include <vtkVertexGlyphFilter.h>
+#include <vtkPolyDataMapper2D.h>
+#include <vtkProperty2D.h>
 
 #include "core/loader.h"
 #include "core/input.h"
@@ -86,10 +91,10 @@ void Viewer::setupRenderer()
     m_infoRenderer->SetBackground(1, 1, 1);
     m_ui->qvtkInfo->GetRenderWindow()->AddRenderer(m_infoRenderer);
 
-    vtkCamera & camera = *m_mainRenderer->GetActiveCamera();
-    camera.SetPosition(0.3, -1, 0.3);
-    camera.SetViewUp(0, 0, 1);
-    m_mainRenderer->ResetCamera();
+    //vtkCamera & camera = *m_mainRenderer->GetActiveCamera();
+    //camera.SetPosition(0.3, -1, 0.3);
+    //camera.SetViewUp(0, 0, 1);
+    //m_mainRenderer->ResetCamera();
 }
 
 void Viewer::setupInteraction()
@@ -117,7 +122,7 @@ void Viewer::setupInteraction()
 void Viewer::loadInputs()
 {
     {
-        std::shared_ptr<Input> indexedSphere = Loader::loadIndexedTriangles(
+        std::shared_ptr<Input3D> indexedSphere = Loader::loadIndexedTriangles(
             "data/Spcoord.txt", 0, 1,
             "data/Svert.txt", 0);
         m_inputs.push_back(indexedSphere);
@@ -168,26 +173,20 @@ void Viewer::loadInputs()
     }
 
     {
-        //std::shared_ptr<DataSetInput> heatMap = Loader::loadGrid("data/observation.txt", "data/X.txt", "data/Y.txt");
-        //m_inputs.push_back(heatMap);
+        std::shared_ptr<DataSetInput> heatMap = Loader::loadGrid("data/observation.txt", "data/X.txt", "data/Y.txt");
+        m_inputs.push_back(heatMap);
 
-        //vtkSmartPointer<vtkLookupTable> lut = vtkSmartPointer<vtkLookupTable>::New();
-        //lut->SetHueRange(0.66667, 0.0);
-        //lut->Build();
+        m_mainRenderer->AddViewProp(heatMap->prop);
 
-        //heatMap->mapper()->SetScalarRange(heatMap->minMaxValue());
-        //heatMap->mapper()->SetLookupTable(lut);
+        vtkScalarBarActor * heatBars = vtkScalarBarActor::New();
+        heatBars->SetTitle("observation");
+        heatBars->SetLookupTable(heatMap->lookupTable);
+        m_mainRenderer->AddViewProp(heatBars);
 
-        //m_mainRenderer->AddViewProp(heatMap->createActor());
-
-        vtkSmartPointer<vtkContextScene> contextScene = vtkSmartPointer<vtkContextScene>::New();
-        vtkSmartPointer<vtkContextActor> contextActor = vtkSmartPointer<vtkContextActor>::New();
-        contextActor->SetScene(contextScene);
-        m_mainRenderer->AddViewProp(contextActor);
-
-        std::shared_ptr<Context2DInput> gridInput = Loader::loadGrid2DScene("data/observation.txt", "data/X.txt", "data/Y.txt");
-
-        contextScene->AddItem(gridInput->contextItem());
+        ((vtkActor*) heatMap->prop.Get())->GetTexture()->Load(m_mainRenderer);
+/*
+        vtkSmartPointer<vtkCubeAxesActor> heatMapAxis = vtkSmartPointer<vtkCubeAxesActor>::New();
+        heatMapAxis->SetBounds(heatMap->)*/
     }
 }
 
