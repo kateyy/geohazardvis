@@ -122,6 +122,34 @@ void Viewer::setupInteraction()
 void Viewer::loadInputs()
 {
     {
+        std::shared_ptr<ProcessedInput> processedVolcano = Loader::loadFileTriangulated("data/Tcoord_topo.txt", 1);
+        m_inputs.push_back(processedVolcano);
+
+        // use the elevation for colorized visualization
+        vtkSmartPointer<vtkElevationFilter> elevation = vtkSmartPointer<vtkElevationFilter>::New();
+        elevation->SetInputConnection(processedVolcano->algorithm->GetOutputPort());
+        elevation->SetLowPoint(0, 0, 4);
+        elevation->SetHighPoint(0, 0, 0);
+
+        vtkSmartPointer<vtkPolyDataMapper> mapper = processedVolcano->createAlgorithmMapper(
+            elevation->GetOutputPort());
+
+        vtkSmartPointer<vtkActor> volcanoActor = vtkSmartPointer<vtkActor>::New();
+        volcanoActor->SetMapper(mapper);
+        vtkProperty & prop = *volcanoActor->GetProperty();
+        prop.SetOpacity(0.6);
+        prop.SetInterpolationToFlat();
+        prop.SetEdgeVisibility(true);
+        prop.SetEdgeColor(0, 0, 0);
+        prop.SetBackfaceCulling(false);
+        prop.SetLighting(false);
+
+        m_loadedInputs.insert("volcano", QVector<vtkSmartPointer<vtkProp>>({
+            volcanoActor,
+            createAxes(processedVolcano->data()->GetBounds(), *m_mainRenderer) }));
+    }
+
+    {
         std::shared_ptr<Input3D> indexedSphere = Loader::loadIndexedTriangles(
             "data/Spcoord.txt", 0, 1,
             "data/Svert.txt", 0);
@@ -130,7 +158,7 @@ void Viewer::loadInputs()
         vtkSmartPointer<vtkActor> sphereActor = indexedSphere->createActor();
         vtkProperty & prop = *sphereActor->GetProperty();
         prop.SetColor(1, 1, 0);
-        prop.SetOpacity(0.9);
+        prop.SetOpacity(1.0);
         prop.SetInterpolationToGouraud();
         prop.SetEdgeVisibility(true);
         prop.SetEdgeColor(0, 0, 0);
@@ -138,58 +166,30 @@ void Viewer::loadInputs()
         prop.SetBackfaceCulling(false);
         prop.SetLighting(true);
 
-        vtkSmartPointer<vtkActor> sphereActorInfo = indexedSphere->createActor();
-        sphereActorInfo->ShallowCopy(sphereActor);
-
-        //m_mainRenderer->AddViewProp(sphereActor);
         m_infoRenderer->AddViewProp(sphereActor);
-    }
 
-    {
-        //std::shared_ptr<ProcessedInput> processedVolcano = Loader::loadFileTriangulated("data/Tcoord_topo.txt", 1);
-        //m_inputs.push_back(processedVolcano);
-
-        //// use the elevation for colorized visualization
-        //vtkSmartPointer<vtkElevationFilter> elevation = vtkSmartPointer<vtkElevationFilter>::New();
-        //elevation->SetInputConnection(processedVolcano->algorithm->GetOutputPort());
-        //elevation->SetLowPoint(0, 0, 4);
-        //elevation->SetHighPoint(0, 0, 0);
-
-        //vtkSmartPointer<vtkPolyDataMapper> mapper = processedVolcano->createAlgorithmMapper(
-        //    elevation->GetOutputPort());
-
-        //vtkSmartPointer<vtkActor> actor = vtkSmartPointer<vtkActor>::New();
-        //actor->SetMapper(mapper);
-        //vtkProperty & prop = *actor->GetProperty();
-        //prop.SetOpacity(0.6);
-        //prop.SetInterpolationToFlat();
-        //prop.SetEdgeVisibility(true);
-        //prop.SetEdgeColor(0, 0, 0);
-        //prop.SetBackfaceCulling(false);
-        //prop.SetLighting(false);
-
-        //m_mainRenderer->AddActor(actor);
-        //setupAxis(*processedVolcano, *m_mainRenderer);
+        m_loadedInputs.insert("sphere", QVector<vtkSmartPointer<vtkProp>>({ sphereActor }));
+        m_loadedInputs["volcano"].push_back(sphereActor);
     }
 
     {
         std::shared_ptr<GridDataInput> heatMap = Loader::loadGrid("data/observation.txt", "data/X.txt", "data/Y.txt");
         m_inputs.push_back(heatMap);
 
-        m_mainRenderer->AddViewProp(heatMap->createTexturedPolygonActor());
-
         vtkScalarBarActor * heatBars = vtkScalarBarActor::New();
         heatBars->SetTitle("observation");
         heatBars->SetLookupTable(heatMap->lookupTable);
-        m_mainRenderer->AddViewProp(heatBars);
 
-        setupAxis(heatMap->bounds, *m_mainRenderer);
+        m_loadedInputs.insert("observation", QVector<vtkSmartPointer<vtkProp>>({
+            heatMap->createTexturedPolygonActor(),
+            heatBars,
+            createAxes(heatMap->bounds, *m_mainRenderer) }));
     }
 }
 
-void Viewer::setupAxis(double bounds[6], vtkRenderer & renderer)
+vtkCubeAxesActor * Viewer::createAxes(double bounds[6], vtkRenderer & renderer)
 {
-    vtkSmartPointer<vtkCubeAxesActor> cubeAxes = vtkSmartPointer<vtkCubeAxesActor>::New();
+    vtkCubeAxesActor * cubeAxes = vtkCubeAxesActor::New();
     cubeAxes->SetBounds(bounds);
     cubeAxes->SetCamera(m_mainRenderer->GetActiveCamera());
     cubeAxes->SetFlyModeToOuterEdges();
@@ -222,7 +222,7 @@ void Viewer::setupAxis(double bounds[6], vtkRenderer & renderer)
 
     cubeAxes->SetRebuildAxes(true);
 
-    renderer.AddViewProp(cubeAxes);
+    return cubeAxes;
 }
 
 void Viewer::ShowInfo(const QStringList & info)
@@ -232,4 +232,28 @@ void Viewer::ShowInfo(const QStringList & info)
     m_ui->infoBox->addItems(info);
 
     setToolTip(info.join('\n'));
+}
+
+void Viewer::setCurrentMainInput(const QString & name)
+{
+    m_mainRenderer->RemoveAllViewProps();
+    for (const vtkSmartPointer<vtkProp> & prop : m_loadedInputs[name]) {
+        m_mainRenderer->AddViewProp(prop);
+    }
+    m_mainRenderer->ResetCamera();
+}
+
+void Viewer::on_actionSphere_triggered()
+{
+    setCurrentMainInput("sphere");
+}
+
+void Viewer::on_actionVolcano_triggered()
+{
+    setCurrentMainInput("volcano");
+}
+
+void Viewer::on_actionObservation_triggered()
+{
+    setCurrentMainInput("observation");
 }

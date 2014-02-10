@@ -86,6 +86,10 @@
     <property name="title">
      <string>File</string>
     </property>
+    <addaction name="actionSphere"/>
+    <addaction name="actionVolcano"/>
+    <addaction name="actionObservation"/>
+    <addaction name="separator"/>
     <addaction name="actionExit"/>
    </widget>
    <addaction name="menuFile"/>
@@ -97,6 +101,30 @@
    </property>
    <property name="shortcut">
     <string>Esc</string>
+   </property>
+  </action>
+  <action name="actionSphere">
+   <property name="text">
+    <string>sphere</string>
+   </property>
+   <property name="shortcut">
+    <string>1</string>
+   </property>
+  </action>
+  <action name="actionVolcano">
+   <property name="text">
+    <string>volcano</string>
+   </property>
+   <property name="shortcut">
+    <string>2</string>
+   </property>
+  </action>
+  <action name="actionObservation">
+   <property name="text">
+    <string>observation</string>
+   </property>
+   <property name="shortcut">
+    <string>3</string>
    </property>
   </action>
  </widget>

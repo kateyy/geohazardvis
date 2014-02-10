@@ -4,19 +4,18 @@
 #include <memory>
 
 #include <QMainWindow>
+#include <QMap>
 
 #include <vtkSmartPointer.h>
 
 class Ui_Viewer;
-class vtkQtTableView;
 class vtkRenderer;
 class vtkRenderWindowInteractor;
-class vtkActor;
-class vtkPolyDataMapper;
+class vtkProp;
+class vtkCubeAxesActor;
 
 class QStringList;
 
-class vtkPointPicker;
 class Input;
 
 class Viewer : public QMainWindow
@@ -29,6 +28,10 @@ public:
 public slots:
     void ShowInfo(const QStringList &info);
 
+    void on_actionSphere_triggered();
+    void on_actionVolcano_triggered();
+    void on_actionObservation_triggered();
+
 private:
     Ui_Viewer *m_ui;
 
@@ -39,8 +42,12 @@ private:
 
     std::list<std::shared_ptr<Input>> m_inputs;
 
+    QMap<QString, QVector<vtkSmartPointer<vtkProp>>> m_loadedInputs;
+
+    void setCurrentMainInput(const QString & name);
+
     void setupRenderer();
     void setupInteraction();
     void loadInputs();
-    void setupAxis(double bounds[6], vtkRenderer & renderer);
+    vtkCubeAxesActor * createAxes(double bounds[6], vtkRenderer & renderer);
 };

@@ -5,6 +5,7 @@ set(WIN32_COMPILE_DEFS
     _UNICODE					# Use unicode
 #    _SCL_SECURE_NO_WARNINGS	    # Calling any one of the potentially unsafe methods in the Standard C++ Library
 #    _CRT_SECURE_NO_DEPRECATE	# Disable CRT deprecation warnings
+    Q_COMPILER_INITIALIZER_LISTS
 )
 
 set(DEFAULT_COMPILE_DEFS_DEBUG
