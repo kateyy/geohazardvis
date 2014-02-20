@@ -13,7 +13,13 @@
 bool populateIOVectors(const std::string inputFileName,
 					   std::vector<std::vector<t_FP> > &ioVectors);
 bool parseIOFile(const std::string inputFileName, std::vector<t_FP> &parsedData, t_UInt & nbColumns);
+bool parseIOStream(std::ifstream & inputStream, std::vector<t_FP> &parsedData, unsigned long numValues);
 void populateVectorsFromData(const std::vector<t_FP> &parsedData,
 							 std::vector<std::vector<t_FP> > &vectorizedData);
+bool populateIOVectors(std::ifstream & inputStream,
+    std::vector<std::vector<t_FP> > &ioVectors,
+    unsigned long numTuples,
+    unsigned short componentsPerTuple);
+
 
 #endif /* FILE_PARSER_H_ */

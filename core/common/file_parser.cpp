@@ -34,6 +34,56 @@ bool populateIOVectors(const string inputFileName,
 	return true;
 }
 
+bool populateIOVectors(ifstream & inputStream,
+    vector<vector<t_FP> > &ioVectors,
+    unsigned long numTuples,
+    unsigned short componentsPerTuple) {
+    assert(ioVectors.empty());
+
+    vector<t_FP> parsedData;
+
+    if (!parseIOStream(inputStream, parsedData, numTuples * componentsPerTuple)) {
+        return false;
+    }
+
+    ioVectors.resize(componentsPerTuple);
+
+    populateVectorsFromData(parsedData, ioVectors);
+
+    return true;
+}
+
+bool parseIOStream(ifstream & inputStream, vector<t_FP> &parsedData, unsigned long numValues) {
+    string input;
+    t_FP input_FP;
+
+    assert(parsedData.empty());
+
+    if (inputStream.fail()) {
+        cout << endl << "\t" << "parseIOStream --- failed!" << endl;
+        return false;
+    }
+
+    unsigned long processedValue = 0;
+    while (++processedValue <= numValues && !inputStream.eof()) {
+        inputStream >> input;
+
+        if (input == "NaN") {
+            input_FP = std::numeric_limits<double>::quiet_NaN();
+        }
+        else {
+            input_FP = atof(input.c_str());
+        }
+
+        parsedData.push_back(input_FP);
+    }
+
+    if (processedValue < numValues)
+        cout << endl << "\t" << "parseIOStream --- failed! (read less values than expected)" << endl;
+
+    return (processedValue == numValues);
+}
+
 bool parseIOFile(const string inputFileName, vector<t_FP> &parsedData, t_UInt & nbColumns) {
 	string input;
     t_FP input_FP;

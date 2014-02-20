@@ -7,6 +7,8 @@ set ( SOURCES
     loader.cpp
     input.h
     input.cpp
+    textfilereader.h
+    textfilereader.cpp
     common/ebem3d_common.h
     common/file_parser.h
     common/file_parser.cpp

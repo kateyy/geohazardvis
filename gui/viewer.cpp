@@ -206,6 +206,9 @@ void Viewer::setCurrentMainInput(const QString & name)
     for (const vtkSmartPointer<vtkProp> & prop : m_loadedInputs[name]) {
         m_mainRenderer->AddViewProp(prop);
     }
+    vtkCamera & camera = *m_mainRenderer->GetActiveCamera();
+    camera.SetPosition(0, 0, 1);
+    camera.SetViewUp(0, 1, 0);
     m_mainRenderer->ResetCamera();
     m_ui->qvtkMain->GetRenderWindow()->Render();
 }
