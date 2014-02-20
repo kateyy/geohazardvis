@@ -8,14 +8,12 @@
 #include <vtkTriangle.h>
 #include <vtkPolyData.h>
 #include <vtkDelaunay2D.h>
-#include <vtkProperty.h>
 #include <vtkCellArray.h>
 #include <vtkPolyDataMapper.h>
 #include <vtkLookupTable.h>
 #include <vtkImageData.h>
 #include <vtkPlaneSource.h>
 #include <vtkExtractVOI.h>
-#include <vtkInformationStringKey.h>
 
 #include "input.h"
 #include "common/file_parser.h"
@@ -171,7 +169,7 @@ vtkPolyData * Loader::parsePoints(const ParsedData & parsedData, t_UInt firstCol
     size_t nbRows = parsedData.at(firstColumn).size();
     std::vector<vtkIdType> pointIds(nbRows);
 
-    // copy triangle vertices to vtk point list
+    // copy triangle vertexes to vtk point list
     for (size_t row = 0; row < nbRows; ++row) {
         pointIds.at(row) = points->InsertNextPoint(parsedData[firstColumn][row], parsedData[firstColumn + 1][row], parsedData[firstColumn + 2][row]);
     }
@@ -199,7 +197,7 @@ vtkPolyData * Loader::parseIndexedTriangles(
 
     std::vector<vtkIdType> pointIds(nbVertices);
 
-    // to let the internal indices start with 0
+    // to let the internal indexes start with 0
     t_UInt indexOffset = std::llround(parsedVertexData[vertexIndexColumn][0]);
 
     for (size_t row = 0; row < nbVertices; ++row) {
@@ -211,8 +209,8 @@ vtkPolyData * Loader::parseIndexedTriangles(
 
     vtkSmartPointer<vtkTriangle> triangle = vtkSmartPointer<vtkTriangle>::New();
     for (size_t row = 0; row < nbTriangles; ++row) {
-        // set the indices for the three triangle vertices
-        // hopefully, these indices map to the vertex indices from parsedVertexData
+        // set the indexes for the three triangle vertexes
+        // hopefully, these indexes map to the vertex indexes from parsedVertexData
         triangle->GetPointIds()->SetId(0, std::llround(parsedIndexData[firstIndexColumn][row]) - indexOffset);
         triangle->GetPointIds()->SetId(1, std::llround(parsedIndexData[firstIndexColumn+1][row]) - indexOffset);
         triangle->GetPointIds()->SetId(2, std::llround(parsedIndexData[firstIndexColumn+2][row]) - indexOffset);

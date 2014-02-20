@@ -9,8 +9,6 @@
 
 class vtkPolyDataMapper;
 class vtkPolyData;
-class vtkActor;
-class vtkPolyDataAlgorithm;
 
 class Input;
 class GridDataInput;

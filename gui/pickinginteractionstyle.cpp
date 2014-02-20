@@ -5,8 +5,6 @@
 #include <vtkObjectFactory.h>
 #include <vtkSmartPointer.h>
 
-#include <vtkPropPicker.h>
-#include <vtkCellPicker.h>
 #include <vtkPointPicker.h>
 
 #include <gui/viewer.h>

@@ -3,8 +3,6 @@ set( TARGET core )
 message( STATUS ${TARGET} )
 
 set ( SOURCES
-    datagenerator.cpp
-    datagenerator.h
     loader.h
     loader.cpp
     input.h

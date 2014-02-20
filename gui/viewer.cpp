@@ -5,7 +5,6 @@
 
 // utility etc
 #include <vtkSmartPointer.h>
-#include <vtkTransform.h>
 #include <vtkProperty.h>
 #include <vtkTextProperty.h>
 #include <vtkCamera.h>
@@ -19,51 +18,18 @@
 #include <vtkPolyDataMapper.h>
 // actors
 #include <vtkActor.h>
-#include <vtkAxisActor.h>
 #include <vtkCubeAxesActor.h>
 #include <vtkScalarBarActor.h>
 // rendering
 #include <vtkRenderer.h>
 #include <vtkRenderWindow.h>
 // interaction
-#include <vtkRenderWindowInteractor.h>
-#include <vtkInteractorStyleTrackballCamera.h>
 #include "pickinginteractionstyle.h"
-#include <vtkBoxWidget.h>
-#include <vtkPointPicker.h>
 // gui/qt
 #include <QVTKWidget.h>
-#include <QTreeView>
-
-// vtk 2D scene
-#include <vtkContextActor.h>
-#include <vtkContextScene.h>
-#include <vtkHeatmapItem.h>
-
-#include <vtkVertexGlyphFilter.h>
-#include <vtkPolyDataMapper2D.h>
-#include <vtkProperty2D.h>
 
 #include "core/loader.h"
 #include "core/input.h"
-
-class TransformCallback : public vtkCommand
-{
-public:
-    static TransformCallback *New()
-    {
-        return new TransformCallback;
-    }
-    virtual void Execute(vtkObject *caller, unsigned long, void*)
-    {
-        vtkTransform *t = vtkTransform::New();
-        vtkBoxWidget *widget = dynamic_cast<vtkBoxWidget*>(caller);
-        assert(widget);
-        widget->GetTransform(t);
-        widget->GetProp3D()->SetUserTransform(t);
-        t->Delete();
-    }
-};
 
 Viewer::Viewer()
 : m_ui(new Ui_Viewer())
@@ -241,6 +207,7 @@ void Viewer::setCurrentMainInput(const QString & name)
         m_mainRenderer->AddViewProp(prop);
     }
     m_mainRenderer->ResetCamera();
+    m_ui->qvtkMain->GetRenderWindow()->Render();
 }
 
 void Viewer::on_actionSphere_triggered()

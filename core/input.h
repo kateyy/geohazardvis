@@ -13,7 +13,6 @@ class vtkActor;
 class vtkInformationStringKey;
 class vtkPolyDataAlgorithm;
 class vtkAlgorithmOutput;
-class vtkContextItem;
 class vtkLookupTable;
 class vtkTexture;
 
