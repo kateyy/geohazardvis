@@ -67,7 +67,7 @@ void Viewer::setupInteraction()
 {
     vtkSmartPointer<PickingInteractionStyle> interactStyle = vtkSmartPointer<PickingInteractionStyle>::New();
     interactStyle->SetDefaultRenderer(m_mainRenderer);
-    interactStyle->setViewer(*this);
+    connect(&interactStyle->pickingInfo, SIGNAL(infoSent(const QStringList&)), SLOT(ShowInfo(const QStringList&)));
     m_mainInteractor = vtkSmartPointer<vtkRenderWindowInteractor>::New();
     m_mainInteractor->SetInteractorStyle(interactStyle);
     m_mainInteractor->SetRenderWindow(m_ui->qvtkMain->GetRenderWindow());
@@ -77,7 +77,8 @@ void Viewer::setupInteraction()
 
     vtkSmartPointer<PickingInteractionStyle> interactStyleInfo = vtkSmartPointer<PickingInteractionStyle>::New();
     interactStyleInfo->SetDefaultRenderer(m_infoRenderer);
-    interactStyleInfo->setViewer(*this);
+
+    connect(&interactStyleInfo->pickingInfo, SIGNAL(infoSent(const QStringList&)), SLOT(ShowInfo(const QStringList&)));
     m_infoInteractor = vtkSmartPointer<vtkRenderWindowInteractor>::New();
     m_infoInteractor->SetInteractorStyle(interactStyleInfo);
     m_infoInteractor->SetRenderWindow(m_ui->qvtkInfo->GetRenderWindow());

@@ -3,8 +3,6 @@
 #include <vtkInteractorStyleTrackballCamera.h>
 #include "gui/pickinginfo.h"
 
-class Viewer;
-
 class PickingInteractionStyle : public vtkInteractorStyleTrackballCamera
 {
 public:
@@ -15,13 +13,9 @@ public:
 
     virtual void OnMouseMove() override;
     virtual void OnLeftButtonDown() override;
-   
-    void setViewer(const Viewer & viewer);
+
+    const PickingInfo pickingInfo; // qt object used to create qt events for vtk pick events
 
 protected:
     void pick();
-
-    const Viewer * m_viewer;
-
-    const PickingInfo m_pickingInfo; // qt object used to create qt events for vtk pick events
 };

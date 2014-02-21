@@ -13,7 +13,6 @@
 #include <vtkLookupTable.h>
 #include <vtkImageData.h>
 #include <vtkPlaneSource.h>
-#include <vtkExtractVOI.h>
 
 #include "input.h"
 #include "common/file_parser.h"
@@ -116,14 +115,9 @@ std::shared_ptr<GridDataInput> Loader::loadGrid(const std::string & gridFilename
 
     input->lookupTable = lut;
 
-    vtkSmartPointer<vtkExtractVOI> voi = vtkSmartPointer<vtkExtractVOI>::New();
-    voi->SetInputData(grid);
-    voi->SetVOI(0, dimensions[0] - 1, 0, dimensions[1] - 1, 0, 0);
-    voi->Update();
-
     vtkSmartPointer<vtkTexture> texture = vtkSmartPointer<vtkTexture>::New();
     texture->SetLookupTable(lut);
-    texture->SetInputData(voi->GetOutput());
+    texture->SetInputData(grid);
     texture->MapColorScalarsThroughLookupTableOn();
     texture->InterpolateOn();
     texture->SetQualityTo32Bit();
