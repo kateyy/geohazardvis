@@ -14,17 +14,18 @@ class Input;
 class GridDataInput;
 class PolyDataInput;
 class ProcessedInput;
+struct ReadDataset;
 
 class Loader
 {
 public:
-    static std::shared_ptr<PolyDataInput> loadIndexedTriangles(const std::string & inputFileName);
-    static std::shared_ptr<GridDataInput> loadGrid(const std::string & inputFileName);
+    static std::shared_ptr<Input> readFile(const std::string filename);
 
 protected:
+    static void loadIndexedTriangles(PolyDataInput & input, const std::vector<ReadDataset> & datasets);
+    static void loadGrid(GridDataInput & input, const std::vector<ReadDataset> & datasets);
+
     typedef std::vector<std::vector<t_FP>> InputVector;
-
-protected:
     static InputVector * loadData(const std::string & filename);
     static vtkPolyData * parsePoints(const InputVector & parsedData, t_UInt firstColumn);
     static vtkPolyData * parseIndexedTriangles(

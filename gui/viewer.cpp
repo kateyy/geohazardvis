@@ -56,11 +56,6 @@ void Viewer::setupRenderer()
     m_infoRenderer = vtkSmartPointer<vtkRenderer>::New();
     m_infoRenderer->SetBackground(1, 1, 1);
     m_ui->qvtkInfo->GetRenderWindow()->AddRenderer(m_infoRenderer);
-
-    //vtkCamera & camera = *m_mainRenderer->GetActiveCamera();
-    //camera.SetPosition(0.3, -1, 0.3);
-    //camera.SetViewUp(0, 0, 1);
-    //m_mainRenderer->ResetCamera();
 }
 
 void Viewer::setupInteraction()
@@ -89,25 +84,9 @@ void Viewer::setupInteraction()
 void Viewer::loadInputs()
 {
     {
-        /*std::shared_ptr<ProcessedInput> processedVolcano = Loader::loadFileTriangulated("data/Tcoord_topo.txt", 1);
-        m_inputs.push_back(processedVolcano);*/
-
-        std::shared_ptr<Input3D> volcano = Loader::loadIndexedTriangles("data/volcano.txt");
+        std::shared_ptr<Input3D> volcano = std::dynamic_pointer_cast<Input3D>(Loader::readFile("data/volcano.txt"));
+        assert(volcano);
         m_inputs.push_back(volcano);
-
-
-        // use the elevation for colorized visualization
- /*       vtkSmartPointer<vtkElevationFilter> elevation = vtkSmartPointer<vtkElevationFilter>::New();
-        elevation->SetInputConnection(processedVolcano->algorithm->GetOutputPort());
-        elevation->SetLowPoint(0, 0, 4);
-        elevation->SetHighPoint(0, 0, 0);*/
-
-        //vtkSmartPointer<vtkPolyDataMapper> mapper = processedVolcano->createAlgorithmMapper(
-        //    elevation->GetOutputPort());
-
-        /*vtkSmartPointer<vtkActor> volcanoActor = vtkSmartPointer<vtkActor>::New();
-        volcanoActor->SetMapper(mapper);*/
-        //vtkProperty & prop = *volcanoActor->GetProperty();
 
         vtkSmartPointer<vtkActor> volcanoActor = volcano->createActor();
         vtkProperty & prop = *volcanoActor->GetProperty();
@@ -124,13 +103,10 @@ void Viewer::loadInputs()
     }
 
     {
-        std::shared_ptr<Input3D> indexedSphere = Loader::loadIndexedTriangles("data/sphere.txt");
-        m_inputs.push_back(indexedSphere);
+        std::shared_ptr<Input3D> indexedSphere = std::dynamic_pointer_cast<Input3D>(Loader::readFile("data/sphere.txt"));
+        assert(indexedSphere);
 
-  /*      std::shared_ptr<Input3D> indexedSphere = Loader::loadIndexedTriangles(
-            "data/Spcoord.txt", 0, 1,
-            "data/Svert.txt", 0);
-        m_inputs.push_back(indexedSphere);*/
+        m_inputs.push_back(indexedSphere);
 
         vtkSmartPointer<vtkActor> sphereActor = indexedSphere->createActor();
         vtkProperty & prop = *sphereActor->GetProperty();
@@ -150,8 +126,8 @@ void Viewer::loadInputs()
     }
 
     {
-        //std::shared_ptr<GridDataInput> heatMap = Loader::loadGrid("data/observation.txt", "data/X.txt", "data/Y.txt");
-        std::shared_ptr<GridDataInput> heatMap = Loader::loadGrid("data/displacements.txt");
+        std::shared_ptr<GridDataInput> heatMap = std::dynamic_pointer_cast<GridDataInput>(Loader::readFile("data/displacements.txt"));
+        assert(heatMap);
         m_inputs.push_back(heatMap);
 
         vtkScalarBarActor * heatBars = vtkScalarBarActor::New();

@@ -20,22 +20,34 @@
 
 using namespace std;
 
-shared_ptr<PolyDataInput> Loader::loadIndexedTriangles(const std::string & inputFileName)
+shared_ptr<Input> Loader::readFile(const string filename)
 {
-    vector<ReadDataset> readDataSets;
-    string dataSetName;
-    shared_ptr<Input> genInput = TextFileReader::read(inputFileName, readDataSets);
-    shared_ptr<PolyDataInput> input = dynamic_pointer_cast<PolyDataInput>(genInput);
-    assert(input);
+    vector<ReadDataset> readDatasets;
+    shared_ptr<Input> genericInput = TextFileReader::read(filename, readDatasets);
 
+    switch (genericInput->type) {
+    case ModelType::triangles:
+        loadIndexedTriangles(*static_cast<PolyDataInput*>(genericInput.get()), readDatasets);
+        break;
+    case ModelType::grid2d:
+        loadGrid(*static_cast<GridDataInput*>(genericInput.get()), readDatasets);
+        break;
+    default:
+        cerr << "Warning: model type unsupported by the loader: " << int(genericInput->type) << endl;
+        return nullptr;
+    }
+    return genericInput;
+}
+
+void Loader::loadIndexedTriangles(PolyDataInput & input, const vector<ReadDataset> & datasets)
+{
     // expect only vertex and index input data sets for now
-    assert(readDataSets.size() == 2);
+    assert(datasets.size() == 2);
     
+    const InputVector * indices = nullptr;
+    const InputVector * vertices = nullptr;
 
-    InputVector * indices = nullptr;
-    InputVector * vertices = nullptr;
-
-    for (ReadDataset & dataSet : readDataSets)
+    for (const ReadDataset & dataSet : datasets)
         if (dataSet.type == DatasetType::vertices)
             vertices = &dataSet.data;
         else if (dataSet.type == DatasetType::indices)
@@ -43,21 +55,14 @@ shared_ptr<PolyDataInput> Loader::loadIndexedTriangles(const std::string & input
 
     assert(indices != nullptr && vertices != nullptr);
 
-    input->setPolyData(*parseIndexedTriangles(*vertices, 0, 1, *indices, 0));
-
-    return input;
+    input.setPolyData(*parseIndexedTriangles(*vertices, 0, 1, *indices, 0));
 }
 
-std::shared_ptr<GridDataInput> Loader::loadGrid(const std::string & inputFileName)
+void Loader::loadGrid(GridDataInput & input, const vector<ReadDataset> & datasets)
 {
-    vector<ReadDataset> readDataSets;
-    std::shared_ptr<Input> genInput = TextFileReader::read(inputFileName, readDataSets);
-    std::shared_ptr<GridDataInput> input = dynamic_pointer_cast<GridDataInput>(genInput);
-    assert(input);
-
-    assert(readDataSets.size() == 1);
-    assert(readDataSets.begin()->type == DatasetType::grid2d);
-    InputVector * inputData = &readDataSets.begin()->data;
+    assert(datasets.size() == 1);
+    assert(datasets.begin()->type == DatasetType::grid2d);
+    const InputVector * inputData = &datasets.begin()->data;
 
     int dimensions[3] = {static_cast<int>(inputData->size()), static_cast<int>(inputData->at(0).size()), 1};
 
@@ -83,11 +88,11 @@ std::shared_ptr<GridDataInput> Loader::loadGrid(const std::string & inputFileNam
         }
     }
 
-    input->setMinMaxValue(minValue, maxValue);
+    input.setMinMaxValue(minValue, maxValue);
 
     grid->GetPointData()->SetScalars(dataArray);
 
-    input->setData(*grid);
+    input.setData(*grid);
 
     vtkSmartPointer<vtkLookupTable> lut = vtkSmartPointer<vtkLookupTable>::New();
     lut->SetTableRange(minValue, maxValue);
@@ -98,7 +103,7 @@ std::shared_ptr<GridDataInput> Loader::loadGrid(const std::string & inputFileNam
     lut->SetAlphaRange(1.0, 1.0);
     lut->Build();
 
-    input->lookupTable = lut;
+    input.lookupTable = lut;
 
     vtkSmartPointer<vtkTexture> texture = vtkSmartPointer<vtkTexture>::New();
     texture->SetLookupTable(lut);
@@ -107,23 +112,21 @@ std::shared_ptr<GridDataInput> Loader::loadGrid(const std::string & inputFileNam
     texture->InterpolateOn();
     texture->SetQualityTo32Bit();
 
-    double xExtend = input->bounds[1] - input->bounds[0];
-    double yExtend = input->bounds[3] - input->bounds[2];
+    double xExtend = input.bounds[1] - input.bounds[0];
+    double yExtend = input.bounds[3] - input.bounds[2];
 
     vtkSmartPointer<vtkPlaneSource> plane = vtkSmartPointer<vtkPlaneSource>::New();
     plane->SetXResolution(dimensions[0]);
     plane->SetYResolution(dimensions[1]);
-    plane->SetOrigin(input->bounds[0], input->bounds[2], 0);
-    plane->SetPoint1(input->bounds[0] + xExtend, input->bounds[2], 0);
-    plane->SetPoint2(input->bounds[0], input->bounds[2] + yExtend, 0);
+    plane->SetOrigin(input.bounds[0], input.bounds[2], 0);
+    plane->SetPoint1(input.bounds[0] + xExtend, input.bounds[2], 0);
+    plane->SetPoint2(input.bounds[0], input.bounds[2] + yExtend, 0);
 
     vtkSmartPointer<vtkPolyDataMapper> planeMapper = vtkSmartPointer<vtkPolyDataMapper>::New();
     planeMapper->SetInputConnection(plane->GetOutputPort());
 
-    input->setMapper(*planeMapper);
-    input->setTexture(*texture);
-
-    return input;
+    input.setMapper(*planeMapper);
+    input.setTexture(*texture);
 }
 
 Loader::InputVector * Loader::loadData(const std::string & filename)
