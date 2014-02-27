@@ -65,7 +65,7 @@ bool parseIOStream(ifstream & inputStream, vector<t_FP> &parsedData, unsigned lo
     }
 
     unsigned long processedValue = 0;
-    while (++processedValue <= numValues && !inputStream.eof()) {
+    while (processedValue < numValues && !inputStream.eof()) {
         inputStream >> input;
 
         if (input == "NaN") {
@@ -76,6 +76,8 @@ bool parseIOStream(ifstream & inputStream, vector<t_FP> &parsedData, unsigned lo
         }
 
         parsedData.push_back(input_FP);
+
+        ++processedValue;
     }
 
     if (processedValue < numValues)

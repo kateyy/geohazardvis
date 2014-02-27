@@ -117,10 +117,13 @@ void Viewer::loadInputs()
     }
 
     {
-        std::shared_ptr<Input3D> indexedSphere = Loader::loadIndexedTriangles(
+        std::shared_ptr<Input3D> indexedSphere = Loader::loadIndexedTriangles("data/sphere.txt");
+        m_inputs.push_back(indexedSphere);
+
+  /*      std::shared_ptr<Input3D> indexedSphere = Loader::loadIndexedTriangles(
             "data/Spcoord.txt", 0, 1,
             "data/Svert.txt", 0);
-        m_inputs.push_back(indexedSphere);
+        m_inputs.push_back(indexedSphere);*/
 
         vtkSmartPointer<vtkActor> sphereActor = indexedSphere->createActor();
         vtkProperty & prop = *sphereActor->GetProperty();

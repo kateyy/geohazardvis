@@ -8,19 +8,19 @@
 #include "common/ebem3d_common.h"
 
 enum class ContentType {
-    vertices,
-    indices
+    vertices,   // index + vec3
+    triangles   // three indices referring to a vertex list
 };
 
 struct ReadData {
     ContentType type;
-    std::vector<std::vector<t_FP>> * data;
+    std::vector<std::vector<t_FP>> data;
 };
 
 class TextFileReader
 {
 public:
-    static void read(const std::string & filename);
+    static void read(const std::string & filename, std::string & dataSetName, std::list<ReadData> & readDataSets);
 
 protected:
     struct InputDefinition {
@@ -29,8 +29,8 @@ protected:
     };
 
     /// read the file header and leave the input stream at a position directly behind the header end
-    /// @return empty list if reading the header was not successful
-    static std::list<InputDefinition> readHeader(std::ifstream & inputStream);
+    /// @return true, only if the input has a valid format
+    static bool readHeader(std::ifstream & inputStream, std::list<InputDefinition>& inputDefs, std::string & name);
 
     static void readContent(std::ifstream & inputStream, const InputDefinition & inputdef);
 };

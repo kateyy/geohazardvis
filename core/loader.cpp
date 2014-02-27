@@ -16,11 +16,14 @@
 
 #include "input.h"
 #include "common/file_parser.h"
+#include "textfilereader.h"
+
+using namespace std;
 
 std::shared_ptr<PolyDataInput> Loader::loadFileAsPoints(const std::string & filename, t_UInt firstDataColumn)
 {
     std::shared_ptr<PolyDataInput> input = std::make_shared<PolyDataInput>(filename);
-    ParsedData * parsedData = loadData(filename);
+    InputVector * parsedData = loadData(filename);
     input->setPolyData(*parsePoints(*parsedData, firstDataColumn));
     delete parsedData;
 
@@ -30,7 +33,7 @@ std::shared_ptr<PolyDataInput> Loader::loadFileAsPoints(const std::string & file
 std::shared_ptr<ProcessedInput> Loader::loadFileTriangulated(const std::string & filename, t_UInt firstDataColumn)
 {
     std::shared_ptr<ProcessedInput> input = std::make_shared<ProcessedInput>(filename);
-    ParsedData * parsedData = loadData(filename);
+    InputVector * parsedData = loadData(filename);
     input->setPolyData(*parsePoints(*parsedData, firstDataColumn));
     delete parsedData;
 
@@ -42,13 +45,40 @@ std::shared_ptr<ProcessedInput> Loader::loadFileTriangulated(const std::string &
     return input;
 }
 
+std::shared_ptr<PolyDataInput> Loader::loadIndexedTriangles(const std::string & inputFileName)
+{
+    list<ReadData> readDataSets;
+    string dataSetName;
+    TextFileReader::read(inputFileName, dataSetName, readDataSets);
+
+    // expect only vertex and index input data sets for now
+    assert(readDataSets.size() == 2);
+    
+    std::shared_ptr<PolyDataInput> input = std::make_shared<PolyDataInput>(dataSetName);
+
+    InputVector * indices = nullptr;
+    InputVector * vertices = nullptr;
+
+    for (ReadData & dataSet : readDataSets)
+        if (dataSet.type == ContentType::vertices)
+            vertices = &dataSet.data;
+        else if (dataSet.type == ContentType::triangles)
+            indices = &dataSet.data;
+
+    assert(indices != nullptr && vertices != nullptr);
+
+    input->setPolyData(*parseIndexedTriangles(*vertices, 0, 1, *indices, 0));
+
+    return input;
+}
+
 std::shared_ptr<PolyDataInput> Loader::loadIndexedTriangles(
     const std::string & vertexFilename, t_UInt vertexIndexColumn, t_UInt firstVertexColumn,
     const std::string & indexFilename, t_UInt firstIndexColumn)
 {
     std::shared_ptr<PolyDataInput> input = std::make_shared<PolyDataInput>(vertexFilename);
-    ParsedData * vertexData = loadData(vertexFilename);
-    ParsedData * indexData = loadData(indexFilename);
+    InputVector * vertexData = loadData(vertexFilename);
+    InputVector * indexData = loadData(indexFilename);
 
     input->setPolyData(*parseIndexedTriangles(
         *vertexData, vertexIndexColumn, firstVertexColumn,
@@ -60,9 +90,9 @@ std::shared_ptr<PolyDataInput> Loader::loadIndexedTriangles(
 std::shared_ptr<GridDataInput> Loader::loadGrid(const std::string & gridFilename, const std::string & xFilename, const std::string & yFilename)
 {
     std::shared_ptr<GridDataInput> input = std::make_shared<GridDataInput>(gridFilename);
-    ParsedData * observation = loadData(gridFilename);
-    ParsedData * xDimensions = loadData(xFilename);
-    ParsedData * yDimensions = loadData(yFilename);
+    InputVector * observation = loadData(gridFilename);
+    InputVector * xDimensions = loadData(xFilename);
+    InputVector * yDimensions = loadData(yFilename);
 
     assert(observation->size() > 0);
     assert(observation->at(0).size() > 0);
@@ -141,9 +171,9 @@ std::shared_ptr<GridDataInput> Loader::loadGrid(const std::string & gridFilename
     return input;
 }
 
-Loader::ParsedData * Loader::loadData(const std::string & filename)
+Loader::InputVector * Loader::loadData(const std::string & filename)
 {
-    Loader::ParsedData * parsedData = new ParsedData();
+    InputVector * parsedData = new InputVector();
 
     // load input file
     populateIOVectors(filename, *parsedData);
@@ -154,7 +184,7 @@ Loader::ParsedData * Loader::loadData(const std::string & filename)
     return parsedData;
 }
 
-vtkPolyData * Loader::parsePoints(const ParsedData & parsedData, t_UInt firstColumn)
+vtkPolyData * Loader::parsePoints(const InputVector & parsedData, t_UInt firstColumn)
 {
     assert(parsedData.size() > firstColumn);
 
@@ -181,8 +211,8 @@ vtkPolyData * Loader::parsePoints(const ParsedData & parsedData, t_UInt firstCol
 }
 
 vtkPolyData * Loader::parseIndexedTriangles(
-    const ParsedData & parsedVertexData, t_UInt vertexIndexColumn, t_UInt firstVertexColumn,
-    const ParsedData & parsedIndexData, t_UInt firstIndexColumn)
+    const InputVector & parsedVertexData, t_UInt vertexIndexColumn, t_UInt firstVertexColumn,
+    const InputVector & parsedIndexData, t_UInt firstIndexColumn)
 {
     vtkSmartPointer<vtkPoints> points = vtkSmartPointer<vtkPoints>::New();
 

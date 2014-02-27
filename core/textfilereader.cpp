@@ -13,46 +13,49 @@ using namespace std;
 namespace {
     const map<string, ContentType> contentNamesTypes = {
         pair<string, ContentType>("vertices", ContentType::vertices),
-        pair<string, ContentType>("indices", ContentType::indices)};
+        pair<string, ContentType>("triangles", ContentType::triangles)};
 
     const map<ContentType, unsigned short> contentTupleSizes = {
         pair<ContentType, unsigned short>(ContentType::vertices, 4),
-        pair<ContentType, unsigned short>(ContentType::indices, 3)};
+        pair<ContentType, unsigned short>(ContentType::triangles, 3)};
 }
 
-void TextFileReader::read(const string & filename)
+void TextFileReader::read(const string & filename, std::string & dataSetName, list<ReadData> & readDataSets)
 {
     ifstream inputStream(filename);
     assert(inputStream.good());
 
-    list<InputDefinition> dataSets = readHeader(inputStream);
+    list<InputDefinition> inputDefs;
+    bool validFile = readHeader(inputStream, inputDefs, dataSetName);
+    assert(validFile);
 
-    list<ReadData> readDataSets;
+    if (!validFile) {
+        cerr << "could not read input text file: \"" << filename << "\"" << endl;
+        return;
+    }
 
-    for (const InputDefinition & input : dataSets) {
-        std::vector<std::vector<t_FP>> * inputData = new std::vector<std::vector<t_FP>>();
-        if ( populateIOVectors(inputStream, *inputData,
+    for (const InputDefinition & input : inputDefs) {
+        ReadData readData({input.type});
+
+        if (populateIOVectors(inputStream, readData.data,
                 input.numTuples,
                 contentTupleSizes.at(input.type))) {
-            readDataSets.push_back({input.type, inputData});
+            readDataSets.push_back(readData);
         }
         else {
             assert(false);
-            delete inputData;
+            cerr << "could not read input data set in " << filename << endl;
         }
     }
-
 }
 
-list<TextFileReader::InputDefinition> TextFileReader::readHeader(ifstream & inputStream)
+bool TextFileReader::readHeader(ifstream & inputStream, list<InputDefinition> & inputDefs, string & name)
 {
     assert(inputStream.good());
 
-    string line;
-
-    list<InputDefinition> fileContents;   // content + number of tuples
     bool validFile = false;
 
+    string line;
     while (!inputStream.eof()) {
         getline(inputStream, line);
 
@@ -60,30 +63,35 @@ list<TextFileReader::InputDefinition> TextFileReader::readHeader(ifstream & inpu
         if (line.empty() || line[0] == '#')
             continue;
 
-        // line defining an input data set
-        if (line.substr(0, 2) == "$ ") {
-            stringstream linestream(line.substr(0, 2));
-            string dataSetType, numTuples;
-            getline(linestream, dataSetType, ' ');
-            getline(linestream, numTuples, ' ');
-            assert(contentNamesTypes.find(dataSetType) != contentNamesTypes.end());
-            fileContents.push_back({
-                contentNamesTypes.at(dataSetType),
-                stol(numTuples)});            
-        }
-
         // this is the end if the header section, required for valid input files
         if (line == "$end") {
             validFile = true;
             break;
         }
+
+        // line defining an input data set
+        if (line.substr(0, 2) == "$ ") {
+            stringstream linestream(line.substr(2, string::npos));
+            string command, parameter;
+            getline(linestream, command, ' ');
+            getline(linestream, parameter, ' ');
+
+            if (command == "name") {
+                name = parameter;
+                continue;
+            }
+
+            // not a comment or file name, not at the end of the header, so expect data definitions
+            assert(contentNamesTypes.find(command) != contentNamesTypes.end());
+            inputDefs.push_back({
+                contentNamesTypes.at(command),
+                stol(parameter)});
+        }
     }
 
-    assert(validFile && !fileContents.empty());
+    assert(validFile && !inputDefs.empty());
 
-    if (validFile)
-        return fileContents;
-    else return list<InputDefinition>();
+    return validFile;
 }
 
 void TextFileReader::readContent(std::ifstream & inputStream, const InputDefinition & inputdef)
