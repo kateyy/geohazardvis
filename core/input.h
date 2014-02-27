@@ -16,17 +16,29 @@ class vtkAlgorithmOutput;
 class vtkLookupTable;
 class vtkTexture;
 
+
+enum class ModelType {
+    triangles,
+    grid2d
+};
+
 class Input {
 public:
-    Input(const std::string & name);
+    static Input * createType(ModelType type, const std::string & name);
+
     virtual ~Input();
+
     const std::string name;
 
     virtual vtkDataSet * data() const;
 
     static vtkInformationStringKey * NameKey();
+
+    const ModelType type;
     
 protected:
+    Input(const std::string & name, const ModelType type);
+
     void setMapperInfo(vtkAbstractMapper * mapper) const;
 
     vtkSmartPointer<vtkDataSet> m_data;
@@ -57,7 +69,7 @@ protected:
 
 class Input3D : public Input {
 public:
-    Input3D(const std::string & name);
+    Input3D(const std::string & name, ModelType type);
     virtual ~Input3D();
 
     virtual vtkActor * createActor();
@@ -71,7 +83,7 @@ protected:
 
 class PolyDataInput : public Input3D {
 public:
-    PolyDataInput(const std::string & name);
+    PolyDataInput(const std::string & name, ModelType type);
 
     virtual vtkPolyData * polyData() const;
     virtual void setPolyData(vtkPolyData & polyData);
@@ -83,7 +95,7 @@ protected:
 
 class ProcessedInput : public PolyDataInput {
 public:
-    ProcessedInput(const std::string & name);
+    ProcessedInput(const std::string & name, ModelType type);
     vtkSmartPointer<vtkPolyDataAlgorithm> algorithm;
     virtual vtkPolyDataMapper * createAlgorithmMapper(vtkAlgorithmOutput * mapperInput) const;
 

@@ -20,49 +20,25 @@
 
 using namespace std;
 
-std::shared_ptr<PolyDataInput> Loader::loadFileAsPoints(const std::string & filename, t_UInt firstDataColumn)
+shared_ptr<PolyDataInput> Loader::loadIndexedTriangles(const std::string & inputFileName)
 {
-    std::shared_ptr<PolyDataInput> input = std::make_shared<PolyDataInput>(filename);
-    InputVector * parsedData = loadData(filename);
-    input->setPolyData(*parsePoints(*parsedData, firstDataColumn));
-    delete parsedData;
-
-    return input;
-}
-
-std::shared_ptr<ProcessedInput> Loader::loadFileTriangulated(const std::string & filename, t_UInt firstDataColumn)
-{
-    std::shared_ptr<ProcessedInput> input = std::make_shared<ProcessedInput>(filename);
-    InputVector * parsedData = loadData(filename);
-    input->setPolyData(*parsePoints(*parsedData, firstDataColumn));
-    delete parsedData;
-
-    // create triangles from vertex list
-    input->algorithm = vtkSmartPointer<vtkDelaunay2D>::New();
-    input->algorithm->SetInputData(input->polyData());
-    input->algorithm->Update();
-
-    return input;
-}
-
-std::shared_ptr<PolyDataInput> Loader::loadIndexedTriangles(const std::string & inputFileName)
-{
-    vector<ReadData> readDataSets;
+    vector<ReadDataset> readDataSets;
     string dataSetName;
-    TextFileReader::read(inputFileName, dataSetName, readDataSets);
+    shared_ptr<Input> genInput = TextFileReader::read(inputFileName, readDataSets);
+    shared_ptr<PolyDataInput> input = dynamic_pointer_cast<PolyDataInput>(genInput);
+    assert(input);
 
     // expect only vertex and index input data sets for now
     assert(readDataSets.size() == 2);
     
-    std::shared_ptr<PolyDataInput> input = std::make_shared<PolyDataInput>(dataSetName);
 
     InputVector * indices = nullptr;
     InputVector * vertices = nullptr;
 
-    for (ReadData & dataSet : readDataSets)
-        if (dataSet.type == ContentType::vertices)
+    for (ReadDataset & dataSet : readDataSets)
+        if (dataSet.type == DatasetType::vertices)
             vertices = &dataSet.data;
-        else if (dataSet.type == ContentType::triangles)
+        else if (dataSet.type == DatasetType::indices)
             indices = &dataSet.data;
 
     assert(indices != nullptr && vertices != nullptr);
@@ -72,32 +48,16 @@ std::shared_ptr<PolyDataInput> Loader::loadIndexedTriangles(const std::string & 
     return input;
 }
 
-std::shared_ptr<PolyDataInput> Loader::loadIndexedTriangles(
-    const std::string & vertexFilename, t_UInt vertexIndexColumn, t_UInt firstVertexColumn,
-    const std::string & indexFilename, t_UInt firstIndexColumn)
-{
-    std::shared_ptr<PolyDataInput> input = std::make_shared<PolyDataInput>(vertexFilename);
-    InputVector * vertexData = loadData(vertexFilename);
-    InputVector * indexData = loadData(indexFilename);
-
-    input->setPolyData(*parseIndexedTriangles(
-        *vertexData, vertexIndexColumn, firstVertexColumn,
-        *indexData, firstIndexColumn));
-
-    return input;
-}
-
 std::shared_ptr<GridDataInput> Loader::loadGrid(const std::string & inputFileName)
 {
-    string notused;
-    vector<ReadData> readDataSets;
-    TextFileReader::read(inputFileName, notused, readDataSets);
+    vector<ReadDataset> readDataSets;
+    std::shared_ptr<Input> genInput = TextFileReader::read(inputFileName, readDataSets);
+    std::shared_ptr<GridDataInput> input = dynamic_pointer_cast<GridDataInput>(genInput);
+    assert(input);
 
     assert(readDataSets.size() == 1);
-    assert(readDataSets.begin()->type == ContentType::grid2d);
+    assert(readDataSets.begin()->type == DatasetType::grid2d);
     InputVector * inputData = &readDataSets.begin()->data;
-    std::shared_ptr<GridDataInput> input = dynamic_pointer_cast<GridDataInput>(readDataSets.begin()->input);
-    assert(input);
 
     int dimensions[3] = {static_cast<int>(inputData->size()), static_cast<int>(inputData->at(0).size()), 1};
 
@@ -115,90 +75,6 @@ std::shared_ptr<GridDataInput> Loader::loadGrid(const std::string & inputFileNam
         for (int c = 0; c < dimensions[0]; ++c) {
             vtkIdType id = c + rOffset;
             float value = inputData->at(c).at(r);
-            if (value < minValue)
-                minValue = value;
-            if (value > maxValue)
-                maxValue = value;
-            dataArray->SetValue(id, value);
-        }
-    }
-
-    input->setMinMaxValue(minValue, maxValue);
-
-    grid->GetPointData()->SetScalars(dataArray);
-
-    input->setData(*grid);
-
-    vtkSmartPointer<vtkLookupTable> lut = vtkSmartPointer<vtkLookupTable>::New();
-    lut->SetTableRange(minValue, maxValue);
-    lut->SetNumberOfColors(static_cast<vtkIdType>(std::ceil(maxValue - minValue)) * 10);
-    lut->SetHueRange(0.66667, 0.0);
-    lut->SetValueRange(0.9, 0.9);
-    lut->SetSaturationRange(1.0, 1.0);
-    lut->SetAlphaRange(1.0, 1.0);
-    lut->Build();
-
-    input->lookupTable = lut;
-
-    vtkSmartPointer<vtkTexture> texture = vtkSmartPointer<vtkTexture>::New();
-    texture->SetLookupTable(lut);
-    texture->SetInputData(grid);
-    texture->MapColorScalarsThroughLookupTableOn();
-    texture->InterpolateOn();
-    texture->SetQualityTo32Bit();
-
-    double xExtend = input->bounds[1] - input->bounds[0];
-    double yExtend = input->bounds[3] - input->bounds[2];
-
-    vtkSmartPointer<vtkPlaneSource> plane = vtkSmartPointer<vtkPlaneSource>::New();
-    plane->SetXResolution(dimensions[0]);
-    plane->SetYResolution(dimensions[1]);
-    plane->SetOrigin(input->bounds[0], input->bounds[2], 0);
-    plane->SetPoint1(input->bounds[0] + xExtend, input->bounds[2], 0);
-    plane->SetPoint2(input->bounds[0], input->bounds[2] + yExtend, 0);
-
-    vtkSmartPointer<vtkPolyDataMapper> planeMapper = vtkSmartPointer<vtkPolyDataMapper>::New();
-    planeMapper->SetInputConnection(plane->GetOutputPort());
-
-    input->setMapper(*planeMapper);
-    input->setTexture(*texture);
-
-    return input;
-}
-
-std::shared_ptr<GridDataInput> Loader::loadGrid(const std::string & gridFilename, const std::string & xFilename, const std::string & yFilename)
-{
-    std::shared_ptr<GridDataInput> input = std::make_shared<GridDataInput>(gridFilename);
-    InputVector * observation = loadData(gridFilename);
-    InputVector * xDimensions = loadData(xFilename);
-    InputVector * yDimensions = loadData(yFilename);
-
-    assert(observation->size() > 0);
-    assert(observation->at(0).size() > 0);
-
-    int dimensions[3] = { static_cast<int>(observation->size()), static_cast<int>(observation->at(0).size()), 1 };
-
-    input->bounds[0] = xDimensions->at(0).at(0);    // minX
-    input->bounds[1] = xDimensions->at(xDimensions->size() - 1).at(0); // maxX
-    input->bounds[2] = yDimensions->at(0).at(0);    // minY
-    input->bounds[3] = yDimensions->at(0).at(yDimensions->at(0).size() - 1);    // maxY
-    input->bounds[4] = 0;
-    input->bounds[5] = 0;
-
-    vtkSmartPointer<vtkImageData> grid = vtkSmartPointer<vtkImageData>::New();
-    grid->SetExtent(0, dimensions[0] - 1, 0, dimensions[1] - 1, 0, 0);
-
-    float minValue = std::numeric_limits<float>::max();
-    float maxValue = std::numeric_limits<float>::lowest();
-
-    vtkSmartPointer<vtkFloatArray> dataArray = vtkSmartPointer<vtkFloatArray>::New();
-    dataArray->SetNumberOfComponents(1);
-    dataArray->SetNumberOfTuples(grid->GetNumberOfPoints());
-    for (int r = 0; r < dimensions[1]; ++r) {
-        vtkIdType rOffset = r * dimensions[0];
-        for (int c = 0; c < dimensions[0]; ++c) {
-            vtkIdType id = c + rOffset;
-            float value = observation->at(c).at(r);
             if (value < minValue)
                 minValue = value;
             if (value > maxValue)

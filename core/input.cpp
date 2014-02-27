@@ -8,8 +8,21 @@
 // macro defining the information key to access the name of the input in the mapper
 vtkInformationKeyMacro(Input, NameKey, String);
 
-Input::Input(const std::string & name)
+Input * Input::createType(ModelType type, const std::string & name)
+{
+    switch (type) {
+    case ModelType::triangles:
+        return new PolyDataInput(name, type);
+    case ModelType::grid2d:
+        return new GridDataInput(name);
+    }
+    assert(false);
+    return nullptr;
+}
+
+Input::Input(const std::string & name, ModelType type)
 : name(name)
+, type(type)
 {
 }
 
@@ -27,8 +40,8 @@ vtkDataSet * Input::data() const
     return m_data;
 }
 
-Input3D::Input3D(const std::string & name)
-: Input(name)
+Input3D::Input3D(const std::string & name, ModelType type)
+: Input(name, type)
 {
 }
 
@@ -36,13 +49,13 @@ Input3D::~Input3D()
 {
 }
 
-PolyDataInput::PolyDataInput(const std::string & name)
-: Input3D(name)
+PolyDataInput::PolyDataInput(const std::string & name, ModelType type)
+: Input3D(name, type)
 {
 }
 
-ProcessedInput::ProcessedInput(const std::string & name)
-: PolyDataInput(name)
+ProcessedInput::ProcessedInput(const std::string & name, ModelType type)
+: PolyDataInput(name, type)
 {
 }
 
@@ -64,7 +77,8 @@ vtkMapper * Input3D::mapper()
 }
 
 GridDataInput::GridDataInput(const std::string & name)
-: Input(name)
+: Input(name, ModelType::grid2d)
+, bounds()
 {
 }
 

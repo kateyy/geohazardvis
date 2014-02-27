@@ -7,36 +7,32 @@
 
 #include "common/ebem3d_common.h"
 
-enum class ContentType {
+enum class DatasetType {
     vertices,   // index + vec3
-    triangles,  // three indices referring to a vertex list
+    indices,    // indices referring to a vertex list
     grid2d
 };
 
 class Input;
 
-struct ReadData {
-    ContentType type;
+struct ReadDataset {
+    DatasetType type;
     std::vector<std::vector<t_FP>> data;
-    std::shared_ptr<Input> input;
 };
 
 class TextFileReader
 {
 public:
-    static void read(const std::string & filename, std::string & dataSetName, std::vector<ReadData> & readDataSets);
+    static std::shared_ptr<Input> read(const std::string & filename, std::vector<ReadDataset> & readDatasets);
 
 protected:
-    struct InputDefinition {
-        ContentType type;
+    struct DatasetDef {
+        DatasetType type;
         unsigned long nbLines;
         unsigned long nbColumns;
-        std::shared_ptr<Input> input;
     };
 
     /// read the file header and leave the input stream at a position directly behind the header end
-    /// @return true, only if the input has a valid format
-    static bool readHeader(std::ifstream & inputStream, std::vector<InputDefinition>& inputDefs, std::string & name);
-
-    static void readContent(std::ifstream & inputStream, const InputDefinition & inputdef);
+    /// @return a shared pointer to an Input object, if the file contains a valid header
+    static std::shared_ptr<Input> readHeader(std::ifstream & inputStream, std::vector<DatasetDef>& inputDefs);
 };

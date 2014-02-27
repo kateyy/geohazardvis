@@ -12,37 +12,35 @@
 using namespace std;
 
 namespace {
-    const map<string, ContentType> contentNamesTypes = {
-        pair<string, ContentType>("vertices", ContentType::vertices),
-        pair<string, ContentType>("triangles", ContentType::triangles),
-        pair<string, ContentType>("grid2d", ContentType::grid2d)};
-
-    const map<ContentType, unsigned short> contentTupleSizes = {
-        pair<ContentType, unsigned short>(ContentType::vertices, 4),
-        pair<ContentType, unsigned short>(ContentType::triangles, 3)};
+    const map<string, DatasetType> datasetNamesTypes = {
+        pair<string, DatasetType>("vertices", DatasetType::vertices),
+        pair<string, DatasetType>("indices", DatasetType::indices),
+        pair<string, DatasetType>("grid2d", DatasetType::grid2d)};
+    const map<string, ModelType> modelNamesType = {
+        pair<string, ModelType>("triangles", ModelType::triangles),
+        pair<string, ModelType>("grid2d", ModelType::grid2d)};
 }
 
-void TextFileReader::read(const string & filename, std::string & dataSetName, vector<ReadData> & readDataSets)
+shared_ptr<Input> TextFileReader::read(const string & filename, vector<ReadDataset> & readDataSets)
 {
     ifstream inputStream(filename);
     assert(inputStream.good());
 
-    vector<InputDefinition> inputDefs;
-    bool validFile = readHeader(inputStream, inputDefs, dataSetName);
-    assert(validFile);
+    vector<DatasetDef> datasetDefs;
+    shared_ptr<Input> input = readHeader(inputStream, datasetDefs);
 
-    if (!validFile) {
+    if (!input) {
         cerr << "could not read input text file: \"" << filename << "\"" << endl;
-        return;
+        return nullptr;
     }
+    assert(input);
 
-    for (const InputDefinition & inputDef : inputDefs) {
-        ReadData readData({inputDef.type});
+    for (const DatasetDef & datasetDef : datasetDefs) {
+        ReadDataset readData({datasetDef.type});
 
         if (populateIOVectors(inputStream, readData.data,
-                inputDef.nbLines,
-                inputDef.nbColumns)) {
-            readData.input = inputDef.input;
+            datasetDef.nbLines,
+            datasetDef.nbColumns)) {
             readDataSets.push_back(readData);
         }
         else {
@@ -50,16 +48,20 @@ void TextFileReader::read(const string & filename, std::string & dataSetName, ve
             cerr << "could not read input data set in " << filename << endl;
         }
     }
+    return input;
 }
 
-bool TextFileReader::readHeader(ifstream & inputStream, vector<InputDefinition> & inputDefs, string & name)
+std::shared_ptr<Input> TextFileReader::readHeader(ifstream & inputStream, vector<DatasetDef> & inputDefs)
 {
     assert(inputStream.good());
 
     bool validFile = false;
+    shared_ptr<Input> input;
 
     string line;
-    ContentType currentType;
+
+    DatasetType currentDataType;
+
     while (!inputStream.eof()) {
         getline(inputStream, line);
 
@@ -73,32 +75,51 @@ bool TextFileReader::readHeader(ifstream & inputStream, vector<InputDefinition> 
             break;
         }
 
-        // line defining an input data set
-        if (line.substr(0, 2) == "$ ") {
-            stringstream linestream(line.substr(2, string::npos));
-            string command, parameter;
-            getline(linestream, command, ' ');
-            getline(linestream, parameter, ' ');
-
-            if (command == "name") {
-                name = parameter;
-                continue;
-            }
-
-            // not a comment or file name, not at the end of the header, so expect data definitions
-            assert(contentNamesTypes.find(command) != contentNamesTypes.end());
-            currentType = contentNamesTypes.at(command);
-            switch (currentType) {
-            case ContentType::triangles:
-            case ContentType::vertices:
-                inputDefs.push_back({currentType, stol(parameter), contentTupleSizes.at(currentType)});
+        // define the current 3d/2d model
+        if (line.substr(0, 8) == "$ model ") {
+            if (input) {
+                cerr << "multiple models per file not supported." << endl;
                 break;
-            case ContentType::grid2d:
+            }
+            assert(!input);
+            stringstream linestream(line.substr(8, string::npos));
+            string type, name;
+            getline(linestream, type, ' ');
+            getline(linestream, name);
+
+            assert(modelNamesType.find(type) != modelNamesType.end());
+            input = shared_ptr<Input>(Input::createType(modelNamesType.at(type), name));
+
+            continue;
+        }
+
+        // line defining an input data set (for the current model)
+        if (line.substr(0, 10) == "$ dataset ") {
+            stringstream linestream(line.substr(10, string::npos));
+            string datasetType, parameter;
+            getline(linestream, datasetType, ' ');
+            getline(linestream, parameter);
+
+            assert(datasetNamesTypes.find(datasetType) != datasetNamesTypes.end());
+            currentDataType = datasetNamesTypes.at(datasetType);
+            switch (input->type) {
+            case ModelType::triangles: {
+                unsigned short tupleSize = 0;
+                if (currentDataType == DatasetType::indices)
+                    tupleSize = 3;
+                else if (currentDataType == DatasetType::vertices)
+                    tupleSize = 4;
+                assert(tupleSize);
+                inputDefs.push_back({currentDataType, stol(parameter), tupleSize});
+                break;
+            }
+            case ModelType::grid2d:
+                assert(currentDataType == DatasetType::grid2d);
                 size_t seperator = parameter.find_first_of(":");
                 unsigned long columns = stol(parameter.substr(0, seperator));
                 unsigned long rows = stol(parameter.substr(seperator + 1, string::npos));
                 assert(columns > 0 && rows > 0);
-                inputDefs.push_back({currentType, rows, columns});
+                inputDefs.push_back({currentDataType, rows, columns});
                 break;
             }
             continue;
@@ -113,31 +134,25 @@ bool TextFileReader::readHeader(ifstream & inputStream, vector<InputDefinition> 
             stringstream linestream(line.substr(3, string::npos));
             string paramName;
             vector<string> s_values;
-            switch (currentType) {
-            case ContentType::grid2d: {
+            switch (currentDataType) {
+            case DatasetType::grid2d: {
                 getline(linestream, paramName, ' ');
                 assert(paramName == "xRange" || paramName == "yRange");
                 s_values.resize(2);
                 getline(linestream, s_values.at(0), ' ');    // range min value
                 getline(linestream, s_values.at(1));    // range max value
-                shared_ptr<GridDataInput> input;
-                if (inputDefs.back().input != nullptr) {
-                    input = dynamic_pointer_cast<GridDataInput>(inputDefs.back().input);
-                    assert(input);
-                }
-                else {
-                    input = make_shared<GridDataInput>(name);
-                    inputDefs.back().input = input;
-                    assert(sizeof(input->bounds) / sizeof(input->bounds[0]) == 6);
-                    std::fill(input->bounds, input->bounds + 6, 0);
-                }
+
+                assert(input);
+                shared_ptr<GridDataInput> gridInput = dynamic_pointer_cast<GridDataInput>(input);
+                assert(gridInput);
+
                 if (paramName == "xRange") {
-                    input->bounds[0] = stod(s_values.at(0));
-                    input->bounds[1] = stod(s_values.at(1));
+                    gridInput->bounds[0] = stod(s_values.at(0));
+                    gridInput->bounds[1] = stod(s_values.at(1));
                 }
                 else if (paramName == "yRange") {
-                    input->bounds[2] = stod(s_values.at(0));
-                    input->bounds[3] = stod(s_values.at(1));
+                    gridInput->bounds[2] = stod(s_values.at(0));
+                    gridInput->bounds[3] = stod(s_values.at(1));
                 }
                 else {
                     cerr << "Invalid parameter in input file: \"" << paramName << "\"" << endl;
@@ -145,7 +160,7 @@ bool TextFileReader::readHeader(ifstream & inputStream, vector<InputDefinition> 
                 break;
             }
             default:
-                cerr << "Unexpectedly detected parameters for input type " << int(currentType) << endl;
+                cerr << "Unexpectedly detected parameters for input type " << int(currentDataType) << endl;
             }
             continue;
         }
@@ -155,10 +170,5 @@ bool TextFileReader::readHeader(ifstream & inputStream, vector<InputDefinition> 
 
     assert(validFile && !inputDefs.empty());
 
-    return validFile;
-}
-
-void TextFileReader::readContent(std::ifstream & inputStream, const InputDefinition & inputdef)
-{
-
+    return input;
 }
