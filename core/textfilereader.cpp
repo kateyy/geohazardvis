@@ -56,6 +56,7 @@ std::shared_ptr<Input> TextFileReader::readHeader(ifstream & inputStream, vector
     assert(inputStream.good());
 
     bool validFile = false;
+    bool started = false;
     shared_ptr<Input> input;
 
     string line;
@@ -68,6 +69,16 @@ std::shared_ptr<Input> TextFileReader::readHeader(ifstream & inputStream, vector
         // ignore empty lines and comments
         if (line.empty() || line[0] == '#')
             continue;
+
+        if (line == "$begin") {
+            started = true;
+            continue;
+        }
+
+        if (!started) {
+            cerr << "invalid input file (does not begin with the $begin tag)." << endl;
+            return nullptr;
+        }
 
         // this is the end if the header section, required for valid input files
         if (line == "$end") {

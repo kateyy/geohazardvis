@@ -20,10 +20,14 @@
 
 using namespace std;
 
-shared_ptr<Input> Loader::readFile(const string filename)
+shared_ptr<Input> Loader::readFile(const string & filename)
 {
     vector<ReadDataset> readDatasets;
     shared_ptr<Input> genericInput = TextFileReader::read(filename, readDatasets);
+    if (!genericInput) {
+        cerr << "Could not read the input file \"" << filename << "\"" << endl;
+        return nullptr;
+    }
 
     switch (genericInput->type) {
     case ModelType::triangles:

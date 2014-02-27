@@ -19,7 +19,7 @@ struct ReadDataset;
 class Loader
 {
 public:
-    static std::shared_ptr<Input> readFile(const std::string filename);
+    static std::shared_ptr<Input> readFile(const std::string & filename);
 
 protected:
     static void loadIndexedTriangles(PolyDataInput & input, const std::vector<ReadDataset> & datasets);
