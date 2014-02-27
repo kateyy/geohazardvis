@@ -89,20 +89,27 @@ void Viewer::setupInteraction()
 void Viewer::loadInputs()
 {
     {
-        std::shared_ptr<ProcessedInput> processedVolcano = Loader::loadFileTriangulated("data/Tcoord_topo.txt", 1);
-        m_inputs.push_back(processedVolcano);
+        /*std::shared_ptr<ProcessedInput> processedVolcano = Loader::loadFileTriangulated("data/Tcoord_topo.txt", 1);
+        m_inputs.push_back(processedVolcano);*/
+
+        std::shared_ptr<Input3D> volcano = Loader::loadIndexedTriangles("data/volcano.txt");
+        m_inputs.push_back(volcano);
+
 
         // use the elevation for colorized visualization
-        vtkSmartPointer<vtkElevationFilter> elevation = vtkSmartPointer<vtkElevationFilter>::New();
+ /*       vtkSmartPointer<vtkElevationFilter> elevation = vtkSmartPointer<vtkElevationFilter>::New();
         elevation->SetInputConnection(processedVolcano->algorithm->GetOutputPort());
         elevation->SetLowPoint(0, 0, 4);
-        elevation->SetHighPoint(0, 0, 0);
+        elevation->SetHighPoint(0, 0, 0);*/
 
-        vtkSmartPointer<vtkPolyDataMapper> mapper = processedVolcano->createAlgorithmMapper(
-            elevation->GetOutputPort());
+        //vtkSmartPointer<vtkPolyDataMapper> mapper = processedVolcano->createAlgorithmMapper(
+        //    elevation->GetOutputPort());
 
-        vtkSmartPointer<vtkActor> volcanoActor = vtkSmartPointer<vtkActor>::New();
-        volcanoActor->SetMapper(mapper);
+        /*vtkSmartPointer<vtkActor> volcanoActor = vtkSmartPointer<vtkActor>::New();
+        volcanoActor->SetMapper(mapper);*/
+        //vtkProperty & prop = *volcanoActor->GetProperty();
+
+        vtkSmartPointer<vtkActor> volcanoActor = volcano->createActor();
         vtkProperty & prop = *volcanoActor->GetProperty();
         prop.SetOpacity(0.6);
         prop.SetInterpolationToFlat();
@@ -113,7 +120,7 @@ void Viewer::loadInputs()
 
         m_loadedInputs.insert("volcano", QVector<vtkSmartPointer<vtkProp>>({
             volcanoActor,
-            createAxes(processedVolcano->data()->GetBounds(), *m_mainRenderer) }));
+            createAxes(volcano->data()->GetBounds(), *m_mainRenderer)}));
     }
 
     {
@@ -143,14 +150,15 @@ void Viewer::loadInputs()
     }
 
     {
-        std::shared_ptr<GridDataInput> heatMap = Loader::loadGrid("data/observation.txt", "data/X.txt", "data/Y.txt");
+        //std::shared_ptr<GridDataInput> heatMap = Loader::loadGrid("data/observation.txt", "data/X.txt", "data/Y.txt");
+        std::shared_ptr<GridDataInput> heatMap = Loader::loadGrid("data/displacements.txt");
         m_inputs.push_back(heatMap);
 
         vtkScalarBarActor * heatBars = vtkScalarBarActor::New();
-        heatBars->SetTitle("observation");
+        heatBars->SetTitle(heatMap->name.c_str());
         heatBars->SetLookupTable(heatMap->lookupTable);
 
-        m_loadedInputs.insert("observation", QVector<vtkSmartPointer<vtkProp>>({
+        m_loadedInputs.insert("displacements", QVector<vtkSmartPointer<vtkProp>>({
             heatMap->createTexturedPolygonActor(),
             heatBars,
             createAxes(heatMap->bounds, *m_mainRenderer) }));
@@ -229,5 +237,5 @@ void Viewer::on_actionVolcano_triggered()
 
 void Viewer::on_actionObservation_triggered()
 {
-    setCurrentMainInput("observation");
+    setCurrentMainInput("displacements");
 }

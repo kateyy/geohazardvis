@@ -47,7 +47,7 @@ std::shared_ptr<ProcessedInput> Loader::loadFileTriangulated(const std::string &
 
 std::shared_ptr<PolyDataInput> Loader::loadIndexedTriangles(const std::string & inputFileName)
 {
-    list<ReadData> readDataSets;
+    vector<ReadData> readDataSets;
     string dataSetName;
     TextFileReader::read(inputFileName, dataSetName, readDataSets);
 
@@ -83,6 +83,85 @@ std::shared_ptr<PolyDataInput> Loader::loadIndexedTriangles(
     input->setPolyData(*parseIndexedTriangles(
         *vertexData, vertexIndexColumn, firstVertexColumn,
         *indexData, firstIndexColumn));
+
+    return input;
+}
+
+std::shared_ptr<GridDataInput> Loader::loadGrid(const std::string & inputFileName)
+{
+    string notused;
+    vector<ReadData> readDataSets;
+    TextFileReader::read(inputFileName, notused, readDataSets);
+
+    assert(readDataSets.size() == 1);
+    assert(readDataSets.begin()->type == ContentType::grid2d);
+    InputVector * inputData = &readDataSets.begin()->data;
+    std::shared_ptr<GridDataInput> input = dynamic_pointer_cast<GridDataInput>(readDataSets.begin()->input);
+    assert(input);
+
+    int dimensions[3] = {static_cast<int>(inputData->size()), static_cast<int>(inputData->at(0).size()), 1};
+
+    vtkSmartPointer<vtkImageData> grid = vtkSmartPointer<vtkImageData>::New();
+    grid->SetExtent(0, dimensions[0] - 1, 0, dimensions[1] - 1, 0, 0);
+
+    float minValue = std::numeric_limits<float>::max();
+    float maxValue = std::numeric_limits<float>::lowest();
+
+    vtkSmartPointer<vtkFloatArray> dataArray = vtkSmartPointer<vtkFloatArray>::New();
+    dataArray->SetNumberOfComponents(1);
+    dataArray->SetNumberOfTuples(grid->GetNumberOfPoints());
+    for (int r = 0; r < dimensions[1]; ++r) {
+        vtkIdType rOffset = r * dimensions[0];
+        for (int c = 0; c < dimensions[0]; ++c) {
+            vtkIdType id = c + rOffset;
+            float value = inputData->at(c).at(r);
+            if (value < minValue)
+                minValue = value;
+            if (value > maxValue)
+                maxValue = value;
+            dataArray->SetValue(id, value);
+        }
+    }
+
+    input->setMinMaxValue(minValue, maxValue);
+
+    grid->GetPointData()->SetScalars(dataArray);
+
+    input->setData(*grid);
+
+    vtkSmartPointer<vtkLookupTable> lut = vtkSmartPointer<vtkLookupTable>::New();
+    lut->SetTableRange(minValue, maxValue);
+    lut->SetNumberOfColors(static_cast<vtkIdType>(std::ceil(maxValue - minValue)) * 10);
+    lut->SetHueRange(0.66667, 0.0);
+    lut->SetValueRange(0.9, 0.9);
+    lut->SetSaturationRange(1.0, 1.0);
+    lut->SetAlphaRange(1.0, 1.0);
+    lut->Build();
+
+    input->lookupTable = lut;
+
+    vtkSmartPointer<vtkTexture> texture = vtkSmartPointer<vtkTexture>::New();
+    texture->SetLookupTable(lut);
+    texture->SetInputData(grid);
+    texture->MapColorScalarsThroughLookupTableOn();
+    texture->InterpolateOn();
+    texture->SetQualityTo32Bit();
+
+    double xExtend = input->bounds[1] - input->bounds[0];
+    double yExtend = input->bounds[3] - input->bounds[2];
+
+    vtkSmartPointer<vtkPlaneSource> plane = vtkSmartPointer<vtkPlaneSource>::New();
+    plane->SetXResolution(dimensions[0]);
+    plane->SetYResolution(dimensions[1]);
+    plane->SetOrigin(input->bounds[0], input->bounds[2], 0);
+    plane->SetPoint1(input->bounds[0] + xExtend, input->bounds[2], 0);
+    plane->SetPoint2(input->bounds[0], input->bounds[2] + yExtend, 0);
+
+    vtkSmartPointer<vtkPolyDataMapper> planeMapper = vtkSmartPointer<vtkPolyDataMapper>::New();
+    planeMapper->SetInputConnection(plane->GetOutputPort());
+
+    input->setMapper(*planeMapper);
+    input->setTexture(*texture);
 
     return input;
 }
