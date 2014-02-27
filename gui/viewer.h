@@ -17,6 +17,8 @@ class vtkCubeAxesActor;
 class QStringList;
 
 class Input;
+class Input3D;
+class GridDataInput;
 
 class Viewer : public QMainWindow
 {
@@ -28,12 +30,13 @@ public:
 public slots:
     void ShowInfo(const QStringList &info);
 
-    void on_actionSphere_triggered();
-    void on_actionVolcano_triggered();
-    void on_actionObservation_triggered();
+    void on_actionOpen_triggered();
 
-private:
+protected:
     Ui_Viewer *m_ui;
+
+    void show3DInput(Input3D & input);
+    void showGridInput(GridDataInput & input);
 
     vtkSmartPointer<vtkRenderer> m_mainRenderer;
     vtkSmartPointer<vtkRenderer> m_infoRenderer;
@@ -44,10 +47,10 @@ private:
 
     QMap<QString, QVector<vtkSmartPointer<vtkProp>>> m_loadedInputs;
 
-    void setCurrentMainInput(const QString & name);
-
     void setupRenderer();
     void setupInteraction();
-    void loadInputs();
-    vtkCubeAxesActor * createAxes(double bounds[6], vtkRenderer & renderer);
+
+    void setupAxes(const double bounds[6]);
+    vtkSmartPointer<vtkCubeAxesActor> m_axesActor;
+    vtkCubeAxesActor * createAxes(vtkRenderer & renderer);
 };

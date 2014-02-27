@@ -27,9 +27,13 @@
 #include "pickinginteractionstyle.h"
 // gui/qt
 #include <QVTKWidget.h>
+#include <QFileDialog>
+#include <QMessageBox>
 
 #include "core/loader.h"
 #include "core/input.h"
+
+using namespace std;
 
 Viewer::Viewer()
 : m_ui(new Ui_Viewer())
@@ -38,8 +42,6 @@ Viewer::Viewer()
 
     setupRenderer();
     setupInteraction();
-
-    loadInputs();
 
     m_mainRenderer->ResetCamera();
     m_infoRenderer->ResetCamera();
@@ -81,70 +83,99 @@ void Viewer::setupInteraction()
     m_infoInteractor->Initialize();
 }
 
-void Viewer::loadInputs()
+void Viewer::ShowInfo(const QStringList & info)
 {
-    {
-        std::shared_ptr<Input3D> volcano = std::dynamic_pointer_cast<Input3D>(Loader::readFile("data/volcano.txt"));
-        assert(volcano);
-        m_inputs.push_back(volcano);
+    m_ui->infoBox->clear();
 
-        vtkSmartPointer<vtkActor> volcanoActor = volcano->createActor();
-        vtkProperty & prop = *volcanoActor->GetProperty();
-        prop.SetOpacity(0.6);
-        prop.SetInterpolationToFlat();
-        prop.SetEdgeVisibility(true);
-        prop.SetEdgeColor(0, 0, 0);
-        prop.SetBackfaceCulling(false);
-        prop.SetLighting(false);
+    m_ui->infoBox->addItems(info);
 
-        m_loadedInputs.insert("volcano", QVector<vtkSmartPointer<vtkProp>>({
-            volcanoActor,
-            createAxes(volcano->data()->GetBounds(), *m_mainRenderer)}));
-    }
-
-    {
-        std::shared_ptr<Input3D> indexedSphere = std::dynamic_pointer_cast<Input3D>(Loader::readFile("data/sphere.txt"));
-        assert(indexedSphere);
-
-        m_inputs.push_back(indexedSphere);
-
-        vtkSmartPointer<vtkActor> sphereActor = indexedSphere->createActor();
-        vtkProperty & prop = *sphereActor->GetProperty();
-        prop.SetColor(1, 1, 0);
-        prop.SetOpacity(1.0);
-        prop.SetInterpolationToGouraud();
-        prop.SetEdgeVisibility(true);
-        prop.SetEdgeColor(0, 0, 0);
-        prop.SetLineWidth(1.5);
-        prop.SetBackfaceCulling(false);
-        prop.SetLighting(true);
-
-        m_infoRenderer->AddViewProp(sphereActor);
-
-        m_loadedInputs.insert("sphere", QVector<vtkSmartPointer<vtkProp>>({ sphereActor }));
-        m_loadedInputs["volcano"].push_back(sphereActor);
-    }
-
-    {
-        std::shared_ptr<GridDataInput> heatMap = std::dynamic_pointer_cast<GridDataInput>(Loader::readFile("data/displacements.txt"));
-        assert(heatMap);
-        m_inputs.push_back(heatMap);
-
-        vtkScalarBarActor * heatBars = vtkScalarBarActor::New();
-        heatBars->SetTitle(heatMap->name.c_str());
-        heatBars->SetLookupTable(heatMap->lookupTable);
-
-        m_loadedInputs.insert("displacements", QVector<vtkSmartPointer<vtkProp>>({
-            heatMap->createTexturedPolygonActor(),
-            heatBars,
-            createAxes(heatMap->bounds, *m_mainRenderer) }));
-    }
+    setToolTip(info.join('\n'));
 }
 
-vtkCubeAxesActor * Viewer::createAxes(double bounds[6], vtkRenderer & renderer)
+void Viewer::on_actionOpen_triggered()
+{
+    static QString lastFolder;
+    QString filename = QFileDialog::getOpenFileName(this, "", lastFolder, "Text files (*.txt)");
+    if (filename.isEmpty())
+        return;
+
+    lastFolder = QFileInfo(filename).absolutePath();
+
+    QByteArray fndata = filename.toLatin1().data(); // work around for qt libraries used with VS11, but compiled for VS10..
+    string fnStr(fndata.data());
+    shared_ptr<Input> input = Loader::readFile(fnStr);
+    if (!input) {
+        QMessageBox::critical(this, "File error", "Could not open the selected input file (unsupported format).");
+        return;
+    }
+
+    m_inputs = {input};
+
+    m_mainRenderer->RemoveAllViewProps();
+
+    switch (input->type) {
+    case ModelType::triangles:
+        show3DInput(*static_cast<Input3D*>(input.get()));
+        break;
+    case ModelType::grid2d:
+        showGridInput(*static_cast<GridDataInput*>(input.get()));
+        break;
+    default:
+        QMessageBox::critical(this, "File error", "Could not open the selected input file. (unsupported format)");
+    }
+
+    vtkCamera & camera = *m_mainRenderer->GetActiveCamera();
+    camera.SetPosition(0, 0, 1);
+    camera.SetViewUp(0, 1, 0);
+    m_mainRenderer->ResetCamera();
+    m_ui->qvtkMain->GetRenderWindow()->Render();
+}
+
+void Viewer::show3DInput(Input3D & input)
+{
+    vtkSmartPointer<vtkActor> actor = input.createActor();
+    vtkProperty & prop = *actor->GetProperty();
+    prop.SetColor(1, 1, 0);
+    prop.SetOpacity(1.0);
+    prop.SetInterpolationToGouraud();
+    prop.SetEdgeVisibility(true);
+    prop.SetEdgeColor(0.1, 0.1, 0.1);
+    prop.SetLineWidth(1.5);
+    prop.SetBackfaceCulling(false);
+    prop.SetLighting(true);
+
+    m_mainRenderer->AddViewProp(actor);
+
+    setupAxes(input.data()->GetBounds());
+}
+
+void Viewer::showGridInput(GridDataInput & input)
+{
+    vtkScalarBarActor * heatBars = vtkScalarBarActor::New();
+    heatBars->SetTitle(input.name.c_str());
+    heatBars->SetLookupTable(input.lookupTable);
+    m_mainRenderer->AddViewProp(heatBars);
+    m_mainRenderer->AddViewProp(input.createTexturedPolygonActor());
+
+    setupAxes(input.bounds);
+}
+
+void Viewer::setupAxes(const double bounds[6])
+{
+    if (!m_axesActor) {
+        m_axesActor = createAxes(*m_mainRenderer);
+        m_mainRenderer->AddViewProp(m_axesActor);
+    }
+    double b[6];
+    for (int i = 0; i < 6; ++i)
+        b[i] = bounds[i];
+    m_axesActor->SetBounds(b);
+    m_axesActor->SetRebuildAxes(true);
+}
+
+vtkCubeAxesActor * Viewer::createAxes(vtkRenderer & renderer)
 {
     vtkCubeAxesActor * cubeAxes = vtkCubeAxesActor::New();
-    cubeAxes->SetBounds(bounds);
     cubeAxes->SetCamera(m_mainRenderer->GetActiveCamera());
     cubeAxes->SetFlyModeToOuterEdges();
     cubeAxes->SetEnableDistanceLOD(1);
@@ -177,41 +208,4 @@ vtkCubeAxesActor * Viewer::createAxes(double bounds[6], vtkRenderer & renderer)
     cubeAxes->SetRebuildAxes(true);
 
     return cubeAxes;
-}
-
-void Viewer::ShowInfo(const QStringList & info)
-{
-    m_ui->infoBox->clear();
-
-    m_ui->infoBox->addItems(info);
-
-    setToolTip(info.join('\n'));
-}
-
-void Viewer::setCurrentMainInput(const QString & name)
-{
-    m_mainRenderer->RemoveAllViewProps();
-    for (const vtkSmartPointer<vtkProp> & prop : m_loadedInputs[name]) {
-        m_mainRenderer->AddViewProp(prop);
-    }
-    vtkCamera & camera = *m_mainRenderer->GetActiveCamera();
-    camera.SetPosition(0, 0, 1);
-    camera.SetViewUp(0, 1, 0);
-    m_mainRenderer->ResetCamera();
-    m_ui->qvtkMain->GetRenderWindow()->Render();
-}
-
-void Viewer::on_actionSphere_triggered()
-{
-    setCurrentMainInput("sphere");
-}
-
-void Viewer::on_actionVolcano_triggered()
-{
-    setCurrentMainInput("volcano");
-}
-
-void Viewer::on_actionObservation_triggered()
-{
-    setCurrentMainInput("displacements");
 }
