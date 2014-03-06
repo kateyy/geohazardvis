@@ -32,6 +32,8 @@ public slots:
 
     void on_actionOpen_triggered();
 
+    void openFile(QString filename);
+
 protected:
     Ui_Viewer *m_ui;
 

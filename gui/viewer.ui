@@ -39,7 +39,7 @@
        <property name="orientation">
         <enum>Qt::Vertical</enum>
        </property>
-       <widget class="QVTKWidget" name="qvtkInfo" native="true">
+       <widget class="RenderWidget" name="qvtkInfo" native="true">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
           <horstretch>1</horstretch>
@@ -55,7 +55,7 @@
        </widget>
        <widget class="QListWidget" name="infoBox"/>
       </widget>
-      <widget class="QVTKWidget" name="qvtkMain" native="true">
+      <widget class="RenderWidget" name="qvtkMain" native="true">
        <property name="sizePolicy">
         <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
          <horstretch>1</horstretch>
@@ -136,9 +136,9 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>QVTKWidget</class>
+   <class>RenderWidget</class>
    <extends>QWidget</extends>
-   <header>QVTKWidget.h</header>
+   <header>renderwidget.h</header>
   </customwidget>
  </customwidgets>
  <resources/>

@@ -26,7 +26,7 @@
 // interaction
 #include "pickinginteractionstyle.h"
 // gui/qt
-#include <QVTKWidget.h>
+#include "renderwidget.h"
 #include <QFileDialog>
 #include <QMessageBox>
 
@@ -58,6 +58,8 @@ void Viewer::setupRenderer()
     m_infoRenderer = vtkSmartPointer<vtkRenderer>::New();
     m_infoRenderer->SetBackground(1, 1, 1);
     m_ui->qvtkInfo->GetRenderWindow()->AddRenderer(m_infoRenderer);
+
+    connect(m_ui->qvtkMain, &RenderWidget::onInputFileDropped, this, &Viewer::openFile);
 }
 
 void Viewer::setupInteraction()
@@ -101,9 +103,12 @@ void Viewer::on_actionOpen_triggered()
 
     lastFolder = QFileInfo(filename).absolutePath();
 
-    QByteArray fndata = filename.toLatin1().data(); // work around for qt libraries used with VS11, but compiled for VS10..
-    string fnStr(fndata.data());
-    shared_ptr<Input> input = Loader::readFile(fnStr);
+    emit openFile(filename);
+}
+
+void Viewer::openFile(QString filename)
+{
+    shared_ptr<Input> input = Loader::readFile(filename.toStdString());
     if (!input) {
         QMessageBox::critical(this, "File error", "Could not open the selected input file (unsupported format).");
         return;
