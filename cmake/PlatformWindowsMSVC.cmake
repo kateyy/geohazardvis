@@ -5,8 +5,10 @@ set(WIN32_COMPILE_DEFS
     _UNICODE					# Use unicode
 #    _SCL_SECURE_NO_WARNINGS	    # Calling any one of the potentially unsafe methods in the Standard C++ Library
 #    _CRT_SECURE_NO_DEPRECATE	# Disable CRT deprecation warnings
-    Q_COMPILER_INITIALIZER_LISTS
+#    Q_COMPILER_INITIALIZER_LISTS
 )
+
+
 
 set(DEFAULT_COMPILE_DEFS_DEBUG
     ${WIN32_COMPILE_DEFS}
@@ -20,7 +22,7 @@ set(DEFAULT_COMPILE_DEFS_RELEASE
 
 
 set(WIN32_COMPILE_FLAGS
-	/nologo /Zc:wchar_t /Zc:forScope /GR /Zi /fp:precise /MP /W3
+	/nologo /Zc:wchar_t /Zc:forScope /GR /Zi /fp:precise /MP /W3 /wd4351
 	# nologo       -> no logo
  	# Zc:wchar_t   -> treat wchar_t as built-in type: yes
  	# Zc:forScope  -> force conformance in for loop scope: Yes
@@ -38,6 +40,7 @@ set(WIN32_COMPILE_FLAGS
     #   4127       -> conditional expression is constant
     #	4251       -> 'identifier' : class 'type' needs to have dll-interface to be used by clients of class 'type2'
     #   4267       -> 'var' : conversion from 'size_t' to 'type', possible loss of data
+    #   4351       -> new behavior: elements of array '...' will be default initialized
     # W4           -> warning level 4
     # WX           -> treat warnings as errors
  
