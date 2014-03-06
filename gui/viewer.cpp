@@ -44,7 +44,6 @@ Viewer::Viewer()
     setupInteraction();
 
     m_mainRenderer->ResetCamera();
-    m_infoRenderer->ResetCamera();
 }
 
 void Viewer::setupRenderer()
@@ -54,10 +53,6 @@ void Viewer::setupRenderer()
     m_mainRenderer = vtkSmartPointer<vtkRenderer>::New();
     m_mainRenderer->SetBackground(1, 1, 1);
     m_ui->qvtkMain->GetRenderWindow()->AddRenderer(m_mainRenderer);
-
-    m_infoRenderer = vtkSmartPointer<vtkRenderer>::New();
-    m_infoRenderer->SetBackground(1, 1, 1);
-    m_ui->qvtkInfo->GetRenderWindow()->AddRenderer(m_infoRenderer);
 
     connect(m_ui->qvtkMain, &RenderWidget::onInputFileDropped, this, &Viewer::openFile);
 }
@@ -72,17 +67,6 @@ void Viewer::setupInteraction()
     m_mainInteractor->SetRenderWindow(m_ui->qvtkMain->GetRenderWindow());
 
     m_mainInteractor->Initialize();
-
-
-    vtkSmartPointer<PickingInteractionStyle> interactStyleInfo = vtkSmartPointer<PickingInteractionStyle>::New();
-    interactStyleInfo->SetDefaultRenderer(m_infoRenderer);
-
-    connect(&interactStyleInfo->pickingInfo, SIGNAL(infoSent(const QStringList&)), SLOT(ShowInfo(const QStringList&)));
-    m_infoInteractor = vtkSmartPointer<vtkRenderWindowInteractor>::New();
-    m_infoInteractor->SetInteractorStyle(interactStyleInfo);
-    m_infoInteractor->SetRenderWindow(m_ui->qvtkInfo->GetRenderWindow());
-
-    m_infoInteractor->Initialize();
 }
 
 void Viewer::ShowInfo(const QStringList & info)
@@ -169,11 +153,11 @@ void Viewer::setupAxes(const double bounds[6])
 {
     if (!m_axesActor) {
         m_axesActor = createAxes(*m_mainRenderer);
-        m_mainRenderer->AddViewProp(m_axesActor);
     }
     double b[6];
     for (int i = 0; i < 6; ++i)
         b[i] = bounds[i];
+    m_mainRenderer->AddViewProp(m_axesActor);
     m_axesActor->SetBounds(b);
     m_axesActor->SetRebuildAxes(true);
 }

@@ -41,9 +41,7 @@ protected:
     void showGridInput(GridDataInput & input);
 
     vtkSmartPointer<vtkRenderer> m_mainRenderer;
-    vtkSmartPointer<vtkRenderer> m_infoRenderer;
     vtkSmartPointer<vtkRenderWindowInteractor> m_mainInteractor;
-    vtkSmartPointer<vtkRenderWindowInteractor> m_infoInteractor;
 
     std::list<std::shared_ptr<Input>> m_inputs;
 
