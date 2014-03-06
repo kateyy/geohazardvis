@@ -3,7 +3,9 @@ set( TARGET ${META_PROJECT_NAME} )
 message( STATUS ${TARGET} )
 
 set ( SOURCES
-    main.cpp )
+    main.cpp
+    application.h
+    application.cpp )
 
 add_executable ( ${TARGET} ${SOURCES} )
 
