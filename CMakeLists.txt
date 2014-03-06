@@ -10,12 +10,9 @@ set (META_AUTHOR_DOMAIN "https://github.com/kateyy/geohazardvis")
 
 project (${META_PROJECT_NAME} C CXX)
 
-option(OPTION_LIMIT_CONFIGS "Generate limited configs (Release; Debug)" ON)
 option(OPTION_LOCAL_INSTALL "Install to local directory instead of system" OFF)
 
-if(OPTION_LIMIT_CONFIGS)
-    set(CMAKE_CONFIGURATION_TYPES "Debug;Release" CACHE STRING "Limited Configs" FORCE)
-endif()
+set(CMAKE_CONFIGURATION_TYPES "Debug;Release;RelWithDebInfo" CACHE STRING "Limited Configs" FORCE)
 
 
 
@@ -54,6 +51,7 @@ else()
     message(WARNING "Unsupported platform/compiler combination")
 endif()
 
+add_compile_options( ${DEFAULT_COMPILE_FLAGS} )
     
 
 find_package(VTK COMPONENTS
