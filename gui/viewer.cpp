@@ -53,6 +53,11 @@ Viewer::Viewer()
     m_ui->infoSplitter->addWidget(m_tableView->GetWidget());
 }
 
+Viewer::~Viewer()
+{
+    delete m_ui;
+}
+
 void Viewer::setupRenderer()
 {
     //m_ui->qvtkMain->GetRenderWindow()->SetAAFrames(2);
@@ -66,7 +71,7 @@ void Viewer::setupRenderer()
 
 void Viewer::setupInteraction()
 {
-    vtkSmartPointer<PickingInteractionStyle> interactStyle = vtkSmartPointer<PickingInteractionStyle>::New();
+    VTK_CREATE(PickingInteractionStyle, interactStyle);
     interactStyle->SetDefaultRenderer(m_mainRenderer);
     connect(&interactStyle->pickingInfo, &PickingInfo::infoSent, this, &Viewer::ShowInfo);
     m_mainInteractor = vtkSmartPointer<vtkRenderWindowInteractor>::New();
@@ -161,7 +166,7 @@ void Viewer::show3DInput(Input3D & input)
 
 void Viewer::showGridInput(GridDataInput & input)
 {
-    vtkScalarBarActor * heatBars = vtkScalarBarActor::New();
+    VTK_CREATE(vtkScalarBarActor, heatBars);
     heatBars->SetTitle(input.name.c_str());
     heatBars->SetLookupTable(input.lookupTable);
     m_mainRenderer->AddViewProp(heatBars);
@@ -183,9 +188,9 @@ void Viewer::setupAxes(const double bounds[6])
     m_axesActor->SetRebuildAxes(true);
 }
 
-vtkCubeAxesActor * Viewer::createAxes(vtkRenderer & renderer)
+vtkSmartPointer<vtkCubeAxesActor> Viewer::createAxes(vtkRenderer & renderer)
 {
-    vtkCubeAxesActor * cubeAxes = vtkCubeAxesActor::New();
+    VTK_CREATE(vtkCubeAxesActor, cubeAxes);
     cubeAxes->SetCamera(m_mainRenderer->GetActiveCamera());
     cubeAxes->SetFlyModeToOuterEdges();
     cubeAxes->SetEnableDistanceLOD(1);

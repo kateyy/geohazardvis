@@ -8,13 +8,17 @@
 // macro defining the information key to access the name of the input in the mapper
 vtkInformationKeyMacro(Input, NameKey, String);
 
-Input * Input::createType(ModelType type, const std::string & name)
+#define VTK_CREATE(type, name) \
+    vtkSmartPointer<type> name = vtkSmartPointer<type>::New()
+
+
+std::shared_ptr<Input> Input::createType(ModelType type, const std::string & name)
 {
     switch (type) {
     case ModelType::triangles:
-        return new PolyDataInput(name, type);
+        return std::make_shared<PolyDataInput>(name, type);
     case ModelType::grid2d:
-        return new GridDataInput(name);
+        return std::make_shared<GridDataInput>(name);
     }
     assert(false);
     return nullptr;
@@ -30,12 +34,12 @@ Input::~Input()
 {
 }
 
-void Input::setMapperInfo(vtkAbstractMapper * mapper) const
+void Input::setMapperInfo(vtkAbstractMapper & mapper) const
 {
-    NameKey()->Set(mapper->GetInformation(), name.c_str());
+    NameKey()->Set(mapper.GetInformation(), name.c_str());
 }
 
-vtkDataSet * Input::data() const
+vtkSmartPointer<vtkDataSet> Input::data() const
 {
     return m_data;
 }
@@ -59,20 +63,20 @@ ProcessedInput::ProcessedInput(const std::string & name, ModelType type)
 {
 }
 
-vtkActor * Input3D::createActor()
+vtkSmartPointer<vtkActor> Input3D::createActor()
 {
-    vtkActor * actor = vtkActor::New();
+    VTK_CREATE(vtkActor, actor);
     actor->SetMapper(mapper());
 
     return actor;
 }
 
-vtkMapper * Input3D::mapper()
+vtkSmartPointer<vtkMapper> Input3D::mapper()
 {
     if (m_mapper == nullptr) {
         m_mapper = createDataMapper();
     }
-    setMapperInfo(m_mapper);
+    setMapperInfo(*m_mapper);
     return m_mapper;
 }
 
@@ -82,9 +86,9 @@ GridDataInput::GridDataInput(const std::string & name)
 {
 }
 
-void GridDataInput::setData(vtkDataSet & data)
+void GridDataInput::setData(vtkSmartPointer<vtkDataSet> data)
 {
-    m_data = &data;
+    m_data = data;
 }
 
 void GridDataInput::setMinMaxValue(double minValue, double maxValue)
@@ -103,63 +107,64 @@ const double * GridDataInput::minMaxValue() const
     return m_minMaxValue;
 }
 
-void GridDataInput::setMapper(vtkPolyDataMapper & mapper)
+void GridDataInput::setMapper(vtkSmartPointer<vtkPolyDataMapper> mapper)
 {
-    m_mapper = &mapper;
-    setMapperInfo(m_mapper);
+    m_mapper = mapper;
+    setMapperInfo(*m_mapper);
 }
 
-void GridDataInput::setTexture(vtkTexture & texture)
+void GridDataInput::setTexture(vtkSmartPointer<vtkTexture> texture)
 {
-    m_texture = &texture;
+    m_texture = texture;
 }
 
-vtkActor * GridDataInput::createTexturedPolygonActor() const
+vtkSmartPointer<vtkActor> GridDataInput::createTexturedPolygonActor() const
 {
     assert(m_mapper);
     assert(m_texture);
-    vtkActor * actor = vtkActor::New();
+    VTK_CREATE(vtkActor, actor);
     actor->SetMapper(m_mapper);
     actor->SetTexture(m_texture);
     return actor;
 }
 
-void PolyDataInput::setPolyData(vtkPolyData & data)
+void PolyDataInput::setPolyData(vtkSmartPointer<vtkPolyData> data)
 {
-    m_data = &data;
+    m_data = data;
 }
 
-vtkPolyData * PolyDataInput::polyData() const
+vtkSmartPointer<vtkPolyData> PolyDataInput::polyData() const
 {
     vtkPolyData * polyData = dynamic_cast<vtkPolyData*>(m_data.Get());
     assert(polyData);
     return polyData;
 }
 
-vtkMapper * PolyDataInput::createDataMapper() const
+vtkSmartPointer<vtkMapper> PolyDataInput::createDataMapper() const
 {
-    vtkPolyDataMapper * mapper = vtkPolyDataMapper::New();
+    VTK_CREATE(vtkPolyDataMapper, mapper);
     mapper->SetInputData(polyData());
     return mapper;
 }
 
-vtkPolyDataMapper * PolyDataInput::polyDataMapper()
+vtkSmartPointer<vtkPolyDataMapper> PolyDataInput::polyDataMapper()
 {
-    vtkPolyDataMapper * polyMapper = dynamic_cast<vtkPolyDataMapper*>(mapper());
-    assert(polyMapper);
-    return polyMapper;
+    vtkPolyDataMapper * polyDataMapper = dynamic_cast<vtkPolyDataMapper*>(mapper().Get());
+    assert(polyDataMapper);
+
+    return polyDataMapper;
 }
 
-vtkMapper * ProcessedInput::createDataMapper() const
+vtkSmartPointer<vtkMapper> ProcessedInput::createDataMapper() const
 {
-    vtkPolyDataMapper * mapper = vtkPolyDataMapper::New();
+    VTK_CREATE(vtkPolyDataMapper, mapper);
     mapper->SetInputConnection(algorithm->GetOutputPort());
     return mapper;
 }
 
-vtkPolyDataMapper * ProcessedInput::createAlgorithmMapper(vtkAlgorithmOutput * mapperInput) const
+vtkSmartPointer<vtkPolyDataMapper> ProcessedInput::createAlgorithmMapper(vtkAlgorithmOutput * mapperInput) const
 {
-    vtkPolyDataMapper * mapper = vtkPolyDataMapper::New();
+    VTK_CREATE(vtkPolyDataMapper, mapper);
     NameKey()->Set(mapper->GetInformation(), name.c_str());
     mapper->SetInputConnection(mapperInput);
     return mapper;

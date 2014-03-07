@@ -26,7 +26,6 @@ protected:
     static void loadGrid(GridDataInput & input, const std::vector<ReadDataset> & datasets);
 
     typedef std::vector<std::vector<t_FP>> InputVector;
-    static InputVector * loadData(const std::string & filename);
     static vtkPolyData * parsePoints(const InputVector & parsedData, t_UInt firstColumn);
     static vtkPolyData * parseIndexedTriangles(
         const InputVector & parsedVertexData, t_UInt vertexIndexColumn, t_UInt firstVertexColumn,

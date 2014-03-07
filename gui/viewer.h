@@ -27,6 +27,7 @@ class Viewer : public QMainWindow
 
 public:
     Viewer();
+    virtual ~Viewer() override;
 
 public slots:
     void ShowInfo(const QStringList &info);
@@ -55,5 +56,5 @@ protected:
 
     void setupAxes(const double bounds[6]);
     vtkSmartPointer<vtkCubeAxesActor> m_axesActor;
-    vtkCubeAxesActor * createAxes(vtkRenderer & renderer);
+    vtkSmartPointer<vtkCubeAxesActor> createAxes(vtkRenderer & renderer);
 };

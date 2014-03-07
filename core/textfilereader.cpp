@@ -99,7 +99,7 @@ std::shared_ptr<Input> TextFileReader::readHeader(ifstream & inputStream, vector
             getline(linestream, name);
 
             assert(modelNamesType.find(type) != modelNamesType.end());
-            input = shared_ptr<Input>(Input::createType(modelNamesType.at(type), name));
+            input = Input::createType(modelNamesType.at(type), name);
 
             continue;
         }

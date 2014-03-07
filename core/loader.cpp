@@ -20,6 +20,11 @@
 
 using namespace std;
 
+
+#define VTK_CREATE(type, name) \
+    vtkSmartPointer<type> name = vtkSmartPointer<type>::New()
+
+
 shared_ptr<Input> Loader::readFile(const string & filename)
 {
     vector<ReadDataset> readDatasets;
@@ -59,7 +64,9 @@ void Loader::loadIndexedTriangles(PolyDataInput & input, const vector<ReadDatase
 
     assert(indices != nullptr && vertices != nullptr);
 
-    input.setPolyData(*parseIndexedTriangles(*vertices, 0, 1, *indices, 0));
+    vtkSmartPointer<vtkPolyData> data = vtkSmartPointer<vtkPolyData>::Take(parseIndexedTriangles(*vertices, 0, 1, *indices, 0));
+
+    input.setPolyData(data);
 }
 
 void Loader::loadGrid(GridDataInput & input, const vector<ReadDataset> & datasets)
@@ -70,13 +77,13 @@ void Loader::loadGrid(GridDataInput & input, const vector<ReadDataset> & dataset
 
     int dimensions[3] = {static_cast<int>(inputData->size()), static_cast<int>(inputData->at(0).size()), 1};
 
-    vtkSmartPointer<vtkImageData> grid = vtkSmartPointer<vtkImageData>::New();
+    VTK_CREATE(vtkImageData, grid);
     grid->SetExtent(0, dimensions[0] - 1, 0, dimensions[1] - 1, 0, 0);
 
     float minValue = std::numeric_limits<float>::max();
     float maxValue = std::numeric_limits<float>::lowest();
 
-    vtkSmartPointer<vtkFloatArray> dataArray = vtkSmartPointer<vtkFloatArray>::New();
+    VTK_CREATE(vtkFloatArray, dataArray);
     dataArray->SetNumberOfComponents(1);
     dataArray->SetNumberOfTuples(grid->GetNumberOfPoints());
     for (int r = 0; r < dimensions[1]; ++r) {
@@ -96,9 +103,9 @@ void Loader::loadGrid(GridDataInput & input, const vector<ReadDataset> & dataset
 
     grid->GetPointData()->SetScalars(dataArray);
 
-    input.setData(*grid);
+    input.setData(grid);
 
-    vtkSmartPointer<vtkLookupTable> lut = vtkSmartPointer<vtkLookupTable>::New();
+    VTK_CREATE(vtkLookupTable, lut);
     lut->SetTableRange(minValue, maxValue);
     lut->SetNumberOfColors(static_cast<vtkIdType>(std::ceil(maxValue - minValue)) * 10);
     lut->SetHueRange(0.66667, 0.0);
@@ -109,7 +116,7 @@ void Loader::loadGrid(GridDataInput & input, const vector<ReadDataset> & dataset
 
     input.lookupTable = lut;
 
-    vtkSmartPointer<vtkTexture> texture = vtkSmartPointer<vtkTexture>::New();
+    VTK_CREATE(vtkTexture, texture);
     texture->SetLookupTable(lut);
     texture->SetInputData(grid);
     texture->MapColorScalarsThroughLookupTableOn();
@@ -119,38 +126,25 @@ void Loader::loadGrid(GridDataInput & input, const vector<ReadDataset> & dataset
     double xExtend = input.bounds[1] - input.bounds[0];
     double yExtend = input.bounds[3] - input.bounds[2];
 
-    vtkSmartPointer<vtkPlaneSource> plane = vtkSmartPointer<vtkPlaneSource>::New();
+    VTK_CREATE(vtkPlaneSource, plane);
     plane->SetXResolution(dimensions[0]);
     plane->SetYResolution(dimensions[1]);
     plane->SetOrigin(input.bounds[0], input.bounds[2], 0);
     plane->SetPoint1(input.bounds[0] + xExtend, input.bounds[2], 0);
     plane->SetPoint2(input.bounds[0], input.bounds[2] + yExtend, 0);
 
-    vtkSmartPointer<vtkPolyDataMapper> planeMapper = vtkSmartPointer<vtkPolyDataMapper>::New();
+    VTK_CREATE(vtkPolyDataMapper, planeMapper);
     planeMapper->SetInputConnection(plane->GetOutputPort());
 
-    input.setMapper(*planeMapper);
-    input.setTexture(*texture);
-}
-
-Loader::InputVector * Loader::loadData(const std::string & filename)
-{
-    InputVector * parsedData = new InputVector();
-
-    // load input file
-    populateIOVectors(filename, *parsedData);
-
-    assert(parsedData->size() > 0);
-    assert(parsedData->at(0).size() > 0);
-
-    return parsedData;
+    input.setMapper(planeMapper);
+    input.setTexture(texture);
 }
 
 vtkPolyData * Loader::parsePoints(const InputVector & parsedData, t_UInt firstColumn)
 {
     assert(parsedData.size() > firstColumn);
 
-    vtkSmartPointer<vtkPoints> points = vtkSmartPointer<vtkPoints>::New();
+    VTK_CREATE(vtkPoints, points);
 
     size_t nbRows = parsedData.at(firstColumn).size();
     std::vector<vtkIdType> pointIds(nbRows);
@@ -161,22 +155,21 @@ vtkPolyData * Loader::parsePoints(const InputVector & parsedData, t_UInt firstCo
     }
 
     // Create the topology of the point (a vertex)
-    vtkSmartPointer<vtkCellArray> vertices = vtkSmartPointer<vtkCellArray>::New();
-
+    VTK_CREATE(vtkCellArray, vertices);
     vertices->InsertNextCell(nbRows, pointIds.data());
 
-    vtkPolyData * polyData = vtkPolyData::New();
-    polyData->SetPoints(points);
-    polyData->SetVerts(vertices);
+    vtkPolyData * resultPolyData = vtkPolyData::New();
+    resultPolyData->SetPoints(points);
+    resultPolyData->SetVerts(vertices);
 
-    return polyData;
+    return resultPolyData;
 }
 
 vtkPolyData * Loader::parseIndexedTriangles(
     const InputVector & parsedVertexData, t_UInt vertexIndexColumn, t_UInt firstVertexColumn,
     const InputVector & parsedIndexData, t_UInt firstIndexColumn)
 {
-    vtkSmartPointer<vtkPoints> points = vtkSmartPointer<vtkPoints>::New();
+    VTK_CREATE(vtkPoints, points);
 
     size_t nbVertices = parsedVertexData[vertexIndexColumn].size();
     size_t nbTriangles = parsedIndexData[firstIndexColumn].size();
@@ -191,9 +184,8 @@ vtkPolyData * Loader::parseIndexedTriangles(
         pointIds.at(row) = std::llround(parsedVertexData[vertexIndexColumn][row]) - indexOffset;
     }
 
-    vtkSmartPointer<vtkCellArray> triangles = vtkSmartPointer<vtkCellArray>::New();
-
-    vtkSmartPointer<vtkTriangle> triangle = vtkSmartPointer<vtkTriangle>::New();
+    VTK_CREATE(vtkCellArray, triangles);
+    VTK_CREATE(vtkTriangle, triangle);
     for (size_t row = 0; row < nbTriangles; ++row) {
         // set the indexes for the three triangle vertexes
         // hopefully, these indexes map to the vertex indexes from parsedVertexData
@@ -203,9 +195,9 @@ vtkPolyData * Loader::parseIndexedTriangles(
         triangles->InsertNextCell(triangle);    // this copies the triangle data into the list
     }
 
-    vtkPolyData * polyData = vtkPolyData::New();
-    polyData->SetPoints(points);
-    polyData->SetPolys(triangles);
+    vtkPolyData * resultPolyData = vtkPolyData::New();
+    resultPolyData->SetPoints(points);
+    resultPolyData->SetPolys(triangles);
 
-    return polyData;
+    return resultPolyData;
 }
