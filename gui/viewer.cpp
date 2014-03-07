@@ -29,11 +29,17 @@
 #include "renderwidget.h"
 #include <QFileDialog>
 #include <QMessageBox>
+#include <vtkQtTableView.h>
+#include <vtkDataObjectToTable.h>
 
 #include "core/loader.h"
 #include "core/input.h"
 
 using namespace std;
+
+
+#define VTK_CREATE(type, name) \
+    vtkSmartPointer<type> name = vtkSmartPointer<type>::New()
 
 Viewer::Viewer()
 : m_ui(new Ui_Viewer())
@@ -43,7 +49,8 @@ Viewer::Viewer()
     setupRenderer();
     setupInteraction();
 
-    m_mainRenderer->ResetCamera();
+    m_tableView = vtkSmartPointer<vtkQtTableView>::New();
+    m_ui->infoSplitter->addWidget(m_tableView->GetWidget());
 }
 
 void Viewer::setupRenderer()
@@ -134,6 +141,20 @@ void Viewer::show3DInput(Input3D & input)
     prop.SetLighting(true);
 
     m_mainRenderer->AddViewProp(actor);
+
+    VTK_CREATE(vtkElevationFilter, elevation);
+    elevation->SetInputData(input.data());
+    elevation->SetLowPoint(0, 0, 0);
+    elevation->SetHighPoint(5, 0, 0);
+
+
+    VTK_CREATE(vtkDataObjectToTable, toTable);
+    toTable->SetInputConnection(elevation->GetOutputPort());
+    toTable->SetFieldType(vtkDataObjectToTable::POINT_DATA);
+    toTable->Update();
+
+    m_tableView->SetRepresentationFromInputConnection(toTable->GetOutputPort());
+    m_tableView->Update();
 
     setupAxes(input.data()->GetBounds());
 }

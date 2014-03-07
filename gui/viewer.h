@@ -13,6 +13,7 @@ class vtkRenderer;
 class vtkRenderWindowInteractor;
 class vtkProp;
 class vtkCubeAxesActor;
+class vtkQtTableView;
 
 class QStringList;
 
@@ -42,6 +43,8 @@ protected:
 
     vtkSmartPointer<vtkRenderer> m_mainRenderer;
     vtkSmartPointer<vtkRenderWindowInteractor> m_mainInteractor;
+
+    vtkSmartPointer<vtkQtTableView> m_tableView;
 
     std::list<std::shared_ptr<Input>> m_inputs;
 
