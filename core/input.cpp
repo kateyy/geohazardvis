@@ -44,17 +44,8 @@ vtkSmartPointer<vtkDataSet> Input::data() const
     return m_data;
 }
 
-Input3D::Input3D(const std::string & name, ModelType type)
-: Input(name, type)
-{
-}
-
-Input3D::~Input3D()
-{
-}
-
 PolyDataInput::PolyDataInput(const std::string & name, ModelType type)
-: Input3D(name, type)
+: Input(name, type)
 {
 }
 
@@ -63,7 +54,7 @@ ProcessedInput::ProcessedInput(const std::string & name, ModelType type)
 {
 }
 
-vtkSmartPointer<vtkActor> Input3D::createActor()
+vtkSmartPointer<vtkActor> PolyDataInput::createActor()
 {
     VTK_CREATE(vtkActor, actor);
     actor->SetMapper(mapper());
@@ -71,7 +62,7 @@ vtkSmartPointer<vtkActor> Input3D::createActor()
     return actor;
 }
 
-vtkSmartPointer<vtkMapper> Input3D::mapper()
+vtkSmartPointer<vtkMapper> PolyDataInput::mapper()
 {
     if (m_mapper == nullptr) {
         m_mapper = createDataMapper();

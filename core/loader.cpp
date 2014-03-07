@@ -64,7 +64,7 @@ void Loader::loadIndexedTriangles(PolyDataInput & input, const vector<ReadDatase
 
     assert(indices != nullptr && vertices != nullptr);
 
-    vtkSmartPointer<vtkPolyData> data = vtkSmartPointer<vtkPolyData>::Take(parseIndexedTriangles(*vertices, 0, 1, *indices, 0));
+    vtkSmartPointer<vtkPolyData> data = parseIndexedTriangles(*vertices, 0, 1, *indices, 0);
 
     input.setPolyData(data);
 }
@@ -140,7 +140,7 @@ void Loader::loadGrid(GridDataInput & input, const vector<ReadDataset> & dataset
     input.setTexture(texture);
 }
 
-vtkPolyData * Loader::parsePoints(const InputVector & parsedData, t_UInt firstColumn)
+vtkSmartPointer<vtkPolyData> Loader::parsePoints(const InputVector & parsedData, t_UInt firstColumn)
 {
     assert(parsedData.size() > firstColumn);
 
@@ -158,14 +158,14 @@ vtkPolyData * Loader::parsePoints(const InputVector & parsedData, t_UInt firstCo
     VTK_CREATE(vtkCellArray, vertices);
     vertices->InsertNextCell(nbRows, pointIds.data());
 
-    vtkPolyData * resultPolyData = vtkPolyData::New();
+    VTK_CREATE(vtkPolyData, resultPolyData);
     resultPolyData->SetPoints(points);
     resultPolyData->SetVerts(vertices);
 
     return resultPolyData;
 }
 
-vtkPolyData * Loader::parseIndexedTriangles(
+vtkSmartPointer<vtkPolyData> Loader::parseIndexedTriangles(
     const InputVector & parsedVertexData, t_UInt vertexIndexColumn, t_UInt firstVertexColumn,
     const InputVector & parsedIndexData, t_UInt firstIndexColumn)
 {
@@ -195,7 +195,7 @@ vtkPolyData * Loader::parseIndexedTriangles(
         triangles->InsertNextCell(triangle);    // this copies the triangle data into the list
     }
 
-    vtkPolyData * resultPolyData = vtkPolyData::New();
+    VTK_CREATE(vtkPolyData, resultPolyData);
     resultPolyData->SetPoints(points);
     resultPolyData->SetPolys(triangles);
 

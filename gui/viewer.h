@@ -18,7 +18,7 @@ class vtkQtTableView;
 class QStringList;
 
 class Input;
-class Input3D;
+class PolyDataInput;
 class GridDataInput;
 
 class Viewer : public QMainWindow
@@ -39,7 +39,7 @@ public slots:
 protected:
     Ui_Viewer *m_ui;
 
-    void show3DInput(Input3D & input);
+    void show3DInput(PolyDataInput & input);
     void showGridInput(GridDataInput & input);
 
     vtkSmartPointer<vtkRenderer> m_mainRenderer;

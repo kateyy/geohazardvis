@@ -68,30 +68,20 @@ protected:
     double m_minMaxValue[2];
 };
 
-class Input3D : public Input {
+class PolyDataInput : public Input {
 public:
-    Input3D(const std::string & name, ModelType type);
-    virtual ~Input3D();
+    PolyDataInput(const std::string & name, ModelType type);
 
     virtual vtkSmartPointer<vtkActor> createActor();
     virtual vtkSmartPointer<vtkMapper> mapper();
-
-protected:
-    /** subclass should override this to create a vtkMapper mapping to specific input data */
-    virtual vtkSmartPointer<vtkMapper> createDataMapper() const = 0;
-    vtkSmartPointer<vtkMapper> m_mapper;
-};
-
-class PolyDataInput : public Input3D {
-public:
-    PolyDataInput(const std::string & name, ModelType type);
 
     virtual vtkSmartPointer<vtkPolyData> polyData() const;
     virtual void setPolyData(vtkSmartPointer<vtkPolyData> polyData);
     virtual vtkSmartPointer<vtkPolyDataMapper> polyDataMapper();
 
 protected:
-    virtual vtkSmartPointer<vtkMapper> createDataMapper() const override;
+    virtual vtkSmartPointer<vtkMapper> createDataMapper() const;
+    vtkSmartPointer<vtkMapper> m_mapper;
 };
 
 class ProcessedInput : public PolyDataInput {

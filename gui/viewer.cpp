@@ -12,8 +12,6 @@
 
 // inputs
 #include <vtkPolyDataAlgorithm.h>
-// filters
-#include <vtkElevationFilter.h>
 // mappers
 #include <vtkPolyDataMapper.h>
 // actors
@@ -31,6 +29,8 @@
 #include <QMessageBox>
 #include <vtkQtTableView.h>
 #include <vtkDataObjectToTable.h>
+#include <vtkArrayToTable.h>
+#include <vtkTable.h>
 
 #include "core/loader.h"
 #include "core/input.h"
@@ -116,7 +116,7 @@ void Viewer::openFile(QString filename)
 
     switch (input->type) {
     case ModelType::triangles:
-        show3DInput(*static_cast<Input3D*>(input.get()));
+        show3DInput(*static_cast<PolyDataInput*>(input.get()));
         break;
     case ModelType::grid2d:
         showGridInput(*static_cast<GridDataInput*>(input.get()));
@@ -132,7 +132,7 @@ void Viewer::openFile(QString filename)
     m_ui->qvtkMain->GetRenderWindow()->Render();
 }
 
-void Viewer::show3DInput(Input3D & input)
+void Viewer::show3DInput(PolyDataInput & input)
 {
     vtkSmartPointer<vtkActor> actor = input.createActor();
     vtkProperty & prop = *actor->GetProperty();
@@ -147,18 +147,10 @@ void Viewer::show3DInput(Input3D & input)
 
     m_mainRenderer->AddViewProp(actor);
 
-    VTK_CREATE(vtkElevationFilter, elevation);
-    elevation->SetInputData(input.data());
-    elevation->SetLowPoint(0, 0, 0);
-    elevation->SetHighPoint(5, 0, 0);
+    VTK_CREATE(vtkTable, table);
+    table->AddColumn(input.polyData()->GetPoints()->GetData());
 
-
-    VTK_CREATE(vtkDataObjectToTable, toTable);
-    toTable->SetInputConnection(elevation->GetOutputPort());
-    toTable->SetFieldType(vtkDataObjectToTable::POINT_DATA);
-    toTable->Update();
-
-    m_tableView->SetRepresentationFromInputConnection(toTable->GetOutputPort());
+    m_tableView->SetRepresentationFromInput(table);
     m_tableView->Update();
 
     setupAxes(input.data()->GetBounds());
@@ -171,6 +163,15 @@ void Viewer::showGridInput(GridDataInput & input)
     heatBars->SetLookupTable(input.lookupTable);
     m_mainRenderer->AddViewProp(heatBars);
     m_mainRenderer->AddViewProp(input.createTexturedPolygonActor());
+
+    VTK_CREATE(vtkDataObjectToTable, toTable);
+    toTable->SetInputData(input.data());
+    toTable->SetFieldType(vtkDataObjectToTable::POINT_DATA);
+    toTable->Update();
+
+    m_tableView->SetRepresentationFromInputConnection(toTable->GetOutputPort());
+
+    m_tableView->Update();
 
     setupAxes(input.bounds);
 }
