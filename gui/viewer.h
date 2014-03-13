@@ -14,6 +14,8 @@ class vtkRenderWindowInteractor;
 class vtkProp;
 class vtkCubeAxesActor;
 class vtkQtTableView;
+class vtkObject;
+class vtkCommand;
 
 class QStringList;
 
@@ -35,6 +37,8 @@ public slots:
     void on_actionOpen_triggered();
 
     void openFile(QString filename);
+
+    void selectionChanged(vtkObject* caller, unsigned long vtk_event, void* clientData, void* callData, vtkCommand* command);
 
 protected:
     Ui_Viewer *m_ui;

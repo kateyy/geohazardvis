@@ -3,6 +3,8 @@
 
 #include <cassert>
 
+#include <QDebug>
+
 // utility etc
 #include <vtkSmartPointer.h>
 #include <vtkProperty.h>
@@ -29,8 +31,13 @@
 #include <QMessageBox>
 #include <vtkQtTableView.h>
 #include <vtkDataObjectToTable.h>
-#include <vtkArrayToTable.h>
 #include <vtkTable.h>
+#include <vtkEventQtSlotConnect.h>
+#include <vtkDataRepresentation.h>
+#include <vtkSelection.h>
+#include <vtkSelectionNode.h>
+#include <vtkInformationIntegerKey.h>
+#include <vtkIdTypeArray.h>
 
 #include "core/loader.h"
 #include "core/input.h"
@@ -50,6 +57,7 @@ Viewer::Viewer()
     setupInteraction();
 
     m_tableView = vtkSmartPointer<vtkQtTableView>::New();
+    m_tableView->SetSelectionBehavior(vtkQtTableView::SELECT_ROWS);
     m_ui->infoSplitter->addWidget(m_tableView->GetWidget());
 }
 
@@ -88,6 +96,19 @@ void Viewer::ShowInfo(const QStringList & info)
     m_ui->infoBox->addItems(info);
 
     setToolTip(info.join('\n'));
+}
+
+void Viewer::selectionChanged(vtkObject* caller, unsigned long vtk_event, void* clientData, void* callData, vtkCommand* command)
+{
+    assert(vtk_event == vtkCommand::SelectionChangedEvent);
+    vtkSelection * selection = reinterpret_cast<vtkSelection*>(callData);
+    assert(selection->GetNumberOfNodes() == 1);
+    vtkSelectionNode * node = selection->GetNode(0);
+    assert(node->GetContentType() == vtkSelectionNode::INDICES);
+    vtkIdTypeArray * indices = reinterpret_cast<vtkIdTypeArray*>(node->GetSelectionList());
+    int nbIndices = indices->GetNumberOfTuples();
+    if (nbIndices)
+        qDebug() << QString::number(indices->GetValue(0));
 }
 
 void Viewer::on_actionOpen_triggered()
@@ -148,12 +169,15 @@ void Viewer::show3DInput(PolyDataInput & input)
 
     m_mainRenderer->AddViewProp(actor);
 
+    setupAxes(input.data()->GetBounds());
+
     VTK_CREATE(vtkTable, table);
     table->AddColumn(input.polyData()->GetPoints()->GetData());
-    m_tableView->SetRepresentationFromInput(table);
+    vtkDataRepresentation * repr = m_tableView->SetRepresentationFromInput(table);
     m_tableView->Update();
 
-    setupAxes(input.data()->GetBounds());
+    vtkEventQtSlotConnect * connect = vtkEventQtSlotConnect::New();
+    connect->Connect(repr, vtkCommand::SelectionChangedEvent, this, SLOT(selectionChanged(vtkObject*, unsigned long, void*, void*, vtkCommand*)));
 }
 
 void Viewer::showGridInput(GridDataInput & input)
