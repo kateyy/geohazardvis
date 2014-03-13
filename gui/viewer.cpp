@@ -38,6 +38,7 @@
 #include <vtkSelectionNode.h>
 #include <vtkInformationIntegerKey.h>
 #include <vtkIdTypeArray.h>
+#include <vtkAnnotationLink.h>
 
 #include "core/loader.h"
 #include "core/input.h"
@@ -50,6 +51,7 @@ using namespace std;
 
 Viewer::Viewer()
 : m_ui(new Ui_Viewer())
+, m_eventToSlot(vtkEventQtSlotConnect::New())
 {
     m_ui->setupUi(this);
 
@@ -82,6 +84,7 @@ void Viewer::setupInteraction()
     VTK_CREATE(PickingInteractionStyle, interactStyle);
     interactStyle->SetDefaultRenderer(m_mainRenderer);
     connect(&interactStyle->pickingInfo, &PickingInfo::infoSent, this, &Viewer::ShowInfo);
+    connect(&interactStyle->pickingInfo, &PickingInfo::selectionChanged, this, &Viewer::selectionChanged);
     m_mainInteractor = vtkSmartPointer<vtkRenderWindowInteractor>::New();
     m_mainInteractor->SetInteractorStyle(interactStyle);
     m_mainInteractor->SetRenderWindow(m_ui->qvtkMain->GetRenderWindow());
@@ -109,6 +112,8 @@ void Viewer::selectionChanged(vtkObject* caller, unsigned long vtk_event, void* 
     int nbIndices = indices->GetNumberOfTuples();
     if (nbIndices)
         qDebug() << QString::number(indices->GetValue(0));
+    m_tableView->GetRepresentation()->GetAnnotationLink()->SetCurrentSelection(selection);
+    m_tableView->Update();
 }
 
 void Viewer::on_actionOpen_triggered()
@@ -176,8 +181,7 @@ void Viewer::show3DInput(PolyDataInput & input)
     vtkDataRepresentation * repr = m_tableView->SetRepresentationFromInput(table);
     m_tableView->Update();
 
-    vtkEventQtSlotConnect * connect = vtkEventQtSlotConnect::New();
-    connect->Connect(repr, vtkCommand::SelectionChangedEvent, this, SLOT(selectionChanged(vtkObject*, unsigned long, void*, void*, vtkCommand*)));
+    m_eventToSlot->Connect(repr, vtkCommand::SelectionChangedEvent, this, SLOT(selectionChanged(vtkObject*, unsigned long, void*, void*, vtkCommand*)));
 }
 
 void Viewer::showGridInput(GridDataInput & input)

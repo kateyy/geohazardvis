@@ -8,9 +8,18 @@
 #include <vtkInformation.h>
 #include <vtkInformationStringKey.h>
 
+#include <vtkDataSet.h>
+#include <vtkCommand.h>
+#include <vtkSelection.h>
+#include <vtkSelectionNode.h>
+#include <vtkIdTypeArray.h>
+
 #include "core/input.h"
 
-void PickingInfo::sendPointInfo(vtkSmartPointer<vtkPointPicker> picker) const
+#define VTK_CREATE(type, name) \
+    vtkSmartPointer<type> name = vtkSmartPointer<type>::New()
+
+void PickingInfo::sendPointInfo(vtkSmartPointer<vtkPointPicker> picker, bool mouseClick) const
 {
     double* pos = picker->GetPickPosition();
 
@@ -49,4 +58,22 @@ void PickingInfo::sendPointInfo(vtkSmartPointer<vtkPointPicker> picker) const
         info.push_back(line);
 
     emit infoSent(info);
+
+    if (!mouseClick)
+        return;
+
+    vtkIdType ptIndex = picker->GetPointId();
+
+    if (ptIndex == -1)
+        return;
+
+    VTK_CREATE(vtkSelection, selection);
+    VTK_CREATE(vtkSelectionNode, node);
+    VTK_CREATE(vtkIdTypeArray, indices);
+    indices->InsertValue(0, ptIndex);
+    node->SetContentType(vtkSelectionNode::INDICES);
+    node->SetSelectionList(indices);
+    selection->AddNode(node);
+
+    emit selectionChanged(picker->GetDataSet(), vtkCommand::SelectionChangedEvent, nullptr, (void*)selection, nullptr);
 }

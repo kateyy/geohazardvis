@@ -18,17 +18,17 @@ PickingInteractionStyle::PickingInteractionStyle()
 
 void PickingInteractionStyle::OnMouseMove()
 {
-    pick();
+    pick(false);
     vtkInteractorStyleTrackballCamera::OnMouseMove();
 }
 
 void PickingInteractionStyle::OnLeftButtonDown()
 {
-    pick();
+    pick(true);
     vtkInteractorStyleTrackballCamera::OnLeftButtonDown();
 }
 
-void PickingInteractionStyle::pick()
+void PickingInteractionStyle::pick(bool mouseClick)
 {
     int* clickPos = this->GetInteractor()->GetEventPosition();
 
@@ -37,5 +37,5 @@ void PickingInteractionStyle::pick()
 
     picker->Pick(clickPos[0], clickPos[1], 0, this->GetDefaultRenderer());
 
-    pickingInfo.sendPointInfo(picker);
+    pickingInfo.sendPointInfo(picker, mouseClick);
 }

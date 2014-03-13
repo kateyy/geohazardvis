@@ -16,6 +16,7 @@ class vtkCubeAxesActor;
 class vtkQtTableView;
 class vtkObject;
 class vtkCommand;
+class vtkEventQtSlotConnect;
 
 class QStringList;
 
@@ -61,4 +62,6 @@ protected:
     void setupAxes(const double bounds[6]);
     vtkSmartPointer<vtkCubeAxesActor> m_axesActor;
     vtkSmartPointer<vtkCubeAxesActor> createAxes(vtkRenderer & renderer);
+
+    vtkSmartPointer<vtkEventQtSlotConnect> m_eventToSlot;
 };
