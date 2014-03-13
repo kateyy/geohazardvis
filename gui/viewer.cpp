@@ -123,6 +123,7 @@ void Viewer::openFile(QString filename)
         break;
     default:
         QMessageBox::critical(this, "File error", "Could not open the selected input file. (unsupported format)");
+        return;
     }
 
     vtkCamera & camera = *m_mainRenderer->GetActiveCamera();
@@ -149,7 +150,6 @@ void Viewer::show3DInput(PolyDataInput & input)
 
     VTK_CREATE(vtkTable, table);
     table->AddColumn(input.polyData()->GetPoints()->GetData());
-
     m_tableView->SetRepresentationFromInput(table);
     m_tableView->Update();
 
@@ -169,6 +169,7 @@ void Viewer::showGridInput(GridDataInput & input)
     toTable->SetFieldType(vtkDataObjectToTable::POINT_DATA);
     toTable->Update();
 
+    //m_tableView->SetSplitMultiComponentColumns(true);
     m_tableView->SetRepresentationFromInputConnection(toTable->GetOutputPort());
 
     m_tableView->Update();

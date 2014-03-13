@@ -4,6 +4,7 @@
 #include <vtkActor.h>
 #include <vtkPolyDataMapper.h>
 #include <vtkPolyDataAlgorithm.h>
+#include <vtkImageData.h>
 
 // macro defining the information key to access the name of the input in the mapper
 vtkInformationKeyMacro(Input, NameKey, String);
@@ -77,7 +78,7 @@ GridDataInput::GridDataInput(const std::string & name)
 {
 }
 
-void GridDataInput::setData(vtkSmartPointer<vtkDataSet> data)
+void GridDataInput::setData(vtkSmartPointer<vtkImageData> data)
 {
     m_data = data;
 }
@@ -96,6 +97,13 @@ double * GridDataInput::minMaxValue()
 const double * GridDataInput::minMaxValue() const
 {
     return m_minMaxValue;
+}
+
+vtkSmartPointer<vtkImageData> GridDataInput::imageData() const
+{
+    vtkImageData * imageData = static_cast<vtkImageData*>(m_data.Get());
+    assert(imageData);
+    return imageData;
 }
 
 void GridDataInput::setMapper(vtkSmartPointer<vtkPolyDataMapper> mapper)

@@ -16,6 +16,7 @@ class vtkPolyDataAlgorithm;
 class vtkAlgorithmOutput;
 class vtkLookupTable;
 class vtkTexture;
+class vtkImageData;
 
 
 enum class ModelType {
@@ -48,10 +49,12 @@ protected:
 class GridDataInput : public Input {
 public:
     GridDataInput(const std::string & name);
-    void setData(vtkSmartPointer<vtkDataSet> data);
+    void setData(vtkSmartPointer<vtkImageData> data);
     virtual void setMinMaxValue(double min, double max);
     virtual double * minMaxValue();
     virtual const double * minMaxValue() const;
+
+    virtual vtkSmartPointer<vtkImageData> imageData() const;
 
     virtual void setMapper(vtkSmartPointer<vtkPolyDataMapper> mapper);
     virtual void setTexture(vtkSmartPointer<vtkTexture> texture);
