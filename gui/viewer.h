@@ -35,6 +35,8 @@ public slots:
 
     void openFile(QString filename);
 
+    void selectPoint(int index);
+
 protected:
     Ui_Viewer *m_ui;
 

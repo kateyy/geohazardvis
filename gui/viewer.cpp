@@ -58,26 +58,22 @@ public:
     int columnCount(const QModelIndex &parent = QModelIndex()) const override {
         if (m_vtkData == nullptr)
             return 0;
-        return 4;
+        return 3;
     }
     QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override {
-        assert(index.column() < 4);
+        assert(index.column() < 3);
         if (!index.isValid() || role != Qt::DisplayRole)
             return QVariant();
-        if (index.column() == 0)
-            return QVariant(index.row());
         double * vertex = m_vtkData->GetPoints()->GetPoint(index.row());
-        return QVariant(vertex[index.column()-1]);
+        return QVariant(vertex[index.column()]);
     }
     QVariant headerData(int section, Qt::Orientation orientation,
         int role = Qt::DisplayRole) const override {
-        if (orientation == Qt::Orientation::Vertical)
-            return QVariant();
         if (role != Qt::DisplayRole)
             return QVariant();
-        if (section == 0)
-            return QVariant("index");
-        return QVariant(QChar('x' + section - 1));
+        if (orientation == Qt::Orientation::Vertical)
+            return QVariant(section);
+        return QVariant(QChar('x' + section));
     }
 
     void setVtkData(vtkSmartPointer<vtkPolyData> data) {
@@ -128,6 +124,7 @@ void Viewer::setupInteraction()
     VTK_CREATE(PickingInteractionStyle, interactStyle);
     interactStyle->SetDefaultRenderer(m_mainRenderer);
     connect(interactStyle, &PickingInteractionStyle::pointInfoSent, this, &Viewer::ShowInfo);
+    connect(interactStyle, &PickingInteractionStyle::pointClicked, this, &Viewer::selectPoint);
     m_mainInteractor = vtkSmartPointer<vtkRenderWindowInteractor>::New();
     m_mainInteractor->SetInteractorStyle(interactStyle);
     m_mainInteractor->SetRenderWindow(m_ui->qvtkMain->GetRenderWindow());
@@ -142,6 +139,11 @@ void Viewer::ShowInfo(const QStringList & info)
     m_ui->infoBox->addItems(info);
 
     setToolTip(info.join('\n'));
+}
+
+void Viewer::selectPoint(int index)
+{
+    m_ui->tableView->selectRow(index);
 }
 
 void Viewer::on_actionOpen_triggered()
@@ -205,7 +207,7 @@ void Viewer::show3DInput(PolyDataInput & input)
     setupAxes(input.data()->GetBounds());
 
     ((QVtkTableModel*) m_ui->tableView->model())->setVtkData(input.polyData());
-    m_ui->tableView->update();
+    m_ui->tableView->resizeColumnsToContents();
 }
 
 void Viewer::showGridInput(GridDataInput & input)
