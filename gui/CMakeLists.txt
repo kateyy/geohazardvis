@@ -7,8 +7,6 @@ set ( SOURCES
     viewer.h
     pickinginteractionstyle.cpp
     pickinginteractionstyle.h
-    pickinginfo.h
-    pickinginfo.cpp
     renderwidget.h
     renderwidget.cpp
 )

@@ -127,7 +127,7 @@ void Viewer::setupInteraction()
 {
     VTK_CREATE(PickingInteractionStyle, interactStyle);
     interactStyle->SetDefaultRenderer(m_mainRenderer);
-    connect(&interactStyle->pickingInfo, &PickingInfo::infoSent, this, &Viewer::ShowInfo);
+    connect(interactStyle, &PickingInteractionStyle::pointInfoSent, this, &Viewer::ShowInfo);
     m_mainInteractor = vtkSmartPointer<vtkRenderWindowInteractor>::New();
     m_mainInteractor->SetInteractorStyle(interactStyle);
     m_mainInteractor->SetRenderWindow(m_ui->qvtkMain->GetRenderWindow());

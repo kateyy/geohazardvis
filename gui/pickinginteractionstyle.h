@@ -1,10 +1,16 @@
 #pragma once
 
 #include <vtkInteractorStyleTrackballCamera.h>
-#include "gui/pickinginfo.h"
+#include <vtkSmartPointer.h>
 
-class PickingInteractionStyle : public vtkInteractorStyleTrackballCamera
+#include <QObject>
+
+class vtkPointPicker;
+
+class PickingInteractionStyle : public QObject, public vtkInteractorStyleTrackballCamera
 {
+    Q_OBJECT
+
 public:
     explicit PickingInteractionStyle();
 
@@ -14,8 +20,14 @@ public:
     virtual void OnMouseMove() override;
     virtual void OnLeftButtonDown() override;
 
-    const PickingInfo pickingInfo; // qt object used to create qt events for vtk pick events
+signals:
+    void pointInfoSent(const QStringList &info) const;
+    void pointClicked(int index) const;
 
 protected:
     void pick();
+
+    void sendPointInfo() const;
+
+    vtkSmartPointer<vtkPointPicker> m_picker;
 };
