@@ -30,6 +30,9 @@
 #include <QFileDialog>
 #include <QMessageBox>
 
+#include <QAbstractTableModel>
+#include <QVariant>
+
 #include "core/loader.h"
 #include "core/input.h"
 
@@ -39,10 +42,66 @@ using namespace std;
 #define VTK_CREATE(type, name) \
     vtkSmartPointer<type> name = vtkSmartPointer<type>::New()
 
+
+class QVtkTableModel : public QAbstractTableModel {
+public:
+    QVtkTableModel(QObject * parent = nullptr)
+    : QAbstractTableModel(parent)
+    {
+    }
+    ~QVtkTableModel() override {}
+    int rowCount(const QModelIndex &parent = QModelIndex()) const override {
+        if (m_vtkData == nullptr)
+            return 0;
+        return m_vtkData->GetPoints()->GetNumberOfPoints();
+    }
+    int columnCount(const QModelIndex &parent = QModelIndex()) const override {
+        if (m_vtkData == nullptr)
+            return 0;
+        return 4;
+    }
+    QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override {
+        assert(index.column() < 4);
+        if (!index.isValid() || role != Qt::DisplayRole)
+            return QVariant();
+        if (index.column() == 0)
+            return QVariant(index.row());
+        double * vertex = m_vtkData->GetPoints()->GetPoint(index.row());
+        return QVariant(vertex[index.column()-1]);
+    }
+    QVariant headerData(int section, Qt::Orientation orientation,
+        int role = Qt::DisplayRole) const override {
+        if (orientation == Qt::Orientation::Vertical)
+            return QVariant();
+        if (role != Qt::DisplayRole)
+            return QVariant();
+        if (section == 0)
+            return QVariant("index");
+        return QVariant(QChar('x' + section - 1));
+    }
+
+    void setVtkData(vtkSmartPointer<vtkPolyData> data) {
+        assert(m_vtkData == nullptr);
+        /*beginInsertColumns(QModelIndex(), 0, 3);
+        beginInsertRows(QModelIndex(), 0, data->GetPoints()->GetNumberOfPoints() - 1);*/
+        beginResetModel();
+        m_vtkData = data;
+        /*endInsertRows();
+        endInsertColumns();*/
+        endResetModel();
+    }
+
+protected:
+    vtkSmartPointer<vtkPolyData> m_vtkData;
+};
+
+
 Viewer::Viewer()
 : m_ui(new Ui_Viewer())
 {
     m_ui->setupUi(this);
+    QVtkTableModel * model = new QVtkTableModel;
+    m_ui->tableView->setModel(model);
 
     setupRenderer();
     setupInteraction();
@@ -144,6 +203,9 @@ void Viewer::show3DInput(PolyDataInput & input)
     m_mainRenderer->AddViewProp(actor);
 
     setupAxes(input.data()->GetBounds());
+
+    ((QVtkTableModel*) m_ui->tableView->model())->setVtkData(input.polyData());
+    m_ui->tableView->update();
 }
 
 void Viewer::showGridInput(GridDataInput & input)

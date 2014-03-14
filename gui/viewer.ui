@@ -40,7 +40,23 @@
         <enum>Qt::Vertical</enum>
        </property>
        <widget class="QListWidget" name="infoBox"/>
-       <widget class="QTableView" name="tableView"/>
+       <widget class="QTableView" name="tableView">
+        <property name="alternatingRowColors">
+         <bool>true</bool>
+        </property>
+        <property name="selectionMode">
+         <enum>QAbstractItemView::SingleSelection</enum>
+        </property>
+        <property name="selectionBehavior">
+         <enum>QAbstractItemView::SelectRows</enum>
+        </property>
+        <attribute name="horizontalHeaderShowSortIndicator" stdset="0">
+         <bool>true</bool>
+        </attribute>
+        <attribute name="verticalHeaderVisible">
+         <bool>false</bool>
+        </attribute>
+       </widget>
       </widget>
       <widget class="RenderWidget" name="qvtkMain" native="true">
        <property name="sizePolicy">
