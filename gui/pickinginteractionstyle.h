@@ -17,5 +17,5 @@ public:
     const PickingInfo pickingInfo; // qt object used to create qt events for vtk pick events
 
 protected:
-    void pick(bool mouseClick);
+    void pick();
 };

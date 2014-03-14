@@ -13,10 +13,6 @@ class vtkRenderer;
 class vtkRenderWindowInteractor;
 class vtkProp;
 class vtkCubeAxesActor;
-class vtkQtTableView;
-class vtkObject;
-class vtkCommand;
-class vtkEventQtSlotConnect;
 
 class QStringList;
 
@@ -39,8 +35,6 @@ public slots:
 
     void openFile(QString filename);
 
-    void selectionChanged(vtkObject* caller, unsigned long vtk_event, void* clientData, void* callData, vtkCommand* command);
-
 protected:
     Ui_Viewer *m_ui;
 
@@ -49,8 +43,6 @@ protected:
 
     vtkSmartPointer<vtkRenderer> m_mainRenderer;
     vtkSmartPointer<vtkRenderWindowInteractor> m_mainInteractor;
-
-    vtkSmartPointer<vtkQtTableView> m_tableView;
 
     std::list<std::shared_ptr<Input>> m_inputs;
 
@@ -62,6 +54,4 @@ protected:
     void setupAxes(const double bounds[6]);
     vtkSmartPointer<vtkCubeAxesActor> m_axesActor;
     vtkSmartPointer<vtkCubeAxesActor> createAxes(vtkRenderer & renderer);
-
-    vtkSmartPointer<vtkEventQtSlotConnect> m_eventToSlot;
 };

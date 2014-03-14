@@ -57,16 +57,13 @@ add_compile_options( ${DEFAULT_COMPILE_FLAGS} )
 find_package(VTK COMPONENTS
     vtkCommonCore
     #vtkFiltersSources     # for the cone
-    vtkInteractionWidgets # vtkBoxWidget
-    vtkRenderingCore      # vtkPolyDataMapper
+    #vtkInteractionWidgets # vtkBoxWidget
     vtkRenderingOpenGL
-    vtkRenderingContext2D
-    vtkViewsQt
+    vtkRenderingQt
     vtkFiltersCore
-    vtkViewsInfovis         # heatmap item: 2D scene
     vtkInteractionStyle
     # vtkRenderingFreeTypeOpenGL
-    vtkRenderingAnnotation  # for the axis actor
+    vtkRenderingAnnotation  # for the axes actor
 )
 include(${VTK_USE_FILE})
 

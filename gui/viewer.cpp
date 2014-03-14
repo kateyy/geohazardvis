@@ -29,16 +29,6 @@
 #include "renderwidget.h"
 #include <QFileDialog>
 #include <QMessageBox>
-#include <vtkQtTableView.h>
-#include <vtkDataObjectToTable.h>
-#include <vtkTable.h>
-#include <vtkEventQtSlotConnect.h>
-#include <vtkDataRepresentation.h>
-#include <vtkSelection.h>
-#include <vtkSelectionNode.h>
-#include <vtkInformationIntegerKey.h>
-#include <vtkIdTypeArray.h>
-#include <vtkAnnotationLink.h>
 
 #include "core/loader.h"
 #include "core/input.h"
@@ -51,16 +41,11 @@ using namespace std;
 
 Viewer::Viewer()
 : m_ui(new Ui_Viewer())
-, m_eventToSlot(vtkEventQtSlotConnect::New())
 {
     m_ui->setupUi(this);
 
     setupRenderer();
     setupInteraction();
-
-    m_tableView = vtkSmartPointer<vtkQtTableView>::New();
-    m_tableView->SetSelectionBehavior(vtkQtTableView::SELECT_ROWS);
-    m_ui->infoSplitter->addWidget(m_tableView->GetWidget());
 }
 
 Viewer::~Viewer()
@@ -84,7 +69,6 @@ void Viewer::setupInteraction()
     VTK_CREATE(PickingInteractionStyle, interactStyle);
     interactStyle->SetDefaultRenderer(m_mainRenderer);
     connect(&interactStyle->pickingInfo, &PickingInfo::infoSent, this, &Viewer::ShowInfo);
-    connect(&interactStyle->pickingInfo, &PickingInfo::selectionChanged, this, &Viewer::selectionChanged);
     m_mainInteractor = vtkSmartPointer<vtkRenderWindowInteractor>::New();
     m_mainInteractor->SetInteractorStyle(interactStyle);
     m_mainInteractor->SetRenderWindow(m_ui->qvtkMain->GetRenderWindow());
@@ -99,21 +83,6 @@ void Viewer::ShowInfo(const QStringList & info)
     m_ui->infoBox->addItems(info);
 
     setToolTip(info.join('\n'));
-}
-
-void Viewer::selectionChanged(vtkObject* caller, unsigned long vtk_event, void* clientData, void* callData, vtkCommand* command)
-{
-    assert(vtk_event == vtkCommand::SelectionChangedEvent);
-    vtkSelection * selection = reinterpret_cast<vtkSelection*>(callData);
-    assert(selection->GetNumberOfNodes() == 1);
-    vtkSelectionNode * node = selection->GetNode(0);
-    assert(node->GetContentType() == vtkSelectionNode::INDICES);
-    vtkIdTypeArray * indices = reinterpret_cast<vtkIdTypeArray*>(node->GetSelectionList());
-    int nbIndices = indices->GetNumberOfTuples();
-    if (nbIndices)
-        qDebug() << QString::number(indices->GetValue(0));
-    m_tableView->GetRepresentation()->GetAnnotationLink()->SetCurrentSelection(selection);
-    m_tableView->Update();
 }
 
 void Viewer::on_actionOpen_triggered()
@@ -175,13 +144,6 @@ void Viewer::show3DInput(PolyDataInput & input)
     m_mainRenderer->AddViewProp(actor);
 
     setupAxes(input.data()->GetBounds());
-
-    VTK_CREATE(vtkTable, table);
-    table->AddColumn(input.polyData()->GetPoints()->GetData());
-    vtkDataRepresentation * repr = m_tableView->SetRepresentationFromInput(table);
-    m_tableView->Update();
-
-    m_eventToSlot->Connect(repr, vtkCommand::SelectionChangedEvent, this, SLOT(selectionChanged(vtkObject*, unsigned long, void*, void*, vtkCommand*)));
 }
 
 void Viewer::showGridInput(GridDataInput & input)
@@ -191,16 +153,6 @@ void Viewer::showGridInput(GridDataInput & input)
     heatBars->SetLookupTable(input.lookupTable);
     m_mainRenderer->AddViewProp(heatBars);
     m_mainRenderer->AddViewProp(input.createTexturedPolygonActor());
-
-    VTK_CREATE(vtkDataObjectToTable, toTable);
-    toTable->SetInputData(input.data());
-    toTable->SetFieldType(vtkDataObjectToTable::POINT_DATA);
-    toTable->Update();
-
-    //m_tableView->SetSplitMultiComponentColumns(true);
-    m_tableView->SetRepresentationFromInputConnection(toTable->GetOutputPort());
-
-    m_tableView->Update();
 
     setupAxes(input.bounds);
 }
