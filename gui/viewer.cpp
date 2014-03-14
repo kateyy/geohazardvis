@@ -134,10 +134,6 @@ void Viewer::setupInteraction()
 
 void Viewer::ShowInfo(const QStringList & info)
 {
-    m_ui->infoBox->clear();
-
-    m_ui->infoBox->addItems(info);
-
     setToolTip(info.join('\n'));
 }
 

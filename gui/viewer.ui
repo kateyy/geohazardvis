@@ -39,7 +39,6 @@
        <property name="orientation">
         <enum>Qt::Vertical</enum>
        </property>
-       <widget class="QListWidget" name="infoBox"/>
        <widget class="QTableView" name="tableView">
         <property name="alternatingRowColors">
          <bool>true</bool>
