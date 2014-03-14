@@ -9,6 +9,8 @@ set ( SOURCES
     pickinginteractionstyle.h
     renderwidget.h
     renderwidget.cpp
+    qvtktablemodel.h
+    qvtktablemodel.cpp
 )
     
 set ( UIs

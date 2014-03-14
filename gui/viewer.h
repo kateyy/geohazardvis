@@ -16,6 +16,8 @@ class vtkCubeAxesActor;
 
 class QStringList;
 
+class QVtkTableModel;
+
 class Input;
 class PolyDataInput;
 class GridDataInput;
@@ -39,6 +41,7 @@ public slots:
 
 protected:
     Ui_Viewer *m_ui;
+    QVtkTableModel * m_tableModel;
 
     void show3DInput(PolyDataInput & input);
     void showGridInput(GridDataInput & input);
