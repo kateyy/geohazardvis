@@ -7,6 +7,11 @@
 class vtkPolyData;
 class vtkImageData;
 
+enum class DisplayData {
+    Points,
+    Polygons
+};
+
 class QVtkTableModel : public QAbstractTableModel {
 public:
     QVtkTableModel(QObject * parent = nullptr);
@@ -21,4 +26,6 @@ public:
 
 protected:
     vtkSmartPointer<vtkPolyData> m_vtkData;
+
+    DisplayData m_displayData;
 };
