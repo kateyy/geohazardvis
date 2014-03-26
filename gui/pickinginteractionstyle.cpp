@@ -1,64 +1,116 @@
 #include "pickinginteractionstyle.h"
 
 #include <vtkRenderWindowInteractor.h>
+#include <vtkRenderer.h>
 
 #include <vtkObjectFactory.h>
-#include <vtkSmartPointer.h>
 #include <vtkPointPicker.h>
+#include <vtkCellPicker.h>
 #include <vtkAbstractMapper3D.h>
 
 #include <vtkInformation.h>
 #include <vtkInformationStringKey.h>
 
-#include <vtkPointPicker.h>
+#include <vtkIdTypeArray.h>
+#include <vtkSelectionNode.h>
+#include <vtkSelection.h>
+#include <vtkExtractSelection.h>
+#include <vtkUnstructuredGrid.h>
+#include <vtkDataSetMapper.h>
+#include <vtkActor.h>
+#include <vtkProperty.h>
 
 #include <QTextStream>
 #include <QStringList>
 
-
+#include "core/vtkhelper.h"
 #include "core/input.h"
 
 
 vtkStandardNewMacro(PickingInteractionStyle);
 
-#define VTK_CREATE(type, name) \
-    vtkSmartPointer<type> name = vtkSmartPointer<type>::New()
-
 PickingInteractionStyle::PickingInteractionStyle()
 : vtkInteractorStyleTrackballCamera()
-, m_picker(vtkPointPicker::New())
+, m_pointPicker(vtkSmartPointer<vtkPointPicker>::New())
+, m_cellPicker(vtkSmartPointer<vtkCellPicker>::New())
+, m_selectedCellActor(vtkSmartPointer<vtkActor>::New())
+, m_selectedCellMapper(vtkSmartPointer<vtkDataSetMapper>::New())
 {
 }
 
 void PickingInteractionStyle::OnMouseMove()
 {
-    pick();
+    pickPoint();
     vtkInteractorStyleTrackballCamera::OnMouseMove();
 }
 
 void PickingInteractionStyle::OnLeftButtonDown()
 {
-    pick();
+    pickPoint();
     vtkInteractorStyleTrackballCamera::OnLeftButtonDown();
 
-    vtkIdType index = m_picker->GetPointId();
+    vtkIdType index = m_pointPicker->GetPointId();
     if (index != -1)
         emit pointClicked(index);
+
+    pickCell();
 }
 
-void PickingInteractionStyle::pick()
+void PickingInteractionStyle::pickPoint()
 {
-    int* clickPos = this->GetInteractor()->GetEventPosition();
+    int* clickPos = GetInteractor()->GetEventPosition();
 
     // picking in the input geometry
-    m_picker->Pick(clickPos[0], clickPos[1], 0, this->GetDefaultRenderer());
+    m_pointPicker->Pick(clickPos[0], clickPos[1], 0, GetDefaultRenderer());
 
     sendPointInfo();
 }
 
+void PickingInteractionStyle::pickCell()
+{
+    int* clickPos = GetInteractor()->GetEventPosition();
+
+    m_cellPicker->Pick(clickPos[0], clickPos[1], 0, GetDefaultRenderer());
+    vtkIdType cellId = m_cellPicker->GetCellId();
+
+    if (cellId == -1)
+        return;
+
+    VTK_CREATE(vtkIdTypeArray, ids);
+    ids->SetNumberOfComponents(1);
+    ids->InsertNextValue(cellId);
+
+    VTK_CREATE(vtkSelectionNode, selectionNode);
+    selectionNode->SetFieldType(vtkSelectionNode::CELL);
+    selectionNode->SetContentType(vtkSelectionNode::INDICES);
+    selectionNode->SetSelectionList(ids);
+
+    VTK_CREATE(vtkSelection, selection);
+    selection->AddNode(selectionNode);
+
+    VTK_CREATE(vtkExtractSelection, extractSelection);
+    extractSelection->SetInputData(0, m_cellPicker->GetDataSet());
+    extractSelection->SetInputData(1, selection);
+    extractSelection->Update();
+
+    VTK_CREATE(vtkUnstructuredGrid, selected);
+    selected->ShallowCopy(extractSelection->GetOutput());
+
+    m_selectedCellMapper->SetInputData(selected);
+
+    m_selectedCellActor->SetMapper(m_selectedCellMapper);
+    m_selectedCellActor->GetProperty()->EdgeVisibilityOn();
+    m_selectedCellActor->GetProperty()->SetEdgeColor(1, 0, 0);
+    m_selectedCellActor->GetProperty()->SetLineWidth(3);
+
+    GetDefaultRenderer()->AddActor(m_selectedCellActor);
+
+    emit(selectionChanged(selection));
+}
+
 void PickingInteractionStyle::sendPointInfo() const
 {
-    double* pos = m_picker->GetPickPosition();
+    double* pos = m_pointPicker->GetPickPosition();
 
     QString content;
     QTextStream stream;
@@ -69,7 +121,7 @@ void PickingInteractionStyle::sendPointInfo() const
 
     std::string inputname;
 
-    vtkAbstractMapper3D * mapper = m_picker->GetMapper();
+    vtkAbstractMapper3D * mapper = m_pointPicker->GetMapper();
 
     if (!mapper) {
         emit pointInfoSent(QStringList());
@@ -87,7 +139,7 @@ void PickingInteractionStyle::sendPointInfo() const
         << pos[0] << endl
         << pos[1] << endl
         << pos[2] << endl
-        << "id: " << m_picker->GetPointId();
+        << "id: " << m_pointPicker->GetPointId();
 
     QStringList info;
     QString line;

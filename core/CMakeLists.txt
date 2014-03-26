@@ -9,6 +9,7 @@ set ( SOURCES
     input.cpp
     textfilereader.h
     textfilereader.cpp
+    vtkhelper.h
     common/ebem3d_common.h
     common/file_parser.h
     common/file_parser.cpp

@@ -6,6 +6,10 @@
 #include <QObject>
 
 class vtkPointPicker;
+class vtkCellPicker;
+class vtkSelection;
+class vtkDataSetMapper;
+class vtkActor;
 
 class PickingInteractionStyle : public QObject, public vtkInteractorStyleTrackballCamera
 {
@@ -24,10 +28,16 @@ signals:
     void pointInfoSent(const QStringList &info) const;
     void pointClicked(int index) const;
 
+    void selectionChanged(vtkSelection * selection) const;
+
 protected:
-    void pick();
+    void pickPoint();
+    void pickCell();
 
     void sendPointInfo() const;
 
-    vtkSmartPointer<vtkPointPicker> m_picker;
+    vtkSmartPointer<vtkPointPicker> m_pointPicker;
+    vtkSmartPointer<vtkCellPicker> m_cellPicker;
+    vtkSmartPointer<vtkActor> m_selectedCellActor;
+    vtkSmartPointer<vtkDataSetMapper> m_selectedCellMapper;
 };
