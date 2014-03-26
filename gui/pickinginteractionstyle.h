@@ -26,9 +26,7 @@ public:
 
 signals:
     void pointInfoSent(const QStringList &info) const;
-    void pointClicked(int index) const;
-
-    void selectionChanged(vtkSelection * selection) const;
+    void selectionChanged(int index) const;
 
 protected:
     void pickPoint();

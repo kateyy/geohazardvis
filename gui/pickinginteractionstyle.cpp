@@ -46,14 +46,9 @@ void PickingInteractionStyle::OnMouseMove()
 
 void PickingInteractionStyle::OnLeftButtonDown()
 {
-    pickPoint();
-    vtkInteractorStyleTrackballCamera::OnLeftButtonDown();
-
-    vtkIdType index = m_pointPicker->GetPointId();
-    if (index != -1)
-        emit pointClicked(index);
-
     pickCell();
+
+    vtkInteractorStyleTrackballCamera::OnLeftButtonDown();
 }
 
 void PickingInteractionStyle::pickPoint()
@@ -105,7 +100,7 @@ void PickingInteractionStyle::pickCell()
 
     GetDefaultRenderer()->AddActor(m_selectedCellActor);
 
-    emit(selectionChanged(selection));
+    emit selectionChanged(cellId);
 }
 
 void PickingInteractionStyle::sendPointInfo() const
