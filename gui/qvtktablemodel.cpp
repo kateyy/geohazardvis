@@ -57,10 +57,9 @@ QVariant QVtkTableModel::data(const QModelIndex &index, int role) const
                 QString::number(tri->GetPointId(1)) + ":" +
                 QString::number(tri->GetPointId(2)));
         }
-        vtkPoints * pts = tri->GetPoints();
-        double center[3];
-        vtkTriangle::TriangleCenter(pts->GetPoint(0), pts->GetPoint(1), pts->GetPoint(2), center);
-        return QVariant(center[index.column() - 1]);
+
+        // list on of the triangle points for now
+        return QVariant(tri->GetPoints()->GetPoint(0)[index.column() - 1]);
     }
     return QVariant();
 }
@@ -76,7 +75,7 @@ QVariant QVtkTableModel::headerData(int section, Qt::Orientation orientation, in
     if (m_displayData == DisplayData::Polygons) {
         if (section == 0)
             return QVariant("indices");
-        return QVariant("center." + QString(QChar('x' + section - 1)));
+        return QVariant(QString(QChar('x' + section - 1)));
     }
     return QVariant();
 }
