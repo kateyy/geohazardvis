@@ -54,16 +54,9 @@ endif()
 add_compile_options( ${DEFAULT_COMPILE_FLAGS} )
     
 
-find_package(VTK COMPONENTS
-    vtkCommonCore
-    #vtkFiltersSources     # for the cone
-    #vtkInteractionWidgets # vtkBoxWidget
-    vtkRenderingOpenGL
-    vtkRenderingQt
-    vtkFiltersCore
-    vtkInteractionStyle
-    # vtkRenderingFreeTypeOpenGL
-    vtkRenderingAnnotation  # for the axes actor
+find_package(VTK REQUIRED
+    vtkRenderingQt          # QVTKWidget
+    vtkRenderingAnnotation  # vtkCubeAxesActor
 )
 include(${VTK_USE_FILE})
 

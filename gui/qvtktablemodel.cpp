@@ -6,6 +6,7 @@
 
 QVtkTableModel::QVtkTableModel(QObject * parent)
 : QAbstractTableModel(parent)
+, m_vtkData(nullptr)
 , m_displayData(DisplayData::Polygons)
 {
 }
