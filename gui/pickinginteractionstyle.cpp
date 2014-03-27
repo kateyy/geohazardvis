@@ -23,6 +23,7 @@
 #include <vtkCamera.h>
 #include <vtkFloatArray.h>
 #include <vtkTriangle.h>
+#include <vtkMath.h>
 
 #include <QTextStream>
 #include <QStringList>
@@ -127,8 +128,9 @@ void PickingInteractionStyle::highlightCell(int cellId, vtkDataObject * dataObje
 
     double eye[3];
     float scale = 100.0f;
-    for (int i = 0; i < 3; ++i)
-        eye[i] = center[i] - scale * normal[i];
+
+    vtkMath::MultiplyScalar(normal, scale);
+    vtkMath::Subtract(center, normal, eye);
 
     GetDefaultRenderer()->GetActiveCamera()->SetPosition(eye);
 
