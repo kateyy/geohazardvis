@@ -71,12 +71,13 @@ void Viewer::setupRenderer()
 
 void Viewer::setupInteraction()
 {
-    VTK_CREATE(PickingInteractionStyle, interactStyle);
-    interactStyle->SetDefaultRenderer(m_mainRenderer);
-    connect(interactStyle, &PickingInteractionStyle::pointInfoSent, this, &Viewer::ShowInfo);
-    connect(interactStyle, &PickingInteractionStyle::selectionChanged, this, &Viewer::selectPoint);
+    m_interactStyle = vtkSmartPointer<PickingInteractionStyle>::New();
+    m_interactStyle->SetDefaultRenderer(m_mainRenderer);
+    connect(m_interactStyle, &PickingInteractionStyle::pointInfoSent, this, &Viewer::ShowInfo);
+    connect(m_interactStyle, &PickingInteractionStyle::selectionChanged, this, &Viewer::selectPoint);
+    connect(m_ui->tableView->selectionModel(), &QItemSelectionModel::selectionChanged, m_interactStyle, &PickingInteractionStyle::changeSelection);
     m_mainInteractor = vtkSmartPointer<vtkRenderWindowInteractor>::New();
-    m_mainInteractor->SetInteractorStyle(interactStyle);
+    m_mainInteractor->SetInteractorStyle(m_interactStyle);
     m_mainInteractor->SetRenderWindow(m_ui->qvtkMain->GetRenderWindow());
 
     m_mainInteractor->Initialize();
@@ -149,6 +150,7 @@ void Viewer::show3DInput(PolyDataInput & input)
     prop.SetLighting(true);
 
     m_mainRenderer->AddViewProp(actor);
+    m_interactStyle->setMainDataObject(input.data());
 
     setupAxes(input.data()->GetBounds());
 
@@ -163,6 +165,7 @@ void Viewer::showGridInput(GridDataInput & input)
     heatBars->SetLookupTable(input.lookupTable);
     m_mainRenderer->AddViewProp(heatBars);
     m_mainRenderer->AddViewProp(input.createTexturedPolygonActor());
+    m_interactStyle->setMainDataObject(input.data());
 
     setupAxes(input.bounds);
 }

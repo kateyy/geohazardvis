@@ -13,6 +13,7 @@ class vtkRenderer;
 class vtkRenderWindowInteractor;
 class vtkProp;
 class vtkCubeAxesActor;
+class PickingInteractionStyle;
 
 class QStringList;
 
@@ -48,6 +49,7 @@ protected:
 
     vtkSmartPointer<vtkRenderer> m_mainRenderer;
     vtkSmartPointer<vtkRenderWindowInteractor> m_mainInteractor;
+    vtkSmartPointer<PickingInteractionStyle> m_interactStyle;
 
     std::list<std::shared_ptr<Input>> m_inputs;
 

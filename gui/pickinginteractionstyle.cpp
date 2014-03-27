@@ -2,6 +2,7 @@
 
 #include <vtkRenderWindowInteractor.h>
 #include <vtkRenderer.h>
+#include <vtkRenderWindow.h>
 
 #include <vtkObjectFactory.h>
 #include <vtkPointPicker.h>
@@ -22,6 +23,7 @@
 
 #include <QTextStream>
 #include <QStringList>
+#include <QItemSelectionModel>
 
 #include "core/vtkhelper.h"
 #include "core/input.h"
@@ -68,8 +70,13 @@ void PickingInteractionStyle::pickCell()
     m_cellPicker->Pick(clickPos[0], clickPos[1], 0, GetDefaultRenderer());
     vtkIdType cellId = m_cellPicker->GetCellId();
 
-    if (cellId == -1)
-        return;
+    if (cellId != -1)
+        highlightCell(cellId, m_cellPicker->GetDataSet());
+}
+
+void PickingInteractionStyle::highlightCell(int cellId, vtkDataObject * dataObject)
+{
+    assert(dataObject);
 
     VTK_CREATE(vtkIdTypeArray, ids);
     ids->SetNumberOfComponents(1);
@@ -84,7 +91,7 @@ void PickingInteractionStyle::pickCell()
     selection->AddNode(selectionNode);
 
     VTK_CREATE(vtkExtractSelection, extractSelection);
-    extractSelection->SetInputData(0, m_cellPicker->GetDataSet());
+    extractSelection->SetInputData(0, dataObject);
     extractSelection->SetInputData(1, selection);
     extractSelection->Update();
 
@@ -99,6 +106,7 @@ void PickingInteractionStyle::pickCell()
     m_selectedCellActor->GetProperty()->SetLineWidth(3);
 
     GetDefaultRenderer()->AddActor(m_selectedCellActor);
+    GetDefaultRenderer()->GetRenderWindow()->Render();
 
     emit selectionChanged(cellId);
 }
@@ -142,5 +150,18 @@ void PickingInteractionStyle::sendPointInfo() const
         info.push_back(line);
 
     emit pointInfoSent(info);
+}
+
+void PickingInteractionStyle::changeSelection(const QItemSelection & selected, const QItemSelection & deselected)
+{
+    if (selected.indexes().isEmpty())
+        return;
+
+    highlightCell(selected.indexes().first().row(), m_mainDataObject);
+}
+
+void PickingInteractionStyle::setMainDataObject(vtkDataObject * dataObject)
+{
+    m_mainDataObject = dataObject;
 }
 
