@@ -20,6 +20,9 @@
 #include <vtkDataSetMapper.h>
 #include <vtkActor.h>
 #include <vtkProperty.h>
+#include <vtkCamera.h>
+#include <vtkFloatArray.h>
+#include <vtkTriangle.h>
 
 #include <QTextStream>
 #include <QStringList>
@@ -106,6 +109,29 @@ void PickingInteractionStyle::highlightCell(int cellId, vtkDataObject * dataObje
     m_selectedCellActor->GetProperty()->SetLineWidth(3);
 
     GetDefaultRenderer()->AddActor(m_selectedCellActor);
+
+    double point0[3];
+    double point1[3];
+    double point2[3];
+    vtkFloatArray * selectedPoints = vtkFloatArray::SafeDownCast(selected->GetPoints()->GetData());
+    selectedPoints->GetTuple(0, point0);
+    selectedPoints->GetTuple(1, point1);
+    selectedPoints->GetTuple(2, point2);
+
+    double center[3];
+    double normal[3];
+    vtkTriangle::TriangleCenter(point0, point1, point2, center);
+    vtkTriangle::ComputeNormal(point0, point1, point2, normal);
+
+    GetDefaultRenderer()->GetActiveCamera()->SetFocalPoint(center);
+
+    double eye[3];
+    float scale = 100.0f;
+    for (int i = 0; i < 3; ++i)
+        eye[i] = center[i] - scale * normal[i];
+
+    GetDefaultRenderer()->GetActiveCamera()->SetPosition(eye);
+
     GetDefaultRenderer()->GetRenderWindow()->Render();
 
     emit selectionChanged(cellId);
