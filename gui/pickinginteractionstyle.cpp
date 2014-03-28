@@ -112,6 +112,10 @@ void PickingInteractionStyle::highlightCell(int cellId, vtkDataObject * dataObje
 
     GetDefaultRenderer()->AddActor(m_selectedCellActor);
 
+
+    vtkPolyData * polyData = vtkPolyData::SafeDownCast(dataObject);
+    vtkTriangle * triangle = vtkTriangle::SafeDownCast(polyData->GetCell(cellId));
+
     double point0[3];
     double point1[3];
     double point2[3];
@@ -122,24 +126,25 @@ void PickingInteractionStyle::highlightCell(int cellId, vtkDataObject * dataObje
 
 
     // look at center of the object
-    vtkPolyData * polyData = vtkPolyData::SafeDownCast(dataObject);
     double bounds[6];
     polyData->GetBounds(bounds);
-    double boundsCenter[3];
-    vtkMath::Add(&bounds[0], &bounds[3], boundsCenter);
-    vtkMath::MultiplyScalar(boundsCenter, 0.5);
+    double boundsCenter[3] = {
+        (bounds[0] + bounds[1]) * 0.5f,
+        (bounds[2] + bounds[3]) * 0.5f,
+        (bounds[4] + bounds[5]) * 0.5f};
     GetDefaultRenderer()->GetActiveCamera()->SetFocalPoint(boundsCenter);
 
     // 
     double triCenter[3];
     vtkTriangle::TriangleCenter(point0, point1, point2, triCenter);
     double normal[3];
-    vtkTriangle::ComputeNormal(point0, point1, point2, normal);
+
+    vtkTriangle::ComputeNormal(polyData->GetPoints(), 0, triangle->GetPointIds()->GetPointer(0), normal);
     float scale = 2 * std::max(bounds[1] - bounds[0], std::max(bounds[3] - bounds[2], bounds[6] - bounds[5]));
 
     vtkMath::MultiplyScalar(normal, scale);
     double eye[3];
-    vtkMath::Subtract(triCenter, normal, eye);
+    vtkMath::Add(triCenter, normal, eye);
 
     GetDefaultRenderer()->GetActiveCamera()->SetPosition(eye);
 
