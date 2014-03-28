@@ -24,6 +24,7 @@
 #include <vtkFloatArray.h>
 #include <vtkTriangle.h>
 #include <vtkMath.h>
+#include <vtkPolyData.h>
 
 #include <QTextStream>
 #include <QStringList>
@@ -119,18 +120,26 @@ void PickingInteractionStyle::highlightCell(int cellId, vtkDataObject * dataObje
     selectedPoints->GetTuple(1, point1);
     selectedPoints->GetTuple(2, point2);
 
-    double center[3];
+
+    // look at center of the object
+    vtkPolyData * polyData = vtkPolyData::SafeDownCast(dataObject);
+    double bounds[6];
+    polyData->GetBounds(bounds);
+    double boundsCenter[3];
+    vtkMath::Add(&bounds[0], &bounds[3], boundsCenter);
+    vtkMath::MultiplyScalar(boundsCenter, 0.5);
+    GetDefaultRenderer()->GetActiveCamera()->SetFocalPoint(boundsCenter);
+
+    // 
+    double triCenter[3];
+    vtkTriangle::TriangleCenter(point0, point1, point2, triCenter);
     double normal[3];
-    vtkTriangle::TriangleCenter(point0, point1, point2, center);
     vtkTriangle::ComputeNormal(point0, point1, point2, normal);
-
-    GetDefaultRenderer()->GetActiveCamera()->SetFocalPoint(center);
-
-    double eye[3];
-    float scale = 100.0f;
+    float scale = 2 * std::max(bounds[1] - bounds[0], std::max(bounds[3] - bounds[2], bounds[6] - bounds[5]));
 
     vtkMath::MultiplyScalar(normal, scale);
-    vtkMath::Subtract(center, normal, eye);
+    double eye[3];
+    vtkMath::Subtract(triCenter, normal, eye);
 
     GetDefaultRenderer()->GetActiveCamera()->SetPosition(eye);
 
