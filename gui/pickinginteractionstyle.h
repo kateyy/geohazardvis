@@ -26,6 +26,7 @@ public:
 
     virtual void OnMouseMove() override;
     virtual void OnLeftButtonDown() override;
+    virtual void OnLeftButtonUp() override;
 
     void setMainDataObject(vtkDataObject * dataObject);
 
@@ -50,4 +51,6 @@ protected:
     vtkSmartPointer<vtkDataSetMapper> m_selectedCellMapper;
 
     vtkSmartPointer<vtkDataObject> m_mainDataObject;
+
+    bool m_mouseMoved;
 };

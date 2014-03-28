@@ -3,36 +3,40 @@
 #include <vtkPolyData.h>
 #include <vtkCellArray.h>
 #include <vtkTriangle.h>
+#include <vtkImageData.h>
+#include <vtkPointData.h>
+#include <vtkFloatArray.h>
 
 QVtkTableModel::QVtkTableModel(QObject * parent)
 : QAbstractTableModel(parent)
-, m_vtkData(nullptr)
-, m_displayData(DisplayData::Polygons)
+, m_vtkPolyData(nullptr)
+, m_vtkImageData(nullptr)
+, m_displayData(DisplayData::Triangles)
 {
 }
 
 int QVtkTableModel::rowCount(const QModelIndex &parent) const
 {
-    if (m_vtkData == nullptr)
-        return 0;
     switch (m_displayData) {
-    case DisplayData::Points:
-        return m_vtkData->GetPoints()->GetNumberOfPoints();
-    case DisplayData::Polygons:
-        return m_vtkData->GetPolys()->GetNumberOfCells();
+    case DisplayData::Triangles:
+        if (m_vtkPolyData == nullptr)
+            return 0;
+        return m_vtkPolyData->GetPolys()->GetNumberOfCells();
+    case DisplayData::Grid:
+        if (m_vtkImageData == nullptr)
+            return 0;
+        return m_vtkImageData->GetPointData()->GetNumberOfTuples();
     }
     return 0;
 }
 
 int QVtkTableModel::columnCount(const QModelIndex &parent) const
 {
-    if (m_vtkData == nullptr)
-        return 0;
     switch (m_displayData) {
-    case DisplayData::Points:
-        return 3; // xyz
-    case DisplayData::Polygons:
+    case DisplayData::Triangles:
         return 4; // xyz(triangle center, indices)
+    case DisplayData::Grid:
+        return 1;
     }
     return 0;
 }
@@ -41,14 +45,12 @@ QVariant QVtkTableModel::data(const QModelIndex &index, int role) const
 {
     if (!index.isValid() || role != Qt::DisplayRole)
         return QVariant();
-    if (m_displayData == DisplayData::Points) {
-        assert(index.column() < 3);
-        return m_vtkData->GetPoints()->GetPoint(index.row())[index.column()];
-    }
-    if (m_displayData == DisplayData::Polygons) {
+    if (m_displayData == DisplayData::Triangles) {
+        if (m_vtkPolyData == nullptr)
+            return QVariant();
         assert(index.column() < 4);
-        assert(m_vtkData->GetCell(index.row())->GetCellType() == VTKCellType::VTK_TRIANGLE);
-        vtkTriangle * tri = static_cast<vtkTriangle*>(m_vtkData->GetCell(index.row()));
+        assert(m_vtkPolyData->GetCell(index.row())->GetCellType() == VTKCellType::VTK_TRIANGLE);
+        vtkTriangle * tri = static_cast<vtkTriangle*>(m_vtkPolyData->GetCell(index.row()));
         assert(tri);
 
         if (index.column() == 0) {  // list indices
@@ -61,6 +63,12 @@ QVariant QVtkTableModel::data(const QModelIndex &index, int role) const
         // list on of the triangle points for now
         return QVariant(tri->GetPoints()->GetPoint(0)[index.column() - 1]);
     }
+    if (m_displayData == DisplayData::Grid) {
+        if (m_vtkImageData == nullptr)
+            return QVariant();
+        vtkFloatArray * values = vtkFloatArray::SafeDownCast(m_vtkImageData->GetPointData()->GetScalars());
+        return QVariant(*values->GetTuple(index.row()));
+    }
     return QVariant();
 }
 
@@ -70,12 +78,13 @@ QVariant QVtkTableModel::headerData(int section, Qt::Orientation orientation, in
         return QVariant();
     if (orientation == Qt::Orientation::Vertical)
         return QVariant(section);
-    if (m_displayData == DisplayData::Points)
-        return QVariant(QChar('x' + section));
-    if (m_displayData == DisplayData::Polygons) {
-        if (section == 0)
-            return QVariant("indices");
+    if (section == 0)
+        return QVariant("indices");
+    if (m_displayData == DisplayData::Triangles) {
         return QVariant(QString(QChar('x' + section - 1)));
+    }
+    if (m_displayData == DisplayData::Grid) {
+        return QVariant("value");
     }
     return QVariant();
 }
@@ -83,6 +92,17 @@ QVariant QVtkTableModel::headerData(int section, Qt::Orientation orientation, in
 void QVtkTableModel::showPolyData(vtkSmartPointer<vtkPolyData> data)
 {
     beginResetModel();
-    m_vtkData = data;
+    m_vtkPolyData = data;
+    m_vtkImageData = nullptr;
+    m_displayData = DisplayData::Triangles;
+    endResetModel();
+}
+
+void QVtkTableModel::showGridData(vtkSmartPointer<vtkImageData> grid)
+{
+    beginResetModel();
+    m_vtkPolyData = nullptr;
+    m_vtkImageData = grid;
+    m_displayData = DisplayData::Grid;
     endResetModel();
 }

@@ -168,6 +168,9 @@ void Viewer::showGridInput(GridDataInput & input)
     m_interactStyle->setMainDataObject(input.data());
 
     setupAxes(input.bounds);
+
+    m_tableModel->showGridData(input.imageData());
+    m_ui->tableView->resizeColumnsToContents();
 }
 
 void Viewer::setupAxes(const double bounds[6])

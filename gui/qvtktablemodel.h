@@ -8,8 +8,8 @@ class vtkPolyData;
 class vtkImageData;
 
 enum class DisplayData {
-    Points,
-    Polygons
+    Triangles,
+    Grid
 };
 
 class QVtkTableModel : public QAbstractTableModel {
@@ -22,10 +22,11 @@ public:
         int role = Qt::DisplayRole) const override;
 
     void showPolyData(vtkSmartPointer<vtkPolyData> data);
-    //void showGridData(vtkSmartPointer<vtkImageData> grid);
+    void showGridData(vtkSmartPointer<vtkImageData> grid);
 
 protected:
-    vtkSmartPointer<vtkPolyData> m_vtkData;
+    vtkSmartPointer<vtkPolyData> m_vtkPolyData;
+    vtkSmartPointer<vtkImageData> m_vtkImageData;
 
     DisplayData m_displayData;
 };

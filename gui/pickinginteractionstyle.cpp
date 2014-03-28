@@ -42,6 +42,7 @@ PickingInteractionStyle::PickingInteractionStyle()
 , m_cellPicker(vtkSmartPointer<vtkCellPicker>::New())
 , m_selectedCellActor(vtkSmartPointer<vtkActor>::New())
 , m_selectedCellMapper(vtkSmartPointer<vtkDataSetMapper>::New())
+, m_mouseMoved(false)
 {
 }
 
@@ -49,13 +50,23 @@ void PickingInteractionStyle::OnMouseMove()
 {
     pickPoint();
     vtkInteractorStyleTrackballCamera::OnMouseMove();
+    m_mouseMoved = true;
 }
 
 void PickingInteractionStyle::OnLeftButtonDown()
 {
-    pickCell();
-
+    m_mouseMoved = false;
     vtkInteractorStyleTrackballCamera::OnLeftButtonDown();
+}
+
+void PickingInteractionStyle::OnLeftButtonUp()
+{
+    if (!m_mouseMoved) {
+        pickCell();
+    }
+    m_mouseMoved = false;
+
+    vtkInteractorStyleTrackballCamera::OnLeftButtonUp();
 }
 
 void PickingInteractionStyle::pickPoint()
@@ -82,6 +93,14 @@ void PickingInteractionStyle::pickCell()
 void PickingInteractionStyle::highlightCell(int cellId, vtkDataObject * dataObject)
 {
     assert(dataObject);
+
+    // not implemented for grid input
+    vtkPolyData * polyData = vtkPolyData::SafeDownCast(dataObject);
+    if (polyData == nullptr)
+        return;
+    vtkTriangle * triangle = vtkTriangle::SafeDownCast(polyData->GetCell(cellId));
+    if (triangle == nullptr)
+        return;
 
     VTK_CREATE(vtkIdTypeArray, ids);
     ids->SetNumberOfComponents(1);
@@ -112,9 +131,8 @@ void PickingInteractionStyle::highlightCell(int cellId, vtkDataObject * dataObje
 
     GetDefaultRenderer()->AddActor(m_selectedCellActor);
 
+    emit selectionChanged(cellId);
 
-    vtkPolyData * polyData = vtkPolyData::SafeDownCast(dataObject);
-    vtkTriangle * triangle = vtkTriangle::SafeDownCast(polyData->GetCell(cellId));
 
     double point0[3];
     double point1[3];
@@ -149,8 +167,6 @@ void PickingInteractionStyle::highlightCell(int cellId, vtkDataObject * dataObje
     GetDefaultRenderer()->GetActiveCamera()->SetPosition(eye);
 
     GetDefaultRenderer()->GetRenderWindow()->Render();
-
-    emit selectionChanged(cellId);
 }
 
 void PickingInteractionStyle::sendPointInfo() const
