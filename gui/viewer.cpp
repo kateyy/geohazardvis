@@ -140,12 +140,12 @@ void Viewer::show3DInput(PolyDataInput & input)
 {
     vtkSmartPointer<vtkActor> actor = input.createActor();
     vtkProperty & prop = *actor->GetProperty();
-    prop.SetColor(1, 1, 0);
+    prop.SetColor(0, 0.6, 0);
     prop.SetOpacity(1.0);
     prop.SetInterpolationToGouraud();
     prop.SetEdgeVisibility(true);
     prop.SetEdgeColor(0.1, 0.1, 0.1);
-    prop.SetLineWidth(1.5);
+    prop.SetLineWidth(1.2);
     prop.SetBackfaceCulling(false);
     prop.SetLighting(true);
 
