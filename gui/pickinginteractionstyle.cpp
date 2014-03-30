@@ -209,17 +209,3 @@ void PickingInteractionStyle::sendPointInfo() const
 
     emit pointInfoSent(info);
 }
-
-void PickingInteractionStyle::changeSelection(const QItemSelection & selected, const QItemSelection & deselected)
-{
-    if (selected.indexes().isEmpty())
-        return;
-
-    highlightCell(selected.indexes().first().row(), m_mainDataObject);
-}
-
-void PickingInteractionStyle::setMainDataObject(vtkDataObject * dataObject)
-{
-    m_mainDataObject = dataObject;
-}
-

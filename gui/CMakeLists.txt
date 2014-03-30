@@ -7,10 +7,12 @@ set ( SOURCES
     viewer.h
     pickinginteractionstyle.cpp
     pickinginteractionstyle.h
-    renderwidget.h
-    renderwidget.cpp
     qvtktablemodel.h
     qvtktablemodel.cpp
+    renderwidget.h
+    renderwidget.cpp
+    selectionhandler.h
+    selectionhandler.cpp
 )
     
 set ( UIs

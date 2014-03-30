@@ -22,6 +22,7 @@ class QVtkTableModel;
 class Input;
 class PolyDataInput;
 class GridDataInput;
+class SelectionHandler;
 
 class Viewer : public QMainWindow
 {
@@ -38,11 +39,10 @@ public slots:
 
     void openFile(QString filename);
 
-    void selectPoint(int index);
-
 protected:
     Ui_Viewer *m_ui;
     QVtkTableModel * m_tableModel;
+    std::shared_ptr<SelectionHandler> m_selectionHandler;
 
     void show3DInput(PolyDataInput & input);
     void showGridInput(GridDataInput & input);

@@ -28,10 +28,8 @@ public:
     virtual void OnLeftButtonDown() override;
     virtual void OnLeftButtonUp() override;
 
-    void setMainDataObject(vtkDataObject * dataObject);
-
 public slots:
-    void changeSelection(const QItemSelection & selected, const QItemSelection & deselected);
+    void highlightCell(int cellId, vtkDataObject * dataObject);
 
 signals:
     void pointInfoSent(const QStringList &info) const;
@@ -41,16 +39,12 @@ protected:
     void pickPoint();
     void pickCell();
 
-    void highlightCell(int cellId, vtkDataObject * dataObject);
-
     void sendPointInfo() const;
 
     vtkSmartPointer<vtkPointPicker> m_pointPicker;
     vtkSmartPointer<vtkCellPicker> m_cellPicker;
     vtkSmartPointer<vtkActor> m_selectedCellActor;
     vtkSmartPointer<vtkDataSetMapper> m_selectedCellMapper;
-
-    vtkSmartPointer<vtkDataObject> m_mainDataObject;
 
     bool m_mouseMoved;
 };
