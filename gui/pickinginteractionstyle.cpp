@@ -94,14 +94,6 @@ void PickingInteractionStyle::highlightCell(int cellId, vtkDataObject * dataObje
 {
     assert(dataObject);
 
-    // not implemented for grid input
-    vtkPolyData * polyData = vtkPolyData::SafeDownCast(dataObject);
-    if (polyData == nullptr)
-        return;
-    vtkTriangle * triangle = vtkTriangle::SafeDownCast(polyData->GetCell(cellId));
-    if (triangle == nullptr)
-        return;
-
     VTK_CREATE(vtkIdTypeArray, ids);
     ids->SetNumberOfComponents(1);
     ids->InsertNextValue(cellId);
@@ -132,29 +124,33 @@ void PickingInteractionStyle::highlightCell(int cellId, vtkDataObject * dataObje
     GetDefaultRenderer()->AddActor(m_selectedCellActor);
 
     emit selectionChanged(cellId);
+    vtkPolyData * polyData = vtkPolyData::SafeDownCast(dataObject);
 
+    if (polyData)
+        lookAtCell(polyData, cellId);
+}
 
-    double point0[3];
-    double point1[3];
-    double point2[3];
-    vtkFloatArray * selectedPoints = vtkFloatArray::SafeDownCast(selected->GetPoints()->GetData());
-    selectedPoints->GetTuple(0, point0);
-    selectedPoints->GetTuple(1, point1);
-    selectedPoints->GetTuple(2, point2);
+void PickingInteractionStyle::lookAtCell(vtkPolyData * polyData, vtkIdType cellId)
+{
+    // not implemented for grid input
+    vtkTriangle * triangle = vtkTriangle::SafeDownCast(polyData->GetCell(cellId));
+    if (triangle == nullptr)
+        return;
+
+    VTK_CREATE(vtkPoints, selectedPoints);
+    polyData->GetPoints()->GetPoints(triangle->GetPointIds(), selectedPoints);
 
 
     // look at center of the object
-    double bounds[6];
-    polyData->GetBounds(bounds);
-    double boundsCenter[3] = {
-        (bounds[0] + bounds[1]) * 0.5f,
-        (bounds[2] + bounds[3]) * 0.5f,
-        (bounds[4] + bounds[5]) * 0.5f};
+    const double * bounds = polyData->GetBounds();
+    const double * boundsCenter = polyData->GetCenter();
     GetDefaultRenderer()->GetActiveCamera()->SetFocalPoint(boundsCenter);
 
-    // 
-    double triCenter[3];
-    vtkTriangle::TriangleCenter(point0, point1, point2, triCenter);
+    // place camera along the normal of the triangle
+    double triangleCenter[3];
+    vtkTriangle::TriangleCenter(
+        selectedPoints->GetPoint(0), selectedPoints->GetPoint(1), selectedPoints->GetPoint(2),
+        triangleCenter);
     double normal[3];
 
     vtkTriangle::ComputeNormal(polyData->GetPoints(), 0, triangle->GetPointIds()->GetPointer(0), normal);
@@ -162,9 +158,10 @@ void PickingInteractionStyle::highlightCell(int cellId, vtkDataObject * dataObje
 
     vtkMath::MultiplyScalar(normal, scale);
     double eye[3];
-    vtkMath::Add(triCenter, normal, eye);
+    vtkMath::Add(triangleCenter, normal, eye);
 
     GetDefaultRenderer()->GetActiveCamera()->SetPosition(eye);
+    GetDefaultRenderer()->ResetCameraClippingRange();
 
     GetDefaultRenderer()->GetRenderWindow()->Render();
 }

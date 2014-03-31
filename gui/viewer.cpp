@@ -88,7 +88,7 @@ void Viewer::setupInteraction()
 
 void Viewer::ShowInfo(const QStringList & info)
 {
-    setToolTip(info.join('\n'));
+    m_ui->qvtkMain->setToolTip(info.join('\n'));
 }
 
 void Viewer::on_actionOpen_triggered()

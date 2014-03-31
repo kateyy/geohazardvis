@@ -11,6 +11,7 @@ class vtkSelection;
 class vtkDataSetMapper;
 class vtkActor;
 class vtkDataObject;
+class vtkPolyData;
 
 class QItemSelection;
 
@@ -38,6 +39,8 @@ signals:
 protected:
     void pickPoint();
     void pickCell();
+
+    void lookAtCell(vtkPolyData * polyData, vtkIdType cellId);
 
     void sendPointInfo() const;
 
