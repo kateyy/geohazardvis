@@ -12,6 +12,7 @@ SelectionHandler::SelectionHandler()
 : m_tableView(nullptr)
 , m_tableModel(nullptr)
 , m_interactionStyle(nullptr)
+, m_currentSelection(-1)
 {
 }
 
@@ -38,8 +39,23 @@ void SelectionHandler::createConnections()
     if (!(m_tableView && m_tableModel && m_interactionStyle))
         return;
 
-    connect(m_interactionStyle, &PickingInteractionStyle::selectionChanged, m_tableView, &QTableView::selectRow);
+    connect(m_interactionStyle, &PickingInteractionStyle::cellPicked, this, &SelectionHandler::cellPicked);
     connect(m_tableView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &SelectionHandler::qtSelectionChanged);
+}
+
+void SelectionHandler::updateSelections(vtkIdType cellId)
+{
+    m_currentSelection = cellId;
+
+    m_interactionStyle->highlightCell(cellId, m_dataObject);
+
+    m_tableView->selectRow(cellId);
+}
+
+void SelectionHandler::cellPicked(vtkDataObject * dataObject, vtkIdType cellId)
+{
+    assert(m_dataObject == dataObject); // not implemented for multiple data objects
+    updateSelections(cellId);
 }
 
 void SelectionHandler::qtSelectionChanged(const QItemSelection & selected, const QItemSelection & deselected)
@@ -50,5 +66,8 @@ void SelectionHandler::qtSelectionChanged(const QItemSelection & selected, const
     if (selected.indexes().isEmpty())
         return;
 
-    m_interactionStyle->highlightCell(selected.indexes().first().row(), m_dataObject);
+    vtkIdType newSelection = selected.indexes().first().row();
+    if (newSelection != m_currentSelection) {
+        updateSelections(newSelection);
+    }
 }

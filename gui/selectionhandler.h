@@ -22,17 +22,21 @@ public:
     void setDataObject(vtkDataObject * dataObject);
 
 private slots:
+    void cellPicked(vtkDataObject * dataObject, vtkIdType cellId);
+    void qtSelectionChanged(const QItemSelection & selected, const QItemSelection & deselected);
 
 private:
     void createConnections();
 
-    void qtSelectionChanged(const QItemSelection & selected, const QItemSelection & deselected);
+    void updateSelections(vtkIdType cellId);
 
 
 private:
     QTableView * m_tableView;
     QVtkTableModel * m_tableModel;
     PickingInteractionStyle * m_interactionStyle;
+
+    vtkIdType m_currentSelection;
 
     vtkSmartPointer<vtkDataObject> m_dataObject;
 };

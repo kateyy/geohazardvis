@@ -32,7 +32,7 @@ public slots:
 
 signals:
     void pointInfoSent(const QStringList &info) const;
-    void selectionChanged(vtkIdType index) const;
+    void cellPicked(vtkDataObject * dataObject, vtkIdType cellId) const;
 
 protected:
     void pickPoint();

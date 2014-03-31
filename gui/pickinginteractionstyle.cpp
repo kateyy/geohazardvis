@@ -1,5 +1,9 @@
 #include "pickinginteractionstyle.h"
 
+#include <cmath>
+
+#include <QDebug>
+
 #include <vtkRenderWindowInteractor.h>
 #include <vtkRenderer.h>
 #include <vtkRenderWindow.h>
@@ -87,7 +91,7 @@ void PickingInteractionStyle::pickCell()
     vtkIdType cellId = m_cellPicker->GetCellId();
 
     if (cellId != -1)
-        highlightCell(cellId, m_cellPicker->GetDataSet());
+        emit cellPicked(m_cellPicker->GetDataSet(), cellId);
 }
 
 void PickingInteractionStyle::highlightCell(vtkIdType cellId, vtkDataObject * dataObject)
@@ -123,7 +127,6 @@ void PickingInteractionStyle::highlightCell(vtkIdType cellId, vtkDataObject * da
 
     GetDefaultRenderer()->AddActor(m_selectedCellActor);
 
-    emit selectionChanged(cellId);
     vtkPolyData * polyData = vtkPolyData::SafeDownCast(dataObject);
 
     if (polyData)
@@ -143,36 +146,41 @@ void PickingInteractionStyle::lookAtCell(vtkPolyData * polyData, vtkIdType cellI
 
     // look at center of the object
     const double * bounds = polyData->GetBounds();
-    const double * boundsCenter = polyData->GetCenter();
-    GetDefaultRenderer()->GetActiveCamera()->SetFocalPoint(boundsCenter);
+    const double * objectCenter = polyData->GetCenter();
+    GetDefaultRenderer()->GetActiveCamera()->SetFocalPoint(objectCenter);
 
     // place camera along the normal of the triangle
     double triangleCenter[3];
     vtkTriangle::TriangleCenter(
         selectedPoints->GetPoint(0), selectedPoints->GetPoint(1), selectedPoints->GetPoint(2),
         triangleCenter);
-    double normal[3];
 
-    vtkTriangle::ComputeNormal(polyData->GetPoints(), 0, triangle->GetPointIds()->GetPointer(0), normal);
-    float scale = 2 * std::max(bounds[1] - bounds[0], std::max(bounds[3] - bounds[2], bounds[6] - bounds[5]));
+    double triangleNormal[3];
+    vtkTriangle::ComputeNormal(polyData->GetPoints(), 0, triangle->GetPointIds()->GetPointer(0), triangleNormal);
+    //float scale = 2 * std::max(bounds[1] - bounds[0], std::max(bounds[3] - bounds[2], bounds[6] - bounds[5]));
 
-    vtkMath::MultiplyScalar(normal, scale);
-    double targetEyePosition[3];
-    vtkMath::Add(triangleCenter, normal, targetEyePosition);
-
-    const int NumberOfFlyFrames = 100;
 
     double eyePosition[3];  // current eye position: starting point
     GetDefaultRenderer()->GetActiveCamera()->GetPosition(eyePosition);
+
+    float distance2ObjTri = (float)vtkMath::Distance2BetweenPoints(objectCenter, triangleCenter);
+    float distance2EyeObj = (float)vtkMath::Distance2BetweenPoints(objectCenter, eyePosition);
+    float distanceEyeTri = std::sqrt(distance2EyeObj - distance2ObjTri);
+
+    vtkMath::MultiplyScalar(triangleNormal, distanceEyeTri);
+    double targetEyePosition[3];
+    vtkMath::Add(triangleCenter, triangleNormal, targetEyePosition);
+
+    const int NumberOfFlyFrames = 10;
 
     double pathVector[3];   // distance vector between two succeeding eye positions
     vtkMath::Subtract(targetEyePosition, eyePosition, pathVector);
     vtkMath::MultiplyScalar(pathVector, 1.0/NumberOfFlyFrames);
 
-    for (int i = 1; i <= NumberOfFlyFrames; ++i)
+    for (int i = 0; i < NumberOfFlyFrames; ++i)
     {
         vtkMath::Add(eyePosition, pathVector, eyePosition);
-        GetDefaultRenderer()->GetActiveCamera()->OrthogonalizeViewUp();
+        //GetDefaultRenderer()->GetActiveCamera()->OrthogonalizeViewUp();
         GetDefaultRenderer()->GetActiveCamera()->SetPosition(eyePosition);
         GetDefaultRenderer()->ResetCameraClippingRange();
         GetDefaultRenderer()->GetRenderWindow()->Render();
