@@ -13,8 +13,6 @@ class vtkActor;
 class vtkDataObject;
 class vtkPolyData;
 
-class QItemSelection;
-
 class PickingInteractionStyle : public QObject, public vtkInteractorStyleTrackballCamera
 {
     Q_OBJECT
@@ -30,11 +28,11 @@ public:
     virtual void OnLeftButtonUp() override;
 
 public slots:
-    void highlightCell(int cellId, vtkDataObject * dataObject);
+    void highlightCell(vtkIdType cellId, vtkDataObject * dataObject);
 
 signals:
     void pointInfoSent(const QStringList &info) const;
-    void selectionChanged(int index) const;
+    void selectionChanged(vtkIdType index) const;
 
 protected:
     void pickPoint();

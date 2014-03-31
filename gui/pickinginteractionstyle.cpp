@@ -90,7 +90,7 @@ void PickingInteractionStyle::pickCell()
         highlightCell(cellId, m_cellPicker->GetDataSet());
 }
 
-void PickingInteractionStyle::highlightCell(int cellId, vtkDataObject * dataObject)
+void PickingInteractionStyle::highlightCell(vtkIdType cellId, vtkDataObject * dataObject)
 {
     assert(dataObject);
 
@@ -157,13 +157,26 @@ void PickingInteractionStyle::lookAtCell(vtkPolyData * polyData, vtkIdType cellI
     float scale = 2 * std::max(bounds[1] - bounds[0], std::max(bounds[3] - bounds[2], bounds[6] - bounds[5]));
 
     vtkMath::MultiplyScalar(normal, scale);
-    double eye[3];
-    vtkMath::Add(triangleCenter, normal, eye);
+    double targetEyePosition[3];
+    vtkMath::Add(triangleCenter, normal, targetEyePosition);
 
-    GetDefaultRenderer()->GetActiveCamera()->SetPosition(eye);
-    GetDefaultRenderer()->ResetCameraClippingRange();
+    const int NumberOfFlyFrames = 100;
 
-    GetDefaultRenderer()->GetRenderWindow()->Render();
+    double eyePosition[3];  // current eye position: starting point
+    GetDefaultRenderer()->GetActiveCamera()->GetPosition(eyePosition);
+
+    double pathVector[3];   // distance vector between two succeeding eye positions
+    vtkMath::Subtract(targetEyePosition, eyePosition, pathVector);
+    vtkMath::MultiplyScalar(pathVector, 1.0/NumberOfFlyFrames);
+
+    for (int i = 1; i <= NumberOfFlyFrames; ++i)
+    {
+        vtkMath::Add(eyePosition, pathVector, eyePosition);
+        GetDefaultRenderer()->GetActiveCamera()->OrthogonalizeViewUp();
+        GetDefaultRenderer()->GetActiveCamera()->SetPosition(eyePosition);
+        GetDefaultRenderer()->ResetCameraClippingRange();
+        GetDefaultRenderer()->GetRenderWindow()->Render();
+    }
 }
 
 void PickingInteractionStyle::sendPointInfo() const
