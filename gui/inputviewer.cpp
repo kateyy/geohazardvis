@@ -1,84 +1,76 @@
-#include "viewer.h"
-#include "ui_viewer.h"
+#include "inputviewer.h"
+#include "ui_inputviewer.h"
 
-#include <cassert>
-
-#include <QDebug>
-
-// utility etc
-#include <vtkSmartPointer.h>
-#include <vtkProperty.h>
-#include <vtkTextProperty.h>
-#include <vtkCamera.h>
-#include <vtkLookupTable.h>
-
-// inputs
-#include <vtkPolyDataAlgorithm.h>
-// mappers
-#include <vtkPolyDataMapper.h>
-// actors
-#include <vtkActor.h>
-#include <vtkCubeAxesActor.h>
-#include <vtkScalarBarActor.h>
-// rendering
-#include <vtkRenderer.h>
-#include <vtkRenderWindow.h>
-// interaction
-#include "pickinginteractionstyle.h"
-// gui/qt
-#include "renderwidget.h"
 #include <QFileDialog>
 #include <QMessageBox>
 
+#include <vtkCamera.h>
+#include <vtkProperty.h>
+#include <vtkTextProperty.h>
+#include <vtkLookupTable.h>
+
+#include <vtkDataSet.h>
+
+#include <vtkScalarBarActor.h>
+#include <vtkCubeAxesActor.h>
+
+#include <vtkRenderer.h>
+#include <vtkRenderWindow.h>
+#include "pickinginteractionstyle.h"
+
+#include "core/vtkhelper.h"
 #include "core/loader.h"
 #include "core/input.h"
-#include "qvtktablemodel.h"
-#include "selectionhandler.h"
 
+#include "mainwindow.h"
+#include "renderwidget.h"
+#include "selectionhandler.h"
+#include "qvtktablemodel.h"
 
 using namespace std;
 
-#define VTK_CREATE(type, name) \
-    vtkSmartPointer<type> name = vtkSmartPointer<type>::New()
-
-
-Viewer::Viewer()
-: m_ui(new Ui_Viewer())
+InputViewer::InputViewer(MainWindow & mainWindow)
+: QDockWidget(&mainWindow)
+, m_mainWindow(mainWindow)
+, m_ui(new Ui_InputViewer())
 , m_tableModel(nullptr)
 {
     m_ui->setupUi(this);
-    m_tableModel = new QVtkTableModel;
+
+    m_tableModel = new QVtkTableModel(m_ui->tableView);
+    QItemSelectionModel * m = m_ui->tableView->selectionModel();
     m_ui->tableView->setModel(m_tableModel);
+    m->deleteLater();
 
     setupRenderer();
     setupInteraction();
 
-    m_selectionHandler = std::make_shared<SelectionHandler>();
+    m_selectionHandler = make_shared<SelectionHandler>();
     m_selectionHandler->setQtTableView(m_ui->tableView, m_tableModel);
     m_selectionHandler->setVtkInteractionStyle(m_interactStyle);
 }
 
-Viewer::~Viewer()
+InputViewer::~InputViewer()
 {
     delete m_ui;
 }
 
-void Viewer::setupRenderer()
+void InputViewer::setupRenderer()
 {
-    //m_ui->qvtkMain->GetRenderWindow()->SetAAFrames(2);
+    m_ui->qvtkMain->GetRenderWindow()->SetAAFrames(2);
 
     m_mainRenderer = vtkSmartPointer<vtkRenderer>::New();
     m_mainRenderer->SetBackground(1, 1, 1);
     m_ui->qvtkMain->GetRenderWindow()->AddRenderer(m_mainRenderer);
 
-    connect(m_ui->qvtkMain, &RenderWidget::onInputFileDropped, this, &Viewer::openFile);
+    connect(m_ui->qvtkMain, &RenderWidget::onInputFileDropped, this, &InputViewer::openFile);
 }
 
-void Viewer::setupInteraction()
+void InputViewer::setupInteraction()
 {
     m_interactStyle = vtkSmartPointer<PickingInteractionStyle>::New();
     m_interactStyle->SetDefaultRenderer(m_mainRenderer);
-    connect(m_interactStyle, &PickingInteractionStyle::pointInfoSent, this, &Viewer::ShowInfo);
+    connect(m_interactStyle, &PickingInteractionStyle::pointInfoSent, this, &InputViewer::ShowInfo);
     m_mainInteractor = vtkSmartPointer<vtkRenderWindowInteractor>::New();
     m_mainInteractor->SetInteractorStyle(m_interactStyle);
     m_mainInteractor->SetRenderWindow(m_ui->qvtkMain->GetRenderWindow());
@@ -86,24 +78,12 @@ void Viewer::setupInteraction()
     m_mainInteractor->Initialize();
 }
 
-void Viewer::ShowInfo(const QStringList & info)
+void InputViewer::ShowInfo(const QStringList & info)
 {
     m_ui->qvtkMain->setToolTip(info.join('\n'));
 }
 
-void Viewer::on_actionOpen_triggered()
-{
-    static QString lastFolder;
-    QString filename = QFileDialog::getOpenFileName(this, "", lastFolder, "Text files (*.txt)");
-    if (filename.isEmpty())
-        return;
-
-    lastFolder = QFileInfo(filename).absolutePath();
-
-    emit openFile(filename);
-}
-
-void Viewer::openFile(QString filename)
+void InputViewer::openFile(QString filename)
 {
     shared_ptr<Input> input = Loader::readFile(filename.toStdString());
     if (!input) {
@@ -111,7 +91,7 @@ void Viewer::openFile(QString filename)
         return;
     }
 
-    m_inputs = {input};
+    m_inputs = { input };
 
     m_mainRenderer->RemoveAllViewProps();
 
@@ -134,7 +114,7 @@ void Viewer::openFile(QString filename)
     m_ui->qvtkMain->GetRenderWindow()->Render();
 }
 
-void Viewer::show3DInput(PolyDataInput & input)
+void InputViewer::show3DInput(PolyDataInput & input)
 {
     vtkSmartPointer<vtkActor> actor = input.createActor();
     vtkProperty & prop = *actor->GetProperty();
@@ -157,7 +137,7 @@ void Viewer::show3DInput(PolyDataInput & input)
     m_ui->tableView->resizeColumnsToContents();
 }
 
-void Viewer::showGridInput(GridDataInput & input)
+void InputViewer::showGridInput(GridDataInput & input)
 {
     VTK_CREATE(vtkScalarBarActor, heatBars);
     heatBars->SetTitle(input.name.c_str());
@@ -172,7 +152,7 @@ void Viewer::showGridInput(GridDataInput & input)
     m_ui->tableView->resizeColumnsToContents();
 }
 
-void Viewer::setupAxes(const double bounds[6])
+void InputViewer::setupAxes(const double bounds[6])
 {
     if (!m_axesActor) {
         m_axesActor = createAxes(*m_mainRenderer);
@@ -185,7 +165,7 @@ void Viewer::setupAxes(const double bounds[6])
     m_axesActor->SetRebuildAxes(true);
 }
 
-vtkSmartPointer<vtkCubeAxesActor> Viewer::createAxes(vtkRenderer & renderer)
+vtkSmartPointer<vtkCubeAxesActor> InputViewer::createAxes(vtkRenderer & renderer)
 {
     VTK_CREATE(vtkCubeAxesActor, cubeAxes);
     cubeAxes->SetCamera(m_mainRenderer->GetActiveCamera());
@@ -194,8 +174,8 @@ vtkSmartPointer<vtkCubeAxesActor> Viewer::createAxes(vtkRenderer & renderer)
     cubeAxes->SetEnableViewAngleLOD(1);
     cubeAxes->SetGridLineLocation(VTK_GRID_LINES_FURTHEST);
 
-    double axesColor[3] = {0, 0, 0};
-    double gridColor[3] = {0.7, 0.7, 0.7};
+    double axesColor[3] = { 0, 0, 0 };
+    double gridColor[3] = { 0.7, 0.7, 0.7 };
 
     cubeAxes->GetXAxesLinesProperty()->SetColor(axesColor);
     cubeAxes->GetYAxesLinesProperty()->SetColor(axesColor);

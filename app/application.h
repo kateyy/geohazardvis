@@ -2,7 +2,7 @@
 
 #include <QApplication>
 
-class Viewer;
+class MainWindow;
 
 class Application : public QApplication
 {
@@ -15,5 +15,5 @@ public:
     virtual void startup();
 
 protected:
-    Viewer * m_viewer;
+    MainWindow * m_mainWindow;
 };

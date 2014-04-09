@@ -1,20 +1,20 @@
 #include "application.h"
 
-#include "gui/viewer.h"
+#include "gui/mainwindow.h"
 
 Application::Application(int & argc, char ** argv)
 : QApplication(argc, argv)
-, m_viewer(nullptr)
+, m_mainWindow(nullptr)
 {
 }
 
 void Application::startup()
 {
-    m_viewer = new Viewer();
-    m_viewer->show();
+    m_mainWindow = new MainWindow();
+    m_mainWindow->show();
 }
 
 Application::~Application()
 {
-    delete m_viewer;
+    delete m_mainWindow;
 }

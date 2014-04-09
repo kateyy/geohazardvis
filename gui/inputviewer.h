@@ -1,64 +1,61 @@
 #pragma once
 
-#include <list>
 #include <memory>
 
-#include <QMainWindow>
+#include <QDockWidget>
 #include <QMap>
 
 #include <vtkSmartPointer.h>
 
-class Ui_Viewer;
-class vtkRenderer;
-class vtkRenderWindowInteractor;
-class vtkProp;
-class vtkCubeAxesActor;
-class PickingInteractionStyle;
-
-class QStringList;
+class Ui_InputViewer;
 
 class QVtkTableModel;
 
+class vtkRenderer;
+class vtkRenderWindowInteractor;
+class vtkCubeAxesActor;
+class vtkProp;
+class PickingInteractionStyle;
+
+class MainWindow;
+class SelectionHandler;
 class Input;
 class PolyDataInput;
 class GridDataInput;
-class SelectionHandler;
 
-class Viewer : public QMainWindow
+class InputViewer : public QDockWidget
 {
     Q_OBJECT
 
 public:
-    Viewer();
-    virtual ~Viewer() override;
+    InputViewer(MainWindow & mainWindow);
+    ~InputViewer() override;
 
 public slots:
     void ShowInfo(const QStringList &info);
-
-    void on_actionOpen_triggered();
-
     void openFile(QString filename);
 
 protected:
-    Ui_Viewer *m_ui;
-    QVtkTableModel * m_tableModel;
-    std::shared_ptr<SelectionHandler> m_selectionHandler;
+    void setupRenderer();
+    void setupInteraction();
 
     void show3DInput(PolyDataInput & input);
     void showGridInput(GridDataInput & input);
 
+    void setupAxes(const double bounds[6]);
+    vtkSmartPointer<vtkCubeAxesActor> createAxes(vtkRenderer & renderer);
+
+protected:
+    MainWindow & m_mainWindow;
+    Ui_InputViewer * m_ui;
+    QVtkTableModel * m_tableModel;
+    std::shared_ptr<SelectionHandler> m_selectionHandler;
+
     vtkSmartPointer<vtkRenderer> m_mainRenderer;
     vtkSmartPointer<vtkRenderWindowInteractor> m_mainInteractor;
     vtkSmartPointer<PickingInteractionStyle> m_interactStyle;
+    vtkSmartPointer<vtkCubeAxesActor> m_axesActor;
 
     std::list<std::shared_ptr<Input>> m_inputs;
-
     QMap<QString, QVector<vtkSmartPointer<vtkProp>>> m_loadedInputs;
-
-    void setupRenderer();
-    void setupInteraction();
-
-    void setupAxes(const double bounds[6]);
-    vtkSmartPointer<vtkCubeAxesActor> m_axesActor;
-    vtkSmartPointer<vtkCubeAxesActor> createAxes(vtkRenderer & renderer);
 };

@@ -3,10 +3,12 @@ set( TARGET gui )
 message( STATUS ${TARGET} )
 
 set ( SOURCES
-    viewer.cpp
-    viewer.h
-    pickinginteractionstyle.cpp
+    mainwindow.h
+    mainwindow.cpp
+    inputviewer.h
+    inputviewer.cpp
     pickinginteractionstyle.h
+    pickinginteractionstyle.cpp
     qvtktablemodel.h
     qvtktablemodel.cpp
     renderwidget.h
@@ -16,7 +18,8 @@ set ( SOURCES
 )
     
 set ( UIs
-    viewer.ui )
+    mainwindow.ui
+    inputviewer.ui )
     
 
 find_package(Qt5Widgets REQUIRED QUIET)
