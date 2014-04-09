@@ -17,7 +17,6 @@ class vtkCubeAxesActor;
 class vtkProp;
 class PickingInteractionStyle;
 
-class MainWindow;
 class SelectionHandler;
 class Input;
 class PolyDataInput;
@@ -28,7 +27,7 @@ class InputViewer : public QDockWidget
     Q_OBJECT
 
 public:
-    InputViewer(MainWindow & mainWindow);
+    InputViewer(QWidget * parent = nullptr);
     ~InputViewer() override;
 
 public slots:
@@ -46,7 +45,6 @@ protected:
     vtkSmartPointer<vtkCubeAxesActor> createAxes(vtkRenderer & renderer);
 
 protected:
-    MainWindow & m_mainWindow;
     Ui_InputViewer * m_ui;
     QVtkTableModel * m_tableModel;
     std::shared_ptr<SelectionHandler> m_selectionHandler;

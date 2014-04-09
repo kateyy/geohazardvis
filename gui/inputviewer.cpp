@@ -29,9 +29,8 @@
 
 using namespace std;
 
-InputViewer::InputViewer(MainWindow & mainWindow)
-: QDockWidget(&mainWindow)
-, m_mainWindow(mainWindow)
+InputViewer::InputViewer(QWidget * parent)
+: QDockWidget(parent)
 , m_ui(new Ui_InputViewer())
 , m_tableModel(nullptr)
 {
@@ -90,6 +89,8 @@ void InputViewer::openFile(QString filename)
         QMessageBox::critical(this, "File error", "Could not open the selected input file (unsupported format).");
         return;
     }
+
+    setWindowTitle(QString::fromStdString(input->name));
 
     m_inputs = { input };
 

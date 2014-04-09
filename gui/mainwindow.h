@@ -1,8 +1,11 @@
 #pragma once
 
+#include <QList>
+
 #include <QMainWindow>
 
 class Ui_MainWindow;
+class InputViewer;
 
 class MainWindow : public QMainWindow
 {
@@ -12,11 +15,12 @@ public:
     MainWindow();
     ~MainWindow() override;
 
-    QWidget * dockSpace() const;
-
 public slots:
     void on_actionOpen_triggered();
 
 protected:
     Ui_MainWindow * m_ui;
+
+    QList<InputViewer *> m_inputViewers;
+
 };

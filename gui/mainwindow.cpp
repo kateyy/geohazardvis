@@ -26,15 +26,11 @@ void MainWindow::on_actionOpen_triggered()
 
     lastFolder = QFileInfo(filename).absolutePath();
 
-    InputViewer * viewer = new InputViewer(*this);
-    dockSpace()->layout()->addWidget(viewer);
+    InputViewer * viewer = new InputViewer();
+
+    addDockWidget(Qt::DockWidgetArea::TopDockWidgetArea, viewer);
 
     QApplication::processEvents();
 
     emit viewer->openFile(filename);
-}
-
-QWidget * MainWindow::dockSpace() const
-{
-    return m_ui->centralwidget;
 }
