@@ -29,6 +29,7 @@ public:
 
 public slots:
     void highlightCell(vtkIdType cellId, vtkDataObject * dataObject);
+    void lookAtCell(vtkPolyData * polyData, vtkIdType cellId);
 
 signals:
     void pointInfoSent(const QStringList &info) const;
@@ -37,8 +38,6 @@ signals:
 protected:
     void pickPoint();
     void pickCell();
-
-    void lookAtCell(vtkPolyData * polyData, vtkIdType cellId);
 
     void sendPointInfo() const;
 

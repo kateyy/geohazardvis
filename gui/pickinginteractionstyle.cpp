@@ -126,11 +126,6 @@ void PickingInteractionStyle::highlightCell(vtkIdType cellId, vtkDataObject * da
     m_selectedCellActor->GetProperty()->SetLineWidth(3);
 
     GetDefaultRenderer()->AddActor(m_selectedCellActor);
-
-    vtkPolyData * polyData = vtkPolyData::SafeDownCast(dataObject);
-
-    if (polyData)
-        lookAtCell(polyData, cellId);
 }
 
 void PickingInteractionStyle::lookAtCell(vtkPolyData * polyData, vtkIdType cellId)

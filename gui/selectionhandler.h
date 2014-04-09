@@ -28,7 +28,7 @@ private slots:
 private:
     void createConnections();
 
-    void updateSelections(vtkIdType cellId);
+    void updateSelections(vtkIdType cellId, bool updateView);
 
 
 private:

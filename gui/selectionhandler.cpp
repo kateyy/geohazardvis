@@ -5,6 +5,7 @@
 #include <QTableView>
 
 #include <vtkDataObject.h>
+#include <vtkPolyData.h>
 
 #include "pickinginteractionstyle.h"
 
@@ -43,11 +44,18 @@ void SelectionHandler::createConnections()
     connect(m_tableView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &SelectionHandler::qtSelectionChanged);
 }
 
-void SelectionHandler::updateSelections(vtkIdType cellId)
+void SelectionHandler::updateSelections(vtkIdType cellId, bool updateView)
 {
     m_currentSelection = cellId;
 
     m_interactionStyle->highlightCell(cellId, m_dataObject);
+
+
+    if (updateView) {
+        vtkPolyData * polyData = vtkPolyData::SafeDownCast(m_dataObject);
+        if (polyData)
+            m_interactionStyle->lookAtCell(polyData, cellId);
+    }
 
     m_tableView->selectRow(cellId);
 }
@@ -55,7 +63,7 @@ void SelectionHandler::updateSelections(vtkIdType cellId)
 void SelectionHandler::cellPicked(vtkDataObject * dataObject, vtkIdType cellId)
 {
     assert(m_dataObject == dataObject); // not implemented for multiple data objects
-    updateSelections(cellId);
+    updateSelections(cellId, false);
 }
 
 void SelectionHandler::qtSelectionChanged(const QItemSelection & selected, const QItemSelection & deselected)
@@ -68,6 +76,6 @@ void SelectionHandler::qtSelectionChanged(const QItemSelection & selected, const
 
     vtkIdType newSelection = selected.indexes().first().row();
     if (newSelection != m_currentSelection) {
-        updateSelections(newSelection);
+        updateSelections(newSelection, true);
     }
 }
