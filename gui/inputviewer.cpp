@@ -37,9 +37,7 @@ InputViewer::InputViewer(QWidget * parent)
     m_ui->setupUi(this);
 
     m_tableModel = new QVtkTableModel(m_ui->tableView);
-    QItemSelectionModel * m = m_ui->tableView->selectionModel();
     m_ui->tableView->setModel(m_tableModel);
-    m->deleteLater();
 
     setupRenderer();
     setupInteraction();

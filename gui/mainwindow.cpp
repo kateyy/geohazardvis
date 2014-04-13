@@ -10,6 +10,10 @@ MainWindow::MainWindow()
 , m_ui(new Ui_MainWindow())
 {
     m_ui->setupUi(this);
+    
+    InputViewer * emptyViewer = new InputViewer();
+
+    addDockWidget(Qt::DockWidgetArea::TopDockWidgetArea, emptyViewer);
 }
 
 MainWindow::~MainWindow()
