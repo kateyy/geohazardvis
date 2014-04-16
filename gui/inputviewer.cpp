@@ -30,7 +30,7 @@
 using namespace std;
 
 InputViewer::InputViewer(QWidget * parent)
-: QDockWidget(parent)
+: QWidget(parent)
 , m_ui(new Ui_InputViewer())
 , m_tableModel(nullptr)
 {
@@ -82,13 +82,21 @@ void InputViewer::ShowInfo(const QStringList & info)
 
 void InputViewer::openFile(QString filename)
 {
+    QApplication::processEvents();
+
+    QString oldName = windowTitle();
+    setWindowTitle(filename + " (loading file)");
+    QApplication::processEvents();
+
     shared_ptr<Input> input = Loader::readFile(filename.toStdString());
     if (!input) {
         QMessageBox::critical(this, "File error", "Could not open the selected input file (unsupported format).");
+        setWindowTitle(oldName);
         return;
     }
 
-    setWindowTitle(QString::fromStdString(input->name));
+    setWindowTitle(QString::fromStdString(input->name) + " (loading to gpu)");
+    QApplication::processEvents();
 
     m_inputs = { input };
 
@@ -111,6 +119,9 @@ void InputViewer::openFile(QString filename)
     camera.SetViewUp(0, 1, 0);
     m_mainRenderer->ResetCamera();
     m_ui->qvtkMain->GetRenderWindow()->Render();
+
+    setWindowTitle(QString::fromStdString(input->name));
+    QApplication::processEvents();
 }
 
 void InputViewer::show3DInput(PolyDataInput & input)

@@ -16,7 +16,13 @@
   <property name="locale">
    <locale language="English" country="UnitedStates"/>
   </property>
-  <widget class="QWidget" name="centralwidget"/>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QHBoxLayout" name="horizontalLayout">
+    <item>
+     <widget class="QTabWidget" name="tabWidget"/>
+    </item>
+   </layout>
+  </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
     <rect>
@@ -30,7 +36,8 @@
     <property name="title">
      <string>&amp;File</string>
     </property>
-    <addaction name="actionOpen"/>
+    <addaction name="actionOpen_currentTab"/>
+    <addaction name="actionOpen_newTab"/>
     <addaction name="separator"/>
     <addaction name="actionExit"/>
    </widget>
@@ -68,12 +75,20 @@
     <string>3</string>
    </property>
   </action>
-  <action name="actionOpen">
+  <action name="actionOpen_currentTab">
    <property name="text">
-    <string>&amp;Open...</string>
+    <string>&amp;Open in current tab...</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+O</string>
+   </property>
+  </action>
+  <action name="actionOpen_newTab">
+   <property name="text">
+    <string>Open in new &amp;tab...</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Shift+O</string>
    </property>
   </action>
  </widget>

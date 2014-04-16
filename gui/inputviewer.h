@@ -22,7 +22,7 @@ class Input;
 class PolyDataInput;
 class GridDataInput;
 
-class InputViewer : public QDockWidget
+class InputViewer : public QWidget
 {
     Q_OBJECT
 
