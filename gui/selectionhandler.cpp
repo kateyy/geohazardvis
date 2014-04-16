@@ -62,7 +62,8 @@ void SelectionHandler::updateSelections(vtkIdType cellId, bool updateView)
 
 void SelectionHandler::cellPicked(vtkDataObject * dataObject, vtkIdType cellId)
 {
-    assert(m_dataObject == dataObject); // not implemented for multiple data objects
+    // assertion not valid for image/grid input data
+    //assert(m_dataObject == dataObject); // not implemented for multiple data objects
     updateSelections(cellId, false);
 }
 
