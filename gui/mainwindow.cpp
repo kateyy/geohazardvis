@@ -13,6 +13,8 @@ MainWindow::MainWindow()
 , m_ui(new Ui_MainWindow())
 {
     m_ui->setupUi(this);
+
+    connect(m_ui->tabWidget, &QTabWidget::tabBarDoubleClicked, this, &MainWindow::untabibyViewer);
     
     InputViewer * emptyViewer = new InputViewer();
 
@@ -23,6 +25,19 @@ MainWindow::MainWindow()
 MainWindow::~MainWindow()
 {
     delete m_ui;
+}
+
+void MainWindow::untabibyViewer(int tabIndex)
+{
+    assert(tabIndex >= 0 && tabIndex < m_ui->tabWidget->count());
+
+    QWidget * tabbedViewer = m_ui->tabWidget->widget(tabIndex);
+    assert(tabbedViewer);
+
+    m_ui->tabWidget->removeTab(tabIndex);
+
+    tabbedViewer->setParent(nullptr);
+    tabbedViewer->show();
 }
 
 void MainWindow::viewerTitleChanged(const QString & title)
