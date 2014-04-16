@@ -16,6 +16,9 @@
     <verstretch>0</verstretch>
    </sizepolicy>
   </property>
+  <property name="acceptDrops">
+   <bool>true</bool>
+  </property>
   <property name="windowTitle">
    <string>(empty)</string>
   </property>
@@ -56,7 +59,7 @@
        </attribute>
       </widget>
      </widget>
-     <widget class="RenderWidget" name="qvtkMain" native="true">
+     <widget class="QVTKWidget" name="qvtkMain" native="true">
       <property name="sizePolicy">
        <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
         <horstretch>1</horstretch>
@@ -76,9 +79,9 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>RenderWidget</class>
+   <class>QVTKWidget</class>
    <extends>QWidget</extends>
-   <header>renderwidget.h</header>
+   <header>QVTKWidget.h</header>
   </customwidget>
  </customwidgets>
  <resources/>

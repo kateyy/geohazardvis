@@ -22,7 +22,7 @@ public slots:
 protected slots:
     void viewerTitleChanged(const QString & title);
 
-    void untabibyViewer(int tabIndex);
+    void untabifyViewer(int tabIndex);
 
 protected:
     QString dialog_inputFileName();

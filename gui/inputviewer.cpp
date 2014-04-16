@@ -3,6 +3,9 @@
 
 #include <QFileDialog>
 #include <QMessageBox>
+#include <QDragEnterEvent>
+#include <QMimeData>
+#include <QDebug>
 
 #include <vtkCamera.h>
 #include <vtkProperty.h>
@@ -23,7 +26,6 @@
 #include "core/input.h"
 
 #include "mainwindow.h"
-#include "renderwidget.h"
 #include "selectionhandler.h"
 #include "qvtktablemodel.h"
 
@@ -59,8 +61,6 @@ void InputViewer::setupRenderer()
     m_mainRenderer = vtkSmartPointer<vtkRenderer>::New();
     m_mainRenderer->SetBackground(1, 1, 1);
     m_ui->qvtkMain->GetRenderWindow()->AddRenderer(m_mainRenderer);
-
-    connect(m_ui->qvtkMain, &RenderWidget::onInputFileDropped, this, &InputViewer::openFile);
 }
 
 void InputViewer::setupInteraction()
@@ -73,6 +73,23 @@ void InputViewer::setupInteraction()
     m_mainInteractor->SetRenderWindow(m_ui->qvtkMain->GetRenderWindow());
 
     m_mainInteractor->Initialize();
+}
+
+void InputViewer::dragEnterEvent(QDragEnterEvent * event)
+{
+    if (event->mimeData()->hasUrls())
+        event->acceptProposedAction();
+}
+
+void InputViewer::dropEvent(QDropEvent * event)
+{
+    assert(event->mimeData()->hasUrls());
+    QString filename = event->mimeData()->urls().first().toLocalFile();
+    qDebug() << filename;
+
+    emit openFile(filename);
+
+    event->acceptProposedAction();
 }
 
 void InputViewer::ShowInfo(const QStringList & info)

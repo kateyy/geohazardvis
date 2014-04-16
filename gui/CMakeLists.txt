@@ -11,8 +11,6 @@ set ( SOURCES
     pickinginteractionstyle.cpp
     qvtktablemodel.h
     qvtktablemodel.cpp
-    renderwidget.h
-    renderwidget.cpp
     selectionhandler.h
     selectionhandler.cpp
 )
