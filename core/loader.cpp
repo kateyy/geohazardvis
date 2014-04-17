@@ -1,6 +1,7 @@
 #include "loader.h"
 
 #include <cmath>
+#include <limits>
 
 #include <vtkFloatArray.h>
 #include <vtkPoints.h>

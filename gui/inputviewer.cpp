@@ -67,7 +67,7 @@ void InputViewer::setupInteraction()
 {
     m_interactStyle = vtkSmartPointer<PickingInteractionStyle>::New();
     m_interactStyle->SetDefaultRenderer(m_mainRenderer);
-    connect(m_interactStyle, &PickingInteractionStyle::pointInfoSent, this, &InputViewer::ShowInfo);
+    connect(m_interactStyle.Get(), &PickingInteractionStyle::pointInfoSent, this, &InputViewer::ShowInfo);
     m_mainInteractor = vtkSmartPointer<vtkRenderWindowInteractor>::New();
     m_mainInteractor->SetInteractorStyle(m_interactStyle);
     m_mainInteractor->SetRenderWindow(m_ui->qvtkMain->GetRenderWindow());
