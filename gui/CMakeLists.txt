@@ -13,6 +13,8 @@ set ( SOURCES
     qvtktablemodel.cpp
     selectionhandler.h
     selectionhandler.cpp
+    tabwidget.h
+    tabwidget.cpp
 )
     
 set ( UIs

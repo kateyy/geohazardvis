@@ -14,7 +14,7 @@ MainWindow::MainWindow()
 {
     m_ui->setupUi(this);
 
-    connect(m_ui->tabWidget, &QTabWidget::tabBarDoubleClicked, this, &MainWindow::untabifyViewer);
+    connect(m_ui->tabWidget, &TabWidget::tabPopOutClicked, this, &MainWindow::untabifyViewer);
     
     InputViewer * emptyViewer = new InputViewer();
 
