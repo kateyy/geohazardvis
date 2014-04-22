@@ -20,6 +20,7 @@ MainWindow::MainWindow()
 
     m_ui->tabWidget->addTab(emptyViewer, emptyViewer->windowTitle());
     connect(emptyViewer, &InputViewer::windowTitleChanged, this, &MainWindow::viewerTitleChanged);
+    connect(emptyViewer, &InputViewer::dockingRequested, this, &MainWindow::tabifyViewer);
 }
 
 MainWindow::~MainWindow()
@@ -27,11 +28,20 @@ MainWindow::~MainWindow()
     delete m_ui;
 }
 
+void MainWindow::tabifyViewer()
+{
+    InputViewer * windowedViewer = dynamic_cast<InputViewer*>(sender());
+    assert(windowedViewer);
+
+    windowedViewer->setWindowFlags(Qt::Widget);
+    m_ui->tabWidget->insertTab(m_ui->tabWidget->currentIndex(), windowedViewer, windowedViewer->windowTitle());
+}
+
 void MainWindow::untabifyViewer(int tabIndex)
 {
     assert(tabIndex >= 0 && tabIndex < m_ui->tabWidget->count());
 
-    QWidget * tabbedViewer = m_ui->tabWidget->widget(tabIndex);
+    InputViewer * tabbedViewer = dynamic_cast<InputViewer*>(m_ui->tabWidget->widget(tabIndex));
     assert(tabbedViewer);
 
     m_ui->tabWidget->removeTab(tabIndex);
@@ -106,6 +116,7 @@ void MainWindow::on_actionOpen_newTab_triggered()
     m_ui->tabWidget->addTab(newViewer, newViewer->windowTitle());
     m_ui->tabWidget->setCurrentWidget(newViewer);
     connect(newViewer, &InputViewer::windowTitleChanged, this, &MainWindow::viewerTitleChanged);
+    connect(newViewer, &InputViewer::dockingRequested, this, &MainWindow::tabifyViewer);
 
     emit newViewer->openFile(fileName);
 }

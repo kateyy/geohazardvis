@@ -47,6 +47,8 @@ InputViewer::InputViewer(QWidget * parent)
     m_selectionHandler = make_shared<SelectionHandler>();
     m_selectionHandler->setQtTableView(m_ui->tableView, m_tableModel);
     m_selectionHandler->setVtkInteractionStyle(m_interactStyle);
+
+    connect(m_ui->dockWindowButton, &QPushButton::released, this, &InputViewer::dockingRequested);
 }
 
 InputViewer::~InputViewer()
@@ -73,6 +75,12 @@ void InputViewer::setupInteraction()
     m_mainInteractor->SetRenderWindow(m_ui->qvtkMain->GetRenderWindow());
 
     m_mainInteractor->Initialize();
+}
+
+void InputViewer::showEvent(QShowEvent * event)
+{
+    // show the docking button only if we are a floating window
+    m_ui->dockWindowButton->setVisible((windowFlags() & Qt::Window) == Qt::Window);
 }
 
 void InputViewer::dragEnterEvent(QDragEnterEvent * event)

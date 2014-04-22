@@ -30,6 +30,9 @@ public:
     InputViewer(QWidget * parent = nullptr);
     ~InputViewer() override;
 
+signals:
+    void dockingRequested();
+
 public slots:
     void ShowInfo(const QStringList &info);
     void openFile(QString filename);
@@ -38,8 +41,9 @@ protected:
     void setupRenderer();
     void setupInteraction();
 
-    virtual void dragEnterEvent(QDragEnterEvent * event) override;
-    virtual void dropEvent(QDropEvent * event) override;
+    void showEvent(QShowEvent * event) override;
+    void dragEnterEvent(QDragEnterEvent * event) override;
+    void dropEvent(QDropEvent * event) override;
 
     void show3DInput(PolyDataInput & input);
     void showGridInput(GridDataInput & input);
