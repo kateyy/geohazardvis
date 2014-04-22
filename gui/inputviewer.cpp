@@ -56,7 +56,7 @@ InputViewer::~InputViewer()
 
 void InputViewer::setupRenderer()
 {
-    m_ui->qvtkMain->GetRenderWindow()->SetAAFrames(2);
+    m_ui->qvtkMain->GetRenderWindow()->SetAAFrames(0);
 
     m_mainRenderer = vtkSmartPointer<vtkRenderer>::New();
     m_mainRenderer->SetBackground(1, 1, 1);
