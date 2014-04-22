@@ -17,11 +17,7 @@ MainWindow::MainWindow()
     connect(m_ui->tabWidget, &TabWidget::tabPopOutClicked, this, &MainWindow::untabifyViewer);
     connect(m_ui->tabWidget, &TabWidget::tabCloseRequested, this, &MainWindow::closeViewer);
     
-    InputViewer * emptyViewer = new InputViewer();
-
-    m_ui->tabWidget->addTab(emptyViewer, emptyViewer->windowTitle());
-    connect(emptyViewer, &InputViewer::windowTitleChanged, this, &MainWindow::viewerTitleChanged);
-    connect(emptyViewer, &InputViewer::dockingRequested, this, &MainWindow::tabifyViewer);
+    createEmptyViewerTabbed();
 }
 
 MainWindow::~MainWindow()
@@ -29,13 +25,61 @@ MainWindow::~MainWindow()
     delete m_ui;
 }
 
+InputViewer * MainWindow::createEmptyViewerTabbed()
+{
+    // use the current viewer if it's empty
+    InputViewer * currentViewer = dynamic_cast<InputViewer*>(m_ui->tabWidget->currentWidget());
+    if (currentViewer && currentViewer->isEmpty())
+        return currentViewer;
+
+
+    InputViewer * emptyViewer = new InputViewer();
+
+    int newIndex = m_ui->tabWidget->addTab(emptyViewer, emptyViewer->windowTitle());
+    m_ui->tabWidget->setCurrentIndex(newIndex);
+
+    connect(emptyViewer, &InputViewer::windowTitleChanged, this, &MainWindow::viewerTitleChanged);
+    connect(emptyViewer, &InputViewer::dockingRequested, this, &MainWindow::tabifyViewer);
+
+    return emptyViewer;
+}
+
 void MainWindow::closeViewer(int tabIndex)
 {
     InputViewer * viewer = dynamic_cast<InputViewer*>(m_ui->tabWidget->widget(tabIndex));
 
+    // can't close the last viewer
+    if (viewer->isEmpty() && m_ui->tabWidget->count() == 1)
+        return;
+
     m_ui->tabWidget->removeTab(tabIndex);
 
     viewer->deleteLater();
+
+    checkForEmptyViewer();
+}
+
+void MainWindow::checkForEmptyViewer()
+{
+    if (m_ui->tabWidget->count() == 0)
+    {
+        createEmptyViewerTabbed();
+        return;
+    }
+
+    for (int index = 0; index < m_ui->tabWidget->count(); )
+    {
+        InputViewer * viewer = dynamic_cast<InputViewer*>(m_ui->tabWidget->widget(index));
+        assert(viewer);
+
+        if (!viewer->isEmpty()) {
+            ++index;
+            continue;
+        }
+
+        m_ui->tabWidget->removeTab(index);
+        viewer->deleteLater();
+    }
 }
 
 void MainWindow::tabifyViewer()
@@ -45,6 +89,9 @@ void MainWindow::tabifyViewer()
 
     windowedViewer->setWindowFlags(Qt::Widget);
     m_ui->tabWidget->insertTab(m_ui->tabWidget->currentIndex(), windowedViewer, windowedViewer->windowTitle());
+    m_ui->tabWidget->setCurrentWidget(windowedViewer);
+
+    checkForEmptyViewer();
 }
 
 void MainWindow::untabifyViewer(int tabIndex)
@@ -62,13 +109,7 @@ void MainWindow::untabifyViewer(int tabIndex)
     // fix position: relative to screen, not main window
     tabbedViewer->move(QPoint(geometry().x(), geometry().y()));
 
-    // create new empty viewer if needed
-    if (m_ui->tabWidget->count() == 0)
-    {
-        InputViewer * emptyViewer = new InputViewer();
-        m_ui->tabWidget->addTab(emptyViewer, emptyViewer->windowTitle());
-        connect(emptyViewer, &InputViewer::windowTitleChanged, this, &MainWindow::viewerTitleChanged);
-    }
+    checkForEmptyViewer();
 
     QApplication::processEvents();
 
@@ -121,12 +162,9 @@ void MainWindow::on_actionOpen_newTab_triggered()
     if (fileName.isEmpty())
         return;
 
-    InputViewer * newViewer = new InputViewer();
-
-    m_ui->tabWidget->addTab(newViewer, newViewer->windowTitle());
-    m_ui->tabWidget->setCurrentWidget(newViewer);
-    connect(newViewer, &InputViewer::windowTitleChanged, this, &MainWindow::viewerTitleChanged);
-    connect(newViewer, &InputViewer::dockingRequested, this, &MainWindow::tabifyViewer);
+    InputViewer * newViewer = createEmptyViewerTabbed();
 
     emit newViewer->openFile(fileName);
+
+    checkForEmptyViewer();
 }

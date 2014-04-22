@@ -33,10 +33,11 @@ void TabWidget::tabInserted(int index)
 
 void TabWidget::popOutButtonClicked(bool checked)
 {
-    QWidget * button = dynamic_cast<QWidget*>(sender());
-    assert(button);
+    assert(sender());
+    QWidget * widget = dynamic_cast<QWidget*>(sender()->parent());
+    assert(widget);
 
-    int index = tabBar()->tabAt(QPoint(button->geometry().x(), button->geometry().y()));
+    int index = tabBar()->tabAt(QPoint(widget->geometry().x(), widget->geometry().y()));
     assert(index >= 0);
 
     emit tabPopOutClicked(index);
@@ -44,10 +45,11 @@ void TabWidget::popOutButtonClicked(bool checked)
 
 void TabWidget::closeButtonReleased()
 {
-    QWidget * button = dynamic_cast<QWidget*>(sender());
-    assert(button);
+    assert(sender());
+    QWidget * widget = dynamic_cast<QWidget*>(sender()->parent());
+    assert(widget);
 
-    int index = tabBar()->tabAt(QPoint(button->geometry().x(), button->geometry().y()));
+    int index = tabBar()->tabAt(QPoint(widget->geometry().x(), widget->geometry().y()));
     assert(index >= 0);
 
     emit tabCloseRequested(index);

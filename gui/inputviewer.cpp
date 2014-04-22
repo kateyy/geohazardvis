@@ -56,6 +56,11 @@ InputViewer::~InputViewer()
     delete m_ui;
 }
 
+bool InputViewer::isEmpty() const
+{
+    return m_inputs.empty();
+}
+
 void InputViewer::setupRenderer()
 {
     m_ui->qvtkMain->GetRenderWindow()->SetAAFrames(0);

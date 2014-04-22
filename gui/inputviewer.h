@@ -30,6 +30,8 @@ public:
     InputViewer(QWidget * parent = nullptr);
     ~InputViewer() override;
 
+    bool isEmpty() const;
+
 signals:
     void dockingRequested();
 

@@ -29,6 +29,9 @@ protected slots:
 protected:
     QString dialog_inputFileName();
 
+    InputViewer * createEmptyViewerTabbed();
+    void checkForEmptyViewer();
+
 protected:
     Ui_MainWindow * m_ui;
 
