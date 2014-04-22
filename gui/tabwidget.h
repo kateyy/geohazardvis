@@ -19,5 +19,6 @@ protected:
 
 protected slots:
     void popOutButtonClicked(bool checked);
+    void closeButtonReleased();
 
 };

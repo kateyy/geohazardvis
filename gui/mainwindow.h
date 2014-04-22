@@ -22,6 +22,7 @@ public slots:
 protected slots:
     void viewerTitleChanged(const QString & title);
 
+    void closeViewer(int tabIndex);
     void tabifyViewer();
     void untabifyViewer(int tabIndex);
 

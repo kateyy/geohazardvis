@@ -15,6 +15,7 @@ MainWindow::MainWindow()
     m_ui->setupUi(this);
 
     connect(m_ui->tabWidget, &TabWidget::tabPopOutClicked, this, &MainWindow::untabifyViewer);
+    connect(m_ui->tabWidget, &TabWidget::tabCloseRequested, this, &MainWindow::closeViewer);
     
     InputViewer * emptyViewer = new InputViewer();
 
@@ -26,6 +27,15 @@ MainWindow::MainWindow()
 MainWindow::~MainWindow()
 {
     delete m_ui;
+}
+
+void MainWindow::closeViewer(int tabIndex)
+{
+    InputViewer * viewer = dynamic_cast<InputViewer*>(m_ui->tabWidget->widget(tabIndex));
+
+    m_ui->tabWidget->removeTab(tabIndex);
+
+    viewer->deleteLater();
 }
 
 void MainWindow::tabifyViewer()
