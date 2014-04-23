@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>394</width>
-    <height>340</height>
+    <width>470</width>
+    <height>382</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -69,6 +69,46 @@
           </attribute>
          </widget>
         </item>
+        <item>
+         <widget class="QGroupBox" name="groupBox">
+          <property name="title">
+           <string>scalar to color mapping</string>
+          </property>
+          <layout class="QVBoxLayout" name="verticalLayout_2">
+           <item>
+            <widget class="QRadioButton" name="scalars_singleColor">
+             <property name="text">
+              <string>single color</string>
+             </property>
+             <property name="checked">
+              <bool>true</bool>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QRadioButton" name="scalars_xValues">
+             <property name="text">
+              <string>x values</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QRadioButton" name="scalars_yValues">
+             <property name="text">
+              <string>y values</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QRadioButton" name="scalars_zValues">
+             <property name="text">
+              <string>z values</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </item>
        </layout>
       </widget>
      </widget>
@@ -98,5 +138,73 @@
   </customwidget>
  </customwidgets>
  <resources/>
- <connections/>
+ <connections>
+  <connection>
+   <sender>scalars_singleColor</sender>
+   <signal>clicked()</signal>
+   <receiver>InputViewer</receiver>
+   <slot>updateScalarToColorMapping()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>82</x>
+     <y>276</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>207</x>
+     <y>169</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>scalars_xValues</sender>
+   <signal>clicked()</signal>
+   <receiver>InputViewer</receiver>
+   <slot>updateScalarToColorMapping()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>82</x>
+     <y>299</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>234</x>
+     <y>190</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>scalars_yValues</sender>
+   <signal>clicked()</signal>
+   <receiver>InputViewer</receiver>
+   <slot>updateScalarToColorMapping()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>82</x>
+     <y>322</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>234</x>
+     <y>190</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>scalars_zValues</sender>
+   <signal>clicked()</signal>
+   <receiver>InputViewer</receiver>
+   <slot>updateScalarToColorMapping()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>82</x>
+     <y>345</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>234</x>
+     <y>190</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+ <slots>
+  <slot>updateScalarToColorMapping()</slot>
+ </slots>
 </ui>

@@ -13,6 +13,11 @@
 #include <vtkLookupTable.h>
 
 #include <vtkDataSet.h>
+#include <vtkPolyData.h>
+
+#include <vtkElevationFilter.h>
+
+#include <vtkPolyDataMapper.h>
 
 #include <vtkScalarBarActor.h>
 #include <vtkCubeAxesActor.h>
@@ -110,6 +115,21 @@ void InputViewer::ShowInfo(const QStringList & info)
     m_ui->qvtkMain->setToolTip(info.join('\n'));
 }
 
+void InputViewer::updateScalarToColorMapping()
+{
+    if (m_inputs.empty())
+        return;
+
+    if (m_inputs.front()->type != ModelType::triangles)
+        return;
+
+    // create the visual representation again, to update to scalar to color mapping
+    m_mainRenderer->RemoveAllViewProps();
+    show3DInput(static_cast<PolyDataInput&>(*m_inputs.front()));
+
+    m_ui->qvtkMain->GetRenderWindow()->Render();
+}
+
 void InputViewer::openFile(QString filename)
 {
     QApplication::processEvents();
@@ -134,10 +154,10 @@ void InputViewer::openFile(QString filename)
 
     switch (input->type) {
     case ModelType::triangles:
-        show3DInput(*static_cast<PolyDataInput*>(input.get()));
+        show3DInput(static_cast<PolyDataInput&>(*input));
         break;
     case ModelType::grid2d:
-        showGridInput(*static_cast<GridDataInput*>(input.get()));
+        showGridInput(static_cast<GridDataInput&>(*input));
         break;
     default:
         QMessageBox::critical(this, "File error", "Could not open the selected input file. (unsupported format)");
@@ -154,9 +174,49 @@ void InputViewer::openFile(QString filename)
     QApplication::processEvents();
 }
 
+vtkPolyDataMapper * InputViewer::map3DInputScalars(PolyDataInput & input)
+{
+    VTK_CREATE(vtkElevationFilter, elevation);
+    elevation->SetInputData(input.polyData());
+
+    vtkPolyDataMapper * mapper = vtkPolyDataMapper::New();
+
+    if (m_ui->scalars_singleColor->isChecked()) {
+        mapper->SetInputData(input.polyData());
+        return mapper;
+    }
+
+    if (m_ui->scalars_xValues->isChecked()) {
+        elevation->SetLowPoint(input.polyData()->GetBounds()[0], 0, 0);
+        elevation->SetHighPoint(input.polyData()->GetBounds()[1], 0, 0);
+    }
+    else if (m_ui->scalars_yValues->isChecked())
+    {
+        elevation->SetLowPoint(0, input.polyData()->GetBounds()[2], 0);
+        elevation->SetHighPoint(0, input.polyData()->GetBounds()[3], 0);
+    }
+    else if (m_ui->scalars_zValues->isChecked())
+    {
+        elevation->SetLowPoint(0, 0, input.polyData()->GetBounds()[4]);
+        elevation->SetHighPoint(0, 0, input.polyData()->GetBounds()[5]);
+    }
+    else
+    {
+        assert(false);
+    }
+
+    mapper->SetInputConnection(elevation->GetOutputPort());
+
+    return mapper;
+}
+
 void InputViewer::show3DInput(PolyDataInput & input)
 {
+    vtkSmartPointer<vtkPolyDataMapper> mapper = map3DInputScalars(input);
+
     vtkSmartPointer<vtkActor> actor = input.createActor();
+    actor->SetMapper(mapper);
+
     vtkProperty & prop = *actor->GetProperty();
     prop.SetColor(0, 0.6, 0);
     prop.SetOpacity(1.0);

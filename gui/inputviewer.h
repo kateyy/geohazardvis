@@ -11,6 +11,7 @@ class Ui_InputViewer;
 
 class QVtkTableModel;
 
+class vtkPolyDataMapper;
 class vtkRenderer;
 class vtkRenderWindowInteractor;
 class vtkCubeAxesActor;
@@ -39,6 +40,9 @@ public slots:
     void ShowInfo(const QStringList &info);
     void openFile(QString filename);
 
+protected slots:
+    void updateScalarToColorMapping();
+
 protected:
     void setupRenderer();
     void setupInteraction();
@@ -49,6 +53,8 @@ protected:
 
     void show3DInput(PolyDataInput & input);
     void showGridInput(GridDataInput & input);
+
+    vtkPolyDataMapper * map3DInputScalars(PolyDataInput & input);
 
     void setupAxes(const double bounds[6]);
     vtkSmartPointer<vtkCubeAxesActor> createAxes(vtkRenderer & renderer);
