@@ -109,6 +109,9 @@
           </layout>
          </widget>
         </item>
+        <item>
+         <widget class="QComboBox" name="gradientComboBox"/>
+        </item>
        </layout>
       </widget>
      </widget>
@@ -203,8 +206,25 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>gradientComboBox</sender>
+   <signal>currentIndexChanged(int)</signal>
+   <receiver>InputViewer</receiver>
+   <slot>uiSelectionChanged(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>82</x>
+     <y>353</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>234</x>
+     <y>190</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <slots>
   <slot>updateScalarToColorMapping()</slot>
+  <slot>uiSelectionChanged(int)</slot>
  </slots>
 </ui>

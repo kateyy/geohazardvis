@@ -1,9 +1,11 @@
 #pragma once
 
 #include <memory>
+#include <array>
 
-#include <QDockWidget>
+#include <QWidget>
 #include <QMap>
+#include <QVector>
 
 #include <vtkSmartPointer.h>
 
@@ -41,11 +43,13 @@ public slots:
     void openFile(QString filename);
 
 protected slots:
+    void uiSelectionChanged(int);
     void updateScalarToColorMapping();
 
 protected:
     void setupRenderer();
     void setupInteraction();
+    void loadGradientImages();
 
     void showEvent(QShowEvent * event) override;
     void dragEnterEvent(QDragEnterEvent * event) override;
@@ -63,6 +67,7 @@ protected:
     Ui_InputViewer * m_ui;
     QVtkTableModel * m_tableModel;
     std::shared_ptr<SelectionHandler> m_selectionHandler;
+    QVector<QImage> m_scalarToColorGradients;
 
     vtkSmartPointer<vtkRenderer> m_mainRenderer;
     vtkSmartPointer<vtkRenderWindowInteractor> m_mainInteractor;
