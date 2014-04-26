@@ -14,10 +14,16 @@
 
 #include <vtkDataSet.h>
 #include <vtkPolyData.h>
+#include <vtkCellData.h>
+
+#include <vtkArrowSource.h>
 
 #include <vtkElevationFilter.h>
+#include <vtkPolyDataNormals.h>
+#include <vtkGlyph3D.h>
 
 #include <vtkPolyDataMapper.h>
+#include <vtkDataSetMapper.h>
 
 #include <vtkScalarBarActor.h>
 #include <vtkCubeAxesActor.h>
@@ -302,8 +308,42 @@ void InputViewer::show3DInput(PolyDataInput & input)
 
     setupAxes(input.data()->GetBounds());
 
+    showVertexNormals(input.polyData());
+
     m_tableModel->showPolyData(input.polyData());
     m_ui->tableView->resizeColumnsToContents();
+}
+
+void InputViewer::showVertexNormals(vtkPolyData * polyData)
+{
+    VTK_CREATE(vtkPolyDataNormals, inputNormals);
+    inputNormals->ComputeCellNormalsOff();
+    inputNormals->ComputePointNormalsOn();
+    inputNormals->SetInputDataObject(polyData);
+
+    VTK_CREATE(vtkArrowSource, arrow);
+    arrow->SetShaftRadius(0.02);
+    arrow->SetTipRadius(0.07);
+    arrow->SetTipLength(0.3);
+
+    VTK_CREATE(vtkGlyph3D, arrowGlyph);
+
+    double * bounds = polyData->GetBounds();
+    double maxBoundsSize = std::max(bounds[1] - bounds[0], std::max(bounds[3] - bounds[2], bounds[5] - bounds[4]));
+
+    arrowGlyph->SetScaleModeToScaleByScalar();
+    arrowGlyph->SetScaleFactor(maxBoundsSize * 0.1);
+    arrowGlyph->SetVectorModeToUseNormal();
+    arrowGlyph->OrientOn();
+    arrowGlyph->SetInputConnection(inputNormals->GetOutputPort());
+    arrowGlyph->SetSourceConnection(arrow->GetOutputPort());
+
+    VTK_CREATE(vtkDataSetMapper, arrowMapper);
+    arrowMapper->SetInputConnection(arrowGlyph->GetOutputPort());
+    VTK_CREATE(vtkActor, arrowActor);
+    arrowActor->SetMapper(arrowMapper);
+
+    m_mainRenderer->AddViewProp(arrowActor);
 }
 
 void InputViewer::showGridInput(GridDataInput & input)

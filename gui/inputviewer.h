@@ -18,6 +18,7 @@ class vtkRenderer;
 class vtkRenderWindowInteractor;
 class vtkCubeAxesActor;
 class vtkProp;
+class vtkPolyData;
 class PickingInteractionStyle;
 
 class SelectionHandler;
@@ -59,6 +60,7 @@ protected:
     void showGridInput(GridDataInput & input);
 
     vtkPolyDataMapper * map3DInputScalars(PolyDataInput & input);
+    void showVertexNormals(vtkPolyData * polyData);
 
     void setupAxes(const double bounds[6]);
     vtkSmartPointer<vtkCubeAxesActor> createAxes(vtkRenderer & renderer);
