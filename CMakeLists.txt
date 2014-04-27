@@ -64,10 +64,11 @@ if("${VTK_QT_VERSION}" STREQUAL "")
     message(FATAL_ERROR "VTK was not built with Qt")
 endif()
 
+find_package(Qt5Widgets REQUIRED)
+find_package(libzeug REQUIRED)
+
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
-
-find_package(Qt5Widgets REQUIRED)
 
 include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}

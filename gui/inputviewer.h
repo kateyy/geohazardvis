@@ -3,13 +3,14 @@
 #include <memory>
 #include <array>
 
-#include <QWidget>
+#include <QMainWindow>
 #include <QMap>
 #include <QVector>
 
 #include <vtkSmartPointer.h>
 
 class Ui_InputViewer;
+class QTableView;
 
 class QVtkTableModel;
 
@@ -25,13 +26,14 @@ class SelectionHandler;
 class Input;
 class PolyDataInput;
 class GridDataInput;
+class RenderConfigWidget;
 
-class InputViewer : public QWidget
+class InputViewer : public QMainWindow
 {
     Q_OBJECT
 
 public:
-    InputViewer(QWidget * parent = nullptr);
+    explicit InputViewer(QWidget * parent = nullptr, Qt::WindowFlags flags = 0);
     ~InputViewer() override;
 
     bool isEmpty() const;
@@ -67,7 +69,9 @@ protected:
 
 protected:
     Ui_InputViewer * m_ui;
+    QTableView * m_tableView;
     QVtkTableModel * m_tableModel;
+    RenderConfigWidget * m_renderConfigWidget;
     std::shared_ptr<SelectionHandler> m_selectionHandler;
     QVector<QImage> m_scalarToColorGradients;
 

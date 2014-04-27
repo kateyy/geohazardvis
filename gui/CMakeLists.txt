@@ -11,6 +11,8 @@ set ( SOURCES
     pickinginteractionstyle.cpp
     qvtktablemodel.h
     qvtktablemodel.cpp
+	renderconfigwidget.h
+	renderconfigwidget.cpp
     selectionhandler.h
     selectionhandler.cpp
     tabwidget.h
@@ -53,6 +55,9 @@ target_link_libraries( ${TARGET}
     
 include_directories(
     ${CMAKE_CURRENT_BINARY_DIR}
+    ${LIBZEUG_SIGNAL_INCLUDE_DIR}
+    ${LIBZEUG_REFLECTION_INCLUDE_DIR}
+    ${LIBZEUG_PROPERTYGUI_INCLUDE_DIR}
 )
 
 set_target_properties( ${TARGET}
