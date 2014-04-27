@@ -76,6 +76,11 @@ const QImage & RenderConfigWidget::selectedGradient() const
     return m_scalarToColorGradients[m_ui->gradientComboBox->currentIndex()];
 }
 
+void RenderConfigWidget::updateGradientSelection(int selection)
+{
+    emit gradientSelectionChanged(m_scalarToColorGradients[selection]);
+}
+
 void RenderConfigWidget::clear()
 {
     setRenderProperty(nullptr);

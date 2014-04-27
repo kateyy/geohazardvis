@@ -59,6 +59,9 @@ InputViewer::InputViewer(QWidget * parent, Qt::WindowFlags flags)
     addDockWidget(Qt::DockWidgetArea::LeftDockWidgetArea, m_dataChooser);
     addDockWidget(Qt::DockWidgetArea::LeftDockWidgetArea, m_renderConfigWidget);
 
+    connect(m_dataChooser, &DataChooser::selectionChanged, this, &InputViewer::updateScalarsForColorMaping);
+    connect(m_renderConfigWidget, &RenderConfigWidget::gradientSelectionChanged, this, &InputViewer::updateGradientForColorMapping);
+
     setupRenderer();
     setupInteraction();
 
@@ -130,6 +133,18 @@ void InputViewer::ShowInfo(const QStringList & info)
 
 void InputViewer::uiSelectionChanged(int)
 {
+    updateScalarToColorMapping();
+}
+
+void InputViewer::updateScalarsForColorMaping(DataSelection /*selection*/)
+{
+    // just rebuild the graphics for now
+    updateScalarToColorMapping();
+}
+
+void InputViewer::updateGradientForColorMapping(const QImage & /*gradient*/)
+{
+    // just rebuild the graphics for now
     updateScalarToColorMapping();
 }
 
@@ -221,12 +236,14 @@ vtkPolyDataMapper * InputViewer::map3DInputScalars(PolyDataInput & input)
         maxValue = input.polyData()->GetBounds()[3];
         elevation->SetLowPoint(0, minValue, 0);
         elevation->SetHighPoint(0, maxValue, 0);
+        break;
 
     case DataSelection::Vertex_zValues:
         minValue = input.polyData()->GetBounds()[4];
         maxValue = input.polyData()->GetBounds()[5];
         elevation->SetLowPoint(0, 0, minValue);
         elevation->SetHighPoint(0, 0, maxValue);
+        break;
     }
 
     mapper->SetInputConnection(elevation->GetOutputPort());

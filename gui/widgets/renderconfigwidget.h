@@ -27,7 +27,10 @@ public:
     const QImage & selectedGradient() const;
 
 signals:
-    void configChanged();
+    void gradientSelectionChanged(const QImage & currentGradient);
+
+protected slots:
+    void updateGradientSelection(int selection);
 
 protected:
     void loadGradientImages();

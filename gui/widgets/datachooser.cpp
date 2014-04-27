@@ -13,6 +13,11 @@ DataChooser::~DataChooser()
     delete m_ui;
 }
 
+void DataChooser::updateSelection()
+{
+    emit selectionChanged(dataSelection());
+}
+
 DataSelection DataChooser::dataSelection() const
 {
     if (m_ui->scalars_singleColor->isChecked())

@@ -25,6 +25,7 @@ class GridDataInput;
 class RenderConfigWidget;
 class TableWidget;
 class DataChooser;
+enum class DataSelection;
 
 class InputViewer : public QMainWindow
 {
@@ -45,6 +46,8 @@ public slots:
 
 protected slots:
     void uiSelectionChanged(int);
+    void updateScalarsForColorMaping(DataSelection dataSelection);
+    void updateGradientForColorMapping(const QImage & gradient);
     void updateScalarToColorMapping();
 
 protected:

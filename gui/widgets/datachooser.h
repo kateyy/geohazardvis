@@ -23,6 +23,13 @@ public:
 
     DataSelection dataSelection() const;
 
+signals:
+    void selectionChanged(DataSelection selection);
+
+protected slots:
+    /// read current gui selection and emit selectionChanged() accordingly
+    void updateSelection();
+
 protected:
     Ui_DataChooser * m_ui;
 };
