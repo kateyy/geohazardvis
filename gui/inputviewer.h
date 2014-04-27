@@ -5,7 +5,6 @@
 
 #include <QMainWindow>
 #include <QMap>
-#include <QVector>
 
 #include <vtkSmartPointer.h>
 
@@ -25,6 +24,7 @@ class PolyDataInput;
 class GridDataInput;
 class RenderConfigWidget;
 class TableWidget;
+class DataChooser;
 
 class InputViewer : public QMainWindow
 {
@@ -50,7 +50,6 @@ protected slots:
 protected:
     void setupRenderer();
     void setupInteraction();
-    void loadGradientImages();
 
     void showEvent(QShowEvent * event) override;
     void dragEnterEvent(QDragEnterEvent * event) override;
@@ -68,9 +67,9 @@ protected:
 protected:
     Ui_InputViewer * m_ui;
     TableWidget * m_tableWidget;
+    DataChooser * m_dataChooser;
     RenderConfigWidget * m_renderConfigWidget;
     std::shared_ptr<SelectionHandler> m_selectionHandler;
-    QVector<QImage> m_scalarToColorGradients;
 
     vtkSmartPointer<vtkRenderer> m_mainRenderer;
     vtkSmartPointer<vtkRenderWindowInteractor> m_mainInteractor;

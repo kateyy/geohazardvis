@@ -25,75 +25,16 @@
   <property name="locale">
    <locale language="English" country="UnitedStates"/>
   </property>
-    <widget class="QSplitter" name="infoMainSplitter">
-     <property name="sizePolicy">
-      <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-       <horstretch>0</horstretch>
-       <verstretch>0</verstretch>
-      </sizepolicy>
-     </property>
-     <property name="orientation">
-      <enum>Qt::Horizontal</enum>
-     </property>
-     <widget class="QSplitter" name="infoSplitter">
-      <property name="orientation">
-       <enum>Qt::Vertical</enum>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QVBoxLayout" name="horizontalLayout">
+    <item>
+     <widget class="QPushButton" name="dockWindowButton">
+      <property name="text">
+       <string>&amp;dock window</string>
       </property>
-      <widget class="QWidget" name="widget" native="true">
-       <layout class="QVBoxLayout" name="verticalLayout">
-        <item>
-         <widget class="QPushButton" name="dockWindowButton">
-          <property name="text">
-           <string>&amp;dock window</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QGroupBox" name="groupBox">
-          <property name="title">
-           <string>scalar to color mapping</string>
-          </property>
-          <layout class="QVBoxLayout" name="verticalLayout_2">
-           <item>
-            <widget class="QRadioButton" name="scalars_singleColor">
-             <property name="text">
-              <string>single color</string>
-             </property>
-             <property name="checked">
-              <bool>true</bool>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QRadioButton" name="scalars_xValues">
-             <property name="text">
-              <string>x values</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QRadioButton" name="scalars_yValues">
-             <property name="text">
-              <string>y values</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QRadioButton" name="scalars_zValues">
-             <property name="text">
-              <string>z values</string>
-             </property>
-            </widget>
-           </item>
-          </layout>
-         </widget>
-        </item>
-        <item>
-         <widget class="QComboBox" name="gradientComboBox"/>
-        </item>
-       </layout>
-      </widget>
      </widget>
+    </item>
+    <item>
      <widget class="QVTKWidget" name="qvtkMain" native="true">
       <property name="sizePolicy">
        <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
@@ -108,7 +49,9 @@
        </size>
       </property>
      </widget>
-    </widget>
+    </item>
+   </layout>
+  </widget>
  </widget>
  <customwidgets>
   <customwidget>
@@ -118,88 +61,7 @@
   </customwidget>
  </customwidgets>
  <resources/>
- <connections>
-  <connection>
-   <sender>scalars_singleColor</sender>
-   <signal>clicked()</signal>
-   <receiver>InputViewer</receiver>
-   <slot>updateScalarToColorMapping()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>82</x>
-     <y>276</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>207</x>
-     <y>169</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>scalars_xValues</sender>
-   <signal>clicked()</signal>
-   <receiver>InputViewer</receiver>
-   <slot>updateScalarToColorMapping()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>82</x>
-     <y>299</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>234</x>
-     <y>190</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>scalars_yValues</sender>
-   <signal>clicked()</signal>
-   <receiver>InputViewer</receiver>
-   <slot>updateScalarToColorMapping()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>82</x>
-     <y>322</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>234</x>
-     <y>190</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>scalars_zValues</sender>
-   <signal>clicked()</signal>
-   <receiver>InputViewer</receiver>
-   <slot>updateScalarToColorMapping()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>82</x>
-     <y>345</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>234</x>
-     <y>190</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>gradientComboBox</sender>
-   <signal>currentIndexChanged(int)</signal>
-   <receiver>InputViewer</receiver>
-   <slot>uiSelectionChanged(int)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>82</x>
-     <y>353</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>234</x>
-     <y>190</y>
-    </hint>
-   </hints>
-  </connection>
- </connections>
+ <connections/>
  <slots>
   <slot>updateScalarToColorMapping()</slot>
   <slot>uiSelectionChanged(int)</slot>

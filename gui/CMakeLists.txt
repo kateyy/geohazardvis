@@ -3,28 +3,32 @@ set( TARGET gui )
 message( STATUS ${TARGET} )
 
 set ( SOURCES
-    mainwindow.h
-    mainwindow.cpp
     inputviewer.h
     inputviewer.cpp
+    mainwindow.h
+    mainwindow.cpp
     pickinginteractionstyle.h
     pickinginteractionstyle.cpp
     qvtktablemodel.h
     qvtktablemodel.cpp
-    renderconfigwidget.h
-    renderconfigwidget.cpp
     selectionhandler.h
     selectionhandler.cpp
-    tablewidget.h
-    tablewidget.cpp
     tabwidget.h
     tabwidget.cpp
+    widgets/datachooser.h
+    widgets/datachooser.cpp
+    widgets/renderconfigwidget.h
+    widgets/renderconfigwidget.cpp
+    widgets/tablewidget.h
+    widgets/tablewidget.cpp
 )
 
 set ( UIs
-    mainwindow.ui
     inputviewer.ui
-    tablewidget.ui
+    mainwindow.ui
+    widgets/datachooser.ui
+    widgets/renderconfigwidget.ui
+    widgets/tablewidget.ui
 )
 
 

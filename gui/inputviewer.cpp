@@ -40,8 +40,9 @@
 #include "mainwindow.h"
 #include "selectionhandler.h"
 #include "qvtktablemodel.h"
-#include "renderconfigwidget.h"
-#include "tablewidget.h"
+#include "widgets/datachooser.h"
+#include "widgets/renderconfigwidget.h"
+#include "widgets/tablewidget.h"
 
 using namespace std;
 
@@ -49,23 +50,23 @@ InputViewer::InputViewer(QWidget * parent, Qt::WindowFlags flags)
 : QMainWindow(parent, flags)
 , m_ui(new Ui_InputViewer())
 , m_tableWidget(new TableWidget())
+, m_dataChooser(new DataChooser)
 , m_renderConfigWidget(new RenderConfigWidget())
 {
     m_ui->setupUi(this);
 
     addDockWidget(Qt::DockWidgetArea::LeftDockWidgetArea, m_tableWidget);
+    addDockWidget(Qt::DockWidgetArea::LeftDockWidgetArea, m_dataChooser);
+    addDockWidget(Qt::DockWidgetArea::LeftDockWidgetArea, m_renderConfigWidget);
 
     setupRenderer();
     setupInteraction();
-    loadGradientImages();
 
     m_selectionHandler = make_shared<SelectionHandler>();
     m_selectionHandler->setQtTableView(m_tableWidget->tableView(), m_tableWidget->model());
     m_selectionHandler->setVtkInteractionStyle(m_interactStyle);
 
     connect(m_ui->dockWindowButton, &QPushButton::released, this, &InputViewer::dockingRequested);
-
-    addDockWidget(Qt::DockWidgetArea::LeftDockWidgetArea, m_renderConfigWidget);
 }
 
 InputViewer::~InputViewer()
@@ -97,45 +98,6 @@ void InputViewer::setupInteraction()
     m_mainInteractor->SetRenderWindow(m_ui->qvtkMain->GetRenderWindow());
 
     m_mainInteractor->Initialize();
-}
-
-void InputViewer::loadGradientImages()
-{
-    // navigate to the gradient directory
-    QDir dir;
-    if (!dir.cd("data/gradients"))
-    {
-        std::cout << "gradient directory does not exist; no gradients will be available" << std::endl;
-        return;
-    }
-
-    // only retrieve png and jpeg files
-    dir.setFilter(QDir::Files | QDir::Hidden | QDir::NoSymLinks);
-    QStringList filters;
-    filters << "*.png" << "*.jpg" << "*.jpeg";
-    dir.setNameFilters(filters);
-    QFileInfoList list = dir.entryInfoList();
-
-    QComboBox* gradientComboBox = m_ui->gradientComboBox;
-    // load the files and add them to the combobox
-    gradientComboBox->blockSignals(true);
-
-    for (QFileInfo fileInfo : list)
-    {
-        QString fileName = fileInfo.baseName();
-        QString filePath = fileInfo.absoluteFilePath();
-        QPixmap pixmap = QPixmap(filePath).scaled(200, 20);
-        m_scalarToColorGradients << pixmap.toImage();
-        
-        gradientComboBox->addItem(pixmap, "");
-        QVariant fileVariant(filePath);
-        gradientComboBox->setItemData(gradientComboBox->count() - 1, fileVariant, Qt::UserRole);
-    }
-
-    gradientComboBox->setIconSize(QSize(200, 20));
-    gradientComboBox->blockSignals(false);
-    // set the "default" gradient
-    gradientComboBox->setCurrentIndex(34);
 }
 
 void InputViewer::showEvent(QShowEvent * event)
@@ -232,47 +194,45 @@ void InputViewer::openFile(QString filename)
 
 vtkPolyDataMapper * InputViewer::map3DInputScalars(PolyDataInput & input)
 {
-    VTK_CREATE(vtkElevationFilter, elevation);
-    elevation->SetInputData(input.polyData());
-
     vtkPolyDataMapper * mapper = vtkPolyDataMapper::New();
 
-    if (m_ui->scalars_singleColor->isChecked()) {
+    switch (m_dataChooser->dataSelection()) {
+    case DataSelection::NoSelection:
+    case DataSelection::DefaultColor:
         mapper->SetInputData(input.polyData());
         return mapper;
     }
 
+    VTK_CREATE(vtkElevationFilter, elevation);
+    elevation->SetInputData(input.polyData());
+
     float minValue, maxValue;
 
-    if (m_ui->scalars_xValues->isChecked()) {
+    switch (m_dataChooser->dataSelection()) {
+    case DataSelection::Vertex_xValues:
         minValue = input.polyData()->GetBounds()[0];
         maxValue = input.polyData()->GetBounds()[1];
         elevation->SetLowPoint(minValue, 0, 0);
         elevation->SetHighPoint(maxValue, 0, 0);
-    }
-    else if (m_ui->scalars_yValues->isChecked())
-    {
+        break;
+
+    case DataSelection::Vertex_yValues:
         minValue = input.polyData()->GetBounds()[2];
         maxValue = input.polyData()->GetBounds()[3];
         elevation->SetLowPoint(0, minValue, 0);
         elevation->SetHighPoint(0, maxValue, 0);
-    }
-    else if (m_ui->scalars_zValues->isChecked())
-    {
+
+    case DataSelection::Vertex_zValues:
         minValue = input.polyData()->GetBounds()[4];
         maxValue = input.polyData()->GetBounds()[5];
         elevation->SetLowPoint(0, 0, minValue);
         elevation->SetHighPoint(0, 0, maxValue);
     }
-    else
-    {
-        assert(false);
-    }
 
     mapper->SetInputConnection(elevation->GetOutputPort());
 
 
-    const QImage & gradient = m_scalarToColorGradients[m_ui->gradientComboBox->currentIndex()];
+    const QImage & gradient = m_renderConfigWidget->selectedGradient();
 
     // use alpha = 1.0, if the image doesn't have a alpha channel
     int alphaMask = gradient.hasAlphaChannel() ? 0x00 : 0xFF;
