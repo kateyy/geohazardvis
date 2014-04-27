@@ -1,5 +1,7 @@
 #include "qvtktablemodel.h"
 
+#include <QDebug>
+
 #include <vtkPolyData.h>
 #include <vtkCellArray.h>
 #include <vtkTriangle.h>
@@ -89,20 +91,33 @@ QVariant QVtkTableModel::headerData(int section, Qt::Orientation orientation, in
     return QVariant();
 }
 
-void QVtkTableModel::showPolyData(vtkSmartPointer<vtkPolyData> data)
+void QVtkTableModel::showData(vtkDataSet * data)
+{
+    switch (data->GetDataObjectType())
+    {
+    case VTK_POLY_DATA:
+        return showPolyData(static_cast<vtkPolyData*>(data));
+    case VTK_IMAGE_DATA:
+        return showGridData(static_cast<vtkImageData*>(data));
+    }
+    
+    qDebug() << "Error: receiving unsupported data format in table model";
+}
+
+void QVtkTableModel::showPolyData(vtkPolyData * polyData)
 {
     beginResetModel();
-    m_vtkPolyData = data;
+    m_vtkPolyData = polyData;
     m_vtkImageData = nullptr;
     m_displayData = DisplayData::Triangles;
     endResetModel();
 }
 
-void QVtkTableModel::showGridData(vtkSmartPointer<vtkImageData> grid)
+void QVtkTableModel::showGridData(vtkImageData * gridData)
 {
     beginResetModel();
     m_vtkPolyData = nullptr;
-    m_vtkImageData = grid;
+    m_vtkImageData = gridData;
     m_displayData = DisplayData::Grid;
     endResetModel();
 }

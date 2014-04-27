@@ -11,18 +11,22 @@ set ( SOURCES
     pickinginteractionstyle.cpp
     qvtktablemodel.h
     qvtktablemodel.cpp
-	renderconfigwidget.h
-	renderconfigwidget.cpp
+    renderconfigwidget.h
+    renderconfigwidget.cpp
     selectionhandler.h
     selectionhandler.cpp
+    tablewidget.h
+    tablewidget.cpp
     tabwidget.h
     tabwidget.cpp
 )
-    
+
 set ( UIs
     mainwindow.ui
-    inputviewer.ui )
-    
+    inputviewer.ui
+    tablewidget.ui
+)
+
 
 find_package(Qt5Widgets REQUIRED QUIET)
 qt5_wrap_ui(UI_Srcs ${UIs})
@@ -52,7 +56,7 @@ target_link_libraries( ${TARGET}
     ${VTK_LIBRARIES}
     core
 )
-    
+
 include_directories(
     ${CMAKE_CURRENT_BINARY_DIR}
     ${LIBZEUG_SIGNAL_INCLUDE_DIR}

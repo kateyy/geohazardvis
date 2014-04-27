@@ -4,6 +4,7 @@
 
 #include <QAbstractTableModel>
 
+class vtkDataSet;
 class vtkPolyData;
 class vtkImageData;
 
@@ -21,10 +22,12 @@ public:
     QVariant headerData(int section, Qt::Orientation orientation,
         int role = Qt::DisplayRole) const override;
 
-    void showPolyData(vtkSmartPointer<vtkPolyData> data);
-    void showGridData(vtkSmartPointer<vtkImageData> grid);
+    void showData(vtkDataSet * data);
 
 protected:
+    void showPolyData(vtkPolyData * polyData);
+    void showGridData(vtkImageData * gridData);
+
     vtkSmartPointer<vtkPolyData> m_vtkPolyData;
     vtkSmartPointer<vtkImageData> m_vtkImageData;
 

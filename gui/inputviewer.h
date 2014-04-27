@@ -10,9 +10,6 @@
 #include <vtkSmartPointer.h>
 
 class Ui_InputViewer;
-class QTableView;
-
-class QVtkTableModel;
 
 class vtkPolyDataMapper;
 class vtkRenderer;
@@ -27,6 +24,7 @@ class Input;
 class PolyDataInput;
 class GridDataInput;
 class RenderConfigWidget;
+class TableWidget;
 
 class InputViewer : public QMainWindow
 {
@@ -69,8 +67,7 @@ protected:
 
 protected:
     Ui_InputViewer * m_ui;
-    QTableView * m_tableView;
-    QVtkTableModel * m_tableModel;
+    TableWidget * m_tableWidget;
     RenderConfigWidget * m_renderConfigWidget;
     std::shared_ptr<SelectionHandler> m_selectionHandler;
     QVector<QImage> m_scalarToColorGradients;

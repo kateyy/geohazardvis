@@ -41,36 +41,26 @@
 #include "selectionhandler.h"
 #include "qvtktablemodel.h"
 #include "renderconfigwidget.h"
+#include "tablewidget.h"
 
 using namespace std;
 
 InputViewer::InputViewer(QWidget * parent, Qt::WindowFlags flags)
 : QMainWindow(parent, flags)
 , m_ui(new Ui_InputViewer())
-, m_tableModel(nullptr)
+, m_tableWidget(new TableWidget())
 , m_renderConfigWidget(new RenderConfigWidget())
 {
     m_ui->setupUi(this);
 
-    m_tableView = new QTableView();
-    m_tableModel = new QVtkTableModel(m_tableView);
-    m_tableView->setModel(m_tableModel);
-    m_tableView->setAlternatingRowColors(true);
-    m_tableView->setSelectionMode(QAbstractItemView::SingleSelection);
-    m_tableView->setSelectionBehavior(QAbstractItemView::SelectRows);
-    m_tableView->verticalHeader()->setVisible(true);
-    m_tableView->horizontalHeader()->setMinimumSectionSize(10);
-    QDockWidget * tableDock = new QDockWidget();
-    tableDock->setWidget(m_tableView);
-
-    addDockWidget(Qt::DockWidgetArea::LeftDockWidgetArea, tableDock);
+    addDockWidget(Qt::DockWidgetArea::LeftDockWidgetArea, m_tableWidget);
 
     setupRenderer();
     setupInteraction();
     loadGradientImages();
 
     m_selectionHandler = make_shared<SelectionHandler>();
-    m_selectionHandler->setQtTableView(m_tableView, m_tableModel);
+    m_selectionHandler->setQtTableView(m_tableWidget->tableView(), m_tableWidget->model());
     m_selectionHandler->setVtkInteractionStyle(m_interactStyle);
 
     connect(m_ui->dockWindowButton, &QPushButton::released, this, &InputViewer::dockingRequested);
@@ -325,8 +315,7 @@ void InputViewer::show3DInput(PolyDataInput & input)
 
     showVertexNormals(input.polyData());
 
-    m_tableModel->showPolyData(input.polyData());
-    m_tableView->resizeColumnsToContents();
+    m_tableWidget->showData(input.polyData());
     m_renderConfigWidget->setRenderProperty(actor->GetProperty());
 }
 
@@ -373,8 +362,7 @@ void InputViewer::showGridInput(GridDataInput & input)
 
     setupAxes(input.bounds);
 
-    m_tableModel->showGridData(input.imageData());
-    m_tableView->resizeColumnsToContents();
+    m_tableWidget->showData(input.data());
 }
 
 void InputViewer::setupAxes(const double bounds[6])
