@@ -61,24 +61,29 @@ void MainWindow::closeViewer(int tabIndex)
 
 void MainWindow::checkForEmptyViewer()
 {
-    if (m_ui->tabWidget->count() == 0)
-    {
-        createEmptyViewerTabbed();
-        return;
-    }
+    const int numTabs = m_ui->tabWidget->count();
 
-    for (int index = 0; index < m_ui->tabWidget->count(); )
+    QList<InputViewer*> tabsToRemove;
+
+    for (int index = 0; index < numTabs; ++index)
     {
         InputViewer * viewer = dynamic_cast<InputViewer*>(m_ui->tabWidget->widget(index));
         assert(viewer);
 
-        if (!viewer->isEmpty()) {
-            ++index;
-            continue;
-        }
+        if (viewer->isEmpty())
+            tabsToRemove << viewer;
+    }
 
-        m_ui->tabWidget->removeTab(index);
+    for (InputViewer * viewer : tabsToRemove)
+    {
+        m_ui->tabWidget->removeTab(m_ui->tabWidget->indexOf(viewer));
         viewer->deleteLater();
+    }
+
+    if (m_ui->tabWidget->count() == 0)
+    {
+        createEmptyViewerTabbed();
+        return;
     }
 }
 
