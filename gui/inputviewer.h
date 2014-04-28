@@ -15,6 +15,7 @@ class vtkRenderer;
 class vtkRenderWindowInteractor;
 class vtkCubeAxesActor;
 class vtkProp;
+class vtkProperty;
 class vtkPolyData;
 class PickingInteractionStyle;
 
@@ -44,11 +45,14 @@ public slots:
     void ShowInfo(const QStringList &info);
     void openFile(QString filename);
 
+    void setShowVertexNormals(bool enabled);
+    bool showVertexNormals() const;
+
 protected slots:
     void uiSelectionChanged(int);
     void updateScalarsForColorMaping(DataSelection dataSelection);
     void updateGradientForColorMapping(const QImage & gradient);
-    void updateScalarToColorMapping();
+    void applyRenderingConfiguration();
 
 protected:
     void setupRenderer();
@@ -62,7 +66,7 @@ protected:
     void showGridInput(GridDataInput & input);
 
     vtkPolyDataMapper * map3DInputScalars(PolyDataInput & input);
-    void showVertexNormals(vtkPolyData * polyData);
+    void createVertexNormals(vtkPolyData * polyData);
 
     void setupAxes(const double bounds[6]);
     vtkSmartPointer<vtkCubeAxesActor> createAxes(vtkRenderer & renderer);
@@ -74,6 +78,9 @@ protected:
     RenderConfigWidget * m_renderConfigWidget;
     std::shared_ptr<SelectionHandler> m_selectionHandler;
 
+    bool m_showVertexNormals;
+
+    vtkSmartPointer<vtkProperty> m_renderProperty;
     vtkSmartPointer<vtkRenderer> m_mainRenderer;
     vtkSmartPointer<vtkRenderWindowInteractor> m_mainInteractor;
     vtkSmartPointer<PickingInteractionStyle> m_interactStyle;

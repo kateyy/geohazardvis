@@ -9,14 +9,18 @@
 #include <reflectionzeug/PropertyGroup.h>
 #include <propertyguizeug/PropertyBrowser.h>
 
+#include "inputviewer.h"
+
 using namespace reflectionzeug;
 using namespace propertyguizeug;
 
 RenderConfigWidget::RenderConfigWidget(QWidget * parent)
 : QDockWidget(parent)
 , m_ui(new Ui_RenderConfigWidget())
+, m_needsBrowserRebuild(true)
 , m_propertyBrowser(new PropertyBrowser())
 , m_propertyRoot(nullptr)
+, m_viewer(nullptr)
 , m_renderProperty(nullptr)
 {
     m_ui->setupUi(this);
@@ -84,13 +88,30 @@ void RenderConfigWidget::updateGradientSelection(int selection)
 void RenderConfigWidget::clear()
 {
     setRenderProperty(nullptr);
+    setViewer(nullptr);
+}
+
+void RenderConfigWidget::setViewer(InputViewer * viewer)
+{
+    m_viewer = viewer;
+    m_needsBrowserRebuild = true;
 }
 
 void RenderConfigWidget::setRenderProperty(vtkProperty * property)
 {
     m_renderProperty = property;
+    m_needsBrowserRebuild = true;
+}
 
-    updatePropertyBrowser();
+void RenderConfigWidget::paintEvent(QPaintEvent * event)
+{
+    if (m_needsBrowserRebuild)
+    {
+        m_needsBrowserRebuild = false;
+        updatePropertyBrowser();
+    }
+
+    QDockWidget::paintEvent(event);
 }
 
 void RenderConfigWidget::updatePropertyBrowser()
@@ -98,22 +119,35 @@ void RenderConfigWidget::updatePropertyBrowser()
     m_propertyBrowser->setRoot(nullptr);
     delete m_propertyRoot;
 
-    if (m_renderProperty == nullptr)
-        return;
-
-    vtkProperty * renderProperty = m_renderProperty;
-
     auto * renderSettings = new PropertyGroup("renderSettings");
 
-    auto * faceColor = renderSettings->addProperty<Color>("color",
-        [renderProperty]() {
-        double * color = renderProperty->GetColor();
-        return Color(static_cast<int>(color[0] * 255), static_cast<int>(color[1] * 255), static_cast<int>(color[2] * 255));
-    },
-        [renderProperty](const Color & color) {
-        renderProperty->SetColor(color.red() / 255.0, color.green() / 255.0, color.blue() / 255.0);
-    });
+    if (m_renderProperty)
+    {
+        vtkProperty * renderProperty = m_renderProperty;
 
-    m_propertyRoot = renderSettings;
-    m_propertyBrowser->setRoot(renderSettings);
+        auto * surfaceColor = renderSettings->addProperty<Color>("surfaceColor",
+            [renderProperty]() {
+            double * color = renderProperty->GetColor();
+            return Color(static_cast<int>(color[0] * 255), static_cast<int>(color[1] * 255), static_cast<int>(color[2] * 255));
+        },
+            [renderProperty](const Color & color) {
+            renderProperty->SetColor(color.red() / 255.0, color.green() / 255.0, color.blue() / 255.0);
+        });
+        surfaceColor->setTitle("surface color");
+    }
+
+    if (m_viewer)
+    {
+        auto showVertexNormals = renderSettings->addProperty<bool>("vertexNormals",
+            std::bind(&InputViewer::showVertexNormals, m_viewer),
+            std::bind(&InputViewer::setShowVertexNormals, m_viewer, std::placeholders::_1));
+        showVertexNormals->setTitle("vertex normals");
+    }
+
+
+    if (renderSettings->hasProperties())
+    {
+        m_propertyRoot = renderSettings;
+        m_propertyBrowser->setRoot(renderSettings);
+    }
 }

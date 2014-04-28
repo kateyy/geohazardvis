@@ -16,6 +16,7 @@
 #include <vtkDataSet.h>
 #include <vtkPolyData.h>
 #include <vtkCellData.h>
+#include <vtkPointData.h>
 
 #include <vtkArrowSource.h>
 
@@ -52,6 +53,7 @@ InputViewer::InputViewer(QWidget * parent, Qt::WindowFlags flags)
 , m_tableWidget(new TableWidget())
 , m_dataChooser(new DataChooser)
 , m_renderConfigWidget(new RenderConfigWidget())
+, m_showVertexNormals(false)
 {
     m_ui->setupUi(this);
 
@@ -61,6 +63,8 @@ InputViewer::InputViewer(QWidget * parent, Qt::WindowFlags flags)
 
     connect(m_dataChooser, &DataChooser::selectionChanged, this, &InputViewer::updateScalarsForColorMaping);
     connect(m_renderConfigWidget, &RenderConfigWidget::gradientSelectionChanged, this, &InputViewer::updateGradientForColorMapping);
+
+    m_renderConfigWidget->setViewer(this);
 
     setupRenderer();
     setupInteraction();
@@ -89,6 +93,18 @@ void InputViewer::setupRenderer()
     m_mainRenderer = vtkSmartPointer<vtkRenderer>::New();
     m_mainRenderer->SetBackground(1, 1, 1);
     m_ui->qvtkMain->GetRenderWindow()->AddRenderer(m_mainRenderer);
+
+    m_renderProperty = vtkProperty::New();
+    m_renderProperty->SetColor(0, 0.6, 0);
+    m_renderProperty->SetOpacity(1.0);
+    m_renderProperty->SetInterpolationToFlat();
+    m_renderProperty->SetEdgeVisibility(true);
+    m_renderProperty->SetEdgeColor(0.1, 0.1, 0.1);
+    m_renderProperty->SetLineWidth(1.2);
+    m_renderProperty->SetBackfaceCulling(false);
+    m_renderProperty->SetLighting(false);
+
+    m_renderConfigWidget->setRenderProperty(m_renderProperty);
 }
 
 void InputViewer::setupInteraction()
@@ -131,24 +147,35 @@ void InputViewer::ShowInfo(const QStringList & info)
     m_ui->qvtkMain->setToolTip(info.join('\n'));
 }
 
+void InputViewer::setShowVertexNormals(bool enabled)
+{
+    m_showVertexNormals = enabled;
+    emit applyRenderingConfiguration();
+}
+
+bool InputViewer::showVertexNormals() const
+{
+    return m_showVertexNormals;
+}
+
 void InputViewer::uiSelectionChanged(int)
 {
-    updateScalarToColorMapping();
+    applyRenderingConfiguration();
 }
 
 void InputViewer::updateScalarsForColorMaping(DataSelection /*selection*/)
 {
     // just rebuild the graphics for now
-    updateScalarToColorMapping();
+    emit applyRenderingConfiguration();
 }
 
 void InputViewer::updateGradientForColorMapping(const QImage & /*gradient*/)
 {
     // just rebuild the graphics for now
-    updateScalarToColorMapping();
+    emit applyRenderingConfiguration();
 }
 
-void InputViewer::updateScalarToColorMapping()
+void InputViewer::applyRenderingConfiguration()
 {
     if (m_inputs.empty())
         return;
@@ -274,15 +301,7 @@ void InputViewer::show3DInput(PolyDataInput & input)
     vtkSmartPointer<vtkActor> actor = input.createActor();
     actor->SetMapper(mapper);
 
-    vtkProperty & prop = *actor->GetProperty();
-    prop.SetColor(0, 0.6, 0);
-    prop.SetOpacity(1.0);
-    prop.SetInterpolationToFlat();
-    prop.SetEdgeVisibility(true);
-    prop.SetEdgeColor(0.1, 0.1, 0.1);
-    prop.SetLineWidth(1.2);
-    prop.SetBackfaceCulling(false);
-    prop.SetLighting(false);
+    actor->SetProperty(m_renderProperty);
 
     m_mainRenderer->AddViewProp(actor);
 
@@ -290,18 +309,25 @@ void InputViewer::show3DInput(PolyDataInput & input)
 
     setupAxes(input.data()->GetBounds());
 
-    showVertexNormals(input.polyData());
+    if (m_showVertexNormals)
+        createVertexNormals(input.polyData());
 
     m_tableWidget->showData(input.polyData());
-    m_renderConfigWidget->setRenderProperty(actor->GetProperty());
 }
 
-void InputViewer::showVertexNormals(vtkPolyData * polyData)
+void InputViewer::createVertexNormals(vtkPolyData * polyData)
 {
-    VTK_CREATE(vtkPolyDataNormals, inputNormals);
-    inputNormals->ComputeCellNormalsOff();
-    inputNormals->ComputePointNormalsOn();
-    inputNormals->SetInputDataObject(polyData);
+    // compute vertex normals if needed
+    if (!polyData->GetPointData()->HasArray("Normals"))
+    {
+        VTK_CREATE(vtkPolyDataNormals, inputNormals);
+        inputNormals->ComputeCellNormalsOff();
+        inputNormals->ComputePointNormalsOn();
+        inputNormals->SetInputDataObject(polyData);
+        inputNormals->Update();
+
+        polyData->GetPointData()->SetNormals(inputNormals->GetOutput()->GetPointData()->GetNormals());
+    }
 
     VTK_CREATE(vtkArrowSource, arrow);
     arrow->SetShaftRadius(0.02);
@@ -317,7 +343,7 @@ void InputViewer::showVertexNormals(vtkPolyData * polyData)
     arrowGlyph->SetScaleFactor(maxBoundsSize * 0.1);
     arrowGlyph->SetVectorModeToUseNormal();
     arrowGlyph->OrientOn();
-    arrowGlyph->SetInputConnection(inputNormals->GetOutputPort());
+    arrowGlyph->SetInputData(polyData);
     arrowGlyph->SetSourceConnection(arrow->GetOutputPort());
 
     VTK_CREATE(vtkDataSetMapper, arrowMapper);
