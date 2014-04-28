@@ -20,7 +20,6 @@ RenderConfigWidget::RenderConfigWidget(QWidget * parent)
 , m_needsBrowserRebuild(true)
 , m_propertyBrowser(new PropertyBrowser())
 , m_propertyRoot(nullptr)
-, m_viewer(nullptr)
 , m_renderProperty(nullptr)
 {
     m_ui->setupUi(this);
@@ -88,19 +87,17 @@ void RenderConfigWidget::updateGradientSelection(int selection)
 void RenderConfigWidget::clear()
 {
     setRenderProperty(nullptr);
-    setViewer(nullptr);
-}
-
-void RenderConfigWidget::setViewer(InputViewer * viewer)
-{
-    m_viewer = viewer;
-    m_needsBrowserRebuild = true;
 }
 
 void RenderConfigWidget::setRenderProperty(vtkProperty * property)
 {
     m_renderProperty = property;
     m_needsBrowserRebuild = true;
+}
+
+void RenderConfigWidget::addPropertyGroup(reflectionzeug::PropertyGroup * group)
+{
+    m_addedGroups << group;
 }
 
 void RenderConfigWidget::paintEvent(QPaintEvent * event)
@@ -119,7 +116,11 @@ void RenderConfigWidget::updatePropertyBrowser()
     m_propertyBrowser->setRoot(nullptr);
     delete m_propertyRoot;
 
+    m_propertyRoot = new PropertyGroup("root");
+
     auto * renderSettings = new PropertyGroup("renderSettings");
+    renderSettings->setTitle("rendering");
+    m_propertyRoot->addGroup(renderSettings);
 
     if (m_renderProperty)
     {
@@ -136,18 +137,8 @@ void RenderConfigWidget::updatePropertyBrowser()
         surfaceColor->setTitle("surface color");
     }
 
-    if (m_viewer)
-    {
-        auto showVertexNormals = renderSettings->addProperty<bool>("vertexNormals",
-            std::bind(&InputViewer::showVertexNormals, m_viewer),
-            std::bind(&InputViewer::setShowVertexNormals, m_viewer, std::placeholders::_1));
-        showVertexNormals->setTitle("vertex normals");
-    }
+    for (auto * group : m_addedGroups)
+        m_propertyRoot->addGroup(group);
 
-
-    if (renderSettings->hasProperties())
-    {
-        m_propertyRoot = renderSettings;
-        m_propertyBrowser->setRoot(renderSettings);
-    }
+    m_propertyBrowser->setRoot(m_propertyRoot);
 }

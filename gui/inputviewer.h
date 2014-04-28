@@ -26,6 +26,7 @@ class GridDataInput;
 class RenderConfigWidget;
 class TableWidget;
 class DataChooser;
+class NormalRepresentation;
 enum class DataSelection;
 
 class InputViewer : public QMainWindow
@@ -45,9 +46,6 @@ public slots:
     void ShowInfo(const QStringList &info);
     void openFile(QString filename);
 
-    void setShowVertexNormals(bool enabled);
-    bool showVertexNormals() const;
-
 protected slots:
     void uiSelectionChanged(int);
     void updateScalarsForColorMaping(DataSelection dataSelection);
@@ -66,7 +64,7 @@ protected:
     void showGridInput(GridDataInput & input);
 
     vtkPolyDataMapper * map3DInputScalars(PolyDataInput & input);
-    void createVertexNormals(vtkPolyData * polyData);
+    void updateVertexNormals(vtkPolyData * polyData);
 
     void setupAxes(const double bounds[6]);
     vtkSmartPointer<vtkCubeAxesActor> createAxes(vtkRenderer & renderer);
@@ -78,7 +76,7 @@ protected:
     RenderConfigWidget * m_renderConfigWidget;
     std::shared_ptr<SelectionHandler> m_selectionHandler;
 
-    bool m_showVertexNormals;
+    NormalRepresentation * m_vertexNormalRepresentation;
 
     vtkSmartPointer<vtkProperty> m_renderProperty;
     vtkSmartPointer<vtkRenderer> m_mainRenderer;

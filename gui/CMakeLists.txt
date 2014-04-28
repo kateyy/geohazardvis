@@ -7,6 +7,8 @@ set ( SOURCES
     inputviewer.cpp
     mainwindow.h
     mainwindow.cpp
+    normalrepresentation.h
+    normalrepresentation.cpp
     pickinginteractionstyle.h
     pickinginteractionstyle.cpp
     qvtktablemodel.h

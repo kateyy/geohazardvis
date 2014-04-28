@@ -41,6 +41,7 @@
 #include "mainwindow.h"
 #include "selectionhandler.h"
 #include "qvtktablemodel.h"
+#include "normalrepresentation.h"
 #include "widgets/datachooser.h"
 #include "widgets/renderconfigwidget.h"
 #include "widgets/tablewidget.h"
@@ -53,7 +54,7 @@ InputViewer::InputViewer(QWidget * parent, Qt::WindowFlags flags)
 , m_tableWidget(new TableWidget())
 , m_dataChooser(new DataChooser)
 , m_renderConfigWidget(new RenderConfigWidget())
-, m_showVertexNormals(false)
+, m_vertexNormalRepresentation(new NormalRepresentation())
 {
     m_ui->setupUi(this);
 
@@ -64,8 +65,6 @@ InputViewer::InputViewer(QWidget * parent, Qt::WindowFlags flags)
     connect(m_dataChooser, &DataChooser::selectionChanged, this, &InputViewer::updateScalarsForColorMaping);
     connect(m_renderConfigWidget, &RenderConfigWidget::gradientSelectionChanged, this, &InputViewer::updateGradientForColorMapping);
 
-    m_renderConfigWidget->setViewer(this);
-
     setupRenderer();
     setupInteraction();
 
@@ -74,6 +73,16 @@ InputViewer::InputViewer(QWidget * parent, Qt::WindowFlags flags)
     m_selectionHandler->setVtkInteractionStyle(m_interactStyle);
 
     connect(m_ui->dockWindowButton, &QPushButton::released, this, &InputViewer::dockingRequested);
+
+    m_vertexNormalRepresentation->setVisible(false);
+    m_mainRenderer->AddViewProp(m_vertexNormalRepresentation->actor());
+    m_renderConfigWidget->addPropertyGroup(m_vertexNormalRepresentation->createPropertyGroup());
+
+    vtkRenderer * renderer = m_mainRenderer;
+    connect(m_vertexNormalRepresentation, &NormalRepresentation::geometryChanged, 
+        [renderer]() {
+        renderer->GetRenderWindow()->Render();
+    });
 }
 
 InputViewer::~InputViewer()
@@ -145,17 +154,6 @@ void InputViewer::dropEvent(QDropEvent * event)
 void InputViewer::ShowInfo(const QStringList & info)
 {
     m_ui->qvtkMain->setToolTip(info.join('\n'));
-}
-
-void InputViewer::setShowVertexNormals(bool enabled)
-{
-    m_showVertexNormals = enabled;
-    emit applyRenderingConfiguration();
-}
-
-bool InputViewer::showVertexNormals() const
-{
-    return m_showVertexNormals;
 }
 
 void InputViewer::uiSelectionChanged(int)
@@ -300,7 +298,6 @@ void InputViewer::show3DInput(PolyDataInput & input)
 
     vtkSmartPointer<vtkActor> actor = input.createActor();
     actor->SetMapper(mapper);
-
     actor->SetProperty(m_renderProperty);
 
     m_mainRenderer->AddViewProp(actor);
@@ -309,49 +306,10 @@ void InputViewer::show3DInput(PolyDataInput & input)
 
     setupAxes(input.data()->GetBounds());
 
-    if (m_showVertexNormals)
-        createVertexNormals(input.polyData());
+    m_vertexNormalRepresentation->setData(input.polyData());
+    m_mainRenderer->AddViewProp(m_vertexNormalRepresentation->actor());
 
     m_tableWidget->showData(input.polyData());
-}
-
-void InputViewer::createVertexNormals(vtkPolyData * polyData)
-{
-    // compute vertex normals if needed
-    if (!polyData->GetPointData()->HasArray("Normals"))
-    {
-        VTK_CREATE(vtkPolyDataNormals, inputNormals);
-        inputNormals->ComputeCellNormalsOff();
-        inputNormals->ComputePointNormalsOn();
-        inputNormals->SetInputDataObject(polyData);
-        inputNormals->Update();
-
-        polyData->GetPointData()->SetNormals(inputNormals->GetOutput()->GetPointData()->GetNormals());
-    }
-
-    VTK_CREATE(vtkArrowSource, arrow);
-    arrow->SetShaftRadius(0.02);
-    arrow->SetTipRadius(0.07);
-    arrow->SetTipLength(0.3);
-
-    VTK_CREATE(vtkGlyph3D, arrowGlyph);
-
-    double * bounds = polyData->GetBounds();
-    double maxBoundsSize = std::max(bounds[1] - bounds[0], std::max(bounds[3] - bounds[2], bounds[5] - bounds[4]));
-
-    arrowGlyph->SetScaleModeToScaleByScalar();
-    arrowGlyph->SetScaleFactor(maxBoundsSize * 0.1);
-    arrowGlyph->SetVectorModeToUseNormal();
-    arrowGlyph->OrientOn();
-    arrowGlyph->SetInputData(polyData);
-    arrowGlyph->SetSourceConnection(arrow->GetOutputPort());
-
-    VTK_CREATE(vtkDataSetMapper, arrowMapper);
-    arrowMapper->SetInputConnection(arrowGlyph->GetOutputPort());
-    VTK_CREATE(vtkActor, arrowActor);
-    arrowActor->SetMapper(arrowMapper);
-
-    m_mainRenderer->AddViewProp(arrowActor);
 }
 
 void InputViewer::showGridInput(GridDataInput & input)

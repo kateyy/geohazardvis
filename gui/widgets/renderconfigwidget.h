@@ -12,7 +12,6 @@ namespace propertyguizeug {
     class PropertyBrowser;
 }
 class Ui_RenderConfigWidget;
-class InputViewer;
 
 class RenderConfigWidget : public QDockWidget
 {
@@ -22,8 +21,10 @@ public:
     RenderConfigWidget(QWidget * parent = nullptr);
     ~RenderConfigWidget() override;
 
-    void setViewer(InputViewer * viewer);
     void setRenderProperty(vtkProperty * property);
+
+    void addPropertyGroup(reflectionzeug::PropertyGroup * group);
+
     void clear();
 
     const QImage & selectedGradient() const;
@@ -47,7 +48,8 @@ protected:
     reflectionzeug::PropertyGroup * m_propertyRoot;
     propertyguizeug::PropertyBrowser * m_propertyBrowser;
 
-    InputViewer * m_viewer;
+    QVector<reflectionzeug::PropertyGroup *> m_addedGroups;
+
     vtkProperty * m_renderProperty;
 
     QVector<QImage> m_scalarToColorGradients;
