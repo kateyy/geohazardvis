@@ -95,6 +95,11 @@ void RenderConfigWidget::setRenderProperty(vtkProperty * property)
     m_needsBrowserRebuild = true;
 }
 
+vtkProperty * RenderConfigWidget::renderProperty()
+{
+    return m_renderProperty;
+}
+
 void RenderConfigWidget::addPropertyGroup(reflectionzeug::PropertyGroup * group)
 {
     m_addedGroups << group;
@@ -124,17 +129,54 @@ void RenderConfigWidget::updatePropertyBrowser()
 
     if (m_renderProperty)
     {
-        vtkProperty * renderProperty = m_renderProperty;
-
-        auto * surfaceColor = renderSettings->addProperty<Color>("surfaceColor",
-            [renderProperty]() {
-            double * color = renderProperty->GetColor();
+        auto * color = renderSettings->addProperty<Color>("color",
+            [this]() {
+            double * color = renderProperty()->GetColor();
             return Color(static_cast<int>(color[0] * 255), static_cast<int>(color[1] * 255), static_cast<int>(color[2] * 255));
         },
-            [renderProperty](const Color & color) {
-            renderProperty->SetColor(color.red() / 255.0, color.green() / 255.0, color.blue() / 255.0);
+            [this](const Color & color) {
+            renderProperty()->SetColor(color.red() / 255.0, color.green() / 255.0, color.blue() / 255.0);
+            emit renderPropertyChanged();
         });
-        surfaceColor->setTitle("surface color");
+
+
+        auto * edgesVisible = renderSettings->addProperty<bool>("edgesVisible",
+            [this]() {
+            return (renderProperty()->GetEdgeVisibility() == 0) ? false : true;
+        },
+            [this](bool vis) {
+            renderProperty()->SetEdgeVisibility(vis);
+            emit renderPropertyChanged();
+        });
+        edgesVisible->setTitle("edge visible");
+
+        auto * edgeColor = renderSettings->addProperty<Color>("edgeColor",
+            [this]() {
+            double * color = renderProperty()->GetEdgeColor();
+            return Color(static_cast<int>(color[0] * 255), static_cast<int>(color[1] * 255), static_cast<int>(color[2] * 255));
+        },
+            [this](const Color & color) {
+            renderProperty()->SetEdgeColor(color.red() / 255.0, color.green() / 255.0, color.blue() / 255.0);
+            emit renderPropertyChanged();
+        });
+        edgeColor->setTitle("edge color");
+
+
+        enum Representation { points = VTK_POINTS, wireframe = VTK_WIREFRAME, surface = VTK_SURFACE };
+
+        auto * representation = renderSettings->addProperty<Representation>("representation",
+            [this]() {
+            return static_cast<Representation>(renderProperty()->GetRepresentation());
+        },
+            [this](const Representation & rep) {
+            renderProperty()->SetRepresentation(static_cast<int>(rep));
+            emit renderPropertyChanged();
+        });
+        representation->setStrings({
+            { Representation::points, "points" },
+            { Representation::wireframe, "wireframe" },
+            { Representation::surface, "surface" }
+        });
     }
 
     for (auto * group : m_addedGroups)

@@ -1,6 +1,8 @@
 #include "inputviewer.h"
 #include "ui_inputviewer.h"
 
+#include <functional>
+
 #include <QFileDialog>
 #include <QMessageBox>
 #include <QTableView>
@@ -78,11 +80,9 @@ InputViewer::InputViewer(QWidget * parent, Qt::WindowFlags flags)
     m_mainRenderer->AddViewProp(m_vertexNormalRepresentation->actor());
     m_renderConfigWidget->addPropertyGroup(m_vertexNormalRepresentation->createPropertyGroup());
 
-    vtkRenderer * renderer = m_mainRenderer;
-    connect(m_vertexNormalRepresentation, &NormalRepresentation::geometryChanged, 
-        [renderer]() {
-        renderer->GetRenderWindow()->Render();
-    });
+    auto renderFunc = std::bind(&vtkRenderWindow::Render, m_mainRenderer->GetRenderWindow());
+    connect(m_vertexNormalRepresentation, &NormalRepresentation::geometryChanged, renderFunc);
+    connect(m_renderConfigWidget, &RenderConfigWidget::renderPropertyChanged, renderFunc);
 }
 
 InputViewer::~InputViewer()
