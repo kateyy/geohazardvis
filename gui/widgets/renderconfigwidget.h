@@ -22,7 +22,6 @@ public:
     ~RenderConfigWidget() override;
 
     void setRenderProperty(vtkProperty * property);
-    vtkProperty * renderProperty();
 
     void addPropertyGroup(reflectionzeug::PropertyGroup * group);
 

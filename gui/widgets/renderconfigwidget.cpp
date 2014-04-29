@@ -95,11 +95,6 @@ void RenderConfigWidget::setRenderProperty(vtkProperty * property)
     m_needsBrowserRebuild = true;
 }
 
-vtkProperty * RenderConfigWidget::renderProperty()
-{
-    return m_renderProperty;
-}
-
 void RenderConfigWidget::addPropertyGroup(reflectionzeug::PropertyGroup * group)
 {
     m_addedGroups << group;
@@ -131,45 +126,55 @@ void RenderConfigWidget::updatePropertyBrowser()
     {
         auto * color = renderSettings->addProperty<Color>("color",
             [this]() {
-            double * color = renderProperty()->GetColor();
+            double * color = m_renderProperty->GetColor();
             return Color(static_cast<int>(color[0] * 255), static_cast<int>(color[1] * 255), static_cast<int>(color[2] * 255));
         },
             [this](const Color & color) {
-            renderProperty()->SetColor(color.red() / 255.0, color.green() / 255.0, color.blue() / 255.0);
+            m_renderProperty->SetColor(color.red() / 255.0, color.green() / 255.0, color.blue() / 255.0);
             emit renderPropertyChanged();
         });
 
 
         auto * edgesVisible = renderSettings->addProperty<bool>("edgesVisible",
             [this]() {
-            return (renderProperty()->GetEdgeVisibility() == 0) ? false : true;
+            return (m_renderProperty->GetEdgeVisibility() == 0) ? false : true;
         },
             [this](bool vis) {
-            renderProperty()->SetEdgeVisibility(vis);
+            m_renderProperty->SetEdgeVisibility(vis);
             emit renderPropertyChanged();
         });
         edgesVisible->setTitle("edge visible");
 
+        auto * lineWidth = renderSettings->addProperty<float>("lineWidth",
+            std::bind(&vtkProperty::GetLineWidth, m_renderProperty),
+            [this](float width) {
+            m_renderProperty->SetLineWidth(width);
+            emit renderPropertyChanged();
+        });
+        lineWidth->setTitle("line width");
+        lineWidth->setMinimum(0.1);
+        lineWidth->setMaximum(std::numeric_limits<float>::max());
+        lineWidth->setStep(0.1);
+
         auto * edgeColor = renderSettings->addProperty<Color>("edgeColor",
             [this]() {
-            double * color = renderProperty()->GetEdgeColor();
+            double * color = m_renderProperty->GetEdgeColor();
             return Color(static_cast<int>(color[0] * 255), static_cast<int>(color[1] * 255), static_cast<int>(color[2] * 255));
         },
             [this](const Color & color) {
-            renderProperty()->SetEdgeColor(color.red() / 255.0, color.green() / 255.0, color.blue() / 255.0);
+            m_renderProperty->SetEdgeColor(color.red() / 255.0, color.green() / 255.0, color.blue() / 255.0);
             emit renderPropertyChanged();
         });
         edgeColor->setTitle("edge color");
 
 
         enum Representation { points = VTK_POINTS, wireframe = VTK_WIREFRAME, surface = VTK_SURFACE };
-
         auto * representation = renderSettings->addProperty<Representation>("representation",
             [this]() {
-            return static_cast<Representation>(renderProperty()->GetRepresentation());
+            return static_cast<Representation>(m_renderProperty->GetRepresentation());
         },
             [this](const Representation & rep) {
-            renderProperty()->SetRepresentation(static_cast<int>(rep));
+            m_renderProperty->SetRepresentation(static_cast<int>(rep));
             emit renderPropertyChanged();
         });
         representation->setStrings({
@@ -177,6 +182,42 @@ void RenderConfigWidget::updatePropertyBrowser()
             { Representation::wireframe, "wireframe" },
             { Representation::surface, "surface" }
         });
+
+        auto * lightingEnabled = renderSettings->addProperty<bool>("lightingEnabled",
+            [this]() {
+            return m_renderProperty->GetLighting() > 0 ? true : false;
+        },
+            [this](bool enabled) {
+            m_renderProperty->SetLighting(enabled);
+            emit renderPropertyChanged();
+        });
+        lightingEnabled->setTitle("lighting enabled");
+
+        enum Interpolation { flat = VTK_FLAT, gouraud = VTK_GOURAUD, phong = VTK_PHONG };
+        auto * interpolation = renderSettings->addProperty<Interpolation>("interpolation",
+            [this]() {
+            return static_cast<Interpolation>(m_renderProperty->GetInterpolation());
+        },
+            [this](const Interpolation & i) {
+            m_renderProperty->SetInterpolation(static_cast<int>(i));
+            emit renderPropertyChanged();
+        });
+        interpolation->setTitle("shading interpolation");
+        interpolation->setStrings({
+            { Interpolation::flat, "flat" },
+            { Interpolation::gouraud, "gouraud" },
+            { Interpolation::phong, "phong" }
+        });
+
+        auto opacity = renderSettings->addProperty<double>("opacity",
+            std::bind(&vtkProperty::GetOpacity, m_renderProperty),
+            [this](float opacity) {
+            m_renderProperty->SetOpacity(opacity);
+            emit renderPropertyChanged();
+        });
+        opacity->setMinimum(0.f);
+        opacity->setMaximum(1.f);
+        opacity->setStep(0.01f);
     }
 
     for (auto * group : m_addedGroups)
