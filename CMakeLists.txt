@@ -12,7 +12,7 @@ project (${META_PROJECT_NAME} C CXX)
 
 option(OPTION_LOCAL_INSTALL "Install to local directory instead of system" OFF)
 
-set(CMAKE_CONFIGURATION_TYPES "Debug;Release;RelWithDebInfo" CACHE STRING "Limited Configs" FORCE)
+set(CMAKE_CONFIGURATION_TYPES "Debug;Release;RelWithDebInfo;MinSizeRel" CACHE STRING "Limited Configs" FORCE)
 
 
 
