@@ -38,20 +38,15 @@ find_package(Qt5Widgets REQUIRED QUIET)
 qt5_wrap_ui(UI_Srcs ${UIs})
 #qt5_add_resources(QRC_Srcs ${QRCs} )
 
-source_group("Source Files" FILES
-    ${SOURCES}
-)
 
-source_group("Resources" FILES
-    ${UIs}
-    #${QRCs}
-)
+# Group source files
+source_group_by_path( ${CMAKE_CURRENT_SOURCE_DIR} "\\\\.cpp$|\\\\.c$|\\\\.h$|\\\\.hpp$|\\\\.inl$"
+    "Source Files" ${SOURCES} )
+source_group_by_path( ${CMAKE_CURRENT_SOURCE_DIR} "\\\\.ui$"
+    "Ressources" ${UIs} )
+source_group_by_path( ${CMAKE_CURRENT_BINARY_DIR} "\\\\.cpp$|\\\\.c$|\\\\.h$|\\\\.hpp$|\\\\.inl$"
+    "Generated" ${UI_Srcs} ${MOC_Srcs} )
 
-source_group("Generated" FILES
-    ${UI_Srcs}
-    ${MOC_Srcs}
-    #${QRC_Srcs}
-)
 
 add_library ( ${TARGET}
     ${SOURCES} ${UI_Srcs} )
