@@ -207,15 +207,17 @@ void RenderConfigWidget::updatePropertyBrowser()
             { Interpolation::phong, "phong" }
         });
 
-        auto opacity = renderSettings->addProperty<double>("opacity",
-            std::bind(&vtkProperty::GetOpacity, m_renderProperty),
-            [this](double opacity) {
-            m_renderProperty->SetOpacity(opacity);
+        auto transparency = renderSettings->addProperty<double>("transparency",
+            [this]() {
+            return 1.0 - m_renderProperty->GetOpacity();
+        },
+            [this](double transparency) {
+            m_renderProperty->SetOpacity(1.0 - transparency);
             emit renderPropertyChanged();
         });
-        opacity->setMinimum(0.f);
-        opacity->setMaximum(1.f);
-        opacity->setStep(0.01f);
+        transparency->setMinimum(0.f);
+        transparency->setMaximum(1.f);
+        transparency->setStep(0.01f);
     }
 
     for (auto * group : m_addedGroups)
