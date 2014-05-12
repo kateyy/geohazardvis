@@ -21,6 +21,8 @@ set ( SOURCES
     widgets/datachooser.cpp
     widgets/renderconfigwidget.h
     widgets/renderconfigwidget.cpp
+    widgets/renderview.h
+    widgets/renderview.cpp
     widgets/tablewidget.h
     widgets/tablewidget.cpp
 )
@@ -30,6 +32,7 @@ set ( UIs
     mainwindow.ui
     widgets/datachooser.ui
     widgets/renderconfigwidget.ui
+    widgets/renderview.ui
     widgets/tablewidget.ui
 )
 

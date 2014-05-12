@@ -23,6 +23,7 @@ class SelectionHandler;
 class Input;
 class PolyDataInput;
 class GridDataInput;
+class RenderView;
 class RenderConfigWidget;
 class TableWidget;
 class DataChooser;
@@ -71,6 +72,7 @@ protected:
 
 protected:
     Ui_InputViewer * m_ui;
+    RenderView * m_renderView;
     TableWidget * m_tableWidget;
     DataChooser * m_dataChooser;
     RenderConfigWidget * m_renderConfigWidget;

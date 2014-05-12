@@ -6,6 +6,7 @@
 #include <QFileDialog>
 #include <QMessageBox>
 #include <QTableView>
+#include <QListWidget>
 #include <QDragEnterEvent>
 #include <QMimeData>
 #include <QDebug>
@@ -34,6 +35,7 @@
 
 #include <vtkRenderer.h>
 #include <vtkRenderWindow.h>
+#include <vtkRenderWindowInteractor.h>
 #include "pickinginteractionstyle.h"
 
 #include "core/vtkhelper.h"
@@ -44,6 +46,7 @@
 #include "selectionhandler.h"
 #include "qvtktablemodel.h"
 #include "normalrepresentation.h"
+#include "widgets/renderview.h"
 #include "widgets/datachooser.h"
 #include "widgets/renderconfigwidget.h"
 #include "widgets/tablewidget.h"
@@ -60,7 +63,15 @@ InputViewer::InputViewer(QWidget * parent, Qt::WindowFlags flags)
 {
     m_ui->setupUi(this);
 
-    addDockWidget(Qt::DockWidgetArea::LeftDockWidgetArea, m_tableWidget);
+    m_renderView = new RenderView();
+
+    setCorner(Qt::Corner::TopLeftCorner, Qt::DockWidgetArea::LeftDockWidgetArea);
+    setCorner(Qt::Corner::BottomLeftCorner, Qt::DockWidgetArea::LeftDockWidgetArea);
+    setCorner(Qt::Corner::TopRightCorner, Qt::DockWidgetArea::RightDockWidgetArea);
+    setCorner(Qt::Corner::BottomRightCorner, Qt::DockWidgetArea::RightDockWidgetArea);
+
+    addDockWidget(Qt::DockWidgetArea::BottomDockWidgetArea, m_renderView);
+    addDockWidget(Qt::DockWidgetArea::RightDockWidgetArea, m_tableWidget);
     addDockWidget(Qt::DockWidgetArea::LeftDockWidgetArea, m_dataChooser);
     addDockWidget(Qt::DockWidgetArea::LeftDockWidgetArea, m_renderConfigWidget);
 
@@ -97,11 +108,11 @@ bool InputViewer::isEmpty() const
 
 void InputViewer::setupRenderer()
 {
-    m_ui->qvtkMain->GetRenderWindow()->SetAAFrames(0);
+    m_renderView->renderWindow()->SetAAFrames(0);
 
     m_mainRenderer = vtkSmartPointer<vtkRenderer>::New();
     m_mainRenderer->SetBackground(1, 1, 1);
-    m_ui->qvtkMain->GetRenderWindow()->AddRenderer(m_mainRenderer);
+    m_renderView->renderWindow()->AddRenderer(m_mainRenderer);
 
     m_renderProperty = vtkProperty::New();
     m_renderProperty->SetColor(0, 0.6, 0);
@@ -123,7 +134,7 @@ void InputViewer::setupInteraction()
     connect(m_interactStyle.Get(), &PickingInteractionStyle::pointInfoSent, this, &InputViewer::ShowInfo);
     m_mainInteractor = vtkSmartPointer<vtkRenderWindowInteractor>::New();
     m_mainInteractor->SetInteractorStyle(m_interactStyle);
-    m_mainInteractor->SetRenderWindow(m_ui->qvtkMain->GetRenderWindow());
+    m_mainInteractor->SetRenderWindow(m_renderView->renderWindow());
 
     m_mainInteractor->Initialize();
 }
@@ -153,7 +164,7 @@ void InputViewer::dropEvent(QDropEvent * event)
 
 void InputViewer::ShowInfo(const QStringList & info)
 {
-    m_ui->qvtkMain->setToolTip(info.join('\n'));
+    m_renderView->setToolTip(info.join('\n'));
 }
 
 void InputViewer::uiSelectionChanged(int)
@@ -185,7 +196,7 @@ void InputViewer::applyRenderingConfiguration()
     m_mainRenderer->RemoveAllViewProps();
     show3DInput(static_cast<PolyDataInput&>(*m_inputs.front()));
 
-    m_ui->qvtkMain->GetRenderWindow()->Render();
+    m_renderView->renderWindow()->Render();
 }
 
 void InputViewer::openFile(QString filename)
@@ -226,7 +237,7 @@ void InputViewer::openFile(QString filename)
     camera.SetPosition(0, 0, 1);
     camera.SetViewUp(0, 1, 0);
     m_mainRenderer->ResetCamera();
-    m_ui->qvtkMain->GetRenderWindow()->Render();
+    m_renderView->renderWindow()->Render();
 
     setWindowTitle(QString::fromStdString(input->name));
     QApplication::processEvents();
