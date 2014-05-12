@@ -184,9 +184,7 @@ void RenderConfigWidget::updatePropertyBrowser()
         });
 
         auto * lightingEnabled = renderSettings->addProperty<bool>("lightingEnabled",
-            [this]() {
-            return m_renderProperty->GetLighting() > 0 ? true : false;
-        },
+            std::bind(&vtkProperty::GetLighting, m_renderProperty),
             [this](bool enabled) {
             m_renderProperty->SetLighting(enabled);
             emit renderPropertyChanged();
@@ -211,7 +209,7 @@ void RenderConfigWidget::updatePropertyBrowser()
 
         auto opacity = renderSettings->addProperty<double>("opacity",
             std::bind(&vtkProperty::GetOpacity, m_renderProperty),
-            [this](float opacity) {
+            [this](double opacity) {
             m_renderProperty->SetOpacity(opacity);
             emit renderPropertyChanged();
         });
