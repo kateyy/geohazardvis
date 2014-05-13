@@ -1,34 +1,17 @@
 #pragma once
 
 #include <memory>
-#include <array>
 
 #include <QMainWindow>
-#include <QMap>
-
-#include <vtkSmartPointer.h>
 
 class Ui_InputViewer;
 
-class vtkPolyDataMapper;
-class vtkRenderer;
-class vtkRenderWindowInteractor;
-class vtkCubeAxesActor;
-class vtkProp;
-class vtkProperty;
-class vtkPolyData;
-class PickingInteractionStyle;
-
 class SelectionHandler;
 class Input;
-class PolyDataInput;
-class GridDataInput;
 class RenderView;
 class RenderConfigWidget;
 class TableWidget;
 class DataChooser;
-class NormalRepresentation;
-enum class DataSelection;
 
 class InputViewer : public QMainWindow
 {
@@ -44,31 +27,12 @@ signals:
     void dockingRequested();
 
 public slots:
-    void ShowInfo(const QStringList &info);
     void openFile(QString filename);
 
-protected slots:
-    void uiSelectionChanged(int);
-    void updateScalarsForColorMaping(DataSelection dataSelection);
-    void updateGradientForColorMapping(const QImage & gradient);
-    void applyRenderingConfiguration();
-
 protected:
-    void setupRenderer();
-    void setupInteraction();
-
     void showEvent(QShowEvent * event) override;
     void dragEnterEvent(QDragEnterEvent * event) override;
     void dropEvent(QDropEvent * event) override;
-
-    void show3DInput(PolyDataInput & input);
-    void showGridInput(GridDataInput & input);
-
-    vtkPolyDataMapper * map3DInputScalars(PolyDataInput & input);
-    void updateVertexNormals(vtkPolyData * polyData);
-
-    void setupAxes(const double bounds[6]);
-    vtkSmartPointer<vtkCubeAxesActor> createAxes(vtkRenderer & renderer);
 
 protected:
     Ui_InputViewer * m_ui;
@@ -78,14 +42,5 @@ protected:
     RenderConfigWidget * m_renderConfigWidget;
     std::shared_ptr<SelectionHandler> m_selectionHandler;
 
-    NormalRepresentation * m_vertexNormalRepresentation;
-
-    vtkSmartPointer<vtkProperty> m_renderProperty;
-    vtkSmartPointer<vtkRenderer> m_mainRenderer;
-    vtkSmartPointer<vtkRenderWindowInteractor> m_mainInteractor;
-    vtkSmartPointer<PickingInteractionStyle> m_interactStyle;
-    vtkSmartPointer<vtkCubeAxesActor> m_axesActor;
-
     std::list<std::shared_ptr<Input>> m_inputs;
-    QMap<QString, QVector<vtkSmartPointer<vtkProp>>> m_loadedInputs;
 };
