@@ -120,7 +120,7 @@ void RenderConfigWidget::updatePropertyBrowser()
 
     auto * renderSettings = new PropertyGroup("renderSettings");
     renderSettings->setTitle("rendering");
-    m_propertyRoot->addGroup(renderSettings);
+    m_propertyRoot->addProperty(renderSettings);
 
     if (m_renderProperty)
     {
@@ -221,7 +221,7 @@ void RenderConfigWidget::updatePropertyBrowser()
     }
 
     for (auto * group : m_addedGroups)
-        m_propertyRoot->addGroup(group);
+        m_propertyRoot->addProperty(group);
 
     m_propertyBrowser->setRoot(m_propertyRoot);
 }
