@@ -45,8 +45,4 @@
  </widget>
  <resources/>
  <connections/>
- <slots>
-  <slot>updateScalarToColorMapping()</slot>
-  <slot>uiSelectionChanged(int)</slot>
- </slots>
 </ui>
