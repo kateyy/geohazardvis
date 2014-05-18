@@ -25,6 +25,9 @@
   <property name="locale">
    <locale language="English" country="UnitedStates"/>
   </property>
+  <property name="dockOptions">
+   <set>QMainWindow::AllowNestedDocks|QMainWindow::AllowTabbedDocks|QMainWindow::AnimatedDocks</set>
+  </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="horizontalLayout">
     <item>
@@ -35,31 +38,11 @@
      </widget>
     </item>
     <item>
-     <widget class="QVTKWidget" name="qvtkMain" native="true">
-      <property name="sizePolicy">
-       <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-        <horstretch>1</horstretch>
-        <verstretch>1</verstretch>
-       </sizepolicy>
-      </property>
-      <property name="minimumSize">
-       <size>
-        <width>300</width>
-        <height>300</height>
-       </size>
-      </property>
-     </widget>
+     <widget class="QListView" name="listView"/>
     </item>
    </layout>
   </widget>
  </widget>
- <customwidgets>
-  <customwidget>
-   <class>QVTKWidget</class>
-   <extends>QWidget</extends>
-   <header>QVTKWidget.h</header>
-  </customwidget>
- </customwidgets>
  <resources/>
  <connections/>
  <slots>
