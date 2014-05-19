@@ -48,6 +48,7 @@
 #include "widgets/renderconfigwidget.h"
 #include "widgets/tablewidget.h"
 
+
 using namespace std;
 
 InputViewer::InputViewer(QWidget * parent, Qt::WindowFlags flags)
@@ -60,7 +61,7 @@ InputViewer::InputViewer(QWidget * parent, Qt::WindowFlags flags)
 {
     m_ui->setupUi(this);
 
-    addDockWidget(Qt::DockWidgetArea::LeftDockWidgetArea, m_tableWidget);
+    addDockWidget(Qt::DockWidgetArea::RightDockWidgetArea, m_tableWidget);
     addDockWidget(Qt::DockWidgetArea::LeftDockWidgetArea, m_dataChooser);
     addDockWidget(Qt::DockWidgetArea::LeftDockWidgetArea, m_renderConfigWidget);
 
