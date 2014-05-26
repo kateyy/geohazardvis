@@ -22,6 +22,7 @@
 #include "widgets/renderconfigwidget.h"
 #include "widgets/tablewidget.h"
 
+
 using namespace std;
 
 InputViewer::InputViewer(QWidget * parent, Qt::WindowFlags flags)

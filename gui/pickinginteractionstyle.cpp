@@ -2,7 +2,8 @@
 
 #include <cmath>
 
-#include <QDebug>
+#include <QTextStream>
+#include <QStringList>
 
 #include <vtkRenderWindowInteractor.h>
 #include <vtkRenderer.h>
@@ -20,19 +21,13 @@
 #include <vtkSelectionNode.h>
 #include <vtkSelection.h>
 #include <vtkExtractSelection.h>
-#include <vtkUnstructuredGrid.h>
 #include <vtkDataSetMapper.h>
 #include <vtkActor.h>
 #include <vtkProperty.h>
 #include <vtkCamera.h>
-#include <vtkFloatArray.h>
 #include <vtkTriangle.h>
 #include <vtkMath.h>
 #include <vtkPolyData.h>
-
-#include <QTextStream>
-#include <QStringList>
-#include <QItemSelectionModel>
 
 #include "core/vtkhelper.h"
 #include "core/input.h"
@@ -115,17 +110,14 @@ void PickingInteractionStyle::highlightCell(vtkIdType cellId, vtkDataObject * da
     extractSelection->SetInputData(1, selection);
     extractSelection->Update();
 
-    VTK_CREATE(vtkUnstructuredGrid, selected);
-    selected->ShallowCopy(extractSelection->GetOutput());
-
-    m_selectedCellMapper->SetInputData(selected);
+    m_selectedCellMapper->SetInputConnection(extractSelection->GetOutputPort());
 
     m_selectedCellActor->SetMapper(m_selectedCellMapper);
     m_selectedCellActor->GetProperty()->EdgeVisibilityOn();
     m_selectedCellActor->GetProperty()->SetEdgeColor(1, 0, 0);
     m_selectedCellActor->GetProperty()->SetLineWidth(3);
 
-    GetDefaultRenderer()->AddActor(m_selectedCellActor);
+    GetDefaultRenderer()->AddViewProp(m_selectedCellActor);
 }
 
 void PickingInteractionStyle::lookAtCell(vtkPolyData * polyData, vtkIdType cellId)
@@ -137,7 +129,6 @@ void PickingInteractionStyle::lookAtCell(vtkPolyData * polyData, vtkIdType cellI
 
     VTK_CREATE(vtkPoints, selectedPoints);
     polyData->GetPoints()->GetPoints(triangle->GetPointIds(), selectedPoints);
-
 
     // look at center of the object
     const double * bounds = polyData->GetBounds();
@@ -152,8 +143,6 @@ void PickingInteractionStyle::lookAtCell(vtkPolyData * polyData, vtkIdType cellI
 
     double triangleNormal[3];
     vtkTriangle::ComputeNormal(polyData->GetPoints(), 0, triangle->GetPointIds()->GetPointer(0), triangleNormal);
-    //float scale = 2 * std::max(bounds[1] - bounds[0], std::max(bounds[3] - bounds[2], bounds[6] - bounds[5]));
-
 
     double eyePosition[3];  // current eye position: starting point
     GetDefaultRenderer()->GetActiveCamera()->GetPosition(eyePosition);
@@ -175,7 +164,6 @@ void PickingInteractionStyle::lookAtCell(vtkPolyData * polyData, vtkIdType cellI
     for (int i = 0; i < NumberOfFlyFrames; ++i)
     {
         vtkMath::Add(eyePosition, pathVector, eyePosition);
-        //GetDefaultRenderer()->GetActiveCamera()->OrthogonalizeViewUp();
         GetDefaultRenderer()->GetActiveCamera()->SetPosition(eyePosition);
         GetDefaultRenderer()->ResetCameraClippingRange();
         GetDefaultRenderer()->GetRenderWindow()->Render();
