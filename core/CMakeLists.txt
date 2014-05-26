@@ -3,12 +3,12 @@ set( TARGET core )
 message( STATUS ${TARGET} )
 
 set ( SOURCES
-    loader.h
-    loader.cpp
-    input.h
-    input.cpp
-    textfilereader.h
-    textfilereader.cpp
+    Loader.h
+    Loader.cpp
+    Input.h
+    Input.cpp
+    TextFileReader.h
+    TextFileReader.cpp
     vtkhelper.h
     common/ebem3d_common.h
     common/file_parser.h
@@ -27,11 +27,12 @@ target_link_libraries( ${TARGET}
 
 set_target_properties( ${TARGET}
     PROPERTIES
-    LINKER_LANGUAGE CXX
+    LINKER_LANGUAGE                     CXX
     COMPILE_DEFINITIONS_DEBUG           "${DEFAULT_COMPILE_DEFS_DEBUG}"
     COMPILE_DEFINITIONS_RELEASE         "${DEFAULT_COMPILE_DEFS_RELEASE}"
     COMPILE_DEFINITIONS_RELWITHDEBINFO  "${DEFAULT_COMPILE_DEFS_RELEASE}"
     COMPILE_DEFINITIONS_MINSIZEREL      "${DEFAULT_COMPILE_DEFS_RELEASE}"
+    COMPILE_FLAGS                       "${DEFAULT_COMPILE_FLAGS}"
     LINK_FLAGS_DEBUG                    "${DEFAULT_LINKER_FLAGS_DEBUG}"
     LINK_FLAGS_RELEASE                  "${DEFAULT_LINKER_FLAGS_RELEASE}"
     LINK_FLAGS_RELWITHDEBINFO           "${DEFAULT_LINKER_FLAGS_RELEASE}"

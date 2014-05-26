@@ -1,9 +1,10 @@
-#include "tablewidget.h"
-#include "ui_tablewidget.h"
+#include "TableWidget.h"
+#include "ui_TableWidget.h"
 
 #include <cassert>
 
-#include "qvtktablemodel.h"
+#include "QVtkTableModel.h"
+
 
 TableWidget::TableWidget(QWidget * parent)
 : QDockWidget(parent)

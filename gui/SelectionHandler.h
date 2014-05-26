@@ -4,11 +4,13 @@
 
 #include <vtkSmartPointer.h>
 
+
 class QTableView;
 class QItemSelection;
 class QVtkTableModel;
 class vtkDataObject;
 class PickingInteractionStyle;
+
 
 class SelectionHandler : public QObject
 {

@@ -4,6 +4,7 @@
 
 #include <vtkSmartPointer.h>
 
+
 class vtkPolyData;
 class vtkMapper;
 class vtkActor;
@@ -12,6 +13,7 @@ class vtkGlyph3D;
 namespace reflectionzeug {
     class PropertyGroup;
 }
+
 
 class NormalRepresentation : public QObject
 {

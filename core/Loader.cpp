@@ -1,4 +1,4 @@
-#include "loader.h"
+#include "Loader.h"
 
 #include <cmath>
 #include <limits>
@@ -15,16 +15,13 @@
 #include <vtkImageData.h>
 #include <vtkPlaneSource.h>
 
-#include "input.h"
+#include "Input.h"
 #include "common/file_parser.h"
-#include "textfilereader.h"
+#include "vtkhelper.h"
+#include "TextFileReader.h"
+
 
 using namespace std;
-
-
-#define VTK_CREATE(type, name) \
-    vtkSmartPointer<type> name = vtkSmartPointer<type>::New()
-
 
 shared_ptr<Input> Loader::readFile(const string & filename)
 {

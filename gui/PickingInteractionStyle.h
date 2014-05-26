@@ -5,6 +5,7 @@
 
 #include <QObject>
 
+
 class vtkPointPicker;
 class vtkCellPicker;
 class vtkSelection;
@@ -12,6 +13,7 @@ class vtkDataSetMapper;
 class vtkActor;
 class vtkDataObject;
 class vtkPolyData;
+
 
 class PickingInteractionStyle : public QObject, public vtkInteractorStyleTrackballCamera
 {

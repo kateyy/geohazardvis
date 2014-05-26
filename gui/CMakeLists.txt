@@ -3,32 +3,32 @@ set( TARGET gui )
 message( STATUS ${TARGET} )
 
 set ( SOURCES
-    mainwindow.h
-    mainwindow.cpp
-    normalrepresentation.h
-    normalrepresentation.cpp
-    pickinginteractionstyle.h
-    pickinginteractionstyle.cpp
-    qvtktablemodel.h
-    qvtktablemodel.cpp
-    selectionhandler.h
-    selectionhandler.cpp
-    widgets/datachooser.h
-    widgets/datachooser.cpp
-    widgets/renderconfigwidget.h
-    widgets/renderconfigwidget.cpp
-    widgets/renderview.h
-    widgets/renderview.cpp
-    widgets/tablewidget.h
-    widgets/tablewidget.cpp
+    MainWindow.h
+    MainWindow.cpp
+    NormalRepresentation.h
+    NormalRepresentation.cpp
+    PickingInteractionStyle.h
+    PickingInteractionStyle.cpp
+    QVtkTableModel.h
+    QVtkTableModel.cpp
+    SelectionHandler.h
+    SelectionHandler.cpp
+    widgets/DataChooser.h
+    widgets/DataChooser.cpp
+    widgets/RenderConfigWidget.h
+    widgets/RenderConfigWidget.cpp
+    widgets/RenderView.h
+    widgets/RenderView.cpp
+    widgets/TableWidget.h
+    widgets/TableWidget.cpp
 )
 
 set ( UIs
-    mainwindow.ui
-    widgets/datachooser.ui
-    widgets/renderconfigwidget.ui
-    widgets/renderview.ui
-    widgets/tablewidget.ui
+    MainWindow.ui
+    widgets/DataChooser.ui
+    widgets/RenderConfigWidget.ui
+    widgets/RenderView.ui
+    widgets/TableWidget.ui
 )
 
 
@@ -53,6 +53,9 @@ qt5_use_modules( ${TARGET} Core Gui Widgets )
 
 target_link_libraries( ${TARGET}
     ${VTK_LIBRARIES}
+    ${LIBZEUG_SIGNAL_LIBRARY}
+    ${LIBZEUG_REFLECTION_LIBRARY}
+    ${LIBZEUG_PROPERTYGUI_LIBRARY}
     core
 )
 
@@ -70,6 +73,7 @@ set_target_properties( ${TARGET}
     COMPILE_DEFINITIONS_RELEASE         "${DEFAULT_COMPILE_DEFS_RELEASE}"
     COMPILE_DEFINITIONS_RELWITHDEBINFO  "${DEFAULT_COMPILE_DEFS_RELEASE}"
     COMPILE_DEFINITIONS_MINSIZEREL      "${DEFAULT_COMPILE_DEFS_RELEASE}"
+    COMPILE_FLAGS                       "${DEFAULT_COMPILE_FLAGS}"
     LINK_FLAGS_DEBUG                    "${DEFAULT_LINKER_FLAGS_DEBUG}"
     LINK_FLAGS_RELEASE                  "${DEFAULT_LINKER_FLAGS_RELEASE}"
     LINK_FLAGS_RELWITHDEBINFO           "${DEFAULT_LINKER_FLAGS_RELEASE}"

@@ -1,4 +1,4 @@
-#include "textfilereader.h"
+#include "TextFileReader.h"
 
 #include <fstream>
 #include <sstream>
@@ -7,7 +7,8 @@
 #include <map>
 
 #include "common/file_parser.h"
-#include "input.h"
+#include "Input.h"
+
 
 using namespace std;
 
@@ -36,7 +37,7 @@ shared_ptr<Input> TextFileReader::read(const string & filename, vector<ReadDatas
     assert(input);
 
     for (const DatasetDef & datasetDef : datasetDefs) {
-        ReadDataset readData({datasetDef.type});
+        ReadDataset readData({datasetDef.type, {}});
 
         if (populateIOVectors(inputStream, readData.data,
             datasetDef.nbLines,
@@ -121,7 +122,7 @@ std::shared_ptr<Input> TextFileReader::readHeader(ifstream & inputStream, vector
                 else if (currentDataType == DatasetType::vertices)
                     tupleSize = 4;
                 assert(tupleSize);
-                inputDefs.push_back({currentDataType, stol(parameter), tupleSize});
+                inputDefs.push_back({currentDataType, (unsigned long)stol(parameter), tupleSize});
                 break;
             }
             case ModelType::grid2d:

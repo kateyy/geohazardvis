@@ -2,7 +2,9 @@
 
 #include <QDockWidget>
 
+
 class Ui_DataChooser;
+
 
 enum class DataSelection
 {

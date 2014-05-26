@@ -1,5 +1,5 @@
-#include "renderview.h"
-#include "ui_renderview.h"
+#include "RenderView.h"
+#include "ui_RenderView.h"
 
 #include <vtkLookupTable.h>
 
@@ -19,15 +19,15 @@
 #include <vtkProperty.h>
 #include <vtkTextProperty.h>
 
-#include "pickinginteractionstyle.h"
-
 #include "core/vtkhelper.h"
-#include "core/input.h"
+#include "core/Input.h"
 
-#include "selectionhandler.h"
-#include "normalrepresentation.h"
-#include "widgets/datachooser.h"
-#include "widgets/renderconfigwidget.h"
+#include "PickingInteractionStyle.h"
+#include "SelectionHandler.h"
+#include "NormalRepresentation.h"
+#include "widgets/DataChooser.h"
+#include "widgets/RenderConfigWidget.h"
+
 
 using namespace std;
 

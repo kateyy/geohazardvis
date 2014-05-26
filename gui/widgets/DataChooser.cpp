@@ -1,5 +1,6 @@
-#include "datachooser.h"
-#include "ui_datachooser.h"
+#include "DataChooser.h"
+#include "ui_DataChooser.h"
+
 
 DataChooser::DataChooser(QWidget * parent)
 : QDockWidget(parent)

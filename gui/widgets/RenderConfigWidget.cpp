@@ -1,5 +1,5 @@
-#include "renderconfigwidget.h"
-#include "ui_renderconfigwidget.h"
+#include "RenderConfigWidget.h"
+#include "ui_RenderConfigWidget.h"
 
 #include <QDir>
 
@@ -13,12 +13,18 @@
 using namespace reflectionzeug;
 using namespace propertyguizeug;
 
+namespace {
+    enum class Interpolation { flat = VTK_FLAT, gouraud = VTK_GOURAUD, phong = VTK_PHONG };
+    enum class Representation { points = VTK_POINTS, wireframe = VTK_WIREFRAME, surface = VTK_SURFACE };
+}
+
+
 RenderConfigWidget::RenderConfigWidget(QWidget * parent)
 : QDockWidget(parent)
 , m_ui(new Ui_RenderConfigWidget())
 , m_needsBrowserRebuild(true)
-, m_propertyBrowser(new PropertyBrowser())
 , m_propertyRoot(nullptr)
+, m_propertyBrowser(new PropertyBrowser())
 , m_renderProperty(nullptr)
 {
     m_ui->setupUi(this);
@@ -167,7 +173,6 @@ void RenderConfigWidget::updatePropertyBrowser()
         edgeColor->setTitle("edge color");
 
 
-        enum Representation { points = VTK_POINTS, wireframe = VTK_WIREFRAME, surface = VTK_SURFACE };
         auto * representation = renderSettings->addProperty<Representation>("representation",
             [this]() {
             return static_cast<Representation>(m_renderProperty->GetRepresentation());
@@ -190,7 +195,6 @@ void RenderConfigWidget::updatePropertyBrowser()
         });
         lightingEnabled->setTitle("lighting enabled");
 
-        enum Interpolation { flat = VTK_FLAT, gouraud = VTK_GOURAUD, phong = VTK_PHONG };
         auto * interpolation = renderSettings->addProperty<Interpolation>("interpolation",
             [this]() {
             return static_cast<Interpolation>(m_renderProperty->GetInterpolation());

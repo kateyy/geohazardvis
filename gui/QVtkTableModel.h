@@ -4,9 +4,11 @@
 
 #include <QAbstractTableModel>
 
+
 class vtkDataSet;
 class vtkPolyData;
 class vtkImageData;
+
 
 enum class DisplayData {
     Triangles,

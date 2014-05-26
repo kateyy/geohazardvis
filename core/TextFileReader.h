@@ -7,13 +7,15 @@
 
 #include "common/ebem3d_common.h"
 
+
+class Input;
+
+
 enum class DatasetType {
     vertices,   // index + vec3
     indices,    // indices referring to a vertex list
     grid2d
 };
-
-class Input;
 
 struct ReadDataset {
     DatasetType type;

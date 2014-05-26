@@ -1,5 +1,5 @@
-#include "mainwindow.h"
-#include "ui_mainwindow.h"
+#include "MainWindow.h"
+#include "ui_MainWindow.h"
 
 #include <cassert>
 
@@ -12,15 +12,15 @@
 #include <vtkPolyData.h>
 
 #include "core/vtkhelper.h"
-#include "core/loader.h"
-#include "core/input.h"
+#include "core/Loader.h"
+#include "core/Input.h"
 
-#include "selectionhandler.h"
-#include "qvtktablemodel.h"
-#include "widgets/renderview.h"
-#include "widgets/datachooser.h"
-#include "widgets/renderconfigwidget.h"
-#include "widgets/tablewidget.h"
+#include "SelectionHandler.h"
+#include "QVtkTableModel.h"
+#include "widgets/RenderView.h"
+#include "widgets/DataChooser.h"
+#include "widgets/RenderConfigWidget.h"
+#include "widgets/TableWidget.h"
 
 
 using namespace std;

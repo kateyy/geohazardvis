@@ -2,6 +2,7 @@
 
 #include <QDockWidget>
 
+
 class Ui_TableWidget;
 class QVtkTableModel;
 class QTableView;

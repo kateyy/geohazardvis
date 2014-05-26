@@ -7,6 +7,7 @@
 
 #include "common/ebem3d_common.h"
 
+
 class vtkPolyDataMapper;
 class vtkPolyData;
 
@@ -15,6 +16,7 @@ class GridDataInput;
 class PolyDataInput;
 class ProcessedInput;
 struct ReadDataset;
+
 
 class Loader
 {

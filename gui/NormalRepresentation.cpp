@@ -1,4 +1,4 @@
-#include "normalrepresentation.h"
+#include "NormalRepresentation.h"
 
 #include <algorithm>
 
@@ -18,6 +18,7 @@
 #include <reflectionzeug/PropertyGroup.h>
 
 #include "core/vtkhelper.h"
+
 
 using namespace reflectionzeug;
 

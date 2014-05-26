@@ -50,8 +50,6 @@ elseif(LINUX AND CMAKE_COMPILER_IS_GNUCXX)
 else()
     message(WARNING "Unsupported platform/compiler combination")
 endif()
-
-add_compile_options( ${DEFAULT_COMPILE_FLAGS} )
     
 
 find_package(VTK REQUIRED

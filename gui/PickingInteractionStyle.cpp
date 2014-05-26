@@ -1,4 +1,4 @@
-#include "pickinginteractionstyle.h"
+#include "PickingInteractionStyle.h"
 
 #include <cmath>
 
@@ -30,7 +30,7 @@
 #include <vtkPolyData.h>
 
 #include "core/vtkhelper.h"
-#include "core/input.h"
+#include "core/Input.h"
 
 
 vtkStandardNewMacro(PickingInteractionStyle);

@@ -1,4 +1,4 @@
-#include "input.h"
+#include "Input.h"
 
 #include <vtkInformationStringKey.h>
 #include <vtkActor.h>
@@ -6,12 +6,11 @@
 #include <vtkPolyDataAlgorithm.h>
 #include <vtkImageData.h>
 
+#include "vtkhelper.h"
+
+
 // macro defining the information key to access the name of the input in the mapper
 vtkInformationKeyMacro(Input, NameKey, String);
-
-#define VTK_CREATE(type, name) \
-    vtkSmartPointer<type> name = vtkSmartPointer<type>::New()
-
 
 std::shared_ptr<Input> Input::createType(ModelType type, const std::string & name)
 {

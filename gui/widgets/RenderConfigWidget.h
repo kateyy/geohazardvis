@@ -3,6 +3,7 @@
 #include <QDockWidget>
 #include <QVector>
 
+
 class QImage;
 class vtkProperty;
 namespace reflectionzeug {
@@ -12,6 +13,7 @@ namespace propertyguizeug {
     class PropertyBrowser;
 }
 class Ui_RenderConfigWidget;
+
 
 class RenderConfigWidget : public QDockWidget
 {

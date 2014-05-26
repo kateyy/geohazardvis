@@ -1,4 +1,4 @@
-#include "qvtktablemodel.h"
+#include "QVtkTableModel.h"
 
 #include <QDebug>
 
@@ -8,6 +8,7 @@
 #include <vtkImageData.h>
 #include <vtkPointData.h>
 #include <vtkFloatArray.h>
+
 
 QVtkTableModel::QVtkTableModel(QObject * parent)
 : QAbstractTableModel(parent)

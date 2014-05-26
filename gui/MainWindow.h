@@ -13,6 +13,7 @@ class TableWidget;
 class DataChooser;
 class Ui_MainWindow;
 
+
 class MainWindow : public QMainWindow
 {
     Q_OBJECT

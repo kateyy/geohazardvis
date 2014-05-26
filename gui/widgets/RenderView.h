@@ -6,6 +6,7 @@
 
 #include <vtkSmartPointer.h>
 
+
 class vtkRenderer;
 class vtkRenderWindow;
 class vtkRenderWindowInteractor;
@@ -25,6 +26,7 @@ class PickingInteractionStyle;
 class RenderConfigWidget;
 class SelectionHandler;
 class Ui_RenderView;
+
 
 class RenderView : public QDockWidget
 {

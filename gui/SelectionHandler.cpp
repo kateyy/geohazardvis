@@ -1,4 +1,4 @@
-#include "selectionhandler.h"
+#include "SelectionHandler.h"
 
 #include <cassert>
 
@@ -7,7 +7,8 @@
 #include <vtkDataObject.h>
 #include <vtkPolyData.h>
 
-#include "pickinginteractionstyle.h"
+#include "PickingInteractionStyle.h"
+
 
 SelectionHandler::SelectionHandler()
 : m_tableView(nullptr)
