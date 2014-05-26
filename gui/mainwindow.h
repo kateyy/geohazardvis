@@ -1,11 +1,17 @@
 #pragma once
 
-#include <QList>
+#include <memory>
 
 #include <QMainWindow>
 
+
+class SelectionHandler;
+class Input;
+class RenderView;
+class RenderConfigWidget;
+class TableWidget;
+class DataChooser;
 class Ui_MainWindow;
-class InputViewer;
 
 class MainWindow : public QMainWindow
 {
@@ -16,27 +22,25 @@ public:
     ~MainWindow() override;
 
 public slots:
+    void openFile(QString filename);
     void on_actionOpen_currentTab_triggered();
     void on_actionOpen_newTab_triggered();
-
-protected slots:
-    void viewerTitleChanged(const QString & title);
-
-    void closeViewer(int tabIndex);
-    void tabifyViewer();
-    void untabifyViewer(int tabIndex);
 
 protected:
     QString dialog_inputFileName();
 
-    InputViewer * createEmptyViewerTabbed();
-    void checkForEmptyViewer();
+    void dragEnterEvent(QDragEnterEvent * event) override;
+    void dropEvent(QDropEvent * event) override;
 
 protected:
     Ui_MainWindow * m_ui;
-
-    QList<InputViewer *> m_inputViewers;
+    RenderView * m_renderView;
+    TableWidget * m_tableWidget;
+    DataChooser * m_dataChooser;
+    RenderConfigWidget * m_renderConfigWidget;
+    std::shared_ptr<SelectionHandler> m_selectionHandler;
 
     QString m_lastOpenFolder;
 
+    std::list<std::shared_ptr<Input>> m_inputs;
 };

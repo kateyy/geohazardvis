@@ -9,7 +9,6 @@
 #include <reflectionzeug/PropertyGroup.h>
 #include <propertyguizeug/PropertyBrowser.h>
 
-#include "inputviewer.h"
 
 using namespace reflectionzeug;
 using namespace propertyguizeug;

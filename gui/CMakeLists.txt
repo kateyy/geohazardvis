@@ -3,8 +3,6 @@ set( TARGET gui )
 message( STATUS ${TARGET} )
 
 set ( SOURCES
-    inputviewer.h
-    inputviewer.cpp
     mainwindow.h
     mainwindow.cpp
     normalrepresentation.h
@@ -15,8 +13,6 @@ set ( SOURCES
     qvtktablemodel.cpp
     selectionhandler.h
     selectionhandler.cpp
-    tabwidget.h
-    tabwidget.cpp
     widgets/datachooser.h
     widgets/datachooser.cpp
     widgets/renderconfigwidget.h
@@ -28,7 +24,6 @@ set ( SOURCES
 )
 
 set ( UIs
-    inputviewer.ui
     mainwindow.ui
     widgets/datachooser.ui
     widgets/renderconfigwidget.ui

@@ -6,29 +6,29 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1002</width>
-    <height>666</height>
+    <width>686</width>
+    <height>607</height>
    </rect>
   </property>
+  <property name="acceptDrops">
+   <bool>true</bool>
+  </property>
   <property name="windowTitle">
-   <string>Viewer</string>
+   <string>GeohazardVis</string>
   </property>
   <property name="locale">
    <locale language="English" country="UnitedStates"/>
   </property>
-  <widget class="QWidget" name="centralwidget">
-   <layout class="QHBoxLayout" name="horizontalLayout">
-    <item>
-     <widget class="TabWidget" name="tabWidget"/>
-    </item>
-   </layout>
-  </widget>
+  <property name="dockOptions">
+   <set>QMainWindow::AllowNestedDocks|QMainWindow::AllowTabbedDocks|QMainWindow::AnimatedDocks</set>
+  </property>
+  <widget class="QWidget" name="centralwidget"/>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1002</width>
+     <width>686</width>
      <height>21</height>
     </rect>
    </property>
@@ -92,32 +92,6 @@
    </property>
   </action>
  </widget>
- <resources/>
- <connections>
-  <connection>
-   <sender>actionExit</sender>
-   <signal>triggered()</signal>
-   <receiver>MainWindow</receiver>
-   <slot>close()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>-1</x>
-     <y>-1</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>500</x>
-     <y>332</y>
-    </hint>
-   </hints>
-  </connection>
- </connections>
- <customwidgets>
-  <customwidget>
-   <class>TabWidget</class>
-   <extends>QTabWidget</extends>
-   <header>tabwidget.h</header>
-  </customwidget>
- </customwidgets>
  <resources/>
  <connections/>
 </ui>
