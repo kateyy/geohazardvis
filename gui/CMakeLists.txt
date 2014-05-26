@@ -3,6 +3,8 @@ set( TARGET gui )
 message( STATUS ${TARGET} )
 
 set ( SOURCES
+    InputRepresentation.h
+    InputRepresentation.cpp
     MainWindow.h
     MainWindow.cpp
     NormalRepresentation.h

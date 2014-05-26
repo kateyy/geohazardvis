@@ -12,11 +12,9 @@ TableWidget::TableWidget(QWidget * parent)
 {
     m_ui->setupUi(this);
 
-    m_model = new QVtkTableModel(m_ui->tableView);
-
-    QAbstractItemModel * oldModel = m_ui->tableView->model();
-    m_ui->tableView->setModel(m_model);
-    delete oldModel;
+    //QAbstractItemModel * oldModel = m_ui->tableView->model();
+    //m_ui->tableView->setModel(m_model);
+    //delete oldModel;
 }
 
 TableWidget::~TableWidget()
@@ -34,6 +32,13 @@ QVtkTableModel * TableWidget::model()
 {
     assert(dynamic_cast<QVtkTableModel*>(m_ui->tableView->model()));
     return static_cast<QVtkTableModel*>(m_ui->tableView->model());
+}
+
+void TableWidget::setModel(QVtkTableModel * model)
+{
+    m_model = model;
+    m_ui->tableView->setModel(m_model);
+    m_ui->tableView->resizeColumnsToContents();
 }
 
 QTableView * TableWidget::tableView()

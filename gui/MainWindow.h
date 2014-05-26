@@ -7,6 +7,7 @@
 
 class SelectionHandler;
 class Input;
+class InputRepresentation;
 class RenderView;
 class RenderConfigWidget;
 class TableWidget;
@@ -43,5 +44,5 @@ protected:
 
     QString m_lastOpenFolder;
 
-    std::list<std::shared_ptr<Input>> m_inputs;
+    std::list<std::shared_ptr<InputRepresentation>> m_inputs;
 };

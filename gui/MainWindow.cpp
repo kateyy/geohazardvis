@@ -15,6 +15,7 @@
 #include "core/Loader.h"
 #include "core/Input.h"
 
+#include "InputRepresentation.h"
 #include "SelectionHandler.h"
 #include "QVtkTableModel.h"
 #include "widgets/RenderView.h"
@@ -39,7 +40,6 @@ MainWindow::MainWindow()
 
     m_renderView = new RenderView(*m_dataChooser, *m_renderConfigWidget, m_selectionHandler);
 
-    m_selectionHandler->setQtTableView(m_tableWidget->tableView(), m_tableWidget->model());
     m_selectionHandler->setVtkInteractionStyle(m_renderView->interactStyle());
 
     setCorner(Qt::Corner::TopLeftCorner, Qt::DockWidgetArea::LeftDockWidgetArea);
@@ -106,24 +106,28 @@ void MainWindow::openFile(QString filename)
         return;
     }
 
+    std::shared_ptr<InputRepresentation> representation = std::make_shared<InputRepresentation>(input);
+
     setWindowTitle(QString::fromStdString(input->name) + " (loading to gpu)");
     QApplication::processEvents();
 
-    m_inputs = { input };
+    m_inputs = { representation };
 
     switch (input->type) {
     case ModelType::triangles:
         m_renderView->show3DInput(std::dynamic_pointer_cast<PolyDataInput>(input));
-        m_tableWidget->showData(static_cast<PolyDataInput&>(*input).data());
+        m_tableWidget->setModel(representation->tableModel());
         break;
     case ModelType::grid2d:
         m_renderView->showGridInput(std::dynamic_pointer_cast<GridDataInput>(input));
-        m_tableWidget->showData(static_cast<GridDataInput&>(*input).data());
+        m_tableWidget->setModel(representation->tableModel());
         break;
     default:
         QMessageBox::critical(this, "File error", "Could not open the selected input file. (unsupported format)");
         return;
     }
+
+    m_selectionHandler->setQtTableView(m_tableWidget->tableView(), representation->tableModel());
 
     setWindowTitle(QString::fromStdString(input->name));
     QApplication::processEvents();

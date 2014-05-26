@@ -16,6 +16,7 @@ public:
     ~TableWidget() override;
 
     QVtkTableModel * model();
+    void setModel(QVtkTableModel * model);
     QTableView * tableView();
 
     void showData(vtkDataSet * data);
