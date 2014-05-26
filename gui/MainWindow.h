@@ -3,6 +3,7 @@
 #include <memory>
 
 #include <QMainWindow>
+#include <QList>
 
 
 class SelectionHandler;
@@ -34,9 +35,11 @@ protected:
     void dragEnterEvent(QDragEnterEvent * event) override;
     void dropEvent(QDropEvent * event) override;
 
+    RenderView * addRenderView();
+
 protected:
     Ui_MainWindow * m_ui;
-    RenderView * m_renderView;
+    QList<RenderView*> m_renderViews;
     TableWidget * m_tableWidget;
     DataChooser * m_dataChooser;
     RenderConfigWidget * m_renderConfigWidget;
@@ -44,5 +47,5 @@ protected:
 
     QString m_lastOpenFolder;
 
-    std::list<std::shared_ptr<InputRepresentation>> m_inputs;
+    QList<std::shared_ptr<InputRepresentation>> m_inputs;
 };

@@ -223,8 +223,8 @@ void RenderConfigWidget::updatePropertyBrowser()
         transparency->setStep(0.01f);
     }
 
-    for (auto * group : m_addedGroups)
-        m_propertyRoot->addProperty(group);
+    //for (auto * group : m_addedGroups)
+    //    m_propertyRoot->addProperty(group);
 
     m_propertyBrowser->setRoot(m_propertyRoot);
 }

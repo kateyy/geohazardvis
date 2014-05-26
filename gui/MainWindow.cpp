@@ -29,7 +29,6 @@ using namespace std;
 MainWindow::MainWindow()
 : QMainWindow()
 , m_ui(new Ui_MainWindow())
-, m_renderView(nullptr)
 , m_tableWidget(new TableWidget())
 , m_dataChooser(new DataChooser())
 , m_renderConfigWidget(new RenderConfigWidget())
@@ -38,23 +37,14 @@ MainWindow::MainWindow()
 
     m_selectionHandler = make_shared<SelectionHandler>();
 
-    m_renderView = new RenderView(*m_dataChooser, *m_renderConfigWidget, m_selectionHandler);
-
-    m_selectionHandler->setVtkInteractionStyle(m_renderView->interactStyle());
-
     setCorner(Qt::Corner::TopLeftCorner, Qt::DockWidgetArea::LeftDockWidgetArea);
     setCorner(Qt::Corner::BottomLeftCorner, Qt::DockWidgetArea::LeftDockWidgetArea);
     setCorner(Qt::Corner::TopRightCorner, Qt::DockWidgetArea::RightDockWidgetArea);
     setCorner(Qt::Corner::BottomRightCorner, Qt::DockWidgetArea::RightDockWidgetArea);
 
-    addDockWidget(Qt::DockWidgetArea::BottomDockWidgetArea, m_renderView);
     addDockWidget(Qt::DockWidgetArea::RightDockWidgetArea, m_tableWidget);
     addDockWidget(Qt::DockWidgetArea::LeftDockWidgetArea, m_dataChooser);
     addDockWidget(Qt::DockWidgetArea::LeftDockWidgetArea, m_renderConfigWidget);
-
-    connect(m_dataChooser, &DataChooser::selectionChanged, m_renderView, &RenderView::updateScalarsForColorMaping);
-    connect(m_renderConfigWidget, &RenderConfigWidget::gradientSelectionChanged, m_renderView, &RenderView::updateGradientForColorMapping);
-    connect(m_renderConfigWidget, &RenderConfigWidget::renderPropertyChanged, m_renderView, &RenderView::render);
 }
 
 MainWindow::~MainWindow()
@@ -91,6 +81,20 @@ void MainWindow::dropEvent(QDropEvent * event)
     event->acceptProposedAction();
 }
 
+RenderView * MainWindow::addRenderView()
+{
+    RenderView * renderView = new RenderView(*m_dataChooser, *m_renderConfigWidget, m_selectionHandler);
+    addDockWidget(Qt::DockWidgetArea::BottomDockWidgetArea, renderView);
+
+    connect(m_dataChooser, &DataChooser::selectionChanged, renderView, &RenderView::updateScalarsForColorMaping);
+    connect(m_renderConfigWidget, &RenderConfigWidget::gradientSelectionChanged, renderView, &RenderView::updateGradientForColorMapping);
+    connect(m_renderConfigWidget, &RenderConfigWidget::renderPropertyChanged, renderView, &RenderView::render);
+
+    m_renderViews << renderView;
+
+    return renderView;
+}
+
 void MainWindow::openFile(QString filename)
 {
     QApplication::processEvents();
@@ -111,15 +115,17 @@ void MainWindow::openFile(QString filename)
     setWindowTitle(QString::fromStdString(input->name) + " (loading to gpu)");
     QApplication::processEvents();
 
-    m_inputs = { representation };
+    m_inputs << representation;
+
+    RenderView * renderView = addRenderView();
 
     switch (input->type) {
     case ModelType::triangles:
-        m_renderView->show3DInput(std::dynamic_pointer_cast<PolyDataInput>(input));
+        renderView->show3DInput(std::dynamic_pointer_cast<PolyDataInput>(input));
         m_tableWidget->setModel(representation->tableModel());
         break;
     case ModelType::grid2d:
-        m_renderView->showGridInput(std::dynamic_pointer_cast<GridDataInput>(input));
+        renderView->showGridInput(std::dynamic_pointer_cast<GridDataInput>(input));
         m_tableWidget->setModel(representation->tableModel());
         break;
     default:
@@ -127,6 +133,8 @@ void MainWindow::openFile(QString filename)
         return;
     }
 
+
+    m_selectionHandler->setVtkInteractionStyle(renderView->interactStyle());
     m_selectionHandler->setQtTableView(m_tableWidget->tableView(), representation->tableModel());
 
     setWindowTitle(QString::fromStdString(input->name));
