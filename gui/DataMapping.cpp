@@ -64,7 +64,8 @@ void DataMapping::openInRenderView(std::shared_ptr<InputRepresentation> represen
 
 void DataMapping::addToRenderView(std::shared_ptr<InputRepresentation> representation, int renderView)
 {
-    QMessageBox::warning(&m_mainWindow, "nan", "niy");
+    assert(m_renderWidgets.contains(renderView));
+    m_renderWidgets[renderView]->addObject(representation);
 
     emit renderViewsChanged(m_renderWidgets.values());
 }

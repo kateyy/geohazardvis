@@ -1,6 +1,8 @@
 #include "RenderWidget.h"
 #include "ui_RenderWidget.h"
 
+#include <QMessageBox>
+
 #include <vtkLookupTable.h>
 
 #include <vtkPolyData.h>
@@ -204,6 +206,15 @@ void RenderWidget::addObject(std::shared_ptr<InputRepresentation> representation
     setWindowTitle(QString::fromStdString(representation->input()->name) + " (loading to gpu)");
     QApplication::processEvents();
 
+    if (!m_inputRepresentations.empty())
+    {
+        if (m_inputRepresentations.first()->input()->type != representation->input()->type)
+        {
+            QMessageBox::warning(this, "", "Cannot render 2d and 3d geometry in the same view.");
+            return;
+        }
+    }
+
     m_inputRepresentations << representation;
 
     switch (representation->input()->type)
@@ -217,6 +228,21 @@ void RenderWidget::addObject(std::shared_ptr<InputRepresentation> representation
     default:
         assert(false);
     }
+
+    double bounds[6] = {
+        std::numeric_limits<double>::max(), std::numeric_limits<double>::lowest(),
+        std::numeric_limits<double>::max(), std::numeric_limits<double>::lowest(),
+        std::numeric_limits<double>::max(), std::numeric_limits<double>::lowest() };
+
+    for (const auto & repr : m_inputRepresentations)
+    {
+        for (int i = 0; i < 6; i += 2)
+        {
+            bounds[i] = std::min(bounds[i], repr->input()->bounds()[i]);
+            bounds[i + 1] = std::max(bounds[i + 1], repr->input()->bounds()[i + 1]);
+        }
+    }
+    setupAxes(bounds);
 
     updateWindowTitle();
 }
@@ -246,8 +272,6 @@ void RenderWidget::show3DInput(std::shared_ptr<PolyDataInput> input)
 
     m_selectionHandler->setDataObject(input->data());
 
-    setupAxes(input->data()->GetBounds());
-
     m_vertexNormalRepresentation->setData(input->polyData());
     m_renderer->AddViewProp(m_vertexNormalRepresentation->actor());
     
@@ -266,6 +290,12 @@ void RenderWidget::showGridInput(std::shared_ptr<GridDataInput> input)
     m_renderer->AddViewProp(heatBars);
     m_renderer->AddViewProp(input->createTexturedPolygonActor());
     m_selectionHandler->setDataObject(input->data());
+
+    vtkCamera & camera = *m_renderer->GetActiveCamera();
+    camera.SetPosition(0, 0, 1);
+    camera.SetViewUp(0, 1, 0);
+    m_renderer->ResetCamera();
+    emit render();
 }
 
 void RenderWidget::setupAxes(const double bounds[6])

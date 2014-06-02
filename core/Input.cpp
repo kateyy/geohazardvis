@@ -73,7 +73,7 @@ vtkSmartPointer<vtkMapper> PolyDataInput::mapper()
 
 GridDataInput::GridDataInput(const std::string & name)
 : Input(name, ModelType::grid2d)
-, bounds()
+, m_bounds()
 {
 }
 
@@ -126,6 +126,16 @@ vtkSmartPointer<vtkActor> GridDataInput::createTexturedPolygonActor() const
     return actor;
 }
 
+const double * GridDataInput::bounds() const
+{
+    return m_bounds;
+}
+
+double * GridDataInput::bounds()
+{
+    return m_bounds;
+}
+
 void PolyDataInput::setPolyData(vtkSmartPointer<vtkPolyData> data)
 {
     m_data = data;
@@ -151,6 +161,11 @@ vtkSmartPointer<vtkPolyDataMapper> PolyDataInput::polyDataMapper()
     assert(polyDataMapper);
 
     return polyDataMapper;
+}
+
+const double * PolyDataInput::bounds() const
+{
+    return polyData()->GetBounds();
 }
 
 vtkSmartPointer<vtkMapper> ProcessedInput::createDataMapper() const

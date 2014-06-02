@@ -33,6 +33,7 @@ public:
     const std::string name;
 
     virtual vtkSmartPointer<vtkDataSet> data() const;
+    virtual const double * bounds() const = 0;
 
     static vtkInformationStringKey * NameKey();
 
@@ -61,7 +62,8 @@ public:
 
     virtual vtkSmartPointer<vtkActor> createTexturedPolygonActor() const;
 
-    double bounds[6];
+    const double * bounds() const override;
+    double * bounds();
 
     vtkSmartPointer<vtkLookupTable> lookupTable;
 
@@ -69,6 +71,7 @@ protected:
     vtkSmartPointer<vtkPolyDataMapper> m_mapper;
     vtkSmartPointer<vtkTexture> m_texture;
     double m_minMaxValue[2];
+    double m_bounds[6];
 };
 
 class PolyDataInput : public Input {
@@ -81,6 +84,8 @@ public:
     virtual vtkSmartPointer<vtkPolyData> polyData() const;
     virtual void setPolyData(vtkSmartPointer<vtkPolyData> polyData);
     virtual vtkSmartPointer<vtkPolyDataMapper> polyDataMapper();
+
+    const double * bounds() const override;
 
 protected:
     virtual vtkSmartPointer<vtkMapper> createDataMapper() const;

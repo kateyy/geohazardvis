@@ -121,15 +121,15 @@ void Loader::loadGrid(GridDataInput & input, const vector<ReadDataset> & dataset
     texture->InterpolateOn();
     texture->SetQualityTo32Bit();
 
-    double xExtend = input.bounds[1] - input.bounds[0];
-    double yExtend = input.bounds[3] - input.bounds[2];
+    double xExtend = input.bounds()[1] - input.bounds()[0];
+    double yExtend = input.bounds()[3] - input.bounds()[2];
 
     VTK_CREATE(vtkPlaneSource, plane);
     plane->SetXResolution(dimensions[0]);
     plane->SetYResolution(dimensions[1]);
-    plane->SetOrigin(input.bounds[0], input.bounds[2], 0);
-    plane->SetPoint1(input.bounds[0] + xExtend, input.bounds[2], 0);
-    plane->SetPoint2(input.bounds[0], input.bounds[2] + yExtend, 0);
+    plane->SetOrigin(input.bounds()[0], input.bounds()[2], 0);
+    plane->SetPoint1(input.bounds()[0] + xExtend, input.bounds()[2], 0);
+    plane->SetPoint2(input.bounds()[0], input.bounds()[2] + yExtend, 0);
 
     VTK_CREATE(vtkPolyDataMapper, planeMapper);
     planeMapper->SetInputConnection(plane->GetOutputPort());

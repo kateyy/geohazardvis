@@ -156,6 +156,8 @@ void MainWindow::updateRenderViewActions(QList<RenderWidget*> widgets)
     for (RenderWidget * widget : widgets)
     {
         QAction * a = new QAction(widget->windowTitle(), this);
+        a->setData(QVariant(widget->index()));
+        connect(a, &QAction::triggered, this, &MainWindow::addToRenderView);
         menu->addAction(a);
     }
 
@@ -194,7 +196,13 @@ void MainWindow::openRenderView()
 
 void MainWindow::addToRenderView()
 {
+    QAction * action = dynamic_cast<QAction*>(sender());
+    assert(action);
+    bool ok = false;
+    int index = action->data().toInt(&ok);
+    assert(ok);
+
     auto input = selectedInput();
     if (input)
-        m_dataMapping->addToRenderView(input, 0);
+        m_dataMapping->addToRenderView(input, index);
 }

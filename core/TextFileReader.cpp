@@ -159,12 +159,12 @@ std::shared_ptr<Input> TextFileReader::readHeader(ifstream & inputStream, vector
                 assert(gridInput);
 
                 if (paramName == "xRange") {
-                    gridInput->bounds[0] = stod(s_values.at(0));
-                    gridInput->bounds[1] = stod(s_values.at(1));
+                    gridInput->bounds()[0] = stod(s_values.at(0));
+                    gridInput->bounds()[1] = stod(s_values.at(1));
                 }
                 else if (paramName == "yRange") {
-                    gridInput->bounds[2] = stod(s_values.at(0));
-                    gridInput->bounds[3] = stod(s_values.at(1));
+                    gridInput->bounds()[2] = stod(s_values.at(0));
+                    gridInput->bounds()[3] = stod(s_values.at(1));
                 }
                 else {
                     cerr << "Invalid parameter in input file: \"" << paramName << "\"" << endl;
