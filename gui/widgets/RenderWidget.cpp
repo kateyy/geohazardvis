@@ -55,6 +55,8 @@ RenderWidget::RenderWidget(
     m_renderConfigWidget.addPropertyGroup(m_vertexNormalRepresentation->createPropertyGroup());
     
     connect(m_vertexNormalRepresentation, &NormalRepresentation::geometryChanged, this, &RenderWidget::render);
+
+    updateWindowTitle();
 }
 
 int RenderWidget::index() const
@@ -199,6 +201,9 @@ vtkPolyDataMapper * RenderWidget::map3DInputScalars(PolyDataInput & input)
 
 void RenderWidget::addObject(std::shared_ptr<InputRepresentation> representation)
 {
+    setWindowTitle(QString::fromStdString(representation->input()->name) + " (loading to gpu)");
+    QApplication::processEvents();
+
     m_inputRepresentations << representation;
 
     switch (representation->input()->type)

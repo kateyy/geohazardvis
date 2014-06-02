@@ -125,17 +125,13 @@ void MainWindow::openFile(QString filename)
 
     std::shared_ptr<InputRepresentation> representation = std::make_shared<InputRepresentation>(input);
 
-    setWindowTitle(QString::fromStdString(input->name) + " (loading to gpu)");
-    QApplication::processEvents();
-
     m_inputs << representation;
 
     m_ui->loadedFiles->addItem(QString::fromStdString(representation->input()->name));
 
     m_dataMapping->addInputRepresenation(representation);
 
-    setWindowTitle(QString::fromStdString(input->name));
-    QApplication::processEvents();
+    setWindowTitle(oldName);
 }
 
 void MainWindow::on_actionOpen_currentTab_triggered()
