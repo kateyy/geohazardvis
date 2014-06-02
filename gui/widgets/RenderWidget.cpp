@@ -1,5 +1,5 @@
-#include "RenderView.h"
-#include "ui_RenderView.h"
+#include "RenderWidget.h"
+#include "ui_RenderWidget.h"
 
 #include <vtkLookupTable.h>
 
@@ -31,12 +31,12 @@
 
 using namespace std;
 
-RenderView::RenderView(
+RenderWidget::RenderWidget(
     const DataChooser & dataChooser,
     RenderConfigWidget & renderConfigWidget,
     std::shared_ptr<SelectionHandler> selectionHandler)
 : QDockWidget()
-, m_ui(new Ui_RenderView())
+, m_ui(new Ui_RenderWidget())
 , m_vertexNormalRepresentation(new NormalRepresentation())
 , m_dataChooser(dataChooser)
 , m_renderConfigWidget(renderConfigWidget)
@@ -51,15 +51,15 @@ RenderView::RenderView(
     m_renderer->AddViewProp(m_vertexNormalRepresentation->actor());
     m_renderConfigWidget.addPropertyGroup(m_vertexNormalRepresentation->createPropertyGroup());
     
-    connect(m_vertexNormalRepresentation, &NormalRepresentation::geometryChanged, this, &RenderView::render);
+    connect(m_vertexNormalRepresentation, &NormalRepresentation::geometryChanged, this, &RenderWidget::render);
 }
 
-void RenderView::render()
+void RenderWidget::render()
 {
     m_renderer->GetRenderWindow()->Render();
 }
 
-void RenderView::setupRenderer()
+void RenderWidget::setupRenderer()
 {
     m_ui->qvtkMain->GetRenderWindow()->SetAAFrames(0);
 
@@ -80,11 +80,11 @@ void RenderView::setupRenderer()
     m_renderConfigWidget.setRenderProperty(m_renderProperty);
 }
 
-void RenderView::setupInteraction()
+void RenderWidget::setupInteraction()
 {
     m_interactStyle = vtkSmartPointer<PickingInteractionStyle>::New();
     m_interactStyle->SetDefaultRenderer(m_renderer);
-    connect(m_interactStyle.Get(), &PickingInteractionStyle::pointInfoSent, this, &RenderView::ShowInfo);
+    connect(m_interactStyle.Get(), &PickingInteractionStyle::pointInfoSent, this, &RenderWidget::ShowInfo);
     m_interactor = vtkSmartPointer<vtkRenderWindowInteractor>::New();
     m_interactor->SetInteractorStyle(m_interactStyle);
     m_interactor->SetRenderWindow(m_ui->qvtkMain->GetRenderWindow());
@@ -92,29 +92,29 @@ void RenderView::setupInteraction()
     m_interactor->Initialize();
 }
 
-void RenderView::ShowInfo(const QStringList & info)
+void RenderWidget::ShowInfo(const QStringList & info)
 {
     setToolTip(info.join('\n'));
 }
 
-void RenderView::uiSelectionChanged(int)
+void RenderWidget::uiSelectionChanged(int)
 {
     applyRenderingConfiguration();
 }
 
-void RenderView::updateScalarsForColorMaping(DataSelection /*selection*/)
+void RenderWidget::updateScalarsForColorMaping(DataSelection /*selection*/)
 {
     // just rebuild the graphics for now
     emit applyRenderingConfiguration();
 }
 
-void RenderView::updateGradientForColorMapping(const QImage & /*gradient*/)
+void RenderWidget::updateGradientForColorMapping(const QImage & /*gradient*/)
 {
     // just rebuild the graphics for now
     emit applyRenderingConfiguration();
 }
 
-void RenderView::applyRenderingConfiguration()
+void RenderWidget::applyRenderingConfiguration()
 {
     if (m_inputs.empty())
         return;
@@ -129,7 +129,7 @@ void RenderView::applyRenderingConfiguration()
     emit render();
 }
 
-vtkPolyDataMapper * RenderView::map3DInputScalars(PolyDataInput & input)
+vtkPolyDataMapper * RenderWidget::map3DInputScalars(PolyDataInput & input)
 {
     vtkPolyDataMapper * mapper = vtkPolyDataMapper::New();
 
@@ -189,7 +189,7 @@ vtkPolyDataMapper * RenderView::map3DInputScalars(PolyDataInput & input)
     return mapper;
 }
 
-void RenderView::show3DInput(std::shared_ptr<PolyDataInput> input)
+void RenderWidget::show3DInput(std::shared_ptr<PolyDataInput> input)
 {
     m_renderer->RemoveAllViewProps();
     m_inputs = { input };
@@ -216,7 +216,7 @@ void RenderView::show3DInput(std::shared_ptr<PolyDataInput> input)
     emit render();
 }
 
-void RenderView::showGridInput(std::shared_ptr<GridDataInput> input)
+void RenderWidget::showGridInput(std::shared_ptr<GridDataInput> input)
 {
     m_renderer->RemoveAllViewProps();
     m_inputs = { input };
@@ -237,7 +237,7 @@ void RenderView::showGridInput(std::shared_ptr<GridDataInput> input)
     emit render();
 }
 
-void RenderView::setupAxes(const double bounds[6])
+void RenderWidget::setupAxes(const double bounds[6])
 {
     if (!m_axesActor) {
         m_axesActor = createAxes(*m_renderer);
@@ -250,7 +250,7 @@ void RenderView::setupAxes(const double bounds[6])
     m_axesActor->SetRebuildAxes(true);
 }
 
-vtkSmartPointer<vtkCubeAxesActor> RenderView::createAxes(vtkRenderer & renderer)
+vtkSmartPointer<vtkCubeAxesActor> RenderWidget::createAxes(vtkRenderer & renderer)
 {
     VTK_CREATE(vtkCubeAxesActor, cubeAxes);
     cubeAxes->SetCamera(m_renderer->GetActiveCamera());
@@ -287,32 +287,32 @@ vtkSmartPointer<vtkCubeAxesActor> RenderView::createAxes(vtkRenderer & renderer)
     return cubeAxes;
 }
 
-vtkRenderWindow * RenderView::renderWindow()
+vtkRenderWindow * RenderWidget::renderWindow()
 {
     return m_ui->qvtkMain->GetRenderWindow();
 }
 
-const vtkRenderWindow * RenderView::renderWindow() const
+const vtkRenderWindow * RenderWidget::renderWindow() const
 {
     return m_ui->qvtkMain->GetRenderWindow();
 }
 
-vtkProperty * RenderView::renderProperty()
+vtkProperty * RenderWidget::renderProperty()
 {
     return m_renderProperty;
 }
 
-const vtkProperty * RenderView::renderProperty() const
+const vtkProperty * RenderWidget::renderProperty() const
 {
     return m_renderProperty;
 }
 
-PickingInteractionStyle * RenderView::interactStyle()
+PickingInteractionStyle * RenderWidget::interactStyle()
 {
     return m_interactStyle;
 }
 
-const PickingInteractionStyle * RenderView::interactStyle() const
+const PickingInteractionStyle * RenderWidget::interactStyle() const
 {
     return m_interactStyle;
 }

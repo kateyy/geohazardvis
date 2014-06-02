@@ -9,7 +9,8 @@
 class SelectionHandler;
 class Input;
 class InputRepresentation;
-class RenderView;
+class DataMapping;
+class RenderWidget;
 class RenderConfigWidget;
 class TableWidget;
 class DataChooser;
@@ -29,18 +30,24 @@ public slots:
     void on_actionOpen_currentTab_triggered();
     void on_actionOpen_newTab_triggered();
 
+    RenderWidget * addRenderWidget();
+
+protected slots:
+    void openTable();
+    void openRenderView();
+    void addToRenderView();
+
 protected:
     QString dialog_inputFileName();
 
     void dragEnterEvent(QDragEnterEvent * event) override;
     void dropEvent(QDropEvent * event) override;
 
-    RenderView * addRenderView();
+    std::shared_ptr<InputRepresentation> selectedInput();
 
 protected:
     Ui_MainWindow * m_ui;
-    QList<RenderView*> m_renderViews;
-    TableWidget * m_tableWidget;
+    DataMapping * m_dataMapping;
     DataChooser * m_dataChooser;
     RenderConfigWidget * m_renderConfigWidget;
     std::shared_ptr<SelectionHandler> m_selectionHandler;

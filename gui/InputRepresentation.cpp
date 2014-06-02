@@ -19,6 +19,11 @@ InputRepresentation::~InputRepresentation()
     delete m_tableModel;
 }
 
+std::shared_ptr<Input> InputRepresentation::input()
+{
+    return m_input;
+}
+
 std::shared_ptr<const Input> InputRepresentation::input() const
 {
     return m_input;

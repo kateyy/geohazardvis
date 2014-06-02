@@ -25,15 +25,15 @@ class NormalRepresentation;
 class PickingInteractionStyle;
 class RenderConfigWidget;
 class SelectionHandler;
-class Ui_RenderView;
+class Ui_RenderWidget;
 
 
-class RenderView : public QDockWidget
+class RenderWidget : public QDockWidget
 {
     Q_OBJECT
 
 public:
-    RenderView(
+    RenderWidget(
         const DataChooser & dataChooser,
         RenderConfigWidget & renderConfigWidget,
         std::shared_ptr<SelectionHandler> selectionHandler);
@@ -71,7 +71,7 @@ private:
     vtkSmartPointer<vtkCubeAxesActor> createAxes(vtkRenderer & renderer);
 
 private:
-    Ui_RenderView * m_ui;
+    Ui_RenderWidget * m_ui;
 
     // Rendering components
     vtkSmartPointer<vtkRenderer> m_renderer;

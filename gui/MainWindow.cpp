@@ -16,9 +16,10 @@
 #include "core/Input.h"
 
 #include "InputRepresentation.h"
+#include "DataMapping.h"
 #include "SelectionHandler.h"
 #include "QVtkTableModel.h"
-#include "widgets/RenderView.h"
+#include "widgets/RenderWidget.h"
 #include "widgets/DataChooser.h"
 #include "widgets/RenderConfigWidget.h"
 #include "widgets/TableWidget.h"
@@ -29,7 +30,7 @@ using namespace std;
 MainWindow::MainWindow()
 : QMainWindow()
 , m_ui(new Ui_MainWindow())
-, m_tableWidget(new TableWidget())
+, m_dataMapping(new DataMapping(*this))
 , m_dataChooser(new DataChooser())
 , m_renderConfigWidget(new RenderConfigWidget())
 {
@@ -42,14 +43,25 @@ MainWindow::MainWindow()
     setCorner(Qt::Corner::TopRightCorner, Qt::DockWidgetArea::RightDockWidgetArea);
     setCorner(Qt::Corner::BottomRightCorner, Qt::DockWidgetArea::RightDockWidgetArea);
 
-    addDockWidget(Qt::DockWidgetArea::RightDockWidgetArea, m_tableWidget);
     addDockWidget(Qt::DockWidgetArea::LeftDockWidgetArea, m_dataChooser);
     addDockWidget(Qt::DockWidgetArea::LeftDockWidgetArea, m_renderConfigWidget);
+
+    QAction * a_openTable = new QAction("open in table", this);
+    connect(a_openTable, &QAction::triggered, this, &MainWindow::openTable);
+    m_ui->loadedFiles->addAction(a_openTable);
+
+    QAction * a_openRenderView = new QAction("open in render view", this);
+    connect(a_openRenderView, &QAction::triggered, this, &MainWindow::openRenderView);
+    m_ui->loadedFiles->addAction(a_openRenderView);
+
+    QAction * a_addToRenderView = new QAction("add to render view", this);
+    connect(a_addToRenderView, &QAction::triggered, this, &MainWindow::addToRenderView);
 }
 
 MainWindow::~MainWindow()
 {
     delete m_ui;
+    delete m_dataMapping;
 }
 
 QString MainWindow::dialog_inputFileName()
@@ -81,18 +93,16 @@ void MainWindow::dropEvent(QDropEvent * event)
     event->acceptProposedAction();
 }
 
-RenderView * MainWindow::addRenderView()
+RenderWidget * MainWindow::addRenderWidget()
 {
-    RenderView * renderView = new RenderView(*m_dataChooser, *m_renderConfigWidget, m_selectionHandler);
-    addDockWidget(Qt::DockWidgetArea::BottomDockWidgetArea, renderView);
+    RenderWidget * renderWidget = new RenderWidget(*m_dataChooser, *m_renderConfigWidget, m_selectionHandler);
+    addDockWidget(Qt::DockWidgetArea::BottomDockWidgetArea, renderWidget);
 
-    connect(m_dataChooser, &DataChooser::selectionChanged, renderView, &RenderView::updateScalarsForColorMaping);
-    connect(m_renderConfigWidget, &RenderConfigWidget::gradientSelectionChanged, renderView, &RenderView::updateGradientForColorMapping);
-    connect(m_renderConfigWidget, &RenderConfigWidget::renderPropertyChanged, renderView, &RenderView::render);
+    connect(m_dataChooser, &DataChooser::selectionChanged, renderWidget, &RenderWidget::updateScalarsForColorMaping);
+    connect(m_renderConfigWidget, &RenderConfigWidget::gradientSelectionChanged, renderWidget, &RenderWidget::updateGradientForColorMapping);
+    connect(m_renderConfigWidget, &RenderConfigWidget::renderPropertyChanged, renderWidget, &RenderWidget::render);
 
-    m_renderViews << renderView;
-
-    return renderView;
+    return renderWidget;
 }
 
 void MainWindow::openFile(QString filename)
@@ -117,25 +127,14 @@ void MainWindow::openFile(QString filename)
 
     m_inputs << representation;
 
-    RenderView * renderView = addRenderView();
+    m_ui->loadedFiles->addItem(QString::fromStdString(representation->input()->name));
 
-    switch (input->type) {
-    case ModelType::triangles:
-        renderView->show3DInput(std::dynamic_pointer_cast<PolyDataInput>(input));
-        m_tableWidget->setModel(representation->tableModel());
-        break;
-    case ModelType::grid2d:
-        renderView->showGridInput(std::dynamic_pointer_cast<GridDataInput>(input));
-        m_tableWidget->setModel(representation->tableModel());
-        break;
-    default:
-        QMessageBox::critical(this, "File error", "Could not open the selected input file. (unsupported format)");
-        return;
-    }
+    RenderWidget * renderWidget = addRenderWidget();
 
+    m_dataMapping->addInputRepresenation(representation);
 
-    m_selectionHandler->setVtkInteractionStyle(renderView->interactStyle());
-    m_selectionHandler->setQtTableView(m_tableWidget->tableView(), representation->tableModel());
+    /*m_selectionHandler->setVtkInteractionStyle(renderWidget->interactStyle());
+    m_selectionHandler->setQtTableView(m_tableWidget->tableView(), representation->tableModel());*/
 
     setWindowTitle(QString::fromStdString(input->name));
     QApplication::processEvents();
@@ -154,4 +153,40 @@ void MainWindow::on_actionOpen_newTab_triggered()
         return;
 
     openFile(fileName);
+}
+
+std::shared_ptr<InputRepresentation> MainWindow::selectedInput()
+{
+    QListWidgetItem * selection = m_ui->loadedFiles->currentItem();
+    if (selection == nullptr)
+        return nullptr;
+
+    for (auto input : m_inputs)
+    {
+        if (selection->text().toStdString() == input->input()->name)
+        {
+            return input;
+        }
+    }
+}
+
+void MainWindow::openTable()
+{
+    auto input = selectedInput();
+    if (input)
+        m_dataMapping->openInTable(input);
+}
+
+void MainWindow::openRenderView()
+{
+    auto input = selectedInput();
+    if (input)
+        m_dataMapping->openInRenderView(input);
+}
+
+void MainWindow::addToRenderView()
+{
+    auto input = selectedInput();
+    if (input)
+        m_dataMapping->addToRenderView(input, 0);
 }

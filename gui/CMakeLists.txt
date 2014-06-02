@@ -5,6 +5,8 @@ message( STATUS ${TARGET} )
 set ( SOURCES
     InputRepresentation.h
     InputRepresentation.cpp
+    DataMapping.h
+    DataMapping.cpp
     MainWindow.h
     MainWindow.cpp
     NormalRepresentation.h
@@ -19,8 +21,8 @@ set ( SOURCES
     widgets/DataChooser.cpp
     widgets/RenderConfigWidget.h
     widgets/RenderConfigWidget.cpp
-    widgets/RenderView.h
-    widgets/RenderView.cpp
+    widgets/RenderWidget.h
+    widgets/RenderWidget.cpp
     widgets/TableWidget.h
     widgets/TableWidget.cpp
 )
@@ -29,7 +31,7 @@ set ( UIs
     MainWindow.ui
     widgets/DataChooser.ui
     widgets/RenderConfigWidget.ui
-    widgets/RenderView.ui
+    widgets/RenderWidget.ui
     widgets/TableWidget.ui
 )
 

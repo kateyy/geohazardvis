@@ -13,6 +13,7 @@ public:
     InputRepresentation(std::shared_ptr<Input> input);
     ~InputRepresentation();
 
+    std::shared_ptr<Input> input();
     std::shared_ptr<const Input> input() const;
 
     QVtkTableModel * tableModel();
