@@ -30,12 +30,14 @@ public slots:
     void on_actionOpen_currentTab_triggered();
     void on_actionOpen_newTab_triggered();
 
-    RenderWidget * addRenderWidget();
+    RenderWidget * addRenderWidget(int index);
 
 protected slots:
     void openTable();
     void openRenderView();
     void addToRenderView();
+
+    void updateRenderViewActions(QList<RenderWidget*> widgets);
 
 protected:
     QString dialog_inputFileName();
@@ -48,6 +50,7 @@ protected:
 protected:
     Ui_MainWindow * m_ui;
     DataMapping * m_dataMapping;
+    QAction * m_addToRendererAction;
     DataChooser * m_dataChooser;
     RenderConfigWidget * m_renderConfigWidget;
     std::shared_ptr<SelectionHandler> m_selectionHandler;

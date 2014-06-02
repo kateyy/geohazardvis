@@ -22,6 +22,7 @@
 #include "core/vtkhelper.h"
 #include "core/Input.h"
 
+#include "InputRepresentation.h"
 #include "PickingInteractionStyle.h"
 #include "SelectionHandler.h"
 #include "NormalRepresentation.h"
@@ -32,11 +33,13 @@
 using namespace std;
 
 RenderWidget::RenderWidget(
+    int index,
     const DataChooser & dataChooser,
     RenderConfigWidget & renderConfigWidget,
     std::shared_ptr<SelectionHandler> selectionHandler)
 : QDockWidget()
 , m_ui(new Ui_RenderWidget())
+, m_index(index)
 , m_vertexNormalRepresentation(new NormalRepresentation())
 , m_dataChooser(dataChooser)
 , m_renderConfigWidget(renderConfigWidget)
@@ -52,6 +55,11 @@ RenderWidget::RenderWidget(
     m_renderConfigWidget.addPropertyGroup(m_vertexNormalRepresentation->createPropertyGroup());
     
     connect(m_vertexNormalRepresentation, &NormalRepresentation::geometryChanged, this, &RenderWidget::render);
+}
+
+int RenderWidget::index() const
+{
+    return m_index;
 }
 
 void RenderWidget::render()
@@ -116,15 +124,15 @@ void RenderWidget::updateGradientForColorMapping(const QImage & /*gradient*/)
 
 void RenderWidget::applyRenderingConfiguration()
 {
-    if (m_inputs.empty())
+    /*if (m_inputRepresentations.empty())
         return;
 
-    if (m_inputs.front()->type != ModelType::triangles)
-        return;
+    if (m_inputRepresentations.front()->input()->type != ModelType::triangles)
+        return;*/
 
     // create the visual representation again, to update to scalar to color mapping
-    m_renderer->RemoveAllViewProps();
-    show3DInput(std::dynamic_pointer_cast<PolyDataInput>(m_inputs.front()));
+    //m_renderer->RemoveAllViewProps();
+    //show3DInput(std::dynamic_pointer_cast<PolyDataInput>(m_inputs.front()));
 
     emit render();
 }
@@ -189,11 +197,40 @@ vtkPolyDataMapper * RenderWidget::map3DInputScalars(PolyDataInput & input)
     return mapper;
 }
 
-void RenderWidget::show3DInput(std::shared_ptr<PolyDataInput> input)
+void RenderWidget::addObject(std::shared_ptr<InputRepresentation> representation)
+{
+    m_inputRepresentations << representation;
+
+    switch (representation->input()->type)
+    {
+    case ModelType::triangles:
+        show3DInput(std::dynamic_pointer_cast<PolyDataInput>(representation->input()));
+        break;
+    case ModelType::grid2d:
+        showGridInput(std::dynamic_pointer_cast<GridDataInput>(representation->input()));
+        break;
+    default:
+        assert(false);
+    }
+
+    updateWindowTitle();
+}
+
+void RenderWidget::setObject(std::shared_ptr<InputRepresentation> representation)
 {
     m_renderer->RemoveAllViewProps();
-    m_inputs = { input };
-    
+
+    m_inputRepresentations.clear();
+    addObject(representation);
+}
+
+const QList<std::shared_ptr<InputRepresentation>> & RenderWidget::inputs()
+{
+    return m_inputRepresentations;
+}
+
+void RenderWidget::show3DInput(std::shared_ptr<PolyDataInput> input)
+{    
     vtkSmartPointer<vtkPolyDataMapper> mapper = map3DInputScalars(*input);
 
     vtkSmartPointer<vtkActor> actor = input->createActor();
@@ -217,24 +254,13 @@ void RenderWidget::show3DInput(std::shared_ptr<PolyDataInput> input)
 }
 
 void RenderWidget::showGridInput(std::shared_ptr<GridDataInput> input)
-{
-    m_renderer->RemoveAllViewProps();
-    m_inputs = { input };
-    
+{    
     VTK_CREATE(vtkScalarBarActor, heatBars);
     heatBars->SetTitle(input->name.c_str());
     heatBars->SetLookupTable(input->lookupTable);
     m_renderer->AddViewProp(heatBars);
     m_renderer->AddViewProp(input->createTexturedPolygonActor());
     m_selectionHandler->setDataObject(input->data());
-
-    setupAxes(input->bounds);
-    
-    vtkCamera & camera = *m_renderer->GetActiveCamera();
-    camera.SetPosition(0, 0, 1);
-    camera.SetViewUp(0, 1, 0);
-    m_renderer->ResetCamera();
-    emit render();
 }
 
 void RenderWidget::setupAxes(const double bounds[6])
@@ -287,6 +313,23 @@ vtkSmartPointer<vtkCubeAxesActor> RenderWidget::createAxes(vtkRenderer & rendere
     return cubeAxes;
 }
 
+void RenderWidget::updateWindowTitle()
+{
+    QString title;
+    for (const auto & repr : m_inputRepresentations)
+    {
+        title += ", " + QString::fromStdString(repr->input()->name);
+    }
+    if (title.isEmpty())
+        title = "(empty)";
+    else
+        title.remove(0, 2);
+
+    title = QString::number(index()) + ": " + title;
+
+    setWindowTitle(title);
+}
+
 vtkRenderWindow * RenderWidget::renderWindow()
 {
     return m_ui->qvtkMain->GetRenderWindow();
@@ -315,4 +358,11 @@ PickingInteractionStyle * RenderWidget::interactStyle()
 const PickingInteractionStyle * RenderWidget::interactStyle() const
 {
     return m_interactStyle;
+}
+
+void RenderWidget::closeEvent(QCloseEvent * event)
+{
+    emit closed();
+
+    QDockWidget::closeEvent(event);
 }

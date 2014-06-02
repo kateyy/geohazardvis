@@ -4,8 +4,6 @@
 
 #include <QMessageBox>
 
-#include "core/Input.h"
-
 #include "MainWindow.h"
 #include "InputRepresentation.h"
 #include "widgets/TableWidget.h"
@@ -55,27 +53,20 @@ void DataMapping::openInTable(std::shared_ptr<InputRepresentation> representatio
 
 void DataMapping::openInRenderView(std::shared_ptr<InputRepresentation> representation)
 {
-    RenderWidget * renderWidget = m_mainWindow.addRenderWidget();
-    m_renderWidgets.insert(m_nextRenderWidgetIndex++, renderWidget);
+    RenderWidget * renderWidget = m_mainWindow.addRenderWidget(m_nextRenderWidgetIndex++);
+    m_renderWidgets.insert(renderWidget->index(), renderWidget);
+    connect(renderWidget, &RenderWidget::closed, this, &DataMapping::renderWidgetClosed);
 
-    std::shared_ptr<Input> input = representation->input();
+    renderWidget->setObject(representation);
 
-    switch (input->type) {
-    case ModelType::triangles:
-        renderWidget->show3DInput(std::dynamic_pointer_cast<PolyDataInput>(input));
-        break;
-    case ModelType::grid2d:
-        renderWidget->showGridInput(std::dynamic_pointer_cast<GridDataInput>(input));
-        break;
-    default:
-        assert(false);
-        return;
-    }
+    emit renderViewsChanged(m_renderWidgets.values());
 }
 
 void DataMapping::addToRenderView(std::shared_ptr<InputRepresentation> representation, int renderView)
 {
     QMessageBox::warning(&m_mainWindow, "nan", "niy");
+
+    emit renderViewsChanged(m_renderWidgets.values());
 }
 
 void DataMapping::tableClosed()
@@ -85,4 +76,15 @@ void DataMapping::tableClosed()
 
     m_tableWidgets.remove(table->index());
     table->deleteLater();
+}
+
+void DataMapping::renderWidgetClosed()
+{
+    RenderWidget * renderWidget = dynamic_cast<RenderWidget*>(sender());
+    assert(renderWidget);
+
+    m_renderWidgets.remove(renderWidget->index());
+    renderWidget->deleteLater();
+
+    emit renderViewsChanged(m_renderWidgets.values());
 }

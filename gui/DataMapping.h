@@ -24,8 +24,12 @@ public:
     void openInRenderView(std::shared_ptr<InputRepresentation> representation);
     void addToRenderView(std::shared_ptr<InputRepresentation> representation, int renderView);
 
+signals:
+    void renderViewsChanged(QList<RenderWidget*> widgets);
+
 private slots:
     void tableClosed();
+    void renderWidgetClosed();
 
 private:
     MainWindow & m_mainWindow;

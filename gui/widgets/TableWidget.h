@@ -33,10 +33,10 @@ public:
 signals:
     void closed();
 
-protected:
+private:
     void closeEvent(QCloseEvent * event) override;
 
-protected:
+private:
     const int m_index;
     Ui_TableWidget * m_ui;
     std::shared_ptr<InputRepresentation> m_inputRepresentation;

@@ -46,16 +46,19 @@ MainWindow::MainWindow()
     addDockWidget(Qt::DockWidgetArea::LeftDockWidgetArea, m_dataChooser);
     addDockWidget(Qt::DockWidgetArea::LeftDockWidgetArea, m_renderConfigWidget);
 
-    QAction * a_openTable = new QAction("open in table", this);
-    connect(a_openTable, &QAction::triggered, this, &MainWindow::openTable);
-    m_ui->loadedFiles->addAction(a_openTable);
+    QAction * a_inputTable = new QAction("show table", this);
+    connect(a_inputTable, &QAction::triggered, this, &MainWindow::openTable);
+    m_ui->loadedFiles->addAction(a_inputTable);
 
-    QAction * a_openRenderView = new QAction("open in render view", this);
+    QAction * a_openRenderView = new QAction("open render view", this);
     connect(a_openRenderView, &QAction::triggered, this, &MainWindow::openRenderView);
     m_ui->loadedFiles->addAction(a_openRenderView);
 
-    QAction * a_addToRenderView = new QAction("add to render view", this);
-    connect(a_addToRenderView, &QAction::triggered, this, &MainWindow::addToRenderView);
+    m_addToRendererAction = new QAction("add to render view", this);
+    m_addToRendererAction->setEnabled(false);
+    m_ui->loadedFiles->addAction(m_addToRendererAction);
+
+    connect(m_dataMapping, &DataMapping::renderViewsChanged, this, &MainWindow::updateRenderViewActions);
 }
 
 MainWindow::~MainWindow()
@@ -93,9 +96,9 @@ void MainWindow::dropEvent(QDropEvent * event)
     event->acceptProposedAction();
 }
 
-RenderWidget * MainWindow::addRenderWidget()
+RenderWidget * MainWindow::addRenderWidget(int index)
 {
-    RenderWidget * renderWidget = new RenderWidget(*m_dataChooser, *m_renderConfigWidget, m_selectionHandler);
+    RenderWidget * renderWidget = new RenderWidget(index, *m_dataChooser, *m_renderConfigWidget, m_selectionHandler);
     addDockWidget(Qt::DockWidgetArea::BottomDockWidgetArea, renderWidget);
 
     connect(m_dataChooser, &DataChooser::selectionChanged, renderWidget, &RenderWidget::updateScalarsForColorMaping);
@@ -129,12 +132,7 @@ void MainWindow::openFile(QString filename)
 
     m_ui->loadedFiles->addItem(QString::fromStdString(representation->input()->name));
 
-    RenderWidget * renderWidget = addRenderWidget();
-
     m_dataMapping->addInputRepresenation(representation);
-
-    /*m_selectionHandler->setVtkInteractionStyle(renderWidget->interactStyle());
-    m_selectionHandler->setQtTableView(m_tableWidget->tableView(), representation->tableModel());*/
 
     setWindowTitle(QString::fromStdString(input->name));
     QApplication::processEvents();
@@ -153,6 +151,20 @@ void MainWindow::on_actionOpen_newTab_triggered()
         return;
 
     openFile(fileName);
+}
+
+void MainWindow::updateRenderViewActions(QList<RenderWidget*> widgets)
+{
+    QMenu * menu = new QMenu(this);
+    
+    for (RenderWidget * widget : widgets)
+    {
+        QAction * a = new QAction(widget->windowTitle(), this);
+        menu->addAction(a);
+    }
+
+    m_addToRendererAction->setMenu(menu);
+    m_addToRendererAction->setEnabled(!menu->isEmpty());
 }
 
 std::shared_ptr<InputRepresentation> MainWindow::selectedInput()

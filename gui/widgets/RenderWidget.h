@@ -3,6 +3,7 @@
 #include <memory>
 
 #include <QDockWidget>
+#include <QList>
 
 #include <vtkSmartPointer.h>
 
@@ -15,6 +16,7 @@ class vtkPolyData;
 class vtkPolyDataMapper;
 class vtkCubeAxesActor;
 
+class InputRepresentation;
 class Input;
 class PolyDataInput;
 class GridDataInput;
@@ -34,12 +36,16 @@ class RenderWidget : public QDockWidget
 
 public:
     RenderWidget(
+        int index,
         const DataChooser & dataChooser,
         RenderConfigWidget & renderConfigWidget,
         std::shared_ptr<SelectionHandler> selectionHandler);
 
-    void show3DInput(std::shared_ptr<PolyDataInput> input);
-    void showGridInput(std::shared_ptr<GridDataInput> input);
+    int index() const;
+
+    void addObject(std::shared_ptr<InputRepresentation> representation);
+    void setObject(std::shared_ptr<InputRepresentation> representation);
+    const QList<std::shared_ptr<InputRepresentation>> & inputs();
 
     vtkRenderWindow * renderWindow();
     const vtkRenderWindow * renderWindow() const;
@@ -60,9 +66,17 @@ public slots:
     void updateGradientForColorMapping(const QImage & gradient);
     void applyRenderingConfiguration();
 
+signals:
+    void closed();
+
 private:
     void setupRenderer();
     void setupInteraction();
+
+    void show3DInput(std::shared_ptr<PolyDataInput> input);
+    void showGridInput(std::shared_ptr<GridDataInput> input);
+
+    void updateWindowTitle();
     
     vtkPolyDataMapper * map3DInputScalars(PolyDataInput & input);
     void updateVertexNormals(vtkPolyData * polyData);
@@ -70,8 +84,12 @@ private:
     void setupAxes(const double bounds[6]);
     vtkSmartPointer<vtkCubeAxesActor> createAxes(vtkRenderer & renderer);
 
+    void closeEvent(QCloseEvent * event) override;
+
 private:
     Ui_RenderWidget * m_ui;
+
+    const int m_index;
 
     // Rendering components
     vtkSmartPointer<vtkRenderer> m_renderer;
@@ -88,5 +106,5 @@ private:
     RenderConfigWidget & m_renderConfigWidget;
     std::shared_ptr<SelectionHandler> m_selectionHandler;
     
-    std::list<std::shared_ptr<Input>> m_inputs;
+    QList<std::shared_ptr<InputRepresentation>> m_inputRepresentations;
 };
