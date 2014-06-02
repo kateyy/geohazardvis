@@ -1,27 +1,43 @@
 #pragma once
 
+#include <memory>
+
 #include <QDockWidget>
 
 
-class Ui_TableWidget;
-class QVtkTableModel;
 class QTableView;
 
 class vtkDataSet;
 
+class Ui_TableWidget;
+class QVtkTableModel;
+class InputRepresentation;
+
+
 class TableWidget : public QDockWidget
 {
+    Q_OBJECT
+
 public:
-    TableWidget(QWidget * parent = nullptr);
+    TableWidget(int index, QWidget * parent = nullptr);
     ~TableWidget() override;
 
-    QVtkTableModel * model();
-    void setModel(QVtkTableModel * model);
-    QTableView * tableView();
+    int index() const;
 
-    void showData(vtkDataSet * data);
+    QVtkTableModel * model();
+    QTableView * view();
+
+    void showInput(std::shared_ptr<InputRepresentation> representation);
+    std::shared_ptr<InputRepresentation> input();
+
+signals:
+    void closed();
 
 protected:
+    void closeEvent(QCloseEvent * event) override;
+
+protected:
+    const int m_index;
     Ui_TableWidget * m_ui;
-    QVtkTableModel * m_model;
+    std::shared_ptr<InputRepresentation> m_inputRepresentation;
 };

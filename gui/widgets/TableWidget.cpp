@@ -3,7 +3,10 @@
 
 #include <cassert>
 
+#include "core/Input.h"
+
 #include "QVtkTableModel.h"
+#include "InputRepresentation.h"
 
 
 TableWidget::TableWidget(int index, QWidget * parent)
@@ -28,23 +31,25 @@ int TableWidget::index() const
     return m_index;
 }
 
-void TableWidget::showData(vtkDataSet * data)
+void TableWidget::showInput(std::shared_ptr<InputRepresentation> representation)
 {
-    m_model->showData(data);
+    m_inputRepresentation = representation;
+    view()->setModel(m_inputRepresentation->tableModel());
+
+    setWindowTitle("Table: " + QString::fromStdString(representation->input()->name));
+
     m_ui->tableView->resizeColumnsToContents();
+}
+
+std::shared_ptr<InputRepresentation> TableWidget::input()
+{
+    return m_inputRepresentation;
 }
 
 QVtkTableModel * TableWidget::model()
 {
     assert(dynamic_cast<QVtkTableModel*>(m_ui->tableView->model()));
     return static_cast<QVtkTableModel*>(m_ui->tableView->model());
-}
-
-void TableWidget::setModel(QVtkTableModel * model)
-{
-    m_model = model;
-    m_ui->tableView->setModel(m_model);
-    m_ui->tableView->resizeColumnsToContents();
 }
 
 QTableView * TableWidget::view()

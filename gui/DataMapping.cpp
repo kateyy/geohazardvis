@@ -26,14 +26,31 @@ void DataMapping::addInputRepresenation(std::shared_ptr<InputRepresentation> inp
 
 void DataMapping::openInTable(std::shared_ptr<InputRepresentation> representation)
 {
-    TableWidget * table = new TableWidget(m_nextTableIndex++);
-    m_tableWidgets.insert(table->index(), table);
+    TableWidget * table = nullptr;
+    for (TableWidget * existingTable : m_tableWidgets)
+    {
+        if (existingTable->input() == representation)
+        {
+            table = existingTable;
+            break;
+        }
+    }
 
-    connect(table, &TableWidget::closed, this, &DataMapping::tableClosed);
+    if (!table)
+    {
+        table = new TableWidget(m_nextTableIndex++);
+        connect(table, &TableWidget::closed, this, &DataMapping::tableClosed);
+        m_mainWindow.addDockWidget(Qt::DockWidgetArea::RightDockWidgetArea, table);
 
-    m_mainWindow.addDockWidget(Qt::DockWidgetArea::RightDockWidgetArea, table);
+        if (!m_tableWidgets.empty())
+        {
+            m_mainWindow.tabifyDockWidget(m_tableWidgets.first(), table);
+        }
 
-    table->setModel(representation->tableModel());
+        m_tableWidgets.insert(table->index(), table);
+    }
+
+    table->showInput(representation);
 }
 
 void DataMapping::openInRenderView(std::shared_ptr<InputRepresentation> representation)
