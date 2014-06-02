@@ -53,7 +53,7 @@ endif()
     
 
 find_package(VTK REQUIRED
-    vtkRenderingQt          # QVTKWidget
+    vtkGUISupportQtOpenGL   # QVTKWidget
     vtkRenderingAnnotation  # vtkCubeAxesActor
 )
 include(${VTK_USE_FILE})
