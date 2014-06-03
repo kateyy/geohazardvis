@@ -28,6 +28,8 @@ RenderConfigWidget::RenderConfigWidget(QWidget * parent)
 {
     m_ui->setupUi(this);
 
+    updateWindowTitle();
+
     loadGradientImages();
 }
 
@@ -88,12 +90,14 @@ void RenderConfigWidget::updateGradientSelection(int selection)
 
 void RenderConfigWidget::clear()
 {
-    setRenderProperty(nullptr);
+    setRenderProperty("", nullptr);
 }
 
-void RenderConfigWidget::setRenderProperty(vtkProperty * property)
+void RenderConfigWidget::setRenderProperty(QString propertyName, vtkProperty * renderProperty)
 {
-    m_renderProperty = property;
+    updateWindowTitle(propertyName);
+
+    m_renderProperty = renderProperty;
     m_needsBrowserRebuild = true;
     emit repaint();
 }
@@ -112,6 +116,19 @@ void RenderConfigWidget::paintEvent(QPaintEvent * event)
     }
 
     QDockWidget::paintEvent(event);
+}
+
+void RenderConfigWidget::updateWindowTitle(QString propertyName)
+{
+    const QString defaultTitle = "render configuration";
+
+    if (propertyName.isEmpty())
+    {
+        setWindowTitle(defaultTitle);
+        return;
+    }
+
+    setWindowTitle(defaultTitle + ": " + propertyName);
 }
 
 void RenderConfigWidget::updatePropertyBrowser()

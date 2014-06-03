@@ -20,7 +20,7 @@ public:
     RenderConfigWidget(QWidget * parent = nullptr);
     ~RenderConfigWidget() override;
 
-    void setRenderProperty(vtkProperty * property);
+    void setRenderProperty(QString propertyName, vtkProperty * renderProperty);
 
     void addPropertyGroup(reflectionzeug::PropertyGroup * group);
 
@@ -37,6 +37,8 @@ protected slots:
 
 protected:
     void paintEvent(QPaintEvent * event) override;
+
+    void updateWindowTitle(QString propertyName = "");
 
     void loadGradientImages();
     void updatePropertyBrowser();

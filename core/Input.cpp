@@ -1,10 +1,15 @@
 #include "Input.h"
 
+#include <cassert>
+
 #include <vtkInformationStringKey.h>
-#include <vtkActor.h>
-#include <vtkPolyDataMapper.h>
-#include <vtkPolyDataAlgorithm.h>
+
+#include <vtkPolyData.h>
 #include <vtkImageData.h>
+
+#include <vtkPolyDataMapper.h>
+
+#include <vtkActor.h>
 
 #include "vtkhelper.h"
 
@@ -34,11 +39,6 @@ Input::~Input()
 {
 }
 
-void Input::setMapperInfo(vtkAbstractMapper & mapper) const
-{
-    NameKey()->Set(mapper.GetInformation(), name.c_str());
-}
-
 vtkSmartPointer<vtkDataSet> Input::data() const
 {
     return m_data;
@@ -47,28 +47,6 @@ vtkSmartPointer<vtkDataSet> Input::data() const
 PolyDataInput::PolyDataInput(const std::string & name, ModelType type)
 : Input(name, type)
 {
-}
-
-ProcessedInput::ProcessedInput(const std::string & name, ModelType type)
-: PolyDataInput(name, type)
-{
-}
-
-vtkSmartPointer<vtkActor> PolyDataInput::createActor()
-{
-    VTK_CREATE(vtkActor, actor);
-    actor->SetMapper(mapper());
-
-    return actor;
-}
-
-vtkSmartPointer<vtkMapper> PolyDataInput::mapper()
-{
-    if (m_mapper == nullptr) {
-        m_mapper = createDataMapper();
-    }
-    setMapperInfo(*m_mapper);
-    return m_mapper;
 }
 
 GridDataInput::GridDataInput(const std::string & name)
@@ -108,7 +86,7 @@ vtkSmartPointer<vtkImageData> GridDataInput::imageData() const
 void GridDataInput::setMapper(vtkSmartPointer<vtkPolyDataMapper> mapper)
 {
     m_mapper = mapper;
-    setMapperInfo(*m_mapper);
+    NameKey()->Set(mapper->GetInformation(), name.c_str());
 }
 
 void GridDataInput::setTexture(vtkSmartPointer<vtkTexture> texture)
@@ -143,42 +121,20 @@ void PolyDataInput::setPolyData(vtkSmartPointer<vtkPolyData> data)
 
 vtkSmartPointer<vtkPolyData> PolyDataInput::polyData() const
 {
-    vtkPolyData * polyData = dynamic_cast<vtkPolyData*>(m_data.Get());
-    assert(polyData);
-    return polyData;
+    assert(dynamic_cast<vtkPolyData*>(m_data.Get()));
+    return static_cast<vtkPolyData*>(m_data.Get());
 }
 
-vtkSmartPointer<vtkMapper> PolyDataInput::createDataMapper() const
+vtkPolyDataMapper * PolyDataInput::createNamedMapper() const
 {
-    VTK_CREATE(vtkPolyDataMapper, mapper);
-    mapper->SetInputData(polyData());
+    vtkPolyDataMapper * mapper = vtkPolyDataMapper::New();
+
+    NameKey()->Set(mapper->GetInformation(), name.c_str());
+
     return mapper;
-}
-
-vtkSmartPointer<vtkPolyDataMapper> PolyDataInput::polyDataMapper()
-{
-    vtkPolyDataMapper * polyDataMapper = dynamic_cast<vtkPolyDataMapper*>(mapper().Get());
-    assert(polyDataMapper);
-
-    return polyDataMapper;
 }
 
 const double * PolyDataInput::bounds() const
 {
     return polyData()->GetBounds();
-}
-
-vtkSmartPointer<vtkMapper> ProcessedInput::createDataMapper() const
-{
-    VTK_CREATE(vtkPolyDataMapper, mapper);
-    mapper->SetInputConnection(algorithm->GetOutputPort());
-    return mapper;
-}
-
-vtkSmartPointer<vtkPolyDataMapper> ProcessedInput::createAlgorithmMapper(vtkAlgorithmOutput * mapperInput) const
-{
-    VTK_CREATE(vtkPolyDataMapper, mapper);
-    NameKey()->Set(mapper->GetInformation(), name.c_str());
-    mapper->SetInputConnection(mapperInput);
-    return mapper;
 }

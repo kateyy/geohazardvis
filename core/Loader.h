@@ -14,7 +14,6 @@ class vtkPolyData;
 class Input;
 class GridDataInput;
 class PolyDataInput;
-class ProcessedInput;
 struct ReadDataset;
 
 

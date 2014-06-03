@@ -3,6 +3,9 @@
 
 #include <QMessageBox>
 
+#include <vtkInformation.h>
+#include <vtkInformationStringKey.h>
+
 #include <vtkLookupTable.h>
 
 #include <vtkPolyData.h>
@@ -149,7 +152,7 @@ void RenderWidget::applyRenderingConfiguration()
 
 vtkPolyDataMapper * RenderWidget::map3DInputScalars(PolyDataInput & input)
 {
-    vtkPolyDataMapper * mapper = vtkPolyDataMapper::New();
+    vtkPolyDataMapper * mapper = input.createNamedMapper();
 
     switch (m_dataChooser.dataSelection()) {
     case DataSelection::NoSelection:
@@ -270,10 +273,10 @@ void RenderWidget::show3DInput(std::shared_ptr<PolyDataInput> input)
 {    
     vtkSmartPointer<vtkPolyDataMapper> mapper = map3DInputScalars(*input);
 
-    vtkSmartPointer<vtkActor> actor = input->createActor();
+    VTK_CREATE(vtkActor, actor);
     actor->SetMapper(mapper);
     actor->SetProperty(createDefaultRenderProperty3D());
-    m_renderConfigWidget.setRenderProperty(actor->GetProperty());
+    m_renderConfigWidget.setRenderProperty(QString::fromStdString(input->name), actor->GetProperty());
 
     m_renderer->AddViewProp(actor);
 
@@ -402,5 +405,13 @@ void RenderWidget::closeEvent(QCloseEvent * event)
 void RenderWidget::on_actorPicked(vtkActor * actor)
 {
     assert(actor);
-    m_renderConfigWidget.setRenderProperty(actor->GetProperty());
+
+
+    vtkInformation * inputInfo = actor->GetMapper()->GetInformation();
+
+    QString propertyName;
+    if (inputInfo->Has(Input::NameKey()))
+        propertyName = Input::NameKey()->Get(inputInfo);
+
+    m_renderConfigWidget.setRenderProperty(propertyName, actor->GetProperty());
 }

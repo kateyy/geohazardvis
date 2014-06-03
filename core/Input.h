@@ -6,14 +6,10 @@
 #include <vtkSmartPointer.h>
 
 class vtkDataSet;
-class vtkAbstractMapper;
-class vtkMapper; // 3d mapper
 class vtkPolyData;
 class vtkPolyDataMapper;
 class vtkActor;
 class vtkInformationStringKey;
-class vtkPolyDataAlgorithm;
-class vtkAlgorithmOutput;
 class vtkLookupTable;
 class vtkTexture;
 class vtkImageData;
@@ -41,8 +37,6 @@ public:
     
 protected:
     Input(const std::string & name, const ModelType type);
-
-    void setMapperInfo(vtkAbstractMapper & mapper) const;
 
     vtkSmartPointer<vtkDataSet> m_data;
 };
@@ -78,26 +72,10 @@ class PolyDataInput : public Input {
 public:
     PolyDataInput(const std::string & name, ModelType type);
 
-    virtual vtkSmartPointer<vtkActor> createActor();
-    virtual vtkSmartPointer<vtkMapper> mapper();
-
     virtual vtkSmartPointer<vtkPolyData> polyData() const;
     virtual void setPolyData(vtkSmartPointer<vtkPolyData> polyData);
-    virtual vtkSmartPointer<vtkPolyDataMapper> polyDataMapper();
 
     const double * bounds() const override;
 
-protected:
-    virtual vtkSmartPointer<vtkMapper> createDataMapper() const;
-    vtkSmartPointer<vtkMapper> m_mapper;
-};
-
-class ProcessedInput : public PolyDataInput {
-public:
-    ProcessedInput(const std::string & name, ModelType type);
-    vtkSmartPointer<vtkPolyDataAlgorithm> algorithm;
-    virtual vtkSmartPointer<vtkPolyDataMapper> createAlgorithmMapper(vtkAlgorithmOutput * mapperInput) const;
-
-protected:
-    virtual vtkSmartPointer<vtkMapper> createDataMapper() const override;
+    vtkPolyDataMapper * createNamedMapper() const;
 };
