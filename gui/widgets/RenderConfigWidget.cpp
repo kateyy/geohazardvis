@@ -24,11 +24,9 @@ RenderConfigWidget::RenderConfigWidget(QWidget * parent)
 , m_ui(new Ui_RenderConfigWidget())
 , m_needsBrowserRebuild(true)
 , m_propertyRoot(nullptr)
-, m_propertyBrowser(new PropertyBrowser())
 , m_renderProperty(nullptr)
 {
     m_ui->setupUi(this);
-    m_ui->mainLayout->addWidget(m_propertyBrowser);
 
     loadGradientImages();
 }
@@ -36,7 +34,6 @@ RenderConfigWidget::RenderConfigWidget(QWidget * parent)
 RenderConfigWidget::~RenderConfigWidget()
 {
     clear();
-    delete m_propertyBrowser;
     delete m_ui;
 }
 
@@ -119,7 +116,7 @@ void RenderConfigWidget::paintEvent(QPaintEvent * event)
 
 void RenderConfigWidget::updatePropertyBrowser()
 {
-    m_propertyBrowser->setRoot(nullptr);
+    m_ui->propertyBrowser->setRoot(nullptr);
     delete m_propertyRoot;
 
     m_propertyRoot = new PropertyGroup("root");
@@ -227,5 +224,6 @@ void RenderConfigWidget::updatePropertyBrowser()
     //for (auto * group : m_addedGroups)
     //    m_propertyRoot->addProperty(group);
 
-    m_propertyBrowser->setRoot(m_propertyRoot);
+    m_ui->propertyBrowser->setRoot(m_propertyRoot);
+    m_ui->propertyBrowser->expandToDepth(0);
 }

@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>147</width>
-    <height>93</height>
+    <height>170</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -27,9 +27,19 @@
       </layout>
      </widget>
     </item>
+    <item>
+     <widget class="propertyguizeug::PropertyBrowser" name="propertyBrowser"/>
+    </item>
    </layout>
   </widget>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>propertyguizeug::PropertyBrowser</class>
+   <extends>QTreeView</extends>
+   <header>propertyguizeug/PropertyBrowser.h</header>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections>
   <connection>

@@ -9,9 +9,6 @@ class vtkProperty;
 namespace reflectionzeug {
     class PropertyGroup;
 }
-namespace propertyguizeug {
-    class PropertyBrowser;
-}
 class Ui_RenderConfigWidget;
 
 
@@ -49,7 +46,6 @@ protected:
     bool m_needsBrowserRebuild;
 
     reflectionzeug::PropertyGroup * m_propertyRoot;
-    propertyguizeug::PropertyBrowser * m_propertyBrowser;
 
     QVector<reflectionzeug::PropertyGroup *> m_addedGroups;
 
