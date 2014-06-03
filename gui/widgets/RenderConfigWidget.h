@@ -26,21 +26,14 @@ public:
 
     void clear();
 
-    const QImage & selectedGradient() const;
-
 signals:
-    void gradientSelectionChanged(const QImage & currentGradient);
     void renderPropertyChanged();
-
-protected slots:
-    void updateGradientSelection(int selection);
 
 protected:
     void paintEvent(QPaintEvent * event) override;
 
     void updateWindowTitle(QString propertyName = "");
 
-    void loadGradientImages();
     void updatePropertyBrowser();
 
 protected:
@@ -52,6 +45,4 @@ protected:
     QVector<reflectionzeug::PropertyGroup *> m_addedGroups;
 
     vtkProperty * m_renderProperty;
-
-    QVector<QImage> m_scalarToColorGradients;
 };

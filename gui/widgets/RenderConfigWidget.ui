@@ -16,18 +16,6 @@
   <widget class="QWidget" name="content">
    <layout class="QVBoxLayout" name="mainLayout">
     <item>
-     <widget class="QGroupBox" name="groupBox">
-      <property name="title">
-       <string>scalar to color mapping</string>
-      </property>
-      <layout class="QVBoxLayout" name="verticalLayout">
-       <item>
-        <widget class="QComboBox" name="gradientComboBox"/>
-       </item>
-      </layout>
-     </widget>
-    </item>
-    <item>
      <widget class="propertyguizeug::PropertyBrowser" name="propertyBrowser"/>
     </item>
    </layout>
@@ -41,25 +29,5 @@
   </customwidget>
  </customwidgets>
  <resources/>
- <connections>
-  <connection>
-   <sender>gradientComboBox</sender>
-   <signal>currentIndexChanged(int)</signal>
-   <receiver>RenderConfigWidget</receiver>
-   <slot>updateGradientSelection(int)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>73</x>
-     <y>63</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>73</x>
-     <y>46</y>
-    </hint>
-   </hints>
-  </connection>
- </connections>
- <slots>
-  <slot>updateGradientSelection(int)</slot>
- </slots>
+ <connections/>
 </ui>

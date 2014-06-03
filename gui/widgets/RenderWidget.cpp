@@ -192,7 +192,7 @@ vtkPolyDataMapper * RenderWidget::map3DInputScalars(PolyDataInput & input)
     mapper->SetInputConnection(elevation->GetOutputPort());
 
 
-    const QImage & gradient = m_renderConfigWidget.selectedGradient();
+    const QImage & gradient = m_dataChooser.selectedGradient();
 
     // use alpha = 1.0, if the image doesn't have a alpha channel
     int alphaMask = gradient.hasAlphaChannel() ? 0x00 : 0xFF;
