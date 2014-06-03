@@ -4,6 +4,7 @@
 
 #include <QDockWidget>
 #include <QList>
+#include <QMap>
 
 #include <vtkSmartPointer.h>
 
@@ -15,6 +16,7 @@ class vtkProperty;
 class vtkPolyData;
 class vtkPolyDataMapper;
 class vtkCubeAxesActor;
+class vtkActor;
 
 class Property;
 class Input;
@@ -43,15 +45,12 @@ public:
 
     int index() const;
 
-    void addObject(std::shared_ptr<Property> representation);
-    void setObject(std::shared_ptr<Property> representation);
+    void addProperty(std::shared_ptr<Property> property);
+    void setProperty(std::shared_ptr<Property> property);
     const QList<std::shared_ptr<Property>> & inputs();
 
     vtkRenderWindow * renderWindow();
     const vtkRenderWindow * renderWindow() const;
-
-    vtkProperty * renderProperty();
-    const vtkProperty * renderProperty() const;
     
     PickingInteractionStyle * interactStyle();
     const PickingInteractionStyle * interactStyle() const;
@@ -73,6 +72,8 @@ private:
     void setupRenderer();
     void setupInteraction();
 
+    static vtkProperty * createDefaultRenderProperty3D();
+
     void show3DInput(std::shared_ptr<PolyDataInput> input);
     void showGridInput(std::shared_ptr<GridDataInput> input);
 
@@ -86,14 +87,20 @@ private:
 
     void closeEvent(QCloseEvent * event) override;
 
+private slots:
+    /** Updates the RenderConfigWidget to reflect the actors render properties. */
+    void on_actorPicked(vtkActor * actor);
+
 private:
     Ui_RenderWidget * m_ui;
 
     const int m_index;
 
+    // properties to render in this view
+    QList<std::shared_ptr<Property>> m_properties;
+
     // Rendering components
     vtkSmartPointer<vtkRenderer> m_renderer;
-    vtkSmartPointer<vtkProperty> m_renderProperty;
     vtkSmartPointer<vtkRenderWindowInteractor> m_interactor;
     vtkSmartPointer<PickingInteractionStyle> m_interactStyle;
 
@@ -105,6 +112,4 @@ private:
     const DataChooser & m_dataChooser;
     RenderConfigWidget & m_renderConfigWidget;
     std::shared_ptr<SelectionHandler> m_selectionHandler;
-    
-    QList<std::shared_ptr<Property>> m_inputRepresentations;
 };

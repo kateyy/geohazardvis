@@ -34,7 +34,7 @@ private slots:
 private:
     MainWindow & m_mainWindow;
 
-    QList<std::shared_ptr<Property>> m_inputRepresentations;
+    QList<std::shared_ptr<Property>> m_properties;
     int m_nextTableIndex;
     int m_nextRenderWidgetIndex;
     QMap<int, TableWidget*> m_tableWidgets;

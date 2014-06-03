@@ -98,6 +98,7 @@ void RenderConfigWidget::setRenderProperty(vtkProperty * property)
 {
     m_renderProperty = property;
     m_needsBrowserRebuild = true;
+    emit repaint();
 }
 
 void RenderConfigWidget::addPropertyGroup(reflectionzeug::PropertyGroup * group)

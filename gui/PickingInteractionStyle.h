@@ -35,6 +35,9 @@ public slots:
 
 signals:
     void pointInfoSent(const QStringList &info) const;
+    /** actor at the mouse position, after releasing (and not moving) the left mouse button
+        This is only emitted if a actor was picked at the mouse position. */
+    void actorPicked(vtkActor * actor);
     void cellPicked(vtkDataObject * dataObject, vtkIdType cellId) const;
 
 protected:

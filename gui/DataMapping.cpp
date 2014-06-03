@@ -20,7 +20,7 @@ DataMapping::DataMapping(MainWindow & mainWindow)
 
 void DataMapping::addInputRepresenation(std::shared_ptr<Property> input)
 {
-    m_inputRepresentations << input;
+    m_properties << input;
 }
 
 void DataMapping::openInTable(std::shared_ptr<Property> representation)
@@ -58,7 +58,7 @@ void DataMapping::openInRenderView(std::shared_ptr<Property> representation)
     m_renderWidgets.insert(renderWidget->index(), renderWidget);
     connect(renderWidget, &RenderWidget::closed, this, &DataMapping::renderWidgetClosed);
 
-    renderWidget->setObject(representation);
+    renderWidget->setProperty(representation);
 
     emit renderViewsChanged(m_renderWidgets.values());
 }
@@ -66,7 +66,7 @@ void DataMapping::openInRenderView(std::shared_ptr<Property> representation)
 void DataMapping::addToRenderView(std::shared_ptr<Property> representation, int renderView)
 {
     assert(m_renderWidgets.contains(renderView));
-    m_renderWidgets[renderView]->addObject(representation);
+    m_renderWidgets[renderView]->addProperty(representation);
 
     emit renderViewsChanged(m_renderWidgets.values());
 }

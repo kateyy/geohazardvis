@@ -85,6 +85,12 @@ void PickingInteractionStyle::pickCell()
     m_cellPicker->Pick(clickPos[0], clickPos[1], 0, GetDefaultRenderer());
     vtkIdType cellId = m_cellPicker->GetCellId();
 
+    vtkActor * pickedActor = m_cellPicker->GetActor();
+    if (pickedActor)
+    {
+        emit actorPicked(pickedActor);
+    }
+
     if (cellId != -1)
         emit cellPicked(m_cellPicker->GetDataSet(), cellId);
 }

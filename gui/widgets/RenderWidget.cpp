@@ -78,25 +78,31 @@ void RenderWidget::setupRenderer()
     m_renderer = vtkSmartPointer<vtkRenderer>::New();
     m_renderer->SetBackground(1, 1, 1);
     m_ui->qvtkMain->GetRenderWindow()->AddRenderer(m_renderer);
+}
 
-    m_renderProperty = vtkProperty::New();
-    m_renderProperty->SetColor(0, 0.6, 0);
-    m_renderProperty->SetOpacity(1.0);
-    m_renderProperty->SetInterpolationToFlat();
-    m_renderProperty->SetEdgeVisibility(true);
-    m_renderProperty->SetEdgeColor(0.1, 0.1, 0.1);
-    m_renderProperty->SetLineWidth(1.2);
-    m_renderProperty->SetBackfaceCulling(false);
-    m_renderProperty->SetLighting(false);
+vtkProperty * RenderWidget::createDefaultRenderProperty3D()
+{
+    vtkProperty * prop = vtkProperty::New();
+    prop->SetColor(0, 0.6, 0);
+    prop->SetOpacity(1.0);
+    prop->SetInterpolationToFlat();
+    prop->SetEdgeVisibility(true);
+    prop->SetEdgeColor(0.1, 0.1, 0.1);
+    prop->SetLineWidth(1.2);
+    prop->SetBackfaceCulling(false);
+    prop->SetLighting(false);
 
-    m_renderConfigWidget.setRenderProperty(m_renderProperty);
+    return prop;
 }
 
 void RenderWidget::setupInteraction()
 {
     m_interactStyle = vtkSmartPointer<PickingInteractionStyle>::New();
     m_interactStyle->SetDefaultRenderer(m_renderer);
+
     connect(m_interactStyle.Get(), &PickingInteractionStyle::pointInfoSent, this, &RenderWidget::ShowInfo);
+    connect(m_interactStyle.Get(), &PickingInteractionStyle::actorPicked, this, &RenderWidget::on_actorPicked);
+
     m_interactor = vtkSmartPointer<vtkRenderWindowInteractor>::New();
     m_interactor->SetInteractorStyle(m_interactStyle);
     m_interactor->SetRenderWindow(m_ui->qvtkMain->GetRenderWindow());
@@ -128,10 +134,10 @@ void RenderWidget::updateGradientForColorMapping(const QImage & /*gradient*/)
 
 void RenderWidget::applyRenderingConfiguration()
 {
-    /*if (m_inputRepresentations.empty())
+    /*if (m_properties.empty())
         return;
 
-    if (m_inputRepresentations.front()->input()->type != ModelType::triangles)
+    if (m_properties.front()->input()->type != ModelType::triangles)
         return;*/
 
     // create the visual representation again, to update to scalar to color mapping
@@ -201,21 +207,21 @@ vtkPolyDataMapper * RenderWidget::map3DInputScalars(PolyDataInput & input)
     return mapper;
 }
 
-void RenderWidget::addObject(std::shared_ptr<Property> representation)
+void RenderWidget::addProperty(std::shared_ptr<Property> representation)
 {
     setWindowTitle(QString::fromStdString(representation->input()->name) + " (loading to gpu)");
     QApplication::processEvents();
 
-    if (!m_inputRepresentations.empty())
+    if (!m_properties.empty())
     {
-        if (m_inputRepresentations.first()->input()->type != representation->input()->type)
+        if (m_properties.first()->input()->type != representation->input()->type)
         {
             QMessageBox::warning(this, "", "Cannot render 2d and 3d geometry in the same view.");
             return;
         }
     }
 
-    m_inputRepresentations << representation;
+    m_properties << representation;
 
     switch (representation->input()->type)
     {
@@ -234,7 +240,7 @@ void RenderWidget::addObject(std::shared_ptr<Property> representation)
         std::numeric_limits<double>::max(), std::numeric_limits<double>::lowest(),
         std::numeric_limits<double>::max(), std::numeric_limits<double>::lowest() };
 
-    for (const auto & repr : m_inputRepresentations)
+    for (const auto & repr : m_properties)
     {
         for (int i = 0; i < 6; i += 2)
         {
@@ -247,17 +253,17 @@ void RenderWidget::addObject(std::shared_ptr<Property> representation)
     updateWindowTitle();
 }
 
-void RenderWidget::setObject(std::shared_ptr<Property> representation)
+void RenderWidget::setProperty(std::shared_ptr<Property> representation)
 {
     m_renderer->RemoveAllViewProps();
 
-    m_inputRepresentations.clear();
-    addObject(representation);
+    m_properties.clear();
+    addProperty(representation);
 }
 
 const QList<std::shared_ptr<Property>> & RenderWidget::inputs()
 {
-    return m_inputRepresentations;
+    return m_properties;
 }
 
 void RenderWidget::show3DInput(std::shared_ptr<PolyDataInput> input)
@@ -266,7 +272,8 @@ void RenderWidget::show3DInput(std::shared_ptr<PolyDataInput> input)
 
     vtkSmartPointer<vtkActor> actor = input->createActor();
     actor->SetMapper(mapper);
-    actor->SetProperty(m_renderProperty);
+    actor->SetProperty(createDefaultRenderProperty3D());
+    m_renderConfigWidget.setRenderProperty(actor->GetProperty());
 
     m_renderer->AddViewProp(actor);
 
@@ -351,7 +358,7 @@ vtkSmartPointer<vtkCubeAxesActor> RenderWidget::createAxes(vtkRenderer & rendere
 void RenderWidget::updateWindowTitle()
 {
     QString title;
-    for (const auto & repr : m_inputRepresentations)
+    for (const auto & repr : m_properties)
     {
         title += ", " + QString::fromStdString(repr->input()->name);
     }
@@ -375,16 +382,6 @@ const vtkRenderWindow * RenderWidget::renderWindow() const
     return m_ui->qvtkMain->GetRenderWindow();
 }
 
-vtkProperty * RenderWidget::renderProperty()
-{
-    return m_renderProperty;
-}
-
-const vtkProperty * RenderWidget::renderProperty() const
-{
-    return m_renderProperty;
-}
-
 PickingInteractionStyle * RenderWidget::interactStyle()
 {
     return m_interactStyle;
@@ -400,4 +397,10 @@ void RenderWidget::closeEvent(QCloseEvent * event)
     emit closed();
 
     QDockWidget::closeEvent(event);
+}
+
+void RenderWidget::on_actorPicked(vtkActor * actor)
+{
+    assert(actor);
+    m_renderConfigWidget.setRenderProperty(actor->GetProperty());
 }
