@@ -14,8 +14,8 @@
 #include "core/vtkhelper.h"
 #include "core/Loader.h"
 #include "core/Input.h"
+#include "core/Property.h"
 
-#include "InputRepresentation.h"
 #include "DataMapping.h"
 #include "SelectionHandler.h"
 #include "QVtkTableModel.h"
@@ -123,7 +123,7 @@ void MainWindow::openFile(QString filename)
         return;
     }
 
-    std::shared_ptr<InputRepresentation> representation = std::make_shared<InputRepresentation>(input);
+    std::shared_ptr<Property> representation = std::make_shared<Property>(input);
 
     m_inputs << representation;
 
@@ -165,7 +165,7 @@ void MainWindow::updateRenderViewActions(QList<RenderWidget*> widgets)
     m_addToRendererAction->setEnabled(!menu->isEmpty());
 }
 
-std::shared_ptr<InputRepresentation> MainWindow::selectedInput()
+std::shared_ptr<Property> MainWindow::selectedInput()
 {
     QListWidgetItem * selection = m_ui->loadedFiles->currentItem();
     if (selection == nullptr)
@@ -178,6 +178,8 @@ std::shared_ptr<InputRepresentation> MainWindow::selectedInput()
             return input;
         }
     }
+    assert(false);
+    return nullptr;
 }
 
 void MainWindow::openTable()

@@ -3,8 +3,6 @@ set( TARGET gui )
 message( STATUS ${TARGET} )
 
 set ( SOURCES
-    InputRepresentation.h
-    InputRepresentation.cpp
     DataMapping.h
     DataMapping.cpp
     MainWindow.h

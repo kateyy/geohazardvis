@@ -4,9 +4,9 @@
 #include <cassert>
 
 #include "core/Input.h"
+#include "core/Property.h"
 
 #include "QVtkTableModel.h"
-#include "InputRepresentation.h"
 
 
 TableWidget::TableWidget(int index, QWidget * parent)
@@ -31,7 +31,7 @@ int TableWidget::index() const
     return m_index;
 }
 
-void TableWidget::showInput(std::shared_ptr<InputRepresentation> representation)
+void TableWidget::showInput(std::shared_ptr<Property> representation)
 {
     m_inputRepresentation = representation;
     view()->setModel(m_inputRepresentation->tableModel());
@@ -41,7 +41,7 @@ void TableWidget::showInput(std::shared_ptr<InputRepresentation> representation)
     m_ui->tableView->resizeColumnsToContents();
 }
 
-std::shared_ptr<InputRepresentation> TableWidget::input()
+std::shared_ptr<Property> TableWidget::input()
 {
     return m_inputRepresentation;
 }

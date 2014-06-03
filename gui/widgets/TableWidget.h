@@ -11,7 +11,7 @@ class vtkDataSet;
 
 class Ui_TableWidget;
 class QVtkTableModel;
-class InputRepresentation;
+class Property;
 
 
 class TableWidget : public QDockWidget
@@ -27,8 +27,8 @@ public:
     QVtkTableModel * model();
     QTableView * view();
 
-    void showInput(std::shared_ptr<InputRepresentation> representation);
-    std::shared_ptr<InputRepresentation> input();
+    void showInput(std::shared_ptr<Property> representation);
+    std::shared_ptr<Property> input();
 
 signals:
     void closed();
@@ -39,5 +39,5 @@ private:
 private:
     const int m_index;
     Ui_TableWidget * m_ui;
-    std::shared_ptr<InputRepresentation> m_inputRepresentation;
+    std::shared_ptr<Property> m_inputRepresentation;
 };

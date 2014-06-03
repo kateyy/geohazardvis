@@ -16,7 +16,7 @@ class vtkPolyData;
 class vtkPolyDataMapper;
 class vtkCubeAxesActor;
 
-class InputRepresentation;
+class Property;
 class Input;
 class PolyDataInput;
 class GridDataInput;
@@ -43,9 +43,9 @@ public:
 
     int index() const;
 
-    void addObject(std::shared_ptr<InputRepresentation> representation);
-    void setObject(std::shared_ptr<InputRepresentation> representation);
-    const QList<std::shared_ptr<InputRepresentation>> & inputs();
+    void addObject(std::shared_ptr<Property> representation);
+    void setObject(std::shared_ptr<Property> representation);
+    const QList<std::shared_ptr<Property>> & inputs();
 
     vtkRenderWindow * renderWindow();
     const vtkRenderWindow * renderWindow() const;
@@ -106,5 +106,5 @@ private:
     RenderConfigWidget & m_renderConfigWidget;
     std::shared_ptr<SelectionHandler> m_selectionHandler;
     
-    QList<std::shared_ptr<InputRepresentation>> m_inputRepresentations;
+    QList<std::shared_ptr<Property>> m_inputRepresentations;
 };

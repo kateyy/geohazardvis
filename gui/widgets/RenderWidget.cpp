@@ -23,8 +23,8 @@
 
 #include "core/vtkhelper.h"
 #include "core/Input.h"
+#include "core/Property.h"
 
-#include "InputRepresentation.h"
 #include "PickingInteractionStyle.h"
 #include "SelectionHandler.h"
 #include "NormalRepresentation.h"
@@ -201,7 +201,7 @@ vtkPolyDataMapper * RenderWidget::map3DInputScalars(PolyDataInput & input)
     return mapper;
 }
 
-void RenderWidget::addObject(std::shared_ptr<InputRepresentation> representation)
+void RenderWidget::addObject(std::shared_ptr<Property> representation)
 {
     setWindowTitle(QString::fromStdString(representation->input()->name) + " (loading to gpu)");
     QApplication::processEvents();
@@ -247,7 +247,7 @@ void RenderWidget::addObject(std::shared_ptr<InputRepresentation> representation
     updateWindowTitle();
 }
 
-void RenderWidget::setObject(std::shared_ptr<InputRepresentation> representation)
+void RenderWidget::setObject(std::shared_ptr<Property> representation)
 {
     m_renderer->RemoveAllViewProps();
 
@@ -255,7 +255,7 @@ void RenderWidget::setObject(std::shared_ptr<InputRepresentation> representation
     addObject(representation);
 }
 
-const QList<std::shared_ptr<InputRepresentation>> & RenderWidget::inputs()
+const QList<std::shared_ptr<Property>> & RenderWidget::inputs()
 {
     return m_inputRepresentations;
 }

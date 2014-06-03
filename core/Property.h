@@ -7,11 +7,11 @@ class Input;
 class QVtkTableModel;
 
 
-class InputRepresentation
+class Property
 {
 public:
-    InputRepresentation(std::shared_ptr<Input> input);
-    ~InputRepresentation();
+    Property(std::shared_ptr<Input> input);
+    ~Property();
 
     std::shared_ptr<Input> input();
     std::shared_ptr<const Input> input() const;

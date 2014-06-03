@@ -4,8 +4,9 @@
 
 #include <QMessageBox>
 
+#include "core/Property.h"
+
 #include "MainWindow.h"
-#include "InputRepresentation.h"
 #include "widgets/TableWidget.h"
 #include "widgets/RenderWidget.h"
 
@@ -17,12 +18,12 @@ DataMapping::DataMapping(MainWindow & mainWindow)
 {
 }
 
-void DataMapping::addInputRepresenation(std::shared_ptr<InputRepresentation> input)
+void DataMapping::addInputRepresenation(std::shared_ptr<Property> input)
 {
     m_inputRepresentations << input;
 }
 
-void DataMapping::openInTable(std::shared_ptr<InputRepresentation> representation)
+void DataMapping::openInTable(std::shared_ptr<Property> representation)
 {
     TableWidget * table = nullptr;
     for (TableWidget * existingTable : m_tableWidgets)
@@ -51,7 +52,7 @@ void DataMapping::openInTable(std::shared_ptr<InputRepresentation> representatio
     table->showInput(representation);
 }
 
-void DataMapping::openInRenderView(std::shared_ptr<InputRepresentation> representation)
+void DataMapping::openInRenderView(std::shared_ptr<Property> representation)
 {
     RenderWidget * renderWidget = m_mainWindow.addRenderWidget(m_nextRenderWidgetIndex++);
     m_renderWidgets.insert(renderWidget->index(), renderWidget);
@@ -62,7 +63,7 @@ void DataMapping::openInRenderView(std::shared_ptr<InputRepresentation> represen
     emit renderViewsChanged(m_renderWidgets.values());
 }
 
-void DataMapping::addToRenderView(std::shared_ptr<InputRepresentation> representation, int renderView)
+void DataMapping::addToRenderView(std::shared_ptr<Property> representation, int renderView)
 {
     assert(m_renderWidgets.contains(renderView));
     m_renderWidgets[renderView]->addObject(representation);
