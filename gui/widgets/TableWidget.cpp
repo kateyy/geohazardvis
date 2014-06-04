@@ -4,7 +4,7 @@
 #include <cassert>
 
 #include "core/Input.h"
-#include "core/Property.h"
+#include "core/DataObject.h"
 
 #include "QVtkTableModel.h"
 
@@ -31,7 +31,7 @@ int TableWidget::index() const
     return m_index;
 }
 
-void TableWidget::showInput(std::shared_ptr<Property> representation)
+void TableWidget::showInput(std::shared_ptr<DataObject> representation)
 {
     m_inputRepresentation = representation;
     view()->setModel(m_inputRepresentation->tableModel());
@@ -41,7 +41,7 @@ void TableWidget::showInput(std::shared_ptr<Property> representation)
     m_ui->tableView->resizeColumnsToContents();
 }
 
-std::shared_ptr<Property> TableWidget::input()
+std::shared_ptr<DataObject> TableWidget::input()
 {
     return m_inputRepresentation;
 }

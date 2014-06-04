@@ -94,11 +94,11 @@ void GridDataInput::setTexture(vtkSmartPointer<vtkTexture> texture)
     m_texture = texture;
 }
 
-vtkSmartPointer<vtkActor> GridDataInput::createTexturedPolygonActor() const
+vtkActor * GridDataInput::createTexturedPolygonActor() const
 {
     assert(m_mapper);
     assert(m_texture);
-    VTK_CREATE(vtkActor, actor);
+    vtkActor * actor = vtkActor::New();
     actor->SetMapper(m_mapper);
     actor->SetTexture(m_texture);
     return actor;

@@ -4,7 +4,7 @@
 
 #include <QMessageBox>
 
-#include "core/Property.h"
+#include "core/DataObject.h"
 
 #include "MainWindow.h"
 #include "widgets/TableWidget.h"
@@ -18,17 +18,17 @@ DataMapping::DataMapping(MainWindow & mainWindow)
 {
 }
 
-void DataMapping::addInputRepresenation(std::shared_ptr<Property> input)
+void DataMapping::addDataObject(std::shared_ptr<DataObject> dataObject)
 {
-    m_properties << input;
+    m_dataObject << dataObject;
 }
 
-void DataMapping::openInTable(std::shared_ptr<Property> representation)
+void DataMapping::openInTable(std::shared_ptr<DataObject> dataObject)
 {
     TableWidget * table = nullptr;
     for (TableWidget * existingTable : m_tableWidgets)
     {
-        if (existingTable->input() == representation)
+        if (existingTable->input() == dataObject)
         {
             table = existingTable;
             break;
@@ -49,24 +49,24 @@ void DataMapping::openInTable(std::shared_ptr<Property> representation)
         m_tableWidgets.insert(table->index(), table);
     }
 
-    table->showInput(representation);
+    table->showInput(dataObject);
 }
 
-void DataMapping::openInRenderView(std::shared_ptr<Property> representation)
+void DataMapping::openInRenderView(std::shared_ptr<DataObject> representation)
 {
     RenderWidget * renderWidget = m_mainWindow.addRenderWidget(m_nextRenderWidgetIndex++);
     m_renderWidgets.insert(renderWidget->index(), renderWidget);
     connect(renderWidget, &RenderWidget::closed, this, &DataMapping::renderWidgetClosed);
 
-    renderWidget->setProperty(representation);
+    renderWidget->setDataObject(representation);
 
     emit renderViewsChanged(m_renderWidgets.values());
 }
 
-void DataMapping::addToRenderView(std::shared_ptr<Property> representation, int renderView)
+void DataMapping::addToRenderView(std::shared_ptr<DataObject> representation, int renderView)
 {
     assert(m_renderWidgets.contains(renderView));
-    m_renderWidgets[renderView]->addProperty(representation);
+    m_renderWidgets[renderView]->addDataObject(representation);
 
     emit renderViewsChanged(m_renderWidgets.values());
 }

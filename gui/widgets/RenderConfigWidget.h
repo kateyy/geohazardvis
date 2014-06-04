@@ -1,5 +1,7 @@
 #pragma once
 
+#include <memory>
+
 #include <QDockWidget>
 #include <QVector>
 
@@ -10,6 +12,7 @@ namespace reflectionzeug {
     class PropertyGroup;
 }
 class Ui_RenderConfigWidget;
+class RenderedData;
 
 
 class RenderConfigWidget : public QDockWidget
@@ -20,7 +23,7 @@ public:
     RenderConfigWidget(QWidget * parent = nullptr);
     ~RenderConfigWidget() override;
 
-    void setRenderProperty(QString propertyName, vtkProperty * renderProperty);
+    void setRenderedData(std::shared_ptr<RenderedData> renderedData);
 
     void addPropertyGroup(reflectionzeug::PropertyGroup * group);
 

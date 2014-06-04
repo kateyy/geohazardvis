@@ -10,8 +10,6 @@
 
 #include <vtkPolyData.h>
 
-#include <vtkElevationFilter.h>
-
 #include <vtkPolyDataMapper.h>
 
 #include <vtkScalarBarActor.h>
@@ -26,7 +24,10 @@
 
 #include "core/vtkhelper.h"
 #include "core/Input.h"
-#include "core/Property.h"
+#include "core/PolyDataObject.h"
+#include "core/ImageDataObject.h"
+#include "core/RenderedPolyData.h"
+#include "core/RenderedImageData.h"
 
 #include "PickingInteractionStyle.h"
 #include "SelectionHandler.h"
@@ -83,21 +84,6 @@ void RenderWidget::setupRenderer()
     m_ui->qvtkMain->GetRenderWindow()->AddRenderer(m_renderer);
 }
 
-vtkProperty * RenderWidget::createDefaultRenderProperty3D()
-{
-    vtkProperty * prop = vtkProperty::New();
-    prop->SetColor(0, 0.6, 0);
-    prop->SetOpacity(1.0);
-    prop->SetInterpolationToFlat();
-    prop->SetEdgeVisibility(true);
-    prop->SetEdgeColor(0.1, 0.1, 0.1);
-    prop->SetLineWidth(1.2);
-    prop->SetBackfaceCulling(false);
-    prop->SetLighting(false);
-
-    return prop;
-}
-
 void RenderWidget::setupInteraction()
 {
     m_interactStyle = vtkSmartPointer<PickingInteractionStyle>::New();
@@ -137,10 +123,10 @@ void RenderWidget::updateGradientForColorMapping(const QImage & /*gradient*/)
 
 void RenderWidget::applyRenderingConfiguration()
 {
-    /*if (m_properties.empty())
+    /*if (m_renderedData.empty())
         return;
 
-    if (m_properties.front()->input()->type != ModelType::triangles)
+    if (m_renderedData.front()->input()->type != ModelType::triangles)
         return;*/
 
     // create the visual representation again, to update to scalar to color mapping
@@ -150,141 +136,66 @@ void RenderWidget::applyRenderingConfiguration()
     emit render();
 }
 
-vtkPolyDataMapper * RenderWidget::map3DInputScalars(PolyDataInput & input)
+void RenderWidget::addDataObject(std::shared_ptr<DataObject> dataObject)
 {
-    vtkPolyDataMapper * mapper = input.createNamedMapper();
-
-    switch (m_dataChooser.dataSelection()) {
-    case DataSelection::NoSelection:
-    case DataSelection::DefaultColor:
-        mapper->SetInputData(input.polyData());
-        return mapper;
-    }
-
-    VTK_CREATE(vtkElevationFilter, elevation);
-    elevation->SetInputData(input.polyData());
-
-    float minValue, maxValue;
-
-    switch (m_dataChooser.dataSelection()) {
-    case DataSelection::Vertex_xValues:
-        minValue = input.polyData()->GetBounds()[0];
-        maxValue = input.polyData()->GetBounds()[1];
-        elevation->SetLowPoint(minValue, 0, 0);
-        elevation->SetHighPoint(maxValue, 0, 0);
-        break;
-
-    case DataSelection::Vertex_yValues:
-        minValue = input.polyData()->GetBounds()[2];
-        maxValue = input.polyData()->GetBounds()[3];
-        elevation->SetLowPoint(0, minValue, 0);
-        elevation->SetHighPoint(0, maxValue, 0);
-        break;
-
-    case DataSelection::Vertex_zValues:
-        minValue = input.polyData()->GetBounds()[4];
-        maxValue = input.polyData()->GetBounds()[5];
-        elevation->SetLowPoint(0, 0, minValue);
-        elevation->SetHighPoint(0, 0, maxValue);
-        break;
-    }
-
-    mapper->SetInputConnection(elevation->GetOutputPort());
-
-
-    const QImage & gradient = m_dataChooser.selectedGradient();
-
-    // use alpha = 1.0, if the image doesn't have a alpha channel
-    int alphaMask = gradient.hasAlphaChannel() ? 0x00 : 0xFF;
-
-    VTK_CREATE(vtkLookupTable, lut);
-    lut->SetNumberOfTableValues(gradient.width());
-    for (int i = 0; i < gradient.width(); ++i) {
-        QRgb color = gradient.pixel(i, 0);
-        lut->SetTableValue(i, qRed(color) / 255.0, qGreen(color) / 255.0, qBlue(color) / 255.0, (alphaMask | qAlpha(color)) / 255.0);
-    }
-    lut->SetValueRange(minValue, maxValue);
-
-    mapper->SetLookupTable(lut);
-
-    return mapper;
-}
-
-void RenderWidget::addProperty(std::shared_ptr<Property> representation)
-{
-    setWindowTitle(QString::fromStdString(representation->input()->name) + " (loading to gpu)");
+    setWindowTitle(QString::fromStdString(dataObject->input()->name) + " (loading to GPU)");
     QApplication::processEvents();
 
-    if (!m_properties.empty())
+    if (!m_renderedData.empty())
     {
-        if (m_properties.first()->input()->type != representation->input()->type)
+        if (m_renderedData.first()->dataObject()->input()->type != dataObject->input()->type)
         {
             QMessageBox::warning(this, "", "Cannot render 2d and 3d geometry in the same view.");
             return;
         }
     }
 
-    m_properties << representation;
+    std::shared_ptr<RenderedData> renderedData;
 
-    switch (representation->input()->type)
+    switch (dataObject->input()->type)
     {
     case ModelType::triangles:
-        show3DInput(std::dynamic_pointer_cast<PolyDataInput>(representation->input()));
+    {
+        std::shared_ptr<RenderedPolyData> renderedPolyData = std::make_shared<RenderedPolyData>(
+            std::dynamic_pointer_cast<PolyDataObject>(dataObject));
+        show3DInput(renderedPolyData);
+        renderedData = renderedPolyData;
         break;
+    }
     case ModelType::grid2d:
-        showGridInput(std::dynamic_pointer_cast<GridDataInput>(representation->input()));
+    {
+        std::shared_ptr<RenderedImageData> renderedImageData = std::make_shared<RenderedImageData>(
+            std::dynamic_pointer_cast<ImageDataObject>(dataObject));
+        showGridInput(renderedImageData);
+        renderedData = renderedImageData;
         break;
+    }
     default:
         assert(false);
     }
+
+    m_renderedData << renderedData;
 
     double bounds[6] = {
         std::numeric_limits<double>::max(), std::numeric_limits<double>::lowest(),
         std::numeric_limits<double>::max(), std::numeric_limits<double>::lowest(),
         std::numeric_limits<double>::max(), std::numeric_limits<double>::lowest() };
 
-    for (const auto & repr : m_properties)
+    for (const auto & rendered : m_renderedData)
     {
         for (int i = 0; i < 6; i += 2)
         {
-            bounds[i] = std::min(bounds[i], repr->input()->bounds()[i]);
-            bounds[i + 1] = std::max(bounds[i + 1], repr->input()->bounds()[i + 1]);
+            const double * inputBounds = rendered->dataObject()->input()->bounds();
+            bounds[i] = std::min(bounds[i], inputBounds[i]);
+            bounds[i + 1] = std::max(bounds[i + 1], inputBounds[i + 1]);
         }
     }
     setupAxes(bounds);
 
     updateWindowTitle();
-}
 
-void RenderWidget::setProperty(std::shared_ptr<Property> representation)
-{
-    m_renderer->RemoveAllViewProps();
+    m_renderConfigWidget.setRenderedData(renderedData);
 
-    m_properties.clear();
-    addProperty(representation);
-}
-
-const QList<std::shared_ptr<Property>> & RenderWidget::inputs()
-{
-    return m_properties;
-}
-
-void RenderWidget::show3DInput(std::shared_ptr<PolyDataInput> input)
-{    
-    vtkSmartPointer<vtkPolyDataMapper> mapper = map3DInputScalars(*input);
-
-    VTK_CREATE(vtkActor, actor);
-    actor->SetMapper(mapper);
-    actor->SetProperty(createDefaultRenderProperty3D());
-    m_renderConfigWidget.setRenderProperty(QString::fromStdString(input->name), actor->GetProperty());
-
-    m_renderer->AddViewProp(actor);
-
-    m_selectionHandler->setDataObject(input->data());
-
-    m_vertexNormalRepresentation->setData(input->polyData());
-    m_renderer->AddViewProp(m_vertexNormalRepresentation->actor());
-    
     vtkCamera & camera = *m_renderer->GetActiveCamera();
     camera.SetPosition(0, 0, 1);
     camera.SetViewUp(0, 1, 0);
@@ -292,20 +203,39 @@ void RenderWidget::show3DInput(std::shared_ptr<PolyDataInput> input)
     emit render();
 }
 
-void RenderWidget::showGridInput(std::shared_ptr<GridDataInput> input)
-{    
+void RenderWidget::setDataObject(std::shared_ptr<DataObject> dataObject)
+{
+    m_renderer->RemoveAllViewProps();
+
+    m_renderedData.clear();
+    addDataObject(dataObject);
+}
+
+void RenderWidget::show3DInput(std::shared_ptr<RenderedPolyData> renderedPolyData)
+{
+    renderedPolyData->setSurfaceColorMapping(
+        m_dataChooser.dataSelection(),
+        m_dataChooser.selectedGradient());
+
+    vtkActor * actor = renderedPolyData->actor();
+
+    m_actorToRenderedData.insert(actor, renderedPolyData);
+
+    m_renderer->AddViewProp(actor);
+
+    //m_vertexNormalRepresentation->setData(input->polyData());
+    //m_renderer->AddViewProp(m_vertexNormalRepresentation->actor());
+}
+
+void RenderWidget::showGridInput(std::shared_ptr<RenderedImageData> renderedImageData)
+{
+    const auto input = renderedImageData->imageDataObject()->gridDataInput();
     VTK_CREATE(vtkScalarBarActor, heatBars);
     heatBars->SetTitle(input->name.c_str());
     heatBars->SetLookupTable(input->lookupTable);
     m_renderer->AddViewProp(heatBars);
-    m_renderer->AddViewProp(input->createTexturedPolygonActor());
+    m_renderer->AddViewProp(renderedImageData->actor());
     m_selectionHandler->setDataObject(input->data());
-
-    vtkCamera & camera = *m_renderer->GetActiveCamera();
-    camera.SetPosition(0, 0, 1);
-    camera.SetViewUp(0, 1, 0);
-    m_renderer->ResetCamera();
-    emit render();
 }
 
 void RenderWidget::setupAxes(const double bounds[6])
@@ -361,9 +291,9 @@ vtkSmartPointer<vtkCubeAxesActor> RenderWidget::createAxes(vtkRenderer & rendere
 void RenderWidget::updateWindowTitle()
 {
     QString title;
-    for (const auto & repr : m_properties)
+    for (const auto & renderedData : m_renderedData)
     {
-        title += ", " + QString::fromStdString(repr->input()->name);
+        title += ", " + QString::fromStdString(renderedData->dataObject()->input()->name);
     }
     if (title.isEmpty())
         title = "(empty)";
@@ -406,12 +336,11 @@ void RenderWidget::on_actorPicked(vtkActor * actor)
 {
     assert(actor);
 
-
     vtkInformation * inputInfo = actor->GetMapper()->GetInformation();
 
     QString propertyName;
     if (inputInfo->Has(Input::NameKey()))
         propertyName = Input::NameKey()->Get(inputInfo);
 
-    m_renderConfigWidget.setRenderProperty(propertyName, actor->GetProperty());
+    m_renderConfigWidget.setRenderedData(m_actorToRenderedData[actor]);
 }

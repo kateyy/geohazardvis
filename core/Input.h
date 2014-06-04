@@ -54,7 +54,7 @@ public:
     virtual void setMapper(vtkSmartPointer<vtkPolyDataMapper> mapper);
     virtual void setTexture(vtkSmartPointer<vtkTexture> texture);
 
-    virtual vtkSmartPointer<vtkActor> createTexturedPolygonActor() const;
+    virtual vtkActor * createTexturedPolygonActor() const;
 
     const double * bounds() const override;
     double * bounds();

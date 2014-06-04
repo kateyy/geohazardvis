@@ -7,11 +7,12 @@ class Input;
 class QVtkTableModel;
 
 
-class Property
+/** Base class representing loaded data. */
+class DataObject
 {
 public:
-    Property(std::shared_ptr<Input> input);
-    ~Property();
+    DataObject(std::shared_ptr<Input> input);
+    virtual ~DataObject() = 0;
 
     std::shared_ptr<Input> input();
     std::shared_ptr<const Input> input() const;

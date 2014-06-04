@@ -7,14 +7,25 @@ set ( SOURCES
     Loader.cpp
     Input.h
     Input.cpp
-    Property.h
-    Property.cpp
     TextFileReader.h
     TextFileReader.cpp
     vtkhelper.h
     common/ebem3d_common.h
     common/file_parser.h
     common/file_parser.cpp
+    
+    DataObject.h
+    DataObject.cpp
+    ImageDataObject.h
+    ImageDataObject.cpp
+    PolyDataObject.h
+    PolyDataObject.cpp
+    RenderedData.h
+    RenderedData.cpp
+    RenderedImageData.h
+    RenderedImageData.cpp
+    RenderedPolyData.h
+    RenderedPolyData.cpp
 )
 
 source_group_by_path(${CMAKE_CURRENT_SOURCE_DIR} "\\\\.cpp$|\\\\.c$|\\\\.h$|\\\\.hpp$|\\\\.ui$|\\\\.inl$"

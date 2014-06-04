@@ -7,6 +7,10 @@
 #include <reflectionzeug/PropertyGroup.h>
 #include <propertyguizeug/PropertyBrowser.h>
 
+#include "core/Input.h"
+#include "core/DataObject.h"
+#include "core/RenderedData.h"
+
 
 using namespace reflectionzeug;
 using namespace propertyguizeug;
@@ -37,14 +41,16 @@ RenderConfigWidget::~RenderConfigWidget()
 
 void RenderConfigWidget::clear()
 {
-    setRenderProperty("", nullptr);
+    updateWindowTitle();
+    m_renderProperty = nullptr;
+    m_needsBrowserRebuild = true;
 }
 
-void RenderConfigWidget::setRenderProperty(QString propertyName, vtkProperty * renderProperty)
+void RenderConfigWidget::setRenderedData(std::shared_ptr<RenderedData> renderedData)
 {
-    updateWindowTitle(propertyName);
+    updateWindowTitle(QString::fromStdString(renderedData->dataObject()->input()->name));
 
-    m_renderProperty = renderProperty;
+    m_renderProperty = renderedData->renderProperty();
     m_needsBrowserRebuild = true;
     emit repaint();
 }

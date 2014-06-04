@@ -12,16 +12,14 @@
 class vtkRenderer;
 class vtkRenderWindow;
 class vtkRenderWindowInteractor;
-class vtkProperty;
 class vtkPolyData;
-class vtkPolyDataMapper;
 class vtkCubeAxesActor;
 class vtkActor;
 
-class Property;
-class Input;
-class PolyDataInput;
-class GridDataInput;
+class DataObject;
+class RenderedData;
+class RenderedPolyData;
+class RenderedImageData;
 
 class DataChooser;
 enum class DataSelection;
@@ -45,9 +43,8 @@ public:
 
     int index() const;
 
-    void addProperty(std::shared_ptr<Property> property);
-    void setProperty(std::shared_ptr<Property> property);
-    const QList<std::shared_ptr<Property>> & inputs();
+    void addDataObject(std::shared_ptr<DataObject> dataObject);
+    void setDataObject(std::shared_ptr<DataObject> dataObject);
 
     vtkRenderWindow * renderWindow();
     const vtkRenderWindow * renderWindow() const;
@@ -72,14 +69,11 @@ private:
     void setupRenderer();
     void setupInteraction();
 
-    static vtkProperty * createDefaultRenderProperty3D();
-
-    void show3DInput(std::shared_ptr<PolyDataInput> input);
-    void showGridInput(std::shared_ptr<GridDataInput> input);
+    void show3DInput(std::shared_ptr<RenderedPolyData> renderedPolyData);
+    void showGridInput(std::shared_ptr<RenderedImageData> renderedImageData);
 
     void updateWindowTitle();
     
-    vtkPolyDataMapper * map3DInputScalars(PolyDataInput & input);
     void updateVertexNormals(vtkPolyData * polyData);
     
     void setupAxes(const double bounds[6]);
@@ -97,7 +91,8 @@ private:
     const int m_index;
 
     // properties to render in this view
-    QList<std::shared_ptr<Property>> m_properties;
+    QList<std::shared_ptr<RenderedData>> m_renderedData;
+    QMap<vtkActor *, std::shared_ptr<RenderedData>> m_actorToRenderedData;
 
     // Rendering components
     vtkSmartPointer<vtkRenderer> m_renderer;

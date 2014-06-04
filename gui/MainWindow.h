@@ -8,7 +8,7 @@
 
 class SelectionHandler;
 class Input;
-class Property;
+class DataObject;
 class DataMapping;
 class RenderWidget;
 class RenderConfigWidget;
@@ -45,7 +45,7 @@ protected:
     void dragEnterEvent(QDragEnterEvent * event) override;
     void dropEvent(QDropEvent * event) override;
 
-    std::shared_ptr<Property> selectedInput();
+    std::shared_ptr<DataObject> selectedInput();
 
 protected:
     Ui_MainWindow * m_ui;
@@ -57,5 +57,5 @@ protected:
 
     QString m_lastOpenFolder;
 
-    QList<std::shared_ptr<Property>> m_inputs;
+    QList<std::shared_ptr<DataObject>> m_dataObjects;
 };

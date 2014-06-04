@@ -7,7 +7,7 @@
 #include <QMap>
 
 class MainWindow;
-class Property;
+class DataObject;
 class TableWidget;
 class RenderWidget;
 
@@ -18,11 +18,11 @@ class DataMapping : public QObject
 public:
     DataMapping(MainWindow & mainWindow);
 
-    void addInputRepresenation(std::shared_ptr<Property> input);
+    void addDataObject(std::shared_ptr<DataObject> input);
 
-    void openInTable(std::shared_ptr<Property> representation);
-    void openInRenderView(std::shared_ptr<Property> representation);
-    void addToRenderView(std::shared_ptr<Property> representation, int renderView);
+    void openInTable(std::shared_ptr<DataObject> representation);
+    void openInRenderView(std::shared_ptr<DataObject> representation);
+    void addToRenderView(std::shared_ptr<DataObject> representation, int renderView);
 
 signals:
     void renderViewsChanged(QList<RenderWidget*> widgets);
@@ -34,7 +34,7 @@ private slots:
 private:
     MainWindow & m_mainWindow;
 
-    QList<std::shared_ptr<Property>> m_properties;
+    QList<std::shared_ptr<DataObject>> m_dataObject;
     int m_nextTableIndex;
     int m_nextRenderWidgetIndex;
     QMap<int, TableWidget*> m_tableWidgets;

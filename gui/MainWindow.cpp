@@ -14,7 +14,8 @@
 #include "core/vtkhelper.h"
 #include "core/Loader.h"
 #include "core/Input.h"
-#include "core/Property.h"
+#include "core/PolyDataObject.h"
+#include "core/ImageDataObject.h"
 
 #include "DataMapping.h"
 #include "SelectionHandler.h"
@@ -123,13 +124,23 @@ void MainWindow::openFile(QString filename)
         return;
     }
 
-    std::shared_ptr<Property> representation = std::make_shared<Property>(input);
+    std::shared_ptr<DataObject> dataObject;
 
-    m_inputs << representation;
+    switch (input->type)
+    {
+    case ModelType::triangles:
+        dataObject = std::make_shared<PolyDataObject>(std::dynamic_pointer_cast<PolyDataInput>(input));
+        break;
+    case ModelType::grid2d:
+        dataObject = std::make_shared<ImageDataObject>(std::dynamic_pointer_cast<GridDataInput>(input));
+        break;
+    }
 
-    m_ui->loadedFiles->addItem(QString::fromStdString(representation->input()->name));
+    m_dataObjects << dataObject;
 
-    m_dataMapping->addInputRepresenation(representation);
+    m_ui->loadedFiles->addItem(QString::fromStdString(dataObject->input()->name));
+
+    m_dataMapping->addDataObject(dataObject);
 
     setWindowTitle(oldName);
 }
@@ -165,13 +176,13 @@ void MainWindow::updateRenderViewActions(QList<RenderWidget*> widgets)
     m_addToRendererAction->setEnabled(!menu->isEmpty());
 }
 
-std::shared_ptr<Property> MainWindow::selectedInput()
+std::shared_ptr<DataObject> MainWindow::selectedInput()
 {
     QListWidgetItem * selection = m_ui->loadedFiles->currentItem();
     if (selection == nullptr)
         return nullptr;
 
-    for (auto input : m_inputs)
+    for (auto input : m_dataObjects)
     {
         if (selection->text().toStdString() == input->input()->name)
         {
