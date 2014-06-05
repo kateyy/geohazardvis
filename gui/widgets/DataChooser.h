@@ -1,9 +1,12 @@
 #pragma once
 
+#include <memory>
+
 #include <QDockWidget>
 #include <QVector>
 
 
+class RenderedData;
 class Ui_DataChooser;
 
 
@@ -24,6 +27,8 @@ public:
     DataChooser(QWidget * parent = nullptr);
     ~DataChooser() override;
 
+    void setRenderedData(std::shared_ptr<RenderedData> renderedData);
+
     DataSelection dataSelection() const;
 
     const QImage & selectedGradient() const;
@@ -39,9 +44,13 @@ private slots:
 
 private:
     void loadGradientImages();
+    void updateWindowTitle(QString propertyName = "");
+    void setUiDataSelection(DataSelection dataSelection);
 
 private:
     Ui_DataChooser * m_ui;
 
     QVector<QImage> m_scalarToColorGradients;
+
+    std::shared_ptr<RenderedData> m_renderedData;
 };

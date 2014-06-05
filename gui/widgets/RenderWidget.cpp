@@ -40,7 +40,7 @@ using namespace std;
 
 RenderWidget::RenderWidget(
     int index,
-    const DataChooser & dataChooser,
+    DataChooser & dataChooser,
     RenderConfigWidget & renderConfigWidget,
     std::shared_ptr<SelectionHandler> selectionHandler)
 : QDockWidget()
@@ -195,6 +195,7 @@ void RenderWidget::addDataObject(std::shared_ptr<DataObject> dataObject)
     updateWindowTitle();
 
     m_renderConfigWidget.setRenderedData(renderedData);
+    m_dataChooser.setRenderedData(renderedData);
 
     vtkCamera & camera = *m_renderer->GetActiveCamera();
     camera.SetPosition(0, 0, 1);
@@ -213,10 +214,6 @@ void RenderWidget::setDataObject(std::shared_ptr<DataObject> dataObject)
 
 void RenderWidget::show3DInput(std::shared_ptr<RenderedPolyData> renderedPolyData)
 {
-    renderedPolyData->setSurfaceColorMapping(
-        m_dataChooser.dataSelection(),
-        m_dataChooser.selectedGradient());
-
     vtkActor * actor = renderedPolyData->actor();
 
     m_actorToRenderedData.insert(actor, renderedPolyData);
@@ -343,4 +340,5 @@ void RenderWidget::on_actorPicked(vtkActor * actor)
         propertyName = Input::NameKey()->Get(inputInfo);
 
     m_renderConfigWidget.setRenderedData(m_actorToRenderedData[actor]);
+    m_dataChooser.setRenderedData(m_actorToRenderedData[actor]);
 }

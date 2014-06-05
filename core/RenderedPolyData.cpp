@@ -23,6 +23,8 @@
 
 RenderedPolyData::RenderedPolyData(std::shared_ptr<const PolyDataObject> dataObject)
     : RenderedData(dataObject)
+    , m_dataSelection(DataSelection::DefaultColor)
+    , m_gradient(nullptr)
 {
 }
 
@@ -52,24 +54,37 @@ vtkProperty * RenderedPolyData::createDefaultRenderProperty() const
 vtkActor * RenderedPolyData::createActor() const
 {
     vtkActor * actor = vtkActor::New();
+    actor->SetMapper(createDataMapper());
 
     return actor;
 }
 
-void RenderedPolyData::setSurfaceColorMapping(DataSelection dataSelection, const QImage & gradient)
+DataSelection RenderedPolyData::currentDataSelection() const
 {
-    vtkPolyDataMapper * mapper = createDataMapper(dataSelection, gradient);
+    return m_dataSelection;
+}
+
+const QImage * RenderedPolyData::currentGradient() const
+{
+    return m_gradient;
+}
+
+void RenderedPolyData::setSurfaceColorMapping(DataSelection dataSelection, const QImage * gradient)
+{
+    m_dataSelection = dataSelection;
+    m_gradient = gradient;
+    vtkPolyDataMapper * mapper = createDataMapper();
 
     actor()->SetMapper(mapper);
 }
 
-vtkPolyDataMapper * RenderedPolyData::createDataMapper(DataSelection dataSelection, const QImage & gradient) const
+vtkPolyDataMapper * RenderedPolyData::createDataMapper() const
 {
     const PolyDataInput & input = *polyDataObject()->polyDataInput().get();
 
     vtkPolyDataMapper * mapper = input.createNamedMapper();
 
-    switch (dataSelection)
+    switch (m_dataSelection)
     {
     case DataSelection::NoSelection:
     case DataSelection::DefaultColor:
@@ -82,7 +97,7 @@ vtkPolyDataMapper * RenderedPolyData::createDataMapper(DataSelection dataSelecti
 
     float minValue, maxValue;
 
-    switch (dataSelection)
+    switch (m_dataSelection)
     {
     case DataSelection::Vertex_xValues:
         minValue = input.polyData()->GetBounds()[0];
@@ -109,13 +124,13 @@ vtkPolyDataMapper * RenderedPolyData::createDataMapper(DataSelection dataSelecti
     mapper->SetInputConnection(elevation->GetOutputPort());
 
     // use alpha = 1.0, if the image doesn't have a alpha channel
-    int alphaMask = gradient.hasAlphaChannel() ? 0x00 : 0xFF;
+    int alphaMask = m_gradient->hasAlphaChannel() ? 0x00 : 0xFF;
 
     VTK_CREATE(vtkLookupTable, lut);
-    lut->SetNumberOfTableValues(gradient.width());
-    for (int i = 0; i < gradient.width(); ++i)
+    lut->SetNumberOfTableValues(m_gradient->width());
+    for (int i = 0; i < m_gradient->width(); ++i)
     {
-        QRgb color = gradient.pixel(i, 0);
+        QRgb color = m_gradient->pixel(i, 0);
         lut->SetTableValue(i, qRed(color) / 255.0, qGreen(color) / 255.0, qBlue(color) / 255.0, (alphaMask | qAlpha(color)) / 255.0);
     }
     lut->SetValueRange(minValue, maxValue);

@@ -37,7 +37,7 @@ class RenderWidget : public QDockWidget
 public:
     RenderWidget(
         int index,
-        const DataChooser & dataChooser,
+        DataChooser & dataChooser,
         RenderConfigWidget & renderConfigWidget,
         std::shared_ptr<SelectionHandler> selectionHandler);
 
@@ -104,7 +104,7 @@ private:
     vtkSmartPointer<vtkCubeAxesActor> m_axesActor;
     
     // configuration widgets
-    const DataChooser & m_dataChooser;
+    DataChooser & m_dataChooser;
     RenderConfigWidget & m_renderConfigWidget;
     std::shared_ptr<SelectionHandler> m_selectionHandler;
 };

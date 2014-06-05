@@ -3,6 +3,7 @@
 #include <memory>
 
 #include "RenderedData.h"
+#include "gui/widgets/DataChooser.h"
 
 
 class QImage;
@@ -21,12 +22,16 @@ public:
 
     std::shared_ptr<const PolyDataObject> polyDataObject() const;
 
-    void setSurfaceColorMapping(DataSelection dataSelection, const QImage & gradient);
+    DataSelection currentDataSelection() const;
+    const QImage * currentGradient() const;
+    void setSurfaceColorMapping(DataSelection dataSelection, const QImage * gradient);
 
 protected:
     vtkProperty * createDefaultRenderProperty() const override;
     vtkActor * createActor() const override;
 
 private:
-    vtkPolyDataMapper * createDataMapper(DataSelection dataSelection, const QImage & gradient) const;
+    vtkPolyDataMapper * createDataMapper() const;
+    DataSelection m_dataSelection;
+    const QImage * m_gradient;
 };
