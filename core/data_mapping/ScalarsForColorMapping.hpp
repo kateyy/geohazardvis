@@ -2,7 +2,7 @@
 
 
 template<typename SubClass>
-ScalarsForColorMapping * ScalarsForColorMapping::newInstance()
+ScalarsForColorMapping * ScalarsForColorMapping::newInstance(const QList<DataObject*> & dataObjects)
 {
-    return new SubClass;
+    return new SubClass(dataObjects);
 }

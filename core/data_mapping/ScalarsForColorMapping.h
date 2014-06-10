@@ -16,6 +16,14 @@ Scalar mappings extract relevant data from an input data objects and supply thei
 class ScalarsForColorMapping
 {
 public:
+    template<typename SubClass>
+    static ScalarsForColorMapping * newInstance(const QList<DataObject*> & dataObjects);
+
+    using MappingConstructor = std::function<ScalarsForColorMapping *(const QList<DataObject *> & dataObjects)>;
+    static bool registerImplementation(QString name, const MappingConstructor & constructor);
+
+
+public:
     explicit ScalarsForColorMapping(const QList<DataObject *> & dataObjects);
     virtual ~ScalarsForColorMapping() = 0;
 
@@ -34,12 +42,6 @@ protected:
 
     /** check whether these scalar extraction is applicable for the data objects it was created with */
     virtual bool isValid() const = 0;
-
-    template<typename SubClass>
-    static ScalarsForColorMapping * newInstance();
-
-    using MappingConstructor = std::function<ScalarsForColorMapping *(const QList<DataObject *> & dataObjects)>;
-    static void registerImplementation(QString name, const MappingConstructor & constructor);
 
 protected:
     double m_minValue;

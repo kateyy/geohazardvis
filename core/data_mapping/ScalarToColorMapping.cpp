@@ -3,6 +3,7 @@
 #include <cassert>
 
 #include "ScalarsForColorMapping.h"
+#include "DefaultColorMapping.h"
 #include "core/data_objects/RenderedData.h"
 
 
@@ -10,6 +11,10 @@ ScalarToColorMapping::ScalarToColorMapping()
     : m_gradient(nullptr)
 {
     clear();
+
+
+    // HACK to enforce object file linking
+    DefaultColorMapping a({});
 }
 
 void ScalarToColorMapping::setRenderedData(const QList<RenderedData *> & renderedData)
@@ -53,8 +58,13 @@ void ScalarToColorMapping::setCurrentScalars(QString scalarsName)
 
     m_currentScalars = scalarsName;
 
-    ScalarsForColorMapping * scalars = m_scalars.value(scalarsName, nullptr);
-    assert(scalars);
+    ScalarsForColorMapping * scalars = nullptr;
+
+    if (!m_currentScalars.isEmpty())
+    {
+        scalars = m_scalars.value(scalarsName, nullptr);
+        assert(scalars);
+    }
 
     for (RenderedData * renderedData : m_renderedData)
     {

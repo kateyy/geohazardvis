@@ -34,11 +34,13 @@ QMap<QString, ScalarsForColorMapping::MappingConstructor> & ScalarsForColorMappi
     return list;
 }
 
-void ScalarsForColorMapping::registerImplementation(QString name, const ScalarsForColorMapping::MappingConstructor & constructor)
+bool ScalarsForColorMapping::registerImplementation(QString name, const ScalarsForColorMapping::MappingConstructor & constructor)
 {
     assert(!mappingConstructors().contains(name));
 
     mappingConstructors().insert(name, constructor);
+
+    return true;
 }
 
 double ScalarsForColorMapping::minValue() const
