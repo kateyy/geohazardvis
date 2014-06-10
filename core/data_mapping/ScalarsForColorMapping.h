@@ -38,6 +38,7 @@ public:
     virtual bool usesGradients() const = 0;
 
 protected:
+    virtual void initialize();
     virtual void updateBounds() = 0;
 
     /** check whether these scalar extraction is applicable for the data objects it was created with */

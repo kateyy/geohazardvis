@@ -57,11 +57,6 @@ public slots:
     void render();
 
     void ShowInfo(const QStringList &info);
-    
-    void uiSelectionChanged(int);
-    void updateScalarsForColorMaping(DataSelection dataSelection);
-    void updateGradientForColorMapping(const QImage & gradient);
-    void applyRenderingConfiguration();
 
 signals:
     void closed();

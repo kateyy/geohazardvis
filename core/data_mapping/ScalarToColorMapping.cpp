@@ -4,6 +4,7 @@
 
 #include "ScalarsForColorMapping.h"
 #include "DefaultColorMapping.h"
+#include "CoordinateValueMapping.h"
 #include "core/data_objects/RenderedData.h"
 
 
@@ -15,11 +16,14 @@ ScalarToColorMapping::ScalarToColorMapping()
 
     // HACK to enforce object file linking
     DefaultColorMapping a({});
+    CoordinateXValueMapping x({});
 }
 
 void ScalarToColorMapping::setRenderedData(const QList<RenderedData *> & renderedData)
 {
     clear();
+
+    m_renderedData = renderedData;
 
     QList<DataObject *> dataObjects;
     for (RenderedData * rendered : renderedData)
@@ -46,12 +50,12 @@ QList<QString> ScalarToColorMapping::scalarsNames() const
     return m_scalars.keys();
 }
 
-QString ScalarToColorMapping::currentScalars() const
+QString ScalarToColorMapping::currentScalarsName() const
 {
     return m_currentScalars;
 }
 
-void ScalarToColorMapping::setCurrentScalars(QString scalarsName)
+void ScalarToColorMapping::setCurrentScalarsByName(QString scalarsName)
 {
     if (m_currentScalars == scalarsName)
         return;
@@ -72,6 +76,17 @@ void ScalarToColorMapping::setCurrentScalars(QString scalarsName)
     }
 }
 
+const ScalarsForColorMapping * ScalarToColorMapping::currentScalars() const
+{
+    if (currentScalarsName().isEmpty())
+        return nullptr;
+
+    auto * scalars = m_scalars.value(currentScalarsName());
+    assert(scalars);
+
+    return scalars;
+}
+
 const QImage * ScalarToColorMapping::gradient() const
 {
     return m_gradient;
@@ -79,9 +94,6 @@ const QImage * ScalarToColorMapping::gradient() const
 
 void ScalarToColorMapping::setGradient(const QImage * gradientImage)
 {
-    if (m_gradient = gradientImage)
-        return;
-
     m_gradient = gradientImage;
 
     if (!m_gradient)

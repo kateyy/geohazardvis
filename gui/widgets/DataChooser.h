@@ -24,7 +24,7 @@ public:
     const QImage & selectedGradient() const;
 
 signals:
-    void gradientSelectionChanged(const QImage & currentGradient);
+    void renderSetupChanged();
 
 private slots:
     void on_scalarsSelectionChanged(QString scalarsName);

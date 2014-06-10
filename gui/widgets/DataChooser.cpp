@@ -9,6 +9,7 @@
 
 #include "core/data_objects/RenderedPolyData.h"
 #include "core/data_objects/DataObject.h"
+#include "core/data_mapping/ScalarsForColorMapping.h"
 #include "core/Input.h"
 
 
@@ -44,11 +45,16 @@ void DataChooser::setMapping(QString rendererName, ScalarToColorMapping * mappin
     m_mapping = mapping;
 
     m_ui->scalarsComboBox->addItems(m_mapping->scalarsNames());
-    m_ui->scalarsComboBox->setCurrentText(m_mapping->currentScalars());
+    m_ui->scalarsComboBox->setCurrentText(m_mapping->currentScalarsName());
 
+    // reuse gradient selection, or use default
     if (m_mapping->gradient())
         m_ui->gradientComboBox->setCurrentIndex(
             m_scalarToColorGradients.indexOf(*m_mapping->gradient()));
+    else
+        m_mapping->setGradient(&selectedGradient());
+
+    emit renderSetupChanged();
 }
 
 const ScalarToColorMapping * DataChooser::mapping() const
@@ -61,7 +67,17 @@ void DataChooser::on_scalarsSelectionChanged(QString scalarsName)
     if (!m_mapping)
         return;
 
-    m_mapping->setCurrentScalars(scalarsName);
+    m_mapping->setCurrentScalarsByName(scalarsName);
+
+    if (scalarsName.isEmpty())
+        return;
+
+    bool gradients = m_mapping->currentScalars()->usesGradients();
+    m_ui->gradientGroupBox->setEnabled(gradients);
+    if (gradients)
+        m_mapping->setGradient(&selectedGradient());
+
+    emit renderSetupChanged();
 }
 
 void DataChooser::on_gradientSelectionChanged(int selection)
@@ -72,6 +88,8 @@ void DataChooser::on_gradientSelectionChanged(int selection)
     int gradientIndex = m_ui->gradientComboBox->currentIndex();
 
     m_mapping->setGradient(&selectedGradient());
+
+    emit renderSetupChanged();
 }
 
 const QImage & DataChooser::selectedGradient() const

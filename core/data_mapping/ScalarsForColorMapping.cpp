@@ -1,9 +1,16 @@
 #include "ScalarsForColorMapping.h"
 
 #include <cassert>
+#include <limits>
 
 
 ScalarsForColorMapping::ScalarsForColorMapping(const QList<DataObject *> & dataObjects)
+    : m_minValue(std::numeric_limits<double>::max())
+    , m_maxValue(std::numeric_limits<double>::lowest())
+{
+}
+
+void ScalarsForColorMapping::initialize()
 {
     updateBounds();
 }

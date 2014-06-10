@@ -29,8 +29,9 @@ public:
     /** list of scalars that can be used with my rendered data */
     const QMap<QString, const ScalarsForColorMapping *> & scalars() const;
 
-    QString currentScalars() const;
-    void setCurrentScalars(QString scalarsName);
+    QString currentScalarsName() const;
+    void setCurrentScalarsByName(QString scalarsName);
+    const ScalarsForColorMapping * currentScalars() const;
 
     /** @return currently used gradient image, in case it was previously set */
     const QImage * gradient() const;

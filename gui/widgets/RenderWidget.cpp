@@ -56,6 +56,8 @@ RenderWidget::RenderWidget(
     setupInteraction();
 
     updateWindowTitle();
+
+    connect(&m_dataChooser, &DataChooser::renderSetupChanged, this, &RenderWidget::render);
 }
 
 RenderWidget::~RenderWidget()
@@ -105,38 +107,6 @@ void RenderWidget::setupInteraction()
 void RenderWidget::ShowInfo(const QStringList & info)
 {
     setToolTip(info.join('\n'));
-}
-
-void RenderWidget::uiSelectionChanged(int)
-{
-    applyRenderingConfiguration();
-}
-
-void RenderWidget::updateScalarsForColorMaping(DataSelection /*selection*/)
-{
-    // just rebuild the graphics for now
-    emit applyRenderingConfiguration();
-}
-
-void RenderWidget::updateGradientForColorMapping(const QImage & /*gradient*/)
-{
-    // just rebuild the graphics for now
-    emit applyRenderingConfiguration();
-}
-
-void RenderWidget::applyRenderingConfiguration()
-{
-    /*if (m_renderedData.empty())
-        return;
-
-    if (m_renderedData.front()->input()->type != ModelType::triangles)
-        return;*/
-
-    // create the visual representation again, to update to scalar to color mapping
-    //m_renderer->RemoveAllViewProps();
-    //show3DInput(std::dynamic_pointer_cast<PolyDataInput>(m_inputs.front()));
-
-    emit render();
 }
 
 void RenderWidget::addDataObject(DataObject * dataObject)
@@ -344,4 +314,5 @@ void RenderWidget::on_actorPicked(vtkActor * actor)
         propertyName = Input::NameKey()->Get(inputInfo);
 
     m_renderConfigWidget.setRenderedData(m_actorToRenderedData[actor]);
+    m_dataChooser.setMapping(windowTitle(), &m_scalarMapping);
 }

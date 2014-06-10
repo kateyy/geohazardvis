@@ -79,7 +79,7 @@ vtkPolyDataMapper * RenderedPolyData::createDataMapper() const
     vtkPolyDataMapper * mapper = input.createNamedMapper();
 
     // no mapping: use default colors
-    if (!m_scalars || !m_gradient)
+    if (!m_scalars || !m_gradient || !m_scalars->usesGradients())
     {
         mapper->SetInputData(input.polyData());
         return mapper;

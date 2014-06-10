@@ -102,7 +102,6 @@ RenderWidget * MainWindow::addRenderWidget(int index)
     RenderWidget * renderWidget = new RenderWidget(index, *m_dataChooser, *m_renderConfigWidget, m_selectionHandler);
     addDockWidget(Qt::DockWidgetArea::BottomDockWidgetArea, renderWidget);
 
-    connect(m_dataChooser, &DataChooser::gradientSelectionChanged, renderWidget, &RenderWidget::updateGradientForColorMapping);
     connect(m_renderConfigWidget, &RenderConfigWidget::renderPropertyChanged, renderWidget, &RenderWidget::render);
 
     return renderWidget;
