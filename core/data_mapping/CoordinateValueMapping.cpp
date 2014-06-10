@@ -7,10 +7,18 @@
 namespace
 {
 QString xMappingName = "x values";
+QString yMappingName = "y values";
+QString zMappingName = "z values";
 
-bool isRegistered = ScalarsForColorMapping::registerImplementation(
+bool isXRegistered = ScalarsForColorMapping::registerImplementation(
     xMappingName,
     ScalarsForColorMapping::newInstance<CoordinateXValueMapping>);
+bool isYRegistered = ScalarsForColorMapping::registerImplementation(
+    yMappingName,
+    ScalarsForColorMapping::newInstance<CoordinateYValueMapping>);
+bool isZRegistered = ScalarsForColorMapping::registerImplementation(
+    zMappingName,
+    ScalarsForColorMapping::newInstance<CoordinateZValueMapping>);
 }
 
 
@@ -60,5 +68,45 @@ void CoordinateXValueMapping::updateBounds()
     {
         m_minValue = std::min(m_minValue, dataObject->input()->bounds()[0]);
         m_maxValue = std::max(m_maxValue, dataObject->input()->bounds()[1]);
+    }
+}
+
+
+CoordinateYValueMapping::CoordinateYValueMapping(const QList<DataObject *> & dataObjects)
+    : AbstractCoordinateValueMapping(dataObjects)
+{
+}
+
+QString CoordinateYValueMapping::name() const
+{
+    return yMappingName;
+}
+
+void CoordinateYValueMapping::updateBounds()
+{
+    for (PolyDataObject * dataObject : m_dataObjects)
+    {
+        m_minValue = std::min(m_minValue, dataObject->input()->bounds()[2]);
+        m_maxValue = std::max(m_maxValue, dataObject->input()->bounds()[3]);
+    }
+}
+
+
+CoordinateZValueMapping::CoordinateZValueMapping(const QList<DataObject *> & dataObjects)
+    : AbstractCoordinateValueMapping(dataObjects)
+{
+}
+
+QString CoordinateZValueMapping::name() const
+{
+    return zMappingName;
+}
+
+void CoordinateZValueMapping::updateBounds()
+{
+    for (PolyDataObject * dataObject : m_dataObjects)
+    {
+        m_minValue = std::min(m_minValue, dataObject->input()->bounds()[4]);
+        m_maxValue = std::max(m_maxValue, dataObject->input()->bounds()[5]);
     }
 }

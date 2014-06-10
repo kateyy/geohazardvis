@@ -36,6 +36,9 @@ void DataChooser::setMapping(QString rendererName, ScalarToColorMapping * mappin
 {
     updateWindowTitle(rendererName);
 
+    if (m_mapping == mapping)
+        return;
+
     m_ui->scalarsComboBox->clear();
     m_ui->gradientGroupBox->setDisabled(true);
 

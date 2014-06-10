@@ -38,10 +38,11 @@ public:
     void setGradient(const QImage * gradientImage);
 
 private:
+    ScalarsForColorMapping * m_currentScalars();
     QList<RenderedData *> m_renderedData;
 
     QMap<QString, ScalarsForColorMapping *> m_scalars;
 
-    QString m_currentScalars;
+    QString m_currentScalarsName;
     const QImage * m_gradient;
 };

@@ -21,8 +21,6 @@ ScalarToColorMapping::ScalarToColorMapping()
 
 void ScalarToColorMapping::setRenderedData(const QList<RenderedData *> & renderedData)
 {
-    clear();
-
     m_renderedData = renderedData;
 
     QList<DataObject *> dataObjects;
@@ -31,12 +29,19 @@ void ScalarToColorMapping::setRenderedData(const QList<RenderedData *> & rendere
         dataObjects << rendered->dataObject();
     }
 
+    qDeleteAll(m_scalars);
     m_scalars = ScalarsForColorMapping::createMappingsValidFor(dataObjects);
+
+    for (RenderedData * rendered : renderedData)
+    {
+        rendered->applyScalarsForColorMapping(m_currentScalars());
+        rendered->applyColorGradient(gradient());
+    }
 }
 
 void ScalarToColorMapping::clear()
 {
-    m_currentScalars = QString();
+    m_currentScalarsName = QString();
     m_gradient = nullptr;
 
     m_renderedData.clear();
@@ -52,19 +57,19 @@ QList<QString> ScalarToColorMapping::scalarsNames() const
 
 QString ScalarToColorMapping::currentScalarsName() const
 {
-    return m_currentScalars;
+    return m_currentScalarsName;
 }
 
 void ScalarToColorMapping::setCurrentScalarsByName(QString scalarsName)
 {
-    if (m_currentScalars == scalarsName)
+    if (m_currentScalarsName == scalarsName)
         return;
 
-    m_currentScalars = scalarsName;
+    m_currentScalarsName = scalarsName;
 
     ScalarsForColorMapping * scalars = nullptr;
 
-    if (!m_currentScalars.isEmpty())
+    if (!m_currentScalarsName.isEmpty())
     {
         scalars = m_scalars.value(scalarsName, nullptr);
         assert(scalars);
@@ -74,6 +79,17 @@ void ScalarToColorMapping::setCurrentScalarsByName(QString scalarsName)
     {
         renderedData->applyScalarsForColorMapping(scalars);
     }
+}
+
+ScalarsForColorMapping * ScalarToColorMapping::m_currentScalars()
+{
+    if (currentScalarsName().isEmpty())
+        return nullptr;
+
+    auto * scalars = m_scalars.value(currentScalarsName());
+    assert(scalars);
+
+    return scalars;
 }
 
 const ScalarsForColorMapping * ScalarToColorMapping::currentScalars() const

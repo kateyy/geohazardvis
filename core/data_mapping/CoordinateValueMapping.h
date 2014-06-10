@@ -20,10 +20,35 @@ protected:
     QList<PolyDataObject *> m_dataObjects;
 };
 
+
 class CoordinateXValueMapping : public AbstractCoordinateValueMapping
 {
 public:
     CoordinateXValueMapping(const QList<DataObject *> & dataObjects);
+
+    virtual QString name() const override;
+
+protected:
+    virtual void updateBounds() override;
+};
+
+
+class CoordinateYValueMapping : public AbstractCoordinateValueMapping
+{
+public:
+    CoordinateYValueMapping(const QList<DataObject *> & dataObjects);
+
+    virtual QString name() const override;
+
+protected:
+    virtual void updateBounds() override;
+};
+
+
+class CoordinateZValueMapping : public AbstractCoordinateValueMapping
+{
+public:
+    CoordinateZValueMapping(const QList<DataObject *> & dataObjects);
 
     virtual QString name() const override;
 
