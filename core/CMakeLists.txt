@@ -14,24 +14,24 @@ set ( SOURCES
     common/file_parser.h
     common/file_parser.cpp
     
-    DataObject.h
-    DataObject.cpp
-    ImageDataObject.h
-    ImageDataObject.cpp
-    PolyDataObject.h
-    PolyDataObject.cpp
-    RenderedData.h
-    RenderedData.cpp
-    RenderedImageData.h
-    RenderedImageData.cpp
-    RenderedPolyData.h
-    RenderedPolyData.cpp
+    data_objects/DataObject.h
+    data_objects/DataObject.cpp
+    data_objects/ImageDataObject.h
+    data_objects/ImageDataObject.cpp
+    data_objects/PolyDataObject.h
+    data_objects/PolyDataObject.cpp
+    data_objects/RenderedData.h
+    data_objects/RenderedData.cpp
+    data_objects/RenderedImageData.h
+    data_objects/RenderedImageData.cpp
+    data_objects/RenderedPolyData.h
+    data_objects/RenderedPolyData.cpp
     
-    ScalarToColorMapping.h
-    ScalarToColorMapping.cpp
-    ScalarsForColorMapping.h
-    ScalarsForColorMapping.hpp
-    ScalarsForColorMapping.cpp
+    data_mapping/ScalarToColorMapping.h
+    data_mapping/ScalarToColorMapping.cpp
+    data_mapping/ScalarsForColorMapping.h
+    data_mapping/ScalarsForColorMapping.hpp
+    data_mapping/ScalarsForColorMapping.cpp
 )
 
 source_group_by_path(${CMAKE_CURRENT_SOURCE_DIR} "\\\\.cpp$|\\\\.c$|\\\\.h$|\\\\.hpp$|\\\\.ui$|\\\\.inl$"

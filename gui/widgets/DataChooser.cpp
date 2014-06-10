@@ -7,8 +7,8 @@
 #include <QDir>
 #include <QDebug>
 
-#include "core/RenderedPolyData.h"
-#include "core/DataObject.h"
+#include "core/data_objects/RenderedPolyData.h"
+#include "core/data_objects/DataObject.h"
 #include "core/Input.h"
 
 

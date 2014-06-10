@@ -4,7 +4,7 @@
 #include <cassert>
 
 #include "core/Input.h"
-#include "core/DataObject.h"
+#include "core/data_objects/DataObject.h"
 
 #include "QVtkTableModel.h"
 

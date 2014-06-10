@@ -6,7 +6,7 @@
 
 #include <vtkSmartPointer.h>
 
-#include "core/ScalarToColorMapping.h"
+#include "core/data_mapping/ScalarToColorMapping.h"
 
 
 class vtkRenderer;

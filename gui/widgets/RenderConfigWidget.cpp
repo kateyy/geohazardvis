@@ -8,8 +8,8 @@
 #include <propertyguizeug/PropertyBrowser.h>
 
 #include "core/Input.h"
-#include "core/DataObject.h"
-#include "core/RenderedData.h"
+#include "core/data_objects/DataObject.h"
+#include "core/data_objects/RenderedData.h"
 
 
 using namespace reflectionzeug;

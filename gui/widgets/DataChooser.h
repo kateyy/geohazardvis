@@ -3,7 +3,7 @@
 #include <QDockWidget>
 #include <QList>
 
-#include "core/ScalarToColorMapping.h"
+#include "core/data_mapping/ScalarToColorMapping.h"
 
 
 class RenderedData;

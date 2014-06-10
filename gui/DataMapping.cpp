@@ -4,7 +4,7 @@
 
 #include <QMessageBox>
 
-#include "core/DataObject.h"
+#include "core/data_objects/DataObject.h"
 
 #include "MainWindow.h"
 #include "widgets/TableWidget.h"

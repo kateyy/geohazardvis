@@ -3,7 +3,7 @@
 #include <cassert>
 
 #include "ScalarsForColorMapping.h"
-#include "RenderedData.h"
+#include "core/data_objects/RenderedData.h"
 
 
 ScalarToColorMapping::ScalarToColorMapping()

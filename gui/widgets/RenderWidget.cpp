@@ -24,10 +24,10 @@
 
 #include "core/vtkhelper.h"
 #include "core/Input.h"
-#include "core/PolyDataObject.h"
-#include "core/ImageDataObject.h"
-#include "core/RenderedPolyData.h"
-#include "core/RenderedImageData.h"
+#include "core/data_objects/PolyDataObject.h"
+#include "core/data_objects/ImageDataObject.h"
+#include "core/data_objects/RenderedPolyData.h"
+#include "core/data_objects/RenderedImageData.h"
 
 #include "PickingInteractionStyle.h"
 #include "SelectionHandler.h"

@@ -14,8 +14,8 @@
 #include "core/vtkhelper.h"
 #include "core/Loader.h"
 #include "core/Input.h"
-#include "core/PolyDataObject.h"
-#include "core/ImageDataObject.h"
+#include "core/data_objects/PolyDataObject.h"
+#include "core/data_objects/ImageDataObject.h"
 
 #include "DataMapping.h"
 #include "SelectionHandler.h"
