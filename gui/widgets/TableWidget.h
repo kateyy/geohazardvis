@@ -27,8 +27,8 @@ public:
     QVtkTableModel * model();
     QTableView * view();
 
-    void showInput(std::shared_ptr<DataObject> representation);
-    std::shared_ptr<DataObject> input();
+    void showInput(DataObject * dataObject);
+    DataObject * dataObject();
 
 signals:
     void closed();
@@ -39,5 +39,5 @@ private:
 private:
     const int m_index;
     Ui_TableWidget * m_ui;
-    std::shared_ptr<DataObject> m_inputRepresentation;
+    DataObject * m_dataObject;
 };

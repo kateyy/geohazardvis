@@ -18,17 +18,23 @@ DataMapping::DataMapping(MainWindow & mainWindow)
 {
 }
 
-void DataMapping::addDataObject(std::shared_ptr<DataObject> dataObject)
+DataMapping::~DataMapping()
+{
+    qDeleteAll(m_renderWidgets.values());
+    qDeleteAll(m_tableWidgets.values());
+}
+
+void DataMapping::addDataObject(DataObject * dataObject)
 {
     m_dataObject << dataObject;
 }
 
-void DataMapping::openInTable(std::shared_ptr<DataObject> dataObject)
+void DataMapping::openInTable(DataObject * dataObject)
 {
     TableWidget * table = nullptr;
     for (TableWidget * existingTable : m_tableWidgets)
     {
-        if (existingTable->input() == dataObject)
+        if (existingTable->dataObject() == dataObject)
         {
             table = existingTable;
             break;
@@ -52,21 +58,21 @@ void DataMapping::openInTable(std::shared_ptr<DataObject> dataObject)
     table->showInput(dataObject);
 }
 
-void DataMapping::openInRenderView(std::shared_ptr<DataObject> representation)
+void DataMapping::openInRenderView(DataObject * dataObject)
 {
     RenderWidget * renderWidget = m_mainWindow.addRenderWidget(m_nextRenderWidgetIndex++);
     m_renderWidgets.insert(renderWidget->index(), renderWidget);
     connect(renderWidget, &RenderWidget::closed, this, &DataMapping::renderWidgetClosed);
 
-    renderWidget->setDataObject(representation);
+    renderWidget->setDataObject(dataObject);
 
     emit renderViewsChanged(m_renderWidgets.values());
 }
 
-void DataMapping::addToRenderView(std::shared_ptr<DataObject> representation, int renderView)
+void DataMapping::addToRenderView(DataObject * dataObject, int renderView)
 {
     assert(m_renderWidgets.contains(renderView));
-    m_renderWidgets[renderView]->addDataObject(representation);
+    m_renderWidgets[renderView]->addDataObject(dataObject);
 
     emit renderViewsChanged(m_renderWidgets.values());
 }

@@ -46,7 +46,7 @@ void RenderConfigWidget::clear()
     m_needsBrowserRebuild = true;
 }
 
-void RenderConfigWidget::setRenderedData(std::shared_ptr<RenderedData> renderedData)
+void RenderConfigWidget::setRenderedData(RenderedData * renderedData)
 {
     updateWindowTitle(QString::fromStdString(renderedData->dataObject()->input()->name));
 

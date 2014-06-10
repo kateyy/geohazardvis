@@ -1,15 +1,15 @@
 #pragma once
 
-#include <memory>
-
 #include <QObject>
 #include <QList>
 #include <QMap>
+
 
 class MainWindow;
 class DataObject;
 class TableWidget;
 class RenderWidget;
+
 
 class DataMapping : public QObject
 {
@@ -17,12 +17,13 @@ class DataMapping : public QObject
 
 public:
     DataMapping(MainWindow & mainWindow);
+    ~DataMapping() override;
 
-    void addDataObject(std::shared_ptr<DataObject> input);
+    void addDataObject(DataObject * input);
 
-    void openInTable(std::shared_ptr<DataObject> representation);
-    void openInRenderView(std::shared_ptr<DataObject> representation);
-    void addToRenderView(std::shared_ptr<DataObject> representation, int renderView);
+    void openInTable(DataObject * dataObject);
+    void openInRenderView(DataObject * dataObject);
+    void addToRenderView(DataObject * dataObject, int renderView);
 
 signals:
     void renderViewsChanged(QList<RenderWidget*> widgets);
@@ -34,7 +35,7 @@ private slots:
 private:
     MainWindow & m_mainWindow;
 
-    QList<std::shared_ptr<DataObject>> m_dataObject;
+    QList<DataObject *> m_dataObject;
     int m_nextTableIndex;
     int m_nextRenderWidgetIndex;
     QMap<int, TableWidget*> m_tableWidgets;

@@ -1,6 +1,9 @@
 #include "DataChooser.h"
 #include "ui_DataChooser.h"
 
+#include <cassert>
+#include <limits>
+
 #include <QDir>
 #include <QDebug>
 
@@ -10,14 +13,17 @@
 
 
 DataChooser::DataChooser(QWidget * parent)
-: QDockWidget(parent)
-, m_ui(new Ui_DataChooser())
+    : QDockWidget(parent)
+    , m_ui(new Ui_DataChooser())
+    , m_mapping(nullptr)
 {
     m_ui->setupUi(this);
 
     updateWindowTitle();
 
     loadGradientImages();
+
+    setMapping();
 }
 
 DataChooser::~DataChooser()
@@ -25,85 +31,47 @@ DataChooser::~DataChooser()
     delete m_ui;
 }
 
-void DataChooser::setRenderedData(std::shared_ptr<RenderedData> renderedData)
+void DataChooser::setMapping(QString rendererName, ScalarToColorMapping * mapping)
 {
-    updateWindowTitle(QString::fromStdString(renderedData->dataObject()->input()->name));
+    updateWindowTitle(rendererName);
 
-    m_renderedData = renderedData;
+    m_ui->scalarsComboBox->clear();
+    m_ui->gradientGroupBox->setDisabled(true);
 
-    std::shared_ptr<RenderedPolyData> renderedPolyData = std::dynamic_pointer_cast<RenderedPolyData>(m_renderedData);
-    if (!renderedPolyData)
+    if (!mapping)
         return;
 
-    setUiDataSelection(renderedPolyData->currentDataSelection());
+    m_mapping = mapping;
 
-    if (renderedPolyData->currentGradient())
-        m_ui->gradientComboBox->setCurrentIndex(m_scalarToColorGradients.indexOf(*renderedPolyData->currentGradient()));
+    m_ui->scalarsComboBox->addItems(m_mapping->scalarsNames());
+    m_ui->scalarsComboBox->setCurrentText(m_mapping->currentScalars());
+
+    if (m_mapping->gradient())
+        m_ui->gradientComboBox->setCurrentIndex(
+            m_scalarToColorGradients.indexOf(*m_mapping->gradient()));
 }
 
-void DataChooser::updateSelection()
+const ScalarToColorMapping * DataChooser::mapping() const
 {
-    std::shared_ptr<RenderedPolyData> renderedPolyData = std::dynamic_pointer_cast<RenderedPolyData>(m_renderedData);
-    if (renderedPolyData)
-    {
-        renderedPolyData->setSurfaceColorMapping(
-            dataSelection(),
-            &m_scalarToColorGradients[m_ui->gradientComboBox->currentIndex()]);
-    }
-
-    emit selectionChanged(dataSelection());
+    return m_mapping;
 }
 
-void DataChooser::updateGradientSelection(int selection)
+void DataChooser::on_scalarsSelectionChanged(QString scalarsName)
 {
-    std::shared_ptr<RenderedPolyData> renderedPolyData = std::dynamic_pointer_cast<RenderedPolyData>(m_renderedData);
-    if (renderedPolyData)
-    {
-        renderedPolyData->setSurfaceColorMapping(
-            dataSelection(),
-            &m_scalarToColorGradients[m_ui->gradientComboBox->currentIndex()]);
-    }
+    if (!m_mapping)
+        return;
 
-    emit gradientSelectionChanged(m_scalarToColorGradients[selection]);
+    m_mapping->setCurrentScalars(scalarsName);
 }
 
-DataSelection DataChooser::dataSelection() const
+void DataChooser::on_gradientSelectionChanged(int selection)
 {
-    if (m_ui->scalars_singleColor->isChecked())
-        return DataSelection::DefaultColor;
-    if (m_ui->scalars_xValues->isChecked())
-        return DataSelection::Vertex_xValues;
-    if (m_ui->scalars_yValues->isChecked())
-        return DataSelection::Vertex_yValues;
-    if (m_ui->scalars_zValues->isChecked())
-        return DataSelection::Vertex_zValues;
+    if (!m_mapping)
+        return;
 
-    return DataSelection::NoSelection;
-}
+    int gradientIndex = m_ui->gradientComboBox->currentIndex();
 
-void DataChooser::setUiDataSelection(DataSelection dataSelection)
-{
-    switch (dataSelection)
-    {
-    case DataSelection::DefaultColor:
-        m_ui->scalars_singleColor->setChecked(true);
-        break;
-    case DataSelection::Vertex_xValues:
-        m_ui->scalars_xValues->setChecked(true);
-        break;
-    case DataSelection::Vertex_yValues:
-        m_ui->scalars_yValues->setChecked(true);
-        break;
-    case DataSelection::Vertex_zValues:
-        m_ui->scalars_zValues->setChecked(true);
-        break;
-    case DataSelection::NoSelection:
-        m_ui->scalars_singleColor->setChecked(false);
-        m_ui->scalars_xValues->setChecked(false);
-        m_ui->scalars_yValues->setChecked(false);
-        m_ui->scalars_zValues->setChecked(false);
-        break;
-    }
+    m_mapping->setGradient(&selectedGradient());
 }
 
 const QImage & DataChooser::selectedGradient() const
@@ -150,15 +118,15 @@ void DataChooser::loadGradientImages()
     gradientComboBox->setCurrentIndex(34);
 }
 
-void DataChooser::updateWindowTitle(QString propertyName)
+void DataChooser::updateWindowTitle(QString objectName)
 {
     const QString defaultTitle = "scalar mapping";
 
-    if (propertyName.isEmpty())
+    if (objectName.isEmpty())
     {
         setWindowTitle(defaultTitle);
         return;
     }
 
-    setWindowTitle(defaultTitle + ": " + propertyName);
+    setWindowTitle(defaultTitle + ": " + objectName);
 }

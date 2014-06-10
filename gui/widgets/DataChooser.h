@@ -1,23 +1,13 @@
 #pragma once
 
-#include <memory>
-
 #include <QDockWidget>
-#include <QVector>
+#include <QList>
+
+#include "core/ScalarToColorMapping.h"
 
 
 class RenderedData;
 class Ui_DataChooser;
-
-
-enum class DataSelection
-{
-    NoSelection,
-    DefaultColor,
-    Vertex_xValues,
-    Vertex_yValues,
-    Vertex_zValues
-};
 
 class DataChooser : public QDockWidget
 {
@@ -27,30 +17,27 @@ public:
     DataChooser(QWidget * parent = nullptr);
     ~DataChooser() override;
 
-    void setRenderedData(std::shared_ptr<RenderedData> renderedData);
-
-    DataSelection dataSelection() const;
+    /** setup UI for a named rendered and a configured scalar to color mapping */
+    void setMapping(QString rendererName = "", ScalarToColorMapping * mapping = nullptr);
+    const ScalarToColorMapping * mapping() const;
 
     const QImage & selectedGradient() const;
 
 signals:
-    void selectionChanged(DataSelection selection);
     void gradientSelectionChanged(const QImage & currentGradient);
 
 private slots:
-    /// read current gui selection and emit selectionChanged() accordingly
-    void updateSelection();
-    void updateGradientSelection(int selection);
+    void on_scalarsSelectionChanged(QString scalarsName);
+    void on_gradientSelectionChanged(int selection);
 
 private:
     void loadGradientImages();
-    void updateWindowTitle(QString propertyName = "");
-    void setUiDataSelection(DataSelection dataSelection);
+    void updateWindowTitle(QString objectName = "");
 
 private:
     Ui_DataChooser * m_ui;
 
-    QVector<QImage> m_scalarToColorGradients;
+    QList<QImage> m_scalarToColorGradients;
 
-    std::shared_ptr<RenderedData> m_renderedData;
+    ScalarToColorMapping * m_mapping;
 };

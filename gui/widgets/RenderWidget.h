@@ -1,12 +1,12 @@
 #pragma once
 
-#include <memory>
-
 #include <QDockWidget>
 #include <QList>
 #include <QMap>
 
 #include <vtkSmartPointer.h>
+
+#include "core/ScalarToColorMapping.h"
 
 
 class vtkRenderer;
@@ -39,12 +39,13 @@ public:
         int index,
         DataChooser & dataChooser,
         RenderConfigWidget & renderConfigWidget,
-        std::shared_ptr<SelectionHandler> selectionHandler);
+        SelectionHandler & selectionHandler);
+    ~RenderWidget() override;
 
     int index() const;
 
-    void addDataObject(std::shared_ptr<DataObject> dataObject);
-    void setDataObject(std::shared_ptr<DataObject> dataObject);
+    void addDataObject(DataObject * dataObject);
+    void setDataObject(DataObject * dataObject);
 
     vtkRenderWindow * renderWindow();
     const vtkRenderWindow * renderWindow() const;
@@ -69,8 +70,8 @@ private:
     void setupRenderer();
     void setupInteraction();
 
-    void show3DInput(std::shared_ptr<RenderedPolyData> renderedPolyData);
-    void showGridInput(std::shared_ptr<RenderedImageData> renderedImageData);
+    void show3DInput(RenderedPolyData * renderedPolyData);
+    void showGridInput(RenderedImageData * renderedImageData);
 
     void updateWindowTitle();
     
@@ -90,9 +91,9 @@ private:
 
     const int m_index;
 
-    // properties to render in this view
-    QList<std::shared_ptr<RenderedData>> m_renderedData;
-    QMap<vtkActor *, std::shared_ptr<RenderedData>> m_actorToRenderedData;
+    // rendered representations of data objects for this view
+    QList<RenderedData *> m_renderedData;
+    QMap<vtkActor *, RenderedData *> m_actorToRenderedData;
 
     // Rendering components
     vtkSmartPointer<vtkRenderer> m_renderer;
@@ -100,11 +101,12 @@ private:
     vtkSmartPointer<PickingInteractionStyle> m_interactStyle;
 
     // visualization and annotation
-    NormalRepresentation * m_vertexNormalRepresentation;
+    //NormalRepresentation * m_vertexNormalRepresentation;
     vtkSmartPointer<vtkCubeAxesActor> m_axesActor;
     
     // configuration widgets
     DataChooser & m_dataChooser;
+    ScalarToColorMapping m_scalarMapping;
     RenderConfigWidget & m_renderConfigWidget;
-    std::shared_ptr<SelectionHandler> m_selectionHandler;
+    SelectionHandler & m_selectionHandler;
 };

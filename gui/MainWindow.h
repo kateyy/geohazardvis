@@ -1,18 +1,16 @@
 #pragma once
 
-#include <memory>
-
 #include <QMainWindow>
 #include <QList>
 
+#include "SelectionHandler.h"
 
-class SelectionHandler;
+
 class Input;
 class DataObject;
 class DataMapping;
 class RenderWidget;
 class RenderConfigWidget;
-class TableWidget;
 class DataChooser;
 class Ui_MainWindow;
 
@@ -45,7 +43,7 @@ protected:
     void dragEnterEvent(QDragEnterEvent * event) override;
     void dropEvent(QDropEvent * event) override;
 
-    std::shared_ptr<DataObject> selectedInput();
+    DataObject * selectedDataObject();
 
 protected:
     Ui_MainWindow * m_ui;
@@ -53,9 +51,9 @@ protected:
     QAction * m_addToRendererAction;
     DataChooser * m_dataChooser;
     RenderConfigWidget * m_renderConfigWidget;
-    std::shared_ptr<SelectionHandler> m_selectionHandler;
+    SelectionHandler m_selectionHandler;
 
     QString m_lastOpenFolder;
 
-    QList<std::shared_ptr<DataObject>> m_dataObjects;
+    QList<DataObject *> m_dataObjects;
 };

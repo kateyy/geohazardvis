@@ -31,19 +31,23 @@ int TableWidget::index() const
     return m_index;
 }
 
-void TableWidget::showInput(std::shared_ptr<DataObject> representation)
+void TableWidget::showInput(DataObject * dataObject)
 {
-    m_inputRepresentation = representation;
-    view()->setModel(m_inputRepresentation->tableModel());
+    if (m_dataObject == dataObject)
+        return;
 
-    setWindowTitle("Table: " + QString::fromStdString(representation->input()->name));
+    assert(dataObject);
+    m_dataObject = dataObject;
+    view()->setModel(m_dataObject->tableModel());
+
+    setWindowTitle("Table: " + QString::fromStdString(m_dataObject->input()->name));
 
     m_ui->tableView->resizeColumnsToContents();
 }
 
-std::shared_ptr<DataObject> TableWidget::input()
+DataObject * TableWidget::dataObject()
 {
-    return m_inputRepresentation;
+    return m_dataObject;
 }
 
 QVtkTableModel * TableWidget::model()

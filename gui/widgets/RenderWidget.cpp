@@ -42,11 +42,10 @@ RenderWidget::RenderWidget(
     int index,
     DataChooser & dataChooser,
     RenderConfigWidget & renderConfigWidget,
-    std::shared_ptr<SelectionHandler> selectionHandler)
+    SelectionHandler & selectionHandler)
 : QDockWidget()
 , m_ui(new Ui_RenderWidget())
 , m_index(index)
-, m_vertexNormalRepresentation(new NormalRepresentation())
 , m_dataChooser(dataChooser)
 , m_renderConfigWidget(renderConfigWidget)
 , m_selectionHandler(selectionHandler)
@@ -55,14 +54,18 @@ RenderWidget::RenderWidget(
 
     setupRenderer();
     setupInteraction();
-    
-    m_vertexNormalRepresentation->setVisible(false);
-    m_renderer->AddViewProp(m_vertexNormalRepresentation->actor());
-    m_renderConfigWidget.addPropertyGroup(m_vertexNormalRepresentation->createPropertyGroup());
-    
-    connect(m_vertexNormalRepresentation, &NormalRepresentation::geometryChanged, this, &RenderWidget::render);
 
     updateWindowTitle();
+}
+
+RenderWidget::~RenderWidget()
+{
+    m_renderConfigWidget.clear();
+
+    if (m_dataChooser.mapping() == &m_scalarMapping)
+        m_dataChooser.setMapping();
+
+    qDeleteAll(m_renderedData);
 }
 
 int RenderWidget::index() const
@@ -136,7 +139,7 @@ void RenderWidget::applyRenderingConfiguration()
     emit render();
 }
 
-void RenderWidget::addDataObject(std::shared_ptr<DataObject> dataObject)
+void RenderWidget::addDataObject(DataObject * dataObject)
 {
     setWindowTitle(QString::fromStdString(dataObject->input()->name) + " (loading to GPU)");
     QApplication::processEvents();
@@ -150,24 +153,23 @@ void RenderWidget::addDataObject(std::shared_ptr<DataObject> dataObject)
         }
     }
 
-    std::shared_ptr<RenderedData> renderedData;
+    RenderedData * renderedData;
 
     switch (dataObject->input()->type)
     {
     case ModelType::triangles:
     {
-        std::shared_ptr<RenderedPolyData> renderedPolyData = std::make_shared<RenderedPolyData>(
-            std::dynamic_pointer_cast<PolyDataObject>(dataObject));
+        RenderedPolyData * renderedPolyData = new RenderedPolyData(dynamic_cast<PolyDataObject*>(dataObject));
         show3DInput(renderedPolyData);
         renderedData = renderedPolyData;
         break;
     }
     case ModelType::grid2d:
     {
-        std::shared_ptr<RenderedImageData> renderedImageData = std::make_shared<RenderedImageData>(
-            std::dynamic_pointer_cast<ImageDataObject>(dataObject));
+        assert(false);
+        /*RenderedImageData * renderedImageData = new RenderedImageData(dynamic_cast<ImageDataObject&>(*dataObject));
         showGridInput(renderedImageData);
-        renderedData = renderedImageData;
+        renderedData = renderedImageData;*/
         break;
     }
     default:
@@ -194,8 +196,10 @@ void RenderWidget::addDataObject(std::shared_ptr<DataObject> dataObject)
 
     updateWindowTitle();
 
+    m_scalarMapping.setRenderedData(m_renderedData);
+
     m_renderConfigWidget.setRenderedData(renderedData);
-    m_dataChooser.setRenderedData(renderedData);
+    m_dataChooser.setMapping(windowTitle(), &m_scalarMapping);
 
     vtkCamera & camera = *m_renderer->GetActiveCamera();
     camera.SetPosition(0, 0, 1);
@@ -204,7 +208,7 @@ void RenderWidget::addDataObject(std::shared_ptr<DataObject> dataObject)
     emit render();
 }
 
-void RenderWidget::setDataObject(std::shared_ptr<DataObject> dataObject)
+void RenderWidget::setDataObject(DataObject * dataObject)
 {
     m_renderer->RemoveAllViewProps();
 
@@ -212,7 +216,7 @@ void RenderWidget::setDataObject(std::shared_ptr<DataObject> dataObject)
     addDataObject(dataObject);
 }
 
-void RenderWidget::show3DInput(std::shared_ptr<RenderedPolyData> renderedPolyData)
+void RenderWidget::show3DInput(RenderedPolyData * renderedPolyData)
 {
     vtkActor * actor = renderedPolyData->actor();
 
@@ -224,7 +228,7 @@ void RenderWidget::show3DInput(std::shared_ptr<RenderedPolyData> renderedPolyDat
     //m_renderer->AddViewProp(m_vertexNormalRepresentation->actor());
 }
 
-void RenderWidget::showGridInput(std::shared_ptr<RenderedImageData> renderedImageData)
+void RenderWidget::showGridInput(RenderedImageData * renderedImageData)
 {
     const auto input = renderedImageData->imageDataObject()->gridDataInput();
     VTK_CREATE(vtkScalarBarActor, heatBars);
@@ -232,7 +236,7 @@ void RenderWidget::showGridInput(std::shared_ptr<RenderedImageData> renderedImag
     heatBars->SetLookupTable(input->lookupTable);
     m_renderer->AddViewProp(heatBars);
     m_renderer->AddViewProp(renderedImageData->actor());
-    m_selectionHandler->setDataObject(input->data());
+    m_selectionHandler.setDataObject(input->data());
 }
 
 void RenderWidget::setupAxes(const double bounds[6])
@@ -340,5 +344,4 @@ void RenderWidget::on_actorPicked(vtkActor * actor)
         propertyName = Input::NameKey()->Get(inputInfo);
 
     m_renderConfigWidget.setRenderedData(m_actorToRenderedData[actor]);
-    m_dataChooser.setRenderedData(m_actorToRenderedData[actor]);
 }

@@ -34,10 +34,9 @@ MainWindow::MainWindow()
 , m_dataMapping(new DataMapping(*this))
 , m_dataChooser(new DataChooser())
 , m_renderConfigWidget(new RenderConfigWidget())
+, m_selectionHandler()
 {
     m_ui->setupUi(this);
-
-    m_selectionHandler = make_shared<SelectionHandler>();
 
     setCorner(Qt::Corner::TopLeftCorner, Qt::DockWidgetArea::LeftDockWidgetArea);
     setCorner(Qt::Corner::BottomLeftCorner, Qt::DockWidgetArea::LeftDockWidgetArea);
@@ -64,8 +63,9 @@ MainWindow::MainWindow()
 
 MainWindow::~MainWindow()
 {
-    delete m_ui;
     delete m_dataMapping;
+
+    delete m_ui;
 }
 
 QString MainWindow::dialog_inputFileName()
@@ -102,7 +102,6 @@ RenderWidget * MainWindow::addRenderWidget(int index)
     RenderWidget * renderWidget = new RenderWidget(index, *m_dataChooser, *m_renderConfigWidget, m_selectionHandler);
     addDockWidget(Qt::DockWidgetArea::BottomDockWidgetArea, renderWidget);
 
-    connect(m_dataChooser, &DataChooser::selectionChanged, renderWidget, &RenderWidget::updateScalarsForColorMaping);
     connect(m_dataChooser, &DataChooser::gradientSelectionChanged, renderWidget, &RenderWidget::updateGradientForColorMapping);
     connect(m_renderConfigWidget, &RenderConfigWidget::renderPropertyChanged, renderWidget, &RenderWidget::render);
 
@@ -124,15 +123,15 @@ void MainWindow::openFile(QString filename)
         return;
     }
 
-    std::shared_ptr<DataObject> dataObject;
+    DataObject * dataObject = nullptr;
 
     switch (input->type)
     {
     case ModelType::triangles:
-        dataObject = std::make_shared<PolyDataObject>(std::dynamic_pointer_cast<PolyDataInput>(input));
+        dataObject = new PolyDataObject(std::dynamic_pointer_cast<PolyDataInput>(input));
         break;
     case ModelType::grid2d:
-        dataObject = std::make_shared<ImageDataObject>(std::dynamic_pointer_cast<GridDataInput>(input));
+        dataObject = new ImageDataObject(std::dynamic_pointer_cast<GridDataInput>(input));
         break;
     }
 
@@ -176,17 +175,17 @@ void MainWindow::updateRenderViewActions(QList<RenderWidget*> widgets)
     m_addToRendererAction->setEnabled(!menu->isEmpty());
 }
 
-std::shared_ptr<DataObject> MainWindow::selectedInput()
+DataObject * MainWindow::selectedDataObject()
 {
     QListWidgetItem * selection = m_ui->loadedFiles->currentItem();
     if (selection == nullptr)
         return nullptr;
 
-    for (auto input : m_dataObjects)
+    for (auto dataObject : m_dataObjects)
     {
-        if (selection->text().toStdString() == input->input()->name)
+        if (selection->text().toStdString() == dataObject->input()->name)
         {
-            return input;
+            return dataObject;
         }
     }
     assert(false);
@@ -195,16 +194,16 @@ std::shared_ptr<DataObject> MainWindow::selectedInput()
 
 void MainWindow::openTable()
 {
-    auto input = selectedInput();
-    if (input)
-        m_dataMapping->openInTable(input);
+    DataObject * dataObject = selectedDataObject();
+    if (dataObject)
+        m_dataMapping->openInTable(dataObject);
 }
 
 void MainWindow::openRenderView()
 {
-    auto input = selectedInput();
-    if (input)
-        m_dataMapping->openInRenderView(input);
+    DataObject * dataObject = selectedDataObject();
+    if (dataObject)
+        m_dataMapping->openInRenderView(dataObject);
 }
 
 void MainWindow::addToRenderView()
@@ -215,7 +214,7 @@ void MainWindow::addToRenderView()
     int index = action->data().toInt(&ok);
     assert(ok);
 
-    auto input = selectedInput();
-    if (input)
-        m_dataMapping->addToRenderView(input, index);
+    DataObject * dataObject = selectedDataObject();
+    if (dataObject)
+        m_dataMapping->addToRenderView(dataObject, index);
 }

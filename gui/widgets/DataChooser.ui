@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>147</width>
-    <height>218</height>
+    <width>156</width>
+    <height>152</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -22,7 +22,7 @@
   <widget class="QWidget" name="content">
    <layout class="QVBoxLayout" name="mainLayout">
     <item>
-     <widget class="QGroupBox" name="groupBox">
+     <widget class="QGroupBox" name="scalarsGroupBox">
       <property name="sizePolicy">
        <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
         <horstretch>0</horstretch>
@@ -30,39 +30,11 @@
        </sizepolicy>
       </property>
       <property name="title">
-       <string>scalar to color mapping</string>
+       <string>scalars for color mapping</string>
       </property>
       <layout class="QVBoxLayout" name="verticalLayout">
        <item>
-        <widget class="QRadioButton" name="scalars_singleColor">
-         <property name="text">
-          <string>single color</string>
-         </property>
-         <property name="checked">
-          <bool>true</bool>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QRadioButton" name="scalars_xValues">
-         <property name="text">
-          <string>x values</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QRadioButton" name="scalars_yValues">
-         <property name="text">
-          <string>y values</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QRadioButton" name="scalars_zValues">
-         <property name="text">
-          <string>z values</string>
-         </property>
-        </widget>
+        <widget class="QComboBox" name="scalarsComboBox"/>
        </item>
       </layout>
      </widget>
@@ -79,7 +51,7 @@
        </sizepolicy>
       </property>
       <property name="title">
-       <string>scalar to color mapping</string>
+       <string>gradient</string>
       </property>
       <layout class="QVBoxLayout" name="gradientGroupLayout">
        <item>
@@ -94,74 +66,10 @@
  <resources/>
  <connections>
   <connection>
-   <sender>scalars_singleColor</sender>
-   <signal>clicked()</signal>
-   <receiver>DataChooser</receiver>
-   <slot>updateSelection()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>64</x>
-     <y>53</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>64</x>
-     <y>70</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>scalars_xValues</sender>
-   <signal>clicked()</signal>
-   <receiver>DataChooser</receiver>
-   <slot>updateSelection()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>64</x>
-     <y>76</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>64</x>
-     <y>70</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>scalars_yValues</sender>
-   <signal>clicked()</signal>
-   <receiver>DataChooser</receiver>
-   <slot>updateSelection()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>64</x>
-     <y>99</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>64</x>
-     <y>70</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>scalars_zValues</sender>
-   <signal>clicked()</signal>
-   <receiver>DataChooser</receiver>
-   <slot>updateSelection()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>64</x>
-     <y>122</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>64</x>
-     <y>70</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
    <sender>gradientComboBox</sender>
    <signal>currentIndexChanged(int)</signal>
    <receiver>DataChooser</receiver>
-   <slot>updateGradientSelection(int)</slot>
+   <slot>on_gradientSelectionChanged(int)</slot>
    <hints>
     <hint type="sourcelabel">
      <x>20</x>
@@ -174,24 +82,24 @@
    </hints>
   </connection>
   <connection>
-   <sender>scalars_singleColor</sender>
-   <signal>toggled(bool)</signal>
-   <receiver>gradientGroupBox</receiver>
-   <slot>setDisabled(bool)</slot>
+   <sender>scalarsComboBox</sender>
+   <signal>currentIndexChanged(QString)</signal>
+   <receiver>DataChooser</receiver>
+   <slot>on_scalarsSelectionChanged(QString)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>73</x>
-     <y>62</y>
+     <x>77</x>
+     <y>63</y>
     </hint>
     <hint type="destinationlabel">
-     <x>73</x>
-     <y>182</y>
+     <x>77</x>
+     <y>75</y>
     </hint>
    </hints>
   </connection>
  </connections>
  <slots>
-  <slot>updateSelection()</slot>
-  <slot>updateGradientSelection(int)</slot>
+  <slot>on_scalarsSelectionChanged(QString)</slot>
+  <slot>on_gradientSelectionChanged(int)</slot>
  </slots>
 </ui>

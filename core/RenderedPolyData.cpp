@@ -2,6 +2,8 @@
 
 #include <cassert>
 
+#include <QImage>
+
 #include <vtkLookupTable.h>
 
 #include <vtkPolyData.h>
@@ -17,23 +19,27 @@
 
 #include "core/Input.h"
 #include "core/vtkhelper.h"
+#include "core/ScalarsForColorMapping.h"
 
-#include "gui/widgets/DataChooser.h"
 
 
-RenderedPolyData::RenderedPolyData(std::shared_ptr<const PolyDataObject> dataObject)
+RenderedPolyData::RenderedPolyData(PolyDataObject * dataObject)
     : RenderedData(dataObject)
-    , m_dataSelection(DataSelection::DefaultColor)
-    , m_gradient(nullptr)
 {
 }
 
 RenderedPolyData::~RenderedPolyData() = default;
 
-std::shared_ptr<const PolyDataObject> RenderedPolyData::polyDataObject() const
+PolyDataObject * RenderedPolyData::polyDataObject()
 {
-    assert(dynamic_cast<const PolyDataObject*>(dataObject().get()));
-    return std::static_pointer_cast<const PolyDataObject>(dataObject());
+    assert(dynamic_cast<PolyDataObject*>(dataObject()));
+    return static_cast<PolyDataObject *>(dataObject());
+}
+
+const PolyDataObject * RenderedPolyData::polyDataObject() const
+{
+    assert(dynamic_cast<const PolyDataObject*>(dataObject()));
+    return static_cast<const PolyDataObject *>(dataObject());
 }
 
 vtkProperty * RenderedPolyData::createDefaultRenderProperty() const
@@ -59,20 +65,8 @@ vtkActor * RenderedPolyData::createActor() const
     return actor;
 }
 
-DataSelection RenderedPolyData::currentDataSelection() const
+void RenderedPolyData::updateScalarToColorMapping()
 {
-    return m_dataSelection;
-}
-
-const QImage * RenderedPolyData::currentGradient() const
-{
-    return m_gradient;
-}
-
-void RenderedPolyData::setSurfaceColorMapping(DataSelection dataSelection, const QImage * gradient)
-{
-    m_dataSelection = dataSelection;
-    m_gradient = gradient;
     vtkPolyDataMapper * mapper = createDataMapper();
 
     actor()->SetMapper(mapper);
@@ -84,10 +78,9 @@ vtkPolyDataMapper * RenderedPolyData::createDataMapper() const
 
     vtkPolyDataMapper * mapper = input.createNamedMapper();
 
-    switch (m_dataSelection)
+    // no mapping: use default colors
+    if (!m_scalars || !m_gradient)
     {
-    case DataSelection::NoSelection:
-    case DataSelection::DefaultColor:
         mapper->SetInputData(input.polyData());
         return mapper;
     }
@@ -95,30 +88,28 @@ vtkPolyDataMapper * RenderedPolyData::createDataMapper() const
     VTK_CREATE(vtkElevationFilter, elevation);
     elevation->SetInputData(input.polyData());
 
-    float minValue, maxValue;
+    float minValue = m_scalars->minValue();
+    float maxValue = m_scalars->maxValue();
 
-    switch (m_dataSelection)
+    // TODO cleanup
+    if (m_scalars->name() == "x values")
     {
-    case DataSelection::Vertex_xValues:
-        minValue = input.polyData()->GetBounds()[0];
-        maxValue = input.polyData()->GetBounds()[1];
         elevation->SetLowPoint(minValue, 0, 0);
         elevation->SetHighPoint(maxValue, 0, 0);
-        break;
-
-    case DataSelection::Vertex_yValues:
-        minValue = input.polyData()->GetBounds()[2];
-        maxValue = input.polyData()->GetBounds()[3];
+    }
+    else if (m_scalars->name() == "y values")
+    {
         elevation->SetLowPoint(0, minValue, 0);
         elevation->SetHighPoint(0, maxValue, 0);
-        break;
-
-    case DataSelection::Vertex_zValues:
-        minValue = input.polyData()->GetBounds()[4];
-        maxValue = input.polyData()->GetBounds()[5];
+    }
+    else if (m_scalars->name() == "z values")
+    {
         elevation->SetLowPoint(0, 0, minValue);
         elevation->SetHighPoint(0, 0, maxValue);
-        break;
+    }
+    else
+    {
+        assert(false);
     }
 
     mapper->SetInputConnection(elevation->GetOutputPort());

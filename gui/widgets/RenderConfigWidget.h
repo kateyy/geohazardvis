@@ -1,7 +1,5 @@
 #pragma once
 
-#include <memory>
-
 #include <QDockWidget>
 #include <QVector>
 
@@ -23,7 +21,7 @@ public:
     RenderConfigWidget(QWidget * parent = nullptr);
     ~RenderConfigWidget() override;
 
-    void setRenderedData(std::shared_ptr<RenderedData> renderedData);
+    void setRenderedData(RenderedData * renderedData);
 
     void addPropertyGroup(reflectionzeug::PropertyGroup * group);
 

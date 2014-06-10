@@ -4,8 +4,10 @@
 #include <vtkActor.h>
 
 
-RenderedData::RenderedData(std::shared_ptr<const DataObject> dataObject)
+RenderedData::RenderedData(DataObject * dataObject)
     : m_dataObject(dataObject)
+    , m_scalars(nullptr)
+    , m_gradient(nullptr)
 {
 }
 
@@ -32,7 +34,26 @@ vtkActor * RenderedData::actor()
     return m_actor;
 }
 
-std::shared_ptr<const DataObject> RenderedData::dataObject() const
+DataObject * RenderedData::dataObject()
 {
     return m_dataObject;
+}
+
+const DataObject * RenderedData::dataObject() const
+{
+    return m_dataObject;
+}
+
+void RenderedData::applyScalarsForColorMapping(ScalarsForColorMapping * scalars)
+{
+    m_scalars = scalars;
+
+    updateScalarToColorMapping();
+}
+
+void RenderedData::applyColorGradient(const QImage * gradient)
+{
+    m_gradient = gradient;
+
+    updateScalarToColorMapping();
 }

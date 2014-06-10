@@ -26,6 +26,12 @@ set ( SOURCES
     RenderedImageData.cpp
     RenderedPolyData.h
     RenderedPolyData.cpp
+    
+    ScalarToColorMapping.h
+    ScalarToColorMapping.cpp
+    ScalarsForColorMapping.h
+    ScalarsForColorMapping.hpp
+    ScalarsForColorMapping.cpp
 )
 
 source_group_by_path(${CMAKE_CURRENT_SOURCE_DIR} "\\\\.cpp$|\\\\.c$|\\\\.h$|\\\\.hpp$|\\\\.ui$|\\\\.inl$"
