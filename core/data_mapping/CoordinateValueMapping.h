@@ -30,6 +30,10 @@ public:
 
 protected:
     virtual void updateBounds() override;
+
+private:
+    static const QString s_name;
+    static const bool s_registered;
 };
 
 
@@ -42,6 +46,10 @@ public:
 
 protected:
     virtual void updateBounds() override;
+
+private:
+    static const QString s_name;
+    static const bool s_registered;
 };
 
 
@@ -54,4 +62,8 @@ public:
 
 protected:
     virtual void updateBounds() override;
+
+private:
+    static const QString s_name;
+    static const bool s_registered;
 };

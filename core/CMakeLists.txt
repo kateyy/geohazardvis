@@ -32,6 +32,8 @@ set ( SOURCES
     data_mapping/ScalarsForColorMapping.h
     data_mapping/ScalarsForColorMapping.hpp
     data_mapping/ScalarsForColorMapping.cpp
+    data_mapping/ScalarsForColorMappingRegistry.h
+    data_mapping/ScalarsForColorMappingRegistry.cpp
     data_mapping/DefaultColorMapping.h
     data_mapping/DefaultColorMapping.cpp
     data_mapping/CoordinateValueMapping.h

@@ -3,23 +3,20 @@
 #include "core/Input.h"
 #include "core/data_objects/PolyDataObject.h"
 
+#include "ScalarsForColorMappingRegistry.h"
 
-namespace
-{
-QString xMappingName = "x values";
-QString yMappingName = "y values";
-QString zMappingName = "z values";
-
-bool isXRegistered = ScalarsForColorMapping::registerImplementation(
-    xMappingName,
-    ScalarsForColorMapping::newInstance<CoordinateXValueMapping>);
-bool isYRegistered = ScalarsForColorMapping::registerImplementation(
-    yMappingName,
-    ScalarsForColorMapping::newInstance<CoordinateYValueMapping>);
-bool isZRegistered = ScalarsForColorMapping::registerImplementation(
-    zMappingName,
-    ScalarsForColorMapping::newInstance<CoordinateZValueMapping>);
-}
+const QString CoordinateXValueMapping::s_name = "x values";
+const bool CoordinateXValueMapping::s_registered = ScalarsForColorMappingRegistry::instance().registerImplementation(
+    s_name,
+    newInstance<CoordinateXValueMapping>);
+const QString CoordinateYValueMapping::s_name = "y values";
+const bool CoordinateYValueMapping::s_registered = ScalarsForColorMappingRegistry::instance().registerImplementation(
+    s_name,
+    newInstance<CoordinateYValueMapping>);
+const QString CoordinateZValueMapping::s_name = "z values";
+const bool CoordinateZValueMapping::s_registered = ScalarsForColorMappingRegistry::instance().registerImplementation(
+    s_name,
+    newInstance<CoordinateZValueMapping>);
 
 
 AbstractCoordinateValueMapping::AbstractCoordinateValueMapping(const QList<DataObject *> & dataObjects)
@@ -59,7 +56,7 @@ CoordinateXValueMapping::CoordinateXValueMapping(const QList<DataObject *> & dat
 
 QString CoordinateXValueMapping::name() const
 {
-    return xMappingName;
+    return s_name;
 }
 
 void CoordinateXValueMapping::updateBounds()
@@ -79,7 +76,7 @@ CoordinateYValueMapping::CoordinateYValueMapping(const QList<DataObject *> & dat
 
 QString CoordinateYValueMapping::name() const
 {
-    return yMappingName;
+    return s_name;
 }
 
 void CoordinateYValueMapping::updateBounds()
@@ -99,7 +96,7 @@ CoordinateZValueMapping::CoordinateZValueMapping(const QList<DataObject *> & dat
 
 QString CoordinateZValueMapping::name() const
 {
-    return zMappingName;
+    return s_name;
 }
 
 void CoordinateZValueMapping::updateBounds()

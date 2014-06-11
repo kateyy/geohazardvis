@@ -3,8 +3,8 @@
 #include <cassert>
 
 #include "ScalarsForColorMapping.h"
-#include "DefaultColorMapping.h"
-#include "CoordinateValueMapping.h"
+#include "ScalarsForColorMappingRegistry.h"
+
 #include "core/data_objects/RenderedData.h"
 
 
@@ -12,11 +12,6 @@ ScalarToColorMapping::ScalarToColorMapping()
     : m_gradient(nullptr)
 {
     clear();
-
-
-    // HACK to enforce object file linking
-    DefaultColorMapping a({});
-    CoordinateXValueMapping x({});
 }
 
 void ScalarToColorMapping::setRenderedData(const QList<RenderedData *> & renderedData)
@@ -30,7 +25,7 @@ void ScalarToColorMapping::setRenderedData(const QList<RenderedData *> & rendere
     }
 
     qDeleteAll(m_scalars);
-    m_scalars = ScalarsForColorMapping::createMappingsValidFor(dataObjects);
+    m_scalars = ScalarsForColorMappingRegistry::instance().createMappingsValidFor(dataObjects);
 
     for (RenderedData * rendered : renderedData)
     {

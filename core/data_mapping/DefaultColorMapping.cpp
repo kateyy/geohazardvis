@@ -1,14 +1,13 @@
 #include "DefaultColorMapping.h"
 
+#include "ScalarsForColorMappingRegistry.h"
 
-namespace
-{
-QString mappingName = "default color";
 
-bool isRegistered = ScalarsForColorMapping::registerImplementation(
-                        mappingName,
-                        ScalarsForColorMapping::newInstance<DefaultColorMapping>);
-}
+const QString DefaultColorMapping::s_name = "default color";
+
+const bool DefaultColorMapping::s_registered = ScalarsForColorMappingRegistry::instance().registerImplementation(
+    s_name,
+    newInstance<DefaultColorMapping>);
 
 DefaultColorMapping::DefaultColorMapping(const QList<DataObject *> & dataObjects)
     : ScalarsForColorMapping(dataObjects)
@@ -19,7 +18,7 @@ DefaultColorMapping::~DefaultColorMapping() = default;
 
 QString DefaultColorMapping::name() const
 {
-    return mappingName;
+    return s_name;
 }
 
 bool DefaultColorMapping::usesGradients() const

@@ -1,7 +1,5 @@
 #pragma once
 
-#include <functional>
-
 #include <QList>
 #include <QMap>
 #include <QString>
@@ -16,19 +14,14 @@ Scalar mappings extract relevant data from an input data objects and supply thei
 class ScalarsForColorMapping
 {
 public:
+    friend class ScalarsForColorMappingRegistry;
+
     template<typename SubClass>
     static ScalarsForColorMapping * newInstance(const QList<DataObject*> & dataObjects);
-
-    using MappingConstructor = std::function<ScalarsForColorMapping *(const QList<DataObject *> & dataObjects)>;
-    static bool registerImplementation(QString name, const MappingConstructor & constructor);
-
 
 public:
     explicit ScalarsForColorMapping(const QList<DataObject *> & dataObjects);
     virtual ~ScalarsForColorMapping() = 0;
-
-    /** retrieve a list of scalars extractions that are applicable for the specified data object list */
-    static QMap<QString, ScalarsForColorMapping *> createMappingsValidFor(const QList<DataObject*> & dataObjects);
 
     double minValue() const;
     double maxValue() const;
@@ -47,9 +40,6 @@ protected:
 protected:
     double m_minValue;
     double m_maxValue;
-
-private:
-    static QMap<QString, MappingConstructor> & mappingConstructors();
 };
 
 #include "ScalarsForColorMapping.hpp"
