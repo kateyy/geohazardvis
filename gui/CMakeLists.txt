@@ -3,34 +3,34 @@ set( TARGET gui )
 message( STATUS ${TARGET} )
 
 set ( SOURCES
-    inputviewer.h
-    inputviewer.cpp
-    mainwindow.h
-    mainwindow.cpp
-    normalrepresentation.h
-    normalrepresentation.cpp
-    pickinginteractionstyle.h
-    pickinginteractionstyle.cpp
-    qvtktablemodel.h
-    qvtktablemodel.cpp
-    selectionhandler.h
-    selectionhandler.cpp
-    tabwidget.h
-    tabwidget.cpp
-    widgets/datachooser.h
-    widgets/datachooser.cpp
-    widgets/renderconfigwidget.h
-    widgets/renderconfigwidget.cpp
-    widgets/tablewidget.h
-    widgets/tablewidget.cpp
+    ${TARGET}_api.h
+    
+    DataMapping.h
+    DataMapping.cpp
+    MainWindow.h
+    MainWindow.cpp
+    NormalRepresentation.h
+    NormalRepresentation.cpp
+    PickingInteractionStyle.h
+    PickingInteractionStyle.cpp
+    SelectionHandler.h
+    SelectionHandler.cpp
+    widgets/DataChooser.h
+    widgets/DataChooser.cpp
+    widgets/RenderConfigWidget.h
+    widgets/RenderConfigWidget.cpp
+    widgets/RenderWidget.h
+    widgets/RenderWidget.cpp
+    widgets/TableWidget.h
+    widgets/TableWidget.cpp
 )
 
 set ( UIs
-    inputviewer.ui
-    mainwindow.ui
-    widgets/datachooser.ui
-    widgets/renderconfigwidget.ui
-    widgets/tablewidget.ui
+    MainWindow.ui
+    widgets/DataChooser.ui
+    widgets/RenderConfigWidget.ui
+    widgets/RenderWidget.ui
+    widgets/TableWidget.ui
 )
 
 
@@ -47,14 +47,19 @@ source_group_by_path( ${CMAKE_CURRENT_SOURCE_DIR} "\\\\.ui$"
 source_group_by_path( ${CMAKE_CURRENT_BINARY_DIR} "\\\\.cpp$|\\\\.c$|\\\\.h$|\\\\.hpp$|\\\\.inl$"
     "Generated" ${UI_Srcs} ${MOC_Srcs} )
 
-
-add_library ( ${TARGET}
-    ${SOURCES} ${UI_Srcs} )
-
-qt5_use_modules( ${TARGET} Core Gui Widgets )
+if (OPTION_BUILD_STATIC)
+    add_library(${TARGET} ${SOURCES})
+else()
+    add_library(${TARGET} SHARED ${SOURCES} ${UI_Srcs})
+endif()
 
 target_link_libraries( ${TARGET}
     ${VTK_LIBRARIES}
+    ${LIBZEUG_SIGNAL_LIBRARY}
+    ${LIBZEUG_REFLECTION_LIBRARY}
+    ${LIBZEUG_PROPERTYGUI_LIBRARY}
+    Qt5::Widgets
+    
     core
 )
 
@@ -72,8 +77,11 @@ set_target_properties( ${TARGET}
     COMPILE_DEFINITIONS_RELEASE         "${DEFAULT_COMPILE_DEFS_RELEASE}"
     COMPILE_DEFINITIONS_RELWITHDEBINFO  "${DEFAULT_COMPILE_DEFS_RELEASE}"
     COMPILE_DEFINITIONS_MINSIZEREL      "${DEFAULT_COMPILE_DEFS_RELEASE}"
+    COMPILE_FLAGS                       "${DEFAULT_COMPILE_FLAGS}"
     LINK_FLAGS_DEBUG                    "${DEFAULT_LINKER_FLAGS_DEBUG}"
     LINK_FLAGS_RELEASE                  "${DEFAULT_LINKER_FLAGS_RELEASE}"
     LINK_FLAGS_RELWITHDEBINFO           "${DEFAULT_LINKER_FLAGS_RELEASE}"
     LINK_FLAGS_MINSIZEREL               "${DEFAULT_LINKER_FLAGS_RELEASE}"
 )
+
+generate_library_export_header(${TARGET})

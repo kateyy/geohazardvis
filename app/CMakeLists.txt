@@ -4,17 +4,17 @@ message( STATUS ${TARGET} )
 
 set ( SOURCES
     main.cpp
-    application.h
-    application.cpp )
+    Application.h
+    Application.cpp )
 
 add_executable ( ${TARGET} ${SOURCES} )
-
-qt5_use_modules( ${TARGET} Widgets )
 
 target_link_libraries( ${TARGET}
     ${LIBZEUG_SIGNAL_LIBRARY}
     ${LIBZEUG_REFLECTION_LIBRARY}
     ${LIBZEUG_PROPERTYGUI_LIBRARY}
+    Qt5::Widgets
+    
     core
     gui )
     
@@ -25,6 +25,7 @@ set_target_properties( ${TARGET}
     COMPILE_DEFINITIONS_RELEASE         "${DEFAULT_COMPILE_DEFS_RELEASE}"
     COMPILE_DEFINITIONS_RELWITHDEBINFO  "${DEFAULT_COMPILE_DEFS_RELEASE}"
     COMPILE_DEFINITIONS_MINSIZEREL      "${DEFAULT_COMPILE_DEFS_RELEASE}"
+    COMPILE_FLAGS                       "${DEFAULT_COMPILE_FLAGS}"
     LINK_FLAGS_DEBUG                    "${DEFAULT_LINKER_FLAGS_DEBUG}"
     LINK_FLAGS_RELEASE                  "${DEFAULT_LINKER_FLAGS_RELEASE}"
     LINK_FLAGS_RELWITHDEBINFO           "${DEFAULT_LINKER_FLAGS_RELEASE}"

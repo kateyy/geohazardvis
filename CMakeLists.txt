@@ -51,11 +51,15 @@ else()
     message(WARNING "Unsupported platform/compiler combination")
 endif()
 
-add_compile_options( ${DEFAULT_COMPILE_FLAGS} )
-    
+
+# Set output directories
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+
 
 find_package(VTK REQUIRED
-    vtkRenderingQt          # QVTKWidget
+    vtkGUISupportQtOpenGL   # QVTKWidget
     vtkRenderingAnnotation  # vtkCubeAxesActor
 )
 include(${VTK_USE_FILE})
@@ -72,6 +76,7 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_BINARY_DIR}
 )
 
 add_subdirectory("core")
