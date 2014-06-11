@@ -47,8 +47,6 @@ source_group_by_path( ${CMAKE_CURRENT_SOURCE_DIR} "\\\\.ui$"
 source_group_by_path( ${CMAKE_CURRENT_BINARY_DIR} "\\\\.cpp$|\\\\.c$|\\\\.h$|\\\\.hpp$|\\\\.inl$"
     "Generated" ${UI_Srcs} ${MOC_Srcs} )
 
-
-qt5_use_modules( ${TARGET} Core Gui Widgets )
 if (OPTION_BUILD_STATIC)
     add_library(${TARGET} ${SOURCES})
 else()
@@ -60,6 +58,8 @@ target_link_libraries( ${TARGET}
     ${LIBZEUG_SIGNAL_LIBRARY}
     ${LIBZEUG_REFLECTION_LIBRARY}
     ${LIBZEUG_PROPERTYGUI_LIBRARY}
+    Qt5::Widgets
+    
     core
 )
 

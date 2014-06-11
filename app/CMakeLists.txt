@@ -9,12 +9,12 @@ set ( SOURCES
 
 add_executable ( ${TARGET} ${SOURCES} )
 
-qt5_use_modules( ${TARGET} Widgets )
-
 target_link_libraries( ${TARGET}
     ${LIBZEUG_SIGNAL_LIBRARY}
     ${LIBZEUG_REFLECTION_LIBRARY}
     ${LIBZEUG_PROPERTYGUI_LIBRARY}
+    Qt5::Widgets
+    
     core
     gui )
     
