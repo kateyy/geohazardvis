@@ -3,6 +3,8 @@ set( TARGET gui )
 message( STATUS ${TARGET} )
 
 set ( SOURCES
+    ${TARGET}_api.h
+    
     DataMapping.h
     DataMapping.cpp
     MainWindow.h
@@ -11,8 +13,6 @@ set ( SOURCES
     NormalRepresentation.cpp
     PickingInteractionStyle.h
     PickingInteractionStyle.cpp
-    QVtkTableModel.h
-    QVtkTableModel.cpp
     SelectionHandler.h
     SelectionHandler.cpp
     widgets/DataChooser.h
@@ -48,10 +48,12 @@ source_group_by_path( ${CMAKE_CURRENT_BINARY_DIR} "\\\\.cpp$|\\\\.c$|\\\\.h$|\\\
     "Generated" ${UI_Srcs} ${MOC_Srcs} )
 
 
-add_library ( ${TARGET}
-    ${SOURCES} ${UI_Srcs} )
-
 qt5_use_modules( ${TARGET} Core Gui Widgets )
+if (OPTION_BUILD_STATIC)
+    add_library(${TARGET} ${SOURCES})
+else()
+    add_library(${TARGET} SHARED ${SOURCES} ${UI_Srcs})
+endif()
 
 target_link_libraries( ${TARGET}
     ${VTK_LIBRARIES}
@@ -81,3 +83,5 @@ set_target_properties( ${TARGET}
     LINK_FLAGS_RELWITHDEBINFO           "${DEFAULT_LINKER_FLAGS_RELEASE}"
     LINK_FLAGS_MINSIZEREL               "${DEFAULT_LINKER_FLAGS_RELEASE}"
 )
+
+generate_library_export_header(${TARGET})

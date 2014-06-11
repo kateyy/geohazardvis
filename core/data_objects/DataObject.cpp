@@ -2,9 +2,9 @@
 
 #include <vtkDataSet.h>
 
-#include "Input.h"
+#include <core/Input.h>
 
-#include "gui/QVtkTableModel.h"
+#include <core/QVtkTableModel.h>
 
 
 DataObject::DataObject(std::shared_ptr<Input> input)

@@ -4,6 +4,7 @@
 
 #include <vtkSmartPointer.h>
 
+#include <gui/gui_api.h>
 
 class QTableView;
 class QItemSelection;
@@ -12,7 +13,7 @@ class vtkDataObject;
 class PickingInteractionStyle;
 
 
-class SelectionHandler : public QObject
+class GUI_API SelectionHandler : public QObject
 {
     Q_OBJECT
 

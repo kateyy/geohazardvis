@@ -4,18 +4,20 @@
 
 #include <QAbstractTableModel>
 
+#include <core/core_api.h>
 
 class vtkDataSet;
 class vtkPolyData;
 class vtkImageData;
 
 
-enum class DisplayData {
+CORE_API enum class DisplayData {
     Triangles,
     Grid
 };
 
-class QVtkTableModel : public QAbstractTableModel {
+class CORE_API QVtkTableModel : public QAbstractTableModel
+{
 public:
     QVtkTableModel(QObject * parent = nullptr);
     int rowCount(const QModelIndex &parent = QModelIndex()) const override;

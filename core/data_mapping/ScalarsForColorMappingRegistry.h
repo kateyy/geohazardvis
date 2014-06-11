@@ -5,12 +5,14 @@
 #include <QString>
 #include <QMap>
 
+#include <core/core_api.h>
+
 
 class DataObject;
 class ScalarsForColorMapping;
 
 
-class ScalarsForColorMappingRegistry
+class CORE_API ScalarsForColorMappingRegistry
 {
 public:
     static ScalarsForColorMappingRegistry & instance();

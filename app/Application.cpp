@@ -1,6 +1,6 @@
 #include "Application.h"
 
-#include "gui/MainWindow.h"
+#include <gui/MainWindow.h>
 
 
 Application::Application(int & argc, char ** argv)

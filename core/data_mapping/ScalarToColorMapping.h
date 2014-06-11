@@ -4,6 +4,8 @@
 #include <QMap>
 #include <QString>
 
+#include <core/core_api.h>
+
 
 class QImage;
 
@@ -15,7 +17,7 @@ class ScalarsForColorMapping;
 Sets up scalar to surface color mapping for rendered data and stores the configuration state.
 Uses ScalarsForColorMapping to determine scalars that can be mapped on the supplied renderedData.
 */
-class ScalarToColorMapping
+class CORE_API ScalarToColorMapping
 {
 public:
     ScalarToColorMapping();

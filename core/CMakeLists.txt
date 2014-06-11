@@ -3,6 +3,8 @@ set( TARGET core )
 message( STATUS ${TARGET} )
 
 set ( SOURCES
+    ${TARGET}_api.h
+    
     Loader.h
     Loader.cpp
     Input.h
@@ -13,6 +15,9 @@ set ( SOURCES
     common/ebem3d_common.h
     common/file_parser.h
     common/file_parser.cpp
+    
+    QVtkTableModel.h
+    QVtkTableModel.cpp
     
     data_objects/DataObject.h
     data_objects/DataObject.cpp
@@ -43,11 +48,15 @@ set ( SOURCES
 source_group_by_path(${CMAKE_CURRENT_SOURCE_DIR} "\\\\.cpp$|\\\\.c$|\\\\.h$|\\\\.hpp$|\\\\.ui$|\\\\.inl$"
     "Source Files" ${SOURCES})
 
-add_library ( ${TARGET}
-    ${SOURCES} )
+if (OPTION_BUILD_STATIC)
+    add_library(${TARGET} ${SOURCES})
+else()
+    add_library(${TARGET} SHARED ${SOURCES})
+endif()
 
 target_link_libraries( ${TARGET}
     ${VTK_LIBRARIES}
+    Qt5::Core
 )
 
 set_target_properties( ${TARGET}
@@ -63,3 +72,5 @@ set_target_properties( ${TARGET}
     LINK_FLAGS_RELWITHDEBINFO           "${DEFAULT_LINKER_FLAGS_RELEASE}"
     LINK_FLAGS_MINSIZEREL               "${DEFAULT_LINKER_FLAGS_RELEASE}"
 )
+
+generate_library_export_header(${TARGET})

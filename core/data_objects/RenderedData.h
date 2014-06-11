@@ -2,6 +2,8 @@
 
 #include <vtkSmartPointer.h>
 
+#include <core/core_api.h>
+
 
 class QImage;
 class vtkProperty;
@@ -16,7 +18,7 @@ Base class for rendered representations of loaded data objects.
 A data object may be rendered in multiple views, each holding its own
 RenderedData instance, referring to the data object.
 */ 
-class RenderedData
+class CORE_API RenderedData
 {
 public:
     RenderedData(DataObject * dataObject);

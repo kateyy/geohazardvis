@@ -3,7 +3,8 @@
 #include <QMainWindow>
 #include <QList>
 
-#include "SelectionHandler.h"
+#include <gui/gui_api.h>
+#include <gui/SelectionHandler.h>
 
 
 class Input;
@@ -15,7 +16,7 @@ class DataChooser;
 class Ui_MainWindow;
 
 
-class MainWindow : public QMainWindow
+class GUI_API MainWindow : public QMainWindow
 {
     Q_OBJECT
 

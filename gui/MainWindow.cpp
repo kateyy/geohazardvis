@@ -11,15 +11,16 @@
 
 #include <vtkPolyData.h>
 
-#include "core/vtkhelper.h"
-#include "core/Loader.h"
-#include "core/Input.h"
-#include "core/data_objects/PolyDataObject.h"
-#include "core/data_objects/ImageDataObject.h"
+#include <core/vtkhelper.h>
+#include <core/Loader.h>
+#include <core/Input.h>
+#include <core/QVtkTableModel.h>
+#include <core/data_objects/PolyDataObject.h>
+#include <core/data_objects/ImageDataObject.h>
+
+#include <gui/SelectionHandler.h>
 
 #include "DataMapping.h"
-#include "SelectionHandler.h"
-#include "QVtkTableModel.h"
 #include "widgets/RenderWidget.h"
 #include "widgets/DataChooser.h"
 #include "widgets/RenderConfigWidget.h"

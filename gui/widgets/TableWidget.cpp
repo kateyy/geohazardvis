@@ -3,10 +3,10 @@
 
 #include <cassert>
 
-#include "core/Input.h"
-#include "core/data_objects/DataObject.h"
+#include <core/Input.h>
+#include <core/QVtkTableModel.h>
+#include <core/data_objects/DataObject.h>
 
-#include "QVtkTableModel.h"
 
 
 TableWidget::TableWidget(int index, QWidget * parent)

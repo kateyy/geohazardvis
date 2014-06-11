@@ -50,7 +50,13 @@ elseif(LINUX AND CMAKE_COMPILER_IS_GNUCXX)
 else()
     message(WARNING "Unsupported platform/compiler combination")
 endif()
-    
+
+
+# Set output directories
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+
 
 find_package(VTK REQUIRED
     vtkGUISupportQtOpenGL   # QVTKWidget
@@ -70,6 +76,7 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_BINARY_DIR}
 )
 
 add_subdirectory("core")

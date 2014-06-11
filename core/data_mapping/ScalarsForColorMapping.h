@@ -4,6 +4,9 @@
 #include <QMap>
 #include <QString>
 
+#include <core/core_api.h>
+
+
 class DataObject;
 
 
@@ -11,7 +14,7 @@ class DataObject;
 Abstract base class for scalars that can be used for surface color mappings.
 Scalar mappings extract relevant data from an input data objects and supply their defined scalar values.
 */
-class ScalarsForColorMapping
+class CORE_API ScalarsForColorMapping
 {
 public:
     friend class ScalarsForColorMappingRegistry;

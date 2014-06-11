@@ -7,6 +7,8 @@
 
 #include "common/ebem3d_common.h"
 
+#include <core/core_api.h>
+
 
 class vtkPolyDataMapper;
 class vtkPolyData;
@@ -17,7 +19,7 @@ class PolyDataInput;
 struct ReadDataset;
 
 
-class Loader
+class CORE_API Loader
 {
 public:
     static std::shared_ptr<Input> readFile(const std::string & filename);

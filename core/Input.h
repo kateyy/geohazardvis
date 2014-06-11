@@ -5,6 +5,8 @@
 
 #include <vtkSmartPointer.h>
 
+#include <core/core_api.h>
+
 class vtkDataSet;
 class vtkPolyData;
 class vtkPolyDataMapper;
@@ -20,7 +22,7 @@ enum class ModelType {
     grid2d
 };
 
-class Input {
+class CORE_API Input {
 public:
     static std::shared_ptr<Input> createType(ModelType type, const std::string & name);
 

@@ -4,15 +4,9 @@
 
 #include "ScalarsForColorMapping.h"
 
-#include "DefaultColorMapping.h"
-#include "CoordinateValueMapping.h"
-
 
 ScalarsForColorMappingRegistry::ScalarsForColorMappingRegistry()
 {
-    // HACK : work around discarded(?) object files, registrations not called
-    DefaultColorMapping({});
-    CoordinateXValueMapping({});
 }
 
 ScalarsForColorMappingRegistry::~ScalarsForColorMappingRegistry() = default;

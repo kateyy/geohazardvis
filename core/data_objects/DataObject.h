@@ -2,13 +2,15 @@
 
 #include <memory>
 
+#include <core/core_api.h>
+
 
 class Input;
 class QVtkTableModel;
 
 
 /** Base class representing loaded data. */
-class DataObject
+class CORE_API DataObject
 {
 public:
     DataObject(std::shared_ptr<Input> input);

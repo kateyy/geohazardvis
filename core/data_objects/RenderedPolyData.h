@@ -1,6 +1,7 @@
 #pragma once
 
-#include "RenderedData.h"
+#include <core/data_objects/RenderedData.h>
+#include <core/core_api.h>
 
 
 class QImage;
@@ -10,7 +11,7 @@ class vtkPolyDataMapper;
 class PolyDataObject;
 
 
-class RenderedPolyData : public RenderedData
+class CORE_API RenderedPolyData : public RenderedData
 {
 public:
     RenderedPolyData(PolyDataObject * dataObject);

@@ -25,3 +25,17 @@ macro(source_group_by_path PARENT_PATH REGEX GROUP)
     endforeach()
 
 endmacro()
+
+include (GenerateExportHeader)
+
+function(generate_library_export_header LIBNAME)
+
+    string(TOUPPER ${LIBNAME}_API LIBRARY_EXPORT_MACRO)
+    
+    generate_export_header( ${LIBNAME}
+        BASE_NAME ${LIBNAME}
+        EXPORT_MACRO_NAME ${LIBRARY_EXPORT_MACRO}
+        EXPORT_FILE_NAME ${LIBNAME}_api.h
+        STATIC_DEFINE OPTION_BUILD_STATIC)
+        
+endfunction()

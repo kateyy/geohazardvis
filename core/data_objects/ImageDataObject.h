@@ -1,12 +1,13 @@
 #pragma once
 
-#include "DataObject.h"
+#include <core/data_objects/DataObject.h>
+#include <core/core_api.h>
 
 
 class GridDataInput;
 
 
-class ImageDataObject : public DataObject
+class CORE_API ImageDataObject : public DataObject
 {
 public:
     ImageDataObject(std::shared_ptr<GridDataInput> input);
