@@ -1,13 +1,10 @@
 #pragma once
 
-#include <memory>
-
 #include <QDockWidget>
 
 
 class QTableView;
-
-class vtkDataSet;
+class QItemSelection;
 
 class Ui_TableWidget;
 class QVtkTableModel;
@@ -25,13 +22,21 @@ public:
     int index() const;
 
     QVtkTableModel * model();
-    QTableView * view();
+    void setModel(QVtkTableModel * model);
 
     void showInput(DataObject * dataObject);
     DataObject * dataObject();
 
+public slots:
+    void selectCell(int cellId);
+
 signals:
+    void cellSelected(int cellId);
+
     void closed();
+
+private slots:
+    void selectionChanged(const QItemSelection & selected, const QItemSelection & deselected);
 
 private:
     void closeEvent(QCloseEvent * event) override;

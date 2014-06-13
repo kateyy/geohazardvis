@@ -4,80 +4,80 @@
 
 #include <QTableView>
 
-#include <vtkDataObject.h>
-#include <vtkPolyData.h>
+#include <core/data_objects/DataObject.h>
 
+#include "widgets/TableWidget.h"
+#include "widgets/RenderWidget.h"
 #include "PickingInteractionStyle.h"
 
 
+SelectionHandler & SelectionHandler::instance()
+{
+    static SelectionHandler selectionHandler;
+    return selectionHandler;
+}
+
 SelectionHandler::SelectionHandler()
-: m_tableView(nullptr)
-, m_tableModel(nullptr)
-, m_interactionStyle(nullptr)
-, m_currentSelection(-1)
 {
 }
 
-void SelectionHandler::setQtTableView(QTableView * tableView, QVtkTableModel * model)
+SelectionHandler::~SelectionHandler() = default;
+
+void SelectionHandler::addTableView(TableWidget * tableWidget)
 {
-    m_tableView = tableView;
-    m_tableModel = model;
-    createConnections();
+    m_tableWidgets << tableWidget;
+    connect(tableWidget, &TableWidget::cellSelected, this, &SelectionHandler::tableSelectionChanged);
 }
 
-void SelectionHandler::setVtkInteractionStyle(PickingInteractionStyle * interactionStyle)
+void SelectionHandler::addRenderView(RenderWidget * renderWidget)
 {
-    m_interactionStyle = interactionStyle;
-    createConnections();
+    m_renderWidgets << renderWidget;
+    connect(renderWidget->interactStyle(), &PickingInteractionStyle::cellPicked, this, &SelectionHandler::cellPicked);
 }
 
-void SelectionHandler::setDataObject(vtkDataObject * dataObject)
+void SelectionHandler::removeTableView(TableWidget * tableWidget)
 {
-    m_dataObject = dataObject;
+    m_tableWidgets.remove(tableWidget);
 }
 
-void SelectionHandler::createConnections()
+void SelectionHandler::removeRenderView(RenderWidget * renderWidget)
 {
-    if (!(m_tableView && m_tableModel && m_interactionStyle))
-        return;
-
-    connect(m_interactionStyle, &PickingInteractionStyle::cellPicked, this, &SelectionHandler::cellPicked);
-    connect(m_tableView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &SelectionHandler::qtSelectionChanged);
+    m_renderWidgets.remove(renderWidget);
 }
 
-void SelectionHandler::updateSelections(vtkIdType cellId, bool updateView)
+void SelectionHandler::tableSelectionChanged(int cellId)
 {
-    m_currentSelection = cellId;
+    TableWidget * table = dynamic_cast<TableWidget*>(sender());
+    assert(table);
 
-    m_interactionStyle->highlightCell(cellId, m_dataObject);
+    DataObject * dataObject = table->dataObject();
 
-
-    if (updateView) {
-        vtkPolyData * polyData = vtkPolyData::SafeDownCast(m_dataObject);
-        if (polyData)
-            m_interactionStyle->lookAtCell(polyData, cellId);
+    for (RenderWidget * renderWidget : m_renderWidgets)
+    {
+        if (renderWidget->dataObjects().contains(dataObject))
+        {
+            renderWidget->interactStyle()->highlightCell(cellId, dataObject);
+        }
     }
-
-    m_tableView->selectRow(cellId);
 }
 
-void SelectionHandler::cellPicked(vtkDataObject * dataObject, vtkIdType cellId)
+void SelectionHandler::cellPicked(DataObject * dataObject, vtkIdType cellId)
 {
-    // assertion not valid for image/grid input data
-    //assert(m_dataObject == dataObject); // not implemented for multiple data objects
-    updateSelections(cellId, false);
-}
+    PickingInteractionStyle * interactionStyle = dynamic_cast<PickingInteractionStyle*>(sender());
+    assert(interactionStyle);
 
-void SelectionHandler::qtSelectionChanged(const QItemSelection & selected, const QItemSelection & deselected)
-{
-    if (m_dataObject == nullptr)
-        return;
-
-    if (selected.indexes().isEmpty())
-        return;
-
-    vtkIdType newSelection = selected.indexes().first().row();
-    if (newSelection != m_currentSelection) {
-        updateSelections(newSelection, true);
+    for (RenderWidget * renderWidget : m_renderWidgets)
+    {
+        if (renderWidget->dataObjects().contains(dataObject))
+        {
+            renderWidget->interactStyle()->highlightCell(cellId, dataObject);
+        }
+    }
+    for (TableWidget * table : m_tableWidgets)
+    {
+        if (table->dataObject() == dataObject)
+        {
+            table->selectCell(cellId);
+        }
     }
 }

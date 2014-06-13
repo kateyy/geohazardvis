@@ -18,13 +18,10 @@
 #include <core/data_objects/PolyDataObject.h>
 #include <core/data_objects/ImageDataObject.h>
 
-#include <gui/SelectionHandler.h>
-
 #include "DataMapping.h"
 #include "widgets/RenderWidget.h"
 #include "widgets/DataChooser.h"
 #include "widgets/RenderConfigWidget.h"
-#include "widgets/TableWidget.h"
 
 
 using namespace std;
@@ -35,7 +32,6 @@ MainWindow::MainWindow()
 , m_dataMapping(new DataMapping(*this))
 , m_dataChooser(new DataChooser())
 , m_renderConfigWidget(new RenderConfigWidget())
-, m_selectionHandler()
 {
     m_ui->setupUi(this);
 
@@ -100,7 +96,7 @@ void MainWindow::dropEvent(QDropEvent * event)
 
 RenderWidget * MainWindow::addRenderWidget(int index)
 {
-    RenderWidget * renderWidget = new RenderWidget(index, *m_dataChooser, *m_renderConfigWidget, m_selectionHandler);
+    RenderWidget * renderWidget = new RenderWidget(index, *m_dataChooser, *m_renderConfigWidget);
     addDockWidget(Qt::DockWidgetArea::BottomDockWidgetArea, renderWidget);
 
     connect(m_renderConfigWidget, &RenderConfigWidget::renderPropertyChanged, renderWidget, &RenderWidget::render);

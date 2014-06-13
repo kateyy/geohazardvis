@@ -41,14 +41,12 @@ using namespace std;
 RenderWidget::RenderWidget(
     int index,
     DataChooser & dataChooser,
-    RenderConfigWidget & renderConfigWidget,
-    SelectionHandler & selectionHandler)
+    RenderConfigWidget & renderConfigWidget)
 : QDockWidget()
 , m_ui(new Ui_RenderWidget())
 , m_index(index)
 , m_dataChooser(dataChooser)
 , m_renderConfigWidget(renderConfigWidget)
-, m_selectionHandler(selectionHandler)
 {
     m_ui->setupUi(this);
 
@@ -58,10 +56,14 @@ RenderWidget::RenderWidget(
     updateWindowTitle();
 
     connect(&m_dataChooser, &DataChooser::renderSetupChanged, this, &RenderWidget::render);
+
+    SelectionHandler::instance().addRenderView(this);
 }
 
 RenderWidget::~RenderWidget()
 {
+    SelectionHandler::instance().removeRenderView(this);
+
     m_renderConfigWidget.clear();
 
     if (m_dataChooser.mapping() == &m_scalarMapping)
@@ -93,6 +95,8 @@ void RenderWidget::setupInteraction()
 {
     m_interactStyle = vtkSmartPointer<PickingInteractionStyle>::New();
     m_interactStyle->SetDefaultRenderer(m_renderer);
+
+    m_interactStyle->setRenderedDataList(&m_renderedData);
 
     connect(m_interactStyle.Get(), &PickingInteractionStyle::pointInfoSent, this, &RenderWidget::ShowInfo);
     connect(m_interactStyle.Get(), &PickingInteractionStyle::actorPicked, this, &RenderWidget::on_actorPicked);
@@ -186,6 +190,15 @@ void RenderWidget::setDataObject(DataObject * dataObject)
     addDataObject(dataObject);
 }
 
+QList<DataObject *> RenderWidget::dataObjects() const
+{
+    QList<DataObject *> dataObjects;
+    for (RenderedData * rendered : m_renderedData)
+        dataObjects << rendered->dataObject();
+
+    return dataObjects;
+}
+
 void RenderWidget::show3DInput(RenderedPolyData * renderedPolyData)
 {
     vtkActor * actor = renderedPolyData->actor();
@@ -206,7 +219,6 @@ void RenderWidget::showGridInput(RenderedImageData * renderedImageData)
     heatBars->SetLookupTable(input->lookupTable);
     m_renderer->AddViewProp(heatBars);
     m_renderer->AddViewProp(renderedImageData->actor());
-    m_selectionHandler.setDataObject(input->data());
 }
 
 void RenderWidget::setupAxes(const double bounds[6])

@@ -4,7 +4,6 @@
 #include <QList>
 
 #include <gui/gui_api.h>
-#include <gui/SelectionHandler.h>
 
 
 class Input;
@@ -52,7 +51,6 @@ protected:
     QAction * m_addToRendererAction;
     DataChooser * m_dataChooser;
     RenderConfigWidget * m_renderConfigWidget;
-    SelectionHandler m_selectionHandler;
 
     QString m_lastOpenFolder;
 

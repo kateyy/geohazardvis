@@ -29,8 +29,10 @@
 #include <vtkMath.h>
 #include <vtkPolyData.h>
 
-#include "core/vtkhelper.h"
-#include "core/Input.h"
+#include <core/vtkhelper.h>
+#include <core/Input.h>
+#include <core/data_objects/DataObject.h>
+#include <core/data_objects/RenderedData.h>
 
 
 vtkStandardNewMacro(PickingInteractionStyle);
@@ -68,6 +70,12 @@ void PickingInteractionStyle::OnLeftButtonUp()
     vtkInteractorStyleTrackballCamera::OnLeftButtonUp();
 }
 
+void PickingInteractionStyle::setRenderedDataList(const QList<RenderedData *> * renderedData)
+{
+    assert(renderedData);
+    m_renderedData = renderedData;
+}
+
 void PickingInteractionStyle::pickPoint()
 {
     int* clickPos = GetInteractor()->GetEventPosition();
@@ -91,13 +99,34 @@ void PickingInteractionStyle::pickCell()
         emit actorPicked(pickedActor);
     }
 
-    if (cellId != -1)
-        emit cellPicked(m_cellPicker->GetDataSet(), cellId);
+    vtkDataSet * dataSet = m_cellPicker->GetDataSet();
+
+    if (dataSet)
+    {
+        for (RenderedData * renderedData : *m_renderedData)
+        {
+            if (renderedData->dataObject()->input()->data() == dataSet)
+            {
+                emit cellPicked(renderedData->dataObject(), cellId);
+            }
+        }
+    }
+    else
+    {
+        highlightCell(-1, nullptr);
+    }
 }
 
-void PickingInteractionStyle::highlightCell(vtkIdType cellId, vtkDataObject * dataObject)
+void PickingInteractionStyle::highlightCell(vtkIdType cellId, DataObject * dataObject)
 {
+    if (cellId == -1)
+    {
+        GetDefaultRenderer()->RemoveViewProp(m_selectedCellActor);
+        return;
+    }
+
     assert(dataObject);
+
 
     VTK_CREATE(vtkIdTypeArray, ids);
     ids->SetNumberOfComponents(1);
@@ -112,7 +141,7 @@ void PickingInteractionStyle::highlightCell(vtkIdType cellId, vtkDataObject * da
     selection->AddNode(selectionNode);
 
     VTK_CREATE(vtkExtractSelection, extractSelection);
-    extractSelection->SetInputData(0, dataObject);
+    extractSelection->SetInputData(0, dataObject->input()->data());
     extractSelection->SetInputData(1, selection);
     extractSelection->Update();
 
@@ -124,6 +153,7 @@ void PickingInteractionStyle::highlightCell(vtkIdType cellId, vtkDataObject * da
     m_selectedCellActor->GetProperty()->SetLineWidth(3);
 
     GetDefaultRenderer()->AddViewProp(m_selectedCellActor);
+    GetDefaultRenderer()->GetRenderWindow()->Render();
 }
 
 void PickingInteractionStyle::lookAtCell(vtkPolyData * polyData, vtkIdType cellId)

@@ -1,45 +1,41 @@
 #pragma once
 
 #include <QObject>
+#include <QSet>
 
-#include <vtkSmartPointer.h>
+#include <vtkType.h>
 
-#include <gui/gui_api.h>
 
-class QTableView;
 class QItemSelection;
-class QVtkTableModel;
-class vtkDataObject;
-class PickingInteractionStyle;
+
+class TableWidget;
+class RenderWidget;
+class DataObject;
 
 
-class GUI_API SelectionHandler : public QObject
+class SelectionHandler : public QObject
 {
     Q_OBJECT
 
 public:
-    SelectionHandler();
+    static SelectionHandler & instance();
 
-    void setQtTableView(QTableView * tableView, QVtkTableModel * model);
-    void setVtkInteractionStyle(PickingInteractionStyle * interactionStyle);
-    void setDataObject(vtkDataObject * dataObject);
+    /** consider this table view when updating selections */
+    void addTableView(TableWidget * tableWidget);
+    void removeTableView(TableWidget * tableWidget);
+    /** consider this render view when updating selections */
+    void addRenderView(RenderWidget * renderWidget);
+    void removeRenderView(RenderWidget * renderWidget);
 
 private slots:
-    void cellPicked(vtkDataObject * dataObject, vtkIdType cellId);
-    void qtSelectionChanged(const QItemSelection & selected, const QItemSelection & deselected);
+    void tableSelectionChanged(int cellId);
+    void cellPicked(DataObject * dataObject, vtkIdType cellId);
 
 private:
-    void createConnections();
-
-    void updateSelections(vtkIdType cellId, bool updateView);
-
+    SelectionHandler();
+    ~SelectionHandler() override;
 
 private:
-    QTableView * m_tableView;
-    QVtkTableModel * m_tableModel;
-    PickingInteractionStyle * m_interactionStyle;
-
-    vtkIdType m_currentSelection;
-
-    vtkSmartPointer<vtkDataObject> m_dataObject;
+    QSet<TableWidget*> m_tableWidgets;
+    QSet<RenderWidget*> m_renderWidgets;
 };

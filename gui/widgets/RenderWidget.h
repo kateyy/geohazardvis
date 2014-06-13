@@ -6,7 +6,7 @@
 
 #include <vtkSmartPointer.h>
 
-#include "core/data_mapping/ScalarToColorMapping.h"
+#include <core/data_mapping/ScalarToColorMapping.h>
 
 
 class vtkRenderer;
@@ -22,11 +22,9 @@ class RenderedPolyData;
 class RenderedImageData;
 
 class DataChooser;
-enum class DataSelection;
 class NormalRepresentation;
 class PickingInteractionStyle;
 class RenderConfigWidget;
-class SelectionHandler;
 class Ui_RenderWidget;
 
 
@@ -38,14 +36,14 @@ public:
     RenderWidget(
         int index,
         DataChooser & dataChooser,
-        RenderConfigWidget & renderConfigWidget,
-        SelectionHandler & selectionHandler);
+        RenderConfigWidget & renderConfigWidget);
     ~RenderWidget() override;
 
     int index() const;
 
     void addDataObject(DataObject * dataObject);
     void setDataObject(DataObject * dataObject);
+    QList<DataObject *> dataObjects() const;
 
     vtkRenderWindow * renderWindow();
     const vtkRenderWindow * renderWindow() const;
@@ -103,5 +101,4 @@ private:
     DataChooser & m_dataChooser;
     ScalarToColorMapping m_scalarMapping;
     RenderConfigWidget & m_renderConfigWidget;
-    SelectionHandler & m_selectionHandler;
 };

@@ -7,22 +7,23 @@
 #include <core/QVtkTableModel.h>
 #include <core/data_objects/DataObject.h>
 
+#include <gui/SelectionHandler.h>
 
 
 TableWidget::TableWidget(int index, QWidget * parent)
-: QDockWidget(parent)
-, m_ui(new Ui_TableWidget())
-, m_index(index)
+    : QDockWidget(parent)
+    , m_ui(new Ui_TableWidget())
+    , m_index(index)
 {
     m_ui->setupUi(this);
-
-    //QAbstractItemModel * oldModel = m_ui->tableView->model();
-    //m_ui->tableView->setModel(m_model);
-    //delete oldModel;
+    
+    SelectionHandler::instance().addTableView(this);
 }
 
 TableWidget::~TableWidget()
 {
+    SelectionHandler::instance().removeTableView(this);
+
     delete m_ui;
 }
 
@@ -38,7 +39,7 @@ void TableWidget::showInput(DataObject * dataObject)
 
     assert(dataObject);
     m_dataObject = dataObject;
-    view()->setModel(m_dataObject->tableModel());
+    setModel(m_dataObject->tableModel());
 
     setWindowTitle("Table: " + QString::fromStdString(m_dataObject->input()->name));
 
@@ -50,16 +51,31 @@ DataObject * TableWidget::dataObject()
     return m_dataObject;
 }
 
+void TableWidget::selectCell(int cellId)
+{
+    m_ui->tableView->selectRow(cellId);
+}
+
 QVtkTableModel * TableWidget::model()
 {
     assert(dynamic_cast<QVtkTableModel*>(m_ui->tableView->model()));
     return static_cast<QVtkTableModel*>(m_ui->tableView->model());
 }
 
-QTableView * TableWidget::view()
+void TableWidget::setModel(QVtkTableModel * model)
 {
-    assert(m_ui->tableView);
-    return m_ui->tableView;
+    m_ui->tableView->setModel(model);
+    connect(m_ui->tableView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &TableWidget::selectionChanged);
+}
+
+void TableWidget::selectionChanged(const QItemSelection & selected, const QItemSelection & /*deselected*/)
+{
+    if (selected.indexes().isEmpty())
+    {
+        emit cellSelected(-1);
+    }
+
+    emit cellSelected(selected.indexes().first().row());
 }
 
 void TableWidget::closeEvent(QCloseEvent * event)
