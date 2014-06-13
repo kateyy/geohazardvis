@@ -1,6 +1,7 @@
 #pragma once
 
 #include <core/data_objects/RenderedData.h>
+#include <core/NormalRepresentation.h>
 #include <core/core_api.h>
 
 
@@ -25,6 +26,7 @@ public:
 protected:
     vtkProperty * createDefaultRenderProperty() const override;
     vtkActor * createActor() const override;
+    QList<vtkActor *> fetchAttributeActors() override;
 
     void updateScalarToColorMapping() override;
 
@@ -32,4 +34,6 @@ private:
     vtkPolyDataMapper * createDataMapper() const;
 
     reflectionzeug::PropertyGroup * m_configGroup;
+
+    NormalRepresentation m_normalRepresentation;
 };

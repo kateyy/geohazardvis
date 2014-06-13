@@ -16,6 +16,8 @@ set ( SOURCES
     common/file_parser.h
     common/file_parser.cpp
     
+    NormalRepresentation.h
+    NormalRepresentation.cpp
     QVtkTableModel.h
     QVtkTableModel.cpp
     

@@ -4,6 +4,8 @@
 
 #include <vtkSmartPointer.h>
 
+#include <core/core_api.h>
+
 
 class vtkPolyData;
 class vtkMapper;
@@ -15,7 +17,7 @@ namespace reflectionzeug {
 }
 
 
-class NormalRepresentation : public QObject
+class CORE_API NormalRepresentation : public QObject
 {
     Q_OBJECT
 

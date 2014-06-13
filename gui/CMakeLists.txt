@@ -9,8 +9,6 @@ set ( SOURCES
     DataMapping.cpp
     MainWindow.h
     MainWindow.cpp
-    NormalRepresentation.h
-    NormalRepresentation.cpp
     PickingInteractionStyle.h
     PickingInteractionStyle.cpp
     SelectionHandler.h

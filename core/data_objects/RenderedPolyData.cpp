@@ -43,6 +43,9 @@ RenderedPolyData::RenderedPolyData(PolyDataObject * dataObject)
     : RenderedData(dataObject)
     , m_configGroup(nullptr)
 {
+    m_normalRepresentation.setData(dataObject->polyDataInput()->polyData());
+    m_normalRepresentation.setVisible(false);
+    connect(&m_normalRepresentation, &NormalRepresentation::geometryChanged, this, &RenderedPolyData::geometryChanged);
 }
 
 RenderedPolyData::~RenderedPolyData()
@@ -169,6 +172,8 @@ reflectionzeug::PropertyGroup * RenderedPolyData::configGroup()
         transparency->setStep(0.01f);
     }
 
+    m_configGroup->addProperty(m_normalRepresentation.createPropertyGroup());
+
     return m_configGroup;
 }
 
@@ -193,6 +198,11 @@ vtkActor * RenderedPolyData::createActor() const
     actor->SetMapper(createDataMapper());
 
     return actor;
+}
+
+QList<vtkActor *> RenderedPolyData::fetchAttributeActors()
+{
+    return{ m_normalRepresentation.actor() };
 }
 
 void RenderedPolyData::updateScalarToColorMapping()
