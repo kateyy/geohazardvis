@@ -74,7 +74,7 @@ class PolyDataInput : public Input {
 public:
     PolyDataInput(const std::string & name, ModelType type);
 
-    virtual vtkSmartPointer<vtkPolyData> polyData() const;
+    virtual vtkPolyData * polyData() const;
     virtual void setPolyData(vtkSmartPointer<vtkPolyData> polyData);
 
     const double * bounds() const override;

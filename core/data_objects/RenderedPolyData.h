@@ -20,6 +20,8 @@ public:
     PolyDataObject * polyDataObject();
     const PolyDataObject * polyDataObject() const;
 
+    reflectionzeug::PropertyGroup * configGroup();
+
 protected:
     vtkProperty * createDefaultRenderProperty() const override;
     vtkActor * createActor() const override;
@@ -28,4 +30,6 @@ protected:
 
 private:
     vtkPolyDataMapper * createDataMapper() const;
+
+    reflectionzeug::PropertyGroup * m_configGroup;
 };

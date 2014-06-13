@@ -22,16 +22,15 @@
 #include <vtkProperty.h>
 #include <vtkTextProperty.h>
 
-#include "core/vtkhelper.h"
-#include "core/Input.h"
-#include "core/data_objects/PolyDataObject.h"
-#include "core/data_objects/ImageDataObject.h"
-#include "core/data_objects/RenderedPolyData.h"
-#include "core/data_objects/RenderedImageData.h"
+#include <core/vtkhelper.h>
+#include <core/Input.h>
+#include <core/data_objects/PolyDataObject.h>
+#include <core/data_objects/ImageDataObject.h>
+#include <core/data_objects/RenderedPolyData.h>
+#include <core/data_objects/RenderedImageData.h>
 
 #include "PickingInteractionStyle.h"
 #include "SelectionHandler.h"
-#include "NormalRepresentation.h"
 #include "widgets/DataChooser.h"
 #include "widgets/RenderConfigWidget.h"
 
@@ -152,6 +151,8 @@ void RenderWidget::addDataObject(DataObject * dataObject)
 
     m_renderedData << renderedData;
 
+    connect(renderedData, &RenderedData::geometryChanged, this, &RenderWidget::render);
+
     double bounds[6] = {
         std::numeric_limits<double>::max(), std::numeric_limits<double>::lowest(),
         std::numeric_limits<double>::max(), std::numeric_limits<double>::lowest(),
@@ -201,14 +202,10 @@ QList<DataObject *> RenderWidget::dataObjects() const
 
 void RenderWidget::show3DInput(RenderedPolyData * renderedPolyData)
 {
-    vtkActor * actor = renderedPolyData->actor();
+    m_actorToRenderedData.insert(renderedPolyData->mainActor(), renderedPolyData);
 
-    m_actorToRenderedData.insert(actor, renderedPolyData);
-
-    m_renderer->AddViewProp(actor);
-
-    //m_vertexNormalRepresentation->setData(input->polyData());
-    //m_renderer->AddViewProp(m_vertexNormalRepresentation->actor());
+    for (vtkActor * actor : renderedPolyData->actors())
+        m_renderer->AddViewProp(actor);
 }
 
 void RenderWidget::showGridInput(RenderedImageData * renderedImageData)
@@ -218,7 +215,8 @@ void RenderWidget::showGridInput(RenderedImageData * renderedImageData)
     heatBars->SetTitle(input->name.c_str());
     heatBars->SetLookupTable(input->lookupTable);
     m_renderer->AddViewProp(heatBars);
-    m_renderer->AddViewProp(renderedImageData->actor());
+    for (vtkActor * actor : renderedImageData->actors())
+        m_renderer->AddViewProp(actor);
 }
 
 void RenderWidget::setupAxes(const double bounds[6])

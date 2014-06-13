@@ -119,7 +119,7 @@ void PolyDataInput::setPolyData(vtkSmartPointer<vtkPolyData> data)
     m_data = data;
 }
 
-vtkSmartPointer<vtkPolyData> PolyDataInput::polyData() const
+vtkPolyData * PolyDataInput::polyData() const
 {
     assert(dynamic_cast<vtkPolyData*>(m_data.Get()));
     return static_cast<vtkPolyData*>(m_data.Get());

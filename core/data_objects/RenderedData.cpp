@@ -23,7 +23,15 @@ vtkProperty * RenderedData::renderProperty()
     return m_renderProperty;
 }
 
-vtkActor * RenderedData::actor()
+QList<vtkActor *> RenderedData::actors()
+{
+    QList<vtkActor *> a;
+    a << mainActor();
+    a << attributeActors();
+    return a;
+}
+
+vtkActor * RenderedData::mainActor()
 {
     if (!m_actor)
     {
@@ -32,6 +40,16 @@ vtkActor * RenderedData::actor()
     }
 
     return m_actor;
+}
+
+QList<vtkActor *> RenderedData::attributeActors()
+{
+    return fetchAttributeActors();
+}
+
+QList<vtkActor *> RenderedData::fetchAttributeActors()
+{
+    return{};
 }
 
 DataObject * RenderedData::dataObject()

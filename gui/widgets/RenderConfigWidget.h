@@ -1,11 +1,8 @@
 #pragma once
 
 #include <QDockWidget>
-#include <QVector>
 
 
-class QImage;
-class vtkProperty;
 namespace reflectionzeug {
     class PropertyGroup;
 }
@@ -21,9 +18,8 @@ public:
     RenderConfigWidget(QWidget * parent = nullptr);
     ~RenderConfigWidget() override;
 
+    /** reset the property browser to contain only configuration options related to the rendered data */
     void setRenderedData(RenderedData * renderedData);
-
-    void addPropertyGroup(reflectionzeug::PropertyGroup * group);
 
     void clear();
 
@@ -42,8 +38,4 @@ protected:
     bool m_needsBrowserRebuild;
 
     reflectionzeug::PropertyGroup * m_propertyRoot;
-
-    QVector<reflectionzeug::PropertyGroup *> m_addedGroups;
-
-    vtkProperty * m_renderProperty;
 };

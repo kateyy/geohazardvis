@@ -56,7 +56,14 @@ endif()
 
 target_link_libraries( ${TARGET}
     ${VTK_LIBRARIES}
+    ${LIBZEUG_SIGNAL_LIBRARY}
+    ${LIBZEUG_REFLECTION_LIBRARY}
     Qt5::Core
+)
+
+include_directories(
+    ${LIBZEUG_SIGNAL_INCLUDE_DIR}
+    ${LIBZEUG_REFLECTION_INCLUDE_DIR}
 )
 
 set_target_properties( ${TARGET}
