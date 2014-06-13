@@ -18,7 +18,7 @@ QVtkTableModel::QVtkTableModel(QObject * parent)
 {
 }
 
-int QVtkTableModel::rowCount(const QModelIndex &parent) const
+int QVtkTableModel::rowCount(const QModelIndex &/*parent*/) const
 {
     switch (m_displayData) {
     case DisplayData::Triangles:
@@ -33,7 +33,7 @@ int QVtkTableModel::rowCount(const QModelIndex &parent) const
     return 0;
 }
 
-int QVtkTableModel::columnCount(const QModelIndex &parent) const
+int QVtkTableModel::columnCount(const QModelIndex &/*parent*/) const
 {
     switch (m_displayData) {
     case DisplayData::Triangles:

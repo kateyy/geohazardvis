@@ -237,7 +237,7 @@ void RenderWidget::setupAxes(const double bounds[6])
 vtkSmartPointer<vtkCubeAxesActor> RenderWidget::createAxes(vtkRenderer & renderer)
 {
     VTK_CREATE(vtkCubeAxesActor, cubeAxes);
-    cubeAxes->SetCamera(m_renderer->GetActiveCamera());
+    cubeAxes->SetCamera(renderer.GetActiveCamera());
     cubeAxes->SetFlyModeToOuterEdges();
     cubeAxes->SetEnableDistanceLOD(1);
     cubeAxes->SetEnableViewAngleLOD(1);

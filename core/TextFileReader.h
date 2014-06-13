@@ -12,6 +12,7 @@ class Input;
 
 
 enum class DatasetType {
+    unknown,
     vertices,   // index + vec3
     indices,    // indices referring to a vertex list
     grid2d

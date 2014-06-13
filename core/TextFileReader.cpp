@@ -62,7 +62,7 @@ std::shared_ptr<Input> TextFileReader::readHeader(ifstream & inputStream, vector
 
     string line;
 
-    DatasetType currentDataType;
+    DatasetType currentDataType(DatasetType::unknown);
 
     while (!inputStream.eof()) {
         getline(inputStream, line);

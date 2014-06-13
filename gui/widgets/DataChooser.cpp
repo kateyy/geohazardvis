@@ -83,12 +83,10 @@ void DataChooser::on_scalarsSelectionChanged(QString scalarsName)
     emit renderSetupChanged();
 }
 
-void DataChooser::on_gradientSelectionChanged(int selection)
+void DataChooser::on_gradientSelectionChanged(int /*selection*/)
 {
     if (!m_mapping)
         return;
-
-    int gradientIndex = m_ui->gradientComboBox->currentIndex();
 
     m_mapping->setGradient(&selectedGradient());
 

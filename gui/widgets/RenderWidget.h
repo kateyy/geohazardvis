@@ -71,7 +71,7 @@ private:
     void updateVertexNormals(vtkPolyData * polyData);
     
     void setupAxes(const double bounds[6]);
-    vtkSmartPointer<vtkCubeAxesActor> createAxes(vtkRenderer & renderer);
+    static vtkSmartPointer<vtkCubeAxesActor> createAxes(vtkRenderer & renderer);
 
     void closeEvent(QCloseEvent * event) override;
 

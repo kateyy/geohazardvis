@@ -167,7 +167,6 @@ void PickingInteractionStyle::lookAtCell(vtkPolyData * polyData, vtkIdType cellI
     polyData->GetPoints()->GetPoints(triangle->GetPointIds(), selectedPoints);
 
     // look at center of the object
-    const double * bounds = polyData->GetBounds();
     const double * objectCenter = polyData->GetCenter();
     GetDefaultRenderer()->GetActiveCamera()->SetFocalPoint(objectCenter);
 
