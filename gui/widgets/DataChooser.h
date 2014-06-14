@@ -3,8 +3,12 @@
 #include <QDockWidget>
 #include <QList>
 
-#include "core/data_mapping/ScalarToColorMapping.h"
+#include <vtkSmartPointer.h>
 
+#include <core/data_mapping/ScalarToColorMapping.h>
+
+
+class vtkLookupTable;
 
 class RenderedData;
 class Ui_DataChooser;
@@ -21,7 +25,7 @@ public:
     void setMapping(QString rendererName = "", ScalarToColorMapping * mapping = nullptr);
     const ScalarToColorMapping * mapping() const;
 
-    const QImage & selectedGradient() const;
+    vtkLookupTable * selectedGradient() const;
 
 signals:
     void renderSetupChanged();
@@ -34,10 +38,12 @@ private:
     void loadGradientImages();
     void updateWindowTitle(QString objectName = "");
 
+    static vtkLookupTable * buildLookupTable(const QImage & image);
+
 private:
     Ui_DataChooser * m_ui;
 
-    QList<QImage> m_scalarToColorGradients;
+    QList<vtkSmartPointer<vtkLookupTable>> m_scalarToColorGradients;
 
     ScalarToColorMapping * m_mapping;
 };

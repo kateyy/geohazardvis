@@ -219,7 +219,7 @@ vtkPolyDataMapper * RenderedPolyData::createDataMapper() const
     vtkPolyDataMapper * mapper = input.createNamedMapper();
 
     // no mapping: use default colors
-    if (!m_scalars || !m_gradient || !m_scalars->usesGradients())
+    if (!m_scalars || !m_lut || !m_scalars->usesGradients())
     {
         mapper->SetInputData(input.polyData());
         return mapper;
@@ -254,19 +254,9 @@ vtkPolyDataMapper * RenderedPolyData::createDataMapper() const
 
     mapper->SetInputConnection(elevation->GetOutputPort());
 
-    // use alpha = 1.0, if the image doesn't have a alpha channel
-    int alphaMask = m_gradient->hasAlphaChannel() ? 0x00 : 0xFF;
+    m_lut->SetValueRange(minValue, maxValue);
 
-    VTK_CREATE(vtkLookupTable, lut);
-    lut->SetNumberOfTableValues(m_gradient->width());
-    for (int i = 0; i < m_gradient->width(); ++i)
-    {
-        QRgb color = m_gradient->pixel(i, 0);
-        lut->SetTableValue(i, qRed(color) / 255.0, qGreen(color) / 255.0, qBlue(color) / 255.0, (alphaMask | qAlpha(color)) / 255.0);
-    }
-    lut->SetValueRange(minValue, maxValue);
-
-    mapper->SetLookupTable(lut);
+    mapper->SetLookupTable(m_lut);
 
     return mapper;
 }

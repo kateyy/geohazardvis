@@ -4,10 +4,12 @@
 #include <QMap>
 #include <QString>
 
+#include <vtkSmartPointer.h>
+
 #include <core/core_api.h>
 
 
-class QImage;
+class vtkLookupTable;
 
 class RenderedData;
 class ScalarsForColorMapping;
@@ -35,9 +37,9 @@ public:
     void setCurrentScalarsByName(QString scalarsName);
     const ScalarsForColorMapping * currentScalars() const;
 
-    /** @return currently used gradient image, in case it was previously set */
-    const QImage * gradient() const;
-    void setGradient(const QImage * gradientImage);
+    /** @return currently used gradient, in case it was previously set */
+    vtkLookupTable * gradient();
+    void setGradient(vtkLookupTable * gradient);
 
 private:
     ScalarsForColorMapping * m_currentScalars();
@@ -46,5 +48,5 @@ private:
     QMap<QString, ScalarsForColorMapping *> m_scalars;
 
     QString m_currentScalarsName;
-    const QImage * m_gradient;
+    vtkSmartPointer<vtkLookupTable> m_gradient;
 };

@@ -7,6 +7,8 @@
 #include <QDir>
 #include <QDebug>
 
+#include <vtkLookupTable.h>
+
 #include "core/data_objects/RenderedPolyData.h"
 #include "core/data_objects/DataObject.h"
 #include "core/data_mapping/ScalarsForColorMapping.h"
@@ -53,9 +55,9 @@ void DataChooser::setMapping(QString rendererName, ScalarToColorMapping * mappin
     // reuse gradient selection, or use default
     if (m_mapping->gradient())
         m_ui->gradientComboBox->setCurrentIndex(
-            m_scalarToColorGradients.indexOf(*m_mapping->gradient()));
+            m_scalarToColorGradients.indexOf(m_mapping->gradient()));
     else
-        m_mapping->setGradient(&selectedGradient());
+        m_mapping->setGradient(selectedGradient());
 
     emit renderSetupChanged();
 }
@@ -78,7 +80,7 @@ void DataChooser::on_scalarsSelectionChanged(QString scalarsName)
     bool gradients = m_mapping->currentScalars()->usesGradients();
     m_ui->gradientGroupBox->setEnabled(gradients);
     if (gradients)
-        m_mapping->setGradient(&selectedGradient());
+        m_mapping->setGradient(selectedGradient());
 
     emit renderSetupChanged();
 }
@@ -88,12 +90,12 @@ void DataChooser::on_gradientSelectionChanged(int /*selection*/)
     if (!m_mapping)
         return;
 
-    m_mapping->setGradient(&selectedGradient());
+    m_mapping->setGradient(selectedGradient());
 
     emit renderSetupChanged();
 }
 
-const QImage & DataChooser::selectedGradient() const
+vtkLookupTable * DataChooser::selectedGradient() const
 {
     return m_scalarToColorGradients[m_ui->gradientComboBox->currentIndex()];
 }
@@ -124,7 +126,7 @@ void DataChooser::loadGradientImages()
         QString fileName = fileInfo.baseName();
         QString filePath = fileInfo.absoluteFilePath();
         QPixmap pixmap = QPixmap(filePath).scaled(200, 20);
-        m_scalarToColorGradients << pixmap.toImage();
+        m_scalarToColorGradients << buildLookupTable(pixmap.toImage());
 
         gradientComboBox->addItem(pixmap, "");
         QVariant fileVariant(filePath);
@@ -148,4 +150,20 @@ void DataChooser::updateWindowTitle(QString objectName)
     }
 
     setWindowTitle(defaultTitle + ": " + objectName);
+}
+
+vtkLookupTable * DataChooser::buildLookupTable(const QImage & image)
+{   
+    // use alpha = 1.0, if the image doesn't have a alpha channel
+    int alphaMask = image.hasAlphaChannel() ? 0x00 : 0xFF;
+
+    vtkLookupTable * lut = vtkLookupTable::New();
+    lut->SetNumberOfTableValues(image.width());
+    for (int i = 0; i < image.width(); ++i)
+    {
+        QRgb color = image.pixel(i, 0);
+        lut->SetTableValue(i, qRed(color) / 255.0, qGreen(color) / 255.0, qBlue(color) / 255.0, (alphaMask | qAlpha(color)) / 255.0);
+    }
+
+    return lut;
 }

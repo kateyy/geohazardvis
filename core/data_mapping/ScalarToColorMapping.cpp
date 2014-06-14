@@ -2,10 +2,12 @@
 
 #include <cassert>
 
+#include <vtkLookupTable.h>
+
 #include "ScalarsForColorMapping.h"
 #include "ScalarsForColorMappingRegistry.h"
 
-#include "core/data_objects/RenderedData.h"
+#include <core/data_objects/RenderedData.h>
 
 
 ScalarToColorMapping::ScalarToColorMapping()
@@ -30,7 +32,7 @@ void ScalarToColorMapping::setRenderedData(const QList<RenderedData *> & rendere
     for (RenderedData * rendered : renderedData)
     {
         rendered->applyScalarsForColorMapping(m_currentScalars());
-        rendered->applyColorGradient(gradient());
+        rendered->applyGradientLookupTable(gradient());
     }
 }
 
@@ -98,20 +100,20 @@ const ScalarsForColorMapping * ScalarToColorMapping::currentScalars() const
     return scalars;
 }
 
-const QImage * ScalarToColorMapping::gradient() const
+vtkLookupTable * ScalarToColorMapping::gradient()
 {
     return m_gradient;
 }
 
-void ScalarToColorMapping::setGradient(const QImage * gradientImage)
+void ScalarToColorMapping::setGradient(vtkLookupTable * gradient)
 {
-    m_gradient = gradientImage;
+    m_gradient = gradient;
 
     if (!m_gradient)
         return;
 
     for (RenderedData * renderedData : m_renderedData)
     {
-        renderedData->applyColorGradient(m_gradient);
+        renderedData->applyGradientLookupTable(m_gradient);
     }
 }

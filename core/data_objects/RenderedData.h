@@ -8,7 +8,7 @@
 #include <core/core_api.h>
 
 
-class QImage;
+class vtkLookupTable;
 class vtkProperty;
 class vtkActor;
 
@@ -46,7 +46,7 @@ public:
     virtual reflectionzeug::PropertyGroup * configGroup() = 0;
 
     void applyScalarsForColorMapping(ScalarsForColorMapping * scalars);
-    void applyColorGradient(const QImage * gradient);
+    void applyGradientLookupTable(vtkLookupTable * gradient);
 
 signals:
     void geometryChanged();
@@ -60,7 +60,7 @@ protected:
 
 protected:
     const ScalarsForColorMapping * m_scalars;
-    const QImage * m_gradient;
+    vtkSmartPointer<vtkLookupTable> m_lut;
 
 private:
     DataObject * m_dataObject;

@@ -1,5 +1,6 @@
 #include "RenderedData.h"
 
+#include <vtkLookupTable.h>
 #include <vtkProperty.h>
 #include <vtkActor.h>
 
@@ -7,7 +8,7 @@
 RenderedData::RenderedData(DataObject * dataObject)
     : m_dataObject(dataObject)
     , m_scalars(nullptr)
-    , m_gradient(nullptr)
+    , m_lut(nullptr)
 {
 }
 
@@ -69,9 +70,9 @@ void RenderedData::applyScalarsForColorMapping(ScalarsForColorMapping * scalars)
     updateScalarToColorMapping();
 }
 
-void RenderedData::applyColorGradient(const QImage * gradient)
+void RenderedData::applyGradientLookupTable(vtkLookupTable * gradient)
 {
-    m_gradient = gradient;
+    m_lut = gradient;
 
     updateScalarToColorMapping();
 }
