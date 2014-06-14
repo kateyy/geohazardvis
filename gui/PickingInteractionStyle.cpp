@@ -97,15 +97,10 @@ void PickingInteractionStyle::pickCell()
     if (pickedActor)
     {
         emit actorPicked(pickedActor);
-    }
 
-    vtkDataSet * dataSet = m_cellPicker->GetDataSet();
-
-    if (dataSet)
-    {
         for (RenderedData * renderedData : *m_renderedData)
         {
-            if (renderedData->dataObject()->input()->data() == dataSet)
+            if (renderedData->mainActor() == pickedActor)
             {
                 emit cellPicked(renderedData->dataObject(), cellId);
             }
