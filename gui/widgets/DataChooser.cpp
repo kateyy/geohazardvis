@@ -9,10 +9,8 @@
 
 #include <vtkLookupTable.h>
 
-#include "core/data_objects/RenderedPolyData.h"
-#include "core/data_objects/DataObject.h"
-#include "core/data_mapping/ScalarsForColorMapping.h"
-#include "core/Input.h"
+#include <core/data_mapping/ScalarsForColorMapping.h>
+#include <core/data_mapping/ScalarToColorMapping.h>
 
 
 DataChooser::DataChooser(QWidget * parent)
@@ -41,23 +39,26 @@ void DataChooser::setMapping(QString rendererName, ScalarToColorMapping * mappin
     if (m_mapping == mapping)
         return;
 
+    m_mapping = nullptr;
+
     m_ui->scalarsComboBox->clear();
     m_ui->gradientGroupBox->setDisabled(true);
 
     if (!mapping)
         return;
 
-    m_mapping = mapping;
-
-    m_ui->scalarsComboBox->addItems(m_mapping->scalarsNames());
-    m_ui->scalarsComboBox->setCurrentText(m_mapping->currentScalarsName());
+    m_ui->scalarsComboBox->addItems(mapping->scalarsNames());
+    m_ui->scalarsComboBox->setCurrentText(mapping->currentScalarsName());
 
     // reuse gradient selection, or use default
-    if (m_mapping->gradient())
+    if (mapping->gradient())
         m_ui->gradientComboBox->setCurrentIndex(
-            m_scalarToColorGradients.indexOf(m_mapping->gradient()));
+            m_scalarToColorGradients.indexOf(mapping->gradient()));
     else
-        m_mapping->setGradient(selectedGradient());
+        mapping->setGradient(selectedGradient());
+
+    // the mapping can now receive signals from the UI
+    m_mapping = mapping;
 
     emit renderSetupChanged();
 }

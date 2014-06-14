@@ -5,13 +5,11 @@
 
 #include <vtkSmartPointer.h>
 
-#include <core/data_mapping/ScalarToColorMapping.h>
-
 
 class vtkLookupTable;
 
-class RenderedData;
 class Ui_DataChooser;
+class ScalarToColorMapping;
 
 class DataChooser : public QDockWidget
 {
