@@ -18,8 +18,6 @@ class vtkActor;
 
 class DataObject;
 class RenderedData;
-class RenderedPolyData;
-class RenderedImageData;
 
 class DataChooser;
 class NormalRepresentation;
@@ -62,9 +60,6 @@ signals:
 private:
     void setupRenderer();
     void setupInteraction();
-
-    void show3DInput(RenderedPolyData * renderedPolyData);
-    void showGridInput(RenderedImageData * renderedImageData);
 
     void updateWindowTitle();
     

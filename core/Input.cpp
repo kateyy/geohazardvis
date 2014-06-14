@@ -39,7 +39,7 @@ Input::~Input()
 {
 }
 
-vtkSmartPointer<vtkDataSet> Input::data() const
+vtkDataSet * Input::data() const
 {
     return m_data;
 }
@@ -55,7 +55,7 @@ GridDataInput::GridDataInput(const std::string & name)
 {
 }
 
-void GridDataInput::setData(vtkSmartPointer<vtkImageData> data)
+void GridDataInput::setData(vtkImageData * data)
 {
     m_data = data;
 }
@@ -76,32 +76,28 @@ const double * GridDataInput::minMaxValue() const
     return m_minMaxValue;
 }
 
-vtkSmartPointer<vtkImageData> GridDataInput::imageData() const
+int * GridDataInput::dimensions()
+{
+    return m_dimensions;
+}
+
+const int * GridDataInput::dimensions() const
+{
+    return m_dimensions;
+}
+
+void GridDataInput::setDimensions(int x, int y, int z)
+{
+    m_dimensions[0] = x;
+    m_dimensions[1] = y;
+    m_dimensions[2] = z;
+}
+
+vtkImageData * GridDataInput::imageData() const
 {
     vtkImageData * imageData = static_cast<vtkImageData*>(m_data.Get());
     assert(imageData);
     return imageData;
-}
-
-void GridDataInput::setMapper(vtkSmartPointer<vtkPolyDataMapper> mapper)
-{
-    m_mapper = mapper;
-    NameKey()->Set(mapper->GetInformation(), name.c_str());
-}
-
-void GridDataInput::setTexture(vtkSmartPointer<vtkTexture> texture)
-{
-    m_texture = texture;
-}
-
-vtkActor * GridDataInput::createTexturedPolygonActor() const
-{
-    assert(m_mapper);
-    assert(m_texture);
-    vtkActor * actor = vtkActor::New();
-    actor->SetMapper(m_mapper);
-    actor->SetTexture(m_texture);
-    return actor;
 }
 
 const double * GridDataInput::bounds() const

@@ -4,6 +4,8 @@
 #include <core/core_api.h>
 
 
+class vtkPolyDataMapper;
+
 class ImageDataObject;
 
 
@@ -14,7 +16,15 @@ public:
 
     const ImageDataObject * imageDataObject() const;
 
+    reflectionzeug::PropertyGroup * configGroup() override;
+
 protected:
     vtkProperty * createDefaultRenderProperty() const override;
     vtkActor * createActor() const override;
+
+    void updateScalarToColorMapping() override;
+
+private:
+    vtkPolyDataMapper * createMapper() const;
+
 };

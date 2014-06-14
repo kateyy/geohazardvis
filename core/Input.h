@@ -30,7 +30,7 @@ public:
 
     const std::string name;
 
-    virtual vtkSmartPointer<vtkDataSet> data() const;
+    virtual vtkDataSet * data() const;
     virtual const double * bounds() const = 0;
 
     static vtkInformationStringKey * NameKey();
@@ -46,28 +46,24 @@ protected:
 class GridDataInput : public Input {
 public:
     GridDataInput(const std::string & name);
-    void setData(vtkSmartPointer<vtkImageData> data);
+    void setData(vtkImageData * data);
     virtual void setMinMaxValue(double min, double max);
     virtual double * minMaxValue();
     virtual const double * minMaxValue() const;
 
-    virtual vtkSmartPointer<vtkImageData> imageData() const;
+    virtual int * dimensions();
+    virtual const int * dimensions() const;
+    virtual void setDimensions(int x, int y, int z);
 
-    virtual void setMapper(vtkSmartPointer<vtkPolyDataMapper> mapper);
-    virtual void setTexture(vtkSmartPointer<vtkTexture> texture);
-
-    virtual vtkActor * createTexturedPolygonActor() const;
+    virtual vtkImageData * imageData() const;
 
     const double * bounds() const override;
     double * bounds();
 
-    vtkSmartPointer<vtkLookupTable> lookupTable;
-
 protected:
-    vtkSmartPointer<vtkPolyDataMapper> m_mapper;
-    vtkSmartPointer<vtkTexture> m_texture;
     double m_minMaxValue[2];
     double m_bounds[6];
+    int m_dimensions[3];
 };
 
 class PolyDataInput : public Input {

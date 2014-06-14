@@ -6,13 +6,10 @@
 #include <vtkInformation.h>
 #include <vtkInformationStringKey.h>
 
-#include <vtkLookupTable.h>
-
 #include <vtkPolyData.h>
 
 #include <vtkPolyDataMapper.h>
 
-#include <vtkScalarBarActor.h>
 #include <vtkCubeAxesActor.h>
 
 #include <vtkRenderer.h>
@@ -126,29 +123,26 @@ void RenderWidget::addDataObject(DataObject * dataObject)
         }
     }
 
-    RenderedData * renderedData;
+    RenderedData * renderedData = nullptr;
 
     switch (dataObject->input()->type)
     {
     case ModelType::triangles:
-    {
-        RenderedPolyData * renderedPolyData = new RenderedPolyData(dynamic_cast<PolyDataObject*>(dataObject));
-        show3DInput(renderedPolyData);
-        renderedData = renderedPolyData;
+        renderedData = new RenderedPolyData(dynamic_cast<PolyDataObject*>(dataObject));
         break;
-    }
     case ModelType::grid2d:
-    {
-        assert(false);
-        /*RenderedImageData * renderedImageData = new RenderedImageData(dynamic_cast<ImageDataObject&>(*dataObject));
-        showGridInput(renderedImageData);
-        renderedData = renderedImageData;*/
+        renderedData = new RenderedImageData(dynamic_cast<ImageDataObject*>(dataObject));
         break;
-    }
     default:
         assert(false);
     }
 
+    assert(renderedData);
+
+    for (vtkActor * actor : renderedData->actors())
+        m_renderer->AddViewProp(actor);
+
+    m_actorToRenderedData.insert(renderedData->mainActor(), renderedData);
     m_renderedData << renderedData;
 
     connect(renderedData, &RenderedData::geometryChanged, this, &RenderWidget::render);
@@ -198,25 +192,6 @@ QList<DataObject *> RenderWidget::dataObjects() const
         dataObjects << rendered->dataObject();
 
     return dataObjects;
-}
-
-void RenderWidget::show3DInput(RenderedPolyData * renderedPolyData)
-{
-    m_actorToRenderedData.insert(renderedPolyData->mainActor(), renderedPolyData);
-
-    for (vtkActor * actor : renderedPolyData->actors())
-        m_renderer->AddViewProp(actor);
-}
-
-void RenderWidget::showGridInput(RenderedImageData * renderedImageData)
-{
-    const auto input = renderedImageData->imageDataObject()->gridDataInput();
-    VTK_CREATE(vtkScalarBarActor, heatBars);
-    heatBars->SetTitle(input->name.c_str());
-    heatBars->SetLookupTable(input->lookupTable);
-    m_renderer->AddViewProp(heatBars);
-    for (vtkActor * actor : renderedImageData->actors())
-        m_renderer->AddViewProp(actor);
 }
 
 void RenderWidget::setupAxes(const double bounds[6])
