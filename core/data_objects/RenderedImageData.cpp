@@ -44,26 +44,6 @@ vtkActor * RenderedImageData::createActor() const
 {
     auto & input = *imageDataObject()->gridDataInput();
 
-    double minValue = input.minMaxValue()[0];
-    double maxValue = input.minMaxValue()[1];
-
-
-    VTK_CREATE(vtkLookupTable, lut);
-    lut->SetTableRange(minValue, maxValue);
-    lut->SetNumberOfColors(static_cast<vtkIdType>(std::ceil(maxValue - minValue)) * 10);
-    lut->SetHueRange(0.66667, 0.0);
-    lut->SetValueRange(0.9, 0.9);
-    lut->SetSaturationRange(1.0, 1.0);
-    lut->SetAlphaRange(1.0, 1.0);
-    lut->Build();
-
-    VTK_CREATE(vtkTexture, texture);
-    texture->SetLookupTable(lut);
-    texture->SetInputData(input.data());
-    texture->MapColorScalarsThroughLookupTableOn();
-    texture->InterpolateOn();
-    texture->SetQualityTo32Bit();
-
     double xExtend = input.bounds()[1] - input.bounds()[0];
     double yExtend = input.bounds()[3] - input.bounds()[2];
 
@@ -79,17 +59,38 @@ vtkActor * RenderedImageData::createActor() const
 
     vtkActor * actor = vtkActor::New();
     actor->SetMapper(planeMapper);
-    actor->SetTexture(texture);
+    actor->SetTexture(buildTexture());
 
     return actor;
 }
 
 void RenderedImageData::updateScalarToColorMapping()
 {
-
+    mainActor()->SetTexture(buildTexture());
 }
 
 vtkPolyDataMapper * RenderedImageData::createMapper() const
 {
     return nullptr;
+}
+
+vtkTexture * RenderedImageData::buildTexture() const
+{
+    vtkTexture * texture = vtkTexture::New();
+
+    if (m_lut)
+    {
+        auto & input = *imageDataObject()->gridDataInput();
+
+        double minValue = input.minMaxValue()[0];
+        double maxValue = input.minMaxValue()[1];
+        m_lut->SetValueRange(minValue, maxValue);
+        texture->SetLookupTable(m_lut);
+        texture->SetInputData(input.data());
+        texture->MapColorScalarsThroughLookupTableOn();
+        texture->InterpolateOn();
+        texture->SetQualityTo32Bit();
+    }
+
+    return texture;
 }

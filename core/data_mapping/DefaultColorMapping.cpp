@@ -2,6 +2,8 @@
 
 #include "ScalarsForColorMappingRegistry.h"
 
+#include <core/data_objects/PolyDataObject.h>
+
 
 const QString DefaultColorMapping::s_name = "default color";
 
@@ -12,6 +14,20 @@ const bool DefaultColorMapping::s_registered = ScalarsForColorMappingRegistry::i
 DefaultColorMapping::DefaultColorMapping(const QList<DataObject *> & dataObjects)
     : ScalarsForColorMapping(dataObjects)
 {
+    int validObjects = 0;
+
+    for (DataObject * dataObject : dataObjects)
+    {
+        PolyDataObject * polyDataObject = dynamic_cast<PolyDataObject*>(dataObject);
+
+        if (!polyDataObject)
+            break;
+
+        validObjects++;
+    }
+
+    // applicable for list of PolyDataObjects only
+    m_valid = validObjects == dataObjects.length();
 }
 
 DefaultColorMapping::~DefaultColorMapping() = default;
@@ -34,5 +50,5 @@ void DefaultColorMapping::updateBounds()
 
 bool DefaultColorMapping::isValid() const
 {
-    return true;
+    return m_valid;
 }

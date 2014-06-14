@@ -5,6 +5,7 @@
 
 
 class vtkPolyDataMapper;
+class vtkTexture;
 
 class ImageDataObject;
 
@@ -26,5 +27,7 @@ protected:
 
 private:
     vtkPolyDataMapper * createMapper() const;
+
+    vtkTexture * buildTexture() const;
 
 };

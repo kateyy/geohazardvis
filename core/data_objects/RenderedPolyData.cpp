@@ -207,9 +207,7 @@ QList<vtkActor *> RenderedPolyData::fetchAttributeActors()
 
 void RenderedPolyData::updateScalarToColorMapping()
 {
-    vtkPolyDataMapper * mapper = createDataMapper();
-
-    mainActor()->SetMapper(mapper);
+    mainActor()->SetMapper(createDataMapper());
 }
 
 vtkPolyDataMapper * RenderedPolyData::createDataMapper() const

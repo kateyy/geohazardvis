@@ -3,11 +3,11 @@
 #include "ScalarsForColorMapping.h"
 
 
-class DefaultColorMapping : public ScalarsForColorMapping
+class GridColorMapping : public ScalarsForColorMapping
 {
 public:
-    DefaultColorMapping(const QList<DataObject *> & dataObjects);
-    ~DefaultColorMapping() override;
+    GridColorMapping(const QList<DataObject *> & dataObjects);
+    ~GridColorMapping() override;
 
     virtual QString name() const override;
     virtual bool usesGradients() const override;
@@ -18,7 +18,7 @@ protected:
     virtual bool isValid() const override;
 
 private:
-    bool m_valid;
+    const bool m_isValid;
 
     static const QString s_name;
     static const bool s_registered;

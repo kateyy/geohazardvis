@@ -45,6 +45,8 @@ set ( SOURCES
     data_mapping/DefaultColorMapping.cpp
     data_mapping/CoordinateValueMapping.h
     data_mapping/CoordinateValueMapping.cpp
+    data_mapping/GridColorMapping.h
+    data_mapping/GridColorMapping.cpp
 )
 
 source_group_by_path(${CMAKE_CURRENT_SOURCE_DIR} "\\\\.cpp$|\\\\.c$|\\\\.h$|\\\\.hpp$|\\\\.ui$|\\\\.inl$"
