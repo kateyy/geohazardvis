@@ -138,12 +138,7 @@ void MainWindow::openFile(QString filename)
     setWindowTitle(oldName);
 }
 
-void MainWindow::on_actionOpen_currentTab_triggered()
-{
-    on_actionOpen_newTab_triggered();
-}
-
-void MainWindow::on_actionOpen_newTab_triggered()
+void MainWindow::on_actionOpen_triggered()
 {
     QString fileName = dialog_inputFileName();
 

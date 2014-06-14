@@ -52,8 +52,7 @@
     <property name="title">
      <string>&amp;File</string>
     </property>
-    <addaction name="actionOpen_currentTab"/>
-    <addaction name="actionOpen_newTab"/>
+    <addaction name="actionOpen"/>
     <addaction name="separator"/>
     <addaction name="actionExit"/>
    </widget>
@@ -91,9 +90,9 @@
     <string>3</string>
    </property>
   </action>
-  <action name="actionOpen_currentTab">
+  <action name="actionOpen">
    <property name="text">
-    <string>&amp;Open in current tab...</string>
+    <string>&amp;Open...</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+O</string>

@@ -29,6 +29,8 @@ void ScalarToColorMapping::setRenderedData(const QList<RenderedData *> & rendere
     qDeleteAll(m_scalars);
     m_scalars = ScalarsForColorMappingRegistry::instance().createMappingsValidFor(dataObjects);
 
+    m_currentScalarsName = m_scalars.first()->name();
+
     for (RenderedData * rendered : renderedData)
     {
         rendered->applyScalarsForColorMapping(m_currentScalars());

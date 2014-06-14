@@ -25,8 +25,7 @@ public:
 
 public slots:
     void openFile(QString filename);
-    void on_actionOpen_currentTab_triggered();
-    void on_actionOpen_newTab_triggered();
+    void on_actionOpen_triggered();
 
     RenderWidget * addRenderWidget(int index);
 

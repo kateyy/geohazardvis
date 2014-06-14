@@ -57,6 +57,8 @@ void DataChooser::setMapping(QString rendererName, ScalarToColorMapping * mappin
     else
         mapping->setGradient(selectedGradient());
 
+    m_ui->gradientGroupBox->setEnabled(mapping->currentScalars()->usesGradients());
+
     // the mapping can now receive signals from the UI
     m_mapping = mapping;
 
