@@ -17,7 +17,7 @@ public:
 
     const ImageDataObject * imageDataObject() const;
 
-    reflectionzeug::PropertyGroup * configGroup() override;
+    reflectionzeug::PropertyGroup * createConfigGroup() override;
 
 protected:
     vtkProperty * createDefaultRenderProperty() const override;

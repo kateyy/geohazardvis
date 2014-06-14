@@ -21,7 +21,7 @@ public:
     PolyDataObject * polyDataObject();
     const PolyDataObject * polyDataObject() const;
 
-    reflectionzeug::PropertyGroup * configGroup();
+    reflectionzeug::PropertyGroup * createConfigGroup() override;
 
 protected:
     vtkProperty * createDefaultRenderProperty() const override;
@@ -32,8 +32,6 @@ protected:
 
 private:
     vtkPolyDataMapper * createDataMapper() const;
-
-    reflectionzeug::PropertyGroup * m_configGroup;
 
     NormalRepresentation m_normalRepresentation;
 };

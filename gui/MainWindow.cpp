@@ -99,8 +99,6 @@ RenderWidget * MainWindow::addRenderWidget(int index)
     RenderWidget * renderWidget = new RenderWidget(index, *m_dataChooser, *m_renderConfigWidget);
     addDockWidget(Qt::DockWidgetArea::BottomDockWidgetArea, renderWidget);
 
-    connect(m_renderConfigWidget, &RenderConfigWidget::renderPropertyChanged, renderWidget, &RenderWidget::render);
-
     return renderWidget;
 }
 

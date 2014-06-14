@@ -23,19 +23,11 @@ public:
 
     void clear();
 
-signals:
-    void renderPropertyChanged();
-
 protected:
-    void paintEvent(QPaintEvent * event) override;
-
-    void updateWindowTitle(QString propertyName = "");
-
-    void updatePropertyBrowser();
+    void updateWindowTitle(RenderedData * renderedData = nullptr);
 
 protected:
     Ui_RenderConfigWidget * m_ui;
-    bool m_needsBrowserRebuild;
 
     reflectionzeug::PropertyGroup * m_propertyRoot;
 };

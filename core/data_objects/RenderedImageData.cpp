@@ -30,7 +30,7 @@ const ImageDataObject * RenderedImageData::imageDataObject() const
     return static_cast<const ImageDataObject*>(dataObject());
 }
 
-reflectionzeug::PropertyGroup * RenderedImageData::configGroup()
+reflectionzeug::PropertyGroup * RenderedImageData::createConfigGroup()
 {
     return nullptr;
 }

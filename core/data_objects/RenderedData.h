@@ -43,7 +43,7 @@ public:
     vtkActor * mainActor();
     QList<vtkActor *> attributeActors();
 
-    virtual reflectionzeug::PropertyGroup * configGroup() = 0;
+    virtual reflectionzeug::PropertyGroup * createConfigGroup() = 0;
 
     void applyScalarsForColorMapping(ScalarsForColorMapping * scalars);
     void applyGradientLookupTable(vtkLookupTable * gradient);

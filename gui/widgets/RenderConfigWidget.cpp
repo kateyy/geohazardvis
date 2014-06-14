@@ -1,7 +1,6 @@
 #include "RenderConfigWidget.h"
 #include "ui_RenderConfigWidget.h"
 
-#include <reflectionzeug/Property.h>
 #include <reflectionzeug/PropertyGroup.h>
 #include <propertyguizeug/PropertyBrowser.h>
 
@@ -15,10 +14,9 @@ using namespace propertyguizeug;
 
 
 RenderConfigWidget::RenderConfigWidget(QWidget * parent)
-: QDockWidget(parent)
-, m_ui(new Ui_RenderConfigWidget())
-, m_needsBrowserRebuild(true)
-, m_propertyRoot(nullptr)
+    : QDockWidget(parent)
+    , m_ui(new Ui_RenderConfigWidget())
+    , m_propertyRoot(nullptr)
 {
     m_ui->setupUi(this);
 
@@ -34,44 +32,40 @@ RenderConfigWidget::~RenderConfigWidget()
 void RenderConfigWidget::clear()
 {
     updateWindowTitle();
-    m_needsBrowserRebuild = true;
+
+    m_ui->propertyBrowser->setRoot(nullptr);
+    delete m_propertyRoot;
+    m_propertyRoot = nullptr;
+
+    emit repaint();
 }
 
 void RenderConfigWidget::setRenderedData(RenderedData * renderedData)
 {
-    updateWindowTitle(QString::fromStdString(renderedData->dataObject()->input()->name));
+    clear();
 
-    m_propertyRoot = renderedData->configGroup();
-    m_needsBrowserRebuild = true;
+    if (!renderedData)
+        return;
+
+    updateWindowTitle(renderedData);
+
+    m_propertyRoot = renderedData->createConfigGroup();
+
+    m_ui->propertyBrowser->setRoot(m_propertyRoot);
+    m_ui->propertyBrowser->expandToDepth(0);
+
     emit repaint();
 }
 
-void RenderConfigWidget::paintEvent(QPaintEvent * event)
-{
-    if (m_needsBrowserRebuild)
-    {
-        m_needsBrowserRebuild = false;
-        updatePropertyBrowser();
-    }
-
-    QDockWidget::paintEvent(event);
-}
-
-void RenderConfigWidget::updateWindowTitle(QString propertyName)
+void RenderConfigWidget::updateWindowTitle(RenderedData * renderedData)
 {
     const QString defaultTitle = "render configuration";
 
-    if (propertyName.isEmpty())
+    if (!renderedData)
     {
         setWindowTitle(defaultTitle);
         return;
     }
 
-    setWindowTitle(defaultTitle + ": " + propertyName);
-}
-
-void RenderConfigWidget::updatePropertyBrowser()
-{
-    m_ui->propertyBrowser->setRoot(m_propertyRoot);
-    m_ui->propertyBrowser->expandToDepth(0);
+    setWindowTitle(defaultTitle + ": " + QString::fromStdString(renderedData->dataObject()->input()->name));
 }

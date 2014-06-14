@@ -41,7 +41,6 @@ namespace
 
 RenderedPolyData::RenderedPolyData(PolyDataObject * dataObject)
     : RenderedData(dataObject)
-    , m_configGroup(nullptr)
 {
     m_normalRepresentation.setData(dataObject->polyDataInput()->polyData());
     m_normalRepresentation.setVisible(false);
@@ -50,7 +49,6 @@ RenderedPolyData::RenderedPolyData(PolyDataObject * dataObject)
 
 RenderedPolyData::~RenderedPolyData()
 {
-    delete m_configGroup;
 }
 
 PolyDataObject * RenderedPolyData::polyDataObject()
@@ -65,16 +63,13 @@ const PolyDataObject * RenderedPolyData::polyDataObject() const
     return static_cast<const PolyDataObject *>(dataObject());
 }
 
-reflectionzeug::PropertyGroup * RenderedPolyData::configGroup()
+reflectionzeug::PropertyGroup * RenderedPolyData::createConfigGroup()
 {
-    if (m_configGroup)
-        return m_configGroup;
-
-    m_configGroup = new PropertyGroup();
+    PropertyGroup * configGroup = new PropertyGroup();
 
     auto * renderSettings = new PropertyGroup("renderSettings");
     renderSettings->setTitle("rendering");
-    m_configGroup->addProperty(renderSettings);
+    configGroup->addProperty(renderSettings);
 
     if (renderProperty())
     {
@@ -172,9 +167,9 @@ reflectionzeug::PropertyGroup * RenderedPolyData::configGroup()
         transparency->setStep(0.01f);
     }
 
-    m_configGroup->addProperty(m_normalRepresentation.createPropertyGroup());
+    configGroup->addProperty(m_normalRepresentation.createPropertyGroup());
 
-    return m_configGroup;
+    return configGroup;
 }
 
 vtkProperty * RenderedPolyData::createDefaultRenderProperty() const
