@@ -25,6 +25,12 @@ set(CMAKE_MODULE_PATH
 
 include(cmake/Custom.cmake)
 
+set(DEFAULT_COMPILE_DEFS
+    $<$<CONFIG:Debug>:_DEBUG>            # Debug build
+    $<$<CONFIG:Release>:NDEBUG>          # Release build
+    $<$<CONFIG:RelWithDebInfo>:NDEBUG>
+    $<$<CONFIG:MinSizeRel>:NDEBUG>
+)
 
 # PLATFORM AND ARCHITECTURE
 

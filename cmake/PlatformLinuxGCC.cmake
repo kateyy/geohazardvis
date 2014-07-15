@@ -8,22 +8,15 @@ if(NOT GCC_VERSION VERSION_EQUAL 4.9)
     message(WARNING "Warning: only tested with gcc 4.9, but ${GCC_VERSION} was found.")
 endif()
 
+LIST(APPEND DEFAULT_COMPILE_DEFS
 
-set(LINUX_COMPILE_DEFS
     LINUX                     # Linux system
     PIC                       # Position-independent code
     _REENTRANT                # Reentrant code
 )
-set(DEFAULT_COMPILE_DEFS_DEBUG
-    ${LINUX_COMPILE_DEFS}
-    _DEBUG                    # Debug build
-)
-set(DEFAULT_COMPILE_DEFS_RELEASE
-    ${LINUX_COMPILE_DEFS}
-    NDEBUG                    # Release build
-)
 
-set(LINUX_COMPILE_FLAGS "-std=gnu++11 -pthread -pipe -fPIC -Wreturn-type -Wall -Wextra -Wcast-align -Wno-unused-parameter -Wno-unused-variable -Wno-unused-but-set-variable")
+set(LINUX_COMPILE_FLAGS 
+    -std=gnu++11 -pthread -pipe -fPIC -Wreturn-type -Wall -Wextra -Wcast-align -Wno-unused-parameter -Wno-unused-variable -Wno-unused-but-set-variable)
 # pthread       -> use pthread library
 # no-rtti       -> disable c++ rtti
 # no-exceptions -> disable exception handling

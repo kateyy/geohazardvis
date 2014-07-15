@@ -1,28 +1,15 @@
 
-set(WIN32_COMPILE_DEFS
+LIST(APPEND DEFAULT_COMPILE_DEFS
+
     WIN32                       # Windows system
     UNICODE                     # Use unicode
     _UNICODE                    # Use unicode
 #    _SCL_SECURE_NO_WARNINGS        # Calling any one of the potentially unsafe methods in the Standard C++ Library
 #    _CRT_SECURE_NO_DEPRECATE   # Disable CRT deprecation warnings
-#    Q_COMPILER_INITIALIZER_LISTS
 )
-
-
-
-set(DEFAULT_COMPILE_DEFS_DEBUG
-    ${WIN32_COMPILE_DEFS}
-    _DEBUG                      # Debug build
-)
-
-set(DEFAULT_COMPILE_DEFS_RELEASE
-    ${WIN32_COMPILE_DEFS}
-    NDEBUG                      # Release build
-)
-
 
 set(WIN32_COMPILE_FLAGS
-    "/nologo /Zc:wchar_t /Zc:forScope /GR /Zi /fp:precise /MP /W4 /wd4127 /wd4189 /wd4250 /wd4251 /wd4351 /wd4505 /wd4512"
+    /nologo /Zc:wchar_t /Zc:forScope /GR /Zi /fp:precise /MP /W4 /wd4127 /wd4189 /wd4250 /wd4251 /wd4351 /wd4505 /wd4512
     # nologo       -> no logo
     # Zc:wchar_t   -> treat wchar_t as built-in type: yes
     # Zc:forScope  -> force conformance in for loop scope: Yes
@@ -64,13 +51,13 @@ set(WIN32_COMPILE_FLAGS
     # arch:SSE2    -> enable enhanced instruction set: streaming simd extensions 2
 )
 
-
-set(DEFAULT_COMPILE_FLAGS ${WIN32_COMPILE_FLAGS})
-
-set(DEFAULT_COMPILE_FLAGS_DEBUG /MDd /RTC1c /Od /GS )
-set(DEFAULT_COMPILE_FLAGS_RELEASE /MD /Ot /Ob2 /Ox /GS- /GL )
-set(DEFAULT_COMPILE_FLAGS_RELWITHDEBINFO /MD /Ot /Ob2 /Ox /GS- /GL )
-
+set(DEFAULT_COMPLIE_FLAGS
+    ${WIN32_COMPILE_FLAGS}
+    $<$<CONFIG:Debug>:          /MDd /RTC1 /RTCc /Od /GS /sdl /GF- >
+    $<$<CONFIG:Release>:        /MD /Ot /Ob2 /Ox /GS- /GL /GF >
+    $<$<CONFIG:RelWithDebInfo>: /MD /Ot /Ob2 /Ox /GS- /GL /GF >
+    $<$<CONFIG:MinSizeRel>:     /MD /Os /Ob1 /O1 /GS- /GL /GF >
+)
 
 set(WIN32_LINKER_FLAGS
     "/NOLOGO /NXCOMPAT"
