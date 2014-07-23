@@ -30,16 +30,16 @@ NormalRepresentation::NormalRepresentation()
     m_actor->SetVisibility(m_visible);
     m_actor->PickableOff();
 
-    VTK_CREATE(vtkArrowSource, arrow);
-    arrow->SetShaftRadius(0.02);
-    arrow->SetTipRadius(0.07);
-    arrow->SetTipLength(0.3);
+    m_arrowSource = vtkSmartPointer<vtkArrowSource>::New();
+    m_arrowSource->SetShaftRadius(0.02);
+    m_arrowSource->SetTipRadius(0.07);
+    m_arrowSource->SetTipLength(0.3);
 
     m_arrowGlyph = vtkSmartPointer<vtkGlyph3D>::New();
     m_arrowGlyph->SetScaleModeToScaleByScalar();
     m_arrowGlyph->SetVectorModeToUseNormal();
     m_arrowGlyph->OrientOn();
-    m_arrowGlyph->SetSourceConnection(arrow->GetOutputPort());
+    m_arrowGlyph->SetSourceConnection(m_arrowSource->GetOutputPort());
 }
 
 void NormalRepresentation::setData(vtkPolyData * polyData)
@@ -68,16 +68,41 @@ bool NormalRepresentation::visible() const
     return m_visible;
 }
 
-void NormalRepresentation::setGlyphSize(float size)
+float NormalRepresentation::arrowLength() const
 {
-    m_arrowGlyph->SetScaleFactor(size);
+    return static_cast<float>(m_arrowGlyph->GetScaleFactor());
+}
+
+void NormalRepresentation::setArrowLength(float length)
+{
+    m_arrowGlyph->SetScaleFactor(length);
 
     emit geometryChanged();
 }
 
-float NormalRepresentation::glyphSize() const
+float NormalRepresentation::arrowRadius() const
 {
-    return static_cast<float>(m_arrowGlyph->GetScaleFactor());
+    return (float)m_arrowSource->GetTipRadius();
+}
+
+void NormalRepresentation::setArrowRadius(float radius)
+{
+    m_arrowSource->SetTipRadius(radius);
+    m_arrowSource->SetShaftRadius(radius * 0.1f);
+
+    emit geometryChanged();
+}
+
+float NormalRepresentation::arrowTipLength() const
+{
+    return (float)m_arrowSource->GetTipLength();
+}
+
+void NormalRepresentation::setArrowTipLength(float tipLength)
+{
+    m_arrowSource->SetTipLength(tipLength);
+
+    emit geometryChanged();
 }
 
 PropertyGroup * NormalRepresentation::createPropertyGroup()
@@ -87,12 +112,24 @@ PropertyGroup * NormalRepresentation::createPropertyGroup()
         std::bind(&NormalRepresentation::visible, this),
         std::bind(&NormalRepresentation::setVisible, this, std::placeholders::_1));
 
-    auto prop_size = group->addProperty<float>("size",
-        std::bind(&NormalRepresentation::glyphSize, this),
-        std::bind(&NormalRepresentation::setGlyphSize, this, std::placeholders::_1));
-    prop_size->setTitle("arrow length");
-    prop_size->setMinimum(0.00001f);
-    prop_size->setStep(0.1);
+    auto prop_length = group->addProperty<float>("length", this,
+        &NormalRepresentation::arrowLength, &NormalRepresentation::setArrowLength);
+    prop_length->setTitle("arrow length");
+    prop_length->setMinimum(0.00001f);
+    prop_length->setStep(0.1f);
+
+    auto prop_radius = group->addProperty<float>("radius", this,
+        &NormalRepresentation::arrowRadius, &NormalRepresentation::setArrowRadius);
+    prop_radius->setTitle("tip radius");
+    prop_radius->setMinimum(0.00001f);
+    prop_radius->setStep(0.01f);
+
+    auto prop_tipLength = group->addProperty<float>("tipLength", this,
+        &NormalRepresentation::arrowTipLength, &NormalRepresentation::setArrowTipLength);
+    prop_tipLength->setTitle("tip length");
+    prop_tipLength->setMinimum(0.00001f);
+    prop_tipLength->setMaximum(1.f);
+    prop_tipLength->setStep(0.01f);
 
     return group;
 }

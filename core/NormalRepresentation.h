@@ -10,6 +10,7 @@
 class vtkPolyData;
 class vtkMapper;
 class vtkActor;
+class vtkArrowSource;
 class vtkGlyph3D;
 
 namespace reflectionzeug {
@@ -28,11 +29,17 @@ public:
 
     vtkActor * actor();
 
-    void setVisible(bool visible);
     bool visible() const;
+    void setVisible(bool visible);
 
-    void setGlyphSize(float size);
-    float glyphSize() const;
+    float arrowLength() const;
+    void setArrowLength(float length);
+
+    float arrowRadius() const;
+    void setArrowRadius(float radius);
+
+    float arrowTipLength() const;
+    void setArrowTipLength(float tipLength);
 
     reflectionzeug::PropertyGroup * createPropertyGroup();
 
@@ -49,5 +56,6 @@ private:
     vtkSmartPointer<vtkActor> m_actor;
     vtkSmartPointer<vtkMapper> m_mapper;
 
+    vtkSmartPointer<vtkArrowSource> m_arrowSource;
     vtkSmartPointer<vtkGlyph3D> m_arrowGlyph;
 };
