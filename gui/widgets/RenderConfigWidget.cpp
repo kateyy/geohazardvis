@@ -20,6 +20,8 @@ RenderConfigWidget::RenderConfigWidget(QWidget * parent)
 {
     m_ui->setupUi(this);
 
+    m_ui->propertyBrowser->setAlwaysExpandGroups(true);
+
     updateWindowTitle();
 }
 
@@ -52,7 +54,7 @@ void RenderConfigWidget::setRenderedData(RenderedData * renderedData)
     m_propertyRoot = renderedData->createConfigGroup();
 
     m_ui->propertyBrowser->setRoot(m_propertyRoot);
-    m_ui->propertyBrowser->expandToDepth(0);
+    m_ui->propertyBrowser->setColumnWidth(0, 135);
 
     emit repaint();
 }

@@ -147,7 +147,7 @@ reflectionzeug::PropertyGroup * RenderedPolyData::createConfigGroup()
                 renderProperty()->SetInterpolation(static_cast<int>(i));
                 emit geometryChanged();
         });
-        interpolation->setTitle("shading interpolation");
+        interpolation->setTitle("interpolation");
         interpolation->setStrings({
                 { Interpolation::flat, "flat" },
                 { Interpolation::gouraud, "gouraud" },
