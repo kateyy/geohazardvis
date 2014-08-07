@@ -2,6 +2,7 @@
 
 #include <QMainWindow>
 #include <QList>
+#include <QStringList>
 
 #include <gui/gui_api.h>
 
@@ -37,7 +38,7 @@ protected slots:
     void updateRenderViewActions(QList<RenderWidget*> widgets);
 
 protected:
-    QString dialog_inputFileName();
+    QStringList dialog_inputFileName();
 
     void dragEnterEvent(QDragEnterEvent * event) override;
     void dropEvent(QDropEvent * event) override;

@@ -65,16 +65,16 @@ MainWindow::~MainWindow()
     delete m_ui;
 }
 
-QString MainWindow::dialog_inputFileName()
+QStringList MainWindow::dialog_inputFileName()
 {
-    QString fileName = QFileDialog::getOpenFileName(this, "", m_lastOpenFolder, "Text files (*.txt)");
+    QStringList fileNames = QFileDialog::getOpenFileNames(this, "", m_lastOpenFolder, "Text files (*.txt)");
 
-    if (fileName.isEmpty())
-        return QString();
+    if (fileNames.isEmpty())
+        return {};
 
-    m_lastOpenFolder = QFileInfo(fileName).absolutePath();
+    m_lastOpenFolder = QFileInfo(fileNames.first()).absolutePath();
 
-    return fileName;
+    return fileNames;
 }
 
 void MainWindow::dragEnterEvent(QDragEnterEvent * event)
@@ -86,10 +86,9 @@ void MainWindow::dragEnterEvent(QDragEnterEvent * event)
 void MainWindow::dropEvent(QDropEvent * event)
 {
     assert(event->mimeData()->hasUrls());
-    QString filename = event->mimeData()->urls().first().toLocalFile();
-    qDebug() << filename;
 
-    emit openFile(filename);
+    for (const QUrl & url : event->mimeData()->urls())
+        openFile(url.toLocalFile());
 
     event->acceptProposedAction();
 }
@@ -104,6 +103,8 @@ RenderWidget * MainWindow::addRenderWidget(int index)
 
 void MainWindow::openFile(QString filename)
 {
+    qDebug() << " <" << filename;
+
     QApplication::processEvents();
 
     QString oldName = windowTitle();
@@ -140,12 +141,10 @@ void MainWindow::openFile(QString filename)
 
 void MainWindow::on_actionOpen_triggered()
 {
-    QString fileName = dialog_inputFileName();
+    QStringList fileNames = dialog_inputFileName();
 
-    if (fileName.isEmpty())
-        return;
-
-    openFile(fileName);
+    for (const QString & fileName : fileNames)
+        openFile(fileName);
 }
 
 void MainWindow::updateRenderViewActions(QList<RenderWidget*> widgets)
