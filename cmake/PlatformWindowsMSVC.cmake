@@ -39,6 +39,8 @@ set(WIN32_COMPILE_FLAGS
     # MDd          -> Runtime Library: Multithreaded Debug DLL
     # Od           -> Optimization: none
     # RTC1         -> Runtime error checks
+    
+    # Zo           -> generates richer debugging information for optimized code (non- /Od builds) (VS2013 Update 3)
  
     # For release: 
     # W3           -> warn level 3
@@ -55,7 +57,7 @@ set(DEFAULT_COMPLIE_FLAGS
     ${WIN32_COMPILE_FLAGS}
     $<$<CONFIG:Debug>:          /MDd /RTC1 /RTCc /Od /GS /sdl /GF- >
     $<$<CONFIG:Release>:        /MD /Ot /Ob2 /Ox /GS- /GL /GF >
-    $<$<CONFIG:RelWithDebInfo>: /MD /Ot /Ob2 /Ox /GS- /GL /GF >
+    $<$<CONFIG:RelWithDebInfo>: /MD /Ot /Ob2 /Ox /GS- /GL /GF /Zo>
     $<$<CONFIG:MinSizeRel>:     /MD /Os /Ob1 /O1 /GS- /GL /GF >
 )
 
