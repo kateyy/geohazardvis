@@ -129,7 +129,7 @@ void DataChooser::loadGradientImages()
         QString fileName = fileInfo.baseName();
         QString filePath = fileInfo.absoluteFilePath();
         QPixmap pixmap = QPixmap(filePath).scaled(200, 20);
-        m_scalarToColorGradients << buildLookupTable(pixmap.toImage());
+        m_scalarToColorGradients << vtkSmartPointer<vtkLookupTable>::Take(buildLookupTable(pixmap.toImage()));
 
         gradientComboBox->addItem(pixmap, "");
         QVariant fileVariant(filePath);
