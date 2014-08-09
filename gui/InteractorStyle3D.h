@@ -21,9 +21,15 @@ public:
     static InteractorStyle3D * New();
     vtkTypeMacro(InteractorStyle3D, vtkInteractorStyleTrackballCamera);
 
-    virtual void OnMouseMove() override;
-    virtual void OnLeftButtonDown() override;
-    virtual void OnLeftButtonUp() override;
+    void OnMouseMove() override;
+    void OnLeftButtonDown() override;
+    void OnLeftButtonUp() override;
+    void OnMiddleButtonDown() override;
+    void OnMiddleButtonUp() override;
+    void OnRightButtonDown() override;
+    void OnRightButtonUp() override;
+
+    void OnChar() override;
 
     void setRenderedDataList(const QList<RenderedData *> * renderedData);
 

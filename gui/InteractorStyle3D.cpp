@@ -77,6 +77,59 @@ void InteractorStyle3D::OnLeftButtonUp()
     m_mouseMoved = false;
 }
 
+void InteractorStyle3D::OnMiddleButtonDown()
+{
+    FindPokedRenderer(GetInteractor()->GetEventPosition()[0], GetInteractor()->GetEventPosition()[1]);
+
+    if (!GetCurrentRenderer())
+        return;
+
+    StartDolly();
+}
+
+void InteractorStyle3D::OnMiddleButtonUp()
+{
+    switch (State)
+    {
+    case VTKIS_DOLLY:
+        EndDolly();
+        if (Interactor)
+            ReleaseFocus();
+        break;
+    default:
+        Superclass::OnMiddleButtonUp();
+    }
+}
+
+void InteractorStyle3D::OnRightButtonDown()
+{
+    FindPokedRenderer(GetInteractor()->GetEventPosition()[0], GetInteractor()->GetEventPosition()[1]);
+
+    if (!GetCurrentRenderer())
+        return;
+
+    StartPan();
+}
+
+void InteractorStyle3D::OnRightButtonUp()
+{
+    switch (State)
+    {
+    case VTKIS_PAN:
+        EndPan();
+        if (Interactor)
+            ReleaseFocus();
+        break;
+    default:
+        Superclass::OnRightButtonUp();
+    }
+}
+
+void InteractorStyle3D::OnChar()
+{
+    // disable magic keys for now
+}
+
 void InteractorStyle3D::setRenderedDataList(const QList<RenderedData *> * renderedData)
 {
     assert(renderedData);
@@ -93,7 +146,10 @@ void InteractorStyle3D::highlightPickedCell()
     vtkActor * pickedActor = m_cellPicker->GetActor();
 
     if (!pickedActor)
+    {
         highlightCell(-1, nullptr);
+        return;
+    }
 
     
     emit actorPicked(pickedActor);

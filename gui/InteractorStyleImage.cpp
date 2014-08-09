@@ -8,6 +8,7 @@
 #include <vtkRenderWindowInteractor.h>
 #include <vtkRenderer.h>
 #include <vtkRenderWindow.h>
+#include <vtkCallbackCommand.h>
 
 #include <vtkObjectFactory.h>
 #include <vtkPointPicker.h>
@@ -62,7 +63,15 @@ void InteractorStyleImage::OnMouseMove()
 
 void InteractorStyleImage::OnLeftButtonDown()
 {
-    vtkInteractorStyleImage::OnLeftButtonDown();
+    FindPokedRenderer(GetInteractor()->GetEventPosition()[0], GetInteractor()->GetEventPosition()[1]);
+
+    if (!GetCurrentRenderer())
+        return;
+
+    GrabFocus(EventCallbackCommand);
+
+    StartPan();
+
     m_mouseMoved = false;
 }
 
@@ -74,6 +83,45 @@ void InteractorStyleImage::OnLeftButtonUp()
         highlightPickedCell();
     
     m_mouseMoved = false;
+}
+
+void InteractorStyleImage::OnMiddleButtonDown()
+{
+    FindPokedRenderer(GetInteractor()->GetEventPosition()[0], GetInteractor()->GetEventPosition()[1]);
+
+    if (!GetCurrentRenderer())
+        return;
+
+    StartDolly();
+}
+
+void InteractorStyleImage::OnMiddleButtonUp()
+{
+    switch (State)
+    {
+    case VTKIS_DOLLY:
+        EndDolly();
+        if (Interactor)
+            ReleaseFocus();
+        break;
+    default:
+        Superclass::OnMiddleButtonUp();
+    }
+}
+
+void InteractorStyleImage::OnRightButtonDown()
+{
+    OnLeftButtonDown();
+}
+
+void InteractorStyleImage::OnRightButtonUp()
+{
+    OnLeftButtonUp();
+}
+
+void InteractorStyleImage::OnChar()
+{
+    // disable magic keys for now
 }
 
 void InteractorStyleImage::setRenderedDataList(const QList<RenderedData *> * renderedData)
@@ -91,7 +139,10 @@ void InteractorStyleImage::highlightPickedCell()
 
     vtkActor * pickedActor = m_cellPicker->GetActor();
     if (!pickedActor)
+    {
         highlightCell(-1, nullptr);
+        return;
+    }
 
     
     emit actorPicked(pickedActor);

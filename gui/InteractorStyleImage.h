@@ -24,6 +24,12 @@ public:
     void OnMouseMove() override;
     void OnLeftButtonDown() override;
     void OnLeftButtonUp() override;
+    void OnMiddleButtonDown() override;
+    void OnMiddleButtonUp() override;
+    void OnRightButtonDown() override;
+    void OnRightButtonUp() override;
+
+    void OnChar() override;
 
     void setRenderedDataList(const QList<RenderedData *> * renderedData) override;
 
