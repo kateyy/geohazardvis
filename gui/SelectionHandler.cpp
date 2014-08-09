@@ -8,7 +8,7 @@
 
 #include "widgets/TableWidget.h"
 #include "widgets/RenderWidget.h"
-#include "PickingInteractionStyle.h"
+#include "IPickingInteractorStyle.h"
 
 
 SelectionHandler & SelectionHandler::instance()
@@ -32,7 +32,7 @@ void SelectionHandler::addTableView(TableWidget * tableWidget)
 void SelectionHandler::addRenderView(RenderWidget * renderWidget)
 {
     m_renderWidgets << renderWidget;
-    connect(renderWidget->interactStyle(), &PickingInteractionStyle::cellPicked, this, &SelectionHandler::cellPicked);
+    connect(renderWidget->interactorStyle(), &IPickingInteractorStyle::cellPicked, this, &SelectionHandler::cellPicked);
 }
 
 void SelectionHandler::removeTableView(TableWidget * tableWidget)
@@ -55,29 +55,20 @@ void SelectionHandler::tableSelectionChanged(int cellId)
     for (RenderWidget * renderWidget : m_renderWidgets)
     {
         if (renderWidget->dataObjects().contains(dataObject))
-        {
-            renderWidget->interactStyle()->highlightCell(cellId, dataObject);
-        }
+            renderWidget->interactorStyle()->highlightCell(cellId, dataObject);
     }
 }
 
 void SelectionHandler::cellPicked(DataObject * dataObject, vtkIdType cellId)
 {
-    PickingInteractionStyle * interactionStyle = dynamic_cast<PickingInteractionStyle*>(sender());
-    assert(interactionStyle);
-
     for (RenderWidget * renderWidget : m_renderWidgets)
     {
         if (renderWidget->dataObjects().contains(dataObject))
-        {
-            renderWidget->interactStyle()->highlightCell(cellId, dataObject);
-        }
+            renderWidget->interactorStyle()->highlightCell(cellId, dataObject);
     }
     for (TableWidget * table : m_tableWidgets)
     {
         if (table->dataObject() == dataObject)
-        {
             table->selectCell(cellId);
-        }
     }
 }

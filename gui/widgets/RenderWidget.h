@@ -21,7 +21,8 @@ class RenderedData;
 
 class DataChooser;
 class NormalRepresentation;
-class PickingInteractionStyle;
+class PickingInteractorStyleSwitch;
+class IPickingInteractorStyle;
 class RenderConfigWidget;
 class Ui_RenderWidget;
 
@@ -46,8 +47,8 @@ public:
     vtkRenderWindow * renderWindow();
     const vtkRenderWindow * renderWindow() const;
     
-    PickingInteractionStyle * interactStyle();
-    const PickingInteractionStyle * interactStyle() const;
+    IPickingInteractorStyle * interactorStyle();
+    const IPickingInteractorStyle * interactorStyle() const;
 
 public slots:
     void render();
@@ -60,6 +61,7 @@ signals:
 private:
     void setupRenderer();
     void setupInteraction();
+    void setInteractorStyle(const std::string & name);
 
     void updateWindowTitle();
     
@@ -86,10 +88,9 @@ private:
     // Rendering components
     vtkSmartPointer<vtkRenderer> m_renderer;
     vtkSmartPointer<vtkRenderWindowInteractor> m_interactor;
-    vtkSmartPointer<PickingInteractionStyle> m_interactStyle;
+    vtkSmartPointer<PickingInteractorStyleSwitch> m_interactorStyle;
 
     // visualization and annotation
-    //NormalRepresentation * m_vertexNormalRepresentation;
     vtkSmartPointer<vtkCubeAxesActor> m_axesActor;
     
     // configuration widgets

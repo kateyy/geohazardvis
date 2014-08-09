@@ -26,13 +26,16 @@
 #include <core/data_objects/RenderedPolyData.h>
 #include <core/data_objects/RenderedImageData.h>
 
-#include "PickingInteractionStyle.h"
+#include "PickingInteractorStyleSwitch.h"
+#include "InteractorStyle3D.h"
+#include "InteractorStyleImage.h"
 #include "SelectionHandler.h"
 #include "widgets/DataChooser.h"
 #include "widgets/RenderConfigWidget.h"
 
 
 using namespace std;
+
 
 RenderWidget::RenderWidget(
     int index,
@@ -89,19 +92,26 @@ void RenderWidget::setupRenderer()
 
 void RenderWidget::setupInteraction()
 {
-    m_interactStyle = vtkSmartPointer<PickingInteractionStyle>::New();
-    m_interactStyle->SetDefaultRenderer(m_renderer);
+    m_interactorStyle = vtkSmartPointer<PickingInteractorStyleSwitch>::New();
+    m_interactorStyle->SetDefaultRenderer(m_renderer);
+    m_interactorStyle->setRenderedDataList(&m_renderedData);
 
-    m_interactStyle->setRenderedDataList(&m_renderedData);
+    m_interactorStyle->addStyle("InteractorStyle3D", InteractorStyle3D::New());
+    m_interactorStyle->addStyle("InteractorStyleImage", InteractorStyleImage::New());
 
-    connect(m_interactStyle.Get(), &PickingInteractionStyle::pointInfoSent, this, &RenderWidget::ShowInfo);
-    connect(m_interactStyle.Get(), &PickingInteractionStyle::actorPicked, this, &RenderWidget::on_actorPicked);
-
+    connect(m_interactorStyle.Get(), &PickingInteractorStyleSwitch::pointInfoSent, this, &RenderWidget::ShowInfo);
+    connect(m_interactorStyle.Get(), &PickingInteractorStyleSwitch::actorPicked, this, &RenderWidget::on_actorPicked);
+ 
     m_interactor = vtkSmartPointer<vtkRenderWindowInteractor>::New();
-    m_interactor->SetInteractorStyle(m_interactStyle);
     m_interactor->SetRenderWindow(m_ui->qvtkMain->GetRenderWindow());
+    m_interactor->SetInteractorStyle(m_interactorStyle);
 
     m_interactor->Initialize();
+}
+
+void RenderWidget::setInteractorStyle(const std::string & name)
+{
+    m_interactorStyle->setCurrentStyle(name);
 }
 
 void RenderWidget::ShowInfo(const QStringList & info)
@@ -114,13 +124,11 @@ void RenderWidget::addDataObject(DataObject * dataObject)
     setWindowTitle(QString::fromStdString(dataObject->input()->name) + " (loading to GPU)");
     QApplication::processEvents();
 
-    if (!m_renderedData.empty())
+    if (!m_renderedData.empty()
+        && m_renderedData.first()->dataObject()->input()->type != dataObject->input()->type)
     {
-        if (m_renderedData.first()->dataObject()->input()->type != dataObject->input()->type)
-        {
-            QMessageBox::warning(this, "", "Cannot render 2d and 3d geometry in the same view.");
-            return;
-        }
+        QMessageBox::warning(this, "", "Cannot render 2d and 3d geometry in the same view.");
+        return;
     }
 
     RenderedData * renderedData = nullptr;
@@ -129,9 +137,11 @@ void RenderWidget::addDataObject(DataObject * dataObject)
     {
     case ModelType::triangles:
         renderedData = new RenderedPolyData(dynamic_cast<PolyDataObject*>(dataObject));
+        setInteractorStyle("InteractorStyle3D");
         break;
     case ModelType::grid2d:
         renderedData = new RenderedImageData(dynamic_cast<ImageDataObject*>(dataObject));
+        setInteractorStyle("InteractorStyleImage");
         break;
     default:
         assert(false);
@@ -271,14 +281,14 @@ const vtkRenderWindow * RenderWidget::renderWindow() const
     return m_ui->qvtkMain->GetRenderWindow();
 }
 
-PickingInteractionStyle * RenderWidget::interactStyle()
+IPickingInteractorStyle * RenderWidget::interactorStyle()
 {
-    return m_interactStyle;
+    return m_interactorStyle;
 }
 
-const PickingInteractionStyle * RenderWidget::interactStyle() const
+const IPickingInteractorStyle * RenderWidget::interactorStyle() const
 {
-    return m_interactStyle;
+    return m_interactorStyle;
 }
 
 void RenderWidget::closeEvent(QCloseEvent * event)

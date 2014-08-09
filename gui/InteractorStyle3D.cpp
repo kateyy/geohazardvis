@@ -1,4 +1,4 @@
-#include "PickingInteractionStyle.h"
+#include "InteractorStyle3D.h"
 
 #include <cmath>
 
@@ -35,34 +35,35 @@
 #include <core/data_objects/RenderedData.h>
 
 
-vtkStandardNewMacro(PickingInteractionStyle);
+vtkStandardNewMacro(InteractorStyle3D);
 
-PickingInteractionStyle::PickingInteractionStyle()
-: vtkInteractorStyleTrackballCamera()
-, m_pointPicker(vtkSmartPointer<vtkPointPicker>::New())
-, m_cellPicker(vtkSmartPointer<vtkCellPicker>::New())
-, m_selectedCellActor(vtkSmartPointer<vtkActor>::New())
-, m_selectedCellMapper(vtkSmartPointer<vtkDataSetMapper>::New())
-, m_mouseMoved(false)
+InteractorStyle3D::InteractorStyle3D()
+    : vtkInteractorStyleTrackballCamera()
+    , m_pointPicker(vtkSmartPointer<vtkPointPicker>::New())
+    , m_cellPicker(vtkSmartPointer<vtkCellPicker>::New())
+    , m_selectedCellActor(vtkSmartPointer<vtkActor>::New())
+    , m_selectedCellMapper(vtkSmartPointer<vtkDataSetMapper>::New())
+    , m_mouseMoved(false)
 {
 }
 
-void PickingInteractionStyle::OnMouseMove()
+void InteractorStyle3D::OnMouseMove()
 {
     pickPoint();
     vtkInteractorStyleTrackballCamera::OnMouseMove();
     m_mouseMoved = true;
 }
 
-void PickingInteractionStyle::OnLeftButtonDown()
+void InteractorStyle3D::OnLeftButtonDown()
 {
     m_mouseMoved = false;
     vtkInteractorStyleTrackballCamera::OnLeftButtonDown();
 }
 
-void PickingInteractionStyle::OnLeftButtonUp()
+void InteractorStyle3D::OnLeftButtonUp()
 {
-    if (!m_mouseMoved) {
+    if (!m_mouseMoved)
+    {
         pickCell();
     }
     m_mouseMoved = false;
@@ -70,13 +71,13 @@ void PickingInteractionStyle::OnLeftButtonUp()
     vtkInteractorStyleTrackballCamera::OnLeftButtonUp();
 }
 
-void PickingInteractionStyle::setRenderedDataList(const QList<RenderedData *> * renderedData)
+void InteractorStyle3D::setRenderedDataList(const QList<RenderedData *> * renderedData)
 {
     assert(renderedData);
     m_renderedData = renderedData;
 }
 
-void PickingInteractionStyle::pickPoint()
+void InteractorStyle3D::pickPoint()
 {
     int* clickPos = GetInteractor()->GetEventPosition();
 
@@ -86,7 +87,7 @@ void PickingInteractionStyle::pickPoint()
     sendPointInfo();
 }
 
-void PickingInteractionStyle::pickCell()
+void InteractorStyle3D::pickCell()
 {
     int* clickPos = GetInteractor()->GetEventPosition();
 
@@ -112,7 +113,7 @@ void PickingInteractionStyle::pickCell()
     }
 }
 
-void PickingInteractionStyle::highlightCell(vtkIdType cellId, DataObject * dataObject)
+void InteractorStyle3D::highlightCell(vtkIdType cellId, DataObject * dataObject)
 {
     if (cellId == -1)
     {
@@ -151,7 +152,7 @@ void PickingInteractionStyle::highlightCell(vtkIdType cellId, DataObject * dataO
     GetDefaultRenderer()->GetRenderWindow()->Render();
 }
 
-void PickingInteractionStyle::lookAtCell(vtkPolyData * polyData, vtkIdType cellId)
+void InteractorStyle3D::lookAtCell(vtkPolyData * polyData, vtkIdType cellId)
 {
     // not implemented for grid input
     vtkTriangle * triangle = vtkTriangle::SafeDownCast(polyData->GetCell(cellId));
@@ -189,7 +190,7 @@ void PickingInteractionStyle::lookAtCell(vtkPolyData * polyData, vtkIdType cellI
 
     double pathVector[3];   // distance vector between two succeeding eye positions
     vtkMath::Subtract(targetEyePosition, eyePosition, pathVector);
-    vtkMath::MultiplyScalar(pathVector, 1.0/NumberOfFlyFrames);
+    vtkMath::MultiplyScalar(pathVector, 1.0 / NumberOfFlyFrames);
 
     for (int i = 0; i < NumberOfFlyFrames; ++i)
     {
@@ -200,7 +201,7 @@ void PickingInteractionStyle::lookAtCell(vtkPolyData * polyData, vtkIdType cellI
     }
 }
 
-void PickingInteractionStyle::sendPointInfo() const
+void InteractorStyle3D::sendPointInfo() const
 {
     double* pos = m_pointPicker->GetPickPosition();
 
@@ -215,7 +216,8 @@ void PickingInteractionStyle::sendPointInfo() const
 
     vtkAbstractMapper3D * mapper = m_pointPicker->GetMapper();
 
-    if (!mapper) {
+    if (!mapper)
+    {
         emit pointInfoSent(QStringList());
         return;
     }

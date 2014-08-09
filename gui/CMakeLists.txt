@@ -7,10 +7,17 @@ set ( SOURCES
     
     DataMapping.h
     DataMapping.cpp
+    InteractorStyle3D.h
+    InteractorStyle3D.cpp
+    InteractorStyleImage.h
+    InteractorStyleImage.cpp
+    InteractorStyleSwitch.h
+    InteractorStyleSwitch.cpp
+    IPickingInteractorStyle.h
+    PickingInteractorStyleSwitch.h
+    PickingInteractorStyleSwitch.cpp
     MainWindow.h
     MainWindow.cpp
-    PickingInteractionStyle.h
-    PickingInteractionStyle.cpp
     SelectionHandler.h
     SelectionHandler.cpp
     widgets/DataChooser.h
