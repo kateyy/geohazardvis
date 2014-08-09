@@ -14,6 +14,6 @@ public:
 
     virtual void startup();
 
-protected:
+private:
     MainWindow * m_mainWindow;
 };

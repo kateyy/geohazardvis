@@ -25,7 +25,8 @@ public:
     ~MainWindow() override;
 
 public slots:
-    void openFile(QString filename);
+    void openFile(QString fileName);
+    void openFiles(QStringList fileNames);
     void on_actionOpen_triggered();
 
     RenderWidget * addRenderWidget(int index);

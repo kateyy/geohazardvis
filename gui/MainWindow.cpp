@@ -101,17 +101,17 @@ RenderWidget * MainWindow::addRenderWidget(int index)
     return renderWidget;
 }
 
-void MainWindow::openFile(QString filename)
+void MainWindow::openFile(QString fileName)
 {
-    qDebug() << " <" << filename;
+    qDebug() << " <" << fileName;
 
     QApplication::processEvents();
 
     QString oldName = windowTitle();
-    setWindowTitle(filename + " (loading file)");
+    setWindowTitle(fileName + " (loading file)");
     QApplication::processEvents();
 
-    shared_ptr<Input> input = Loader::readFile(filename.toStdString());
+    shared_ptr<Input> input = Loader::readFile(fileName.toStdString());
     if (!input) {
         QMessageBox::critical(this, "File error", "Could not open the selected input file (unsupported format).");
         setWindowTitle(oldName);
@@ -139,12 +139,15 @@ void MainWindow::openFile(QString filename)
     setWindowTitle(oldName);
 }
 
-void MainWindow::on_actionOpen_triggered()
+void MainWindow::openFiles(QStringList fileNames)
 {
-    QStringList fileNames = dialog_inputFileName();
-
     for (const QString & fileName : fileNames)
         openFile(fileName);
+}
+
+void MainWindow::on_actionOpen_triggered()
+{
+    openFiles(dialog_inputFileName());
 }
 
 void MainWindow::updateRenderViewActions(QList<RenderWidget*> widgets)
