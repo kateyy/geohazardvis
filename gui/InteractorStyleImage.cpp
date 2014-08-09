@@ -49,26 +49,31 @@ InteractorStyleImage::InteractorStyleImage()
 
 void InteractorStyleImage::OnMouseMove()
 {
-    pickPoint();
     vtkInteractorStyleImage::OnMouseMove();
+
+    int* clickPos = GetInteractor()->GetEventPosition();
+    m_pointPicker->Pick(clickPos[0], clickPos[1], 0, GetDefaultRenderer());
+    m_cellPicker->Pick(clickPos[0], clickPos[1], 0, GetDefaultRenderer());
+
+    sendPointInfo();
+
     m_mouseMoved = true;
 }
 
 void InteractorStyleImage::OnLeftButtonDown()
 {
-    m_mouseMoved = false;
     vtkInteractorStyleImage::OnLeftButtonDown();
+    m_mouseMoved = false;
 }
 
 void InteractorStyleImage::OnLeftButtonUp()
 {
-    if (!m_mouseMoved)
-    {
-        pickCell();
-    }
-    m_mouseMoved = false;
-
     vtkInteractorStyleImage::OnLeftButtonUp();
+
+    if (!m_mouseMoved)
+        highlightPickedCell();
+    
+    m_mouseMoved = false;
 }
 
 void InteractorStyleImage::setRenderedDataList(const QList<RenderedData *> * renderedData)
@@ -77,17 +82,7 @@ void InteractorStyleImage::setRenderedDataList(const QList<RenderedData *> * ren
     m_renderedData = renderedData;
 }
 
-void InteractorStyleImage::pickPoint()
-{
-    int* clickPos = GetInteractor()->GetEventPosition();
-
-    // picking in the input geometry
-    m_pointPicker->Pick(clickPos[0], clickPos[1], 0, GetDefaultRenderer());
-
-    sendPointInfo();
-}
-
-void InteractorStyleImage::pickCell()
+void InteractorStyleImage::highlightPickedCell()
 {
     int* clickPos = GetInteractor()->GetEventPosition();
 
@@ -95,21 +90,16 @@ void InteractorStyleImage::pickCell()
     vtkIdType cellId = m_cellPicker->GetCellId();
 
     vtkActor * pickedActor = m_cellPicker->GetActor();
-    if (pickedActor)
-    {
-        emit actorPicked(pickedActor);
-
-        for (RenderedData * renderedData : *m_renderedData)
-        {
-            if (renderedData->mainActor() == pickedActor)
-            {
-                emit cellPicked(renderedData->dataObject(), cellId);
-            }
-        }
-    }
-    else
-    {
+    if (!pickedActor)
         highlightCell(-1, nullptr);
+
+    
+    emit actorPicked(pickedActor);
+
+    for (RenderedData * renderedData : *m_renderedData)
+    {
+        if (renderedData->mainActor() == pickedActor)
+            emit cellPicked(renderedData->dataObject(), cellId);
     }
 }
 
@@ -152,58 +142,18 @@ void InteractorStyleImage::highlightCell(vtkIdType cellId, DataObject * dataObje
     GetDefaultRenderer()->GetRenderWindow()->Render();
 }
 
-void InteractorStyleImage::lookAtCell(vtkPolyData * polyData, vtkIdType cellId)
+void InteractorStyleImage::lookAtCell(vtkPolyData * /*polyData*/, vtkIdType /*cellId*/)
 {
-    // not implemented for grid input
-    vtkTriangle * triangle = vtkTriangle::SafeDownCast(polyData->GetCell(cellId));
-    if (triangle == nullptr)
-        return;
-
-    VTK_CREATE(vtkPoints, selectedPoints);
-    polyData->GetPoints()->GetPoints(triangle->GetPointIds(), selectedPoints);
-
-    // look at center of the object
-    const double * objectCenter = polyData->GetCenter();
-    GetDefaultRenderer()->GetActiveCamera()->SetFocalPoint(objectCenter);
-
-    // place camera along the normal of the triangle
-    double triangleCenter[3];
-    vtkTriangle::TriangleCenter(
-        selectedPoints->GetPoint(0), selectedPoints->GetPoint(1), selectedPoints->GetPoint(2),
-        triangleCenter);
-
-    double triangleNormal[3];
-    vtkTriangle::ComputeNormal(polyData->GetPoints(), 0, triangle->GetPointIds()->GetPointer(0), triangleNormal);
-
-    double eyePosition[3];  // current eye position: starting point
-    GetDefaultRenderer()->GetActiveCamera()->GetPosition(eyePosition);
-
-    float distance2ObjTri = (float)vtkMath::Distance2BetweenPoints(objectCenter, triangleCenter);
-    float distance2EyeObj = (float)vtkMath::Distance2BetweenPoints(objectCenter, eyePosition);
-    float distanceEyeTri = std::sqrt(distance2EyeObj - distance2ObjTri);
-
-    vtkMath::MultiplyScalar(triangleNormal, distanceEyeTri);
-    double targetEyePosition[3];
-    vtkMath::Add(triangleCenter, triangleNormal, targetEyePosition);
-
-    const int NumberOfFlyFrames = 10;
-
-    double pathVector[3];   // distance vector between two succeeding eye positions
-    vtkMath::Subtract(targetEyePosition, eyePosition, pathVector);
-    vtkMath::MultiplyScalar(pathVector, 1.0 / NumberOfFlyFrames);
-
-    for (int i = 0; i < NumberOfFlyFrames; ++i)
-    {
-        vtkMath::Add(eyePosition, pathVector, eyePosition);
-        GetDefaultRenderer()->GetActiveCamera()->SetPosition(eyePosition);
-        GetDefaultRenderer()->ResetCameraClippingRange();
-        GetDefaultRenderer()->GetRenderWindow()->Render();
-    }
 }
 
 void InteractorStyleImage::sendPointInfo() const
 {
-    double* pos = m_pointPicker->GetPickPosition();
+    vtkAbstractMapper3D * mapper = m_pointPicker->GetMapper();
+    if (!mapper)
+    {
+        emit pointInfoSent(QStringList());
+        return;
+    }
 
     QString content;
     QTextStream stream;
@@ -214,25 +164,19 @@ void InteractorStyleImage::sendPointInfo() const
 
     std::string inputname;
 
-    vtkAbstractMapper3D * mapper = m_pointPicker->GetMapper();
-
-    if (!mapper)
-    {
-        emit pointInfoSent(QStringList());
-        return;
-    }
-
     vtkInformation * inputInfo = mapper->GetInformation();
 
     if (inputInfo->Has(Input::NameKey()))
         inputname = Input::NameKey()->Get(inputInfo);
+
+    double * pos = m_pointPicker->GetPickPosition();
 
     stream
         << "input file: " << QString::fromStdString(inputname) << endl
         << "selected point: " << endl
         << pos[0] << endl
         << pos[1] << endl
-        << pos[2] << endl
+        //<< "value: " << << endl // TODO extract value from picked cell
         << "id: " << m_pointPicker->GetPointId();
 
     QStringList info;

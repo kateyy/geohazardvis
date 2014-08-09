@@ -34,9 +34,7 @@ public slots:
 protected:
     explicit InteractorStyle3D();
 
-    void pickPoint();
-    void pickCell();
-
+    void highlightPickedCell();
     void sendPointInfo() const;
 
 protected:

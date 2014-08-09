@@ -49,26 +49,32 @@ InteractorStyle3D::InteractorStyle3D()
 
 void InteractorStyle3D::OnMouseMove()
 {
-    pickPoint();
     vtkInteractorStyleTrackballCamera::OnMouseMove();
+
+    int* clickPos = GetInteractor()->GetEventPosition();
+    m_pointPicker->Pick(clickPos[0], clickPos[1], 0, GetDefaultRenderer());
+    m_cellPicker->Pick(clickPos[0], clickPos[1], 0, GetDefaultRenderer());
+
+    sendPointInfo();
+
     m_mouseMoved = true;
 }
 
 void InteractorStyle3D::OnLeftButtonDown()
 {
-    m_mouseMoved = false;
     vtkInteractorStyleTrackballCamera::OnLeftButtonDown();
+
+    m_mouseMoved = false;
 }
 
 void InteractorStyle3D::OnLeftButtonUp()
 {
-    if (!m_mouseMoved)
-    {
-        pickCell();
-    }
-    m_mouseMoved = false;
-
     vtkInteractorStyleTrackballCamera::OnLeftButtonUp();
+
+    if (!m_mouseMoved)
+        highlightPickedCell();
+    
+    m_mouseMoved = false;
 }
 
 void InteractorStyle3D::setRenderedDataList(const QList<RenderedData *> * renderedData)
@@ -77,17 +83,7 @@ void InteractorStyle3D::setRenderedDataList(const QList<RenderedData *> * render
     m_renderedData = renderedData;
 }
 
-void InteractorStyle3D::pickPoint()
-{
-    int* clickPos = GetInteractor()->GetEventPosition();
-
-    // picking in the input geometry
-    m_pointPicker->Pick(clickPos[0], clickPos[1], 0, GetDefaultRenderer());
-
-    sendPointInfo();
-}
-
-void InteractorStyle3D::pickCell()
+void InteractorStyle3D::highlightPickedCell()
 {
     int* clickPos = GetInteractor()->GetEventPosition();
 
@@ -95,22 +91,18 @@ void InteractorStyle3D::pickCell()
     vtkIdType cellId = m_cellPicker->GetCellId();
 
     vtkActor * pickedActor = m_cellPicker->GetActor();
-    if (pickedActor)
-    {
-        emit actorPicked(pickedActor);
 
-        for (RenderedData * renderedData : *m_renderedData)
-        {
-            if (renderedData->mainActor() == pickedActor)
-            {
-                emit cellPicked(renderedData->dataObject(), cellId);
-            }
-        }
-    }
-    else
-    {
+    if (!pickedActor)
         highlightCell(-1, nullptr);
-    }
+
+    
+    emit actorPicked(pickedActor);
+
+    for (RenderedData * renderedData : *m_renderedData)
+    {
+        if (renderedData->mainActor() == pickedActor)
+            emit cellPicked(renderedData->dataObject(), cellId);
+    }    
 }
 
 void InteractorStyle3D::highlightCell(vtkIdType cellId, DataObject * dataObject)
@@ -123,6 +115,8 @@ void InteractorStyle3D::highlightCell(vtkIdType cellId, DataObject * dataObject)
 
     assert(dataObject);
 
+
+    // extract picked triangle and create highlighting geometry
 
     VTK_CREATE(vtkIdTypeArray, ids);
     ids->SetNumberOfComponents(1);
@@ -154,10 +148,8 @@ void InteractorStyle3D::highlightCell(vtkIdType cellId, DataObject * dataObject)
 
 void InteractorStyle3D::lookAtCell(vtkPolyData * polyData, vtkIdType cellId)
 {
-    // not implemented for grid input
     vtkTriangle * triangle = vtkTriangle::SafeDownCast(polyData->GetCell(cellId));
-    if (triangle == nullptr)
-        return;
+    assert(triangle);
 
     VTK_CREATE(vtkPoints, selectedPoints);
     polyData->GetPoints()->GetPoints(triangle->GetPointIds(), selectedPoints);
@@ -203,7 +195,13 @@ void InteractorStyle3D::lookAtCell(vtkPolyData * polyData, vtkIdType cellId)
 
 void InteractorStyle3D::sendPointInfo() const
 {
-    double* pos = m_pointPicker->GetPickPosition();
+    vtkAbstractMapper3D * mapper = m_pointPicker->GetMapper();
+    if (!mapper)    // no object at cursor position
+    {
+        emit pointInfoSent({});
+        return;
+    }
+
 
     QString content;
     QTextStream stream;
@@ -212,18 +210,11 @@ void InteractorStyle3D::sendPointInfo() const
     stream.setRealNumberNotation(QTextStream::RealNumberNotation::ScientificNotation);
     stream.setRealNumberPrecision(17);
 
-    std::string inputname;
-
-    vtkAbstractMapper3D * mapper = m_pointPicker->GetMapper();
-
-    if (!mapper)
-    {
-        emit pointInfoSent(QStringList());
-        return;
-    }
+    double* pos = m_pointPicker->GetPickPosition();
 
     vtkInformation * inputInfo = mapper->GetInformation();
 
+    std::string inputname;
     if (inputInfo->Has(Input::NameKey()))
         inputname = Input::NameKey()->Get(inputInfo);
 
