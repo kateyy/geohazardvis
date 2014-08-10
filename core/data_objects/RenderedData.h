@@ -59,7 +59,7 @@ protected:
     virtual void updateScalarToColorMapping() = 0;
 
 protected:
-    const ScalarsForColorMapping * m_scalars;
+    ScalarsForColorMapping * m_scalars;
     vtkSmartPointer<vtkLookupTable> m_lut;
 
 private:

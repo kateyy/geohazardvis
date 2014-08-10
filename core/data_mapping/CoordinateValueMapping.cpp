@@ -1,7 +1,10 @@
 #include "CoordinateValueMapping.h"
 
-#include "core/Input.h"
-#include "core/data_objects/PolyDataObject.h"
+#include <vtkElevationFilter.h>
+
+#include <core/vtkhelper.h>
+#include <core/Input.h>
+#include <core/data_objects/PolyDataObject.h>
 
 #include "ScalarsForColorMappingRegistry.h"
 
@@ -44,6 +47,16 @@ bool AbstractCoordinateValueMapping::usesGradients() const
     return true;
 }
 
+vtkAlgorithm * AbstractCoordinateValueMapping::createFilter()
+{
+    VTK_CREATE(vtkElevationFilter, elevation);
+    m_filters << elevation;
+
+    minMaxChanged();    // trigger elevation update
+
+    return elevation;
+}
+
 bool AbstractCoordinateValueMapping::isValid() const
 {
     return !m_dataObjects.isEmpty();
@@ -69,6 +82,15 @@ void CoordinateXValueMapping::updateBounds()
     ScalarsForColorMapping::updateBounds();
 }
 
+void CoordinateXValueMapping::minMaxChanged()
+{
+    for (vtkElevationFilter * elevation : m_filters)
+    {
+        elevation->SetLowPoint(m_minValue, 0, 0);
+        elevation->SetHighPoint(m_maxValue, 0, 0);
+    }
+}
+
 
 CoordinateYValueMapping::CoordinateYValueMapping(const QList<DataObject *> & dataObjects)
     : AbstractCoordinateValueMapping(dataObjects)
@@ -90,6 +112,15 @@ void CoordinateYValueMapping::updateBounds()
     ScalarsForColorMapping::updateBounds();
 }
 
+void CoordinateYValueMapping::minMaxChanged()
+{
+    for (vtkElevationFilter * elevation : m_filters)
+    {
+        elevation->SetLowPoint(0, m_minValue, 0);
+        elevation->SetHighPoint(0, m_maxValue, 0);
+    }
+}
+
 
 CoordinateZValueMapping::CoordinateZValueMapping(const QList<DataObject *> & dataObjects)
     : AbstractCoordinateValueMapping(dataObjects)
@@ -109,4 +140,13 @@ void CoordinateZValueMapping::updateBounds()
         m_dataMaxValue = std::max(m_dataMaxValue, dataObject->input()->bounds()[5]);
     }
     ScalarsForColorMapping::updateBounds();
+}
+
+void CoordinateZValueMapping::minMaxChanged()
+{
+    for (vtkElevationFilter * elevation : m_filters)
+    {
+        elevation->SetLowPoint(0, 0, m_minValue);
+        elevation->SetHighPoint(0, 0, m_maxValue);
+    }
 }

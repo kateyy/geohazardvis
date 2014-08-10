@@ -8,8 +8,6 @@
 
 #include <vtkPolyData.h>
 
-#include <vtkElevationFilter.h>
-
 #include <vtkPolyDataMapper.h>
 
 #include <vtkProperty.h>
@@ -19,9 +17,9 @@
 
 #include "PolyDataObject.h"
 
-#include "core/Input.h"
-#include "core/vtkhelper.h"
-#include "core/data_mapping/ScalarsForColorMapping.h"
+#include <core/Input.h>
+#include <core/vtkhelper.h>
+#include <core/data_mapping/ScalarsForColorMapping.h>
 
 
 using namespace reflectionzeug;
@@ -216,36 +214,10 @@ vtkPolyDataMapper * RenderedPolyData::createDataMapper() const
         return mapper;
     }
 
-    VTK_CREATE(vtkElevationFilter, elevation);
-    elevation->SetInputData(input.polyData());
+    vtkAlgorithm * filter = m_scalars->createFilter();
+    filter->SetInputDataObject(input.data());
 
-    float minValue = m_scalars->minValue();
-    float maxValue = m_scalars->maxValue();
-
-    // TODO cleanup
-    if (m_scalars->name() == "x values")
-    {
-        elevation->SetLowPoint(minValue, 0, 0);
-        elevation->SetHighPoint(maxValue, 0, 0);
-    }
-    else if (m_scalars->name() == "y values")
-    {
-        elevation->SetLowPoint(0, minValue, 0);
-        elevation->SetHighPoint(0, maxValue, 0);
-    }
-    else if (m_scalars->name() == "z values")
-    {
-        elevation->SetLowPoint(0, 0, minValue);
-        elevation->SetHighPoint(0, 0, maxValue);
-    }
-    else
-    {
-        assert(false);
-    }
-
-    mapper->SetInputConnection(elevation->GetOutputPort());
-
-    m_lut->SetValueRange(minValue, maxValue);
+    mapper->SetInputConnection(filter->GetOutputPort());
 
     mapper->SetLookupTable(m_lut);
 

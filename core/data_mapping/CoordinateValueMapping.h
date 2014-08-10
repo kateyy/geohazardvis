@@ -1,7 +1,11 @@
 #pragma once
 
+#include <vtkSmartPointer.h>
+
 #include "ScalarsForColorMapping.h"
 
+
+class vtkElevationFilter;
 
 class PolyDataObject;
 
@@ -12,12 +16,17 @@ public:
     AbstractCoordinateValueMapping(const QList<DataObject *> & dataObjects);
     ~AbstractCoordinateValueMapping() override;
 
-    virtual bool usesGradients() const override;
+    bool usesGradients() const override;
+
+    /** create a filter to map values to color, applying current min/max settings
+      * Stores a reference to the filter, to update min/max values on demand. */
+    vtkAlgorithm * createFilter();
 
 protected:
-    virtual bool isValid() const override;
+    bool isValid() const override;
 
     QList<PolyDataObject *> m_dataObjects;
+    QList<vtkSmartPointer<vtkElevationFilter>> m_filters;
 };
 
 
@@ -26,10 +35,11 @@ class CoordinateXValueMapping : public AbstractCoordinateValueMapping
 public:
     CoordinateXValueMapping(const QList<DataObject *> & dataObjects);
 
-    virtual QString name() const override;
+    QString name() const override;
 
 protected:
-    virtual void updateBounds() override;
+    void updateBounds() override;
+    void minMaxChanged() override;
 
 private:
     static const QString s_name;
@@ -42,10 +52,11 @@ class CoordinateYValueMapping : public AbstractCoordinateValueMapping
 public:
     CoordinateYValueMapping(const QList<DataObject *> & dataObjects);
 
-    virtual QString name() const override;
+     QString name() const override;
 
 protected:
-    virtual void updateBounds() override;
+    void updateBounds() override;
+    void minMaxChanged() override;
 
 private:
     static const QString s_name;
@@ -58,10 +69,11 @@ class CoordinateZValueMapping : public AbstractCoordinateValueMapping
 public:
     CoordinateZValueMapping(const QList<DataObject *> & dataObjects);
 
-    virtual QString name() const override;
+    QString name() const override;
 
 protected:
-    virtual void updateBounds() override;
+    void updateBounds() override;
+    void minMaxChanged() override;
 
 private:
     static const QString s_name;

@@ -7,6 +7,8 @@
 #include <core/core_api.h>
 
 
+class vtkAlgorithm;
+
 class DataObject;
 
 
@@ -27,6 +29,9 @@ public:
     explicit ScalarsForColorMapping(const QList<DataObject *> & dataObjects);
     virtual ~ScalarsForColorMapping() = 0;
 
+    /** create a filter to map values to color, applying current min/max settings
+      * May be implemented by subclasses, returns nullptr by default. */
+    virtual vtkAlgorithm * createFilter();
 
     /** minimal value in the data set */
     double dataMinValue() const;
@@ -47,6 +52,7 @@ public:
 protected:
     virtual void initialize();
     virtual void updateBounds() = 0;
+    virtual void minMaxChanged();
 
     /** check whether these scalar extraction is applicable for the data objects it was created with */
     virtual bool isValid() const = 0;

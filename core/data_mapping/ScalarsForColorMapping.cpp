@@ -17,6 +17,11 @@ void ScalarsForColorMapping::initialize()
 
 ScalarsForColorMapping::~ScalarsForColorMapping() = default;
 
+vtkAlgorithm * ScalarsForColorMapping::createFilter()
+{
+    return nullptr;
+}
+
 double ScalarsForColorMapping::dataMinValue() const
 {
     assert(m_dataMinValue <= m_dataMaxValue);
@@ -37,6 +42,8 @@ double ScalarsForColorMapping::minValue() const
 void ScalarsForColorMapping::setMinValue(double value)
 {
     m_minValue = std::min(std::max(m_dataMinValue, value), m_dataMaxValue);
+
+    minMaxChanged();
 }
 
 double ScalarsForColorMapping::maxValue() const
@@ -47,10 +54,16 @@ double ScalarsForColorMapping::maxValue() const
 void ScalarsForColorMapping::setMaxValue(double value)
 {
     m_maxValue = std::min(std::max(m_dataMinValue, value), m_dataMaxValue);
+
+    minMaxChanged();
 }
 
 void ScalarsForColorMapping::updateBounds()
 {
     m_minValue = m_dataMinValue;
     m_maxValue = m_dataMaxValue;
+}
+
+void ScalarsForColorMapping::minMaxChanged()
+{
 }
