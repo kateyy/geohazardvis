@@ -1,8 +1,9 @@
 #include "CoordinateValueMapping.h"
 
+#include <limits>
+
 #include <vtkElevationFilter.h>
 
-#include <core/vtkhelper.h>
 #include <core/Input.h>
 #include <core/data_objects/PolyDataObject.h>
 
@@ -49,7 +50,8 @@ bool AbstractCoordinateValueMapping::usesGradients() const
 
 vtkAlgorithm * AbstractCoordinateValueMapping::createFilter()
 {
-    VTK_CREATE(vtkElevationFilter, elevation);
+    vtkWeakPointer<vtkElevationFilter> elevation = vtkElevationFilter::New();
+
     m_filters << elevation;
 
     minMaxChanged();    // trigger elevation update
@@ -60,6 +62,20 @@ vtkAlgorithm * AbstractCoordinateValueMapping::createFilter()
 bool AbstractCoordinateValueMapping::isValid() const
 {
     return !m_dataObjects.isEmpty();
+}
+
+void AbstractCoordinateValueMapping::minMaxChanged()
+{
+    // remove empty weak pointers
+
+    auto it = m_filters.begin();
+    while (it != m_filters.end())
+    {
+        if (*it == nullptr)
+            it = m_filters.erase(it);
+        else
+            ++it;
+    }
 }
 
 CoordinateXValueMapping::CoordinateXValueMapping(const QList<DataObject *> & dataObjects)
@@ -84,10 +100,17 @@ void CoordinateXValueMapping::updateBounds()
 
 void CoordinateXValueMapping::minMaxChanged()
 {
+    AbstractCoordinateValueMapping::minMaxChanged();
+
+    // prevent degenerated vector
+    double fixedMax = m_maxValue;
+    if (m_minValue == m_maxValue)
+        fixedMax += std::numeric_limits<double>::epsilon();
+
     for (vtkElevationFilter * elevation : m_filters)
     {
         elevation->SetLowPoint(m_minValue, 0, 0);
-        elevation->SetHighPoint(m_maxValue, 0, 0);
+        elevation->SetHighPoint(fixedMax, 0, 0);
     }
 }
 
@@ -114,10 +137,17 @@ void CoordinateYValueMapping::updateBounds()
 
 void CoordinateYValueMapping::minMaxChanged()
 {
+    AbstractCoordinateValueMapping::minMaxChanged();
+
+    // prevent degenerated vector
+    double fixedMax = m_maxValue;
+    if (m_minValue == m_maxValue)
+        fixedMax += std::numeric_limits<double>::epsilon();
+
     for (vtkElevationFilter * elevation : m_filters)
     {
         elevation->SetLowPoint(0, m_minValue, 0);
-        elevation->SetHighPoint(0, m_maxValue, 0);
+        elevation->SetHighPoint(0, fixedMax, 0);
     }
 }
 
@@ -144,9 +174,16 @@ void CoordinateZValueMapping::updateBounds()
 
 void CoordinateZValueMapping::minMaxChanged()
 {
+    AbstractCoordinateValueMapping::minMaxChanged();
+
+    // prevent degenerated vector
+    double fixedMax = m_maxValue;
+    if (m_minValue == m_maxValue)
+        fixedMax += std::numeric_limits<double>::epsilon();
+
     for (vtkElevationFilter * elevation : m_filters)
     {
         elevation->SetLowPoint(0, 0, m_minValue);
-        elevation->SetHighPoint(0, 0, m_maxValue);
+        elevation->SetHighPoint(0, 0, fixedMax);
     }
 }

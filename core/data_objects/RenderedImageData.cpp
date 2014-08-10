@@ -40,7 +40,7 @@ vtkProperty * RenderedImageData::createDefaultRenderProperty() const
     return vtkProperty::New();
 }
 
-vtkActor * RenderedImageData::createActor() const
+vtkActor * RenderedImageData::createActor()
 {
     auto & input = *imageDataObject()->gridDataInput();
 

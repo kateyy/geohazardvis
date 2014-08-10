@@ -21,7 +21,7 @@ public:
 
 protected:
     vtkProperty * createDefaultRenderProperty() const override;
-    vtkActor * createActor() const override;
+    vtkActor * createActor() override;
 
     void updateScalarToColorMapping() override;
 

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <vtkSmartPointer.h>
+#include <vtkWeakPointer.h>
 
 #include "ScalarsForColorMapping.h"
 
@@ -24,9 +24,11 @@ public:
 
 protected:
     bool isValid() const override;
+    void minMaxChanged() override;
 
+protected:
     QList<PolyDataObject *> m_dataObjects;
-    QList<vtkSmartPointer<vtkElevationFilter>> m_filters;
+    QList<vtkWeakPointer<vtkElevationFilter>> m_filters;
 };
 
 

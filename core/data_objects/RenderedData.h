@@ -53,7 +53,7 @@ signals:
 
 protected:
     virtual vtkProperty * createDefaultRenderProperty() const = 0;
-    virtual vtkActor * createActor() const = 0;
+    virtual vtkActor * createActor() = 0;
     virtual QList<vtkActor *> fetchAttributeActors();
 
     virtual void updateScalarToColorMapping() = 0;

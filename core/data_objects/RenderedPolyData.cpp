@@ -39,6 +39,7 @@ namespace
 
 RenderedPolyData::RenderedPolyData(PolyDataObject * dataObject)
     : RenderedData(dataObject)
+    , m_filter(nullptr)
 {
     m_normalRepresentation.setData(dataObject->polyDataInput()->polyData());
     m_normalRepresentation.setVisible(false);
@@ -183,7 +184,7 @@ vtkProperty * RenderedPolyData::createDefaultRenderProperty() const
     return prop;
 }
 
-vtkActor * RenderedPolyData::createActor() const
+vtkActor * RenderedPolyData::createActor()
 {
     vtkActor * actor = vtkActor::New();
     actor->SetMapper(createDataMapper());
@@ -201,7 +202,7 @@ void RenderedPolyData::updateScalarToColorMapping()
     mainActor()->SetMapper(createDataMapper());
 }
 
-vtkPolyDataMapper * RenderedPolyData::createDataMapper() const
+vtkPolyDataMapper * RenderedPolyData::createDataMapper()
 {
     const PolyDataInput & input = *polyDataObject()->polyDataInput().get();
 
@@ -214,10 +215,13 @@ vtkPolyDataMapper * RenderedPolyData::createDataMapper() const
         return mapper;
     }
 
-    vtkAlgorithm * filter = m_scalars->createFilter();
-    filter->SetInputDataObject(input.data());
+    // TODO LEAK: older filter is referenced by input.data(), thus gets not deleted (weak pointer in CoordinateValueMapping...)
 
-    mapper->SetInputConnection(filter->GetOutputPort());
+    m_filter.TakeReference(m_scalars->createFilter());
+
+    m_filter->SetInputDataObject(input.data());
+
+    mapper->SetInputConnection(m_filter->GetOutputPort());
 
     mapper->SetLookupTable(m_lut);
 
