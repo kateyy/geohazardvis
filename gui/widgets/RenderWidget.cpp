@@ -128,6 +128,7 @@ void RenderWidget::addDataObject(DataObject * dataObject)
         && m_renderedData.first()->dataObject()->input()->type != dataObject->input()->type)
     {
         QMessageBox::warning(this, "", "Cannot render 2d and 3d geometry in the same view.");
+        updateWindowTitle();
         return;
     }
 

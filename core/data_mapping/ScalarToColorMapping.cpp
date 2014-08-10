@@ -26,10 +26,16 @@ void ScalarToColorMapping::setRenderedData(const QList<RenderedData *> & rendere
         dataObjects << rendered->dataObject();
     }
 
+    QString lastScalars = currentScalarsName();
+
     qDeleteAll(m_scalars);
     m_scalars = ScalarsForColorMappingRegistry::instance().createMappingsValidFor(dataObjects);
 
-    m_currentScalarsName = m_scalars.first()->name();
+    // reuse last configuration if possible
+    if (m_scalars.contains(lastScalars))
+        m_currentScalarsName = lastScalars;
+    else
+        m_currentScalarsName = m_scalars.first()->name();
 
     for (RenderedData * rendered : renderedData)
     {

@@ -24,6 +24,8 @@ class CORE_API ScalarToColorMapping
 public:
     ScalarToColorMapping();
 
+    /** setup a list of scalar mappings which are applicable to the list of rendered data
+      * reuse lastly used scalars if possible */
     void setRenderedData(const QList<RenderedData *> & renderedData);
 
     void clear();
