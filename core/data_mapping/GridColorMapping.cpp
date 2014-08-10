@@ -31,8 +31,9 @@ bool GridColorMapping::usesGradients() const
 
 void GridColorMapping::updateBounds()
 {
-    m_minValue = 0;
-    m_maxValue = 0;
+    m_dataMinValue = 0;
+    m_dataMaxValue = 0;
+    ScalarsForColorMapping::updateBounds();
 }
 
 bool GridColorMapping::isValid() const

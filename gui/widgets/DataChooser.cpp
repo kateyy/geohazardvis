@@ -62,6 +62,8 @@ void DataChooser::setMapping(QString rendererName, ScalarToColorMapping * mappin
     // the mapping can now receive signals from the UI
     m_mapping = mapping;
 
+    updateGuiValueRanges();
+
     emit renderSetupChanged();
 }
 
@@ -70,12 +72,13 @@ const ScalarToColorMapping * DataChooser::mapping() const
     return m_mapping;
 }
 
-void DataChooser::on_scalarsSelectionChanged(QString scalarsName)
+void DataChooser::scalarsSelectionChanged(QString scalarsName)
 {
     if (!m_mapping)
         return;
 
     m_mapping->setCurrentScalarsByName(scalarsName);
+    updateGuiValueRanges();
 
     if (scalarsName.isEmpty())
         return;
@@ -88,12 +91,32 @@ void DataChooser::on_scalarsSelectionChanged(QString scalarsName)
     emit renderSetupChanged();
 }
 
-void DataChooser::on_gradientSelectionChanged(int /*selection*/)
+void DataChooser::gradientSelectionChanged(int /*selection*/)
 {
     if (!m_mapping)
         return;
 
     m_mapping->setGradient(selectedGradient());
+
+    emit renderSetupChanged();
+}
+
+void DataChooser::minValueChanged(double value)
+{
+    if (!m_mapping)
+        return;
+
+    m_mapping->currentScalars()->setMinValue(value);
+
+    emit renderSetupChanged();
+}
+
+void DataChooser::maxValueChanged(double value)
+{
+    if (!m_mapping)
+        return;
+
+    m_mapping->currentScalars()->setMaxValue(value);
 
     emit renderSetupChanged();
 }
@@ -153,6 +176,33 @@ void DataChooser::updateWindowTitle(QString objectName)
     }
 
     setWindowTitle(defaultTitle + ": " + objectName);
+}
+
+void DataChooser::updateGuiValueRanges()
+{
+    double min = 0, max = 0;
+    double currentMin = 0, currentMax = 0;
+
+    if (m_mapping)
+    {
+        min = m_mapping->currentScalars()->dataMinValue();
+        max = m_mapping->currentScalars()->dataMaxValue();
+        currentMin = m_mapping->currentScalars()->minValue();
+        currentMax = m_mapping->currentScalars()->maxValue();
+    }
+
+    // disable mapping updates
+    auto currentMapping = m_mapping;
+    m_mapping = nullptr;
+
+    m_ui->minValueSpinBox->setMinimum(min);
+    m_ui->minValueSpinBox->setMaximum(max);
+    m_ui->minValueSpinBox->setValue(currentMin);
+    m_ui->maxValueSpinBox->setMinimum(min);
+    m_ui->maxValueSpinBox->setMaximum(max);
+    m_ui->maxValueSpinBox->setValue(currentMax);
+
+    m_mapping = currentMapping;
 }
 
 vtkLookupTable * DataChooser::buildLookupTable(const QImage & image)

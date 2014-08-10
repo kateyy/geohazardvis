@@ -37,7 +37,7 @@ public:
 
     QString currentScalarsName() const;
     void setCurrentScalarsByName(QString scalarsName);
-    const ScalarsForColorMapping * currentScalars() const;
+    ScalarsForColorMapping * currentScalars();
 
     /** @return currently used gradient, in case it was previously set */
     vtkLookupTable * gradient();

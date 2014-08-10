@@ -63,9 +63,10 @@ void CoordinateXValueMapping::updateBounds()
 {
     for (PolyDataObject * dataObject : m_dataObjects)
     {
-        m_minValue = std::min(m_minValue, dataObject->input()->bounds()[0]);
-        m_maxValue = std::max(m_maxValue, dataObject->input()->bounds()[1]);
+        m_dataMinValue = std::min(m_dataMinValue, dataObject->input()->bounds()[0]);
+        m_dataMaxValue = std::max(m_dataMaxValue, dataObject->input()->bounds()[1]);
     }
+    ScalarsForColorMapping::updateBounds();
 }
 
 
@@ -83,9 +84,10 @@ void CoordinateYValueMapping::updateBounds()
 {
     for (PolyDataObject * dataObject : m_dataObjects)
     {
-        m_minValue = std::min(m_minValue, dataObject->input()->bounds()[2]);
-        m_maxValue = std::max(m_maxValue, dataObject->input()->bounds()[3]);
+        m_dataMinValue = std::min(m_dataMinValue, dataObject->input()->bounds()[2]);
+        m_dataMaxValue = std::max(m_dataMaxValue, dataObject->input()->bounds()[3]);
     }
+    ScalarsForColorMapping::updateBounds();
 }
 
 
@@ -103,7 +105,8 @@ void CoordinateZValueMapping::updateBounds()
 {
     for (PolyDataObject * dataObject : m_dataObjects)
     {
-        m_minValue = std::min(m_minValue, dataObject->input()->bounds()[4]);
-        m_maxValue = std::max(m_maxValue, dataObject->input()->bounds()[5]);
+        m_dataMinValue = std::min(m_dataMinValue, dataObject->input()->bounds()[4]);
+        m_dataMaxValue = std::max(m_dataMaxValue, dataObject->input()->bounds()[5]);
     }
+    ScalarsForColorMapping::updateBounds();
 }

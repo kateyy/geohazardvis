@@ -47,9 +47,7 @@ RenderedPolyData::RenderedPolyData(PolyDataObject * dataObject)
     connect(&m_normalRepresentation, &NormalRepresentation::geometryChanged, this, &RenderedPolyData::geometryChanged);
 }
 
-RenderedPolyData::~RenderedPolyData()
-{
-}
+RenderedPolyData::~RenderedPolyData() = default;
 
 PolyDataObject * RenderedPolyData::polyDataObject()
 {

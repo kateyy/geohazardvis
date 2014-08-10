@@ -29,12 +29,15 @@ signals:
     void renderSetupChanged();
 
 private slots:
-    void on_scalarsSelectionChanged(QString scalarsName);
-    void on_gradientSelectionChanged(int selection);
+    void scalarsSelectionChanged(QString scalarsName);
+    void gradientSelectionChanged(int selection);
+    void minValueChanged(double value);
+    void maxValueChanged(double value);
 
 private:
     void loadGradientImages();
     void updateWindowTitle(QString objectName = "");
+    void updateGuiValueRanges();
 
     static vtkLookupTable * buildLookupTable(const QImage & image);
 

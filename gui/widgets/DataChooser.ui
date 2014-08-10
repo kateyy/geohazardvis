@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>156</width>
-    <height>152</height>
+    <height>242</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -35,6 +35,46 @@
       <layout class="QVBoxLayout" name="verticalLayout">
        <item>
         <widget class="QComboBox" name="scalarsComboBox"/>
+       </item>
+       <item>
+        <widget class="QLabel" name="label">
+         <property name="text">
+          <string>Minimum</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QDoubleSpinBox" name="minValueSpinBox">
+         <property name="decimals">
+          <number>4</number>
+         </property>
+         <property name="maximum">
+          <double>0.000000000000000</double>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="label_2">
+         <property name="text">
+          <string>Maximum</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QDoubleSpinBox" name="maxValueSpinBox">
+         <property name="decimals">
+          <number>4</number>
+         </property>
+         <property name="minimum">
+          <double>0.000000000000000</double>
+         </property>
+         <property name="maximum">
+          <double>0.000000000000000</double>
+         </property>
+         <property name="value">
+          <double>0.000000000000000</double>
+         </property>
+        </widget>
        </item>
       </layout>
      </widget>
@@ -69,7 +109,7 @@
    <sender>gradientComboBox</sender>
    <signal>currentIndexChanged(int)</signal>
    <receiver>DataChooser</receiver>
-   <slot>on_gradientSelectionChanged(int)</slot>
+   <slot>gradientSelectionChanged(int)</slot>
    <hints>
     <hint type="sourcelabel">
      <x>20</x>
@@ -85,7 +125,7 @@
    <sender>scalarsComboBox</sender>
    <signal>currentIndexChanged(QString)</signal>
    <receiver>DataChooser</receiver>
-   <slot>on_scalarsSelectionChanged(QString)</slot>
+   <slot>scalarsSelectionChanged(QString)</slot>
    <hints>
     <hint type="sourcelabel">
      <x>77</x>
@@ -97,9 +137,43 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>minValueSpinBox</sender>
+   <signal>valueChanged(double)</signal>
+   <receiver>DataChooser</receiver>
+   <slot>minValueChanged(double)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>77</x>
+     <y>108</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>77</x>
+     <y>120</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>maxValueSpinBox</sender>
+   <signal>valueChanged(double)</signal>
+   <receiver>DataChooser</receiver>
+   <slot>maxValueChanged(double)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>77</x>
+     <y>153</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>77</x>
+     <y>120</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <slots>
-  <slot>on_scalarsSelectionChanged(QString)</slot>
-  <slot>on_gradientSelectionChanged(int)</slot>
+  <slot>scalarsSelectionChanged(QString)</slot>
+  <slot>gradientSelectionChanged(int)</slot>
+  <slot>minValueChanged(double)</slot>
+  <slot>maxValueChanged(double)</slot>
  </slots>
 </ui>

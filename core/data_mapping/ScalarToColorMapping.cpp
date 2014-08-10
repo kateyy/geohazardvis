@@ -97,7 +97,7 @@ ScalarsForColorMapping * ScalarToColorMapping::m_currentScalars()
     return scalars;
 }
 
-const ScalarsForColorMapping * ScalarToColorMapping::currentScalars() const
+ScalarsForColorMapping * ScalarToColorMapping::currentScalars()
 {
     if (currentScalarsName().isEmpty())
         return nullptr;

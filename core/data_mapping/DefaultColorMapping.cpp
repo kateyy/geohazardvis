@@ -44,8 +44,9 @@ bool DefaultColorMapping::usesGradients() const
 
 void DefaultColorMapping::updateBounds()
 {
-    m_minValue = 0;
-    m_maxValue = 0;
+    m_dataMinValue = 0;
+    m_dataMaxValue = 0;
+    ScalarsForColorMapping::updateBounds();
 }
 
 bool DefaultColorMapping::isValid() const
