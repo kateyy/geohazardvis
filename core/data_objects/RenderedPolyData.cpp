@@ -39,7 +39,6 @@ namespace
 
 RenderedPolyData::RenderedPolyData(PolyDataObject * dataObject)
     : RenderedData(dataObject)
-    , m_filter(nullptr)
 {
     m_normalRepresentation.setData(dataObject->polyDataInput()->polyData());
     m_normalRepresentation.setVisible(false);
@@ -215,13 +214,11 @@ vtkPolyDataMapper * RenderedPolyData::createDataMapper()
         return mapper;
     }
 
-    // TODO LEAK: older filter is referenced by input.data(), thus gets not deleted (weak pointer in CoordinateValueMapping...)
+    vtkSmartPointer<vtkAlgorithm> filter = vtkSmartPointer<vtkAlgorithm>::Take(m_scalars->createFilter());
+    filter->SetInputDataObject(input.data());
 
-    m_filter.TakeReference(m_scalars->createFilter());
-
-    m_filter->SetInputDataObject(input.data());
-
-    mapper->SetInputConnection(m_filter->GetOutputPort());
+    // TODO LEAK: this should delete the old filter, but it is referenced somewhere else (still part of the pipeline)
+    mapper->SetInputConnection(filter->GetOutputPort());
 
     mapper->SetLookupTable(m_lut);
 

@@ -1,7 +1,5 @@
 #pragma once
 
-#include <vtkSmartPointer.h>
-
 #include <core/data_objects/RenderedData.h>
 #include <core/NormalRepresentation.h>
 #include <core/core_api.h>
@@ -10,7 +8,6 @@
 class QImage;
 
 class vtkPolyDataMapper;
-class vtkAlgorithm;
 
 class PolyDataObject;
 
@@ -37,6 +34,4 @@ private:
     vtkPolyDataMapper * createDataMapper();
 
     NormalRepresentation m_normalRepresentation;
-
-    vtkSmartPointer<vtkAlgorithm> m_filter;
 };
