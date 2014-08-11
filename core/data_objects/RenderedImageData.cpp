@@ -17,6 +17,7 @@
 #include <core/data_objects/ImageDataObject.h>
 #include <core/Input.h>
 #include <core/vtkhelper.h>
+#include <core/data_mapping/ScalarsForColorMapping.h>
 
 
 RenderedImageData::RenderedImageData(ImageDataObject * dataObject)
@@ -82,9 +83,8 @@ vtkTexture * RenderedImageData::buildTexture() const
     {
         auto & input = *imageDataObject()->gridDataInput();
 
-        double minValue = input.minMaxValue()[0];
-        double maxValue = input.minMaxValue()[1];
-        m_lut->SetValueRange(minValue, maxValue);
+        m_lut->SetTableRange(m_scalars->minValue(), m_scalars->maxValue());
+        m_lut->Build();
         texture->SetLookupTable(m_lut);
         texture->SetInputData(input.data());
         texture->MapColorScalarsThroughLookupTableOn();

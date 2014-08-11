@@ -3,6 +3,9 @@
 #include "ScalarsForColorMapping.h"
 
 
+class ImageDataObject;
+
+
 class GridColorMapping : public ScalarsForColorMapping
 {
 public:
@@ -19,6 +22,8 @@ protected:
 
 private:
     const bool m_isValid;
+
+    ImageDataObject * m_dataObject;
 
     static const QString s_name;
     static const bool s_registered;
