@@ -64,7 +64,7 @@ bool AbstractCoordinateValueMapping::isValid() const
     return !m_dataObjects.isEmpty();
 }
 
-void AbstractCoordinateValueMapping::minMaxChanged()
+void AbstractCoordinateValueMapping::minMaxChangedEvent()
 {
     // remove empty weak pointers
 
@@ -76,6 +76,8 @@ void AbstractCoordinateValueMapping::minMaxChanged()
         else
             ++it;
     }
+
+    ScalarsForColorMapping::minMaxChangedEvent();
 }
 
 CoordinateXValueMapping::CoordinateXValueMapping(const QList<DataObject *> & dataObjects)
@@ -98,9 +100,9 @@ void CoordinateXValueMapping::updateBounds()
     ScalarsForColorMapping::updateBounds();
 }
 
-void CoordinateXValueMapping::minMaxChanged()
+void CoordinateXValueMapping::minMaxChangedEvent()
 {
-    AbstractCoordinateValueMapping::minMaxChanged();
+    AbstractCoordinateValueMapping::minMaxChangedEvent();
 
     // prevent degenerated vector
     double fixedMax = m_maxValue;
@@ -135,9 +137,9 @@ void CoordinateYValueMapping::updateBounds()
     ScalarsForColorMapping::updateBounds();
 }
 
-void CoordinateYValueMapping::minMaxChanged()
+void CoordinateYValueMapping::minMaxChangedEvent()
 {
-    AbstractCoordinateValueMapping::minMaxChanged();
+    AbstractCoordinateValueMapping::minMaxChangedEvent();
 
     // prevent degenerated vector
     double fixedMax = m_maxValue;
@@ -172,9 +174,9 @@ void CoordinateZValueMapping::updateBounds()
     ScalarsForColorMapping::updateBounds();
 }
 
-void CoordinateZValueMapping::minMaxChanged()
+void CoordinateZValueMapping::minMaxChangedEvent()
 {
-    AbstractCoordinateValueMapping::minMaxChanged();
+    AbstractCoordinateValueMapping::minMaxChangedEvent();
 
     // prevent degenerated vector
     double fixedMax = m_maxValue;

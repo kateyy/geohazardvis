@@ -2,6 +2,7 @@
 
 #include <QList>
 #include <QMap>
+#include <QObject>
 #include <QString>
 
 #include <core/core_api.h>
@@ -17,8 +18,10 @@ Abstract base class for scalars that can be used for surface color mappings.
 Scalar mappings extract relevant data from an input data objects and supply their defined scalar values.
 A subrange of values may be used for the color mapping (setMinValue, setMaxValue).
 */
-class CORE_API ScalarsForColorMapping
+class CORE_API ScalarsForColorMapping : public QObject
 {
+    Q_OBJECT
+
 public:
     friend class ScalarsForColorMappingRegistry;
 
@@ -49,13 +52,18 @@ public:
 
     virtual bool usesGradients() const = 0;
 
+signals:
+    void minMaxChanged();
+
 protected:
     virtual void initialize();
     virtual void updateBounds() = 0;
-    virtual void minMaxChanged();
 
     /** check whether these scalar extraction is applicable for the data objects it was created with */
     virtual bool isValid() const = 0;
+
+protected:
+    virtual void minMaxChangedEvent();
 
 protected:
     double m_dataMinValue;

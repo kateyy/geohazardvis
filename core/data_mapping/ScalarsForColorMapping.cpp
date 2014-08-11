@@ -43,7 +43,7 @@ void ScalarsForColorMapping::setMinValue(double value)
 {
     m_minValue = std::min(std::max(m_dataMinValue, value), m_dataMaxValue);
 
-    minMaxChanged();
+    minMaxChangedEvent();
 }
 
 double ScalarsForColorMapping::maxValue() const
@@ -55,7 +55,7 @@ void ScalarsForColorMapping::setMaxValue(double value)
 {
     m_maxValue = std::min(std::max(m_dataMinValue, value), m_dataMaxValue);
 
-    minMaxChanged();
+    minMaxChangedEvent();
 }
 
 void ScalarsForColorMapping::updateBounds()
@@ -64,6 +64,7 @@ void ScalarsForColorMapping::updateBounds()
     m_maxValue = m_dataMaxValue;
 }
 
-void ScalarsForColorMapping::minMaxChanged()
+void ScalarsForColorMapping::minMaxChangedEvent()
 {
+    emit minMaxChanged();
 }

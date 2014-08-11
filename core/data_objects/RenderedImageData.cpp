@@ -68,6 +68,14 @@ vtkActor * RenderedImageData::createActor()
 void RenderedImageData::updateScalarToColorMapping()
 {
     mainActor()->SetTexture(buildTexture());
+
+    if (m_scalars)
+        connect(m_scalars, &ScalarsForColorMapping::minMaxChanged, 
+            [this]()
+            {
+                if (m_lut)
+                    m_lut->SetTableRange(m_scalars->minValue(), m_scalars->maxValue());
+            });
 }
 
 vtkPolyDataMapper * RenderedImageData::createMapper() const

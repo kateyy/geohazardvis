@@ -24,7 +24,8 @@ public:
 
 protected:
     bool isValid() const override;
-    void minMaxChanged() override;
+
+    void minMaxChangedEvent() override;
 
 protected:
     QList<PolyDataObject *> m_dataObjects;
@@ -41,7 +42,7 @@ public:
 
 protected:
     void updateBounds() override;
-    void minMaxChanged() override;
+    void minMaxChangedEvent() override;
 
 private:
     static const QString s_name;
@@ -58,7 +59,7 @@ public:
 
 protected:
     void updateBounds() override;
-    void minMaxChanged() override;
+    void minMaxChangedEvent() override;
 
 private:
     static const QString s_name;
@@ -75,7 +76,7 @@ public:
 
 protected:
     void updateBounds() override;
-    void minMaxChanged() override;
+    void minMaxChangedEvent() override;
 
 private:
     static const QString s_name;
