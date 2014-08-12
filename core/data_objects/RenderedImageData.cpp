@@ -73,14 +73,6 @@ vtkActor * RenderedImageData::createActor()
 void RenderedImageData::scalarsForColorMappingChangedEvent()
 {
     updateTexture();
-    
-    if (m_scalars)
-        connect(m_scalars, &ScalarsForColorMapping::minMaxChanged,
-            [this]()
-            {
-                if (m_lut)
-                    m_lut->SetTableRange(m_scalars->minValue(), m_scalars->maxValue());
-            });
 }
 
 void RenderedImageData::gradientForColorMappingChangedEvent()

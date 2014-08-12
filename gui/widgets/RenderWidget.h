@@ -14,6 +14,7 @@ class vtkRenderWindow;
 class vtkRenderWindowInteractor;
 class vtkPolyData;
 class vtkCubeAxesActor;
+class vtkScalarBarActor;
 class vtkActor;
 
 class DataObject;
@@ -92,6 +93,7 @@ private:
 
     // visualization and annotation
     vtkSmartPointer<vtkCubeAxesActor> m_axesActor;
+    vtkSmartPointer<vtkScalarBarActor> m_colorMappingLegend;
     
     // configuration widgets
     DataChooser & m_dataChooser;

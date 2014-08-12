@@ -3,6 +3,7 @@
 #include <QList>
 #include <QMap>
 #include <QString>
+#include <QObject>
 
 #include <vtkSmartPointer.h>
 
@@ -19,8 +20,10 @@ class ScalarsForColorMapping;
 Sets up scalar to surface color mapping for rendered data and stores the configuration state.
 Uses ScalarsForColorMapping to determine scalars that can be mapped on the supplied renderedData.
 */
-class CORE_API ScalarToColorMapping
+class CORE_API ScalarToColorMapping : public QObject
 {
+    Q_OBJECT
+
 public:
     ScalarToColorMapping();
 
@@ -43,8 +46,11 @@ public:
     vtkLookupTable * gradient();
     void setGradient(vtkLookupTable * gradient);
 
+private slots:
+    /** apply changed min/max from scalar to color mapping to gradient lookup table */
+    void updateGradientValueRange();
+
 private:
-    ScalarsForColorMapping * m_currentScalars();
     QList<RenderedData *> m_renderedData;
 
     QMap<QString, ScalarsForColorMapping *> m_scalars;

@@ -6,11 +6,14 @@
 #include <vtkInformation.h>
 #include <vtkInformationStringKey.h>
 
+#include <vtkLookupTable.h>
+
 #include <vtkPolyData.h>
 
 #include <vtkPolyDataMapper.h>
 
 #include <vtkCubeAxesActor.h>
+#include <vtkScalarBarActor.h>
 
 #include <vtkRenderer.h>
 #include <vtkRenderWindow.h>
@@ -216,6 +219,13 @@ void RenderWidget::setupAxes(const double bounds[6])
     m_renderer->AddViewProp(m_axesActor);
     m_axesActor->SetBounds(b);
     m_axesActor->SetRebuildAxes(true);
+
+    m_colorMappingLegend = vtkSmartPointer<vtkScalarBarActor>::New();
+    m_colorMappingLegend->SetTitle("asd");
+    m_colorMappingLegend->SetLookupTable(m_scalarMapping.gradient());
+    m_colorMappingLegend->SetAnnotationTextScaling(1);
+
+    m_renderer->AddViewProp(m_colorMappingLegend);
 }
 
 vtkSmartPointer<vtkCubeAxesActor> RenderWidget::createAxes(vtkRenderer & renderer)

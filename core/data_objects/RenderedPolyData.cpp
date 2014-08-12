@@ -219,6 +219,9 @@ vtkPolyDataMapper * RenderedPolyData::createDataMapper()
         return mapper;
     }
 
+    // don't break the lut configuration
+    mapper->SetUseLookupTableScalarRange(true);
+
     vtkSmartPointer<vtkAlgorithm> filter = vtkSmartPointer<vtkAlgorithm>::Take(m_scalars->createFilter());
     filter->SetInputDataObject(input.data());
 

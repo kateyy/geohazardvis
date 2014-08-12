@@ -52,6 +52,8 @@ vtkAlgorithm * AbstractCoordinateValueMapping::createFilter()
 {
     vtkWeakPointer<vtkElevationFilter> elevation = vtkElevationFilter::New();
 
+    elevation->SetScalarRange(m_dataMinValue, m_dataMaxValue);
+
     m_filters << elevation;
 
     minMaxChangedEvent();    // trigger elevation update
@@ -67,7 +69,6 @@ bool AbstractCoordinateValueMapping::isValid() const
 void AbstractCoordinateValueMapping::minMaxChangedEvent()
 {
     // remove empty weak pointers
-
     auto it = m_filters.begin();
     while (it != m_filters.end())
     {

@@ -66,7 +66,8 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 
 find_package(VTK REQUIRED
     vtkGUISupportQtOpenGL   # QVTKWidget
-    vtkRenderingAnnotation  # vtkCubeAxesActor
+    vtkRenderingAnnotation  # vtkCubeAxesActor, vtkScalarBarActor
+    vtkRenderingFreeTypeOpenGL
 )
 include(${VTK_USE_FILE})
 

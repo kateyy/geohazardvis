@@ -31,6 +31,12 @@ void ScalarToColorMapping::setRenderedData(const QList<RenderedData *> & rendere
     qDeleteAll(m_scalars);
     m_scalars = ScalarsForColorMappingRegistry::instance().createMappingsValidFor(dataObjects);
 
+    for (ScalarsForColorMapping * scalars : m_scalars)
+    {
+        connect(scalars, &ScalarsForColorMapping::minMaxChanged,
+            this, &ScalarToColorMapping::updateGradientValueRange);
+    }
+
     // reuse last configuration if possible
     if (m_scalars.contains(lastScalars))
         m_currentScalarsName = lastScalars;
@@ -39,7 +45,7 @@ void ScalarToColorMapping::setRenderedData(const QList<RenderedData *> & rendere
 
     for (RenderedData * rendered : renderedData)
     {
-        rendered->applyScalarsForColorMapping(m_currentScalars());
+        rendered->applyScalarsForColorMapping(currentScalars());
         rendered->applyGradientLookupTable(gradient());
     }
 }
@@ -85,17 +91,6 @@ void ScalarToColorMapping::setCurrentScalarsByName(QString scalarsName)
     }
 }
 
-ScalarsForColorMapping * ScalarToColorMapping::m_currentScalars()
-{
-    if (currentScalarsName().isEmpty())
-        return nullptr;
-
-    auto * scalars = m_scalars.value(currentScalarsName());
-    assert(scalars);
-
-    return scalars;
-}
-
 ScalarsForColorMapping * ScalarToColorMapping::currentScalars()
 {
     if (currentScalarsName().isEmpty())
@@ -118,6 +113,14 @@ void ScalarToColorMapping::setGradient(vtkLookupTable * gradient)
 
     m_gradient->DeepCopy(gradient);
 
+    updateGradientValueRange();
+
     for (RenderedData * renderedData : m_renderedData)
         renderedData->applyGradientLookupTable(m_gradient);
+}
+
+void ScalarToColorMapping::updateGradientValueRange()
+{
+    m_gradient->SetTableRange(currentScalars()->minValue(), currentScalars()->maxValue());
+    m_gradient->SetRange(currentScalars()->minValue(), currentScalars()->maxValue());
 }
