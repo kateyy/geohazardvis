@@ -50,12 +50,7 @@ void DataChooser::setMapping(QString rendererName, ScalarToColorMapping * mappin
     m_ui->scalarsComboBox->addItems(mapping->scalarsNames());
     m_ui->scalarsComboBox->setCurrentText(mapping->currentScalarsName());
 
-    // reuse gradient selection, or use default
-    if (mapping->gradient())
-        m_ui->gradientComboBox->setCurrentIndex(
-            m_scalarToColorGradients.indexOf(mapping->gradient()));
-    else
-        mapping->setGradient(selectedGradient());
+    mapping->setGradient(selectedGradient());
 
     m_ui->gradientGroupBox->setEnabled(mapping->currentScalars()->usesGradients());
 
@@ -79,9 +74,6 @@ void DataChooser::scalarsSelectionChanged(QString scalarsName)
 
     m_mapping->setCurrentScalarsByName(scalarsName);
     updateGuiValueRanges();
-
-    if (scalarsName.isEmpty())
-        return;
 
     bool gradients = m_mapping->currentScalars()->usesGradients();
     m_ui->gradientGroupBox->setEnabled(gradients);

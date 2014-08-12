@@ -22,7 +22,12 @@
 
 RenderedImageData::RenderedImageData(ImageDataObject * dataObject)
     : RenderedData(dataObject)
+    , m_texture(vtkSmartPointer<vtkTexture>::New())
 {
+    m_texture->SetInputData(imageDataObject()->gridDataInput()->data());
+    m_texture->MapColorScalarsThroughLookupTableOn();
+    m_texture->InterpolateOn();
+    m_texture->SetQualityTo32Bit();
 }
 
 const ImageDataObject * RenderedImageData::imageDataObject() const
@@ -60,17 +65,17 @@ vtkActor * RenderedImageData::createActor()
 
     vtkActor * actor = vtkActor::New();
     actor->SetMapper(planeMapper);
-    actor->SetTexture(buildTexture());
+    actor->SetTexture(m_texture);
 
     return actor;
 }
 
-void RenderedImageData::updateScalarToColorMapping()
+void RenderedImageData::scalarsForColorMappingChangedEvent()
 {
-    mainActor()->SetTexture(buildTexture());
-
+    updateTexture();
+    
     if (m_scalars)
-        connect(m_scalars, &ScalarsForColorMapping::minMaxChanged, 
+        connect(m_scalars, &ScalarsForColorMapping::minMaxChanged,
             [this]()
             {
                 if (m_lut)
@@ -78,27 +83,24 @@ void RenderedImageData::updateScalarToColorMapping()
             });
 }
 
+void RenderedImageData::gradientForColorMappingChangedEvent()
+{
+    updateTexture();
+}
+
 vtkPolyDataMapper * RenderedImageData::createMapper() const
 {
     return nullptr;
 }
 
-vtkTexture * RenderedImageData::buildTexture() const
+void RenderedImageData::updateTexture()
 {
-    vtkTexture * texture = vtkTexture::New();
+    if (!m_lut)
+        return;
 
-    if (m_lut)
-    {
-        auto & input = *imageDataObject()->gridDataInput();
+    // not update needed for gradient == nullptr
+    // this happens only when the DataChooser / mapping is not fully initialized
 
-        m_lut->SetTableRange(m_scalars->minValue(), m_scalars->maxValue());
-        m_lut->Build();
-        texture->SetLookupTable(m_lut);
-        texture->SetInputData(input.data());
-        texture->MapColorScalarsThroughLookupTableOn();
-        texture->InterpolateOn();
-        texture->SetQualityTo32Bit();
-    }
-
-    return texture;
+    m_lut->SetTableRange(m_scalars->minValue(), m_scalars->maxValue());
+    m_texture->SetLookupTable(m_lut);
 }

@@ -11,7 +11,7 @@
 
 
 ScalarToColorMapping::ScalarToColorMapping()
-    : m_gradient(nullptr)
+    : m_gradient(vtkSmartPointer<vtkLookupTable>::New())
 {
     clear();
 }
@@ -47,7 +47,6 @@ void ScalarToColorMapping::setRenderedData(const QList<RenderedData *> & rendere
 void ScalarToColorMapping::clear()
 {
     m_currentScalarsName = QString();
-    m_gradient = nullptr;
 
     m_renderedData.clear();
 
@@ -115,13 +114,10 @@ vtkLookupTable * ScalarToColorMapping::gradient()
 
 void ScalarToColorMapping::setGradient(vtkLookupTable * gradient)
 {
-    m_gradient = gradient;
+    assert(gradient);
 
-    if (!m_gradient)
-        return;
+    m_gradient->DeepCopy(gradient);
 
     for (RenderedData * renderedData : m_renderedData)
-    {
         renderedData->applyGradientLookupTable(m_gradient);
-    }
 }

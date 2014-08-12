@@ -28,7 +28,8 @@ protected:
     vtkActor * createActor() override;
     QList<vtkActor *> fetchAttributeActors() override;
 
-    void updateScalarToColorMapping() override;
+    void scalarsForColorMappingChangedEvent() override;
+    void gradientForColorMappingChangedEvent() override;
 
 private:
     vtkPolyDataMapper * createDataMapper();

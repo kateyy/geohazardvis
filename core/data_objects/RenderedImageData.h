@@ -23,11 +23,15 @@ protected:
     vtkProperty * createDefaultRenderProperty() const override;
     vtkActor * createActor() override;
 
-    void updateScalarToColorMapping() override;
+    void scalarsForColorMappingChangedEvent() override;
+    void gradientForColorMappingChangedEvent() override;
 
 private:
     vtkPolyDataMapper * createMapper() const;
 
-    vtkTexture * buildTexture() const;
+    void updateTexture();
+
+private:
+    vtkSmartPointer<vtkTexture> m_texture;
 
 };

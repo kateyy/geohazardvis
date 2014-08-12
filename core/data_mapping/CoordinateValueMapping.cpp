@@ -54,7 +54,7 @@ vtkAlgorithm * AbstractCoordinateValueMapping::createFilter()
 
     m_filters << elevation;
 
-    minMaxChanged();    // trigger elevation update
+    minMaxChangedEvent();    // trigger elevation update
 
     return elevation;
 }

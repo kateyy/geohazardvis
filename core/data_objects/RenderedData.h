@@ -56,11 +56,13 @@ protected:
     virtual vtkActor * createActor() = 0;
     virtual QList<vtkActor *> fetchAttributeActors();
 
-    virtual void updateScalarToColorMapping() = 0;
+    virtual void scalarsForColorMappingChangedEvent() = 0;
+    virtual void gradientForColorMappingChangedEvent() = 0;
 
 protected:
     ScalarsForColorMapping * m_scalars;
     vtkSmartPointer<vtkLookupTable> m_lut;
+    unsigned long m_lutMTime;
 
 private:
     DataObject * m_dataObject;

@@ -196,7 +196,12 @@ QList<vtkActor *> RenderedPolyData::fetchAttributeActors()
     return{ m_normalRepresentation.actor() };
 }
 
-void RenderedPolyData::updateScalarToColorMapping()
+void RenderedPolyData::scalarsForColorMappingChangedEvent()
+{
+    mainActor()->SetMapper(createDataMapper());
+}
+
+void RenderedPolyData::gradientForColorMappingChangedEvent()
 {
     mainActor()->SetMapper(createDataMapper());
 }
@@ -221,6 +226,8 @@ vtkPolyDataMapper * RenderedPolyData::createDataMapper()
     mapper->SetInputConnection(filter->GetOutputPort());
 
     mapper->SetLookupTable(m_lut);
+
+    emit geometryChanged();
 
     return mapper;
 }

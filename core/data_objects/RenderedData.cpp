@@ -65,14 +65,20 @@ const DataObject * RenderedData::dataObject() const
 
 void RenderedData::applyScalarsForColorMapping(ScalarsForColorMapping * scalars)
 {
+    if (scalars == m_scalars)
+        return;
+
     m_scalars = scalars;
 
-    updateScalarToColorMapping();
+    scalarsForColorMappingChangedEvent();
 }
 
 void RenderedData::applyGradientLookupTable(vtkLookupTable * gradient)
 {
+    if (gradient && m_lutMTime == gradient->GetMTime())
+        return;
+
     m_lut = gradient;
 
-    updateScalarToColorMapping();
+    gradientForColorMappingChangedEvent();
 }
