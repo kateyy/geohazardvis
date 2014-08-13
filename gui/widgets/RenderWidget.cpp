@@ -14,6 +14,8 @@
 
 #include <vtkCubeAxesActor.h>
 #include <vtkScalarBarActor.h>
+#include <vtkScalarBarWidget.h>
+#include <vtkScalarBarRepresentation.h>
 
 #include <vtkRenderer.h>
 #include <vtkRenderWindow.h>
@@ -224,6 +226,18 @@ void RenderWidget::setupAxes(const double bounds[6])
     m_colorMappingLegend->SetTitle("asd");
     m_colorMappingLegend->SetLookupTable(m_scalarMapping.gradient());
     m_colorMappingLegend->SetAnnotationTextScaling(1);
+
+    VTK_CREATE(vtkScalarBarRepresentation, repr);
+    repr->SetScalarBarActor(m_colorMappingLegend);
+
+    //VTK_CREATE(vtkScalarBarWidget, widget);
+    vtkScalarBarWidget * widget = vtkScalarBarWidget::New();
+    widget->SetScalarBarActor(m_colorMappingLegend);
+    widget->SetRepresentation(repr);
+
+    widget->SetInteractor(m_interactor);
+
+    widget->SetEnabled(true);
 
     m_renderer->AddViewProp(m_colorMappingLegend);
 }

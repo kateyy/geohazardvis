@@ -68,6 +68,7 @@ find_package(VTK REQUIRED
     vtkGUISupportQtOpenGL   # QVTKWidget
     vtkRenderingAnnotation  # vtkCubeAxesActor, vtkScalarBarActor
     vtkRenderingFreeTypeOpenGL
+    vtkInteractionWidgets
 )
 include(${VTK_USE_FILE})
 
