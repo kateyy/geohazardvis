@@ -36,26 +36,8 @@ void DataChooser::setMapping(QString rendererName, ScalarToColorMapping * mappin
 {
     updateWindowTitle(rendererName);
 
-    if (m_mapping == mapping)
-        return;
-
-    m_mapping = nullptr;
-
-    m_ui->scalarsComboBox->clear();
-    m_ui->gradientGroupBox->setDisabled(true);
-
-    if (!mapping)
-        return;
-
-    m_ui->scalarsComboBox->addItems(mapping->scalarsNames());
-    m_ui->scalarsComboBox->setCurrentText(mapping->currentScalarsName());
-
-    mapping->setGradient(selectedGradient());
-
-    m_ui->gradientGroupBox->setEnabled(mapping->currentScalars()->usesGradients());
-
-    // the mapping can now receive signals from the UI
-    m_mapping = mapping;
+    if (m_mapping != mapping)
+        rebuildGui(mapping);
 
     updateGuiValueRanges();
 
@@ -170,10 +152,34 @@ void DataChooser::updateWindowTitle(QString objectName)
     setWindowTitle(defaultTitle + ": " + objectName);
 }
 
+void DataChooser::rebuildGui(ScalarToColorMapping * newMapping)
+{
+    m_mapping = nullptr;    // disable GUI to mapping events
+
+    m_ui->scalarsComboBox->clear();
+    m_ui->gradientGroupBox->setDisabled(true);
+
+    // stop with cleared GUI when not rendering
+    if (!newMapping)
+        return;
+
+    m_ui->scalarsComboBox->addItems(newMapping->scalarsNames());
+    m_ui->scalarsComboBox->setCurrentText(newMapping->currentScalarsName());
+
+    newMapping->setGradient(selectedGradient());
+
+    m_ui->gradientGroupBox->setEnabled(newMapping->currentScalars()->usesGradients());
+
+    // the mapping can now receive signals from the UI
+    m_mapping = newMapping;
+}
+
 void DataChooser::updateGuiValueRanges()
 {
     double min = 0, max = 0;
     double currentMin = 0, currentMax = 0;
+
+    bool enableRangeGui = false;
 
     if (m_mapping)
     {
@@ -181,6 +187,9 @@ void DataChooser::updateGuiValueRanges()
         max = m_mapping->currentScalars()->dataMaxValue();
         currentMin = m_mapping->currentScalars()->minValue();
         currentMax = m_mapping->currentScalars()->maxValue();
+
+        // assume that the mapping does not use scalar values/ranges, if it has useless min/max values
+        enableRangeGui = min != max;
     }
 
     // disable mapping updates
@@ -193,6 +202,9 @@ void DataChooser::updateGuiValueRanges()
     m_ui->maxValueSpinBox->setMinimum(min);
     m_ui->maxValueSpinBox->setMaximum(max);
     m_ui->maxValueSpinBox->setValue(currentMax);
+
+    m_ui->minValueSpinBox->setEnabled(enableRangeGui);
+    m_ui->maxValueSpinBox->setEnabled(enableRangeGui);
 
     m_mapping = currentMapping;
 }

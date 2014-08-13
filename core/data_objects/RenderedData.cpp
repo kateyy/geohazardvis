@@ -78,6 +78,8 @@ void RenderedData::applyGradientLookupTable(vtkLookupTable * gradient)
     if (gradient && m_lutMTime == gradient->GetMTime())
         return;
 
+    m_lutMTime = gradient->GetMTime();
+
     m_lut = gradient;
 
     gradientForColorMappingChangedEvent();

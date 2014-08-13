@@ -230,7 +230,5 @@ vtkPolyDataMapper * RenderedPolyData::createDataMapper()
 
     mapper->SetLookupTable(m_lut);
 
-    emit geometryChanged();
-
     return mapper;
 }

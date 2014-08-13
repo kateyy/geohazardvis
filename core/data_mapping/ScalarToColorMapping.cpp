@@ -122,5 +122,4 @@ void ScalarToColorMapping::setGradient(vtkLookupTable * gradient)
 void ScalarToColorMapping::updateGradientValueRange()
 {
     m_gradient->SetTableRange(currentScalars()->minValue(), currentScalars()->maxValue());
-    m_gradient->SetRange(currentScalars()->minValue(), currentScalars()->maxValue());
 }

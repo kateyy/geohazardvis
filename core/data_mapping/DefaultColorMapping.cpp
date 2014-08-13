@@ -5,7 +5,7 @@
 #include <core/data_objects/PolyDataObject.h>
 
 
-const QString DefaultColorMapping::s_name = "default color";
+const QString DefaultColorMapping::s_name = "user-defined color";
 
 const bool DefaultColorMapping::s_registered = ScalarsForColorMappingRegistry::instance().registerImplementation(
     s_name,

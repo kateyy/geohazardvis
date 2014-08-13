@@ -37,6 +37,7 @@ private slots:
 private:
     void loadGradientImages();
     void updateWindowTitle(QString objectName = "");
+    void rebuildGui(ScalarToColorMapping * newMapping);
     void updateGuiValueRanges();
 
     static vtkLookupTable * buildLookupTable(const QImage & image);
