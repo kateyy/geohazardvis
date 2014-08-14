@@ -35,7 +35,7 @@
   <customwidget>
    <class>TableView</class>
    <extends>QTableView</extends>
-   <header>TableView.h</header>
+   <header>gui/widgets/TableView.h</header>
   </customwidget>
  </customwidgets>
  <resources/>

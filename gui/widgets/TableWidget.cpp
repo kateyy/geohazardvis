@@ -12,8 +12,9 @@
 
 TableWidget::TableWidget(int index, QWidget * parent)
     : QDockWidget(parent)
-    , m_ui(new Ui_TableWidget())
     , m_index(index)
+    , m_ui(new Ui_TableWidget())
+    , m_dataObject(nullptr)
 {
     m_ui->setupUi(this);
 

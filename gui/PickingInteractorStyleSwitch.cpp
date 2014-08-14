@@ -2,6 +2,8 @@
 
 #include <cassert>
 
+#include <QStringList>
+
 #include <vtkObjectFactory.h>
 #include <vtkActor.h>
 

@@ -6,9 +6,10 @@
 
 
 RenderedData::RenderedData(DataObject * dataObject)
-    : m_dataObject(dataObject)
+    : QObject()
     , m_scalars(nullptr)
     , m_lut(nullptr)
+    , m_dataObject(dataObject)
 {
 }
 
