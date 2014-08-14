@@ -14,11 +14,23 @@
 #include <vtkTexture.h>
 #include <vtkActor.h>
 
+#include <reflectionzeug/PropertyGroup.h>
+
 #include <core/data_objects/ImageDataObject.h>
 #include <core/Input.h>
 #include <core/vtkhelper.h>
 #include <core/data_mapping/ScalarsForColorMapping.h>
 
+
+using namespace reflectionzeug;
+
+namespace
+{
+    enum class Interpolation
+    {
+        flat = VTK_FLAT, gouraud = VTK_GOURAUD, phong = VTK_PHONG
+    };
+}
 
 RenderedImageData::RenderedImageData(ImageDataObject * dataObject)
     : RenderedData(dataObject)
@@ -38,7 +50,31 @@ const ImageDataObject * RenderedImageData::imageDataObject() const
 
 reflectionzeug::PropertyGroup * RenderedImageData::createConfigGroup()
 {
-    return nullptr;
+    PropertyGroup * configGroup = new PropertyGroup();
+
+    auto * renderSettings = new PropertyGroup("renderSettings");
+    renderSettings->setTitle("rendering");
+    configGroup->addProperty(renderSettings);
+
+    auto * interpolate = renderSettings->addProperty<bool>("interpolate",
+        [this]() {
+        return m_texture->GetInterpolate() != 0;
+    },
+        [this](bool doInterpolate) {
+        m_texture->SetInterpolate(doInterpolate);
+        emit geometryChanged();
+    });
+
+    /*auto * quality = renderSettings->addProperty<bool>("hq",
+        [this]() {
+        return m_texture->GetQuality() == VTK_TEXTURE_QUALITY_32BIT;
+    },
+        [this](bool hq) {
+        m_texture->SetQuality(hq ? VTK_TEXTURE_QUALITY_32BIT : VTK_TEXTURE_QUALITY_16BIT);
+        emit geometryChanged();
+    });*/
+
+    return configGroup;
 }
 
 vtkProperty * RenderedImageData::createDefaultRenderProperty() const

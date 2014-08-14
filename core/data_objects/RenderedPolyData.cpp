@@ -67,101 +67,99 @@ reflectionzeug::PropertyGroup * RenderedPolyData::createConfigGroup()
     renderSettings->setTitle("rendering");
     configGroup->addProperty(renderSettings);
 
-    if (renderProperty())
-    {
-        auto * color = renderSettings->addProperty<Color>("color",
-            [this]() {
-                double * color = renderProperty()->GetColor();
-                return Color(static_cast<int>(color[0] * 255), static_cast<int>(color[1] * 255), static_cast<int>(color[2] * 255));
-            },
-            [this](const Color & color) {
-                renderProperty()->SetColor(color.red() / 255.0, color.green() / 255.0, color.blue() / 255.0);
-                emit geometryChanged();
-        });
+
+    auto * color = renderSettings->addProperty<Color>("color",
+        [this]() {
+        double * color = renderProperty()->GetColor();
+        return Color(static_cast<int>(color[0] * 255), static_cast<int>(color[1] * 255), static_cast<int>(color[2] * 255));
+    },
+        [this](const Color & color) {
+        renderProperty()->SetColor(color.red() / 255.0, color.green() / 255.0, color.blue() / 255.0);
+        emit geometryChanged();
+    });
 
 
-        auto * edgesVisible = renderSettings->addProperty<bool>("edgesVisible",
-            [this]() {
-                return (renderProperty()->GetEdgeVisibility() == 0) ? false : true;
-            },
-            [this](bool vis) {
-                renderProperty()->SetEdgeVisibility(vis);
-                emit geometryChanged();
-        });
-        edgesVisible->setTitle("edge visible");
+    auto * edgesVisible = renderSettings->addProperty<bool>("edgesVisible",
+        [this]() {
+        return (renderProperty()->GetEdgeVisibility() == 0) ? false : true;
+    },
+        [this](bool vis) {
+        renderProperty()->SetEdgeVisibility(vis);
+        emit geometryChanged();
+    });
+    edgesVisible->setTitle("edge visible");
 
-        auto * lineWidth = renderSettings->addProperty<float>("lineWidth",
-            std::bind(&vtkProperty::GetLineWidth, renderProperty()),
-            [this](float width) {
-                renderProperty()->SetLineWidth(width);
-                emit geometryChanged();
-        });
-        lineWidth->setTitle("line width");
-        lineWidth->setMinimum(0.1);
-        lineWidth->setMaximum(std::numeric_limits<float>::max());
-        lineWidth->setStep(0.1);
+    auto * lineWidth = renderSettings->addProperty<float>("lineWidth",
+        std::bind(&vtkProperty::GetLineWidth, renderProperty()),
+        [this](float width) {
+        renderProperty()->SetLineWidth(width);
+        emit geometryChanged();
+    });
+    lineWidth->setTitle("line width");
+    lineWidth->setMinimum(0.1);
+    lineWidth->setMaximum(std::numeric_limits<float>::max());
+    lineWidth->setStep(0.1);
 
-        auto * edgeColor = renderSettings->addProperty<Color>("edgeColor",
-            [this]() {
-                double * color = renderProperty()->GetEdgeColor();
-                return Color(static_cast<int>(color[0] * 255), static_cast<int>(color[1] * 255), static_cast<int>(color[2] * 255));
-            },
-            [this](const Color & color) {
-                renderProperty()->SetEdgeColor(color.red() / 255.0, color.green() / 255.0, color.blue() / 255.0);
-                emit geometryChanged();
-        });
-        edgeColor->setTitle("edge color");
+    auto * edgeColor = renderSettings->addProperty<Color>("edgeColor",
+        [this]() {
+        double * color = renderProperty()->GetEdgeColor();
+        return Color(static_cast<int>(color[0] * 255), static_cast<int>(color[1] * 255), static_cast<int>(color[2] * 255));
+    },
+        [this](const Color & color) {
+        renderProperty()->SetEdgeColor(color.red() / 255.0, color.green() / 255.0, color.blue() / 255.0);
+        emit geometryChanged();
+    });
+    edgeColor->setTitle("edge color");
 
 
-        auto * representation = renderSettings->addProperty<Representation>("representation",
-            [this]() {
-                return static_cast<Representation>(renderProperty()->GetRepresentation());
-            },
-            [this](const Representation & rep) {
-                renderProperty()->SetRepresentation(static_cast<int>(rep));
-                emit geometryChanged();
-        });
-        representation->setStrings({
-                { Representation::points, "points" },
-                { Representation::wireframe, "wireframe" },
-                { Representation::surface, "surface" }
-        });
+    auto * representation = renderSettings->addProperty<Representation>("representation",
+        [this]() {
+        return static_cast<Representation>(renderProperty()->GetRepresentation());
+    },
+        [this](const Representation & rep) {
+        renderProperty()->SetRepresentation(static_cast<int>(rep));
+        emit geometryChanged();
+    });
+    representation->setStrings({
+            { Representation::points, "points" },
+            { Representation::wireframe, "wireframe" },
+            { Representation::surface, "surface" }
+    });
 
-        auto * lightingEnabled = renderSettings->addProperty<bool>("lightingEnabled",
-            std::bind(&vtkProperty::GetLighting, renderProperty()),
-            [this](bool enabled) {
-                renderProperty()->SetLighting(enabled);
-                emit geometryChanged();
-        });
-        lightingEnabled->setTitle("lighting enabled");
+    auto * lightingEnabled = renderSettings->addProperty<bool>("lightingEnabled",
+        std::bind(&vtkProperty::GetLighting, renderProperty()),
+        [this](bool enabled) {
+        renderProperty()->SetLighting(enabled);
+        emit geometryChanged();
+    });
+    lightingEnabled->setTitle("lighting enabled");
 
-        auto * interpolation = renderSettings->addProperty<Interpolation>("interpolation",
-            [this]() {
-                return static_cast<Interpolation>(renderProperty()->GetInterpolation());
-            },
-            [this](const Interpolation & i) {
-                renderProperty()->SetInterpolation(static_cast<int>(i));
-                emit geometryChanged();
-        });
-        interpolation->setTitle("interpolation");
-        interpolation->setStrings({
-                { Interpolation::flat, "flat" },
-                { Interpolation::gouraud, "gouraud" },
-                { Interpolation::phong, "phong" }
-        });
+    auto * interpolation = renderSettings->addProperty<Interpolation>("interpolation",
+        [this]() {
+        return static_cast<Interpolation>(renderProperty()->GetInterpolation());
+    },
+        [this](const Interpolation & i) {
+        renderProperty()->SetInterpolation(static_cast<int>(i));
+        emit geometryChanged();
+    });
+    interpolation->setTitle("interpolation");
+    interpolation->setStrings({
+            { Interpolation::flat, "flat" },
+            { Interpolation::gouraud, "gouraud" },
+            { Interpolation::phong, "phong" }
+    });
 
-        auto transparency = renderSettings->addProperty<double>("transparency",
-            [this]() {
-                return 1.0 - renderProperty()->GetOpacity();
-            },
-            [this](double transparency) {
-                renderProperty()->SetOpacity(1.0 - transparency);
-                emit geometryChanged();
-        });
-        transparency->setMinimum(0.f);
-        transparency->setMaximum(1.f);
-        transparency->setStep(0.01f);
-    }
+    auto transparency = renderSettings->addProperty<double>("transparency",
+        [this]() {
+        return 1.0 - renderProperty()->GetOpacity();
+    },
+        [this](double transparency) {
+        renderProperty()->SetOpacity(1.0 - transparency);
+        emit geometryChanged();
+    });
+    transparency->setMinimum(0.f);
+    transparency->setMaximum(1.f);
+    transparency->setStep(0.01f);
 
     configGroup->addProperty(m_normalRepresentation.createPropertyGroup());
 
