@@ -20,6 +20,7 @@
 
 #include "DataMapping.h"
 #include "LoadedFilesTableModel.h"
+#include "SelectionHandler.h"
 #include "widgets/RenderWidget.h"
 #include "widgets/DataChooser.h"
 #include "widgets/RenderConfigWidget.h"
@@ -38,6 +39,8 @@ MainWindow::MainWindow()
     m_ui->setupUi(this);
 
     m_ui->loadedFiles->setModel(m_loadedFilesModel);
+
+    SelectionHandler::instance().setSyncToggleMenu(m_ui->menuSynchronize_Selections);
 
     setCorner(Qt::Corner::TopLeftCorner, Qt::DockWidgetArea::LeftDockWidgetArea);
     setCorner(Qt::Corner::BottomLeftCorner, Qt::DockWidgetArea::LeftDockWidgetArea);

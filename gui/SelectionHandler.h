@@ -1,16 +1,19 @@
 #pragma once
 
 #include <QObject>
-#include <QSet>
+#include <QMap>
 
 #include <vtkType.h>
 
 
 class QItemSelection;
+class QMenu;
+class QAction;
 
 class TableWidget;
 class RenderWidget;
 class DataObject;
+class IPickingInteractorStyle;
 
 
 class SelectionHandler : public QObject
@@ -27,6 +30,8 @@ public:
     void addRenderView(RenderWidget * renderWidget);
     void removeRenderView(RenderWidget * renderWidget);
 
+    void setSyncToggleMenu(QMenu * syncToggleMenu);
+
 private slots:
     void syncRenderViewsWithTable(DataObject * dataObject, vtkIdType cellId);
     void syncRenderAndTableViews(DataObject * dataObject, vtkIdType cellId);
@@ -36,7 +41,13 @@ private:
     SelectionHandler();
     ~SelectionHandler() override;
 
+    void updateSyncToggleMenu();
+
 private:
-    QSet<TableWidget*> m_tableWidgets;
-    QSet<RenderWidget*> m_renderWidgets;
+    QMap<TableWidget*, QAction*> m_tableWidgets;
+    QMap<RenderWidget*, QAction*> m_renderWidgets;
+
+    QMap<IPickingInteractorStyle *, QAction *> m_actionForInteractor;
+
+    QMenu * m_syncToggleMenu;
 };

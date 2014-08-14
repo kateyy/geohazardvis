@@ -74,7 +74,13 @@
     <addaction name="separator"/>
     <addaction name="actionExit"/>
    </widget>
+   <widget class="QMenu" name="menuSynchronize_Selections">
+    <property name="title">
+     <string>Synchronize Selections</string>
+    </property>
+   </widget>
    <addaction name="menuFile"/>
+   <addaction name="menuSynchronize_Selections"/>
   </widget>
   <action name="actionExit">
    <property name="text">
