@@ -29,6 +29,20 @@ void DataMapping::addDataObject(DataObject * dataObject)
     m_dataObject << dataObject;
 }
 
+void DataMapping::removeDataObject(DataObject * dataObject)
+{
+    QList<RenderWidget*> currentRenderWidgets = m_renderWidgets.values();
+    for (RenderWidget * renderWidget : currentRenderWidgets)
+        renderWidget->removeDataObject(dataObject);
+
+    QList<TableWidget*> currentTableWidgets = m_tableWidgets.values();
+    for (TableWidget * tableWidget : currentTableWidgets)
+    {
+        if (tableWidget->dataObject() == dataObject)
+            tableWidget->close();
+    }
+}
+
 void DataMapping::openInTable(DataObject * dataObject)
 {
     TableWidget * table = nullptr;

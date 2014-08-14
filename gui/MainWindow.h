@@ -32,14 +32,16 @@ public slots:
 
     RenderWidget * addRenderWidget(int index);
 
-protected slots:
+private slots:
     void openTable();
     void openRenderView();
     void addToRenderView();
 
+    void removeFile();
+
     void updateRenderViewActions(QList<RenderWidget*> widgets);
 
-protected:
+private:
     QStringList dialog_inputFileName();
 
     void dragEnterEvent(QDragEnterEvent * event) override;
@@ -47,11 +49,12 @@ protected:
 
     DataObject * selectedDataObject();
 
-protected:
+private:
     Ui_MainWindow * m_ui;
     LoadedFilesTableModel * m_loadedFilesModel;
     DataMapping * m_dataMapping;
     QAction * m_addToRendererAction;
+    QAction * m_removeLoadedFileAction;
     DataChooser * m_dataChooser;
     RenderConfigWidget * m_renderConfigWidget;
 

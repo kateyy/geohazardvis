@@ -19,7 +19,8 @@ public:
     DataMapping(MainWindow & mainWindow);
     ~DataMapping() override;
 
-    void addDataObject(DataObject * input);
+    void addDataObject(DataObject * dataObject);
+    void removeDataObject(DataObject * dataObject);
 
     void openInTable(DataObject * dataObject);
     void openInRenderView(DataObject * dataObject);

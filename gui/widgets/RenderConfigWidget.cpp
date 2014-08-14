@@ -17,6 +17,7 @@ RenderConfigWidget::RenderConfigWidget(QWidget * parent)
     : QDockWidget(parent)
     , m_ui(new Ui_RenderConfigWidget())
     , m_propertyRoot(nullptr)
+    , m_renderedData(nullptr)
 {
     m_ui->setupUi(this);
 
@@ -49,6 +50,8 @@ void RenderConfigWidget::setRenderedData(RenderedData * renderedData)
     if (!renderedData)
         return;
 
+    m_renderedData = renderedData;
+
     updateWindowTitle(renderedData);
 
     m_propertyRoot = renderedData->createConfigGroup();
@@ -57,6 +60,11 @@ void RenderConfigWidget::setRenderedData(RenderedData * renderedData)
     m_ui->propertyBrowser->setColumnWidth(0, 135);
 
     emit repaint();
+}
+
+const RenderedData * RenderConfigWidget::renderedData() const
+{
+    return m_renderedData;
 }
 
 void RenderConfigWidget::updateWindowTitle(RenderedData * renderedData)

@@ -15,6 +15,7 @@ public:
     LoadedFilesTableModel(QObject * parent = nullptr);
 
     void addDataObject(DataObject * dataObject);
+    void removeDataObject(DataObject * dataObject);
 
     int rowCount(const QModelIndex &parent = QModelIndex()) const override;
     int columnCount(const QModelIndex &parent = QModelIndex()) const override;

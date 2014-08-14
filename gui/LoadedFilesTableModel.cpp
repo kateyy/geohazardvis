@@ -93,3 +93,11 @@ void LoadedFilesTableModel::addDataObject(DataObject * dataObject)
     m_dataObjects << dataObject;
     endInsertRows();
 }
+
+void LoadedFilesTableModel::removeDataObject(DataObject * dataObject)
+{
+    int index = m_dataObjects.indexOf(dataObject);
+    beginRemoveRows(QModelIndex(), index, index);
+    m_dataObjects.removeAt(index);
+    endRemoveRows();
+}

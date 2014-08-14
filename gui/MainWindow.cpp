@@ -59,6 +59,12 @@ MainWindow::MainWindow()
     m_addToRendererAction->setEnabled(false);
     m_ui->loadedFiles->addAction(m_addToRendererAction);
 
+    m_removeLoadedFileAction = new QAction("remove", this);
+    connect(m_removeLoadedFileAction, &QAction::triggered, this, &MainWindow::removeFile);
+    m_ui->loadedFiles->addAction(m_removeLoadedFileAction);
+
+
+
     connect(m_dataMapping, &DataMapping::renderViewsChanged, this, &MainWindow::updateRenderViewActions);
 }
 
@@ -213,4 +219,15 @@ void MainWindow::addToRenderView()
     DataObject * dataObject = selectedDataObject();
     if (dataObject)
         m_dataMapping->addToRenderView(dataObject, index);
+}
+
+void MainWindow::removeFile()
+{
+    DataObject * dataObject = selectedDataObject();
+    if (!dataObject)
+        return;
+
+    m_loadedFilesModel->removeDataObject(dataObject);
+
+    m_dataMapping->removeDataObject(dataObject);
 }

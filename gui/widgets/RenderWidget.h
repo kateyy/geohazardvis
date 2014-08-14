@@ -44,6 +44,7 @@ public:
 
     void addDataObject(DataObject * dataObject);
     void setDataObject(DataObject * dataObject);
+    void removeDataObject(DataObject * dataObject);
     QList<DataObject *> dataObjects() const;
 
     vtkRenderWindow * renderWindow();

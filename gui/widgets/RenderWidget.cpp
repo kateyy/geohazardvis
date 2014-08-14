@@ -202,6 +202,42 @@ void RenderWidget::setDataObject(DataObject * dataObject)
     addDataObject(dataObject);
 }
 
+void RenderWidget::removeDataObject(DataObject * dataObject)
+{
+    RenderedData * renderedData = nullptr;
+    for (RenderedData * r : m_renderedData)
+    {
+        if (r->dataObject() == dataObject)
+        {
+            renderedData = r;
+            break;
+        }
+    }
+
+    // we didn't render this object
+    if (!renderedData)
+        return;
+
+    // this was our only object, so end here
+    if (m_renderedData.size() == 1)
+    {
+        close();
+        return;
+    }
+
+    for (vtkActor * actor : renderedData->actors())
+        m_renderer->RemoveViewProp(actor);
+
+    m_renderedData.removeOne(renderedData);
+
+    m_scalarMapping.setRenderedData(m_renderedData);
+    if (m_renderConfigWidget.renderedData() == renderedData)
+        m_renderConfigWidget.setRenderedData(nullptr);
+    m_dataChooser.setMapping(windowTitle(), &m_scalarMapping);
+
+    delete renderedData;
+}
+
 QList<DataObject *> RenderWidget::dataObjects() const
 {
     QList<DataObject *> dataObjects;
