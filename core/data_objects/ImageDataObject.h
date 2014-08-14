@@ -12,6 +12,8 @@ class CORE_API ImageDataObject : public DataObject
 public:
     ImageDataObject(std::shared_ptr<GridDataInput> input);
 
+    QString dataTypeName() const override;
+
     std::shared_ptr<GridDataInput> gridDataInput();
     std::shared_ptr<const GridDataInput> gridDataInput() const;
 };

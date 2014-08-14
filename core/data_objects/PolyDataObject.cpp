@@ -5,9 +5,19 @@
 #include "core/Input.h"
 
 
+namespace
+{
+    QString s_dataTypeName = "polygonal mesh";
+}
+
 PolyDataObject::PolyDataObject(std::shared_ptr<PolyDataInput> input)
     : DataObject(input)
 {
+}
+
+QString PolyDataObject::dataTypeName() const
+{
+    return s_dataTypeName;
 }
 
 std::shared_ptr<PolyDataInput> PolyDataObject::polyDataInput()

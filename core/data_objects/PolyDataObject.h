@@ -12,6 +12,8 @@ class CORE_API PolyDataObject : public DataObject
 public:
     PolyDataObject(std::shared_ptr<PolyDataInput> input);
 
+    QString dataTypeName() const override;
+
     std::shared_ptr<PolyDataInput> polyDataInput();
     std::shared_ptr<const PolyDataInput> polyDataInput() const;
 };

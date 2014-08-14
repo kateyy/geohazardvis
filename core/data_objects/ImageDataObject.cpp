@@ -5,9 +5,19 @@
 #include "core/Input.h"
 
 
+namespace
+{
+    QString s_dataTypeName = "regular 2D grid";
+}
+
 ImageDataObject::ImageDataObject(std::shared_ptr<GridDataInput> input)
     : DataObject(input)
 {
+}
+
+QString ImageDataObject::dataTypeName() const
+{
+    return s_dataTypeName;
 }
 
 std::shared_ptr<GridDataInput> ImageDataObject::gridDataInput()

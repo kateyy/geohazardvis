@@ -137,6 +137,7 @@ void MainWindow::openFile(QString fileName)
     m_dataObjects << dataObject;
 
     m_loadedFilesModel->addDataObject(dataObject);
+    m_ui->loadedFiles->resizeColumnsToContents();
 
     m_dataMapping->addDataObject(dataObject);
 
