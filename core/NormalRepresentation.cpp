@@ -157,7 +157,7 @@ void NormalRepresentation::updateGlyphs()
     // create arrow geometry if needed
     if (!m_mapper)
     {
-        m_mapper = vtkDataSetMapper::New();
+        m_mapper = vtkSmartPointer<vtkDataSetMapper>::New();
         m_mapper->SetInputConnection(m_arrowGlyph->GetOutputPort());
     }
 

@@ -184,7 +184,8 @@ vtkProperty * RenderedPolyData::createDefaultRenderProperty() const
 vtkActor * RenderedPolyData::createActor()
 {
     vtkActor * actor = vtkActor::New();
-    actor->SetMapper(createDataMapper());
+    vtkSmartPointer<vtkMapper> mapper = vtkSmartPointer<vtkMapper>::Take(createDataMapper());
+    actor->SetMapper(mapper);
 
     return actor;
 }
@@ -196,12 +197,14 @@ QList<vtkActor *> RenderedPolyData::fetchAttributeActors()
 
 void RenderedPolyData::scalarsForColorMappingChangedEvent()
 {
-    mainActor()->SetMapper(createDataMapper());
+    vtkSmartPointer<vtkMapper> mapper = vtkSmartPointer<vtkMapper>::Take(createDataMapper());
+    mainActor()->SetMapper(mapper);
 }
 
 void RenderedPolyData::gradientForColorMappingChangedEvent()
 {
-    mainActor()->SetMapper(createDataMapper());
+    vtkSmartPointer<vtkMapper> mapper = vtkSmartPointer<vtkMapper>::Take(createDataMapper());
+    mainActor()->SetMapper(mapper);
 }
 
 vtkPolyDataMapper * RenderedPolyData::createDataMapper()

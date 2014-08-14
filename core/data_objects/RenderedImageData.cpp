@@ -96,7 +96,7 @@ vtkActor * RenderedImageData::createActor()
     plane->SetPoint1(input.bounds()[0] + xExtend, input.bounds()[2], 0);
     plane->SetPoint2(input.bounds()[0], input.bounds()[2] + yExtend, 0);
 
-    vtkPolyDataMapper * planeMapper = vtkPolyDataMapper::New();
+    VTK_CREATE(vtkPolyDataMapper, planeMapper);
     planeMapper->SetInputConnection(plane->GetOutputPort());
 
     vtkActor * actor = vtkActor::New();
