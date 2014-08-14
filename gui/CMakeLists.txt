@@ -16,6 +16,8 @@ set ( SOURCES
     IPickingInteractorStyle.h
     PickingInteractorStyleSwitch.h
     PickingInteractorStyleSwitch.cpp
+    LoadedFilesTableModel.h
+    LoadedFilesTableModel.cpp
     MainWindow.h
     MainWindow.cpp
     SelectionHandler.h

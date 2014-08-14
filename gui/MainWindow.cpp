@@ -19,6 +19,7 @@
 #include <core/data_objects/ImageDataObject.h>
 
 #include "DataMapping.h"
+#include "LoadedFilesTableModel.h"
 #include "widgets/RenderWidget.h"
 #include "widgets/DataChooser.h"
 #include "widgets/RenderConfigWidget.h"
@@ -27,13 +28,16 @@
 using namespace std;
 
 MainWindow::MainWindow()
-: QMainWindow()
-, m_ui(new Ui_MainWindow())
-, m_dataMapping(new DataMapping(*this))
-, m_dataChooser(new DataChooser())
-, m_renderConfigWidget(new RenderConfigWidget())
+    : QMainWindow()
+    , m_ui(new Ui_MainWindow())
+    , m_loadedFilesModel(new LoadedFilesTableModel())
+    , m_dataMapping(new DataMapping(*this))
+    , m_dataChooser(new DataChooser())
+    , m_renderConfigWidget(new RenderConfigWidget())
 {
     m_ui->setupUi(this);
+
+    m_ui->loadedFiles->setModel(m_loadedFilesModel);
 
     setCorner(Qt::Corner::TopLeftCorner, Qt::DockWidgetArea::LeftDockWidgetArea);
     setCorner(Qt::Corner::BottomLeftCorner, Qt::DockWidgetArea::LeftDockWidgetArea);
@@ -132,7 +136,7 @@ void MainWindow::openFile(QString fileName)
 
     m_dataObjects << dataObject;
 
-    m_ui->loadedFiles->addItem(QString::fromStdString(dataObject->input()->name));
+    m_loadedFilesModel->addDataObject(dataObject);
 
     m_dataMapping->addDataObject(dataObject);
 
@@ -168,16 +172,16 @@ void MainWindow::updateRenderViewActions(QList<RenderWidget*> widgets)
 
 DataObject * MainWindow::selectedDataObject()
 {
-    QListWidgetItem * selection = m_ui->loadedFiles->currentItem();
-    if (selection == nullptr)
+    QModelIndexList selection = m_ui->loadedFiles->selectionModel()->selectedRows();
+    if (selection.isEmpty())
         return nullptr;
+
+    std::string selectedName = m_loadedFilesModel->data(selection.first()).toString().toStdString();
 
     for (auto dataObject : m_dataObjects)
     {
-        if (selection->text().toStdString() == dataObject->input()->name)
-        {
+        if (selectedName == dataObject->input()->name)
             return dataObject;
-        }
     }
     assert(false);
     return nullptr;

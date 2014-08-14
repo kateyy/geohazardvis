@@ -13,6 +13,7 @@ class DataMapping;
 class RenderWidget;
 class RenderConfigWidget;
 class DataChooser;
+class LoadedFilesTableModel;
 class Ui_MainWindow;
 
 
@@ -48,6 +49,7 @@ protected:
 
 protected:
     Ui_MainWindow * m_ui;
+    LoadedFilesTableModel * m_loadedFilesModel;
     DataMapping * m_dataMapping;
     QAction * m_addToRendererAction;
     DataChooser * m_dataChooser;
