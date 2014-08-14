@@ -13,7 +13,7 @@
   <property name="windowTitle">
    <string>table view</string>
   </property>
-  <widget class="QTableView" name="tableView">
+  <widget class="TableView" name="tableView">
    <property name="alternatingRowColors">
     <bool>true</bool>
    </property>
@@ -31,6 +31,13 @@
    </attribute>
   </widget>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>TableView</class>
+   <extends>QTableView</extends>
+   <header>TableView.h</header>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>

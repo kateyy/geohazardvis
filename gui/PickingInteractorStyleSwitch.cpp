@@ -31,9 +31,9 @@ void PickingInteractorStyleSwitch::highlightCell(vtkIdType cellId, DataObject * 
     dynamic_cast<IPickingInteractorStyle*>(currentStyle())->highlightCell(cellId, dataObject);
 }
 
-void PickingInteractorStyleSwitch::lookAtCell(vtkPolyData * polyData, vtkIdType cellId)
+void PickingInteractorStyleSwitch::lookAtCell(DataObject * dataObject, vtkIdType cellId)
 {
-    dynamic_cast<IPickingInteractorStyle*>(currentStyle())->lookAtCell(polyData, cellId);
+    dynamic_cast<IPickingInteractorStyle*>(currentStyle())->lookAtCell(dataObject, cellId);
 }
 
 void PickingInteractorStyleSwitch::styleAdded(vtkInteractorStyle * style)

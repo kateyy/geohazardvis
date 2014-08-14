@@ -2,6 +2,8 @@
 
 #include <QDockWidget>
 
+#include <vtkType.h>
+
 
 class QTableView;
 class QItemSelection;
@@ -31,12 +33,14 @@ public slots:
     void selectCell(int cellId);
 
 signals:
-    void cellSelected(int cellId);
+    void cellSelected(DataObject * dataObject, vtkIdType cellId);
+    void cellDoubleClicked(DataObject * dataObject, vtkIdType cellId);
 
     void closed();
 
 private slots:
-    void selectionChanged(const QItemSelection & selected, const QItemSelection & deselected);
+    void emitCellSelected(const QItemSelection & selected, const QItemSelection & deselected);
+    
 
 private:
     void closeEvent(QCloseEvent * event) override;

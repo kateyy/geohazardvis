@@ -26,13 +26,17 @@ SelectionHandler::~SelectionHandler() = default;
 void SelectionHandler::addTableView(TableWidget * tableWidget)
 {
     m_tableWidgets << tableWidget;
-    connect(tableWidget, &TableWidget::cellSelected, this, &SelectionHandler::tableSelectionChanged);
+    connect(tableWidget, &TableWidget::cellSelected, this, &SelectionHandler::syncRenderViewsWithTable);
+    connect(tableWidget, &TableWidget::cellDoubleClicked, 
+        [this](DataObject * dataObject, int row) {
+        renderViewsLookAt(dataObject, static_cast<vtkIdType>(row));
+    });
 }
 
 void SelectionHandler::addRenderView(RenderWidget * renderWidget)
 {
     m_renderWidgets << renderWidget;
-    connect(renderWidget->interactorStyle(), &IPickingInteractorStyle::cellPicked, this, &SelectionHandler::cellPicked);
+    connect(renderWidget->interactorStyle(), &IPickingInteractorStyle::cellPicked, this, &SelectionHandler::syncRenderAndTableViews);
 }
 
 void SelectionHandler::removeTableView(TableWidget * tableWidget)
@@ -45,13 +49,8 @@ void SelectionHandler::removeRenderView(RenderWidget * renderWidget)
     m_renderWidgets.remove(renderWidget);
 }
 
-void SelectionHandler::tableSelectionChanged(int cellId)
+void SelectionHandler::syncRenderViewsWithTable(DataObject * dataObject, vtkIdType cellId)
 {
-    TableWidget * table = dynamic_cast<TableWidget*>(sender());
-    assert(table);
-
-    DataObject * dataObject = table->dataObject();
-
     for (RenderWidget * renderWidget : m_renderWidgets)
     {
         if (renderWidget->dataObjects().contains(dataObject))
@@ -59,7 +58,7 @@ void SelectionHandler::tableSelectionChanged(int cellId)
     }
 }
 
-void SelectionHandler::cellPicked(DataObject * dataObject, vtkIdType cellId)
+void SelectionHandler::syncRenderAndTableViews(DataObject * dataObject, vtkIdType cellId)
 {
     for (RenderWidget * renderWidget : m_renderWidgets)
     {
@@ -70,5 +69,13 @@ void SelectionHandler::cellPicked(DataObject * dataObject, vtkIdType cellId)
     {
         if (table->dataObject() == dataObject)
             table->selectCell(cellId);
+    }
+}
+
+void SelectionHandler::renderViewsLookAt(DataObject * dataObject, vtkIdType cellId)
+{
+    for (RenderWidget * renderWidget : m_renderWidgets)
+    {
+        renderWidget->interactorStyle()->lookAtCell(dataObject, cellId);
     }
 }

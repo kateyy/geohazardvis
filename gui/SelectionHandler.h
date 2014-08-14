@@ -28,8 +28,9 @@ public:
     void removeRenderView(RenderWidget * renderWidget);
 
 private slots:
-    void tableSelectionChanged(int cellId);
-    void cellPicked(DataObject * dataObject, vtkIdType cellId);
+    void syncRenderViewsWithTable(DataObject * dataObject, vtkIdType cellId);
+    void syncRenderAndTableViews(DataObject * dataObject, vtkIdType cellId);
+    void renderViewsLookAt(DataObject * dataObject, vtkIdType cellId);
 
 private:
     SelectionHandler();

@@ -193,7 +193,7 @@ void InteractorStyleImage::highlightCell(vtkIdType cellId, DataObject * dataObje
     GetDefaultRenderer()->GetRenderWindow()->Render();
 }
 
-void InteractorStyleImage::lookAtCell(vtkPolyData * /*polyData*/, vtkIdType /*cellId*/)
+void InteractorStyleImage::lookAtCell(DataObject * /*polyData*/, vtkIdType /*cellId*/)
 {
 }
 

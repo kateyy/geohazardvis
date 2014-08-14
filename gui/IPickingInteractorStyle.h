@@ -8,7 +8,6 @@
 template<typename T> class QList;
 
 class vtkActor;
-class vtkPolyData;
 
 class DataObject;
 class RenderedData;
@@ -30,5 +29,5 @@ signals:
 
 public slots:
     virtual void highlightCell(vtkIdType cellId, DataObject * dataObject) = 0;
-    virtual void lookAtCell(vtkPolyData * polyData, vtkIdType cellId) = 0;
+    virtual void lookAtCell(DataObject * dataObject, vtkIdType cellId) = 0;
 };

@@ -28,6 +28,8 @@ set ( SOURCES
     widgets/RenderConfigWidget.cpp
     widgets/RenderWidget.h
     widgets/RenderWidget.cpp
+    widgets/TableView.h
+    widgets/TableView.cpp
     widgets/TableWidget.h
     widgets/TableWidget.cpp
 )

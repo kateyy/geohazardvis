@@ -202,8 +202,15 @@ void InteractorStyle3D::highlightCell(vtkIdType cellId, DataObject * dataObject)
     GetDefaultRenderer()->GetRenderWindow()->Render();
 }
 
-void InteractorStyle3D::lookAtCell(vtkPolyData * polyData, vtkIdType cellId)
+void InteractorStyle3D::lookAtCell(DataObject * dataObject, vtkIdType cellId)
 {
+    if (dataObject->input()->type != ModelType::triangles)
+        return;
+
+    assert(dynamic_cast<PolyDataInput*>(dataObject->input().get()));
+    PolyDataInput * polyDataInput = static_cast<PolyDataInput*>(dataObject->input().get());
+    vtkPolyData * polyData = polyDataInput->polyData();
+
     vtkTriangle * triangle = vtkTriangle::SafeDownCast(polyData->GetCell(cellId));
     assert(triangle);
 

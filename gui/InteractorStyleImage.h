@@ -35,7 +35,7 @@ public:
 
 public slots:
     void highlightCell(vtkIdType cellId, DataObject * dataObject) override;
-    void lookAtCell(vtkPolyData * polyData, vtkIdType cellId) override;
+    void lookAtCell(DataObject * dataObject, vtkIdType cellId) override;
 
 protected:
     explicit InteractorStyleImage();

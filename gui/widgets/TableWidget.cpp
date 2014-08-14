@@ -16,6 +16,11 @@ TableWidget::TableWidget(int index, QWidget * parent)
     , m_index(index)
 {
     m_ui->setupUi(this);
+
+    connect(m_ui->tableView, &TableView::mouseDoubleClicked,
+        [this](int /*column*/, int row) {
+        emit cellDoubleClicked(m_dataObject, vtkIdType(row));
+    });
     
     SelectionHandler::instance().addTableView(this);
 }
@@ -65,17 +70,18 @@ QVtkTableModel * TableWidget::model()
 void TableWidget::setModel(QVtkTableModel * model)
 {
     m_ui->tableView->setModel(model);
-    connect(m_ui->tableView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &TableWidget::selectionChanged);
+    connect(m_ui->tableView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &TableWidget::emitCellSelected);
 }
 
-void TableWidget::selectionChanged(const QItemSelection & selected, const QItemSelection & /*deselected*/)
+void TableWidget::emitCellSelected(const QItemSelection & selected, const QItemSelection & /*deselected*/)
 {
     if (selected.indexes().isEmpty())
     {
-        emit cellSelected(-1);
+        emit cellSelected(m_dataObject, vtkIdType(-1));
+        return;
     }
 
-    emit cellSelected(selected.indexes().first().row());
+    emit cellSelected(m_dataObject, vtkIdType(selected.indexes().first().row()));
 }
 
 void TableWidget::closeEvent(QCloseEvent * event)
