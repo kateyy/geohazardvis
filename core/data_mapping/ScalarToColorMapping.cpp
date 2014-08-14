@@ -3,6 +3,7 @@
 #include <cassert>
 
 #include <vtkLookupTable.h>
+#include <vtkScalarBarActor.h>
 
 #include "ScalarsForColorMapping.h"
 #include "ScalarsForColorMappingRegistry.h"
@@ -12,7 +13,11 @@
 
 ScalarToColorMapping::ScalarToColorMapping()
     : m_gradient(vtkSmartPointer<vtkLookupTable>::New())
+    , m_colorMappingLegend(vtkSmartPointer<vtkScalarBarActor>::New())
 {
+    m_colorMappingLegend->SetLookupTable(m_gradient);
+    m_colorMappingLegend->SetVisibility(false);
+
     clear();
 }
 
@@ -37,15 +42,17 @@ void ScalarToColorMapping::setRenderedData(const QList<RenderedData *> & rendere
             this, &ScalarToColorMapping::updateGradientValueRange);
     }
 
+    QString newScalarsName;
     // reuse last configuration if possible
     if (m_scalars.contains(lastScalars))
-        m_currentScalarsName = lastScalars;
+        newScalarsName = lastScalars;
     else
-        m_currentScalarsName = m_scalars.first()->name();
+        newScalarsName = m_scalars.first()->name();
+
+    setCurrentScalarsByName(newScalarsName);
 
     for (RenderedData * rendered : renderedData)
     {
-        rendered->applyScalarsForColorMapping(currentScalars());
         rendered->applyGradientLookupTable(gradient());
     }
 }
@@ -81,9 +88,12 @@ void ScalarToColorMapping::setCurrentScalarsByName(QString scalarsName)
 
     if (!m_currentScalarsName.isEmpty())
     {
-        scalars = m_scalars.value(scalarsName, nullptr);
+        scalars = m_scalars.value(m_currentScalarsName, nullptr);
         assert(scalars);
     }
+
+    m_colorMappingLegend->SetTitle(scalarsName.toLatin1().data());
+    m_colorMappingLegend->SetVisibility(scalars->usesGradients());
 
     for (RenderedData * renderedData : m_renderedData)
     {
@@ -117,6 +127,11 @@ void ScalarToColorMapping::setGradient(vtkLookupTable * gradient)
 
     for (RenderedData * renderedData : m_renderedData)
         renderedData->applyGradientLookupTable(m_gradient);
+}
+
+vtkScalarBarActor * ScalarToColorMapping::colorMappingLegend()
+{
+    return m_colorMappingLegend;
 }
 
 void ScalarToColorMapping::updateGradientValueRange()

@@ -11,6 +11,7 @@
 
 
 class vtkLookupTable;
+class vtkScalarBarActor;
 
 class RenderedData;
 class ScalarsForColorMapping;
@@ -46,6 +47,8 @@ public:
     vtkLookupTable * gradient();
     void setGradient(vtkLookupTable * gradient);
 
+    vtkScalarBarActor * colorMappingLegend();
+
 private slots:
     /** apply changed min/max from scalar to color mapping to gradient lookup table */
     void updateGradientValueRange();
@@ -57,4 +60,6 @@ private:
 
     QString m_currentScalarsName;
     vtkSmartPointer<vtkLookupTable> m_gradient;
+
+    vtkSmartPointer<vtkScalarBarActor> m_colorMappingLegend;
 };

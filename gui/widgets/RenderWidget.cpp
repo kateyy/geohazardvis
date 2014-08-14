@@ -6,8 +6,6 @@
 #include <vtkInformation.h>
 #include <vtkInformationStringKey.h>
 
-#include <vtkLookupTable.h>
-
 #include <vtkPolyData.h>
 
 #include <vtkPolyDataMapper.h>
@@ -57,6 +55,7 @@ RenderWidget::RenderWidget(
 
     setupRenderer();
     setupInteraction();
+    setupColorMappingLegend();
 
     updateWindowTitle();
 
@@ -197,6 +196,7 @@ void RenderWidget::addDataObject(DataObject * dataObject)
 void RenderWidget::setDataObject(DataObject * dataObject)
 {
     m_renderer->RemoveAllViewProps();
+    m_renderer->AddViewProp(m_colorMappingLegend);
 
     m_renderedData.clear();
     addDataObject(dataObject);
@@ -222,46 +222,6 @@ void RenderWidget::setupAxes(const double bounds[6])
     m_renderer->AddViewProp(m_axesActor);
     m_axesActor->SetBounds(b);
     m_axesActor->SetRebuildAxes(true);
-
-    m_colorMappingLegend = vtkSmartPointer<vtkScalarBarActor>::New();
-    m_colorMappingLegend->SetTitle("x values");
-    m_colorMappingLegend->SetLookupTable(m_scalarMapping.gradient());
-    m_colorMappingLegend->SetAnnotationTextScaling(false);
-    m_colorMappingLegend->SetBarRatio(0.2);
-    m_colorMappingLegend->SetNumberOfLabels(7);
-    m_colorMappingLegend->SetDrawBackground(true);
-    m_colorMappingLegend->GetBackgroundProperty()->SetColor(1, 1, 1);
-    m_colorMappingLegend->SetDrawFrame(true);
-    m_colorMappingLegend->GetFrameProperty()->SetColor(0, 0, 0);
-    m_colorMappingLegend->SetVerticalTitleSeparation(5);
-    m_colorMappingLegend->SetTextPad(3);
-
-    vtkTextProperty * labelProp = m_colorMappingLegend->GetLabelTextProperty();
-    labelProp->SetShadow(false);
-    labelProp->SetColor(0, 0, 0);
-    labelProp->SetBold(false);
-    labelProp->SetItalic(false);
-
-    vtkTextProperty * titleProp = m_colorMappingLegend->GetTitleTextProperty();
-    titleProp->SetShadow(false);
-    titleProp->SetColor(0, 0, 0);
-    titleProp->SetBold(false);
-    titleProp->SetItalic(false);;
-    
-
-    VTK_CREATE(vtkScalarBarRepresentation, repr);
-    repr->SetScalarBarActor(m_colorMappingLegend);
-
-    //VTK_CREATE(vtkScalarBarWidget, widget);
-    vtkScalarBarWidget * widget = vtkScalarBarWidget::New();
-    widget->SetScalarBarActor(m_colorMappingLegend);
-    widget->SetRepresentation(repr);
-
-    widget->SetInteractor(m_interactor);
-
-    widget->SetEnabled(true);
-
-    m_renderer->AddViewProp(m_colorMappingLegend);
 }
 
 vtkSmartPointer<vtkCubeAxesActor> RenderWidget::createAxes(vtkRenderer & renderer)
@@ -299,6 +259,43 @@ vtkSmartPointer<vtkCubeAxesActor> RenderWidget::createAxes(vtkRenderer & rendere
     cubeAxes->SetRebuildAxes(true);
 
     return cubeAxes;
+}
+
+void RenderWidget::setupColorMappingLegend()
+{
+    m_colorMappingLegend = m_scalarMapping.colorMappingLegend();
+    m_colorMappingLegend->SetAnnotationTextScaling(false);
+    m_colorMappingLegend->SetBarRatio(0.2);
+    m_colorMappingLegend->SetNumberOfLabels(7);
+    m_colorMappingLegend->SetDrawBackground(true);
+    m_colorMappingLegend->GetBackgroundProperty()->SetColor(1, 1, 1);
+    m_colorMappingLegend->SetDrawFrame(true);
+    m_colorMappingLegend->GetFrameProperty()->SetColor(0, 0, 0);
+    m_colorMappingLegend->SetVerticalTitleSeparation(5);
+    m_colorMappingLegend->SetTextPad(3);
+
+    vtkTextProperty * labelProp = m_colorMappingLegend->GetLabelTextProperty();
+    labelProp->SetShadow(false);
+    labelProp->SetColor(0, 0, 0);
+    labelProp->SetBold(false);
+    labelProp->SetItalic(false);
+
+    vtkTextProperty * titleProp = m_colorMappingLegend->GetTitleTextProperty();
+    titleProp->SetShadow(false);
+    titleProp->SetColor(0, 0, 0);
+    titleProp->SetBold(false);
+    titleProp->SetItalic(false);
+
+    VTK_CREATE(vtkScalarBarRepresentation, repr);
+    repr->SetScalarBarActor(m_colorMappingLegend);
+
+    m_scalarBarWidget = vtkSmartPointer<vtkScalarBarWidget>::New();
+    m_scalarBarWidget->SetScalarBarActor(m_colorMappingLegend);
+    m_scalarBarWidget->SetRepresentation(repr);
+    m_scalarBarWidget->SetInteractor(m_interactor);
+    m_scalarBarWidget->SetEnabled(true);
+
+    m_renderer->AddViewProp(m_colorMappingLegend);
 }
 
 void RenderWidget::updateWindowTitle()

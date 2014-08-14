@@ -15,6 +15,7 @@ class vtkRenderWindowInteractor;
 class vtkPolyData;
 class vtkCubeAxesActor;
 class vtkScalarBarActor;
+class vtkScalarBarWidget;
 class vtkActor;
 
 class DataObject;
@@ -70,6 +71,7 @@ private:
     
     void setupAxes(const double bounds[6]);
     static vtkSmartPointer<vtkCubeAxesActor> createAxes(vtkRenderer & renderer);
+    void setupColorMappingLegend();
 
     void closeEvent(QCloseEvent * event) override;
 
@@ -93,7 +95,8 @@ private:
 
     // visualization and annotation
     vtkSmartPointer<vtkCubeAxesActor> m_axesActor;
-    vtkSmartPointer<vtkScalarBarActor> m_colorMappingLegend;
+    vtkScalarBarActor * m_colorMappingLegend;
+    vtkSmartPointer<vtkScalarBarWidget> m_scalarBarWidget;
     
     // configuration widgets
     DataChooser & m_dataChooser;
