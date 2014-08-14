@@ -57,7 +57,6 @@ else()
     message(WARNING "Unsupported platform/compiler combination")
 endif()
 
-
 # Set output directories
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})

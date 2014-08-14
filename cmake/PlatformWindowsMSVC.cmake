@@ -53,7 +53,7 @@ set(WIN32_COMPILE_FLAGS
     # arch:SSE2    -> enable enhanced instruction set: streaming simd extensions 2
 )
 
-set(DEFAULT_COMPLIE_FLAGS
+set(DEFAULT_COMPILE_FLAGS
     ${WIN32_COMPILE_FLAGS}
     $<$<CONFIG:Debug>:          /MDd /RTC1 /RTCc /Od /GS /sdl /GF- >
     $<$<CONFIG:Release>:        /MD /Ot /Ob2 /Ox /GS- /GL /GF >

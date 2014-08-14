@@ -2,8 +2,8 @@
 function(configure_cxx_target TARGET)
 
     target_compile_definitions(${TARGET} PRIVATE ${DEFAULT_COMPILE_DEFS})
-    
-    target_compile_options(${TARGET} PRIVATE ${DEFAULT_COMPLIE_FLAGS})
+
+    target_compile_options(${TARGET} PRIVATE ${DEFAULT_COMPILE_FLAGS})
     
     set_target_properties( ${TARGET}
         PROPERTIES
