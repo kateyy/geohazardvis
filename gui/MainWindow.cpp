@@ -71,8 +71,10 @@ MainWindow::MainWindow()
 MainWindow::~MainWindow()
 {
     delete m_dataMapping;
-
     delete m_ui;
+    delete m_loadedFilesModel;
+
+    qDeleteAll(m_dataObjects);
 }
 
 QStringList MainWindow::dialog_inputFileName()
@@ -230,4 +232,8 @@ void MainWindow::removeFile()
     m_loadedFilesModel->removeDataObject(dataObject);
 
     m_dataMapping->removeDataObject(dataObject);
+
+    m_dataObjects.removeOne(dataObject);
+
+    delete dataObject;
 }
