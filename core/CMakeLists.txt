@@ -49,6 +49,9 @@ set ( SOURCES
     data_mapping/GridColorMapping.cpp
 )
 
+
+find_package(Qt5Gui REQUIRED)
+
 source_group_by_path(${CMAKE_CURRENT_SOURCE_DIR} "\\\\.cpp$|\\\\.c$|\\\\.h$|\\\\.hpp$|\\\\.ui$|\\\\.inl$"
     "Source Files" ${SOURCES})
 
@@ -63,6 +66,7 @@ target_link_libraries( ${TARGET}
     ${LIBZEUG_SIGNAL_LIBRARY}
     ${LIBZEUG_REFLECTION_LIBRARY}
     Qt5::Core
+    Qt5::Gui
 )
 
 include_directories(
