@@ -136,7 +136,7 @@ void DataChooser::loadGradientImages()
     gradientComboBox->setIconSize(QSize(200, 20));
     gradientComboBox->blockSignals(false);
     // set the "default" gradient
-    gradientComboBox->setCurrentIndex(34);
+    gradientComboBox->setCurrentIndex(32);
 }
 
 void DataChooser::updateWindowTitle(QString objectName)
