@@ -97,7 +97,7 @@ void DataChooser::maxValueChanged(double value)
 
 vtkLookupTable * DataChooser::selectedGradient() const
 {
-    return m_scalarToColorGradients[m_ui->gradientComboBox->currentIndex()];
+    return m_gradients[m_ui->gradientComboBox->currentIndex()];
 }
 
 void DataChooser::loadGradientImages()
@@ -126,7 +126,7 @@ void DataChooser::loadGradientImages()
         QString fileName = fileInfo.baseName();
         QString filePath = fileInfo.absoluteFilePath();
         QPixmap pixmap = QPixmap(filePath).scaled(200, 20);
-        m_scalarToColorGradients << vtkSmartPointer<vtkLookupTable>::Take(buildLookupTable(pixmap.toImage()));
+        m_gradients << vtkSmartPointer<vtkLookupTable>::Take(buildLookupTable(pixmap.toImage()));
 
         gradientComboBox->addItem(pixmap, "");
         QVariant fileVariant(filePath);

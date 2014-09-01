@@ -45,7 +45,7 @@ private:
 private:
     Ui_DataChooser * m_ui;
 
-    QList<vtkSmartPointer<vtkLookupTable>> m_scalarToColorGradients;
+    QList<vtkSmartPointer<vtkLookupTable>> m_gradients;
 
     ScalarToColorMapping * m_mapping;
 };

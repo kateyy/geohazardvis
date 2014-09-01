@@ -78,7 +78,7 @@ private:
 
 private slots:
     /** Updates the RenderConfigWidget to reflect the actors render properties. */
-    void on_actorPicked(vtkActor * actor);
+    void updateGuiForActor(vtkActor * actor);
 
 private:
     Ui_RenderWidget * m_ui;

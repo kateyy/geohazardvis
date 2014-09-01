@@ -105,7 +105,7 @@ void RenderWidget::setupInteraction()
     m_interactorStyle->addStyle("InteractorStyleImage", InteractorStyleImage::New());
 
     connect(m_interactorStyle.Get(), &PickingInteractorStyleSwitch::pointInfoSent, this, &RenderWidget::ShowInfo);
-    connect(m_interactorStyle.Get(), &PickingInteractorStyleSwitch::actorPicked, this, &RenderWidget::on_actorPicked);
+    connect(m_interactorStyle.Get(), &PickingInteractorStyleSwitch::actorPicked, this, &RenderWidget::updateGuiForActor);
  
     m_interactor = vtkSmartPointer<vtkRenderWindowInteractor>::New();
     m_interactor->SetRenderWindow(m_ui->qvtkMain->GetRenderWindow());
@@ -378,7 +378,7 @@ void RenderWidget::closeEvent(QCloseEvent * event)
     QDockWidget::closeEvent(event);
 }
 
-void RenderWidget::on_actorPicked(vtkActor * actor)
+void RenderWidget::updateGuiForActor(vtkActor * actor)
 {
     assert(actor);
 
