@@ -3,6 +3,7 @@
 #include <cassert>
 
 #include <QMessageBox>
+#include <QCoreApplication>
 
 #include "core/data_objects/DataObject.h"
 
@@ -67,6 +68,12 @@ void DataMapping::openInTable(DataObject * dataObject)
         }
 
         m_tableWidgets.insert(table->index(), table);
+    }
+
+    if (m_tableWidgets.size() > 1)
+    {
+        QCoreApplication::processEvents(); // setup GUI before searching for the tabbed widget...
+        m_mainWindow.tabbedDockWidgetToFront(table);
     }
 
     table->showInput(dataObject);

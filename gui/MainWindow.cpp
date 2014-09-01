@@ -166,6 +166,28 @@ void MainWindow::on_actionOpen_triggered()
     openFiles(dialog_inputFileName());
 }
 
+void MainWindow::tabbedDockWidgetToFront(QDockWidget * widget)
+{
+    // http://qt-project.org/faq/answer/how_can_i_check_which_tab_is_the_current_one_in_a_tabbed_qdockwidget
+    QList<QTabBar*> tabBars = findChildren<QTabBar*>("", Qt::FindChildOption::FindDirectChildrenOnly);
+
+    for (QTabBar * tabBar : tabBars)
+    {
+        for (int i = 0; i < tabBar->count(); ++i)
+        {
+            bool ok;
+            QDockWidget * tabbedWidget = reinterpret_cast<QDockWidget*>(tabBar->tabData(i).toULongLong(&ok));
+            assert(ok);
+
+            if (tabbedWidget == widget)
+            {
+                tabBar->setCurrentIndex(i);
+                return;
+            }
+        }
+    }
+}
+
 void MainWindow::updateRenderViewActions(QList<RenderWidget*> widgets)
 {
     QMenu * menu = new QMenu(this);

@@ -30,6 +30,8 @@ public slots:
     void openFiles(QStringList fileNames);
     void on_actionOpen_triggered();
 
+    void tabbedDockWidgetToFront(QDockWidget * widget);
+
     RenderWidget * addRenderWidget(int index);
 
 private slots:
