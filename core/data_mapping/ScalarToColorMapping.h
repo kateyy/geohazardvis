@@ -43,8 +43,12 @@ public:
     void setCurrentScalarsByName(QString scalarsName);
     ScalarsForColorMapping * currentScalars();
 
-    /** @return currently used gradient, in case it was previously set */
+    /** @return gradient lookup table
+      * This is empty or a copy of the table passed by setGradient. */
     vtkLookupTable * gradient();
+    /** @return pointer to the gradient that was passed via setGradient
+      * Used to compare the local gradient copy with the original object. */
+    vtkLookupTable * originalGradient();
     void setGradient(vtkLookupTable * gradient);
 
     vtkScalarBarActor * colorMappingLegend();
@@ -60,6 +64,7 @@ private:
 
     QString m_currentScalarsName;
     vtkSmartPointer<vtkLookupTable> m_gradient;
+    vtkLookupTable * m_originalGradient;
 
     vtkSmartPointer<vtkScalarBarActor> m_colorMappingLegend;
 };

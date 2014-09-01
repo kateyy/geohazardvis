@@ -13,6 +13,7 @@
 
 ScalarToColorMapping::ScalarToColorMapping()
     : m_gradient(vtkSmartPointer<vtkLookupTable>::New())
+    , m_originalGradient(nullptr)
     , m_colorMappingLegend(vtkSmartPointer<vtkScalarBarActor>::New())
 {
     m_colorMappingLegend->SetLookupTable(m_gradient);
@@ -117,9 +118,16 @@ vtkLookupTable * ScalarToColorMapping::gradient()
     return m_gradient;
 }
 
+vtkLookupTable * ScalarToColorMapping::originalGradient()
+{
+    return m_originalGradient;
+}
+
 void ScalarToColorMapping::setGradient(vtkLookupTable * gradient)
 {
     assert(gradient);
+
+    m_originalGradient = gradient;
 
     m_gradient->DeepCopy(gradient);
 

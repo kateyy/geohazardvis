@@ -139,6 +139,19 @@ void DataChooser::loadGradientImages()
     gradientComboBox->setCurrentIndex(32);
 }
 
+int DataChooser::gradientIndex(vtkLookupTable * gradient) const
+{
+    int index = 0;
+    for (const vtkSmartPointer<vtkLookupTable> & ptr : m_gradients)
+    {
+        if (ptr.Get() == gradient)
+            return index;
+        ++index;
+    }
+    assert(false);
+    return -1;
+}
+
 void DataChooser::updateWindowTitle(QString objectName)
 {
     const QString defaultTitle = "scalar mapping";
@@ -166,7 +179,11 @@ void DataChooser::rebuildGui(ScalarToColorMapping * newMapping)
     m_ui->scalarsComboBox->addItems(newMapping->scalarsNames());
     m_ui->scalarsComboBox->setCurrentText(newMapping->currentScalarsName());
 
-    newMapping->setGradient(selectedGradient());
+    // set GUI to the mappings gradient
+    if (newMapping->originalGradient())
+        m_ui->gradientComboBox->setCurrentIndex(gradientIndex(newMapping->originalGradient()));
+    else // or use currently selected for the new mapping
+        newMapping->setGradient(selectedGradient());
 
     m_ui->gradientGroupBox->setEnabled(newMapping->currentScalars()->usesGradients());
 

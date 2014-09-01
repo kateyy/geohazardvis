@@ -36,6 +36,8 @@ private slots:
 
 private:
     void loadGradientImages();
+    int gradientIndex(vtkLookupTable * gradient) const;
+
     void updateWindowTitle(QString objectName = "");
     void rebuildGui(ScalarToColorMapping * newMapping);
     void updateGuiValueRanges();
