@@ -20,6 +20,7 @@ public:
     void removeDataObject(DataObject * dataObject);
 
     void setVisibility(const DataObject * dataObject, bool visible);
+    void setNoRendererFocused();
 
     int rowCount(const QModelIndex &parent = QModelIndex()) const override;
     int columnCount(const QModelIndex &parent = QModelIndex()) const override;
@@ -33,6 +34,7 @@ public:
 private:
     QList<DataObject *> m_dataObjects;
     QMap<const DataObject *, bool> m_visibilities;
+    bool m_rendererFocused;
 
     QMap<QString, QIcon> m_icons;
 

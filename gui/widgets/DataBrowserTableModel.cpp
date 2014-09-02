@@ -18,11 +18,26 @@ const int s_btnClms = 3;
 
 DataBrowserTableModel::DataBrowserTableModel(QObject * parent)
     : QAbstractTableModel(parent)
+    , m_rendererFocused(false)
 {
     m_icons.insert("notRendered", QIcon(":/icons/painting.svg"));
     m_icons.insert("rendered", QIcon(":/icons/painting_faded.svg"));
     m_icons.insert("table", QIcon(":/icons/table.svg"));
     m_icons.insert("delete_red", QIcon(":/icons/delete_red.svg"));
+
+    {
+        QPixmap pixmap(":/icons/painting.svg"); QImage image = pixmap.toImage();
+        for (int i = 0; i < pixmap.width(); ++i)
+        {
+            for (int j = 0; j < pixmap.height(); ++j)
+            {
+                QRgb pixel = image.pixel(i, j);
+                int gray = qGray(pixel);
+                image.setPixel(i, j, qRgba(gray, gray, gray, qAlpha(pixel)));
+            };
+        }
+        m_icons.insert("noRenderer", QIcon(QPixmap().fromImage(image)));
+    }
 }
 
 int DataBrowserTableModel::rowCount(const QModelIndex &/*parent = QModelIndex()*/) const
@@ -44,6 +59,8 @@ QVariant DataBrowserTableModel::data(const QModelIndex &index, int role /*= Qt::
         case 0:
             return QVariant(m_icons["table"]);
         case 1:
+            if (!m_rendererFocused)
+                return QVariant(m_icons["noRenderer"]);
             if (m_visibilities[dataObjectAt(index)])
                 return QVariant(m_icons["rendered"]);
             return QVariant(m_icons["notRendered"]);
@@ -149,4 +166,10 @@ void DataBrowserTableModel::removeDataObject(DataObject * dataObject)
 void DataBrowserTableModel::setVisibility(const DataObject * dataObject, bool visible)
 {
     m_visibilities[dataObject] = visible;
+    m_rendererFocused = true;
+}
+
+void DataBrowserTableModel::setNoRendererFocused()
+{
+    m_rendererFocused = false;
 }

@@ -152,6 +152,12 @@ void DataBrowser::setupGuiFor(RenderWidget * renderView)
     for (const DataObject * dataObject : m_dataObjects)
         allObjects << dataObject;
 
+    if (!renderView)
+    {
+        m_tableModel->setNoRendererFocused();
+        return;
+    }
+
     for (const RenderedData * renderedData : renderView->renderedData())
     {
         allObjects.remove(renderedData->dataObject());

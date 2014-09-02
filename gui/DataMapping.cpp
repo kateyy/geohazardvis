@@ -68,6 +68,8 @@ void DataMapping::openInTable(DataObject * dataObject)
             m_mainWindow.tabifyDockWidget(m_tableWidgets.first(), table);
         }
 
+        connect(table, &TableWidget::focused, this, &DataMapping::setFocusedTableView);
+
         m_tableWidgets.insert(table->index(), table);
     }
 
@@ -111,6 +113,13 @@ void DataMapping::setFocusedRenderView(RenderWidget * renderView)
     m_focusedRenderView = renderView;
 
     emit focusedRenderViewChanged(renderView);
+}
+
+void DataMapping::setFocusedTableView(TableWidget * /*tableView*/)
+{
+    m_focusedRenderView = nullptr;
+
+    emit focusedRenderViewChanged(nullptr);
 }
 
 void DataMapping::tableClosed()

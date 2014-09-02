@@ -34,6 +34,7 @@ signals:
 
 private slots:
     void setFocusedRenderView(RenderWidget * renderView);
+    void setFocusedTableView(TableWidget * tableView);
 
     void tableClosed();
     void renderWidgetClosed();
