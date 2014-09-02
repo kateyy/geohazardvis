@@ -16,6 +16,7 @@ DataMapping::DataMapping(MainWindow & mainWindow)
     : m_mainWindow(mainWindow)
     , m_nextTableIndex(0)
     , m_nextRenderWidgetIndex(0)
+    , m_focusedRenderView(nullptr)
 {
 }
 
@@ -25,21 +26,21 @@ DataMapping::~DataMapping()
     qDeleteAll(m_tableWidgets.values());
 }
 
-void DataMapping::addDataObject(DataObject * dataObject)
+void DataMapping::addDataObjects(QList<DataObject *> dataObjects)
 {
-    m_dataObject << dataObject;
+    m_dataObject << dataObjects;
 }
 
-void DataMapping::removeDataObject(DataObject * dataObject)
+void DataMapping::removeDataObjects(QList<DataObject *> dataObjects)
 {
     QList<RenderWidget*> currentRenderWidgets = m_renderWidgets.values();
     for (RenderWidget * renderWidget : currentRenderWidgets)
-        renderWidget->removeDataObject(dataObject);
+        renderWidget->removeDataObjects(dataObjects);
 
     QList<TableWidget*> currentTableWidgets = m_tableWidgets.values();
     for (TableWidget * tableWidget : currentTableWidgets)
     {
-        if (tableWidget->dataObject() == dataObject)
+        if (dataObjects.contains(tableWidget->dataObject()))
             tableWidget->close();
     }
 }
@@ -79,23 +80,37 @@ void DataMapping::openInTable(DataObject * dataObject)
     table->showInput(dataObject);
 }
 
-void DataMapping::openInRenderView(DataObject * dataObject)
+void DataMapping::openInRenderView(QList<DataObject *> dataObjects)
 {
     RenderWidget * renderWidget = m_mainWindow.addRenderWidget(m_nextRenderWidgetIndex++);
     m_renderWidgets.insert(renderWidget->index(), renderWidget);
+
+    connect(renderWidget, &RenderWidget::focused, this, &DataMapping::setFocusedRenderView);
     connect(renderWidget, &RenderWidget::closed, this, &DataMapping::renderWidgetClosed);
 
-    renderWidget->setDataObject(dataObject);
+    renderWidget->addDataObjects(dataObjects);
 
     emit renderViewsChanged(m_renderWidgets.values());
 }
 
-void DataMapping::addToRenderView(DataObject * dataObject, int renderView)
+void DataMapping::addToRenderView(QList<DataObject *> dataObjects, int renderView)
 {
     assert(m_renderWidgets.contains(renderView));
-    m_renderWidgets[renderView]->addDataObject(dataObject);
+    m_renderWidgets[renderView]->addDataObjects(dataObjects);
 
     emit renderViewsChanged(m_renderWidgets.values());
+}
+
+RenderWidget * DataMapping::focusedRenderView()
+{
+    return m_focusedRenderView;
+}
+
+void DataMapping::setFocusedRenderView(RenderWidget * renderView)
+{
+    m_focusedRenderView = renderView;
+
+    emit focusedRenderViewChanged(renderView);
 }
 
 void DataMapping::tableClosed()

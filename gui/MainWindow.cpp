@@ -19,7 +19,6 @@
 #include <core/data_objects/ImageDataObject.h>
 
 #include "DataMapping.h"
-#include "LoadedFilesTableModel.h"
 #include "SelectionHandler.h"
 #include "widgets/RenderWidget.h"
 #include "widgets/DataChooser.h"
@@ -31,14 +30,14 @@ using namespace std;
 MainWindow::MainWindow()
     : QMainWindow()
     , m_ui(new Ui_MainWindow())
-    , m_loadedFilesModel(new LoadedFilesTableModel())
     , m_dataMapping(new DataMapping(*this))
     , m_dataChooser(new DataChooser())
     , m_renderConfigWidget(new RenderConfigWidget())
 {
     m_ui->setupUi(this);
 
-    m_ui->loadedFiles->setModel(m_loadedFilesModel);
+    m_dataBrowser = m_ui->centralwidget;
+    m_dataBrowser->setDataMapping(m_dataMapping);
 
     SelectionHandler::instance().setSyncToggleMenu(m_ui->menuSynchronize_Selections);
 
@@ -50,34 +49,18 @@ MainWindow::MainWindow()
     addDockWidget(Qt::DockWidgetArea::LeftDockWidgetArea, m_dataChooser);
     addDockWidget(Qt::DockWidgetArea::LeftDockWidgetArea, m_renderConfigWidget);
 
-    QAction * a_inputTable = new QAction("show table", this);
-    connect(a_inputTable, &QAction::triggered, this, &MainWindow::openTable);
-    m_ui->loadedFiles->addAction(a_inputTable);
-
-    QAction * a_openRenderView = new QAction("open render view", this);
-    connect(a_openRenderView, &QAction::triggered, this, &MainWindow::openRenderView);
-    m_ui->loadedFiles->addAction(a_openRenderView);
-
-    m_addToRendererAction = new QAction("add to render view", this);
-    m_addToRendererAction->setEnabled(false);
-    m_ui->loadedFiles->addAction(m_addToRendererAction);
-
-    m_removeLoadedFileAction = new QAction("remove", this);
-    connect(m_removeLoadedFileAction, &QAction::triggered, this, &MainWindow::removeFile);
-    m_ui->loadedFiles->addAction(m_removeLoadedFileAction);
 
 
 
-    connect(m_dataMapping, &DataMapping::renderViewsChanged, this, &MainWindow::updateRenderViewActions);
+
+
+
 }
 
 MainWindow::~MainWindow()
 {
-    delete m_dataMapping;
     delete m_ui;
-    delete m_loadedFilesModel;
-
-    qDeleteAll(m_dataObjects);
+    delete m_dataMapping;
 }
 
 QStringList MainWindow::dialog_inputFileName()
@@ -145,12 +128,9 @@ void MainWindow::openFile(QString fileName)
         break;
     }
 
-    m_dataObjects << dataObject;
+    m_dataBrowser->addDataObject(dataObject);
 
-    m_loadedFilesModel->addDataObject(dataObject);
-    m_ui->loadedFiles->resizeColumnsToContents();
-
-    m_dataMapping->addDataObject(dataObject);
+    m_dataMapping->addDataObjects({ dataObject });
 
     setWindowTitle(oldName);
 }
@@ -193,77 +173,3 @@ void MainWindow::tabbedDockWidgetToFront(QDockWidget * widget)
     }
 }
 
-void MainWindow::updateRenderViewActions(QList<RenderWidget*> widgets)
-{
-    QMenu * menu = new QMenu(this);
-    
-    for (RenderWidget * widget : widgets)
-    {
-        QAction * a = new QAction(widget->windowTitle(), this);
-        a->setData(QVariant(widget->index()));
-        connect(a, &QAction::triggered, this, &MainWindow::addToRenderView);
-        menu->addAction(a);
-    }
-
-    m_addToRendererAction->setMenu(menu);
-    m_addToRendererAction->setEnabled(!menu->isEmpty());
-}
-
-DataObject * MainWindow::selectedDataObject()
-{
-    QModelIndexList selection = m_ui->loadedFiles->selectionModel()->selectedRows();
-    if (selection.isEmpty())
-        return nullptr;
-
-    std::string selectedName = m_loadedFilesModel->data(selection.first()).toString().toStdString();
-
-    for (auto dataObject : m_dataObjects)
-    {
-        if (selectedName == dataObject->input()->name)
-            return dataObject;
-    }
-    assert(false);
-    return nullptr;
-}
-
-void MainWindow::openTable()
-{
-    DataObject * dataObject = selectedDataObject();
-    if (dataObject)
-        m_dataMapping->openInTable(dataObject);
-}
-
-void MainWindow::openRenderView()
-{
-    DataObject * dataObject = selectedDataObject();
-    if (dataObject)
-        m_dataMapping->openInRenderView(dataObject);
-}
-
-void MainWindow::addToRenderView()
-{
-    QAction * action = dynamic_cast<QAction*>(sender());
-    assert(action);
-    bool ok = false;
-    int index = action->data().toInt(&ok);
-    assert(ok);
-
-    DataObject * dataObject = selectedDataObject();
-    if (dataObject)
-        m_dataMapping->addToRenderView(dataObject, index);
-}
-
-void MainWindow::removeFile()
-{
-    DataObject * dataObject = selectedDataObject();
-    if (!dataObject)
-        return;
-
-    m_loadedFilesModel->removeDataObject(dataObject);
-
-    m_dataMapping->removeDataObject(dataObject);
-
-    m_dataObjects.removeOne(dataObject);
-
-    delete dataObject;
-}

@@ -19,6 +19,14 @@ DataObject::~DataObject()
     delete m_tableModel;
 }
 
+QString DataObject::name() const
+{
+    if (!m_input)
+        return QString();
+
+    return QString::fromStdString(m_input->name);
+}
+
 std::shared_ptr<Input> DataObject::input()
 {
     return m_input;

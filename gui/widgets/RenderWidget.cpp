@@ -86,6 +86,11 @@ void RenderWidget::render()
     m_renderer->GetRenderWindow()->Render();
 }
 
+void RenderWidget::focusInEvent(QFocusEvent * /*event*/)
+{
+    emit focused(this);
+}
+
 void RenderWidget::setupRenderer()
 {
     m_ui->qvtkMain->GetRenderWindow()->SetAAFrames(0);
@@ -124,7 +129,7 @@ void RenderWidget::ShowInfo(const QStringList & info)
     setToolTip(info.join('\n'));
 }
 
-void RenderWidget::addDataObject(DataObject * dataObject)
+RenderedData * RenderWidget::addDataObject(DataObject * dataObject)
 {
     setWindowTitle(QString::fromStdString(dataObject->input()->name) + " (loading to GPU)");
     QApplication::processEvents();
@@ -134,7 +139,7 @@ void RenderWidget::addDataObject(DataObject * dataObject)
     {
         QMessageBox::warning(this, "", "Cannot render 2d and 3d geometry in the same view.");
         updateWindowTitle();
-        return;
+        return nullptr;
     }
 
     RenderedData * renderedData = nullptr;
@@ -179,27 +184,55 @@ void RenderWidget::addDataObject(DataObject * dataObject)
     }
     setupAxes(bounds);
 
-    updateWindowTitle();
+    m_dataObjectToRendered.insert(dataObject, renderedData);
+
+    return renderedData;
+}
+
+void RenderWidget::addDataObjects(QList<DataObject *> dataObjects)
+{
+    RenderedData * aNewObject = nullptr;
+
+    for (DataObject * dataObject : dataObjects)
+    {
+        RenderedData * oldRendered = m_dataObjectToRendered.value(dataObject);
+
+        if (oldRendered)
+        {
+            for (vtkActor * actor : oldRendered->actors())
+                actor->SetVisibility(true);
+        }
+        else
+            aNewObject = addDataObject(dataObject);
+    }
+
+    if (aNewObject)
+        m_renderConfigWidget.setRenderedData(aNewObject);
 
     m_scalarMapping.setRenderedData(m_renderedData);
-
-    m_renderConfigWidget.setRenderedData(renderedData);
     m_dataChooser.setMapping(windowTitle(), &m_scalarMapping);
+
+    updateWindowTitle();
 
     vtkCamera & camera = *m_renderer->GetActiveCamera();
     camera.SetPosition(0, 0, 1);
     camera.SetViewUp(0, 1, 0);
     m_renderer->ResetCamera();
+
     emit render();
 }
 
-void RenderWidget::setDataObject(DataObject * dataObject)
+void RenderWidget::hideDataObjects(QList<DataObject *> dataObjects)
 {
-    m_renderer->RemoveAllViewProps();
-    m_renderer->AddViewProp(m_colorMappingLegend);
+    for (DataObject * dataObject : dataObjects)
+    {
+        RenderedData * rendered = m_dataObjectToRendered.value(dataObject);
+        if (!rendered)
+            continue;
 
-    m_renderedData.clear();
-    addDataObject(dataObject);
+        for (vtkActor * actor : rendered->actors())
+            actor->SetVisibility(false);
+    }
 }
 
 void RenderWidget::removeDataObject(DataObject * dataObject)
@@ -236,6 +269,13 @@ void RenderWidget::removeDataObject(DataObject * dataObject)
     m_dataChooser.setMapping(windowTitle(), &m_scalarMapping);
 
     delete renderedData;
+}
+
+void RenderWidget::removeDataObjects(QList<DataObject *> dataObjects)
+{
+    // TODO optimize as needed
+    for (DataObject * dataObject : dataObjects)
+        removeDataObject(dataObject);
 }
 
 QList<DataObject *> RenderWidget::dataObjects() const

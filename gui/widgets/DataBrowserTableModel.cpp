@@ -1,4 +1,4 @@
-#include "LoadedFilesTableModel.h"
+#include "DataBrowserTableModel.h"
 
 #include <cassert>
 
@@ -8,22 +8,22 @@
 #include <core/data_objects/DataObject.h>
 
 
-LoadedFilesTableModel::LoadedFilesTableModel(QObject * parent)
+DataBrowserTableModel::DataBrowserTableModel(QObject * parent)
     : QAbstractTableModel(parent)
 {
 }
 
-int LoadedFilesTableModel::rowCount(const QModelIndex &/*parent = QModelIndex()*/) const
+int DataBrowserTableModel::rowCount(const QModelIndex &/*parent = QModelIndex()*/) const
 {
     return m_dataObjects.size();
 }
 
-int LoadedFilesTableModel::columnCount(const QModelIndex &/*parent = QModelIndex()*/) const
+int DataBrowserTableModel::columnCount(const QModelIndex &/*parent = QModelIndex()*/) const
 {
     return 6;
 }
 
-QVariant LoadedFilesTableModel::data(const QModelIndex &index, int role /*= Qt::DisplayRole*/) const
+QVariant DataBrowserTableModel::data(const QModelIndex &index, int role /*= Qt::DisplayRole*/) const
 {
     if (role != Qt::DisplayRole)
         return QVariant();
@@ -66,7 +66,7 @@ QVariant LoadedFilesTableModel::data(const QModelIndex &index, int role /*= Qt::
     return QVariant();
 }
 
-QVariant LoadedFilesTableModel::headerData(int section, Qt::Orientation orientation,
+QVariant DataBrowserTableModel::headerData(int section, Qt::Orientation orientation,
     int role /*= Qt::DisplayRole*/) const
 {
     if (role != Qt::DisplayRole)
@@ -87,14 +87,25 @@ QVariant LoadedFilesTableModel::headerData(int section, Qt::Orientation orientat
     return QVariant();
 }
 
-void LoadedFilesTableModel::addDataObject(DataObject * dataObject)
+DataObject * DataBrowserTableModel::dataObjectAt(int row)
+{
+    if (row < 0 || row >= m_dataObjects.size())
+    {
+        assert(false);
+        return nullptr;
+    }
+
+    return m_dataObjects.at(row);
+}
+
+void DataBrowserTableModel::addDataObject(DataObject * dataObject)
 {
     beginInsertRows(QModelIndex(), m_dataObjects.size(), m_dataObjects.size());
     m_dataObjects << dataObject;
     endInsertRows();
 }
 
-void LoadedFilesTableModel::removeDataObject(DataObject * dataObject)
+void DataBrowserTableModel::removeDataObject(DataObject * dataObject)
 {
     int index = m_dataObjects.indexOf(dataObject);
     beginRemoveRows(QModelIndex(), index, index);

@@ -1,0 +1,7 @@
+<RCC>
+  <qresource prefix="icons">
+    <file alias="painting.svg">../data/toolbaricons.sourceforge.net/painting.svg</file>
+    <file alias="painting_faded.svg">../data/toolbaricons.sourceforge.net/painting_faded.svg</file>
+    <file alias="table.svg">../data/toolbaricons.sourceforge.net/table.svg</file>
+  </qresource>
+</RCC>

@@ -19,17 +19,22 @@ public:
     DataMapping(MainWindow & mainWindow);
     ~DataMapping() override;
 
-    void addDataObject(DataObject * dataObject);
-    void removeDataObject(DataObject * dataObject);
+    void addDataObjects(QList<DataObject *> dataObjects);
+    void removeDataObjects(QList<DataObject *> dataObjects);
 
     void openInTable(DataObject * dataObject);
-    void openInRenderView(DataObject * dataObject);
-    void addToRenderView(DataObject * dataObject, int renderView);
+    void openInRenderView(QList<DataObject *> dataObjects);
+    void addToRenderView(QList<DataObject *> dataObjects, int renderView);
+
+    RenderWidget * focusedRenderView();
 
 signals:
     void renderViewsChanged(QList<RenderWidget*> widgets);
+    void focusedRenderViewChanged(RenderWidget * renderView);
 
 private slots:
+    void setFocusedRenderView(RenderWidget * renderView);
+
     void tableClosed();
     void renderWidgetClosed();
 
@@ -41,4 +46,6 @@ private:
     int m_nextRenderWidgetIndex;
     QMap<int, TableWidget*> m_tableWidgets;
     QMap<int, RenderWidget*> m_renderWidgets;
+
+    RenderWidget * m_focusedRenderView;
 };

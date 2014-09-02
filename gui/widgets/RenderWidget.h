@@ -42,9 +42,12 @@ public:
 
     int index() const;
 
-    void addDataObject(DataObject * dataObject);
-    void setDataObject(DataObject * dataObject);
-    void removeDataObject(DataObject * dataObject);
+    /** add data objects to the view or make already added objects visible again */
+    void addDataObjects(QList<DataObject *> dataObjects);
+    /** remove rendered representations of data objects, don't delete data and settings */
+    void hideDataObjects(QList<DataObject *> dataObjects);
+    /** remove rendered representations and all references to the data objects */
+    void removeDataObjects(QList<DataObject *> dataObjects);
     QList<DataObject *> dataObjects() const;
 
     vtkRenderWindow * renderWindow();
@@ -60,11 +63,19 @@ public slots:
 
 signals:
     void closed();
+    /** signaled when the widget receive the keyboard focus (focusInEvent) */
+    void focused(RenderWidget * renderWidget);
+
+protected:
+    void focusInEvent(QFocusEvent * event);
 
 private:
     void setupRenderer();
     void setupInteraction();
     void setInteractorStyle(const std::string & name);
+
+    RenderedData * addDataObject(DataObject * dataObject);
+    void removeDataObject(DataObject * dataObject);
 
     void updateWindowTitle();
     
@@ -87,6 +98,7 @@ private:
 
     // rendered representations of data objects for this view
     QList<RenderedData *> m_renderedData;
+    QMap<DataObject *, RenderedData *> m_dataObjectToRendered;
     QMap<vtkActor *, RenderedData *> m_actorToRenderedData;
 
     // Rendering components

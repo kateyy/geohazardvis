@@ -12,8 +12,8 @@ class DataObject;
 class DataMapping;
 class RenderWidget;
 class RenderConfigWidget;
+class DataBrowser;
 class DataChooser;
-class LoadedFilesTableModel;
 class Ui_MainWindow;
 
 
@@ -37,13 +37,7 @@ public slots:
     RenderWidget * addRenderWidget(int index);
 
 private slots:
-    void openTable();
-    void openRenderView();
-    void addToRenderView();
-
-    void removeFile();
-
-    void updateRenderViewActions(QList<RenderWidget*> widgets);
+    //void updateRenderViewActions(QList<RenderWidget*> widgets);
 
 private:
     QStringList dialog_inputFileName();
@@ -51,18 +45,14 @@ private:
     void dragEnterEvent(QDragEnterEvent * event) override;
     void dropEvent(QDropEvent * event) override;
 
-    DataObject * selectedDataObject();
-
 private:
     Ui_MainWindow * m_ui;
-    LoadedFilesTableModel * m_loadedFilesModel;
     DataMapping * m_dataMapping;
     QAction * m_addToRendererAction;
     QAction * m_removeLoadedFileAction;
+    DataBrowser * m_dataBrowser;
     DataChooser * m_dataChooser;
     RenderConfigWidget * m_renderConfigWidget;
 
     QString m_lastOpenFolder;
-
-    QList<DataObject *> m_dataObjects;
 };

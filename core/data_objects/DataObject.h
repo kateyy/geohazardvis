@@ -18,6 +18,7 @@ public:
     DataObject(std::shared_ptr<Input> input);
     virtual ~DataObject() = 0;
 
+    QString name() const;
     virtual QString dataTypeName() const = 0;
 
     std::shared_ptr<Input> input();

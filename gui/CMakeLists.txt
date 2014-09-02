@@ -16,12 +16,14 @@ set ( SOURCES
     IPickingInteractorStyle.h
     PickingInteractorStyleSwitch.h
     PickingInteractorStyleSwitch.cpp
-    LoadedFilesTableModel.h
-    LoadedFilesTableModel.cpp
     MainWindow.h
     MainWindow.cpp
     SelectionHandler.h
     SelectionHandler.cpp
+    widgets/DataBrowser.h
+    widgets/DataBrowser.cpp
+    widgets/DataBrowserTableModel.h
+    widgets/DataBrowserTableModel.cpp
     widgets/DataChooser.h
     widgets/DataChooser.cpp
     widgets/RenderConfigWidget.h
@@ -36,6 +38,7 @@ set ( SOURCES
 
 set ( UIs
     MainWindow.ui
+    widgets/DataBrowser.ui
     widgets/DataChooser.ui
     widgets/RenderConfigWidget.ui
     widgets/RenderWidget.ui
