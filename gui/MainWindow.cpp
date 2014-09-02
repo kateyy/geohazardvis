@@ -94,7 +94,7 @@ void MainWindow::dropEvent(QDropEvent * event)
 RenderWidget * MainWindow::addRenderWidget(int index)
 {
     RenderWidget * renderWidget = new RenderWidget(index, *m_dataChooser, *m_renderConfigWidget);
-    addDockWidget(Qt::DockWidgetArea::BottomDockWidgetArea, renderWidget);
+    addDockWidget(Qt::DockWidgetArea::TopDockWidgetArea, renderWidget);
 
     return renderWidget;
 }

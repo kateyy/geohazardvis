@@ -83,13 +83,17 @@ void DataBrowser::openRenderView()
 
 void DataBrowser::changeRenderedVisibility(DataObject * clickedObject)
 {
-    RenderWidget * renderView = m_dataMapping->focusedRenderView();
-    if (!renderView)
-        return;
-
     QList<DataObject *> selection = selectedDataObjects();
     if (selection.isEmpty())
         return;
+
+    RenderWidget * renderView = m_dataMapping->focusedRenderView();
+    // no current render view: add selection to new view
+    if (!renderView)
+    {
+        m_dataMapping->openInRenderView(selection);
+        return;
+    }
 
     bool wasVisible = renderView->isVisible(clickedObject);
 

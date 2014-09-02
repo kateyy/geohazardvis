@@ -27,8 +27,8 @@ public:
     QVariant headerData(int section, Qt::Orientation orientation,
         int role = Qt::DisplayRole) const override;
 
-    DataObject * dataObjectAt(int row);
-    DataObject * dataObjectAt(const QModelIndex & index);
+    DataObject * dataObjectAt(int row) const;
+    DataObject * dataObjectAt(const QModelIndex & index) const;
 
 private:
     QList<DataObject *> m_dataObjects;

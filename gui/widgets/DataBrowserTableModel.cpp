@@ -44,7 +44,9 @@ QVariant DataBrowserTableModel::data(const QModelIndex &index, int role /*= Qt::
         case 0:
             return QVariant(m_icons["table"]);
         case 1:
-            return QVariant(m_icons["rendered"]);
+            if (m_visibilities[dataObjectAt(index)])
+                return QVariant(m_icons["rendered"]);
+            return QVariant(m_icons["notRendered"]);
         case 2:
             return QVariant(m_icons["delete_red"]);
         }
@@ -112,7 +114,7 @@ QVariant DataBrowserTableModel::headerData(int section, Qt::Orientation orientat
     return QVariant();
 }
 
-DataObject * DataBrowserTableModel::dataObjectAt(int row)
+DataObject * DataBrowserTableModel::dataObjectAt(int row) const
 {
     if (row < 0 || row >= m_dataObjects.size())
     {
@@ -123,7 +125,7 @@ DataObject * DataBrowserTableModel::dataObjectAt(int row)
     return m_dataObjects.at(row);
 }
 
-DataObject * DataBrowserTableModel::dataObjectAt(const QModelIndex & index)
+DataObject * DataBrowserTableModel::dataObjectAt(const QModelIndex & index) const
 {
     return dataObjectAt(index.row());
 }
@@ -132,6 +134,7 @@ void DataBrowserTableModel::addDataObject(DataObject * dataObject)
 {
     beginInsertRows(QModelIndex(), m_dataObjects.size(), m_dataObjects.size());
     m_dataObjects << dataObject;
+    m_visibilities.insert(dataObject, false);
     endInsertRows();
 }
 
