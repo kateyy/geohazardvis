@@ -45,24 +45,27 @@ set ( UIs
     widgets/TableWidget.ui
 )
 
+set ( QRCs
+    icons.qrc
+)
 
 find_package(Qt5Widgets REQUIRED QUIET)
 qt5_wrap_ui(UI_Srcs ${UIs})
-#qt5_add_resources(QRC_Srcs ${QRCs} )
+qt5_add_resources(QRC_Srcs ${QRCs} )
 
 
 # Group source files
 source_group_by_path( ${CMAKE_CURRENT_SOURCE_DIR} "\\\\.cpp$|\\\\.c$|\\\\.h$|\\\\.hpp$|\\\\.inl$"
     "Source Files" ${SOURCES} )
-source_group_by_path( ${CMAKE_CURRENT_SOURCE_DIR} "\\\\.ui$"
-    "Ressources" ${UIs} )
+source_group_by_path( ${CMAKE_CURRENT_SOURCE_DIR} "\\\\.ui$|\\\\.qrc$"
+    "Ressources" ${UIs} ${QRCs})
 source_group_by_path( ${CMAKE_CURRENT_BINARY_DIR} "\\\\.cpp$|\\\\.c$|\\\\.h$|\\\\.hpp$|\\\\.inl$"
-    "Generated" ${UI_Srcs} ${MOC_Srcs} )
+    "Generated" ${UI_Srcs} ${MOC_Srcs} ${QRC_Srcs})
 
 if (OPTION_BUILD_STATIC)
     add_library(${TARGET} ${SOURCES})
 else()
-    add_library(${TARGET} SHARED ${SOURCES} ${UI_Srcs})
+    add_library(${TARGET} SHARED ${SOURCES} ${UI_Srcs} ${QRC_Srcs})
 endif()
 
 target_link_libraries( ${TARGET}

@@ -2,6 +2,8 @@
 
 #include <QAbstractTableModel>
 #include <QList>
+#include <QMap>
+#include <QIcon>
 
 
 class DataObject;
@@ -27,5 +29,8 @@ public:
 
 private:
     QList<DataObject *> m_dataObjects;
+    QMap<const DataObject *, bool> m_visibilities;
+
+    QMap<QString, QIcon> m_icons;
 
 };

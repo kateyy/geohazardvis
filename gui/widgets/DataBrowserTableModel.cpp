@@ -8,9 +8,21 @@
 #include <core/data_objects/DataObject.h>
 
 
+namespace
+{
+
+const int s_btnClms = 3;
+
+}
+
+
 DataBrowserTableModel::DataBrowserTableModel(QObject * parent)
     : QAbstractTableModel(parent)
 {
+    m_icons.insert("notRendered", QIcon(":/icons/painting.svg"));
+    m_icons.insert("rendered", QIcon(":/icons/painting_faded.svg"));
+    m_icons.insert("table", QIcon(":/icons/table.svg"));
+    m_icons.insert("delete_red", QIcon(":/icons/delete_red.svg"));
 }
 
 int DataBrowserTableModel::rowCount(const QModelIndex &/*parent = QModelIndex()*/) const
@@ -20,11 +32,24 @@ int DataBrowserTableModel::rowCount(const QModelIndex &/*parent = QModelIndex()*
 
 int DataBrowserTableModel::columnCount(const QModelIndex &/*parent = QModelIndex()*/) const
 {
-    return 6;
+    return s_btnClms + 6;
 }
 
 QVariant DataBrowserTableModel::data(const QModelIndex &index, int role /*= Qt::DisplayRole*/) const
 {
+    if (role == Qt::DecorationRole)
+    {
+        switch (index.column())
+        {
+        case 0:
+            return QVariant(m_icons["table"]);
+        case 1:
+            return QVariant(m_icons["rendered"]);
+        case 2:
+            return QVariant(m_icons["delete_red"]);
+        }
+    }
+
     if (role != Qt::DisplayRole)
         return QVariant();
 
@@ -34,11 +59,11 @@ QVariant DataBrowserTableModel::data(const QModelIndex &index, int role /*= Qt::
 
     switch (index.column())
     {
-    case 0:
+    case s_btnClms:
         return QVariant(QString::fromStdString(dataObject->input()->name));
-    case 1:
+    case s_btnClms + 1:
         return QVariant(dataObject->dataTypeName());
-    case 2:
+    case s_btnClms + 2:
         switch (dataObject->input()->type)
         {
         case ModelType::triangles:
@@ -49,15 +74,15 @@ QVariant DataBrowserTableModel::data(const QModelIndex &index, int role /*= Qt::
             GridDataInput * grid = static_cast<GridDataInput*>(dataObject->input().get());
             return QVariant(QString::number(grid->dimensions()[0]) + "x" + QString::number(grid->dimensions()[0]) + " values");
         }
-    case 3:
+    case s_btnClms + 3:
         return QVariant(
             QString::number(dataObject->input()->bounds()[0]) + "; " +
             QString::number(dataObject->input()->bounds()[1]));
-    case 4:
+    case s_btnClms + 4:
         return QVariant(
             QString::number(dataObject->input()->bounds()[2]) + "; " +
             QString::number(dataObject->input()->bounds()[3]));
-    case 5:
+    case s_btnClms + 5:
         return QVariant(
             QString::number(dataObject->input()->bounds()[4]) + "; " +
             QString::number(dataObject->input()->bounds()[5]));
@@ -76,12 +101,12 @@ QVariant DataBrowserTableModel::headerData(int section, Qt::Orientation orientat
 
     switch (section)
     {
-    case 0: return QVariant("name");
-    case 1: return QVariant("data set type");
-    case 2: return QVariant("dimensions");
-    case 3: return QVariant("x value range");
-    case 4: return QVariant("y value range");
-    case 5: return QVariant("z value range");
+    case s_btnClms + 0: return QVariant("name");
+    case s_btnClms + 1: return QVariant("data set type");
+    case s_btnClms + 2: return QVariant("dimensions");
+    case s_btnClms + 3: return QVariant("x value range");
+    case s_btnClms + 4: return QVariant("y value range");
+    case s_btnClms + 5: return QVariant("z value range");
     }        
 
     return QVariant();
