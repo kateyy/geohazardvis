@@ -19,6 +19,8 @@ public:
     void addDataObject(DataObject * dataObject);
     void removeDataObject(DataObject * dataObject);
 
+    void setVisibility(const DataObject * dataObject, bool visible);
+
     int rowCount(const QModelIndex &parent = QModelIndex()) const override;
     int columnCount(const QModelIndex &parent = QModelIndex()) const override;
     QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
@@ -26,6 +28,7 @@ public:
         int role = Qt::DisplayRole) const override;
 
     DataObject * dataObjectAt(int row);
+    DataObject * dataObjectAt(const QModelIndex & index);
 
 private:
     QList<DataObject *> m_dataObjects;

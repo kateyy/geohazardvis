@@ -43,6 +43,9 @@ public:
     vtkActor * mainActor();
     QList<vtkActor *> attributeActors();
 
+    bool isVisible() const;
+    void setVisible(bool visible);
+
     virtual reflectionzeug::PropertyGroup * createConfigGroup() = 0;
 
     void applyScalarsForColorMapping(ScalarsForColorMapping * scalars);
@@ -69,4 +72,6 @@ private:
 
     vtkSmartPointer<vtkProperty> m_renderProperty;
     vtkSmartPointer<vtkActor> m_actor;
+
+    bool m_isVisible;
 };

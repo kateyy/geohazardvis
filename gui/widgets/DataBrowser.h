@@ -28,11 +28,13 @@ private slots:
     void showTable();
     /** open new render view for currently selected objects */
     void openRenderView();
-    /** set the visibility of selected objects in the current render view */
-    void setRenderedVisibility(bool visible);
+    /** change visibility of selected objects in the current render view */
+    void changeRenderedVisibility(DataObject * clickedObject);
 
     /** unload selected objects, free all data/settings, close views if empty */
     void removeFile();
+
+    void evaluateItemViewClick(const QModelIndex & index);
 
     /** set button states for object visibilities in the renderView */
     void setupGuiFor(RenderWidget * renderView);

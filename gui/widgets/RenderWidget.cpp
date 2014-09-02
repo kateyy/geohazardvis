@@ -198,10 +198,7 @@ void RenderWidget::addDataObjects(QList<DataObject *> dataObjects)
         RenderedData * oldRendered = m_dataObjectToRendered.value(dataObject);
 
         if (oldRendered)
-        {
-            for (vtkActor * actor : oldRendered->actors())
-                actor->SetVisibility(true);
-        }
+            oldRendered->setVisible(true);
         else
             aNewObject = addDataObject(dataObject);
     }
@@ -230,9 +227,16 @@ void RenderWidget::hideDataObjects(QList<DataObject *> dataObjects)
         if (!rendered)
             continue;
 
-        for (vtkActor * actor : rendered->actors())
-            actor->SetVisibility(false);
+        rendered->setVisible(false);
     }
+}
+
+bool RenderWidget::isVisible(DataObject * dataObject) const
+{
+    RenderedData * renderedData = m_dataObjectToRendered.value(dataObject, nullptr);
+    if (!renderedData)
+        return false;
+    return renderedData->isVisible();
 }
 
 void RenderWidget::removeDataObject(DataObject * dataObject)
@@ -280,11 +284,15 @@ void RenderWidget::removeDataObjects(QList<DataObject *> dataObjects)
 
 QList<DataObject *> RenderWidget::dataObjects() const
 {
-    QList<DataObject *> dataObjects;
-    for (RenderedData * rendered : m_renderedData)
-        dataObjects << rendered->dataObject();
+    return m_dataObjectToRendered.keys();
+}
 
-    return dataObjects;
+QList<const RenderedData *> RenderWidget::renderedData() const
+{
+    QList<const RenderedData *> l;
+    for (auto r : m_renderedData)
+        l << r;
+    return l;
 }
 
 void RenderWidget::setupAxes(const double bounds[6])

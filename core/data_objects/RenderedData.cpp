@@ -10,6 +10,7 @@ RenderedData::RenderedData(DataObject * dataObject)
     , m_scalars(nullptr)
     , m_lut(nullptr)
     , m_dataObject(dataObject)
+    , m_isVisible(true)
 {
 }
 
@@ -47,6 +48,21 @@ vtkActor * RenderedData::mainActor()
 QList<vtkActor *> RenderedData::attributeActors()
 {
     return fetchAttributeActors();
+}
+
+bool RenderedData::isVisible() const
+{
+    return m_isVisible;
+}
+
+void RenderedData::setVisible(bool visible)
+{
+    m_isVisible = visible;
+
+    for (vtkActor * actor : actors())
+    {
+        actor->SetVisibility(visible);
+    }
 }
 
 QList<vtkActor *> RenderedData::fetchAttributeActors()

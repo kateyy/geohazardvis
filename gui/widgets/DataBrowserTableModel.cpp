@@ -123,6 +123,11 @@ DataObject * DataBrowserTableModel::dataObjectAt(int row)
     return m_dataObjects.at(row);
 }
 
+DataObject * DataBrowserTableModel::dataObjectAt(const QModelIndex & index)
+{
+    return dataObjectAt(index.row());
+}
+
 void DataBrowserTableModel::addDataObject(DataObject * dataObject)
 {
     beginInsertRows(QModelIndex(), m_dataObjects.size(), m_dataObjects.size());
@@ -136,4 +141,9 @@ void DataBrowserTableModel::removeDataObject(DataObject * dataObject)
     beginRemoveRows(QModelIndex(), index, index);
     m_dataObjects.removeAt(index);
     endRemoveRows();
+}
+
+void DataBrowserTableModel::setVisibility(const DataObject * dataObject, bool visible)
+{
+    m_visibilities[dataObject] = visible;
 }

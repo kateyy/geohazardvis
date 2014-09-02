@@ -46,9 +46,12 @@ public:
     void addDataObjects(QList<DataObject *> dataObjects);
     /** remove rendered representations of data objects, don't delete data and settings */
     void hideDataObjects(QList<DataObject *> dataObjects);
+    /** check if the this objects is currently rendered */
+    bool isVisible(DataObject * dataObject) const;
     /** remove rendered representations and all references to the data objects */
     void removeDataObjects(QList<DataObject *> dataObjects);
     QList<DataObject *> dataObjects() const;
+    QList<const RenderedData *> renderedData() const;
 
     vtkRenderWindow * renderWindow();
     const vtkRenderWindow * renderWindow() const;

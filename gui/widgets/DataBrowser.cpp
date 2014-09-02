@@ -4,6 +4,7 @@
 #include <QMessageBox>
 
 #include <core/data_objects/DataObject.h>
+#include <core/data_objects/RenderedData.h>
 
 #include <gui/DataMapping.h>
 #include <gui/widgets/RenderWidget.h>
@@ -20,6 +21,8 @@ DataBrowser::DataBrowser(QWidget* parent, Qt::WindowFlags f)
     m_tableModel->setParent(m_ui->dataTableView);
     auto blub = m_ui->dataTableView->selectionModel();
     m_ui->dataTableView->setModel(m_tableModel);
+
+    connect(m_ui->dataTableView, &QAbstractItemView::clicked, this, &DataBrowser::evaluateItemViewClick);
 }
 
 DataBrowser::~DataBrowser()
@@ -78,13 +81,33 @@ void DataBrowser::openRenderView()
     m_dataMapping->openInRenderView(oneTypeObjects);
 }
 
-void DataBrowser::setRenderedVisibility(bool visible)
+void DataBrowser::changeRenderedVisibility(DataObject * clickedObject)
 {
     RenderWidget * renderView = m_dataMapping->focusedRenderView();
     if (!renderView)
         return;
 
-    if (visible)
+    QList<DataObject *> selection = selectedDataObjects();
+    if (selection.isEmpty())
+        return;
+
+    bool wasVisible = renderView->isVisible(clickedObject);
+
+    // if multiple objects are selected: first change all to the same (current) value
+    // and toggle visibility only with the next click
+    bool setToVisible = !wasVisible;
+    if (selection.size() > 1)
+    {
+        bool allSame = true;
+        bool firstValue = renderView->isVisible(selection.first());
+        for (DataObject * dataObject : selection)
+            allSame = allSame && (firstValue == renderView->isVisible(dataObject));
+
+        if (!allSame)
+            setToVisible = wasVisible;
+    }
+
+    if (setToVisible)
         renderView->addDataObjects(selectedDataObjects());
     else
         renderView->hideDataObjects(selectedDataObjects());
@@ -106,9 +129,31 @@ void DataBrowser::removeFile()
     qDeleteAll(selection);
 }
 
+void DataBrowser::evaluateItemViewClick(const QModelIndex & index)
+{
+    switch (index.column())
+    {
+    case 0:
+        return showTable();
+    case 1:
+        return changeRenderedVisibility(m_tableModel->dataObjectAt(index));
+    case 2:
+        return removeFile();
+    }
+}
+
 void DataBrowser::setupGuiFor(RenderWidget * renderView)
 {
+    QSet<const DataObject *> allObjects;
+    for (const DataObject * dataObject : m_dataObjects)
+        allObjects << dataObject;
 
+    for (const RenderedData * renderedData : renderView->renderedData())
+    {
+        allObjects.remove(renderedData->dataObject());
+
+        m_tableModel->setVisibility(renderedData->dataObject(), renderedData->isVisible());
+    }
 }
 
 QList<DataObject *> DataBrowser::selectedDataObjects() const
