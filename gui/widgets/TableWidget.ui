@@ -16,7 +16,7 @@
   <property name="windowTitle">
    <string>table view</string>
   </property>
-  <widget class="TableView" name="tableView">
+  <widget class="QTableView" name="tableView">
    <property name="font">
     <font>
      <weight>50</weight>
@@ -40,13 +40,6 @@
    </attribute>
   </widget>
  </widget>
- <customwidgets>
-  <customwidget>
-   <class>TableView</class>
-   <extends>QTableView</extends>
-   <header>gui/widgets/TableView.h</header>
-  </customwidget>
- </customwidgets>
  <resources/>
  <connections/>
 </ui>

@@ -3,6 +3,8 @@
 
 #include <cassert>
 
+#include <QMouseEvent>
+
 #include <core/Input.h>
 #include <core/QVtkTableModel.h>
 #include <core/data_objects/DataObject.h>
@@ -18,11 +20,7 @@ TableWidget::TableWidget(int index, QWidget * parent)
 {
     m_ui->setupUi(this);
     m_ui->tableView->installEventFilter(this);
-
-    connect(m_ui->tableView, &TableView::mouseDoubleClicked,
-        [this](int /*column*/, int row) {
-        emit cellDoubleClicked(m_dataObject, vtkIdType(row));
-    });
+    m_ui->tableView->viewport()->installEventFilter(this);
     
     SelectionHandler::instance().addTableView(this);
 }
@@ -77,9 +75,6 @@ void TableWidget::setModel(QVtkTableModel * model)
 
 void TableWidget::focusInEvent(QFocusEvent * /*event*/)
 {
-    if (m_ui->tableView->hasFocus())
-        return;
-
     auto f = font();
     f.setBold(true);
     setFont(f);
@@ -89,17 +84,29 @@ void TableWidget::focusInEvent(QFocusEvent * /*event*/)
 
 void TableWidget::focusOutEvent(QFocusEvent * /*event*/)
 {
+    if (m_ui->tableView->hasFocus())
+        return;
+
     auto f = font();
     f.setBold(false);
     setFont(f);
 }
 
-bool TableWidget::eventFilter(QObject * obj, QEvent * ev)
+bool TableWidget::eventFilter(QObject * /*obj*/, QEvent * ev)
 {
-    assert(obj == m_ui->tableView);
-
-    if (ev->type() == QEvent::Type::FocusIn)
+    switch (ev->type())
+    {
+    case QEvent::Type::MouseButtonDblClick:
+    {
+        QMouseEvent * event = static_cast<QMouseEvent*>(ev);
+        vtkIdType row = m_ui->tableView->rowAt(event->pos().y());
+        emit cellDoubleClicked(m_dataObject, row);
+        return true;
+    }
+    case QEvent::FocusIn:
         setFocus();
+        break;
+    }
 
     return false;
 }
