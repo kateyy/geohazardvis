@@ -1,10 +1,11 @@
 #pragma once
 
-#include <QDockWidget>
 #include <QList>
 #include <QMap>
 
 #include <vtkSmartPointer.h>
+
+#include "AbstractDataView.h"
 
 #include <core/data_mapping/ScalarToColorMapping.h>
 
@@ -22,14 +23,13 @@ class DataObject;
 class RenderedData;
 
 class DataChooser;
-class NormalRepresentation;
 class PickingInteractorStyleSwitch;
 class IPickingInteractorStyle;
 class RenderConfigWidget;
 class Ui_RenderView;
 
 
-class RenderView : public QDockWidget
+class RenderView : public AbstractDataView
 {
     Q_OBJECT
 
@@ -37,10 +37,12 @@ public:
     RenderView(
         int index,
         DataChooser & dataChooser,
-        RenderConfigWidget & renderConfigWidget);
+        RenderConfigWidget & renderConfigWidget,
+        QWidget * parent = nullptr, Qt::WindowFlags flags = 0);
     ~RenderView() override;
 
-    int index() const;
+    bool isTable() const override;
+    bool isRenderer() const override;
 
     /** add data objects to the view or make already added objects visible again */
     void addDataObjects(QList<DataObject *> dataObjects);
@@ -64,16 +66,8 @@ public slots:
 
     void ShowInfo(const QStringList &info);
 
-signals:
-    void closed();
-    /** signaled when the widget receive the keyboard focus (focusInEvent) */
-    void focused(RenderView * renderView);
-
 protected:
-    void focusInEvent(QFocusEvent * event);
-    void focusOutEvent(QFocusEvent * event);
-
-    bool eventFilter(QObject * obj, QEvent * ev) override;
+    QWidget * contentWidget() override;
 
 private:
     void setupRenderer();
@@ -91,16 +85,12 @@ private:
     static vtkSmartPointer<vtkCubeAxesActor> createAxes(vtkRenderer & renderer);
     void setupColorMappingLegend();
 
-    void closeEvent(QCloseEvent * event) override;
-
 private slots:
     /** Updates the RenderConfigWidget to reflect the actors render properties. */
     void updateGuiForActor(vtkActor * actor);
 
 private:
     Ui_RenderView * m_ui;
-
-    const int m_index;
 
     // rendered representations of data objects for this view
     QList<RenderedData *> m_renderedData;

@@ -20,6 +20,8 @@ set ( SOURCES
     MainWindow.cpp
     SelectionHandler.h
     SelectionHandler.cpp
+    widgets/AbstractDataView.h
+    widgets/AbstractDataView.cpp
     widgets/DataBrowser.h
     widgets/DataBrowser.cpp
     widgets/DataBrowserTableModel.h

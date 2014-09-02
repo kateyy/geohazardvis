@@ -68,7 +68,7 @@ void DataMapping::openInTable(DataObject * dataObject)
             m_mainWindow.tabifyDockWidget(m_tableViews.first(), table);
         }
 
-        connect(table, &TableView::focused, this, &DataMapping::setFocusedTableView);
+        connect(table, &TableView::focused, this, &DataMapping::setFocusedView);
 
         m_tableViews.insert(table->index(), table);
     }
@@ -79,7 +79,7 @@ void DataMapping::openInTable(DataObject * dataObject)
         m_mainWindow.tabbedDockWidgetToFront(table);
     }
 
-    table->showInput(dataObject);
+    table->showDataObject(dataObject);
 }
 
 void DataMapping::openInRenderView(QList<DataObject *> dataObjects)
@@ -87,7 +87,7 @@ void DataMapping::openInRenderView(QList<DataObject *> dataObjects)
     RenderView * renderView = m_mainWindow.addRenderView(m_nextRenderViewIndex++);
     m_renderViews.insert(renderView->index(), renderView);
 
-    connect(renderView, &RenderView::focused, this, &DataMapping::setFocusedRenderView);
+    connect(renderView, &RenderView::focused, this, &DataMapping::setFocusedView);
     connect(renderView, &RenderView::closed, this, &DataMapping::renderViewClosed);
 
     renderView->addDataObjects(dataObjects);
@@ -108,18 +108,13 @@ RenderView * DataMapping::focusedRenderView()
     return m_focusedRenderView;
 }
 
-void DataMapping::setFocusedRenderView(RenderView * renderView)
+void DataMapping::setFocusedView(AbstractDataView * view)
 {
-    m_focusedRenderView = renderView;
-
-    emit focusedRenderViewChanged(renderView);
-}
-
-void DataMapping::setFocusedTableView(TableView * /*tableView*/)
-{
-    m_focusedRenderView = nullptr;
-
-    emit focusedRenderViewChanged(nullptr);
+    if (view->isRenderer())
+    {
+        m_focusedRenderView = static_cast<RenderView*>(view);
+        emit focusedRenderViewChanged(m_focusedRenderView);
+    }
 }
 
 void DataMapping::tableClosed()

@@ -5,21 +5,18 @@
 
 #include <QMouseEvent>
 
-#include <core/Input.h>
 #include <core/QVtkTableModel.h>
 #include <core/data_objects/DataObject.h>
 
 #include <gui/SelectionHandler.h>
 
 
-TableView::TableView(int index, QWidget * parent)
-    : QDockWidget(parent)
-    , m_index(index)
+TableView::TableView(int index, QWidget * parent, Qt::WindowFlags flags)
+    : AbstractDataView(index, parent, flags)
     , m_ui(new Ui_TableView())
     , m_dataObject(nullptr)
 {
     m_ui->setupUi(this);
-    m_ui->tableView->installEventFilter(this);
     m_ui->tableView->viewport()->installEventFilter(this);
     
     SelectionHandler::instance().addTableView(this);
@@ -32,12 +29,17 @@ TableView::~TableView()
     delete m_ui;
 }
 
-int TableView::index() const
+bool TableView::isTable() const
 {
-    return m_index;
+    return true;
 }
 
-void TableView::showInput(DataObject * dataObject)
+bool TableView::isRenderer() const
+{
+    return false;
+}
+
+void TableView::showDataObject(DataObject * dataObject)
 {
     if (m_dataObject == dataObject)
         return;
@@ -46,7 +48,7 @@ void TableView::showInput(DataObject * dataObject)
     m_dataObject = dataObject;
     setModel(m_dataObject->tableModel());
 
-    setWindowTitle("Table: " + QString::fromStdString(m_dataObject->input()->name));
+    setWindowTitle("Table: " + m_dataObject->name());
 
     m_ui->tableView->resizeColumnsToContents();
 }
@@ -73,42 +75,22 @@ void TableView::setModel(QVtkTableModel * model)
     connect(m_ui->tableView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &TableView::emitCellSelected);
 }
 
-void TableView::focusInEvent(QFocusEvent * /*event*/)
+QWidget * TableView::contentWidget()
 {
-    auto f = font();
-    f.setBold(true);
-    setFont(f);
-
-    emit focused(this);
+    return m_ui->tableView;
 }
 
-void TableView::focusOutEvent(QFocusEvent * /*event*/)
+bool TableView::eventFilter(QObject * obj, QEvent * ev)
 {
-    if (m_ui->tableView->hasFocus())
-        return;
-
-    auto f = font();
-    f.setBold(false);
-    setFont(f);
-}
-
-bool TableView::eventFilter(QObject * /*obj*/, QEvent * ev)
-{
-    switch (ev->type())
-    {
-    case QEvent::Type::MouseButtonDblClick:
+    if (ev->type() == QEvent::MouseButtonDblClick)
     {
         QMouseEvent * event = static_cast<QMouseEvent*>(ev);
         vtkIdType row = m_ui->tableView->rowAt(event->pos().y());
         emit cellDoubleClicked(m_dataObject, row);
         return true;
     }
-    case QEvent::FocusIn:
-        setFocus();
-        break;
-    }
 
-    return false;
+    return AbstractDataView::eventFilter(obj, ev);
 }
 
 void TableView::emitCellSelected(const QItemSelection & selected, const QItemSelection & /*deselected*/)
@@ -120,11 +102,4 @@ void TableView::emitCellSelected(const QItemSelection & selected, const QItemSel
     }
 
     emit cellSelected(m_dataObject, vtkIdType(selected.indexes().first().row()));
-}
-
-void TableView::closeEvent(QCloseEvent * event)
-{
-    emit closed();
-
-    QDockWidget::closeEvent(event);
 }

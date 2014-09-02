@@ -7,6 +7,7 @@
 
 class MainWindow;
 class DataObject;
+class AbstractDataView;
 class TableView;
 class RenderView;
 
@@ -33,8 +34,7 @@ signals:
     void focusedRenderViewChanged(RenderView * renderView);
 
 private slots:
-    void setFocusedRenderView(RenderView * renderView);
-    void setFocusedTableView(TableView * tableView);
+    void setFocusedView(AbstractDataView * renderView);
 
     void tableClosed();
     void renderViewClosed();

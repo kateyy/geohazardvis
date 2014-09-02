@@ -44,15 +44,14 @@ using namespace std;
 RenderView::RenderView(
     int index,
     DataChooser & dataChooser,
-    RenderConfigWidget & renderConfigWidget)
-: QDockWidget()
-, m_ui(new Ui_RenderView())
-, m_index(index)
-, m_dataChooser(dataChooser)
-, m_renderConfigWidget(renderConfigWidget)
+    RenderConfigWidget & renderConfigWidget,
+    QWidget * parent, Qt::WindowFlags flags)
+    : AbstractDataView(index, parent, flags)
+    , m_ui(new Ui_RenderView())
+    , m_dataChooser(dataChooser)
+    , m_renderConfigWidget(renderConfigWidget)
 {
     m_ui->setupUi(this);
-    m_ui->qvtkMain->installEventFilter(this);
 
     setupRenderer();
     setupInteraction();
@@ -77,9 +76,14 @@ RenderView::~RenderView()
     qDeleteAll(m_renderedData);
 }
 
-int RenderView::index() const
+bool RenderView::isTable() const
 {
-    return m_index;
+    return false;
+}
+
+bool RenderView::isRenderer() const
+{
+    return true;
 }
 
 void RenderView::render()
@@ -87,33 +91,9 @@ void RenderView::render()
     m_renderer->GetRenderWindow()->Render();
 }
 
-void RenderView::focusInEvent(QFocusEvent * /*event*/)
+QWidget * RenderView::contentWidget()
 {
-    auto f = font();
-    f.setBold(true);
-    setFont(f);
-
-    emit focused(this);
-}
-
-void RenderView::focusOutEvent(QFocusEvent * /*event*/)
-{
-    if (m_ui->qvtkMain->hasFocus())
-        return;
-
-    auto f = font();
-    f.setBold(false);
-    setFont(f);
-}
-
-bool RenderView::eventFilter(QObject * obj, QEvent * ev)
-{
-    assert(obj == m_ui->qvtkMain);
-
-    if (ev->type() == QEvent::Type::FocusIn)
-        setFocus();
-
-    return false;
+    return m_ui->qvtkMain;
 }
 
 void RenderView::setupRenderer()
@@ -442,13 +422,6 @@ IPickingInteractorStyle * RenderView::interactorStyle()
 const IPickingInteractorStyle * RenderView::interactorStyle() const
 {
     return m_interactorStyle;
-}
-
-void RenderView::closeEvent(QCloseEvent * event)
-{
-    emit closed();
-
-    QDockWidget::closeEvent(event);
 }
 
 void RenderView::updateGuiForActor(vtkActor * actor)

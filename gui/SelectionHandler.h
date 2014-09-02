@@ -10,6 +10,7 @@ class QItemSelection;
 class QMenu;
 class QAction;
 
+class AbstractDataView;
 class TableView;
 class RenderView;
 class DataObject;

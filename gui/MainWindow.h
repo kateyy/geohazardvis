@@ -36,9 +36,6 @@ public slots:
 
     RenderView * addRenderView(int index);
 
-private slots:
-    //void updateRenderViewActions(QList<RenderWidget*> widgets);
-
 private:
     QStringList dialog_inputFileName();
 
