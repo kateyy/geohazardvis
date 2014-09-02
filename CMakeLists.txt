@@ -8,7 +8,7 @@ set (META_VERSION "${META_VERSION_MAJOR}.${META_VERSION_MINOR}.${META_VERSION_PA
 set (META_AUTHOR_ORGANIZATION "")
 set (META_AUTHOR_DOMAIN "https://github.com/kateyy/geohazardvis")
 
-project (${META_PROJECT_NAME} C CXX)
+project (${META_PROJECT_NAME} CXX)
 
 option(OPTION_LOCAL_INSTALL "Install to local directory instead of system" OFF)
 
