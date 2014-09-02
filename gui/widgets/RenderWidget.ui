@@ -1,7 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
  <class>RenderWidget</class>
- <widget class="QDockWidget" name="RenderView">
+ <widget class="QDockWidget" name="RenderWidget">
+  <property name="focusPolicy">
+   <enum>Qt::StrongFocus</enum>
+  </property>
   <widget class="QVTKWidget" name="qvtkMain">
    <property name="sizePolicy">
     <sizepolicy hsizetype="MinimumExpanding" vsizetype="MinimumExpanding">
@@ -14,6 +17,15 @@
      <width>300</width>
      <height>300</height>
     </size>
+   </property>
+   <property name="font">
+    <font>
+     <weight>50</weight>
+     <bold>false</bold>
+    </font>
+   </property>
+   <property name="focusPolicy">
+    <enum>Qt::StrongFocus</enum>
    </property>
   </widget>
  </widget>

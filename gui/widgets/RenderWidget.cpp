@@ -52,6 +52,7 @@ RenderWidget::RenderWidget(
 , m_renderConfigWidget(renderConfigWidget)
 {
     m_ui->setupUi(this);
+    m_ui->qvtkMain->installEventFilter(this);
 
     setupRenderer();
     setupInteraction();
@@ -88,7 +89,31 @@ void RenderWidget::render()
 
 void RenderWidget::focusInEvent(QFocusEvent * /*event*/)
 {
+    auto f = font();
+    f.setBold(true);
+    setFont(f);
+
     emit focused(this);
+}
+
+void RenderWidget::focusOutEvent(QFocusEvent * /*event*/)
+{
+    if (m_ui->qvtkMain->hasFocus())
+        return;
+
+    auto f = font();
+    f.setBold(false);
+    setFont(f);
+}
+
+bool RenderWidget::eventFilter(QObject * obj, QEvent * ev)
+{
+    assert(obj == m_ui->qvtkMain);
+
+    if (ev->type() == QEvent::Type::FocusIn)
+        setFocus();
+
+    return false;
 }
 
 void RenderWidget::setupRenderer()

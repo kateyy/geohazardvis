@@ -71,6 +71,9 @@ signals:
 
 protected:
     void focusInEvent(QFocusEvent * event);
+    void focusOutEvent(QFocusEvent * event);
+
+    bool eventFilter(QObject * obj, QEvent * ev) override;
 
 private:
     void setupRenderer();

@@ -17,6 +17,7 @@ TableWidget::TableWidget(int index, QWidget * parent)
     , m_dataObject(nullptr)
 {
     m_ui->setupUi(this);
+    m_ui->tableView->installEventFilter(this);
 
     connect(m_ui->tableView, &TableView::mouseDoubleClicked,
         [this](int /*column*/, int row) {
@@ -72,6 +73,35 @@ void TableWidget::setModel(QVtkTableModel * model)
 {
     m_ui->tableView->setModel(model);
     connect(m_ui->tableView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &TableWidget::emitCellSelected);
+}
+
+void TableWidget::focusInEvent(QFocusEvent * /*event*/)
+{
+    if (m_ui->tableView->hasFocus())
+        return;
+
+    auto f = font();
+    f.setBold(true);
+    setFont(f);
+
+    emit focused(this);
+}
+
+void TableWidget::focusOutEvent(QFocusEvent * /*event*/)
+{
+    auto f = font();
+    f.setBold(false);
+    setFont(f);
+}
+
+bool TableWidget::eventFilter(QObject * obj, QEvent * ev)
+{
+    assert(obj == m_ui->tableView);
+
+    if (ev->type() == QEvent::Type::FocusIn)
+        setFocus();
+
+    return false;
 }
 
 void TableWidget::emitCellSelected(const QItemSelection & selected, const QItemSelection & /*deselected*/)

@@ -37,11 +37,18 @@ signals:
     void cellDoubleClicked(DataObject * dataObject, vtkIdType cellId);
 
     void closed();
+    /** signaled when the widget receive the keyboard focus (focusInEvent) */
+    void focused(TableWidget * renderWidget);
+
+protected:
+    void focusInEvent(QFocusEvent * event);
+    void focusOutEvent(QFocusEvent * event);
+
+    bool eventFilter(QObject * obj, QEvent * ev) override;
 
 private slots:
     void emitCellSelected(const QItemSelection & selected, const QItemSelection & deselected);
     
-
 private:
     void closeEvent(QCloseEvent * event) override;
 
