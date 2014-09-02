@@ -28,7 +28,9 @@ public:
 public slots:
     void openFile(QString fileName);
     void openFiles(QStringList fileNames);
+
     void on_actionOpen_triggered();
+    void on_actionAbout_Qt_triggered();
 
     void tabbedDockWidgetToFront(QDockWidget * widget);
 

@@ -166,6 +166,11 @@ void MainWindow::on_actionOpen_triggered()
     openFiles(dialog_inputFileName());
 }
 
+void MainWindow::on_actionAbout_Qt_triggered()
+{
+    QMessageBox::aboutQt(this);
+}
+
 void MainWindow::tabbedDockWidgetToFront(QDockWidget * widget)
 {
     // http://qt-project.org/faq/answer/how_can_i_check_which_tab_is_the_current_one_in_a_tabbed_qdockwidget

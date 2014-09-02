@@ -75,12 +75,22 @@
     <addaction name="actionExit"/>
    </widget>
    <widget class="QMenu" name="menuSynchronize_Selections">
+    <property name="enabled">
+     <bool>false</bool>
+    </property>
     <property name="title">
      <string>Synchronize Selections</string>
     </property>
    </widget>
+   <widget class="QMenu" name="menuHelp">
+    <property name="title">
+     <string>&amp;Help</string>
+    </property>
+    <addaction name="actionAbout_Qt"/>
+   </widget>
    <addaction name="menuFile"/>
    <addaction name="menuSynchronize_Selections"/>
+   <addaction name="menuHelp"/>
   </widget>
   <action name="actionExit">
    <property name="text">
@@ -128,6 +138,11 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+Shift+O</string>
+   </property>
+  </action>
+  <action name="actionAbout_Qt">
+   <property name="text">
+    <string>About Qt</string>
    </property>
   </action>
  </widget>

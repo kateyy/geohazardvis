@@ -136,6 +136,9 @@ void SelectionHandler::updateSyncToggleMenu()
 {
     m_syncToggleMenu->clear();
 
+    m_syncToggleMenu->setEnabled(!m_tableWidgets.empty() || !m_renderWidgets.empty());
+
+
     m_syncToggleMenu->addActions(m_tableWidgets.values());
     m_syncToggleMenu->addSeparator();
     m_syncToggleMenu->addActions(m_renderWidgets.values());
