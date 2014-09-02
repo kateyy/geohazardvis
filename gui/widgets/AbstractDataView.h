@@ -20,12 +20,15 @@ signals:
     void focused(AbstractDataView * tableView);
     void closed();
 
+public slots:
+    /** highlight this view as currently selected of its type */
+    void setCurrent(bool isCurrent);
+
 protected:
     virtual QWidget * contentWidget() = 0;
 
     void showEvent(QShowEvent * event) override;
     void focusInEvent(QFocusEvent * event) override;
-    void focusOutEvent(QFocusEvent * event) override;
     void closeEvent(QCloseEvent * event) override;
 
     bool eventFilter(QObject * obj, QEvent * ev) override;

@@ -95,6 +95,7 @@ void DataBrowser::changeRenderedVisibility(DataObject * clickedObject)
     if (!renderView)
     {
         renderView = m_dataMapping->openInRenderView(selection);
+        renderView->setFocus();
         setupGuiFor(renderView);
         return;
     }
@@ -170,6 +171,10 @@ void DataBrowser::setupGuiFor(RenderView * renderView)
 
         m_tableModel->setVisibility(renderedData->dataObject(), renderedData->isVisible());
     }
+
+    // hide all not rendered objects
+    for (const DataObject * dataObject : allObjects)
+        m_tableModel->setVisibility(dataObject, false);
 }
 
 QList<DataObject *> DataBrowser::selectedDataObjects() const

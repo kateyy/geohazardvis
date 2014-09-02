@@ -28,27 +28,20 @@ void AbstractDataView::showEvent(QShowEvent * /*event*/)
 
 void AbstractDataView::focusInEvent(QFocusEvent * /*event*/)
 {
-    auto f = font();
-    f.setBold(true);
-    setFont(f);
-
     emit focused(this);
 }
 
-void AbstractDataView::focusOutEvent(QFocusEvent * /*event*/)
+void AbstractDataView::setCurrent(bool isCurrent)
 {
-    if (contentWidget()->hasFocus())
-        return;
-
     auto f = font();
-    f.setBold(false);
+    f.setBold(isCurrent);
     setFont(f);
 }
 
 bool AbstractDataView::eventFilter(QObject * /*obj*/, QEvent * ev)
 {
     if (ev->type() == QEvent::FocusIn)
-        setFocus();
+        emit focused(this);
 
     return false;
 }
