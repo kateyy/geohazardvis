@@ -30,6 +30,7 @@ protected:
 
     void scalarsForColorMappingChangedEvent() override;
     void gradientForColorMappingChangedEvent() override;
+    void visibilityChangedEvent(bool visible) override;
 
 private:
     vtkPolyDataMapper * createDataMapper();

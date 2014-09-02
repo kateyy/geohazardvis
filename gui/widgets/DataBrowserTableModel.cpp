@@ -20,8 +20,8 @@ DataBrowserTableModel::DataBrowserTableModel(QObject * parent)
     : QAbstractTableModel(parent)
     , m_rendererFocused(false)
 {
-    m_icons.insert("notRendered", QIcon(":/icons/painting.svg"));
-    m_icons.insert("rendered", QIcon(":/icons/painting_faded.svg"));
+    m_icons.insert("rendered", QIcon(":/icons/painting.svg"));
+    m_icons.insert("notRendered", QIcon(":/icons/painting_faded.svg"));
     m_icons.insert("table", QIcon(":/icons/table.svg"));
     m_icons.insert("delete_red", QIcon(":/icons/delete_red.svg"));
 

@@ -151,6 +151,11 @@ void MainWindow::on_actionAbout_Qt_triggered()
     QMessageBox::aboutQt(this);
 }
 
+void MainWindow::on_actionNew_Render_View_triggered()
+{
+    m_dataMapping->openInRenderView({});
+}
+
 void MainWindow::tabbedDockWidgetToFront(QDockWidget * widget)
 {
     // http://qt-project.org/faq/answer/how_can_i_check_which_tab_is_the_current_one_in_a_tabbed_qdockwidget

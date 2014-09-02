@@ -221,7 +221,7 @@ void RenderView::addDataObjects(QList<DataObject *> dataObjects)
     camera.SetViewUp(0, 1, 0);
     m_renderer->ResetCamera();
 
-    emit render();
+    render();
 }
 
 void RenderView::hideDataObjects(QList<DataObject *> dataObjects)
@@ -234,6 +234,8 @@ void RenderView::hideDataObjects(QList<DataObject *> dataObjects)
 
         rendered->setVisible(false);
     }
+
+    render();
 }
 
 bool RenderView::isVisible(DataObject * dataObject) const

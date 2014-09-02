@@ -61,6 +61,7 @@ protected:
 
     virtual void scalarsForColorMappingChangedEvent() = 0;
     virtual void gradientForColorMappingChangedEvent() = 0;
+    virtual void visibilityChangedEvent(bool visible);
 
 protected:
     ScalarsForColorMapping * m_scalars;

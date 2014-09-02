@@ -59,15 +59,18 @@ void RenderedData::setVisible(bool visible)
 {
     m_isVisible = visible;
 
-    for (vtkActor * actor : actors())
-    {
-        actor->SetVisibility(visible);
-    }
+    mainActor()->SetVisibility(visible);
+
+    visibilityChangedEvent(visible);
 }
 
 QList<vtkActor *> RenderedData::fetchAttributeActors()
 {
     return{};
+}
+
+void RenderedData::visibilityChangedEvent(bool /*visible*/)
+{
 }
 
 DataObject * RenderedData::dataObject()

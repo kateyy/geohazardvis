@@ -82,7 +82,7 @@ void DataMapping::openInTable(DataObject * dataObject)
     table->showDataObject(dataObject);
 }
 
-void DataMapping::openInRenderView(QList<DataObject *> dataObjects)
+RenderView * DataMapping::openInRenderView(QList<DataObject *> dataObjects)
 {
     RenderView * renderView = m_mainWindow.addRenderView(m_nextRenderViewIndex++);
     m_renderViews.insert(renderView->index(), renderView);
@@ -93,6 +93,8 @@ void DataMapping::openInRenderView(QList<DataObject *> dataObjects)
     renderView->addDataObjects(dataObjects);
 
     emit renderViewsChanged(m_renderViews.values());
+
+    return renderView;
 }
 
 void DataMapping::addToRenderView(QList<DataObject *> dataObjects, int renderView)

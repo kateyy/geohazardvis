@@ -24,7 +24,7 @@ public:
     void removeDataObjects(QList<DataObject *> dataObjects);
 
     void openInTable(DataObject * dataObject);
-    void openInRenderView(QList<DataObject *> dataObjects);
+    RenderView * openInRenderView(QList<DataObject *> dataObjects);
     void addToRenderView(QList<DataObject *> dataObjects, int renderView);
 
     RenderView * focusedRenderView();

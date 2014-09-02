@@ -207,6 +207,12 @@ void RenderedPolyData::gradientForColorMappingChangedEvent()
     mainActor()->SetMapper(mapper);
 }
 
+void RenderedPolyData::visibilityChangedEvent(bool visible)
+{
+    m_normalRepresentation.actor()->SetVisibility(
+        visible && m_normalRepresentation.visible());
+}
+
 vtkPolyDataMapper * RenderedPolyData::createDataMapper()
 {
     const PolyDataInput & input = *polyDataObject()->polyDataInput().get();

@@ -56,6 +56,8 @@ void DataBrowser::showTable()
         m_dataMapping->openInTable(dataObject);
 }
 
+
+// TODO currently not used
 void DataBrowser::openRenderView()
 {
     QList<DataObject *> selection = selectedDataObjects();
@@ -78,7 +80,8 @@ void DataBrowser::openRenderView()
         QMessageBox::warning(this, "Invalid data selection", QString("Cannot render 2D and 3D data in the same render view!")
             + QString("\nDiscarded objects:\n") + invalidObjects.join('\n'));
 
-    m_dataMapping->openInRenderView(oneTypeObjects);
+    RenderView * renderView = m_dataMapping->openInRenderView(oneTypeObjects);
+    setupGuiFor(renderView);
 }
 
 void DataBrowser::changeRenderedVisibility(DataObject * clickedObject)
@@ -91,7 +94,8 @@ void DataBrowser::changeRenderedVisibility(DataObject * clickedObject)
     // no current render view: add selection to new view
     if (!renderView)
     {
-        m_dataMapping->openInRenderView(selection);
+        renderView = m_dataMapping->openInRenderView(selection);
+        setupGuiFor(renderView);
         return;
     }
 
@@ -115,6 +119,8 @@ void DataBrowser::changeRenderedVisibility(DataObject * clickedObject)
         renderView->addDataObjects(selectedDataObjects());
     else
         renderView->hideDataObjects(selectedDataObjects());
+
+    setupGuiFor(renderView);
 }
 
 void DataBrowser::removeFile()

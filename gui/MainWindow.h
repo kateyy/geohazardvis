@@ -31,6 +31,7 @@ public slots:
 
     void on_actionOpen_triggered();
     void on_actionAbout_Qt_triggered();
+    void on_actionNew_Render_View_triggered();
 
     void tabbedDockWidgetToFront(QDockWidget * widget);
 

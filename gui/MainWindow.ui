@@ -22,7 +22,7 @@
   <property name="dockOptions">
    <set>QMainWindow::AllowNestedDocks|QMainWindow::AllowTabbedDocks|QMainWindow::AnimatedDocks</set>
   </property>
-  <widget class="DataBrowser" name="centralwidget" />
+  <widget class="DataBrowser" name="centralwidget"/>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
     <rect>
@@ -54,7 +54,14 @@
     </property>
     <addaction name="actionAbout_Qt"/>
    </widget>
+   <widget class="QMenu" name="menuViews">
+    <property name="title">
+     <string>&amp;Views</string>
+    </property>
+    <addaction name="actionNew_Render_View"/>
+   </widget>
    <addaction name="menuFile"/>
+   <addaction name="menuViews"/>
    <addaction name="menuSynchronize_Selections"/>
    <addaction name="menuHelp"/>
   </widget>
@@ -109,6 +116,16 @@
   <action name="actionAbout_Qt">
    <property name="text">
     <string>About Qt</string>
+   </property>
+  </action>
+  <action name="actionNew_render_view">
+   <property name="text">
+    <string>New render view</string>
+   </property>
+  </action>
+  <action name="actionNew_Render_View">
+   <property name="text">
+    <string>New &amp;Render View</string>
    </property>
   </action>
  </widget>
