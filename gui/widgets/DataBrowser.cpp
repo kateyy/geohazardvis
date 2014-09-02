@@ -7,7 +7,7 @@
 #include <core/data_objects/RenderedData.h>
 
 #include <gui/DataMapping.h>
-#include <gui/widgets/RenderWidget.h>
+#include <gui/widgets/RenderView.h>
 #include "DataBrowserTableModel.h"
 
 
@@ -87,7 +87,7 @@ void DataBrowser::changeRenderedVisibility(DataObject * clickedObject)
     if (selection.isEmpty())
         return;
 
-    RenderWidget * renderView = m_dataMapping->focusedRenderView();
+    RenderView * renderView = m_dataMapping->focusedRenderView();
     // no current render view: add selection to new view
     if (!renderView)
     {
@@ -146,7 +146,7 @@ void DataBrowser::evaluateItemViewClick(const QModelIndex & index)
     }
 }
 
-void DataBrowser::setupGuiFor(RenderWidget * renderView)
+void DataBrowser::setupGuiFor(RenderView * renderView)
 {
     QSet<const DataObject *> allObjects;
     for (const DataObject * dataObject : m_dataObjects)

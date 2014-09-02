@@ -20,7 +20,7 @@
 
 #include "DataMapping.h"
 #include "SelectionHandler.h"
-#include "widgets/RenderWidget.h"
+#include "widgets/RenderView.h"
 #include "widgets/DataChooser.h"
 #include "widgets/RenderConfigWidget.h"
 
@@ -91,12 +91,12 @@ void MainWindow::dropEvent(QDropEvent * event)
     event->acceptProposedAction();
 }
 
-RenderWidget * MainWindow::addRenderWidget(int index)
+RenderView * MainWindow::addRenderView(int index)
 {
-    RenderWidget * renderWidget = new RenderWidget(index, *m_dataChooser, *m_renderConfigWidget);
-    addDockWidget(Qt::DockWidgetArea::TopDockWidgetArea, renderWidget);
+    RenderView * renderView = new RenderView(index, *m_dataChooser, *m_renderConfigWidget);
+    addDockWidget(Qt::DockWidgetArea::TopDockWidgetArea, renderView);
 
-    return renderWidget;
+    return renderView;
 }
 
 void MainWindow::openFile(QString fileName)

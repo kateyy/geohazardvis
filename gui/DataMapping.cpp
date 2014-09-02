@@ -8,22 +8,22 @@
 #include "core/data_objects/DataObject.h"
 
 #include "MainWindow.h"
-#include "widgets/TableWidget.h"
-#include "widgets/RenderWidget.h"
+#include "widgets/TableView.h"
+#include "widgets/RenderView.h"
 
 
 DataMapping::DataMapping(MainWindow & mainWindow)
     : m_mainWindow(mainWindow)
     , m_nextTableIndex(0)
-    , m_nextRenderWidgetIndex(0)
+    , m_nextRenderViewIndex(0)
     , m_focusedRenderView(nullptr)
 {
 }
 
 DataMapping::~DataMapping()
 {
-    qDeleteAll(m_renderWidgets.values());
-    qDeleteAll(m_tableWidgets.values());
+    qDeleteAll(m_renderViews.values());
+    qDeleteAll(m_tableViews.values());
 }
 
 void DataMapping::addDataObjects(QList<DataObject *> dataObjects)
@@ -33,22 +33,22 @@ void DataMapping::addDataObjects(QList<DataObject *> dataObjects)
 
 void DataMapping::removeDataObjects(QList<DataObject *> dataObjects)
 {
-    QList<RenderWidget*> currentRenderWidgets = m_renderWidgets.values();
-    for (RenderWidget * renderWidget : currentRenderWidgets)
-        renderWidget->removeDataObjects(dataObjects);
+    QList<RenderView*> currentRenderViews = m_renderViews.values();
+    for (RenderView * renderView : currentRenderViews)
+        renderView->removeDataObjects(dataObjects);
 
-    QList<TableWidget*> currentTableWidgets = m_tableWidgets.values();
-    for (TableWidget * tableWidget : currentTableWidgets)
+    QList<TableView*> currentTableViews = m_tableViews.values();
+    for (TableView * tableView : currentTableViews)
     {
-        if (dataObjects.contains(tableWidget->dataObject()))
-            tableWidget->close();
+        if (dataObjects.contains(tableView->dataObject()))
+            tableView->close();
     }
 }
 
 void DataMapping::openInTable(DataObject * dataObject)
 {
-    TableWidget * table = nullptr;
-    for (TableWidget * existingTable : m_tableWidgets)
+    TableView * table = nullptr;
+    for (TableView * existingTable : m_tableViews)
     {
         if (existingTable->dataObject() == dataObject)
         {
@@ -59,21 +59,21 @@ void DataMapping::openInTable(DataObject * dataObject)
 
     if (!table)
     {
-        table = new TableWidget(m_nextTableIndex++);
-        connect(table, &TableWidget::closed, this, &DataMapping::tableClosed);
+        table = new TableView(m_nextTableIndex++);
+        connect(table, &TableView::closed, this, &DataMapping::tableClosed);
         m_mainWindow.addDockWidget(Qt::DockWidgetArea::RightDockWidgetArea, table);
 
-        if (!m_tableWidgets.empty())
+        if (!m_tableViews.empty())
         {
-            m_mainWindow.tabifyDockWidget(m_tableWidgets.first(), table);
+            m_mainWindow.tabifyDockWidget(m_tableViews.first(), table);
         }
 
-        connect(table, &TableWidget::focused, this, &DataMapping::setFocusedTableView);
+        connect(table, &TableView::focused, this, &DataMapping::setFocusedTableView);
 
-        m_tableWidgets.insert(table->index(), table);
+        m_tableViews.insert(table->index(), table);
     }
 
-    if (m_tableWidgets.size() > 1)
+    if (m_tableViews.size() > 1)
     {
         QCoreApplication::processEvents(); // setup GUI before searching for the tabbed widget...
         m_mainWindow.tabbedDockWidgetToFront(table);
@@ -84,38 +84,38 @@ void DataMapping::openInTable(DataObject * dataObject)
 
 void DataMapping::openInRenderView(QList<DataObject *> dataObjects)
 {
-    RenderWidget * renderWidget = m_mainWindow.addRenderWidget(m_nextRenderWidgetIndex++);
-    m_renderWidgets.insert(renderWidget->index(), renderWidget);
+    RenderView * renderView = m_mainWindow.addRenderView(m_nextRenderViewIndex++);
+    m_renderViews.insert(renderView->index(), renderView);
 
-    connect(renderWidget, &RenderWidget::focused, this, &DataMapping::setFocusedRenderView);
-    connect(renderWidget, &RenderWidget::closed, this, &DataMapping::renderWidgetClosed);
+    connect(renderView, &RenderView::focused, this, &DataMapping::setFocusedRenderView);
+    connect(renderView, &RenderView::closed, this, &DataMapping::renderViewClosed);
 
-    renderWidget->addDataObjects(dataObjects);
+    renderView->addDataObjects(dataObjects);
 
-    emit renderViewsChanged(m_renderWidgets.values());
+    emit renderViewsChanged(m_renderViews.values());
 }
 
 void DataMapping::addToRenderView(QList<DataObject *> dataObjects, int renderView)
 {
-    assert(m_renderWidgets.contains(renderView));
-    m_renderWidgets[renderView]->addDataObjects(dataObjects);
+    assert(m_renderViews.contains(renderView));
+    m_renderViews[renderView]->addDataObjects(dataObjects);
 
-    emit renderViewsChanged(m_renderWidgets.values());
+    emit renderViewsChanged(m_renderViews.values());
 }
 
-RenderWidget * DataMapping::focusedRenderView()
+RenderView * DataMapping::focusedRenderView()
 {
     return m_focusedRenderView;
 }
 
-void DataMapping::setFocusedRenderView(RenderWidget * renderView)
+void DataMapping::setFocusedRenderView(RenderView * renderView)
 {
     m_focusedRenderView = renderView;
 
     emit focusedRenderViewChanged(renderView);
 }
 
-void DataMapping::setFocusedTableView(TableWidget * /*tableView*/)
+void DataMapping::setFocusedTableView(TableView * /*tableView*/)
 {
     m_focusedRenderView = nullptr;
 
@@ -124,20 +124,20 @@ void DataMapping::setFocusedTableView(TableWidget * /*tableView*/)
 
 void DataMapping::tableClosed()
 {
-    TableWidget * table = dynamic_cast<TableWidget*>(sender());
+    TableView * table = dynamic_cast<TableView*>(sender());
     assert(table);
 
-    m_tableWidgets.remove(table->index());
+    m_tableViews.remove(table->index());
     table->deleteLater();
 }
 
-void DataMapping::renderWidgetClosed()
+void DataMapping::renderViewClosed()
 {
-    RenderWidget * renderWidget = dynamic_cast<RenderWidget*>(sender());
-    assert(renderWidget);
+    RenderView * renderView = dynamic_cast<RenderView*>(sender());
+    assert(renderView);
 
-    m_renderWidgets.remove(renderWidget->index());
-    renderWidget->deleteLater();
+    m_renderViews.remove(renderView->index());
+    renderView->deleteLater();
 
-    emit renderViewsChanged(m_renderWidgets.values());
+    emit renderViewsChanged(m_renderViews.values());
 }

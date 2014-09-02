@@ -26,19 +26,19 @@ class NormalRepresentation;
 class PickingInteractorStyleSwitch;
 class IPickingInteractorStyle;
 class RenderConfigWidget;
-class Ui_RenderWidget;
+class Ui_RenderView;
 
 
-class RenderWidget : public QDockWidget
+class RenderView : public QDockWidget
 {
     Q_OBJECT
 
 public:
-    RenderWidget(
+    RenderView(
         int index,
         DataChooser & dataChooser,
         RenderConfigWidget & renderConfigWidget);
-    ~RenderWidget() override;
+    ~RenderView() override;
 
     int index() const;
 
@@ -67,7 +67,7 @@ public slots:
 signals:
     void closed();
     /** signaled when the widget receive the keyboard focus (focusInEvent) */
-    void focused(RenderWidget * renderWidget);
+    void focused(RenderView * renderView);
 
 protected:
     void focusInEvent(QFocusEvent * event);
@@ -98,7 +98,7 @@ private slots:
     void updateGuiForActor(vtkActor * actor);
 
 private:
-    Ui_RenderWidget * m_ui;
+    Ui_RenderView * m_ui;
 
     const int m_index;
 

@@ -1,5 +1,5 @@
-#include "TableWidget.h"
-#include "ui_TableWidget.h"
+#include "TableView.h"
+#include "ui_TableView.h"
 
 #include <cassert>
 
@@ -12,10 +12,10 @@
 #include <gui/SelectionHandler.h>
 
 
-TableWidget::TableWidget(int index, QWidget * parent)
+TableView::TableView(int index, QWidget * parent)
     : QDockWidget(parent)
     , m_index(index)
-    , m_ui(new Ui_TableWidget())
+    , m_ui(new Ui_TableView())
     , m_dataObject(nullptr)
 {
     m_ui->setupUi(this);
@@ -25,19 +25,19 @@ TableWidget::TableWidget(int index, QWidget * parent)
     SelectionHandler::instance().addTableView(this);
 }
 
-TableWidget::~TableWidget()
+TableView::~TableView()
 {
     SelectionHandler::instance().removeTableView(this);
 
     delete m_ui;
 }
 
-int TableWidget::index() const
+int TableView::index() const
 {
     return m_index;
 }
 
-void TableWidget::showInput(DataObject * dataObject)
+void TableView::showInput(DataObject * dataObject)
 {
     if (m_dataObject == dataObject)
         return;
@@ -51,29 +51,29 @@ void TableWidget::showInput(DataObject * dataObject)
     m_ui->tableView->resizeColumnsToContents();
 }
 
-DataObject * TableWidget::dataObject()
+DataObject * TableView::dataObject()
 {
     return m_dataObject;
 }
 
-void TableWidget::selectCell(int cellId)
+void TableView::selectCell(int cellId)
 {
     m_ui->tableView->selectRow(cellId);
 }
 
-QVtkTableModel * TableWidget::model()
+QVtkTableModel * TableView::model()
 {
     assert(dynamic_cast<QVtkTableModel*>(m_ui->tableView->model()));
     return static_cast<QVtkTableModel*>(m_ui->tableView->model());
 }
 
-void TableWidget::setModel(QVtkTableModel * model)
+void TableView::setModel(QVtkTableModel * model)
 {
     m_ui->tableView->setModel(model);
-    connect(m_ui->tableView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &TableWidget::emitCellSelected);
+    connect(m_ui->tableView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &TableView::emitCellSelected);
 }
 
-void TableWidget::focusInEvent(QFocusEvent * /*event*/)
+void TableView::focusInEvent(QFocusEvent * /*event*/)
 {
     auto f = font();
     f.setBold(true);
@@ -82,7 +82,7 @@ void TableWidget::focusInEvent(QFocusEvent * /*event*/)
     emit focused(this);
 }
 
-void TableWidget::focusOutEvent(QFocusEvent * /*event*/)
+void TableView::focusOutEvent(QFocusEvent * /*event*/)
 {
     if (m_ui->tableView->hasFocus())
         return;
@@ -92,7 +92,7 @@ void TableWidget::focusOutEvent(QFocusEvent * /*event*/)
     setFont(f);
 }
 
-bool TableWidget::eventFilter(QObject * /*obj*/, QEvent * ev)
+bool TableView::eventFilter(QObject * /*obj*/, QEvent * ev)
 {
     switch (ev->type())
     {
@@ -111,7 +111,7 @@ bool TableWidget::eventFilter(QObject * /*obj*/, QEvent * ev)
     return false;
 }
 
-void TableWidget::emitCellSelected(const QItemSelection & selected, const QItemSelection & /*deselected*/)
+void TableView::emitCellSelected(const QItemSelection & selected, const QItemSelection & /*deselected*/)
 {
     if (selected.indexes().isEmpty())
     {
@@ -122,7 +122,7 @@ void TableWidget::emitCellSelected(const QItemSelection & selected, const QItemS
     emit cellSelected(m_dataObject, vtkIdType(selected.indexes().first().row()));
 }
 
-void TableWidget::closeEvent(QCloseEvent * event)
+void TableView::closeEvent(QCloseEvent * event)
 {
     emit closed();
 

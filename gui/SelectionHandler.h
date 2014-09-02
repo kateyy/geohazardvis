@@ -10,8 +10,8 @@ class QItemSelection;
 class QMenu;
 class QAction;
 
-class TableWidget;
-class RenderWidget;
+class TableView;
+class RenderView;
 class DataObject;
 class IPickingInteractorStyle;
 
@@ -24,11 +24,11 @@ public:
     static SelectionHandler & instance();
 
     /** consider this table view when updating selections */
-    void addTableView(TableWidget * tableWidget);
-    void removeTableView(TableWidget * tableWidget);
+    void addTableView(TableView * tableView);
+    void removeTableView(TableView * tableView);
     /** consider this render view when updating selections */
-    void addRenderView(RenderWidget * renderWidget);
-    void removeRenderView(RenderWidget * renderWidget);
+    void addRenderView(RenderView * renderView);
+    void removeRenderView(RenderView * renderView);
 
     void setSyncToggleMenu(QMenu * syncToggleMenu);
 
@@ -44,8 +44,8 @@ private:
     void updateSyncToggleMenu();
 
 private:
-    QMap<TableWidget*, QAction*> m_tableWidgets;
-    QMap<RenderWidget*, QAction*> m_renderWidgets;
+    QMap<TableView*, QAction*> m_tableViews;
+    QMap<RenderView*, QAction*> m_renderViews;
 
     QMap<IPickingInteractorStyle *, QAction *> m_actionForInteractor;
 

@@ -7,8 +7,8 @@
 
 class MainWindow;
 class DataObject;
-class TableWidget;
-class RenderWidget;
+class TableView;
+class RenderView;
 
 
 class DataMapping : public QObject
@@ -26,27 +26,27 @@ public:
     void openInRenderView(QList<DataObject *> dataObjects);
     void addToRenderView(QList<DataObject *> dataObjects, int renderView);
 
-    RenderWidget * focusedRenderView();
+    RenderView * focusedRenderView();
 
 signals:
-    void renderViewsChanged(QList<RenderWidget*> widgets);
-    void focusedRenderViewChanged(RenderWidget * renderView);
+    void renderViewsChanged(QList<RenderView*> widgets);
+    void focusedRenderViewChanged(RenderView * renderView);
 
 private slots:
-    void setFocusedRenderView(RenderWidget * renderView);
-    void setFocusedTableView(TableWidget * tableView);
+    void setFocusedRenderView(RenderView * renderView);
+    void setFocusedTableView(TableView * tableView);
 
     void tableClosed();
-    void renderWidgetClosed();
+    void renderViewClosed();
 
 private:
     MainWindow & m_mainWindow;
 
     QList<DataObject *> m_dataObject;
     int m_nextTableIndex;
-    int m_nextRenderWidgetIndex;
-    QMap<int, TableWidget*> m_tableWidgets;
-    QMap<int, RenderWidget*> m_renderWidgets;
+    int m_nextRenderViewIndex;
+    QMap<int, TableView*> m_tableViews;
+    QMap<int, RenderView*> m_renderViews;
 
-    RenderWidget * m_focusedRenderView;
+    RenderView * m_focusedRenderView;
 };

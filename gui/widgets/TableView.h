@@ -8,18 +8,18 @@
 class QTableView;
 class QItemSelection;
 
-class Ui_TableWidget;
+class Ui_TableView;
 class QVtkTableModel;
 class DataObject;
 
 
-class TableWidget : public QDockWidget
+class TableView : public QDockWidget
 {
     Q_OBJECT
 
 public:
-    TableWidget(int index, QWidget * parent = nullptr);
-    ~TableWidget() override;
+    TableView(int index, QWidget * parent = nullptr);
+    ~TableView() override;
 
     int index() const;
 
@@ -38,7 +38,7 @@ signals:
 
     void closed();
     /** signaled when the widget receive the keyboard focus (focusInEvent) */
-    void focused(TableWidget * renderWidget);
+    void focused(TableView * tableView);
 
 protected:
     void focusInEvent(QFocusEvent * event);
@@ -54,6 +54,6 @@ private:
 
 private:
     const int m_index;
-    Ui_TableWidget * m_ui;
+    Ui_TableView * m_ui;
     DataObject * m_dataObject;
 };

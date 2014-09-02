@@ -10,7 +10,7 @@
 class Input;
 class DataObject;
 class DataMapping;
-class RenderWidget;
+class RenderView;
 class RenderConfigWidget;
 class DataBrowser;
 class DataChooser;
@@ -34,7 +34,7 @@ public slots:
 
     void tabbedDockWidgetToFront(QDockWidget * widget);
 
-    RenderWidget * addRenderWidget(int index);
+    RenderView * addRenderView(int index);
 
 private slots:
     //void updateRenderViewActions(QList<RenderWidget*> widgets);

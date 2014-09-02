@@ -28,10 +28,10 @@ set ( SOURCES
     widgets/DataChooser.cpp
     widgets/RenderConfigWidget.h
     widgets/RenderConfigWidget.cpp
-    widgets/RenderWidget.h
-    widgets/RenderWidget.cpp
-    widgets/TableWidget.h
-    widgets/TableWidget.cpp
+    widgets/RenderView.h
+    widgets/RenderView.cpp
+    widgets/TableView.h
+    widgets/TableView.cpp
 )
 
 set ( UIs
@@ -39,8 +39,8 @@ set ( UIs
     widgets/DataBrowser.ui
     widgets/DataChooser.ui
     widgets/RenderConfigWidget.ui
-    widgets/RenderWidget.ui
-    widgets/TableWidget.ui
+    widgets/RenderView.ui
+    widgets/TableView.ui
 )
 
 set ( QRCs

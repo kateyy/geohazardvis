@@ -8,7 +8,7 @@ class Ui_DataBrowser;
 class DataBrowserTableModel;
 class DataObject;
 class DataMapping;
-class RenderWidget;
+class RenderView;
 
 
 class DataBrowser : public QWidget
@@ -37,7 +37,7 @@ private slots:
     void evaluateItemViewClick(const QModelIndex & index);
 
     /** set button states for object visibilities in the renderView */
-    void setupGuiFor(RenderWidget * renderView);
+    void setupGuiFor(RenderView * renderView);
 
 private:
     QList<DataObject *> selectedDataObjects() const;

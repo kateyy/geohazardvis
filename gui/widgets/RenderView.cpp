@@ -1,5 +1,5 @@
-#include "RenderWidget.h"
-#include "ui_RenderWidget.h"
+#include "RenderView.h"
+#include "ui_RenderView.h"
 
 #include <QMessageBox>
 
@@ -41,12 +41,12 @@
 using namespace std;
 
 
-RenderWidget::RenderWidget(
+RenderView::RenderView(
     int index,
     DataChooser & dataChooser,
     RenderConfigWidget & renderConfigWidget)
 : QDockWidget()
-, m_ui(new Ui_RenderWidget())
+, m_ui(new Ui_RenderView())
 , m_index(index)
 , m_dataChooser(dataChooser)
 , m_renderConfigWidget(renderConfigWidget)
@@ -60,12 +60,12 @@ RenderWidget::RenderWidget(
 
     updateWindowTitle();
 
-    connect(&m_dataChooser, &DataChooser::renderSetupChanged, this, &RenderWidget::render);
+    connect(&m_dataChooser, &DataChooser::renderSetupChanged, this, &RenderView::render);
 
     SelectionHandler::instance().addRenderView(this);
 }
 
-RenderWidget::~RenderWidget()
+RenderView::~RenderView()
 {
     SelectionHandler::instance().removeRenderView(this);
 
@@ -77,17 +77,17 @@ RenderWidget::~RenderWidget()
     qDeleteAll(m_renderedData);
 }
 
-int RenderWidget::index() const
+int RenderView::index() const
 {
     return m_index;
 }
 
-void RenderWidget::render()
+void RenderView::render()
 {
     m_renderer->GetRenderWindow()->Render();
 }
 
-void RenderWidget::focusInEvent(QFocusEvent * /*event*/)
+void RenderView::focusInEvent(QFocusEvent * /*event*/)
 {
     auto f = font();
     f.setBold(true);
@@ -96,7 +96,7 @@ void RenderWidget::focusInEvent(QFocusEvent * /*event*/)
     emit focused(this);
 }
 
-void RenderWidget::focusOutEvent(QFocusEvent * /*event*/)
+void RenderView::focusOutEvent(QFocusEvent * /*event*/)
 {
     if (m_ui->qvtkMain->hasFocus())
         return;
@@ -106,7 +106,7 @@ void RenderWidget::focusOutEvent(QFocusEvent * /*event*/)
     setFont(f);
 }
 
-bool RenderWidget::eventFilter(QObject * obj, QEvent * ev)
+bool RenderView::eventFilter(QObject * obj, QEvent * ev)
 {
     assert(obj == m_ui->qvtkMain);
 
@@ -116,7 +116,7 @@ bool RenderWidget::eventFilter(QObject * obj, QEvent * ev)
     return false;
 }
 
-void RenderWidget::setupRenderer()
+void RenderView::setupRenderer()
 {
     m_ui->qvtkMain->GetRenderWindow()->SetAAFrames(0);
 
@@ -125,7 +125,7 @@ void RenderWidget::setupRenderer()
     m_ui->qvtkMain->GetRenderWindow()->AddRenderer(m_renderer);
 }
 
-void RenderWidget::setupInteraction()
+void RenderView::setupInteraction()
 {
     m_interactorStyle = vtkSmartPointer<PickingInteractorStyleSwitch>::New();
     m_interactorStyle->SetDefaultRenderer(m_renderer);
@@ -134,8 +134,8 @@ void RenderWidget::setupInteraction()
     m_interactorStyle->addStyle("InteractorStyle3D", InteractorStyle3D::New());
     m_interactorStyle->addStyle("InteractorStyleImage", InteractorStyleImage::New());
 
-    connect(m_interactorStyle.Get(), &PickingInteractorStyleSwitch::pointInfoSent, this, &RenderWidget::ShowInfo);
-    connect(m_interactorStyle.Get(), &PickingInteractorStyleSwitch::actorPicked, this, &RenderWidget::updateGuiForActor);
+    connect(m_interactorStyle.Get(), &PickingInteractorStyleSwitch::pointInfoSent, this, &RenderView::ShowInfo);
+    connect(m_interactorStyle.Get(), &PickingInteractorStyleSwitch::actorPicked, this, &RenderView::updateGuiForActor);
  
     m_interactor = vtkSmartPointer<vtkRenderWindowInteractor>::New();
     m_interactor->SetRenderWindow(m_ui->qvtkMain->GetRenderWindow());
@@ -144,17 +144,17 @@ void RenderWidget::setupInteraction()
     m_interactor->Initialize();
 }
 
-void RenderWidget::setInteractorStyle(const std::string & name)
+void RenderView::setInteractorStyle(const std::string & name)
 {
     m_interactorStyle->setCurrentStyle(name);
 }
 
-void RenderWidget::ShowInfo(const QStringList & info)
+void RenderView::ShowInfo(const QStringList & info)
 {
     setToolTip(info.join('\n'));
 }
 
-RenderedData * RenderWidget::addDataObject(DataObject * dataObject)
+RenderedData * RenderView::addDataObject(DataObject * dataObject)
 {
     setWindowTitle(QString::fromStdString(dataObject->input()->name) + " (loading to GPU)");
     QApplication::processEvents();
@@ -191,7 +191,7 @@ RenderedData * RenderWidget::addDataObject(DataObject * dataObject)
     m_actorToRenderedData.insert(renderedData->mainActor(), renderedData);
     m_renderedData << renderedData;
 
-    connect(renderedData, &RenderedData::geometryChanged, this, &RenderWidget::render);
+    connect(renderedData, &RenderedData::geometryChanged, this, &RenderView::render);
 
     double bounds[6] = {
         std::numeric_limits<double>::max(), std::numeric_limits<double>::lowest(),
@@ -214,7 +214,7 @@ RenderedData * RenderWidget::addDataObject(DataObject * dataObject)
     return renderedData;
 }
 
-void RenderWidget::addDataObjects(QList<DataObject *> dataObjects)
+void RenderView::addDataObjects(QList<DataObject *> dataObjects)
 {
     RenderedData * aNewObject = nullptr;
 
@@ -244,7 +244,7 @@ void RenderWidget::addDataObjects(QList<DataObject *> dataObjects)
     emit render();
 }
 
-void RenderWidget::hideDataObjects(QList<DataObject *> dataObjects)
+void RenderView::hideDataObjects(QList<DataObject *> dataObjects)
 {
     for (DataObject * dataObject : dataObjects)
     {
@@ -256,7 +256,7 @@ void RenderWidget::hideDataObjects(QList<DataObject *> dataObjects)
     }
 }
 
-bool RenderWidget::isVisible(DataObject * dataObject) const
+bool RenderView::isVisible(DataObject * dataObject) const
 {
     RenderedData * renderedData = m_dataObjectToRendered.value(dataObject, nullptr);
     if (!renderedData)
@@ -264,7 +264,7 @@ bool RenderWidget::isVisible(DataObject * dataObject) const
     return renderedData->isVisible();
 }
 
-void RenderWidget::removeDataObject(DataObject * dataObject)
+void RenderView::removeDataObject(DataObject * dataObject)
 {
     RenderedData * renderedData = nullptr;
     for (RenderedData * r : m_renderedData)
@@ -300,19 +300,19 @@ void RenderWidget::removeDataObject(DataObject * dataObject)
     delete renderedData;
 }
 
-void RenderWidget::removeDataObjects(QList<DataObject *> dataObjects)
+void RenderView::removeDataObjects(QList<DataObject *> dataObjects)
 {
     // TODO optimize as needed
     for (DataObject * dataObject : dataObjects)
         removeDataObject(dataObject);
 }
 
-QList<DataObject *> RenderWidget::dataObjects() const
+QList<DataObject *> RenderView::dataObjects() const
 {
     return m_dataObjectToRendered.keys();
 }
 
-QList<const RenderedData *> RenderWidget::renderedData() const
+QList<const RenderedData *> RenderView::renderedData() const
 {
     QList<const RenderedData *> l;
     for (auto r : m_renderedData)
@@ -320,7 +320,7 @@ QList<const RenderedData *> RenderWidget::renderedData() const
     return l;
 }
 
-void RenderWidget::setupAxes(const double bounds[6])
+void RenderView::setupAxes(const double bounds[6])
 {
     if (!m_axesActor) {
         m_axesActor = createAxes(*m_renderer);
@@ -333,7 +333,7 @@ void RenderWidget::setupAxes(const double bounds[6])
     m_axesActor->SetRebuildAxes(true);
 }
 
-vtkSmartPointer<vtkCubeAxesActor> RenderWidget::createAxes(vtkRenderer & renderer)
+vtkSmartPointer<vtkCubeAxesActor> RenderView::createAxes(vtkRenderer & renderer)
 {
     VTK_CREATE(vtkCubeAxesActor, cubeAxes);
     cubeAxes->SetCamera(renderer.GetActiveCamera());
@@ -370,7 +370,7 @@ vtkSmartPointer<vtkCubeAxesActor> RenderWidget::createAxes(vtkRenderer & rendere
     return cubeAxes;
 }
 
-void RenderWidget::setupColorMappingLegend()
+void RenderView::setupColorMappingLegend()
 {
     m_colorMappingLegend = m_scalarMapping.colorMappingLegend();
     m_colorMappingLegend->SetAnnotationTextScaling(false);
@@ -407,7 +407,7 @@ void RenderWidget::setupColorMappingLegend()
     m_renderer->AddViewProp(m_colorMappingLegend);
 }
 
-void RenderWidget::updateWindowTitle()
+void RenderView::updateWindowTitle()
 {
     QString title;
     for (const auto & renderedData : m_renderedData)
@@ -424,34 +424,34 @@ void RenderWidget::updateWindowTitle()
     setWindowTitle(title);
 }
 
-vtkRenderWindow * RenderWidget::renderWindow()
+vtkRenderWindow * RenderView::renderWindow()
 {
     return m_ui->qvtkMain->GetRenderWindow();
 }
 
-const vtkRenderWindow * RenderWidget::renderWindow() const
+const vtkRenderWindow * RenderView::renderWindow() const
 {
     return m_ui->qvtkMain->GetRenderWindow();
 }
 
-IPickingInteractorStyle * RenderWidget::interactorStyle()
+IPickingInteractorStyle * RenderView::interactorStyle()
 {
     return m_interactorStyle;
 }
 
-const IPickingInteractorStyle * RenderWidget::interactorStyle() const
+const IPickingInteractorStyle * RenderView::interactorStyle() const
 {
     return m_interactorStyle;
 }
 
-void RenderWidget::closeEvent(QCloseEvent * event)
+void RenderView::closeEvent(QCloseEvent * event)
 {
     emit closed();
 
     QDockWidget::closeEvent(event);
 }
 
-void RenderWidget::updateGuiForActor(vtkActor * actor)
+void RenderView::updateGuiForActor(vtkActor * actor)
 {
     assert(actor);
 
