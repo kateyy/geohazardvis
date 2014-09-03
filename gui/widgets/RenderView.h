@@ -81,7 +81,7 @@ private:
     
     void updateVertexNormals(vtkPolyData * polyData);
     
-    void setupAxes(const double bounds[6]);
+    void updateAxes();
     static vtkSmartPointer<vtkCubeAxesActor> createAxes(vtkRenderer & renderer);
     void setupColorMappingLegend();
 

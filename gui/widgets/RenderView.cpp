@@ -3,6 +3,7 @@
 
 #include <QMessageBox>
 
+#include <vtkBoundingBox.h>
 #include <vtkInformation.h>
 #include <vtkInformationStringKey.h>
 
@@ -173,22 +174,6 @@ RenderedData * RenderView::addDataObject(DataObject * dataObject)
 
     connect(renderedData, &RenderedData::geometryChanged, this, &RenderView::render);
 
-    double bounds[6] = {
-        std::numeric_limits<double>::max(), std::numeric_limits<double>::lowest(),
-        std::numeric_limits<double>::max(), std::numeric_limits<double>::lowest(),
-        std::numeric_limits<double>::max(), std::numeric_limits<double>::lowest() };
-
-    for (const auto & rendered : m_renderedData)
-    {
-        for (int i = 0; i < 6; i += 2)
-        {
-            const double * inputBounds = rendered->dataObject()->input()->bounds();
-            bounds[i] = std::min(bounds[i], inputBounds[i]);
-            bounds[i + 1] = std::max(bounds[i + 1], inputBounds[i + 1]);
-        }
-    }
-    setupAxes(bounds);
-
     m_dataObjectToRendered.insert(dataObject, renderedData);
 
     return renderedData;
@@ -210,6 +195,8 @@ void RenderView::addDataObjects(QList<DataObject *> dataObjects)
 
     if (aNewObject)
         m_renderConfigWidget.setRenderedData(aNewObject);
+
+    updateAxes();
 
     m_scalarMapping.setRenderedData(m_renderedData);
     m_dataChooser.setMapping(windowTitle(), &m_scalarMapping);
@@ -234,6 +221,8 @@ void RenderView::hideDataObjects(QList<DataObject *> dataObjects)
 
         rendered->setVisible(false);
     }
+
+    updateAxes();
 
     render();
 }
@@ -274,6 +263,8 @@ void RenderView::removeDataObject(DataObject * dataObject)
 
     m_renderedData.removeOne(renderedData);
 
+    updateAxes();
+
     m_scalarMapping.setRenderedData(m_renderedData);
     if (m_renderConfigWidget.renderedData() == renderedData)
         m_renderConfigWidget.setRenderedData(nullptr);
@@ -302,16 +293,33 @@ QList<const RenderedData *> RenderView::renderedData() const
     return l;
 }
 
-void RenderView::setupAxes(const double bounds[6])
+void RenderView::updateAxes()
 {
-    if (!m_axesActor) {
-        m_axesActor = createAxes(*m_renderer);
+    vtkBoundingBox bounds;
+
+    for (RenderedData * renderedData : m_renderedData)
+    {
+        if (renderedData->isVisible())
+            bounds.AddBounds(renderedData->dataObject()->input()->bounds());
     }
-    double b[6];
-    for (int i = 0; i < 6; ++i)
-        b[i] = bounds[i];
+
+    // hide axes when we don't have visible objects
+    if (!bounds.IsValid() && m_axesActor)
+    {
+        m_axesActor->SetVisibility(false);
+        return;
+    }
+
+    if (!m_axesActor)
+        m_axesActor = createAxes(*m_renderer);
+    
+    m_axesActor->SetVisibility(true);
+
     m_renderer->AddViewProp(m_axesActor);
-    m_axesActor->SetBounds(b);
+
+    double rawBounds[6];
+    bounds.GetBounds(rawBounds);
+    m_axesActor->SetBounds(rawBounds);
     m_axesActor->SetRebuildAxes(true);
 }
 
