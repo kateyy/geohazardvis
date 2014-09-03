@@ -97,6 +97,8 @@ private:
 
     void updateInteractionType();
 
+    void warnIncompatibleObjects(QStringList incompatibleObjects);
+
 private slots:
     /** Updates the RenderConfigWidget to reflect the actors render properties. */
     void updateGuiForActor(vtkActor * actor);

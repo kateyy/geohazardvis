@@ -189,12 +189,18 @@ RenderedData * RenderView::addDataObject(DataObject * dataObject)
 
 void RenderView::addDataObjects(QList<DataObject *> dataObjects)
 {
+    if (dataObjects.isEmpty())
+        return;
+
     RenderedData * aNewObject = nullptr;
 
     QStringList incompatibleObjects = checkCompatibleObjects(dataObjects);
 
     if (dataObjects.isEmpty())
+    {
+        warnIncompatibleObjects(incompatibleObjects);
         return;
+    }
 
     for (DataObject * dataObject : dataObjects)
     {
@@ -224,8 +230,7 @@ void RenderView::addDataObjects(QList<DataObject *> dataObjects)
     render();
 
     if (!incompatibleObjects.isEmpty())
-        QMessageBox::warning(this, "Invalid data selection", QString("Cannot render 2D and 3D data in the same render view!")
-        + QString("\nDiscarded objects:\n") + incompatibleObjects.join('\n'));
+        warnIncompatibleObjects(incompatibleObjects);
 }
 
 void RenderView::hideDataObjects(QList<DataObject *> dataObjects)
@@ -294,7 +299,10 @@ QStringList RenderView::checkCompatibleObjects(QList<DataObject *> & dataObjects
     bool amIEmpty = true;
     for (RenderedData * renderedData : m_renderedData)
         if (renderedData->isVisible())
+        {
             amIEmpty = false;
+            break;
+        }
 
     assert(amIEmpty || !m_currentDataType.isEmpty());
 
@@ -473,6 +481,12 @@ void RenderView::updateInteractionType()
         setInteractorStyle("InteractorStyleImage");
     else
         setInteractorStyle("InteractorStyle3D");
+}
+
+void RenderView::warnIncompatibleObjects(QStringList incompatibleObjects)
+{
+    QMessageBox::warning(this, "Invalid data selection", QString("Cannot render 2D and 3D data in the same render view!")
+        + QString("\nDiscarded objects:\n") + incompatibleObjects.join('\n'));
 }
 
 vtkRenderWindow * RenderView::renderWindow()
