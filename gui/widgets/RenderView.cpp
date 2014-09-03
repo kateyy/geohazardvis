@@ -140,13 +140,7 @@ RenderedData * RenderView::addDataObject(DataObject * dataObject)
     setWindowTitle(QString::fromStdString(dataObject->input()->name) + " (loading to GPU)");
     QApplication::processEvents();
 
-    if (!m_renderedData.empty()
-        && m_renderedData.first()->dataObject()->input()->type != dataObject->input()->type)
-    {
-        QMessageBox::warning(this, "", "Cannot render 2d and 3d geometry in the same view.");
-        updateWindowTitle();
-        return nullptr;
-    }
+    assert(dataObject->dataTypeName() == m_currentDataType);
 
     RenderedData * renderedData = nullptr;
 
@@ -154,11 +148,9 @@ RenderedData * RenderView::addDataObject(DataObject * dataObject)
     {
     case ModelType::triangles:
         renderedData = new RenderedPolyData(dynamic_cast<PolyDataObject*>(dataObject));
-        setInteractorStyle("InteractorStyle3D");
         break;
     case ModelType::grid2d:
         renderedData = new RenderedImageData(dynamic_cast<ImageDataObject*>(dataObject));
-        setInteractorStyle("InteractorStyleImage");
         break;
     default:
         assert(false);
@@ -182,6 +174,11 @@ RenderedData * RenderView::addDataObject(DataObject * dataObject)
 void RenderView::addDataObjects(QList<DataObject *> dataObjects)
 {
     RenderedData * aNewObject = nullptr;
+
+    checkCompatibleObjects(dataObjects);
+
+    if (dataObjects.isEmpty())
+        return;
 
     for (DataObject * dataObject : dataObjects)
     {
@@ -237,15 +234,7 @@ bool RenderView::isVisible(DataObject * dataObject) const
 
 void RenderView::removeDataObject(DataObject * dataObject)
 {
-    RenderedData * renderedData = nullptr;
-    for (RenderedData * r : m_renderedData)
-    {
-        if (r->dataObject() == dataObject)
-        {
-            renderedData = r;
-            break;
-        }
-    }
+    RenderedData * renderedData = m_dataObjectToRendered.value(dataObject, nullptr);
 
     // we didn't render this object
     if (!renderedData)
@@ -261,7 +250,7 @@ void RenderView::removeDataObject(DataObject * dataObject)
     for (vtkActor * actor : renderedData->actors())
         m_renderer->RemoveViewProp(actor);
 
-    m_renderedData.removeOne(renderedData);
+    removeFromInternalLists({ dataObject });
 
     updateAxes();
 
@@ -269,8 +258,6 @@ void RenderView::removeDataObject(DataObject * dataObject)
     if (m_renderConfigWidget.renderedData() == renderedData)
         m_renderConfigWidget.setRenderedData(nullptr);
     m_dataChooser.setMapping(windowTitle(), &m_scalarMapping);
-
-    delete renderedData;
 }
 
 void RenderView::removeDataObjects(QList<DataObject *> dataObjects)
@@ -278,6 +265,71 @@ void RenderView::removeDataObjects(QList<DataObject *> dataObjects)
     // TODO optimize as needed
     for (DataObject * dataObject : dataObjects)
         removeDataObject(dataObject);
+}
+
+void RenderView::checkCompatibleObjects(QList<DataObject *> & dataObjects)
+{
+    assert(!dataObjects.isEmpty());
+
+    bool amIEmpty = true;
+    for (RenderedData * renderedData : m_renderedData)
+        if (renderedData->isVisible())
+            amIEmpty = false;
+
+    assert(amIEmpty || !m_currentDataType.isEmpty());
+
+    // allow data type switch if nothing is visible
+    if (amIEmpty)
+    {
+        QString newType = dataObjects.first()->dataTypeName();
+        if (newType != m_currentDataType)
+        {
+            m_currentDataType = newType;
+            clearInternalLists();
+            updateInteractionType();
+        }
+    }
+
+    QStringList invalidObjects;
+    QList<DataObject *> compatibleObjects;
+
+    for (DataObject * dataObject : dataObjects)
+    {
+        if (dataObject->dataTypeName() == m_currentDataType)
+            compatibleObjects << dataObject;
+        else
+            invalidObjects << dataObject->name();
+    }
+
+    if (!invalidObjects.isEmpty())
+        QMessageBox::warning(this, "Invalid data selection", QString("Cannot render 2D and 3D data in the same render view!")
+        + QString("\nDiscarded objects:\n") + invalidObjects.join('\n'));
+
+    dataObjects = compatibleObjects;
+}
+
+void RenderView::clearInternalLists()
+{
+    qDeleteAll(m_renderedData);
+
+    m_renderedData.clear();
+    m_dataObjectToRendered.clear();
+    m_actorToRenderedData.clear();    
+}
+
+void RenderView::removeFromInternalLists(QList<DataObject *> dataObjects)
+{
+    for (DataObject * dataObject : dataObjects)
+    {
+        RenderedData * rendered = m_dataObjectToRendered.value(dataObject, nullptr);
+        assert(rendered);
+
+        m_actorToRenderedData.remove(rendered->mainActor());
+        m_dataObjectToRendered.remove(dataObject);
+        m_renderedData.removeOne(rendered);
+
+        delete rendered;
+    }
 }
 
 QList<DataObject *> RenderView::dataObjects() const
@@ -395,6 +447,14 @@ void RenderView::setupColorMappingLegend()
     m_scalarBarWidget->SetEnabled(true);
 
     m_renderer->AddViewProp(m_colorMappingLegend);
+}
+
+void RenderView::updateInteractionType()
+{
+    if (m_currentDataType == "regular 2D grid")
+        setInteractorStyle("InteractorStyleImage");
+    else
+        setInteractorStyle("InteractorStyle3D");
 }
 
 void RenderView::updateWindowTitle()

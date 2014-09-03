@@ -56,34 +56,6 @@ void DataBrowser::showTable()
         m_dataMapping->openInTable(dataObject);
 }
 
-
-// TODO currently not used
-void DataBrowser::openRenderView()
-{
-    QList<DataObject *> selection = selectedDataObjects();
-    if (selection.isEmpty())
-        return;
-
-    QString dataType = selection.first()->dataTypeName();
-    QStringList invalidObjects;
-    QList<DataObject *> oneTypeObjects;
-
-    for (DataObject * dataObject : selectedDataObjects())
-    {
-        if (dataObject->dataTypeName() == dataType)
-            oneTypeObjects << dataObject;
-        else
-            invalidObjects << dataObject->name();
-    }
-
-    if (!invalidObjects.isEmpty())
-        QMessageBox::warning(this, "Invalid data selection", QString("Cannot render 2D and 3D data in the same render view!")
-            + QString("\nDiscarded objects:\n") + invalidObjects.join('\n'));
-
-    RenderView * renderView = m_dataMapping->openInRenderView(oneTypeObjects);
-    setupGuiFor(renderView);
-}
-
 void DataBrowser::changeRenderedVisibility(DataObject * clickedObject)
 {
     QList<DataObject *> selection = selectedDataObjects();

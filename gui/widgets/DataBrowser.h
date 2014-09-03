@@ -26,8 +26,6 @@ public:
 private slots:
     /** show and bring to front the table for selected objects */
     void showTable();
-    /** open new render view for currently selected objects */
-    void openRenderView();
     /** change visibility of selected objects in the current render view */
     void changeRenderedVisibility(DataObject * clickedObject);
 

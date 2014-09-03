@@ -74,8 +74,18 @@ private:
     void setupInteraction();
     void setInteractorStyle(const std::string & name);
 
+    // data handling
+
     RenderedData * addDataObject(DataObject * dataObject);
     void removeDataObject(DataObject * dataObject);
+    /** reduce list to compatible objects, show GUI warning if needed */
+    void checkCompatibleObjects(QList<DataObject *> & dataObjects);
+
+    // remove some data objects from internal lists
+    void removeFromInternalLists(QList<DataObject *> dataObjects = {});
+    void clearInternalLists();
+
+    // GUI / rendering tools
 
     void updateWindowTitle();
     
@@ -84,6 +94,8 @@ private:
     void updateAxes();
     static vtkSmartPointer<vtkCubeAxesActor> createAxes(vtkRenderer & renderer);
     void setupColorMappingLegend();
+
+    void updateInteractionType();
 
 private slots:
     /** Updates the RenderConfigWidget to reflect the actors render properties. */
@@ -111,4 +123,6 @@ private:
     DataChooser & m_dataChooser;
     ScalarToColorMapping m_scalarMapping;
     RenderConfigWidget & m_renderConfigWidget;
+
+    QString m_currentDataType;
 };
