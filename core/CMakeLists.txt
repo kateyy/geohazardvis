@@ -49,9 +49,6 @@ set ( SOURCES
     data_mapping/GridColorMapping.cpp
 )
 
-
-find_package(Qt5Gui REQUIRED)
-
 source_group_by_path(${CMAKE_CURRENT_SOURCE_DIR} "\\\\.cpp$|\\\\.c$|\\\\.h$|\\\\.hpp$|\\\\.ui$|\\\\.inl$"
     "Source Files" ${SOURCES})
 

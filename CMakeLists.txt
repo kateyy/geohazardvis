@@ -10,24 +10,16 @@ set (META_AUTHOR_DOMAIN "https://github.com/kateyy/geohazardvis")
 
 project (${META_PROJECT_NAME} CXX)
 
-option(OPTION_LOCAL_INSTALL "Install to local directory instead of system" OFF)
-
-set(CMAKE_CONFIGURATION_TYPES "Debug;Release;RelWithDebInfo;MinSizeRel" CACHE STRING "Limited Configs" FORCE)
-
-
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
-set(CMAKE_MODULE_PATH 
-    ${CMAKE_MODULE_PATH}
-    ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
-
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
 include(cmake/Custom.cmake)
 
 set(DEFAULT_COMPILE_DEFS
     $<$<CONFIG:Debug>:_DEBUG>            # Debug build
-    $<$<CONFIG:Release>:NDEBUG>          # Release build
+    $<$<CONFIG:Release>:NDEBUG>          # optimized builds
     $<$<CONFIG:RelWithDebInfo>:NDEBUG>
     $<$<CONFIG:MinSizeRel>:NDEBUG>
 )
@@ -66,13 +58,14 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 find_package(VTK REQUIRED
     vtkGUISupportQtOpenGL   # QVTKWidget
     vtkRenderingAnnotation  # vtkCubeAxesActor, vtkScalarBarActor
-    vtkRenderingFreeTypeOpenGL
     vtkInteractionWidgets
 )
 include(${VTK_USE_FILE})
 
 if("${VTK_QT_VERSION}" STREQUAL "")
     message(FATAL_ERROR "VTK was not built with Qt")
+elseif(NOT "${VTK_QT_VERSION}" STREQUAL "5")
+    message(FATAL_ERROR "VTK was a wrong Qt version (${VTK_QT_VERSION}). Only Qt5 is supported.")
 endif()
 
 find_package(Qt5Widgets REQUIRED)

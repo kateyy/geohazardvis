@@ -49,7 +49,6 @@ set ( QRCs
     icons.qrc
 )
 
-find_package(Qt5Widgets REQUIRED QUIET)
 qt5_wrap_ui(UI_Srcs ${UIs})
 qt5_add_resources(QRC_Srcs ${QRCs} )
 
