@@ -175,7 +175,7 @@ void RenderView::addDataObjects(QList<DataObject *> dataObjects)
 {
     RenderedData * aNewObject = nullptr;
 
-    checkCompatibleObjects(dataObjects);
+    QStringList incompatibleObjects = checkCompatibleObjects(dataObjects);
 
     if (dataObjects.isEmpty())
         return;
@@ -206,6 +206,10 @@ void RenderView::addDataObjects(QList<DataObject *> dataObjects)
     m_renderer->ResetCamera();
 
     render();
+
+    if (!incompatibleObjects.isEmpty())
+        QMessageBox::warning(this, "Invalid data selection", QString("Cannot render 2D and 3D data in the same render view!")
+        + QString("\nDiscarded objects:\n") + incompatibleObjects.join('\n'));
 }
 
 void RenderView::hideDataObjects(QList<DataObject *> dataObjects)
@@ -267,7 +271,7 @@ void RenderView::removeDataObjects(QList<DataObject *> dataObjects)
         removeDataObject(dataObject);
 }
 
-void RenderView::checkCompatibleObjects(QList<DataObject *> & dataObjects)
+QStringList RenderView::checkCompatibleObjects(QList<DataObject *> & dataObjects)
 {
     assert(!dataObjects.isEmpty());
 
@@ -301,11 +305,9 @@ void RenderView::checkCompatibleObjects(QList<DataObject *> & dataObjects)
             invalidObjects << dataObject->name();
     }
 
-    if (!invalidObjects.isEmpty())
-        QMessageBox::warning(this, "Invalid data selection", QString("Cannot render 2D and 3D data in the same render view!")
-        + QString("\nDiscarded objects:\n") + invalidObjects.join('\n'));
-
     dataObjects = compatibleObjects;
+
+    return invalidObjects;
 }
 
 void RenderView::clearInternalLists()

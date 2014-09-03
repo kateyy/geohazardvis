@@ -79,7 +79,7 @@ private:
     RenderedData * addDataObject(DataObject * dataObject);
     void removeDataObject(DataObject * dataObject);
     /** reduce list to compatible objects, show GUI warning if needed */
-    void checkCompatibleObjects(QList<DataObject *> & dataObjects);
+    QStringList checkCompatibleObjects(QList<DataObject *> & dataObjects);
 
     // remove some data objects from internal lists
     void removeFromInternalLists(QList<DataObject *> dataObjects = {});
