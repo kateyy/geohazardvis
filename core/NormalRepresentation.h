@@ -18,6 +18,12 @@ namespace reflectionzeug {
 }
 
 
+enum class NormalType
+{
+    CellNormal,
+    PointNormal
+};
+
 class CORE_API NormalRepresentation : public QObject
 {
     Q_OBJECT
@@ -51,6 +57,8 @@ private:
 
 private:
     bool m_visible;
+    NormalType m_normalType;
+    bool m_normalTypeChanged;
     vtkSmartPointer<vtkPolyData> m_polyData;
     bool m_polyDataChanged;
     vtkSmartPointer<vtkActor> m_actor;

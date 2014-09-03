@@ -29,7 +29,9 @@ using namespace reflectionzeug;
 
 NormalRepresentation::NormalRepresentation()
 : m_visible(true)
+, m_normalType(NormalType::CellNormal)
 , m_polyDataChanged(false)
+, m_normalTypeChanged(false)
 , m_actor(vtkSmartPointer<vtkActor>::New())
 {
     m_actor->SetVisibility(m_visible);
@@ -117,6 +119,19 @@ PropertyGroup * NormalRepresentation::createPropertyGroup()
         std::bind(&NormalRepresentation::visible, this),
         std::bind(&NormalRepresentation::setVisible, this, std::placeholders::_1));
 
+    auto * prop_normalType = group->addProperty<NormalType>("type",
+        [this](){ return m_normalType;
+    },
+        [this](NormalType type) { 
+        m_normalType = type;
+        m_normalTypeChanged = true;
+        updateGlyphs();
+    });
+    prop_normalType->setStrings({
+            { NormalType::CellNormal, "cell normal" },
+            { NormalType::PointNormal, "point normal" }
+    });
+
     auto prop_length = group->addProperty<float>("length", this,
         &NormalRepresentation::arrowLength, &NormalRepresentation::setArrowLength);
     prop_length->setTitle("arrow length");
@@ -167,13 +182,17 @@ void NormalRepresentation::updateGlyphs()
         m_mapper->SetInputConnection(m_arrowGlyph->GetOutputPort());
     }
 
-    if (m_polyDataChanged) {
+    if (m_polyDataChanged)
+    {
         double * bounds = m_polyData->GetBounds();
         double maxBoundsSize = std::max(bounds[1] - bounds[0], std::max(bounds[3] - bounds[2], bounds[5] - bounds[4]));
         m_arrowGlyph->SetScaleFactor(maxBoundsSize * 0.1);
+    }
 
+    if (m_polyDataChanged || m_normalTypeChanged)
+    {
         vtkDataArray * centroid = m_polyData->GetCellData()->GetArray("centroid");
-        if (centroid)
+        if (m_normalType == NormalType::CellNormal && centroid)
         {
             VTK_CREATE(vtkPoints, points);
             points->SetData(centroid);
@@ -190,10 +209,12 @@ void NormalRepresentation::updateGlyphs()
 
             m_arrowGlyph->SetInputData(processedPoints);
         }
-        else  // fall back: no centroids, set vertex normals
+        else
         {
             m_arrowGlyph->SetInputData(m_polyData);
         }
+
+        m_normalTypeChanged = false;
     }
 
     m_actor->SetMapper(m_mapper);
