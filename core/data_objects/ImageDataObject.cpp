@@ -2,7 +2,10 @@
 
 #include <cassert>
 
+#include <vtkImageData.h>
+
 #include "core/Input.h"
+#include <core/data_objects/RenderedImageData.h>
 
 
 namespace
@@ -13,6 +16,12 @@ namespace
 ImageDataObject::ImageDataObject(std::shared_ptr<GridDataInput> input)
     : DataObject(input)
 {
+    assert(vtkImageData::SafeDownCast(dataSet()));
+}
+
+RenderedData * ImageDataObject::createRendered()
+{
+    return new RenderedImageData(this);
 }
 
 QString ImageDataObject::dataTypeName() const
@@ -20,14 +29,22 @@ QString ImageDataObject::dataTypeName() const
     return s_dataTypeName;
 }
 
-std::shared_ptr<GridDataInput> ImageDataObject::gridDataInput()
+vtkImageData * ImageDataObject::imageData()
 {
-    assert(dynamic_cast<GridDataInput*>(input().get()));
-    return std::static_pointer_cast<GridDataInput>(input());
+    return static_cast<vtkImageData *>(dataSet());
 }
 
-std::shared_ptr<const GridDataInput> ImageDataObject::gridDataInput() const
+const vtkImageData * ImageDataObject::imageData() const
 {
-    assert(dynamic_cast<const GridDataInput*>(input().get()));
-    return std::static_pointer_cast<const GridDataInput>(input());
+    return static_cast<const vtkImageData *>(dataSet());
+}
+
+const int * ImageDataObject::dimensions()
+{
+    return imageData()->GetDimensions();
+}
+
+const double * ImageDataObject::minMaxValue()
+{
+    return imageData()->GetScalarRange();
 }

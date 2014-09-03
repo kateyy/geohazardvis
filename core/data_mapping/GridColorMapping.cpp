@@ -2,7 +2,6 @@
 
 #include "ScalarsForColorMappingRegistry.h"
 
-#include <core/Input.h>
 #include <core/data_objects/ImageDataObject.h>
 
 
@@ -35,8 +34,8 @@ bool GridColorMapping::usesGradients() const
 
 void GridColorMapping::updateBounds()
 {
-    m_dataMinValue = m_dataObject->gridDataInput()->minMaxValue()[0];
-    m_dataMaxValue = m_dataObject->gridDataInput()->minMaxValue()[1];
+    m_dataMinValue = m_dataObject->minMaxValue()[0];
+    m_dataMaxValue = m_dataObject->minMaxValue()[1];
 
     ScalarsForColorMapping::updateBounds();
 }

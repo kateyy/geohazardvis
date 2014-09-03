@@ -4,6 +4,8 @@
 
 #include <QImage>
 
+#include <vtkInformationStringKey.h>
+
 #include <vtkLookupTable.h>
 
 #include <vtkPolyData.h>
@@ -40,7 +42,8 @@ namespace
 RenderedPolyData::RenderedPolyData(PolyDataObject * dataObject)
     : RenderedData(dataObject)
 {
-    m_normalRepresentation.setData(dataObject->polyDataInput()->polyData());
+    vtkPolyData * polyData = vtkPolyData::SafeDownCast(dataObject->dataSet());
+    m_normalRepresentation.setData(polyData);
     m_normalRepresentation.setVisible(false);
     connect(&m_normalRepresentation, &NormalRepresentation::geometryChanged, this, &RenderedPolyData::geometryChanged);
 }
@@ -215,14 +218,16 @@ void RenderedPolyData::visibilityChangedEvent(bool visible)
 
 vtkPolyDataMapper * RenderedPolyData::createDataMapper()
 {
-    const PolyDataInput & input = *polyDataObject()->polyDataInput().get();
-
-    vtkPolyDataMapper * mapper = input.createNamedMapper();
+    vtkPolyDataMapper * mapper = vtkPolyDataMapper::New();
+    
+    QByteArray localName = dataObject()->name().toLocal8Bit();
+    dataObject()->NameKey()->Set(mapper->GetInformation(), localName.data());
 
     // no mapping: use default colors
     if (!m_scalars || !m_lut || !m_scalars->usesGradients())
     {
-        mapper->SetInputData(input.polyData());
+        vtkPolyData * polyData = vtkPolyData::SafeDownCast(dataObject()->dataSet());
+        mapper->SetInputData(polyData);
         return mapper;
     }
 
@@ -230,7 +235,7 @@ vtkPolyDataMapper * RenderedPolyData::createDataMapper()
     mapper->SetUseLookupTableScalarRange(true);
 
     vtkSmartPointer<vtkAlgorithm> filter = vtkSmartPointer<vtkAlgorithm>::Take(m_scalars->createFilter());
-    filter->SetInputDataObject(input.data());
+    filter->SetInputDataObject(dataObject()->dataSet());
 
     // TODO LEAK: this should delete the old filter, but it is referenced somewhere else (still part of the pipeline)
     mapper->SetInputConnection(filter->GetOutputPort());

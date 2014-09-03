@@ -1,5 +1,7 @@
 #include "DataObject.h"
 
+#include <vtkInformationStringKey.h>
+
 #include <vtkDataSet.h>
 
 #include <core/Input.h>
@@ -7,9 +9,12 @@
 #include <core/QVtkTableModel.h>
 
 
+vtkInformationKeyMacro(DataObject, NameKey, String);
+
 DataObject::DataObject(std::shared_ptr<Input> input)
-: m_input(input)
-, m_tableModel(new QVtkTableModel())
+    : m_dataSet(input->data())
+    , m_input(input)
+    , m_tableModel(new QVtkTableModel())
 {
     m_tableModel->showData(m_input->data());
 }
@@ -27,14 +32,19 @@ QString DataObject::name() const
     return QString::fromStdString(m_input->name);
 }
 
-std::shared_ptr<Input> DataObject::input()
+vtkDataSet * DataObject::dataSet()
 {
-    return m_input;
+    return m_dataSet;
 }
 
-std::shared_ptr<const Input> DataObject::input() const
+const vtkDataSet * DataObject::dataSet() const
 {
-    return m_input;
+    return m_dataSet;
+}
+
+const double * DataObject::bounds()
+{
+    return dataSet()->GetBounds();
 }
 
 QVtkTableModel * DataObject::tableModel()

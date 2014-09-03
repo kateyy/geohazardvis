@@ -31,7 +31,6 @@
 #include <vtkPolyData.h>
 
 #include <core/vtkhelper.h>
-#include <core/Input.h>
 #include <core/data_objects/DataObject.h>
 #include <core/data_objects/RenderedData.h>
 
@@ -178,7 +177,7 @@ void InteractorStyleImage::highlightCell(vtkIdType cellId, DataObject * dataObje
     selection->AddNode(selectionNode);
 
     VTK_CREATE(vtkExtractSelection, extractSelection);
-    extractSelection->SetInputData(0, dataObject->input()->data());
+    extractSelection->SetInputData(0, dataObject->dataSet());
     extractSelection->SetInputData(1, selection);
     extractSelection->Update();
 
@@ -217,8 +216,8 @@ void InteractorStyleImage::sendPointInfo() const
 
     vtkInformation * inputInfo = mapper->GetInformation();
 
-    if (inputInfo->Has(Input::NameKey()))
-        inputname = Input::NameKey()->Get(inputInfo);
+    if (inputInfo->Has(DataObject::NameKey()))
+        inputname = DataObject::NameKey()->Get(inputInfo);
 
     double * pos = m_pointPicker->GetPickPosition();
 

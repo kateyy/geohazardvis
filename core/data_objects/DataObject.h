@@ -4,11 +4,16 @@
 
 #include <QString>
 
+#include <vtkSmartPointer.h>
+
 #include <core/core_api.h>
 
 
+class vtkInformationStringKey;
 class Input;
+class vtkDataSet;
 class QVtkTableModel;
+class RenderedData;
 
 
 /** Base class representing loaded data. */
@@ -18,15 +23,23 @@ public:
     DataObject(std::shared_ptr<Input> input);
     virtual ~DataObject() = 0;
 
+    /** create a rendered instance */
+    virtual RenderedData * createRendered() = 0;
+
     QString name() const;
     virtual QString dataTypeName() const = 0;
 
-    std::shared_ptr<Input> input();
-    std::shared_ptr<const Input> input() const;
+    vtkDataSet * dataSet();
+    const vtkDataSet * dataSet() const;
+
+    const double * bounds();
 
     QVtkTableModel * tableModel();
 
+    static vtkInformationStringKey * NameKey();
+
 private:
+    vtkSmartPointer<vtkDataSet> m_dataSet;
     std::shared_ptr<Input> m_input;
     QVtkTableModel * m_tableModel;
 };

@@ -69,33 +69,24 @@ void Loader::loadGrid(GridDataInput & input, const vector<ReadDataset> & dataset
     assert(datasets.begin()->type == DatasetType::grid2d);
     const InputVector * inputData = &datasets.begin()->data;
 
-    input.setDimensions(static_cast<int>(inputData->size()), static_cast<int>(inputData->at(0).size()), 1);
+    int dimensions[3] = { static_cast<int>(inputData->size()), static_cast<int>(inputData->at(0).size()), 1 };
 
     VTK_CREATE(vtkImageData, grid);
-    grid->SetExtent(0, input.dimensions()[0] - 1, 0, input.dimensions()[1] - 1, 0, 0);
-
-    float minValue = std::numeric_limits<float>::max();
-    float maxValue = std::numeric_limits<float>::lowest();
+    grid->SetExtent(0, dimensions[0] - 1, 0, dimensions[1] - 1, 0, 0);
 
     VTK_CREATE(vtkFloatArray, dataArray);
     dataArray->SetNumberOfComponents(1);
     dataArray->SetNumberOfTuples(grid->GetNumberOfPoints());
-    for (int r = 0; r < input.dimensions()[1]; ++r)
+    for (int r = 0; r < dimensions[1]; ++r)
     {
-        vtkIdType rOffset = r * input.dimensions()[0];
-        for (int c = 0; c < input.dimensions()[0]; ++c)
+        vtkIdType rOffset = r * dimensions[0];
+        for (int c = 0; c < dimensions[0]; ++c)
         {
             vtkIdType id = c + rOffset;
             float value = inputData->at(c).at(r);
-            if (value < minValue)
-                minValue = value;
-            if (value > maxValue)
-                maxValue = value;
             dataArray->SetValue(id, value);
         }
     }
-
-    input.setMinMaxValue(minValue, maxValue);
 
     grid->GetPointData()->SetScalars(dataArray);
 

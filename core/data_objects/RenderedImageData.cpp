@@ -17,7 +17,6 @@
 #include <reflectionzeug/PropertyGroup.h>
 
 #include <core/data_objects/ImageDataObject.h>
-#include <core/Input.h>
 #include <core/vtkhelper.h>
 #include <core/data_mapping/ScalarsForColorMapping.h>
 
@@ -36,7 +35,7 @@ RenderedImageData::RenderedImageData(ImageDataObject * dataObject)
     : RenderedData(dataObject)
     , m_texture(vtkSmartPointer<vtkTexture>::New())
 {
-    m_texture->SetInputData(imageDataObject()->gridDataInput()->data());
+    m_texture->SetInputData(dataObject->dataSet());
     m_texture->MapColorScalarsThroughLookupTableOn();
     m_texture->InterpolateOn();
     m_texture->SetQualityTo32Bit();
@@ -84,17 +83,18 @@ vtkProperty * RenderedImageData::createDefaultRenderProperty() const
 
 vtkActor * RenderedImageData::createActor()
 {
-    auto & input = *imageDataObject()->gridDataInput();
+    const double * bounds = dataObject()->bounds();
+    double xExtend = bounds[1] - bounds[0];
+    double yExtend = bounds[3] - bounds[2];
 
-    double xExtend = input.bounds()[1] - input.bounds()[0];
-    double yExtend = input.bounds()[3] - input.bounds()[2];
+    ImageDataObject * image = static_cast<ImageDataObject*>(dataObject());
 
     VTK_CREATE(vtkPlaneSource, plane);
-    plane->SetXResolution(input.dimensions()[0]);
-    plane->SetYResolution(input.dimensions()[1]);
-    plane->SetOrigin(input.bounds()[0], input.bounds()[2], 0);
-    plane->SetPoint1(input.bounds()[0] + xExtend, input.bounds()[2], 0);
-    plane->SetPoint2(input.bounds()[0], input.bounds()[2] + yExtend, 0);
+    plane->SetXResolution(image->dimensions()[0]);
+    plane->SetYResolution(image->dimensions()[1]);
+    plane->SetOrigin(bounds[0], bounds[2], 0);
+    plane->SetPoint1(bounds[0] + xExtend, bounds[2], 0);
+    plane->SetPoint2(bounds[0], bounds[2] + yExtend, 0);
 
     VTK_CREATE(vtkPolyDataMapper, planeMapper);
     planeMapper->SetInputConnection(plane->GetOutputPort());

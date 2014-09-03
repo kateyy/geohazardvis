@@ -1,15 +1,11 @@
 #include "RenderView.h"
 #include "ui_RenderView.h"
 
+#include <cassert>
+
 #include <QMessageBox>
 
 #include <vtkBoundingBox.h>
-#include <vtkInformation.h>
-#include <vtkInformationStringKey.h>
-
-#include <vtkPolyData.h>
-
-#include <vtkPolyDataMapper.h>
 
 #include <vtkCubeAxesActor.h>
 #include <vtkScalarBarActor.h>
@@ -19,17 +15,13 @@
 
 #include <vtkRenderer.h>
 #include <vtkRenderWindow.h>
-#include <vtkRenderWindowInteractor.h>
 #include <vtkCamera.h>
 #include <vtkProperty.h>
 #include <vtkTextProperty.h>
 
 #include <core/vtkhelper.h>
-#include <core/Input.h>
-#include <core/data_objects/PolyDataObject.h>
-#include <core/data_objects/ImageDataObject.h>
-#include <core/data_objects/RenderedPolyData.h>
-#include <core/data_objects/RenderedImageData.h>
+#include <core/data_objects/DataObject.h>
+#include <core/data_objects/RenderedData.h>
 
 #include "PickingInteractorStyleSwitch.h"
 #include "InteractorStyle3D.h"
@@ -158,20 +150,7 @@ RenderedData * RenderView::addDataObject(DataObject * dataObject)
 
     assert(dataObject->dataTypeName() == m_currentDataType);
 
-    RenderedData * renderedData = nullptr;
-
-    switch (dataObject->input()->type)
-    {
-    case ModelType::triangles:
-        renderedData = new RenderedPolyData(dynamic_cast<PolyDataObject*>(dataObject));
-        break;
-    case ModelType::grid2d:
-        renderedData = new RenderedImageData(dynamic_cast<ImageDataObject*>(dataObject));
-        break;
-    default:
-        assert(false);
-    }
-
+    RenderedData * renderedData = dataObject->createRendered();
     assert(renderedData);
 
     for (vtkActor * actor : renderedData->actors())
@@ -378,7 +357,7 @@ void RenderView::updateAxes()
     for (RenderedData * renderedData : m_renderedData)
     {
         if (renderedData->isVisible())
-            bounds.AddBounds(renderedData->dataObject()->input()->bounds());
+            bounds.AddBounds(renderedData->dataObject()->bounds());
     }
 
     // hide axes when we don't have visible objects

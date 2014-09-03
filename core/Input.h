@@ -5,8 +5,6 @@
 
 #include <vtkSmartPointer.h>
 
-#include <core/core_api.h>
-
 class vtkDataSet;
 class vtkPolyData;
 class vtkPolyDataMapper;
@@ -22,7 +20,7 @@ enum class ModelType {
     grid2d
 };
 
-class CORE_API Input {
+class Input {
 public:
     static std::shared_ptr<Input> createType(ModelType type, const std::string & name);
 
@@ -47,13 +45,6 @@ class GridDataInput : public Input {
 public:
     GridDataInput(const std::string & name);
     void setData(vtkImageData * data);
-    virtual void setMinMaxValue(double min, double max);
-    virtual double * minMaxValue();
-    virtual const double * minMaxValue() const;
-
-    virtual int * dimensions();
-    virtual const int * dimensions() const;
-    virtual void setDimensions(int x, int y, int z);
 
     virtual vtkImageData * imageData() const;
 

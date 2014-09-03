@@ -60,39 +60,6 @@ void GridDataInput::setData(vtkImageData * data)
     m_data = data;
 }
 
-void GridDataInput::setMinMaxValue(double minValue, double maxValue)
-{
-    m_minMaxValue[0] = minValue;
-    m_minMaxValue[1] = maxValue;
-}
-
-double * GridDataInput::minMaxValue()
-{
-    return m_minMaxValue;
-}
-
-const double * GridDataInput::minMaxValue() const
-{
-    return m_minMaxValue;
-}
-
-int * GridDataInput::dimensions()
-{
-    return m_dimensions;
-}
-
-const int * GridDataInput::dimensions() const
-{
-    return m_dimensions;
-}
-
-void GridDataInput::setDimensions(int x, int y, int z)
-{
-    m_dimensions[0] = x;
-    m_dimensions[1] = y;
-    m_dimensions[2] = z;
-}
-
 vtkImageData * GridDataInput::imageData() const
 {
     vtkImageData * imageData = static_cast<vtkImageData*>(m_data.Get());

@@ -30,7 +30,6 @@
 #include <vtkPolyData.h>
 
 #include <core/vtkhelper.h>
-#include <core/Input.h>
 #include <core/data_objects/DataObject.h>
 #include <core/data_objects/RenderedData.h>
 
@@ -187,7 +186,7 @@ void InteractorStyle3D::highlightCell(vtkIdType cellId, DataObject * dataObject)
     selection->AddNode(selectionNode);
 
     VTK_CREATE(vtkExtractSelection, extractSelection);
-    extractSelection->SetInputData(0, dataObject->input()->data());
+    extractSelection->SetInputData(0, dataObject->dataSet());
     extractSelection->SetInputData(1, selection);
     extractSelection->Update();
 
@@ -204,12 +203,7 @@ void InteractorStyle3D::highlightCell(vtkIdType cellId, DataObject * dataObject)
 
 void InteractorStyle3D::lookAtCell(DataObject * dataObject, vtkIdType cellId)
 {
-    if (dataObject->input()->type != ModelType::triangles)
-        return;
-
-    assert(dynamic_cast<PolyDataInput*>(dataObject->input().get()));
-    PolyDataInput * polyDataInput = static_cast<PolyDataInput*>(dataObject->input().get());
-    vtkPolyData * polyData = polyDataInput->polyData();
+    vtkPolyData * polyData = vtkPolyData::SafeDownCast(dataObject->dataSet());
 
     vtkTriangle * triangle = vtkTriangle::SafeDownCast(polyData->GetCell(cellId));
     assert(triangle);
@@ -278,8 +272,8 @@ void InteractorStyle3D::sendPointInfo() const
     vtkInformation * inputInfo = mapper->GetInformation();
 
     std::string inputname;
-    if (inputInfo->Has(Input::NameKey()))
-        inputname = Input::NameKey()->Get(inputInfo);
+    if (inputInfo->Has(DataObject::NameKey()))
+        inputname = DataObject::NameKey()->Get(inputInfo);
 
     stream
         << "input file: " << QString::fromStdString(inputname) << endl

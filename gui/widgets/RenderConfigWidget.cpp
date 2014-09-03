@@ -4,9 +4,8 @@
 #include <reflectionzeug/PropertyGroup.h>
 #include <propertyguizeug/PropertyBrowser.h>
 
-#include "core/Input.h"
-#include "core/data_objects/DataObject.h"
-#include "core/data_objects/RenderedData.h"
+#include <core/data_objects/DataObject.h>
+#include <core/data_objects/RenderedData.h>
 
 
 using namespace reflectionzeug;
@@ -77,5 +76,5 @@ void RenderConfigWidget::updateWindowTitle(RenderedData * renderedData)
         return;
     }
 
-    setWindowTitle(defaultTitle + ": " + QString::fromStdString(renderedData->dataObject()->input()->name));
+    setWindowTitle(defaultTitle + ": " + renderedData->dataObject()->name());
 }
