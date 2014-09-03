@@ -16,6 +16,7 @@
 #include <vtkVertexGlyphFilter.h>
 
 #include <vtkActor.h>
+#include <vtkProperty.h>
 
 #include <vtkDataSetMapper.h>
 
@@ -150,6 +151,17 @@ PropertyGroup * NormalRepresentation::createPropertyGroup()
     prop_tipLength->setMinimum(0.00001f);
     prop_tipLength->setMaximum(1.f);
     prop_tipLength->setStep(0.01f);
+
+    auto * edgeColor = group->addProperty<Color>("color",
+        [this]() {
+        double * color = m_actor->GetProperty()->GetColor();
+        return Color(static_cast<int>(color[0] * 255), static_cast<int>(color[1] * 255), static_cast<int>(color[2] * 255));
+    },
+        [this](const Color & color) {
+        m_actor->GetProperty()->SetColor(color.red() / 255.0, color.green() / 255.0, color.blue() / 255.0);
+        emit geometryChanged();
+    });
+    edgeColor->setTitle("color");
 
     return group;
 }
