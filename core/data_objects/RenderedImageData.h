@@ -1,7 +1,6 @@
 #pragma once
 
 #include <core/data_objects/RenderedData.h>
-#include <core/core_api.h>
 
 
 class vtkPolyDataMapper;

@@ -9,9 +9,9 @@
 
 #include <core/data_objects/DataObject.h>
 
-#include "widgets/TableView.h"
-#include "widgets/RenderView.h"
-#include "IPickingInteractorStyle.h"
+#include "data_view/TableView.h"
+#include "data_view/RenderView.h"
+#include "rendering_interaction/IPickingInteractorStyle.h"
 
 
 SelectionHandler & SelectionHandler::instance()

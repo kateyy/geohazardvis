@@ -4,24 +4,31 @@ message( STATUS ${TARGET} )
 
 set ( SOURCES
     ${TARGET}_api.h
-    
+
     DataMapping.h
     DataMapping.cpp
-    InteractorStyle3D.h
-    InteractorStyle3D.cpp
-    InteractorStyleImage.h
-    InteractorStyleImage.cpp
-    InteractorStyleSwitch.h
-    InteractorStyleSwitch.cpp
-    IPickingInteractorStyle.h
-    PickingInteractorStyleSwitch.h
-    PickingInteractorStyleSwitch.cpp
     MainWindow.h
     MainWindow.cpp
     SelectionHandler.h
     SelectionHandler.cpp
-    widgets/AbstractDataView.h
-    widgets/AbstractDataView.cpp
+
+    data_view/AbstractDataView.h
+    data_view/AbstractDataView.cpp
+    data_view/RenderView.h
+    data_view/RenderView.cpp
+    data_view/TableView.h
+    data_view/TableView.cpp
+
+    rendering_interaction/InteractorStyle3D.h
+    rendering_interaction/InteractorStyle3D.cpp
+    rendering_interaction/InteractorStyleImage.h
+    rendering_interaction/InteractorStyleImage.cpp
+    rendering_interaction/InteractorStyleSwitch.h
+    rendering_interaction/InteractorStyleSwitch.cpp
+    rendering_interaction/IPickingInteractorStyle.h
+    rendering_interaction/PickingInteractorStyleSwitch.h
+    rendering_interaction/PickingInteractorStyleSwitch.cpp
+
     widgets/DataBrowser.h
     widgets/DataBrowser.cpp
     widgets/DataBrowserTableModel.h
@@ -30,19 +37,17 @@ set ( SOURCES
     widgets/DataChooser.cpp
     widgets/RenderConfigWidget.h
     widgets/RenderConfigWidget.cpp
-    widgets/RenderView.h
-    widgets/RenderView.cpp
-    widgets/TableView.h
-    widgets/TableView.cpp
 )
 
 set ( UIs
     MainWindow.ui
+    
+    data_view/RenderView.ui
+    data_view/TableView.ui
+    
     widgets/DataBrowser.ui
     widgets/DataChooser.ui
     widgets/RenderConfigWidget.ui
-    widgets/RenderView.ui
-    widgets/TableView.ui
 )
 
 set ( QRCs
@@ -73,7 +78,7 @@ target_link_libraries( ${TARGET}
     ${LIBZEUG_REFLECTION_LIBRARY}
     ${LIBZEUG_PROPERTYGUI_LIBRARY}
     Qt5::Widgets
-    
+
     core
 )
 

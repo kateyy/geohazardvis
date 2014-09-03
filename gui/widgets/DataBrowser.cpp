@@ -9,7 +9,7 @@
 #include <core/data_objects/RenderedData.h>
 
 #include <gui/DataMapping.h>
-#include <gui/widgets/RenderView.h>
+#include <gui/data_view/RenderView.h>
 #include "DataBrowserTableModel.h"
 
 

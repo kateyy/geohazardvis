@@ -2,14 +2,13 @@
 
 #include <cassert>
 
-#include <QMessageBox>
 #include <QCoreApplication>
 
-#include "core/data_objects/DataObject.h"
+#include <core/data_objects/DataObject.h>
 
-#include "MainWindow.h"
-#include "widgets/TableView.h"
-#include "widgets/RenderView.h"
+#include <gui/MainWindow.h>
+#include "data_view/TableView.h"
+#include "data_view/RenderView.h"
 
 
 DataMapping::DataMapping(MainWindow & mainWindow)

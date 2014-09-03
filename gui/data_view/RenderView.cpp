@@ -23,10 +23,10 @@
 #include <core/data_objects/DataObject.h>
 #include <core/data_objects/RenderedData.h>
 
-#include "PickingInteractorStyleSwitch.h"
-#include "InteractorStyle3D.h"
-#include "InteractorStyleImage.h"
 #include "SelectionHandler.h"
+#include "rendering_interaction/PickingInteractorStyleSwitch.h"
+#include "rendering_interaction/InteractorStyle3D.h"
+#include "rendering_interaction/InteractorStyleImage.h"
 #include "widgets/DataChooser.h"
 #include "widgets/RenderConfigWidget.h"
 

@@ -2,7 +2,7 @@
 
 #include <vtkWeakPointer.h>
 
-#include "ScalarsForColorMapping.h"
+#include <core/data_mapping/ScalarsForColorMapping.h>
 
 
 class vtkElevationFilter;
@@ -10,7 +10,7 @@ class vtkElevationFilter;
 class PolyDataObject;
 
 
-class AbstractCoordinateValueMapping : public ScalarsForColorMapping
+class CORE_API AbstractCoordinateValueMapping : public ScalarsForColorMapping
 {
 public:
     AbstractCoordinateValueMapping(const QList<DataObject *> & dataObjects);
@@ -33,7 +33,7 @@ protected:
 };
 
 
-class CoordinateXValueMapping : public AbstractCoordinateValueMapping
+class CORE_API CoordinateXValueMapping : public AbstractCoordinateValueMapping
 {
 public:
     CoordinateXValueMapping(const QList<DataObject *> & dataObjects);
@@ -50,7 +50,7 @@ private:
 };
 
 
-class CoordinateYValueMapping : public AbstractCoordinateValueMapping
+class CORE_API CoordinateYValueMapping : public AbstractCoordinateValueMapping
 {
 public:
     CoordinateYValueMapping(const QList<DataObject *> & dataObjects);
@@ -67,7 +67,7 @@ private:
 };
 
 
-class CoordinateZValueMapping : public AbstractCoordinateValueMapping
+class CORE_API CoordinateZValueMapping : public AbstractCoordinateValueMapping
 {
 public:
     CoordinateZValueMapping(const QList<DataObject *> & dataObjects);

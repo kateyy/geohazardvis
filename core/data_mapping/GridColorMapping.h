@@ -1,12 +1,12 @@
 #pragma once
 
-#include "ScalarsForColorMapping.h"
+#include <core/data_mapping/ScalarsForColorMapping.h>
 
 
 class ImageDataObject;
 
 
-class GridColorMapping : public ScalarsForColorMapping
+class CORE_API GridColorMapping : public ScalarsForColorMapping
 {
 public:
     GridColorMapping(const QList<DataObject *> & dataObjects);

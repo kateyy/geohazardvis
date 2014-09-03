@@ -4,9 +4,9 @@
 
 #include <vtkElevationFilter.h>
 
+#include <core/data_mapping/ScalarsForColorMappingRegistry.h>
 #include <core/data_objects/PolyDataObject.h>
 
-#include "ScalarsForColorMappingRegistry.h"
 
 const QString CoordinateXValueMapping::s_name = "x values";
 const bool CoordinateXValueMapping::s_registered = ScalarsForColorMappingRegistry::instance().registerImplementation(

@@ -14,12 +14,10 @@
 
 #include "DataMapping.h"
 #include "SelectionHandler.h"
-#include "widgets/RenderView.h"
+#include "data_view/RenderView.h"
 #include "widgets/DataChooser.h"
 #include "widgets/RenderConfigWidget.h"
 
-
-using namespace std;
 
 MainWindow::MainWindow()
     : QMainWindow()
@@ -42,13 +40,6 @@ MainWindow::MainWindow()
 
     addDockWidget(Qt::DockWidgetArea::LeftDockWidgetArea, m_dataChooser);
     addDockWidget(Qt::DockWidgetArea::LeftDockWidgetArea, m_renderConfigWidget);
-
-
-
-
-
-
-
 }
 
 MainWindow::~MainWindow()
@@ -160,4 +151,3 @@ void MainWindow::tabbedDockWidgetToFront(QDockWidget * widget)
         }
     }
 }
-

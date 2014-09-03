@@ -9,7 +9,7 @@
 
 namespace
 {
-    QString s_dataTypeName = "regular 2D grid";
+    const QString s_dataTypeName = "regular 2D grid";
 }
 
 ImageDataObject::ImageDataObject(QString name, vtkImageData * dataSet)

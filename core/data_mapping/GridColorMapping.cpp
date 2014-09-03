@@ -1,7 +1,6 @@
 #include "GridColorMapping.h"
 
-#include "ScalarsForColorMappingRegistry.h"
-
+#include <core/data_mapping/ScalarsForColorMappingRegistry.h>
 #include <core/data_objects/ImageDataObject.h>
 
 

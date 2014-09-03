@@ -1,6 +1,6 @@
 #include "QVtkTableModel.h"
 
-#include <QDebug>
+#include <cassert>
 
 #include <vtkPolyData.h>
 #include <vtkCellArray.h>
@@ -102,7 +102,7 @@ void QVtkTableModel::showData(vtkDataSet * data)
         return showGridData(static_cast<vtkImageData*>(data));
     }
     
-    qDebug() << "Error: receiving unsupported data format in table model";
+    assert(false);
 }
 
 void QVtkTableModel::showPolyData(vtkPolyData * polyData)

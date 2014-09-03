@@ -1,9 +1,9 @@
 #pragma once
 
-#include "ScalarsForColorMapping.h"
+#include <core/data_mapping/ScalarsForColorMapping.h>
 
 
-class DefaultColorMapping : public ScalarsForColorMapping
+class CORE_API DefaultColorMapping : public ScalarsForColorMapping
 {
 public:
     DefaultColorMapping(const QList<DataObject *> & dataObjects);

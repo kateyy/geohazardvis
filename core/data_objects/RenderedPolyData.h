@@ -2,7 +2,6 @@
 
 #include <core/data_objects/RenderedData.h>
 #include <core/NormalRepresentation.h>
-#include <core/core_api.h>
 
 
 class QImage;

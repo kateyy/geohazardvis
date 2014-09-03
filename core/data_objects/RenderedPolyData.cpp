@@ -17,9 +17,8 @@
 
 #include <reflectionzeug/PropertyGroup.h>
 
-#include "PolyDataObject.h"
-
 #include <core/vtkhelper.h>
+#include <core/data_objects/PolyDataObject.h>
 #include <core/data_mapping/ScalarsForColorMapping.h>
 
 

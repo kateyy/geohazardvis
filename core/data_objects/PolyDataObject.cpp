@@ -9,7 +9,7 @@
 
 namespace
 {
-    QString s_dataTypeName = "polygonal mesh";
+    const QString s_dataTypeName = "polygonal mesh";
 }
 
 PolyDataObject::PolyDataObject(QString name, vtkPolyData * dataSet)

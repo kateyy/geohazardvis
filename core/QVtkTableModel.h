@@ -1,8 +1,8 @@
 #pragma once
 
-#include <vtkSmartPointer.h>
-
 #include <QAbstractTableModel>
+
+#include <vtkSmartPointer.h>
 
 #include <core/core_api.h>
 
@@ -11,7 +11,8 @@ class vtkPolyData;
 class vtkImageData;
 
 
-CORE_API enum class DisplayData {
+enum class DisplayData
+{
     Triangles,
     Grid
 };
