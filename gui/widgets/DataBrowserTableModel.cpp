@@ -147,6 +147,11 @@ DataObject * DataBrowserTableModel::dataObjectAt(const QModelIndex & index) cons
     return dataObjectAt(index.row());
 }
 
+int DataBrowserTableModel::numButtonColumns()
+{
+    return s_btnClms;
+}
+
 void DataBrowserTableModel::addDataObject(DataObject * dataObject)
 {
     beginInsertRows(QModelIndex(), m_dataObjects.size(), m_dataObjects.size());

@@ -31,6 +31,8 @@ public:
     DataObject * dataObjectAt(int row) const;
     DataObject * dataObjectAt(const QModelIndex & index) const;
 
+    static int numButtonColumns();
+
 private:
     QList<DataObject *> m_dataObjects;
     QMap<const DataObject *, bool> m_visibilities;

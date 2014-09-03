@@ -23,6 +23,9 @@ public:
 
     void addDataObject(DataObject * dataObject);
 
+protected:
+    bool eventFilter(QObject * obj, QEvent * ev) override;
+
 private slots:
     /** show and bring to front the table for selected objects */
     void showTable();

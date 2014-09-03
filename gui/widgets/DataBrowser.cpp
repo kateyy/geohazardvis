@@ -2,6 +2,8 @@
 #include "ui_DataBrowser.h"
 
 #include <QMessageBox>
+#include <QMouseEvent>
+#include <QDebug>
 
 #include <core/data_objects/DataObject.h>
 #include <core/data_objects/RenderedData.h>
@@ -19,10 +21,9 @@ DataBrowser::DataBrowser(QWidget* parent, Qt::WindowFlags f)
     m_ui->setupUi(this);
 
     m_tableModel->setParent(m_ui->dataTableView);
-    auto blub = m_ui->dataTableView->selectionModel();
     m_ui->dataTableView->setModel(m_tableModel);
 
-    connect(m_ui->dataTableView, &QAbstractItemView::clicked, this, &DataBrowser::evaluateItemViewClick);
+    m_ui->dataTableView->viewport()->installEventFilter(this);
 }
 
 DataBrowser::~DataBrowser()
@@ -48,6 +49,33 @@ void DataBrowser::addDataObject(DataObject * dataObject)
     m_tableModel->addDataObject(dataObject);
 
     m_ui->dataTableView->resizeColumnsToContents();
+}
+
+bool DataBrowser::eventFilter(QObject * obj, QEvent * ev)
+{
+    QModelIndex index;
+
+    switch (ev->type())
+    {
+    case QEvent::MouseButtonPress:
+        index = m_ui->dataTableView->indexAt(static_cast<QMouseEvent *>(ev)->pos());
+        break;
+    case QEvent::MouseButtonRelease:
+        index = m_ui->dataTableView->indexAt(static_cast<QMouseEvent *>(ev)->pos());
+        evaluateItemViewClick(index);
+        break;
+    default:
+        return false;
+    }
+
+    // for multi selections: don't discard the selection when clicking on the buttons
+    QItemSelection selection = m_ui->dataTableView->selectionModel()->selection();
+    if ((selection.size() > 1)
+        && selection.contains(index)
+        && (index.column() < m_tableModel->numButtonColumns()))
+        return true;
+
+    return false;
 }
 
 void DataBrowser::showTable()
