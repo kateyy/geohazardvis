@@ -11,6 +11,7 @@
 #include <vtkTriangle.h>
 #include <vtkPolyData.h>
 #include <vtkCellArray.h>
+#include <vtkCellData.h>
 #include <vtkImageData.h>
 
 #include "common/file_parser.h"
@@ -45,23 +46,50 @@ DataObject * Loader::readFile(QString filename)
 
 PolyDataObject * Loader::loadIndexedTriangles(QString name, const std::vector<ReadDataset> & datasets)
 {
-    // expect only vertex and index input data sets for now
-    assert(datasets.size() == 2);
+    assert(datasets.size() >= 2);
     
     const InputVector * indices = nullptr;
     const InputVector * vertices = nullptr;
+    const InputVector * centroid = nullptr;
 
     for (const ReadDataset & dataSet : datasets)
-        if (dataSet.type == DatasetType::vertices)
-            vertices = &dataSet.data;
-        else if (dataSet.type == DatasetType::indices)
-            indices = &dataSet.data;
+    {
+        switch (dataSet.type)
+        {
+        case DatasetType::vertices: vertices = &dataSet.data;
+            break;
+        case DatasetType::indices: indices = &dataSet.data;
+            break;
+        case DatasetType::centroid: centroid = &dataSet.data;
+        }
+    }
 
     assert(indices != nullptr && vertices != nullptr);
 
-    vtkSmartPointer<vtkPolyData> dataSet = vtkSmartPointer<vtkPolyData>::Take(parseIndexedTriangles(*vertices, 0, 1, *indices, 0));
+    vtkSmartPointer<vtkPolyData> polyData = vtkSmartPointer<vtkPolyData>::Take(parseIndexedTriangles(*vertices, 0, 1, *indices, 0));
 
-    return new PolyDataObject(name, dataSet);
+    if (centroid)
+    {
+        const vtkIdType numCells = polyData->GetNumberOfCells();
+        assert(centroid->size() == 3);
+        assert(size_t(numCells) == centroid->front().size());
+
+        vtkSmartPointer<vtkFloatArray> a = vtkSmartPointer<vtkFloatArray>::New();
+        a->SetName("centroid");
+        a->SetNumberOfComponents(3);
+        a->SetNumberOfTuples(numCells);
+
+        const std::vector<t_FP> & xs = centroid->at(0);
+        const std::vector<t_FP> & ys = centroid->at(1);
+        const std::vector<t_FP> & zs = centroid->at(2);
+
+        for (vtkIdType i = 0; i < numCells; ++i)
+            a->SetTuple3(i, xs.at(i), ys.at(i), zs.at(i));
+
+        polyData->GetCellData()->AddArray(a);
+    }
+
+    return new PolyDataObject(name, polyData);
 }
 
 ImageDataObject * Loader::loadGrid(QString name, const std::vector<ReadDataset> & datasets)

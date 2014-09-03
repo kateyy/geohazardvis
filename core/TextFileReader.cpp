@@ -13,13 +13,14 @@ using namespace std;
 
 namespace 
 {
-    const map<string, DatasetType> datasetNamesTypes = {
-        pair<string, DatasetType>("vertices", DatasetType::vertices),
-        pair<string, DatasetType>("indices", DatasetType::indices),
-        pair<string, DatasetType>("grid2d", DatasetType::grid2d)};
-    const map<string, ModelType> modelNamesType = {
-        pair<string, ModelType>("triangles", ModelType::triangles),
-        pair<string, ModelType>("grid2d", ModelType::grid2d)};
+const map<string, DatasetType> datasetNamesTypes = {
+        { "vertices", DatasetType::vertices },
+        { "indices", DatasetType::indices },
+        { "grid2d", DatasetType::grid2d },
+        { "centroid", DatasetType::centroid } };
+const map<string, ModelType> modelNamesType = {
+        { "triangles", ModelType::triangles },
+        { "grid2d", ModelType::grid2d } };
 }
 
 InputFileInfo::InputFileInfo(const std::string & name, ModelType type)
@@ -123,12 +124,18 @@ std::shared_ptr<InputFileInfo> TextFileReader::readHeader(ifstream & inputStream
             switch (input->type) {
             case ModelType::triangles: {
                 unsigned short tupleSize = 0;
-                if (currentDataType == DatasetType::indices)
+                switch (currentDataType)
+                {
+                case DatasetType::indices:
+                case DatasetType::centroid:
                     tupleSize = 3;
-                else if (currentDataType == DatasetType::vertices)
+                    break;
+                case DatasetType::vertices:
                     tupleSize = 4;
+                    break;
+                }
                 assert(tupleSize);
-                inputDefs.push_back({currentDataType, (unsigned long)stol(parameter), tupleSize});
+                inputDefs.push_back({ currentDataType, (unsigned long)stol(parameter), tupleSize });
                 break;
             }
             case ModelType::grid2d:

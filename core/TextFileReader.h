@@ -15,6 +15,7 @@ enum class DatasetType {
     unknown,
     vertices,   // index + vec3
     indices,    // indices referring to a vertex list
+    centroid,   // for each cell defined by the index list
     grid2d
 };
 

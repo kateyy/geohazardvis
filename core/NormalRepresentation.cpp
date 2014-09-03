@@ -3,12 +3,17 @@
 #include <algorithm>
 
 #include <vtkPolyData.h>
+
 #include <vtkPointData.h>
+#include <vtkCellData.h>
+#include <vtkPoints.h>
 
 #include <vtkArrowSource.h>
 
 #include <vtkGlyph3D.h>
 #include <vtkPolyDataNormals.h>
+
+#include <vtkVertexGlyphFilter.h>
 
 #include <vtkActor.h>
 
@@ -146,12 +151,13 @@ void NormalRepresentation::updateGlyphs()
     if (m_polyDataChanged && !m_polyData->GetPointData()->HasArray("Normals"))
     {
         VTK_CREATE(vtkPolyDataNormals, inputNormals);
-        inputNormals->ComputeCellNormalsOff();
+        inputNormals->ComputeCellNormalsOn();
         inputNormals->ComputePointNormalsOn();
         inputNormals->SetInputDataObject(m_polyData);
         inputNormals->Update();
 
         m_polyData->GetPointData()->SetNormals(inputNormals->GetOutput()->GetPointData()->GetNormals());
+        m_polyData->GetCellData()->SetNormals(inputNormals->GetOutput()->GetCellData()->GetNormals());
     }
 
     // create arrow geometry if needed
@@ -165,7 +171,29 @@ void NormalRepresentation::updateGlyphs()
         double * bounds = m_polyData->GetBounds();
         double maxBoundsSize = std::max(bounds[1] - bounds[0], std::max(bounds[3] - bounds[2], bounds[5] - bounds[4]));
         m_arrowGlyph->SetScaleFactor(maxBoundsSize * 0.1);
-        m_arrowGlyph->SetInputData(m_polyData);
+
+        vtkDataArray * centroid = m_polyData->GetCellData()->GetArray("centroid");
+        if (centroid)
+        {
+            VTK_CREATE(vtkPoints, points);
+            points->SetData(centroid);
+
+            VTK_CREATE(vtkPolyData, pointsPolyData);
+            pointsPolyData->SetPoints(points);
+
+            VTK_CREATE(vtkVertexGlyphFilter, filter);
+            filter->SetInputData(pointsPolyData);
+            filter->Update();
+            vtkPolyData * processedPoints = filter->GetOutput();
+
+            processedPoints->GetPointData()->SetNormals(m_polyData->GetCellData()->GetNormals());
+
+            m_arrowGlyph->SetInputData(processedPoints);
+        }
+        else  // fall back: no centroids, set vertex normals
+        {
+            m_arrowGlyph->SetInputData(m_polyData);
+        }
     }
 
     m_actor->SetMapper(m_mapper);
