@@ -12,8 +12,13 @@ public:
 
     int index() const;
 
+    void updateWindowTitle(QString message = {});
+
     virtual bool isTable() const = 0;
     virtual bool isRenderer() const = 0;
+
+    /** name the id and represented data */
+    virtual QString friendlyName() const = 0;
 
 signals:
     /** signaled when the widget receive the keyboard focus (focusInEvent) */

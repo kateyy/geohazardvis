@@ -87,6 +87,22 @@ bool RenderView::isRenderer() const
     return true;
 }
 
+QString RenderView::friendlyName() const
+{
+    QString name;
+    for (RenderedData * renderedData : m_renderedData)
+        name += ", " + renderedData->dataObject()->name();
+
+    if (name.isEmpty())
+        name = "(empty)";
+    else
+        name.remove(0, 2);
+
+    name = QString::number(index()) + ": " + name;
+
+    return name;
+}
+
 void RenderView::render()
 {
     m_renderer->GetRenderWindow()->Render();
@@ -137,7 +153,7 @@ void RenderView::ShowInfo(const QStringList & info)
 
 RenderedData * RenderView::addDataObject(DataObject * dataObject)
 {
-    setWindowTitle(QString::fromStdString(dataObject->input()->name) + " (loading to GPU)");
+    updateWindowTitle(dataObject->name() + " (loading to GPU)");
     QApplication::processEvents();
 
     assert(dataObject->dataTypeName() == m_currentDataType);
@@ -196,7 +212,7 @@ void RenderView::addDataObjects(QList<DataObject *> dataObjects)
     updateAxes();
 
     m_scalarMapping.setRenderedData(m_renderedData);
-    m_dataChooser.setMapping(windowTitle(), &m_scalarMapping);
+    m_dataChooser.setMapping(friendlyName(), &m_scalarMapping);
 
     updateWindowTitle();
 
@@ -261,7 +277,7 @@ void RenderView::removeDataObject(DataObject * dataObject)
     m_scalarMapping.setRenderedData(m_renderedData);
     if (m_renderConfigWidget.renderedData() == renderedData)
         m_renderConfigWidget.setRenderedData(nullptr);
-    m_dataChooser.setMapping(windowTitle(), &m_scalarMapping);
+    m_dataChooser.setMapping(friendlyName(), &m_scalarMapping);
 }
 
 void RenderView::removeDataObjects(QList<DataObject *> dataObjects)
@@ -459,23 +475,6 @@ void RenderView::updateInteractionType()
         setInteractorStyle("InteractorStyle3D");
 }
 
-void RenderView::updateWindowTitle()
-{
-    QString title;
-    for (const auto & renderedData : m_renderedData)
-    {
-        title += ", " + QString::fromStdString(renderedData->dataObject()->input()->name);
-    }
-    if (title.isEmpty())
-        title = "(empty)";
-    else
-        title.remove(0, 2);
-
-    title = QString::number(index()) + ": " + title;
-
-    setWindowTitle(title);
-}
-
 vtkRenderWindow * RenderView::renderWindow()
 {
     return m_ui->qvtkMain->GetRenderWindow();
@@ -500,12 +499,6 @@ void RenderView::updateGuiForActor(vtkActor * actor)
 {
     assert(actor);
 
-    vtkInformation * inputInfo = actor->GetMapper()->GetInformation();
-
-    QString propertyName;
-    if (inputInfo->Has(Input::NameKey()))
-        propertyName = Input::NameKey()->Get(inputInfo);
-
     m_renderConfigWidget.setRenderedData(m_actorToRenderedData[actor]);
-    m_dataChooser.setMapping(windowTitle(), &m_scalarMapping);
+    m_dataChooser.setMapping(friendlyName(), &m_scalarMapping);
 }

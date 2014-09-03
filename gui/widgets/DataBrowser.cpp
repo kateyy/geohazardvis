@@ -51,7 +51,7 @@ void DataBrowser::addDataObject(DataObject * dataObject)
     m_ui->dataTableView->resizeColumnsToContents();
 }
 
-bool DataBrowser::eventFilter(QObject * obj, QEvent * ev)
+bool DataBrowser::eventFilter(QObject * /*obj*/, QEvent * ev)
 {
     QModelIndex index;
 

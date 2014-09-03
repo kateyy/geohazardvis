@@ -39,6 +39,11 @@ bool TableView::isRenderer() const
     return false;
 }
 
+QString TableView::friendlyName() const
+{
+    return QString::number(index()) + ": " + m_dataObject->name();
+}
+
 void TableView::showDataObject(DataObject * dataObject)
 {
     if (m_dataObject == dataObject)
@@ -48,7 +53,7 @@ void TableView::showDataObject(DataObject * dataObject)
     m_dataObject = dataObject;
     setModel(m_dataObject->tableModel());
 
-    setWindowTitle("Table: " + m_dataObject->name());
+    updateWindowTitle();
 
     m_ui->tableView->resizeColumnsToContents();
 }

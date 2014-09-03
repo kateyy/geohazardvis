@@ -44,6 +44,8 @@ public:
     bool isTable() const override;
     bool isRenderer() const override;
 
+    QString friendlyName() const override;
+
     /** add data objects to the view or make already added objects visible again */
     void addDataObjects(QList<DataObject *> dataObjects);
     /** remove rendered representations of data objects, don't delete data and settings */
@@ -86,8 +88,6 @@ private:
     void clearInternalLists();
 
     // GUI / rendering tools
-
-    void updateWindowTitle();
     
     void updateVertexNormals(vtkPolyData * polyData);
     

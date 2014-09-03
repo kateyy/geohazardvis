@@ -24,6 +24,8 @@ public:
     bool isTable() const override;
     bool isRenderer() const override;
 
+    QString friendlyName() const override;
+
     QVtkTableModel * model();
     void setModel(QVtkTableModel * model);
 
