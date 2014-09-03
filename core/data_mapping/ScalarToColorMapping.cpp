@@ -43,6 +43,8 @@ void ScalarToColorMapping::setRenderedData(const QList<RenderedData *> & rendere
             this, &ScalarToColorMapping::updateGradientValueRange);
     }
 
+    assert(!m_scalars.isEmpty());   // we should we something applicable here
+
     QString newScalarsName;
     // reuse last configuration if possible
     if (m_scalars.contains(lastScalars))

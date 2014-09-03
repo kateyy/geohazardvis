@@ -36,8 +36,7 @@ void DataChooser::setMapping(QString rendererName, ScalarToColorMapping * mappin
 {
     updateWindowTitle(rendererName);
 
-    if (m_mapping != mapping)
-        rebuildGui(mapping);
+    rebuildGui(mapping);
 
     updateGuiValueRanges();
 

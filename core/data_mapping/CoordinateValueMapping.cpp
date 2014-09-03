@@ -37,7 +37,7 @@ AbstractCoordinateValueMapping::AbstractCoordinateValueMapping(const QList<DataO
     }
 
     // applicable for list of PolyDataObjects only
-    if (!m_dataObjects.length() == dataObjects.length())
+    if (m_dataObjects.length() != dataObjects.length())
         m_dataObjects.clear();
 }
 
