@@ -4,13 +4,13 @@
 #include <core/core_api.h>
 
 
-class PolyDataInput;
+class vtkPolyData;
 
 
 class CORE_API PolyDataObject : public DataObject
 {
 public:
-    PolyDataObject(std::shared_ptr<PolyDataInput> input);
+    PolyDataObject(QString name, vtkPolyData * dataSet);
 
     RenderedData * createRendered() override;
 

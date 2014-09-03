@@ -3,6 +3,8 @@
 #include <cmath>
 #include <limits>
 
+#include <QDebug>
+
 #include <vtkFloatArray.h>
 #include <vtkPoints.h>
 #include <vtkPointData.h>
@@ -11,38 +13,37 @@
 #include <vtkCellArray.h>
 #include <vtkImageData.h>
 
-#include "Input.h"
 #include "common/file_parser.h"
 #include "vtkhelper.h"
 #include "TextFileReader.h"
+#include <data_objects/PolyDataObject.h>
+#include <data_objects/ImageDataObject.h>
 
 
-using namespace std;
-
-shared_ptr<Input> Loader::readFile(const string & filename)
+DataObject * Loader::readFile(QString filename)
 {
-    vector<ReadDataset> readDatasets;
-    shared_ptr<Input> genericInput = TextFileReader::read(filename, readDatasets);
-    if (!genericInput) {
-        cerr << "Could not read the input file \"" << filename << "\"" << endl;
+    std::vector<ReadDataset> readDatasets;
+    std::shared_ptr<InputFileInfo> inputInfo = TextFileReader::read(filename.toStdString(), readDatasets);
+    if (!inputInfo)
+    {
+        qDebug() << "Could not read the input file \"" << filename << "\"";
         return nullptr;
     }
 
-    switch (genericInput->type) {
+    QString dataSetName = QString::fromStdString(inputInfo->name);
+    switch (inputInfo->type)
+    {
     case ModelType::triangles:
-        loadIndexedTriangles(*static_cast<PolyDataInput*>(genericInput.get()), readDatasets);
-        break;
+        return loadIndexedTriangles(dataSetName, readDatasets);
     case ModelType::grid2d:
-        loadGrid(*static_cast<GridDataInput*>(genericInput.get()), readDatasets);
-        break;
+        return loadGrid(dataSetName, readDatasets);
     default:
-        cerr << "Warning: model type unsupported by the loader: " << int(genericInput->type) << endl;
+        cerr << "Warning: model type unsupported by the loader: " << int(inputInfo->type) << endl;
         return nullptr;
     }
-    return genericInput;
 }
 
-void Loader::loadIndexedTriangles(PolyDataInput & input, const vector<ReadDataset> & datasets)
+PolyDataObject * Loader::loadIndexedTriangles(QString name, const std::vector<ReadDataset> & datasets)
 {
     // expect only vertex and index input data sets for now
     assert(datasets.size() == 2);
@@ -58,12 +59,12 @@ void Loader::loadIndexedTriangles(PolyDataInput & input, const vector<ReadDatase
 
     assert(indices != nullptr && vertices != nullptr);
 
-    vtkSmartPointer<vtkPolyData> data = parseIndexedTriangles(*vertices, 0, 1, *indices, 0);
+    vtkSmartPointer<vtkPolyData> dataSet = vtkSmartPointer<vtkPolyData>::Take(parseIndexedTriangles(*vertices, 0, 1, *indices, 0));
 
-    input.setPolyData(data);
+    return new PolyDataObject(name, dataSet);
 }
 
-void Loader::loadGrid(GridDataInput & input, const vector<ReadDataset> & datasets)
+ImageDataObject * Loader::loadGrid(QString name, const std::vector<ReadDataset> & datasets)
 {
     assert(datasets.size() == 1);
     assert(datasets.begin()->type == DatasetType::grid2d);
@@ -90,10 +91,10 @@ void Loader::loadGrid(GridDataInput & input, const vector<ReadDataset> & dataset
 
     grid->GetPointData()->SetScalars(dataArray);
 
-    input.setData(grid);
+    return new ImageDataObject(name, grid);
 }
 
-vtkSmartPointer<vtkPolyData> Loader::parsePoints(const InputVector & parsedData, t_UInt firstColumn)
+vtkPolyData * Loader::parsePoints(const InputVector & parsedData, t_UInt firstColumn)
 {
     assert(parsedData.size() > firstColumn);
 
@@ -111,14 +112,14 @@ vtkSmartPointer<vtkPolyData> Loader::parsePoints(const InputVector & parsedData,
     VTK_CREATE(vtkCellArray, vertices);
     vertices->InsertNextCell(nbRows, pointIds.data());
 
-    VTK_CREATE(vtkPolyData, resultPolyData);
+    vtkPolyData * resultPolyData = vtkPolyData::New();
     resultPolyData->SetPoints(points);
     resultPolyData->SetVerts(vertices);
 
     return resultPolyData;
 }
 
-vtkSmartPointer<vtkPolyData> Loader::parseIndexedTriangles(
+vtkPolyData * Loader::parseIndexedTriangles(
     const InputVector & parsedVertexData, t_UInt vertexIndexColumn, t_UInt firstVertexColumn,
     const InputVector & parsedIndexData, t_UInt firstIndexColumn)
 {
@@ -148,7 +149,7 @@ vtkSmartPointer<vtkPolyData> Loader::parseIndexedTriangles(
         triangles->InsertNextCell(triangle);    // this copies the triangle data into the list
     }
 
-    VTK_CREATE(vtkPolyData, resultPolyData);
+    vtkPolyData * resultPolyData = vtkPolyData::New();
     resultPolyData->SetPoints(points);
     resultPolyData->SetPolys(triangles);
 

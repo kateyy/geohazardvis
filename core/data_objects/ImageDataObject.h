@@ -4,14 +4,13 @@
 #include <core/core_api.h>
 
 
-class GridDataInput;
 class vtkImageData;
 
 
 class CORE_API ImageDataObject : public DataObject
 {
 public:
-    ImageDataObject(std::shared_ptr<GridDataInput> input);
+    ImageDataObject(QString name, vtkImageData * dataSet);
 
     RenderedData * createRendered() override;
 

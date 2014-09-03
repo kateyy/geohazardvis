@@ -8,7 +8,7 @@
 #include "common/ebem3d_common.h"
 
 
-class Input;
+class vtkDataSet;
 
 
 enum class DatasetType {
@@ -16,6 +16,22 @@ enum class DatasetType {
     vertices,   // index + vec3
     indices,    // indices referring to a vertex list
     grid2d
+};
+
+enum class ModelType
+{
+    triangles,
+    grid2d
+};
+
+struct InputFileInfo
+{
+    InputFileInfo(const std::string & name, const ModelType type);
+
+    const std::string name;
+    const ModelType type;
+
+    double bounds[6];
 };
 
 struct ReadDataset {
@@ -26,7 +42,7 @@ struct ReadDataset {
 class TextFileReader
 {
 public:
-    static std::shared_ptr<Input> read(const std::string & filename, std::vector<ReadDataset> & readDatasets);
+    static std::shared_ptr<InputFileInfo> read(const std::string & filename, std::vector<ReadDataset> & readDatasets);
 
 protected:
     struct DatasetDef {
@@ -36,6 +52,6 @@ protected:
     };
 
     /// read the file header and leave the input stream at a position directly behind the header end
-    /// @return a shared pointer to an Input object, if the file contains a valid header
-    static std::shared_ptr<Input> readHeader(std::ifstream & inputStream, std::vector<DatasetDef>& inputDefs);
+    /// @return a shared pointer to an InputFileInfo object, if the file contains a valid header
+    static std::shared_ptr<InputFileInfo> readHeader(std::ifstream & inputStream, std::vector<DatasetDef>& inputDefs);
 };

@@ -7,12 +7,12 @@
 #include <map>
 
 #include "common/file_parser.h"
-#include "Input.h"
 
 
 using namespace std;
 
-namespace {
+namespace 
+{
     const map<string, DatasetType> datasetNamesTypes = {
         pair<string, DatasetType>("vertices", DatasetType::vertices),
         pair<string, DatasetType>("indices", DatasetType::indices),
@@ -22,13 +22,19 @@ namespace {
         pair<string, ModelType>("grid2d", ModelType::grid2d)};
 }
 
-shared_ptr<Input> TextFileReader::read(const string & filename, vector<ReadDataset> & readDataSets)
+InputFileInfo::InputFileInfo(const std::string & name, ModelType type)
+    : name(name)
+    , type(type)
+{
+}
+
+shared_ptr<InputFileInfo> TextFileReader::read(const string & filename, vector<ReadDataset> & readDataSets)
 {
     ifstream inputStream(filename);
     assert(inputStream.good());
 
     vector<DatasetDef> datasetDefs;
-    shared_ptr<Input> input = readHeader(inputStream, datasetDefs);
+    shared_ptr<InputFileInfo> input = readHeader(inputStream, datasetDefs);
 
     if (!input) {
         cerr << "could not read input text file: \"" << filename << "\"" << endl;
@@ -52,13 +58,13 @@ shared_ptr<Input> TextFileReader::read(const string & filename, vector<ReadDatas
     return input;
 }
 
-std::shared_ptr<Input> TextFileReader::readHeader(ifstream & inputStream, vector<DatasetDef> & inputDefs)
+std::shared_ptr<InputFileInfo> TextFileReader::readHeader(ifstream & inputStream, vector<DatasetDef> & inputDefs)
 {
     assert(inputStream.good());
 
     bool validFile = false;
     bool started = false;
-    shared_ptr<Input> input;
+    shared_ptr<InputFileInfo> input;
 
     string line;
 
@@ -100,7 +106,7 @@ std::shared_ptr<Input> TextFileReader::readHeader(ifstream & inputStream, vector
             getline(linestream, name);
 
             assert(modelNamesType.find(type) != modelNamesType.end());
-            input = Input::createType(modelNamesType.at(type), name);
+            input.reset(new InputFileInfo(name, modelNamesType.at(type)));
 
             continue;
         }
@@ -155,16 +161,14 @@ std::shared_ptr<Input> TextFileReader::readHeader(ifstream & inputStream, vector
                 getline(linestream, s_values.at(1));    // range max value
 
                 assert(input);
-                shared_ptr<GridDataInput> gridInput = dynamic_pointer_cast<GridDataInput>(input);
-                assert(gridInput);
 
                 if (paramName == "xRange") {
-                    gridInput->bounds()[0] = stod(s_values.at(0));
-                    gridInput->bounds()[1] = stod(s_values.at(1));
+                    input->bounds[0] = stod(s_values.at(0));
+                    input->bounds[1] = stod(s_values.at(1));
                 }
                 else if (paramName == "yRange") {
-                    gridInput->bounds()[2] = stod(s_values.at(0));
-                    gridInput->bounds()[3] = stod(s_values.at(1));
+                    input->bounds[2] = stod(s_values.at(0));
+                    input->bounds[3] = stod(s_values.at(1));
                 }
                 else {
                     cerr << "Invalid parameter in input file: \"" << paramName << "\"" << endl;

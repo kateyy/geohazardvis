@@ -16,28 +16,28 @@
 using namespace std;
 
 bool populateIOVectors(const string inputFileName,
-						vector<vector<t_FP> > &ioVectors) {
+                        vector<vector<t_FP> > &ioVectors) {
     assert(ioVectors.empty());
 
-	vector<t_FP> parsedData;
+    vector<t_FP> parsedData;
 
     t_UInt nbColumns;
 
-	if(!parseIOFile(inputFileName, parsedData, nbColumns)) {
-		return false;
-	}
+    if(!parseIOFile(inputFileName, parsedData, nbColumns)) {
+        return false;
+    }
 
     ioVectors.resize(nbColumns);
 
-	populateVectorsFromData(parsedData, ioVectors);
+    populateVectorsFromData(parsedData, ioVectors);
 
-	return true;
+    return true;
 }
 
 bool populateIOVectors(ifstream & inputStream,
     vector<vector<t_FP> > &ioVectors,
     unsigned long numTuples,
-    unsigned short componentsPerTuple) {
+    unsigned long componentsPerTuple) {
     assert(ioVectors.empty());
 
     vector<t_FP> parsedData;
@@ -87,7 +87,7 @@ bool parseIOStream(ifstream & inputStream, vector<t_FP> &parsedData, unsigned lo
 }
 
 bool parseIOFile(const string inputFileName, vector<t_FP> &parsedData, t_UInt & nbColumns) {
-	string input;
+    string input;
     t_FP input_FP;
 
     assert(parsedData.empty());
@@ -107,38 +107,38 @@ bool parseIOFile(const string inputFileName, vector<t_FP> &parsedData, t_UInt & 
         }
     }
 
-	ifstream stream;
-	stream.open(inputFileName.c_str(), ios::in);
+    ifstream stream;
+    stream.open(inputFileName.c_str(), ios::in);
 
-	if(stream.fail()) {
-		cout << endl << "\t" << "parseIOFile --- failed!" << endl;
-		return false;
-	}
+    if(stream.fail()) {
+        cout << endl << "\t" << "parseIOFile --- failed!" << endl;
+        return false;
+    }
 
-	while(stream >> input) {
-		if(input == "NaN") {
-			input_FP = std::numeric_limits<double>::quiet_NaN();
-		}
-		else {
-			input_FP = atof(input.c_str());
-		}
+    while(stream >> input) {
+        if(input == "NaN") {
+            input_FP = std::numeric_limits<double>::quiet_NaN();
+        }
+        else {
+            input_FP = atof(input.c_str());
+        }
 
-		parsedData.push_back(input_FP);
-	}
-	stream.close();
+        parsedData.push_back(input_FP);
+    }
+    stream.close();
 
-	return true;
+    return true;
 }
 
 void populateVectorsFromData(const vector<t_FP> &parsedData,
-							 vector<vector<t_FP> > &ioVectors) {
-	size_t i, j, numOfVectors;
-	numOfVectors = ioVectors.size();
+                             vector<vector<t_FP> > &ioVectors) {
+    size_t i, j, numOfVectors;
+    numOfVectors = ioVectors.size();
     assert(numOfVectors > 0);
 
-	for(i = 0; i < parsedData.size(); i+=numOfVectors) {
-		for(j = 0; j < numOfVectors; j++) {
-			ioVectors[j].push_back(parsedData[i+j]);
-		}
-	}
+    for(i = 0; i < parsedData.size(); i+=numOfVectors) {
+        for(j = 0; j < numOfVectors; j++) {
+            ioVectors[j].push_back(parsedData[i+j]);
+        }
+    }
 }

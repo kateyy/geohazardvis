@@ -19,7 +19,6 @@
 
 #include "PolyDataObject.h"
 
-#include <core/Input.h>
 #include <core/vtkhelper.h>
 #include <core/data_mapping/ScalarsForColorMapping.h>
 

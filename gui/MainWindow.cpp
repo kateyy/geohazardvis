@@ -9,14 +9,8 @@
 #include <QMimeData>
 #include <QDebug>
 
-#include <vtkPolyData.h>
-
 #include <core/vtkhelper.h>
 #include <core/Loader.h>
-#include <core/Input.h>
-#include <core/QVtkTableModel.h>
-#include <core/data_objects/PolyDataObject.h>
-#include <core/data_objects/ImageDataObject.h>
 
 #include "DataMapping.h"
 #include "SelectionHandler.h"
@@ -109,23 +103,12 @@ void MainWindow::openFile(QString fileName)
     setWindowTitle(fileName + " (loading file)");
     QApplication::processEvents();
 
-    shared_ptr<Input> input = Loader::readFile(fileName.toStdString());
-    if (!input) {
+    DataObject * dataObject = Loader::readFile(fileName);
+    if (!dataObject)
+    {
         QMessageBox::critical(this, "File error", "Could not open the selected input file (unsupported format).");
         setWindowTitle(oldName);
         return;
-    }
-
-    DataObject * dataObject = nullptr;
-
-    switch (input->type)
-    {
-    case ModelType::triangles:
-        dataObject = new PolyDataObject(std::dynamic_pointer_cast<PolyDataInput>(input));
-        break;
-    case ModelType::grid2d:
-        dataObject = new ImageDataObject(std::dynamic_pointer_cast<GridDataInput>(input));
-        break;
     }
 
     m_dataBrowser->addDataObject(dataObject);

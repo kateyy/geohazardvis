@@ -4,7 +4,6 @@
 
 #include <vtkImageData.h>
 
-#include "core/Input.h"
 #include <core/data_objects/RenderedImageData.h>
 
 
@@ -13,10 +12,9 @@ namespace
     QString s_dataTypeName = "regular 2D grid";
 }
 
-ImageDataObject::ImageDataObject(std::shared_ptr<GridDataInput> input)
-    : DataObject(input)
+ImageDataObject::ImageDataObject(QString name, vtkImageData * dataSet)
+    : DataObject(name, dataSet)
 {
-    assert(vtkImageData::SafeDownCast(dataSet()));
 }
 
 RenderedData * ImageDataObject::createRendered()

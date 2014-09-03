@@ -2,7 +2,8 @@
 
 #include <cassert>
 
-#include "core/Input.h"
+#include <vtkPolyData.h>
+
 #include <core/data_objects/RenderedPolyData.h>
 
 
@@ -11,8 +12,8 @@ namespace
     QString s_dataTypeName = "polygonal mesh";
 }
 
-PolyDataObject::PolyDataObject(std::shared_ptr<PolyDataInput> input)
-    : DataObject(input)
+PolyDataObject::PolyDataObject(QString name, vtkPolyData * dataSet)
+    : DataObject(name, dataSet)
 {
 }
 

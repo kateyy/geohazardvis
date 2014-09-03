@@ -7,8 +7,6 @@ set ( SOURCES
     
     Loader.h
     Loader.cpp
-    Input.h
-    Input.cpp
     TextFileReader.h
     TextFileReader.cpp
     vtkhelper.h

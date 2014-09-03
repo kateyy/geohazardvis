@@ -1,7 +1,5 @@
 #pragma once
 
-#include <memory>
-
 #include <QString>
 
 #include <vtkSmartPointer.h>
@@ -10,7 +8,6 @@
 
 
 class vtkInformationStringKey;
-class Input;
 class vtkDataSet;
 class QVtkTableModel;
 class RenderedData;
@@ -20,7 +17,7 @@ class RenderedData;
 class CORE_API DataObject
 {
 public:
-    DataObject(std::shared_ptr<Input> input);
+    DataObject(QString name, vtkDataSet * dataSet);
     virtual ~DataObject() = 0;
 
     /** create a rendered instance */
@@ -39,7 +36,8 @@ public:
     static vtkInformationStringKey * NameKey();
 
 private:
+    QString m_name;
+
     vtkSmartPointer<vtkDataSet> m_dataSet;
-    std::shared_ptr<Input> m_input;
     QVtkTableModel * m_tableModel;
 };

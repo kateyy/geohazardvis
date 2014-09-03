@@ -1,14 +1,11 @@
 #pragma once
 
 #include <QMainWindow>
-#include <QList>
 #include <QStringList>
 
 #include <gui/gui_api.h>
 
 
-class Input;
-class DataObject;
 class DataMapping;
 class RenderView;
 class RenderConfigWidget;
