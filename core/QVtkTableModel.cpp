@@ -57,20 +57,20 @@ QVariant QVtkTableModel::data(const QModelIndex &index, int role) const
         assert(tri);
 
         if (index.column() == 0) {  // list indices
-            return QVariant(
+            return
                 QString::number(tri->GetPointId(0)) + ":" +
                 QString::number(tri->GetPointId(1)) + ":" +
-                QString::number(tri->GetPointId(2)));
+                QString::number(tri->GetPointId(2));
         }
 
         // list on of the triangle points for now
-        return QVariant(tri->GetPoints()->GetPoint(0)[index.column() - 1]);
+        return tri->GetPoints()->GetPoint(0)[index.column() - 1];
     }
     if (m_displayData == DisplayData::Grid) {
         if (m_vtkImageData == nullptr)
             return QVariant();
         vtkFloatArray * values = vtkFloatArray::SafeDownCast(m_vtkImageData->GetPointData()->GetScalars());
-        return QVariant(*values->GetTuple(index.row()));
+        return *values->GetTuple(index.row());
     }
     return QVariant();
 }
@@ -80,14 +80,14 @@ QVariant QVtkTableModel::headerData(int section, Qt::Orientation orientation, in
     if (role != Qt::DisplayRole)
         return QVariant();
     if (orientation == Qt::Orientation::Vertical)
-        return QVariant(section);
+        return section;
     if (section == 0)
-        return QVariant("indices");
+        return "indices";
     if (m_displayData == DisplayData::Triangles) {
-        return QVariant(QString(QChar('x' + section - 1)));
+        return QChar('x' + section - 1);
     }
     if (m_displayData == DisplayData::Grid) {
-        return QVariant("value");
+        return "value";
     }
     return QVariant();
 }

@@ -57,15 +57,15 @@ QVariant DataBrowserTableModel::data(const QModelIndex &index, int role /*= Qt::
         switch (index.column())
         {
         case 0:
-            return QVariant(m_icons["table"]);
+            return m_icons["table"];
         case 1:
             if (!m_rendererFocused)
-                return QVariant(m_icons["noRenderer"]);
+                return m_icons["noRenderer"];
             if (m_visibilities[dataObjectAt(index)])
-                return QVariant(m_icons["rendered"]);
-            return QVariant(m_icons["notRendered"]);
+                return m_icons["rendered"];
+            return m_icons["notRendered"];
         case 2:
-            return QVariant(m_icons["delete_red"]);
+            return m_icons["delete_red"];
         }
     }
 
@@ -79,25 +79,25 @@ QVariant DataBrowserTableModel::data(const QModelIndex &index, int role /*= Qt::
     switch (index.column())
     {
     case s_btnClms:
-        return QVariant(dataObject->name());
+        return dataObject->name();
     case s_btnClms + 1:
-        return QVariant(dataObject->dataTypeName());
+        return dataObject->dataTypeName();
     case s_btnClms + 2:
         if (dataObject->dataTypeName() == "polygonal mesh")
-            return QVariant(
-                QString::number(dataObject->dataSet()->GetNumberOfCells()) + " triangles; " +
-                QString::number(dataObject->dataSet()->GetNumberOfPoints()) + " vertices");
+            return
+            QString::number(dataObject->dataSet()->GetNumberOfCells()) + " triangles; " +
+            QString::number(dataObject->dataSet()->GetNumberOfPoints()) + " vertices";
         if (dataObject->dataTypeName() == "regular 2D grid")
         {
             ImageDataObject * imageData = static_cast<ImageDataObject*>(dataObject);
-            return QVariant(QString::number(imageData->dimensions()[0]) + "x" + QString::number(imageData->dimensions()[1]) + " values");
+            return QString::number(imageData->dimensions()[0]) + "x" + QString::number(imageData->dimensions()[1]) + " values";
         }
     case s_btnClms + 3:
         if (dataObject->dataTypeName() == "polygonal mesh")
-            return QVariant(
+            return
             "x: " + QString::number(dataObject->bounds()[0]) + "; " + QString::number(dataObject->bounds()[1]) +
             ", y: " + QString::number(dataObject->bounds()[2]) + "; " + QString::number(dataObject->bounds()[3]) +
-            ", z: " + QString::number(dataObject->bounds()[4]) + "; " + QString::number(dataObject->bounds()[5]));
+            ", z: " + QString::number(dataObject->bounds()[4]) + "; " + QString::number(dataObject->bounds()[5]);
         if (dataObject->dataTypeName() == "regular 2D grid")
         {
             const double * minMax = static_cast<ImageDataObject*>(dataObject)->minMaxValue();
@@ -119,10 +119,10 @@ QVariant DataBrowserTableModel::headerData(int section, Qt::Orientation orientat
 
     switch (section)
     {
-    case s_btnClms + 0: return QVariant("name");
-    case s_btnClms + 1: return QVariant("data set type");
-    case s_btnClms + 2: return QVariant("dimensions");
-    case s_btnClms + 3: return QVariant("value range");
+    case s_btnClms + 0: return "name";
+    case s_btnClms + 1: return "data set type";
+    case s_btnClms + 2: return "dimensions";
+    case s_btnClms + 3: return "value range";
     }        
 
     return QVariant();
