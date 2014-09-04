@@ -7,7 +7,7 @@
 
 #include "AbstractDataView.h"
 
-#include <core/data_mapping/ScalarToColorMapping.h>
+#include <core/scalar_mapping/ScalarToColorMapping.h>
 
 
 class vtkRenderer;

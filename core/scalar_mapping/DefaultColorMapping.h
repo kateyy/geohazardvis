@@ -1,6 +1,6 @@
 #pragma once
 
-#include <core/data_mapping/ScalarsForColorMapping.h>
+#include <core/scalar_mapping/ScalarsForColorMapping.h>
 
 
 class CORE_API DefaultColorMapping : public ScalarsForColorMapping

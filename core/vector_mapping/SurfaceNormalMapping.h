@@ -24,12 +24,12 @@ enum class NormalType
     PointNormal
 };
 
-class CORE_API NormalRepresentation : public QObject
+class CORE_API SurfaceNormalMapping : public QObject
 {
     Q_OBJECT
 
 public:
-    NormalRepresentation();
+    SurfaceNormalMapping();
 
     void setData(vtkPolyData * geometry);
 

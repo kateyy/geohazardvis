@@ -9,8 +9,8 @@
 
 #include <vtkLookupTable.h>
 
-#include <core/data_mapping/ScalarsForColorMapping.h>
-#include <core/data_mapping/ScalarToColorMapping.h>
+#include <core/scalar_mapping/ScalarsForColorMapping.h>
+#include <core/scalar_mapping/ScalarToColorMapping.h>
 
 
 DataChooser::DataChooser(QWidget * parent)

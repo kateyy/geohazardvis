@@ -2,7 +2,7 @@
 
 #include <vtkWeakPointer.h>
 
-#include <core/data_mapping/ScalarsForColorMapping.h>
+#include <core/scalar_mapping/ScalarsForColorMapping.h>
 
 
 class vtkElevationFilter;

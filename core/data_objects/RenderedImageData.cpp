@@ -18,7 +18,7 @@
 
 #include <core/data_objects/ImageDataObject.h>
 #include <core/vtkhelper.h>
-#include <core/data_mapping/ScalarsForColorMapping.h>
+#include <core/scalar_mapping/ScalarsForColorMapping.h>
 
 
 using namespace reflectionzeug;

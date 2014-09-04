@@ -1,6 +1,6 @@
 #include "DefaultColorMapping.h"
 
-#include <core/data_mapping/ScalarsForColorMappingRegistry.h>
+#include <core/scalar_mapping/ScalarsForColorMappingRegistry.h>
 #include <core/data_objects/PolyDataObject.h>
 
 

@@ -19,7 +19,7 @@
 
 #include <core/vtkhelper.h>
 #include <core/data_objects/PolyDataObject.h>
-#include <core/data_mapping/ScalarsForColorMapping.h>
+#include <core/scalar_mapping/ScalarsForColorMapping.h>
 
 
 using namespace reflectionzeug;
@@ -43,7 +43,7 @@ RenderedPolyData::RenderedPolyData(PolyDataObject * dataObject)
     vtkPolyData * polyData = vtkPolyData::SafeDownCast(dataObject->dataSet());
     m_normalRepresentation.setData(polyData);
     m_normalRepresentation.setVisible(false);
-    connect(&m_normalRepresentation, &NormalRepresentation::geometryChanged, this, &RenderedPolyData::geometryChanged);
+    connect(&m_normalRepresentation, &SurfaceNormalMapping::geometryChanged, this, &RenderedPolyData::geometryChanged);
 }
 
 RenderedPolyData::~RenderedPolyData() = default;

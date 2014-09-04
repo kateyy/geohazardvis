@@ -1,7 +1,7 @@
 #pragma once
 
 #include <core/data_objects/RenderedData.h>
-#include <core/NormalRepresentation.h>
+#include <core/vector_mapping/SurfaceNormalMapping.h>
 
 
 class QImage;
@@ -34,5 +34,5 @@ protected:
 private:
     vtkPolyDataMapper * createDataMapper();
 
-    NormalRepresentation m_normalRepresentation;
+    SurfaceNormalMapping m_normalRepresentation;
 };

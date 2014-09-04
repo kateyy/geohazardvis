@@ -14,8 +14,6 @@ set ( SOURCES
     common/file_parser.h
     common/file_parser.cpp
     
-    NormalRepresentation.h
-    NormalRepresentation.cpp
     QVtkTableModel.h
     QVtkTableModel.cpp
     
@@ -32,19 +30,21 @@ set ( SOURCES
     data_objects/RenderedPolyData.h
     data_objects/RenderedPolyData.cpp
     
-    data_mapping/ScalarToColorMapping.h
-    data_mapping/ScalarToColorMapping.cpp
-    data_mapping/ScalarsForColorMapping.h
-    data_mapping/ScalarsForColorMapping.hpp
-    data_mapping/ScalarsForColorMapping.cpp
-    data_mapping/ScalarsForColorMappingRegistry.h
-    data_mapping/ScalarsForColorMappingRegistry.cpp
-    data_mapping/DefaultColorMapping.h
-    data_mapping/DefaultColorMapping.cpp
-    data_mapping/CoordinateValueMapping.h
-    data_mapping/CoordinateValueMapping.cpp
-    data_mapping/GridColorMapping.h
-    data_mapping/GridColorMapping.cpp
+    scalar_mapping/ScalarToColorMapping.h
+    scalar_mapping/ScalarToColorMapping.cpp
+    scalar_mapping/ScalarsForColorMapping.h
+    scalar_mapping/ScalarsForColorMapping.hpp
+    scalar_mapping/ScalarsForColorMapping.cpp
+    scalar_mapping/ScalarsForColorMappingRegistry.h
+    scalar_mapping/ScalarsForColorMappingRegistry.cpp
+    scalar_mapping/DefaultColorMapping.h
+    scalar_mapping/DefaultColorMapping.cpp
+    scalar_mapping/CoordinateValueMapping.h
+    scalar_mapping/CoordinateValueMapping.cpp
+    scalar_mapping/GridColorMapping.h
+    scalar_mapping/GridColorMapping.cpp
+    vector_mapping/SurfaceNormalMapping.h
+    vector_mapping/SurfaceNormalMapping.cpp    
 )
 
 source_group_by_path(${CMAKE_CURRENT_SOURCE_DIR} "\\\\.cpp$|\\\\.c$|\\\\.h$|\\\\.hpp$|\\\\.ui$|\\\\.inl$"

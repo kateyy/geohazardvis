@@ -1,4 +1,4 @@
-#include "NormalRepresentation.h"
+#include "SurfaceNormalMapping.h"
 
 #include <algorithm>
 
@@ -28,7 +28,7 @@
 
 using namespace reflectionzeug;
 
-NormalRepresentation::NormalRepresentation()
+SurfaceNormalMapping::SurfaceNormalMapping()
 : m_visible(true)
 , m_showDispVecs(true)
 , m_normalType(NormalType::CellNormal)
@@ -51,7 +51,7 @@ NormalRepresentation::NormalRepresentation()
     m_arrowGlyph->SetSourceConnection(m_arrowSource->GetOutputPort());
 }
 
-void NormalRepresentation::setData(vtkPolyData * polyData)
+void SurfaceNormalMapping::setData(vtkPolyData * polyData)
 {
     if (m_polyData == polyData)
         return;
@@ -62,7 +62,7 @@ void NormalRepresentation::setData(vtkPolyData * polyData)
     updateGlyphs();
 }
 
-void NormalRepresentation::setVisible(bool visible)
+void SurfaceNormalMapping::setVisible(bool visible)
 {
     if (m_visible == visible)
         return;
@@ -72,29 +72,29 @@ void NormalRepresentation::setVisible(bool visible)
     updateGlyphs();
 }
 
-bool NormalRepresentation::visible() const
+bool SurfaceNormalMapping::visible() const
 {
     return m_visible;
 }
 
-float NormalRepresentation::arrowLength() const
+float SurfaceNormalMapping::arrowLength() const
 {
     return static_cast<float>(m_arrowGlyph->GetScaleFactor());
 }
 
-void NormalRepresentation::setArrowLength(float length)
+void SurfaceNormalMapping::setArrowLength(float length)
 {
     m_arrowGlyph->SetScaleFactor(length);
 
     emit geometryChanged();
 }
 
-float NormalRepresentation::arrowRadius() const
+float SurfaceNormalMapping::arrowRadius() const
 {
     return (float)m_arrowSource->GetTipRadius();
 }
 
-void NormalRepresentation::setArrowRadius(float radius)
+void SurfaceNormalMapping::setArrowRadius(float radius)
 {
     m_arrowSource->SetTipRadius(radius);
     m_arrowSource->SetShaftRadius(radius * 0.1f);
@@ -102,24 +102,24 @@ void NormalRepresentation::setArrowRadius(float radius)
     emit geometryChanged();
 }
 
-float NormalRepresentation::arrowTipLength() const
+float SurfaceNormalMapping::arrowTipLength() const
 {
     return (float)m_arrowSource->GetTipLength();
 }
 
-void NormalRepresentation::setArrowTipLength(float tipLength)
+void SurfaceNormalMapping::setArrowTipLength(float tipLength)
 {
     m_arrowSource->SetTipLength(tipLength);
 
     emit geometryChanged();
 }
 
-PropertyGroup * NormalRepresentation::createPropertyGroup()
+PropertyGroup * SurfaceNormalMapping::createPropertyGroup()
 {
     PropertyGroup * group = new PropertyGroup("normals");
     auto * prop_visible = group->addProperty<bool>("visible",
-        std::bind(&NormalRepresentation::visible, this),
-        std::bind(&NormalRepresentation::setVisible, this, std::placeholders::_1));
+        std::bind(&SurfaceNormalMapping::visible, this),
+        std::bind(&SurfaceNormalMapping::setVisible, this, std::placeholders::_1));
 
     auto * prop_showDispVecs = group->addProperty<bool>("showDispVecs",
         [this](){ return m_showDispVecs;
@@ -145,19 +145,19 @@ PropertyGroup * NormalRepresentation::createPropertyGroup()
     });
 
     auto prop_length = group->addProperty<float>("length", this,
-        &NormalRepresentation::arrowLength, &NormalRepresentation::setArrowLength);
+        &SurfaceNormalMapping::arrowLength, &SurfaceNormalMapping::setArrowLength);
     prop_length->setTitle("arrow length");
     prop_length->setMinimum(0.00001f);
     prop_length->setStep(0.1f);
 
     auto prop_radius = group->addProperty<float>("radius", this,
-        &NormalRepresentation::arrowRadius, &NormalRepresentation::setArrowRadius);
+        &SurfaceNormalMapping::arrowRadius, &SurfaceNormalMapping::setArrowRadius);
     prop_radius->setTitle("tip radius");
     prop_radius->setMinimum(0.00001f);
     prop_radius->setStep(0.01f);
 
     auto prop_tipLength = group->addProperty<float>("tipLength", this,
-        &NormalRepresentation::arrowTipLength, &NormalRepresentation::setArrowTipLength);
+        &SurfaceNormalMapping::arrowTipLength, &SurfaceNormalMapping::setArrowTipLength);
     prop_tipLength->setTitle("tip length");
     prop_tipLength->setMinimum(0.00001f);
     prop_tipLength->setMaximum(1.f);
@@ -177,7 +177,7 @@ PropertyGroup * NormalRepresentation::createPropertyGroup()
     return group;
 }
 
-void NormalRepresentation::updateGlyphs()
+void SurfaceNormalMapping::updateGlyphs()
 {
     if (!m_polyData) {
         m_mapper = nullptr;
@@ -256,7 +256,7 @@ void NormalRepresentation::updateGlyphs()
     m_polyDataChanged = false;
 }
 
-vtkActor * NormalRepresentation::actor()
+vtkActor * SurfaceNormalMapping::actor()
 {
     return m_actor;
 }
