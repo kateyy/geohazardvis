@@ -19,6 +19,7 @@ namespace reflectionzeug
 
 class DataObject;
 class ScalarsForColorMapping;
+class VectorsToSurfaceMapping;
 
 
 /**
@@ -61,16 +62,19 @@ protected:
 
     virtual void scalarsForColorMappingChangedEvent() = 0;
     virtual void gradientForColorMappingChangedEvent() = 0;
+    virtual void vectorsForSurfaceMappingChangedEvent();
     virtual void visibilityChangedEvent(bool visible);
-
-protected:
-    ScalarsForColorMapping * m_scalars;
-    vtkSmartPointer<vtkLookupTable> m_lut;
-    unsigned long m_lutMTime;
 
 private:
     DataObject * m_dataObject;
 
+protected:
+    ScalarsForColorMapping * m_scalars;
+    vtkSmartPointer<vtkLookupTable> m_lut;
+    VectorsToSurfaceMapping * m_vectors;
+    unsigned long m_lutMTime;
+
+private:
     vtkSmartPointer<vtkProperty> m_renderProperty;
     vtkSmartPointer<vtkActor> m_actor;
 

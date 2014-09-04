@@ -4,12 +4,15 @@
 #include <vtkProperty.h>
 #include <vtkActor.h>
 
+#include <core/vector_mapping/VectorsToSurfaceMapping.h>
+
 
 RenderedData::RenderedData(DataObject * dataObject)
     : QObject()
+    , m_dataObject(dataObject)
     , m_scalars(nullptr)
     , m_lut(nullptr)
-    , m_dataObject(dataObject)
+    , m_vectors(new VectorsToSurfaceMapping(this))
     , m_isVisible(true)
 {
 }
@@ -67,6 +70,10 @@ void RenderedData::setVisible(bool visible)
 QList<vtkActor *> RenderedData::fetchAttributeActors()
 {
     return{};
+}
+
+void RenderedData::vectorsForSurfaceMappingChangedEvent()
+{
 }
 
 void RenderedData::visibilityChangedEvent(bool /*visible*/)

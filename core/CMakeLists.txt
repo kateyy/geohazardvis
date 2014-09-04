@@ -43,6 +43,14 @@ set ( SOURCES
     scalar_mapping/CoordinateValueMapping.cpp
     scalar_mapping/GridColorMapping.h
     scalar_mapping/GridColorMapping.cpp
+
+    vector_mapping/VectorsToSurfaceMapping.h
+    vector_mapping/VectorsToSurfaceMapping.cpp
+    vector_mapping/VectorsForSurfaceMapping.h
+    vector_mapping/VectorsForSurfaceMapping.hpp
+    vector_mapping/VectorsForSurfaceMapping.cpp
+    vector_mapping/VectorsForSurfaceMappingRegistry.h
+    vector_mapping/VectorsForSurfaceMappingRegistry.cpp
     vector_mapping/SurfaceNormalMapping.h
     vector_mapping/SurfaceNormalMapping.cpp    
 )

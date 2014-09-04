@@ -1,7 +1,6 @@
 #pragma once
 
 #include <core/data_objects/RenderedData.h>
-#include <core/vector_mapping/SurfaceNormalMapping.h>
 
 
 class QImage;
@@ -29,10 +28,9 @@ protected:
 
     void scalarsForColorMappingChangedEvent() override;
     void gradientForColorMappingChangedEvent() override;
+    void vectorsForSurfaceMappingChangedEvent() override;
     void visibilityChangedEvent(bool visible) override;
 
 private:
     vtkPolyDataMapper * createDataMapper();
-
-    SurfaceNormalMapping m_normalRepresentation;
 };

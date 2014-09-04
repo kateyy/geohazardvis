@@ -23,21 +23,36 @@
 #include <reflectionzeug/Property.h>
 #include <reflectionzeug/PropertyGroup.h>
 
-#include "core/vtkhelper.h"
+#include <core/vtkhelper.h>
+#include <core/data_objects/DataObject.h>
+#include <core/data_objects/RenderedData.h>
+#include <core/vector_mapping/VectorsForSurfaceMappingRegistry.h>
 
+
+namespace
+{
+const QString s_name = "surface normals";
+}
+
+const bool SurfaceNormalMapping::s_registered = VectorsForSurfaceMappingRegistry::instance().registerImplementation(
+    s_name,
+    newInstance<SurfaceNormalMapping>);
 
 using namespace reflectionzeug;
 
-SurfaceNormalMapping::SurfaceNormalMapping()
-: m_visible(true)
-, m_showDispVecs(true)
-, m_normalType(NormalType::CellNormal)
-, m_polyDataChanged(false)
-, m_normalTypeChanged(false)
-, m_actor(vtkSmartPointer<vtkActor>::New())
+SurfaceNormalMapping::SurfaceNormalMapping(RenderedData * renderedData)
+    : VectorsForSurfaceMapping(renderedData)
+    , m_normalType(NormalType::CellNormal)
+    , m_normalTypeChanged(true)
 {
-    m_actor->SetVisibility(m_visible);
-    m_actor->PickableOff();
+    assert(renderedData);
+
+    vtkPolyData * poly = vtkPolyData::SafeDownCast(renderedData->dataObject()->dataSet());
+    // only for triangle data
+    if (!poly || (poly->GetCellType(0) != VTK_TRIANGLE))
+        return;
+
+    m_polyData = poly;
 
     m_arrowSource = vtkSmartPointer<vtkArrowSource>::New();
     m_arrowSource->SetShaftRadius(0.02);
@@ -51,30 +66,11 @@ SurfaceNormalMapping::SurfaceNormalMapping()
     m_arrowGlyph->SetSourceConnection(m_arrowSource->GetOutputPort());
 }
 
-void SurfaceNormalMapping::setData(vtkPolyData * polyData)
+SurfaceNormalMapping::~SurfaceNormalMapping() = default;
+
+QString SurfaceNormalMapping::name() const
 {
-    if (m_polyData == polyData)
-        return;
-
-    m_polyData = polyData;
-    m_polyDataChanged = true;
-
-    updateGlyphs();
-}
-
-void SurfaceNormalMapping::setVisible(bool visible)
-{
-    if (m_visible == visible)
-        return;
-
-    m_visible = visible;
-
-    updateGlyphs();
-}
-
-bool SurfaceNormalMapping::visible() const
-{
-    return m_visible;
+    return s_name;
 }
 
 float SurfaceNormalMapping::arrowLength() const
@@ -118,18 +114,8 @@ PropertyGroup * SurfaceNormalMapping::createPropertyGroup()
 {
     PropertyGroup * group = new PropertyGroup("normals");
     auto * prop_visible = group->addProperty<bool>("visible",
-        std::bind(&SurfaceNormalMapping::visible, this),
+        std::bind(&SurfaceNormalMapping::isVisible, this),
         std::bind(&SurfaceNormalMapping::setVisible, this, std::placeholders::_1));
-
-    auto * prop_showDispVecs = group->addProperty<bool>("showDispVecs",
-        [this](){ return m_showDispVecs;
-    },
-        [this](bool d) {
-        m_showDispVecs = d;
-        m_normalTypeChanged = true;
-        updateGlyphs();
-    });
-    prop_showDispVecs->setTitle("displacement vectors");
 
     auto * prop_normalType = group->addProperty<NormalType>("type",
         [this](){ return m_normalType;
@@ -165,11 +151,11 @@ PropertyGroup * SurfaceNormalMapping::createPropertyGroup()
 
     auto * edgeColor = group->addProperty<Color>("color",
         [this]() {
-        double * color = m_actor->GetProperty()->GetColor();
+        double * color = actor()->GetProperty()->GetColor();
         return Color(static_cast<int>(color[0] * 255), static_cast<int>(color[1] * 255), static_cast<int>(color[2] * 255));
     },
         [this](const Color & color) {
-        m_actor->GetProperty()->SetColor(color.red() / 255.0, color.green() / 255.0, color.blue() / 255.0);
+        actor()->GetProperty()->SetColor(color.red() / 255.0, color.green() / 255.0, color.blue() / 255.0);
         emit geometryChanged();
     });
     edgeColor->setTitle("color");
@@ -177,50 +163,52 @@ PropertyGroup * SurfaceNormalMapping::createPropertyGroup()
     return group;
 }
 
+bool SurfaceNormalMapping::isValid() const
+{
+    return m_polyData != nullptr;
+}
+
+void SurfaceNormalMapping::visibilityChangedEvent()
+{
+    updateGlyphs();
+}
+
 void SurfaceNormalMapping::updateGlyphs()
 {
-    if (!m_polyData) {
-        m_mapper = nullptr;
-        m_actor->SetMapper(nullptr);
-        return;
-    }
+    assert(m_polyData);
 
-    // compute vertex normals if needed
-    if (m_polyDataChanged && !m_polyData->GetPointData()->HasArray("Normals"))
+    // compute normals if needed
+    bool computePointNormals = !m_polyData->GetPointData()->HasArray("Normals");
+    bool computeCellNormals = !m_polyData->GetCellData()->HasArray("Normals");
+    if (computePointNormals || computeCellNormals)
     {
         VTK_CREATE(vtkPolyDataNormals, inputNormals);
-        inputNormals->ComputeCellNormalsOn();
-        inputNormals->ComputePointNormalsOn();
+        inputNormals->SetComputePointNormals(computePointNormals);
+        inputNormals->SetComputeCellNormals(computePointNormals);
         inputNormals->SetInputDataObject(m_polyData);
         inputNormals->Update();
 
-        m_polyData->GetPointData()->SetNormals(inputNormals->GetOutput()->GetPointData()->GetNormals());
-        m_polyData->GetCellData()->SetNormals(inputNormals->GetOutput()->GetCellData()->GetNormals());
+        if (computePointNormals)
+            m_polyData->GetPointData()->SetNormals(inputNormals->GetOutput()->GetPointData()->GetNormals());
+        if (computeCellNormals)
+            m_polyData->GetCellData()->SetNormals(inputNormals->GetOutput()->GetCellData()->GetNormals());
     }
 
-    // create arrow geometry if needed
+    // initially configure arrow geometry if needed
     if (!m_mapper)
     {
         m_mapper = vtkSmartPointer<vtkDataSetMapper>::New();
         m_mapper->SetInputConnection(m_arrowGlyph->GetOutputPort());
-    }
+        actor()->SetMapper(m_mapper);
 
-    if (m_polyDataChanged)
-    {
         double * bounds = m_polyData->GetBounds();
         double maxBoundsSize = std::max(bounds[1] - bounds[0], std::max(bounds[3] - bounds[2], bounds[5] - bounds[4]));
         m_arrowGlyph->SetScaleFactor(maxBoundsSize * 0.1);
     }
 
-    if (m_polyDataChanged || m_normalTypeChanged)
+    if (m_normalTypeChanged)
     {
         vtkDataArray * centroid = m_polyData->GetCellData()->GetArray("centroid");
-        vtkDataArray * dispVecs = m_polyData->GetCellData()->GetArray("dispVec");
-
-        if (dispVecs && m_showDispVecs)
-            m_arrowGlyph->SetVectorModeToUseVector();
-        else
-            m_arrowGlyph->SetVectorModeToUseNormal();
 
         if (m_normalType == NormalType::CellNormal && centroid)
         {
@@ -236,7 +224,6 @@ void SurfaceNormalMapping::updateGlyphs()
             vtkPolyData * processedPoints = filter->GetOutput();
 
             processedPoints->GetPointData()->SetNormals(m_polyData->GetCellData()->GetNormals());
-            processedPoints->GetPointData()->SetVectors(centroid);
 
             m_arrowGlyph->SetInputData(processedPoints);
         }
@@ -247,16 +234,4 @@ void SurfaceNormalMapping::updateGlyphs()
 
         m_normalTypeChanged = false;
     }
-
-    m_actor->SetMapper(m_mapper);
-    m_actor->SetVisibility(m_visible);
-
-    emit geometryChanged();
-
-    m_polyDataChanged = false;
-}
-
-vtkActor * SurfaceNormalMapping::actor()
-{
-    return m_actor;
 }

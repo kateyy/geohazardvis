@@ -20,6 +20,8 @@
 #include <core/vtkhelper.h>
 #include <core/data_objects/PolyDataObject.h>
 #include <core/scalar_mapping/ScalarsForColorMapping.h>
+#include <core/vector_mapping/VectorsToSurfaceMapping.h>
+#include <core/vector_mapping/VectorsForSurfaceMapping.h>
 
 
 using namespace reflectionzeug;
@@ -41,9 +43,6 @@ RenderedPolyData::RenderedPolyData(PolyDataObject * dataObject)
     : RenderedData(dataObject)
 {
     vtkPolyData * polyData = vtkPolyData::SafeDownCast(dataObject->dataSet());
-    m_normalRepresentation.setData(polyData);
-    m_normalRepresentation.setVisible(false);
-    connect(&m_normalRepresentation, &SurfaceNormalMapping::geometryChanged, this, &RenderedPolyData::geometryChanged);
 }
 
 RenderedPolyData::~RenderedPolyData() = default;
@@ -162,8 +161,6 @@ reflectionzeug::PropertyGroup * RenderedPolyData::createConfigGroup()
     transparency->setMaximum(1.f);
     transparency->setStep(0.01f);
 
-    configGroup->addProperty(m_normalRepresentation.createPropertyGroup());
-
     return configGroup;
 }
 
@@ -193,7 +190,11 @@ vtkActor * RenderedPolyData::createActor()
 
 QList<vtkActor *> RenderedPolyData::fetchAttributeActors()
 {
-    return{ m_normalRepresentation.actor() };
+    QList<vtkActor *> actors;
+    for (auto * v : m_vectors->vectors())
+        actors << v->actor();
+
+    return actors;
 }
 
 void RenderedPolyData::scalarsForColorMappingChangedEvent()
@@ -208,10 +209,15 @@ void RenderedPolyData::gradientForColorMappingChangedEvent()
     mainActor()->SetMapper(mapper);
 }
 
+void RenderedPolyData::vectorsForSurfaceMappingChangedEvent()
+{
+}
+
 void RenderedPolyData::visibilityChangedEvent(bool visible)
 {
-    m_normalRepresentation.actor()->SetVisibility(
-        visible && m_normalRepresentation.visible());
+    for (VectorsForSurfaceMapping * vectors : m_vectors->vectors())
+        vectors->actor()->SetVisibility(
+        visible && m_vectors);
 }
 
 vtkPolyDataMapper * RenderedPolyData::createDataMapper()

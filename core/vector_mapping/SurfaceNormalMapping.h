@@ -1,10 +1,8 @@
 #pragma once
 
-#include <QObject>
-
 #include <vtkSmartPointer.h>
 
-#include <core/core_api.h>
+#include <core/vector_mapping/VectorsForSurfaceMapping.h>
 
 
 class vtkPolyData;
@@ -13,7 +11,8 @@ class vtkActor;
 class vtkArrowSource;
 class vtkGlyph3D;
 
-namespace reflectionzeug {
+namespace reflectionzeug
+{
     class PropertyGroup;
 }
 
@@ -24,19 +23,15 @@ enum class NormalType
     PointNormal
 };
 
-class CORE_API SurfaceNormalMapping : public QObject
+class CORE_API SurfaceNormalMapping : public VectorsForSurfaceMapping
 {
     Q_OBJECT
 
 public:
-    SurfaceNormalMapping();
+    SurfaceNormalMapping(RenderedData * renderedData);
+    ~SurfaceNormalMapping() override;
 
-    void setData(vtkPolyData * geometry);
-
-    vtkActor * actor();
-
-    bool visible() const;
-    void setVisible(bool visible);
+    QString name() const override;
 
     float arrowLength() const;
     void setArrowLength(float length);
@@ -47,24 +42,26 @@ public:
     float arrowTipLength() const;
     void setArrowTipLength(float tipLength);
 
-    reflectionzeug::PropertyGroup * createPropertyGroup();
+    reflectionzeug::PropertyGroup * createPropertyGroup() override;
 
 signals:
     void geometryChanged();
+
+protected:
+    bool isValid() const override;
+    void visibilityChangedEvent() override;
 
 private:
     void updateGlyphs();
 
 private:
-    bool m_visible;
-    bool m_showDispVecs;
     NormalType m_normalType;
     bool m_normalTypeChanged;
     vtkSmartPointer<vtkPolyData> m_polyData;
-    bool m_polyDataChanged;
-    vtkSmartPointer<vtkActor> m_actor;
     vtkSmartPointer<vtkMapper> m_mapper;
 
     vtkSmartPointer<vtkArrowSource> m_arrowSource;
     vtkSmartPointer<vtkGlyph3D> m_arrowGlyph;
+
+    static const bool s_registered;
 };
