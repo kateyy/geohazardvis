@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>DataChooser</class>
- <widget class="QDockWidget" name="DataChooser">
+ <class>ScalarMappingChooser</class>
+ <widget class="QDockWidget" name="ScalarMappingChooser">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -138,7 +138,7 @@
   <connection>
    <sender>gradientComboBox</sender>
    <signal>currentIndexChanged(int)</signal>
-   <receiver>DataChooser</receiver>
+   <receiver>ScalarMappingChooser</receiver>
    <slot>gradientSelectionChanged(int)</slot>
    <hints>
     <hint type="sourcelabel">
@@ -154,7 +154,7 @@
   <connection>
    <sender>scalarsComboBox</sender>
    <signal>currentIndexChanged(QString)</signal>
-   <receiver>DataChooser</receiver>
+   <receiver>ScalarMappingChooser</receiver>
    <slot>scalarsSelectionChanged(QString)</slot>
    <hints>
     <hint type="sourcelabel">
@@ -170,7 +170,7 @@
   <connection>
    <sender>minValueSpinBox</sender>
    <signal>valueChanged(double)</signal>
-   <receiver>DataChooser</receiver>
+   <receiver>ScalarMappingChooser</receiver>
    <slot>minValueChanged(double)</slot>
    <hints>
     <hint type="sourcelabel">
@@ -186,7 +186,7 @@
   <connection>
    <sender>maxValueSpinBox</sender>
    <signal>valueChanged(double)</signal>
-   <receiver>DataChooser</receiver>
+   <receiver>ScalarMappingChooser</receiver>
    <slot>maxValueChanged(double)</slot>
    <hints>
     <hint type="sourcelabel">

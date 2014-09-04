@@ -10,7 +10,7 @@ class DataMapping;
 class RenderView;
 class RenderConfigWidget;
 class DataBrowser;
-class DataChooser;
+class ScalarMappingChooser;
 class Ui_MainWindow;
 
 
@@ -46,7 +46,7 @@ private:
     QAction * m_addToRendererAction;
     QAction * m_removeLoadedFileAction;
     DataBrowser * m_dataBrowser;
-    DataChooser * m_dataChooser;
+    ScalarMappingChooser * m_scalarMappingChooser;
     RenderConfigWidget * m_renderConfigWidget;
 
     QString m_lastOpenFolder;

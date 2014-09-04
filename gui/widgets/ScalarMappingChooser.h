@@ -8,16 +8,16 @@
 
 class vtkLookupTable;
 
-class Ui_DataChooser;
+class Ui_ScalarMappingChooser;
 class ScalarToColorMapping;
 
-class DataChooser : public QDockWidget
+class ScalarMappingChooser : public QDockWidget
 {
     Q_OBJECT
 
 public:
-    DataChooser(QWidget * parent = nullptr);
-    ~DataChooser() override;
+    ScalarMappingChooser(QWidget * parent = nullptr);
+    ~ScalarMappingChooser() override;
 
     /** setup UI for a named rendered and a configured scalar to color mapping */
     void setMapping(QString rendererName = "", ScalarToColorMapping * mapping = nullptr);
@@ -45,7 +45,7 @@ private:
     static vtkLookupTable * buildLookupTable(const QImage & image);
 
 private:
-    Ui_DataChooser * m_ui;
+    Ui_ScalarMappingChooser * m_ui;
 
     QList<vtkSmartPointer<vtkLookupTable>> m_gradients;
 

@@ -127,7 +127,7 @@ void RenderedImageData::updateTexture()
         return;
 
     // not update needed for gradient == nullptr
-    // this happens only when the DataChooser / mapping is not fully initialized
+    // this happens only when the ScalarMappingChooser / mapping is not fully initialized
 
     m_lut->SetTableRange(m_scalars->minValue(), m_scalars->maxValue());
     m_texture->SetLookupTable(m_lut);

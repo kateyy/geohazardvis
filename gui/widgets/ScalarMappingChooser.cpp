@@ -1,5 +1,5 @@
-#include "DataChooser.h"
-#include "ui_DataChooser.h"
+#include "ScalarMappingChooser.h"
+#include "ui_ScalarMappingChooser.h"
 
 #include <cassert>
 #include <limits>
@@ -13,9 +13,9 @@
 #include <core/scalar_mapping/ScalarToColorMapping.h>
 
 
-DataChooser::DataChooser(QWidget * parent)
+ScalarMappingChooser::ScalarMappingChooser(QWidget * parent)
     : QDockWidget(parent)
-    , m_ui(new Ui_DataChooser())
+    , m_ui(new Ui_ScalarMappingChooser())
     , m_mapping(nullptr)
 {
     m_ui->setupUi(this);
@@ -27,12 +27,12 @@ DataChooser::DataChooser(QWidget * parent)
     setMapping();
 }
 
-DataChooser::~DataChooser()
+ScalarMappingChooser::~ScalarMappingChooser()
 {
     delete m_ui;
 }
 
-void DataChooser::setMapping(QString rendererName, ScalarToColorMapping * mapping)
+void ScalarMappingChooser::setMapping(QString rendererName, ScalarToColorMapping * mapping)
 {
     updateWindowTitle(rendererName);
 
@@ -43,12 +43,12 @@ void DataChooser::setMapping(QString rendererName, ScalarToColorMapping * mappin
     emit renderSetupChanged();
 }
 
-const ScalarToColorMapping * DataChooser::mapping() const
+const ScalarToColorMapping * ScalarMappingChooser::mapping() const
 {
     return m_mapping;
 }
 
-void DataChooser::scalarsSelectionChanged(QString scalarsName)
+void ScalarMappingChooser::scalarsSelectionChanged(QString scalarsName)
 {
     if (!m_mapping)
         return;
@@ -64,7 +64,7 @@ void DataChooser::scalarsSelectionChanged(QString scalarsName)
     emit renderSetupChanged();
 }
 
-void DataChooser::gradientSelectionChanged(int /*selection*/)
+void ScalarMappingChooser::gradientSelectionChanged(int /*selection*/)
 {
     if (!m_mapping)
         return;
@@ -74,7 +74,7 @@ void DataChooser::gradientSelectionChanged(int /*selection*/)
     emit renderSetupChanged();
 }
 
-void DataChooser::minValueChanged(double value)
+void ScalarMappingChooser::minValueChanged(double value)
 {
     if (!m_mapping)
         return;
@@ -84,7 +84,7 @@ void DataChooser::minValueChanged(double value)
     emit renderSetupChanged();
 }
 
-void DataChooser::maxValueChanged(double value)
+void ScalarMappingChooser::maxValueChanged(double value)
 {
     if (!m_mapping)
         return;
@@ -94,12 +94,12 @@ void DataChooser::maxValueChanged(double value)
     emit renderSetupChanged();
 }
 
-vtkLookupTable * DataChooser::selectedGradient() const
+vtkLookupTable * ScalarMappingChooser::selectedGradient() const
 {
     return m_gradients[m_ui->gradientComboBox->currentIndex()];
 }
 
-void DataChooser::loadGradientImages()
+void ScalarMappingChooser::loadGradientImages()
 {
     // navigate to the gradient directory
     QDir dir;
@@ -138,7 +138,7 @@ void DataChooser::loadGradientImages()
     gradientComboBox->setCurrentIndex(32);
 }
 
-int DataChooser::gradientIndex(vtkLookupTable * gradient) const
+int ScalarMappingChooser::gradientIndex(vtkLookupTable * gradient) const
 {
     int index = 0;
     for (const vtkSmartPointer<vtkLookupTable> & ptr : m_gradients)
@@ -151,7 +151,7 @@ int DataChooser::gradientIndex(vtkLookupTable * gradient) const
     return -1;
 }
 
-void DataChooser::updateWindowTitle(QString objectName)
+void ScalarMappingChooser::updateWindowTitle(QString objectName)
 {
     const QString defaultTitle = "scalar mapping";
 
@@ -164,7 +164,7 @@ void DataChooser::updateWindowTitle(QString objectName)
     setWindowTitle(defaultTitle + ": " + objectName);
 }
 
-void DataChooser::rebuildGui(ScalarToColorMapping * newMapping)
+void ScalarMappingChooser::rebuildGui(ScalarToColorMapping * newMapping)
 {
     m_mapping = nullptr;    // disable GUI to mapping events
 
@@ -190,7 +190,7 @@ void DataChooser::rebuildGui(ScalarToColorMapping * newMapping)
     m_mapping = newMapping;
 }
 
-void DataChooser::updateGuiValueRanges()
+void ScalarMappingChooser::updateGuiValueRanges()
 {
     double min = 0, max = 0;
     double currentMin = 0, currentMax = 0;
@@ -225,7 +225,7 @@ void DataChooser::updateGuiValueRanges()
     m_mapping = currentMapping;
 }
 
-vtkLookupTable * DataChooser::buildLookupTable(const QImage & image)
+vtkLookupTable * ScalarMappingChooser::buildLookupTable(const QImage & image)
 {   
     // use alpha = 1.0, if the image doesn't have a alpha channel
     int alphaMask = image.hasAlphaChannel() ? 0x00 : 0xFF;

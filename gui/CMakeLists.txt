@@ -33,8 +33,8 @@ set ( SOURCES
     widgets/DataBrowser.cpp
     widgets/DataBrowserTableModel.h
     widgets/DataBrowserTableModel.cpp
-    widgets/DataChooser.h
-    widgets/DataChooser.cpp
+    widgets/ScalarMappingChooser.h
+    widgets/ScalarMappingChooser.cpp
     widgets/RenderConfigWidget.h
     widgets/RenderConfigWidget.cpp
 )
@@ -46,7 +46,7 @@ set ( UIs
     data_view/TableView.ui
     
     widgets/DataBrowser.ui
-    widgets/DataChooser.ui
+    widgets/ScalarMappingChooser.ui
     widgets/RenderConfigWidget.ui
 )
 

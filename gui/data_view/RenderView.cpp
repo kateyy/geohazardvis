@@ -27,7 +27,7 @@
 #include "rendering_interaction/PickingInteractorStyleSwitch.h"
 #include "rendering_interaction/InteractorStyle3D.h"
 #include "rendering_interaction/InteractorStyleImage.h"
-#include "widgets/DataChooser.h"
+#include "widgets/ScalarMappingChooser.h"
 #include "widgets/RenderConfigWidget.h"
 
 
@@ -36,12 +36,12 @@ using namespace std;
 
 RenderView::RenderView(
     int index,
-    DataChooser & dataChooser,
+    ScalarMappingChooser & scalarMappingChooser,
     RenderConfigWidget & renderConfigWidget,
     QWidget * parent, Qt::WindowFlags flags)
     : AbstractDataView(index, parent, flags)
     , m_ui(new Ui_RenderView())
-    , m_dataChooser(dataChooser)
+    , m_scalarMappingChooser(scalarMappingChooser)
     , m_renderConfigWidget(renderConfigWidget)
 {
     m_ui->setupUi(this);
@@ -52,7 +52,7 @@ RenderView::RenderView(
 
     updateWindowTitle();
 
-    connect(&m_dataChooser, &DataChooser::renderSetupChanged, this, &RenderView::render);
+    connect(&m_scalarMappingChooser, &ScalarMappingChooser::renderSetupChanged, this, &RenderView::render);
 
     SelectionHandler::instance().addRenderView(this);
 }
@@ -63,8 +63,8 @@ RenderView::~RenderView()
 
     m_renderConfigWidget.clear();
 
-    if (m_dataChooser.mapping() == &m_scalarMapping)
-        m_dataChooser.setMapping();
+    if (m_scalarMappingChooser.mapping() == &m_scalarMapping)
+        m_scalarMappingChooser.setMapping();
 
     qDeleteAll(m_renderedData);
 }
@@ -197,7 +197,7 @@ void RenderView::addDataObjects(QList<DataObject *> dataObjects)
     updateAxes();
 
     m_scalarMapping.setRenderedData(m_renderedData);
-    m_dataChooser.setMapping(friendlyName(), &m_scalarMapping);
+    m_scalarMappingChooser.setMapping(friendlyName(), &m_scalarMapping);
 
     updateWindowTitle();
 
@@ -261,7 +261,7 @@ void RenderView::removeDataObject(DataObject * dataObject)
     m_scalarMapping.setRenderedData(m_renderedData);
     if (m_renderConfigWidget.renderedData() == renderedData)
         m_renderConfigWidget.setRenderedData(nullptr);
-    m_dataChooser.setMapping(friendlyName(), &m_scalarMapping);
+    m_scalarMappingChooser.setMapping(friendlyName(), &m_scalarMapping);
 }
 
 void RenderView::removeDataObjects(QList<DataObject *> dataObjects)
@@ -493,5 +493,5 @@ void RenderView::updateGuiForActor(vtkActor * actor)
     assert(actor);
 
     m_renderConfigWidget.setRenderedData(m_actorToRenderedData[actor]);
-    m_dataChooser.setMapping(friendlyName(), &m_scalarMapping);
+    m_scalarMappingChooser.setMapping(friendlyName(), &m_scalarMapping);
 }

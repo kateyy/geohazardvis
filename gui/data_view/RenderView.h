@@ -22,7 +22,7 @@ class vtkActor;
 class DataObject;
 class RenderedData;
 
-class DataChooser;
+class ScalarMappingChooser;
 class PickingInteractorStyleSwitch;
 class IPickingInteractorStyle;
 class RenderConfigWidget;
@@ -36,7 +36,7 @@ class RenderView : public AbstractDataView
 public:
     RenderView(
         int index,
-        DataChooser & dataChooser,
+        ScalarMappingChooser & scalarMappingChooser,
         RenderConfigWidget & renderConfigWidget,
         QWidget * parent = nullptr, Qt::WindowFlags flags = 0);
     ~RenderView() override;
@@ -122,7 +122,7 @@ private:
     vtkSmartPointer<vtkScalarBarWidget> m_scalarBarWidget;
     
     // configuration widgets
-    DataChooser & m_dataChooser;
+    ScalarMappingChooser & m_scalarMappingChooser;
     ScalarToColorMapping m_scalarMapping;
     RenderConfigWidget & m_renderConfigWidget;
 
