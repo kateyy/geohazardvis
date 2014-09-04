@@ -17,7 +17,8 @@ const map<string, DatasetType> datasetNamesTypes = {
         { "vertices", DatasetType::vertices },
         { "indices", DatasetType::indices },
         { "grid2d", DatasetType::grid2d },
-        { "centroid", DatasetType::centroid } };
+        { "centroid", DatasetType::centroid },
+        { "dispVec", DatasetType::dispVec } };
 const map<string, ModelType> modelNamesType = {
         { "triangles", ModelType::triangles },
         { "grid2d", ModelType::grid2d } };
@@ -128,6 +129,7 @@ std::shared_ptr<InputFileInfo> TextFileReader::readHeader(ifstream & inputStream
                 {
                 case DatasetType::indices:
                 case DatasetType::centroid:
+                case DatasetType::dispVec:
                     tupleSize = 3;
                     break;
                 case DatasetType::vertices:

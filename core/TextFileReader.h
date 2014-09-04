@@ -16,6 +16,7 @@ enum class DatasetType {
     vertices,   // index + vec3
     indices,    // indices referring to a vertex list
     centroid,   // for each cell defined by the index list
+    dispVec,    // displacement per cell
     grid2d
 };
 

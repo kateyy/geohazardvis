@@ -57,6 +57,7 @@ private:
 
 private:
     bool m_visible;
+    bool m_showDispVecs;
     NormalType m_normalType;
     bool m_normalTypeChanged;
     vtkSmartPointer<vtkPolyData> m_polyData;

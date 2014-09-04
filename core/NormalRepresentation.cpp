@@ -30,6 +30,7 @@ using namespace reflectionzeug;
 
 NormalRepresentation::NormalRepresentation()
 : m_visible(true)
+, m_showDispVecs(true)
 , m_normalType(NormalType::CellNormal)
 , m_polyDataChanged(false)
 , m_normalTypeChanged(false)
@@ -120,6 +121,16 @@ PropertyGroup * NormalRepresentation::createPropertyGroup()
         std::bind(&NormalRepresentation::visible, this),
         std::bind(&NormalRepresentation::setVisible, this, std::placeholders::_1));
 
+    auto * prop_showDispVecs = group->addProperty<bool>("showDispVecs",
+        [this](){ return m_showDispVecs;
+    },
+        [this](bool d) {
+        m_showDispVecs = d;
+        m_normalTypeChanged = true;
+        updateGlyphs();
+    });
+    prop_showDispVecs->setTitle("displacement vectors");
+
     auto * prop_normalType = group->addProperty<NormalType>("type",
         [this](){ return m_normalType;
     },
@@ -204,6 +215,13 @@ void NormalRepresentation::updateGlyphs()
     if (m_polyDataChanged || m_normalTypeChanged)
     {
         vtkDataArray * centroid = m_polyData->GetCellData()->GetArray("centroid");
+        vtkDataArray * dispVecs = m_polyData->GetCellData()->GetArray("dispVec");
+
+        if (dispVecs && m_showDispVecs)
+            m_arrowGlyph->SetVectorModeToUseVector();
+        else
+            m_arrowGlyph->SetVectorModeToUseNormal();
+
         if (m_normalType == NormalType::CellNormal && centroid)
         {
             VTK_CREATE(vtkPoints, points);
@@ -218,6 +236,7 @@ void NormalRepresentation::updateGlyphs()
             vtkPolyData * processedPoints = filter->GetOutput();
 
             processedPoints->GetPointData()->SetNormals(m_polyData->GetCellData()->GetNormals());
+            processedPoints->GetPointData()->SetVectors(centroid);
 
             m_arrowGlyph->SetInputData(processedPoints);
         }
