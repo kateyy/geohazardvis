@@ -1,11 +1,12 @@
 #include "VectorMappingChooser.h"
 #include "ui_VectorMappingChooser.h"
 
-#include <QDebug>
+#include <reflectionzeug/PropertyGroup.h>
 
 #include <core/data_objects/DataObject.h>
 #include <core/data_objects/RenderedData.h>
 #include <core/vector_mapping/VectorsToSurfaceMapping.h>
+#include <core/vector_mapping/VectorsForSurfaceMapping.h>
 
 #include "VectorMappingChooserListModel.h"
 
@@ -27,10 +28,19 @@ VectorMappingChooser::VectorMappingChooser(QWidget * parent, Qt::WindowFlags fla
     m_ui->vectorsListView->setModel(m_listModel);
 
     connect(m_listModel, &VectorMappingChooserListModel::vectorVisibilityChanged, this, &VectorMappingChooser::renderSetupChanged);
+    connect(m_ui->vectorsListView->selectionModel(), &QItemSelectionModel::selectionChanged,
+        [this](const QItemSelection & selection)
+    {
+        m_ui->propertyBrowser->setRoot(selection.indexes().isEmpty()
+            ? nullptr
+            : m_propertyGroups[selection.indexes().first().row()]);
+    });
 }
 
 VectorMappingChooser::~VectorMappingChooser()
 {
+    setMapping();
+
     delete m_ui;
 }
 
@@ -43,7 +53,23 @@ void VectorMappingChooser::setMapping(int rendererId, VectorsToSurfaceMapping * 
 
     updateWindowTitle(rendererId);
 
+    m_ui->propertyBrowser->setRoot(nullptr);
+    qDeleteAll(m_propertyGroups);
+    m_propertyGroups.clear();
+
     m_listModel->setMapping(mapping);
+
+    if (m_mapping)
+    {
+        for (VectorsForSurfaceMapping * vectors : m_mapping->vectors().values())
+        {
+            m_propertyGroups << vectors->createPropertyGroup();
+            connect(vectors, &VectorsForSurfaceMapping::geometryChanged, this, &VectorMappingChooser::renderSetupChanged);
+        }
+
+        QModelIndex index(m_listModel->index(0, 0));
+        m_ui->vectorsListView->selectionModel()->select(index, QItemSelectionModel::Select);
+    }
 }
 
 const VectorsToSurfaceMapping * VectorMappingChooser::mapping() const

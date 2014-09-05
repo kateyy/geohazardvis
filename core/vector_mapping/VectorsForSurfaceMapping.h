@@ -45,6 +45,9 @@ public:
 
     virtual reflectionzeug::PropertyGroup * createPropertyGroup() = 0;
 
+signals:
+    void geometryChanged();
+
 protected:
     virtual void initialize();
 

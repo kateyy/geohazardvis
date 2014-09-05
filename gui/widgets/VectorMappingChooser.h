@@ -3,6 +3,11 @@
 #include <QDockWidget>
 
 
+namespace reflectionzeug
+{
+    class PropertyGroup;
+}
+
 class VectorsToSurfaceMapping;
 class VectorMappingChooserListModel;
 class Ui_VectorMappingChooser;
@@ -29,4 +34,5 @@ private:
     Ui_VectorMappingChooser * m_ui;
     VectorsToSurfaceMapping * m_mapping;
     VectorMappingChooserListModel * m_listModel;
+    QList<reflectionzeug::PropertyGroup *> m_propertyGroups;
 };

@@ -44,9 +44,6 @@ public:
 
     reflectionzeug::PropertyGroup * createPropertyGroup() override;
 
-signals:
-    void geometryChanged();
-
 protected:
     bool isValid() const override;
     void visibilityChangedEvent() override;

@@ -113,9 +113,6 @@ void SurfaceNormalMapping::setArrowTipLength(float tipLength)
 PropertyGroup * SurfaceNormalMapping::createPropertyGroup()
 {
     PropertyGroup * group = new PropertyGroup("normals");
-    auto * prop_visible = group->addProperty<bool>("visible",
-        std::bind(&SurfaceNormalMapping::isVisible, this),
-        std::bind(&SurfaceNormalMapping::setVisible, this, std::placeholders::_1));
 
     auto * prop_normalType = group->addProperty<NormalType>("type",
         [this](){ return m_normalType;
@@ -124,6 +121,7 @@ PropertyGroup * SurfaceNormalMapping::createPropertyGroup()
         m_normalType = type;
         m_normalTypeChanged = true;
         updateGlyphs();
+        emit geometryChanged();
     });
     prop_normalType->setStrings({
             { NormalType::CellNormal, "cell normal" },
