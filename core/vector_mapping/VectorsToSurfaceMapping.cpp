@@ -20,3 +20,8 @@ const QMap<QString, VectorsForSurfaceMapping *> & VectorsToSurfaceMapping::vecto
 {
     return m_vectors;
 }
+
+const RenderedData * VectorsToSurfaceMapping::renderedData() const
+{
+    return m_renderedData;
+}

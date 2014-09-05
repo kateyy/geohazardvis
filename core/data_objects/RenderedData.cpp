@@ -90,6 +90,11 @@ const DataObject * RenderedData::dataObject() const
     return m_dataObject;
 }
 
+VectorsToSurfaceMapping * RenderedData::vectorMapping()
+{
+    return m_vectors;
+}
+
 void RenderedData::applyScalarsForColorMapping(ScalarsForColorMapping * scalars)
 {
     if (scalars == m_scalars)

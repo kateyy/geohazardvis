@@ -49,6 +49,8 @@ public:
 
     virtual reflectionzeug::PropertyGroup * createConfigGroup() = 0;
 
+    VectorsToSurfaceMapping * vectorMapping();
+
     void applyScalarsForColorMapping(ScalarsForColorMapping * scalars);
     void applyGradientLookupTable(vtkLookupTable * gradient);
 

@@ -28,6 +28,7 @@
 #include "rendering_interaction/InteractorStyle3D.h"
 #include "rendering_interaction/InteractorStyleImage.h"
 #include "widgets/ScalarMappingChooser.h"
+#include "widgets/VectorMappingChooser.h"
 #include "widgets/RenderConfigWidget.h"
 
 
@@ -37,11 +38,13 @@ using namespace std;
 RenderView::RenderView(
     int index,
     ScalarMappingChooser & scalarMappingChooser,
+    VectorMappingChooser & vectorMappingChooser,
     RenderConfigWidget & renderConfigWidget,
     QWidget * parent, Qt::WindowFlags flags)
     : AbstractDataView(index, parent, flags)
     , m_ui(new Ui_RenderView())
     , m_scalarMappingChooser(scalarMappingChooser)
+    , m_vectorMappingChooser(vectorMappingChooser)
     , m_renderConfigWidget(renderConfigWidget)
 {
     m_ui->setupUi(this);
@@ -53,6 +56,7 @@ RenderView::RenderView(
     updateWindowTitle();
 
     connect(&m_scalarMappingChooser, &ScalarMappingChooser::renderSetupChanged, this, &RenderView::render);
+    connect(&m_vectorMappingChooser, &VectorMappingChooser::renderSetupChanged, this, &RenderView::render);
 
     SelectionHandler::instance().addRenderView(this);
 }
@@ -65,6 +69,15 @@ RenderView::~RenderView()
 
     if (m_scalarMappingChooser.mapping() == &m_scalarMapping)
         m_scalarMappingChooser.setMapping();
+
+    for (RenderedData * renderedData : m_renderedData)
+    {
+        if (renderedData->vectorMapping() == m_vectorMappingChooser.mapping())
+        {
+            m_vectorMappingChooser.setMapping();
+            break;
+        }
+    }   
 
     qDeleteAll(m_renderedData);
 }
@@ -192,7 +205,10 @@ void RenderView::addDataObjects(QList<DataObject *> dataObjects)
     }
 
     if (aNewObject)
+    {
         m_renderConfigWidget.setRenderedData(aNewObject);
+        m_vectorMappingChooser.setMapping(index(), aNewObject->vectorMapping());
+    }
 
     updateAxes();
 
@@ -492,6 +508,9 @@ void RenderView::updateGuiForActor(vtkActor * actor)
 {
     assert(actor);
 
-    m_renderConfigWidget.setRenderedData(m_actorToRenderedData[actor]);
+    RenderedData * r = m_actorToRenderedData[actor];
+
+    m_renderConfigWidget.setRenderedData(r);
     m_scalarMappingChooser.setMapping(friendlyName(), &m_scalarMapping);
+    m_vectorMappingChooser.setMapping(index(), r->vectorMapping());
 }

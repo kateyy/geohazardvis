@@ -37,6 +37,10 @@ set ( SOURCES
     widgets/ScalarMappingChooser.cpp
     widgets/RenderConfigWidget.h
     widgets/RenderConfigWidget.cpp
+    widgets/VectorMappingChooser.h
+    widgets/VectorMappingChooser.cpp
+    widgets/VectorMappingChooserListModel.h
+    widgets/VectorMappingChooserListModel.cpp
 )
 
 set ( UIs
@@ -48,6 +52,7 @@ set ( UIs
     widgets/DataBrowser.ui
     widgets/ScalarMappingChooser.ui
     widgets/RenderConfigWidget.ui
+    widgets/VectorMappingChooser.ui
 )
 
 set ( QRCs

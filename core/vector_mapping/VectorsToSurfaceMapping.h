@@ -28,6 +28,8 @@ public:
     /** list of vectors that can be used with my data */
     const QMap<QString, VectorsForSurfaceMapping *> & vectors() const;
 
+    const RenderedData * renderedData() const;
+
 private:
     RenderedData * m_renderedData;
 

@@ -16,6 +16,7 @@
 #include "SelectionHandler.h"
 #include "data_view/RenderView.h"
 #include "widgets/ScalarMappingChooser.h"
+#include "widgets/VectorMappingChooser.h"
 #include "widgets/RenderConfigWidget.h"
 
 
@@ -24,6 +25,7 @@ MainWindow::MainWindow()
     , m_ui(new Ui_MainWindow())
     , m_dataMapping(new DataMapping(*this))
     , m_scalarMappingChooser(new ScalarMappingChooser())
+    , m_vectorMappingChooser(new VectorMappingChooser())
     , m_renderConfigWidget(new RenderConfigWidget())
 {
     m_ui->setupUi(this);
@@ -39,6 +41,8 @@ MainWindow::MainWindow()
     setCorner(Qt::Corner::BottomRightCorner, Qt::DockWidgetArea::RightDockWidgetArea);
 
     addDockWidget(Qt::DockWidgetArea::LeftDockWidgetArea, m_scalarMappingChooser);
+    addDockWidget(Qt::DockWidgetArea::LeftDockWidgetArea, m_vectorMappingChooser);
+    tabifyDockWidget(m_scalarMappingChooser, m_vectorMappingChooser);
     addDockWidget(Qt::DockWidgetArea::LeftDockWidgetArea, m_renderConfigWidget);
 }
 
@@ -78,7 +82,7 @@ void MainWindow::dropEvent(QDropEvent * event)
 
 RenderView * MainWindow::addRenderView(int index)
 {
-    RenderView * renderView = new RenderView(index, *m_scalarMappingChooser, *m_renderConfigWidget);
+    RenderView * renderView = new RenderView(index, *m_scalarMappingChooser, *m_vectorMappingChooser, *m_renderConfigWidget);
     addDockWidget(Qt::DockWidgetArea::TopDockWidgetArea, renderView);
 
     return renderView;

@@ -23,6 +23,7 @@ class DataObject;
 class RenderedData;
 
 class ScalarMappingChooser;
+class VectorMappingChooser;
 class PickingInteractorStyleSwitch;
 class IPickingInteractorStyle;
 class RenderConfigWidget;
@@ -37,6 +38,7 @@ public:
     RenderView(
         int index,
         ScalarMappingChooser & scalarMappingChooser,
+        VectorMappingChooser & vectorMappingChooser,
         RenderConfigWidget & renderConfigWidget,
         QWidget * parent = nullptr, Qt::WindowFlags flags = 0);
     ~RenderView() override;
@@ -123,6 +125,7 @@ private:
     
     // configuration widgets
     ScalarMappingChooser & m_scalarMappingChooser;
+    VectorMappingChooser & m_vectorMappingChooser;
     ScalarToColorMapping m_scalarMapping;
     RenderConfigWidget & m_renderConfigWidget;
 
