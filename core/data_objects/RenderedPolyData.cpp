@@ -161,6 +161,19 @@ reflectionzeug::PropertyGroup * RenderedPolyData::createConfigGroup()
     transparency->setMaximum(1.f);
     transparency->setStep(0.01f);
 
+    auto pointSize = renderSettings->addProperty<unsigned>("pointSize",
+        [this]() {
+        return static_cast<unsigned>(renderProperty()->GetPointSize());
+    },
+        [this](unsigned pointSize) {
+        renderProperty()->SetPointSize(pointSize);
+        emit geometryChanged();
+    });
+    pointSize->setTitle("point size");
+    pointSize->setMinimum(1);
+    pointSize->setMaximum(20);
+    pointSize->setStep(1);
+
     return configGroup;
 }
 
