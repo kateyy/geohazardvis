@@ -18,13 +18,13 @@ enum class DatasetType {
     indices,    // indices referring to a vertex list
     centroid,   // for each cell defined by the index list
     vectors,    // additional vector data per cell
-    grid2d
+    grid2D
 };
 
 enum class ModelType
 {
     triangles,
-    grid2d
+    grid2D
 };
 
 struct InputFileInfo
@@ -33,8 +33,6 @@ struct InputFileInfo
 
     const std::string name;
     const ModelType type;
-
-    double bounds[6];
 };
 
 struct ReadDataset {
@@ -48,7 +46,7 @@ class TextFileReader
 public:
     static std::shared_ptr<InputFileInfo> read(const std::string & filename, std::vector<ReadDataset> & readDatasets);
 
-protected:
+private:
     struct DatasetDef {
         DatasetType type;
         t_UInt nbLines;
@@ -59,4 +57,7 @@ protected:
     /// read the file header and leave the input stream at a position directly behind the header end
     /// @return a shared pointer to an InputFileInfo object, if the file contains a valid header
     static std::shared_ptr<InputFileInfo> readHeader(std::ifstream & inputStream, std::vector<DatasetDef>& inputDefs);
+
+    static bool readHeader_triangles(std::ifstream & inputStream, std::vector<DatasetDef>& inputDefs);
+    static bool readHeader_grid2D(std::ifstream & inputStream, std::vector<DatasetDef>& inputDefs);
 };

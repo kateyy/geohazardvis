@@ -37,7 +37,7 @@ DataObject * Loader::readFile(QString filename)
     {
     case ModelType::triangles:
         return loadIndexedTriangles(dataSetName, readDatasets);
-    case ModelType::grid2d:
+    case ModelType::grid2D:
         return loadGrid(dataSetName, readDatasets);
     default:
         cerr << "Warning: model type unsupported by the loader: " << int(inputInfo->type) << endl;
@@ -120,7 +120,7 @@ PolyDataObject * Loader::loadIndexedTriangles(QString name, const std::vector<Re
 ImageDataObject * Loader::loadGrid(QString name, const std::vector<ReadDataset> & datasets)
 {
     assert(datasets.size() == 1);
-    assert(datasets.begin()->type == DatasetType::grid2d);
+    assert(datasets.begin()->type == DatasetType::grid2D);
     const InputVector * inputData = &datasets.begin()->data;
 
     int dimensions[3] = { static_cast<int>(inputData->size()), static_cast<int>(inputData->at(0).size()), 1 };
