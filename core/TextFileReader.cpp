@@ -18,7 +18,7 @@ const map<string, DatasetType> datasetNamesTypes = {
         { "indices", DatasetType::indices },
         { "grid2d", DatasetType::grid2d },
         { "centroid", DatasetType::centroid },
-        { "dispVec", DatasetType::dispVec } };
+        { "vectors", DatasetType::vectors } };
 const map<string, ModelType> modelNamesType = {
         { "triangles", ModelType::triangles },
         { "grid2d", ModelType::grid2d } };
@@ -45,7 +45,7 @@ shared_ptr<InputFileInfo> TextFileReader::read(const string & filename, vector<R
     assert(input);
 
     for (const DatasetDef & datasetDef : datasetDefs) {
-        ReadDataset readData({datasetDef.type, {}});
+        ReadDataset readData{datasetDef.type, {}, datasetDef.attributeName};
 
         if (populateIOVectors(inputStream, readData.data,
             datasetDef.nbLines,
@@ -71,6 +71,7 @@ std::shared_ptr<InputFileInfo> TextFileReader::readHeader(ifstream & inputStream
     string line;
 
     DatasetType currentDataType(DatasetType::unknown);
+    uint64_t numCells = 0;
 
     while (!inputStream.eof()) {
         getline(inputStream, line);
@@ -113,31 +114,49 @@ std::shared_ptr<InputFileInfo> TextFileReader::readHeader(ifstream & inputStream
             continue;
         }
 
-        // line defining an input data set (for the current model)
-        if (line.substr(0, 10) == "$ dataset ") {
-            stringstream linestream(line.substr(10, string::npos));
+        // expecting only some types of datasets from now on
+        if (line.substr(0, 2) == "$ ")
+        {
+            stringstream linestream(line.substr(2, string::npos));
             string datasetType, parameter;
             getline(linestream, datasetType, ' ');
             getline(linestream, parameter);
+
+            string attributeName;
 
             assert(datasetNamesTypes.find(datasetType) != datasetNamesTypes.end());
             currentDataType = datasetNamesTypes.at(datasetType);
             switch (input->type) {
             case ModelType::triangles: {
-                unsigned short tupleSize = 0;
+                t_UInt tupleSize = 0;
+                t_UInt numTuples = 0;
                 switch (currentDataType)
                 {
                 case DatasetType::indices:
-                case DatasetType::centroid:
-                case DatasetType::dispVec:
                     tupleSize = 3;
+                    numTuples = stoul(parameter);
+                    numCells = numTuples;
                     break;
                 case DatasetType::vertices:
                     tupleSize = 4;
+                    numTuples = stoul(parameter);
+                    break;
+                case DatasetType::centroid:
+                    tupleSize = 3;
+                    numTuples = numCells;
+                    break;
+                case DatasetType::vectors:
+                {
+                    size_t tupleSizePos = parameter.find(" ", 0);
+                    tupleSize = stoul(parameter.substr(0, tupleSizePos));
+                    numTuples = numCells;
+                    attributeName = parameter.substr(tupleSizePos + 1);
                     break;
                 }
+                }
                 assert(tupleSize);
-                inputDefs.push_back({ currentDataType, (unsigned long)stol(parameter), tupleSize });
+                assert(numTuples);
+                inputDefs.push_back({ currentDataType, numTuples, tupleSize, attributeName });
                 break;
             }
             case ModelType::grid2d:

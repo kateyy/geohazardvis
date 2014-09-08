@@ -4,6 +4,7 @@
 #include <limits>
 
 #include <QDebug>
+#include <QList>
 
 #include <vtkFloatArray.h>
 #include <vtkPoints.h>
@@ -51,7 +52,7 @@ PolyDataObject * Loader::loadIndexedTriangles(QString name, const std::vector<Re
     const InputVector * indices = nullptr;
     const InputVector * vertices = nullptr;
     const InputVector * centroid = nullptr;
-    const InputVector * dispVec = nullptr;
+    std::map<std::string, const InputVector *> vectorArrays;
 
     for (const ReadDataset & dataSet : datasets)
     {
@@ -63,7 +64,7 @@ PolyDataObject * Loader::loadIndexedTriangles(QString name, const std::vector<Re
             break;
         case DatasetType::centroid: centroid = &dataSet.data;
             break;
-        case DatasetType::dispVec: dispVec = &dataSet.data;
+        case DatasetType::vectors: vectorArrays.emplace(dataSet.attributeName, &dataSet.data);
             break;
         }
     }
@@ -93,24 +94,23 @@ PolyDataObject * Loader::loadIndexedTriangles(QString name, const std::vector<Re
         polyData->GetCellData()->AddArray(a);
     }
 
-    if (dispVec)
+    for (auto namedVector : vectorArrays)
     {
         const vtkIdType numCells = polyData->GetNumberOfCells();
-        assert(dispVec->size() == 3);
-        assert(size_t(numCells) == dispVec->front().size());
+        const auto & vector = namedVector.second;
+
+        const vtkIdType tupleSize = vector->size();
+        assert(size_t(numCells) == vector->front().size());
 
         vtkSmartPointer<vtkFloatArray> a = vtkSmartPointer<vtkFloatArray>::New();
-        a->SetName("dispVec");
-        a->SetNumberOfComponents(3);
+        a->SetName(namedVector.first.c_str());
+        a->SetNumberOfComponents(tupleSize);
         a->SetNumberOfTuples(numCells);
 
-        const std::vector<t_FP> & xs = dispVec->at(0);
-        const std::vector<t_FP> & ys = dispVec->at(1);
-        const std::vector<t_FP> & zs = dispVec->at(2);
-
-        for (vtkIdType i = 0; i < numCells; ++i)
-            a->SetTuple3(i, xs.at(i), ys.at(i), zs.at(i));
-
+        for (vtkIdType component = 0; component < tupleSize; ++component)
+            for (vtkIdType cellId = 0; cellId < numCells; ++cellId)
+                a->SetValue(cellId * tupleSize + component, vector->at(component).at(cellId));
+        
         polyData->GetCellData()->AddArray(a);
     }
 

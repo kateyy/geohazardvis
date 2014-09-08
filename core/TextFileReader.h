@@ -4,6 +4,7 @@
 #include <vector>
 #include <fstream>
 #include <memory>
+#include <cinttypes>
 
 #include "common/ebem3d_common.h"
 
@@ -16,7 +17,7 @@ enum class DatasetType {
     vertices,   // index + vec3
     indices,    // indices referring to a vertex list
     centroid,   // for each cell defined by the index list
-    dispVec,    // displacement per cell
+    vectors,    // additional vector data per cell
     grid2d
 };
 
@@ -39,6 +40,7 @@ struct InputFileInfo
 struct ReadDataset {
     DatasetType type;
     std::vector<std::vector<t_FP>> data;
+    std::string attributeName;
 };
 
 class TextFileReader
@@ -49,8 +51,9 @@ public:
 protected:
     struct DatasetDef {
         DatasetType type;
-        unsigned long nbLines;
-        unsigned long nbColumns;
+        t_UInt nbLines;
+        t_UInt nbColumns;
+        std::string attributeName;
     };
 
     /// read the file header and leave the input stream at a position directly behind the header end
