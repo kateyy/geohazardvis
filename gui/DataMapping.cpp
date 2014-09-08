@@ -91,6 +91,8 @@ RenderView * DataMapping::openInRenderView(QList<DataObject *> dataObjects)
 
     renderView->addDataObjects(dataObjects);
 
+    setFocusedView(renderView);
+
     emit renderViewsChanged(m_renderViews.values());
 
     return renderView;
@@ -99,7 +101,10 @@ RenderView * DataMapping::openInRenderView(QList<DataObject *> dataObjects)
 void DataMapping::addToRenderView(QList<DataObject *> dataObjects, int renderView)
 {
     assert(m_renderViews.contains(renderView));
-    m_renderViews[renderView]->addDataObjects(dataObjects);
+    RenderView * view = m_renderViews[renderView];
+    view->addDataObjects(dataObjects);
+
+    setFocusedView(view);
 
     emit renderViewsChanged(m_renderViews.values());
 }

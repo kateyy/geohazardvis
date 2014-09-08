@@ -41,9 +41,10 @@ MainWindow::MainWindow()
     setCorner(Qt::Corner::BottomRightCorner, Qt::DockWidgetArea::RightDockWidgetArea);
 
     addDockWidget(Qt::DockWidgetArea::LeftDockWidgetArea, m_scalarMappingChooser);
-    addDockWidget(Qt::DockWidgetArea::LeftDockWidgetArea, m_vectorMappingChooser);
-    tabifyDockWidget(m_scalarMappingChooser, m_vectorMappingChooser);
     addDockWidget(Qt::DockWidgetArea::LeftDockWidgetArea, m_renderConfigWidget);
+    addDockWidget(Qt::DockWidgetArea::LeftDockWidgetArea, m_vectorMappingChooser);
+    tabifyDockWidget(m_renderConfigWidget, m_vectorMappingChooser);
+    tabbedDockWidgetToFront(m_renderConfigWidget);
 }
 
 MainWindow::~MainWindow()

@@ -12,7 +12,7 @@ public:
 
     int index() const;
 
-    void updateWindowTitle(QString message = {});
+    void updateTitle(QString message = {});
 
     virtual bool isTable() const = 0;
     virtual bool isRenderer() const = 0;

@@ -22,7 +22,7 @@ RenderConfigWidget::RenderConfigWidget(QWidget * parent)
 
     m_ui->propertyBrowser->setAlwaysExpandGroups(true);
 
-    updateWindowTitle();
+    updateTitle();
 }
 
 RenderConfigWidget::~RenderConfigWidget()
@@ -33,7 +33,9 @@ RenderConfigWidget::~RenderConfigWidget()
 
 void RenderConfigWidget::clear()
 {
-    updateWindowTitle();
+    updateTitle();
+
+    m_renderedData = nullptr;
 
     m_ui->propertyBrowser->setRoot(nullptr);
     delete m_propertyRoot;
@@ -42,16 +44,15 @@ void RenderConfigWidget::clear()
     emit repaint();
 }
 
-void RenderConfigWidget::setRenderedData(RenderedData * renderedData)
+void RenderConfigWidget::setRenderedData(int rendererId, RenderedData * renderedData)
 {
     clear();
 
+    m_renderedData = renderedData;
+    updateTitle(rendererId);
+
     if (!renderedData)
         return;
-
-    m_renderedData = renderedData;
-
-    updateWindowTitle(renderedData);
 
     m_propertyRoot = renderedData->createConfigGroup();
 
@@ -66,15 +67,13 @@ const RenderedData * RenderConfigWidget::renderedData() const
     return m_renderedData;
 }
 
-void RenderConfigWidget::updateWindowTitle(RenderedData * renderedData)
+void RenderConfigWidget::updateTitle(int rendererId)
 {
-    const QString defaultTitle = "render configuration";
+    QString title;
+    if (!renderedData())
+        title = "(no object selected)";
+    else
+        title = QString::number(rendererId) + ": " + renderedData()->dataObject()->name();
 
-    if (!renderedData)
-    {
-        setWindowTitle(defaultTitle);
-        return;
-    }
-
-    setWindowTitle(defaultTitle + ": " + renderedData->dataObject()->name());
+    m_ui->relatedDataObject->setText(title);
 }

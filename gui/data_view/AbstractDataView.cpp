@@ -16,7 +16,7 @@ int AbstractDataView::index() const
     return m_index;
 }
 
-void AbstractDataView::updateWindowTitle(QString message)
+void AbstractDataView::updateTitle(QString message)
 {
     QString title;
 

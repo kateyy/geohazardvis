@@ -6,15 +6,28 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>147</width>
+    <width>221</width>
     <height>170</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string/>
+   <string>render configuration</string>
   </property>
   <widget class="QWidget" name="content">
    <layout class="QVBoxLayout" name="mainLayout">
+    <item>
+     <widget class="QLabel" name="relatedDataObject">
+      <property name="font">
+       <font>
+        <weight>75</weight>
+        <bold>true</bold>
+       </font>
+      </property>
+      <property name="text">
+       <string>(no object selected)</string>
+      </property>
+     </widget>
+    </item>
     <item>
      <widget class="propertyguizeug::PropertyBrowser" name="propertyBrowser"/>
     </item>

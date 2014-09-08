@@ -19,13 +19,13 @@ public:
     ~RenderConfigWidget() override;
 
     /** reset the property browser to contain only configuration options related to the rendered data */
-    void setRenderedData(RenderedData * renderedData);
+    void setRenderedData(int rendererId = -1, RenderedData * renderedData = nullptr);
     const RenderedData * renderedData() const;
 
     void clear();
 
 protected:
-    void updateWindowTitle(RenderedData * renderedData = nullptr);
+    void updateTitle(int rendererId = -1);
 
 protected:
     Ui_RenderConfigWidget * m_ui;

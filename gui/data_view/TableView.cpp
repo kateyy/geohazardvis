@@ -53,7 +53,7 @@ void TableView::showDataObject(DataObject * dataObject)
     m_dataObject = dataObject;
     setModel(m_dataObject->tableModel());
 
-    updateWindowTitle();
+    updateTitle();
 
     m_ui->tableView->resizeColumnsToContents();
 }

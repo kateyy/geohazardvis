@@ -20,7 +20,7 @@ ScalarMappingChooser::ScalarMappingChooser(QWidget * parent)
 {
     m_ui->setupUi(this);
 
-    updateWindowTitle();
+    updateTitle();
 
     loadGradientImages();
 
@@ -34,7 +34,7 @@ ScalarMappingChooser::~ScalarMappingChooser()
 
 void ScalarMappingChooser::setMapping(QString rendererName, ScalarToColorMapping * mapping)
 {
-    updateWindowTitle(rendererName);
+    updateTitle(rendererName);
 
     rebuildGui(mapping);
 
@@ -151,17 +151,15 @@ int ScalarMappingChooser::gradientIndex(vtkLookupTable * gradient) const
     return -1;
 }
 
-void ScalarMappingChooser::updateWindowTitle(QString objectName)
+void ScalarMappingChooser::updateTitle(QString rendererName)
 {
-    const QString defaultTitle = "scalar mapping";
+    QString title;
+    if (rendererName.isEmpty())
+        title = "(no render view selected)";
+    else
+        title = rendererName;
 
-    if (objectName.isEmpty())
-    {
-        setWindowTitle(defaultTitle);
-        return;
-    }
-
-    setWindowTitle(defaultTitle + ": " + objectName);
+    m_ui->relatedRenderView->setText(title);
 }
 
 void ScalarMappingChooser::rebuildGui(ScalarToColorMapping * newMapping)

@@ -14,7 +14,26 @@
    <string>vector mapping</string>
   </property>
   <widget class="QWidget" name="content">
-   <layout class="QHBoxLayout" name="horizontalLayout">
+   <layout class="QVBoxLayout" name="verticalLayout_2">
+    <item>
+     <widget class="QLabel" name="relatedDataObject">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="font">
+       <font>
+        <weight>75</weight>
+        <bold>true</bold>
+       </font>
+      </property>
+      <property name="text">
+       <string>(no object selected)</string>
+      </property>
+     </widget>
+    </item>
     <item>
      <widget class="QSplitter" name="splitter">
       <property name="frameShape">
@@ -27,10 +46,29 @@
        <bool>false</bool>
       </property>
       <widget class="QListView" name="vectorsListView"/>
-      <widget class="propertyguizeug::PropertyBrowser" name="propertyBrowser">
-       <attribute name="headerVisible">
-        <bool>false</bool>
-       </attribute>
+      <widget class="QWidget" name="propertyBrowserContainer">
+       <layout class="QVBoxLayout" name="verticalLayout">
+        <item>
+         <widget class="QLabel" name="propertyBrowserLabel">
+          <property name="text">
+           <string/>
+          </property>
+          <property name="margin">
+           <number>0</number>
+          </property>
+          <property name="indent">
+           <number>15</number>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="propertyguizeug::PropertyBrowser" name="propertyBrowser">
+          <attribute name="headerVisible">
+           <bool>false</bool>
+          </attribute>
+         </widget>
+        </item>
+       </layout>
       </widget>
      </widget>
     </item>

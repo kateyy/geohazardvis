@@ -2,6 +2,7 @@
 #include "ui_VectorMappingChooser.h"
 
 #include <reflectionzeug/PropertyGroup.h>
+#include <reflectionzeug/StringProperty.h>
 
 #include <core/data_objects/DataObject.h>
 #include <core/data_objects/RenderedData.h>
@@ -10,11 +11,6 @@
 
 #include "VectorMappingChooserListModel.h"
 
-
-namespace
-{
-const QString friendlyName = "vector mapping";
-}
 
 VectorMappingChooser::VectorMappingChooser(QWidget * parent, Qt::WindowFlags flags)
     : QDockWidget(parent, flags)
@@ -31,9 +27,17 @@ VectorMappingChooser::VectorMappingChooser(QWidget * parent, Qt::WindowFlags fla
     connect(m_ui->vectorsListView->selectionModel(), &QItemSelectionModel::selectionChanged,
         [this](const QItemSelection & selection)
     {
-        m_ui->propertyBrowser->setRoot(selection.indexes().isEmpty()
-            ? nullptr
-            : m_propertyGroups[selection.indexes().first().row()]);
+        if (selection.indexes().isEmpty())
+        {
+            m_ui->propertyBrowser->setRoot(nullptr);
+            m_ui->propertyBrowserLabel->setText("");
+        }
+        else
+        {
+            int index = selection.indexes().first().row();
+            m_ui->propertyBrowser->setRoot(m_propertyGroups[index]);
+            m_ui->propertyBrowserLabel->setText(m_mapping->vectorNames()[index]);
+        }        
     });
 }
 
@@ -51,7 +55,7 @@ void VectorMappingChooser::setMapping(int rendererId, VectorsToSurfaceMapping * 
 
     m_mapping = mapping;
 
-    updateWindowTitle(rendererId);
+    updateTitle(rendererId);
 
     m_ui->propertyBrowser->setRoot(nullptr);
     qDeleteAll(m_propertyGroups);
@@ -77,11 +81,13 @@ const VectorsToSurfaceMapping * VectorMappingChooser::mapping() const
     return m_mapping;
 }
 
-void VectorMappingChooser::updateWindowTitle(int rendererId)
+void VectorMappingChooser::updateTitle(int rendererId)
 {
-    QString title = friendlyName;
-    if (rendererId >= 0)
-        title += QString::number(rendererId) + m_mapping->renderedData()->dataObject()->name();
+    QString title;
+    if (rendererId < 0)
+        title = "(no object selected)";
+    else
+        title = QString::number(rendererId) + ": " + m_mapping->renderedData()->dataObject()->name();
 
-    setWindowTitle(title);
+    m_ui->relatedDataObject->setText(title);
 }

@@ -53,7 +53,7 @@ RenderView::RenderView(
     setupInteraction();
     setupColorMappingLegend();
 
-    updateWindowTitle();
+    updateTitle();
 
     connect(&m_scalarMappingChooser, &ScalarMappingChooser::renderSetupChanged, this, &RenderView::render);
     connect(&m_vectorMappingChooser, &VectorMappingChooser::renderSetupChanged, this, &RenderView::render);
@@ -158,7 +158,7 @@ void RenderView::ShowInfo(const QStringList & info)
 
 RenderedData * RenderView::addDataObject(DataObject * dataObject)
 {
-    updateWindowTitle(dataObject->name() + " (loading to GPU)");
+    updateTitle(dataObject->name() + " (loading to GPU)");
     QApplication::processEvents();
 
     assert(dataObject->dataTypeName() == m_currentDataType);
@@ -206,7 +206,7 @@ void RenderView::addDataObjects(QList<DataObject *> dataObjects)
 
     if (aNewObject)
     {
-        m_renderConfigWidget.setRenderedData(aNewObject);
+        m_renderConfigWidget.setRenderedData(index(), aNewObject);
         m_vectorMappingChooser.setMapping(index(), aNewObject->vectorMapping());
     }
 
@@ -215,7 +215,7 @@ void RenderView::addDataObjects(QList<DataObject *> dataObjects)
     m_scalarMapping.setRenderedData(m_renderedData);
     m_scalarMappingChooser.setMapping(friendlyName(), &m_scalarMapping);
 
-    updateWindowTitle();
+    updateTitle();
 
     vtkCamera & camera = *m_renderer->GetActiveCamera();
     camera.SetPosition(0, 0, 1);
@@ -276,7 +276,7 @@ void RenderView::removeDataObject(DataObject * dataObject)
 
     m_scalarMapping.setRenderedData(m_renderedData);
     if (m_renderConfigWidget.renderedData() == renderedData)
-        m_renderConfigWidget.setRenderedData(nullptr);
+        m_renderConfigWidget.setRenderedData();
     m_scalarMappingChooser.setMapping(friendlyName(), &m_scalarMapping);
 }
 
@@ -510,7 +510,7 @@ void RenderView::updateGuiForActor(vtkActor * actor)
 
     RenderedData * r = m_actorToRenderedData[actor];
 
-    m_renderConfigWidget.setRenderedData(r);
+    m_renderConfigWidget.setRenderedData(index(), r);
     m_scalarMappingChooser.setMapping(friendlyName(), &m_scalarMapping);
     m_vectorMappingChooser.setMapping(index(), r->vectorMapping());
 }

@@ -28,7 +28,7 @@ signals:
     void renderSetupChanged();
 
 private:
-    void updateWindowTitle(int rendererId = -1);
+    void updateTitle(int rendererId = -1);
 
 private:
     Ui_VectorMappingChooser * m_ui;

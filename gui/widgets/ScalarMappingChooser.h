@@ -38,7 +38,7 @@ private:
     void loadGradientImages();
     int gradientIndex(vtkLookupTable * gradient) const;
 
-    void updateWindowTitle(QString objectName = "");
+    void updateTitle(QString rendererName = "");
     void rebuildGui(ScalarToColorMapping * newMapping);
     void updateGuiValueRanges();
 

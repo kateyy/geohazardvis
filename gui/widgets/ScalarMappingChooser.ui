@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>210</width>
-    <height>242</height>
+    <height>229</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -17,10 +17,26 @@
    </sizepolicy>
   </property>
   <property name="windowTitle">
-   <string/>
+   <string>scalar mapping</string>
   </property>
   <widget class="QWidget" name="content">
    <layout class="QVBoxLayout" name="mainLayout">
+    <item>
+     <widget class="QLabel" name="relatedRenderView">
+      <property name="font">
+       <font>
+        <weight>75</weight>
+        <bold>true</bold>
+       </font>
+      </property>
+      <property name="text">
+       <string>(no render view selected)</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+      </property>
+     </widget>
+    </item>
     <item>
      <widget class="QGroupBox" name="scalarsGroupBox">
       <property name="sizePolicy">
@@ -31,6 +47,9 @@
       </property>
       <property name="title">
        <string>scalars for color mapping</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
       </property>
       <layout class="QVBoxLayout" name="verticalLayout">
        <item>
@@ -129,6 +148,19 @@
        </item>
       </layout>
      </widget>
+    </item>
+    <item>
+     <spacer name="verticalSpacer">
+      <property name="orientation">
+       <enum>Qt::Vertical</enum>
+      </property>
+      <property name="sizeHint" stdset="0">
+       <size>
+        <width>20</width>
+        <height>40</height>
+       </size>
+      </property>
+     </spacer>
     </item>
    </layout>
   </widget>
