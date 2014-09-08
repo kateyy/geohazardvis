@@ -52,7 +52,8 @@ reflectionzeug::PropertyGroup * RenderedImageData::createConfigGroup()
     PropertyGroup * configGroup = new PropertyGroup();
 
     auto * renderSettings = new PropertyGroup("renderSettings");
-    renderSettings->setTitle("rendering");
+    renderSettings->setOption("title", "rendering");
+    renderSettings->setOption("title", "rendering");
     configGroup->addProperty(renderSettings);
 
     auto * interpolate = renderSettings->addProperty<bool>("interpolate",

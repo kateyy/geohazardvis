@@ -64,7 +64,7 @@ reflectionzeug::PropertyGroup * RenderedPolyData::createConfigGroup()
     PropertyGroup * configGroup = new PropertyGroup();
 
     auto * renderSettings = new PropertyGroup("renderSettings");
-    renderSettings->setTitle("rendering");
+    renderSettings->setOption("title", "rendering");
     configGroup->addProperty(renderSettings);
 
 
@@ -87,7 +87,7 @@ reflectionzeug::PropertyGroup * RenderedPolyData::createConfigGroup()
         renderProperty()->SetEdgeVisibility(vis);
         emit geometryChanged();
     });
-    edgesVisible->setTitle("edge visible");
+    edgesVisible->setOption("title", "edge visible");
 
     auto * lineWidth = renderSettings->addProperty<float>("lineWidth",
         std::bind(&vtkProperty::GetLineWidth, renderProperty()),
@@ -95,10 +95,10 @@ reflectionzeug::PropertyGroup * RenderedPolyData::createConfigGroup()
         renderProperty()->SetLineWidth(width);
         emit geometryChanged();
     });
-    lineWidth->setTitle("line width");
-    lineWidth->setMinimum(0.1);
-    lineWidth->setMaximum(std::numeric_limits<float>::max());
-    lineWidth->setStep(0.1);
+    lineWidth->setOption("title", "line width");
+    lineWidth->setOption("minimum", 0.1);
+    lineWidth->setOption("maximum", std::numeric_limits<float>::max());
+    lineWidth->setOption("step", 0.1);
 
     auto * edgeColor = renderSettings->addProperty<Color>("edgeColor",
         [this]() {
@@ -109,7 +109,7 @@ reflectionzeug::PropertyGroup * RenderedPolyData::createConfigGroup()
         renderProperty()->SetEdgeColor(color.red() / 255.0, color.green() / 255.0, color.blue() / 255.0);
         emit geometryChanged();
     });
-    edgeColor->setTitle("edge color");
+    edgeColor->setOption("title", "edge color");
 
 
     auto * representation = renderSettings->addProperty<Representation>("representation",
@@ -132,7 +132,7 @@ reflectionzeug::PropertyGroup * RenderedPolyData::createConfigGroup()
         renderProperty()->SetLighting(enabled);
         emit geometryChanged();
     });
-    lightingEnabled->setTitle("lighting enabled");
+    lightingEnabled->setOption("title", "lighting enabled");
 
     auto * interpolation = renderSettings->addProperty<Interpolation>("interpolation",
         [this]() {
@@ -142,7 +142,7 @@ reflectionzeug::PropertyGroup * RenderedPolyData::createConfigGroup()
         renderProperty()->SetInterpolation(static_cast<int>(i));
         emit geometryChanged();
     });
-    interpolation->setTitle("interpolation");
+    interpolation->setOption("title", "interpolation");
     interpolation->setStrings({
             { Interpolation::flat, "flat" },
             { Interpolation::gouraud, "gouraud" },
@@ -157,9 +157,9 @@ reflectionzeug::PropertyGroup * RenderedPolyData::createConfigGroup()
         renderProperty()->SetOpacity(1.0 - transparency);
         emit geometryChanged();
     });
-    transparency->setMinimum(0.f);
-    transparency->setMaximum(1.f);
-    transparency->setStep(0.01f);
+    transparency->setOption("minimum", 0.f);
+    transparency->setOption("maximum", 1.f);
+    transparency->setOption("step", 0.01f);
 
     auto pointSize = renderSettings->addProperty<unsigned>("pointSize",
         [this]() {
@@ -169,10 +169,10 @@ reflectionzeug::PropertyGroup * RenderedPolyData::createConfigGroup()
         renderProperty()->SetPointSize(pointSize);
         emit geometryChanged();
     });
-    pointSize->setTitle("point size");
-    pointSize->setMinimum(1);
-    pointSize->setMaximum(20);
-    pointSize->setStep(1);
+    pointSize->setOption("title", "point size");
+    pointSize->setOption("minimum", 1);
+    pointSize->setOption("maximum", 20);
+    pointSize->setOption("step", 1);
 
     return configGroup;
 }

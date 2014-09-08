@@ -115,22 +115,22 @@ reflectionzeug::PropertyGroup * VectorsForSurfaceMapping::createPropertyGroup()
 
     auto prop_length = group->addProperty<float>("length", this,
         &VectorsForSurfaceMapping::arrowLength, &VectorsForSurfaceMapping::setArrowLength);
-    prop_length->setTitle("arrow length");
-    prop_length->setMinimum(0.00001f);
-    prop_length->setStep(0.1f);
+    prop_length->setOption("title", "arrow length");
+    prop_length->setOption("minimum", 0.00001f);
+    prop_length->setOption("step", 0.1f);
 
     auto prop_radius = group->addProperty<float>("radius", this,
         &VectorsForSurfaceMapping::arrowRadius, &VectorsForSurfaceMapping::setArrowRadius);
-    prop_radius->setTitle("tip radius");
-    prop_radius->setMinimum(0.00001f);
-    prop_radius->setStep(0.01f);
+    prop_radius->setOption("title", "tip radius");
+    prop_radius->setOption("minimum", 0.00001f);
+    prop_radius->setOption("step", 0.01f);
 
     auto prop_tipLength = group->addProperty<float>("tipLength", this,
         &VectorsForSurfaceMapping::arrowTipLength, &VectorsForSurfaceMapping::setArrowTipLength);
-    prop_tipLength->setTitle("tip length");
-    prop_tipLength->setMinimum(0.00001f);
-    prop_tipLength->setMaximum(1.f);
-    prop_tipLength->setStep(0.01f);
+    prop_tipLength->setOption("title", "tip length");
+    prop_tipLength->setOption("minimum", 0.00001f);
+    prop_tipLength->setOption("maximum", 1.f);
+    prop_tipLength->setOption("step", 0.01f);
 
     auto * edgeColor = group->addProperty<reflectionzeug::Color>("color",
         [this]() {
@@ -141,7 +141,7 @@ reflectionzeug::PropertyGroup * VectorsForSurfaceMapping::createPropertyGroup()
         actor()->GetProperty()->SetColor(color.red() / 255.0, color.green() / 255.0, color.blue() / 255.0);
         emit geometryChanged();
     });
-    edgeColor->setTitle("color");
+    edgeColor->setOption("title", "color");
 
     return group;
 }
