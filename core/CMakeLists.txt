@@ -21,6 +21,8 @@ set ( SOURCES
     
     data_objects/DataObject.h
     data_objects/DataObject.cpp
+    data_objects/AttributeVectorData.h
+    data_objects/AttributeVectorData.cpp
     data_objects/ImageDataObject.h
     data_objects/ImageDataObject.cpp
     data_objects/PolyDataObject.h

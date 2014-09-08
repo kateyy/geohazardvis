@@ -164,7 +164,8 @@ RenderedData * RenderView::addDataObject(DataObject * dataObject)
     assert(dataObject->dataTypeName() == m_currentDataType);
 
     RenderedData * renderedData = dataObject->createRendered();
-    assert(renderedData);
+    if (!renderedData)
+        return nullptr;
 
     for (vtkActor * actor : renderedData->actors())
         m_renderer->AddViewProp(actor);

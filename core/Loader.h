@@ -26,6 +26,8 @@ protected:
     static PolyDataObject * loadIndexedTriangles(QString name, const std::vector<ReadDataset> & datasets);
     static ImageDataObject * loadGrid(QString name, const std::vector<ReadDataset> & datasets);
 
+    static DataObject * readRawFile(QString fileName);
+
     typedef std::vector<std::vector<t_FP>> InputVector;
     static vtkPolyData * parsePoints(const InputVector & parsedData, t_UInt firstColumn);
     static vtkPolyData * parseIndexedTriangles(

@@ -12,9 +12,8 @@ vtkInformationKeyMacro(DataObject, NameKey, String);
 DataObject::DataObject(QString name, vtkDataSet * dataSet)
     : m_name(name)
     , m_dataSet(dataSet)
-    , m_tableModel(new QVtkTableModel())
+    , m_tableModel(nullptr)
 {
-    m_tableModel->showData(dataSet);
 }
 
 DataObject::~DataObject()
@@ -44,5 +43,17 @@ const double * DataObject::bounds()
 
 QVtkTableModel * DataObject::tableModel()
 {
+    if (!m_tableModel)
+        m_tableModel = createTableModel();
+
     return m_tableModel;
+}
+
+QVtkTableModel * DataObject::createTableModel()
+{
+    QVtkTableModel * model = new QVtkTableModel;
+
+    model->showData(dataSet());
+
+    return model;
 }

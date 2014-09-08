@@ -23,6 +23,7 @@ enum class DatasetType {
 
 enum class ModelType
 {
+    raw,
     triangles,
     grid2D
 };

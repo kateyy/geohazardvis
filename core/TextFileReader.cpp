@@ -85,8 +85,8 @@ std::shared_ptr<InputFileInfo> TextFileReader::readHeader(ifstream & inputStream
         }
 
         if (!started) {
-            cerr << "invalid input file (does not begin with the $begin tag)." << endl;
-            return nullptr;
+            //cerr << "invalid input file (does not begin with the $begin tag)." << endl;
+            return make_shared<InputFileInfo>("", ModelType::raw);
         }
 
         // define the current 3d/2d model
@@ -102,7 +102,7 @@ std::shared_ptr<InputFileInfo> TextFileReader::readHeader(ifstream & inputStream
             getline(linestream, name);
 
             assert(modelNamesType.find(type) != modelNamesType.end());
-            input.reset(new InputFileInfo(name, modelNamesType.at(type)));
+            input = make_shared<InputFileInfo>(name, modelNamesType.at(type));
 
             switch (input->type)
             {

@@ -5,6 +5,7 @@
 
 #include <QDebug>
 #include <QList>
+#include <QFileInfo>
 
 #include <vtkFloatArray.h>
 #include <vtkPoints.h>
@@ -16,10 +17,11 @@
 #include <vtkImageData.h>
 
 #include "common/file_parser.h"
-#include "vtkhelper.h"
 #include "TextFileReader.h"
-#include <data_objects/PolyDataObject.h>
-#include <data_objects/ImageDataObject.h>
+#include <core/vtkhelper.h>
+#include <core/data_objects/PolyDataObject.h>
+#include <core/data_objects/ImageDataObject.h>
+#include <core/data_objects/AttributeVectorData.h>
 
 
 DataObject * Loader::readFile(QString filename)
@@ -39,6 +41,8 @@ DataObject * Loader::readFile(QString filename)
         return loadIndexedTriangles(dataSetName, readDatasets);
     case ModelType::grid2D:
         return loadGrid(dataSetName, readDatasets);
+    case ModelType::raw:
+        return readRawFile(filename);
     default:
         cerr << "Warning: model type unsupported by the loader: " << int(inputInfo->type) << endl;
         return nullptr;
@@ -156,7 +160,7 @@ vtkPolyData * Loader::parsePoints(const InputVector & parsedData, t_UInt firstCo
     size_t nbRows = parsedData.at(firstColumn).size();
     std::vector<vtkIdType> pointIds(nbRows);
 
-    // copy triangle vertexes to vtk point list
+    // copy triangle vertexes to VTK point list
     for (size_t row = 0; row < nbRows; ++row) {
         pointIds.at(row) = points->InsertNextPoint(parsedData[firstColumn][row], parsedData[firstColumn + 1][row], parsedData[firstColumn + 2][row]);
     }
@@ -207,4 +211,38 @@ vtkPolyData * Loader::parseIndexedTriangles(
     resultPolyData->SetPolys(triangles);
 
     return resultPolyData;
+}
+
+DataObject * Loader::readRawFile(QString fileName)
+{
+    InputVector inputVectors;
+    populateIOVectors(fileName.toStdString(), inputVectors);
+
+    int numColumns = (int)inputVectors.size();
+    if (numColumns == 0)
+        return nullptr;
+    int numRows = (int)inputVectors.at(0).size();
+    if (numRows == 0)
+        return nullptr;
+
+    bool switchRowsColumns = numColumns > numRows;
+    if (switchRowsColumns)
+        std::swap(numColumns, numRows);
+
+    vtkSmartPointer<vtkFloatArray> dataArray = vtkSmartPointer<vtkFloatArray>::New();
+    dataArray->SetNumberOfComponents(numColumns);
+    dataArray->SetNumberOfTuples(numRows);
+
+    if (!switchRowsColumns)
+        for (vtkIdType component = 0; component < numColumns; ++component)
+            for (vtkIdType cellId = 0; cellId < numRows; ++cellId)
+                dataArray->SetValue(cellId * numColumns + component, inputVectors.at(component).at(cellId));
+    else
+        for (vtkIdType component = 0; component < numColumns; ++component)
+            for (vtkIdType cellId = 0; cellId < numRows; ++cellId)
+                dataArray->SetValue(component * numRows + cellId, inputVectors.at(component).at(cellId));
+
+    QFileInfo fInfo(fileName);
+
+    return new AttributeVectorData(fInfo.baseName(), dataArray);
 }

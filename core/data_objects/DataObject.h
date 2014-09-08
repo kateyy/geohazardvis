@@ -35,6 +35,9 @@ public:
 
     static vtkInformationStringKey * NameKey();
 
+protected:
+    virtual QVtkTableModel * createTableModel();
+
 private:
     QString m_name;
 
