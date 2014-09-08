@@ -25,11 +25,6 @@ DataMapping::~DataMapping()
     qDeleteAll(m_tableViews.values());
 }
 
-void DataMapping::addDataObjects(QList<DataObject *> dataObjects)
-{
-    m_dataObject << dataObjects;
-}
-
 void DataMapping::removeDataObjects(QList<DataObject *> dataObjects)
 {
     QList<RenderView*> currentRenderViews = m_renderViews.values();

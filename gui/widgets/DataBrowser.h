@@ -47,6 +47,4 @@ private:
     Ui_DataBrowser * m_ui;
     DataBrowserTableModel * m_tableModel;
     DataMapping * m_dataMapping;
-
-    QList<DataObject *> m_dataObjects;
 };

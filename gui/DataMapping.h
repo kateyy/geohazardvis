@@ -42,7 +42,6 @@ private slots:
 private:
     MainWindow & m_mainWindow;
 
-    QList<DataObject *> m_dataObject;
     int m_nextTableIndex;
     int m_nextRenderViewIndex;
     QMap<int, TableView*> m_tableViews;

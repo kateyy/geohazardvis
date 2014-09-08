@@ -5,6 +5,7 @@
 #include <QMouseEvent>
 #include <QDebug>
 
+#include <core/DataSetHandler.h>
 #include <core/data_objects/DataObject.h>
 #include <core/data_objects/RenderedData.h>
 
@@ -29,8 +30,6 @@ DataBrowser::DataBrowser(QWidget* parent, Qt::WindowFlags f)
 DataBrowser::~DataBrowser()
 {
     delete m_ui;
-
-    qDeleteAll(m_dataObjects);
 }
 
 void DataBrowser::setDataMapping(DataMapping * dataMapping)
@@ -44,7 +43,7 @@ void DataBrowser::setDataMapping(DataMapping * dataMapping)
 
 void DataBrowser::addDataObject(DataObject * dataObject)
 {
-    m_dataObjects << dataObject;
+    DataSetHandler::instance().add(dataObject);
 
     m_tableModel->addDataObject(dataObject);
 
@@ -134,10 +133,8 @@ void DataBrowser::removeFile()
     {
         m_tableModel->removeDataObject(dataObject);
 
-        m_dataObjects.removeOne(dataObject);
+        DataSetHandler::instance().deleteObject(dataObject);
     }
-
-    qDeleteAll(selection);
 }
 
 void DataBrowser::evaluateItemViewClick(const QModelIndex & index)
@@ -156,7 +153,7 @@ void DataBrowser::evaluateItemViewClick(const QModelIndex & index)
 void DataBrowser::setupGuiFor(RenderView * renderView)
 {
     QSet<const DataObject *> allObjects;
-    for (const DataObject * dataObject : m_dataObjects)
+    for (DataObject * dataObject : DataSetHandler::instance().dataObjects())
         allObjects << dataObject;
 
     if (!renderView)

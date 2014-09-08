@@ -5,6 +5,8 @@ message( STATUS ${TARGET} )
 set ( SOURCES
     ${TARGET}_api.h
     
+    DataSetHandler.h
+    DataSetHandler.cpp
     Loader.h
     Loader.cpp
     TextFileReader.h

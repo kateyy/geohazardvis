@@ -109,8 +109,6 @@ void MainWindow::openFile(QString fileName)
 
     m_dataBrowser->addDataObject(dataObject);
 
-    m_dataMapping->addDataObjects({ dataObject });
-
     setWindowTitle(oldName);
 }
 
