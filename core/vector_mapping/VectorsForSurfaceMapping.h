@@ -1,5 +1,6 @@
 #pragma once
 
+#include <QList>
 #include <QMap>
 #include <QObject>
 #include <QString>
@@ -33,11 +34,7 @@ class CORE_API VectorsForSurfaceMapping : public QObject
 public:
     friend class VectorsForSurfaceMappingRegistry;
 
-    template<typename SubClass>
-    static VectorsForSurfaceMapping * newInstance(RenderedData * renderedData);
-
 public:
-    explicit VectorsForSurfaceMapping(RenderedData * renderedData);
     virtual ~VectorsForSurfaceMapping() = 0;
 
     virtual QString name() const = 0;
@@ -62,6 +59,11 @@ signals:
     void geometryChanged();
 
 protected:
+    template<typename SubClass>
+    /** default function for Registry::MappingCreator, returning a single mapping instance */
+    static QList<VectorsForSurfaceMapping *> newInstance(RenderedData * renderedData);
+    explicit VectorsForSurfaceMapping(RenderedData * renderedData);
+
     virtual void initialize();
 
     virtual bool isValid() const;

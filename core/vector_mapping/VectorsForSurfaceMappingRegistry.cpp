@@ -21,30 +21,33 @@ QMap<QString, VectorsForSurfaceMapping *> VectorsForSurfaceMappingRegistry::crea
 {
     QMap<QString, VectorsForSurfaceMapping *> validVectors;
 
-    for (auto constr : m_mappingConstructors)
+    for (auto creator : m_mappingCreators)
     {
-        VectorsForSurfaceMapping * vectors = constr(renderedData);
+        QList<VectorsForSurfaceMapping *> vectors = creator(renderedData);
 
-        if (vectors->isValid())
-            validVectors.insert(vectors->name(), vectors);
-        else
-            delete vectors;
+        for (VectorsForSurfaceMapping * v : vectors)
+        {
+            if (v->isValid())
+                validVectors.insert(v->name(), v);
+            else
+                delete v;
+        }
     }
 
     return validVectors;
 }
 
-const QMap<QString, VectorsForSurfaceMappingRegistry::MappingConstructor> & VectorsForSurfaceMappingRegistry::mappingConstructors()
+const QMap<QString, VectorsForSurfaceMappingRegistry::MappingCreator> & VectorsForSurfaceMappingRegistry::mappingCreators()
 {
-    return m_mappingConstructors;
+    return m_mappingCreators;
 }
 
-bool VectorsForSurfaceMappingRegistry::registerImplementation(QString name, const MappingConstructor & constructor)
+bool VectorsForSurfaceMappingRegistry::registerImplementation(QString name, const MappingCreator & constructor)
 {
-    assert(!m_mappingConstructors.contains(name));
-    if (m_mappingConstructors.contains(name))
+    assert(!m_mappingCreators.contains(name));
+    if (m_mappingCreators.contains(name))
         return false;
 
-    m_mappingConstructors.insert(name, constructor);
+    m_mappingCreators.insert(name, constructor);
     return true;
 }

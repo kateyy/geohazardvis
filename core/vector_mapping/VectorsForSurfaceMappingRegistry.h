@@ -2,8 +2,9 @@
 
 #include <functional>
 
-#include <QString>
+#include <QList>
 #include <QMap>
+#include <QString>
 
 #include <core/core_api.h>
 
@@ -17,8 +18,8 @@ class CORE_API VectorsForSurfaceMappingRegistry
 public:
     static VectorsForSurfaceMappingRegistry & instance();
 
-    using MappingConstructor = std::function<VectorsForSurfaceMapping *(RenderedData * renderedData)>;
-    bool registerImplementation(QString name, const MappingConstructor & constructor);
+    using MappingCreator = std::function<QList<VectorsForSurfaceMapping *> (RenderedData * renderedData)>;
+    bool registerImplementation(QString name, const MappingCreator & creator);
 
     /** retrieve a list of vectors that are applicable for the rendered data object */
     QMap<QString, VectorsForSurfaceMapping *> createMappingsValidFor(RenderedData * renderedData);
@@ -27,7 +28,7 @@ private:
     VectorsForSurfaceMappingRegistry();
     ~VectorsForSurfaceMappingRegistry();
 
-    const QMap<QString, MappingConstructor> & mappingConstructors();
+    const QMap<QString, MappingCreator> & mappingCreators();
 
-    QMap<QString, MappingConstructor> m_mappingConstructors;
+    QMap<QString, MappingCreator> m_mappingCreators;
 };
