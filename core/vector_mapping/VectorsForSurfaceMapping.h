@@ -79,11 +79,14 @@ private:
 
     bool m_isVisible;
 
-    vtkSmartPointer<vtkArrowSource> m_arrowSource;
     vtkSmartPointer<vtkPolyData> m_polyData;
+    vtkSmartPointer<vtkArrowSource> m_arrowSource;
     vtkSmartPointer<vtkGlyph3D> m_arrowGlyph;
     vtkSmartPointer<vtkMapper> m_mapper;
     vtkSmartPointer<vtkActor> m_actor;
+
+protected:
+    bool m_isValid;
 
 };
 

@@ -38,6 +38,9 @@ SurfaceNormalMapping::SurfaceNormalMapping(RenderedData * renderedData)
     , m_normalType(NormalType::CellNormal)
     , m_normalTypeChanged(true)
 {
+    if (!m_isValid)
+        return;
+
     arrowGlyph()->SetVectorModeToUseNormal();
 }
 

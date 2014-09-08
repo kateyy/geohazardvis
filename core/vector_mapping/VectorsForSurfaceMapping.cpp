@@ -21,18 +21,16 @@
 
 
 VectorsForSurfaceMapping::VectorsForSurfaceMapping(RenderedData * renderedData)
-    : m_renderedData(renderedData)
+    : m_polyData(vtkPolyData::SafeDownCast(renderedData->dataObject()->dataSet()))
+    , m_renderedData(renderedData)
     , m_isVisible(false)
     , m_actor(vtkSmartPointer<vtkActor>::New())
+    , m_isValid(m_polyData && (m_polyData->GetCellType(0) == VTK_TRIANGLE))
 {
     assert(renderedData);
 
-    vtkPolyData * poly = vtkPolyData::SafeDownCast(renderedData->dataObject()->dataSet());
-    // only for triangle data
-    if (!poly || (poly->GetCellType(0) != VTK_TRIANGLE))
+    if (!m_isValid)
         return;
-
-    m_polyData = poly;
 
     m_arrowSource = vtkSmartPointer<vtkArrowSource>::New();
     m_arrowSource->SetShaftRadius(0.02);
@@ -162,7 +160,7 @@ RenderedData * VectorsForSurfaceMapping::renderedData()
 
 bool VectorsForSurfaceMapping::isValid() const
 {
-    return m_polyData != nullptr;
+    return m_isValid;
 }
 
 vtkPolyData * VectorsForSurfaceMapping::polyData()

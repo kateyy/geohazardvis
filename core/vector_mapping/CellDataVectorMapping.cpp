@@ -68,6 +68,9 @@ CellDataVectorMapping::CellDataVectorMapping(RenderedData * renderedData, vtkDat
     : VectorsForSurfaceMapping(renderedData)
     , m_dataArray(vectorData)
 {
+    if (!m_isValid)
+        return;
+
     arrowGlyph()->SetVectorModeToUseVector();
 }
 
