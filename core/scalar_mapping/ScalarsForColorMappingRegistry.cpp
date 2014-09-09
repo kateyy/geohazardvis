@@ -21,30 +21,33 @@ QMap<QString, ScalarsForColorMapping *> ScalarsForColorMappingRegistry::createMa
 {
     QMap<QString, ScalarsForColorMapping *> validScalars;
 
-    for (auto constr : m_mappingConstructors)
+    for (auto creator : m_mappingCreators)
     {
-        ScalarsForColorMapping * scalars = constr(dataObjects);
+        QList<ScalarsForColorMapping *> scalars = creator(dataObjects);
 
-        if (scalars->isValid())
-            validScalars.insert(scalars->name(), scalars);
-        else
-            delete scalars;
+        for (ScalarsForColorMapping * s : scalars)
+        {
+            if (s->isValid())
+                validScalars.insert(s->name(), s);
+            else
+                delete s;
+        }
     }
 
     return validScalars;
 }
 
-const QMap<QString, ScalarsForColorMappingRegistry::MappingConstructor> & ScalarsForColorMappingRegistry::mappingConstructors()
+const QMap<QString, ScalarsForColorMappingRegistry::MappingCreator> & ScalarsForColorMappingRegistry::mappingCreators()
 {
-    return m_mappingConstructors;
+    return m_mappingCreators;
 }
 
-bool ScalarsForColorMappingRegistry::registerImplementation(QString name, const MappingConstructor & constructor)
+bool ScalarsForColorMappingRegistry::registerImplementation(QString name, const MappingCreator & creator)
 {
-    assert(!m_mappingConstructors.contains(name));
-    if (m_mappingConstructors.contains(name))
+    assert(!m_mappingCreators.contains(name));
+    if (m_mappingCreators.contains(name))
         return false;
 
-    m_mappingConstructors.insert(name, constructor);
+    m_mappingCreators.insert(name, creator);
     return true;
 }

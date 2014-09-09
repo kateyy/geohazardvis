@@ -20,7 +20,7 @@ public:
 
     /** create a filter to map values to color, applying current min/max settings
       * Stores a reference to the filter, to update min/max values on demand. */
-    vtkAlgorithm * createFilter();
+    vtkAlgorithm * createFilter() override;
 
 protected:
     bool isValid() const override;

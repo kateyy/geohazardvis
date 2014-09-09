@@ -2,8 +2,9 @@
 
 #include <functional>
 
-#include <QString>
+#include <QList>
 #include <QMap>
+#include <QString>
 
 #include <core/core_api.h>
 
@@ -17,8 +18,8 @@ class CORE_API ScalarsForColorMappingRegistry
 public:
     static ScalarsForColorMappingRegistry & instance();
 
-    using MappingConstructor = std::function<ScalarsForColorMapping *(const QList<DataObject *> & dataObjects)>;
-    bool registerImplementation(QString name, const MappingConstructor & constructor);
+    using MappingCreator = std::function<QList<ScalarsForColorMapping *>(const QList<DataObject*> & dataObjects)>;
+    bool registerImplementation(QString name, const MappingCreator & creator);
 
     /** retrieve a list of scalars extractions that are applicable for the specified data object list */
      QMap<QString, ScalarsForColorMapping *> createMappingsValidFor(const QList<DataObject*> & dataObjects);
@@ -27,7 +28,7 @@ private:
     ScalarsForColorMappingRegistry();
     ~ScalarsForColorMappingRegistry();
 
-    const QMap<QString, MappingConstructor> & mappingConstructors();
+    const QMap<QString, MappingCreator> & mappingCreators();
 
-    QMap<QString, MappingConstructor> m_mappingConstructors;
+    QMap<QString, MappingCreator> m_mappingCreators;
 };

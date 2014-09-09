@@ -26,7 +26,7 @@ public:
     friend class ScalarsForColorMappingRegistry;
 
     template<typename SubClass>
-    static ScalarsForColorMapping * newInstance(const QList<DataObject*> & dataObjects);
+    static QList<ScalarsForColorMapping *> newInstance(const QList<DataObject*> & dataObjects);
 
 public:
     explicit ScalarsForColorMapping(const QList<DataObject *> & dataObjects);
