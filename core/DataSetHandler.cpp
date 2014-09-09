@@ -36,12 +36,12 @@ void DataSetHandler::add(DataObject * dataObject)
 {
     assert(dataObject);
     assert(!dataObjects().contains(dataObject));
-    dataObjects() << dataObject;
+    s_dataObjects->append(dataObject);
 }
 
 void DataSetHandler::deleteObject(DataObject * dataObject)
 {
-    dataObjects().removeOne(dataObject);
+    s_dataObjects->removeOne(dataObject);
     delete dataObject;
 }
 

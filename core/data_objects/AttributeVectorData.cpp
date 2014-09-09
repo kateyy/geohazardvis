@@ -9,6 +9,7 @@ AttributeVectorData::AttributeVectorData(QString name, vtkFloatArray * dataArray
     : DataObject(name, nullptr)
     , m_dataArray(dataArray)
 {
+    dataArray->SetName(name.toLatin1().data());
 }
 
 AttributeVectorData::~AttributeVectorData() = default;

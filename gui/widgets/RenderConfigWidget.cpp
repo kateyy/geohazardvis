@@ -33,9 +33,9 @@ RenderConfigWidget::~RenderConfigWidget()
 
 void RenderConfigWidget::clear()
 {
-    updateTitle();
-
     m_renderedData = nullptr;
+
+    updateTitle();
 
     m_ui->propertyBrowser->setRoot(nullptr);
     delete m_propertyRoot;

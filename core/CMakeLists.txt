@@ -55,6 +55,8 @@ set ( SOURCES
     vector_mapping/VectorsForSurfaceMapping.cpp
     vector_mapping/VectorsForSurfaceMappingRegistry.h
     vector_mapping/VectorsForSurfaceMappingRegistry.cpp
+    vector_mapping/AttributeVectorMapping.h
+    vector_mapping/AttributeVectorMapping.cpp
     vector_mapping/CellDataVectorMapping.h
     vector_mapping/CellDataVectorMapping.cpp
     vector_mapping/SurfaceNormalMapping.h

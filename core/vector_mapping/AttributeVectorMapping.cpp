@@ -1,61 +1,50 @@
-#include "CellDataVectorMapping.h"
+#include "AttributeVectorMapping.h"
 
-#include <cstring>
-
-#include <vtkPolyData.h>
-#include <vtkPolygon.h>
-#include <vtkIdTypeArray.h>
 #include <vtkFloatArray.h>
-
-#include <vtkPointData.h>
+#include <vtkDataSet.h>
+#include <vtkGlyph3D.h>
 #include <vtkCellData.h>
 #include <vtkCellIterator.h>
+#include <vtkPolygon.h>
+#include <vtkIdTypeArray.h>
 #include <vtkPoints.h>
-
-#include <vtkGlyph3D.h>
-
 #include <vtkVertexGlyphFilter.h>
+#include <vtkPointData.h>
 
+#include <core/DataSetHandler.h>
 #include <core/vtkhelper.h>
-#include <core/data_objects/DataObject.h>
+#include <core/data_objects/AttributeVectorData.h>
 #include <core/data_objects/RenderedData.h>
 #include <core/vector_mapping/VectorsForSurfaceMappingRegistry.h>
 
 
 namespace
 {
-const QString s_name = "cell data vectors";
+const QString s_name = "attribute array vectors";
 }
 
-const bool CellDataVectorMapping::s_registered = VectorsForSurfaceMappingRegistry::instance().registerImplementation(
+const bool AttributeVectorMapping::s_registered = VectorsForSurfaceMappingRegistry::instance().registerImplementation(
     s_name,
     newInstances);
 
-using namespace reflectionzeug;
-
-
-QList<VectorsForSurfaceMapping *> CellDataVectorMapping::newInstances(RenderedData * renderedData)
+QList<VectorsForSurfaceMapping *> AttributeVectorMapping::newInstances(RenderedData * renderedData)
 {
-    vtkPolyData * polyData = vtkPolyData::SafeDownCast(renderedData->dataObject()->dataSet());
-    // only polygonal datasets are supported
-    if (!polyData)
-        return{};
+    QList<AttributeVectorData *> attrs;
 
-
-    // find 3D-vector data, skip the "centroid"
-
-    vtkCellData * cellData = polyData->GetCellData();
-    QList<vtkDataArray *> vectorArrays;
-    for (int i = 0; vtkDataArray * a = cellData->GetArray(i); ++i)
+    for (DataObject * dataObject : DataSetHandler::instance().dataObjects())
     {
-        if (a && (std::strncmp(a->GetName(), "centroid", 9)))
-            vectorArrays << a;
+        AttributeVectorData * attr = dynamic_cast<AttributeVectorData *>(dataObject);
+        if (!attr)
+            continue;
+
+        if (attr->dataArray()->GetNumberOfTuples() >= renderedData->dataObject()->dataSet()->GetNumberOfCells())
+            attrs << attr;
     }
 
     QList<VectorsForSurfaceMapping *> instances;
-    for (vtkDataArray * vectorsArray : vectorArrays)
+    for (AttributeVectorData * attr : attrs)
     {
-        CellDataVectorMapping * mapping = new CellDataVectorMapping(renderedData, vectorsArray);
+        AttributeVectorMapping * mapping = new AttributeVectorMapping(renderedData, attr);
         if (mapping->isValid())
         {
             mapping->initialize();
@@ -68,9 +57,9 @@ QList<VectorsForSurfaceMapping *> CellDataVectorMapping::newInstances(RenderedDa
     return instances;
 }
 
-CellDataVectorMapping::CellDataVectorMapping(RenderedData * renderedData, vtkDataArray * vectorData)
+AttributeVectorMapping::AttributeVectorMapping(RenderedData * renderedData, AttributeVectorData * attributeVector)
     : VectorsForSurfaceMapping(renderedData)
-    , m_dataArray(vectorData)
+    , m_attributeVector(attributeVector)
 {
     if (!m_isValid)
         return;
@@ -78,20 +67,18 @@ CellDataVectorMapping::CellDataVectorMapping(RenderedData * renderedData, vtkDat
     arrowGlyph()->SetVectorModeToUseVector();
 }
 
-CellDataVectorMapping::~CellDataVectorMapping() = default;
+AttributeVectorMapping::~AttributeVectorMapping() = default;
 
-QString CellDataVectorMapping::name() const
+QString AttributeVectorMapping::name() const
 {
-    assert(m_dataArray);
-    return QString::fromLatin1(m_dataArray->GetName());
+    assert(m_attributeVector);
+    return QString::fromLatin1(m_attributeVector->dataArray()->GetName());
 }
 
-void CellDataVectorMapping::initialize()
+void AttributeVectorMapping::initialize()
 {
-    assert(polyData());
-
     vtkCellData * cellData = polyData()->GetCellData();
-    
+
     vtkSmartPointer<vtkDataArray> centroids = cellData->GetArray("centroid");
     if (!centroids)
     {
@@ -127,7 +114,7 @@ void CellDataVectorMapping::initialize()
     filter->Update();
     vtkPolyData * processedPoints = filter->GetOutput();
 
-    processedPoints->GetPointData()->SetVectors(m_dataArray);
+    processedPoints->GetPointData()->SetVectors(m_attributeVector->dataArray());
 
     arrowGlyph()->SetInputData(processedPoints);
 }

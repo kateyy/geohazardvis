@@ -10,8 +10,6 @@ class vtkDataArray;
 
 class CORE_API CellDataVectorMapping : public VectorsForSurfaceMapping
 {
-    Q_OBJECT
-
 public:
     ~CellDataVectorMapping() override;
 

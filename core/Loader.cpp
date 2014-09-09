@@ -240,7 +240,7 @@ DataObject * Loader::readRawFile(QString fileName)
     else
         for (vtkIdType component = 0; component < numColumns; ++component)
             for (vtkIdType cellId = 0; cellId < numRows; ++cellId)
-                dataArray->SetValue(component * numRows + cellId, inputVectors.at(component).at(cellId));
+                dataArray->SetValue(cellId * numColumns + component, inputVectors.at(cellId).at(component));
 
     QFileInfo fInfo(fileName);
 
