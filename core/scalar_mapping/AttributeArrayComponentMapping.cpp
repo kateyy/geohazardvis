@@ -5,6 +5,7 @@
 #include <vtkFloatArray.h>
 #include <vtkDataSet.h>
 #include <vtkCellData.h>
+#include <vtkMapper.h>
 
 #include <core/DataSetHandler.h>
 #include <core/data_objects/AttributeVectorData.h>
@@ -109,7 +110,11 @@ QString AttributeArrayComponentMapping::name() const
 
 void AttributeArrayComponentMapping::configureDataObjectAndMapper(DataObject * dataObject, vtkMapper * mapper)
 {
+    ScalarsForColorMapping::configureDataObjectAndMapper(dataObject, mapper);
     dataObject->dataSet()->GetCellData()->SetScalars(m_dataArray);
+    mapper->GetArrayComponent();
+    // TODO this is marked as legacy, but accessing the mappers LUT is not safe here
+    mapper->ColorByArrayComponent(m_dataArray->GetName(), m_component);
 }
 
 void AttributeArrayComponentMapping::updateBounds()
