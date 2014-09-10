@@ -24,7 +24,7 @@ const bool AttributeArrayComponentMapping::s_registered = ScalarsForColorMapping
 
 QList<ScalarsForColorMapping *> AttributeArrayComponentMapping::newInstances(const QList<DataObject *> & dataObjects)
 {
-    QList<AttributeVectorData *> attrs;
+    QList<vtkFloatArray *> dataArrays;
 
     // only for one object currently
     if (dataObjects.size() != 1)
@@ -38,16 +38,18 @@ QList<ScalarsForColorMapping *> AttributeArrayComponentMapping::newInstances(con
         if (!attr)
             continue;
 
-        if (attr->dataArray()->GetNumberOfTuples() >= inputObject->dataSet()->GetNumberOfCells())
-            attrs << attr;
+        vtkFloatArray * dataArray = attr->dataArray();
+
+        if (dataArray->GetNumberOfTuples() >= inputObject->dataSet()->GetNumberOfCells())
+            dataArrays << dataArray;
     }
 
     QList<ScalarsForColorMapping *> instances;
-    for (AttributeVectorData * attr : attrs)
+    for (vtkFloatArray * dataArray : dataArrays)
     {
-        for (vtkIdType component = 0; component < attr->dataArray()->GetNumberOfComponents(); ++component)
+        for (vtkIdType component = 0; component < dataArray->GetNumberOfComponents(); ++component)
         {
-            AttributeArrayComponentMapping * mapping = new AttributeArrayComponentMapping(dataObjects, attr, component);
+            AttributeArrayComponentMapping * mapping = new AttributeArrayComponentMapping(dataObjects, dataArray, component);
             if (mapping->isValid())
             {
                 mapping->initialize();
@@ -61,42 +63,31 @@ QList<ScalarsForColorMapping *> AttributeArrayComponentMapping::newInstances(con
     return instances;
 }
 
-AttributeArrayComponentMapping::AttributeArrayComponentMapping(const QList<DataObject *> & dataObjects, AttributeVectorData * attributeVector, vtkIdType component)
+AttributeArrayComponentMapping::AttributeArrayComponentMapping(const QList<DataObject *> & dataObjects, vtkFloatArray * dataArray, vtkIdType component)
     : ScalarsForColorMapping(dataObjects)
-    , m_attributeVector(attributeVector)
+    , m_dataArray(dataArray)
     , m_component(component)
 {
-    assert(attributeVector);
-    assert(attributeVector->dataArray()->GetNumberOfComponents() > m_component);
+    assert(dataArray);
+    assert(dataArray->GetNumberOfComponents() > m_component);
 
     m_valid = false;
 
     assert(dataObjects.size() == 1);
-    m_polyData = vtkPolyData::SafeDownCast(dataObjects[0]->dataSet());
-
-    if (!m_polyData)
-        return;
 
     double range[2];
-    m_attributeVector->dataArray()->GetRange(range, m_component);
+    dataArray->GetRange(range, m_component);
 
     // discard vector components with constant value
     m_valid = range[0] != range[1];
-}
-
-void AttributeArrayComponentMapping::initialize()
-{
-    ScalarsForColorMapping::initialize();
-
-    m_polyData->GetCellData()->SetScalars(m_attributeVector->dataArray());
 }
 
 AttributeArrayComponentMapping::~AttributeArrayComponentMapping() = default;
 
 QString AttributeArrayComponentMapping::name() const
 {
-    QString baseName = QString::fromLatin1(m_attributeVector->dataArray()->GetName());
-    int numComponents = m_attributeVector->dataArray()->GetNumberOfComponents();
+    QString baseName = QString::fromLatin1(m_dataArray->GetName());
+    int numComponents = m_dataArray->GetNumberOfComponents();
 
     if (numComponents == 0)
         return baseName;
@@ -110,13 +101,13 @@ QString AttributeArrayComponentMapping::name() const
 
 void AttributeArrayComponentMapping::configureDataObjectAndMapper(DataObject * dataObject, vtkMapper * /*mapper*/)
 {
-    dataObject->dataSet()->GetCellData()->SetScalars(m_attributeVector->dataArray());
+    dataObject->dataSet()->GetCellData()->SetScalars(m_dataArray);
 }
 
 void AttributeArrayComponentMapping::updateBounds()
 {
     double range[2];
-    m_attributeVector->dataArray()->GetRange(range, m_component);
+    m_dataArray->GetRange(range, m_component);
 
     m_dataMinValue = range[0];
     m_dataMaxValue = range[1];

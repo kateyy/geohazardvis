@@ -5,16 +5,15 @@
 #include <core/scalar_mapping/ScalarsForColorMapping.h>
 
 
-class vtkPolyData;
+class vtkFloatArray;
 
-class AttributeVectorData;
 class PolyDataObject;
 
 
 class CORE_API AttributeArrayComponentMapping : public ScalarsForColorMapping
 {
 public:
-    AttributeArrayComponentMapping(const QList<DataObject *> & dataObjects, AttributeVectorData * attributeVector, vtkIdType component);
+    AttributeArrayComponentMapping(const QList<DataObject *> & dataObjects, vtkFloatArray * dataArray, vtkIdType component);
     ~AttributeArrayComponentMapping() override;
 
     QString name() const override;
@@ -23,7 +22,6 @@ public:
 
 protected:
     static QList<ScalarsForColorMapping *> newInstances(const QList<DataObject *> & dataObjects);
-    void initialize() override;
 
     void updateBounds() override;
     bool isValid() const override;
@@ -33,8 +31,6 @@ private:
 
     bool m_valid;
 
-    AttributeVectorData * m_attributeVector;
+    vtkFloatArray * m_dataArray;
     vtkIdType m_component;
-
-    vtkPolyData * m_polyData;
 };
