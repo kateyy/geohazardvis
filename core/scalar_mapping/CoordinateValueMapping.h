@@ -16,11 +16,10 @@ public:
     AbstractCoordinateValueMapping(const QList<DataObject *> & dataObjects);
     ~AbstractCoordinateValueMapping() override;
 
-    bool usesGradients() const override;
-
     /** create a filter to map values to color, applying current min/max settings
       * Stores a reference to the filter, to update min/max values on demand. */
     vtkAlgorithm * createFilter() override;
+    bool usesFilter() const override;
 
 protected:
     bool isValid() const override;

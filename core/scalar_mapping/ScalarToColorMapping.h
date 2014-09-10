@@ -52,6 +52,7 @@ public:
     void setGradient(vtkLookupTable * gradient);
 
     vtkScalarBarActor * colorMappingLegend();
+    bool currentScalarsUseMappingLegend() const;
 
 private slots:
     /** apply changed min/max from scalar to color mapping to gradient lookup table */

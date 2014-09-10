@@ -1,5 +1,7 @@
 #include "DefaultColorMapping.h"
 
+#include <vtkMapper.h>
+
 #include <core/scalar_mapping/ScalarsForColorMappingRegistry.h>
 #include <core/data_objects/PolyDataObject.h>
 
@@ -36,9 +38,11 @@ QString DefaultColorMapping::name() const
     return s_name;
 }
 
-bool DefaultColorMapping::usesGradients() const
+void DefaultColorMapping::configureDataObjectAndMapper(DataObject * dataObject, vtkMapper * mapper)
 {
-    return false;
+    ScalarsForColorMapping::configureDataObjectAndMapper(dataObject, mapper);
+
+    mapper->ScalarVisibilityOff();
 }
 
 void DefaultColorMapping::updateBounds()

@@ -96,7 +96,8 @@ void ScalarToColorMapping::setCurrentScalarsByName(QString scalarsName)
     }
 
     m_colorMappingLegend->SetTitle(scalarsName.toLatin1().data());
-    m_colorMappingLegend->SetVisibility(scalars->usesGradients());
+    bool usesGradient = scalars->dataMinValue() != scalars->dataMaxValue();
+    m_colorMappingLegend->SetVisibility(usesGradient);
 
     for (RenderedData * renderedData : m_renderedData)
     {
@@ -142,6 +143,11 @@ void ScalarToColorMapping::setGradient(vtkLookupTable * gradient)
 vtkScalarBarActor * ScalarToColorMapping::colorMappingLegend()
 {
     return m_colorMappingLegend;
+}
+
+bool ScalarToColorMapping::currentScalarsUseMappingLegend() const
+{
+    return m_colorMappingLegend->GetVisibility() != 0;
 }
 
 void ScalarToColorMapping::updateGradientValueRange()

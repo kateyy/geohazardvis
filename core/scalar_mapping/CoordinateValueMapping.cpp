@@ -42,11 +42,6 @@ AbstractCoordinateValueMapping::AbstractCoordinateValueMapping(const QList<DataO
 
 AbstractCoordinateValueMapping::~AbstractCoordinateValueMapping() = default;
 
-bool AbstractCoordinateValueMapping::usesGradients() const
-{
-    return true;
-}
-
 vtkAlgorithm * AbstractCoordinateValueMapping::createFilter()
 {
     vtkWeakPointer<vtkElevationFilter> elevation = vtkElevationFilter::New();
@@ -58,6 +53,11 @@ vtkAlgorithm * AbstractCoordinateValueMapping::createFilter()
     minMaxChangedEvent();    // trigger elevation update
 
     return elevation;
+}
+
+bool AbstractCoordinateValueMapping::usesFilter() const
+{
+    return true;
 }
 
 bool AbstractCoordinateValueMapping::isValid() const

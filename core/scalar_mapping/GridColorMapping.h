@@ -12,8 +12,7 @@ public:
     GridColorMapping(const QList<DataObject *> & dataObjects);
     ~GridColorMapping() override;
 
-    virtual QString name() const override;
-    virtual bool usesGradients() const override;
+    QString name() const override;
 
 protected:
     virtual void updateBounds() override;

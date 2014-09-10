@@ -69,15 +69,6 @@ AttributeArrayComponentMapping::AttributeArrayComponentMapping(const QList<DataO
     assert(attributeVector);
     assert(attributeVector->dataArray()->GetNumberOfComponents() > m_component);
 
-    /*int numValid = 0;
-    for (DataObject * dataObject : dataObjects)
-    {
-        if (dataObject->dataSet())
-            ++numValid;
-    }*/
-
-    //m_valid = numValid == dataObjects.length();
-
     m_valid = false;
 
     assert(dataObjects.size() == 1);
@@ -86,7 +77,11 @@ AttributeArrayComponentMapping::AttributeArrayComponentMapping(const QList<DataO
     if (!m_polyData)
         return;
 
-    m_valid = true;
+    double range[2];
+    m_attributeVector->dataArray()->GetRange(range, m_component);
+
+    // discard vector components with constant value
+    m_valid = range[0] != range[1];
 }
 
 void AttributeArrayComponentMapping::initialize()
@@ -100,12 +95,22 @@ AttributeArrayComponentMapping::~AttributeArrayComponentMapping() = default;
 
 QString AttributeArrayComponentMapping::name() const
 {
-    return QString::fromLatin1(m_attributeVector->dataArray()->GetName()) + " (" + QString::number(m_component) + ")";
+    QString baseName = QString::fromLatin1(m_attributeVector->dataArray()->GetName());
+    int numComponents = m_attributeVector->dataArray()->GetNumberOfComponents();
+
+    if (numComponents == 0)
+        return baseName;
+
+    QString component = numComponents <= 3
+        ? QChar::fromLatin1('x' + m_component)
+        : QString::number(m_component);
+    
+    return  baseName + " (" + component + ")";
 }
 
-bool AttributeArrayComponentMapping::usesGradients() const
+void AttributeArrayComponentMapping::configureDataObjectAndMapper(DataObject * dataObject, vtkMapper * /*mapper*/)
 {
-    return false;
+    dataObject->dataSet()->GetCellData()->SetScalars(m_attributeVector->dataArray());
 }
 
 void AttributeArrayComponentMapping::updateBounds()
@@ -122,11 +127,4 @@ void AttributeArrayComponentMapping::updateBounds()
 bool AttributeArrayComponentMapping::isValid() const
 {
     return m_valid;
-}
-
-void AttributeArrayComponentMapping::minMaxChangedEvent()
-{
-    m_polyData->GetCellData()->SetScalars(m_attributeVector->dataArray());
-
-    ScalarsForColorMapping::minMaxChangedEvent();
 }

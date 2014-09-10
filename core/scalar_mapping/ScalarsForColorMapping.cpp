@@ -4,8 +4,9 @@
 #include <limits>
 
 
-ScalarsForColorMapping::ScalarsForColorMapping(const QList<DataObject *> & /*dataObjects*/)
-    : m_dataMinValue(std::numeric_limits<double>::max())
+ScalarsForColorMapping::ScalarsForColorMapping(const QList<DataObject *> & dataObjects)
+    : m_dataObjects(dataObjects)
+    , m_dataMinValue(std::numeric_limits<double>::max())
     , m_dataMaxValue(std::numeric_limits<double>::lowest())
 {
 }
@@ -20,6 +21,16 @@ ScalarsForColorMapping::~ScalarsForColorMapping() = default;
 vtkAlgorithm * ScalarsForColorMapping::createFilter()
 {
     return nullptr;
+}
+
+bool ScalarsForColorMapping::usesFilter() const
+{
+    return false;
+}
+
+void ScalarsForColorMapping::configureDataObjectAndMapper(DataObject * dataObject, vtkMapper * /*mapper*/)
+{
+    assert(m_dataObjects.contains(dataObject));
 }
 
 double ScalarsForColorMapping::dataMinValue() const

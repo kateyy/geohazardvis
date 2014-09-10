@@ -56,7 +56,7 @@ void ScalarMappingChooser::scalarsSelectionChanged(QString scalarsName)
     m_mapping->setCurrentScalarsByName(scalarsName);
     updateGuiValueRanges();
 
-    bool gradients = m_mapping->currentScalars()->usesGradients();
+    bool gradients = m_mapping->currentScalars()->dataMinValue() != m_mapping->currentScalars()->dataMaxValue();
     m_ui->gradientGroupBox->setEnabled(gradients);
     if (gradients)
         m_mapping->setGradient(selectedGradient());
@@ -182,7 +182,7 @@ void ScalarMappingChooser::rebuildGui(ScalarToColorMapping * newMapping)
     else // or use currently selected for the new mapping
         newMapping->setGradient(selectedGradient());
 
-    m_ui->gradientGroupBox->setEnabled(newMapping->currentScalars()->usesGradients());
+    m_ui->gradientGroupBox->setEnabled(newMapping->currentScalarsUseMappingLegend());
 
     // the mapping can now receive signals from the UI
     m_mapping = newMapping;

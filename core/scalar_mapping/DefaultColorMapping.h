@@ -9,8 +9,9 @@ public:
     DefaultColorMapping(const QList<DataObject *> & dataObjects);
     ~DefaultColorMapping() override;
 
-    virtual QString name() const override;
-    virtual bool usesGradients() const override;
+    QString name() const override;
+
+    void configureDataObjectAndMapper(DataObject * dataObject, vtkMapper * mapper) override;
 
 protected:
     virtual void updateBounds() override;

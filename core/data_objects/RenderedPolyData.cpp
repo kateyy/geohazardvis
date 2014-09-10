@@ -239,23 +239,29 @@ vtkPolyDataMapper * RenderedPolyData::createDataMapper()
     
     QByteArray localName = dataObject()->name().toLocal8Bit();
     dataObject()->NameKey()->Set(mapper->GetInformation(), localName.data());
-
-    // no mapping: use default colors
-    if (!m_scalars || !m_lut || !m_scalars->usesGradients())
+    
+    // no mapping yet, so just render the data set
+    if (!m_scalars || !m_lut)
     {
         vtkPolyData * polyData = vtkPolyData::SafeDownCast(dataObject()->dataSet());
         mapper->SetInputData(polyData);
         return mapper;
     }
 
+    m_scalars->configureDataObjectAndMapper(dataObject(), mapper);
+
     // don't break the lut configuration
     mapper->SetUseLookupTableScalarRange(true);
 
-    vtkSmartPointer<vtkAlgorithm> filter = vtkSmartPointer<vtkAlgorithm>::Take(m_scalars->createFilter());
-    filter->SetInputDataObject(dataObject()->dataSet());
-
     // TODO LEAK: this should delete the old filter, but it is referenced somewhere else (still part of the pipeline)
-    mapper->SetInputConnection(filter->GetOutputPort());
+    if (m_scalars->usesFilter())
+    {
+        vtkSmartPointer<vtkAlgorithm> filter = vtkSmartPointer<vtkAlgorithm>::Take(m_scalars->createFilter());
+        filter->SetInputDataObject(dataObject()->dataSet());
+        mapper->SetInputConnection(filter->GetOutputPort());
+    }
+    else
+        mapper->SetInputDataObject(vtkPolyData::SafeDownCast(dataObject()->dataSet()));
 
     mapper->SetLookupTable(m_lut);
 

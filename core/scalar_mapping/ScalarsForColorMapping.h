@@ -9,6 +9,7 @@
 
 
 class vtkAlgorithm;
+class vtkMapper;
 
 class DataObject;
 
@@ -32,9 +33,16 @@ public:
     explicit ScalarsForColorMapping(const QList<DataObject *> & dataObjects);
     virtual ~ScalarsForColorMapping() = 0;
 
+    virtual QString name() const = 0;
+
     /** create a filter to map values to color, applying current min/max settings
       * May be implemented by subclasses, returns nullptr by default. */
     virtual vtkAlgorithm * createFilter();
+    virtual bool usesFilter() const;
+
+    /** set parameters on the data object/data set and the mapper that is used to render the object.
+        @param dataObject must be one of the objects that where passed when calling the mapping's constructor */
+    virtual void configureDataObjectAndMapper(DataObject * dataObject, vtkMapper * mapper);
 
     /** minimal value in the data set */
     double dataMinValue() const;
@@ -47,10 +55,6 @@ public:
     /** maximal value used for scalar mapping (clamped to [dataMinValue, dataMaxValue]) */
     double maxValue() const;
     void setMaxValue(double value);
-
-    virtual QString name() const = 0;
-
-    virtual bool usesGradients() const = 0;
 
 signals:
     void minMaxChanged();
@@ -66,6 +70,8 @@ protected:
     virtual void minMaxChangedEvent();
 
 protected:
+    QList<DataObject *> m_dataObjects;
+
     double m_dataMinValue;
     double m_dataMaxValue;
     double m_minValue;

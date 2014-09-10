@@ -18,7 +18,8 @@ public:
     ~AttributeArrayComponentMapping() override;
 
     QString name() const override;
-    bool usesGradients() const override;
+
+    void configureDataObjectAndMapper(DataObject * dataObject, vtkMapper * mapper) override;
 
 protected:
     static QList<ScalarsForColorMapping *> newInstances(const QList<DataObject *> & dataObjects);
@@ -26,7 +27,6 @@ protected:
 
     void updateBounds() override;
     bool isValid() const override;
-    void minMaxChangedEvent() override;
 
 private:
     static const bool s_registered;

@@ -26,11 +26,6 @@ QString GridColorMapping::name() const
     return s_name;
 }
 
-bool GridColorMapping::usesGradients() const
-{
-    return true;
-}
-
 void GridColorMapping::updateBounds()
 {
     m_dataMinValue = m_dataObject->minMaxValue()[0];
