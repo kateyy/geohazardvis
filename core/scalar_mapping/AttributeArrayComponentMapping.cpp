@@ -4,7 +4,6 @@
 
 #include <vtkFloatArray.h>
 #include <vtkDataSet.h>
-#include <vtkPolyData.h>
 #include <vtkCellData.h>
 
 #include <core/DataSetHandler.h>
@@ -41,6 +40,15 @@ QList<ScalarsForColorMapping *> AttributeArrayComponentMapping::newInstances(con
         vtkFloatArray * dataArray = attr->dataArray();
 
         if (dataArray->GetNumberOfTuples() >= inputObject->dataSet()->GetNumberOfCells())
+            dataArrays << dataArray;
+    }
+
+    DataObject * dataObject = dataObjects.first();
+    vtkCellData * cellData = dataObject->dataSet()->GetCellData();
+    for (vtkIdType i = 0; i < cellData->GetNumberOfArrays(); ++i)
+    {
+        vtkFloatArray * dataArray = vtkFloatArray::SafeDownCast(cellData->GetArray(i));
+        if (dataArray)
             dataArrays << dataArray;
     }
 
@@ -99,7 +107,7 @@ QString AttributeArrayComponentMapping::name() const
     return  baseName + " (" + component + ")";
 }
 
-void AttributeArrayComponentMapping::configureDataObjectAndMapper(DataObject * dataObject, vtkMapper * /*mapper*/)
+void AttributeArrayComponentMapping::configureDataObjectAndMapper(DataObject * dataObject, vtkMapper * mapper)
 {
     dataObject->dataSet()->GetCellData()->SetScalars(m_dataArray);
 }
