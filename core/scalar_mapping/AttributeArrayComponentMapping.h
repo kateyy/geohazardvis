@@ -13,10 +13,13 @@ class PolyDataObject;
 class CORE_API AttributeArrayComponentMapping : public ScalarsForColorMapping
 {
 public:
-    AttributeArrayComponentMapping(const QList<DataObject *> & dataObjects, vtkFloatArray * dataArray, vtkIdType component);
+    AttributeArrayComponentMapping(const QList<DataObject *> & dataObjects, QString dataArrayName, vtkIdType component);
     ~AttributeArrayComponentMapping() override;
 
     QString name() const override;
+
+    vtkAlgorithm * createFilter() override;
+    bool usesFilter() const override;
 
     void configureDataObjectAndMapper(DataObject * dataObject, vtkMapper * mapper) override;
 
@@ -31,6 +34,7 @@ private:
 
     bool m_valid;
 
-    vtkFloatArray * m_dataArray;
+    QString m_dataArrayName;
     vtkIdType m_component;
+    vtkIdType m_arrayNumComponents;
 };
