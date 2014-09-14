@@ -45,8 +45,6 @@ set ( SOURCES
     scalar_mapping/AttributeArrayComponentMapping.cpp
     scalar_mapping/DefaultColorMapping.h
     scalar_mapping/DefaultColorMapping.cpp
-    scalar_mapping/CoordinateValueMapping.h
-    scalar_mapping/CoordinateValueMapping.cpp
     scalar_mapping/GridColorMapping.h
     scalar_mapping/GridColorMapping.cpp
 
