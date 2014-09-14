@@ -205,18 +205,14 @@ void RenderView::addDataObjects(QList<DataObject *> dataObjects)
             aNewObject = addDataObject(dataObject);
     }
 
-    if (aNewObject)
-    {
-        m_renderConfigWidget.setRenderedData(index(), aNewObject);
-        m_vectorMappingChooser.setMapping(index(), aNewObject->vectorMapping());
-    }
+    m_scalarMapping.setRenderedData(m_renderedData);
 
     updateAxes();
 
-    m_scalarMapping.setRenderedData(m_renderedData);
-    m_scalarMappingChooser.setMapping(friendlyName(), &m_scalarMapping);
-
     updateTitle();
+
+    if (aNewObject)
+        updateGuiForData(aNewObject);
 
     vtkCamera & camera = *m_renderer->GetActiveCamera();
     camera.SetPosition(0, 0, 1);
@@ -511,7 +507,12 @@ void RenderView::updateGuiForActor(vtkActor * actor)
 
     RenderedData * r = m_actorToRenderedData[actor];
 
-    m_renderConfigWidget.setRenderedData(index(), r);
+    updateGuiForData(r);
+}
+
+void RenderView::updateGuiForData(RenderedData * renderedData)
+{
+    m_renderConfigWidget.setRenderedData(index(), renderedData);
     m_scalarMappingChooser.setMapping(friendlyName(), &m_scalarMapping);
-    m_vectorMappingChooser.setMapping(index(), r->vectorMapping());
+    m_vectorMappingChooser.setMapping(index(), renderedData->vectorMapping());
 }

@@ -54,6 +54,8 @@ void ScalarToColorMapping::setRenderedData(const QList<RenderedData *> & rendere
 
     setCurrentScalarsByName(newScalarsName);
 
+    updateGradientValueRange();
+
     for (RenderedData * rendered : renderedData)
     {
         rendered->applyGradientLookupTable(gradient());
@@ -82,9 +84,6 @@ QString ScalarToColorMapping::currentScalarsName() const
 
 void ScalarToColorMapping::setCurrentScalarsByName(QString scalarsName)
 {
-    if (m_currentScalarsName == scalarsName)
-        return;
-
     m_currentScalarsName = scalarsName;
 
     ScalarsForColorMapping * scalars = nullptr;
@@ -95,7 +94,8 @@ void ScalarToColorMapping::setCurrentScalarsByName(QString scalarsName)
         assert(scalars);
     }
 
-    m_colorMappingLegend->SetTitle(scalarsName.toLatin1().data());
+    QByteArray c_name = scalarsName.toLatin1();
+    m_colorMappingLegend->SetTitle(c_name.data());
     bool usesGradient = scalars->dataMinValue() != scalars->dataMaxValue();
     m_colorMappingLegend->SetVisibility(usesGradient);
 
