@@ -36,6 +36,10 @@ void ScalarMappingChooser::setMapping(QString rendererName, ScalarToColorMapping
 {
     updateTitle(rendererName);
 
+    // setup gradient for newly created mappings
+    if (mapping && !mapping->originalGradient())
+        mapping->setGradient(selectedGradient());
+
     rebuildGui(mapping);
 
     updateGuiValueRanges();
@@ -176,12 +180,7 @@ void ScalarMappingChooser::rebuildGui(ScalarToColorMapping * newMapping)
     m_ui->scalarsComboBox->addItems(newMapping->scalarsNames());
     m_ui->scalarsComboBox->setCurrentText(newMapping->currentScalarsName());
 
-    // set GUI to the mappings gradient
-    if (newMapping->originalGradient())
-        m_ui->gradientComboBox->setCurrentIndex(gradientIndex(newMapping->originalGradient()));
-    else // or use currently selected for the new mapping
-        newMapping->setGradient(selectedGradient());
-
+    m_ui->gradientComboBox->setCurrentIndex(gradientIndex(newMapping->originalGradient()));
     m_ui->gradientGroupBox->setEnabled(newMapping->currentScalarsUseMappingLegend());
 
     // the mapping can now receive signals from the UI
