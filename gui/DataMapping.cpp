@@ -128,6 +128,19 @@ void DataMapping::setFocusedView(AbstractDataView * view)
     }
 }
 
+void DataMapping::focusNextRenderView()
+{
+    if (m_renderViews.isEmpty())
+        m_focusedRenderView = nullptr;
+    else
+    {
+        m_focusedRenderView = m_renderViews.first();
+        m_focusedRenderView->setCurrent(true);
+    }
+
+    emit focusedRenderViewChanged(m_focusedRenderView);
+}
+
 void DataMapping::tableClosed()
 {
     TableView * table = dynamic_cast<TableView*>(sender());
@@ -143,6 +156,10 @@ void DataMapping::renderViewClosed()
     assert(renderView);
 
     m_renderViews.remove(renderView->index());
+
+    if (renderView == m_focusedRenderView)
+        focusNextRenderView();
+
     renderView->deleteLater();
 
     emit renderViewsChanged(m_renderViews.values());

@@ -35,6 +35,7 @@ signals:
 
 private slots:
     void setFocusedView(AbstractDataView * renderView);
+    void focusNextRenderView();
 
     void tableClosed();
     void renderViewClosed();
