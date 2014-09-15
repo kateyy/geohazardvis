@@ -101,12 +101,10 @@ void SurfaceNormalMapping::updateGlyphs()
 
     if (m_normalTypeChanged)
     {
-        vtkDataArray * centroid = polyData()->GetCellData()->GetArray("centroid");
-
-        if (m_normalType == NormalType::CellNormal && centroid)
+        if (m_normalType == NormalType::CellNormal)
         {
             VTK_CREATE(vtkPoints, points);
-            points->SetData(centroid);
+            points->SetData(polyData()->GetCellData()->GetArray("centroid"));
 
             VTK_CREATE(vtkPolyData, pointsPolyData);
             pointsPolyData->SetPoints(points);

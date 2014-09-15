@@ -2,14 +2,13 @@
 
 #include <vtkFloatArray.h>
 #include <vtkDataSet.h>
-#include <vtkGlyph3D.h>
-#include <vtkCellData.h>
-#include <vtkCellIterator.h>
-#include <vtkPolygon.h>
-#include <vtkIdTypeArray.h>
 #include <vtkPoints.h>
-#include <vtkVertexGlyphFilter.h>
+
 #include <vtkPointData.h>
+#include <vtkCellData.h>
+
+#include <vtkGlyph3D.h>
+#include <vtkVertexGlyphFilter.h>
 
 #include <core/DataSetHandler.h>
 #include <core/vtkhelper.h>
@@ -80,28 +79,7 @@ void AttributeVectorMapping::initialize()
     vtkCellData * cellData = polyData()->GetCellData();
 
     vtkSmartPointer<vtkDataArray> centroids = cellData->GetArray("centroid");
-    if (!centroids)
-    {
-        centroids = vtkSmartPointer<vtkFloatArray>::New();
-        centroids->SetName("centroid");
-        centroids->SetNumberOfComponents(3);
-        centroids->SetNumberOfTuples(polyData()->GetNumberOfCells());
-        vtkSmartPointer<vtkCellIterator> it = vtkSmartPointer<vtkCellIterator>::Take(polyData()->NewCellIterator());
-        double centroid[3];
-        vtkSmartPointer<vtkIdTypeArray> idArray = vtkSmartPointer<vtkIdTypeArray>::New();
-        vtkPoints * polyDataPoints = polyData()->GetPoints();
-        vtkIdType centroidIndex = 0;
-        for (it->InitTraversal(); !it->IsDoneWithTraversal(); it->GoToNextCell())
-        {
-            idArray->SetArray(it->GetPointIds()->GetPointer(0), it->GetNumberOfPoints(), true);
-            vtkPolygon::ComputeCentroid(
-                idArray,
-                polyDataPoints,
-                centroid);
-            centroids->SetTuple(centroidIndex++, centroid);
-        }
-        cellData->AddArray(centroids);
-    }
+    assert(centroids);
 
     VTK_CREATE(vtkPoints, points);
     points->SetData(centroids);
