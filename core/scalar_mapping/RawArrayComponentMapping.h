@@ -2,6 +2,8 @@
 
 #include <QMap>
 
+#include <vtkSmartPointer.h>
+
 #include <core/scalar_mapping/AbstractArrayComponentMapping.h>
 
 
@@ -14,6 +16,8 @@ public:
     RawArrayComponentMapping(const QList<DataObject *> & dataObjects, vtkFloatArray * dataArray, vtkIdType component);
     ~RawArrayComponentMapping() override;
 
+    vtkIdType maximumStartingIndex() override;
+
     vtkAlgorithm * createFilter(DataObject * dataObject) override;
     bool usesFilter() const override;
 
@@ -24,7 +28,14 @@ protected:
 
     void updateBounds() override;
 
+    void startingIndexChangedEvent() override;
+    void objectOrderChangedEvent() override;
+
+private:
     QByteArray arraySectionName(DataObject * dataObject);
+    vtkIdType sectionIndex(DataObject * dataObject);
+
+    void redistributeArraySections();
 
 private:
     static const bool s_registered;
@@ -32,4 +43,5 @@ private:
     QMap<DataObject *, vtkIdType> m_dataObjectToArrayIndex;
 
     vtkFloatArray * m_dataArray;
+    QMap<DataObject *, vtkSmartPointer<vtkFloatArray>> m_sections;
 };

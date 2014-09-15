@@ -3,12 +3,55 @@
 #include <cassert>
 #include <limits>
 
+#include <QSet>
+
 
 ScalarsForColorMapping::ScalarsForColorMapping(const QList<DataObject *> & dataObjects)
     : m_dataObjects(dataObjects)
+    , m_startingIndex(0)
     , m_dataMinValue(std::numeric_limits<double>::max())
     , m_dataMaxValue(std::numeric_limits<double>::lowest())
 {
+}
+
+vtkIdType ScalarsForColorMapping::maximumStartingIndex()
+{
+    return 0;
+}
+
+vtkIdType ScalarsForColorMapping::startingIndex() const
+{
+    assert(m_startingIndex <= const_cast<ScalarsForColorMapping *>(this)->maximumStartingIndex());
+    return m_startingIndex;
+}
+
+void ScalarsForColorMapping::setStartingIndex(vtkIdType index)
+{
+    vtkIdType newIndex = std::max(0ll, std::min(index, maximumStartingIndex()));
+
+    if (newIndex == m_startingIndex)
+        return;
+
+    m_startingIndex = newIndex;
+
+    startingIndexChangedEvent();
+}
+
+QList<DataObject *> ScalarsForColorMapping::dataObjects() const
+{
+    return m_dataObjects;
+}
+
+void ScalarsForColorMapping::rearrangeDataObjets(QList<DataObject *> dataObjects)
+{
+    assert(dataObjects.toSet() == m_dataObjects.toSet());
+
+    if (m_dataObjects == dataObjects)
+        return;
+
+    m_dataObjects = dataObjects;
+
+    objectOrderChangedEvent();
 }
 
 void ScalarsForColorMapping::initialize()
@@ -78,4 +121,12 @@ void ScalarsForColorMapping::updateBounds()
 void ScalarsForColorMapping::minMaxChangedEvent()
 {
     emit minMaxChanged();
+}
+
+void ScalarsForColorMapping::startingIndexChangedEvent()
+{
+}
+
+void ScalarsForColorMapping::objectOrderChangedEvent()
+{
 }

@@ -43,7 +43,7 @@ public:
     void setVisible(bool enabled);
 
     /** when mapping arrays that have more tuples than cells (triangles) exist in the data set:
-    return highest possible index that can be used as first index in the vector array. */
+        return highest possible index that can be used as first index in the vector array. */
     virtual vtkIdType maximumStartingIndex();
     vtkIdType startingIndex() const;
     void setStartingIndex(vtkIdType index);

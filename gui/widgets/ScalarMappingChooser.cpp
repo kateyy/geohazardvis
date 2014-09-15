@@ -6,11 +6,17 @@
 
 #include <QDir>
 #include <QDebug>
+#include <QDialog>
+#include <QListWidget>
+#include <QDialogButtonBox>
 
 #include <vtkLookupTable.h>
 
+#include <core/data_objects/DataObject.h>
 #include <core/scalar_mapping/ScalarsForColorMapping.h>
 #include <core/scalar_mapping/ScalarToColorMapping.h>
+
+#include <gui/widgets/ScalarRearrangeObjects.h>
 
 
 ScalarMappingChooser::ScalarMappingChooser(QWidget * parent)
@@ -25,6 +31,8 @@ ScalarMappingChooser::ScalarMappingChooser(QWidget * parent)
     loadGradientImages();
 
     setMapping();
+
+    connect(m_ui->rearrangeDataObjectsBtn, &QAbstractButton::clicked, this, &ScalarMappingChooser::rearrangeDataObjects);
 }
 
 ScalarMappingChooser::~ScalarMappingChooser()
@@ -103,6 +111,14 @@ vtkLookupTable * ScalarMappingChooser::selectedGradient() const
     return m_gradients[m_ui->gradientComboBox->currentIndex()];
 }
 
+void ScalarMappingChooser::rearrangeDataObjects()
+{
+    if (!m_mapping)
+        return;
+
+    ScalarRearrangeObjects::rearrange(this, m_mapping->currentScalars());
+}
+
 void ScalarMappingChooser::loadGradientImages()
 {
     // navigate to the gradient directory
@@ -171,7 +187,7 @@ void ScalarMappingChooser::rebuildGui(ScalarToColorMapping * newMapping)
     m_mapping = nullptr;    // disable GUI to mapping events
 
     m_ui->scalarsComboBox->clear();
-    m_ui->gradientGroupBox->setDisabled(true);
+    m_ui->gradientGroupBox->setEnabled(false);
 
     // stop with cleared GUI when not rendering
     if (!newMapping)

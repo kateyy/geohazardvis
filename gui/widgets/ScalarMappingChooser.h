@@ -34,6 +34,9 @@ private slots:
     void minValueChanged(double value);
     void maxValueChanged(double value);
 
+private slots:
+    void rearrangeDataObjects();
+
 private:
     void loadGradientImages();
     int gradientIndex(vtkLookupTable * gradient) const;
