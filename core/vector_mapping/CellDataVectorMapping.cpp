@@ -11,6 +11,9 @@
 
 #include <vtkVertexGlyphFilter.h>
 
+#include <vtkInformation.h>
+#include <vtkInformationIntegerKey.h>
+
 #include <core/vtkhelper.h>
 #include <core/data_objects/DataObject.h>
 #include <core/data_objects/RenderedData.h>
@@ -43,8 +46,15 @@ QList<VectorsForSurfaceMapping *> CellDataVectorMapping::newInstances(RenderedDa
     QList<vtkDataArray *> vectorArrays;
     for (int i = 0; vtkDataArray * a = cellData->GetArray(i); ++i)
     {
-        if (a && (std::strncmp(a->GetName(), "centroid", 9)))
-            vectorArrays << a;
+        assert(a);
+        if (!std::strncmp(a->GetName(), "centroid", 9))
+            continue;
+
+        if (a->GetInformation()->Has(DataObject::ArrayIsAuxiliaryKey())
+            && a->GetInformation()->Get(DataObject::ArrayIsAuxiliaryKey()))
+            continue;
+
+        vectorArrays << a;
     }
 
     QList<VectorsForSurfaceMapping *> instances;
