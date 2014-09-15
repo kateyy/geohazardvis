@@ -1,6 +1,7 @@
 #include "DataObject.h"
 
 #include <vtkInformationStringKey.h>
+#include <vtkInformationIntegerKey.h>
 
 #include <vtkDataSet.h>
 
@@ -8,6 +9,8 @@
 
 
 vtkInformationKeyMacro(DataObject, NameKey, String);
+vtkInformationKeyMacro(DataObject, ArrayIsAuxiliaryKey, Integer);
+
 
 DataObject::DataObject(QString name, vtkDataSet * dataSet)
     : m_name(name)

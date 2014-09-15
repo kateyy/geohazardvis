@@ -8,6 +8,7 @@
 
 
 class vtkInformationStringKey;
+class vtkInformationIntegerKey;
 class vtkDataSet;
 class QVtkTableModel;
 class RenderedData;
@@ -34,6 +35,7 @@ public:
     QVtkTableModel * tableModel();
 
     static vtkInformationStringKey * NameKey();
+    static vtkInformationIntegerKey * ArrayIsAuxiliaryKey();
 
 protected:
     virtual QVtkTableModel * createTableModel();

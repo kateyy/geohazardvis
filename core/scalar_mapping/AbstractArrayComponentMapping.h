@@ -5,9 +5,6 @@
 #include <core/scalar_mapping/ScalarsForColorMapping.h>
 
 
-class vtkInformationIntegerKey;
-
-
 class CORE_API AbstractArrayComponentMapping : public ScalarsForColorMapping
 {
 public:
@@ -17,8 +14,6 @@ public:
 
 protected:
     bool isValid() const override;
-
-    static vtkInformationIntegerKey * ArrayIsAuxiliaryKey();
 
 protected:
     bool m_isValid;

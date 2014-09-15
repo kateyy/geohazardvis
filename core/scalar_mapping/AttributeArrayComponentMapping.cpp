@@ -46,8 +46,8 @@ QList<ScalarsForColorMapping *> AttributeArrayComponentMapping::newInstances(con
 
             // skip arrays that are marked as auxiliary
             vtkInformation * arrayInfo = dataArray->GetInformation();
-            if (arrayInfo->Has(AbstractArrayComponentMapping::ArrayIsAuxiliaryKey())
-                && arrayInfo->Get(AbstractArrayComponentMapping::ArrayIsAuxiliaryKey()))
+            if (arrayInfo->Has(DataObject::ArrayIsAuxiliaryKey())
+                && arrayInfo->Get(DataObject::ArrayIsAuxiliaryKey()))
                 continue;
 
             QString name = QString::fromLatin1(dataArray->GetName());
