@@ -13,9 +13,7 @@
 #include <vtkMapper.h>
 #include <vtkAssignAttribute.h>
 
-#include <core/DataSetHandler.h>
-#include <core/data_objects/AttributeVectorData.h>
-#include <core/data_objects/PolyDataObject.h>
+#include <core/data_objects/DataObject.h>
 #include <core/scalar_mapping/ScalarsForColorMappingRegistry.h>
 
 
@@ -78,21 +76,16 @@ QList<ScalarsForColorMapping *> AttributeArrayComponentMapping::newInstances(con
 }
 
 AttributeArrayComponentMapping::AttributeArrayComponentMapping(const QList<DataObject *> & dataObjects, QString dataArrayName, vtkIdType component)
-    : ScalarsForColorMapping(dataObjects)
-    , m_dataArrayName(dataArrayName)
-    , m_component(component)
-    , m_arrayNumComponents()
+    : AbstractArrayComponentMapping(dataObjects, dataArrayName, component)
 {
-    m_valid = false;
-
     assert(!dataObjects.isEmpty());
 
     QByteArray c_name = dataArrayName.toLatin1();
 
     // assuming that all data objects have this array and that all arrays have the same number of components
     vtkDataArray * anArray = dataObjects.first()->dataSet()->GetCellData()->GetArray(c_name.data());
-    if (anArray)
-        m_arrayNumComponents = anArray->GetNumberOfComponents();
+    assert(anArray);
+    m_arrayNumComponents = anArray->GetNumberOfComponents();
 
     double totalRange[2] = { std::numeric_limits<float>::max(), std::numeric_limits<float>::lowest() };
     for (DataObject * dataObject : dataObjects)
@@ -115,22 +108,10 @@ AttributeArrayComponentMapping::AttributeArrayComponentMapping(const QList<DataO
     assert(totalRange[0] <= totalRange[1]);
 
     // discard vector components with constant value
-    m_valid = totalRange[0] != totalRange[1];
+    m_isValid = totalRange[0] != totalRange[1];
 }
 
 AttributeArrayComponentMapping::~AttributeArrayComponentMapping() = default;
-
-QString AttributeArrayComponentMapping::name() const
-{
-    if (m_arrayNumComponents == 1)
-        return m_dataArrayName;
-
-    QString component = m_arrayNumComponents <= 3
-        ? QChar::fromLatin1('x' + m_component)
-        : QString::number(m_component);
-    
-    return m_dataArrayName + " (" + component + ")";
-}
 
 vtkAlgorithm * AttributeArrayComponentMapping::createFilter(DataObject * /*dataObject*/)
 {
@@ -180,9 +161,4 @@ void AttributeArrayComponentMapping::updateBounds()
     m_dataMaxValue = totalRange[1];
 
     ScalarsForColorMapping::updateBounds();
-}
-
-bool AttributeArrayComponentMapping::isValid() const
-{
-    return m_valid;
 }

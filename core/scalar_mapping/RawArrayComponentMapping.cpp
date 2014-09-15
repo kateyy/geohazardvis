@@ -12,7 +12,7 @@
 #include <core/vtkhelper.h>
 #include <core/DataSetHandler.h>
 #include <core/data_objects/AttributeVectorData.h>
-#include <core/data_objects/PolyDataObject.h>
+#include <core/data_objects/DataObject.h>
 #include <core/scalar_mapping/ScalarsForColorMappingRegistry.h>
 
 
@@ -66,14 +66,13 @@ QList<ScalarsForColorMapping *> RawArrayComponentMapping::newInstances(const QLi
 }
 
 RawArrayComponentMapping::RawArrayComponentMapping(const QList<DataObject *> & dataObjects, vtkFloatArray * dataArray, vtkIdType component)
-    : ScalarsForColorMapping(dataObjects)
+    : AbstractArrayComponentMapping(dataObjects, QString::fromLatin1(dataArray->GetName()), component)
     , m_dataArray(dataArray)
-    , m_component(component)
 {
     assert(dataArray);
     assert(dataArray->GetNumberOfComponents() > m_component);
 
-    m_valid = false;
+    m_arrayNumComponents = dataArray->GetNumberOfComponents();
 
     double range[2];
     dataArray->GetRange(range, m_component);
@@ -89,12 +88,12 @@ RawArrayComponentMapping::RawArrayComponentMapping(const QList<DataObject *> & d
     }
     assert(currentIndex <= dataArray->GetNumberOfTuples());
 
-    m_valid = true;
+    m_isValid = true;
 }
 
 RawArrayComponentMapping::~RawArrayComponentMapping()
 {
-    if (!m_valid)
+    if (!m_isValid)
         return;
 
     for (DataObject * dataObject : m_dataObjects)
@@ -102,21 +101,6 @@ RawArrayComponentMapping::~RawArrayComponentMapping()
         dataObject->dataSet()->GetCellData()->RemoveArray(
             arraySectionName(dataObject).data());
     }
-}
-
-QString RawArrayComponentMapping::name() const
-{
-    QString baseName = QString::fromLatin1(m_dataArray->GetName());
-    int numComponents = m_dataArray->GetNumberOfComponents();
-
-    if (numComponents == 0)
-        return baseName;
-
-    QString component = numComponents <= 3
-        ? QChar::fromLatin1('x' + m_component)
-        : QString::number(m_component);
-    
-    return  baseName + " (" + component + ")";
 }
 
 vtkAlgorithm * RawArrayComponentMapping::createFilter(DataObject * dataObject)
@@ -166,11 +150,6 @@ void RawArrayComponentMapping::updateBounds()
     m_dataMaxValue = range[1];
 
     ScalarsForColorMapping::updateBounds();
-}
-
-bool RawArrayComponentMapping::isValid() const
-{
-    return m_valid;
 }
 
 QByteArray RawArrayComponentMapping::arraySectionName(DataObject * dataObject)

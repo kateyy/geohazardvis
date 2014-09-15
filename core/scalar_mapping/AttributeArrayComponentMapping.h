@@ -1,22 +1,13 @@
 #pragma once
 
-#include <vtkType.h>
-
-#include <core/scalar_mapping/ScalarsForColorMapping.h>
+#include <core/scalar_mapping/AbstractArrayComponentMapping.h>
 
 
-class vtkFloatArray;
-
-class PolyDataObject;
-
-
-class CORE_API AttributeArrayComponentMapping : public ScalarsForColorMapping
+class CORE_API AttributeArrayComponentMapping : public AbstractArrayComponentMapping
 {
 public:
     AttributeArrayComponentMapping(const QList<DataObject *> & dataObjects, QString dataArrayName, vtkIdType component);
     ~AttributeArrayComponentMapping() override;
-
-    QString name() const override;
 
     vtkAlgorithm * createFilter(DataObject * dataObject) override;
     bool usesFilter() const override;
@@ -27,14 +18,7 @@ protected:
     static QList<ScalarsForColorMapping *> newInstances(const QList<DataObject *> & dataObjects);
 
     void updateBounds() override;
-    bool isValid() const override;
 
 private:
     static const bool s_registered;
-
-    bool m_valid;
-
-    QString m_dataArrayName;
-    vtkIdType m_component;
-    vtkIdType m_arrayNumComponents;
 };
