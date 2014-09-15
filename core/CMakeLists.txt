@@ -43,6 +43,8 @@ set ( SOURCES
     scalar_mapping/ScalarsForColorMappingRegistry.cpp
     scalar_mapping/AttributeArrayComponentMapping.h
     scalar_mapping/AttributeArrayComponentMapping.cpp
+    scalar_mapping/RawArrayComponentMapping.h
+    scalar_mapping/RawArrayComponentMapping.cpp
     scalar_mapping/DefaultColorMapping.h
     scalar_mapping/DefaultColorMapping.cpp
     scalar_mapping/GridColorMapping.h
