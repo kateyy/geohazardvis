@@ -2,6 +2,10 @@
 
 #include <cassert>
 
+#include <vtkInformationIntegerKey.h>
+
+
+vtkInformationKeyMacro(AbstractArrayComponentMapping, ArrayIsAuxiliaryKey, Integer);
 
 AbstractArrayComponentMapping::AbstractArrayComponentMapping(const QList<DataObject *> & dataObjects, QString dataArrayName, vtkIdType component)
     : ScalarsForColorMapping(dataObjects)

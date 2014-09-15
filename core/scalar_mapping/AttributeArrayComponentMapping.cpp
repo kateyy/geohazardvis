@@ -7,6 +7,9 @@
 #include <QMap>
 #include <QDebug>
 
+#include <vtkInformation.h>
+#include <vtkInformationIntegerKey.h>
+
 #include <vtkFloatArray.h>
 #include <vtkDataSet.h>
 #include <vtkCellData.h>
@@ -39,6 +42,12 @@ QList<ScalarsForColorMapping *> AttributeArrayComponentMapping::newInstances(con
         {
             vtkFloatArray * dataArray = vtkFloatArray::SafeDownCast(cellData->GetArray(i));
             if (!dataArray)
+                continue;
+
+            // skip arrays that are marked as auxiliary
+            vtkInformation * arrayInfo = dataArray->GetInformation();
+            if (arrayInfo->Has(AbstractArrayComponentMapping::ArrayIsAuxiliaryKey())
+                && arrayInfo->Get(AbstractArrayComponentMapping::ArrayIsAuxiliaryKey()))
                 continue;
 
             QString name = QString::fromLatin1(dataArray->GetName());

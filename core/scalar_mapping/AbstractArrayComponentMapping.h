@@ -5,6 +5,9 @@
 #include <core/scalar_mapping/ScalarsForColorMapping.h>
 
 
+class vtkInformationIntegerKey;
+
+
 class CORE_API AbstractArrayComponentMapping : public ScalarsForColorMapping
 {
 public:

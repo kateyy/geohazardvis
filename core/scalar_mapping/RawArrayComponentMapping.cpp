@@ -9,6 +9,9 @@
 #include <vtkMapper.h>
 #include <vtkAssignAttribute.h>
 
+#include <vtkInformation.h>
+#include <vtkInformationIntegerKey.h>
+
 #include <core/vtkhelper.h>
 #include <core/DataSetHandler.h>
 #include <core/data_objects/AttributeVectorData.h>
@@ -129,6 +132,7 @@ void RawArrayComponentMapping::configureDataObjectAndMapper(DataObject * dataObj
 
     // create array that reuses a data section of our data array
     VTK_CREATE(vtkFloatArray, section);
+    section->GetInformation()->Set(AbstractArrayComponentMapping::ArrayIsAuxiliaryKey(), true);
     section->SetName(sectionName.data());
     section->SetNumberOfComponents(numComponents);
     section->SetNumberOfTuples(sectionSize);
