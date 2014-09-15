@@ -18,7 +18,7 @@ public:
 
     QString name() const override;
 
-    vtkAlgorithm * createFilter() override;
+    vtkAlgorithm * createFilter(DataObject * dataObject) override;
     bool usesFilter() const override;
 
     void configureDataObjectAndMapper(DataObject * dataObject, vtkMapper * mapper) override;

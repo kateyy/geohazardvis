@@ -132,7 +132,7 @@ QString AttributeArrayComponentMapping::name() const
     return m_dataArrayName + " (" + component + ")";
 }
 
-vtkAlgorithm * AttributeArrayComponentMapping::createFilter()
+vtkAlgorithm * AttributeArrayComponentMapping::createFilter(DataObject * /*dataObject*/)
 {
     vtkAssignAttribute * filter = vtkAssignAttribute::New();
 

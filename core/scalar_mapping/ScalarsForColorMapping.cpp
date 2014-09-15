@@ -18,7 +18,7 @@ void ScalarsForColorMapping::initialize()
 
 ScalarsForColorMapping::~ScalarsForColorMapping() = default;
 
-vtkAlgorithm * ScalarsForColorMapping::createFilter()
+vtkAlgorithm * ScalarsForColorMapping::createFilter(DataObject * /*dataObject*/)
 {
     return nullptr;
 }

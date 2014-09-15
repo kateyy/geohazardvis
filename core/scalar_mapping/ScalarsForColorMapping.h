@@ -36,8 +36,10 @@ public:
     virtual QString name() const = 0;
 
     /** create a filter to map values to color, applying current min/max settings
+      * @param dataObject is required to setup object specific parameters on the filter.
+      *     The filter input is not set by this method.
       * May be implemented by subclasses, returns nullptr by default. */
-    virtual vtkAlgorithm * createFilter();
+    virtual vtkAlgorithm * createFilter(DataObject * dataObject);
     virtual bool usesFilter() const;
 
     /** set parameters on the data object/data set and the mapper that is used to render the object.

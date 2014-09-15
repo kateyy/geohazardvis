@@ -256,7 +256,7 @@ vtkPolyDataMapper * RenderedPolyData::createDataMapper()
     // TODO LEAK: this should delete the old filter, but it is referenced somewhere else (still part of the pipeline)
     if (m_scalars->usesFilter())
     {
-        vtkSmartPointer<vtkAlgorithm> filter = vtkSmartPointer<vtkAlgorithm>::Take(m_scalars->createFilter());
+        vtkSmartPointer<vtkAlgorithm> filter = vtkSmartPointer<vtkAlgorithm>::Take(m_scalars->createFilter(dataObject()));
         filter->SetInputDataObject(dataObject()->dataSet());
         mapper->SetInputConnection(filter->GetOutputPort());
     }
