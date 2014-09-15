@@ -24,21 +24,7 @@ VectorMappingChooser::VectorMappingChooser(QWidget * parent, Qt::WindowFlags fla
     m_ui->vectorsListView->setModel(m_listModel);
 
     connect(m_listModel, &VectorMappingChooserListModel::vectorVisibilityChanged, this, &VectorMappingChooser::renderSetupChanged);
-    connect(m_ui->vectorsListView->selectionModel(), &QItemSelectionModel::selectionChanged,
-        [this](const QItemSelection & selection)
-    {
-        if (selection.indexes().isEmpty())
-        {
-            m_ui->propertyBrowser->setRoot(nullptr);
-            m_ui->propertyBrowserLabel->setText("");
-        }
-        else
-        {
-            int index = selection.indexes().first().row();
-            m_ui->propertyBrowser->setRoot(m_propertyGroups[index]);
-            m_ui->propertyBrowserLabel->setText(m_mapping->vectorNames()[index]);
-        }        
-    });
+    connect(m_ui->vectorsListView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &VectorMappingChooser::updateGui);
 }
 
 VectorMappingChooser::~VectorMappingChooser()
@@ -56,6 +42,7 @@ void VectorMappingChooser::setMapping(int rendererId, VectorsToSurfaceMapping * 
     m_mapping = mapping;
 
     updateTitle(rendererId);
+    updateGui();
 
     m_ui->propertyBrowser->setRoot(nullptr);
     qDeleteAll(m_propertyGroups);
@@ -79,6 +66,39 @@ void VectorMappingChooser::setMapping(int rendererId, VectorsToSurfaceMapping * 
 const VectorsToSurfaceMapping * VectorMappingChooser::mapping() const
 {
     return m_mapping;
+}
+
+void VectorMappingChooser::updateGui(const QItemSelection & selection)
+{
+    disconnect(m_startingIndexConnection);
+
+    if (selection.indexes().isEmpty())
+    {
+        m_ui->firstIndexSlider->setEnabled(false);
+        m_ui->propertyBrowser->setRoot(nullptr);
+        m_ui->propertyBrowserContainer->setTitle("(no selection)");
+        m_ui->firstIndexLabel->setText("first &index");
+    }
+    else
+    {
+        int index = selection.indexes().first().row();
+        QString vectorsName = m_mapping->vectorNames()[index];
+
+        m_ui->propertyBrowser->setRoot(m_propertyGroups[index]);
+        m_ui->propertyBrowserContainer->setTitle(vectorsName);
+
+        VectorsForSurfaceMapping * vectors = m_mapping->vectors()[vectorsName];
+
+        m_startingIndexConnection =
+            connect(m_ui->firstIndexSlider, static_cast<void(QAbstractSlider::*)(int)>(&QAbstractSlider::valueChanged),
+            [this, vectors](int value) {
+            vectors->setStartingIndex(value);
+            m_ui->firstIndexLabel->setText("first &index (" + QString::number(value) + "/" + QString::number(vectors->maximumStartingIndex()) + ")");
+        });
+        m_ui->firstIndexSlider->setMaximum(vectors->maximumStartingIndex());
+        m_ui->firstIndexSlider->setValue(vectors->startingIndex());
+        m_ui->firstIndexSlider->setEnabled(vectors->maximumStartingIndex() > 0);
+    }
 }
 
 void VectorMappingChooser::updateTitle(int rendererId)

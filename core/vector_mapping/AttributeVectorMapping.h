@@ -4,6 +4,7 @@
 
 
 class vtkDataArray;
+class vtkFloatArray;
 
 class AttributeVectorData;
 
@@ -15,6 +16,8 @@ public:
 
     QString name() const override;
 
+    vtkIdType maximumStartingIndex() override;
+
 protected:
     static QList<VectorsForSurfaceMapping *> newInstances(RenderedData * renderedData);
 
@@ -22,8 +25,13 @@ protected:
 
     void initialize() override;
 
+    void startingIndexChangedEvent() override;
+
 private:
     static const bool s_registered;
 
     AttributeVectorData * m_attributeVector;
+
+    vtkSmartPointer<vtkFloatArray> m_sectionArray;
+    vtkSmartPointer<vtkPolyData> m_processedPoints;
 };

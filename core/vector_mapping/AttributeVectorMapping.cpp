@@ -10,6 +10,9 @@
 #include <vtkGlyph3D.h>
 #include <vtkVertexGlyphFilter.h>
 
+#include <vtkInformation.h>
+#include <vtkInformationIntegerKey.h>
+
 #include <core/DataSetHandler.h>
 #include <core/vtkhelper.h>
 #include <core/data_objects/AttributeVectorData.h>
@@ -74,6 +77,16 @@ QString AttributeVectorMapping::name() const
     return QString::fromLatin1(m_attributeVector->dataArray()->GetName());
 }
 
+vtkIdType AttributeVectorMapping::maximumStartingIndex()
+{
+    vtkIdType diff = m_attributeVector->dataArray()->GetNumberOfTuples()
+        - renderedData()->dataObject()->dataSet()->GetNumberOfCells();
+
+    assert(diff >= 0);
+
+    return diff;
+}
+
 void AttributeVectorMapping::initialize()
 {
     vtkCellData * cellData = polyData()->GetCellData();
@@ -90,9 +103,37 @@ void AttributeVectorMapping::initialize()
     VTK_CREATE(vtkVertexGlyphFilter, filter);
     filter->SetInputData(pointsPolyData);
     filter->Update();
-    vtkPolyData * processedPoints = filter->GetOutput();
+    m_processedPoints = filter->GetOutput();
 
-    processedPoints->GetPointData()->SetVectors(m_attributeVector->dataArray());
+    vtkFloatArray * dataArray = m_attributeVector->dataArray();
+    QByteArray sectionName = (QString::fromLatin1(m_attributeVector->dataArray()->GetName()) + "_" + QString::number((vtkIdType)this)).toLatin1();
+    vtkIdType numComponents = dataArray->GetNumberOfComponents();
+    vtkIdType numTuples = dataArray->GetNumberOfTuples() - startingIndex();
 
-    arrowGlyph()->SetInputData(processedPoints);
+    m_sectionArray = vtkSmartPointer<vtkFloatArray>::New();
+    m_sectionArray->GetInformation()->Set(DataObject::ArrayIsAuxiliaryKey(), true);
+    m_sectionArray->SetName(sectionName.data());
+    m_sectionArray->SetNumberOfComponents(numComponents);
+
+    m_sectionArray->SetNumberOfTuples(numTuples);
+    m_sectionArray->SetArray(dataArray->GetPointer(startingIndex() * numComponents), numTuples * numComponents, true);
+
+    m_processedPoints->GetPointData()->SetVectors(m_sectionArray);
+
+    arrowGlyph()->SetInputData(m_processedPoints);
+}
+
+void AttributeVectorMapping::startingIndexChangedEvent()
+{
+    vtkFloatArray * dataArray = m_attributeVector->dataArray();
+    vtkIdType numComponents = dataArray->GetNumberOfComponents();
+    vtkIdType numTuples = dataArray->GetNumberOfTuples() - startingIndex();
+
+    m_sectionArray->SetNumberOfTuples(numTuples);
+    m_sectionArray->SetArray(dataArray->GetPointer(startingIndex() * numComponents), numTuples * numComponents, true);
+
+    arrowGlyph()->SetInputData(nullptr);
+    arrowGlyph()->SetInputData(m_processedPoints);
+
+    emit geometryChanged();
 }

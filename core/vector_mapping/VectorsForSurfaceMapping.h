@@ -42,6 +42,12 @@ public:
     bool isVisible() const;
     void setVisible(bool enabled);
 
+    /** when mapping arrays that have more tuples than cells (triangles) exist in the data set:
+    return highest possible index that can be used as first index in the vector array. */
+    virtual vtkIdType maximumStartingIndex();
+    vtkIdType startingIndex() const;
+    void setStartingIndex(vtkIdType index);
+
     float arrowLength() const;
     void setArrowLength(float length);
 
@@ -73,11 +79,14 @@ protected:
     vtkGlyph3D * arrowGlyph();
 
     virtual void visibilityChangedEvent();
+    virtual void startingIndexChangedEvent();
 
 private:
     RenderedData * m_renderedData;
 
     bool m_isVisible;
+
+    vtkIdType m_startingIndex;
 
     vtkSmartPointer<vtkPolyData> m_polyData;
     vtkSmartPointer<vtkArrowSource> m_arrowSource;

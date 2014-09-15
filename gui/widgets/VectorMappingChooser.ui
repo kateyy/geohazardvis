@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>251</width>
-    <height>258</height>
+    <height>277</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -45,21 +45,41 @@
       <property name="childrenCollapsible">
        <bool>false</bool>
       </property>
-      <widget class="QListView" name="vectorsListView"/>
-      <widget class="QWidget" name="propertyBrowserContainer">
+      <widget class="QWidget" name="upperContent">
+       <layout class="QVBoxLayout" name="upperVerticalLayout">
+        <item>
+         <widget class="QListView" name="vectorsListView"/>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QGroupBox" name="propertyBrowserContainer">
+       <property name="title">
+        <string>(no selection)</string>
+       </property>
+       <property name="flat">
+        <bool>false</bool>
+       </property>
        <layout class="QVBoxLayout" name="verticalLayout">
         <item>
-         <widget class="QLabel" name="propertyBrowserLabel">
-          <property name="text">
-           <string/>
-          </property>
-          <property name="margin">
-           <number>0</number>
-          </property>
-          <property name="indent">
-           <number>15</number>
-          </property>
-         </widget>
+         <layout class="QHBoxLayout" name="horizontalLayout">
+          <item>
+           <widget class="QLabel" name="firstIndexLabel">
+            <property name="text">
+             <string>first &amp;index</string>
+            </property>
+            <property name="buddy">
+             <cstring>firstIndexSlider</cstring>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QScrollBar" name="firstIndexSlider">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+           </widget>
+          </item>
+         </layout>
         </item>
         <item>
          <widget class="propertyguizeug::PropertyBrowser" name="propertyBrowser">

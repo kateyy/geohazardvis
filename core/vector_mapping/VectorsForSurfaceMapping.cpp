@@ -24,6 +24,7 @@ VectorsForSurfaceMapping::VectorsForSurfaceMapping(RenderedData * renderedData)
     : m_polyData(vtkPolyData::SafeDownCast(renderedData->dataObject()->dataSet()))
     , m_renderedData(renderedData)
     , m_isVisible(false)
+    , m_startingIndex(0ll)
     , m_actor(vtkSmartPointer<vtkActor>::New())
     , m_isValid(m_polyData && (m_polyData->GetCellType(0) == VTK_TRIANGLE))
 {
@@ -54,6 +55,8 @@ VectorsForSurfaceMapping::VectorsForSurfaceMapping(RenderedData * renderedData)
     m_actor->SetMapper(m_mapper);
 }
 
+VectorsForSurfaceMapping::~VectorsForSurfaceMapping() = default;
+
 bool VectorsForSurfaceMapping::isVisible() const
 {
     return m_isVisible;
@@ -68,6 +71,29 @@ void VectorsForSurfaceMapping::setVisible(bool visible)
     m_actor->SetVisibility(visible);
 
     visibilityChangedEvent();
+}
+
+vtkIdType VectorsForSurfaceMapping::maximumStartingIndex()
+{
+    return 0;
+}
+
+vtkIdType VectorsForSurfaceMapping::startingIndex() const
+{
+    assert(m_startingIndex <= const_cast<VectorsForSurfaceMapping *>(this)->maximumStartingIndex());
+    return m_startingIndex;
+}
+
+void VectorsForSurfaceMapping::setStartingIndex(vtkIdType index)
+{
+    vtkIdType newIndex = std::max(0ll, std::min(index, maximumStartingIndex()));
+
+    if (newIndex == m_startingIndex)
+        return;
+
+    m_startingIndex = newIndex;
+
+    startingIndexChangedEvent();
 }
 
 float VectorsForSurfaceMapping::arrowLength() const
@@ -177,4 +203,6 @@ void VectorsForSurfaceMapping::visibilityChangedEvent()
 {
 }
 
-VectorsForSurfaceMapping::~VectorsForSurfaceMapping() = default;
+void VectorsForSurfaceMapping::startingIndexChangedEvent()
+{
+}

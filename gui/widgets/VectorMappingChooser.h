@@ -1,7 +1,10 @@
 #pragma once
 
 #include <QDockWidget>
+#include <QItemSelection>
 
+
+class QItemSelection;
 
 namespace reflectionzeug
 {
@@ -27,6 +30,9 @@ public:
 signals:
     void renderSetupChanged();
 
+private slots:
+    void updateGui(const QItemSelection & selection = QItemSelection());
+
 private:
     void updateTitle(int rendererId = -1);
 
@@ -35,4 +41,5 @@ private:
     VectorsToSurfaceMapping * m_mapping;
     VectorMappingChooserListModel * m_listModel;
     QList<reflectionzeug::PropertyGroup *> m_propertyGroups;
+    QMetaObject::Connection m_startingIndexConnection;
 };
