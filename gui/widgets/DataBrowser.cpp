@@ -18,6 +18,7 @@ DataBrowser::DataBrowser(QWidget* parent, Qt::WindowFlags f)
     : QWidget(parent, f)
     , m_ui(new Ui_DataBrowser)
     , m_tableModel(new DataBrowserTableModel)
+    , m_dataMapping(nullptr)
 {
     m_ui->setupUi(this);
 
