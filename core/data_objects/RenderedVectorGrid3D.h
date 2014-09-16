@@ -3,6 +3,9 @@
 #include <core/data_objects/RenderedData.h>
 
 
+class vtkLineSource;
+class vtkGlyph3DMapper;
+
 class VectorGrid3DDataObject;
 
 
@@ -20,4 +23,8 @@ public:
 protected:
     vtkProperty * createDefaultRenderProperty() const override;
     vtkActor * createActor() override;
+
+private:
+    vtkSmartPointer<vtkLineSource> m_lineSource;
+    vtkSmartPointer<vtkGlyph3DMapper> m_glyphMapper;
 };

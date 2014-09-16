@@ -3,7 +3,13 @@
 #include <vtkInformation.h>
 #include <vtkInformationStringKey.h>
 
+#include <vtkLineSource.h>
+
 #include <vtkPolyData.h>
+#include <vtkDataSetAttributes.h>
+
+//#include <vtkGlyph3D.h>
+#include <vtkGlyph3DMapper.h>
 
 #include <vtkPolyDataMapper.h>
 #include <vtkPainterPolyDataMapper.h>
@@ -23,7 +29,27 @@ using namespace reflectionzeug;
 
 RenderedVectorGrid3D::RenderedVectorGrid3D(VectorGrid3DDataObject * dataObject)
     : RenderedData(dataObject)
+    , m_lineSource(vtkSmartPointer<vtkLineSource>::New())
+    , m_glyphMapper(vtkSmartPointer<vtkGlyph3DMapper>::New())
 {
+    m_lineSource->SetPoint1(0.f, 0.f, 0.f);
+    m_lineSource->SetPoint2(1.f, 0.f, 0.f);
+    m_lineSource->SetResolution(1);
+    m_lineSource->SetOutputPointsPrecision(vtkAlgorithm::SINGLE_PRECISION);
+
+    m_glyphMapper->SetSourceConnection(m_lineSource->GetOutputPort());
+    m_glyphMapper->ScalingOn();
+    m_glyphMapper->SetScaleModeToNoDataScaling();
+    m_glyphMapper->SetScaleFactor(0.1f);
+    m_glyphMapper->OrientOn();
+
+    m_glyphMapper->SetInputDataObject(dataObject->dataSet());
+    m_glyphMapper->SetOrientationArray(vtkDataSetAttributes::VECTORS);
+
+
+    m_glyphMapper->GetInformation()->Set(DataObject::NameKey(),
+        dataObject->name().toLatin1().data());
+
 }
 
 RenderedVectorGrid3D::~RenderedVectorGrid3D() = default;
@@ -69,6 +95,18 @@ PropertyGroup * RenderedVectorGrid3D::createConfigGroup()
     pointSize->setOption("maximum", 20);
     pointSize->setOption("step", 1);
 
+
+    auto * vectorVisSettings = configGroup->addGroup("vectorVisSettings");
+    vectorVisSettings->setOption("title", "vector visualization");
+    
+    auto prop_length = vectorVisSettings->addProperty<float>("length",
+        [this]() { return static_cast<float>(m_glyphMapper->GetScaleFactor()); },
+        [this](float value) {
+        m_glyphMapper->SetScaleFactor(value);
+        emit geometryChanged();
+    });
+    prop_length->setOption("step", 0.02f);
+
     return configGroup;
 }
 
@@ -84,19 +122,8 @@ vtkProperty * RenderedVectorGrid3D::createDefaultRenderProperty() const
 
 vtkActor * RenderedVectorGrid3D::createActor()
 {
-    VTK_CREATE(vtkPainterPolyDataMapper, mapper);
-
-    mapper->GetInformation()->Set(DataObject::NameKey(),
-        dataObject()->name().toLatin1().data());
-
-    vtkSmartPointer<vtkPointsPainter> painter = vtkSmartPointer<vtkPointsPainter>::New();
-    mapper->ScalarVisibilityOff();
-    mapper->SetPainter(painter);
-
-    mapper->SetInputDataObject(dataObject()->dataSet());
-
     vtkLODActor * actor = vtkLODActor::New();
-    actor->SetMapper(mapper);
+    actor->SetMapper(m_glyphMapper);
 
     return actor;
 }
