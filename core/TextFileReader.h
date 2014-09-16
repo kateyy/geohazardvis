@@ -18,14 +18,16 @@ enum class DatasetType {
     indices,    // indices referring to a vertex list
     centroid,   // for each cell defined by the index list
     vectors,    // additional vector data per cell
-    grid2D
+    grid2D,
+    vectorGrid3D
 };
 
 enum class ModelType
 {
     raw,
     triangles,
-    grid2D
+    grid2D,
+    vectorGrid3D
 };
 
 struct InputFileInfo
@@ -61,6 +63,7 @@ private:
 
     static bool readHeader_triangles(std::ifstream & inputStream, std::vector<DatasetDef>& inputDefs);
     static bool readHeader_grid2D(std::ifstream & inputStream, std::vector<DatasetDef>& inputDefs);
+    static bool readHeader_vectorGrid3D(std::ifstream & inputStream, std::vector<DatasetDef>& inputDefs);
 
     static DatasetType checkDataSetType(const std::string & nameString);
 };

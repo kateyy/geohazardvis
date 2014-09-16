@@ -18,10 +18,12 @@ const map<string, DatasetType> datasetNamesTypes = {
         { "indices", DatasetType::indices },
         { "grid2d", DatasetType::grid2D },
         { "centroid", DatasetType::centroid },
-        { "vectors", DatasetType::vectors } };
+        { "vectors", DatasetType::vectors },
+        { "vectorGrid3D", DatasetType::vectorGrid3D } };
 const map<string, ModelType> modelNamesType = {
         { "triangles", ModelType::triangles },
-        { "grid2d", ModelType::grid2D } };
+        { "grid2d", ModelType::grid2D },
+        { "vectorGrid3D", ModelType::vectorGrid3D } };
 }
 
 InputFileInfo::InputFileInfo(const std::string & name, ModelType type)
@@ -117,6 +119,8 @@ std::shared_ptr<InputFileInfo> TextFileReader::readHeader(ifstream & inputStream
             case ModelType::grid2D:
                 validFile = readHeader_grid2D(inputStream, inputDefs);
                 break;
+            case ModelType::vectorGrid3D:
+                validFile = readHeader_vectorGrid3D(inputStream, inputDefs);
             }
 
             if (!validFile)
@@ -255,6 +259,47 @@ bool TextFileReader::readHeader_grid2D(ifstream & inputStream, vector<DatasetDef
     return false;
 }
 
+bool TextFileReader::readHeader_vectorGrid3D(std::ifstream & inputStream, std::vector<DatasetDef>& inputDefs)
+{
+    string line;
+    DatasetType currentDataType(DatasetType::unknown);
+
+    while (!inputStream.eof())
+    {
+        getline(inputStream, line);
+
+        if (line.empty() || line[0] == '#')
+            continue;
+
+        if (line == "$end")
+            return true;
+
+        if (!(line.substr(0, 2) == "$ "))
+        {
+            cerr << "Invalid line in input file: \n\t" << line << endl;
+            return false;
+        }
+
+        stringstream linestream(line.substr(2, string::npos));
+        string datasetType, parameter;
+        getline(linestream, datasetType, ' ');
+        getline(linestream, parameter);
+
+        currentDataType = checkDataSetType(datasetType);
+
+        if (currentDataType != DatasetType::vectorGrid3D)
+        {
+            cerr << "Data set type " << datasetType << " not supported in model type vectorGrid3D" << endl;
+            return false;
+        }
+
+        unsigned long rows = stol(parameter);
+        const unsigned long columns = 6u;
+        inputDefs.push_back({ currentDataType, rows, columns});
+    }
+
+    return false;
+}
 
 DatasetType TextFileReader::checkDataSetType(const std::string & nameString)
 {

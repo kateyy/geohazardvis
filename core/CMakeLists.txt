@@ -27,6 +27,8 @@ set ( SOURCES
     data_objects/ImageDataObject.cpp
     data_objects/PolyDataObject.h
     data_objects/PolyDataObject.cpp
+    data_objects/VectorGrid3DDataObject.h
+    data_objects/VectorGrid3DDataObject.cpp
     data_objects/RenderedData.h
     data_objects/RenderedData.cpp
     data_objects/RenderedImageData.h

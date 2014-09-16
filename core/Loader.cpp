@@ -21,6 +21,7 @@
 #include <core/vtkhelper.h>
 #include <core/data_objects/PolyDataObject.h>
 #include <core/data_objects/ImageDataObject.h>
+#include <core/data_objects/VectorGrid3DDataObject.h>
 #include <core/data_objects/AttributeVectorData.h>
 
 
@@ -41,6 +42,8 @@ DataObject * Loader::readFile(QString filename)
         return loadIndexedTriangles(dataSetName, readDatasets);
     case ModelType::grid2D:
         return loadGrid2D(dataSetName, readDatasets);
+    case ModelType::vectorGrid3D:
+        return loadGrid3D(dataSetName, readDatasets);
     case ModelType::raw:
         return readRawFile(filename);
     default:
@@ -106,7 +109,7 @@ DataObject * Loader::loadIndexedTriangles(QString name, const std::vector<ReadDa
     return new PolyDataObject(name, polyData);
 }
 
-ImageDataObject * Loader::loadGrid(QString name, const std::vector<ReadDataset> & datasets)
+DataObject * Loader::loadGrid2D(QString name, const std::vector<ReadDataset> & datasets)
 {
     assert(datasets.size() == 1);
     assert(datasets.begin()->type == DatasetType::grid2D);
@@ -134,6 +137,25 @@ ImageDataObject * Loader::loadGrid(QString name, const std::vector<ReadDataset> 
     grid->GetPointData()->SetScalars(dataArray);
 
     return new ImageDataObject(name, grid);
+}
+
+DataObject * Loader::loadGrid3D(QString name, const std::vector<ReadDataset> & datasets)
+{
+    assert(datasets.size() == 1);
+    assert(datasets.front().type == DatasetType::vectorGrid3D);
+    const InputVector & data = datasets.front().data;
+    // expecting point data and 3D vectors at minimum
+    assert(data.size() >= 6);
+
+    vtkSmartPointer<vtkPolyData> polyData;
+    polyData.TakeReference(parsePoints(data, 0));
+
+    vtkSmartPointer<vtkFloatArray> vectors;
+    vectors.TakeReference(parseFloatVector(data, name.toLatin1().data(), 3, int(data.size() - 1)));
+    
+    polyData->GetPointData()->SetVectors(vectors);
+
+    return new VectorGrid3DDataObject(name, polyData);
 }
 
 vtkPolyData * Loader::parsePoints(const InputVector & parsedData, t_UInt firstColumn)
