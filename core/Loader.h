@@ -10,11 +10,10 @@
 
 
 class vtkPolyData;
+class vtkFloatArray;
 
 struct ReadDataset;
 class DataObject;
-class PolyDataObject;
-class ImageDataObject;
 
 
 class CORE_API Loader
@@ -23,8 +22,8 @@ public:
     static DataObject * readFile(QString filename);
 
 protected:
-    static PolyDataObject * loadIndexedTriangles(QString name, const std::vector<ReadDataset> & datasets);
-    static ImageDataObject * loadGrid(QString name, const std::vector<ReadDataset> & datasets);
+    static DataObject * loadIndexedTriangles(QString name, const std::vector<ReadDataset> & datasets);
+    static DataObject * loadGrid2D(QString name, const std::vector<ReadDataset> & datasets);
 
     static DataObject * readRawFile(QString fileName);
 
@@ -33,4 +32,5 @@ protected:
     static vtkPolyData * parseIndexedTriangles(
         const InputVector & parsedVertexData, t_UInt vertexIndexColumn, t_UInt firstVertexColumn,
         const InputVector & parsedIndexData, t_UInt firstIndexColumn);
+    static vtkFloatArray * parseFloatVector(const InputVector & parsedData, QString arrayName, int firstColumn, int lastColumn);
 };

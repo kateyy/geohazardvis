@@ -40,7 +40,7 @@ DataObject * Loader::readFile(QString filename)
     case ModelType::triangles:
         return loadIndexedTriangles(dataSetName, readDatasets);
     case ModelType::grid2D:
-        return loadGrid(dataSetName, readDatasets);
+        return loadGrid2D(dataSetName, readDatasets);
     case ModelType::raw:
         return readRawFile(filename);
     default:
@@ -49,7 +49,7 @@ DataObject * Loader::readFile(QString filename)
     }
 }
 
-PolyDataObject * Loader::loadIndexedTriangles(QString name, const std::vector<ReadDataset> & datasets)
+DataObject * Loader::loadIndexedTriangles(QString name, const std::vector<ReadDataset> & datasets)
 {
     assert(datasets.size() >= 2);
     
@@ -83,17 +83,8 @@ PolyDataObject * Loader::loadIndexedTriangles(QString name, const std::vector<Re
         assert(centroid->size() == 3);
         assert(size_t(numCells) == centroid->front().size());
 
-        vtkSmartPointer<vtkFloatArray> a = vtkSmartPointer<vtkFloatArray>::New();
-        a->SetName("centroid");
-        a->SetNumberOfComponents(3);
-        a->SetNumberOfTuples(numCells);
-
-        const std::vector<t_FP> & xs = centroid->at(0);
-        const std::vector<t_FP> & ys = centroid->at(1);
-        const std::vector<t_FP> & zs = centroid->at(2);
-
-        for (vtkIdType i = 0; i < numCells; ++i)
-            a->SetTuple3(i, xs.at(i), ys.at(i), zs.at(i));
+        vtkSmartPointer<vtkFloatArray> a;
+        a.TakeReference(parseFloatVector(*centroid, "centroid", 0, 2));
 
         polyData->GetCellData()->AddArray(a);
     }
@@ -101,19 +92,13 @@ PolyDataObject * Loader::loadIndexedTriangles(QString name, const std::vector<Re
     for (auto namedVector : vectorArrays)
     {
         const vtkIdType numCells = polyData->GetNumberOfCells();
-        const auto & vector = namedVector.second;
+        const auto vector = *namedVector.second;
 
-        const vtkIdType tupleSize = vector->size();
-        assert(size_t(numCells) == vector->front().size());
+        const vtkIdType tupleSize = vector.size();
+        assert(size_t(numCells) == vector.front().size());
 
-        vtkSmartPointer<vtkFloatArray> a = vtkSmartPointer<vtkFloatArray>::New();
-        a->SetName(namedVector.first.c_str());
-        a->SetNumberOfComponents(tupleSize);
-        a->SetNumberOfTuples(numCells);
-
-        for (vtkIdType component = 0; component < tupleSize; ++component)
-            for (vtkIdType cellId = 0; cellId < numCells; ++cellId)
-                a->SetValue(cellId * tupleSize + component, vector->at(component).at(cellId));
+        vtkSmartPointer<vtkFloatArray> a;
+        a.TakeReference(parseFloatVector(vector, namedVector.first.c_str(), 0, int(vector.size() - 1)));
         
         polyData->GetCellData()->AddArray(a);
     }
@@ -245,4 +230,28 @@ DataObject * Loader::readRawFile(QString fileName)
     QFileInfo fInfo(fileName);
 
     return new AttributeVectorData(fInfo.baseName(), dataArray);
+}
+
+vtkFloatArray * Loader::parseFloatVector(const InputVector & parsedData, QString arrayName, int firstColumn, int lastColumn)
+{
+    assert(firstColumn <= lastColumn);
+    assert(parsedData.size() > lastColumn);
+    vtkIdType numComponents = lastColumn - firstColumn + 1;
+    vtkIdType numTuples = parsedData.at(lastColumn).size();
+
+    for (auto ax : parsedData)
+    {
+        assert(ax.size() == size_t(numTuples));
+    }
+
+    vtkFloatArray * a = vtkFloatArray::New();
+    a->SetName(arrayName.toLatin1().data());
+    a->SetNumberOfComponents(numComponents);
+    a->SetNumberOfTuples(numTuples);
+
+    for (vtkIdType component = 0; component < numComponents; ++component)
+        for (vtkIdType cellId = 0; cellId < numTuples; ++cellId)
+            a->SetValue(cellId * numComponents + component, parsedData.at(component).at(cellId));
+
+    return a;
 }
