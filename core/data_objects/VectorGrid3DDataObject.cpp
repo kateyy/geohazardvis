@@ -2,7 +2,7 @@
 
 #include <vtkPolyData.h>
 
-#include <core/data_objects/RenderedVectorGrid3D.h>
+//#include <core/data_objects/RenderedVectorGrid3D.h>
 
 
 namespace

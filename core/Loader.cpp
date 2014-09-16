@@ -73,6 +73,8 @@ DataObject * Loader::loadIndexedTriangles(QString name, const std::vector<ReadDa
             break;
         case DatasetType::vectors: vectorArrays.emplace(dataSet.attributeName, &dataSet.data);
             break;
+        default:
+            assert(false);
         }
     }
 
@@ -257,7 +259,7 @@ DataObject * Loader::readRawFile(QString fileName)
 vtkFloatArray * Loader::parseFloatVector(const InputVector & parsedData, QString arrayName, int firstColumn, int lastColumn)
 {
     assert(firstColumn <= lastColumn);
-    assert(parsedData.size() > lastColumn);
+    assert(parsedData.size() > unsigned(lastColumn));
     vtkIdType numComponents = lastColumn - firstColumn + 1;
     vtkIdType numTuples = parsedData.at(lastColumn).size();
 

@@ -21,10 +21,10 @@
 
 
 VectorsForSurfaceMapping::VectorsForSurfaceMapping(RenderedData * renderedData)
-    : m_polyData(vtkPolyData::SafeDownCast(renderedData->dataObject()->dataSet()))
-    , m_renderedData(renderedData)
+    : m_renderedData(renderedData)
     , m_isVisible(false)
     , m_startingIndex(0ll)
+    , m_polyData(vtkPolyData::SafeDownCast(renderedData->dataObject()->dataSet()))
     , m_actor(vtkSmartPointer<vtkActor>::New())
     , m_isValid(m_polyData && (m_polyData->GetCellType(0) == VTK_TRIANGLE))
 {

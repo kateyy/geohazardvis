@@ -121,6 +121,10 @@ std::shared_ptr<InputFileInfo> TextFileReader::readHeader(ifstream & inputStream
                 break;
             case ModelType::vectorGrid3D:
                 validFile = readHeader_vectorGrid3D(inputStream, inputDefs);
+                break;
+            default:
+                cerr << "Unexpected model type \"" << type << "\"" << endl;
+                return nullptr;
             }
 
             if (!validFile)
@@ -246,14 +250,14 @@ bool TextFileReader::readHeader_grid2D(ifstream & inputStream, vector<DatasetDef
         }
 
         size_t seperator = parameter.find_first_of(":");
-        unsigned long columns = stol(parameter.substr(0, seperator));
-        unsigned long rows = stol(parameter.substr(seperator + 1, string::npos));
+        t_UInt columns = stoul(parameter.substr(0, seperator));
+        t_UInt rows = stoul(parameter.substr(seperator + 1, string::npos));
         if (!(columns > 0 && rows > 0))
         {
             cerr << "missing \"columns:rows\" specification for grid2d data set" << endl;
             return false;
         }
-        inputDefs.push_back({ currentDataType, rows, columns });
+        inputDefs.push_back({ currentDataType, rows, columns, "" });
     }
 
     return false;
@@ -293,9 +297,9 @@ bool TextFileReader::readHeader_vectorGrid3D(std::ifstream & inputStream, std::v
             return false;
         }
 
-        unsigned long rows = stol(parameter);
-        const unsigned long columns = 6u;
-        inputDefs.push_back({ currentDataType, rows, columns});
+        t_UInt rows = stoul(parameter);
+        const t_UInt columns = 6u;
+        inputDefs.push_back({ currentDataType, rows, columns, ""});
     }
 
     return false;
