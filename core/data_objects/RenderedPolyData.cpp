@@ -4,6 +4,7 @@
 
 #include <QImage>
 
+#include <vtkInformation.h>
 #include <vtkInformationStringKey.h>
 
 #include <vtkLookupTable.h>
@@ -42,7 +43,7 @@ namespace
 RenderedPolyData::RenderedPolyData(PolyDataObject * dataObject)
     : RenderedData(dataObject)
 {
-    vtkPolyData * polyData = vtkPolyData::SafeDownCast(dataObject->dataSet());
+    assert(vtkPolyData::SafeDownCast(dataObject->dataSet()));
 }
 
 RenderedPolyData::~RenderedPolyData() = default;
@@ -237,14 +238,13 @@ vtkPolyDataMapper * RenderedPolyData::createDataMapper()
 {
     vtkPolyDataMapper * mapper = vtkPolyDataMapper::New();
     
-    QByteArray localName = dataObject()->name().toLocal8Bit();
-    dataObject()->NameKey()->Set(mapper->GetInformation(), localName.data());
+    mapper->GetInformation()->Set(DataObject::NameKey(),
+        dataObject()->name().toLatin1().data());
     
     // no mapping yet, so just render the data set
     if (!m_scalars || !m_lut)
     {
-        vtkPolyData * polyData = vtkPolyData::SafeDownCast(dataObject()->dataSet());
-        mapper->SetInputData(polyData);
+        mapper->SetInputDataObject(dataObject()->dataSet());
         return mapper;
     }
 
@@ -253,7 +253,6 @@ vtkPolyDataMapper * RenderedPolyData::createDataMapper()
     // don't break the lut configuration
     mapper->SetUseLookupTableScalarRange(true);
 
-    // TODO LEAK: this should delete the old filter, but it is referenced somewhere else (still part of the pipeline)
     if (m_scalars->usesFilter())
     {
         vtkSmartPointer<vtkAlgorithm> filter = vtkSmartPointer<vtkAlgorithm>::Take(m_scalars->createFilter(dataObject()));
@@ -261,7 +260,7 @@ vtkPolyDataMapper * RenderedPolyData::createDataMapper()
         mapper->SetInputConnection(filter->GetOutputPort());
     }
     else
-        mapper->SetInputDataObject(vtkPolyData::SafeDownCast(dataObject()->dataSet()));
+        mapper->SetInputDataObject(dataObject()->dataSet());
 
     mapper->SetLookupTable(m_lut);
 
