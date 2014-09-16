@@ -72,6 +72,14 @@ QList<vtkActor *> RenderedData::fetchAttributeActors()
     return{};
 }
 
+void RenderedData::scalarsForColorMappingChangedEvent()
+{
+}
+
+void RenderedData::gradientForColorMappingChangedEvent()
+{
+}
+
 void RenderedData::vectorsForSurfaceMappingChangedEvent()
 {
 }

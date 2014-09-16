@@ -33,6 +33,7 @@ void ScalarToColorMapping::setRenderedData(const QList<RenderedData *> & rendere
     }
 
     QString lastScalars = currentScalarsName();
+    m_currentScalarsName.clear();
 
     qDeleteAll(m_scalars);
     m_scalars = ScalarsForColorMappingRegistry::instance().createMappingsValidFor(dataObjects);
@@ -43,7 +44,8 @@ void ScalarToColorMapping::setRenderedData(const QList<RenderedData *> & rendere
             this, &ScalarToColorMapping::updateGradientValueRange);
     }
 
-    assert(!m_scalars.isEmpty());   // we should we something applicable here
+    if (m_scalars.isEmpty())
+        return;
 
     QString newScalarsName;
     // reuse last configuration if possible
@@ -152,5 +154,8 @@ bool ScalarToColorMapping::currentScalarsUseMappingLegend() const
 
 void ScalarToColorMapping::updateGradientValueRange()
 {
-    m_gradient->SetTableRange(currentScalars()->minValue(), currentScalars()->maxValue());
+    ScalarsForColorMapping * scalars = currentScalars();
+
+    if (scalars)
+        m_gradient->SetTableRange(scalars->minValue(), scalars->maxValue());
 }

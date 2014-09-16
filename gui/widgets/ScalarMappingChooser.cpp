@@ -116,6 +116,10 @@ void ScalarMappingChooser::rearrangeDataObjects()
     if (!m_mapping)
         return;
 
+    ScalarsForColorMapping * scalars = m_mapping->currentScalars();
+    if (!scalars)
+        return;
+
     ScalarRearrangeObjects::rearrange(this, m_mapping->currentScalars());
 }
 
@@ -212,10 +216,15 @@ void ScalarMappingChooser::updateGuiValueRanges()
 
     if (m_mapping)
     {
-        min = m_mapping->currentScalars()->dataMinValue();
-        max = m_mapping->currentScalars()->dataMaxValue();
-        currentMin = m_mapping->currentScalars()->minValue();
-        currentMax = m_mapping->currentScalars()->maxValue();
+        ScalarsForColorMapping * scalars = m_mapping->currentScalars();
+
+        if (scalars)
+        {
+            min = scalars->dataMinValue();
+            max = scalars->dataMaxValue();
+            currentMin = scalars->minValue();
+            currentMax = scalars->maxValue();
+        }
 
         // assume that the mapping does not use scalar values/ranges, if it has useless min/max values
         enableRangeGui = min != max;

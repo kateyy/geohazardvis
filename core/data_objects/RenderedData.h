@@ -62,8 +62,8 @@ protected:
     virtual vtkActor * createActor() = 0;
     virtual QList<vtkActor *> fetchAttributeActors();
 
-    virtual void scalarsForColorMappingChangedEvent() = 0;
-    virtual void gradientForColorMappingChangedEvent() = 0;
+    virtual void scalarsForColorMappingChangedEvent();
+    virtual void gradientForColorMappingChangedEvent();
     virtual void vectorsForSurfaceMappingChangedEvent();
     virtual void visibilityChangedEvent(bool visible);
 
