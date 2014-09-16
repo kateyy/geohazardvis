@@ -2,7 +2,7 @@
 
 #include <vtkPolyData.h>
 
-//#include <core/data_objects/RenderedVectorGrid3D.h>
+#include <core/data_objects/RenderedVectorGrid3D.h>
 
 
 namespace
@@ -19,8 +19,7 @@ VectorGrid3DDataObject::~VectorGrid3DDataObject() = default;
 
 RenderedData * VectorGrid3DDataObject::createRendered()
 {
-    //return new RenderedVectorGrid3D(this);
-    return nullptr;
+    return new RenderedVectorGrid3D(this);
 }
 
 QString VectorGrid3DDataObject::dataTypeName() const

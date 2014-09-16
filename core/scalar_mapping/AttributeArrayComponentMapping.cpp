@@ -101,7 +101,7 @@ AttributeArrayComponentMapping::AttributeArrayComponentMapping(const QList<DataO
     {
         vtkFloatArray * dataArray = vtkFloatArray::SafeDownCast(
             dataObject->dataSet()->GetCellData()->GetArray(c_name.data()));
-        
+
         if (!dataArray)
         {
             qDebug() << "Data array" << dataArrayName << "does not exist in" << dataObject->name();

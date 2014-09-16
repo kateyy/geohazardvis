@@ -35,6 +35,8 @@ set ( SOURCES
     data_objects/RenderedImageData.cpp
     data_objects/RenderedPolyData.h
     data_objects/RenderedPolyData.cpp
+    data_objects/RenderedVectorGrid3D.h
+    data_objects/RenderedVectorGrid3D.cpp
     
     scalar_mapping/ScalarToColorMapping.h
     scalar_mapping/ScalarToColorMapping.cpp
