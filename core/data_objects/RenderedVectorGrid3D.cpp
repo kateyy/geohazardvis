@@ -8,8 +8,7 @@
 #include <vtkPolyData.h>
 #include <vtkDataSetAttributes.h>
 
-//#include <vtkGlyph3D.h>
-#include <vtkGlyph3DMapper.h>
+#include <vtkGlyph3D.h>
 
 #include <vtkPolyDataMapper.h>
 #include <vtkPainterPolyDataMapper.h>
@@ -30,26 +29,22 @@ using namespace reflectionzeug;
 RenderedVectorGrid3D::RenderedVectorGrid3D(VectorGrid3DDataObject * dataObject)
     : RenderedData(dataObject)
     , m_lineSource(vtkSmartPointer<vtkLineSource>::New())
-    , m_glyphMapper(vtkSmartPointer<vtkGlyph3DMapper>::New())
+    , m_glyph(vtkSmartPointer<vtkGlyph3D>::New())
 {
     m_lineSource->SetPoint1(0.f, 0.f, 0.f);
     m_lineSource->SetPoint2(1.f, 0.f, 0.f);
     m_lineSource->SetResolution(1);
     m_lineSource->SetOutputPointsPrecision(vtkAlgorithm::SINGLE_PRECISION);
 
-    m_glyphMapper->SetSourceConnection(m_lineSource->GetOutputPort());
-    m_glyphMapper->ScalingOn();
-    m_glyphMapper->SetScaleModeToNoDataScaling();
-    m_glyphMapper->SetScaleFactor(0.1f);
-    m_glyphMapper->OrientOn();
-
-    m_glyphMapper->SetInputDataObject(dataObject->dataSet());
-    m_glyphMapper->SetOrientationArray(vtkDataSetAttributes::VECTORS);
 
 
-    m_glyphMapper->GetInformation()->Set(DataObject::NameKey(),
-        dataObject->name().toLatin1().data());
+    m_glyph->SetSourceConnection(m_lineSource->GetOutputPort());
+    m_glyph->ScalingOn();
+    m_glyph->SetScaleModeToDataScalingOff();
+    m_glyph->SetScaleFactor(0.1f);
+    m_glyph->SetVectorModeToUseVector();
 
+    m_glyph->SetInputDataObject(dataObject->dataSet());
 }
 
 RenderedVectorGrid3D::~RenderedVectorGrid3D() = default;
@@ -100,9 +95,9 @@ PropertyGroup * RenderedVectorGrid3D::createConfigGroup()
     vectorVisSettings->setOption("title", "vector visualization");
     
     auto prop_length = vectorVisSettings->addProperty<float>("length",
-        [this]() { return static_cast<float>(m_glyphMapper->GetScaleFactor()); },
+        [this]() { return static_cast<float>(m_glyph->GetScaleFactor());  },
         [this](float value) {
-        m_glyphMapper->SetScaleFactor(value);
+        m_glyph->SetScaleFactor(value);
         emit geometryChanged();
     });
     prop_length->setOption("step", 0.02f);
@@ -123,7 +118,9 @@ vtkProperty * RenderedVectorGrid3D::createDefaultRenderProperty() const
 vtkActor * RenderedVectorGrid3D::createActor()
 {
     vtkLODActor * actor = vtkLODActor::New();
-    actor->SetMapper(m_glyphMapper);
+    VTK_CREATE(vtkPolyDataMapper, mapper);
+    mapper->SetInputConnection(m_glyph->GetOutputPort());
+    actor->SetMapper(mapper);
 
     return actor;
 }

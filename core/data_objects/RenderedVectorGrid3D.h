@@ -4,7 +4,7 @@
 
 
 class vtkLineSource;
-class vtkGlyph3DMapper;
+class vtkGlyph3D;
 
 class VectorGrid3DDataObject;
 
@@ -26,5 +26,5 @@ protected:
 
 private:
     vtkSmartPointer<vtkLineSource> m_lineSource;
-    vtkSmartPointer<vtkGlyph3DMapper> m_glyphMapper;
+    vtkSmartPointer<vtkGlyph3D> m_glyph;
 };
