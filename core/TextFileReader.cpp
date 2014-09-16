@@ -93,7 +93,7 @@ std::shared_ptr<InputFileInfo> TextFileReader::readHeader(ifstream & inputStream
         if (line.substr(0, 8) == "$ model ") {
             if (input) {
                 cerr << "multiple models per file not supported." << endl;
-                break;
+                return nullptr;
             }
             assert(!input);
             stringstream linestream(line.substr(8, string::npos));
@@ -101,8 +101,13 @@ std::shared_ptr<InputFileInfo> TextFileReader::readHeader(ifstream & inputStream
             getline(linestream, type, ' ');
             getline(linestream, name);
 
-            assert(modelNamesType.find(type) != modelNamesType.end());
-            input = make_shared<InputFileInfo>(name, modelNamesType.at(type));
+            auto it = modelNamesType.find(type);
+            if (it == modelNamesType.end())
+            {
+                cerr << "Invalid model type \"" << type << "\"" << endl;
+                return nullptr;
+            }
+            input = make_shared<InputFileInfo>(name, it->second);
 
             switch (input->type)
             {
@@ -161,8 +166,7 @@ bool TextFileReader::readHeader_triangles(ifstream & inputStream, vector<Dataset
 
         string attributeName;
 
-        assert(datasetNamesTypes.find(datasetType) != datasetNamesTypes.end());
-        currentDataType = datasetNamesTypes.at(datasetType);
+        currentDataType = checkDataSetType(datasetType);
 
         t_UInt tupleSize = 0;
         t_UInt numTuples = 0;
@@ -189,6 +193,11 @@ bool TextFileReader::readHeader_triangles(ifstream & inputStream, vector<Dataset
             attributeName = parameter.substr(tupleSizePos + 1);
             break;
         }
+        case DatasetType::unknown:
+            return false;
+        default:
+            cerr << "Data set type \"" + datasetType + "\" not supported with model type \"triangles\"" << endl;
+            return false;
         }
         assert(tupleSize);
         assert(numTuples);
@@ -224,19 +233,36 @@ bool TextFileReader::readHeader_grid2D(ifstream & inputStream, vector<DatasetDef
         getline(linestream, datasetType, ' ');
         getline(linestream, parameter);
 
+        currentDataType = checkDataSetType(datasetType);
 
-        assert(datasetNamesTypes.find(datasetType) != datasetNamesTypes.end());
-        currentDataType = datasetNamesTypes.at(datasetType);
+        if (currentDataType != DatasetType::grid2D)
+        {
+            cerr << "Data set type " << datasetType << " not supported in model type grid2d" << endl;
+            return false;
+        }
 
         size_t seperator = parameter.find_first_of(":");
         unsigned long columns = stol(parameter.substr(0, seperator));
         unsigned long rows = stol(parameter.substr(seperator + 1, string::npos));
-        assert(columns > 0 && rows > 0);
+        if (!(columns > 0 && rows > 0))
+        {
+            cerr << "missing \"columns:rows\" specification for grid2d data set" << endl;
+            return false;
+        }
         inputDefs.push_back({ currentDataType, rows, columns });
-
-        continue;
     }
 
     return false;
 }
 
+
+DatasetType TextFileReader::checkDataSetType(const std::string & nameString)
+{
+    auto it = datasetNamesTypes.find(nameString);
+    if (it == datasetNamesTypes.end())
+    {
+        cerr << "Invalid data set type: " << nameString << endl;
+        return DatasetType::unknown;
+    }
+    return it->second;
+}

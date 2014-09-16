@@ -61,4 +61,6 @@ private:
 
     static bool readHeader_triangles(std::ifstream & inputStream, std::vector<DatasetDef>& inputDefs);
     static bool readHeader_grid2D(std::ifstream & inputStream, std::vector<DatasetDef>& inputDefs);
+
+    static DatasetType checkDataSetType(const std::string & nameString);
 };
