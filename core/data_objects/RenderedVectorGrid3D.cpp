@@ -12,7 +12,7 @@
 
 #include <vtkPolyDataMapper.h>
 #include <vtkPainterPolyDataMapper.h>
-#include <vtkPointsPainter.h>
+#include <vtkLinesPainter.h>
 
 #include <vtkProperty.h>
 #include <vtkLODActor.h>
@@ -118,7 +118,9 @@ vtkProperty * RenderedVectorGrid3D::createDefaultRenderProperty() const
 vtkActor * RenderedVectorGrid3D::createActor()
 {
     vtkLODActor * actor = vtkLODActor::New();
-    VTK_CREATE(vtkPolyDataMapper, mapper);
+    VTK_CREATE(vtkPainterPolyDataMapper, mapper);
+    VTK_CREATE(vtkLinesPainter, painter);
+    mapper->SetPainter(painter);
     mapper->SetInputConnection(m_glyph->GetOutputPort());
     actor->SetMapper(mapper);
 
