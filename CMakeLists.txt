@@ -58,6 +58,7 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 find_package(VTK REQUIRED
     vtkGUISupportQt         # QVTKWidget
     vtkRenderingAnnotation  # vtkCubeAxesActor, vtkScalarBarActor
+    vtkRenderingLOD
     vtkInteractionWidgets
 )
 include(${VTK_USE_FILE})

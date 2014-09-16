@@ -6,9 +6,11 @@
 #include <vtkPolyData.h>
 
 #include <vtkPolyDataMapper.h>
+#include <vtkPainterPolyDataMapper.h>
+#include <vtkPointsPainter.h>
 
 #include <vtkProperty.h>
-#include <vtkActor.h>
+#include <vtkLODActor.h>
 
 #include <reflectionzeug/PropertyGroup.h>
 
@@ -82,14 +84,18 @@ vtkProperty * RenderedVectorGrid3D::createDefaultRenderProperty() const
 
 vtkActor * RenderedVectorGrid3D::createActor()
 {
-    VTK_CREATE(vtkPolyDataMapper, mapper);
+    VTK_CREATE(vtkPainterPolyDataMapper, mapper);
 
     mapper->GetInformation()->Set(DataObject::NameKey(),
         dataObject()->name().toLatin1().data());
 
-    mapper->SetInputData(vtkPolyData::SafeDownCast(dataObject()->dataSet()));
+    vtkSmartPointer<vtkPointsPainter> painter = vtkSmartPointer<vtkPointsPainter>::New();
+    mapper->ScalarVisibilityOff();
+    mapper->SetPainter(painter);
 
-    vtkActor * actor = vtkActor::New();
+    mapper->SetInputDataObject(dataObject()->dataSet());
+
+    vtkLODActor * actor = vtkLODActor::New();
     actor->SetMapper(mapper);
 
     return actor;
