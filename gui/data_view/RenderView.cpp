@@ -46,6 +46,7 @@ RenderView::RenderView(
     , m_scalarMappingChooser(scalarMappingChooser)
     , m_vectorMappingChooser(vectorMappingChooser)
     , m_renderConfigWidget(renderConfigWidget)
+    , m_contains3DData(true)
 {
     m_ui->setupUi(this);
 
@@ -304,9 +305,9 @@ QStringList RenderView::checkCompatibleObjects(QList<DataObject *> & dataObjects
         {
             m_contains3DData = is3D;
             clearInternalLists();
-            updateInteractionType();
         }
     }
+    updateInteractionType();
 
     QStringList invalidObjects;
     QList<DataObject *> compatibleObjects;
