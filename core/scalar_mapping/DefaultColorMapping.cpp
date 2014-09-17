@@ -3,7 +3,7 @@
 #include <vtkMapper.h>
 
 #include <core/scalar_mapping/ScalarsForColorMappingRegistry.h>
-#include <core/data_objects/PolyDataObject.h>
+#include <core/data_objects/DataObject.h>
 
 
 const QString DefaultColorMapping::s_name = "user-defined color";
@@ -15,20 +15,15 @@ const bool DefaultColorMapping::s_registered = ScalarsForColorMappingRegistry::i
 DefaultColorMapping::DefaultColorMapping(const QList<DataObject *> & dataObjects)
     : ScalarsForColorMapping(dataObjects)
 {
-    int validObjects = 0;
-
+    // only makes sense if there is a surface which we can color
     for (DataObject * dataObject : dataObjects)
     {
-        PolyDataObject * polyDataObject = dynamic_cast<PolyDataObject*>(dataObject);
-
-        if (!polyDataObject)
+        if (dataObject->is3D())
+        {
+            m_valid = true;
             break;
-
-        validObjects++;
+        }
     }
-
-    // applicable for list of PolyDataObjects only
-    m_valid = validObjects == dataObjects.length();
 }
 
 DefaultColorMapping::~DefaultColorMapping() = default;
