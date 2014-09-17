@@ -60,7 +60,7 @@ QList<ScalarsForColorMapping *> AttributeArrayComponentMapping::newInstances(con
                 continue;
             }
 
-            if (!lastNumComp)
+            if (!lastNumComp)   // current array isn't yet in our list
                 arrayNamesComponents.insert(name, currentNumComp);
         }
     }
@@ -91,8 +91,15 @@ AttributeArrayComponentMapping::AttributeArrayComponentMapping(const QList<DataO
 
     QByteArray c_name = dataArrayName.toLatin1();
 
-    // assuming that all data objects have this array and that all arrays have the same number of components
-    vtkDataArray * anArray = dataObjects.first()->dataSet()->GetCellData()->GetArray(c_name.data());
+    // assuming that all arrays with our array name have the same number of components
+    // so just find the first currently existing array
+    vtkDataArray * anArray = nullptr;
+    for (DataObject * dataObject : dataObjects)
+    {
+        anArray = dataObject->dataSet()->GetCellData()->GetArray(c_name.data());
+        if (anArray)
+            break;
+    }
     assert(anArray);
     m_arrayNumComponents = anArray->GetNumberOfComponents();
 
@@ -101,12 +108,9 @@ AttributeArrayComponentMapping::AttributeArrayComponentMapping(const QList<DataO
     {
         vtkFloatArray * dataArray = vtkFloatArray::SafeDownCast(
             dataObject->dataSet()->GetCellData()->GetArray(c_name.data()));
-
-        if (!dataArray)
-        {
-            qDebug() << "Data array" << dataArrayName << "does not exist in" << dataObject->name();
+        
+        if (!dataArray) // current object doesn't contain this data array
             continue;
-        }
 
         double range[2];
         dataArray->GetRange(range, m_component);
