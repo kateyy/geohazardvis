@@ -3,7 +3,6 @@
 #include <core/data_objects/RenderedData.h>
 
 
-class vtkLineSource;
 class vtkGlyph3D;
 
 class VectorGrid3DDataObject;
@@ -25,6 +24,5 @@ protected:
     vtkActor * createActor() override;
 
 private:
-    vtkSmartPointer<vtkLineSource> m_lineSource;
     vtkSmartPointer<vtkGlyph3D> m_glyph;
 };

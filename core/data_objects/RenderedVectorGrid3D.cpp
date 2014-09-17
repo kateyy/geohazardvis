@@ -4,6 +4,7 @@
 #include <vtkInformationStringKey.h>
 
 #include <vtkLineSource.h>
+#include <vtkAppendPolyData.h>
 
 #include <vtkPolyData.h>
 #include <vtkDataSetAttributes.h>
@@ -26,17 +27,40 @@
 using namespace reflectionzeug;
 
 
+namespace
+{
+
+vtkSmartPointer<vtkAlgorithm> createArrow()
+{
+    VTK_CREATE(vtkLineSource, shaft);
+    shaft->SetPoint1(0.f, 0.f, 0.f);
+    shaft->SetPoint2(1.f, 0.f, 0.f);
+
+    VTK_CREATE(vtkLineSource, cone1);
+    cone1->SetPoint1(1.00f, 0.0f, 0.f);
+    cone1->SetPoint2(0.65f, 0.1f, 0.f);
+
+    VTK_CREATE(vtkLineSource, cone2);
+    cone2->SetPoint1(1.00f,  0.0f, 0.f);
+    cone2->SetPoint2(0.65f, -0.1f, 0.f);
+
+    VTK_CREATE(vtkAppendPolyData, arrow);
+    arrow->AddInputConnection(shaft->GetOutputPort());
+    arrow->AddInputConnection(cone2->GetOutputPort());
+    arrow->AddInputConnection(cone2->GetOutputPort());
+
+    return arrow;
+}
+
+}
+
 RenderedVectorGrid3D::RenderedVectorGrid3D(VectorGrid3DDataObject * dataObject)
     : RenderedData(dataObject)
-    , m_lineSource(vtkSmartPointer<vtkLineSource>::New())
     , m_glyph(vtkSmartPointer<vtkGlyph3D>::New())
 {
-    m_lineSource->SetPoint1(0.f, 0.f, 0.f);
-    m_lineSource->SetPoint2(1.f, 0.f, 0.f);
-    m_lineSource->SetResolution(1);
-    m_lineSource->SetOutputPointsPrecision(vtkAlgorithm::SINGLE_PRECISION);
-
-    m_glyph->SetSourceConnection(m_lineSource->GetOutputPort());
+    vtkSmartPointer<vtkAlgorithm> arrow = createArrow();
+    
+    m_glyph->SetSourceConnection(arrow->GetOutputPort());
     m_glyph->ScalingOn();
     m_glyph->SetScaleModeToDataScalingOff();
     m_glyph->SetScaleFactor(0.1f);
