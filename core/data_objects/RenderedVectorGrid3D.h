@@ -4,6 +4,7 @@
 
 
 class vtkGlyph3D;
+class vtkMaskPoints;
 
 class VectorGrid3DDataObject;
 
@@ -25,4 +26,5 @@ protected:
 
 private:
     vtkSmartPointer<vtkGlyph3D> m_glyph;
+    vtkSmartPointer<vtkMaskPoints> m_lodMask;
 };

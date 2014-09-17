@@ -10,6 +10,7 @@
 #include <vtkDataSetAttributes.h>
 
 #include <vtkGlyph3D.h>
+#include <vtkMaskPoints.h>
 
 #include <vtkPolyDataMapper.h>
 #include <vtkPainterPolyDataMapper.h>
@@ -57,6 +58,7 @@ vtkSmartPointer<vtkAlgorithm> createArrow()
 RenderedVectorGrid3D::RenderedVectorGrid3D(VectorGrid3DDataObject * dataObject)
     : RenderedData(dataObject)
     , m_glyph(vtkSmartPointer<vtkGlyph3D>::New())
+    , m_lodMask(vtkSmartPointer<vtkMaskPoints>::New())
 {
     vtkSmartPointer<vtkAlgorithm> arrow = createArrow();
     
@@ -66,7 +68,13 @@ RenderedVectorGrid3D::RenderedVectorGrid3D(VectorGrid3DDataObject * dataObject)
     m_glyph->SetScaleFactor(0.1f);
     m_glyph->SetVectorModeToUseVector();
 
-    m_glyph->SetInputDataObject(dataObject->dataSet());
+    m_lodMask->SetInputDataObject(dataObject->dataSet());
+    m_lodMask->RandomModeOn();
+    m_lodMask->SetRandomModeType(2);
+    m_lodMask->SetOnRatio(1);
+    m_lodMask->SetMaximumNumberOfPoints(10000);
+
+    m_glyph->SetInputConnection(m_lodMask->GetOutputPort());
 }
 
 RenderedVectorGrid3D::~RenderedVectorGrid3D() = default;
@@ -85,9 +93,8 @@ PropertyGroup * RenderedVectorGrid3D::createConfigGroup()
 {
     PropertyGroup * configGroup = new PropertyGroup();
 
-    auto * renderSettings = new PropertyGroup("renderSettings");
+    auto * renderSettings = configGroup->addGroup("renderSettings");
     renderSettings->setOption("title", "rendering");
-    configGroup->addProperty(renderSettings);
 
     auto * color = renderSettings->addProperty<Color>("lineColor",
         [this]() {
@@ -136,13 +143,24 @@ PropertyGroup * RenderedVectorGrid3D::createConfigGroup()
     lineLength->setOption("minimum", 0);
     lineLength->setOption("step", 0.02f);
 
+
+    auto * lodSettings = configGroup->addGroup("lod");
+    lodSettings->setOption("title", "level of detail");
+
+    auto lodOuputPoints = lodSettings->addProperty<vtkIdType>("lodOuputPoints",
+        [this]() { return m_lodMask->GetMaximumNumberOfPoints(); },
+        [this](vtkIdType value) { m_lodMask->SetMaximumNumberOfPoints(value); });
+    lodOuputPoints->setOption("title", "maximum number of points");
+    lodOuputPoints->setOption("minimum", m_lodMask->GetMaximumNumberOfPointsMinValue());
+    lodOuputPoints->setOption("maximum", m_lodMask->GetMaximumNumberOfPointsMaxValue());
+
     return configGroup;
 }
 
 vtkProperty * RenderedVectorGrid3D::createDefaultRenderProperty() const
 {
     vtkProperty * prop = vtkProperty::New();
-    prop->SetColor(0, 0, 0);
+    prop->SetColor(1, 0, 0);
     prop->SetInterpolationToFlat();
     prop->LightingOff();
 
