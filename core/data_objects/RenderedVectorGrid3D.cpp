@@ -65,7 +65,7 @@ PropertyGroup * RenderedVectorGrid3D::createConfigGroup()
     renderSettings->setOption("title", "rendering");
     configGroup->addProperty(renderSettings);
 
-    auto * color = renderSettings->addProperty<Color>("color",
+    auto * color = renderSettings->addProperty<Color>("lineColor",
         [this]() {
         double * color = renderProperty()->GetColor();
         return Color(static_cast<int>(color[0] * 255), static_cast<int>(color[1] * 255), static_cast<int>(color[2] * 255));
@@ -74,6 +74,7 @@ PropertyGroup * RenderedVectorGrid3D::createConfigGroup()
         renderProperty()->SetColor(color.red() / 255.0, color.green() / 255.0, color.blue() / 255.0);
         emit geometryChanged();
     });
+    color->setOption("title", "line color");
 
     auto pointSize = renderSettings->addProperty<unsigned>("pointSize",
         [this]() {
@@ -85,20 +86,31 @@ PropertyGroup * RenderedVectorGrid3D::createConfigGroup()
     });
     pointSize->setOption("title", "point size");
     pointSize->setOption("minimum", 1);
-    pointSize->setOption("maximum", 20);
+    pointSize->setOption("maximum", 100);
     pointSize->setOption("step", 1);
 
-
-    auto * vectorVisSettings = configGroup->addGroup("vectorVisSettings");
-    vectorVisSettings->setOption("title", "vector visualization");
+    auto lineWidth = renderSettings->addProperty<unsigned>("lineWidth",
+        [this]() {
+        return static_cast<unsigned>(renderProperty()->GetLineWidth());
+    },
+        [this](unsigned lineWidth) {
+        renderProperty()->SetLineWidth(lineWidth);
+        emit geometryChanged();
+    });
+    lineWidth->setOption("title", "line width");
+    lineWidth->setOption("minimum", 1);
+    lineWidth->setOption("maximum", 100);
+    lineWidth->setOption("step", 1);
     
-    auto prop_length = vectorVisSettings->addProperty<float>("length",
+    auto lineLength = renderSettings->addProperty<float>("lineLength",
         [this]() { return static_cast<float>(m_glyph->GetScaleFactor());  },
         [this](float value) {
         m_glyph->SetScaleFactor(value);
         emit geometryChanged();
     });
-    prop_length->setOption("step", 0.02f);
+    lineLength->setOption("title", "line length");
+    lineLength->setOption("minimum", 0);
+    lineLength->setOption("step", 0.02f);
 
     return configGroup;
 }

@@ -97,9 +97,9 @@ reflectionzeug::PropertyGroup * RenderedPolyData::createConfigGroup()
         emit geometryChanged();
     });
     lineWidth->setOption("title", "line width");
-    lineWidth->setOption("minimum", 0.1);
+    lineWidth->setOption("minimum", 0.1f);
     lineWidth->setOption("maximum", std::numeric_limits<float>::max());
-    lineWidth->setOption("step", 0.1);
+    lineWidth->setOption("step", 0.1f);
 
     auto * edgeColor = renderSettings->addProperty<Color>("edgeColor",
         [this]() {
