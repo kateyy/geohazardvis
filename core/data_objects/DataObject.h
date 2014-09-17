@@ -21,6 +21,9 @@ public:
     DataObject(QString name, vtkDataSet * dataSet);
     virtual ~DataObject() = 0;
 
+    /** @return true if this is a 3D geometry (and false if it's image/2D data) */
+    virtual bool is3D() const = 0;
+
     /** create a rendered instance */
     virtual RenderedData * createRendered() = 0;
 

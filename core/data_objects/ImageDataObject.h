@@ -12,6 +12,8 @@ class CORE_API ImageDataObject : public DataObject
 public:
     ImageDataObject(QString name, vtkImageData * dataSet);
 
+    bool is3D() const override;
+
     RenderedData * createRendered() override;
 
     QString dataTypeName() const override;

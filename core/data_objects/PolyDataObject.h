@@ -12,6 +12,8 @@ class CORE_API PolyDataObject : public DataObject
 public:
     PolyDataObject(QString name, vtkPolyData * dataSet);
 
+    bool is3D() const override;
+
     RenderedData * createRendered() override;
 
     QString dataTypeName() const override;

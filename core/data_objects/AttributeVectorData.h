@@ -12,6 +12,8 @@ public:
     AttributeVectorData(QString name, vtkFloatArray * dataArray);
     ~AttributeVectorData() override;
 
+    bool is3D() const override;
+
     RenderedData * createRendered() override;
 
     QString dataTypeName() const override;

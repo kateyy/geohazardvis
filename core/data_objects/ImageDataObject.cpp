@@ -17,6 +17,11 @@ ImageDataObject::ImageDataObject(QString name, vtkImageData * dataSet)
 {
 }
 
+bool ImageDataObject::is3D() const
+{
+    return false;
+}
+
 RenderedData * ImageDataObject::createRendered()
 {
     return new RenderedImageData(this);

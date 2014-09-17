@@ -14,6 +14,11 @@ AttributeVectorData::AttributeVectorData(QString name, vtkFloatArray * dataArray
 
 AttributeVectorData::~AttributeVectorData() = default;
 
+bool AttributeVectorData::is3D() const
+{
+    return false;
+}
+
 RenderedData * AttributeVectorData::createRendered()
 {
     return nullptr;

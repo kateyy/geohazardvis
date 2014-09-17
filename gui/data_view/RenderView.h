@@ -130,5 +130,5 @@ private:
     ScalarToColorMapping m_scalarMapping;
     RenderConfigWidget & m_renderConfigWidget;
 
-    QString m_currentDataType;
+    bool m_contains3DData;
 };

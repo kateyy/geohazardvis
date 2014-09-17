@@ -47,6 +47,11 @@ PolyDataObject::PolyDataObject(QString name, vtkPolyData * dataSet)
     }
 }
 
+bool PolyDataObject::is3D() const
+{
+    return true;
+}
+
 RenderedData * PolyDataObject::createRendered()
 {
     return new RenderedPolyData(this);

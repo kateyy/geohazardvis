@@ -12,6 +12,8 @@ public:
     VectorGrid3DDataObject(QString name, vtkPolyData * dataSet);
     ~VectorGrid3DDataObject() override;
 
+    bool is3D() const override;
+
     /** create a rendered instance */
     RenderedData * createRendered() override;
 

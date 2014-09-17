@@ -36,8 +36,6 @@ RenderedVectorGrid3D::RenderedVectorGrid3D(VectorGrid3DDataObject * dataObject)
     m_lineSource->SetResolution(1);
     m_lineSource->SetOutputPointsPrecision(vtkAlgorithm::SINGLE_PRECISION);
 
-
-
     m_glyph->SetSourceConnection(m_lineSource->GetOutputPort());
     m_glyph->ScalingOn();
     m_glyph->SetScaleModeToDataScalingOff();

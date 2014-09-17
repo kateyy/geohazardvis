@@ -161,7 +161,7 @@ RenderedData * RenderView::addDataObject(DataObject * dataObject)
     updateTitle(dataObject->name() + " (loading to GPU)");
     QApplication::processEvents();
 
-    assert(dataObject->dataTypeName() == m_currentDataType);
+    assert(dataObject->is3D() == m_contains3DData);
 
     RenderedData * renderedData = dataObject->createRendered();
     if (!renderedData)
@@ -296,15 +296,13 @@ QStringList RenderView::checkCompatibleObjects(QList<DataObject *> & dataObjects
             break;
         }
 
-    assert(amIEmpty || !m_currentDataType.isEmpty());
-
     // allow data type switch if nothing is visible
     if (amIEmpty)
     {
-        QString newType = dataObjects.first()->dataTypeName();
-        if (newType != m_currentDataType)
+        bool is3D = dataObjects.first()->is3D();
+        if (is3D != m_contains3DData)
         {
-            m_currentDataType = newType;
+            m_contains3DData = is3D;
             clearInternalLists();
             updateInteractionType();
         }
@@ -315,7 +313,7 @@ QStringList RenderView::checkCompatibleObjects(QList<DataObject *> & dataObjects
 
     for (DataObject * dataObject : dataObjects)
     {
-        if (dataObject->dataTypeName() == m_currentDataType)
+        if (dataObject->is3D() == m_contains3DData)
             compatibleObjects << dataObject;
         else
             invalidObjects << dataObject->name();
@@ -469,10 +467,10 @@ void RenderView::setupColorMappingLegend()
 
 void RenderView::updateInteractionType()
 {
-    if (m_currentDataType == "regular 2D grid")
-        setInteractorStyle("InteractorStyleImage");
-    else
+    if (m_contains3DData)
         setInteractorStyle("InteractorStyle3D");
+    else
+        setInteractorStyle("InteractorStyleImage");
 }
 
 void RenderView::warnIncompatibleObjects(QStringList incompatibleObjects)

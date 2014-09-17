@@ -17,6 +17,11 @@ VectorGrid3DDataObject::VectorGrid3DDataObject(QString name, vtkPolyData * dataS
 
 VectorGrid3DDataObject::~VectorGrid3DDataObject() = default;
 
+bool VectorGrid3DDataObject::is3D() const
+{
+    return true;
+}
+
 RenderedData * VectorGrid3DDataObject::createRendered()
 {
     return new RenderedVectorGrid3D(this);
