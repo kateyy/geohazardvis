@@ -149,7 +149,10 @@ PropertyGroup * RenderedVectorGrid3D::createConfigGroup()
 
     auto lodOuputPoints = lodSettings->addProperty<vtkIdType>("lodOuputPoints",
         [this]() { return m_lodMask->GetMaximumNumberOfPoints(); },
-        [this](vtkIdType value) { m_lodMask->SetMaximumNumberOfPoints(value); });
+        [this](vtkIdType value) {
+        m_lodMask->SetMaximumNumberOfPoints(value);
+        emit geometryChanged();
+    });
     lodOuputPoints->setOption("title", "maximum number of points");
     lodOuputPoints->setOption("minimum", m_lodMask->GetMaximumNumberOfPointsMinValue());
     lodOuputPoints->setOption("maximum", m_lodMask->GetMaximumNumberOfPointsMaxValue());
