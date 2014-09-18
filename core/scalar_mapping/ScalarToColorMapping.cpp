@@ -52,7 +52,12 @@ void ScalarToColorMapping::setRenderedData(const QList<RenderedData *> & rendere
     if (m_scalars.contains(lastScalars))
         newScalarsName = lastScalars;
     else
-        newScalarsName = m_scalars.first()->name();
+    {
+        if (m_scalars.contains("user-defined color"))
+            newScalarsName = "user-defined color";
+        else
+            newScalarsName = m_scalars.first()->name();
+    }
 
     setCurrentScalarsByName(newScalarsName);
 
