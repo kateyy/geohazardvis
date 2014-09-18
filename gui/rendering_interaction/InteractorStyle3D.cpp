@@ -150,7 +150,10 @@ void InteractorStyle3D::highlightPickedCell()
         return;
     }
 
-    vtkActor * pickedActor = m_cellPicker->GetActor();
+    vtkActor * pickedActor = cellId != -1
+        ? m_cellPicker->GetActor()
+        : m_pointPicker->GetActor();
+
     RenderedData * renderedData = m_actorToRenderedData.value(pickedActor);
     assert(renderedData);
     
@@ -251,8 +254,9 @@ void InteractorStyle3D::lookAtCell(DataObject * dataObject, vtkIdType cellId)
 
 void InteractorStyle3D::sendPointInfo() const
 {
-    vtkAbstractMapper3D * mapper = m_cellPicker->GetMapper();
-    if (!mapper)    // no object at cursor position
+    vtkAbstractMapper3D * cellMapper = m_cellPicker->GetMapper();
+    vtkAbstractMapper3D * pointMapper = m_pointPicker->GetMapper();
+    if (!cellMapper && ! pointMapper)    // no object at cursor position
     {
         emit pointInfoSent({});
         return;
@@ -266,7 +270,9 @@ void InteractorStyle3D::sendPointInfo() const
     stream.setRealNumberNotation(QTextStream::RealNumberNotation::ScientificNotation);
     stream.setRealNumberPrecision(17);
 
-    vtkInformation * inputInfo = mapper->GetInformation();
+    vtkInformation * inputInfo = cellMapper
+        ? cellMapper->GetInformation()
+        : pointMapper->GetInformation();
 
     QString inputName;
     if (inputInfo->Has(DataObject::NameKey()))
@@ -275,19 +281,13 @@ void InteractorStyle3D::sendPointInfo() const
     stream
         << "data set: " << inputName << endl;
 
-    vtkCellData * cellData = m_cellPicker->GetDataSet()->GetCellData();
-    vtkDataArray * centroids = cellData->GetArray("centroid");
 
-    if (!centroids)
-    {
-        double* pos = m_pointPicker->GetPickPosition();
-        stream
-            << "point index: " << m_pointPicker->GetPointId() << endl
-            << "x: " << pos[0] << endl
-            << "y: " << pos[1] << endl
-            << "z: " << pos[2];
-    }
-    else
+    vtkCellData * cellData = nullptr; vtkDataArray * centroids = nullptr;
+    if (cellMapper && (cellData = m_cellPicker->GetDataSet()->GetCellData()))
+        centroids = cellData->GetArray("centroid");
+
+    // for poly data: centroid and scalar information if available
+    if (centroids)
     {
         vtkIdType cellId = m_cellPicker->GetCellId();
         double * centroid = centroids->GetTuple(cellId);
@@ -297,7 +297,8 @@ void InteractorStyle3D::sendPointInfo() const
             << "y: " << centroid[1] << endl
             << "z: " << centroid[2];
 
-        vtkMapper * concreteMapper = vtkMapper::SafeDownCast(mapper);
+        vtkMapper * concreteMapper = vtkMapper::SafeDownCast(cellMapper);
+        assert(concreteMapper);
         vtkDataArray * scalars = cellData->GetScalars();
         if (concreteMapper && scalars)
         {
@@ -305,6 +306,16 @@ void InteractorStyle3D::sendPointInfo() const
                 scalars->GetTuple(cellId)[concreteMapper->GetArrayComponent()];
             stream << endl << "scalar value: " << value;
         }
+    }
+    // for 3D vectors, or poly data fallback
+    else
+    {
+        double* pos = m_pointPicker->GetPickPosition();
+        stream
+            << "point index: " << m_pointPicker->GetPointId() << endl
+            << "x: " << pos[0] << endl
+            << "y: " << pos[1] << endl
+            << "z: " << pos[2];
     }
 
     QStringList info;
