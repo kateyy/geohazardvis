@@ -1,6 +1,6 @@
 #pragma once
 
-#include <QList>
+#include <QMap>
 
 #include <vtkInteractorStyleTrackballCamera.h>
 #include <vtkSmartPointer.h>
@@ -31,10 +31,10 @@ public:
 
     void OnChar() override;
 
-    void setRenderedDataList(const QList<RenderedData *> * renderedData);
+    void setRenderedData(QList<RenderedData *> renderedData);
 
 public slots:
-    void highlightCell(vtkIdType cellId, DataObject * dataObject) override;
+    void highlightCell(DataObject * dataObject, vtkIdType cellId) override;
     void lookAtCell(DataObject * polyData, vtkIdType cellId) override;
 
 protected:
@@ -44,7 +44,7 @@ protected:
     void sendPointInfo() const;
 
 protected:
-    const QList<RenderedData *> * m_renderedData;
+    QMap<vtkActor *, RenderedData *> m_actorToRenderedData;
 
     vtkSmartPointer<vtkPointPicker> m_pointPicker;
     vtkSmartPointer<vtkCellPicker> m_cellPicker;

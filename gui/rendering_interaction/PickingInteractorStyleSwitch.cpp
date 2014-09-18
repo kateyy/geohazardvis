@@ -5,9 +5,9 @@
 #include <QStringList>
 
 #include <vtkObjectFactory.h>
-#include <vtkActor.h>
 
 #include <core/data_objects/DataObject.h>
+#include <core/data_objects/RenderedData.h>
 
 
 vtkStandardNewMacro(PickingInteractorStyleSwitch);
@@ -15,37 +15,47 @@ vtkStandardNewMacro(PickingInteractorStyleSwitch);
 
 PickingInteractorStyleSwitch::PickingInteractorStyleSwitch()
     : InteractorStyleSwitch()
+    , m_currentPickingStyle(nullptr)
 {
 }
 
 PickingInteractorStyleSwitch::~PickingInteractorStyleSwitch() = default;
 
-void PickingInteractorStyleSwitch::setRenderedDataList(const QList<RenderedData *> * renderedData)
+void PickingInteractorStyleSwitch::setRenderedData(QList<RenderedData *> renderedData)
 {
     m_renderedData = renderedData;
 
-    for (auto & it : namedStyles())
-        dynamic_cast<IPickingInteractorStyle*>(it.second.Get())->setRenderedDataList(m_renderedData);
+    if (m_currentPickingStyle)
+        m_currentPickingStyle->setRenderedData(m_renderedData);
 }
 
-void PickingInteractorStyleSwitch::highlightCell(vtkIdType cellId, DataObject * dataObject)
+void PickingInteractorStyleSwitch::highlightCell(DataObject * dataObject, vtkIdType cellId)
 {
-    dynamic_cast<IPickingInteractorStyle*>(currentStyle())->highlightCell(cellId, dataObject);
+    if (m_currentPickingStyle)
+        m_currentPickingStyle->highlightCell(dataObject, cellId);
 }
 
 void PickingInteractorStyleSwitch::lookAtCell(DataObject * dataObject, vtkIdType cellId)
 {
-    dynamic_cast<IPickingInteractorStyle*>(currentStyle())->lookAtCell(dataObject, cellId);
+    if (m_currentPickingStyle)
+        m_currentPickingStyle->lookAtCell(dataObject, cellId);
 }
 
-void PickingInteractorStyleSwitch::styleAdded(vtkInteractorStyle * style)
+void PickingInteractorStyleSwitch::styleAddedEvent(vtkInteractorStyle * style)
 {
     IPickingInteractorStyle * pickingStyle = dynamic_cast<IPickingInteractorStyle*>(style);
-    assert(pickingStyle);
 
-    pickingStyle->setRenderedDataList(m_renderedData);
+    if (!m_currentPickingStyle)
+        return;
+
+    pickingStyle->setRenderedData(m_renderedData);
 
     connect(pickingStyle, &IPickingInteractorStyle::pointInfoSent, this, &IPickingInteractorStyle::pointInfoSent);
-    connect(pickingStyle, &IPickingInteractorStyle::actorPicked, this, &IPickingInteractorStyle::actorPicked);
+    connect(pickingStyle, &IPickingInteractorStyle::dataPicked, this, &IPickingInteractorStyle::dataPicked);
     connect(pickingStyle, &IPickingInteractorStyle::cellPicked, this, &IPickingInteractorStyle::cellPicked);
+}
+
+void PickingInteractorStyleSwitch::currentStyleChangedEvent()
+{
+    m_currentPickingStyle = dynamic_cast<IPickingInteractorStyle *>(currentStyle());
 }

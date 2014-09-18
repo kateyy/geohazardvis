@@ -129,38 +129,36 @@ void InteractorStyle3D::OnChar()
     // disable magic keys for now
 }
 
-void InteractorStyle3D::setRenderedDataList(const QList<RenderedData *> * renderedData)
+void InteractorStyle3D::setRenderedData(QList<RenderedData *> renderedData)
 {
-    assert(renderedData);
-    m_renderedData = renderedData;
+    m_actorToRenderedData.clear();
+    for (RenderedData * r : renderedData)
+        m_actorToRenderedData.insert(r->mainActor(), r);
 }
 
 void InteractorStyle3D::highlightPickedCell()
 {
-    int* clickPos = GetInteractor()->GetEventPosition();
+    // assume cells and points picked (in OnMouseMove)
 
-    m_cellPicker->Pick(clickPos[0], clickPos[1], 0, GetDefaultRenderer());
     vtkIdType cellId = m_cellPicker->GetCellId();
+    vtkIdType pointId = m_pointPicker->GetPointId();
 
-    vtkActor * pickedActor = m_cellPicker->GetActor();
-
-    if (!pickedActor)
+    if (cellId == -1 && pointId == -1)
     {
-        highlightCell(-1, nullptr);
+        highlightCell(nullptr , - 1);
         return;
     }
 
+    vtkActor * pickedActor = m_cellPicker->GetActor();
+    RenderedData * renderedData = m_actorToRenderedData.value(pickedActor);
+    assert(renderedData);
     
-    emit actorPicked(pickedActor);
+    emit dataPicked(renderedData);
 
-    for (RenderedData * renderedData : *m_renderedData)
-    {
-        if (renderedData->mainActor() == pickedActor)
-            emit cellPicked(renderedData->dataObject(), cellId);
-    }    
+    emit cellPicked(renderedData->dataObject(), cellId);
 }
 
-void InteractorStyle3D::highlightCell(vtkIdType cellId, DataObject * dataObject)
+void InteractorStyle3D::highlightCell(DataObject * dataObject, vtkIdType cellId)
 {
     if (cellId == -1)
     {

@@ -132,13 +132,12 @@ void RenderView::setupInteraction()
 {
     m_interactorStyle = vtkSmartPointer<PickingInteractorStyleSwitch>::New();
     m_interactorStyle->SetDefaultRenderer(m_renderer);
-    m_interactorStyle->setRenderedDataList(&m_renderedData);
 
     m_interactorStyle->addStyle("InteractorStyle3D", InteractorStyle3D::New());
     m_interactorStyle->addStyle("InteractorStyleImage", InteractorStyleImage::New());
 
     connect(m_interactorStyle.Get(), &PickingInteractorStyleSwitch::pointInfoSent, this, &RenderView::ShowInfo);
-    connect(m_interactorStyle.Get(), &PickingInteractorStyleSwitch::actorPicked, this, &RenderView::updateGuiForActor);
+    connect(m_interactorStyle.Get(), &PickingInteractorStyleSwitch::dataPicked, this, &RenderView::updateGuiForData);
  
     m_interactor = vtkSmartPointer<vtkRenderWindowInteractor>::New();
     m_interactor->SetRenderWindow(m_ui->qvtkMain->GetRenderWindow());
@@ -171,7 +170,6 @@ RenderedData * RenderView::addDataObject(DataObject * dataObject)
     for (vtkActor * actor : renderedData->actors())
         m_renderer->AddViewProp(actor);
 
-    m_actorToRenderedData.insert(renderedData->mainActor(), renderedData);
     m_renderedData << renderedData;
 
     connect(renderedData, &RenderedData::geometryChanged, this, &RenderView::render);
@@ -331,7 +329,6 @@ void RenderView::clearInternalLists()
 
     m_renderedData.clear();
     m_dataObjectToRendered.clear();
-    m_actorToRenderedData.clear();    
 }
 
 void RenderView::removeFromInternalLists(QList<DataObject *> dataObjects)
@@ -341,7 +338,6 @@ void RenderView::removeFromInternalLists(QList<DataObject *> dataObjects)
         RenderedData * rendered = m_dataObjectToRendered.value(dataObject, nullptr);
         assert(rendered);
 
-        m_actorToRenderedData.remove(rendered->mainActor());
         m_dataObjectToRendered.remove(dataObject);
         m_renderedData.removeOne(rendered);
 
@@ -500,17 +496,9 @@ const IPickingInteractorStyle * RenderView::interactorStyle() const
     return m_interactorStyle;
 }
 
-void RenderView::updateGuiForActor(vtkActor * actor)
-{
-    assert(actor);
-
-    RenderedData * r = m_actorToRenderedData[actor];
-
-    updateGuiForData(r);
-}
-
 void RenderView::updateGuiForData(RenderedData * renderedData)
 {
+    m_interactorStyle->setRenderedData(m_renderedData);
     m_renderConfigWidget.setRenderedData(index(), renderedData);
     m_scalarMappingChooser.setMapping(friendlyName(), &m_scalarMapping);
     m_vectorMappingChooser.setMapping(index(), renderedData->vectorMapping());

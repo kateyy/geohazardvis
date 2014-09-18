@@ -30,7 +30,7 @@ void InteractorStyleSwitch::addStyle(const std::string & name, vtkInteractorStyl
         setCurrentStyle(name);
     }
 
-    styleAdded(interactorStyle);
+    styleAddedEvent(interactorStyle);
 }
 
 void InteractorStyleSwitch::setCurrentStyle(const std::string & name)
@@ -49,6 +49,8 @@ void InteractorStyleSwitch::setCurrentStyle(const std::string & name)
     m_currentStyle = styleIt->second;
 
     m_currentStyle->SetInteractor(GetInteractor());
+
+    currentStyleChangedEvent();
 }
 
 const std::string & InteractorStyleSwitch::currentStyleName() const
@@ -93,7 +95,11 @@ void InteractorStyleSwitch::SetCurrentRenderer(vtkRenderer * renderer)
         it.second->SetCurrentRenderer(renderer);
 }
 
-void InteractorStyleSwitch::styleAdded(vtkInteractorStyle * /*interactorStyle*/)
+void InteractorStyleSwitch::styleAddedEvent(vtkInteractorStyle * /*interactorStyle*/)
+{
+}
+
+void InteractorStyleSwitch::currentStyleChangedEvent()
 {
 }
 

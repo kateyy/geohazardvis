@@ -1,5 +1,7 @@
 #pragma once
 
+#include <QList>
+
 #include "IPickingInteractorStyle.h"
 #include "InteractorStyleSwitch.h"
 
@@ -12,18 +14,20 @@ public:
     static PickingInteractorStyleSwitch * New();
     vtkTypeMacro(PickingInteractorStyleSwitch, InteractorStyleSwitch);
 
-    void setRenderedDataList(const QList<RenderedData *> * renderedData) override;
+    void setRenderedData(QList<RenderedData *> renderedData) override;
 
 public slots:
-    void highlightCell(vtkIdType cellId, DataObject * dataObject) override;
+    void highlightCell(DataObject * dataObject, vtkIdType cellId) override;
     void lookAtCell(DataObject * dataObject, vtkIdType cellId) override;
     
 protected:
     PickingInteractorStyleSwitch();
     ~PickingInteractorStyleSwitch() override;
 
-    void styleAdded(vtkInteractorStyle * style) override;
+    void styleAddedEvent(vtkInteractorStyle * style) override;
+    void currentStyleChangedEvent() override;
 
 private:
-    const QList<RenderedData *> * m_renderedData;
+    QList<RenderedData *> m_renderedData;
+    IPickingInteractorStyle * m_currentPickingStyle;
 };

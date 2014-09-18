@@ -27,7 +27,8 @@ protected:
     InteractorStyleSwitch();
     ~InteractorStyleSwitch() override;
 
-    virtual void styleAdded(vtkInteractorStyle * interactorStyle);
+    virtual void styleAddedEvent(vtkInteractorStyle * interactorStyle);
+    virtual void currentStyleChangedEvent();
     const std::unordered_map<std::string, vtkSmartPointer<vtkInteractorStyle>> namedStyles() const;
 
 private:

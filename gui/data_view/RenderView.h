@@ -102,8 +102,7 @@ private:
     void warnIncompatibleObjects(QStringList incompatibleObjects);
 
 private slots:
-    /** Updates the RenderConfigWidget to reflect the actors render properties. */
-    void updateGuiForActor(vtkActor * actor);
+    /** Updates the RenderConfigWidget to reflect the data's render properties. */
     void updateGuiForData(RenderedData * renderedData);
 
 private:
@@ -112,7 +111,6 @@ private:
     // rendered representations of data objects for this view
     QList<RenderedData *> m_renderedData;
     QMap<DataObject *, RenderedData *> m_dataObjectToRendered;
-    QMap<vtkActor *, RenderedData *> m_actorToRenderedData;
 
     // Rendering components
     vtkSmartPointer<vtkRenderer> m_renderer;

@@ -100,7 +100,7 @@ void SelectionHandler::syncRenderViewsWithTable(DataObject * dataObject, vtkIdTy
     for (auto it = m_renderViews.begin(); it != m_renderViews.end(); ++it)
     {
         if (it.value()->isChecked() && it.key()->dataObjects().contains(dataObject))
-            it.key()->interactorStyle()->highlightCell(cellId, dataObject);
+            it.key()->interactorStyle()->highlightCell(dataObject, cellId);
     }
 }
 
@@ -114,7 +114,7 @@ void SelectionHandler::syncRenderAndTableViews(DataObject * dataObject, vtkIdTyp
     for (auto it = m_renderViews.begin(); it != m_renderViews.end(); ++it)
     {
         if (it.value()->isChecked() && it.key()->dataObjects().contains(dataObject))
-            it.key()->interactorStyle()->highlightCell(cellId, dataObject);
+            it.key()->interactorStyle()->highlightCell(dataObject, cellId);
     }
     for (auto it = m_tableViews.begin(); it != m_tableViews.end(); ++it)
     {

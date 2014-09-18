@@ -123,10 +123,11 @@ void InteractorStyleImage::OnChar()
     // disable magic keys for now
 }
 
-void InteractorStyleImage::setRenderedDataList(const QList<RenderedData *> * renderedData)
+void InteractorStyleImage::setRenderedData(QList<RenderedData *> renderedData)
 {
-    assert(renderedData);
-    m_renderedData = renderedData;
+    m_actorToRenderedData.clear();
+    for (auto r : renderedData)
+        m_actorToRenderedData.insert(r->mainActor(), r);
 }
 
 void InteractorStyleImage::highlightPickedCell()
@@ -139,21 +140,19 @@ void InteractorStyleImage::highlightPickedCell()
     vtkActor * pickedActor = m_cellPicker->GetActor();
     if (!pickedActor)
     {
-        highlightCell(-1, nullptr);
+        highlightCell(nullptr, -1);
         return;
     }
 
+    RenderedData * renderedData = m_actorToRenderedData.value(pickedActor);
+    assert(renderedData);
     
-    emit actorPicked(pickedActor);
+    emit dataPicked(renderedData);
 
-    for (RenderedData * renderedData : *m_renderedData)
-    {
-        if (renderedData->mainActor() == pickedActor)
-            emit cellPicked(renderedData->dataObject(), cellId);
-    }
+    emit cellPicked(renderedData->dataObject(), cellId);
 }
 
-void InteractorStyleImage::highlightCell(vtkIdType cellId, DataObject * dataObject)
+void InteractorStyleImage::highlightCell(DataObject * dataObject, vtkIdType cellId)
 {
     if (cellId == -1)
     {
