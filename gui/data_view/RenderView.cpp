@@ -18,6 +18,8 @@
 #include <vtkCamera.h>
 #include <vtkProperty.h>
 #include <vtkTextProperty.h>
+#include <vtkLightCollection.h>
+#include <vtkLightKit.h>
 
 #include <core/vtkhelper.h>
 #include <core/data_objects/DataObject.h>
@@ -126,6 +128,10 @@ void RenderView::setupRenderer()
     m_renderer = vtkSmartPointer<vtkRenderer>::New();
     m_renderer->SetBackground(1, 1, 1);
     m_ui->qvtkMain->GetRenderWindow()->AddRenderer(m_renderer);
+    
+    m_renderer->GetLights()->RemoveAllItems();
+    m_lightKit = vtkSmartPointer<vtkLightKit>::New();
+    m_lightKit->AddLightsToRenderer(m_renderer);
 }
 
 void RenderView::setupInteraction()
@@ -476,6 +482,11 @@ void RenderView::warnIncompatibleObjects(QStringList incompatibleObjects)
         + QString("\nDiscarded objects:\n") + incompatibleObjects.join('\n'));
 }
 
+vtkRenderer * RenderView::renderer()
+{
+    return m_renderer;
+}
+
 vtkRenderWindow * RenderView::renderWindow()
 {
     return m_ui->qvtkMain->GetRenderWindow();
@@ -494,6 +505,11 @@ IPickingInteractorStyle * RenderView::interactorStyle()
 const IPickingInteractorStyle * RenderView::interactorStyle() const
 {
     return m_interactorStyle;
+}
+
+vtkLightKit * RenderView::lightKit()
+{
+    return m_lightKit;
 }
 
 void RenderView::updateGuiForData(RenderedData * renderedData)

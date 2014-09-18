@@ -18,6 +18,7 @@
 #include "widgets/ScalarMappingChooser.h"
 #include "widgets/VectorMappingChooser.h"
 #include "widgets/RenderConfigWidget.h"
+#include "widgets/RendererConfigWidget.h"
 
 
 MainWindow::MainWindow()
@@ -27,6 +28,7 @@ MainWindow::MainWindow()
     , m_scalarMappingChooser(new ScalarMappingChooser())
     , m_vectorMappingChooser(new VectorMappingChooser())
     , m_renderConfigWidget(new RenderConfigWidget())
+    , m_rendererConfigWidget(new RendererConfigWidget())
 {
     m_ui->setupUi(this);
 
@@ -43,8 +45,14 @@ MainWindow::MainWindow()
     addDockWidget(Qt::DockWidgetArea::LeftDockWidgetArea, m_scalarMappingChooser);
     addDockWidget(Qt::DockWidgetArea::LeftDockWidgetArea, m_renderConfigWidget);
     addDockWidget(Qt::DockWidgetArea::LeftDockWidgetArea, m_vectorMappingChooser);
+    addDockWidget(Qt::DockWidgetArea::LeftDockWidgetArea, m_rendererConfigWidget);
     tabifyDockWidget(m_renderConfigWidget, m_vectorMappingChooser);
+    tabifyDockWidget(m_renderConfigWidget, m_rendererConfigWidget);
     tabbedDockWidgetToFront(m_renderConfigWidget);
+
+    connect(m_dataMapping, &DataMapping::renderViewsChanged, m_rendererConfigWidget, &RendererConfigWidget::setRenderViews);
+    connect(m_dataMapping, &DataMapping::focusedRenderViewChanged,
+        m_rendererConfigWidget, static_cast<void(RendererConfigWidget::*)(RenderView*)>(&RendererConfigWidget::setCurrentRenderView));
 }
 
 MainWindow::~MainWindow()

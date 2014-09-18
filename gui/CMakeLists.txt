@@ -39,6 +39,8 @@ set ( SOURCES
     widgets/ScalarRearrangeObjects.cpp
     widgets/RenderConfigWidget.h
     widgets/RenderConfigWidget.cpp
+    widgets/RendererConfigWidget.h
+    widgets/RendererConfigWidget.cpp
     widgets/VectorMappingChooser.h
     widgets/VectorMappingChooser.cpp
     widgets/VectorMappingChooserListModel.h
@@ -55,6 +57,7 @@ set ( UIs
     widgets/ScalarMappingChooser.ui
     widgets/ScalarRearrangeObjects.ui
     widgets/RenderConfigWidget.ui
+    widgets/RendererConfigWidget.ui
     widgets/VectorMappingChooser.ui
 )
 

@@ -18,6 +18,7 @@ class vtkCubeAxesActor;
 class vtkScalarBarActor;
 class vtkScalarBarWidget;
 class vtkActor;
+class vtkLightKit;
 
 class DataObject;
 class RenderedData;
@@ -59,11 +60,14 @@ public:
     QList<DataObject *> dataObjects() const;
     QList<const RenderedData *> renderedData() const;
 
+    vtkRenderer * renderer();
     vtkRenderWindow * renderWindow();
     const vtkRenderWindow * renderWindow() const;
     
     IPickingInteractorStyle * interactorStyle();
     const IPickingInteractorStyle * interactorStyle() const;
+
+    vtkLightKit * lightKit();
 
 public slots:
     void render();
@@ -116,6 +120,7 @@ private:
     vtkSmartPointer<vtkRenderer> m_renderer;
     vtkSmartPointer<vtkRenderWindowInteractor> m_interactor;
     vtkSmartPointer<PickingInteractorStyleSwitch> m_interactorStyle;
+    vtkSmartPointer<vtkLightKit> m_lightKit;
 
     // visualization and annotation
     vtkSmartPointer<vtkCubeAxesActor> m_axesActor;

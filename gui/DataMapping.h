@@ -30,7 +30,7 @@ public:
     RenderView * focusedRenderView();
 
 signals:
-    void renderViewsChanged(QList<RenderView*> widgets);
+    void renderViewsChanged(const QList<RenderView *> & widgets);
     void focusedRenderViewChanged(RenderView * renderView);
 
 private slots:

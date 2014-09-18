@@ -9,6 +9,7 @@
 class DataMapping;
 class RenderView;
 class RenderConfigWidget;
+class RendererConfigWidget;
 class DataBrowser;
 class ScalarMappingChooser;
 class VectorMappingChooser;
@@ -50,6 +51,7 @@ private:
     ScalarMappingChooser * m_scalarMappingChooser;
     VectorMappingChooser * m_vectorMappingChooser;
     RenderConfigWidget * m_renderConfigWidget;
+    RendererConfigWidget * m_rendererConfigWidget;
 
     QString m_lastOpenFolder;
 };

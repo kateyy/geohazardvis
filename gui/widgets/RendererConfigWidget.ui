@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>RendererConfigWidget</class>
+ <widget class="QDockWidget" name="RendererConfigWidget">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>221</width>
+    <height>170</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>renderer configuration</string>
+  </property>
+  <widget class="QWidget" name="content">
+   <layout class="QVBoxLayout" name="mainLayout">
+    <item>
+     <widget class="QComboBox" name="relatedRenderer"/>
+    </item>
+    <item>
+     <widget class="propertyguizeug::PropertyBrowser" name="propertyBrowser"/>
+    </item>
+   </layout>
+  </widget>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>propertyguizeug::PropertyBrowser</class>
+   <extends>QTreeView</extends>
+   <header>propertyguizeug/PropertyBrowser.h</header>
+  </customwidget>
+ </customwidgets>
+ <resources/>
+ <connections/>
+</ui>
