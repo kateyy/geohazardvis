@@ -69,6 +69,11 @@ elseif(NOT "${VTK_QT_VERSION}" STREQUAL "5")
     message(FATAL_ERROR "VTK was a wrong Qt version (${VTK_QT_VERSION}). Only Qt5 is supported.")
 endif()
 
+# if (${VTK_RENDERING_BACKEND} STREQUAL "OpenGL2")
+# message(VTK_RENDERING_BACKEND ${VTK_RENDERING_BACKEND})
+list(APPEND DEFAULT_COMPILE_DEFS VTK_RENDERING_BACKEND_${VTK_RENDERING_BACKEND})
+message(STATUS "VTK Rendering Backend: " ${VTK_RENDERING_BACKEND})
+
 find_package(Qt5Widgets REQUIRED)
 find_package(libzeug REQUIRED)
 

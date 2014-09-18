@@ -173,9 +173,15 @@ vtkProperty * RenderedVectorGrid3D::createDefaultRenderProperty() const
 vtkActor * RenderedVectorGrid3D::createActor()
 {
     vtkLODActor * actor = vtkLODActor::New();
-    VTK_CREATE(vtkPainterPolyDataMapper, mapper);
+    vtkSmartPointer<vtkPolyDataMapper> mapper;
+#if defined(VTK_RENDERING_BACKEND_OpenGL2)
+    mapper = vtkSmartPointer<vtkPolyDataMapper>::New();
+#else // VTK_RENDERING_BACKEND_OpenGL
     VTK_CREATE(vtkLinesPainter, painter);
-    mapper->SetPainter(painter);
+    VTK_CREATE(vtkPainterPolyDataMapper, painterMapper);
+    painterMapper->SetPainter(painter);
+    mapper = painterMapper;
+#endif 
     mapper->SetInputConnection(m_glyph->GetOutputPort());
     actor->SetMapper(mapper);
 
