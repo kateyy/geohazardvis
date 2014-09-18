@@ -28,6 +28,7 @@
 #include <vtkTriangle.h>
 #include <vtkMath.h>
 #include <vtkPolyData.h>
+#include <vtkCellData.h>
 
 #include <core/vtkhelper.h>
 #include <core/data_objects/DataObject.h>
@@ -250,7 +251,7 @@ void InteractorStyle3D::lookAtCell(DataObject * dataObject, vtkIdType cellId)
 
 void InteractorStyle3D::sendPointInfo() const
 {
-    vtkAbstractMapper3D * mapper = m_pointPicker->GetMapper();
+    vtkAbstractMapper3D * mapper = m_cellPicker->GetMapper();
     if (!mapper)    // no object at cursor position
     {
         emit pointInfoSent({});
@@ -265,21 +266,46 @@ void InteractorStyle3D::sendPointInfo() const
     stream.setRealNumberNotation(QTextStream::RealNumberNotation::ScientificNotation);
     stream.setRealNumberPrecision(17);
 
-    double* pos = m_pointPicker->GetPickPosition();
-
     vtkInformation * inputInfo = mapper->GetInformation();
 
-    std::string inputname;
+    QString inputName;
     if (inputInfo->Has(DataObject::NameKey()))
-        inputname = DataObject::NameKey()->Get(inputInfo);
+        inputName = DataObject::NameKey()->Get(inputInfo);
 
     stream
-        << "input file: " << QString::fromStdString(inputname) << endl
-        << "selected point: " << endl
-        << pos[0] << endl
-        << pos[1] << endl
-        << pos[2] << endl
-        << "id: " << m_pointPicker->GetPointId();
+        << "data set: " << inputName << endl;
+
+    vtkCellData * cellData = m_cellPicker->GetDataSet()->GetCellData();
+    vtkDataArray * centroids = cellData->GetArray("centroid");
+
+    if (!centroids)
+    {
+        double* pos = m_pointPicker->GetPickPosition();
+        stream
+            << "point index: " << m_pointPicker->GetPointId() << endl
+            << "x: " << pos[0] << endl
+            << "y: " << pos[1] << endl
+            << "z: " << pos[2];
+    }
+    else
+    {
+        vtkIdType cellId = m_cellPicker->GetCellId();
+        double * centroid = centroids->GetTuple(cellId);
+        stream
+            << "triangle index: " << cellId << endl
+            << "x: " << centroid[0] << endl
+            << "y: " << centroid[1] << endl
+            << "z: " << centroid[2];
+
+        vtkMapper * concreteMapper = vtkMapper::SafeDownCast(mapper);
+        vtkDataArray * scalars = cellData->GetScalars();
+        if (concreteMapper && scalars)
+        {
+            double value =
+                scalars->GetTuple(cellId)[concreteMapper->GetArrayComponent()];
+            stream << endl << "scalar value: " << value;
+        }
+    }
 
     QStringList info;
     QString line;
