@@ -8,6 +8,7 @@
 #include <vtkRenderWindowInteractor.h>
 #include <vtkRenderer.h>
 #include <vtkRenderWindow.h>
+#include <vtkCallbackCommand.h>
 
 #include <vtkObjectFactory.h>
 #include <vtkPointPicker.h>
@@ -38,7 +39,7 @@
 vtkStandardNewMacro(InteractorStyle3D);
 
 InteractorStyle3D::InteractorStyle3D()
-    : vtkInteractorStyleTrackballCamera()
+    : Superclass()
     , m_pointPicker(vtkSmartPointer<vtkPointPicker>::New())
     , m_cellPicker(vtkSmartPointer<vtkCellPicker>::New())
     , m_selectedCellActor(vtkSmartPointer<vtkActor>::New())
@@ -47,9 +48,16 @@ InteractorStyle3D::InteractorStyle3D()
 {
 }
 
+void InteractorStyle3D::setRenderedData(QList<RenderedData *> renderedData)
+{
+    m_actorToRenderedData.clear();
+    for (RenderedData * r : renderedData)
+        m_actorToRenderedData.insert(r->mainActor(), r);
+}
+
 void InteractorStyle3D::OnMouseMove()
 {
-    vtkInteractorStyleTrackballCamera::OnMouseMove();
+    Superclass::OnMouseMove();
 
     int* clickPos = GetInteractor()->GetEventPosition();
     m_pointPicker->Pick(clickPos[0], clickPos[1], 0, GetDefaultRenderer());
@@ -62,14 +70,14 @@ void InteractorStyle3D::OnMouseMove()
 
 void InteractorStyle3D::OnLeftButtonDown()
 {
-    vtkInteractorStyleTrackballCamera::OnLeftButtonDown();
+    Superclass::OnLeftButtonDown();
 
     m_mouseMoved = false;
 }
 
 void InteractorStyle3D::OnLeftButtonUp()
 {
-    vtkInteractorStyleTrackballCamera::OnLeftButtonUp();
+    Superclass::OnLeftButtonUp();
 
     if (!m_mouseMoved)
         highlightPickedCell();
@@ -125,16 +133,64 @@ void InteractorStyle3D::OnRightButtonUp()
     }
 }
 
-void InteractorStyle3D::OnChar()
+void InteractorStyle3D::OnMouseWheelForward()
 {
-    // disable magic keys for now
+    FindPokedRenderer(GetInteractor()->GetEventPosition()[0], GetInteractor()->GetEventPosition()[1]);
+
+    MouseWheelDolly(true);
 }
 
-void InteractorStyle3D::setRenderedData(QList<RenderedData *> renderedData)
+void InteractorStyle3D::OnMouseWheelBackward()
 {
-    m_actorToRenderedData.clear();
-    for (RenderedData * r : renderedData)
-        m_actorToRenderedData.insert(r->mainActor(), r);
+    FindPokedRenderer(GetInteractor()->GetEventPosition()[0], GetInteractor()->GetEventPosition()[1]);
+
+    MouseWheelDolly(false);
+}
+
+void InteractorStyle3D::OnChar()
+{
+    // disable most magic keys
+
+    if (this->Interactor->GetKeyCode() == 'l')
+        Superclass::OnChar();
+}
+
+void InteractorStyle3D::MouseWheelDolly(bool forward)
+{
+    if (!CurrentRenderer)
+        return;
+
+    GrabFocus(EventCallbackCommand);
+    StartDolly();
+
+    double factor = MotionFactor * 0.2 * MouseWheelMotionFactor;
+    if (!forward)
+        factor *= -1;
+    factor = std::pow(1.1, factor);
+
+    vtkCamera * camera = CurrentRenderer->GetActiveCamera();
+    if (camera->GetParallelProjection())
+    {
+        camera->SetParallelScale(camera->GetParallelScale() / factor);
+    }
+    else
+    {
+        camera->Dolly(factor);
+        if (AutoAdjustCameraClippingRange)
+        {
+            CurrentRenderer->ResetCameraClippingRange();
+        }
+    }
+
+    if (Interactor->GetLightFollowCamera())
+    {
+        CurrentRenderer->UpdateLightsGeometryToFollowCamera();
+    }
+
+    EndDolly();
+    ReleaseFocus();
+
+    Interactor->Render();
 }
 
 void InteractorStyle3D::highlightPickedCell()

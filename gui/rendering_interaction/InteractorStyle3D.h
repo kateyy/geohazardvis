@@ -2,7 +2,7 @@
 
 #include <QMap>
 
-#include <vtkInteractorStyleTrackballCamera.h>
+#include <vtkInteractorStyleTerrain.h>
 #include <vtkSmartPointer.h>
 
 #include "IPickingInteractorStyle.h"
@@ -13,13 +13,15 @@ class vtkCellPicker;
 class vtkDataSetMapper;
 
 
-class InteractorStyle3D : public IPickingInteractorStyle, public vtkInteractorStyleTrackballCamera
+class InteractorStyle3D : public IPickingInteractorStyle, public vtkInteractorStyleTerrain
 {
     Q_OBJECT
 
 public:
     static InteractorStyle3D * New();
-    vtkTypeMacro(InteractorStyle3D, vtkInteractorStyleTrackballCamera);
+    vtkTypeMacro(InteractorStyle3D, vtkInteractorStyleTerrain);
+
+    void setRenderedData(QList<RenderedData *> renderedData);
 
     void OnMouseMove() override;
     void OnLeftButtonDown() override;
@@ -28,10 +30,10 @@ public:
     void OnMiddleButtonUp() override;
     void OnRightButtonDown() override;
     void OnRightButtonUp() override;
+    void OnMouseWheelForward() override;
+    void OnMouseWheelBackward() override;
 
     void OnChar() override;
-
-    void setRenderedData(QList<RenderedData *> renderedData);
 
 public slots:
     void highlightCell(DataObject * dataObject, vtkIdType cellId) override;
@@ -39,6 +41,8 @@ public slots:
 
 protected:
     explicit InteractorStyle3D();
+
+    void MouseWheelDolly(bool forward);
 
     void highlightPickedCell();
     void sendPointInfo() const;

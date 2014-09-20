@@ -220,8 +220,8 @@ void RenderView::addDataObjects(QList<DataObject *> dataObjects)
         updateGuiForData(aNewObject);
 
     vtkCamera & camera = *m_renderer->GetActiveCamera();
-    camera.SetPosition(0, 0, 1);
-    camera.SetViewUp(0, 1, 0);
+    camera.SetPosition(0, -1, 0);
+    camera.SetViewUp(0, 0, 1);
     m_renderer->ResetCamera();
 
     render();
