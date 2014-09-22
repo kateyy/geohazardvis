@@ -41,8 +41,8 @@ void setAzimuth(vtkCamera * camera, double azimuth)
             std::sin(radA) * viewXYLength};
 
     camera->SetPosition(
-        inverseViewDirXY[0] + camera->GetFocalPoint()[0],
-        inverseViewDirXY[1] + camera->GetFocalPoint()[1],
+        inverseViewDirXY[0] + foc.GetX(),
+        inverseViewDirXY[1] + foc.GetY(),
         camera->GetPosition()[2]);
 }
 

@@ -1,8 +1,11 @@
 #pragma once
 
 #include <QDockWidget>
+#include <QMap>
 
 
+class vtkObject;
+class vtkCamera;
 namespace reflectionzeug
 {
     class PropertyGroup;
@@ -27,12 +30,19 @@ public slots:
 
 private slots:
     void setCurrentRenderView(int index);
+    void updateRenderViewTitle(const QString & newTitle);
 
 private:
     reflectionzeug::PropertyGroup * createPropertyGroup(RenderView * renderView);
+
+    void activeCameraChangedEvent();
 
 private:
     Ui_RendererConfigWidget * m_ui;
 
     reflectionzeug::PropertyGroup * m_propertyRoot;
+
+    vtkCamera * m_activeCamera;
+
+    friend struct CameraCallbackCommand;
 };

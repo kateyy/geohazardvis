@@ -1,8 +1,14 @@
 #include "RendererConfigWidget.h"
 #include "ui_RendererConfigWidget.h"
 
+#include <cassert>
+
 #include <vtkRenderer.h>
 #include <vtkLightKit.h>
+#include <vtkCamera.h>
+
+#include <vtkCallbackCommand.h>
+#include <vtkObjectFactory.h>
 
 #include <reflectionzeug/PropertyGroup.h>
 
@@ -14,10 +20,28 @@ using namespace reflectionzeug;
 using namespace propertyguizeug;
 
 
+struct CameraCallbackCommand : public vtkCallbackCommand
+{
+    static CameraCallbackCommand * New();
+    vtkTypeMacro(CameraCallbackCommand, vtkCallbackCommand);
+    void Execute(vtkObject * caller, unsigned long /*eid*/, void * /*dcallData*/) override
+    {
+        assert(rendererConfigWidget);
+        if (caller == rendererConfigWidget->m_activeCamera)
+            rendererConfigWidget->activeCameraChangedEvent();
+    }
+
+    RendererConfigWidget * rendererConfigWidget = nullptr;
+};
+
+vtkStandardNewMacro(CameraCallbackCommand);
+
+
 RendererConfigWidget::RendererConfigWidget(QWidget * parent)
     : QDockWidget(parent)
     , m_ui(new Ui_RendererConfigWidget())
     , m_propertyRoot(nullptr)
+    , m_activeCamera(nullptr)
 {
     m_ui->setupUi(this);
 
@@ -49,6 +73,12 @@ void RendererConfigWidget::setRenderViews(const QList<RenderView *> & renderView
         m_ui->relatedRenderer->addItem(
             renderView->friendlyName(),
             reinterpret_cast<size_t>(renderView));
+
+        connect(renderView, &RenderView::windowTitleChanged, this, &RendererConfigWidget::updateRenderViewTitle);
+
+        vtkSmartPointer<CameraCallbackCommand> callbackCommand = vtkSmartPointer<CameraCallbackCommand>::New();
+        callbackCommand->rendererConfigWidget = this;
+        renderView->renderer()->GetActiveCamera()->AddObserver(vtkCommand::ModifiedEvent, callbackCommand);
     }
 
     if (renderViews.isEmpty())
@@ -75,6 +105,23 @@ void RendererConfigWidget::setCurrentRenderView(int index)
 
     m_propertyRoot = createPropertyGroup(renderView);
     m_ui->propertyBrowser->setRoot(m_propertyRoot);
+    m_activeCamera = renderView->renderer()->GetActiveCamera();
+}
+
+void RendererConfigWidget::updateRenderViewTitle(const QString & newTitle)
+{
+    RenderView * renderView = dynamic_cast<RenderView *>(sender());
+    assert(renderView);
+    size_t ptr = reinterpret_cast<size_t>(renderView);
+
+    for (int i = 0; i < m_ui->relatedRenderer->count(); ++i)
+    {
+        if (m_ui->relatedRenderer->itemData(i, Qt::UserRole).toULongLong() == ptr)
+        {
+            m_ui->relatedRenderer->setItemText(i, newTitle);
+            return;
+        }
+    }
 }
 
 PropertyGroup * RendererConfigWidget::createPropertyGroup(RenderView * renderView)
@@ -126,4 +173,9 @@ PropertyGroup * RendererConfigWidget::createPropertyGroup(RenderView * renderVie
     prop_intensity->setOption("step", 0.05);
 
     return root;
+}
+
+void RendererConfigWidget::activeCameraChangedEvent()
+{
+    m_propertyRoot->property("Camera/azimuth")->asValue()->valueChanged();
 }
