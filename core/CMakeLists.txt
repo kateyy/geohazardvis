@@ -11,6 +11,8 @@ set ( SOURCES
     Loader.cpp
     TextFileReader.h
     TextFileReader.cpp
+    vtkcamerahelper.h
+    vtkcamerahelper.cpp
     vtkhelper.h
     common/ebem3d_common.h
     common/file_parser.h
