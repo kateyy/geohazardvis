@@ -2,7 +2,11 @@
 #include "ui_RendererConfigWidget.h"
 
 #include <vtkRenderer.h>
+#include <vtkCamera.h>
 #include <vtkLightKit.h>
+
+#include <vtkVector.h>
+#include <vtkMath.h>
 
 #include <reflectionzeug/PropertyGroup.h>
 
@@ -11,6 +15,15 @@
 
 using namespace reflectionzeug;
 using namespace propertyguizeug;
+
+
+namespace
+{
+vtkVector3d operator-(const vtkVector3d & l, const vtkVector3d & r)
+{
+    return{ l.GetX() - r.GetX(), l.GetY() - r.GetY(), l.GetZ() - r.GetZ() };
+}
+}
 
 
 RendererConfigWidget::RendererConfigWidget(QWidget * parent)
@@ -76,6 +89,36 @@ void RendererConfigWidget::setCurrentRenderView(int index)
     m_ui->propertyBrowser->setRoot(m_propertyRoot);
 }
 
+namespace
+{
+double getAzimuth(vtkCamera * camera)
+{
+    vtkVector3d foc(camera->GetFocalPoint());
+    vtkVector3d pos(camera->GetPosition());
+    vtkVector2d xyViewDir((foc - pos).GetData());
+    double rad = std::acos(xyViewDir.GetX() / xyViewDir.Norm());
+    return vtkMath::DegreesFromRadians(rad);
+}
+
+void setAzimuth(vtkCamera * camera, double azimuth)
+{
+    double radA = vtkMath::RadiansFromDegrees(azimuth);
+
+    vtkVector3d foc(camera->GetFocalPoint());
+    vtkVector3d pos(camera->GetPosition());
+    double viewXYLength = vtkVector2d((foc - pos).GetData()).Norm();
+
+    double inverseViewDirXY[2] {
+        -std::cos(radA) * viewXYLength,
+         std::sin(radA) * viewXYLength};
+
+    camera->SetPosition(
+        inverseViewDirXY[0] + camera->GetFocalPoint()[0],
+        inverseViewDirXY[1] + camera->GetFocalPoint()[1],
+        camera->GetPosition()[2]);
+}
+}
+
 PropertyGroup * RendererConfigWidget::createPropertyGroup(RenderView * renderView)
 {
     PropertyGroup * root = new PropertyGroup();
@@ -91,6 +134,26 @@ PropertyGroup * RendererConfigWidget::createPropertyGroup(RenderView * renderVie
     });
     backgroundColor->setOption("title", "background color");
 
+    auto cameraGroup = root->addGroup("Camera");
+    {
+        /** default view:
+            up (0, 0, 1)
+            pos(0, 0, 0)
+            foc(0, 0, 1)
+            azimuth==0° direction: (1, 0, 0)
+        */
+        vtkCamera * camera = renderView->renderer()->GetActiveCamera();
+        auto prop_azimuth = cameraGroup->addProperty<double>("azimuth",
+            [camera]() {
+            return getAzimuth(camera);
+        },
+            [renderView, camera](const double & azimuth) {
+            setAzimuth(camera, azimuth);
+            renderView->render();
+        });
+        prop_azimuth->setOption("minimum", 0);
+        prop_azimuth->setOption("maximum", 360);
+    }
 
     PropertyGroup * lightingGroup = root->addGroup("Lighting");
 
