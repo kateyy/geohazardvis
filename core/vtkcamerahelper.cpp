@@ -16,7 +16,7 @@ vtkVector3d operator-(const vtkVector3d & l, const vtkVector3d & r)
 }
 
 
-namespace Camera
+namespace TerrainCamera
 {
 
 double getAzimuth(vtkCamera * camera)
@@ -24,8 +24,8 @@ double getAzimuth(vtkCamera * camera)
     vtkVector3d foc(camera->GetFocalPoint());
     vtkVector3d pos(camera->GetPosition());
     vtkVector2d xyViewDir((foc - pos).GetData());
-    double rad = std::acos(xyViewDir.GetX() / xyViewDir.Norm());
-    return vtkMath::DegreesFromRadians(rad);
+    double rad = std::atan2(xyViewDir.GetY(), xyViewDir.GetX());
+    return std::fmod(vtkMath::DegreesFromRadians(rad) + 360, 360.0);
 }
 
 void setAzimuth(vtkCamera * camera, double azimuth)
@@ -38,7 +38,7 @@ void setAzimuth(vtkCamera * camera, double azimuth)
 
     double inverseViewDirXY[2] {
         -std::cos(radA) * viewXYLength,
-            std::sin(radA) * viewXYLength};
+        -std::sin(radA) * viewXYLength};
 
     camera->SetPosition(
         inverseViewDirXY[0] + foc.GetX(),

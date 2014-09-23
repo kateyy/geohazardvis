@@ -2,6 +2,7 @@
 #include "ui_RendererConfigWidget.h"
 
 #include <cassert>
+#include <limits>
 
 #include <vtkRenderer.h>
 #include <vtkLightKit.h>
@@ -141,23 +142,16 @@ PropertyGroup * RendererConfigWidget::createPropertyGroup(RenderView * renderVie
 
     auto cameraGroup = root->addGroup("Camera");
     {
-        /** default view:
-            up (0, 0, 1)
-            pos(0, 0, 0)
-            foc(0, 0, 1)
-            azimuth==0° direction: (1, 0, 0)
-        */
         vtkCamera * camera = renderView->renderer()->GetActiveCamera();
         auto prop_azimuth = cameraGroup->addProperty<double>("azimuth",
             [camera]() {
-            return Camera::getAzimuth(camera);
+            return TerrainCamera::getAzimuth(camera);
         },
             [renderView, camera](const double & azimuth) {
-            Camera::setAzimuth(camera, azimuth);
+            TerrainCamera::setAzimuth(camera, azimuth);
             renderView->render();
         });
-        prop_azimuth->setOption("minimum", 0);
-        prop_azimuth->setOption("maximum", 360);
+        prop_azimuth->setOption("minimum", std::numeric_limits<double>::lowest());
     }
 
     PropertyGroup * lightingGroup = root->addGroup("Lighting");

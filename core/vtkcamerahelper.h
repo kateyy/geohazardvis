@@ -6,7 +6,7 @@
 class vtkCamera;
 
 
-namespace Camera
+namespace TerrainCamera
 {
     /** get/set azimuth (in degrees) for terrain navigations
       * up vector must be (0, 0, 1) 
