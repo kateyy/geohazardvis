@@ -106,6 +106,7 @@ void RendererConfigWidget::setCurrentRenderView(int index)
 
     m_propertyRoot = createPropertyGroup(renderView);
     m_ui->propertyBrowser->setRoot(m_propertyRoot);
+    m_ui->propertyBrowser->setColumnWidth(0, 135);
     m_activeCamera = renderView->renderer()->GetActiveCamera();
 }
 
@@ -143,6 +144,8 @@ PropertyGroup * RendererConfigWidget::createPropertyGroup(RenderView * renderVie
     auto cameraGroup = root->addGroup("Camera");
     {
         vtkCamera * camera = renderView->renderer()->GetActiveCamera();
+        std::string degreesSuffix = (QString(' ') + QChar(0xB0)).toStdString();
+
         auto prop_azimuth = cameraGroup->addProperty<double>("azimuth",
             [camera]() {
             return TerrainCamera::getAzimuth(camera);
@@ -152,6 +155,38 @@ PropertyGroup * RendererConfigWidget::createPropertyGroup(RenderView * renderVie
             renderView->render();
         });
         prop_azimuth->setOption("minimum", std::numeric_limits<double>::lowest());
+        prop_azimuth->setOption("suffix", degreesSuffix);
+
+        auto prop_elevation = cameraGroup->addProperty<double>("elevation",
+            [camera]() {
+            return TerrainCamera::getVerticalElevation(camera);
+        },
+            [renderView, camera](const double & elevation) {
+            TerrainCamera::setVerticalElevation(camera, elevation);
+            renderView->render();
+        });
+        prop_elevation->setOption("minimum", -89);
+        prop_elevation->setOption("maximum", 89);
+        prop_elevation->setOption("suffix", degreesSuffix);
+
+        auto prop_focalPoint = cameraGroup->addProperty<std::array<double, 3>>("focalPoint",
+            [camera](size_t component) {
+            return camera->GetFocalPoint()[component];
+        },
+            [camera, renderView](size_t component, const double & value) {
+            double foc[3];
+            camera->GetFocalPoint(foc);
+            foc[component] = value;
+            camera->SetFocalPoint(foc);
+            renderView->render();
+        });
+        prop_focalPoint->setOption("title", "focal point");
+        char title[2] {'x', 0};
+        for (quint8 i = 0; i < 3; ++i)
+        {
+            prop_focalPoint->at(i)->setOption("title", title);
+            ++title[0];
+        }
     }
 
     PropertyGroup * lightingGroup = root->addGroup("Lighting");
@@ -171,5 +206,13 @@ PropertyGroup * RendererConfigWidget::createPropertyGroup(RenderView * renderVie
 
 void RendererConfigWidget::activeCameraChangedEvent()
 {
-    m_propertyRoot->property("Camera/azimuth")->asValue()->valueChanged();
+    std::function<void(AbstractProperty &)> updateFunc = [&updateFunc](AbstractProperty & property)
+    {
+        if (property.isCollection())
+            property.asCollection()->forEach(updateFunc);
+        if (property.isValue())
+            property.asValue()->valueChanged();
+    };
+
+    m_propertyRoot->group("Camera")->forEach(updateFunc);
 }

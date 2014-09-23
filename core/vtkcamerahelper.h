@@ -13,4 +13,7 @@ namespace TerrainCamera
       * azimuth is zero for a view vector of (1, 0, z) */
     double CORE_API getAzimuth(vtkCamera * camera);
     void CORE_API setAzimuth(vtkCamera * camera, double azimuth);
+
+    double CORE_API getVerticalElevation(vtkCamera * camera);
+    void CORE_API setVerticalElevation(vtkCamera * camera, double elevation);
 }
