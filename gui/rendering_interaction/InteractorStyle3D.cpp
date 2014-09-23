@@ -358,7 +358,7 @@ void InteractorStyle3D::lookAtCell(DataObject * dataObject, vtkIdType cellId)
             circleLineIntersection(viewDistanceXY, selectionCenterXY, selectionFrontXY, intersection);
         
         // ignore for now
-        if (!intersection)
+        if (!intersects)
         {
             targetPositionXY[0] = eyePosition[0];
             targetPositionXY[1] = eyePosition[1];

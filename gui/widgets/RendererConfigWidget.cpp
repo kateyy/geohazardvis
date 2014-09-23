@@ -73,7 +73,7 @@ void RendererConfigWidget::setRenderViews(const QList<RenderView *> & renderView
     {
         m_ui->relatedRenderer->addItem(
             renderView->friendlyName(),
-            reinterpret_cast<size_t>(renderView));
+            reinterpret_cast<qulonglong>(renderView));
 
         connect(renderView, &RenderView::windowTitleChanged, this, &RendererConfigWidget::updateRenderViewTitle);
 
@@ -114,7 +114,7 @@ void RendererConfigWidget::updateRenderViewTitle(const QString & newTitle)
 {
     RenderView * renderView = dynamic_cast<RenderView *>(sender());
     assert(renderView);
-    size_t ptr = reinterpret_cast<size_t>(renderView);
+    qulonglong ptr = reinterpret_cast<qulonglong>(renderView);
 
     for (int i = 0; i < m_ui->relatedRenderer->count(); ++i)
     {
@@ -189,7 +189,7 @@ PropertyGroup * RendererConfigWidget::createPropertyGroup(RenderView * renderVie
         char title[2] {'x', 0};
         for (quint8 i = 0; i < 3; ++i)
         {
-            prop_focalPoint->at(i)->setOption("title", title);
+            prop_focalPoint->at(i)->setOption("title", std::string(title));
             ++title[0];
         }
     }
@@ -224,3 +224,4 @@ void RendererConfigWidget::activeCameraChangedEvent()
 
     m_propertyRoot->group("Camera")->forEach(updateFunc);
 }
+
