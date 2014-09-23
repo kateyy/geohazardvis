@@ -22,6 +22,7 @@
 #include <vtkLightKit.h>
 
 #include <core/vtkhelper.h>
+#include <core/vtkcamerahelper.h>
 #include <core/data_objects/DataObject.h>
 #include <core/data_objects/RenderedData.h>
 
@@ -200,6 +201,8 @@ void RenderView::addDataObjects(QList<DataObject *> dataObjects)
         return;
     }
 
+    bool wasEmpty = m_renderedData.isEmpty();
+
     for (DataObject * dataObject : dataObjects)
     {
         RenderedData * oldRendered = m_dataObjectToRendered.value(dataObject);
@@ -210,19 +213,32 @@ void RenderView::addDataObjects(QList<DataObject *> dataObjects)
             aNewObject = addDataObject(dataObject);
     }
 
-    m_scalarMapping.setRenderedData(m_renderedData);
+    vtkCamera * camera = m_renderer->GetActiveCamera();
+    if (wasEmpty)
+    {
+        if (m_contains3DData)
+        {
+            camera->SetViewUp(0, 0, 1);
+            TerrainCamera::setAzimuth(camera, 0);
+            TerrainCamera::setVerticalElevation(camera, 45);
+        }
+        else
+        {
+            camera->SetViewUp(0, 1, 0);
+            camera->SetFocalPoint(0, 0, 0);
+            camera->SetPosition(0, 0, 1);
+        }
+    }
+    m_renderer->ResetCamera();
 
     updateAxes();
 
     updateTitle();
 
+    m_scalarMapping.setRenderedData(m_renderedData);
+
     if (aNewObject)
         updateGuiForData(aNewObject);
-
-    vtkCamera & camera = *m_renderer->GetActiveCamera();
-    camera.SetPosition(0, -1, 0);
-    camera.SetViewUp(0, 0, 1);
-    m_renderer->ResetCamera();
 
     render();
 
@@ -510,6 +526,11 @@ const IPickingInteractorStyle * RenderView::interactorStyle() const
 vtkLightKit * RenderView::lightKit()
 {
     return m_lightKit;
+}
+
+bool RenderView::contains3dData() const
+{
+    return m_contains3DData;
 }
 
 void RenderView::updateGuiForData(RenderedData * renderedData)

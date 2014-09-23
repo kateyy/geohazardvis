@@ -121,6 +121,7 @@ void RendererConfigWidget::updateRenderViewTitle(const QString & newTitle)
         if (m_ui->relatedRenderer->itemData(i, Qt::UserRole).toULongLong() == ptr)
         {
             m_ui->relatedRenderer->setItemText(i, newTitle);
+            setCurrentRenderView(i);
             return;
         }
     }
@@ -144,30 +145,34 @@ PropertyGroup * RendererConfigWidget::createPropertyGroup(RenderView * renderVie
     auto cameraGroup = root->addGroup("Camera");
     {
         vtkCamera * camera = renderView->renderer()->GetActiveCamera();
-        std::string degreesSuffix = (QString(' ') + QChar(0xB0)).toStdString();
 
-        auto prop_azimuth = cameraGroup->addProperty<double>("azimuth",
-            [camera]() {
-            return TerrainCamera::getAzimuth(camera);
-        },
-            [renderView, camera](const double & azimuth) {
-            TerrainCamera::setAzimuth(camera, azimuth);
-            renderView->render();
-        });
-        prop_azimuth->setOption("minimum", std::numeric_limits<double>::lowest());
-        prop_azimuth->setOption("suffix", degreesSuffix);
+        if (renderView->contains3dData())
+        {
+            std::string degreesSuffix = (QString(' ') + QChar(0xB0)).toStdString();
 
-        auto prop_elevation = cameraGroup->addProperty<double>("elevation",
-            [camera]() {
-            return TerrainCamera::getVerticalElevation(camera);
-        },
-            [renderView, camera](const double & elevation) {
-            TerrainCamera::setVerticalElevation(camera, elevation);
-            renderView->render();
-        });
-        prop_elevation->setOption("minimum", -89);
-        prop_elevation->setOption("maximum", 89);
-        prop_elevation->setOption("suffix", degreesSuffix);
+            auto prop_azimuth = cameraGroup->addProperty<double>("azimuth",
+                [camera]() {
+                return TerrainCamera::getAzimuth(camera);
+            },
+                [renderView, camera](const double & azimuth) {
+                TerrainCamera::setAzimuth(camera, azimuth);
+                renderView->render();
+            });
+            prop_azimuth->setOption("minimum", std::numeric_limits<double>::lowest());
+            prop_azimuth->setOption("suffix", degreesSuffix);
+
+            auto prop_elevation = cameraGroup->addProperty<double>("elevation",
+                [camera]() {
+                return TerrainCamera::getVerticalElevation(camera);
+            },
+                [renderView, camera](const double & elevation) {
+                TerrainCamera::setVerticalElevation(camera, elevation);
+                renderView->render();
+            });
+            prop_elevation->setOption("minimum", -89);
+            prop_elevation->setOption("maximum", 89);
+            prop_elevation->setOption("suffix", degreesSuffix);
+        }
 
         auto prop_focalPoint = cameraGroup->addProperty<std::array<double, 3>>("focalPoint",
             [camera](size_t component) {
@@ -189,17 +194,20 @@ PropertyGroup * RendererConfigWidget::createPropertyGroup(RenderView * renderVie
         }
     }
 
-    PropertyGroup * lightingGroup = root->addGroup("Lighting");
+    if (renderView->contains3dData())
+    {
+        PropertyGroup * lightingGroup = root->addGroup("Lighting");
 
-    auto prop_intensity = lightingGroup->addProperty<double>("intensity",
-        [renderView]() { return renderView->lightKit()->GetKeyLightIntensity(); },
-        [renderView](double value) {
-        renderView->lightKit()->SetKeyLightIntensity(value);
-        renderView->render();
-    });
-    prop_intensity->setOption("minimum", 0);
-    prop_intensity->setOption("maximum", 3);
-    prop_intensity->setOption("step", 0.05);
+        auto prop_intensity = lightingGroup->addProperty<double>("intensity",
+            [renderView]() { return renderView->lightKit()->GetKeyLightIntensity(); },
+            [renderView](double value) {
+            renderView->lightKit()->SetKeyLightIntensity(value);
+            renderView->render();
+        });
+        prop_intensity->setOption("minimum", 0);
+        prop_intensity->setOption("maximum", 3);
+        prop_intensity->setOption("step", 0.05);
+    }
 
     return root;
 }

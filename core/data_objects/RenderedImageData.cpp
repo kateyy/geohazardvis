@@ -78,7 +78,9 @@ reflectionzeug::PropertyGroup * RenderedImageData::createConfigGroup()
 
 vtkProperty * RenderedImageData::createDefaultRenderProperty() const
 {
-    return vtkProperty::New();
+    vtkProperty * property = vtkProperty::New();
+    property->LightingOff();
+    return property;
 }
 
 vtkActor * RenderedImageData::createActor()

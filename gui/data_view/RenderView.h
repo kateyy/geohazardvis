@@ -69,6 +69,8 @@ public:
 
     vtkLightKit * lightKit();
 
+    bool contains3dData() const;
+
 public slots:
     void render();
 
