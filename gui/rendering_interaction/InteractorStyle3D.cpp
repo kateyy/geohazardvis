@@ -259,50 +259,138 @@ void InteractorStyle3D::highlightCell(DataObject * dataObject, vtkIdType cellId)
     GetDefaultRenderer()->GetRenderWindow()->Render();
 }
 
+namespace
+{
+
+/** @return -1 if value < 0, 1 else */
+template <typename T> char sgn(const T & value)
+{
+    return (T(0) <= value) - (value < T(0));
+}
+
+bool circleLineIntersection(double radius, double P0[2], double P1[2], double intersection[2])
+{
+    double dx = P1[0] - P0[0];
+    double dy = P1[1] - P0[1];
+    double dr2 = dx * dx + dy * dy;
+
+    double D = P0[0] * P1[1] + P1[0] + P0[1];
+
+    double incidence = radius * radius *  dr2 - D * D;
+    if (incidence < 0)
+        return false;
+
+    double sqrtIncidence = std::sqrt(incidence);
+
+    // switch +/- for second intersection
+    intersection[0] = (D * dy + sgn(dy) * dx * sqrtIncidence) / dr2;
+    intersection[1] = (-D * dx + std::fabs(dy) * sqrtIncidence) / dr2;
+
+    return true;
+}
+}
+
 void InteractorStyle3D::lookAtCell(DataObject * dataObject, vtkIdType cellId)
 {
+    vtkDataSet * dataSet = dataObject->dataSet();
     vtkPolyData * polyData = vtkPolyData::SafeDownCast(dataObject->dataSet());
 
-    vtkTriangle * triangle = vtkTriangle::SafeDownCast(polyData->GetCell(cellId));
-    assert(triangle);
-
-    VTK_CREATE(vtkPoints, selectedPoints);
-    polyData->GetPoints()->GetPoints(triangle->GetPointIds(), selectedPoints);
+    vtkCamera * camera = GetDefaultRenderer()->GetActiveCamera();
+    const double * objectCenter = dataSet->GetCenter();
+    const double * eyePosition = camera->GetPosition();
 
     // look at center of the object
-    const double * objectCenter = polyData->GetCenter();
-    GetDefaultRenderer()->GetActiveCamera()->SetFocalPoint(objectCenter);
+    const double * targetFocalPoint(objectCenter);
+    double targetPositionXY[2];
 
-    // place camera along the normal of the triangle
-    double triangleCenter[3];
-    vtkTriangle::TriangleCenter(
-        selectedPoints->GetPoint(0), selectedPoints->GetPoint(1), selectedPoints->GetPoint(2),
-        triangleCenter);
 
+    double objectToEye[3];
+    vtkMath::Subtract(eyePosition, objectCenter, objectToEye);
+    double viewDistanceXY = vtkMath::Normalize2D(objectToEye);
+
+    vtkDataArray * centroids = dataSet->GetCellData()->GetArray("centroid");
+    assert(centroids && centroids->GetNumberOfComponents() == 3);
+    double selectionCenterXY[2] = { centroids->GetTuple(cellId)[0], centroids->GetTuple(cellId)[1] };
+
+    vtkTriangle * triangle = vtkTriangle::SafeDownCast(dataSet->GetCell(cellId));
+    assert(triangle);
     double triangleNormal[3];
     vtkTriangle::ComputeNormal(polyData->GetPoints(), 0, triangle->GetPointIds()->GetPointer(0), triangleNormal);
 
-    double eyePosition[3];  // current eye position: starting point
-    GetDefaultRenderer()->GetActiveCamera()->GetPosition(eyePosition);
+    double norm_objectToSelectionXY[3];
+    vtkMath::Subtract(selectionCenterXY, objectCenter, norm_objectToSelectionXY);
+    double selectionRadiusXY = vtkMath::Normalize2D(norm_objectToSelectionXY);
 
-    float distance2ObjTri = (float)vtkMath::Distance2BetweenPoints(objectCenter, triangleCenter);
-    float distance2EyeObj = (float)vtkMath::Distance2BetweenPoints(objectCenter, eyePosition);
-    float distanceEyeTri = std::sqrt(distance2EyeObj - distance2ObjTri);
+    // make sure to move outside of the selection
+    if (viewDistanceXY < selectionRadiusXY)
+        viewDistanceXY = selectionRadiusXY * 1.5;
 
-    vtkMath::MultiplyScalar(triangleNormal, distanceEyeTri);
-    double targetEyePosition[3];
-    vtkMath::Add(triangleCenter, triangleNormal, targetEyePosition);
+
+    // choose nearest viewpoint for flat surfaces
+    const double flat_threshold = 30;
+    double inclination = std::acos(triangleNormal[2]) * 180.0 / vtkMath::Pi();
+    if (inclination < flat_threshold)
+    {
+        targetPositionXY[0] = norm_objectToSelectionXY[0];
+        targetPositionXY[1] = norm_objectToSelectionXY[1];
+        vtkMath::MultiplyScalar2D(targetPositionXY, viewDistanceXY);
+    }
+
+    // or use the hill's normal
+    else
+    {
+        double triangleNormalXY[2] = { triangleNormal[0], triangleNormal[1] };
+
+        double l;
+        if ((l = std::sqrt((triangleNormalXY[0] * triangleNormalXY[0] + triangleNormalXY[1] * triangleNormalXY[1]))) != 0.0)
+        {
+            triangleNormalXY[0] /= l;
+            triangleNormalXY[1] /= l;
+        }
+
+        // get a point in front of the selected cell
+        double selectionFrontXY[2] = { selectionCenterXY[0] + triangleNormalXY[0], selectionCenterXY[1] + triangleNormalXY[1] };
+
+        double intersection[2];
+        // our focal point (center of view circle) is the object center
+        // so assume a circle center of (0,0) in the calculations
+        bool intersects =
+            circleLineIntersection(viewDistanceXY, selectionCenterXY, selectionFrontXY, intersection);
+        
+        // ignore for now
+        if (!intersection)
+        {
+            targetPositionXY[0] = eyePosition[0];
+            targetPositionXY[1] = eyePosition[1];
+        }
+
+        targetPositionXY[0] = intersection[0];
+        targetPositionXY[1] = intersection[1];
+    }
+
 
     const int NumberOfFlyFrames = 10;
 
-    double pathVector[3];   // distance vector between two succeeding eye positions
-    vtkMath::Subtract(targetEyePosition, eyePosition, pathVector);
-    vtkMath::MultiplyScalar(pathVector, 1.0 / NumberOfFlyFrames);
+    double pathVectorFocal[3];
+    const double * currentFocal = camera->GetFocalPoint();
+    vtkMath::Subtract(targetFocalPoint, currentFocal, pathVectorFocal);
+    vtkMath::MultiplyScalar(pathVectorFocal, 1.0 / (NumberOfFlyFrames + 1));
+
+    double pathVectorPos[3];   // distance vector between two succeeding eye positions
+    pathVectorPos[0] = targetPositionXY[0] - eyePosition[0];
+    pathVectorPos[1] = targetPositionXY[1] - eyePosition[1];
+    pathVectorPos[2] = 0;
+    vtkMath::MultiplyScalar(pathVectorPos, 1.0 / (NumberOfFlyFrames + 1));
+
+    double intermediateFocal[3]{ currentFocal[0], currentFocal[1], currentFocal[2] };
+    double intermediateEye[3]{ eyePosition[0], eyePosition[1], eyePosition[2] };
 
     for (int i = 0; i < NumberOfFlyFrames; ++i)
     {
-        vtkMath::Add(eyePosition, pathVector, eyePosition);
-        GetDefaultRenderer()->GetActiveCamera()->SetPosition(eyePosition);
+        vtkMath::Add(intermediateFocal, pathVectorFocal, intermediateFocal);
+        vtkMath::Add(intermediateEye, pathVectorPos, intermediateEye);
+        camera->SetFocalPoint(intermediateFocal);
+        camera->SetPosition(intermediateEye);
         GetDefaultRenderer()->ResetCameraClippingRange();
         GetDefaultRenderer()->GetRenderWindow()->Render();
     }
