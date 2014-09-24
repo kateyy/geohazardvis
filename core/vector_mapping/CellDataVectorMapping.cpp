@@ -47,7 +47,8 @@ QList<VectorsForSurfaceMapping *> CellDataVectorMapping::newInstances(RenderedDa
     for (int i = 0; vtkDataArray * a = cellData->GetArray(i); ++i)
     {
         assert(a);
-        if (!std::strncmp(a->GetName(), "centroid", 9))
+        QString name(a->GetName());
+        if (name == "centroid" || name == "Normals")
             continue;
 
         if (a->GetInformation()->Has(DataObject::ArrayIsAuxiliaryKey())

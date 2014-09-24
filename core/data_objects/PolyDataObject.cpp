@@ -5,12 +5,15 @@
 #include <vtkFloatArray.h>
 #include <vtkIdTypeArray.h>
 
+#include <vtkPolyDataNormals.h>
+
 #include <vtkPolyData.h>
 #include <vtkCellData.h>
 #include <vtkCellIterator.h>
 
 #include <vtkPolygon.h>
 
+#include <core/vtkhelper.h>
 #include <core/data_objects/RenderedPolyData.h>
 
 
@@ -44,6 +47,17 @@ PolyDataObject::PolyDataObject(QString name, vtkPolyData * dataSet)
             centroids->SetTuple(centroidIndex++, centroid);
         }
         dataSet->GetCellData()->AddArray(centroids);
+    }
+
+    if (!dataSet->GetCellData()->HasArray("Normals"))
+    {
+        VTK_CREATE(vtkPolyDataNormals, inputNormals);
+        inputNormals->ComputePointNormalsOff();
+        inputNormals->ComputeCellNormalsOn();
+        inputNormals->SetInputDataObject(dataSet);
+        inputNormals->Update();
+
+        dataSet->GetCellData()->SetNormals(inputNormals->GetOutput()->GetCellData()->GetNormals());
     }
 }
 
