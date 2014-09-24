@@ -42,6 +42,7 @@ public:
     QString currentScalarsName() const;
     void setCurrentScalarsByName(QString scalarsName);
     ScalarsForColorMapping * currentScalars();
+    const ScalarsForColorMapping * currentScalars() const;
 
     /** @return gradient lookup table
       * This is empty or a copy of the table passed by setGradient. */
@@ -53,6 +54,10 @@ public:
 
     vtkScalarBarActor * colorMappingLegend();
     bool currentScalarsUseMappingLegend() const;
+    /** get/set visibility of the color mapping legend.
+        It is always hidden if the current scalars don't use the color mapping. */
+    bool colorMappingLegendVisible() const;
+    void setColorMappingLegendVisible(bool visible);
 
 signals:
     void scalarsChanged();
@@ -73,4 +78,5 @@ private:
     vtkLookupTable * m_originalGradient;
 
     vtkSmartPointer<vtkScalarBarActor> m_colorMappingLegend;
+    bool m_colorMappingLegendVisible;
 };

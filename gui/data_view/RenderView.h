@@ -67,6 +67,7 @@ public:
     const IPickingInteractorStyle * interactorStyle() const;
 
     vtkLightKit * lightKit();
+    vtkScalarBarWidget * colorLegendWidget();
 
     bool contains3dData() const;
 

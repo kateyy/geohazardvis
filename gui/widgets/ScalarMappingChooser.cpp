@@ -11,24 +11,36 @@
 #include <QDialogButtonBox>
 
 #include <vtkLookupTable.h>
+#include <vtkEventQtSlotConnect.h>
+#include <vtkScalarBarActor.h>
+#include <vtkScalarBarRepresentation.h>
+#include <vtkScalarBarWidget.h>
 
 #include <core/data_objects/DataObject.h>
 #include <core/scalar_mapping/ScalarsForColorMapping.h>
 #include <core/scalar_mapping/ScalarToColorMapping.h>
 
 #include <gui/widgets/ScalarRearrangeObjects.h>
+#include <gui/data_view/RenderView.h>
 
 
 ScalarMappingChooser::ScalarMappingChooser(QWidget * parent)
     : QDockWidget(parent)
     , m_ui(new Ui_ScalarMappingChooser())
     , m_mapping(nullptr)
+    , m_renderView(nullptr)
+    , m_movingColorLegend(false)
 {
     m_ui->setupUi(this);
 
     updateTitle();
 
     loadGradientImages();
+
+    m_ui->legendPositionComboBox->addItems({
+        "left", "right", "top", "bottom", "user-defined position"
+    });
+    m_ui->legendPositionComboBox->setCurrentText("right");
 
     setMapping();
 
@@ -40,11 +52,12 @@ ScalarMappingChooser::~ScalarMappingChooser()
     delete m_ui;
 }
 
-void ScalarMappingChooser::setMapping(QString rendererName, ScalarToColorMapping * mapping)
+void ScalarMappingChooser::setMapping(RenderView * renderView, ScalarToColorMapping * mapping)
 {
-    updateTitle(rendererName);
+    updateTitle(renderView ? renderView->friendlyName() : "");
 
     m_mapping = mapping;
+    m_renderView = renderView;
 
     // setup gradient for newly created mappings
     if (mapping && !mapping->originalGradient())
@@ -54,8 +67,18 @@ void ScalarMappingChooser::setMapping(QString rendererName, ScalarToColorMapping
 
     emit renderSetupChanged();
 
+    m_ui->legendPositionComboBox->setCurrentText("user-defined position");
+
     if (mapping)
+    {
         connect(mapping, &ScalarToColorMapping::scalarsChanged, this, &ScalarMappingChooser::rebuildGui);
+        vtkEventQtSlotConnect * vtkQtConnect = vtkEventQtSlotConnect::New();
+        m_colorLegendConnects.TakeReference(vtkQtConnect);
+        vtkQtConnect->Connect(mapping->colorMappingLegend()->GetPositionCoordinate(), vtkCommand::ModifiedEvent,
+            this, SLOT(colorLegendPositionChanged()));
+        vtkQtConnect->Connect(mapping->colorMappingLegend()->GetPosition2Coordinate(), vtkCommand::ModifiedEvent,
+            this, SLOT(colorLegendPositionChanged()));
+    }
 }
 
 const ScalarToColorMapping * ScalarMappingChooser::mapping() const
@@ -71,8 +94,10 @@ void ScalarMappingChooser::scalarsSelectionChanged(QString scalarsName)
     m_mapping->setCurrentScalarsByName(scalarsName);
     updateGuiValueRanges();
 
-    bool gradients = m_mapping->currentScalars()->dataMinValue() != m_mapping->currentScalars()->dataMaxValue();
+    bool gradients = m_mapping->currentScalarsUseMappingLegend();
     m_ui->gradientGroupBox->setEnabled(gradients);
+    m_ui->colorLegendGroupBox->setEnabled(gradients);
+    m_ui->colorLegendGroupBox->setChecked(m_mapping->colorMappingLegendVisible());
     if (gradients)
         m_mapping->setGradient(selectedGradient());
 
@@ -124,6 +149,58 @@ void ScalarMappingChooser::rearrangeDataObjects()
         return;
 
     ScalarRearrangeObjects::rearrange(this, m_mapping->currentScalars());
+}
+
+void ScalarMappingChooser::on_legendPositionComboBox_currentIndexChanged(QString position)
+{
+    if (!m_mapping || !m_renderView)
+        return;
+
+    vtkScalarBarRepresentation * representation = m_renderView->colorLegendWidget()->GetScalarBarRepresentation();
+
+    m_movingColorLegend = true;
+
+    if (position == "left")
+    {
+        representation->SetOrientation(1);
+        representation->SetPosition(0.01, 0.1);
+        representation->SetPosition2(0.17, 0.8);
+    }
+    else if (position == "right")
+    {
+        representation->SetOrientation(1);
+        representation->SetPosition(0.82, 0.1);
+        representation->SetPosition2(0.17, 0.8);
+    }
+    else if (position == "top")
+    {
+        representation->SetOrientation(0);
+        representation->SetPosition(0.01, 0.82);
+        representation->SetPosition2(0.98, 0.17);
+    }
+    else if (position == "bottom")
+    {
+        representation->SetOrientation(0);
+        representation->SetPosition(0.01, 0.01);
+        representation->SetPosition2(0.98, 0.17);
+    }
+
+    m_renderView->render();
+
+    m_movingColorLegend = false;
+}
+
+void ScalarMappingChooser::colorLegendPositionChanged()
+{
+    if (!m_movingColorLegend)
+        m_ui->legendPositionComboBox->setCurrentText("user-defined position");
+}
+
+void ScalarMappingChooser::on_colorLegendGroupBox_toggled(bool on)
+{
+    m_mapping->setColorMappingLegendVisible(on);
+
+    m_renderView->render();
 }
 
 void ScalarMappingChooser::loadGradientImages()
@@ -196,6 +273,7 @@ void ScalarMappingChooser::rebuildGui()
 
     m_ui->scalarsComboBox->clear();
     m_ui->gradientGroupBox->setEnabled(false);
+    m_ui->colorLegendGroupBox->setEnabled(false);
 
     // clear GUI when not rendering
     if (newMapping)
@@ -205,6 +283,7 @@ void ScalarMappingChooser::rebuildGui()
 
         m_ui->gradientComboBox->setCurrentIndex(gradientIndex(newMapping->originalGradient()));
         m_ui->gradientGroupBox->setEnabled(newMapping->currentScalarsUseMappingLegend());
+        m_ui->colorLegendGroupBox->setEnabled(newMapping->currentScalarsUseMappingLegend());
     }
 
     // the mapping can now receive signals from the UI

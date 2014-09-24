@@ -7,9 +7,11 @@
 
 
 class vtkLookupTable;
+class vtkEventQtSlotConnect;
 
 class Ui_ScalarMappingChooser;
 class ScalarToColorMapping;
+class RenderView;
 
 class ScalarMappingChooser : public QDockWidget
 {
@@ -20,7 +22,7 @@ public:
     ~ScalarMappingChooser() override;
 
     /** setup UI for a named rendered and a configured scalar to color mapping */
-    void setMapping(QString rendererName = "", ScalarToColorMapping * mapping = nullptr);
+    void setMapping(RenderView * renderView = nullptr, ScalarToColorMapping * mapping = nullptr);
     const ScalarToColorMapping * mapping() const;
 
     vtkLookupTable * selectedGradient() const;
@@ -36,8 +38,11 @@ private slots:
 
     void rebuildGui();
 
-private slots:
     void rearrangeDataObjects();
+
+    void on_legendPositionComboBox_currentIndexChanged(QString position);
+    void colorLegendPositionChanged();
+    void on_colorLegendGroupBox_toggled(bool on);
 
 private:
     void loadGradientImages();
@@ -54,4 +59,8 @@ private:
     QList<vtkSmartPointer<vtkLookupTable>> m_gradients;
 
     ScalarToColorMapping * m_mapping;
+    RenderView * m_renderView;
+    /** check if we are moving the actor or if the user interacts */
+    bool m_movingColorLegend;
+    vtkSmartPointer<vtkEventQtSlotConnect> m_colorLegendConnects;
 };

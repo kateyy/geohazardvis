@@ -16,6 +16,7 @@ ScalarToColorMapping::ScalarToColorMapping()
     : m_gradient(vtkSmartPointer<vtkLookupTable>::New())
     , m_originalGradient(nullptr)
     , m_colorMappingLegend(vtkSmartPointer<vtkScalarBarActor>::New())
+    , m_colorMappingLegendVisible(true)
 {
     m_colorMappingLegend->SetLookupTable(m_gradient);
     m_colorMappingLegend->SetVisibility(false);
@@ -108,7 +109,7 @@ void ScalarToColorMapping::setCurrentScalarsByName(QString scalarsName)
     QByteArray c_name = scalarsName.toLatin1();
     m_colorMappingLegend->SetTitle(c_name.data());
     bool usesGradient = scalars->dataMinValue() != scalars->dataMaxValue();
-    m_colorMappingLegend->SetVisibility(usesGradient);
+    m_colorMappingLegend->SetVisibility(m_colorMappingLegendVisible && usesGradient);
 
     for (RenderedData * renderedData : m_renderedData)
     {
@@ -117,6 +118,12 @@ void ScalarToColorMapping::setCurrentScalarsByName(QString scalarsName)
 }
 
 ScalarsForColorMapping * ScalarToColorMapping::currentScalars()
+{
+    return const_cast<ScalarsForColorMapping *>(    // don't implement the same function twice
+        ((const ScalarToColorMapping *)(this))->currentScalars());
+}
+
+const ScalarsForColorMapping * ScalarToColorMapping::currentScalars() const
 {
     if (currentScalarsName().isEmpty())
         return nullptr;
@@ -158,7 +165,20 @@ vtkScalarBarActor * ScalarToColorMapping::colorMappingLegend()
 
 bool ScalarToColorMapping::currentScalarsUseMappingLegend() const
 {
-    return m_colorMappingLegend->GetVisibility() != 0;
+    const ScalarsForColorMapping * scalars = currentScalars();
+    return scalars->dataMinValue() != scalars->dataMaxValue();
+}
+
+bool ScalarToColorMapping::colorMappingLegendVisible() const
+{
+    return m_colorMappingLegendVisible;
+}
+
+void ScalarToColorMapping::setColorMappingLegendVisible(bool visible)
+{
+    m_colorMappingLegendVisible = visible;
+
+    m_colorMappingLegend->SetVisibility(currentScalarsUseMappingLegend() && m_colorMappingLegendVisible);
 }
 
 void ScalarToColorMapping::updateGradientValueRange()

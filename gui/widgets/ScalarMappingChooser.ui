@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>210</width>
-    <height>258</height>
+    <height>324</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -150,6 +150,24 @@
      </widget>
     </item>
     <item>
+     <widget class="QGroupBox" name="colorLegendGroupBox">
+      <property name="enabled">
+       <bool>false</bool>
+      </property>
+      <property name="title">
+       <string>color legend</string>
+      </property>
+      <property name="checkable">
+       <bool>true</bool>
+      </property>
+      <layout class="QVBoxLayout" name="verticalLayout_2">
+       <item>
+        <widget class="QComboBox" name="legendPositionComboBox" />
+       </item>
+      </layout>
+     </widget>
+    </item>
+    <item>
      <widget class="QPushButton" name="rearrangeDataObjectsBtn">
       <property name="enabled">
        <bool>true</bool>
@@ -158,19 +176,6 @@
        <string>rearrange data objects...</string>
       </property>
      </widget>
-    </item>
-    <item>
-     <spacer name="verticalSpacer">
-      <property name="orientation">
-       <enum>Qt::Vertical</enum>
-      </property>
-      <property name="sizeHint" stdset="0">
-       <size>
-        <width>20</width>
-        <height>40</height>
-       </size>
-      </property>
-     </spacer>
     </item>
    </layout>
   </widget>

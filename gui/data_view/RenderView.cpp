@@ -536,6 +536,11 @@ vtkLightKit * RenderView::lightKit()
     return m_lightKit;
 }
 
+vtkScalarBarWidget * RenderView::colorLegendWidget()
+{
+    return m_scalarBarWidget;
+}
+
 bool RenderView::contains3dData() const
 {
     return m_contains3DData;
@@ -546,7 +551,7 @@ void RenderView::updateGuiForData(RenderedData * renderedData)
     m_interactorStyle->setRenderedData(m_renderedData);
     m_renderConfigWidget.setRenderedData(index(), renderedData);
     m_scalarMapping.setRenderedData(m_renderedData);
-    m_scalarMappingChooser.setMapping(friendlyName(), &m_scalarMapping);
+    m_scalarMappingChooser.setMapping(this,  &m_scalarMapping);
     m_vectorMappingChooser.setMapping(index(), renderedData->vectorMapping());
 }
 
@@ -567,7 +572,7 @@ void RenderView::updateGuiForRemovedData()
             m_renderConfigWidget.setRenderedData(index(), nextSelection);
 
     m_scalarMapping.setRenderedData(m_renderedData);
-    m_scalarMappingChooser.setMapping(friendlyName(), &m_scalarMapping);
+    m_scalarMappingChooser.setMapping(this, &m_scalarMapping);
 
     VectorsToSurfaceMapping * nextMapping = nextSelection ?
         nextSelection->vectorMapping() : nullptr;
