@@ -231,7 +231,7 @@ void RenderedPolyData::visibilityChangedEvent(bool visible)
 {
     for (VectorsForSurfaceMapping * vectors : m_vectors->vectors())
         vectors->actor()->SetVisibility(
-        visible && m_vectors);
+        visible && vectors->isVisible());
 }
 
 vtkPolyDataMapper * RenderedPolyData::createDataMapper()
