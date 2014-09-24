@@ -32,7 +32,8 @@ signals:
     void renderSetupChanged();
 
 private slots:
-    void updateGui(const QItemSelection & selection = QItemSelection());
+    void updateGuiForSelection(const QItemSelection & selection = QItemSelection());
+    void updateVectorsList();
 
 private:
     void updateTitle();

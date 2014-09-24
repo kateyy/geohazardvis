@@ -36,12 +36,8 @@ QList<ScalarsForColorMapping *> RawArrayComponentMapping::newInstances(const QLi
     for (DataObject * dataObject : dataObjects)
         totalNumCells += dataObject->dataSet()->GetNumberOfCells();
 
-    for (DataObject * dataObject : DataSetHandler::instance().dataObjects())
+    for (AttributeVectorData * attr : DataSetHandler::instance().attributeVectors())
     {
-        AttributeVectorData * attr = dynamic_cast<AttributeVectorData *>(dataObject);
-        if (!attr)
-            continue;
-
         vtkFloatArray * dataArray = attr->dataArray();
 
         // support only scalars that span all visible objects

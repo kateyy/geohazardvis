@@ -34,6 +34,8 @@ private slots:
     void minValueChanged(double value);
     void maxValueChanged(double value);
 
+    void rebuildGui();
+
 private slots:
     void rearrangeDataObjects();
 
@@ -42,7 +44,6 @@ private:
     int gradientIndex(vtkLookupTable * gradient) const;
 
     void updateTitle(QString rendererName = "");
-    void rebuildGui(ScalarToColorMapping * newMapping);
     void updateGuiValueRanges();
 
     static vtkLookupTable * buildLookupTable(const QImage & image);

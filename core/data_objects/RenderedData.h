@@ -56,6 +56,7 @@ public:
 
 signals:
     void geometryChanged();
+    void attributeActorsChanged();
 
 protected:
     virtual vtkProperty * createDefaultRenderProperty() const = 0;

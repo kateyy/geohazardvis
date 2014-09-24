@@ -54,9 +54,14 @@ public:
     vtkScalarBarActor * colorMappingLegend();
     bool currentScalarsUseMappingLegend() const;
 
+signals:
+    void scalarsChanged();
+
 private slots:
     /** apply changed min/max from scalar to color mapping to gradient lookup table */
     void updateGradientValueRange();
+    /** reread the data set list provided by the DataSetHandler for new/deleted data */
+    void updateAvailableScalars();
 
 private:
     QList<RenderedData *> m_renderedData;

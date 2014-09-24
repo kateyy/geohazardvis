@@ -170,8 +170,11 @@ RenderedData * RenderView::addDataObject(DataObject * dataObject)
     if (!renderedData)
         return nullptr;
 
+    m_attributeActors << renderedData->attributeActors();
     for (vtkActor * actor : renderedData->actors())
         m_renderer->AddViewProp(actor);
+
+    connect(renderedData, &RenderedData::attributeActorsChanged, this, &RenderView::fetchAllAttributeActors);
 
     m_renderedData << renderedData;
 
@@ -557,6 +560,8 @@ void RenderView::updateGuiForRemovedData()
 
     updateTitle();
 
+    m_interactorStyle->setRenderedData(m_renderedData);
+
     if (m_renderConfigWidget.rendererId() == index())
         if (!m_renderedData.contains(m_renderConfigWidget.renderedData()))
             m_renderConfigWidget.setRenderedData(index(), nextSelection);
@@ -568,4 +573,23 @@ void RenderView::updateGuiForRemovedData()
         nextSelection->vectorMapping() : nullptr;
     if (m_vectorMappingChooser.rendererId() == index())
         m_vectorMappingChooser.setMapping(index(), nextMapping);
+}
+
+void RenderView::fetchAllAttributeActors()
+{
+    for (vtkActor * actor : m_attributeActors)
+        m_renderer->RemoveViewProp(actor);
+
+    m_attributeActors.clear();
+
+    for (RenderedData * renderedData : m_renderedData)
+        m_attributeActors << renderedData->attributeActors();
+
+    for (RenderedData * renderedData : m_renderedDataCache)
+        m_attributeActors << renderedData->attributeActors();
+
+    for (vtkActor * actor : m_attributeActors)
+        m_renderer->AddViewProp(actor);
+
+    render();
 }

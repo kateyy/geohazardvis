@@ -9,6 +9,7 @@
 #include "ScalarsForColorMappingRegistry.h"
 
 #include <core/data_objects/RenderedData.h>
+#include <core/DataSetHandler.h>
 
 
 ScalarToColorMapping::ScalarToColorMapping()
@@ -20,6 +21,9 @@ ScalarToColorMapping::ScalarToColorMapping()
     m_colorMappingLegend->SetVisibility(false);
 
     clear();
+
+    connect(&DataSetHandler::instance(), &DataSetHandler::attributeVectorsChanged,
+        this, &ScalarToColorMapping::updateAvailableScalars);
 }
 
 void ScalarToColorMapping::setRenderedData(const QList<RenderedData *> & renderedData)
@@ -163,4 +167,12 @@ void ScalarToColorMapping::updateGradientValueRange()
 
     if (scalars)
         m_gradient->SetTableRange(scalars->minValue(), scalars->maxValue());
+}
+
+void ScalarToColorMapping::updateAvailableScalars()
+{
+    // rerun the factory and update the GUI
+    setRenderedData(m_renderedData);
+
+    emit scalarsChanged();
 }

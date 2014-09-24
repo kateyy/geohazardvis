@@ -15,9 +15,13 @@ RenderedData::RenderedData(DataObject * dataObject)
     , m_vectors(new VectorsToSurfaceMapping(this))
     , m_isVisible(true)
 {
+    connect(m_vectors, &VectorsToSurfaceMapping::vectorsChanged, this, &RenderedData::attributeActorsChanged);
 }
 
-RenderedData::~RenderedData() = default;
+RenderedData::~RenderedData()
+{
+    delete m_vectors;
+}
 
 vtkProperty * RenderedData::renderProperty()
 {

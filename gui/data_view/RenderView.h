@@ -110,6 +110,8 @@ private slots:
     /** Updates the RenderConfigWidget to reflect the data's render properties. */
     void updateGuiForData(RenderedData * renderedData);
     void updateGuiForRemovedData();
+    /** scan all rendered data for changed attribute vectors */
+    void fetchAllAttributeActors();
 
 private:
     Ui_RenderView * m_ui;
@@ -119,6 +121,7 @@ private:
     // objects that were loaded to the GPU but are currently not rendered 
     QList<RenderedData *> m_renderedDataCache;
     QMap<DataObject *, RenderedData *> m_dataObjectToRendered;
+    QList<vtkActor *> m_attributeActors;
 
     // Rendering components
     vtkSmartPointer<vtkRenderer> m_renderer;

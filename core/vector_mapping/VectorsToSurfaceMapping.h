@@ -22,6 +22,7 @@ class CORE_API VectorsToSurfaceMapping : public QObject
 
 public:
     VectorsToSurfaceMapping(RenderedData * renderedData);
+    ~VectorsToSurfaceMapping() override;
 
     /** names of vectors that can be used with my data */
     QList<QString> vectorNames() const;
@@ -29,6 +30,13 @@ public:
     const QMap<QString, VectorsForSurfaceMapping *> & vectors() const;
 
     const RenderedData * renderedData() const;
+
+signals:
+    void vectorsChanged();
+
+private slots:
+    /** reread the data set list provided by the DataSetHandler for new/deleted data */
+    void updateAvailableVectors();
 
 private:
     RenderedData * m_renderedData;

@@ -33,12 +33,8 @@ QList<VectorsForSurfaceMapping *> AttributeVectorMapping::newInstances(RenderedD
 {
     QList<AttributeVectorData *> attrs;
 
-    for (DataObject * dataObject : DataSetHandler::instance().dataObjects())
+    for (AttributeVectorData * attr : DataSetHandler::instance().attributeVectors())
     {
-        AttributeVectorData * attr = dynamic_cast<AttributeVectorData *>(dataObject);
-        if (!attr)
-            continue;
-
         if (attr->dataArray()->GetNumberOfTuples() >= renderedData->dataObject()->dataSet()->GetNumberOfCells())
             attrs << attr;
     }

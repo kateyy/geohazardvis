@@ -44,15 +44,18 @@ void ScalarMappingChooser::setMapping(QString rendererName, ScalarToColorMapping
 {
     updateTitle(rendererName);
 
+    m_mapping = mapping;
+
     // setup gradient for newly created mappings
     if (mapping && !mapping->originalGradient())
         mapping->setGradient(selectedGradient());
 
-    rebuildGui(mapping);
-
-    updateGuiValueRanges();
+    rebuildGui();
 
     emit renderSetupChanged();
+
+    if (mapping)
+        connect(mapping, &ScalarToColorMapping::scalarsChanged, this, &ScalarMappingChooser::rebuildGui);
 }
 
 const ScalarToColorMapping * ScalarMappingChooser::mapping() const
@@ -186,25 +189,28 @@ void ScalarMappingChooser::updateTitle(QString rendererName)
     m_ui->relatedRenderView->setText(title);
 }
 
-void ScalarMappingChooser::rebuildGui(ScalarToColorMapping * newMapping)
+void ScalarMappingChooser::rebuildGui()
 {
+    auto newMapping = m_mapping;
     m_mapping = nullptr;    // disable GUI to mapping events
 
     m_ui->scalarsComboBox->clear();
     m_ui->gradientGroupBox->setEnabled(false);
 
-    // stop with cleared GUI when not rendering
-    if (!newMapping)
-        return;
+    // clear GUI when not rendering
+    if (newMapping)
+    {
+        m_ui->scalarsComboBox->addItems(newMapping->scalarsNames());
+        m_ui->scalarsComboBox->setCurrentText(newMapping->currentScalarsName());
 
-    m_ui->scalarsComboBox->addItems(newMapping->scalarsNames());
-    m_ui->scalarsComboBox->setCurrentText(newMapping->currentScalarsName());
-
-    m_ui->gradientComboBox->setCurrentIndex(gradientIndex(newMapping->originalGradient()));
-    m_ui->gradientGroupBox->setEnabled(newMapping->currentScalarsUseMappingLegend());
+        m_ui->gradientComboBox->setCurrentIndex(gradientIndex(newMapping->originalGradient()));
+        m_ui->gradientGroupBox->setEnabled(newMapping->currentScalarsUseMappingLegend());
+    }
 
     // the mapping can now receive signals from the UI
     m_mapping = newMapping;
+
+    updateGuiValueRanges();
 }
 
 void ScalarMappingChooser::updateGuiValueRanges()

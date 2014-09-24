@@ -25,7 +25,7 @@ VectorMappingChooser::VectorMappingChooser(QWidget * parent, Qt::WindowFlags fla
     m_ui->vectorsListView->setModel(m_listModel);
 
     connect(m_listModel, &VectorMappingChooserListModel::vectorVisibilityChanged, this, &VectorMappingChooser::renderSetupChanged);
-    connect(m_ui->vectorsListView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &VectorMappingChooser::updateGui);
+    connect(m_ui->vectorsListView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &VectorMappingChooser::updateGuiForSelection);
 }
 
 VectorMappingChooser::~VectorMappingChooser()
@@ -44,13 +44,22 @@ void VectorMappingChooser::setMapping(int rendererId, VectorsToSurfaceMapping * 
     m_mapping = mapping;
 
     updateTitle();
-    updateGui();
+
+    updateVectorsList();
+
+    if (m_mapping)
+        connect(m_mapping, &VectorsToSurfaceMapping::vectorsChanged, this, &VectorMappingChooser::updateVectorsList);
+}
+
+void VectorMappingChooser::updateVectorsList()
+{
+    updateGuiForSelection();
 
     m_ui->propertyBrowser->setRoot(nullptr);
     qDeleteAll(m_propertyGroups);
     m_propertyGroups.clear();
 
-    m_listModel->setMapping(mapping);
+    m_listModel->setMapping(m_mapping);
 
     if (m_mapping)
     {
@@ -75,7 +84,7 @@ const VectorsToSurfaceMapping * VectorMappingChooser::mapping() const
     return m_mapping;
 }
 
-void VectorMappingChooser::updateGui(const QItemSelection & selection)
+void VectorMappingChooser::updateGuiForSelection(const QItemSelection & selection)
 {
     disconnect(m_startingIndexConnection);
 
