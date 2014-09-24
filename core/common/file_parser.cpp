@@ -72,7 +72,8 @@ bool parseIOStream(ifstream & inputStream, vector<t_FP> &parsedData, unsigned lo
             input_FP = std::numeric_limits<double>::quiet_NaN();
         }
         else {
-            input_FP = atof(input.c_str());
+            stringstream f_stream(input);
+            f_stream >> input_FP;
         }
 
         parsedData.push_back(input_FP);
@@ -120,7 +121,8 @@ bool parseIOFile(const string inputFileName, vector<t_FP> &parsedData, t_UInt & 
             input_FP = std::numeric_limits<double>::quiet_NaN();
         }
         else {
-            input_FP = atof(input.c_str());
+            stringstream f_stream(input);
+            f_stream >> input_FP;
         }
 
         parsedData.push_back(input_FP);

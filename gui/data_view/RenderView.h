@@ -12,7 +12,6 @@
 
 class vtkRenderer;
 class vtkRenderWindow;
-class vtkRenderWindowInteractor;
 class vtkPolyData;
 class vtkCubeAxesActor;
 class vtkScalarBarActor;
@@ -120,7 +119,6 @@ private:
 
     // Rendering components
     vtkSmartPointer<vtkRenderer> m_renderer;
-    vtkSmartPointer<vtkRenderWindowInteractor> m_interactor;
     vtkSmartPointer<PickingInteractorStyleSwitch> m_interactorStyle;
     vtkSmartPointer<vtkLightKit> m_lightKit;
 

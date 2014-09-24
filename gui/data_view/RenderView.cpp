@@ -145,12 +145,8 @@ void RenderView::setupInteraction()
 
     connect(m_interactorStyle.Get(), &PickingInteractorStyleSwitch::pointInfoSent, this, &RenderView::ShowInfo);
     connect(m_interactorStyle.Get(), &PickingInteractorStyleSwitch::dataPicked, this, &RenderView::updateGuiForData);
- 
-    m_interactor = vtkSmartPointer<vtkRenderWindowInteractor>::New();
-    m_interactor->SetRenderWindow(m_ui->qvtkMain->GetRenderWindow());
-    m_interactor->SetInteractorStyle(m_interactorStyle);
 
-    m_interactor->Initialize();
+    m_ui->qvtkMain->GetRenderWindow()->GetInteractor()->SetInteractorStyle(m_interactorStyle);
 }
 
 void RenderView::setInteractorStyle(const std::string & name)
@@ -478,7 +474,7 @@ void RenderView::setupColorMappingLegend()
     m_scalarBarWidget = vtkSmartPointer<vtkScalarBarWidget>::New();
     m_scalarBarWidget->SetScalarBarActor(m_colorMappingLegend);
     m_scalarBarWidget->SetRepresentation(repr);
-    m_scalarBarWidget->SetInteractor(m_interactor);
+    m_scalarBarWidget->SetInteractor(renderWindow()->GetInteractor());
     m_scalarBarWidget->SetEnabled(true);
 
     m_renderer->AddViewProp(m_colorMappingLegend);
