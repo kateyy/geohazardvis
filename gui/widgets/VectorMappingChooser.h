@@ -25,6 +25,7 @@ public:
     ~VectorMappingChooser();
 
     void setMapping(int rendererId = -1, VectorsToSurfaceMapping * mapping = nullptr);
+    int rendererId() const;
     const VectorsToSurfaceMapping * mapping() const;
 
 signals:
@@ -34,10 +35,11 @@ private slots:
     void updateGui(const QItemSelection & selection = QItemSelection());
 
 private:
-    void updateTitle(int rendererId = -1);
+    void updateTitle();
 
 private:
     Ui_VectorMappingChooser * m_ui;
+    int m_rendererId;
     VectorsToSurfaceMapping * m_mapping;
     VectorMappingChooserListModel * m_listModel;
     QList<reflectionzeug::PropertyGroup *> m_propertyGroups;

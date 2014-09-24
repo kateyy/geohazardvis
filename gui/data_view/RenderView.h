@@ -115,6 +115,8 @@ private:
 
     // rendered representations of data objects for this view
     QList<RenderedData *> m_renderedData;
+    // objects that were loaded to the GPU but are currently not rendered 
+    QList<RenderedData *> m_renderedDataCache;
     QMap<DataObject *, RenderedData *> m_dataObjectToRendered;
 
     // Rendering components

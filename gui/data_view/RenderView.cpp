@@ -201,12 +201,28 @@ void RenderView::addDataObjects(QList<DataObject *> dataObjects)
 
     for (DataObject * dataObject : dataObjects)
     {
-        RenderedData * oldRendered = m_dataObjectToRendered.value(dataObject);
+        RenderedData * cachedRendered = m_dataObjectToRendered.value(dataObject);
 
-        if (oldRendered)
-            oldRendered->setVisible(true);
-        else
+        // create new rendered representation
+        if (!cachedRendered)
+        {
             aNewObject = addDataObject(dataObject);
+            continue;
+        }
+
+        aNewObject = cachedRendered;
+
+        // reuse cached data
+        if (m_renderedData.contains(cachedRendered))
+        {
+            assert(false);
+            continue;
+        }
+
+        assert(m_renderedDataCache.count(cachedRendered) == 1);
+        m_renderedDataCache.removeOne(cachedRendered);
+        m_renderedData << cachedRendered;
+        cachedRendered->setVisible(true);
     }
 
     vtkCamera * camera = m_renderer->GetActiveCamera();
@@ -244,16 +260,45 @@ void RenderView::addDataObjects(QList<DataObject *> dataObjects)
 
 void RenderView::hideDataObjects(QList<DataObject *> dataObjects)
 {
+    bool changed = false;
     for (DataObject * dataObject : dataObjects)
     {
         RenderedData * rendered = m_dataObjectToRendered.value(dataObject);
         if (!rendered)
             continue;
 
-        rendered->setVisible(false);
+        // move data to cache if it isn't already invisible
+        if (m_renderedData.removeOne(rendered))
+        {
+            rendered->setVisible(false);
+            m_renderedDataCache << rendered;
+
+            changed = true;
+        }
+        assert(!m_renderedData.contains(rendered));
+        assert(m_renderedDataCache.count(rendered) == 1);
     }
 
+    if (!changed)
+        return;
+
+    m_renderer->ResetCamera();
     updateAxes();
+    updateTitle();
+    m_interactorStyle->setRenderedData(m_renderedData);
+    
+    RenderedData * nextSelection = m_renderedData.isEmpty()
+        ? nullptr : m_renderedData.first();
+    if (m_renderConfigWidget.rendererId() == index())
+        if (!m_renderedData.contains(m_renderConfigWidget.renderedData()))
+            m_renderConfigWidget.setRenderedData(index(), nextSelection);
+
+    m_scalarMappingChooser.setMapping(friendlyName(), &m_scalarMapping);
+
+    VectorsToSurfaceMapping * nextMapping = nextSelection ?
+        nextSelection->vectorMapping() : nullptr;
+    if (m_vectorMappingChooser.rendererId() == index())
+        m_vectorMappingChooser.setMapping(index(), nextMapping);
 
     render();
 }
@@ -273,13 +318,6 @@ void RenderView::removeDataObject(DataObject * dataObject)
     // we didn't render this object
     if (!renderedData)
         return;
-
-    // this was our only object, so end here
-    if (m_renderedData.size() == 1)
-    {
-        close();
-        return;
-    }
 
     for (vtkActor * actor : renderedData->actors())
         m_renderer->RemoveViewProp(actor);
@@ -305,23 +343,11 @@ QStringList RenderView::checkCompatibleObjects(QList<DataObject *> & dataObjects
 {
     assert(!dataObjects.isEmpty());
 
-    bool amIEmpty = true;
-    for (RenderedData * renderedData : m_renderedData)
-        if (renderedData->isVisible())
-        {
-            amIEmpty = false;
-            break;
-        }
-
     // allow data type switch if nothing is visible
-    if (amIEmpty)
+    if (m_renderedData.isEmpty())
     {
-        bool is3D = dataObjects.first()->is3D();
-        if (is3D != m_contains3DData)
-        {
-            m_contains3DData = is3D;
-            clearInternalLists();
-        }
+        // using the first new object as reference for our new type
+        m_contains3DData = dataObjects.first()->is3D();
     }
     updateInteractionType();
 
@@ -357,7 +383,9 @@ void RenderView::removeFromInternalLists(QList<DataObject *> dataObjects)
         assert(rendered);
 
         m_dataObjectToRendered.remove(dataObject);
-        m_renderedData.removeOne(rendered);
+        assert(m_renderedData.count(rendered) + m_renderedDataCache.count(rendered) == 1);
+        if (!m_renderedData.removeOne(rendered))
+            m_renderedDataCache.removeOne(rendered);
 
         delete rendered;
     }
@@ -382,14 +410,15 @@ void RenderView::updateAxes()
 
     for (RenderedData * renderedData : m_renderedData)
     {
-        if (renderedData->isVisible())
-            bounds.AddBounds(renderedData->dataObject()->bounds());
+        assert(renderedData->isVisible());
+        bounds.AddBounds(renderedData->dataObject()->bounds());
     }
 
-    // hide axes when we don't have visible objects
+    // hide axes if we don't have visible objects
     if (!bounds.IsValid() && m_axesActor)
     {
         m_axesActor->SetVisibility(false);
+        m_scalarBarWidget->SetEnabled(false);
         return;
     }
 
@@ -397,6 +426,7 @@ void RenderView::updateAxes()
         m_axesActor = createAxes(*m_renderer);
     
     m_axesActor->SetVisibility(true);
+    m_scalarBarWidget->SetEnabled(true);
 
     m_renderer->AddViewProp(m_axesActor);
 

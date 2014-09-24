@@ -16,6 +16,7 @@ RenderConfigWidget::RenderConfigWidget(QWidget * parent)
     : QDockWidget(parent)
     , m_ui(new Ui_RenderConfigWidget())
     , m_propertyRoot(nullptr)
+    , m_rendererId(-1)
     , m_renderedData(nullptr)
 {
     m_ui->setupUi(this);
@@ -49,7 +50,8 @@ void RenderConfigWidget::setRenderedData(int rendererId, RenderedData * rendered
     clear();
 
     m_renderedData = renderedData;
-    updateTitle(rendererId);
+    m_rendererId = rendererId;
+    updateTitle();
 
     if (!renderedData)
         return;
@@ -62,18 +64,23 @@ void RenderConfigWidget::setRenderedData(int rendererId, RenderedData * rendered
     emit repaint();
 }
 
-const RenderedData * RenderConfigWidget::renderedData() const
+int RenderConfigWidget::rendererId() const
+{
+    return m_rendererId;
+}
+
+RenderedData * RenderConfigWidget::renderedData()
 {
     return m_renderedData;
 }
 
-void RenderConfigWidget::updateTitle(int rendererId)
+void RenderConfigWidget::updateTitle()
 {
     QString title;
     if (!renderedData())
         title = "(no object selected)";
     else
-        title = QString::number(rendererId) + ": " + renderedData()->dataObject()->name();
+        title = QString::number(m_rendererId) + ": " + renderedData()->dataObject()->name();
 
     m_ui->relatedDataObject->setText(title);
 }

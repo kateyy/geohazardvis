@@ -15,6 +15,7 @@
 VectorMappingChooser::VectorMappingChooser(QWidget * parent, Qt::WindowFlags flags)
     : QDockWidget(parent, flags)
     , m_ui(new Ui_VectorMappingChooser())
+    , m_rendererId(-1)
     , m_mapping(nullptr)
     , m_listModel(new VectorMappingChooserListModel())
 {
@@ -39,9 +40,10 @@ void VectorMappingChooser::setMapping(int rendererId, VectorsToSurfaceMapping * 
     if (mapping == m_mapping)
         return;
 
+    m_rendererId = rendererId;
     m_mapping = mapping;
 
-    updateTitle(rendererId);
+    updateTitle();
     updateGui();
 
     m_ui->propertyBrowser->setRoot(nullptr);
@@ -61,6 +63,11 @@ void VectorMappingChooser::setMapping(int rendererId, VectorsToSurfaceMapping * 
         QModelIndex index(m_listModel->index(0, 0));
         m_ui->vectorsListView->selectionModel()->select(index, QItemSelectionModel::Select);
     }
+}
+
+int VectorMappingChooser::rendererId() const
+{
+    return m_rendererId;
 }
 
 const VectorsToSurfaceMapping * VectorMappingChooser::mapping() const
@@ -101,13 +108,13 @@ void VectorMappingChooser::updateGui(const QItemSelection & selection)
     }
 }
 
-void VectorMappingChooser::updateTitle(int rendererId)
+void VectorMappingChooser::updateTitle()
 {
     QString title;
-    if (rendererId < 0)
+    if (!m_mapping)
         title = "(no object selected)";
     else
-        title = QString::number(rendererId) + ": " + m_mapping->renderedData()->dataObject()->name();
+        title = QString::number(m_rendererId) + ": " + m_mapping->renderedData()->dataObject()->name();
 
     m_ui->relatedDataObject->setText(title);
 }

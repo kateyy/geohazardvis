@@ -20,17 +20,19 @@ public:
 
     /** reset the property browser to contain only configuration options related to the rendered data */
     void setRenderedData(int rendererId = -1, RenderedData * renderedData = nullptr);
-    const RenderedData * renderedData() const;
+    int rendererId() const;
+    RenderedData * renderedData();
 
     void clear();
 
 protected:
-    void updateTitle(int rendererId = -1);
+    void updateTitle();
 
 protected:
     Ui_RenderConfigWidget * m_ui;
 
     reflectionzeug::PropertyGroup * m_propertyRoot;
 
+    int m_rendererId;
     RenderedData * m_renderedData;
 };

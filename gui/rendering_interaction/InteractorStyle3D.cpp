@@ -51,6 +51,7 @@ InteractorStyle3D::InteractorStyle3D()
 void InteractorStyle3D::setRenderedData(QList<RenderedData *> renderedData)
 {
     m_actorToRenderedData.clear();
+    GetDefaultRenderer()->RemoveViewProp(m_selectedCellActor);
     for (RenderedData * r : renderedData)
         m_actorToRenderedData.insert(r->mainActor(), r);
 }
