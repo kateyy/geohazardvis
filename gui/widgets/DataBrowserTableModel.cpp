@@ -4,6 +4,7 @@
 #include <algorithm>
 
 #include <vtkDataSet.h>
+#include <vtkFloatArray.h>
 
 #include <core/DataSetHandler.h>
 #include <core/data_objects/AttributeVectorData.h>
@@ -219,15 +220,17 @@ QVariant DataBrowserTableModel::data_dataObject(int row, int column, int role) c
     case s_btnClms + 2:
         if (dataObject->dataTypeName() == "polygonal mesh")
             return
-            QString::number(dataObject->dataSet()->GetNumberOfCells()) + " triangles; " +
+            QString::number(dataObject->dataSet()->GetNumberOfCells()) + " triangles, " +
             QString::number(dataObject->dataSet()->GetNumberOfPoints()) + " vertices";
         if (dataObject->dataTypeName() == "regular 2D grid")
         {
             ImageDataObject * imageData = static_cast<ImageDataObject*>(dataObject);
             return QString::number(imageData->dimensions()[0]) + "x" + QString::number(imageData->dimensions()[1]) + " values";
         }
+        if (dataObject->dataTypeName() == "3D vector grid")
+            return  QString::number(dataObject->dataSet()->GetNumberOfPoints()) + " vectors";
     case s_btnClms + 3:
-        if (dataObject->dataTypeName() == "polygonal mesh")
+        if (dataObject->dataTypeName() == "polygonal mesh" || dataObject->dataTypeName() == "3D vector grid")
             return
             "x: " + QString::number(dataObject->bounds()[0]) + "; " + QString::number(dataObject->bounds()[1]) +
             ", y: " + QString::number(dataObject->bounds()[2]) + "; " + QString::number(dataObject->bounds()[3]) +
@@ -263,15 +266,29 @@ QVariant DataBrowserTableModel::data_attributeVector(int row, int column, int ro
 
     AttributeVectorData * attributeVector = attributeVectors.at(row);
 
+    vtkDataArray * dataArray = attributeVector->dataArray();
+    int numComponents = dataArray->GetNumberOfComponents();
+
     switch (column)
     {
     case s_btnClms:
         return attributeVector->name();
     case s_btnClms + 1:
-        return attributeVector->dataTypeName();
+        return QString::number(numComponents) + " component vector";
     case s_btnClms + 2:
+        return QString::number(dataArray->GetNumberOfTuples()) + " tuples";
     case s_btnClms + 3:
-        break;
+    {
+        QString ranges;
+        double range[2];
+        for (int c = 0; c < numComponents; ++c)
+        {
+            dataArray->GetRange(range, c);
+            ranges += "[" + QString::number(c) + "]" + QString::number(range[0]) + "; " + QString::number(range[1]) + ", ";
+        }
+        ranges.remove(ranges.length() - 2, 2);
+        return ranges;
+    }
     }
 
     return QVariant();
