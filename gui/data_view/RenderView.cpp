@@ -241,16 +241,16 @@ void RenderView::addDataObjects(QList<DataObject *> dataObjects)
             camera->SetPosition(0, 0, 1);
         }
     }
-    m_renderer->ResetCamera();
-
-    updateAxes();
-
-    updateTitle();
-
-    m_scalarMapping.setRenderedData(m_renderedData);
 
     if (aNewObject)
+    {
+        updateAxes();
+        m_renderer->ResetCamera();
+
+        updateTitle();
+
         updateGuiForData(aNewObject);
+    }
 
     render();
 
@@ -282,23 +282,7 @@ void RenderView::hideDataObjects(QList<DataObject *> dataObjects)
     if (!changed)
         return;
 
-    m_renderer->ResetCamera();
-    updateAxes();
-    updateTitle();
-    m_interactorStyle->setRenderedData(m_renderedData);
-    
-    RenderedData * nextSelection = m_renderedData.isEmpty()
-        ? nullptr : m_renderedData.first();
-    if (m_renderConfigWidget.rendererId() == index())
-        if (!m_renderedData.contains(m_renderConfigWidget.renderedData()))
-            m_renderConfigWidget.setRenderedData(index(), nextSelection);
-
-    m_scalarMappingChooser.setMapping(friendlyName(), &m_scalarMapping);
-
-    VectorsToSurfaceMapping * nextMapping = nextSelection ?
-        nextSelection->vectorMapping() : nullptr;
-    if (m_vectorMappingChooser.rendererId() == index())
-        m_vectorMappingChooser.setMapping(index(), nextMapping);
+    updateGuiForRemovedData();
 
     render();
 }
@@ -324,12 +308,7 @@ void RenderView::removeDataObject(DataObject * dataObject)
 
     removeFromInternalLists({ dataObject });
 
-    updateAxes();
-
-    m_scalarMapping.setRenderedData(m_renderedData);
-    if (m_renderConfigWidget.renderedData() == renderedData)
-        m_renderConfigWidget.setRenderedData();
-    m_scalarMappingChooser.setMapping(friendlyName(), &m_scalarMapping);
+    updateGuiForRemovedData();
 }
 
 void RenderView::removeDataObjects(QList<DataObject *> dataObjects)
@@ -563,6 +542,30 @@ void RenderView::updateGuiForData(RenderedData * renderedData)
 {
     m_interactorStyle->setRenderedData(m_renderedData);
     m_renderConfigWidget.setRenderedData(index(), renderedData);
+    m_scalarMapping.setRenderedData(m_renderedData);
     m_scalarMappingChooser.setMapping(friendlyName(), &m_scalarMapping);
     m_vectorMappingChooser.setMapping(index(), renderedData->vectorMapping());
+}
+
+void RenderView::updateGuiForRemovedData()
+{
+    RenderedData * nextSelection = m_renderedData.isEmpty()
+        ? nullptr : m_renderedData.first();
+
+    updateAxes();
+    m_renderer->ResetCamera();
+
+    updateTitle();
+
+    if (m_renderConfigWidget.rendererId() == index())
+        if (!m_renderedData.contains(m_renderConfigWidget.renderedData()))
+            m_renderConfigWidget.setRenderedData(index(), nextSelection);
+
+    m_scalarMapping.setRenderedData(m_renderedData);
+    m_scalarMappingChooser.setMapping(friendlyName(), &m_scalarMapping);
+
+    VectorsToSurfaceMapping * nextMapping = nextSelection ?
+        nextSelection->vectorMapping() : nullptr;
+    if (m_vectorMappingChooser.rendererId() == index())
+        m_vectorMappingChooser.setMapping(index(), nextMapping);
 }

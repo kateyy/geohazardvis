@@ -109,6 +109,7 @@ private:
 private slots:
     /** Updates the RenderConfigWidget to reflect the data's render properties. */
     void updateGuiForData(RenderedData * renderedData);
+    void updateGuiForRemovedData();
 
 private:
     Ui_RenderView * m_ui;

@@ -88,7 +88,8 @@ void RendererConfigWidget::setRenderViews(const QList<RenderView *> & renderView
 
 void RendererConfigWidget::setCurrentRenderView(RenderView * renderView)
 {
-    m_ui->relatedRenderer->setCurrentText(renderView->friendlyName());
+    if (renderView)
+        m_ui->relatedRenderer->setCurrentText(renderView->friendlyName());
 }
 
 void RendererConfigWidget::setCurrentRenderView(int index)
