@@ -152,6 +152,9 @@ int DataBrowserTableModel::numButtonColumns()
 
 void DataBrowserTableModel::addDataObjects(QList<DataObject *> dataObjects)
 {
+    if (dataObjects.isEmpty())
+        return;
+
     beginInsertRows(QModelIndex(), m_dataObjects.size(), m_dataObjects.size() + dataObjects.size() - 1);
 
     m_dataObjects << dataObjects;

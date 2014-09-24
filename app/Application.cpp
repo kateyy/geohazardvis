@@ -24,7 +24,8 @@ void Application::startup()
         if (QFileInfo(arguments()[i]).exists())
             fileNames << arguments()[i];
 
-    m_mainWindow->openFiles(fileNames);
+    if (!fileNames.isEmpty())
+        m_mainWindow->openFiles(fileNames);
 }
 
 Application::~Application()
