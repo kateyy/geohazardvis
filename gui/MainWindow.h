@@ -25,7 +25,6 @@ public:
     ~MainWindow() override;
 
 public slots:
-    void openFile(QString fileName);
     void openFiles(QStringList fileNames);
 
     void on_actionOpen_triggered();

@@ -16,8 +16,8 @@ class DataBrowserTableModel : public QAbstractTableModel
 public:
     DataBrowserTableModel(QObject * parent = nullptr);
 
-    void addDataObject(DataObject * dataObject);
-    void removeDataObject(DataObject * dataObject);
+    void addDataObjects(QList<DataObject *> dataObjects);
+    void removeDataObjects(QList<DataObject *> dataObjects);
 
     void setVisibility(const DataObject * dataObject, bool visible);
     void setNoRendererFocused();

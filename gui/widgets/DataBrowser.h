@@ -21,7 +21,7 @@ public:
 
     void setDataMapping(DataMapping * dataMapping);
 
-    void addDataObject(DataObject * dataObject);
+    void addDataObjects(QList<DataObject *> dataObject);
 
 protected:
     bool eventFilter(QObject * obj, QEvent * ev) override;

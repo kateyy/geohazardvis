@@ -42,11 +42,11 @@ void DataBrowser::setDataMapping(DataMapping * dataMapping)
     connect(m_dataMapping, &DataMapping::focusedRenderViewChanged, this, &DataBrowser::setupGuiFor);
 }
 
-void DataBrowser::addDataObject(DataObject * dataObject)
+void DataBrowser::addDataObjects(QList<DataObject *> dataObjects)
 {
-    DataSetHandler::instance().add(dataObject);
+    DataSetHandler::instance().addData(dataObjects);
 
-    m_tableModel->addDataObject(dataObject);
+    m_tableModel->addDataObjects(dataObjects);
 
     m_ui->dataTableView->resizeColumnsToContents();
 }
@@ -129,13 +129,8 @@ void DataBrowser::removeFile()
     QList<DataObject *> selection = selectedDataObjects();
 
     m_dataMapping->removeDataObjects(selection);
-
-    for (DataObject * dataObject : selection)
-    {
-        m_tableModel->removeDataObject(dataObject);
-
-        DataSetHandler::instance().deleteObject(dataObject);
-    }
+    m_tableModel->removeDataObjects(selection);
+    DataSetHandler::instance().deleteData(selection);
 }
 
 void DataBrowser::evaluateItemViewClick(const QModelIndex & index)

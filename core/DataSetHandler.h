@@ -7,6 +7,7 @@
 template <typename T> class QList;
 
 class DataObject;
+class AttributeVectorData;
 
 
 class CORE_API DataSetHandler : public QObject
@@ -16,10 +17,15 @@ class CORE_API DataSetHandler : public QObject
 public:
     static DataSetHandler & instance();
 
-    void add(DataObject * dataObject);
-    void deleteObject(DataObject * dataObject);
+    void addData(QList<DataObject *> dataObjects);
+    void deleteData(QList<DataObject *> dataObjects);
 
     QList<DataObject *> dataObjects();
+    QList<AttributeVectorData *> attributeVectors();
+
+signals:
+    void dataObjectsChanged();
+    void attributeVectorsChanged();
 
 private:
     DataSetHandler();

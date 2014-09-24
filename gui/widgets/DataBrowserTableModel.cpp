@@ -1,6 +1,7 @@
 #include "DataBrowserTableModel.h"
 
 #include <cassert>
+#include <algorithm>
 
 #include <vtkDataSet.h>
 
@@ -149,19 +150,34 @@ int DataBrowserTableModel::numButtonColumns()
     return s_btnClms;
 }
 
-void DataBrowserTableModel::addDataObject(DataObject * dataObject)
+void DataBrowserTableModel::addDataObjects(QList<DataObject *> dataObjects)
 {
-    beginInsertRows(QModelIndex(), m_dataObjects.size(), m_dataObjects.size());
-    m_dataObjects << dataObject;
-    m_visibilities.insert(dataObject, false);
+    beginInsertRows(QModelIndex(), m_dataObjects.size(), m_dataObjects.size() + dataObjects.size() - 1);
+
+    m_dataObjects << dataObjects;
+    for (DataObject * dataObject : dataObjects)
+        m_visibilities.insert(dataObject, false);
+
     endInsertRows();
 }
 
-void DataBrowserTableModel::removeDataObject(DataObject * dataObject)
+void DataBrowserTableModel::removeDataObjects(QList<DataObject *> dataObjects)
 {
-    int index = m_dataObjects.indexOf(dataObject);
-    beginRemoveRows(QModelIndex(), index, index);
-    m_dataObjects.removeAt(index);
+    QList<int> indexes;
+    int first = m_dataObjects.size(), last = -1;
+
+    for (DataObject * dataObject : dataObjects)
+    {
+        int index = m_dataObjects.indexOf(dataObject);
+        if (index < first) first = index;
+        if (index > last) last = index;
+    }
+
+    beginRemoveRows(QModelIndex(), first, last);
+
+    for (DataObject * dataObject : dataObjects)
+        m_dataObjects.removeOne(dataObject);
+
     endRemoveRows();
 }
 

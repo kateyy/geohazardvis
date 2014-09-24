@@ -83,10 +83,13 @@ void MainWindow::dropEvent(QDropEvent * event)
 {
     assert(event->mimeData()->hasUrls());
 
-    for (const QUrl & url : event->mimeData()->urls())
-        openFile(url.toLocalFile());
-
     event->acceptProposedAction();
+
+    QStringList fileNames;
+    for (const QUrl & url : event->mimeData()->urls())
+        fileNames << url.toLocalFile();
+
+    openFiles(fileNames);
 }
 
 RenderView * MainWindow::addRenderView(int index)
@@ -97,33 +100,33 @@ RenderView * MainWindow::addRenderView(int index)
     return renderView;
 }
 
-void MainWindow::openFile(QString fileName)
-{
-    qDebug() << " <" << fileName;
-
-    QApplication::processEvents();
-
-    QString oldName = windowTitle();
-    setWindowTitle(fileName + " (loading file)");
-    QApplication::processEvents();
-
-    DataObject * dataObject = Loader::readFile(fileName);
-    if (!dataObject)
-    {
-        QMessageBox::critical(this, "File error", "Could not open the selected input file (unsupported format).");
-        setWindowTitle(oldName);
-        return;
-    }
-
-    m_dataBrowser->addDataObject(dataObject);
-
-    setWindowTitle(oldName);
-}
-
 void MainWindow::openFiles(QStringList fileNames)
 {
-    for (const QString & fileName : fileNames)
-        openFile(fileName);
+    QString oldName = windowTitle();
+
+    QList<DataObject *> newData;
+
+    for (QString fileName : fileNames)
+    {
+        qDebug() << " <" << fileName;
+
+        setWindowTitle(fileName + " (loading file)");
+        QApplication::processEvents();
+
+        DataObject * dataObject = Loader::readFile(fileName);
+        if (!dataObject)
+        {
+            QMessageBox::critical(this, "File error", "Could not open the selected input file (unsupported format).");
+            setWindowTitle(oldName);
+            continue;
+        }
+
+        newData << dataObject;
+    }
+
+    m_dataBrowser->addDataObjects(newData);
+
+    setWindowTitle(oldName);
 }
 
 void MainWindow::on_actionOpen_triggered()
