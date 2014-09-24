@@ -42,6 +42,8 @@ private slots:
 
 private:
     QList<DataObject *> selectedDataObjects() const;
+    QList<DataObject *> selectedDataSets() const;
+    QList<DataObject *> selectedAttributeVectors() const;
 
 private:
     Ui_DataBrowser * m_ui;

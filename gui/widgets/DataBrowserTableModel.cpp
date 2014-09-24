@@ -5,7 +5,8 @@
 
 #include <vtkDataSet.h>
 
-#include <core/data_objects/DataObject.h>
+#include <core/DataSetHandler.h>
+#include <core/data_objects/AttributeVectorData.h>
 #include <core/data_objects/ImageDataObject.h>
 
 
@@ -20,6 +21,8 @@ const int s_btnClms = 3;
 DataBrowserTableModel::DataBrowserTableModel(QObject * parent)
     : QAbstractTableModel(parent)
     , m_rendererFocused(false)
+    , m_numDataObjects(0)
+    , m_numAttributeVectors(0)
 {
     m_icons.insert("rendered", QIcon(":/icons/painting.svg"));
     m_icons.insert("notRendered", QIcon(":/icons/painting_faded.svg"));
@@ -43,7 +46,7 @@ DataBrowserTableModel::DataBrowserTableModel(QObject * parent)
 
 int DataBrowserTableModel::rowCount(const QModelIndex &/*parent = QModelIndex()*/) const
 {
-    return m_dataObjects.size();
+    return m_numDataObjects + 1 + m_numAttributeVectors;
 }
 
 int DataBrowserTableModel::columnCount(const QModelIndex &/*parent = QModelIndex()*/) const
@@ -53,16 +56,145 @@ int DataBrowserTableModel::columnCount(const QModelIndex &/*parent = QModelIndex
 
 QVariant DataBrowserTableModel::data(const QModelIndex &index, int role /*= Qt::DisplayRole*/) const
 {
+    int row = index.row();
+    int column = index.column();
+
+    if (row < m_numDataObjects)
+        return data_dataObject(row, column, role);
+
+    if (row == m_numDataObjects)
+        return QVariant();
+
+    return data_attributeVector(row - 1 - m_numDataObjects, column, role);
+}
+
+QVariant DataBrowserTableModel::headerData(int section, Qt::Orientation orientation,
+    int role /*= Qt::DisplayRole*/) const
+{
+    if (role != Qt::DisplayRole)
+        return QVariant();
+
+    assert(orientation == Qt::Orientation::Horizontal);
+
+    switch (section)
+    {
+    case s_btnClms + 0: return "name";
+    case s_btnClms + 1: return "data set type";
+    case s_btnClms + 2: return "dimensions";
+    case s_btnClms + 3: return "value range";
+    }        
+
+    return QVariant();
+}
+
+DataObject * DataBrowserTableModel::dataObjectAt(int row) const
+{
+    if (row < m_numDataObjects)
+        return DataSetHandler::instance().dataSets()[row];
+
+    if (row == m_numDataObjects)
+        return nullptr;
+
+    row -= 1 + m_numDataObjects;
+    assert(row < m_numAttributeVectors);
+
+    return DataSetHandler::instance().attributeVectors()[row];
+}
+
+DataObject * DataBrowserTableModel::dataObjectAt(const QModelIndex & index) const
+{
+    return dataObjectAt(index.row());
+}
+
+QList<DataObject *> DataBrowserTableModel::dataObjects(QModelIndexList indexes)
+{
+    QList<DataObject *> result;
+
+    for (const QModelIndex & index : indexes)
+        if (DataObject * d = dataObjectAt(index.row()))
+            result << d;
+
+    return result;
+}
+
+QList<DataObject *> DataBrowserTableModel::dataSets(QModelIndexList indexes)
+{
+    QList<DataObject *> result;
+
+    for (const QModelIndex & index : indexes)
+    {
+        if (index.row() >= m_numDataObjects)
+            continue;
+
+        if (DataObject * d = dataObjectAt(index.row()))
+            result << d;
+    }
+
+    return result;
+}
+
+QList<DataObject *> DataBrowserTableModel::attributeVectors(QModelIndexList indexes)
+{
+    QList<DataObject *> result;
+
+    for (const QModelIndex & index : indexes)
+    {
+        if (index.row() <= m_numDataObjects)
+            continue;
+
+        if (DataObject * d = dataObjectAt(index.row()))
+            result << d;
+    }
+
+    return result;
+}
+
+int DataBrowserTableModel::numButtonColumns()
+{
+    return s_btnClms;
+}
+
+void DataBrowserTableModel::updateDataList()
+{
+    beginResetModel();
+
+    const QList<DataObject *> & dataSets = DataSetHandler::instance().dataSets();
+    const QList<AttributeVectorData *> & attributeVectors = DataSetHandler::instance().attributeVectors();
+    m_numDataObjects = dataSets.size();
+    m_numAttributeVectors = attributeVectors.size();
+
+    m_visibilities.clear();
+    for (DataObject * dataObject : dataSets)
+        m_visibilities.insert(dataObject, false);
+    for (AttributeVectorData * attr : attributeVectors)
+        m_visibilities.insert(attr, false);
+
+    endResetModel();
+}
+
+void DataBrowserTableModel::setVisibility(const DataObject * dataObject, bool visible)
+{
+    m_visibilities[dataObject] = visible;
+    m_rendererFocused = true;
+}
+
+void DataBrowserTableModel::setNoRendererFocused()
+{
+    m_rendererFocused = false;
+}
+
+QVariant DataBrowserTableModel::data_dataObject(int row, int column, int role) const
+{
     if (role == Qt::DecorationRole)
     {
-        switch (index.column())
+        switch (column)
         {
         case 0:
             return m_icons["table"];
         case 1:
             if (!m_rendererFocused)
                 return m_icons["noRenderer"];
-            if (m_visibilities[dataObjectAt(index)])
+            if (m_visibilities[dataObjectAt(row)])
                 return m_icons["rendered"];
             return m_icons["notRendered"];
         case 2:
@@ -73,11 +205,12 @@ QVariant DataBrowserTableModel::data(const QModelIndex &index, int role /*= Qt::
     if (role != Qt::DisplayRole)
         return QVariant();
 
-    assert(index.row() < m_dataObjects.size());
+    const QList<DataObject *> & dataSets = DataSetHandler::instance().dataSets();
+    assert(row < dataSets.size());
 
-    DataObject * dataObject = m_dataObjects[index.row()];
+    DataObject * dataObject = dataSets.at(row);
 
-    switch (index.column())
+    switch (column)
     {
     case s_btnClms:
         return dataObject->name();
@@ -104,93 +237,42 @@ QVariant DataBrowserTableModel::data(const QModelIndex &index, int role /*= Qt::
             const double * minMax = static_cast<ImageDataObject*>(dataObject)->minMaxValue();
             return QString::number(minMax[0]) + "; " + QString::number(minMax[1]);
         }
-        
     }
 
     return QVariant();
 }
 
-QVariant DataBrowserTableModel::headerData(int section, Qt::Orientation orientation,
-    int role /*= Qt::DisplayRole*/) const
+QVariant DataBrowserTableModel::data_attributeVector(int row, int column, int role) const
 {
+    if (role == Qt::DecorationRole)
+    {
+        switch (column)
+        {
+        case 0:
+            return m_icons["table"];
+        case 2:
+            return m_icons["delete_red"];
+        }
+    }
+
     if (role != Qt::DisplayRole)
         return QVariant();
 
-    assert(orientation == Qt::Orientation::Horizontal);
+    const QList<AttributeVectorData *> & attributeVectors = DataSetHandler::instance().attributeVectors();
+    assert(row < attributeVectors.size());
 
-    switch (section)
+    AttributeVectorData * attributeVector = attributeVectors.at(row);
+
+    switch (column)
     {
-    case s_btnClms + 0: return "name";
-    case s_btnClms + 1: return "data set type";
-    case s_btnClms + 2: return "dimensions";
-    case s_btnClms + 3: return "value range";
-    }        
+    case s_btnClms:
+        return attributeVector->name();
+    case s_btnClms + 1:
+        return attributeVector->dataTypeName();
+    case s_btnClms + 2:
+    case s_btnClms + 3:
+        break;
+    }
 
     return QVariant();
-}
-
-DataObject * DataBrowserTableModel::dataObjectAt(int row) const
-{
-    if (row < 0 || row >= m_dataObjects.size())
-    {
-        assert(false);
-        return nullptr;
-    }
-
-    return m_dataObjects.at(row);
-}
-
-DataObject * DataBrowserTableModel::dataObjectAt(const QModelIndex & index) const
-{
-    return dataObjectAt(index.row());
-}
-
-int DataBrowserTableModel::numButtonColumns()
-{
-    return s_btnClms;
-}
-
-void DataBrowserTableModel::addDataObjects(QList<DataObject *> dataObjects)
-{
-    if (dataObjects.isEmpty())
-        return;
-
-    beginInsertRows(QModelIndex(), m_dataObjects.size(), m_dataObjects.size() + dataObjects.size() - 1);
-
-    m_dataObjects << dataObjects;
-    for (DataObject * dataObject : dataObjects)
-        m_visibilities.insert(dataObject, false);
-
-    endInsertRows();
-}
-
-void DataBrowserTableModel::removeDataObjects(QList<DataObject *> dataObjects)
-{
-    QList<int> indexes;
-    int first = m_dataObjects.size(), last = -1;
-
-    for (DataObject * dataObject : dataObjects)
-    {
-        int index = m_dataObjects.indexOf(dataObject);
-        if (index < first) first = index;
-        if (index > last) last = index;
-    }
-
-    beginRemoveRows(QModelIndex(), first, last);
-
-    for (DataObject * dataObject : dataObjects)
-        m_dataObjects.removeOne(dataObject);
-
-    endRemoveRows();
-}
-
-void DataBrowserTableModel::setVisibility(const DataObject * dataObject, bool visible)
-{
-    m_visibilities[dataObject] = visible;
-    m_rendererFocused = true;
-}
-
-void DataBrowserTableModel::setNoRendererFocused()
-{
-    m_rendererFocused = false;
 }

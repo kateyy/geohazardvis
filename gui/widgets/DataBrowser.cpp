@@ -46,7 +46,7 @@ void DataBrowser::addDataObjects(QList<DataObject *> dataObjects)
 {
     DataSetHandler::instance().addData(dataObjects);
 
-    m_tableModel->addDataObjects(dataObjects);
+    m_tableModel->updateDataList();
 
     m_ui->dataTableView->resizeColumnsToContents();
 }
@@ -86,7 +86,7 @@ void DataBrowser::showTable()
 
 void DataBrowser::changeRenderedVisibility(DataObject * clickedObject)
 {
-    QList<DataObject *> selection = selectedDataObjects();
+    QList<DataObject *> selection = selectedDataSets();
     if (selection.isEmpty())
         return;
 
@@ -117,9 +117,9 @@ void DataBrowser::changeRenderedVisibility(DataObject * clickedObject)
     }
 
     if (setToVisible)
-        renderView->addDataObjects(selectedDataObjects());
+        renderView->addDataObjects(selection);
     else
-        renderView->hideDataObjects(selectedDataObjects());
+        renderView->hideDataObjects(selection);
 
     setupGuiFor(renderView);
 }
@@ -129,8 +129,8 @@ void DataBrowser::removeFile()
     QList<DataObject *> selection = selectedDataObjects();
 
     m_dataMapping->removeDataObjects(selection);
-    m_tableModel->removeDataObjects(selection);
     DataSetHandler::instance().deleteData(selection);
+    m_tableModel->updateDataList();
 }
 
 void DataBrowser::evaluateItemViewClick(const QModelIndex & index)
@@ -140,7 +140,12 @@ void DataBrowser::evaluateItemViewClick(const QModelIndex & index)
     case 0:
         return showTable();
     case 1:
-        return changeRenderedVisibility(m_tableModel->dataObjectAt(index));
+    {
+        DataObject * dataObject = m_tableModel->dataObjectAt(index);
+        if (!dataObject || !dataObject->dataSet())
+            return;
+        return changeRenderedVisibility(dataObject);
+    }
     case 2:
         return removeFile();
     }
@@ -149,7 +154,7 @@ void DataBrowser::evaluateItemViewClick(const QModelIndex & index)
 void DataBrowser::setupGuiFor(RenderView * renderView)
 {
     QSet<const DataObject *> allObjects;
-    for (DataObject * dataObject : DataSetHandler::instance().dataObjects())
+    for (DataObject * dataObject : DataSetHandler::instance().dataSets())
         allObjects << dataObject;
 
     if (!renderView)
@@ -174,10 +179,19 @@ QList<DataObject *> DataBrowser::selectedDataObjects() const
 {
     QModelIndexList selection = m_ui->dataTableView->selectionModel()->selectedRows();
 
-    QList<DataObject *> selectedObjects;
+    return m_tableModel->dataObjects(selection);
+}
 
-    for (const QModelIndex & index : selection)
-        selectedObjects << m_tableModel->dataObjectAt(index.row());
+QList<DataObject *> DataBrowser::selectedDataSets() const
+{
+    QModelIndexList selection = m_ui->dataTableView->selectionModel()->selectedRows();
 
-    return selectedObjects;
+    return m_tableModel->dataSets(selection);
+}
+
+QList<DataObject *> DataBrowser::selectedAttributeVectors() const
+{
+    QModelIndexList selection = m_ui->dataTableView->selectionModel()->selectedRows();
+
+    return m_tableModel->attributeVectors(selection);
 }

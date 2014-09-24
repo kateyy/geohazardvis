@@ -9,7 +9,7 @@
 
 namespace
 {
-QList<DataObject *> * s_dataObjects = nullptr;
+QList<DataObject *> * s_dataSets = nullptr;
 QList<AttributeVectorData *> * s_attributeVectors = nullptr;
 }
 
@@ -17,14 +17,14 @@ QList<AttributeVectorData *> * s_attributeVectors = nullptr;
 DataSetHandler::DataSetHandler()
     : QObject()
 {
-    s_dataObjects = new QList<DataObject *>();
+    s_dataSets = new QList<DataObject *>();
     s_attributeVectors = new QList<AttributeVectorData *>();
 }
 
 DataSetHandler::~DataSetHandler()
 {
-    qDeleteAll(dataObjects());
-    delete s_dataObjects;
+    qDeleteAll(dataSets());
+    delete s_dataSets;
     qDeleteAll(attributeVectors());
     delete s_attributeVectors;
 }
@@ -42,11 +42,11 @@ void DataSetHandler::addData(QList<DataObject *> dataObjects)
     for (DataObject * dataObject : dataObjects)
     {
         assert(dataObject);
-        assert(!s_dataObjects->contains(dataObject));
+        assert(!s_dataSets->contains(dataObject));
 
         if (dataObject->dataSet())
         {
-            s_dataObjects->append(dataObject);
+            s_dataSets->append(dataObject);
             dataChanged = true;
         }
         else
@@ -71,7 +71,7 @@ void DataSetHandler::deleteData(QList<DataObject *> dataObjects)
         if (dataObject->dataSet())
         {
             dataChanged = true;
-            s_dataObjects->removeOne(dataObject);
+            s_dataSets->removeOne(dataObject);
         }
         else
         {
@@ -89,12 +89,12 @@ void DataSetHandler::deleteData(QList<DataObject *> dataObjects)
     qDeleteAll(dataObjects);
 }
 
-QList<DataObject *> DataSetHandler::dataObjects()
+const QList<DataObject *> & DataSetHandler::dataSets()
 {
-    return *s_dataObjects;
+    return *s_dataSets;
 }
 
-QList<AttributeVectorData *> DataSetHandler::attributeVectors()
+const QList<AttributeVectorData *> & DataSetHandler::attributeVectors()
 {
     return *s_attributeVectors;
 }

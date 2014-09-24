@@ -20,8 +20,8 @@ public:
     void addData(QList<DataObject *> dataObjects);
     void deleteData(QList<DataObject *> dataObjects);
 
-    QList<DataObject *> dataObjects();
-    QList<AttributeVectorData *> attributeVectors();
+    const QList<DataObject *> & dataSets();
+    const QList<AttributeVectorData *> & attributeVectors();
 
 signals:
     void dataObjectsChanged();
