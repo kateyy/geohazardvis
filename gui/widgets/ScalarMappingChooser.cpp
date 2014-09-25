@@ -279,11 +279,14 @@ void ScalarMappingChooser::rebuildGui()
     if (newMapping)
     {
         m_ui->scalarsComboBox->addItems(newMapping->scalarsNames());
-        m_ui->scalarsComboBox->setCurrentText(newMapping->currentScalarsName());
 
-        m_ui->gradientComboBox->setCurrentIndex(gradientIndex(newMapping->originalGradient()));
-        m_ui->gradientGroupBox->setEnabled(newMapping->currentScalarsUseMappingLegend());
-        m_ui->colorLegendGroupBox->setEnabled(newMapping->currentScalarsUseMappingLegend());
+        if (m_ui->scalarsComboBox->count() != 0)
+        {
+            m_ui->scalarsComboBox->setCurrentText(newMapping->currentScalarsName());
+            m_ui->gradientComboBox->setCurrentIndex(gradientIndex(newMapping->originalGradient()));
+            m_ui->gradientGroupBox->setEnabled(newMapping->currentScalarsUseMappingLegend());
+            m_ui->colorLegendGroupBox->setEnabled(newMapping->currentScalarsUseMappingLegend());
+        }
     }
 
     // the mapping can now receive signals from the UI
