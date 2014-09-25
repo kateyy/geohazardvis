@@ -63,6 +63,7 @@ void DataMapping::openInTable(DataObject * dataObject)
         }
 
         connect(table, &TableView::focused, this, &DataMapping::setFocusedView);
+        connect(table, &TableView::dataChanged, this, &DataMapping::updateRendererForChangedTable);
 
         m_tableViews.insert(table->index(), table);
     }
@@ -139,6 +140,20 @@ void DataMapping::focusNextRenderView()
     }
 
     emit focusedRenderViewChanged(m_focusedRenderView);
+}
+
+void DataMapping::updateRendererForChangedTable()
+{
+    TableView * table = dynamic_cast<TableView *>(sender());
+    assert(table);
+
+    DataObject * data = table->dataObject();
+
+    for (RenderView * renderer : m_renderViews)
+    {
+        if (renderer->dataObjects().contains(data))
+            renderer->render();
+    }
 }
 
 void DataMapping::tableClosed()

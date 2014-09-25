@@ -92,6 +92,35 @@ QVariant QVtkTableModel::headerData(int section, Qt::Orientation orientation, in
     return QVariant();
 }
 
+bool QVtkTableModel::setData(const QModelIndex & index, const QVariant & value, int role)
+{
+    if (role != Qt::EditRole)
+        return false;
+
+    if (m_displayData != DisplayData::Grid)
+        return false;
+
+    vtkDataArray * scalars = m_vtkImageData->GetPointData()->GetScalars();
+    assert(scalars);
+
+    bool ok;
+    float f_value = value.toFloat(&ok);
+    if (!ok)
+        return false;
+
+    scalars->SetVariantValue(index.row(), f_value);
+    scalars->Modified();
+
+    emit dataChanged();
+    
+    return true;
+}
+
+Qt::ItemFlags QVtkTableModel::flags(const QModelIndex &index) const
+{
+    return Qt::ItemIsEditable | QAbstractItemModel::flags(index);
+}
+
 void QVtkTableModel::showData(vtkDataSet * data)
 {
     switch (data->GetDataObjectType())

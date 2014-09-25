@@ -19,6 +19,8 @@ enum class DisplayData
 
 class CORE_API QVtkTableModel : public QAbstractTableModel
 {
+    Q_OBJECT
+
 public:
     QVtkTableModel(QObject * parent = nullptr);
     int rowCount(const QModelIndex &parent = QModelIndex()) const override;
@@ -26,8 +28,13 @@ public:
     QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
     QVariant headerData(int section, Qt::Orientation orientation,
         int role = Qt::DisplayRole) const override;
+    bool setData(const QModelIndex & index, const QVariant & value, int role) override;
+    Qt::ItemFlags flags(const QModelIndex &index) const override;
 
     void showData(vtkDataSet * data);
+
+signals:
+    void dataChanged();
 
 protected:
     void showPolyData(vtkPolyData * polyData);

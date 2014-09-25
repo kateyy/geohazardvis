@@ -76,8 +76,12 @@ QVtkTableModel * TableView::model()
 
 void TableView::setModel(QVtkTableModel * model)
 {
+    if (QVtkTableModel * oldModel = static_cast<QVtkTableModel *>(m_ui->tableView->model()))
+        disconnect(oldModel, &QVtkTableModel::dataChanged, this, &TableView::dataChanged);
+
     m_ui->tableView->setModel(model);
     connect(m_ui->tableView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &TableView::emitCellSelected);
+    connect(model, &QVtkTableModel::dataChanged, this, &TableView::dataChanged);
 }
 
 QWidget * TableView::contentWidget()
@@ -87,13 +91,17 @@ QWidget * TableView::contentWidget()
 
 bool TableView::eventFilter(QObject * obj, QEvent * ev)
 {
-    if (ev->type() == QEvent::MouseButtonDblClick)
-    {
-        QMouseEvent * event = static_cast<QMouseEvent*>(ev);
-        vtkIdType row = m_ui->tableView->rowAt(event->pos().y());
-        emit cellDoubleClicked(m_dataObject, row);
-        return true;
-    }
+    //if (ev->type() == QEvent::MouseButtonDblClick)
+    //{
+    //    QMouseEvent * event = static_cast<QMouseEvent*>(ev);
+    //    QModelIndex index = m_ui->tableView->indexAt(event->pos());
+    //    // cell index column. all other columns may be editable
+    //    if (index.column() == 0)
+    //    {
+    //        emit cellDoubleClicked(m_dataObject, index.row());
+    //        return true;
+    //    }
+    //}
 
     return AbstractDataView::eventFilter(obj, ev);
 }

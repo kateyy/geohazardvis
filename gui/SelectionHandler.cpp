@@ -5,7 +5,6 @@
 #include <QTableView>
 #include <QAction>
 #include <QMenu>
-#include <QDebug>
 
 #include <core/data_objects/DataObject.h>
 
@@ -42,7 +41,6 @@ void SelectionHandler::addTableView(TableView * tableView)
     connect(tableView, &TableView::cellSelected, this, &SelectionHandler::syncRenderViewsWithTable);
     connect(tableView, &TableView::cellDoubleClicked, 
         [this](DataObject * dataObject, int row) {
-        qDebug() << sender();
         renderViewsLookAt(dataObject, static_cast<vtkIdType>(row));
     });
 

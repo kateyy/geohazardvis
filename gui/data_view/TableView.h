@@ -39,6 +39,8 @@ signals:
     void cellSelected(DataObject * dataObject, vtkIdType cellId);
     void cellDoubleClicked(DataObject * dataObject, vtkIdType cellId);
 
+    void dataChanged();
+
 protected:
     QWidget * contentWidget() override;
 
