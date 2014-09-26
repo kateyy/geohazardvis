@@ -21,6 +21,10 @@ public:
     vtkImageData * imageData();
     const vtkImageData * imageData() const;
 
+    /** number of values on each axis (x, y, z) */
     const int * dimensions();
+    /** index of first and last point on each axis (min/max per x, y, z) */
+    const int * extent();
+    /** scalar range */
     const double * minMaxValue();
 };

@@ -85,18 +85,16 @@ vtkProperty * RenderedImageData::createDefaultRenderProperty() const
 
 vtkActor * RenderedImageData::createActor()
 {
-    const double * bounds = dataObject()->bounds();
-    double xExtend = bounds[1] - bounds[0];
-    double yExtend = bounds[3] - bounds[2];
-
-    ImageDataObject * image = static_cast<ImageDataObject*>(dataObject());
+    ImageDataObject * image = static_cast<ImageDataObject *>(dataObject());
+    const int * extent = image->extent();
+    int xMin = extent[0], xMax = extent[1], yMin = extent[2], yMax = extent[3];
 
     VTK_CREATE(vtkPlaneSource, plane);
     plane->SetXResolution(image->dimensions()[0]);
     plane->SetYResolution(image->dimensions()[1]);
-    plane->SetOrigin(bounds[0], bounds[2], 0);
-    plane->SetPoint1(bounds[0] + xExtend, bounds[2], 0);
-    plane->SetPoint2(bounds[0], bounds[2] + yExtend, 0);
+    plane->SetOrigin(xMin, yMin, 0);
+    plane->SetPoint1(xMax, yMin, 0);
+    plane->SetPoint2(xMin, yMax, 0);
 
     VTK_CREATE(vtkPolyDataMapper, planeMapper);
     planeMapper->SetInputConnection(plane->GetOutputPort());

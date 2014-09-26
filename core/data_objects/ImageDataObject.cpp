@@ -47,6 +47,11 @@ const int * ImageDataObject::dimensions()
     return imageData()->GetDimensions();
 }
 
+const int * ImageDataObject::extent()
+{
+    return imageData()->GetExtent();
+}
+
 const double * ImageDataObject::minMaxValue()
 {
     return imageData()->GetScalarRange();
