@@ -120,11 +120,13 @@ DataObject * Loader::loadGrid2D(QString name, const std::vector<ReadDataset> & d
     int dimensions[3] = { static_cast<int>(inputData->size()), static_cast<int>(inputData->at(0).size()), 1 };
 
     VTK_CREATE(vtkImageData, grid);
-    grid->SetExtent(0, dimensions[0] - 1, 0, dimensions[1] - 1, 0, 0);
+    // assigning the scalars to cells, so the point grid needs dimensions + 1
+    grid->SetExtent(0, dimensions[0], 0, dimensions[1], 0, 0);
 
-    VTK_CREATE(vtkFloatArray, dataArray);
-    dataArray->SetNumberOfComponents(1);
-    dataArray->SetNumberOfTuples(grid->GetNumberOfPoints());
+    VTK_CREATE(vtkFloatArray, cellArray);
+    cellArray->SetName(name.toLatin1().data());
+    cellArray->SetNumberOfComponents(1);
+    cellArray->SetNumberOfTuples(dimensions[0] * dimensions[1] * dimensions[2]);
     for (int r = 0; r < dimensions[1]; ++r)
     {
         vtkIdType rOffset = r * dimensions[0];
@@ -132,11 +134,11 @@ DataObject * Loader::loadGrid2D(QString name, const std::vector<ReadDataset> & d
         {
             vtkIdType id = c + rOffset;
             float value = inputData->at(c).at(r);
-            dataArray->SetValue(id, value);
+            cellArray->SetValue(id, value);
         }
     }
 
-    grid->GetPointData()->SetScalars(dataArray);
+    grid->GetCellData()->SetScalars(cellArray);
 
     return new ImageDataObject(name, grid);
 }
