@@ -5,30 +5,28 @@
 #include <QTextStream>
 #include <QStringList>
 
+#include <vtkObjectFactory.h>
+#include <vtkInformation.h>
+#include <vtkInformationStringKey.h>
+#include <vtkCallbackCommand.h>
+
 #include <vtkRenderWindowInteractor.h>
 #include <vtkRenderer.h>
 #include <vtkRenderWindow.h>
-#include <vtkCallbackCommand.h>
-
-#include <vtkObjectFactory.h>
-#include <vtkPointPicker.h>
+#include <vtkCamera.h>
 #include <vtkCellPicker.h>
-#include <vtkAbstractMapper3D.h>
-
-#include <vtkInformation.h>
-#include <vtkInformationStringKey.h>
-
-#include <vtkIdTypeArray.h>
 #include <vtkSelectionNode.h>
 #include <vtkSelection.h>
 #include <vtkExtractSelection.h>
+
+#include <vtkIdTypeArray.h>
+#include <vtkCellData.h>
+#include <vtkImageData.h>
+
 #include <vtkDataSetMapper.h>
 #include <vtkActor.h>
+#include <vtkTexture.h>
 #include <vtkProperty.h>
-#include <vtkCamera.h>
-#include <vtkTriangle.h>
-#include <vtkMath.h>
-#include <vtkPolyData.h>
 
 #include <core/vtkhelper.h>
 #include <core/data_objects/DataObject.h>
@@ -39,10 +37,8 @@ vtkStandardNewMacro(InteractorStyleImage);
 
 InteractorStyleImage::InteractorStyleImage()
     : vtkInteractorStyleImage()
-    , m_pointPicker(vtkSmartPointer<vtkPointPicker>::New())
     , m_cellPicker(vtkSmartPointer<vtkCellPicker>::New())
     , m_selectedCellActor(vtkSmartPointer<vtkActor>::New())
-    , m_selectedCellMapper(vtkSmartPointer<vtkDataSetMapper>::New())
     , m_mouseMoved(false)
 {
 }
@@ -52,7 +48,6 @@ void InteractorStyleImage::OnMouseMove()
     vtkInteractorStyleImage::OnMouseMove();
 
     int* clickPos = GetInteractor()->GetEventPosition();
-    m_pointPicker->Pick(clickPos[0], clickPos[1], 0, GetDefaultRenderer());
     m_cellPicker->Pick(clickPos[0], clickPos[1], 0, GetDefaultRenderer());
 
     sendPointInfo();
@@ -125,6 +120,7 @@ void InteractorStyleImage::OnChar()
 
 void InteractorStyleImage::setRenderedData(QList<RenderedData *> renderedData)
 {
+    GetDefaultRenderer()->RemoveViewProp(m_selectedCellActor);
     m_actorToRenderedData.clear();
     for (auto r : renderedData)
         m_actorToRenderedData.insert(r->mainActor(), r);
@@ -180,12 +176,14 @@ void InteractorStyleImage::highlightCell(DataObject * dataObject, vtkIdType cell
     extractSelection->SetInputData(1, selection);
     extractSelection->Update();
 
-    m_selectedCellMapper->SetInputConnection(extractSelection->GetOutputPort());
+    VTK_CREATE(vtkDataSetMapper, selectedCellMapper);
+    selectedCellMapper->SetInputConnection(extractSelection->GetOutputPort());
 
-    m_selectedCellActor->SetMapper(m_selectedCellMapper);
+    m_selectedCellActor->SetMapper(selectedCellMapper);
     m_selectedCellActor->GetProperty()->EdgeVisibilityOn();
     m_selectedCellActor->GetProperty()->SetEdgeColor(1, 0, 0);
     m_selectedCellActor->GetProperty()->SetLineWidth(3);
+    m_selectedCellActor->PickableOff();
 
     GetDefaultRenderer()->AddViewProp(m_selectedCellActor);
     GetDefaultRenderer()->GetRenderWindow()->Render();
@@ -197,7 +195,7 @@ void InteractorStyleImage::lookAtCell(DataObject * /*polyData*/, vtkIdType /*cel
 
 void InteractorStyleImage::sendPointInfo() const
 {
-    vtkAbstractMapper3D * mapper = m_pointPicker->GetMapper();
+    vtkAbstractMapper3D * mapper = m_cellPicker->GetMapper();
     if (!mapper)
     {
         emit pointInfoSent(QStringList());
@@ -218,15 +216,25 @@ void InteractorStyleImage::sendPointInfo() const
     if (inputInfo->Has(DataObject::NameKey()))
         inputname = DataObject::NameKey()->Get(inputInfo);
 
-    double * pos = m_pointPicker->GetPickPosition();
+    double * pos = m_cellPicker->GetPickPosition();
+
+    vtkTexture * texture = m_cellPicker->GetActor()->GetTexture();
+    assert(texture);
+    vtkImageData * image = texture->GetInput();
+    assert(image);
+    vtkDataArray * data = image->GetCellData()->GetScalars();
+    assert(data);
+
+    vtkIdType cellId = m_cellPicker->GetCellId();
+    double value = data->GetTuple(cellId)[0];
 
     stream
         << "input file: " << QString::fromStdString(inputname) << endl
-        << "selected point: " << endl
-        << pos[0] << endl
-        << pos[1] << endl
-        //<< "value: " << << endl // TODO extract value from picked cell
-        << "id: " << m_pointPicker->GetPointId();
+        << "selected cell: " << endl
+        << "value: " << value << endl
+        << "row: " << pos[0] << endl
+        << "column: " << pos[1] << endl
+        << "id: " << cellId;
 
     QStringList info;
     QString line;

@@ -8,9 +8,7 @@
 #include "IPickingInteractorStyle.h"
 
 
-class vtkPointPicker;
 class vtkCellPicker;
-class vtkDataSetMapper;
 
 
 class InteractorStyleImage : public IPickingInteractorStyle, public vtkInteractorStyleImage
@@ -47,10 +45,8 @@ protected:
 protected:
     QMap<vtkActor *, RenderedData *> m_actorToRenderedData;
 
-    vtkSmartPointer<vtkPointPicker> m_pointPicker;
     vtkSmartPointer<vtkCellPicker> m_cellPicker;
     vtkSmartPointer<vtkActor> m_selectedCellActor;
-    vtkSmartPointer<vtkDataSetMapper> m_selectedCellMapper;
 
     bool m_mouseMoved;
 };

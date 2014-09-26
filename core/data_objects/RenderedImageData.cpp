@@ -90,8 +90,8 @@ vtkActor * RenderedImageData::createActor()
     int xMin = extent[0], xMax = extent[1], yMin = extent[2], yMax = extent[3];
 
     VTK_CREATE(vtkPlaneSource, plane);
-    plane->SetXResolution(image->dimensions()[0]);
-    plane->SetYResolution(image->dimensions()[1]);
+    plane->SetXResolution(image->dimensions()[0] -1);
+    plane->SetYResolution(image->dimensions()[1] -1);
     plane->SetOrigin(xMin, yMin, 0);
     plane->SetPoint1(xMax, yMin, 0);
     plane->SetPoint2(xMin, yMax, 0);

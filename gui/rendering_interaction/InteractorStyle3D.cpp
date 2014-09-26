@@ -255,6 +255,7 @@ void InteractorStyle3D::highlightCell(DataObject * dataObject, vtkIdType cellId)
     m_selectedCellActor->GetProperty()->EdgeVisibilityOn();
     m_selectedCellActor->GetProperty()->SetEdgeColor(1, 0, 0);
     m_selectedCellActor->GetProperty()->SetLineWidth(3);
+    m_selectedCellActor->PickableOff();
 
     GetDefaultRenderer()->AddViewProp(m_selectedCellActor);
     GetDefaultRenderer()->GetRenderWindow()->Render();

@@ -6,7 +6,7 @@
 #include <vtkCellArray.h>
 #include <vtkTriangle.h>
 #include <vtkImageData.h>
-#include <vtkPointData.h>
+#include <vtkCellData.h>
 #include <vtkFloatArray.h>
 
 
@@ -28,7 +28,7 @@ int QVtkTableModel::rowCount(const QModelIndex &/*parent*/) const
     case DisplayData::Grid:
         if (m_vtkImageData == nullptr)
             return 0;
-        return m_vtkImageData->GetPointData()->GetNumberOfTuples();
+        return m_vtkImageData->GetCellData()->GetNumberOfTuples();
     }
     return 0;
 }
@@ -69,7 +69,7 @@ QVariant QVtkTableModel::data(const QModelIndex &index, int role) const
     if (m_displayData == DisplayData::Grid) {
         if (m_vtkImageData == nullptr)
             return QVariant();
-        vtkFloatArray * values = vtkFloatArray::SafeDownCast(m_vtkImageData->GetPointData()->GetScalars());
+        vtkFloatArray * values = vtkFloatArray::SafeDownCast(m_vtkImageData->GetCellData()->GetScalars());
         return *values->GetTuple(index.row());
     }
     return QVariant();
@@ -100,7 +100,7 @@ bool QVtkTableModel::setData(const QModelIndex & index, const QVariant & value, 
     if (m_displayData != DisplayData::Grid)
         return false;
 
-    vtkDataArray * scalars = m_vtkImageData->GetPointData()->GetScalars();
+    vtkDataArray * scalars = m_vtkImageData->GetCellData()->GetScalars();
     assert(scalars);
 
     bool ok;
