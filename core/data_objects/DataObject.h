@@ -41,7 +41,7 @@ public:
     static vtkInformationIntegerKey * ArrayIsAuxiliaryKey();
 
 protected:
-    virtual QVtkTableModel * createTableModel();
+    virtual QVtkTableModel * createTableModel() = 0;
 
 private:
     QString m_name;

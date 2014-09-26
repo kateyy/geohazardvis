@@ -2,7 +2,7 @@
 
 #include <vtkFloatArray.h>
 
-#include <core/QVtkTableModel.h>
+#include <core/table_model/QVtkTableModelRawVector.h>
 
 
 AttributeVectorData::AttributeVectorData(QString name, vtkFloatArray * dataArray)
@@ -37,7 +37,8 @@ vtkFloatArray * AttributeVectorData::dataArray()
 
 QVtkTableModel * AttributeVectorData::createTableModel()
 {
-    QVtkTableModel * model = new QVtkTableModel;
+    QVtkTableModel * model = new QVtkTableModelRawVector;
+    model->setDataObject(this);
 
     return model;
 }

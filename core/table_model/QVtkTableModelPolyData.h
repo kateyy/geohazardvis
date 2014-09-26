@@ -1,28 +1,17 @@
 #pragma once
 
-#include <QAbstractTableModel>
-
 #include <vtkSmartPointer.h>
 
-#include <core/core_api.h>
+#include <core/table_model/QVtkTableModel.h>
 
-class vtkDataSet;
+
 class vtkPolyData;
-class vtkImageData;
 
 
-enum class DisplayData
+class CORE_API QVtkTableModelPolyData : public QVtkTableModel
 {
-    Triangles,
-    Grid
-};
-
-class CORE_API QVtkTableModel : public QAbstractTableModel
-{
-    Q_OBJECT
-
 public:
-    QVtkTableModel(QObject * parent = nullptr);
+    QVtkTableModelPolyData(QObject * parent = nullptr);
     int rowCount(const QModelIndex &parent = QModelIndex()) const override;
     int columnCount(const QModelIndex &parent = QModelIndex()) const override;
     QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
@@ -31,17 +20,8 @@ public:
     bool setData(const QModelIndex & index, const QVariant & value, int role) override;
     Qt::ItemFlags flags(const QModelIndex &index) const override;
 
-    void showData(vtkDataSet * data);
-
-signals:
-    void dataChanged();
-
 protected:
-    void showPolyData(vtkPolyData * polyData);
-    void showGridData(vtkImageData * gridData);
+    void resetDisplayData() override;
 
     vtkSmartPointer<vtkPolyData> m_vtkPolyData;
-    vtkSmartPointer<vtkImageData> m_vtkImageData;
-
-    DisplayData m_displayData;
 };

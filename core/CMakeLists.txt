@@ -18,9 +18,6 @@ set ( SOURCES
     common/file_parser.h
     common/file_parser.cpp
     
-    QVtkTableModel.h
-    QVtkTableModel.cpp
-    
     data_objects/DataObject.h
     data_objects/DataObject.cpp
     data_objects/AttributeVectorData.h
@@ -39,7 +36,18 @@ set ( SOURCES
     data_objects/RenderedPolyData.cpp
     data_objects/RenderedVectorGrid3D.h
     data_objects/RenderedVectorGrid3D.cpp
-    
+
+    table_model/QVtkTableModel.h
+    table_model/QVtkTableModel.cpp
+    table_model/QVtkTableModelImage.h
+    table_model/QVtkTableModelImage.cpp
+    table_model/QVtkTableModelPolyData.h
+    table_model/QVtkTableModelPolyData.cpp
+    table_model/QVtkTableModelRawVector.h
+    table_model/QVtkTableModelRawVector.cpp
+    table_model/QVtkTableModelVectorGrid3D.h
+    table_model/QVtkTableModelVectorGrid3D.cpp
+
     scalar_mapping/ScalarToColorMapping.h
     scalar_mapping/ScalarToColorMapping.cpp
     scalar_mapping/ScalarsForColorMapping.h

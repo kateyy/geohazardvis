@@ -63,7 +63,7 @@ void DataMapping::openInTable(DataObject * dataObject)
         }
 
         connect(table, &TableView::focused, this, &DataMapping::setFocusedView);
-        connect(table, &TableView::dataChanged, this, &DataMapping::updateRendererForChangedTable);
+        connect(table, &TableView::dataModified, this, &DataMapping::updateRendererForChangedTable);
 
         m_tableViews.insert(table->index(), table);
     }
@@ -73,6 +73,8 @@ void DataMapping::openInTable(DataObject * dataObject)
         QCoreApplication::processEvents(); // setup GUI before searching for the tabbed widget...
         m_mainWindow.tabbedDockWidgetToFront(table);
     }
+    
+    QCoreApplication::processEvents();
 
     table->showDataObject(dataObject);
 }

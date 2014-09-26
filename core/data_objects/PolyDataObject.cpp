@@ -15,6 +15,7 @@
 
 #include <core/vtkhelper.h>
 #include <core/data_objects/RenderedPolyData.h>
+#include <core/table_model/QVtkTableModelPolyData.h>
 
 
 namespace
@@ -74,4 +75,12 @@ RenderedData * PolyDataObject::createRendered()
 QString PolyDataObject::dataTypeName() const
 {
     return s_dataTypeName;
+}
+
+QVtkTableModel * PolyDataObject::createTableModel()
+{
+    QVtkTableModel * model = new QVtkTableModelPolyData();
+    model->setDataObject(this);
+
+    return model;
 }

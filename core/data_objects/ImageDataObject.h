@@ -27,4 +27,7 @@ public:
     const int * extent();
     /** scalar range */
     const double * minMaxValue();
+
+protected:
+    QVtkTableModel * createTableModel() override;
 };

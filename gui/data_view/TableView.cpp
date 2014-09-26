@@ -5,7 +5,7 @@
 
 #include <QMouseEvent>
 
-#include <core/QVtkTableModel.h>
+#include <core/table_model/QVtkTableModel.h>
 #include <core/data_objects/DataObject.h>
 
 #include <gui/SelectionHandler.h>
@@ -77,11 +77,11 @@ QVtkTableModel * TableView::model()
 void TableView::setModel(QVtkTableModel * model)
 {
     if (QVtkTableModel * oldModel = static_cast<QVtkTableModel *>(m_ui->tableView->model()))
-        disconnect(oldModel, &QVtkTableModel::dataChanged, this, &TableView::dataChanged);
+        disconnect(oldModel, &QVtkTableModel::dataModified, this, &TableView::dataModified);
 
     m_ui->tableView->setModel(model);
     connect(m_ui->tableView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &TableView::emitCellSelected);
-    connect(model, &QVtkTableModel::dataChanged, this, &TableView::dataChanged);
+    connect(model, &QVtkTableModel::dataModified, this, &TableView::dataModified);
 }
 
 QWidget * TableView::contentWidget()

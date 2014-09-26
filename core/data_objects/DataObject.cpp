@@ -5,7 +5,7 @@
 
 #include <vtkDataSet.h>
 
-#include <core/QVtkTableModel.h>
+#include <core/table_model/QVtkTableModel.h>
 
 
 vtkInformationKeyMacro(DataObject, NameKey, String);
@@ -50,13 +50,4 @@ QVtkTableModel * DataObject::tableModel()
         m_tableModel = createTableModel();
 
     return m_tableModel;
-}
-
-QVtkTableModel * DataObject::createTableModel()
-{
-    QVtkTableModel * model = new QVtkTableModel;
-
-    model->showData(dataSet());
-
-    return model;
 }

@@ -18,4 +18,7 @@ public:
     RenderedData * createRendered() override;
 
     QString dataTypeName() const override;
+
+protected:
+    QVtkTableModel * createTableModel() override;
 };

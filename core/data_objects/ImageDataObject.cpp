@@ -5,6 +5,7 @@
 #include <vtkImageData.h>
 
 #include <core/data_objects/RenderedImageData.h>
+#include <core/table_model/QVtkTableModelImage.h>
 
 
 namespace
@@ -55,4 +56,12 @@ const int * ImageDataObject::extent()
 const double * ImageDataObject::minMaxValue()
 {
     return imageData()->GetScalarRange();
+}
+
+QVtkTableModel * ImageDataObject::createTableModel()
+{
+    QVtkTableModelImage * model = new QVtkTableModelImage();
+    model->setDataObject(this);
+
+    return model;
 }

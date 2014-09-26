@@ -3,6 +3,7 @@
 #include <vtkPolyData.h>
 
 #include <core/data_objects/RenderedVectorGrid3D.h>
+#include <core/table_model/QVtkTableModelVectorGrid3D.h>
 
 
 namespace
@@ -30,4 +31,12 @@ RenderedData * VectorGrid3DDataObject::createRendered()
 QString VectorGrid3DDataObject::dataTypeName() const
 {
     return s_dataTypeName;
+}
+
+QVtkTableModel * VectorGrid3DDataObject::createTableModel()
+{
+    QVtkTableModel * model = new QVtkTableModelVectorGrid3D();
+    model->setDataObject(this);
+
+    return model;
 }
