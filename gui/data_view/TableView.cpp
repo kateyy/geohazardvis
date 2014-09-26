@@ -91,17 +91,17 @@ QWidget * TableView::contentWidget()
 
 bool TableView::eventFilter(QObject * obj, QEvent * ev)
 {
-    //if (ev->type() == QEvent::MouseButtonDblClick)
-    //{
-    //    QMouseEvent * event = static_cast<QMouseEvent*>(ev);
-    //    QModelIndex index = m_ui->tableView->indexAt(event->pos());
-    //    // cell index column. all other columns may be editable
-    //    if (index.column() == 0)
-    //    {
-    //        emit cellDoubleClicked(m_dataObject, index.row());
-    //        return true;
-    //    }
-    //}
+    if (ev->type() == QEvent::MouseButtonDblClick)
+    {
+        QMouseEvent * event = static_cast<QMouseEvent*>(ev);
+        QModelIndex index = m_ui->tableView->indexAt(event->pos());
+        // cell index column. all other columns may be editable
+        if (index.column() == 0)
+        {
+            emit cellDoubleClicked(m_dataObject, index.row());
+            return true;
+        }
+    }
 
     return AbstractDataView::eventFilter(obj, ev);
 }
