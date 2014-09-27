@@ -3,6 +3,9 @@
 #include <cassert>
 
 #include <vtkImageData.h>
+#include <vtkCellData.h>
+#include <vtkDataArray.h>
+#include <vtkEventQtSlotConnect.h>
 
 #include <core/data_objects/RenderedImageData.h>
 #include <core/table_model/QVtkTableModelImage.h>
@@ -16,6 +19,8 @@ namespace
 ImageDataObject::ImageDataObject(QString name, vtkImageData * dataSet)
     : DataObject(name, dataSet)
 {
+    vtkDataArray * data = dataSet->GetCellData()->GetScalars();
+    vtkQtConnect()->Connect(data, vtkCommand::ModifiedEvent, this, SLOT(_dataChanged()));
 }
 
 bool ImageDataObject::is3D() const

@@ -4,6 +4,9 @@
 #include <vtkInformationIntegerKey.h>
 
 #include <vtkDataSet.h>
+#include <vtkCellData.h>
+#include <vtkDataArray.h>
+#include <vtkEventQtSlotConnect.h>
 
 #include <core/table_model/QVtkTableModel.h>
 
@@ -16,7 +19,11 @@ DataObject::DataObject(QString name, vtkDataSet * dataSet)
     : m_name(name)
     , m_dataSet(dataSet)
     , m_tableModel(nullptr)
+    , m_vtkQtConnect(vtkSmartPointer<vtkEventQtSlotConnect>::New())
 {
+    dataSet->GetBounds(m_bounds);
+
+    m_vtkQtConnect->Connect(dataSet, vtkCommand::ModifiedEvent, this, SLOT(_dataChanged()));
 }
 
 DataObject::~DataObject()
@@ -50,4 +57,65 @@ QVtkTableModel * DataObject::tableModel()
         m_tableModel = createTableModel();
 
     return m_tableModel;
+}
+
+vtkEventQtSlotConnect * DataObject::vtkQtConnect()
+{
+    return m_vtkQtConnect;
+}
+
+bool DataObject::checkIfBoundsChanged()
+{
+    double newBounds[6];
+
+    dataSet()->GetBounds(newBounds);
+
+    bool changed = false;
+    for (int i = 0; i < 6; ++i)
+        changed = changed || (m_bounds[i] != newBounds[i]);
+
+    if (changed)
+        for (int i = 0; i < 6; ++i)
+            m_bounds[i] = newBounds[i];
+
+    return changed;
+}
+
+bool DataObject::checkIfValueRangeChanged()
+{
+    // this depends on the actual kind of values
+    return true;
+}
+
+void DataObject::dataChangedEvent()
+{
+}
+
+void DataObject::boundsChangedEvent()
+{
+}
+
+void DataObject::valueRangeChangedEvent()
+{
+}
+
+void DataObject::_dataChanged()
+{
+    dataChangedEvent();
+
+    emit dataChanged();
+
+    if (checkIfBoundsChanged())
+    {
+        boundsChangedEvent();
+
+        emit boundsChanged();
+    }
+
+    if (checkIfValueRangeChanged())
+    {
+        valueRangeChangedEvent();
+
+        emit valueRangeChanged();
+    }
 }

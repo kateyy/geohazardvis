@@ -18,9 +18,6 @@ public:
     void setDataObject(DataObject * dataObject);
     DataObject * dataObject();
 
-signals:
-    void dataModified();
-
 protected:
     virtual void resetDisplayData() = 0;
 

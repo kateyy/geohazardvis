@@ -91,8 +91,6 @@ bool QVtkTableModelRawVector::setData(const QModelIndex & index, const QVariant 
 
     m_data->Modified();
 
-    emit dataModified();
-
     return true;
 }
 

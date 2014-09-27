@@ -18,6 +18,18 @@
   </property>
   <widget class="QWidget" name="content">
    <layout class="QVBoxLayout" name="mainLayout">
+    <property name="leftMargin">
+     <number>0</number>
+    </property>
+    <property name="topMargin">
+     <number>0</number>
+    </property>
+    <property name="rightMargin">
+     <number>0</number>
+    </property>
+    <property name="bottomMargin">
+     <number>0</number>
+    </property>
     <item>
      <widget class="QTableView" name="tableView">
       <property name="font">
@@ -50,13 +62,6 @@
       <attribute name="verticalHeaderVisible">
        <bool>false</bool>
       </attribute>
-     </widget>
-    </item>
-    <item>
-     <widget class="QPushButton" name="applyChanges">
-      <property name="text">
-       <string>&amp;Apply Changes</string>
-      </property>
      </widget>
     </item>
    </layout>

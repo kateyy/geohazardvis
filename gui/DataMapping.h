@@ -37,8 +37,6 @@ private slots:
     void setFocusedView(AbstractDataView * renderView);
     void focusNextRenderView();
 
-    void updateRendererForChangedTable();
-
     void tableClosed();
     void renderViewClosed();
 

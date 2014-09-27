@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QString>
+#include <QObject>
 
 #include <vtkSmartPointer.h>
 
@@ -10,13 +11,16 @@
 class vtkInformationStringKey;
 class vtkInformationIntegerKey;
 class vtkDataSet;
+class vtkEventQtSlotConnect;
 class QVtkTableModel;
 class RenderedData;
 
 
 /** Base class representing loaded data. */
-class CORE_API DataObject
+class CORE_API DataObject : public QObject
 {
+    Q_OBJECT
+
 public:
     DataObject(QString name, vtkDataSet * dataSet);
     virtual ~DataObject() = 0;
@@ -40,12 +44,34 @@ public:
     static vtkInformationStringKey * NameKey();
     static vtkInformationIntegerKey * ArrayIsAuxiliaryKey();
 
+signals:
+    void dataChanged();
+    void boundsChanged();
+    void valueRangeChanged();
+
 protected:
     virtual QVtkTableModel * createTableModel() = 0;
+
+    vtkEventQtSlotConnect * vtkQtConnect();
+protected slots:
+    void _dataChanged();
+
+protected:
+    /** when data set values changed, check whether this also affects the bounds*/
+    virtual bool checkIfBoundsChanged();
+    virtual bool checkIfValueRangeChanged();
+
+    virtual void dataChangedEvent();
+    virtual void boundsChangedEvent();
+    virtual void valueRangeChangedEvent();
 
 private:
     QString m_name;
 
     vtkSmartPointer<vtkDataSet> m_dataSet;
     QVtkTableModel * m_tableModel;
+
+    double m_bounds[6];
+
+    vtkSmartPointer<vtkEventQtSlotConnect> m_vtkQtConnect;
 };

@@ -76,12 +76,11 @@ QVtkTableModel * TableView::model()
 
 void TableView::setModel(QVtkTableModel * model)
 {
-    if (QVtkTableModel * oldModel = static_cast<QVtkTableModel *>(m_ui->tableView->model()))
-        disconnect(oldModel, &QVtkTableModel::dataModified, this, &TableView::dataModified);
+    if (QItemSelectionModel * oldSelectionModel = m_ui->tableView->selectionModel())
+        disconnect(oldSelectionModel, &QItemSelectionModel::selectionChanged, this, &TableView::emitCellSelected);
 
     m_ui->tableView->setModel(model);
     connect(m_ui->tableView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &TableView::emitCellSelected);
-    connect(model, &QVtkTableModel::dataModified, this, &TableView::dataModified);
 }
 
 QWidget * TableView::contentWidget()

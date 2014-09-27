@@ -47,6 +47,9 @@ void ScalarToColorMapping::setRenderedData(const QList<RenderedData *> & rendere
     {
         connect(scalars, &ScalarsForColorMapping::minMaxChanged,
             this, &ScalarToColorMapping::updateGradientValueRange);
+
+        connect(scalars, &ScalarsForColorMapping::dataMinMaxChanged,
+            this, &ScalarToColorMapping::scalarsChanged);
     }
 
     if (m_scalars.isEmpty())

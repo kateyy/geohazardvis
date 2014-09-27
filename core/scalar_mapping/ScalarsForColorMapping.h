@@ -72,6 +72,7 @@ public:
 
 signals:
     void minMaxChanged();
+    void dataMinMaxChanged();
 
 protected:
     virtual void initialize();

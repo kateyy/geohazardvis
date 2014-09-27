@@ -4,6 +4,7 @@
 #include <vtkProperty.h>
 #include <vtkActor.h>
 
+#include <core/data_objects/DataObject.h>
 #include <core/vector_mapping/VectorsToSurfaceMapping.h>
 
 
@@ -16,6 +17,7 @@ RenderedData::RenderedData(DataObject * dataObject)
     , m_isVisible(true)
 {
     connect(m_vectors, &VectorsToSurfaceMapping::vectorsChanged, this, &RenderedData::attributeActorsChanged);
+    connect(dataObject, &DataObject::dataChanged, this, &RenderedData::geometryChanged);
 }
 
 RenderedData::~RenderedData()

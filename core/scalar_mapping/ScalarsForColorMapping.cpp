@@ -5,12 +5,16 @@
 
 #include <QSet>
 
+#include <core/data_objects/DataObject.h>
+
 
 ScalarsForColorMapping::ScalarsForColorMapping(const QList<DataObject *> & dataObjects)
     : m_dataObjects(dataObjects)
     , m_startingIndex(0)
     , m_dataMinValue(std::numeric_limits<double>::max())
     , m_dataMaxValue(std::numeric_limits<double>::lowest())
+    , m_minValue(std::numeric_limits<double>::max())
+    , m_maxValue(std::numeric_limits<double>::lowest())
 {
 }
 
@@ -56,6 +60,9 @@ void ScalarsForColorMapping::rearrangeDataObjets(QList<DataObject *> dataObjects
 
 void ScalarsForColorMapping::initialize()
 {
+    for (DataObject * dataObject : m_dataObjects)
+        connect(dataObject, &DataObject::valueRangeChanged, this, &ScalarsForColorMapping::updateBounds);
+
     updateBounds();
 }
 
@@ -114,8 +121,24 @@ void ScalarsForColorMapping::setMaxValue(double value)
 
 void ScalarsForColorMapping::updateBounds()
 {
-    m_minValue = m_dataMinValue;
-    m_maxValue = m_dataMaxValue;
+    bool minMaxChanged = false;
+    
+    // reset user selected ranges only if really needed
+    if (m_minValue < m_dataMinValue || m_minValue > m_dataMaxValue)
+    {
+        m_minValue = m_dataMinValue;
+        minMaxChanged = true;
+    }
+    if (m_maxValue < m_dataMinValue || m_maxValue > m_dataMaxValue)
+    {
+        m_maxValue = m_dataMaxValue;
+        minMaxChanged = true;
+    }
+    
+    if (minMaxChanged)
+        minMaxChangedEvent();
+
+    emit dataMinMaxChanged();
 }
 
 void ScalarsForColorMapping::minMaxChangedEvent()

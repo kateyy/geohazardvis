@@ -65,8 +65,6 @@ void ScalarMappingChooser::setMapping(RenderView * renderView, ScalarToColorMapp
 
     rebuildGui();
 
-    emit renderSetupChanged();
-
     m_ui->legendPositionComboBox->setCurrentText("user-defined position");
 
     if (mapping)
@@ -293,6 +291,8 @@ void ScalarMappingChooser::rebuildGui()
     m_mapping = newMapping;
 
     updateGuiValueRanges();
+
+    emit renderSetupChanged();
 }
 
 void ScalarMappingChooser::updateGuiValueRanges()
@@ -328,6 +328,8 @@ void ScalarMappingChooser::updateGuiValueRanges()
     m_ui->maxValueSpinBox->setMinimum(min);
     m_ui->maxValueSpinBox->setMaximum(max);
     m_ui->maxValueSpinBox->setValue(currentMax);
+    m_ui->minLabel->setText("min (data: " + QString::number(min) + ")");
+    m_ui->maxLabel->setText("max (data: " + QString::number(max) + ")");
 
     m_ui->minValueSpinBox->setEnabled(enableRangeGui);
     m_ui->maxValueSpinBox->setEnabled(enableRangeGui);

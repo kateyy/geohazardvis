@@ -85,8 +85,6 @@ bool QVtkTableModelImage::setData(const QModelIndex & index, const QVariant & va
 
     data->SetVariantValue(index.row(), f_value);
     data->Modified();
-
-    emit dataModified();
     
     return true;
 }

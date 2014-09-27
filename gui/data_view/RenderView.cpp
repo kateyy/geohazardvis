@@ -213,6 +213,8 @@ void RenderView::addDataObjects(QList<DataObject *> dataObjects)
             continue;
         }
 
+        connect(dataObject, &DataObject::boundsChanged, this, &RenderView::updateAxes);
+
         aNewObject = cachedRendered;
 
         // reuse cached data
@@ -280,6 +282,8 @@ void RenderView::hideDataObjects(QList<DataObject *> dataObjects)
         }
         assert(!m_renderedData.contains(rendered));
         assert(m_renderedDataCache.count(rendered) == 1);
+
+        disconnect(dataObject, &DataObject::boundsChanged, this, &RenderView::updateAxes);
     }
 
     if (!changed)
