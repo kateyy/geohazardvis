@@ -21,6 +21,7 @@
 
 #include <reflectionzeug/PropertyGroup.h>
 
+#include "config.h"
 #include <core/vtkhelper.h>
 #include <core/data_objects/VectorGrid3DDataObject.h>
 
@@ -174,9 +175,9 @@ vtkActor * RenderedVectorGrid3D::createActor()
 {
     vtkLODActor * actor = vtkLODActor::New();
     vtkSmartPointer<vtkPolyDataMapper> mapper;
-#if defined(VTK_RENDERING_BACKEND_OpenGL2)
+#if VTK_RENDERING_BACKEND == 2
     mapper = vtkSmartPointer<vtkPolyDataMapper>::New();
-#else // VTK_RENDERING_BACKEND_OpenGL
+#else
     VTK_CREATE(vtkLinesPainter, painter);
     VTK_CREATE(vtkPainterPolyDataMapper, painterMapper);
     painterMapper->SetPainter(painter);

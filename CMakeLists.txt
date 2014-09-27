@@ -63,16 +63,27 @@ find_package(VTK REQUIRED
 )
 include(${VTK_USE_FILE})
 
+if (NOT ${VTK_VERSION_MAJOR} STREQUAL "6")
+    message(FATAL_ERROR "VTK 6 is required! Found ${VTK_VERSION_MAJOR}")
+endif()
+
 if("${VTK_QT_VERSION}" STREQUAL "")
     message(FATAL_ERROR "VTK was not built with Qt")
 elseif(NOT "${VTK_QT_VERSION}" STREQUAL "5")
     message(FATAL_ERROR "VTK was a wrong Qt version (${VTK_QT_VERSION}). Only Qt5 is supported.")
 endif()
 
-# if (${VTK_RENDERING_BACKEND} STREQUAL "OpenGL2")
-# message(VTK_RENDERING_BACKEND ${VTK_RENDERING_BACKEND})
-list(APPEND DEFAULT_COMPILE_DEFS VTK_RENDERING_BACKEND_${VTK_RENDERING_BACKEND})
-message(STATUS "VTK Rendering Backend: " ${VTK_RENDERING_BACKEND})
+if (${VTK_RENDERING_BACKEND} STREQUAL "OpenGL" OR ${VTK_RENDERING_BACKEND} STREQUAL "OpenGL2")
+    message(STATUS "VTK Rendering Backend: " ${VTK_RENDERING_BACKEND})
+    if (${VTK_RENDERING_BACKEND} STREQUAL "OpenGL")
+        set(VTK_RENDERING_BACKEND_VERSION 1)
+    else()
+        set(VTK_RENDERING_BACKEND_VERSION 2)
+    endif()
+else()
+    message(FATAL_ERROR "Unsupported VTK Rendering Backend: ${VTK_RENDERING_BACKEND}")
+endif()
+
 
 find_package(Qt5Widgets REQUIRED)
 find_package(libzeug REQUIRED)
@@ -84,6 +95,9 @@ include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_CURRENT_BINARY_DIR}
 )
+
+configure_file(cmake/config.h.in ${CMAKE_CURRENT_BINARY_DIR}/config.h)
+
 
 add_subdirectory("core")
 add_subdirectory("gui")
