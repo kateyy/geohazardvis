@@ -19,11 +19,15 @@ DataObject::DataObject(QString name, vtkDataSet * dataSet)
     : m_name(name)
     , m_dataSet(dataSet)
     , m_tableModel(nullptr)
+    , m_bounds()
     , m_vtkQtConnect(vtkSmartPointer<vtkEventQtSlotConnect>::New())
 {
-    dataSet->GetBounds(m_bounds);
+    if (dataSet)
+    {
+        dataSet->GetBounds(m_bounds);
 
-    m_vtkQtConnect->Connect(dataSet, vtkCommand::ModifiedEvent, this, SLOT(_dataChanged()));
+        m_vtkQtConnect->Connect(dataSet, vtkCommand::ModifiedEvent, this, SLOT(_dataChanged()));
+    }
 }
 
 DataObject::~DataObject()
