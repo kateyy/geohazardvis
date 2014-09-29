@@ -72,6 +72,9 @@ bool DataObject::checkIfBoundsChanged()
 {
     double newBounds[6];
 
+    if (!dataSet())
+        return true;
+
     dataSet()->GetBounds(newBounds);
 
     bool changed = false;

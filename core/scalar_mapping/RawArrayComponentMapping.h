@@ -9,11 +9,13 @@
 
 class vtkFloatArray;
 
+class RawVectorData;
+
 
 class CORE_API RawArrayComponentMapping : public AbstractArrayComponentMapping
 {
 public:
-    RawArrayComponentMapping(const QList<DataObject *> & dataObjects, vtkFloatArray * dataArray, vtkIdType component);
+    RawArrayComponentMapping(const QList<DataObject *> & dataObjects, RawVectorData * rawVector, vtkIdType component);
     ~RawArrayComponentMapping() override;
 
     vtkIdType maximumStartingIndex() override;
@@ -26,6 +28,7 @@ public:
 protected:
     static QList<ScalarsForColorMapping *> newInstances(const QList<DataObject *> & dataObjects);
 
+    void initialize() override;
     void updateBounds() override;
 
     void startingIndexChangedEvent() override;
@@ -42,6 +45,6 @@ private:
 
     QMap<DataObject *, vtkIdType> m_dataObjectToArrayIndex;
 
-    vtkFloatArray * m_dataArray;
+    RawVectorData * m_rawVector;
     QMap<DataObject *, vtkSmartPointer<vtkFloatArray>> m_sections;
 };

@@ -30,7 +30,7 @@ const bool RawArrayComponentMapping::s_registered = ScalarsForColorMappingRegist
 
 QList<ScalarsForColorMapping *> RawArrayComponentMapping::newInstances(const QList<DataObject *> & dataObjects)
 {
-    QList<vtkFloatArray *> dataArrays;
+    QList<RawVectorData *> rawVectors;
 
     vtkIdType totalNumCells = 0;
     for (DataObject * dataObject : dataObjects)
@@ -38,19 +38,17 @@ QList<ScalarsForColorMapping *> RawArrayComponentMapping::newInstances(const QLi
 
     for (RawVectorData * attr : DataSetHandler::instance().rawVectors())
     {
-        vtkFloatArray * dataArray = attr->dataArray();
-
         // support only scalars that span all visible objects
-        if (dataArray->GetNumberOfTuples() >= totalNumCells)
-            dataArrays << dataArray;
+        if (attr->dataArray()->GetNumberOfTuples() >= totalNumCells)
+            rawVectors << attr;
     }
 
     QList<ScalarsForColorMapping *> instances;
-    for (vtkFloatArray * dataArray : dataArrays)
+    for (RawVectorData * rawVector : rawVectors)
     {
-        for (vtkIdType component = 0; component < dataArray->GetNumberOfComponents(); ++component)
+        for (vtkIdType component = 0; component < rawVector->dataArray()->GetNumberOfComponents(); ++component)
         {
-            RawArrayComponentMapping * mapping = new RawArrayComponentMapping(dataObjects, dataArray, component);
+            RawArrayComponentMapping * mapping = new RawArrayComponentMapping(dataObjects, rawVector, component);
             if (mapping->isValid())
             {
                 mapping->initialize();
@@ -64,11 +62,12 @@ QList<ScalarsForColorMapping *> RawArrayComponentMapping::newInstances(const QLi
     return instances;
 }
 
-RawArrayComponentMapping::RawArrayComponentMapping(const QList<DataObject *> & dataObjects, vtkFloatArray * dataArray, vtkIdType component)
-    : AbstractArrayComponentMapping(dataObjects, QString::fromLatin1(dataArray->GetName()), component)
-    , m_dataArray(dataArray)
+RawArrayComponentMapping::RawArrayComponentMapping(const QList<DataObject *> & dataObjects, RawVectorData * rawVector, vtkIdType component)
+    : AbstractArrayComponentMapping(dataObjects, rawVector->name(), component)
+    , m_rawVector(rawVector)
 {
-    assert(dataArray);
+    assert(rawVector);
+    vtkDataArray * dataArray = rawVector->dataArray();
     assert(dataArray->GetNumberOfComponents() > m_component);
 
     m_arrayNumComponents = dataArray->GetNumberOfComponents();
@@ -108,7 +107,7 @@ vtkIdType RawArrayComponentMapping::maximumStartingIndex()
     for (DataObject * dataObject : m_dataObjects)
         indexes += dataObject->dataSet()->GetNumberOfCells();
 
-    vtkIdType diff = m_dataArray->GetNumberOfTuples() - indexes;
+    vtkIdType diff = m_rawVector->dataArray()->GetNumberOfTuples() - indexes;
 
     assert(diff >= 0);
 
@@ -137,7 +136,7 @@ void RawArrayComponentMapping::configureDataObjectAndMapper(DataObject * dataObj
     vtkIdType secIndex = sectionIndex(dataObject);
     QByteArray sectionName = arraySectionName(dataObject);
     vtkIdType sectionSize = dataObject->dataSet()->GetNumberOfCells();
-    vtkIdType numComponents = m_dataArray->GetNumberOfComponents();
+    vtkIdType numComponents = m_rawVector->dataArray()->GetNumberOfComponents();
 
     // create array that reuses a data section of our data array
     VTK_CREATE(vtkFloatArray, section);
@@ -146,7 +145,7 @@ void RawArrayComponentMapping::configureDataObjectAndMapper(DataObject * dataObj
     section->SetNumberOfComponents(numComponents);
     section->SetNumberOfTuples(sectionSize);
     section->SetArray(
-        m_dataArray->GetPointer(secIndex * numComponents),
+        m_rawVector->dataArray()->GetPointer(secIndex * numComponents),
         sectionSize * numComponents, true);
 
     m_sections.insert(dataObject, section);
@@ -156,10 +155,17 @@ void RawArrayComponentMapping::configureDataObjectAndMapper(DataObject * dataObj
     mapper->ColorByArrayComponent(sectionName.data(), m_component);
 }
 
+void RawArrayComponentMapping::initialize()
+{
+    ScalarsForColorMapping::initialize();
+
+    connect(m_rawVector, &DataObject::valueRangeChanged, this, &RawArrayComponentMapping::updateBounds);
+}
+
 void RawArrayComponentMapping::updateBounds()
 {
     double range[2];
-    m_dataArray->GetRange(range, m_component);
+    m_rawVector->dataArray()->GetRange(range, m_component);
 
     m_dataMinValue = range[0];
     m_dataMaxValue = range[1];
@@ -179,7 +185,7 @@ void RawArrayComponentMapping::objectOrderChangedEvent()
 
 QByteArray RawArrayComponentMapping::arraySectionName(DataObject * dataObject)
 {
-    return (QString::fromLatin1(m_dataArray->GetName()) + "_" + QString::number(reinterpret_cast<size_t>(dataObject))).toLatin1();
+    return (m_rawVector->name() + "_" + QString::number(reinterpret_cast<size_t>(dataObject))).toLatin1();
 }
 
 vtkIdType RawArrayComponentMapping::sectionIndex(DataObject * dataObject)
@@ -195,15 +201,15 @@ void RawArrayComponentMapping::redistributeArraySections()
         m_dataObjectToArrayIndex.insert(dataObject, currentIndex);
         currentIndex += dataObject->dataSet()->GetNumberOfCells();
     }
-    assert(currentIndex <= m_dataArray->GetNumberOfTuples());
+    assert(currentIndex <= m_rawVector->dataArray()->GetNumberOfTuples());
 
-    vtkIdType numComponents = m_dataArray->GetNumberOfComponents();
+    vtkIdType numComponents = m_rawVector->dataArray()->GetNumberOfComponents();
     for (auto it = m_sections.begin(); it != m_sections.end(); ++it)
     {
         DataObject * dataObject = it.key();
         vtkSmartPointer<vtkFloatArray> & array = it.value();
         array->SetArray(
-            m_dataArray->GetPointer(sectionIndex(dataObject) * numComponents),
+            m_rawVector->dataArray()->GetPointer(sectionIndex(dataObject) * numComponents),
             dataObject->dataSet()->GetNumberOfCells() * numComponents,
             true);
 

@@ -1,6 +1,7 @@
 #include "RawVectorData.h"
 
 #include <vtkFloatArray.h>
+#include <vtkEventQtSlotConnect.h>
 
 #include <core/table_model/QVtkTableModelRawVector.h>
 
@@ -10,6 +11,8 @@ RawVectorData::RawVectorData(QString name, vtkFloatArray * dataArray)
     , m_dataArray(dataArray)
 {
     dataArray->SetName(name.toLatin1().data());
+
+    vtkQtConnect()->Connect(dataArray, vtkCommand::ModifiedEvent, this, SLOT(_dataChanged()));
 }
 
 RawVectorData::~RawVectorData() = default;
