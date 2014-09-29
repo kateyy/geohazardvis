@@ -64,7 +64,6 @@ PolyDataObject::PolyDataObject(QString name, vtkPolyData * dataSet)
     }
 
     m_cellCenters->SetInputData(dataSet);
-    m_cellCenters->Update();
 }
 
 bool PolyDataObject::is3D() const
@@ -74,6 +73,7 @@ bool PolyDataObject::is3D() const
 
 vtkPolyData * PolyDataObject::cellCenters()
 {
+    m_cellCenters->Update();
     return m_cellCenters->GetOutput();
 }
 

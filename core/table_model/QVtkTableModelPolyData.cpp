@@ -5,13 +5,11 @@
 
 #include <vtkPolyData.h>
 #include <vtkCellData.h>
-#include <vtkIdTypeArray.h>
 #include <vtkCell.h>
-#include <vtkIdList.h>
 #include <vtkPolygon.h>
 
 #include <core/vtkhelper.h>
-#include <core/data_objects/DataObject.h>
+#include <core/data_objects/PolyDataObject.h>
 
 
 QVtkTableModelPolyData::QVtkTableModelPolyData(QObject * parent)
@@ -57,9 +55,11 @@ QVariant QVtkTableModelPolyData::data(const QModelIndex &index, int role) const
     case 3:
     case 4:
     {
-        vtkDataArray * centroid = m_vtkPolyData->GetCellData()->GetArray("centroid");
-        assert(centroid);
-        return centroid->GetTuple(cellId)[index.column() - 2];
+        assert(m_polyData->cellCenters()->GetNumberOfPoints() > cellId);
+        const double * centroid = m_polyData->cellCenters()->GetPoint(cellId);
+        int component = index.column() - 2;
+        assert(component >= 0 && component < 3);
+        return centroid[component];
     }
     }
 
@@ -117,16 +117,7 @@ bool QVtkTableModelPolyData::setData(const QModelIndex & index, const QVariant &
         m_vtkPolyData->GetPoints()->SetPoint(pointId, point);
     }
 
-    // apply requested modification to the centroid
-    double centroid[3];
-    vtkDataArray * centroids = m_vtkPolyData->GetCellData()->GetArray("centroid");
-    assert(centroids && centroids->GetNumberOfComponents() == 3);
-    centroids->GetTuple(cellId, centroid);
-    centroid[component] = newValue;
-    centroids->SetTuple(cellId, centroid);
-
-
-    // also adjust the centroids and normals of adjacent triangles
+    // also adjust the normals of adjacent triangles
     VTK_CREATE(vtkIdList, vertex);
     vertex->SetNumberOfIds(1);
     VTK_CREATE(vtkIdList, vertexNeighbors);
@@ -146,17 +137,10 @@ bool QVtkTableModelPolyData::setData(const QModelIndex & index, const QVariant &
     vtkDataArray * normals = m_vtkPolyData->GetCellData()->GetNormals();
     assert(normals);
 
-    VTK_CREATE(vtkIdTypeArray, idArray);
     for (vtkIdType neighborCellId : neighborCellIds)
     {
         vtkCell * neighbor = m_vtkPolyData->GetCell(neighborCellId);
-        idArray->SetArray(neighbor->GetPointIds()->GetPointer(0), neighbor->GetNumberOfPoints(), true);
-        vtkPolygon::ComputeCentroid(
-            idArray,
-            m_vtkPolyData->GetPoints(),
-            centroid);
-        centroids->SetTuple(neighborCellId, centroid);
-
+    
         double normal[3];
         vtkPolygon::ComputeNormal(neighbor->GetPoints(), normal);
         normals->SetTuple(neighborCellId, normal);
@@ -180,5 +164,9 @@ Qt::ItemFlags QVtkTableModelPolyData::flags(const QModelIndex &index) const
 
 void QVtkTableModelPolyData::resetDisplayData()
 {
-    m_vtkPolyData = vtkPolyData::SafeDownCast(dataObject()->dataSet());
+    m_polyData = dynamic_cast<PolyDataObject *>(dataObject());
+    if (m_polyData)
+        m_vtkPolyData = vtkPolyData::SafeDownCast(dataObject()->dataSet());
+    else
+        m_vtkPolyData = nullptr;
 }

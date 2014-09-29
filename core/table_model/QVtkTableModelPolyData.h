@@ -7,6 +7,8 @@
 
 class vtkPolyData;
 
+class PolyDataObject;
+
 
 class CORE_API QVtkTableModelPolyData : public QVtkTableModel
 {
@@ -22,6 +24,8 @@ public:
 
 protected:
     void resetDisplayData() override;
+
+    PolyDataObject * m_polyData;
 
     vtkSmartPointer<vtkPolyData> m_vtkPolyData;
 };
