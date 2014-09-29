@@ -124,7 +124,8 @@ void SelectionHandler::renderViewsLookAt(DataObject * dataObject, vtkIdType item
     for (auto it = m_renderViews.begin(); it != m_renderViews.end(); ++it)
     {
         if (it.value()->isChecked())
-            it.key()->interactorStyle()->lookAtCell(dataObject, itemId);
+            if (it.key()->dataObjects().contains(dataObject))
+                it.key()->interactorStyle()->lookAtCell(dataObject, itemId);
     }
 }
 
