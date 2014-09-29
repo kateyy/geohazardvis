@@ -25,6 +25,10 @@ VectorMappingChooser::VectorMappingChooser(QWidget * parent, Qt::WindowFlags fla
     m_ui->vectorsListView->setModel(m_listModel);
 
     connect(m_listModel, &VectorMappingChooserListModel::vectorVisibilityChanged, this, &VectorMappingChooser::renderSetupChanged);
+    connect(m_listModel, &QAbstractItemModel::dataChanged,
+        [this] (const QModelIndex &topLeft, const QModelIndex & /*bottomRight*/, const QVector<int> & /*roles*/) {
+        m_ui->vectorsListView->setCurrentIndex(topLeft);
+    });
     connect(m_ui->vectorsListView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &VectorMappingChooser::updateGuiForSelection);
 }
 

@@ -77,6 +77,8 @@ bool VectorMappingChooserListModel::setData(const QModelIndex & index, const QVa
 
         emit vectorVisibilityChanged();
 
+        emit dataChanged(index, index, { Qt::ItemDataRole::CheckStateRole });
+
         return true;
     }
 
