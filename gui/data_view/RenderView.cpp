@@ -122,6 +122,11 @@ QWidget * RenderView::contentWidget()
     return m_ui->qvtkMain;
 }
 
+void RenderView::highlightedIdChangedEvent(DataObject * dataObject, vtkIdType itemId)
+{
+    interactorStyle()->highlightCell(dataObject, itemId);
+}
+
 void RenderView::setupRenderer()
 {
     m_ui->qvtkMain->GetRenderWindow()->SetAAFrames(0);
@@ -145,6 +150,7 @@ void RenderView::setupInteraction()
 
     connect(m_interactorStyle.Get(), &PickingInteractorStyleSwitch::pointInfoSent, this, &RenderView::ShowInfo);
     connect(m_interactorStyle.Get(), &PickingInteractorStyleSwitch::dataPicked, this, &RenderView::updateGuiForData);
+    connect(m_interactorStyle.Get(), &PickingInteractorStyleSwitch::cellPicked, this, &AbstractDataView::objectPicked);
 
     m_ui->qvtkMain->GetRenderWindow()->GetInteractor()->SetInteractorStyle(m_interactorStyle);
 }

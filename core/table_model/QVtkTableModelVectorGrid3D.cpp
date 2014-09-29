@@ -62,7 +62,7 @@ QVariant QVtkTableModelVectorGrid3D::data(const QModelIndex &index, int role) co
 QVariant QVtkTableModelVectorGrid3D::headerData(int section, Qt::Orientation orientation, int role) const
 {
     if (role != Qt::DisplayRole || orientation != Qt::Horizontal)
-        return QVariant();
+        return QVtkTableModel::headerData(section, orientation, role);
 
     switch (section)
     {

@@ -8,6 +8,8 @@ AbstractDataView::AbstractDataView(
     : QDockWidget(parent, flags)
     , m_index(index)
     , m_initialized(false)
+    , m_highlightedObject(nullptr)
+    , m_hightlightedItemId(-1)
 {
 }
 
@@ -26,6 +28,21 @@ void AbstractDataView::updateTitle(QString message)
         title = QString::number(index()) + ": " + message;
 
     setWindowTitle(title);
+}
+
+vtkIdType AbstractDataView::highlightedItemId() const
+{
+    return m_hightlightedItemId;
+}
+
+DataObject * AbstractDataView::highlightedObject()
+{
+    return m_highlightedObject;
+}
+
+const DataObject * AbstractDataView::highlightedObject() const
+{
+    return m_highlightedObject;
 }
 
 void AbstractDataView::showEvent(QShowEvent * /*event*/)
@@ -48,6 +65,17 @@ void AbstractDataView::setCurrent(bool isCurrent)
     auto f = font();
     f.setBold(isCurrent);
     setFont(f);
+}
+
+void AbstractDataView::setHighlightedId(DataObject * dataObject, vtkIdType itemId)
+{
+    if (m_highlightedObject == dataObject && m_hightlightedItemId == itemId)
+        return;
+
+    m_highlightedObject = dataObject;
+    m_hightlightedItemId = itemId;
+
+    highlightedIdChangedEvent(dataObject, itemId);
 }
 
 bool AbstractDataView::eventFilter(QObject * /*obj*/, QEvent * ev)

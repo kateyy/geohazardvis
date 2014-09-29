@@ -32,22 +32,18 @@ public:
     void showDataObject(DataObject * dataObject);
     DataObject * dataObject();
 
-public slots:
-    void selectCell(int cellId);
-
 signals:
-    void cellSelected(DataObject * dataObject, vtkIdType cellId);
-    void cellDoubleClicked(DataObject * dataObject, vtkIdType cellId);
+    void itemDoubleClicked(DataObject * dataObject, vtkIdType itemId);
 
 protected:
     QWidget * contentWidget() override;
+    void highlightedIdChangedEvent(DataObject * dataObject, vtkIdType itemId) override;
 
     bool eventFilter(QObject * obj, QEvent * ev) override;
-
-private slots:
-    void emitCellSelected(const QItemSelection & selected, const QItemSelection & deselected);
 
 private:
     Ui_TableView * m_ui;
     DataObject * m_dataObject;
+
+    QMetaObject::Connection m_hightlightUpdateConnection;
 };

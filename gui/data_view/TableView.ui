@@ -60,7 +60,7 @@
        <number>10</number>
       </attribute>
       <attribute name="verticalHeaderVisible">
-       <bool>false</bool>
+       <bool>true</bool>
       </attribute>
      </widget>
     </item>

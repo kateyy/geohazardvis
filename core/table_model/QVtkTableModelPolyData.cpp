@@ -69,7 +69,7 @@ QVariant QVtkTableModelPolyData::data(const QModelIndex &index, int role) const
 QVariant QVtkTableModelPolyData::headerData(int section, Qt::Orientation orientation, int role) const
 {
     if (role != Qt::DisplayRole || orientation != Qt::Horizontal)
-        return QVariant();
+        return QVtkTableModel::headerData(section, orientation, role);
 
     switch (section)
     {

@@ -8,9 +8,9 @@
 
 #include <core/data_objects/DataObject.h>
 
-#include "data_view/TableView.h"
-#include "data_view/RenderView.h"
-#include "rendering_interaction/IPickingInteractorStyle.h"
+#include "gui/data_view/TableView.h"
+#include "gui/data_view/RenderView.h"
+#include "gui/rendering_interaction/IPickingInteractorStyle.h"
 
 
 SelectionHandler & SelectionHandler::instance()
@@ -33,31 +33,35 @@ SelectionHandler::~SelectionHandler()
 
 void SelectionHandler::addTableView(TableView * tableView)
 {
-    QAction * syncToggleAction = new QAction(tableView->windowTitle(), this);
-    syncToggleAction->setCheckable(true);
-    syncToggleAction->setChecked(true);
-    m_tableViews.insert(tableView, syncToggleAction);
-    connect(tableView, &QWidget::windowTitleChanged, syncToggleAction, &QAction::setText);
-    connect(tableView, &TableView::cellSelected, this, &SelectionHandler::syncRenderViewsWithTable);
-    connect(tableView, &TableView::cellDoubleClicked, 
-        [this](DataObject * dataObject, int row) {
-        renderViewsLookAt(dataObject, static_cast<vtkIdType>(row));
-    });
+    QAction * syncToggleAction = addAbstractDataView(tableView);
 
+    m_tableViews.insert(tableView, syncToggleAction);
     updateSyncToggleMenu();
+    
+    connect(tableView, &TableView::itemDoubleClicked, 
+        [this](DataObject * dataObject, vtkIdType itemId) {
+        renderViewsLookAt(dataObject, itemId);
+    });
 }
 
 void SelectionHandler::addRenderView(RenderView * renderView)
 {
-    QAction * syncToggleAction = new QAction(renderView->windowTitle(), this);
+    QAction * syncToggleAction = addAbstractDataView(renderView);
+
+    m_renderViews.insert(renderView, syncToggleAction);
+    updateSyncToggleMenu();
+}
+
+QAction * SelectionHandler::addAbstractDataView(AbstractDataView * dataView)
+{
+    QAction * syncToggleAction = new QAction(dataView->windowTitle(), this);
     syncToggleAction->setCheckable(true);
     syncToggleAction->setChecked(true);
-    m_renderViews.insert(renderView, syncToggleAction);
-    m_actionForInteractor.insert(renderView->interactorStyle(), syncToggleAction);
-    connect(renderView, &QWidget::windowTitleChanged, syncToggleAction, &QAction::setText);
-    connect(renderView->interactorStyle(), &IPickingInteractorStyle::cellPicked, this, &SelectionHandler::syncRenderAndTableViews);
 
-    updateSyncToggleMenu();
+    connect(dataView, &AbstractDataView::windowTitleChanged, syncToggleAction, &QAction::setText);
+    connect(dataView, &AbstractDataView::objectPicked, this, &SelectionHandler::hightlightSelection);
+
+    return syncToggleAction;
 }
 
 void SelectionHandler::removeTableView(TableView * tableView)
@@ -76,7 +80,6 @@ void SelectionHandler::removeRenderView(RenderView * renderView)
     QAction * action = m_renderViews[renderView];
 
     m_renderViews.remove(renderView);
-    m_actionForInteractor.remove(renderView->interactorStyle());
 
     updateSyncToggleMenu();
 
@@ -88,45 +91,40 @@ void SelectionHandler::setSyncToggleMenu(QMenu * syncToggleMenu)
     m_syncToggleMenu = syncToggleMenu;
 }
 
-void SelectionHandler::syncRenderViewsWithTable(DataObject * dataObject, vtkIdType cellId)
+void SelectionHandler::hightlightSelection(DataObject * dataObject, vtkIdType highlightedItemId)
 {
-    QAction * action = m_tableViews.value(static_cast<TableView*>(sender()), nullptr);
-    assert(action);
-    if (!action->isChecked())
-        return;
-
-    for (auto it = m_renderViews.begin(); it != m_renderViews.end(); ++it)
+    QAction * action = nullptr;
+    if (TableView * table = dynamic_cast<TableView *>(sender()))
+        action = m_tableViews[table];
+    else
     {
-        if (it.value()->isChecked() && it.key()->dataObjects().contains(dataObject))
-            it.key()->interactorStyle()->highlightCell(dataObject, cellId);
+        assert(dynamic_cast<RenderView *>(sender()));
+        action = m_renderViews.value(static_cast<RenderView *>(sender()));
     }
-}
-
-void SelectionHandler::syncRenderAndTableViews(DataObject * dataObject, vtkIdType cellId)
-{
-    QAction * action = m_actionForInteractor.value(static_cast<IPickingInteractorStyle*>(sender()), nullptr);
     assert(action);
+
     if (!action->isChecked())
         return;
+
 
     for (auto it = m_renderViews.begin(); it != m_renderViews.end(); ++it)
     {
         if (it.value()->isChecked() && it.key()->dataObjects().contains(dataObject))
-            it.key()->interactorStyle()->highlightCell(dataObject, cellId);
+            it.key()->setHighlightedId(dataObject, highlightedItemId);
     }
     for (auto it = m_tableViews.begin(); it != m_tableViews.end(); ++it)
     {
         if (it.value()->isChecked() && it.key()->dataObject() == dataObject)
-            it.key()->selectCell(cellId);
+            it.key()->setHighlightedId(dataObject, highlightedItemId);
     }
 }
 
-void SelectionHandler::renderViewsLookAt(DataObject * dataObject, vtkIdType cellId)
+void SelectionHandler::renderViewsLookAt(DataObject * dataObject, vtkIdType itemId)
 {
     for (auto it = m_renderViews.begin(); it != m_renderViews.end(); ++it)
     {
         if (it.value()->isChecked())
-            it.key()->interactorStyle()->lookAtCell(dataObject, cellId);
+            it.key()->interactorStyle()->lookAtCell(dataObject, itemId);
     }
 }
 

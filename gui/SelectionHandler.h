@@ -34,9 +34,9 @@ public:
     void setSyncToggleMenu(QMenu * syncToggleMenu);
 
 private slots:
-    void syncRenderViewsWithTable(DataObject * dataObject, vtkIdType cellId);
-    void syncRenderAndTableViews(DataObject * dataObject, vtkIdType cellId);
-    void renderViewsLookAt(DataObject * dataObject, vtkIdType cellId);
+    void hightlightSelection(DataObject * dataObject, vtkIdType highlightedItemId);
+
+    void renderViewsLookAt(DataObject * dataObject, vtkIdType itemId);
 
 private:
     SelectionHandler();
@@ -44,11 +44,11 @@ private:
 
     void updateSyncToggleMenu();
 
+    QAction * addAbstractDataView(AbstractDataView * dataView);
+
 private:
     QMap<TableView*, QAction*> m_tableViews;
     QMap<RenderView*, QAction*> m_renderViews;
-
-    QMap<IPickingInteractorStyle *, QAction *> m_actionForInteractor;
 
     QMenu * m_syncToggleMenu;
 };

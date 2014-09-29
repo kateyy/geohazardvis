@@ -78,6 +78,7 @@ public slots:
 
 protected:
     QWidget * contentWidget() override;
+    void highlightedIdChangedEvent(DataObject * dataObject, vtkIdType itemId) override;
 
 private:
     void setupRenderer();

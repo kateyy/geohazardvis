@@ -18,6 +18,8 @@ TableView::TableView(int index, QWidget * parent, Qt::WindowFlags flags)
 {
     m_ui->setupUi(this);
     m_ui->tableView->viewport()->installEventFilter(this);
+
+    m_ui->tableView->verticalHeader()->setFixedWidth(15);
     
     SelectionHandler::instance().addTableView(this);
 }
@@ -63,11 +65,6 @@ DataObject * TableView::dataObject()
     return m_dataObject;
 }
 
-void TableView::selectCell(int cellId)
-{
-    m_ui->tableView->selectRow(cellId);
-}
-
 QVtkTableModel * TableView::model()
 {
     assert(dynamic_cast<QVtkTableModel*>(m_ui->tableView->model()));
@@ -76,16 +73,33 @@ QVtkTableModel * TableView::model()
 
 void TableView::setModel(QVtkTableModel * model)
 {
-    if (QItemSelectionModel * oldSelectionModel = m_ui->tableView->selectionModel())
-        disconnect(oldSelectionModel, &QItemSelectionModel::selectionChanged, this, &TableView::emitCellSelected);
+    disconnect(m_hightlightUpdateConnection);
 
     m_ui->tableView->setModel(model);
-    connect(m_ui->tableView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &TableView::emitCellSelected);
+    m_hightlightUpdateConnection = connect(m_ui->tableView->selectionModel(), &QItemSelectionModel::selectionChanged,
+        [this, model] (const QItemSelection & selected, const QItemSelection & /*deselected*/)
+    {
+        if (selected.indexes().isEmpty())
+            return;
+
+        vtkIdType id = model->itemIdAt(selected.indexes().first());
+        model->setHighlightItemId(id);
+
+        emit objectPicked(m_dataObject, id);
+    });
 }
 
 QWidget * TableView::contentWidget()
 {
     return m_ui->tableView;
+}
+
+void TableView::highlightedIdChangedEvent(DataObject * /*dataObject*/, vtkIdType itemId)
+{
+    QModelIndex selection(model()->index(itemId, 0));
+    m_ui->tableView->scrollTo(selection);
+
+    model()->setHighlightItemId(itemId);
 }
 
 bool TableView::eventFilter(QObject * obj, QEvent * ev)
@@ -97,21 +111,11 @@ bool TableView::eventFilter(QObject * obj, QEvent * ev)
         // cell index column. all other columns may be editable
         if (index.column() == 0)
         {
-            emit cellDoubleClicked(m_dataObject, index.row());
+            vtkIdType id = static_cast<vtkIdType>(index.row());
+            emit itemDoubleClicked(m_dataObject, id);
             return true;
         }
     }
 
     return AbstractDataView::eventFilter(obj, ev);
-}
-
-void TableView::emitCellSelected(const QItemSelection & selected, const QItemSelection & /*deselected*/)
-{
-    if (selected.indexes().isEmpty())
-    {
-        emit cellSelected(m_dataObject, vtkIdType(-1));
-        return;
-    }
-
-    emit cellSelected(m_dataObject, vtkIdType(selected.indexes().first().row()));
 }

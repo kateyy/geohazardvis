@@ -2,6 +2,11 @@
 
 #include <QDockWidget>
 
+#include <vtkType.h>
+
+
+class DataObject;
+
 
 class AbstractDataView : public QDockWidget
 {
@@ -20,14 +25,24 @@ public:
     /** name the id and represented data */
     virtual QString friendlyName() const = 0;
 
+    vtkIdType highlightedItemId() const;
+    DataObject * highlightedObject();
+    const DataObject * highlightedObject() const;
+
 signals:
     /** signaled when the widget receive the keyboard focus (focusInEvent) */
     void focused(AbstractDataView * tableView);
     void closed();
 
+    /** user selected some content */
+    void objectPicked(DataObject * dataObject, vtkIdType selectionId);
+
 public slots:
     /** highlight this view as currently selected of its type */
     void setCurrent(bool isCurrent);
+
+    /** highlight requested id */
+    void setHighlightedId(DataObject * dataObject, vtkIdType itemId);
 
 protected:
     virtual QWidget * contentWidget() = 0;
@@ -38,7 +53,12 @@ protected:
 
     bool eventFilter(QObject * obj, QEvent * ev) override;
 
+    virtual void highlightedIdChangedEvent(DataObject * dataObject, vtkIdType itemId) = 0;
+
 private:
     const int m_index;
     bool m_initialized;
+
+    DataObject * m_highlightedObject;
+    vtkIdType m_hightlightedItemId;
 };
