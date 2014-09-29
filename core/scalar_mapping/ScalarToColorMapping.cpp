@@ -111,8 +111,8 @@ void ScalarToColorMapping::setCurrentScalarsByName(QString scalarsName)
 
     QByteArray c_name = scalarsName.toLatin1();
     m_colorMappingLegend->SetTitle(c_name.data());
-    bool usesGradient = scalars->dataMinValue() != scalars->dataMaxValue();
-    m_colorMappingLegend->SetVisibility(m_colorMappingLegendVisible && usesGradient);
+
+    setColorMappingLegendVisible(m_colorMappingLegend);
 
     for (RenderedData * renderedData : m_renderedData)
     {
@@ -181,7 +181,11 @@ void ScalarToColorMapping::setColorMappingLegendVisible(bool visible)
 {
     m_colorMappingLegendVisible = visible;
 
-    m_colorMappingLegend->SetVisibility(currentScalarsUseMappingLegend() && m_colorMappingLegendVisible);
+    bool actualVisibilty = currentScalarsUseMappingLegend() && m_colorMappingLegendVisible;
+
+    m_colorMappingLegend->SetVisibility(actualVisibilty);
+
+    emit colorLegendVisibilityChanged(actualVisibilty);
 }
 
 void ScalarToColorMapping::updateGradientValueRange()

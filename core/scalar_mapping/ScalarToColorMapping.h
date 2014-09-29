@@ -61,6 +61,7 @@ public:
 
 signals:
     void scalarsChanged();
+    void colorLegendVisibilityChanged(bool visible);
 
 private slots:
     /** apply changed min/max from scalar to color mapping to gradient lookup table */

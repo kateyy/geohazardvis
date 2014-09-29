@@ -61,6 +61,10 @@ RenderView::RenderView(
 
     connect(&m_scalarMappingChooser, &ScalarMappingChooser::renderSetupChanged, this, &RenderView::render);
     connect(&m_vectorMappingChooser, &VectorMappingChooser::renderSetupChanged, this, &RenderView::render);
+    connect(&m_scalarMapping, &ScalarToColorMapping::colorLegendVisibilityChanged,
+        [this] (bool visible) {
+        m_scalarBarWidget->SetEnabled(visible);
+    });
 
     SelectionHandler::instance().addRenderView(this);
 }
@@ -409,16 +413,15 @@ void RenderView::updateAxes()
     // hide axes if we don't have visible objects
     if (!bounds.IsValid() && m_axesActor)
     {
-        m_axesActor->SetVisibility(false);
-        m_scalarBarWidget->SetEnabled(false);
+        m_axesActor->VisibilityOff();
+        m_scalarBarWidget->EnabledOff();
         return;
     }
 
     if (!m_axesActor)
         m_axesActor = createAxes(*m_renderer);
     
-    m_axesActor->SetVisibility(true);
-    m_scalarBarWidget->SetEnabled(true);
+    m_axesActor->VisibilityOn();
 
     m_renderer->AddViewProp(m_axesActor);
 
@@ -497,7 +500,7 @@ void RenderView::setupColorMappingLegend()
     m_scalarBarWidget->SetScalarBarActor(m_colorMappingLegend);
     m_scalarBarWidget->SetRepresentation(repr);
     m_scalarBarWidget->SetInteractor(renderWindow()->GetInteractor());
-    m_scalarBarWidget->SetEnabled(true);
+    m_scalarBarWidget->EnabledOff();
 
     m_renderer->AddViewProp(m_colorMappingLegend);
 }
