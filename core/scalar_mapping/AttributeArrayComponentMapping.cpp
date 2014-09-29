@@ -103,25 +103,7 @@ AttributeArrayComponentMapping::AttributeArrayComponentMapping(const QList<DataO
     assert(anArray);
     m_arrayNumComponents = anArray->GetNumberOfComponents();
 
-    double totalRange[2] = { std::numeric_limits<float>::max(), std::numeric_limits<float>::lowest() };
-    for (DataObject * dataObject : dataObjects)
-    {
-        vtkFloatArray * dataArray = vtkFloatArray::SafeDownCast(
-            dataObject->dataSet()->GetCellData()->GetArray(c_name.data()));
-        
-        if (!dataArray) // current object doesn't contain this data array
-            continue;
-
-        double range[2];
-        dataArray->GetRange(range, m_component);
-        totalRange[0] = std::min(totalRange[0], range[0]);
-        totalRange[1] = std::max(totalRange[1], range[1]);
-    }
-
-    assert(totalRange[0] <= totalRange[1]);
-
-    // discard vector components with constant value
-    m_isValid = totalRange[0] != totalRange[1];
+    m_isValid = true;
 }
 
 AttributeArrayComponentMapping::~AttributeArrayComponentMapping() = default;

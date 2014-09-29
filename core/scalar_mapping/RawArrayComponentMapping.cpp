@@ -72,12 +72,6 @@ RawArrayComponentMapping::RawArrayComponentMapping(const QList<DataObject *> & d
 
     m_arrayNumComponents = dataArray->GetNumberOfComponents();
 
-    double range[2];
-    dataArray->GetRange(range, m_component);
-    // discard vector components with constant value
-    if (range[0] == range[1])
-        return;
-
     vtkIdType currentIndex = 0;
     for (DataObject * dataObject : dataObjects)
     {
