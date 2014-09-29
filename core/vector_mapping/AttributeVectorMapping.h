@@ -7,6 +7,8 @@
 
 class vtkDataArray;
 
+class PolyDataObject;
+
 
 class CORE_API AttributeVectorMapping : public VectorsForSurfaceMapping
 {
@@ -27,5 +29,6 @@ protected:
 private:
     static const bool s_registered;
 
+    PolyDataObject * m_polyData;
     vtkSmartPointer<vtkDataArray> m_dataArray;
 };

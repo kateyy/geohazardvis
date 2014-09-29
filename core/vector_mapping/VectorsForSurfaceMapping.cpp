@@ -179,6 +179,11 @@ void VectorsForSurfaceMapping::initialize()
 {
 }
 
+DataObject * VectorsForSurfaceMapping::dataObject()
+{
+    return m_renderedData->dataObject();
+}
+
 RenderedData * VectorsForSurfaceMapping::renderedData()
 {
     return m_renderedData;

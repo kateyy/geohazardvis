@@ -6,6 +6,7 @@
 #include <vtkIdTypeArray.h>
 
 #include <vtkPolyDataNormals.h>
+#include <vtkCellCenters.h>
 
 #include <vtkPolyData.h>
 #include <vtkCellData.h>
@@ -25,6 +26,7 @@ namespace
 
 PolyDataObject::PolyDataObject(QString name, vtkPolyData * dataSet)
     : DataObject(name, dataSet)
+    , m_cellCenters(vtkSmartPointer<vtkCellCenters>::New())
 {
 
     if (!dataSet->GetCellData()->HasArray("centroid"))
@@ -60,11 +62,24 @@ PolyDataObject::PolyDataObject(QString name, vtkPolyData * dataSet)
 
         dataSet->GetCellData()->SetNormals(inputNormals->GetOutput()->GetCellData()->GetNormals());
     }
+
+    m_cellCenters->SetInputData(dataSet);
+    m_cellCenters->Update();
 }
 
 bool PolyDataObject::is3D() const
 {
     return true;
+}
+
+vtkPolyData * PolyDataObject::cellCenters()
+{
+    return m_cellCenters->GetOutput();
+}
+
+vtkAlgorithmOutput * PolyDataObject::cellCentersOutputPort()
+{
+    return m_cellCenters->GetOutputPort();
 }
 
 RenderedData * PolyDataObject::createRendered()

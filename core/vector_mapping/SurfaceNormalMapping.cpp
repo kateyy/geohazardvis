@@ -6,12 +6,9 @@
 
 #include <vtkPointData.h>
 #include <vtkCellData.h>
-#include <vtkPoints.h>
 
 #include <vtkGlyph3D.h>
 #include <vtkPolyDataNormals.h>
-
-#include <vtkVertexGlyphFilter.h>
 
 #include <vtkProperty.h>
 
@@ -19,6 +16,7 @@
 #include <reflectionzeug/PropertyGroup.h>
 
 #include <core/vtkhelper.h>
+#include <core/data_objects/PolyDataObject.h>
 #include <core/vector_mapping/VectorsForSurfaceMappingRegistry.h>
 
 
@@ -37,8 +35,11 @@ SurfaceNormalMapping::SurfaceNormalMapping(RenderedData * renderedData)
     : VectorsForSurfaceMapping(renderedData)
     , m_normalType(NormalType::CellNormal)
     , m_normalTypeChanged(true)
+    , m_polyData(nullptr)
 {
-    if (!m_isValid)
+    m_polyData = dynamic_cast<PolyDataObject *>(dataObject());
+
+    if (!m_isValid || !m_polyData)
         return;
 
     arrowGlyph()->SetVectorModeToUseNormal();
@@ -102,26 +103,9 @@ void SurfaceNormalMapping::updateGlyphs()
     if (m_normalTypeChanged)
     {
         if (m_normalType == NormalType::CellNormal)
-        {
-            VTK_CREATE(vtkPoints, points);
-            points->SetData(polyData()->GetCellData()->GetArray("centroid"));
-
-            VTK_CREATE(vtkPolyData, pointsPolyData);
-            pointsPolyData->SetPoints(points);
-
-            VTK_CREATE(vtkVertexGlyphFilter, filter);
-            filter->SetInputData(pointsPolyData);
-            filter->Update();
-            vtkPolyData * processedPoints = filter->GetOutput();
-
-            processedPoints->GetPointData()->SetNormals(polyData()->GetCellData()->GetNormals());
-
-            arrowGlyph()->SetInputData(processedPoints);
-        }
+            arrowGlyph()->SetInputConnection(m_polyData->cellCentersOutputPort());
         else
-        {
             arrowGlyph()->SetInputData(polyData());
-        }
 
         m_normalTypeChanged = false;
     }

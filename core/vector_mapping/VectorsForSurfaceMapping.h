@@ -21,6 +21,7 @@ namespace reflectionzeug
     class PropertyGroup;
 }
 
+class DataObject;
 class RenderedData;
 
 
@@ -74,6 +75,7 @@ protected:
 
     virtual bool isValid() const;
 
+    DataObject * dataObject();
     RenderedData * renderedData();
     vtkPolyData * polyData();
     vtkGlyph3D * arrowGlyph();

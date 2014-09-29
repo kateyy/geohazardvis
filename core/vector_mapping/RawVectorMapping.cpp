@@ -2,12 +2,9 @@
 
 #include <vtkFloatArray.h>
 #include <vtkDataSet.h>
-#include <vtkPoints.h>
 
-#include <vtkPointData.h>
 #include <vtkCellData.h>
 
-#include <vtkCellCenters.h>
 #include <vtkAssignAttribute.h>
 #include <vtkGlyph3D.h>
 
@@ -19,6 +16,7 @@
 #include <core/DataSetHandler.h>
 #include <core/vtkhelper.h>
 #include <core/data_objects/RawVectorData.h>
+#include <core/data_objects/PolyDataObject.h>
 #include <core/data_objects/RenderedData.h>
 #include <core/vector_mapping/VectorsForSurfaceMappingRegistry.h>
 
@@ -61,8 +59,9 @@ QList<VectorsForSurfaceMapping *> RawVectorMapping::newInstances(RenderedData * 
 RawVectorMapping::RawVectorMapping(RenderedData * renderedData, RawVectorData * rawVector)
     : VectorsForSurfaceMapping(renderedData)
     , m_rawVector(rawVector)
+    , m_polyData(dynamic_cast<PolyDataObject *>(renderedData->dataObject()))
 {
-    if (!m_isValid)
+    if (!m_isValid || !m_polyData)
         return;
 
     arrowGlyph()->SetVectorModeToUseVector();
@@ -103,11 +102,8 @@ void RawVectorMapping::initialize()
 
     polyData()->GetCellData()->AddArray(m_sectionArray);
 
-    VTK_CREATE(vtkCellCenters, centroidPoints);
-    centroidPoints->SetInputData(polyData());
-
     VTK_CREATE(vtkAssignAttribute, assignAttribute);
-    assignAttribute->SetInputConnection(centroidPoints->GetOutputPort());
+    assignAttribute->SetInputConnection(m_polyData->cellCentersOutputPort());
     assignAttribute->Assign(m_sectionArray->GetName(), vtkDataSetAttributes::VECTORS, vtkAssignAttribute::POINT_DATA);
 
     arrowGlyph()->SetInputConnection(assignAttribute->GetOutputPort());

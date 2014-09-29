@@ -5,6 +5,8 @@
 
 
 class vtkPolyData;
+class vtkCellCenters;
+class vtkAlgorithmOutput;
 
 
 class CORE_API PolyDataObject : public DataObject
@@ -14,10 +16,15 @@ public:
 
     bool is3D() const override;
 
+    vtkPolyData * cellCenters();
+    vtkAlgorithmOutput * cellCentersOutputPort();
+
     RenderedData * createRendered() override;
 
     QString dataTypeName() const override;
 
 protected:
     QVtkTableModel * createTableModel() override;
+
+    vtkSmartPointer<vtkCellCenters> m_cellCenters;
 };

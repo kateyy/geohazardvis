@@ -4,19 +4,17 @@
 
 #include <vtkPolyData.h>
 
-#include <vtkPointData.h>
 #include <vtkCellData.h>
 
 #include <vtkGlyph3D.h>
 
-#include <vtkCellCenters.h>
 #include <vtkAssignAttribute.h>
 
 #include <vtkInformation.h>
 #include <vtkInformationIntegerKey.h>
 
 #include <core/vtkhelper.h>
-#include <core/data_objects/DataObject.h>
+#include <core/data_objects/PolyDataObject.h>
 #include <core/data_objects/RenderedData.h>
 #include <core/vector_mapping/VectorsForSurfaceMappingRegistry.h>
 
@@ -78,8 +76,9 @@ QList<VectorsForSurfaceMapping *> AttributeVectorMapping::newInstances(RenderedD
 AttributeVectorMapping::AttributeVectorMapping(RenderedData * renderedData, vtkDataArray * vectorData)
     : VectorsForSurfaceMapping(renderedData)
     , m_dataArray(vectorData)
+    , m_polyData(dynamic_cast<PolyDataObject *>(renderedData->dataObject()))
 {
-    if (!m_isValid)
+    if (!m_isValid || !m_polyData)
         return;
 
     arrowGlyph()->SetVectorModeToUseVector();
@@ -95,13 +94,8 @@ QString AttributeVectorMapping::name() const
 
 void AttributeVectorMapping::initialize()
 {
-    assert(polyData());
-
-    VTK_CREATE(vtkCellCenters, centroidPoints);
-    centroidPoints->SetInputData(polyData());
-
     VTK_CREATE(vtkAssignAttribute, assignAttribute);
-    assignAttribute->SetInputConnection(centroidPoints->GetOutputPort());
+    assignAttribute->SetInputConnection(m_polyData->cellCentersOutputPort());
     assignAttribute->Assign(m_dataArray->GetName(), vtkDataSetAttributes::VECTORS, vtkAssignAttribute::POINT_DATA);
 
     arrowGlyph()->SetInputConnection(assignAttribute->GetOutputPort());

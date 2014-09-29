@@ -7,6 +7,7 @@ class vtkFloatArray;
 class vtkEventQtSlotConnect;
 
 class RawVectorData;
+class PolyDataObject;
 
 
 class RawVectorMapping : public VectorsForSurfaceMapping
@@ -36,6 +37,7 @@ private:
     static const bool s_registered;
 
     RawVectorData * m_rawVector;
+    PolyDataObject * m_polyData;
 
     vtkSmartPointer<vtkFloatArray> m_sectionArray;
 
