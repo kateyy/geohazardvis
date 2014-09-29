@@ -126,7 +126,7 @@ bool QVtkTableModelPolyData::setData(const QModelIndex & index, const QVariant &
     centroids->SetTuple(cellId, centroid);
 
 
-    // also adjust the centroids of adjacent triangles
+    // also adjust the centroids and normals of adjacent triangles
     VTK_CREATE(vtkIdList, vertex);
     vertex->SetNumberOfIds(1);
     VTK_CREATE(vtkIdList, vertexNeighbors);
@@ -143,6 +143,8 @@ bool QVtkTableModelPolyData::setData(const QModelIndex & index, const QVariant &
             neighborCellIds << vertexNeighbors->GetId(i);
     }
 
+    vtkDataArray * normals = m_vtkPolyData->GetCellData()->GetNormals();
+    assert(normals);
 
     VTK_CREATE(vtkIdTypeArray, idArray);
     for (vtkIdType neighborCellId : neighborCellIds)
@@ -153,9 +155,16 @@ bool QVtkTableModelPolyData::setData(const QModelIndex & index, const QVariant &
             idArray,
             m_vtkPolyData->GetPoints(),
             centroid);
-        centroids->SetTuple(neighborCellId++, centroid);
+        centroids->SetTuple(neighborCellId, centroid);
+
+        double normal[3];
+        vtkPolygon::ComputeNormal(neighbor->GetPoints(), normal);
+        normals->SetTuple(neighborCellId, normal);
+
+        ++neighborCellId;
     }
 
+    normals->Modified();
     m_vtkPolyData->Modified();
 
     return true;
