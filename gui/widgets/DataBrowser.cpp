@@ -193,5 +193,5 @@ QList<DataObject *> DataBrowser::selectedAttributeVectors() const
 {
     QModelIndexList selection = m_ui->dataTableView->selectionModel()->selectedRows();
 
-    return m_tableModel->attributeVectors(selection);
+    return m_tableModel->rawVectors(selection);
 }

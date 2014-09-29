@@ -7,7 +7,7 @@
 #include <vtkFloatArray.h>
 
 #include <core/DataSetHandler.h>
-#include <core/data_objects/AttributeVectorData.h>
+#include <core/data_objects/RawVectorData.h>
 #include <core/data_objects/ImageDataObject.h>
 
 
@@ -99,7 +99,7 @@ DataObject * DataBrowserTableModel::dataObjectAt(int row) const
     row -= 1 + m_numDataObjects;
     assert(row < m_numAttributeVectors);
 
-    return DataSetHandler::instance().attributeVectors()[row];
+    return DataSetHandler::instance().rawVectors()[row];
 }
 
 DataObject * DataBrowserTableModel::dataObjectAt(const QModelIndex & index) const
@@ -134,7 +134,7 @@ QList<DataObject *> DataBrowserTableModel::dataSets(QModelIndexList indexes)
     return result;
 }
 
-QList<DataObject *> DataBrowserTableModel::attributeVectors(QModelIndexList indexes)
+QList<DataObject *> DataBrowserTableModel::rawVectors(QModelIndexList indexes)
 {
     QList<DataObject *> result;
 
@@ -160,14 +160,14 @@ void DataBrowserTableModel::updateDataList()
     beginResetModel();
 
     const QList<DataObject *> & dataSets = DataSetHandler::instance().dataSets();
-    const QList<AttributeVectorData *> & attributeVectors = DataSetHandler::instance().attributeVectors();
+    const QList<RawVectorData *> & rawVectors = DataSetHandler::instance().rawVectors();
     m_numDataObjects = dataSets.size();
-    m_numAttributeVectors = attributeVectors.size();
+    m_numAttributeVectors = rawVectors.size();
 
     m_visibilities.clear();
     for (DataObject * dataObject : dataSets)
         m_visibilities.insert(dataObject, false);
-    for (AttributeVectorData * attr : attributeVectors)
+    for (RawVectorData * attr : rawVectors)
         m_visibilities.insert(attr, false);
 
     endResetModel();
@@ -261,10 +261,10 @@ QVariant DataBrowserTableModel::data_attributeVector(int row, int column, int ro
     if (role != Qt::DisplayRole)
         return QVariant();
 
-    const QList<AttributeVectorData *> & attributeVectors = DataSetHandler::instance().attributeVectors();
-    assert(row < attributeVectors.size());
+    const QList<RawVectorData *> & rawVectors = DataSetHandler::instance().rawVectors();
+    assert(row < rawVectors.size());
 
-    AttributeVectorData * attributeVector = attributeVectors.at(row);
+    RawVectorData * attributeVector = rawVectors.at(row);
 
     vtkDataArray * dataArray = attributeVector->dataArray();
     int numComponents = dataArray->GetNumberOfComponents();

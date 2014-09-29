@@ -22,7 +22,7 @@
 #include <core/data_objects/PolyDataObject.h>
 #include <core/data_objects/ImageDataObject.h>
 #include <core/data_objects/VectorGrid3DDataObject.h>
-#include <core/data_objects/AttributeVectorData.h>
+#include <core/data_objects/RawVectorData.h>
 
 
 DataObject * Loader::readFile(QString filename)
@@ -255,7 +255,7 @@ DataObject * Loader::readRawFile(QString fileName)
 
     QFileInfo fInfo(fileName);
 
-    return new AttributeVectorData(fInfo.baseName(), dataArray);
+    return new RawVectorData(fInfo.baseName(), dataArray);
 }
 
 vtkFloatArray * Loader::parseFloatVector(const InputVector & parsedData, QString arrayName, int firstColumn, int lastColumn)

@@ -32,7 +32,7 @@ public:
 
     QList<DataObject *> dataObjects(QModelIndexList indexes);
     QList<DataObject *> dataSets(QModelIndexList indexes);
-    QList<DataObject *> attributeVectors(QModelIndexList indexes);
+    QList<DataObject *> rawVectors(QModelIndexList indexes);
 
     static int numButtonColumns();
 

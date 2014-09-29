@@ -12,7 +12,7 @@ VectorsToSurfaceMapping::VectorsToSurfaceMapping(RenderedData * renderedData)
 {
     m_vectors = VectorsForSurfaceMappingRegistry::instance().createMappingsValidFor(m_renderedData);
 
-    connect(&DataSetHandler::instance(), &DataSetHandler::attributeVectorsChanged,
+    connect(&DataSetHandler::instance(), &DataSetHandler::rawVectorsChanged,
         this, &VectorsToSurfaceMapping::updateAvailableVectors);
 }
 

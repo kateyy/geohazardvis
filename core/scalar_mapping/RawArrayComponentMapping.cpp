@@ -14,7 +14,7 @@
 
 #include <core/vtkhelper.h>
 #include <core/DataSetHandler.h>
-#include <core/data_objects/AttributeVectorData.h>
+#include <core/data_objects/RawVectorData.h>
 #include <core/data_objects/DataObject.h>
 #include <core/scalar_mapping/ScalarsForColorMappingRegistry.h>
 
@@ -36,7 +36,7 @@ QList<ScalarsForColorMapping *> RawArrayComponentMapping::newInstances(const QLi
     for (DataObject * dataObject : dataObjects)
         totalNumCells += dataObject->dataSet()->GetNumberOfCells();
 
-    for (AttributeVectorData * attr : DataSetHandler::instance().attributeVectors())
+    for (RawVectorData * attr : DataSetHandler::instance().rawVectors())
     {
         vtkFloatArray * dataArray = attr->dataArray();
 

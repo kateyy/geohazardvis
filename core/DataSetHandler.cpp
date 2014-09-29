@@ -4,13 +4,13 @@
 
 #include <QList>
 
-#include <core/data_objects/AttributeVectorData.h>
+#include <core/data_objects/RawVectorData.h>
 
 
 namespace
 {
 QList<DataObject *> * s_dataSets = nullptr;
-QList<AttributeVectorData *> * s_attributeVectors = nullptr;
+QList<RawVectorData *> * s_rawVectors = nullptr;
 }
 
 
@@ -18,15 +18,15 @@ DataSetHandler::DataSetHandler()
     : QObject()
 {
     s_dataSets = new QList<DataObject *>();
-    s_attributeVectors = new QList<AttributeVectorData *>();
+    s_rawVectors = new QList<RawVectorData *>();
 }
 
 DataSetHandler::~DataSetHandler()
 {
     qDeleteAll(dataSets());
     delete s_dataSets;
-    qDeleteAll(attributeVectors());
-    delete s_attributeVectors;
+    qDeleteAll(rawVectors());
+    delete s_rawVectors;
 }
 
 DataSetHandler & DataSetHandler::instance()
@@ -38,7 +38,7 @@ DataSetHandler & DataSetHandler::instance()
 
 void DataSetHandler::addData(QList<DataObject *> dataObjects)
 {
-    bool dataChanged = false, attributesChanged = false;
+    bool dataChanged = false, rawDataChanged = false;
     for (DataObject * dataObject : dataObjects)
     {
         assert(dataObject);
@@ -51,21 +51,21 @@ void DataSetHandler::addData(QList<DataObject *> dataObjects)
         }
         else
         {
-            assert(dynamic_cast<AttributeVectorData*>(dataObject));
-            s_attributeVectors->append(static_cast<AttributeVectorData *>(dataObject));
-            attributesChanged = true;
+            assert(dynamic_cast<RawVectorData*>(dataObject));
+            s_rawVectors->append(static_cast<RawVectorData *>(dataObject));
+            rawDataChanged = true;
         }
     }
 
     if (dataChanged)
         emit dataObjectsChanged();
-    if (attributesChanged)
-        emit attributeVectorsChanged();
+    if (rawDataChanged)
+        emit rawVectorsChanged();
 }
 
 void DataSetHandler::deleteData(QList<DataObject *> dataObjects)
 {
-    bool dataChanged = false, attributesChanged = false;
+    bool dataChanged = false, rawDataChanged = false;
     for (DataObject * dataObject : dataObjects)
     {
         if (dataObject->dataSet())
@@ -75,16 +75,16 @@ void DataSetHandler::deleteData(QList<DataObject *> dataObjects)
         }
         else
         {
-            attributesChanged = true;
-            s_attributeVectors->removeOne(static_cast<AttributeVectorData *>(dataObject));
+            rawDataChanged = true;
+            s_rawVectors->removeOne(static_cast<RawVectorData *>(dataObject));
         }
 
     }
 
     if (dataChanged)
         emit dataObjectsChanged();
-    if (attributesChanged)
-        emit attributeVectorsChanged();
+    if (rawDataChanged)
+        emit rawVectorsChanged();
 
     qDeleteAll(dataObjects);
 }
@@ -94,7 +94,7 @@ const QList<DataObject *> & DataSetHandler::dataSets()
     return *s_dataSets;
 }
 
-const QList<AttributeVectorData *> & DataSetHandler::attributeVectors()
+const QList<RawVectorData *> & DataSetHandler::rawVectors()
 {
-    return *s_attributeVectors;
+    return *s_rawVectors;
 }

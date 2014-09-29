@@ -1,51 +1,68 @@
 #include "AttributeVectorMapping.h"
 
-#include <vtkFloatArray.h>
-#include <vtkDataSet.h>
-#include <vtkPoints.h>
+#include <cstring>
+
+#include <vtkPolyData.h>
 
 #include <vtkPointData.h>
 #include <vtkCellData.h>
 
-#include <vtkCellCenters.h>
-#include <vtkAssignAttribute.h>
 #include <vtkGlyph3D.h>
 
-#include <vtkEventQtSlotConnect.h>
+#include <vtkCellCenters.h>
+#include <vtkAssignAttribute.h>
 
 #include <vtkInformation.h>
 #include <vtkInformationIntegerKey.h>
 
-#include <core/DataSetHandler.h>
 #include <core/vtkhelper.h>
-#include <core/data_objects/AttributeVectorData.h>
+#include <core/data_objects/DataObject.h>
 #include <core/data_objects/RenderedData.h>
 #include <core/vector_mapping/VectorsForSurfaceMappingRegistry.h>
 
 
 namespace
 {
-const QString s_name = "attribute array vectors";
+const QString s_name = "cell data vectors";
 }
 
 const bool AttributeVectorMapping::s_registered = VectorsForSurfaceMappingRegistry::instance().registerImplementation(
     s_name,
     newInstances);
 
+using namespace reflectionzeug;
+
+
 QList<VectorsForSurfaceMapping *> AttributeVectorMapping::newInstances(RenderedData * renderedData)
 {
-    QList<AttributeVectorData *> attrs;
+    vtkPolyData * polyData = vtkPolyData::SafeDownCast(renderedData->dataObject()->dataSet());
+    // only polygonal datasets are supported
+    if (!polyData)
+        return{};
 
-    for (AttributeVectorData * attr : DataSetHandler::instance().attributeVectors())
+
+    // find 3D-vector data, skip the "centroid"
+
+    vtkCellData * cellData = polyData->GetCellData();
+    QList<vtkDataArray *> vectorArrays;
+    for (int i = 0; vtkDataArray * a = cellData->GetArray(i); ++i)
     {
-        if (attr->dataArray()->GetNumberOfTuples() >= renderedData->dataObject()->dataSet()->GetNumberOfCells())
-            attrs << attr;
+        assert(a);
+        QString name(a->GetName());
+        if (name == "centroid" || name == "Normals")
+            continue;
+
+        if (a->GetInformation()->Has(DataObject::ArrayIsAuxiliaryKey())
+            && a->GetInformation()->Get(DataObject::ArrayIsAuxiliaryKey()))
+            continue;
+
+        vectorArrays << a;
     }
 
     QList<VectorsForSurfaceMapping *> instances;
-    for (AttributeVectorData * attr : attrs)
+    for (vtkDataArray * vectorsArray : vectorArrays)
     {
-        AttributeVectorMapping * mapping = new AttributeVectorMapping(renderedData, attr);
+        AttributeVectorMapping * mapping = new AttributeVectorMapping(renderedData, vectorsArray);
         if (mapping->isValid())
         {
             mapping->initialize();
@@ -58,9 +75,9 @@ QList<VectorsForSurfaceMapping *> AttributeVectorMapping::newInstances(RenderedD
     return instances;
 }
 
-AttributeVectorMapping::AttributeVectorMapping(RenderedData * renderedData, AttributeVectorData * attributeVector)
+AttributeVectorMapping::AttributeVectorMapping(RenderedData * renderedData, vtkDataArray * vectorData)
     : VectorsForSurfaceMapping(renderedData)
-    , m_attributeVector(attributeVector)
+    , m_dataArray(vectorData)
 {
     if (!m_isValid)
         return;
@@ -72,67 +89,20 @@ AttributeVectorMapping::~AttributeVectorMapping() = default;
 
 QString AttributeVectorMapping::name() const
 {
-    assert(m_attributeVector);
-    return QString::fromLatin1(m_attributeVector->dataArray()->GetName());
-}
-
-vtkIdType AttributeVectorMapping::maximumStartingIndex()
-{
-    vtkIdType diff = m_attributeVector->dataArray()->GetNumberOfTuples()
-        - renderedData()->dataObject()->dataSet()->GetNumberOfCells();
-
-    assert(diff >= 0);
-
-    return diff;
+    assert(m_dataArray);
+    return QString::fromLatin1(m_dataArray->GetName());
 }
 
 void AttributeVectorMapping::initialize()
 {
-    vtkFloatArray * dataArray = m_attributeVector->dataArray();
-    QByteArray sectionName = (QString::fromLatin1(m_attributeVector->dataArray()->GetName()) + "_" + QString::number((vtkIdType)this)).toLatin1();
-    vtkIdType numComponents = dataArray->GetNumberOfComponents();
-    vtkIdType numTuples = dataArray->GetNumberOfTuples() - startingIndex();
-
-    m_sectionArray = vtkSmartPointer<vtkFloatArray>::New();
-    m_sectionArray->GetInformation()->Set(DataObject::ArrayIsAuxiliaryKey(), true);
-    m_sectionArray->SetName(sectionName.data());
-    m_sectionArray->SetNumberOfComponents(numComponents);
-
-    m_sectionArray->SetNumberOfTuples(numTuples);
-    m_sectionArray->SetArray(dataArray->GetPointer(startingIndex() * numComponents), numTuples * numComponents, true);
-
-    polyData()->GetCellData()->AddArray(m_sectionArray);
+    assert(polyData());
 
     VTK_CREATE(vtkCellCenters, centroidPoints);
     centroidPoints->SetInputData(polyData());
 
     VTK_CREATE(vtkAssignAttribute, assignAttribute);
     assignAttribute->SetInputConnection(centroidPoints->GetOutputPort());
-    assignAttribute->Assign(m_sectionArray->GetName(), vtkDataSetAttributes::VECTORS, vtkAssignAttribute::POINT_DATA);
+    assignAttribute->Assign(m_dataArray->GetName(), vtkDataSetAttributes::VECTORS, vtkAssignAttribute::POINT_DATA);
 
     arrowGlyph()->SetInputConnection(assignAttribute->GetOutputPort());
-
-    m_vtkQtConnect = vtkSmartPointer<vtkEventQtSlotConnect>::New();
-    m_vtkQtConnect->Connect(dataArray, vtkCommand::ModifiedEvent, this, SLOT(updateForChangedData()));
-}
-
-void AttributeVectorMapping::startingIndexChangedEvent()
-{
-    vtkFloatArray * dataArray = m_attributeVector->dataArray();
-    vtkIdType numComponents = dataArray->GetNumberOfComponents();
-    vtkIdType numTuples = dataArray->GetNumberOfTuples() - startingIndex();
-
-    m_sectionArray->SetNumberOfTuples(numTuples);
-    m_sectionArray->SetArray(dataArray->GetPointer(startingIndex() * numComponents), numTuples * numComponents, true);
-
-    m_sectionArray->Modified();
-
-    emit geometryChanged();
-}
-
-void AttributeVectorMapping::updateForChangedData()
-{
-    m_sectionArray->Modified();
-
-    emit geometryChanged();
 }

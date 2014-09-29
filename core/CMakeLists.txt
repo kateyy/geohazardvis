@@ -4,7 +4,7 @@ message( STATUS ${TARGET} )
 
 set ( SOURCES
     ${TARGET}_api.h
-    
+
     DataSetHandler.h
     DataSetHandler.cpp
     Loader.h
@@ -17,17 +17,17 @@ set ( SOURCES
     common/ebem3d_common.h
     common/file_parser.h
     common/file_parser.cpp
-    
+
     data_objects/DataObject.h
     data_objects/DataObject.cpp
-    data_objects/AttributeVectorData.h
-    data_objects/AttributeVectorData.cpp
     data_objects/ImageDataObject.h
     data_objects/ImageDataObject.cpp
     data_objects/PolyDataObject.h
     data_objects/PolyDataObject.cpp
     data_objects/VectorGrid3DDataObject.h
     data_objects/VectorGrid3DDataObject.cpp
+    data_objects/RawVectorData.h
+    data_objects/RawVectorData.cpp
     data_objects/RenderedData.h
     data_objects/RenderedData.cpp
     data_objects/RenderedImageData.h
@@ -75,10 +75,10 @@ set ( SOURCES
     vector_mapping/VectorsForSurfaceMappingRegistry.cpp
     vector_mapping/AttributeVectorMapping.h
     vector_mapping/AttributeVectorMapping.cpp
-    vector_mapping/CellDataVectorMapping.h
-    vector_mapping/CellDataVectorMapping.cpp
+    vector_mapping/RawVectorMapping.h
+    vector_mapping/RawVectorMapping.cpp
     vector_mapping/SurfaceNormalMapping.h
-    vector_mapping/SurfaceNormalMapping.cpp    
+    vector_mapping/SurfaceNormalMapping.cpp
 )
 
 source_group_by_path(${CMAKE_CURRENT_SOURCE_DIR} "\\\\.cpp$|\\\\.c$|\\\\.h$|\\\\.hpp$|\\\\.ui$|\\\\.inl$"

@@ -1,43 +1,31 @@
 #pragma once
 
+#include <vtkSmartPointer.h>
+
 #include <core/vector_mapping/VectorsForSurfaceMapping.h>
 
 
-class vtkFloatArray;
-class vtkEventQtSlotConnect;
-
-class AttributeVectorData;
+class vtkDataArray;
 
 
-class AttributeVectorMapping : public VectorsForSurfaceMapping
+class CORE_API AttributeVectorMapping : public VectorsForSurfaceMapping
 {
-    Q_OBJECT
-
 public:
     ~AttributeVectorMapping() override;
 
     QString name() const override;
 
-    vtkIdType maximumStartingIndex() override;
-
 protected:
+    /** create an instance for each 3D vector array found in the renderedData */
     static QList<VectorsForSurfaceMapping *> newInstances(RenderedData * renderedData);
 
-    AttributeVectorMapping(RenderedData * renderedData, AttributeVectorData * attributeVector);
+    /** create an instances that maps vectors from vectorData to the renderedData's geometry */
+    AttributeVectorMapping(RenderedData * renderedData, vtkDataArray * vectorData);
 
     void initialize() override;
-
-    void startingIndexChangedEvent() override;
-
-protected slots:
-    void updateForChangedData();
 
 private:
     static const bool s_registered;
 
-    AttributeVectorData * m_attributeVector;
-
-    vtkSmartPointer<vtkFloatArray> m_sectionArray;
-
-    vtkSmartPointer<vtkEventQtSlotConnect> m_vtkQtConnect;
+    vtkSmartPointer<vtkDataArray> m_dataArray;
 };

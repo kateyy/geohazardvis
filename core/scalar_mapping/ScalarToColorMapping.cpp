@@ -23,7 +23,7 @@ ScalarToColorMapping::ScalarToColorMapping()
 
     clear();
 
-    connect(&DataSetHandler::instance(), &DataSetHandler::attributeVectorsChanged,
+    connect(&DataSetHandler::instance(), &DataSetHandler::rawVectorsChanged,
         this, &ScalarToColorMapping::updateAvailableScalars);
 }
 

@@ -4,7 +4,7 @@
 
 #include <vtkFloatArray.h>
 
-#include <core/data_objects/AttributeVectorData.h>
+#include <core/data_objects/RawVectorData.h>
 
 
 QVtkTableModelRawVector::QVtkTableModelRawVector(QObject * parent)
@@ -104,7 +104,7 @@ Qt::ItemFlags QVtkTableModelRawVector::flags(const QModelIndex &index) const
 
 void QVtkTableModelRawVector::resetDisplayData()
 {
-    if (AttributeVectorData * dataVector = dynamic_cast<AttributeVectorData *>(dataObject()))
+    if (RawVectorData * dataVector = dynamic_cast<RawVectorData *>(dataObject()))
         m_data = dataVector->dataArray();
     else
         m_data = nullptr;
