@@ -90,8 +90,8 @@ bool QVtkTableModelVectorGrid3D::setData(const QModelIndex & index, const QVaria
 
 Qt::ItemFlags QVtkTableModelVectorGrid3D::flags(const QModelIndex &index) const
 {
-    if (index.column() > 3)
-        return Qt::ItemIsEditable | QAbstractItemModel::flags(index);
+    //if (index.column() > 3)
+    //    return Qt::ItemIsEditable | QAbstractItemModel::flags(index);
 
     return QAbstractItemModel::flags(index);
 }

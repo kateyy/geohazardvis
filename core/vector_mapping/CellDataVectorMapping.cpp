@@ -9,7 +9,8 @@
 
 #include <vtkGlyph3D.h>
 
-#include <vtkVertexGlyphFilter.h>
+#include <vtkCellCenters.h>
+#include <vtkAssignAttribute.h>
 
 #include <vtkInformation.h>
 #include <vtkInformationIntegerKey.h>
@@ -96,23 +97,12 @@ void CellDataVectorMapping::initialize()
 {
     assert(polyData());
 
-    vtkCellData * cellData = polyData()->GetCellData();
-    
-    vtkSmartPointer<vtkDataArray> centroids = cellData->GetArray("centroid");
-    assert(centroids);
+    VTK_CREATE(vtkCellCenters, centroidPoints);
+    centroidPoints->SetInputData(polyData());
 
-    VTK_CREATE(vtkPoints, points);
-    points->SetData(centroids);
+    VTK_CREATE(vtkAssignAttribute, assignAttribute);
+    assignAttribute->SetInputConnection(centroidPoints->GetOutputPort());
+    assignAttribute->Assign(m_dataArray->GetName(), vtkDataSetAttributes::VECTORS, vtkAssignAttribute::POINT_DATA);
 
-    VTK_CREATE(vtkPolyData, pointsPolyData);
-    pointsPolyData->SetPoints(points);
-
-    VTK_CREATE(vtkVertexGlyphFilter, filter);
-    filter->SetInputData(pointsPolyData);
-    filter->Update();
-    vtkPolyData * processedPoints = filter->GetOutput();
-
-    processedPoints->GetPointData()->SetVectors(m_dataArray);
-
-    arrowGlyph()->SetInputData(processedPoints);
+    arrowGlyph()->SetInputConnection(assignAttribute->GetOutputPort());
 }
