@@ -32,7 +32,7 @@
 #include <vtkCellData.h>
 
 #include <core/vtkhelper.h>
-#include <core/data_objects/DataObject.h>
+#include <core/data_objects/PolyDataObject.h>
 #include <core/data_objects/RenderedData.h>
 
 
@@ -294,6 +294,10 @@ bool circleLineIntersection(double radius, double P0[2], double P1[2], double in
 
 void InteractorStyle3D::lookAtCell(DataObject * dataObject, vtkIdType cellId)
 {
+    PolyDataObject * polyDataObject = dynamic_cast<PolyDataObject *>(dataObject);
+    if (!polyDataObject)
+        return;
+
     vtkDataSet * dataSet = dataObject->dataSet();
     vtkPolyData * polyData = vtkPolyData::SafeDownCast(dataObject->dataSet());
 
@@ -305,14 +309,13 @@ void InteractorStyle3D::lookAtCell(DataObject * dataObject, vtkIdType cellId)
     const double * targetFocalPoint(objectCenter);
     double targetPositionXY[2];
 
-
     double objectToEye[3];
     vtkMath::Subtract(eyePosition, objectCenter, objectToEye);
     double viewDistanceXY = vtkMath::Normalize2D(objectToEye);
 
-    vtkDataArray * centroids = dataSet->GetCellData()->GetArray("centroid");
-    assert(centroids && centroids->GetNumberOfComponents() == 3);
-    double selectionCenterXY[2] = { centroids->GetTuple(cellId)[0], centroids->GetTuple(cellId)[1] };
+    double centroid[3];
+    polyDataObject->cellCenters()->GetPoint(cellId, centroid);
+    double selectionCenterXY[2] = { centroid[0], centroid[1] };
 
     vtkTriangle * triangle = vtkTriangle::SafeDownCast(dataSet->GetCell(cellId));
     assert(triangle);
@@ -427,16 +430,18 @@ void InteractorStyle3D::sendPointInfo() const
     stream
         << "data set: " << inputName << endl;
 
-
-    vtkCellData * cellData = nullptr; vtkDataArray * centroids = nullptr;
-    if (cellMapper && (cellData = m_cellPicker->GetDataSet()->GetCellData()))
-        centroids = cellData->GetArray("centroid");
-
+    PolyDataObject * polyData = nullptr;
+    if (cellMapper)
+    {
+        DataObject * dataObject = DataObject::getDataObject(cellMapper->GetInformation());
+        polyData = dynamic_cast<PolyDataObject *>(dataObject);
+    }
     // for poly data: centroid and scalar information if available
-    if (centroids)
+    if (polyData)
     {
         vtkIdType cellId = m_cellPicker->GetCellId();
-        double * centroid = centroids->GetTuple(cellId);
+        double centroid[3];
+        polyData->cellCenters()->GetPoint(cellId, centroid);
         stream
             << "triangle index: " << cellId << endl
             << "x: " << centroid[0] << endl
@@ -445,7 +450,7 @@ void InteractorStyle3D::sendPointInfo() const
 
         vtkMapper * concreteMapper = vtkMapper::SafeDownCast(cellMapper);
         assert(concreteMapper);
-        vtkDataArray * scalars = cellData->GetScalars();
+        vtkDataArray * scalars = polyData->processedDataSet()->GetCellData()->GetScalars();
         if (concreteMapper && scalars)
         {
             double value =
