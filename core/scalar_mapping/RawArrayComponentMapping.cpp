@@ -112,6 +112,7 @@ vtkAlgorithm * RawArrayComponentMapping::createFilter(DataObject * dataObject)
 {
     vtkAssignAttribute * filter = vtkAssignAttribute::New();
 
+    filter->SetInputConnection(dataObject->processedOutputPort());
     filter->Assign(arraySectionName(dataObject).data(), vtkDataSetAttributes::SCALARS,
         vtkAssignAttribute::CELL_DATA);
 

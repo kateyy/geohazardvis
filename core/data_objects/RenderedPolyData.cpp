@@ -256,7 +256,6 @@ vtkPolyDataMapper * RenderedPolyData::createDataMapper()
     if (m_scalars->usesFilter())
     {
         vtkSmartPointer<vtkAlgorithm> filter = vtkSmartPointer<vtkAlgorithm>::Take(m_scalars->createFilter(dataObject()));
-        filter->SetInputConnection(dataObject()->processedOutputPort());
         mapper->SetInputConnection(filter->GetOutputPort());
     }
     else

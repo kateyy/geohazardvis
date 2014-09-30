@@ -49,7 +49,7 @@ public:
 
     /** create a filter to map values to color, applying current min/max settings
       * @param dataObject is required to setup object specific parameters on the filter.
-      *     The filter input is not set by this method.
+      *        The filter inputs are set as required.
       * May be implemented by subclasses, returns nullptr by default. */
     virtual vtkAlgorithm * createFilter(DataObject * dataObject);
     virtual bool usesFilter() const;

@@ -109,12 +109,13 @@ AttributeArrayComponentMapping::AttributeArrayComponentMapping(const QList<DataO
 
 AttributeArrayComponentMapping::~AttributeArrayComponentMapping() = default;
 
-vtkAlgorithm * AttributeArrayComponentMapping::createFilter(DataObject * /*dataObject*/)
+vtkAlgorithm * AttributeArrayComponentMapping::createFilter(DataObject * dataObject)
 {
     vtkAssignAttribute * filter = vtkAssignAttribute::New();
 
     QByteArray c_name = m_dataArrayName.toLatin1();
 
+    filter->SetInputConnection(dataObject->processedOutputPort());
     filter->Assign(c_name.data(), vtkDataSetAttributes::SCALARS,
         vtkAssignAttribute::CELL_DATA);
 
