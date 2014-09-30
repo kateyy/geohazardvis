@@ -17,7 +17,6 @@ const map<string, DatasetType> datasetNamesTypes = {
         { "vertices", DatasetType::vertices },
         { "indices", DatasetType::indices },
         { "grid2d", DatasetType::grid2D },
-        { "centroid", DatasetType::centroid },
         { "vectors", DatasetType::vectors },
         { "vectorGrid3D", DatasetType::vectorGrid3D } };
 const map<string, ModelType> modelNamesType = {
@@ -188,10 +187,6 @@ bool TextFileReader::readHeader_triangles(ifstream & inputStream, vector<Dataset
         case DatasetType::vertices:
             tupleSize = 4;
             numTuples = stoul(parameter);
-            break;
-        case DatasetType::centroid:
-            tupleSize = 3;
-            numTuples = numCells;
             break;
         case DatasetType::vectors:
         {

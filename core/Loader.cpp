@@ -58,7 +58,6 @@ DataObject * Loader::loadIndexedTriangles(QString name, const std::vector<ReadDa
     
     const InputVector * indices = nullptr;
     const InputVector * vertices = nullptr;
-    const InputVector * centroid = nullptr;
     std::map<std::string, const InputVector *> vectorArrays;
 
     for (const ReadDataset & dataSet : datasets)
@@ -68,8 +67,6 @@ DataObject * Loader::loadIndexedTriangles(QString name, const std::vector<ReadDa
         case DatasetType::vertices: vertices = &dataSet.data;
             break;
         case DatasetType::indices: indices = &dataSet.data;
-            break;
-        case DatasetType::centroid: centroid = &dataSet.data;
             break;
         case DatasetType::vectors: vectorArrays.emplace(dataSet.attributeName, &dataSet.data);
             break;
@@ -81,18 +78,6 @@ DataObject * Loader::loadIndexedTriangles(QString name, const std::vector<ReadDa
     assert(indices != nullptr && vertices != nullptr);
 
     vtkSmartPointer<vtkPolyData> polyData = vtkSmartPointer<vtkPolyData>::Take(parseIndexedTriangles(*vertices, 0, 1, *indices, 0));
-
-    if (centroid)
-    {
-        const vtkIdType numCells = polyData->GetNumberOfCells();
-        assert(centroid->size() == 3);
-        assert(size_t(numCells) == centroid->front().size());
-
-        vtkSmartPointer<vtkFloatArray> a;
-        a.TakeReference(parseFloatVector(*centroid, "centroid", 0, 2));
-
-        polyData->GetCellData()->AddArray(a);
-    }
 
     for (auto namedVector : vectorArrays)
     {
