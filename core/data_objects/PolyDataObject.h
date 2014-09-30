@@ -29,6 +29,9 @@ public:
 
     QString dataTypeName() const override;
 
+    bool setCellCenterComponent(vtkIdType cellId, int component, double value);
+    bool setCellNormalComponent(vtkIdType cellId, int component, double value);
+
 protected:
     QVtkTableModel * createTableModel() override;
 

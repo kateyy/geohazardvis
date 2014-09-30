@@ -3,6 +3,7 @@
 #include <cassert>
 
 #include <vtkPolyData.h>
+#include <vtkCellData.h>
 #include <vtkCell.h>
 
 #include <core/data_objects/PolyDataObject.h>
@@ -23,7 +24,7 @@ int QVtkTableModelPolyData::rowCount(const QModelIndex &/*parent*/) const
 
 int QVtkTableModelPolyData::columnCount(const QModelIndex &/*parent*/) const
 {
-    return 5;
+    return 8;
 }
 
 QVariant QVtkTableModelPolyData::data(const QModelIndex &index, int role) const
@@ -59,6 +60,17 @@ QVariant QVtkTableModelPolyData::data(const QModelIndex &index, int role) const
         assert(component >= 0 && component < 3);
         return centroid[component];
     }
+    case 5:
+    case 6:
+    case 7:
+    {
+        vtkDataArray * normals = m_polyData->processedDataSet()->GetCellData()->GetNormals();
+        assert(normals);
+        const double * normal = normals->GetTuple(cellId);
+        int component = index.column() - 5;
+        assert(component >= 0 && component < 3);
+        return normal[component];
+    }
     }
 
     return QVariant();
@@ -76,6 +88,9 @@ QVariant QVtkTableModelPolyData::headerData(int section, Qt::Orientation orienta
     case 2: return "x";
     case 3: return "y";
     case 4: return "z";
+    case 5: return "normal x";
+    case 6: return "normal y";
+    case 7: return "normal z";
     }
 
     return QVariant();
@@ -86,41 +101,25 @@ bool QVtkTableModelPolyData::setData(const QModelIndex & index, const QVariant &
     if (role != Qt::EditRole || index.column() < 2 || !m_polyData)
         return false;
 
-    // get the delta between current and changed centroid coordinate value
     bool ok;
-    double formerValue = data(index).toDouble(&ok);
-    assert(ok);
     double newValue = value.toDouble(&ok);
     if (!ok)
         return false;
 
-    double valueDelta = value.toDouble(&ok) - formerValue;
-
-
     vtkIdType cellId = index.row();
-    int component = index.column() - 2;
-    assert(component >= 0 && component < 3);
 
-    vtkSmartPointer<vtkPolyData> dataSet = vtkPolyData::SafeDownCast(m_polyData->dataSet());
-    assert(dataSet);
-
-    vtkCell * cell = dataSet->GetCell(cellId);
-    vtkIdList * pointIds = cell->GetPointIds();
-
-
-    // apply the value delta to all point of the triangle
-    double point[3];
-    for (int i = 0; i < pointIds->GetNumberOfIds(); ++i)
+    if (index.column() < 5)
     {
-        vtkIdType pointId = pointIds->GetId(i);
-        dataSet->GetPoint(pointId, point);
-        point[component] += valueDelta;
-        dataSet->GetPoints()->SetPoint(pointId, point);
+        int component = index.column() - 2;
+        return m_polyData->setCellCenterComponent(cellId, component, newValue);
+    }
+    else if (index.column() < 8)
+    {
+        int component = index.column() - 5;
+        return m_polyData->setCellNormalComponent(cellId, component, newValue);
     }
 
-    dataSet->Modified();
-
-    return true;
+    return false;
 }
 
 Qt::ItemFlags QVtkTableModelPolyData::flags(const QModelIndex &index) const

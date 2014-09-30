@@ -21,5 +21,6 @@ public:
 protected:
     void resetDisplayData() override;
 
+private:
     PolyDataObject * m_polyData;
 };
