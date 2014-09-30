@@ -6,6 +6,7 @@
 
 class vtkPolyData;
 class vtkCellCenters;
+class vtkPolyDataNormals;
 class vtkAlgorithmOutput;
 
 
@@ -19,6 +20,9 @@ public:
     vtkPolyData * cellCenters();
     vtkAlgorithmOutput * cellCentersOutputPort();
 
+    vtkPolyData * cellNormals();
+    vtkAlgorithmOutput * cellNormalsOuputPort();
+
     RenderedData * createRendered() override;
 
     QString dataTypeName() const override;
@@ -27,4 +31,5 @@ protected:
     QVtkTableModel * createTableModel() override;
 
     vtkSmartPointer<vtkCellCenters> m_cellCenters;
+    vtkSmartPointer<vtkPolyDataNormals> m_cellNormals;
 };
