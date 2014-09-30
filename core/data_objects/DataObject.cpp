@@ -7,6 +7,7 @@
 #include <vtkCellData.h>
 #include <vtkDataArray.h>
 #include <vtkEventQtSlotConnect.h>
+#include <vtkTrivialProducer.h>
 
 #include <core/table_model/QVtkTableModel.h>
 
@@ -48,6 +49,22 @@ vtkDataSet * DataObject::dataSet()
 const vtkDataSet * DataObject::dataSet() const
 {
     return m_dataSet;
+}
+
+vtkDataSet * DataObject::processedDataSet()
+{
+    return m_dataSet;
+}
+
+vtkAlgorithmOutput * DataObject::processedOutputPort()
+{
+    if (!m_trivialProducer)
+    {
+        m_trivialProducer = vtkSmartPointer<vtkTrivialProducer>::New();
+        m_trivialProducer->SetOutput(m_dataSet);
+    }
+
+    return m_trivialProducer->GetOutputPort();
 }
 
 const double * DataObject::bounds()

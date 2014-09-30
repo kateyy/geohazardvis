@@ -11,6 +11,8 @@
 class vtkInformationStringKey;
 class vtkInformationIntegerKey;
 class vtkDataSet;
+class vtkAlgorithmOutput;
+class vtkTrivialProducer;
 class vtkEventQtSlotConnect;
 class QVtkTableModel;
 class RenderedData;
@@ -36,6 +38,9 @@ public:
 
     vtkDataSet * dataSet();
     const vtkDataSet * dataSet() const;
+
+    virtual vtkDataSet * processedDataSet();
+    virtual vtkAlgorithmOutput * processedOutputPort();
 
     const double * bounds();
 
@@ -70,6 +75,8 @@ private:
 
     vtkSmartPointer<vtkDataSet> m_dataSet;
     QVtkTableModel * m_tableModel;
+
+    vtkSmartPointer<vtkTrivialProducer> m_trivialProducer;
 
     double m_bounds[6];
 

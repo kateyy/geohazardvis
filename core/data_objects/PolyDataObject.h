@@ -5,8 +5,8 @@
 
 
 class vtkPolyData;
-class vtkCellCenters;
 class vtkPolyDataNormals;
+class vtkCellCenters;
 class vtkAlgorithmOutput;
 
 
@@ -17,11 +17,13 @@ public:
 
     bool is3D() const override;
 
+    /** @return poly data set with cell normals */
+    vtkDataSet * processedDataSet() override;
+    vtkAlgorithmOutput * processedOutputPort() override;
+
+    /** @return centroids with normals, computed from polygonal data set cells */
     vtkPolyData * cellCenters();
     vtkAlgorithmOutput * cellCentersOutputPort();
-
-    vtkPolyData * cellNormals();
-    vtkAlgorithmOutput * cellNormalsOuputPort();
 
     RenderedData * createRendered() override;
 
@@ -30,6 +32,6 @@ public:
 protected:
     QVtkTableModel * createTableModel() override;
 
-    vtkSmartPointer<vtkCellCenters> m_cellCenters;
     vtkSmartPointer<vtkPolyDataNormals> m_cellNormals;
+    vtkSmartPointer<vtkCellCenters> m_cellCenters;
 };

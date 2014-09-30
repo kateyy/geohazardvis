@@ -26,8 +26,8 @@ namespace
 
 PolyDataObject::PolyDataObject(QString name, vtkPolyData * dataSet)
     : DataObject(name, dataSet)
-    , m_cellCenters(vtkSmartPointer<vtkCellCenters>::New())
     , m_cellNormals(vtkSmartPointer<vtkPolyDataNormals>::New())
+    , m_cellCenters(vtkSmartPointer<vtkCellCenters>::New())
 {
 
     if (!dataSet->GetCellData()->HasArray("centroid"))
@@ -65,6 +65,17 @@ bool PolyDataObject::is3D() const
     return true;
 }
 
+vtkDataSet * PolyDataObject::processedDataSet()
+{
+    m_cellCenters->Update();
+    return m_cellCenters->GetOutput();
+}
+
+vtkAlgorithmOutput * PolyDataObject::processedOutputPort()
+{
+    return m_cellCenters->GetOutputPort();
+}
+
 vtkPolyData * PolyDataObject::cellCenters()
 {
     m_cellCenters->Update();
@@ -76,16 +87,6 @@ vtkAlgorithmOutput * PolyDataObject::cellCentersOutputPort()
     return m_cellCenters->GetOutputPort();
 }
 
-vtkPolyData * PolyDataObject::cellNormals()
-{
-    m_cellNormals->Update();
-    return m_cellNormals->GetOutput();
-}
-
-vtkAlgorithmOutput * PolyDataObject::cellNormalsOuputPort()
-{
-    return m_cellNormals->GetOutputPort();
-}
 
 RenderedData * PolyDataObject::createRendered()
 {
