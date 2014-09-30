@@ -91,16 +91,19 @@ reflectionzeug::PropertyGroup * RenderedPolyData::createConfigGroup()
     });
     edgesVisible->setOption("title", "edge visible");
 
-    auto * lineWidth = renderSettings->addProperty<float>("lineWidth",
-        std::bind(&vtkProperty::GetLineWidth, renderProperty()),
-        [this](float width) {
+    auto * lineWidth = renderSettings->addProperty<unsigned>("lineWidth",
+        [this] () {
+        return static_cast<unsigned>(renderProperty()->GetLineWidth());
+    },
+        [this] (unsigned width) {
         renderProperty()->SetLineWidth(width);
         emit geometryChanged();
     });
     lineWidth->setOption("title", "line width");
-    lineWidth->setOption("minimum", 0.1f);
-    lineWidth->setOption("maximum", std::numeric_limits<float>::max());
-    lineWidth->setOption("step", 0.1f);
+    lineWidth->setOption("minimum", 1);
+    lineWidth->setOption("maximum", std::numeric_limits<unsigned>::max());
+    lineWidth->setOption("step", 1);
+    lineWidth->setOption("suffix", " pixel");
 
     auto * edgeColor = renderSettings->addProperty<Color>("edgeColor",
         [this]() {
@@ -153,15 +156,16 @@ reflectionzeug::PropertyGroup * RenderedPolyData::createConfigGroup()
 
     auto transparency = renderSettings->addProperty<double>("transparency",
         [this]() {
-        return 1.0 - renderProperty()->GetOpacity();
+        return (1.0 - renderProperty()->GetOpacity()) * 100;
     },
         [this](double transparency) {
-        renderProperty()->SetOpacity(1.0 - transparency);
+        renderProperty()->SetOpacity(1.0 - transparency * 0.01);
         emit geometryChanged();
     });
-    transparency->setOption("minimum", 0.f);
-    transparency->setOption("maximum", 1.f);
-    transparency->setOption("step", 0.01f);
+    transparency->setOption("minimum", 0);
+    transparency->setOption("maximum", 100);
+    transparency->setOption("step", 1);
+    transparency->setOption("suffix", " %");
 
     auto pointSize = renderSettings->addProperty<unsigned>("pointSize",
         [this]() {
@@ -175,6 +179,7 @@ reflectionzeug::PropertyGroup * RenderedPolyData::createConfigGroup()
     pointSize->setOption("minimum", 1);
     pointSize->setOption("maximum", 20);
     pointSize->setOption("step", 1);
+    pointSize->setOption("suffix", " pixel");
 
     return configGroup;
 }
