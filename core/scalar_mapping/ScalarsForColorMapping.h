@@ -81,6 +81,9 @@ protected:
     /** check whether these scalar extraction is applicable for the data objects it was created with */
     virtual bool isValid() const = 0;
 
+    void setDataMinMaxValue(const double minMax[2]);
+    void setDataMinMaxValue(double min, double max);
+
 protected:
     virtual void minMaxChangedEvent();
     virtual void startingIndexChangedEvent();
@@ -89,6 +92,7 @@ protected:
 protected:
     QList<DataObject *> m_dataObjects;
 
+private:
     vtkIdType m_startingIndex;
 
     double m_dataMinValue;

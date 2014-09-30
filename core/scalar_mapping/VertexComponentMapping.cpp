@@ -104,8 +104,5 @@ void VertexComponentMapping::updateBounds()
         totalRange[1] = std::max(totalRange[1], objectBounds[2 * m_component + 1]);
     }
 
-    m_dataMinValue = totalRange[0];
-    m_dataMaxValue = totalRange[1];
-
-    ScalarsForColorMapping::updateBounds();
+    setDataMinMaxValue(totalRange);
 }

@@ -154,8 +154,5 @@ void AttributeArrayComponentMapping::updateBounds()
         totalRange[1] = std::max(totalRange[1], range[1]);
     }
 
-    m_dataMinValue = totalRange[0];
-    m_dataMaxValue = totalRange[1];
-
-    ScalarsForColorMapping::updateBounds();
+    setDataMinMaxValue(totalRange);
 }

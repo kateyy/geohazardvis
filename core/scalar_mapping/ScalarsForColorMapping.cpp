@@ -119,10 +119,13 @@ void ScalarsForColorMapping::setMaxValue(double value)
     minMaxChangedEvent();
 }
 
-void ScalarsForColorMapping::updateBounds()
+void ScalarsForColorMapping::setDataMinMaxValue(const double minMax[2])
 {
+    m_dataMinValue = minMax[0];
+    m_dataMaxValue = minMax[1];
+
     bool minMaxChanged = false;
-    
+
     // reset user selected ranges only if really needed
     if (m_minValue < m_dataMinValue || m_minValue > m_dataMaxValue)
     {
@@ -134,11 +137,17 @@ void ScalarsForColorMapping::updateBounds()
         m_maxValue = m_dataMaxValue;
         minMaxChanged = true;
     }
-    
+
     if (minMaxChanged)
         minMaxChangedEvent();
 
     emit dataMinMaxChanged();
+}
+
+void ScalarsForColorMapping::setDataMinMaxValue(double min, double max)
+{
+    double minMax[2] = { min, max };
+    setDataMinMaxValue(minMax);
 }
 
 void ScalarsForColorMapping::minMaxChangedEvent()

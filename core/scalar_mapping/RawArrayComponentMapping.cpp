@@ -159,13 +159,7 @@ void RawArrayComponentMapping::initialize()
 
 void RawArrayComponentMapping::updateBounds()
 {
-    double range[2];
-    m_rawVector->dataArray()->GetRange(range, m_component);
-
-    m_dataMinValue = range[0];
-    m_dataMaxValue = range[1];
-
-    ScalarsForColorMapping::updateBounds();
+    setDataMinMaxValue(m_rawVector->dataArray()->GetRange(m_component));
 }
 
 void RawArrayComponentMapping::startingIndexChangedEvent()

@@ -28,10 +28,7 @@ QString GridColorMapping::name() const
 
 void GridColorMapping::updateBounds()
 {
-    m_dataMinValue = m_dataObject->minMaxValue()[0];
-    m_dataMaxValue = m_dataObject->minMaxValue()[1];
-
-    ScalarsForColorMapping::updateBounds();
+    setDataMinMaxValue(m_dataObject->minMaxValue());
 }
 
 bool GridColorMapping::isValid() const
