@@ -36,7 +36,8 @@ QList<ScalarsForColorMapping *> AttributeArrayComponentMapping::newInstances(con
     // list all available array names, check for same number of components
     for (DataObject * dataObject : dataObjects)
     {
-        vtkCellData * cellData = dataObject->dataSet()->GetCellData();
+        vtkDataSet * dataSet = dataObject->processedDataSet();
+        vtkCellData * cellData = dataSet->GetCellData();
         const int numArrays = cellData->GetNumberOfArrays();
         for (vtkIdType i = 0; i < numArrays; ++i)
         {
@@ -96,7 +97,7 @@ AttributeArrayComponentMapping::AttributeArrayComponentMapping(const QList<DataO
     vtkDataArray * anArray = nullptr;
     for (DataObject * dataObject : dataObjects)
     {
-        anArray = dataObject->dataSet()->GetCellData()->GetArray(c_name.data());
+        anArray = dataObject->processedDataSet()->GetCellData()->GetArray(c_name.data());
         if (anArray)
             break;
     }
@@ -141,7 +142,7 @@ void AttributeArrayComponentMapping::updateBounds()
     double totalRange[2] = { std::numeric_limits<float>::max(), std::numeric_limits<float>::lowest() };
     for (DataObject * dataObject : m_dataObjects)
     {
-        vtkDataArray * dataArray = dataObject->dataSet()->GetCellData()->GetArray(c_name.data());
+        vtkDataArray * dataArray = dataObject->processedDataSet()->GetCellData()->GetArray(c_name.data());
 
         if (!dataArray)
             continue;

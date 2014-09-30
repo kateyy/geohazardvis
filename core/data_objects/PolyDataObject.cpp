@@ -67,13 +67,13 @@ bool PolyDataObject::is3D() const
 
 vtkDataSet * PolyDataObject::processedDataSet()
 {
-    m_cellCenters->Update();
-    return m_cellCenters->GetOutput();
+    m_cellNormals->Update();
+    return m_cellNormals->GetOutput();
 }
 
 vtkAlgorithmOutput * PolyDataObject::processedOutputPort()
 {
-    return m_cellCenters->GetOutputPort();
+    return m_cellNormals->GetOutputPort();
 }
 
 vtkPolyData * PolyDataObject::cellCenters()

@@ -244,23 +244,23 @@ vtkPolyDataMapper * RenderedPolyData::createDataMapper()
     // no mapping yet, so just render the data set
     if (!m_scalars || !m_lut)
     {
-        mapper->SetInputDataObject(dataObject()->dataSet());
+        mapper->SetInputConnection(dataObject()->processedOutputPort());
         return mapper;
     }
 
     m_scalars->configureDataObjectAndMapper(dataObject(), mapper);
 
     // don't break the lut configuration
-    mapper->SetUseLookupTableScalarRange(true);
+    mapper->UseLookupTableScalarRangeOn();
 
     if (m_scalars->usesFilter())
     {
         vtkSmartPointer<vtkAlgorithm> filter = vtkSmartPointer<vtkAlgorithm>::Take(m_scalars->createFilter(dataObject()));
-        filter->SetInputDataObject(dataObject()->dataSet());
+        filter->SetInputConnection(dataObject()->processedOutputPort());
         mapper->SetInputConnection(filter->GetOutputPort());
     }
     else
-        mapper->SetInputDataObject(dataObject()->dataSet());
+        mapper->SetInputConnection(dataObject()->processedOutputPort());
 
     mapper->SetLookupTable(m_lut);
 
