@@ -1,29 +1,24 @@
 #include "QVtkTableModelPolyData.h"
 
 #include <cassert>
-#include <QSet>
 
 #include <vtkPolyData.h>
-#include <vtkCellData.h>
 #include <vtkCell.h>
-#include <vtkPolygon.h>
 
-#include <core/vtkhelper.h>
 #include <core/data_objects/PolyDataObject.h>
 
 
 QVtkTableModelPolyData::QVtkTableModelPolyData(QObject * parent)
 : QVtkTableModel(parent)
-, m_vtkPolyData(nullptr)
 {
 }
 
 int QVtkTableModelPolyData::rowCount(const QModelIndex &/*parent*/) const
 {
-    if (!m_vtkPolyData)
+    if (!m_polyData)
         return 0;
 
-    return m_vtkPolyData->GetNumberOfCells();
+    return m_polyData->dataSet()->GetNumberOfCells();
 }
 
 int QVtkTableModelPolyData::columnCount(const QModelIndex &/*parent*/) const
@@ -33,13 +28,15 @@ int QVtkTableModelPolyData::columnCount(const QModelIndex &/*parent*/) const
 
 QVariant QVtkTableModelPolyData::data(const QModelIndex &index, int role) const
 {
-    if (role != Qt::DisplayRole || ! m_vtkPolyData)
+    if (role != Qt::DisplayRole || !m_polyData)
         return QVariant();
 
     vtkIdType cellId = index.row();
 
-    assert(m_vtkPolyData->GetCell(cellId)->GetCellType() == VTKCellType::VTK_TRIANGLE);
-    vtkCell * tri = m_vtkPolyData->GetCell(cellId);
+
+    vtkSmartPointer<vtkDataSet> dataSet = m_polyData->dataSet();
+    assert(dataSet->GetCell(cellId)->GetCellType() == VTKCellType::VTK_TRIANGLE);
+    vtkCell * tri = dataSet->GetCell(cellId);
     assert(tri);
 
     switch (index.column())
@@ -55,8 +52,9 @@ QVariant QVtkTableModelPolyData::data(const QModelIndex &index, int role) const
     case 3:
     case 4:
     {
-        assert(m_polyData->cellCenters()->GetNumberOfPoints() > cellId);
-        const double * centroid = m_polyData->cellCenters()->GetPoint(cellId);
+        vtkSmartPointer<vtkPolyData> centroids = m_polyData->cellCenters();
+        assert(centroids->GetNumberOfPoints() > cellId);
+        const double * centroid = centroids->GetPoint(cellId);
         int component = index.column() - 2;
         assert(component >= 0 && component < 3);
         return centroid[component];
@@ -85,7 +83,7 @@ QVariant QVtkTableModelPolyData::headerData(int section, Qt::Orientation orienta
 
 bool QVtkTableModelPolyData::setData(const QModelIndex & index, const QVariant & value, int role)
 {
-    if (role != Qt::EditRole || index.column() < 2 || !m_vtkPolyData)
+    if (role != Qt::EditRole || index.column() < 2 || !m_polyData)
         return false;
 
     // get the delta between current and changed centroid coordinate value
@@ -103,7 +101,10 @@ bool QVtkTableModelPolyData::setData(const QModelIndex & index, const QVariant &
     int component = index.column() - 2;
     assert(component >= 0 && component < 3);
 
-    vtkCell * cell = m_vtkPolyData->GetCell(cellId);
+    vtkSmartPointer<vtkPolyData> dataSet = vtkPolyData::SafeDownCast(m_polyData->dataSet());
+    assert(dataSet);
+
+    vtkCell * cell = dataSet->GetCell(cellId);
     vtkIdList * pointIds = cell->GetPointIds();
 
 
@@ -112,44 +113,12 @@ bool QVtkTableModelPolyData::setData(const QModelIndex & index, const QVariant &
     for (int i = 0; i < pointIds->GetNumberOfIds(); ++i)
     {
         vtkIdType pointId = pointIds->GetId(i);
-        m_vtkPolyData->GetPoint(pointId, point);
+        dataSet->GetPoint(pointId, point);
         point[component] += valueDelta;
-        m_vtkPolyData->GetPoints()->SetPoint(pointId, point);
+        dataSet->GetPoints()->SetPoint(pointId, point);
     }
 
-    // also adjust the normals of adjacent triangles
-    VTK_CREATE(vtkIdList, vertex);
-    vertex->SetNumberOfIds(1);
-    VTK_CREATE(vtkIdList, vertexNeighbors);
-
-    QSet<vtkIdType> neighborCellIds;
-
-    // find cell neighbors
-    for (vtkIdType i = 0; i < pointIds->GetNumberOfIds(); ++i)
-    {
-        vertex->SetId(0, pointIds->GetId(i));
-        m_vtkPolyData->GetCellNeighbors(cellId, vertex, vertexNeighbors);
-
-        for (vtkIdType i = 0; i < vertexNeighbors->GetNumberOfIds(); ++i)
-            neighborCellIds << vertexNeighbors->GetId(i);
-    }
-
-    vtkDataArray * normals = m_vtkPolyData->GetCellData()->GetNormals();
-    assert(normals);
-
-    for (vtkIdType neighborCellId : neighborCellIds)
-    {
-        vtkCell * neighbor = m_vtkPolyData->GetCell(neighborCellId);
-    
-        double normal[3];
-        vtkPolygon::ComputeNormal(neighbor->GetPoints(), normal);
-        normals->SetTuple(neighborCellId, normal);
-
-        ++neighborCellId;
-    }
-
-    normals->Modified();
-    m_vtkPolyData->Modified();
+    dataSet->Modified();
 
     return true;
 }
@@ -165,8 +134,4 @@ Qt::ItemFlags QVtkTableModelPolyData::flags(const QModelIndex &index) const
 void QVtkTableModelPolyData::resetDisplayData()
 {
     m_polyData = dynamic_cast<PolyDataObject *>(dataObject());
-    if (m_polyData)
-        m_vtkPolyData = vtkPolyData::SafeDownCast(dataObject()->dataSet());
-    else
-        m_vtkPolyData = nullptr;
 }

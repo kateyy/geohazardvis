@@ -1,11 +1,7 @@
 #pragma once
 
-#include <vtkSmartPointer.h>
-
 #include <core/table_model/QVtkTableModel.h>
 
-
-class vtkPolyData;
 
 class PolyDataObject;
 
@@ -26,6 +22,4 @@ protected:
     void resetDisplayData() override;
 
     PolyDataObject * m_polyData;
-
-    vtkSmartPointer<vtkPolyData> m_vtkPolyData;
 };
