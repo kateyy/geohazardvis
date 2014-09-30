@@ -15,56 +15,88 @@
 vtkInformationKeyMacro(DataObject, NameKey, String);
 vtkInformationKeyMacro(DataObject, ArrayIsAuxiliaryKey, Integer);
 
+class DataObjectPrivate
+{
+public:
+    DataObjectPrivate(DataObject & dataObject, QString name, vtkDataSet * dataSet)
+        : q_ptr(dataObject)
+        , m_name(name)
+        , m_dataSet(dataSet)
+        , m_tableModel(nullptr)
+        , m_bounds()
+        , m_vtkQtConnect(vtkSmartPointer<vtkEventQtSlotConnect>::New())
+    {
+    }
+    
+    ~DataObjectPrivate()
+    {
+        q_ptr.blockSignals(false);
+    }
+
+    static vtkInformationIntegerPointerKey * DataObjectKey();
+
+    DataObject & q_ptr;
+
+    QString m_name;
+
+    vtkSmartPointer<vtkDataSet> m_dataSet;
+    QVtkTableModel * m_tableModel;
+
+    vtkSmartPointer<vtkTrivialProducer> m_trivialProducer;
+
+    double m_bounds[6];
+
+    vtkSmartPointer<vtkEventQtSlotConnect> m_vtkQtConnect;
+};
+
+vtkInformationKeyMacro(DataObjectPrivate, DataObjectKey, IntegerPointer);
+
 
 DataObject::DataObject(QString name, vtkDataSet * dataSet)
-    : m_name(name)
-    , m_dataSet(dataSet)
-    , m_tableModel(nullptr)
-    , m_bounds()
-    , m_vtkQtConnect(vtkSmartPointer<vtkEventQtSlotConnect>::New())
+    : d_ptr(new DataObjectPrivate(*this, name, dataSet))
 {
     if (dataSet)
     {
-        dataSet->GetBounds(m_bounds);
+        dataSet->GetBounds(d_ptr->m_bounds);
 
-        m_vtkQtConnect->Connect(dataSet, vtkCommand::ModifiedEvent, this, SLOT(_dataChanged()));
+        d_ptr->m_vtkQtConnect->Connect(dataSet, vtkCommand::ModifiedEvent, this, SLOT(_dataChanged()));
     }
 }
 
 DataObject::~DataObject()
 {
-    delete m_tableModel;
+    delete d_ptr->m_tableModel;
 }
 
 QString DataObject::name() const
 {
-    return m_name;
+    return d_ptr->m_name;
 }
 
 vtkDataSet * DataObject::dataSet()
 {
-    return m_dataSet;
+    return d_ptr->m_dataSet;
 }
 
 const vtkDataSet * DataObject::dataSet() const
 {
-    return m_dataSet;
+    return d_ptr->m_dataSet;
 }
 
 vtkDataSet * DataObject::processedDataSet()
 {
-    return m_dataSet;
+    return d_ptr->m_dataSet;
 }
 
 vtkAlgorithmOutput * DataObject::processedOutputPort()
 {
-    if (!m_trivialProducer)
+    if (!d_ptr->m_trivialProducer)
     {
-        m_trivialProducer = vtkSmartPointer<vtkTrivialProducer>::New();
-        m_trivialProducer->SetOutput(m_dataSet);
+        d_ptr->m_trivialProducer = vtkSmartPointer<vtkTrivialProducer>::New();
+        d_ptr->m_trivialProducer->SetOutput(d_ptr->m_dataSet);
     }
 
-    return m_trivialProducer->GetOutputPort();
+    return d_ptr->m_trivialProducer->GetOutputPort();
 }
 
 const double * DataObject::bounds()
@@ -74,15 +106,15 @@ const double * DataObject::bounds()
 
 QVtkTableModel * DataObject::tableModel()
 {
-    if (!m_tableModel)
-        m_tableModel = createTableModel();
+    if (!d_ptr->m_tableModel)
+        d_ptr->m_tableModel = createTableModel();
 
-    return m_tableModel;
+    return d_ptr->m_tableModel;
 }
 
 vtkEventQtSlotConnect * DataObject::vtkQtConnect()
 {
-    return m_vtkQtConnect;
+    return d_ptr->m_vtkQtConnect;
 }
 
 bool DataObject::checkIfBoundsChanged()
@@ -96,11 +128,11 @@ bool DataObject::checkIfBoundsChanged()
 
     bool changed = false;
     for (int i = 0; i < 6; ++i)
-        changed = changed || (m_bounds[i] != newBounds[i]);
+        changed = changed || (d_ptr->m_bounds[i] != newBounds[i]);
 
     if (changed)
         for (int i = 0; i < 6; ++i)
-            m_bounds[i] = newBounds[i];
+            d_ptr->m_bounds[i] = newBounds[i];
 
     return changed;
 }

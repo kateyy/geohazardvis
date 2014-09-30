@@ -17,6 +17,8 @@ class vtkEventQtSlotConnect;
 class QVtkTableModel;
 class RenderedData;
 
+class DataObjectPrivate;
+
 
 /** Base class representing loaded data. */
 class CORE_API DataObject : public QObject
@@ -71,14 +73,5 @@ protected:
     virtual void valueRangeChangedEvent();
 
 private:
-    QString m_name;
-
-    vtkSmartPointer<vtkDataSet> m_dataSet;
-    QVtkTableModel * m_tableModel;
-
-    vtkSmartPointer<vtkTrivialProducer> m_trivialProducer;
-
-    double m_bounds[6];
-
-    vtkSmartPointer<vtkEventQtSlotConnect> m_vtkQtConnect;
+    DataObjectPrivate * d_ptr;
 };
