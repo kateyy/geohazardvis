@@ -3,6 +3,7 @@
 #include <vtkLookupTable.h>
 #include <vtkProperty.h>
 #include <vtkActor.h>
+#include <vtkInformationIntegerPointerKey.h>
 
 #include <core/data_objects/DataObject.h>
 #include <core/vector_mapping/VectorsToSurfaceMapping.h>

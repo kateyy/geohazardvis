@@ -8,6 +8,7 @@
 #include <core/core_api.h>
 
 
+class vtkInformation;
 class vtkInformationStringKey;
 class vtkInformationIntegerKey;
 class vtkDataSet;
@@ -50,6 +51,9 @@ public:
 
     static vtkInformationStringKey * NameKey();
     static vtkInformationIntegerKey * ArrayIsAuxiliaryKey();
+
+    static DataObject * getDataObject(vtkInformation * information);
+    static void setDataObject(vtkInformation * information, DataObject * dataObject);
 
 signals:
     void dataChanged();

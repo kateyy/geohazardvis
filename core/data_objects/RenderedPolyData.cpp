@@ -5,6 +5,7 @@
 #include <QImage>
 
 #include <vtkInformation.h>
+#include <vtkInformationIntegerPointerKey.h>
 #include <vtkInformationStringKey.h>
 
 #include <vtkLookupTable.h>
@@ -238,8 +239,9 @@ vtkPolyDataMapper * RenderedPolyData::createDataMapper()
 {
     vtkPolyDataMapper * mapper = vtkPolyDataMapper::New();
     
-    mapper->GetInformation()->Set(DataObject::NameKey(),
-        dataObject()->name().toLatin1().data());
+    vtkInformation * mapperInfo = mapper->GetInformation();
+    mapperInfo->Set(DataObject::NameKey(), dataObject()->name().toLatin1().data());
+    DataObject::setDataObject(mapperInfo, dataObject());
     
     // no mapping yet, so just render the data set
     if (!m_scalars || !m_lut)

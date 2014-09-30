@@ -1,7 +1,12 @@
 #include "DataObject.h"
 
+#include <cassert>
+#include <type_traits>
+
+#include <vtkInformation.h>
 #include <vtkInformationStringKey.h>
 #include <vtkInformationIntegerKey.h>
+#include <vtkInformationIntegerPointerKey.h>
 
 #include <vtkDataSet.h>
 #include <vtkCellData.h>
@@ -110,6 +115,24 @@ QVtkTableModel * DataObject::tableModel()
         d_ptr->m_tableModel = createTableModel();
 
     return d_ptr->m_tableModel;
+}
+
+DataObject * DataObject::getDataObject(vtkInformation * information)
+{
+    static_assert(sizeof(int*) == sizeof(DataObject*), "");
+
+    if (information->Has(DataObjectPrivate::DataObjectKey()))
+    {
+        assert(information->Length(DataObjectPrivate::DataObjectKey()) == 1);
+        return reinterpret_cast<DataObject *>(information->Get(DataObjectPrivate::DataObjectKey()));
+    }
+
+    else return nullptr;
+}
+
+void DataObject::setDataObject(vtkInformation * information, DataObject * dataObject)
+{
+    information->Set(DataObjectPrivate::DataObjectKey(), reinterpret_cast<int *>(dataObject), 1);
 }
 
 vtkEventQtSlotConnect * DataObject::vtkQtConnect()
