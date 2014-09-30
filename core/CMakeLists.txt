@@ -36,6 +36,9 @@ set ( SOURCES
     data_objects/RenderedPolyData.cpp
     data_objects/RenderedVectorGrid3D.h
     data_objects/RenderedVectorGrid3D.cpp
+    
+    filters/CentroidAsScalarsFilter.h
+    filters/CentroidAsScalarsFilter.cpp
 
     table_model/QVtkTableModel.h
     table_model/QVtkTableModel.cpp
@@ -55,14 +58,16 @@ set ( SOURCES
     scalar_mapping/ScalarsForColorMapping.cpp
     scalar_mapping/ScalarsForColorMappingRegistry.h
     scalar_mapping/ScalarsForColorMappingRegistry.cpp
+    scalar_mapping/DefaultColorMapping.h
+    scalar_mapping/DefaultColorMapping.cpp
+    scalar_mapping/VertexComponentMapping.h
+    scalar_mapping/VertexComponentMapping.cpp
     scalar_mapping/AbstractArrayComponentMapping.h
     scalar_mapping/AbstractArrayComponentMapping.cpp
     scalar_mapping/AttributeArrayComponentMapping.h
     scalar_mapping/AttributeArrayComponentMapping.cpp
     scalar_mapping/RawArrayComponentMapping.h
     scalar_mapping/RawArrayComponentMapping.cpp
-    scalar_mapping/DefaultColorMapping.h
-    scalar_mapping/DefaultColorMapping.cpp
     scalar_mapping/GridColorMapping.h
     scalar_mapping/GridColorMapping.cpp
 
