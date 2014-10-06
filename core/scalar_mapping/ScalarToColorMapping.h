@@ -68,6 +68,7 @@ private slots:
     void updateGradientValueRange();
     /** reread the data set list provided by the DataSetHandler for new/deleted data */
     void updateAvailableScalars();
+    void updateLegendVisibility();
 
 private:
     QList<RenderedData *> m_renderedData;

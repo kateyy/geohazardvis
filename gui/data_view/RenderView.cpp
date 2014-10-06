@@ -414,7 +414,6 @@ void RenderView::updateAxes()
     if (!bounds.IsValid() && m_axesActor)
     {
         m_axesActor->VisibilityOff();
-        m_scalarBarWidget->EnabledOff();
         return;
     }
 

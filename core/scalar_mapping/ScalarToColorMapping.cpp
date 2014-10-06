@@ -53,7 +53,10 @@ void ScalarToColorMapping::setRenderedData(const QList<RenderedData *> & rendere
     }
 
     if (m_scalars.isEmpty())
+    {
+        updateLegendVisibility();
         return;
+    }
 
     QString newScalarsName;
     // reuse last configuration if possible
@@ -112,7 +115,7 @@ void ScalarToColorMapping::setCurrentScalarsByName(QString scalarsName)
     QByteArray c_name = scalarsName.toLatin1();
     m_colorMappingLegend->SetTitle(c_name.data());
 
-    setColorMappingLegendVisible(m_colorMappingLegend);
+    updateLegendVisibility();
 
     for (RenderedData * renderedData : m_renderedData)
     {
@@ -169,6 +172,9 @@ vtkScalarBarActor * ScalarToColorMapping::colorMappingLegend()
 bool ScalarToColorMapping::currentScalarsUseMappingLegend() const
 {
     const ScalarsForColorMapping * scalars = currentScalars();
+    if (!scalars)
+        return false;
+
     return scalars->dataMinValue() != scalars->dataMaxValue();
 }
 
@@ -181,11 +187,7 @@ void ScalarToColorMapping::setColorMappingLegendVisible(bool visible)
 {
     m_colorMappingLegendVisible = visible;
 
-    bool actualVisibilty = currentScalarsUseMappingLegend() && m_colorMappingLegendVisible;
-
-    m_colorMappingLegend->SetVisibility(actualVisibilty);
-
-    emit colorLegendVisibilityChanged(actualVisibilty);
+    updateLegendVisibility();
 }
 
 void ScalarToColorMapping::updateGradientValueRange()
@@ -202,4 +204,17 @@ void ScalarToColorMapping::updateAvailableScalars()
     setRenderedData(m_renderedData);
 
     emit scalarsChanged();
+}
+
+void ScalarToColorMapping::updateLegendVisibility()
+{
+    bool actualVisibilty = currentScalarsUseMappingLegend() && m_colorMappingLegendVisible;
+
+    bool oldValue = m_colorMappingLegend->GetVisibility() > 0;
+
+    if (oldValue != actualVisibilty)
+    {
+        m_colorMappingLegend->SetVisibility(actualVisibilty);
+        emit colorLegendVisibilityChanged(actualVisibilty);
+    }
 }
