@@ -13,15 +13,19 @@
 #include <vtkMaskPoints.h>
 
 #include <vtkPolyDataMapper.h>
-#include <vtkPainterPolyDataMapper.h>
-#include <vtkLinesPainter.h>
 
 #include <vtkProperty.h>
 #include <vtkLODActor.h>
 
+#include "config.h"
+#if VTK_RENDERING_BACKEND == 1
+#include <vtkPainterPolyDataMapper.h>
+#include <vtkLinesPainter.h>
+#endif
+
+
 #include <reflectionzeug/PropertyGroup.h>
 
-#include "config.h"
 #include <core/vtkhelper.h>
 #include <core/data_objects/VectorGrid3DDataObject.h>
 
