@@ -46,6 +46,7 @@ RenderView::RenderView(
     QWidget * parent, Qt::WindowFlags flags)
     : AbstractDataView(index, parent, flags)
     , m_ui(new Ui_RenderView())
+    , m_axesEnabled(true)
     , m_scalarMappingChooser(scalarMappingChooser)
     , m_vectorMappingChooser(vectorMappingChooser)
     , m_renderConfigWidget(renderConfigWidget)
@@ -55,6 +56,7 @@ RenderView::RenderView(
 
     setupRenderer();
     setupInteraction();
+    m_axesActor = createAxes(*m_renderer);
     setupColorMappingLegend();
 
     updateTitle();
@@ -134,6 +136,7 @@ void RenderView::highlightedIdChangedEvent(DataObject * dataObject, vtkIdType it
 void RenderView::setupRenderer()
 {
     m_ui->qvtkMain->GetRenderWindow()->SetAAFrames(0);
+    //m_ui->qvtkMain->GetRenderWindow()->SetMultiSamples(0);
 
     m_renderer = vtkSmartPointer<vtkRenderer>::New();
     m_renderer->SetBackground(1, 1, 1);
@@ -411,16 +414,13 @@ void RenderView::updateAxes()
     }
 
     // hide axes if we don't have visible objects
-    if (!bounds.IsValid() && m_axesActor)
+    if (!bounds.IsValid())
     {
         m_axesActor->VisibilityOff();
         return;
     }
-
-    if (!m_axesActor)
-        m_axesActor = createAxes(*m_renderer);
     
-    m_axesActor->VisibilityOn();
+    m_axesActor->SetVisibility(m_axesEnabled);
 
     m_renderer->AddViewProp(m_axesActor);
 
@@ -435,9 +435,11 @@ vtkSmartPointer<vtkCubeAxesActor> RenderView::createAxes(vtkRenderer & renderer)
     VTK_CREATE(vtkCubeAxesActor, cubeAxes);
     cubeAxes->SetCamera(renderer.GetActiveCamera());
     cubeAxes->SetFlyModeToOuterEdges();
-    cubeAxes->SetEnableDistanceLOD(1);
-    cubeAxes->SetEnableViewAngleLOD(1);
     cubeAxes->SetGridLineLocation(VTK_GRID_LINES_FURTHEST);
+    //cubeAxes->SetUseTextActor3D(true);
+    cubeAxes->SetTickLocationToBoth();
+    // fix strange rotation of z-labels
+    cubeAxes->GetLabelTextProperty(2)->SetOrientation(90);
 
     double axesColor[3] = { 0, 0, 0 };
     double gridColor[3] = { 0.7, 0.7, 0.7 };
@@ -454,9 +456,9 @@ vtkSmartPointer<vtkCubeAxesActor> RenderView::createAxes(vtkRenderer & renderer)
         cubeAxes->GetLabelTextProperty(i)->SetColor(axesColor);
     }
 
-    cubeAxes->SetXAxisMinorTickVisibility(0);
-    cubeAxes->SetYAxisMinorTickVisibility(0);
-    cubeAxes->SetZAxisMinorTickVisibility(0);
+    cubeAxes->XAxisMinorTickVisibilityOff();
+    cubeAxes->YAxisMinorTickVisibilityOff();
+    cubeAxes->ZAxisMinorTickVisibilityOff();
 
     cubeAxes->DrawXGridlinesOn();
     cubeAxes->DrawYGridlinesOn();
@@ -551,6 +553,28 @@ vtkLightKit * RenderView::lightKit()
 vtkScalarBarWidget * RenderView::colorLegendWidget()
 {
     return m_scalarBarWidget;
+}
+
+vtkCubeAxesActor * RenderView::axesActor()
+{
+    return m_axesActor;
+}
+
+void RenderView::setEnableAxes(bool enabled)
+{
+    if (m_axesEnabled == enabled)
+        return;
+
+    m_axesEnabled = enabled;
+
+    m_axesActor->SetVisibility(m_axesEnabled && !m_renderedData.isEmpty());
+
+    render();
+}
+
+bool RenderView::axesEnabled() const
+{
+    return m_axesEnabled;
 }
 
 bool RenderView::contains3dData() const

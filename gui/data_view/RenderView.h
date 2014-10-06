@@ -69,6 +69,11 @@ public:
     vtkLightKit * lightKit();
     vtkScalarBarWidget * colorLegendWidget();
 
+    vtkCubeAxesActor * axesActor();
+    /** show/hide axes in case the render view currently contains data */
+    void setEnableAxes(bool enabled);
+    bool axesEnabled() const;
+
     bool contains3dData() const;
 
 public slots:
@@ -132,6 +137,7 @@ private:
 
     // visualization and annotation
     vtkSmartPointer<vtkCubeAxesActor> m_axesActor;
+    bool m_axesEnabled;
     vtkScalarBarActor * m_colorMappingLegend;
     vtkSmartPointer<vtkScalarBarWidget> m_scalarBarWidget;
     

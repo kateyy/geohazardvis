@@ -7,6 +7,7 @@
 #include <vtkRenderer.h>
 #include <vtkLightKit.h>
 #include <vtkCamera.h>
+#include <vtkCubeAxesActor.h>
 
 #include <vtkCallbackCommand.h>
 #include <vtkObjectFactory.h>
@@ -19,6 +20,16 @@
 
 using namespace reflectionzeug;
 using namespace propertyguizeug;
+
+namespace
+{
+enum class CubeAxesTickLocation
+{
+    inside = VTK_TICKS_INSIDE,
+    outside = VTK_TICKS_OUTSIDE,
+    both = VTK_TICKS_BOTH
+};
+}
 
 
 struct CameraCallbackCommand : public vtkCallbackCommand
@@ -208,6 +219,85 @@ PropertyGroup * RendererConfigWidget::createPropertyGroup(RenderView * renderVie
         prop_intensity->setOption("minimum", 0);
         prop_intensity->setOption("maximum", 3);
         prop_intensity->setOption("step", 0.05);
+    }
+
+    auto axesGroup = root->addGroup("Axes");
+    {
+        vtkCubeAxesActor * axes = renderView->axesActor();
+        axesGroup->addProperty<bool>("visible",
+            std::bind(&RenderView::axesEnabled, renderView),
+            std::bind(&RenderView::setEnableAxes, renderView, std::placeholders::_1));
+
+        axesGroup->addProperty<bool>("labels",
+            [axes] () { return axes->GetXAxisLabelVisibility() != 0; },
+            [axes, renderView] (bool visible) {
+            axes->SetXAxisLabelVisibility(visible);
+            axes->SetYAxisLabelVisibility(visible);
+            axes->SetZAxisLabelVisibility(visible);
+            renderView->render();
+        });
+
+        auto prop_gridVisible = axesGroup->addProperty<bool>("gridLines",
+            [axes] () { return axes->GetDrawXGridlines() != 0; },
+            [axes, renderView] (bool visible) {
+            axes->SetDrawXGridlines(visible);
+            axes->SetDrawYGridlines(visible);
+            axes->SetDrawZGridlines(visible);
+            renderView->render();
+        });
+        prop_gridVisible->setOption("title", "grid lines");
+
+        auto prop_innerGridVisible = axesGroup->addProperty<bool>("innerGridLines",
+            [axes] () { return axes->GetDrawXInnerGridlines() != 0; },
+            [axes, renderView] (bool visible) {
+            axes->SetDrawXInnerGridlines(visible);
+            axes->SetDrawYInnerGridlines(visible);
+            axes->SetDrawZInnerGridlines(visible);
+            renderView->render();
+        });
+        prop_innerGridVisible->setOption("title", "inner grid lines");
+
+        auto prop_foregroundGridLines = axesGroup->addProperty<bool>("foregroundGridLines",
+            [axes] () { return axes->GetGridLineLocation() == VTK_GRID_LINES_ALL; },
+            [axes, renderView] (bool v) {
+            axes->SetGridLineLocation(v
+                ? VTK_GRID_LINES_ALL
+                : VTK_GRID_LINES_FURTHEST);
+            renderView->render();
+        });
+        prop_foregroundGridLines->setOption("title", "foreground grid lines");
+
+        auto prop_ticksVisible = axesGroup->addProperty<bool>("ticks",
+            [axes] () { return axes->GetXAxisTickVisibility() != 0; },
+            [axes, renderView] (bool visible) {
+            axes->SetXAxisTickVisibility(visible);
+            axes->SetYAxisTickVisibility(visible);
+            axes->SetZAxisTickVisibility(visible);
+            renderView->render();
+        });
+
+        auto prop_tickLocation = axesGroup->addProperty<CubeAxesTickLocation>("tickLocation",
+            [axes] () { return static_cast<CubeAxesTickLocation>(axes->GetTickLocation()); },
+            [axes, renderView] (CubeAxesTickLocation mode) {
+            axes->SetTickLocation(static_cast<int>(mode));
+            renderView->render();
+        });
+        prop_tickLocation->setOption("title", "tick location");
+        prop_tickLocation->setStrings({
+                { CubeAxesTickLocation::both, "inside/outside" },
+                { CubeAxesTickLocation::inside, "inside" },
+                { CubeAxesTickLocation::outside, "outside" } }
+        );
+
+        auto prop_minorTicksVisible = axesGroup->addProperty<bool>("minorTicks",
+            [axes] () { return axes->GetXAxisMinorTickVisibility() != 0; },
+            [axes, renderView] (bool visible) {
+            axes->SetXAxisMinorTickVisibility(visible);
+            axes->SetYAxisMinorTickVisibility(visible);
+            axes->SetZAxisMinorTickVisibility(visible);
+            renderView->render();
+        });
+        prop_minorTicksVisible->setOption("title", "minor ticks");
     }
 
     return root;
