@@ -152,8 +152,8 @@ void RenderView::setupInteraction()
     m_interactorStyle = vtkSmartPointer<PickingInteractorStyleSwitch>::New();
     m_interactorStyle->SetDefaultRenderer(m_renderer);
 
-    m_interactorStyle->addStyle("InteractorStyle3D", InteractorStyle3D::New());
-    m_interactorStyle->addStyle("InteractorStyleImage", InteractorStyleImage::New());
+    m_interactorStyle->addStyle("InteractorStyle3D", vtkSmartPointer<InteractorStyle3D>::New());
+    m_interactorStyle->addStyle("InteractorStyleImage", vtkSmartPointer<InteractorStyleImage>::New());
 
     connect(m_interactorStyle.Get(), &PickingInteractorStyleSwitch::pointInfoSent, this, &RenderView::ShowInfo);
     connect(m_interactorStyle.Get(), &PickingInteractorStyleSwitch::dataPicked, this, &RenderView::updateGuiForData);

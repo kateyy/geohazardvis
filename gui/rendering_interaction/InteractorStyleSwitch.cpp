@@ -20,7 +20,7 @@ void InteractorStyleSwitch::addStyle(const std::string & name, vtkInteractorStyl
 {
     assert(m_namedStyles.find(name) == m_namedStyles.end());
 
-    m_namedStyles.emplace(name, vtkSmartPointer<vtkInteractorStyle>::Take(interactorStyle));
+    m_namedStyles.emplace(name, interactorStyle);
 
     interactorStyle->SetDefaultRenderer(GetDefaultRenderer());
     interactorStyle->SetCurrentRenderer(GetCurrentRenderer());

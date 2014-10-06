@@ -4,6 +4,8 @@
 
 #include <vtkType.h>
 
+#include <gui/gui_api.h>
+
 
 template<typename T> class QList;
 
@@ -11,7 +13,7 @@ class DataObject;
 class RenderedData;
 
 
-class IPickingInteractorStyle : public QObject
+class GUI_API IPickingInteractorStyle : public QObject
 {
     Q_OBJECT
 

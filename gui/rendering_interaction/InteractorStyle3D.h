@@ -5,7 +5,7 @@
 #include <vtkInteractorStyleTerrain.h>
 #include <vtkSmartPointer.h>
 
-#include "IPickingInteractorStyle.h"
+#include <gui/rendering_interaction/IPickingInteractorStyle.h>
 
 
 class vtkPointPicker;
@@ -13,7 +13,7 @@ class vtkCellPicker;
 class vtkDataSetMapper;
 
 
-class InteractorStyle3D : public IPickingInteractorStyle, public vtkInteractorStyleTerrain
+class GUI_API InteractorStyle3D : public IPickingInteractorStyle, public vtkInteractorStyleTerrain
 {
     Q_OBJECT
 

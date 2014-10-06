@@ -2,11 +2,11 @@
 
 #include <QList>
 
-#include "IPickingInteractorStyle.h"
-#include "InteractorStyleSwitch.h"
+#include <gui/rendering_interaction/IPickingInteractorStyle.h>
+#include <gui/rendering_interaction/InteractorStyleSwitch.h>
 
 
-class PickingInteractorStyleSwitch : public IPickingInteractorStyle, public InteractorStyleSwitch
+class GUI_API PickingInteractorStyleSwitch : public IPickingInteractorStyle, public InteractorStyleSwitch
 {
     Q_OBJECT
 

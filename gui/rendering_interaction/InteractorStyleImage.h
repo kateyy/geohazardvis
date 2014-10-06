@@ -5,13 +5,13 @@
 #include <vtkInteractorStyleImage.h>
 #include <vtkSmartPointer.h>
 
-#include "IPickingInteractorStyle.h"
+#include <gui/rendering_interaction/IPickingInteractorStyle.h>
 
 
 class vtkCellPicker;
 
 
-class InteractorStyleImage : public IPickingInteractorStyle, public vtkInteractorStyleImage
+class GUI_API InteractorStyleImage : public IPickingInteractorStyle, public vtkInteractorStyleImage
 {
     Q_OBJECT
 
