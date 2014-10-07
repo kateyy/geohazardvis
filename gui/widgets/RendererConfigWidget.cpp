@@ -134,7 +134,8 @@ void RendererConfigWidget::readCameraStats(vtkObject * caller)
             property.asValue()->valueChanged();
     };
 
-    m_propertyRoot->group("Camera")->forEach(updateFunc);
+    if (m_propertyRoot->propertyExists("Camera"))
+        m_propertyRoot->group("Camera")->forEach(updateFunc);
 }
 
 PropertyGroup * RendererConfigWidget::createPropertyGroup(RenderView * renderView)

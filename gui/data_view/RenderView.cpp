@@ -75,6 +75,9 @@ RenderView::RenderView(
 
 RenderView::~RenderView()
 {
+    disconnect(&m_scalarMappingChooser, &ScalarMappingChooser::renderSetupChanged, this, &RenderView::render);
+    disconnect(&m_vectorMappingChooser, &VectorMappingChooser::renderSetupChanged, this, &RenderView::render);
+
     SelectionHandler::instance().removeRenderView(this);
 
     m_renderConfigWidget.clear();
@@ -92,6 +95,7 @@ RenderView::~RenderView()
     }   
 
     qDeleteAll(m_renderedData);
+    qDeleteAll(m_renderedDataCache);
 
     delete m_emptyStrategy;
 }
@@ -232,10 +236,10 @@ void RenderView::addDataObjects(QList<DataObject *> dataObjects)
         if (!cachedRendered)
         {
             aNewObject = addDataObject(dataObject);
+            connect(dataObject, &DataObject::boundsChanged, this, &RenderView::updateAxes);
+
             continue;
         }
-
-        connect(dataObject, &DataObject::boundsChanged, this, &RenderView::updateAxes);
 
         aNewObject = cachedRendered;
 
