@@ -324,7 +324,7 @@ void RenderView::hideDataObjects(QList<DataObject *> dataObjects)
     emit renderedDataChanged(m_renderedData);
 
     if (m_renderedData.isEmpty())
-        setStrategie(nullptr);
+        setStrategy(nullptr);
 
     render();
 }
@@ -360,7 +360,7 @@ void RenderView::removeDataObjects(QList<DataObject *> dataObjects)
         removeDataObject(dataObject);
 
     if (m_renderedData.isEmpty())
-        setStrategie(nullptr);
+        setStrategy(nullptr);
 }
 
 void RenderView::clearInternalLists()
@@ -400,6 +400,17 @@ QList<const RenderedData *> RenderView::renderedData() const
     return l;
 }
 
+const double * RenderView::getDataBounds() const
+{
+    return m_dataBounds;
+}
+
+void RenderView::getDataBounds(double bounds[6]) const
+{
+    for (int i = 0; i < 6; ++i)
+        bounds[i] = m_dataBounds[i];
+}
+
 RenderViewStrategy & RenderView::strategy() const
 {
     assert(m_emptyStrategy);
@@ -419,6 +430,8 @@ void RenderView::updateAxes()
         bounds.AddBounds(renderedData->dataObject()->bounds());
     }
 
+    bounds.GetBounds(m_dataBounds);
+
     // hide axes if we don't have visible objects
     if (!bounds.IsValid())
     {
@@ -430,9 +443,7 @@ void RenderView::updateAxes()
 
     m_renderer->AddViewProp(m_axesActor);
 
-    double rawBounds[6];
-    bounds.GetBounds(rawBounds);
-    m_axesActor->SetBounds(rawBounds);
+    m_axesActor->SetBounds(m_dataBounds);
     m_axesActor->SetRebuildAxes(true);
 }
 

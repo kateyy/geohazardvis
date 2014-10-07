@@ -59,6 +59,9 @@ public:
     QList<DataObject *> dataObjects() const;
     QList<const RenderedData *> renderedData() const;
 
+    const double * getDataBounds() const;
+    void getDataBounds(double bounds[6]) const;
+
     vtkRenderer * renderer();
     vtkRenderWindow * renderWindow();
     const vtkRenderWindow * renderWindow() const;
@@ -137,6 +140,8 @@ private:
     QList<RenderedData *> m_renderedDataCache;
     QMap<DataObject *, RenderedData *> m_dataObjectToRendered;
     QList<vtkActor *> m_attributeActors;
+
+    double m_dataBounds[6];
 
     // Rendering components
     vtkSmartPointer<vtkRenderer> m_renderer;

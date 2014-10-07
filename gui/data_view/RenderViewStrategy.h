@@ -2,6 +2,7 @@
 
 #include <functional>
 
+#include <QObject>
 #include <QStringList>
 
 #include <gui/gui_api.h>
@@ -14,7 +15,7 @@ class DataObject;
 class RenderedData;
 
 
-class GUI_API RenderViewStrategy
+class GUI_API RenderViewStrategy : public QObject
 {
 public:
     RenderViewStrategy(RenderView & renderView);

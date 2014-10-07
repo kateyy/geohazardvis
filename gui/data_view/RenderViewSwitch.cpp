@@ -28,7 +28,7 @@ RenderViewSwitch::RenderViewSwitch(
 
 RenderViewSwitch::~RenderViewSwitch()
 {
-    m_view.setStrategie(nullptr);
+    m_view.setStrategy(nullptr);
     qDeleteAll(m_strategies.values());
 }
 
