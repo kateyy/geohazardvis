@@ -3,9 +3,12 @@
 #include <QDockWidget>
 #include <QMap>
 
+#include <vtkSmartPointer.h>
+
 
 class vtkObject;
 class vtkCamera;
+class vtkEventQtSlotConnect;
 namespace reflectionzeug
 {
     class PropertyGroup;
@@ -31,11 +34,10 @@ public slots:
 private slots:
     void setCurrentRenderView(int index);
     void updateRenderViewTitle(const QString & newTitle);
+    void readCameraStats(vtkObject * caller);
 
 private:
     reflectionzeug::PropertyGroup * createPropertyGroup(RenderView * renderView);
-
-    void activeCameraChangedEvent();
 
 private:
     Ui_RendererConfigWidget * m_ui;
@@ -44,5 +46,5 @@ private:
 
     vtkCamera * m_activeCamera;
 
-    friend struct CameraCallbackCommand;
+    vtkSmartPointer<vtkEventQtSlotConnect> m_eventConnect;
 };

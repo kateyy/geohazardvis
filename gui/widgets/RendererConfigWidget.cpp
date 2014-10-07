@@ -8,9 +8,7 @@
 #include <vtkLightKit.h>
 #include <vtkCamera.h>
 #include <vtkCubeAxesActor.h>
-
-#include <vtkCallbackCommand.h>
-#include <vtkObjectFactory.h>
+#include <vtkEventQtSlotConnect.h>
 
 #include <reflectionzeug/PropertyGroup.h>
 
@@ -32,28 +30,12 @@ enum class CubeAxesTickLocation
 }
 
 
-struct CameraCallbackCommand : public vtkCallbackCommand
-{
-    static CameraCallbackCommand * New();
-    vtkTypeMacro(CameraCallbackCommand, vtkCallbackCommand);
-    void Execute(vtkObject * caller, unsigned long /*eid*/, void * /*dcallData*/) override
-    {
-        assert(rendererConfigWidget);
-        if (caller == rendererConfigWidget->m_activeCamera)
-            rendererConfigWidget->activeCameraChangedEvent();
-    }
-
-    RendererConfigWidget * rendererConfigWidget = nullptr;
-};
-
-vtkStandardNewMacro(CameraCallbackCommand);
-
-
 RendererConfigWidget::RendererConfigWidget(QWidget * parent)
     : QDockWidget(parent)
     , m_ui(new Ui_RendererConfigWidget())
     , m_propertyRoot(nullptr)
     , m_activeCamera(nullptr)
+    , m_eventConnect(vtkSmartPointer<vtkEventQtSlotConnect>::New())
 {
     m_ui->setupUi(this);
 
@@ -88,9 +70,7 @@ void RendererConfigWidget::setRenderViews(const QList<RenderView *> & renderView
 
         connect(renderView, &RenderView::windowTitleChanged, this, &RendererConfigWidget::updateRenderViewTitle);
 
-        vtkSmartPointer<CameraCallbackCommand> callbackCommand = vtkSmartPointer<CameraCallbackCommand>::New();
-        callbackCommand->rendererConfigWidget = this;
-        renderView->renderer()->GetActiveCamera()->AddObserver(vtkCommand::ModifiedEvent, callbackCommand);
+        m_eventConnect->Connect(renderView->renderer(), vtkCommand::ModifiedEvent, this, SLOT(readCameraStats(vtkObject *)), this);
     }
 
     if (renderViews.isEmpty())
@@ -139,6 +119,24 @@ void RendererConfigWidget::updateRenderViewTitle(const QString & newTitle)
     }
 }
 
+void RendererConfigWidget::readCameraStats(vtkObject * caller)
+{
+    assert(vtkRenderer::SafeDownCast(caller));
+    vtkRenderer * renderer = static_cast<vtkRenderer *>(caller);
+    if (renderer->GetActiveCamera() != m_activeCamera)
+        return;
+
+    std::function<void(AbstractProperty &)> updateFunc = [&updateFunc] (AbstractProperty & property)
+    {
+        if (property.isCollection())
+            property.asCollection()->forEach(updateFunc);
+        if (property.isValue())
+            property.asValue()->valueChanged();
+    };
+
+    m_propertyRoot->group("Camera")->forEach(updateFunc);
+}
+
 PropertyGroup * RendererConfigWidget::createPropertyGroup(RenderView * renderView)
 {
     PropertyGroup * root = new PropertyGroup();
@@ -156,17 +154,17 @@ PropertyGroup * RendererConfigWidget::createPropertyGroup(RenderView * renderVie
 
     auto cameraGroup = root->addGroup("Camera");
     {
-        vtkCamera * camera = renderView->renderer()->GetActiveCamera();
+        vtkCamera & camera = *renderView->renderer()->GetActiveCamera();
 
         if (renderView->contains3dData())
         {
             std::string degreesSuffix = (QString(' ') + QChar(0xB0)).toStdString();
 
             auto prop_azimuth = cameraGroup->addProperty<double>("azimuth",
-                [camera]() {
+                [&camera]() {
                 return TerrainCamera::getAzimuth(camera);
             },
-                [renderView, camera](const double & azimuth) {
+                [renderView, &camera](const double & azimuth) {
                 TerrainCamera::setAzimuth(camera, azimuth);
                 renderView->render();
             });
@@ -174,10 +172,10 @@ PropertyGroup * RendererConfigWidget::createPropertyGroup(RenderView * renderVie
             prop_azimuth->setOption("suffix", degreesSuffix);
 
             auto prop_elevation = cameraGroup->addProperty<double>("elevation",
-                [camera]() {
+                [&camera]() {
                 return TerrainCamera::getVerticalElevation(camera);
             },
-                [renderView, camera](const double & elevation) {
+                [renderView, &camera](const double & elevation) {
                 TerrainCamera::setVerticalElevation(camera, elevation);
                 renderView->render();
             });
@@ -187,14 +185,14 @@ PropertyGroup * RendererConfigWidget::createPropertyGroup(RenderView * renderVie
         }
 
         auto prop_focalPoint = cameraGroup->addProperty<std::array<double, 3>>("focalPoint",
-            [camera](size_t component) {
-            return camera->GetFocalPoint()[component];
+            [&camera](size_t component) {
+            return camera.GetFocalPoint()[component];
         },
-            [camera, renderView](size_t component, const double & value) {
+            [&camera, renderView](size_t component, const double & value) {
             double foc[3];
-            camera->GetFocalPoint(foc);
+            camera.GetFocalPoint(foc);
             foc[component] = value;
-            camera->SetFocalPoint(foc);
+            camera.SetFocalPoint(foc);
             renderView->render();
         });
         prop_focalPoint->setOption("title", "focal point");
@@ -302,17 +300,3 @@ PropertyGroup * RendererConfigWidget::createPropertyGroup(RenderView * renderVie
 
     return root;
 }
-
-void RendererConfigWidget::activeCameraChangedEvent()
-{
-    std::function<void(AbstractProperty &)> updateFunc = [&updateFunc](AbstractProperty & property)
-    {
-        if (property.isCollection())
-            property.asCollection()->forEach(updateFunc);
-        if (property.isValue())
-            property.asValue()->valueChanged();
-    };
-
-    m_propertyRoot->group("Camera")->forEach(updateFunc);
-}
-
