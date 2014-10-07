@@ -323,6 +323,9 @@ void RenderView::hideDataObjects(QList<DataObject *> dataObjects)
 
     emit renderedDataChanged(m_renderedData);
 
+    if (m_renderedData.isEmpty())
+        setStrategie(nullptr);
+
     render();
 }
 
@@ -355,6 +358,9 @@ void RenderView::removeDataObjects(QList<DataObject *> dataObjects)
     // TODO optimize as needed
     for (DataObject * dataObject : dataObjects)
         removeDataObject(dataObject);
+
+    if (m_renderedData.isEmpty())
+        setStrategie(nullptr);
 }
 
 void RenderView::clearInternalLists()

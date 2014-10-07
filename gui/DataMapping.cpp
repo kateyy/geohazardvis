@@ -22,8 +22,8 @@ DataMapping::DataMapping(MainWindow & mainWindow)
 
 DataMapping::~DataMapping()
 {
-    qDeleteAll(m_renderViews);
     qDeleteAll(m_renderViewSwitches);
+    qDeleteAll(m_renderViews);
     qDeleteAll(m_tableViews);
 }
 
@@ -161,11 +161,14 @@ void DataMapping::renderViewClosed()
     RenderView * renderView = dynamic_cast<RenderView*>(sender());
     assert(renderView);
 
+    RenderViewSwitch * sw = m_renderViewSwitches.value(renderView);
+    m_renderViewSwitches.remove(renderView);
     m_renderViews.remove(renderView->index());
 
     if (renderView == m_focusedRenderView)
         focusNextRenderView();
 
+    sw->deleteLater();
     renderView->deleteLater();
 
     emit renderViewsChanged(m_renderViews.values());
