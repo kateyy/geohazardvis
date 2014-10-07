@@ -35,7 +35,7 @@ public:
     
     ~DataObjectPrivate()
     {
-        q_ptr.blockSignals(false);
+        delete m_tableModel;
     }
 
     static vtkInformationIntegerPointerKey * DataObjectKey();
@@ -70,7 +70,7 @@ DataObject::DataObject(QString name, vtkDataSet * dataSet)
 
 DataObject::~DataObject()
 {
-    delete d_ptr->m_tableModel;
+    delete d_ptr;
 }
 
 QString DataObject::name() const

@@ -28,7 +28,7 @@ class CORE_API DataObject : public QObject
 
 public:
     DataObject(QString name, vtkDataSet * dataSet);
-    virtual ~DataObject() = 0;
+    virtual ~DataObject();
 
     /** @return true if this is a 3D geometry (and false if it's image/2D data) */
     virtual bool is3D() const = 0;
