@@ -7,8 +7,9 @@
 #include <core/data_objects/DataObject.h>
 
 #include <gui/MainWindow.h>
-#include "data_view/TableView.h"
-#include "data_view/RenderView.h"
+#include <gui/data_view/TableView.h>
+#include <gui/data_view/RenderView.h>
+#include <gui/data_view/RenderViewSwitch.h>
 
 
 DataMapping::DataMapping(MainWindow & mainWindow)
@@ -21,8 +22,9 @@ DataMapping::DataMapping(MainWindow & mainWindow)
 
 DataMapping::~DataMapping()
 {
-    qDeleteAll(m_renderViews.values());
-    qDeleteAll(m_tableViews.values());
+    qDeleteAll(m_renderViews);
+    qDeleteAll(m_renderViewSwitches);
+    qDeleteAll(m_tableViews);
 }
 
 void DataMapping::removeDataObjects(QList<DataObject *> dataObjects)
@@ -80,8 +82,10 @@ void DataMapping::openInTable(DataObject * dataObject)
 
 RenderView * DataMapping::openInRenderView(QList<DataObject *> dataObjects)
 {
-    RenderView * renderView = m_mainWindow.addRenderView(m_nextRenderViewIndex++);
+    RenderView * renderView = m_mainWindow.createRenderView(m_nextRenderViewIndex++);
     m_renderViews.insert(renderView->index(), renderView);
+    RenderViewSwitch * sw = new RenderViewSwitch(*renderView);
+    m_renderViewSwitches.insert(renderView, sw);
 
     connect(renderView, &RenderView::focused, this, &DataMapping::setFocusedView);
     connect(renderView, &RenderView::closed, this, &DataMapping::renderViewClosed);

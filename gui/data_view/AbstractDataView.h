@@ -4,11 +4,13 @@
 
 #include <vtkType.h>
 
+#include <gui/gui_api.h>
+
 
 class DataObject;
 
 
-class AbstractDataView : public QDockWidget
+class GUI_API AbstractDataView : public QDockWidget
 {
     Q_OBJECT
 

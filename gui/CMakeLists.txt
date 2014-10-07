@@ -14,8 +14,14 @@ set ( SOURCES
 
     data_view/AbstractDataView.h
     data_view/AbstractDataView.cpp
+    data_view/RenderViewSwitch.h
+    data_view/RenderViewSwitch.cpp
     data_view/RenderView.h
     data_view/RenderView.cpp
+    data_view/RenderViewStrategy.h
+    data_view/RenderViewStrategy.cpp
+    data_view/RenderViewStrategyNull.h
+    data_view/RenderViewStrategyNull.cpp
     data_view/TableView.h
     data_view/TableView.cpp
 

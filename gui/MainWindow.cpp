@@ -92,7 +92,7 @@ void MainWindow::dropEvent(QDropEvent * event)
     openFiles(fileNames);
 }
 
-RenderView * MainWindow::addRenderView(int index)
+RenderView * MainWindow::createRenderView(int index)
 {
     RenderView * renderView = new RenderView(index, *m_scalarMappingChooser, *m_vectorMappingChooser, *m_renderConfigWidget);
     addDockWidget(Qt::DockWidgetArea::TopDockWidgetArea, renderView);

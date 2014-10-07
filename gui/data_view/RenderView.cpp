@@ -26,13 +26,14 @@
 #include <core/data_objects/DataObject.h>
 #include <core/data_objects/RenderedData.h>
 
-#include "SelectionHandler.h"
-#include "rendering_interaction/PickingInteractorStyleSwitch.h"
-#include "rendering_interaction/InteractorStyle3D.h"
-#include "rendering_interaction/InteractorStyleImage.h"
-#include "widgets/ScalarMappingChooser.h"
-#include "widgets/VectorMappingChooser.h"
-#include "widgets/RenderConfigWidget.h"
+#include <gui/SelectionHandler.h>
+#include <gui/data_view/RenderViewStrategyNull.h>
+#include <gui/rendering_interaction/PickingInteractorStyleSwitch.h>
+#include <gui/rendering_interaction/InteractorStyle3D.h>
+#include <gui/rendering_interaction/InteractorStyleImage.h>
+#include <gui/widgets/ScalarMappingChooser.h>
+#include <gui/widgets/VectorMappingChooser.h>
+#include <gui/widgets/RenderConfigWidget.h>
 
 
 using namespace std;
@@ -46,11 +47,12 @@ RenderView::RenderView(
     QWidget * parent, Qt::WindowFlags flags)
     : AbstractDataView(index, parent, flags)
     , m_ui(new Ui_RenderView())
+    , m_strategy(nullptr)
+    , m_emptyStrategy(new RenderViewStrategyNull(*this))
     , m_axesEnabled(true)
     , m_scalarMappingChooser(scalarMappingChooser)
     , m_vectorMappingChooser(vectorMappingChooser)
     , m_renderConfigWidget(renderConfigWidget)
-    , m_contains3DData(true)
 {
     m_ui->setupUi(this);
 
@@ -90,6 +92,8 @@ RenderView::~RenderView()
     }   
 
     qDeleteAll(m_renderedData);
+
+    delete m_emptyStrategy;
 }
 
 bool RenderView::isTable() const
@@ -172,12 +176,17 @@ void RenderView::ShowInfo(const QStringList & info)
     setToolTip(info.join('\n'));
 }
 
+void RenderView::setStrategy(RenderViewStrategy * strategy)
+{
+    m_strategy = strategy;
+}
+
 RenderedData * RenderView::addDataObject(DataObject * dataObject)
 {
     updateTitle(dataObject->name() + " (loading to GPU)");
     QApplication::processEvents();
 
-    assert(dataObject->is3D() == m_contains3DData);
+    assert(dataObject->is3D() == contains3dData());
 
     RenderedData * renderedData = dataObject->createRendered();
     if (!renderedData)
@@ -205,7 +214,7 @@ void RenderView::addDataObjects(QList<DataObject *> dataObjects)
 
     RenderedData * aNewObject = nullptr;
 
-    QStringList incompatibleObjects = checkCompatibleObjects(dataObjects);
+    QStringList incompatibleObjects = strategy().checkCompatibleObjects(dataObjects);
 
     if (dataObjects.isEmpty())
     {
@@ -243,34 +252,31 @@ void RenderView::addDataObjects(QList<DataObject *> dataObjects)
         cachedRendered->setVisible(true);
     }
 
-    vtkCamera * camera = m_renderer->GetActiveCamera();
-    if (wasEmpty)
-    {
-        if (m_contains3DData)
-        {
-            camera->SetViewUp(0, 0, 1);
-            TerrainCamera::setAzimuth(camera, 0);
-            TerrainCamera::setVerticalElevation(camera, 45);
-        }
-        else
-        {
-            camera->SetViewUp(0, 1, 0);
-            camera->SetFocalPoint(0, 0, 0);
-            camera->SetPosition(0, 0, 1);
-        }
-    }
-
     if (aNewObject)
     {
         updateAxes();
-        m_renderer->ResetCamera();
 
         updateTitle();
 
         updateGuiForData(aNewObject);
+
+        emit renderedDataChanged(m_renderedData);
     }
 
-    render();
+    if (wasEmpty)
+    {
+        emit resetStrategie();
+
+        strategy().resetCamera(*m_renderer->GetActiveCamera());
+    }
+
+    if (aNewObject)
+    {
+        m_renderer->ResetCamera();
+
+        render();
+    }
+
 
     if (!incompatibleObjects.isEmpty())
         warnIncompatibleObjects(incompatibleObjects);
@@ -304,6 +310,8 @@ void RenderView::hideDataObjects(QList<DataObject *> dataObjects)
 
     updateGuiForRemovedData();
 
+    emit renderedDataChanged(m_renderedData);
+
     render();
 }
 
@@ -336,34 +344,6 @@ void RenderView::removeDataObjects(QList<DataObject *> dataObjects)
     // TODO optimize as needed
     for (DataObject * dataObject : dataObjects)
         removeDataObject(dataObject);
-}
-
-QStringList RenderView::checkCompatibleObjects(QList<DataObject *> & dataObjects)
-{
-    assert(!dataObjects.isEmpty());
-
-    // allow data type switch if nothing is visible
-    if (m_renderedData.isEmpty())
-    {
-        // using the first new object as reference for our new type
-        m_contains3DData = dataObjects.first()->is3D();
-    }
-    updateInteractionType();
-
-    QStringList invalidObjects;
-    QList<DataObject *> compatibleObjects;
-
-    for (DataObject * dataObject : dataObjects)
-    {
-        if (dataObject->is3D() == m_contains3DData)
-            compatibleObjects << dataObject;
-        else
-            invalidObjects << dataObject->name();
-    }
-
-    dataObjects = compatibleObjects;
-
-    return invalidObjects;
 }
 
 void RenderView::clearInternalLists()
@@ -401,6 +381,15 @@ QList<const RenderedData *> RenderView::renderedData() const
     for (auto r : m_renderedData)
         l << r;
     return l;
+}
+
+RenderViewStrategy & RenderView::strategy() const
+{
+    assert(m_emptyStrategy);
+    if (m_strategy)
+        return *m_strategy;
+
+    return *m_emptyStrategy;
 }
 
 void RenderView::updateAxes()
@@ -506,14 +495,6 @@ void RenderView::setupColorMappingLegend()
     m_renderer->AddViewProp(m_colorMappingLegend);
 }
 
-void RenderView::updateInteractionType()
-{
-    if (m_contains3DData)
-        setInteractorStyle("InteractorStyle3D");
-    else
-        setInteractorStyle("InteractorStyleImage");
-}
-
 void RenderView::warnIncompatibleObjects(QStringList incompatibleObjects)
 {
     QMessageBox::warning(this, "Invalid data selection", QString("Cannot render 2D and 3D data in the same render view!")
@@ -579,7 +560,7 @@ bool RenderView::axesEnabled() const
 
 bool RenderView::contains3dData() const
 {
-    return m_contains3DData;
+    return strategy().contains3dData();
 }
 
 void RenderView::updateGuiForData(RenderedData * renderedData)

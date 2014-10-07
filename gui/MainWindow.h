@@ -33,7 +33,7 @@ public slots:
 
     void tabbedDockWidgetToFront(QDockWidget * widget);
 
-    RenderView * addRenderView(int index);
+    RenderView * createRenderView(int index);
 
 private:
     QStringList dialog_inputFileName();

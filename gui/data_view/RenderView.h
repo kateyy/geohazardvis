@@ -5,9 +5,8 @@
 
 #include <vtkSmartPointer.h>
 
-#include "AbstractDataView.h"
-
 #include <core/scalar_mapping/ScalarToColorMapping.h>
+#include <gui/data_view/AbstractDataView.h>
 
 
 class vtkRenderer;
@@ -28,9 +27,10 @@ class PickingInteractorStyleSwitch;
 class IPickingInteractorStyle;
 class RenderConfigWidget;
 class Ui_RenderView;
+class RenderViewStrategy;
 
 
-class RenderView : public AbstractDataView
+class GUI_API RenderView : public AbstractDataView
 {
     Q_OBJECT
 
@@ -76,10 +76,18 @@ public:
 
     bool contains3dData() const;
 
+signals:
+    /** emitted after changing the list of visible objects */
+    void renderedDataChanged(const QList<RenderedData *> & renderedData);
+    /** emitted after loading data into an empty view (emitted when needed after renderedDataChanged) */
+    void resetStrategie();
+
 public slots:
     void render();
 
     void ShowInfo(const QStringList &info);
+
+    void setStrategy(RenderViewStrategy * strategy);
 
 protected:
     QWidget * contentWidget() override;
@@ -94,22 +102,18 @@ private:
 
     RenderedData * addDataObject(DataObject * dataObject);
     void removeDataObject(DataObject * dataObject);
-    /** reduce list to compatible objects, show GUI warning if needed */
-    QStringList checkCompatibleObjects(QList<DataObject *> & dataObjects);
 
     // remove some data objects from internal lists
     void removeFromInternalLists(QList<DataObject *> dataObjects = {});
     void clearInternalLists();
 
     // GUI / rendering tools
-    
-    void updateVertexNormals(vtkPolyData * polyData);
+
+    RenderViewStrategy & strategy() const;
     
     void updateAxes();
     static vtkSmartPointer<vtkCubeAxesActor> createAxes(vtkRenderer & renderer);
     void setupColorMappingLegend();
-
-    void updateInteractionType();
 
     void warnIncompatibleObjects(QStringList incompatibleObjects);
 
@@ -122,6 +126,8 @@ private slots:
 
 private:
     Ui_RenderView * m_ui;
+    RenderViewStrategy * m_strategy;
+    RenderViewStrategy * m_emptyStrategy;
 
     // rendered representations of data objects for this view
     QList<RenderedData *> m_renderedData;
@@ -146,6 +152,4 @@ private:
     VectorMappingChooser & m_vectorMappingChooser;
     ScalarToColorMapping m_scalarMapping;
     RenderConfigWidget & m_renderConfigWidget;
-
-    bool m_contains3DData;
 };

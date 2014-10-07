@@ -10,6 +10,7 @@ class DataObject;
 class AbstractDataView;
 class TableView;
 class RenderView;
+class RenderViewSwitch;
 
 
 class DataMapping : public QObject
@@ -45,8 +46,9 @@ private:
 
     int m_nextTableIndex;
     int m_nextRenderViewIndex;
-    QMap<int, TableView*> m_tableViews;
-    QMap<int, RenderView*> m_renderViews;
+    QMap<int, TableView *> m_tableViews;
+    QMap<int, RenderView *> m_renderViews;
+    QMap<RenderView *, RenderViewSwitch *> m_renderViewSwitches;
 
     RenderView * m_focusedRenderView;
 };
