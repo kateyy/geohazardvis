@@ -65,6 +65,7 @@ public:
     
     IPickingInteractorStyle * interactorStyle();
     const IPickingInteractorStyle * interactorStyle() const;
+    PickingInteractorStyleSwitch * interactorStyleSwitch();
 
     vtkLightKit * lightKit();
     vtkScalarBarWidget * colorLegendWidget();
@@ -79,8 +80,9 @@ public:
 signals:
     /** emitted after changing the list of visible objects */
     void renderedDataChanged(const QList<RenderedData *> & renderedData);
-    /** emitted after loading data into an empty view (emitted when needed after renderedDataChanged) */
-    void resetStrategie();
+    /** emitted loading data into an empty view
+        @param dataObjects List of objects that are requested for visualization. */
+    void resetStrategie(const QList<DataObject *> & dataObjects);
 
 public slots:
     void render();

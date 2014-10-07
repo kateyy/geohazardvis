@@ -182,7 +182,13 @@ void RenderView::ShowInfo(const QStringList & info)
 
 void RenderView::setStrategy(RenderViewStrategy * strategy)
 {
+    if (m_strategy)
+        m_strategy->deactivate();
+
     m_strategy = strategy;
+    
+    if (m_strategy)
+        m_strategy->activate();
 }
 
 RenderedData * RenderView::addDataObject(DataObject * dataObject)
@@ -216,6 +222,11 @@ void RenderView::addDataObjects(QList<DataObject *> dataObjects)
     if (dataObjects.isEmpty())
         return;
 
+    bool wasEmpty = m_renderedData.isEmpty();
+
+    if (wasEmpty)
+        emit resetStrategie(dataObjects);
+
     RenderedData * aNewObject = nullptr;
 
     QStringList incompatibleObjects = strategy().checkCompatibleObjects(dataObjects);
@@ -225,8 +236,6 @@ void RenderView::addDataObjects(QList<DataObject *> dataObjects)
         warnIncompatibleObjects(incompatibleObjects);
         return;
     }
-
-    bool wasEmpty = m_renderedData.isEmpty();
 
     for (DataObject * dataObject : dataObjects)
     {
@@ -269,8 +278,6 @@ void RenderView::addDataObjects(QList<DataObject *> dataObjects)
 
     if (wasEmpty)
     {
-        emit resetStrategie();
-
         strategy().resetCamera(*m_renderer->GetActiveCamera());
     }
 
@@ -526,6 +533,11 @@ IPickingInteractorStyle * RenderView::interactorStyle()
 }
 
 const IPickingInteractorStyle * RenderView::interactorStyle() const
+{
+    return m_interactorStyle;
+}
+
+PickingInteractorStyleSwitch * RenderView::interactorStyleSwitch()
 {
     return m_interactorStyle;
 }

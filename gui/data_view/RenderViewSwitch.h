@@ -8,6 +8,7 @@
 
 class RenderView;
 class RenderViewStrategy;
+class DataObject;
 class RenderedData;
 
 
@@ -27,11 +28,11 @@ signals:
 public slots:
     void setStrategy(const QString & name);
     void updateStrategies(const QList<RenderedData *> & renderedData);
-    void findSuitableStrategie();
+    void findSuitableStrategy(const QList<DataObject *> & dataObjects);
 
 private:
     RenderView & m_view;
 
     QMap<QString, RenderViewStrategy * > m_strategies;
-    QMap<QString, bool> m_strategieStates;
+    QMap<QString, bool> m_strategyStates;
 };

@@ -3,10 +3,10 @@
 #include <gui/data_view/RenderViewStrategy.h>
 
 
-class GUI_API RenderViewStrategy3D : public RenderViewStrategy
+class GUI_API RenderViewStrategyImage2D : public RenderViewStrategy
 {
 public:
-    RenderViewStrategy3D(RenderView & renderView);
+    RenderViewStrategyImage2D(RenderView & renderView);
 
     QString name() const override;
 

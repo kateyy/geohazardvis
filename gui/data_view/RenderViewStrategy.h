@@ -22,6 +22,9 @@ public:
 
     virtual QString name() const = 0;
 
+    virtual void activate();
+    virtual void deactivate();
+
     virtual bool contains3dData() const = 0;
 
     /** reset camera view/orientation for new content */

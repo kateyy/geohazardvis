@@ -5,6 +5,9 @@
 #include <core/vtkcamerahelper.h>
 #include <core/data_objects/DataObject.h>
 #include <core/data_objects/RenderedData.h>
+#include <gui/data_view/RenderView.h>
+#include <gui/rendering_interaction/PickingInteractorStyleSwitch.h>
+
 
 const bool RenderViewStrategy3D::s_isRegistered = RenderViewStrategy::registerStrategy<RenderViewStrategy3D>();
 
@@ -19,6 +22,11 @@ QString RenderViewStrategy3D::name() const
     return "3D terrain";
 }
 
+void RenderViewStrategy3D::activate()
+{
+    m_context.interactorStyleSwitch()->setCurrentStyle("InteractorStyle3D");
+}
+
 bool RenderViewStrategy3D::contains3dData() const
 {
     return true;
@@ -29,7 +37,6 @@ void RenderViewStrategy3D::resetCamera(vtkCamera & camera)
     camera.SetViewUp(0, 0, 1);
     TerrainCamera::setAzimuth(camera, 0);
     TerrainCamera::setVerticalElevation(camera, 45);
-
 }
 
 QStringList RenderViewStrategy3D::checkCompatibleObjects(QList<DataObject *> & dataObjects) const

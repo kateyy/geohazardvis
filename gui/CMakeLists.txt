@@ -24,6 +24,8 @@ set ( SOURCES
     data_view/RenderViewStrategyNull.cpp
     data_view/RenderViewStrategy3D.h
     data_view/RenderViewStrategy3D.cpp
+    data_view/RenderViewStrategyImage2D.h
+    data_view/RenderViewStrategyImage2D.cpp
     data_view/TableView.h
     data_view/TableView.cpp
 

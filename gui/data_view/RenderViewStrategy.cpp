@@ -8,6 +8,14 @@ RenderViewStrategy::RenderViewStrategy(RenderView & renderView)
 
 RenderViewStrategy::~RenderViewStrategy() = default;
 
+void RenderViewStrategy::activate()
+{
+}
+
+void RenderViewStrategy::deactivate()
+{
+}
+
 const QList<RenderViewStrategy::StategyConstructor> & RenderViewStrategy::constructors()
 {
     return s_constructors();
