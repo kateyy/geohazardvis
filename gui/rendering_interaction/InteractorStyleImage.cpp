@@ -195,13 +195,6 @@ void InteractorStyleImage::lookAtCell(DataObject * /*polyData*/, vtkIdType /*cel
 
 void InteractorStyleImage::sendPointInfo() const
 {
-    vtkAbstractMapper3D * mapper = m_cellPicker->GetMapper();
-    if (!mapper)
-    {
-        emit pointInfoSent(QStringList());
-        return;
-    }
-
     QString content;
     QTextStream stream;
     stream.setString(&content);
@@ -209,32 +202,43 @@ void InteractorStyleImage::sendPointInfo() const
     stream.setRealNumberNotation(QTextStream::RealNumberNotation::ScientificNotation);
     stream.setRealNumberPrecision(17);
 
-    std::string inputname;
+    do
+    {
+        vtkAbstractMapper3D * mapper = m_cellPicker->GetMapper();
+        if (!mapper)
+            break;
 
-    vtkInformation * inputInfo = mapper->GetInformation();
 
-    if (inputInfo->Has(DataObject::NameKey()))
-        inputname = DataObject::NameKey()->Get(inputInfo);
+        std::string inputname;
 
-    double * pos = m_cellPicker->GetPickPosition();
+        vtkInformation * inputInfo = mapper->GetInformation();
+        if (inputInfo->Has(DataObject::NameKey()))
+            inputname = DataObject::NameKey()->Get(inputInfo);
 
-    vtkTexture * texture = m_cellPicker->GetActor()->GetTexture();
-    assert(texture);
-    vtkImageData * image = texture->GetInput();
-    assert(image);
-    vtkDataArray * data = image->GetCellData()->GetScalars();
-    assert(data);
+        double * pos = m_cellPicker->GetPickPosition();
 
-    vtkIdType cellId = m_cellPicker->GetCellId();
-    double value = data->GetTuple(cellId)[0];
+        vtkTexture * texture = m_cellPicker->GetActor()->GetTexture();
+        if (!texture)
+            break;
 
-    stream
-        << "input file: " << QString::fromStdString(inputname) << endl
-        << "selected cell: " << endl
-        << "value: " << value << endl
-        << "row: " << pos[0] << endl
-        << "column: " << pos[1] << endl
-        << "id: " << cellId;
+        vtkImageData * image = texture->GetInput();
+        if (!image)
+            break;
+        vtkDataArray * data = image->GetCellData()->GetScalars();
+        if (!data)
+            break;
+
+        vtkIdType cellId = m_cellPicker->GetCellId();
+        double value = data->GetTuple(cellId)[0];
+
+        stream
+            << "input file: " << QString::fromStdString(inputname) << endl
+            << "selected cell: " << endl
+            << "value: " << value << endl
+            << "row: " << pos[0] << endl
+            << "column: " << pos[1] << endl
+            << "id: " << cellId;
+    } while (false);
 
     QStringList info;
     QString line;

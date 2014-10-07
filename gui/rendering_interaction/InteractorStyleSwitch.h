@@ -6,7 +6,7 @@
 #include <vtkInteractorStyle.h>
 #include <vtkSmartPointer.h>
 
-#include <gui_api.h>
+#include <gui/gui_api.h>
 
 
 class GUI_API InteractorStyleSwitch : public vtkInteractorStyle
