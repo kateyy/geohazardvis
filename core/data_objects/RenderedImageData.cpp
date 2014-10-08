@@ -116,11 +116,6 @@ void RenderedImageData::gradientForColorMappingChangedEvent()
     updateTexture();
 }
 
-vtkPolyDataMapper * RenderedImageData::createMapper() const
-{
-    return nullptr;
-}
-
 void RenderedImageData::updateTexture()
 {
     if (!m_lut)

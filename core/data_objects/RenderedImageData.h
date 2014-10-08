@@ -26,8 +26,6 @@ protected:
     void gradientForColorMappingChangedEvent() override;
 
 private:
-    vtkPolyDataMapper * createMapper() const;
-
     void updateTexture();
 
 private:
