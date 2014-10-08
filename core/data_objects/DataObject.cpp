@@ -106,7 +106,7 @@ vtkAlgorithmOutput * DataObject::processedOutputPort()
 
 const double * DataObject::bounds()
 {
-    return dataSet()->GetBounds();
+    return processedDataSet()->GetBounds();
 }
 
 QVtkTableModel * DataObject::tableModel()
