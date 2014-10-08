@@ -149,15 +149,22 @@ void RenderViewStrategyImage2D::startProfilePlot()
 
 void RenderViewStrategyImage2D::acceptProfilePlot()
 {
-    ImageDataObject * imageData = dynamic_cast<ImageDataObject *>(m_context.dataObjects().first());
-    if (!imageData)
-        return;
+    ImageDataObject * image = nullptr;
+    for (DataObject * dataObject : m_context.dataObjects())
+    {
+        image = dynamic_cast<ImageDataObject *>(dataObject);
+        if (image)
+            break;
+    }
+    assert(image);
 
     double point1[3], point2[3];
     m_lineWidget->GetLineRepresentation()->GetPoint1WorldPosition(point1);
     m_lineWidget->GetLineRepresentation()->GetPoint2WorldPosition(point2);
     point1[2] = point2[2] = 0;
-    ImageProfileData * profile = new ImageProfileData(imageData, point1, point2);
+
+    QString name = image->name() + " plot";
+    ImageProfileData * profile = new ImageProfileData(name, image, point1, point2);
 
     DataSetHandler::instance().addData({ profile });
 

@@ -21,7 +21,6 @@ public:
     DataMapping(MainWindow & mainWindow);
     ~DataMapping() override;
 
-    void addDataObjects(QList<DataObject *> dataObjects);
     void removeDataObjects(QList<DataObject *> dataObjects);
 
     void openInTable(DataObject * dataObject);

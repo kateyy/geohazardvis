@@ -6,13 +6,12 @@
 
 #include <vtkLineSource.h>
 
+#include <vtkImageData.h>
 #include <vtkCellArray.h>
-#include <vtkVertex.h>
 #include <vtkCellData.h>
 #include <vtkPointData.h>
 
 #include <vtkProbeFilter.h>
-#include <vtkTrivialProducer.h>
 
 #include <core/vtkhelper.h>
 #include <core/data_objects/ImageDataObject.h>
@@ -22,30 +21,22 @@
 #include <core/data_objects/PolyDataObject.h>
 
 
-ImageProfileData::ImageProfileData(ImageDataObject * imageData, double point1[3], double point2[3])
-    : DataObject(imageData->name() + " profile", imageData->dataSet())
+ImageProfileData::ImageProfileData(const QString & name, ImageDataObject * imageData, double point1[3], double point2[3])
+    : DataObject(name, vtkSmartPointer<vtkImageData>::New())
     , m_imageData(imageData)
     , m_graphLine()
 {
     vtkDataArray * scalars = imageData->processedDataSet()->GetCellData()->GetScalars();
     if (!scalars)
-        imageData->processedDataSet()->GetPointData()->GetScalars();
-    // probe doesn't make sense without scalar data
+        scalars = imageData->processedDataSet()->GetPointData()->GetScalars();
     assert(scalars);
-
     m_scalarsName = QString::fromLatin1(scalars->GetName());
-    
+
     for (int i = 0; i < 3; ++i)
     {
         m_point1[i] = point1[i];
         m_point2[i] = point2[i];
     }
-}
-
-void ImageProfileData::generateOutput()
-{
-    if (m_graphLine)
-        return;
 
     VTK_CREATE(vtkLineSource, probeLine);
     probeLine->SetPoint1(m_point1);
@@ -99,16 +90,12 @@ QString ImageProfileData::dataTypeName() const
 
 vtkDataSet * ImageProfileData::processedDataSet()
 {
-    generateOutput();
-
     m_graphLine->Update();
     return m_graphLine->GetOutput();
 }
 
 vtkAlgorithmOutput * ImageProfileData::processedOutputPort()
 {
-    generateOutput();
-
     return m_graphLine->GetOutputPort();
 }
 

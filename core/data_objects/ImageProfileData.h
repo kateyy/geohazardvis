@@ -11,7 +11,7 @@ class ImageDataObject;
 class CORE_API ImageProfileData : public DataObject
 {
 public:
-    ImageProfileData(ImageDataObject * imageData, double point1[3], double point2[3]);
+    ImageProfileData(const QString & name, ImageDataObject * imageData, double point1[3], double point2[3]);
 
     bool is3D() const override;
     RenderedData * createRendered() override;
@@ -27,9 +27,6 @@ public:
 
 protected:
     QVtkTableModel * createTableModel() override;
-
-private:
-    void generateOutput();
 
 private:
     ImageDataObject * m_imageData;
