@@ -22,6 +22,8 @@ set ( SOURCES
     data_objects/DataObject.cpp
     data_objects/ImageDataObject.h
     data_objects/ImageDataObject.cpp
+    data_objects/ImageProfileData.h
+    data_objects/ImageProfileData.cpp
     data_objects/PolyDataObject.h
     data_objects/PolyDataObject.cpp
     data_objects/VectorGrid3DDataObject.h
@@ -30,13 +32,15 @@ set ( SOURCES
     data_objects/RawVectorData.cpp
     data_objects/RenderedData.h
     data_objects/RenderedData.cpp
+    data_objects/ImageProfilePlot.h
+    data_objects/ImageProfilePlot.cpp
     data_objects/RenderedImageData.h
     data_objects/RenderedImageData.cpp
     data_objects/RenderedPolyData.h
     data_objects/RenderedPolyData.cpp
     data_objects/RenderedVectorGrid3D.h
     data_objects/RenderedVectorGrid3D.cpp
-    
+
     filters/CentroidAsScalarsFilter.h
     filters/CentroidAsScalarsFilter.cpp
 

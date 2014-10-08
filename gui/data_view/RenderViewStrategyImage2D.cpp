@@ -1,5 +1,7 @@
 #include "RenderViewStrategyImage2D.h"
 
+#include <cassert>
+
 #include <QAction>
 #include <QIcon>
 #include <QLayout>
@@ -13,8 +15,10 @@
 
 #include <core/vtkhelper.h>
 #include <core/vtkcamerahelper.h>
-#include <core/data_objects/DataObject.h>
-#include <core/data_objects/RenderedData.h>
+#include <core/data_objects/ImageDataObject.h>
+#include <core/data_objects/ImageProfileData.h>
+#include <core/data_objects/ImageProfilePlot.h>
+#include <core/DataSetHandler.h>
 #include <gui/data_view/RenderView.h>
 #include <gui/rendering_interaction/PickingInteractorStyleSwitch.h>
 
@@ -139,6 +143,19 @@ void RenderViewStrategyImage2D::startProfilePlot()
 
 void RenderViewStrategyImage2D::acceptProfilePlot()
 {
+    ImageDataObject * imageData = dynamic_cast<ImageDataObject *>(m_context.dataObjects().first());
+    if (!imageData)
+        return;
+
+    double point1[3], point2[3];
+    m_lineWidget->GetLineRepresentation()->GetPoint1WorldPosition(point1);
+    m_lineWidget->GetLineRepresentation()->GetPoint2WorldPosition(point2);
+    ImageProfileData * profile = new ImageProfileData(imageData, point1, point2);
+
+    DataSetHandler::instance().addData({ profile });
+
+    m_lineWidget = nullptr;
+
     m_profilePlotAction->setEnabled(true);
     m_profilePlotAcceptAction->setVisible(false);
     m_profilePlotAbortAction->setVisible(false);
@@ -146,6 +163,8 @@ void RenderViewStrategyImage2D::acceptProfilePlot()
 
 void RenderViewStrategyImage2D::abortProfilePlot()
 {
+    m_lineWidget = nullptr;
+
     m_profilePlotAction->setEnabled(true);
     m_profilePlotAcceptAction->setVisible(false);
     m_profilePlotAbortAction->setVisible(false);

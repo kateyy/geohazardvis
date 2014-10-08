@@ -33,7 +33,7 @@ class CORE_API RenderedData : public QObject
 
 public:
     RenderedData(DataObject * dataObject);
-    virtual ~RenderedData() = 0;
+    virtual ~RenderedData();
 
     DataObject * dataObject();
     const DataObject * dataObject() const;
