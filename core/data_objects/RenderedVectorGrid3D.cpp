@@ -52,7 +52,7 @@ vtkSmartPointer<vtkAlgorithm> createArrow()
 
     VTK_CREATE(vtkAppendPolyData, arrow);
     arrow->AddInputConnection(shaft->GetOutputPort());
-    arrow->AddInputConnection(cone2->GetOutputPort());
+    arrow->AddInputConnection(cone1->GetOutputPort());
     arrow->AddInputConnection(cone2->GetOutputPort());
 
     return arrow;
