@@ -4,6 +4,8 @@
 #include <cassert>
 
 #include <QMouseEvent>
+#include <QMenu>
+#include <QAction>
 
 #include <core/table_model/QVtkTableModel.h>
 #include <core/data_objects/DataObject.h>
@@ -15,11 +17,19 @@ TableView::TableView(int index, QWidget * parent, Qt::WindowFlags flags)
     : AbstractDataView(index, parent, flags)
     , m_ui(new Ui_TableView())
     , m_dataObject(nullptr)
+    , m_selectColumnsMenu(nullptr)
 {
     m_ui->setupUi(this);
+    m_selectColumnsMenu = new QMenu(m_ui->tableView);
+
     m_ui->tableView->viewport()->installEventFilter(this);
 
     m_ui->tableView->verticalHeader()->setFixedWidth(15);
+
+    m_ui->tableView->horizontalHeader()->setContextMenuPolicy(Qt::CustomContextMenu);
+    connect(m_ui->tableView->horizontalHeader(), &QHeaderView::customContextMenuRequested, [this] (const QPoint & position) {
+        m_selectColumnsMenu->popup(m_ui->tableView->horizontalHeader()->mapToGlobal(position));
+    });
     
     SelectionHandler::instance().addTableView(this);
 }
@@ -57,7 +67,23 @@ void TableView::showDataObject(DataObject * dataObject)
 
     updateTitle();
 
-    m_ui->tableView->resizeColumnsToContents();
+    QTableView * view = m_ui->tableView;
+    view->resizeColumnsToContents();
+
+    m_selectColumnsMenu->clear();
+    for (int i = 0; i < m_dataObject->tableModel()->columnCount(); ++i)
+    {
+        QString title = m_dataObject->tableModel()->headerData(i, Qt::Horizontal).toString();
+        QAction * action = m_selectColumnsMenu->addAction(title);
+        action->setCheckable(true);
+        action->setChecked(!view->isColumnHidden(i));
+        connect(action, &QAction::triggered, [view, i] (bool checked) {
+            if (checked)
+                view->showColumn(i);
+            else
+                view->hideColumn(i);
+        });
+    }
 }
 
 DataObject * TableView::dataObject()

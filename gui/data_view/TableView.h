@@ -7,6 +7,7 @@
 
 class QTableView;
 class QItemSelection;
+class QMenu;
 
 class Ui_TableView;
 class QVtkTableModel;
@@ -44,6 +45,7 @@ protected:
 private:
     Ui_TableView * m_ui;
     DataObject * m_dataObject;
+    QMenu * m_selectColumnsMenu;
 
     QMetaObject::Connection m_hightlightUpdateConnection;
 };
