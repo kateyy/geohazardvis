@@ -102,7 +102,7 @@ QStringList RenderViewStrategyImage2D::checkCompatibleObjects(QList<DataObject *
 
     for (DataObject * dataObject : dataObjects)
     {
-        if (!dataObject->is3D())
+        if (dynamic_cast<ImageDataObject *>(dataObject))
             compatible << dataObject;
         else
             incompatible << dataObject->name();
@@ -116,7 +116,7 @@ QStringList RenderViewStrategyImage2D::checkCompatibleObjects(QList<DataObject *
 bool RenderViewStrategyImage2D::canApplyTo(const QList<RenderedData *> & renderedData)
 {
     for (RenderedData * rendered : renderedData)
-        if (rendered->dataObject()->is3D())
+        if (!dynamic_cast<ImageDataObject *>(rendered->dataObject()))
             return false;
 
     return true;

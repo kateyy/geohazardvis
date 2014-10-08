@@ -388,7 +388,11 @@ void RenderView::removeFromInternalLists(QList<DataObject *> dataObjects)
 
 QList<DataObject *> RenderView::dataObjects() const
 {
-    return m_dataObjectToRendered.keys();
+    QList<DataObject *> objs;
+    for (RenderedData * r : m_renderedData)
+        objs << r->dataObject();
+
+    return objs;
 }
 
 QList<const RenderedData *> RenderView::renderedData() const
@@ -519,7 +523,7 @@ void RenderView::setupColorMappingLegend()
 
 void RenderView::warnIncompatibleObjects(QStringList incompatibleObjects)
 {
-    QMessageBox::warning(this, "Invalid data selection", QString("Cannot render 2D and 3D data in the same render view!")
+    QMessageBox::warning(this, "Invalid data selection", QString("Cannot render data of different type in the same render view!")
         + QString("\nDiscarded objects:\n") + incompatibleObjects.join('\n'));
 }
 

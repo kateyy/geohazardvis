@@ -21,8 +21,10 @@ RenderViewSwitch::RenderViewSwitch(
     {
         RenderViewStrategy * instance = constructor(m_view);
 
-        m_strategies.insert(instance->name(), instance);
-        m_strategyStates.insert(instance->name(), false);
+        QString name = instance->name();
+        assert(!m_strategies.contains(name) && !m_strategyStates.contains(name));
+        m_strategies.insert(name, instance);
+        m_strategyStates.insert(name, false);
     }
 }
 
