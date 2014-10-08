@@ -5,9 +5,13 @@
 #include <gui/data_view/RenderViewStrategy.h>
 
 
+class QAction;
 class QToolBar;
 class vtkLineWidget2;
-class QAction;
+class vtkEventQtSlotConnect;
+
+class ImageProfileData;
+class RenderView;
 
 
 class GUI_API RenderViewStrategyImage2D : public RenderViewStrategy
@@ -35,6 +39,8 @@ private slots:
     void acceptProfilePlot();
     void abortProfilePlot();
 
+    void lineMoved();
+
 private:
     void initialize();
 
@@ -47,6 +53,9 @@ private:
     QAction * m_profilePlotAction;
     QAction * m_profilePlotAcceptAction;
     QAction * m_profilePlotAbortAction;
+    ImageProfileData * m_previewProfile;
+    RenderView * m_previewRenderer;
 
     vtkSmartPointer<vtkLineWidget2> m_lineWidget;
+    vtkSmartPointer<vtkEventQtSlotConnect> m_vtkConnect;
 };

@@ -20,6 +20,7 @@ class DataMapping : public QObject
 public:
     DataMapping(MainWindow & mainWindow);
     ~DataMapping() override;
+    static DataMapping & instance();
 
     void removeDataObjects(QList<DataObject *> dataObjects);
 

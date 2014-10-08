@@ -12,19 +12,34 @@
 #include <gui/data_view/RenderViewSwitch.h>
 
 
+namespace
+{
+    DataMapping * s_instance = nullptr;
+}
+
 DataMapping::DataMapping(MainWindow & mainWindow)
     : m_mainWindow(mainWindow)
     , m_nextTableIndex(0)
     , m_nextRenderViewIndex(0)
     , m_focusedRenderView(nullptr)
 {
+    assert(!s_instance);
+    s_instance = this;
 }
 
 DataMapping::~DataMapping()
 {
+    assert(s_instance);
     qDeleteAll(m_renderViewSwitches);
     qDeleteAll(m_renderViews);
     qDeleteAll(m_tableViews);
+    s_instance = nullptr;
+}
+
+DataMapping & DataMapping::instance()
+{
+    assert(s_instance);
+    return *s_instance;
 }
 
 void DataMapping::removeDataObjects(QList<DataObject *> dataObjects)

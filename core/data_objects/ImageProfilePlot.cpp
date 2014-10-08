@@ -74,6 +74,7 @@ vtkActor * ImageProfilePlot::createActor()
 {
     VTK_CREATE(vtkPolyDataMapper, mapper);
     mapper->SetInputConnection(dataObject()->processedOutputPort());
+    mapper->ScalarVisibilityOff();
     vtkActor * actor = vtkActor::New();
     actor->SetMapper(mapper);
     return actor;

@@ -1,17 +1,21 @@
 #include "ImageProfileData.h"
 
 #include <cmath>
+#include <algorithm>
 
 #include <vtkMath.h>
-
-#include <vtkLineSource.h>
 
 #include <vtkImageData.h>
 #include <vtkCellArray.h>
 #include <vtkCellData.h>
 #include <vtkPointData.h>
 
+#include <vtkLineSource.h>
 #include <vtkProbeFilter.h>
+#include <vtkTransformFilter.h>
+#include <vtkTransform.h>
+#include <vtkAssignAttribute.h>
+#include <vtkWarpScalar.h>
 
 #include <core/vtkhelper.h>
 #include <core/data_objects/ImageDataObject.h>
@@ -21,10 +25,12 @@
 #include <core/data_objects/PolyDataObject.h>
 
 
-ImageProfileData::ImageProfileData(const QString & name, ImageDataObject * imageData, double point1[3], double point2[3])
+ImageProfileData::ImageProfileData(const QString & name, ImageDataObject * imageData)
     : DataObject(name, vtkSmartPointer<vtkImageData>::New())
     , m_imageData(imageData)
-    , m_graphLine()
+    , m_probeLine(vtkSmartPointer<vtkLineSource>::New())
+    , m_transform(vtkSmartPointer<vtkTransformFilter>::New())
+    , m_graphLine(vtkSmartPointer<vtkWarpScalar>::New())
 {
     vtkDataArray * scalars = imageData->processedDataSet()->GetCellData()->GetScalars();
     if (!scalars)
@@ -32,45 +38,19 @@ ImageProfileData::ImageProfileData(const QString & name, ImageDataObject * image
     assert(scalars);
     m_scalarsName = QString::fromLatin1(scalars->GetName());
 
-    for (int i = 0; i < 3; ++i)
-    {
-        m_point1[i] = point1[i];
-        m_point2[i] = point2[i];
-    }
-
-    VTK_CREATE(vtkLineSource, probeLine);
-    probeLine->SetPoint1(m_point1);
-    probeLine->SetPoint2(m_point2);
-    double probeVector[3];
-    vtkMath::Subtract(m_point1, m_point2, probeVector);
-    int numProbePoints = static_cast<int>(std::ceil(std::sqrt(vtkMath::Dot(probeVector, probeVector))));
-    probeLine->SetResolution(numProbePoints);
-
     VTK_CREATE(vtkProbeFilter, probe);
-    probe->SetInputConnection(probeLine->GetOutputPort());
+    probe->SetInputConnection(m_probeLine->GetOutputPort());
     probe->SetSourceConnection(m_imageData->processedOutputPort());
 
-    probe->Update();
-    vtkPolyData * probedLine = probe->GetPolyDataOutput();
-    vtkDataArray * probedScalars = probedLine->GetPointData()->GetArray(m_scalarsName.toLatin1().data());
-    assert(probedScalars);
+    m_transform->SetInputConnection(probe->GetOutputPort());
 
-    vtkIdType numPoints = probedLine->GetNumberOfPoints();
+    VTK_CREATE(vtkAssignAttribute, assign);
+    assign->Assign(m_scalarsName.toLatin1().data(), vtkDataSetAttributes::SCALARS, vtkAssignAttribute::POINT_DATA);
+    assign->SetInputConnection(m_transform->GetOutputPort());
 
-    VTK_CREATE(vtkPoints, graphPoints);
-    graphPoints->SetNumberOfPoints(numPoints);
-
-    for (vtkIdType i = 0; i < numPoints; ++i)
-    {
-        double value = probedScalars->GetTuple(i)[0];
-        graphPoints->SetPoint(i,
-            i,
-            value,
-            0);
-    }
-
-    m_graphLine = vtkSmartPointer<vtkLineSource>::New();
-    m_graphLine->SetPoints(graphPoints);
+    m_graphLine->UseNormalOn();
+    m_graphLine->SetNormal(0, 1, 0);
+    m_graphLine->SetInputConnection(assign->GetOutputPort());
 }
 
 bool ImageProfileData::is3D() const
@@ -106,12 +86,38 @@ const QString & ImageProfileData::scalarsName() const
 
 const double * ImageProfileData::point1() const
 {
-    return m_point1;
+    return m_probeLine->GetPoint1();
 }
 
 const double * ImageProfileData::point2() const
 {
-    return m_point2;
+    return m_probeLine->GetPoint2();
+}
+
+void ImageProfileData::setPoints(double point1[3], double point2[3])
+{
+    m_probeLine->SetPoint1(point1);
+    m_probeLine->SetPoint2(point2);
+
+    double probeVector[3];
+    vtkMath::Subtract(point2, point1, probeVector);
+    int numProbePoints = static_cast<int>(std::ceil(std::sqrt(vtkMath::Dot(probeVector, probeVector))));
+    m_probeLine->SetResolution(numProbePoints);
+
+    VTK_CREATE(vtkTransform, m);
+    // move to origin
+    double xTranslate = -point1[0];
+    double yTranslate = -point1[1];
+    // align to x axis
+    const double xAxis[3] = { 1, 0, 0 };
+    double angle = vtkMath::DegreesFromRadians(std::atan2(probeVector[1], probeVector[0]));
+
+    m->RotateZ(-angle);
+    m->Translate(xTranslate, yTranslate, 0);
+    m_transform->SetTransform(m);
+
+    emit dataChanged();
+    emit boundsChanged();
 }
 
 QVtkTableModel * ImageProfileData::createTableModel()

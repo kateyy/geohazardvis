@@ -4,14 +4,17 @@
 
 #include <core/data_objects/DataObject.h>
 
+
 class vtkLineSource;
+class vtkTransformFilter;
+class vtkWarpScalar;
 class ImageDataObject;
 
 
 class CORE_API ImageProfileData : public DataObject
 {
 public:
-    ImageProfileData(const QString & name, ImageDataObject * imageData, double point1[3], double point2[3]);
+    ImageProfileData(const QString & name, ImageDataObject * imageData);
 
     bool is3D() const override;
     RenderedData * createRendered() override;
@@ -24,6 +27,7 @@ public:
     const QString & scalarsName() const;
     const double * point1() const;
     const double * point2() const;
+    void setPoints(double point1[3], double point2[3]);
 
 protected:
     QVtkTableModel * createTableModel() override;
@@ -31,8 +35,8 @@ protected:
 private:
     ImageDataObject * m_imageData;
     QString m_scalarsName;
-    double m_point1[3];
-    double m_point2[3];
 
-    vtkSmartPointer<vtkLineSource> m_graphLine;
+    vtkSmartPointer<vtkLineSource> m_probeLine;
+    vtkSmartPointer<vtkTransformFilter> m_transform;
+    vtkSmartPointer<vtkWarpScalar> m_graphLine;
 };

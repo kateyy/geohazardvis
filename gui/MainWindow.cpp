@@ -58,8 +58,10 @@ MainWindow::MainWindow()
 
 MainWindow::~MainWindow()
 {
-    delete m_ui;
     delete m_dataMapping;
+    // wait to close all views
+    QApplication::processEvents();
+    delete m_ui;
 }
 
 QStringList MainWindow::dialog_inputFileName()
