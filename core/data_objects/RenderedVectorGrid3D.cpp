@@ -6,7 +6,7 @@
 #include <vtkLineSource.h>
 #include <vtkAppendPolyData.h>
 
-#include <vtkPolyData.h>
+#include <vtkImageData.h>
 #include <vtkDataSetAttributes.h>
 
 #include <vtkGlyph3D.h>

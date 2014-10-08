@@ -3,13 +3,13 @@
 #include <core/data_objects/DataObject.h>
 
 
-class vtkPolyData;
+class vtkImageData;
 
 
 class VectorGrid3DDataObject : public DataObject
 {
 public:
-    VectorGrid3DDataObject(QString name, vtkPolyData * dataSet);
+    VectorGrid3DDataObject(QString name, vtkImageData * dataSet);
     ~VectorGrid3DDataObject() override;
 
     bool is3D() const override;

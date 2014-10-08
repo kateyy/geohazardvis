@@ -135,16 +135,124 @@ DataObject * Loader::loadGrid3D(QString name, const std::vector<ReadDataset> & d
     const InputVector & data = datasets.front().data;
     // expecting point data and 3D vectors at minimum
     assert(data.size() >= 6);
+    const int numComponents = static_cast<int>(data.size() - 3);
 
-    vtkSmartPointer<vtkPolyData> polyData;
-    polyData.TakeReference(parsePoints(data, 0));
-
-    vtkSmartPointer<vtkFloatArray> vectors;
-    vectors.TakeReference(parseFloatVector(data, name.toLatin1().data(), 3, int(data.size() - 1)));
+    const std::vector<t_FP> & coordX = data[0];
+    const std::vector<t_FP> & coordY = data[1];
+    const std::vector<t_FP> & coordZ = data[2];
+    assert((coordX.size() == coordY.size()) && (coordX.size() == coordZ.size()));
     
-    polyData->GetPointData()->SetVectors(vectors);
+    if (coordX.size() > (size_t)std::numeric_limits<vtkIdType>::max())
+    {
+        qDebug() << "cannot read data set (too large to count with vtkIdType, " + QString::number(sizeof(vtkIdType)) + ")";
+        return nullptr;
+    }
 
-    return new VectorGrid3DDataObject(name, polyData);
+    const vtkIdType numPoints = static_cast<vtkIdType>(coordX.size());
+
+    // some assumptions on the file format:
+    // starts with continues values along the y axis
+    // creating columns along the x axis
+    // creating slices along the z axis
+    //
+    // it's an regular grid...
+
+    double originX = coordX[0];
+    double originY = coordY[0];
+    double originZ = coordZ[0];
+
+    // get column spacing
+    double xSpacing = -1, ySpacing = -1, zSpacing = -1;
+    vtkIdType xExtent = -1, yExtent = -1, zExtent = -1;
+    ySpacing = std::abs(originX - coordY[1]);
+
+    // count columns and get row spacing
+    yExtent = 0;
+    for (vtkIdType i = 0; i < numPoints; ++i)
+    {
+        t_FP nextX = coordX.at(i);
+        if (nextX != originX)
+        {
+            xSpacing = std::abs(originX - nextX);
+            break;
+        }
+        ++yExtent;
+    }
+    assert(xSpacing > 0 && yExtent > 0);
+
+    // count rows and get slice spacing
+    xExtent = 0;
+    for (vtkIdType i = 0; i < numPoints; i += yExtent)
+    {
+        t_FP nextZ = coordZ.at(i);
+        if (nextZ != originZ)
+        {
+            zSpacing = std::abs(originZ - nextZ);
+            break;
+        }
+        ++xExtent;
+    }
+    
+    assert(xExtent > 0);
+
+    // get number of z-slices
+    // we should be able to compute them without counting, if the grid is complete
+
+    // didn't get zSpacing -> only one slice
+    if (zSpacing < 0)
+    {
+        zSpacing = 0;
+        zExtent = 1;
+    }
+    else
+    {
+        double f_zExtent = double(numPoints) / (xExtent * yExtent);
+        double intPart;
+        double f_floatPart = std::modf(f_zExtent, &intPart);
+        if (f_floatPart < std::numeric_limits<double>::epsilon())
+            zExtent = static_cast<vtkIdType>(intPart);
+    }
+
+    if (zExtent < 1 || (numPoints != xExtent * yExtent * zExtent))
+    {
+        qDebug() << "cannot read incomplete grid data set";
+        return nullptr;
+    }
+
+    VTK_CREATE(vtkFloatArray, vectorData);
+    vectorData->SetNumberOfComponents(numComponents);
+    vectorData->SetNumberOfTuples(numPoints);
+    vectorData->SetName(name.toLatin1().data());
+
+    float * tuple = new float[numComponents];
+
+    vtkIdType numSliceValues = xExtent * yExtent;
+    for (vtkIdType z = 0; z < zExtent; ++z)
+    {
+        vtkIdType sliceOffset = z * numSliceValues;
+        for (vtkIdType x = 0; x < xExtent; ++x)
+        {
+            vtkIdType columnOffset = x * yExtent;
+            for (vtkIdType y = 0; y < yExtent; ++y)
+            {
+                vtkIdType index = sliceOffset + columnOffset + y;
+                for (int i = 0; i < numComponents; ++i)
+                    tuple[i] = data.at(3 + i).at(index);
+                vectorData->SetTuple(index, tuple);
+            }
+        }
+    }
+
+    delete[] tuple;
+
+    VTK_CREATE(vtkImageData, image);
+    image->SetOrigin(originX, originY, originZ);
+    image->SetExtent(0, xExtent - 1, 0, yExtent - 1, 0, zExtent - 1);
+    image->SetSpacing(xSpacing, ySpacing, zSpacing);
+
+    image->GetPointData()->SetVectors(vectorData);
+
+    return new VectorGrid3DDataObject(name, image);
 }
 
 vtkPolyData * Loader::parsePoints(const InputVector & parsedData, t_UInt firstColumn)
