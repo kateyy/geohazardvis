@@ -23,4 +23,5 @@ protected:
 
 private:
     PolyDataObject * m_polyData;
+    QString m_cellTypeName;
 };

@@ -5,7 +5,9 @@
 #include <vtkPolyData.h>
 #include <vtkCellData.h>
 #include <vtkCell.h>
+#include <vtkCellTypes.h>
 
+#include <core/vtkhelper.h>
 #include <core/data_objects/PolyDataObject.h>
 
 
@@ -34,21 +36,20 @@ QVariant QVtkTableModelPolyData::data(const QModelIndex &index, int role) const
 
     vtkIdType cellId = index.row();
 
-
-    vtkSmartPointer<vtkDataSet> dataSet = m_polyData->dataSet();
-    assert(dataSet->GetCell(cellId)->GetCellType() == VTKCellType::VTK_TRIANGLE);
-    vtkCell * tri = dataSet->GetCell(cellId);
-    assert(tri);
-
     switch (index.column())
     {
     case 0:
         return cellId;
     case 1:
-        return
-            QString::number(tri->GetPointId(0)) + ":" +
-            QString::number(tri->GetPointId(1)) + ":" +
-            QString::number(tri->GetPointId(2));
+    {
+        vtkCell * cell = m_polyData->dataSet()->GetCell(cellId);
+        assert(cell);
+        QString idListString;
+        for (vtkIdType i = 0; i < cell->GetNumberOfPoints(); ++i)
+            idListString += QString::number(cell->GetPointId(i)) + ":";
+
+        return idListString.left(idListString.length() - 1);
+    }
     case 2:
     case 3:
     case 4:
@@ -83,7 +84,7 @@ QVariant QVtkTableModelPolyData::headerData(int section, Qt::Orientation orienta
 
     switch (section)
     {
-    case 0: return "triangle ID";
+    case 0: return m_cellTypeName + " ID";
     case 1: return "point IDs";
     case 2: return "x";
     case 3: return "y";
@@ -133,4 +134,16 @@ Qt::ItemFlags QVtkTableModelPolyData::flags(const QModelIndex &index) const
 void QVtkTableModelPolyData::resetDisplayData()
 {
     m_polyData = dynamic_cast<PolyDataObject *>(dataObject());
+
+    if (m_polyData)
+    {
+        vtkDataSet * dataSet = m_polyData->dataSet();
+        VTK_CREATE(vtkCellTypes, cellTypes);
+        dataSet->GetCellTypes(cellTypes);
+
+        if (cellTypes->GetNumberOfTypes() == 1 && dataSet->GetCellType(0) == VTK_TRIANGLE)
+            m_cellTypeName = "triangle";
+        else
+            m_cellTypeName = "cell";
+    }
 }
