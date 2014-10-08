@@ -11,6 +11,7 @@
 
 #include <core/vtkhelper.h>
 #include <core/Loader.h>
+#include <core/DataSetHandler.h>
 
 #include "DataMapping.h"
 #include "SelectionHandler.h"
@@ -124,7 +125,7 @@ void MainWindow::openFiles(QStringList fileNames)
         newData << dataObject;
     }
 
-    m_dataBrowser->addDataObjects(newData);
+    DataSetHandler::instance().addData(newData);
 
     setWindowTitle(oldName);
 }

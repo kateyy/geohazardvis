@@ -26,6 +26,9 @@ DataBrowser::DataBrowser(QWidget* parent, Qt::WindowFlags f)
     m_ui->dataTableView->setModel(m_tableModel);
 
     m_ui->dataTableView->viewport()->installEventFilter(this);
+
+    connect(&DataSetHandler::instance(), &DataSetHandler::dataObjectsChanged, this, &DataBrowser::updateDataList);
+    connect(&DataSetHandler::instance(), &DataSetHandler::rawVectorsChanged, this, &DataBrowser::updateDataList);
 }
 
 DataBrowser::~DataBrowser()
@@ -40,15 +43,6 @@ void DataBrowser::setDataMapping(DataMapping * dataMapping)
 
     m_dataMapping = dataMapping;
     connect(m_dataMapping, &DataMapping::focusedRenderViewChanged, this, &DataBrowser::setupGuiFor);
-}
-
-void DataBrowser::addDataObjects(QList<DataObject *> dataObjects)
-{
-    DataSetHandler::instance().addData(dataObjects);
-
-    m_tableModel->updateDataList();
-
-    m_ui->dataTableView->resizeColumnsToContents();
 }
 
 bool DataBrowser::eventFilter(QObject * /*obj*/, QEvent * ev)
@@ -76,6 +70,13 @@ bool DataBrowser::eventFilter(QObject * /*obj*/, QEvent * ev)
         return true;
 
     return false;
+}
+
+void DataBrowser::updateDataList()
+{
+    m_tableModel->updateDataList();
+
+    m_ui->dataTableView->resizeColumnsToContents();
 }
 
 void DataBrowser::showTable()

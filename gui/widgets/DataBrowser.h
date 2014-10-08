@@ -21,12 +21,12 @@ public:
 
     void setDataMapping(DataMapping * dataMapping);
 
-    void addDataObjects(QList<DataObject *> dataObject);
-
 protected:
     bool eventFilter(QObject * obj, QEvent * ev) override;
 
 private slots:
+    void updateDataList();
+
     /** show and bring to front the table for selected objects */
     void showTable();
     /** change visibility of selected objects in the current render view */
