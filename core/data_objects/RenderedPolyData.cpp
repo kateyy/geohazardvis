@@ -63,12 +63,7 @@ const PolyDataObject * RenderedPolyData::polyDataObject() const
 
 reflectionzeug::PropertyGroup * RenderedPolyData::createConfigGroup()
 {
-    PropertyGroup * configGroup = new PropertyGroup();
-
-    auto * renderSettings = new PropertyGroup("renderSettings");
-    renderSettings->setOption("title", "rendering");
-    configGroup->addProperty(renderSettings);
-
+    PropertyGroup * renderSettings = new PropertyGroup();
 
     auto * color = renderSettings->addProperty<Color>("color",
         [this]() {
@@ -181,7 +176,7 @@ reflectionzeug::PropertyGroup * RenderedPolyData::createConfigGroup()
     pointSize->setOption("step", 1);
     pointSize->setOption("suffix", " pixel");
 
-    return configGroup;
+    return renderSettings;
 }
 
 vtkProperty * RenderedPolyData::createDefaultRenderProperty() const

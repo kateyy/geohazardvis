@@ -49,11 +49,7 @@ const ImageDataObject * RenderedImageData::imageDataObject() const
 
 reflectionzeug::PropertyGroup * RenderedImageData::createConfigGroup()
 {
-    PropertyGroup * configGroup = new PropertyGroup();
-
-    auto * renderSettings = new PropertyGroup("renderSettings");
-    renderSettings->setOption("title", "rendering");
-    configGroup->addProperty(renderSettings);
+    PropertyGroup * renderSettings = new PropertyGroup();
 
     auto * interpolate = renderSettings->addProperty<bool>("interpolate",
         [this]() {
@@ -73,7 +69,7 @@ reflectionzeug::PropertyGroup * RenderedImageData::createConfigGroup()
         emit geometryChanged();
     });*/
 
-    return configGroup;
+    return renderSettings;
 }
 
 vtkProperty * RenderedImageData::createDefaultRenderProperty() const
