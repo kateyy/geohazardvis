@@ -117,7 +117,7 @@ private:
     RenderViewStrategy & strategy() const;
     
     void updateAxes();
-    static vtkSmartPointer<vtkCubeAxesActor> createAxes(vtkRenderer & renderer);
+    void createAxes();
     void setupColorMappingLegend();
 
     void warnIncompatibleObjects(QStringList incompatibleObjects);

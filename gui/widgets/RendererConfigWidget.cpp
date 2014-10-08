@@ -8,12 +8,13 @@
 #include <vtkLightKit.h>
 #include <vtkCamera.h>
 #include <vtkCubeAxesActor.h>
+#include <vtkTextProperty.h>
 #include <vtkEventQtSlotConnect.h>
 
 #include <reflectionzeug/PropertyGroup.h>
 
 #include <core/vtkcamerahelper.h>
-#include "gui/data_view/RenderView.h"
+#include <gui/data_view/RenderView.h>
 
 
 using namespace reflectionzeug;
@@ -70,7 +71,7 @@ void RendererConfigWidget::setRenderViews(const QList<RenderView *> & renderView
 
         connect(renderView, &RenderView::windowTitleChanged, this, &RendererConfigWidget::updateRenderViewTitle);
 
-        m_eventConnect->Connect(renderView->renderer(), vtkCommand::ModifiedEvent, this, SLOT(readCameraStats(vtkObject *)), this);
+        m_eventConnect->Connect(renderView->renderer()->GetActiveCamera(), vtkCommand::ModifiedEvent, this, SLOT(readCameraStats(vtkObject *)), this);
     }
 
     if (renderViews.isEmpty())
@@ -121,9 +122,9 @@ void RendererConfigWidget::updateRenderViewTitle(const QString & newTitle)
 
 void RendererConfigWidget::readCameraStats(vtkObject * caller)
 {
-    assert(vtkRenderer::SafeDownCast(caller));
-    vtkRenderer * renderer = static_cast<vtkRenderer *>(caller);
-    if (renderer->GetActiveCamera() != m_activeCamera)
+    assert(vtkCamera::SafeDownCast(caller));
+    vtkCamera * camera = static_cast<vtkCamera *>(caller);
+    if (camera != m_activeCamera)
         return;
 
     std::function<void(AbstractProperty &)> updateFunc = [&updateFunc] (AbstractProperty & property)
@@ -134,8 +135,31 @@ void RendererConfigWidget::readCameraStats(vtkObject * caller)
             property.asValue()->valueChanged();
     };
 
+    PropertyGroup * cameraGroup = nullptr;
     if (m_propertyRoot->propertyExists("Camera"))
-        m_propertyRoot->group("Camera")->forEach(updateFunc);
+        cameraGroup = m_propertyRoot->group("Camera");
+
+    if (!cameraGroup)
+        return;
+
+    cameraGroup->forEach(updateFunc);
+    
+    RenderView * renderView = reinterpret_cast<RenderView *>(
+        m_ui->relatedRenderer->currentData(Qt::UserRole).toULongLong());
+    assert(renderView);
+
+    // update axes text label rotations for terrain view
+    double up[3];
+    camera->GetViewUp(up);
+    if (up[2] > up[0] + up[1])
+    {
+        double azimuth = TerrainCamera::getAzimuth(*camera);
+        if (TerrainCamera::getVerticalElevation(*camera) < 0)
+            azimuth *= -1;
+
+        renderView->axesActor()->GetLabelTextProperty(0)->SetOrientation(azimuth - 90);
+        renderView->axesActor()->GetLabelTextProperty(1)->SetOrientation(azimuth);
+    }
 }
 
 PropertyGroup * RendererConfigWidget::createPropertyGroup(RenderView * renderView)
@@ -167,6 +191,7 @@ PropertyGroup * RendererConfigWidget::createPropertyGroup(RenderView * renderVie
             },
                 [renderView, &camera](const double & azimuth) {
                 TerrainCamera::setAzimuth(camera, azimuth);
+                renderView->renderer()->ResetCamera();
                 renderView->render();
             });
             prop_azimuth->setOption("minimum", std::numeric_limits<double>::lowest());
@@ -178,6 +203,7 @@ PropertyGroup * RendererConfigWidget::createPropertyGroup(RenderView * renderVie
             },
                 [renderView, &camera](const double & elevation) {
                 TerrainCamera::setVerticalElevation(camera, elevation);
+                renderView->renderer()->ResetCamera();
                 renderView->render();
             });
             prop_elevation->setOption("minimum", -89);

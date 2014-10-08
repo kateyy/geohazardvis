@@ -9,6 +9,9 @@
 
 #include <vtkCamera.h>
 #include <vtkRenderWindow.h>
+#include <vtkCubeAxesActor.h>
+#include <vtkTextProperty.h>
+#include <vtkProperty.h>
 
 #include <vtkLineWidget2.h>
 #include <vtkLineRepresentation.h>
@@ -66,8 +69,10 @@ void RenderViewStrategyImage2D::activate()
     m_context.interactorStyleSwitch()->setCurrentStyle("InteractorStyleImage");
 
     QWidget * content = m_context.findChild<QWidget *>("content", Qt::FindDirectChildrenOnly);
-
     content->layout()->addWidget(m_toolbar);
+
+    m_context.axesActor()->GetLabelTextProperty(0)->SetOrientation(0);
+    m_context.axesActor()->GetLabelTextProperty(1)->SetOrientation(90);
 }
 
 void RenderViewStrategyImage2D::deactivate()
@@ -121,6 +126,7 @@ void RenderViewStrategyImage2D::startProfilePlot()
 {
     m_lineWidget = vtkSmartPointer<vtkLineWidget2>::New();
     VTK_CREATE(vtkLineRepresentation, repr);
+    repr->SetLineColor(1, 0, 0);
     m_lineWidget->SetRepresentation(repr);
     m_lineWidget->SetInteractor(m_context.renderWindow()->GetInteractor());
     m_lineWidget->On();
@@ -150,11 +156,13 @@ void RenderViewStrategyImage2D::acceptProfilePlot()
     double point1[3], point2[3];
     m_lineWidget->GetLineRepresentation()->GetPoint1WorldPosition(point1);
     m_lineWidget->GetLineRepresentation()->GetPoint2WorldPosition(point2);
+    point1[2] = point2[2] = 0;
     ImageProfileData * profile = new ImageProfileData(imageData, point1, point2);
 
     DataSetHandler::instance().addData({ profile });
 
     m_lineWidget = nullptr;
+    m_context.render();
 
     m_profilePlotAction->setEnabled(true);
     m_profilePlotAcceptAction->setVisible(false);
@@ -164,6 +172,7 @@ void RenderViewStrategyImage2D::acceptProfilePlot()
 void RenderViewStrategyImage2D::abortProfilePlot()
 {
     m_lineWidget = nullptr;
+    m_context.render();
 
     m_profilePlotAction->setEnabled(true);
     m_profilePlotAcceptAction->setVisible(false);

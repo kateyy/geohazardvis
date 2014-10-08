@@ -58,7 +58,8 @@ RenderView::RenderView(
 
     setupRenderer();
     setupInteraction();
-    m_axesActor = createAxes(*m_renderer);
+    createAxes();
+
     setupColorMappingLegend();
 
     updateTitle();
@@ -284,10 +285,8 @@ void RenderView::addDataObjects(QList<DataObject *> dataObjects)
     if (aNewObject)
     {
         m_renderer->ResetCamera();
-
         render();
     }
-
 
     if (!incompatibleObjects.isEmpty())
         warnIncompatibleObjects(incompatibleObjects);
@@ -441,49 +440,44 @@ void RenderView::updateAxes()
     
     m_axesActor->SetVisibility(m_axesEnabled);
 
-    m_renderer->AddViewProp(m_axesActor);
-
     m_axesActor->SetBounds(m_dataBounds);
-    m_axesActor->SetRebuildAxes(true);
 }
 
-vtkSmartPointer<vtkCubeAxesActor> RenderView::createAxes(vtkRenderer & renderer)
+void RenderView::createAxes()
 {
-    VTK_CREATE(vtkCubeAxesActor, cubeAxes);
-    cubeAxes->SetCamera(renderer.GetActiveCamera());
-    cubeAxes->SetFlyModeToOuterEdges();
-    cubeAxes->SetGridLineLocation(VTK_GRID_LINES_FURTHEST);
-    //cubeAxes->SetUseTextActor3D(true);
-    cubeAxes->SetTickLocationToBoth();
+    m_axesActor = vtkSmartPointer<vtkCubeAxesActor>::New();
+    m_axesActor->SetCamera(m_renderer->GetActiveCamera());
+    m_axesActor->SetFlyModeToOuterEdges();
+    m_axesActor->SetGridLineLocation(VTK_GRID_LINES_FURTHEST);
+    //m_axesActor->SetUseTextActor3D(true);
+    m_axesActor->SetTickLocationToBoth();
     // fix strange rotation of z-labels
-    cubeAxes->GetLabelTextProperty(2)->SetOrientation(90);
+    m_axesActor->GetLabelTextProperty(2)->SetOrientation(90);
 
     double axesColor[3] = { 0, 0, 0 };
     double gridColor[3] = { 0.7, 0.7, 0.7 };
 
-    cubeAxes->GetXAxesLinesProperty()->SetColor(axesColor);
-    cubeAxes->GetYAxesLinesProperty()->SetColor(axesColor);
-    cubeAxes->GetZAxesLinesProperty()->SetColor(axesColor);
-    cubeAxes->GetXAxesGridlinesProperty()->SetColor(gridColor);
-    cubeAxes->GetYAxesGridlinesProperty()->SetColor(gridColor);
-    cubeAxes->GetZAxesGridlinesProperty()->SetColor(gridColor);
+    m_axesActor->GetXAxesLinesProperty()->SetColor(axesColor);
+    m_axesActor->GetYAxesLinesProperty()->SetColor(axesColor);
+    m_axesActor->GetZAxesLinesProperty()->SetColor(axesColor);
+    m_axesActor->GetXAxesGridlinesProperty()->SetColor(gridColor);
+    m_axesActor->GetYAxesGridlinesProperty()->SetColor(gridColor);
+    m_axesActor->GetZAxesGridlinesProperty()->SetColor(gridColor);
 
     for (int i = 0; i < 3; ++i) {
-        cubeAxes->GetTitleTextProperty(i)->SetColor(axesColor);
-        cubeAxes->GetLabelTextProperty(i)->SetColor(axesColor);
+        m_axesActor->GetTitleTextProperty(i)->SetColor(axesColor);
+        m_axesActor->GetLabelTextProperty(i)->SetColor(axesColor);
     }
 
-    cubeAxes->XAxisMinorTickVisibilityOff();
-    cubeAxes->YAxisMinorTickVisibilityOff();
-    cubeAxes->ZAxisMinorTickVisibilityOff();
+    m_axesActor->XAxisMinorTickVisibilityOff();
+    m_axesActor->YAxisMinorTickVisibilityOff();
+    m_axesActor->ZAxisMinorTickVisibilityOff();
 
-    cubeAxes->DrawXGridlinesOn();
-    cubeAxes->DrawYGridlinesOn();
-    cubeAxes->DrawZGridlinesOn();
+    m_axesActor->DrawXGridlinesOn();
+    m_axesActor->DrawYGridlinesOn();
+    m_axesActor->DrawZGridlinesOn();
 
-    cubeAxes->SetRebuildAxes(true);
-
-    return cubeAxes;
+    m_renderer->AddViewProp(m_axesActor);
 }
 
 void RenderView::setupColorMappingLegend()
