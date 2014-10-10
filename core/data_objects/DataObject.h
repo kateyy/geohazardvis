@@ -1,9 +1,6 @@
 #pragma once
 
-#include <QString>
 #include <QObject>
-
-#include <vtkSmartPointer.h>
 
 #include <core/core_api.h>
 
@@ -13,7 +10,6 @@ class vtkInformationStringKey;
 class vtkInformationIntegerKey;
 class vtkDataSet;
 class vtkAlgorithmOutput;
-class vtkTrivialProducer;
 class vtkEventQtSlotConnect;
 class QVtkTableModel;
 class RenderedData;

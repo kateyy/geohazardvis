@@ -1,5 +1,7 @@
 #pragma once
 
+#include <vtkSmartPointer.h>
+
 #include <core/data_objects/DataObject.h>
 #include <core/core_api.h>
 

@@ -20,6 +20,8 @@ set ( SOURCES
 
     data_objects/DataObject.h
     data_objects/DataObject.cpp
+    data_objects/DataObject_private.h
+    data_objects/DataObject_private.cpp
     data_objects/ImageDataObject.h
     data_objects/ImageDataObject.cpp
     data_objects/ImageProfileData.h

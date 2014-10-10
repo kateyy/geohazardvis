@@ -1,60 +1,20 @@
 #include "DataObject.h"
+#include "DataObject_private.h"
 
 #include <cassert>
 #include <type_traits>
 
+#include <vtkAlgorithm.h>
 #include <vtkInformation.h>
 #include <vtkInformationStringKey.h>
 #include <vtkInformationIntegerKey.h>
-#include <vtkInformationIntegerPointerKey.h>
 
 #include <vtkDataSet.h>
-#include <vtkCellData.h>
-#include <vtkDataArray.h>
 #include <vtkEventQtSlotConnect.h>
-#include <vtkTrivialProducer.h>
-
-#include <core/table_model/QVtkTableModel.h>
 
 
 vtkInformationKeyMacro(DataObject, NameKey, String);
 vtkInformationKeyMacro(DataObject, ArrayIsAuxiliaryKey, Integer);
-
-class DataObjectPrivate
-{
-public:
-    DataObjectPrivate(DataObject & dataObject, QString name, vtkDataSet * dataSet)
-        : q_ptr(dataObject)
-        , m_name(name)
-        , m_dataSet(dataSet)
-        , m_tableModel(nullptr)
-        , m_bounds()
-        , m_vtkQtConnect(vtkSmartPointer<vtkEventQtSlotConnect>::New())
-    {
-    }
-    
-    ~DataObjectPrivate()
-    {
-        delete m_tableModel;
-    }
-
-    static vtkInformationIntegerPointerKey * DataObjectKey();
-
-    DataObject & q_ptr;
-
-    QString m_name;
-
-    vtkSmartPointer<vtkDataSet> m_dataSet;
-    QVtkTableModel * m_tableModel;
-
-    vtkSmartPointer<vtkTrivialProducer> m_trivialProducer;
-
-    double m_bounds[6];
-
-    vtkSmartPointer<vtkEventQtSlotConnect> m_vtkQtConnect;
-};
-
-vtkInformationKeyMacro(DataObjectPrivate, DataObjectKey, IntegerPointer);
 
 
 DataObject::DataObject(QString name, vtkDataSet * dataSet)
@@ -95,13 +55,7 @@ vtkDataSet * DataObject::processedDataSet()
 
 vtkAlgorithmOutput * DataObject::processedOutputPort()
 {
-    if (!d_ptr->m_trivialProducer)
-    {
-        d_ptr->m_trivialProducer = vtkSmartPointer<vtkTrivialProducer>::New();
-        d_ptr->m_trivialProducer->SetOutput(d_ptr->m_dataSet);
-    }
-
-    return d_ptr->m_trivialProducer->GetOutputPort();
+    return d_ptr->trivialProducer()->GetOutputPort();
 }
 
 const double * DataObject::bounds()
