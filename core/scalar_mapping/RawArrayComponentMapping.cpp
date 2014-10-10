@@ -46,31 +46,24 @@ QList<ScalarsForColorMapping *> RawArrayComponentMapping::newInstances(const QLi
     QList<ScalarsForColorMapping *> instances;
     for (RawVectorData * rawVector : rawVectors)
     {
-        for (vtkIdType component = 0; component < rawVector->dataArray()->GetNumberOfComponents(); ++component)
+        RawArrayComponentMapping * mapping = new RawArrayComponentMapping(dataObjects, rawVector, rawVector->dataArray()->GetNumberOfComponents());
+        if (mapping->isValid())
         {
-            RawArrayComponentMapping * mapping = new RawArrayComponentMapping(dataObjects, rawVector, component);
-            if (mapping->isValid())
-            {
-                mapping->initialize();
-                instances << mapping;
-            }
-            else
-                delete mapping;
+            mapping->initialize();
+            instances << mapping;
         }
+        else
+            delete mapping;
     }
 
     return instances;
 }
 
-RawArrayComponentMapping::RawArrayComponentMapping(const QList<DataObject *> & dataObjects, RawVectorData * rawVector, vtkIdType component)
-    : AbstractArrayComponentMapping(dataObjects, rawVector->name(), component)
+RawArrayComponentMapping::RawArrayComponentMapping(const QList<DataObject *> & dataObjects, RawVectorData * rawVector, vtkIdType numDataComponents)
+    : AbstractArrayComponentMapping(dataObjects, rawVector->name(), numDataComponents)
     , m_rawVector(rawVector)
 {
     assert(rawVector);
-    vtkDataArray * dataArray = rawVector->dataArray();
-    assert(dataArray->GetNumberOfComponents() > m_component);
-
-    m_arrayNumComponents = dataArray->GetNumberOfComponents();
 
     vtkIdType currentIndex = 0;
     for (DataObject * dataObject : dataObjects)
@@ -78,7 +71,7 @@ RawArrayComponentMapping::RawArrayComponentMapping(const QList<DataObject *> & d
         m_dataObjectToArrayIndex.insert(dataObject, currentIndex);
         currentIndex += dataObject->dataSet()->GetNumberOfCells();
     }
-    assert(currentIndex <= dataArray->GetNumberOfTuples());
+    assert(currentIndex <= rawVector->dataArray()->GetNumberOfTuples());
 
     m_isValid = true;
 }
@@ -146,8 +139,6 @@ void RawArrayComponentMapping::configureDataObjectAndMapper(DataObject * dataObj
     m_sections.insert(dataObject, section);
 
     dataObject->dataSet()->GetCellData()->AddArray(section);
-    // TODO this is marked as legacy, but accessing the mappers LUT is not safe here
-    mapper->ColorByArrayComponent(sectionName.data(), m_component);
 }
 
 void RawArrayComponentMapping::initialize()
@@ -159,7 +150,10 @@ void RawArrayComponentMapping::initialize()
 
 void RawArrayComponentMapping::updateBounds()
 {
-    setDataMinMaxValue(m_rawVector->dataArray()->GetRange(m_component));
+    for (vtkIdType c = 0; c < numDataComponents(); ++c)
+    {
+        setDataMinMaxValue(m_rawVector->dataArray()->GetRange(c), c);
+    }
 }
 
 void RawArrayComponentMapping::startingIndexChangedEvent()

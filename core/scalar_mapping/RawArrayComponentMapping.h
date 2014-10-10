@@ -15,7 +15,7 @@ class RawVectorData;
 class CORE_API RawArrayComponentMapping : public AbstractArrayComponentMapping
 {
 public:
-    RawArrayComponentMapping(const QList<DataObject *> & dataObjects, RawVectorData * rawVector, vtkIdType component);
+    RawArrayComponentMapping(const QList<DataObject *> & dataObjects, RawVectorData * rawVector, vtkIdType numDataComponents);
     ~RawArrayComponentMapping() override;
 
     vtkIdType maximumStartingIndex() override;

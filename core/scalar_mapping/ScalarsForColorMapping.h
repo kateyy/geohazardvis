@@ -1,5 +1,7 @@
 #pragma once
 
+#include <vector>
+
 #include <QList>
 #include <QMap>
 #include <QObject>
@@ -32,10 +34,14 @@ public:
     static QList<ScalarsForColorMapping *> newInstance(const QList<DataObject*> & dataObjects);
 
 public:
-    explicit ScalarsForColorMapping(const QList<DataObject *> & dataObjects);
+    explicit ScalarsForColorMapping(const QList<DataObject *> & dataObjects, vtkIdType numDataComponents = 1);
     virtual ~ScalarsForColorMapping() = 0;
 
     virtual QString name() const = 0;
+
+    vtkIdType numDataComponents() const;
+    vtkIdType dataComponent() const;
+    void setDataComponent(vtkIdType component);
 
     /** when mapping arrays that have more tuples than cells (triangles) exist in the data set:
         return highest possible index that can be used as first index in the scalar array. */
@@ -58,17 +64,19 @@ public:
         @param dataObject must be one of the objects that where passed when calling the mapping's constructor */
     virtual void configureDataObjectAndMapper(DataObject * dataObject, vtkMapper * mapper);
 
-    /** minimal value in the data set */
-    double dataMinValue() const;
-    /** maximal value in the data set */
-    double dataMaxValue() const;
+    /** minimal value in the data set 
+        @param select a data component to query or use the currently selected component (-1) */
+    double dataMinValue(vtkIdType component = -1) const;
+    /** maximal value in the data set 
+        @param select a data component to query or use the currently selected component (-1) */
+    double dataMaxValue(vtkIdType component = -1) const;
 
     /** minimal value used for scalar mapping (clamped to [dataMinValue, dataMaxValue]) */
-    double minValue() const;
-    void setMinValue(double value);
+    double minValue(vtkIdType component = -1) const;
+    void setMinValue(double value, vtkIdType component = -1);
     /** maximal value used for scalar mapping (clamped to [dataMinValue, dataMaxValue]) */
-    double maxValue() const;
-    void setMaxValue(double value);
+    double maxValue(vtkIdType component = -1) const;
+    void setMaxValue(double value, vtkIdType component = -1);
 
 signals:
     void minMaxChanged();
@@ -81,10 +89,11 @@ protected:
     /** check whether these scalar extraction is applicable for the data objects it was created with */
     virtual bool isValid() const = 0;
 
-    void setDataMinMaxValue(const double minMax[2]);
-    void setDataMinMaxValue(double min, double max);
+    void setDataMinMaxValue(const double minMax[2], vtkIdType component);
+    void setDataMinMaxValue(double min, double max, vtkIdType component);
 
 protected:
+    virtual void dataComponentChangedEvent();
     virtual void minMaxChangedEvent();
     virtual void startingIndexChangedEvent();
     virtual void objectOrderChangedEvent();
@@ -95,10 +104,14 @@ protected:
 private:
     vtkIdType m_startingIndex;
 
-    double m_dataMinValue;
-    double m_dataMaxValue;
-    double m_minValue;
-    double m_maxValue;
+    const vtkIdType m_numDataComponents;
+    vtkIdType m_dataComponent;
+
+    /** per data component: value range and user selected subrange */
+    std::vector<double> m_dataMinValue;
+    std::vector<double> m_dataMaxValue;
+    std::vector<double> m_minValue;
+    std::vector<double> m_maxValue;
 };
 
 #include "ScalarsForColorMapping.hpp"

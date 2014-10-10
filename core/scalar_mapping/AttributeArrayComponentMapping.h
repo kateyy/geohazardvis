@@ -6,7 +6,7 @@
 class CORE_API AttributeArrayComponentMapping : public AbstractArrayComponentMapping
 {
 public:
-    AttributeArrayComponentMapping(const QList<DataObject *> & dataObjects, QString dataArrayName, vtkIdType component);
+    AttributeArrayComponentMapping(const QList<DataObject *> & dataObjects, QString dataArrayName, vtkIdType numDataComponents);
     ~AttributeArrayComponentMapping() override;
 
     vtkAlgorithm * createFilter(DataObject * dataObject) override;

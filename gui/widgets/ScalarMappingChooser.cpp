@@ -112,6 +112,20 @@ void ScalarMappingChooser::gradientSelectionChanged(int /*selection*/)
     emit renderSetupChanged();
 }
 
+void ScalarMappingChooser::componentChanged(int guiComponent)
+{
+    if (!m_mapping)
+        return;
+
+    vtkIdType component = guiComponent - 1;
+
+    m_mapping->scalarsSetDataComponent(component);
+
+    updateGuiValueRanges();
+
+    emit renderSetupChanged();
+}
+
 void ScalarMappingChooser::minValueChanged(double value)
 {
     if (!m_mapping)
@@ -297,6 +311,7 @@ void ScalarMappingChooser::rebuildGui()
 
 void ScalarMappingChooser::updateGuiValueRanges()
 {
+    int numComponents = 0, currentComponent = 1;
     double min = 0, max = 0;
     double currentMin = 0, currentMax = 0;
 
@@ -308,6 +323,8 @@ void ScalarMappingChooser::updateGuiValueRanges()
 
         if (scalars)
         {
+            numComponents = scalars->numDataComponents();
+            currentComponent = scalars->dataComponent();
             min = scalars->dataMinValue();
             max = scalars->dataMaxValue();
             currentMin = scalars->minValue();
@@ -322,15 +339,21 @@ void ScalarMappingChooser::updateGuiValueRanges()
     auto currentMapping = m_mapping;
     m_mapping = nullptr;
 
+    m_ui->componentSpinBox->setMinimum(1);
+    m_ui->componentSpinBox->setMaximum(numComponents);
+    m_ui->componentSpinBox->setValue(currentComponent + 1);
     m_ui->minValueSpinBox->setMinimum(min);
     m_ui->minValueSpinBox->setMaximum(max);
     m_ui->minValueSpinBox->setValue(currentMin);
     m_ui->maxValueSpinBox->setMinimum(min);
     m_ui->maxValueSpinBox->setMaximum(max);
     m_ui->maxValueSpinBox->setValue(currentMax);
+
+    m_ui->componentLabel->setText("component (" + QString::number(numComponents) + ")");
     m_ui->minLabel->setText("min (data: " + QString::number(min) + ")");
     m_ui->maxLabel->setText("max (data: " + QString::number(max) + ")");
 
+    m_ui->componentSpinBox->setEnabled(numComponents > 1);
     m_ui->minValueSpinBox->setEnabled(enableRangeGui);
     m_ui->maxValueSpinBox->setEnabled(enableRangeGui);
 
@@ -349,6 +372,8 @@ vtkLookupTable * ScalarMappingChooser::buildLookupTable(const QImage & image)
         QRgb color = image.pixel(i, 0);
         lut->SetTableValue(i, qRed(color) / 255.0, qGreen(color) / 255.0, qBlue(color) / 255.0, (alphaMask | qAlpha(color)) / 255.0);
     }
+
+    lut->SetVectorModeToComponent();
 
     return lut;
 }

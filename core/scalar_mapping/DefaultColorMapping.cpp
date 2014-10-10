@@ -42,7 +42,7 @@ void DefaultColorMapping::configureDataObjectAndMapper(DataObject * dataObject, 
 
 void DefaultColorMapping::updateBounds()
 {
-    setDataMinMaxValue(0, 0);
+    setDataMinMaxValue(0.0, 0.0, 0);
 }
 
 bool DefaultColorMapping::isValid() const

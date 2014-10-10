@@ -33,6 +33,7 @@ signals:
 private slots:
     void scalarsSelectionChanged(QString scalarsName);
     void gradientSelectionChanged(int selection);
+    void componentChanged(int guiComponent);
     void minValueChanged(double value);
     void maxValueChanged(double value);
 

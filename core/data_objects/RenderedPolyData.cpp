@@ -250,10 +250,12 @@ vtkPolyDataMapper * RenderedPolyData::createDataMapper()
         return mapper;
     }
 
-    m_scalars->configureDataObjectAndMapper(dataObject(), mapper);
-
     // don't break the lut configuration
     mapper->UseLookupTableScalarRangeOn();
+
+    mapper->SetLookupTable(m_lut);
+
+    m_scalars->configureDataObjectAndMapper(dataObject(), mapper);
 
     if (m_scalars->usesFilter())
     {
@@ -262,8 +264,6 @@ vtkPolyDataMapper * RenderedPolyData::createDataMapper()
     }
     else
         mapper->SetInputConnection(dataObject()->processedOutputPort());
-
-    mapper->SetLookupTable(m_lut);
 
     return mapper;
 }

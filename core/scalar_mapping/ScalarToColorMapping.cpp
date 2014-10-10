@@ -140,6 +140,14 @@ const ScalarsForColorMapping * ScalarToColorMapping::currentScalars() const
     return scalars;
 }
 
+void ScalarToColorMapping::scalarsSetDataComponent(vtkIdType component)
+{
+    m_gradient->SetVectorComponent(component);
+    currentScalars()->setDataComponent(component);
+
+    updateGradientValueRange();
+}
+
 vtkLookupTable * ScalarToColorMapping::gradient()
 {
     return m_gradient;

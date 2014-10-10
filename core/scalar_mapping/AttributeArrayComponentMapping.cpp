@@ -10,7 +10,7 @@
 #include <vtkInformation.h>
 #include <vtkInformationIntegerKey.h>
 
-#include <vtkFloatArray.h>
+#include <vtkDataArray.h>
 #include <vtkDataSet.h>
 #include <vtkCellData.h>
 #include <vtkMapper.h>
@@ -41,9 +41,7 @@ QList<ScalarsForColorMapping *> AttributeArrayComponentMapping::newInstances(con
         const int numArrays = cellData->GetNumberOfArrays();
         for (vtkIdType i = 0; i < numArrays; ++i)
         {
-            vtkFloatArray * dataArray = vtkFloatArray::SafeDownCast(cellData->GetArray(i));
-            if (!dataArray)
-                continue;
+            vtkDataArray * dataArray = cellData->GetArray(i);
 
             // skip arrays that are marked as auxiliary
             vtkInformation * arrayInfo = dataArray->GetInformation();
@@ -69,40 +67,23 @@ QList<ScalarsForColorMapping *> AttributeArrayComponentMapping::newInstances(con
     QList<ScalarsForColorMapping *> instances;
     for (auto it = arrayNamesComponents.begin(); it != arrayNamesComponents.end(); ++it)
     {
-        for (vtkIdType component = 0; component < it.value(); ++component)
+        AttributeArrayComponentMapping * mapping = new AttributeArrayComponentMapping(dataObjects, it.key(), it.value());
+        if (mapping->isValid())
         {
-            AttributeArrayComponentMapping * mapping = new AttributeArrayComponentMapping(dataObjects, it.key(), component);
-            if (mapping->isValid())
-            {
-                mapping->initialize();
-                instances << mapping;
-            }
-            else
-                delete mapping;
+            mapping->initialize();
+            instances << mapping;
         }
+        else
+            delete mapping;
     }
 
     return instances;
 }
 
-AttributeArrayComponentMapping::AttributeArrayComponentMapping(const QList<DataObject *> & dataObjects, QString dataArrayName, vtkIdType component)
-    : AbstractArrayComponentMapping(dataObjects, dataArrayName, component)
+AttributeArrayComponentMapping::AttributeArrayComponentMapping(const QList<DataObject *> & dataObjects, QString dataArrayName, vtkIdType numDataComponents)
+    : AbstractArrayComponentMapping(dataObjects, dataArrayName, numDataComponents)
 {
     assert(!dataObjects.isEmpty());
-
-    QByteArray c_name = dataArrayName.toLatin1();
-
-    // assuming that all arrays with our array name have the same number of components
-    // so just find the first currently existing array
-    vtkDataArray * anArray = nullptr;
-    for (DataObject * dataObject : dataObjects)
-    {
-        anArray = dataObject->processedDataSet()->GetCellData()->GetArray(c_name.data());
-        if (anArray)
-            break;
-    }
-    assert(anArray);
-    m_arrayNumComponents = anArray->GetNumberOfComponents();
 
     m_isValid = true;
 }
@@ -130,29 +111,32 @@ bool AttributeArrayComponentMapping::usesFilter() const
 void AttributeArrayComponentMapping::configureDataObjectAndMapper(DataObject * dataObject, vtkMapper * mapper)
 {
     ScalarsForColorMapping::configureDataObjectAndMapper(dataObject, mapper);
-    QByteArray c_name = m_dataArrayName.toLatin1();
 
-    // TODO this is marked as legacy, but accessing the mappers LUT is not safe here
-    mapper->ColorByArrayComponent(c_name.data(), m_component);
+    mapper->ScalarVisibilityOn();
+    mapper->SetScalarModeToUseCellData();
+    mapper->SelectColorArray(m_dataArrayName.toLatin1().data());
 }
 
 void AttributeArrayComponentMapping::updateBounds()
 {
     QByteArray c_name = m_dataArrayName.toLatin1();
 
-    double totalRange[2] = { std::numeric_limits<float>::max(), std::numeric_limits<float>::lowest() };
-    for (DataObject * dataObject : m_dataObjects)
+    for (vtkIdType c = 0; c < numDataComponents(); ++c)
     {
-        vtkDataArray * dataArray = dataObject->processedDataSet()->GetCellData()->GetArray(c_name.data());
+        double totalRange[2] = { std::numeric_limits<float>::max(), std::numeric_limits<float>::lowest() };
+        for (DataObject * dataObject : m_dataObjects)
+        {
+            vtkDataArray * dataArray = dataObject->processedDataSet()->GetCellData()->GetArray(c_name.data());
 
-        if (!dataArray)
-            continue;
+            if (!dataArray)
+                continue;
 
-        double range[2];
-        dataArray->GetRange(range, m_component);
-        totalRange[0] = std::min(totalRange[0], range[0]);
-        totalRange[1] = std::max(totalRange[1], range[1]);
+            double range[2];
+            dataArray->GetRange(range, c);
+            totalRange[0] = std::min(totalRange[0], range[0]);
+            totalRange[1] = std::max(totalRange[1], range[1]);
+        }
+
+        setDataMinMaxValue(totalRange, c);
     }
-
-    setDataMinMaxValue(totalRange);
 }

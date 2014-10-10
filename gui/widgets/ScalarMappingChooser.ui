@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>210</width>
-    <height>324</height>
+    <height>337</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -70,20 +70,17 @@
           <property name="bottomMargin">
            <number>0</number>
           </property>
-          <item row="0" column="0">
-           <widget class="QLabel" name="minLabel">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
+          <item row="1" column="1">
+           <widget class="QDoubleSpinBox" name="minValueSpinBox">
+            <property name="decimals">
+             <number>4</number>
             </property>
-            <property name="text">
-             <string>min</string>
+            <property name="maximum">
+             <double>0.000000000000000</double>
             </property>
            </widget>
           </item>
-          <item row="1" column="0">
+          <item row="2" column="0">
            <widget class="QLabel" name="maxLabel">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
@@ -96,17 +93,7 @@
             </property>
            </widget>
           </item>
-          <item row="0" column="1">
-           <widget class="QDoubleSpinBox" name="minValueSpinBox">
-            <property name="decimals">
-             <number>4</number>
-            </property>
-            <property name="maximum">
-             <double>0.000000000000000</double>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="1">
+          <item row="2" column="1">
            <widget class="QDoubleSpinBox" name="maxValueSpinBox">
             <property name="decimals">
              <number>4</number>
@@ -119,6 +106,29 @@
             </property>
             <property name="value">
              <double>0.000000000000000</double>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="minLabel">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="text">
+             <string>min</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QSpinBox" name="componentSpinBox"/>
+          </item>
+          <item row="0" column="0">
+           <widget class="QLabel" name="componentLabel">
+            <property name="text">
+             <string>component</string>
             </property>
            </widget>
           </item>
@@ -162,7 +172,7 @@
       </property>
       <layout class="QVBoxLayout" name="verticalLayout_2">
        <item>
-        <widget class="QComboBox" name="legendPositionComboBox" />
+        <widget class="QComboBox" name="legendPositionComboBox"/>
        </item>
       </layout>
      </widget>
@@ -246,11 +256,28 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>componentSpinBox</sender>
+   <signal>valueChanged(int)</signal>
+   <receiver>ScalarMappingChooser</receiver>
+   <slot>componentChanged(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>134</x>
+     <y>108</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>104</x>
+     <y>168</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <slots>
   <slot>scalarsSelectionChanged(QString)</slot>
   <slot>gradientSelectionChanged(int)</slot>
   <slot>minValueChanged(double)</slot>
   <slot>maxValueChanged(double)</slot>
+  <slot>componentChanged(int)</slot>
  </slots>
 </ui>

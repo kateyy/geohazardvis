@@ -8,7 +8,7 @@
 class CORE_API AbstractArrayComponentMapping : public ScalarsForColorMapping
 {
 public:
-    AbstractArrayComponentMapping(const QList<DataObject *> & dataObjects, QString dataArrayName, vtkIdType component);
+    AbstractArrayComponentMapping(const QList<DataObject *> & dataObjects, QString dataArrayName, vtkIdType numDataComponents);
 
     QString name() const override;
 
@@ -19,6 +19,4 @@ protected:
     bool m_isValid;
 
     QString m_dataArrayName;
-    vtkIdType m_component;
-    vtkIdType m_arrayNumComponents;
 };

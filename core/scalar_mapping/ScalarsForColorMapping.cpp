@@ -8,14 +8,36 @@
 #include <core/data_objects/DataObject.h>
 
 
-ScalarsForColorMapping::ScalarsForColorMapping(const QList<DataObject *> & dataObjects)
+ScalarsForColorMapping::ScalarsForColorMapping(const QList<DataObject *> & dataObjects, vtkIdType numDataComponents)
     : m_dataObjects(dataObjects)
     , m_startingIndex(0)
-    , m_dataMinValue(std::numeric_limits<double>::max())
-    , m_dataMaxValue(std::numeric_limits<double>::lowest())
-    , m_minValue(std::numeric_limits<double>::max())
-    , m_maxValue(std::numeric_limits<double>::lowest())
+    , m_numDataComponents(numDataComponents)
+    , m_dataMinValue(numDataComponents, std::numeric_limits<double>::max())
+    , m_dataMaxValue(numDataComponents, std::numeric_limits<double>::lowest())
+    , m_minValue(numDataComponents, std::numeric_limits<double>::max())
+    , m_maxValue(numDataComponents, std::numeric_limits<double>::lowest())
 {
+}
+
+vtkIdType ScalarsForColorMapping::numDataComponents() const
+{
+    return m_numDataComponents;
+}
+
+vtkIdType ScalarsForColorMapping::dataComponent() const
+{
+    return m_dataComponent;
+}
+
+void ScalarsForColorMapping::setDataComponent(vtkIdType component)
+{
+    assert(0 <= component && component < m_numDataComponents);
+    if (m_dataComponent == component)
+        return;
+
+    m_dataComponent = component;
+
+    dataComponentChangedEvent();
 }
 
 vtkIdType ScalarsForColorMapping::maximumStartingIndex()
@@ -83,58 +105,76 @@ void ScalarsForColorMapping::configureDataObjectAndMapper(DataObject * dataObjec
     assert(m_dataObjects.contains(dataObject));
 }
 
-double ScalarsForColorMapping::dataMinValue() const
+double ScalarsForColorMapping::dataMinValue(vtkIdType component) const
 {
-    assert(m_dataMinValue <= m_dataMaxValue);
-    return m_dataMinValue;
+    assert(m_dataMinValue <= m_dataMaxValue && component < m_numDataComponents);
+    if (component < 0)
+        component = m_dataComponent;
+    return m_dataMinValue[component];
 }
 
-double ScalarsForColorMapping::dataMaxValue() const
+double ScalarsForColorMapping::dataMaxValue(vtkIdType component) const
 {
-    assert(m_dataMinValue <= m_dataMaxValue);
-    return m_dataMaxValue;
+    assert(m_dataMinValue <= m_dataMaxValue && component < m_numDataComponents);
+    if (component < 0)
+        component = m_dataComponent;
+    return m_dataMaxValue[component];
 }
 
-double ScalarsForColorMapping::minValue() const
+double ScalarsForColorMapping::minValue(vtkIdType component) const
 {
-    return m_minValue;
+    if (component < 0)
+        component = m_dataComponent;
+    return m_minValue[component];
 }
 
-void ScalarsForColorMapping::setMinValue(double value)
+void ScalarsForColorMapping::setMinValue(double value, vtkIdType component)
 {
-    m_minValue = std::min(std::max(m_dataMinValue, value), m_dataMaxValue);
+    if (component < 0)
+        component = m_dataComponent;
+
+    m_minValue[component] = std::min(std::max(m_dataMinValue[component], value), m_dataMaxValue[component]);
 
     minMaxChangedEvent();
 }
 
-double ScalarsForColorMapping::maxValue() const
+double ScalarsForColorMapping::maxValue(vtkIdType component) const
 {
-    return m_maxValue;
+    if (component < 0)
+        component = m_dataComponent;
+
+    return m_maxValue[component];
 }
 
-void ScalarsForColorMapping::setMaxValue(double value)
+void ScalarsForColorMapping::setMaxValue(double value, vtkIdType component)
 {
-    m_maxValue = std::min(std::max(m_dataMinValue, value), m_dataMaxValue);
+    if (component < 0)
+        component = m_dataComponent;
+
+    m_maxValue[component] = std::min(std::max(m_dataMinValue[component], value), m_dataMaxValue[component]);
 
     minMaxChangedEvent();
 }
 
-void ScalarsForColorMapping::setDataMinMaxValue(const double minMax[2])
+void ScalarsForColorMapping::setDataMinMaxValue(const double minMax[2], vtkIdType component)
 {
-    m_dataMinValue = minMax[0];
-    m_dataMaxValue = minMax[1];
+    if (component < 0)
+        component = m_dataComponent;
+
+    m_dataMinValue[component] = minMax[0];
+    m_dataMaxValue[component] = minMax[1];
 
     bool minMaxChanged = false;
 
     // reset user selected ranges only if really needed
-    if (m_minValue < m_dataMinValue || m_minValue > m_dataMaxValue)
+    if (m_minValue[component] < m_dataMinValue[component] || m_minValue[component] > m_dataMaxValue[component])
     {
-        m_minValue = m_dataMinValue;
+        m_minValue[component] = m_dataMinValue[component];
         minMaxChanged = true;
     }
-    if (m_maxValue < m_dataMinValue || m_maxValue > m_dataMaxValue)
+    if (m_maxValue[component] < m_dataMinValue[component] || m_maxValue[component] > m_dataMaxValue[component])
     {
-        m_maxValue = m_dataMaxValue;
+        m_maxValue[component] = m_dataMaxValue[component];
         minMaxChanged = true;
     }
 
@@ -144,10 +184,14 @@ void ScalarsForColorMapping::setDataMinMaxValue(const double minMax[2])
     emit dataMinMaxChanged();
 }
 
-void ScalarsForColorMapping::setDataMinMaxValue(double min, double max)
+void ScalarsForColorMapping::setDataMinMaxValue(double min, double max, vtkIdType component)
 {
     double minMax[2] = { min, max };
-    setDataMinMaxValue(minMax);
+    setDataMinMaxValue(minMax, component);
+}
+
+void ScalarsForColorMapping::dataComponentChangedEvent()
+{
 }
 
 void ScalarsForColorMapping::minMaxChangedEvent()

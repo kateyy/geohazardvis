@@ -104,5 +104,5 @@ void VertexComponentMapping::updateBounds()
         totalRange[1] = std::max(totalRange[1], objectBounds[2 * m_component + 1]);
     }
 
-    setDataMinMaxValue(totalRange);
+    setDataMinMaxValue(totalRange, 0);
 }

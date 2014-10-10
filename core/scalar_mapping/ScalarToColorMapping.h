@@ -44,6 +44,8 @@ public:
     ScalarsForColorMapping * currentScalars();
     const ScalarsForColorMapping * currentScalars() const;
 
+    void scalarsSetDataComponent(vtkIdType component);
+
     /** @return gradient lookup table
       * This is empty or a copy of the table passed by setGradient. */
     vtkLookupTable * gradient();
