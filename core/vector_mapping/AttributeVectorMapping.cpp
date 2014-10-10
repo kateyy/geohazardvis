@@ -75,8 +75,8 @@ QList<VectorsForSurfaceMapping *> AttributeVectorMapping::newInstances(RenderedD
 
 AttributeVectorMapping::AttributeVectorMapping(RenderedData * renderedData, vtkDataArray * vectorData)
     : VectorsForSurfaceMapping(renderedData)
-    , m_dataArray(vectorData)
     , m_polyData(dynamic_cast<PolyDataObject *>(renderedData->dataObject()))
+    , m_dataArray(vectorData)
 {
     if (!m_isValid || !m_polyData)
         return;

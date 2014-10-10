@@ -12,8 +12,8 @@ public:
 
     static CentroidAsScalarsFilter * New();
 
-    vtkSetClampMacro(Component, unsigned, 0, 2);
-    vtkGetMacro(Component, unsigned);
+    vtkSetClampMacro(Component, int, 0, 2);
+    vtkGetMacro(Component, int);
 
 protected:
     CentroidAsScalarsFilter();
@@ -28,5 +28,5 @@ private:
     CentroidAsScalarsFilter(const CentroidAsScalarsFilter&);    // Not implemented.
     void operator=(const CentroidAsScalarsFilter&);             // Not implemented.
 
-    unsigned Component;
+    int Component;
 };

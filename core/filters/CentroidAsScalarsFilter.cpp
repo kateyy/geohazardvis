@@ -53,7 +53,7 @@ int CentroidAsScalarsFilter::RequestData(vtkInformation *vtkNotUsed(request),
         centroidScalars->SetValue(i, value);
     }
 
-    char componentName[2] = { 'x' + Component, 0 };
+    char componentName[2] = { static_cast<char>('x' + Component), '\0' };
     std::string name = std::string(componentName) + "-coordinate";
     centroidScalars->SetName(name.c_str());
 

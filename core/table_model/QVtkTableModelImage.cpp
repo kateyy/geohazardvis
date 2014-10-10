@@ -42,9 +42,9 @@ QVariant QVtkTableModelImage::data(const QModelIndex &index, int role) const
     case 0:
         return cellId;
     case 1:
-        return static_cast<long int>(position[0]);
+        return static_cast<long long int>(position[0]);
     case 2:
-        return static_cast<long int>(position[1]);
+        return static_cast<long long int>(position[1]);
     case 3:
         vtkDataArray * data = m_vtkImageData->GetCellData()->GetScalars();
         assert(data);

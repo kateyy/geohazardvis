@@ -13,12 +13,12 @@ vtkInformationKeyMacro(DataObjectPrivate, DataObjectKey, IntegerPointer);
 
 
 DataObjectPrivate::DataObjectPrivate(DataObject & dataObject, QString name, vtkDataSet * dataSet)
-    : q_ptr(dataObject)
-    , m_name(name)
+    : m_name(name)
     , m_dataSet(dataSet)
     , m_tableModel(nullptr)
     , m_bounds()
     , m_vtkQtConnect(vtkSmartPointer<vtkEventQtSlotConnect>::New())
+    , q_ptr(dataObject)
 {
 }
 

@@ -2,48 +2,19 @@
 
 #include <cassert>
 
-#include <QAction>
-#include <QIcon>
-#include <QLayout>
-#include <QToolBar>
-
 #include <vtkCamera.h>
 #include <vtkRenderWindow.h>
 #include <vtkCubeAxesActor.h>
 #include <vtkTextProperty.h>
-#include <vtkStringArray.h>
-#include <vtkProperty.h>
 
-#include <vtkLineWidget2.h>
-#include <vtkLineRepresentation.h>
-
-#include <core/vtkhelper.h>
-#include <core/vtkcamerahelper.h>
-#include <core/data_objects/ImageDataObject.h>
 #include <core/data_objects/ImageProfileData.h>
 #include <core/data_objects/ImageProfilePlot.h>
-#include <core/DataSetHandler.h>
 #include <gui/data_view/RenderView.h>
 #include <gui/rendering_interaction/PickingInteractorStyleSwitch.h>
 
+
 const bool RenderViewStrategyImage2DPlot::s_isRegistered = RenderViewStrategy::registerStrategy<RenderViewStrategyImage2DPlot>();
 
-
-namespace
-{
-void stringToVtkArray(const QString & string, vtkStringArray * stringArray)
-{
-    QByteArray data = string.toLatin1();
-    stringArray->SetNumberOfValues(data.size() + 1);
-    char c;
-    for (int i = 0; i < data.size(); ++i)
-    {
-        c = data.at(i);
-        stringArray->SetValue(i, &c);
-    }
-    stringArray->SetValue(data.size(), '\0');
-}
-}
 
 RenderViewStrategyImage2DPlot::RenderViewStrategyImage2DPlot(RenderView & renderView)
     : RenderViewStrategy(renderView)
