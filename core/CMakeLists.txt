@@ -74,8 +74,6 @@ set ( SOURCES
     scalar_mapping/AttributeArrayComponentMapping.cpp
     scalar_mapping/RawArrayComponentMapping.h
     scalar_mapping/RawArrayComponentMapping.cpp
-    scalar_mapping/GridColorMapping.h
-    scalar_mapping/GridColorMapping.cpp
 
     vector_mapping/VectorsToSurfaceMapping.h
     vector_mapping/VectorsToSurfaceMapping.cpp
