@@ -11,6 +11,7 @@
 ScalarsForColorMapping::ScalarsForColorMapping(const QList<DataObject *> & dataObjects, vtkIdType numDataComponents)
     : m_dataObjects(dataObjects)
     , m_startingIndex(0)
+    , m_dataComponent(0)
     , m_numDataComponents(numDataComponents)
     , m_dataMinValue(numDataComponents, std::numeric_limits<double>::max())
     , m_dataMaxValue(numDataComponents, std::numeric_limits<double>::lowest())
