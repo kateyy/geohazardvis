@@ -1,10 +1,12 @@
 #pragma once
 
+#include <array>
+
 #include <core/data_objects/RenderedData.h>
 
 
 class vtkGlyph3D;
-class vtkMaskPoints;
+class vtkExtractVOI;
 
 class VectorGrid3DDataObject;
 
@@ -25,6 +27,11 @@ protected:
     vtkActor * createActor() override;
 
 private:
+    void setSampleRate(int x, int y, int z);
+
+private:
     vtkSmartPointer<vtkGlyph3D> m_glyph;
-    vtkSmartPointer<vtkMaskPoints> m_lodMask;
+    vtkSmartPointer<vtkExtractVOI> m_extractVOI;
+
+    std::array<vtkSmartPointer<vtkExtractVOI>, 3> m_extractSlices;
 };

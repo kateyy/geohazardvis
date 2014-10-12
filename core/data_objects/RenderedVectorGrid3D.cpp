@@ -1,27 +1,27 @@
 #include "RenderedVectorGrid3D.h"
 
+#include <algorithm>
+
 #include <vtkInformation.h>
 #include <vtkInformationStringKey.h>
+#include <vtkLookupTable.h>
 
 #include <vtkLineSource.h>
+#include <vtkPlaneSource.h>
 #include <vtkAppendPolyData.h>
 
 #include <vtkImageData.h>
+#include <vtkPointData.h>
 #include <vtkDataSetAttributes.h>
 
+#include <vtkExtractVOI.h>
 #include <vtkGlyph3D.h>
-#include <vtkMaskPoints.h>
+#include <vtkAssignAttribute.h>
 
 #include <vtkPolyDataMapper.h>
 
 #include <vtkProperty.h>
-#include <vtkLODActor.h>
-
-#include "config.h"
-#if VTK_RENDERING_BACKEND == 1
-#include <vtkPainterPolyDataMapper.h>
-#include <vtkLinesPainter.h>
-#endif
+#include <vtkActor.h>
 
 
 #include <reflectionzeug/PropertyGroup.h>
@@ -35,6 +35,8 @@ using namespace reflectionzeug;
 
 namespace
 {
+
+const vtkIdType DefaultMaxNumberOfPoints = 1000;
 
 vtkSmartPointer<vtkAlgorithm> createArrow()
 {
@@ -63,23 +65,43 @@ vtkSmartPointer<vtkAlgorithm> createArrow()
 RenderedVectorGrid3D::RenderedVectorGrid3D(VectorGrid3DDataObject * dataObject)
     : RenderedData(dataObject)
     , m_glyph(vtkSmartPointer<vtkGlyph3D>::New())
-    , m_lodMask(vtkSmartPointer<vtkMaskPoints>::New())
+    , m_extractVOI(vtkSmartPointer<vtkExtractVOI>::New())
 {
+    assert(vtkImageData::SafeDownCast(dataObject->processedDataSet()));
+
+    vtkImageData * image = static_cast<vtkImageData *>(dataObject->processedDataSet());
+
+    m_extractVOI->SetInputConnection(dataObject->processedOutputPort());
+    m_extractVOI->SetIncludeBoundary(1);
+
+    // initialize sample rate to prevent crashing/blocking rendering
+    vtkIdType numPoints = image->GetNumberOfPoints();
+    int sampleRate = std::max(1, (int)std::floor(std::cbrt(float(numPoints) / DefaultMaxNumberOfPoints)));
+    setSampleRate(sampleRate, sampleRate, sampleRate);
+
     vtkSmartPointer<vtkAlgorithm> arrow = createArrow();
     
+    m_glyph->SetInputConnection(m_extractVOI->GetOutputPort());
     m_glyph->SetSourceConnection(arrow->GetOutputPort());
     m_glyph->ScalingOn();
     m_glyph->SetScaleModeToDataScalingOff();
-    m_glyph->SetScaleFactor(0.1f);
     m_glyph->SetVectorModeToUseVector();
 
-    m_lodMask->SetInputDataObject(dataObject->dataSet());
-    m_lodMask->RandomModeOn();
-    m_lodMask->SetRandomModeType(2);
-    m_lodMask->SetOnRatio(1);
-    m_lodMask->SetMaximumNumberOfPoints(10000);
 
-    m_glyph->SetInputConnection(m_lodMask->GetOutputPort());
+    VTK_CREATE(vtkAssignAttribute, assignVectorToScalars);
+    assignVectorToScalars->SetInputConnection(dataObject->processedOutputPort());
+    assignVectorToScalars->Assign(vtkDataSetAttributes::VECTORS, vtkDataSetAttributes::SCALARS, vtkAssignAttribute::POINT_DATA);
+
+    for (int i = 0; i < 3; ++i)
+    {
+        m_extractSlices[i] = vtkSmartPointer<vtkExtractVOI>::New();
+        m_extractSlices[i]->SetInputConnection(assignVectorToScalars->GetOutputPort());
+
+        int voi[6];
+        image->GetExtent(voi);
+        voi[2 * i] = voi[2 * i + 1] = (voi[2 * i + 1] - voi[2 * i]) / 2;
+        m_extractSlices[i]->SetVOI(voi);
+    }
 }
 
 RenderedVectorGrid3D::~RenderedVectorGrid3D() = default;
@@ -138,29 +160,42 @@ PropertyGroup * RenderedVectorGrid3D::createConfigGroup()
     lineWidth->setOption("maximum", 100);
     lineWidth->setOption("step", 1);
     
-    auto lineLength = renderSettings->addProperty<float>("lineLength",
+    auto arrowLength = renderSettings->addProperty<float>("arrowLength",
         [this]() { return static_cast<float>(m_glyph->GetScaleFactor());  },
         [this](float value) {
         m_glyph->SetScaleFactor(value);
         emit geometryChanged();
     });
-    lineLength->setOption("title", "line length");
-    lineLength->setOption("minimum", 0);
-    lineLength->setOption("step", 0.02f);
+    arrowLength->setOption("title", "arrow length");
+    arrowLength->setOption("step", 0.02f);
 
 
-    auto * lodSettings = configGroup->addGroup("lod");
-    lodSettings->setOption("title", "level of detail");
-
-    auto lodOuputPoints = lodSettings->addProperty<vtkIdType>("lodOuputPoints",
-        [this]() { return m_lodMask->GetMaximumNumberOfPoints(); },
-        [this](vtkIdType value) {
-        m_lodMask->SetMaximumNumberOfPoints(value);
+    auto * sampleRate = configGroup->addProperty<std::array<int, 3>>("sampleRate",
+        [this] (size_t i) { return m_extractVOI->GetSampleRate()[i]; },
+        [this] (size_t i, int value) {
+        int rates[3];
+        m_extractVOI->GetSampleRate(rates);
+        rates[i] = value;
+        setSampleRate(rates[0], rates[1], rates[2]);
         emit geometryChanged();
     });
-    lodOuputPoints->setOption("title", "maximum number of points");
-    lodOuputPoints->setOption("minimum", m_lodMask->GetMaximumNumberOfPointsMinValue());
-    lodOuputPoints->setOption("maximum", m_lodMask->GetMaximumNumberOfPointsMaxValue());
+    sampleRate->setOption("title", "sample rate");
+    std::function<void(Property<int> &)> optionSetter = [] (Property<int> & prop){
+        prop.setOption("minimum", 1);
+    };
+    sampleRate->forEach(optionSetter);
+
+    auto * zSlice = configGroup->addProperty<int>("zSlice",
+        [this] () { return m_extractSlices[2]->GetVOI()[4]; },
+        [this] (int value) {
+        int voi[6];
+        m_extractSlices[2]->GetVOI(voi);
+        voi[4] = voi[5] = value;
+        m_extractSlices[2]->SetVOI(voi);
+        emit geometryChanged();
+    });
+    zSlice->setOption("minimum", 0);
+    zSlice->setOption("maximum", static_cast<vtkImageData *>(dataObject()->processedDataSet())->GetExtent()[5]);
 
     return configGroup;
 }
@@ -168,8 +203,8 @@ PropertyGroup * RenderedVectorGrid3D::createConfigGroup()
 vtkProperty * RenderedVectorGrid3D::createDefaultRenderProperty() const
 {
     vtkProperty * prop = vtkProperty::New();
-    prop->SetColor(1, 0, 0);
-    prop->SetInterpolationToFlat();
+    /*prop->SetColor(1, 0, 0);
+    prop->SetInterpolationToFlat();*/
     prop->LightingOff();
 
     return prop;
@@ -177,18 +212,52 @@ vtkProperty * RenderedVectorGrid3D::createDefaultRenderProperty() const
 
 vtkActor * RenderedVectorGrid3D::createActor()
 {
-    vtkLODActor * actor = vtkLODActor::New();
-    vtkSmartPointer<vtkPolyDataMapper> mapper;
-#if VTK_RENDERING_BACKEND == 2
-    mapper = vtkSmartPointer<vtkPolyDataMapper>::New();
-#else
-    VTK_CREATE(vtkLinesPainter, painter);
-    VTK_CREATE(vtkPainterPolyDataMapper, painterMapper);
-    painterMapper->SetPainter(painter);
-    mapper = painterMapper;
-#endif 
-    mapper->SetInputConnection(m_glyph->GetOutputPort());
+    m_extractSlices[2]->Update();
+    vtkImageData * slice = static_cast<vtkImageData *>(m_extractSlices[2]->GetOutput());
+
+    VTK_CREATE(vtkLookupTable, lut);
+    lut->SetTableRange(slice->GetScalarRange());
+    lut->Build();
+
+    VTK_CREATE(vtkTexture, texture);
+    texture->SetLookupTable(lut);
+    texture->SetInputConnection(m_extractSlices[2]->GetOutputPort());
+    texture->MapColorScalarsThroughLookupTableOn();
+    texture->InterpolateOn();
+
+    const double * extent = slice->GetBounds();
+    double xMin = extent[0], xMax = extent[1], yMin = extent[2], yMax = extent[3], zMin = extent[4], zMax = extent[5];
+
+    VTK_CREATE(vtkPlaneSource, plane);
+    plane->SetXResolution(slice->GetDimensions()[0]);
+    plane->SetYResolution(slice->GetDimensions()[1]);
+    plane->SetOrigin(xMin, yMin, zMin);
+    // zSlice: xy-Plane
+    plane->SetPoint1(xMax, yMin, zMin);
+    plane->SetPoint2(xMin, yMax, zMin);
+
+    VTK_CREATE(vtkAppendPolyData, append);
+    append->AddInputConnection(m_glyph->GetOutputPort());
+    append->AddInputConnection(plane->GetOutputPort());
+
+    VTK_CREATE(vtkPolyDataMapper, mapper);
+    mapper->SetInputConnection(append->GetOutputPort());
+
+    vtkActor * actor = vtkActor::New();
     actor->SetMapper(mapper);
+    actor->SetTexture(texture);
 
     return actor;
+}
+
+void RenderedVectorGrid3D::setSampleRate(int x, int y, int z)
+{
+    m_extractVOI->SetSampleRate(x, y, z);
+
+    m_extractVOI->Update();
+    double cellSpacing = m_extractVOI->GetOutput()->GetSpacing()[0];
+    m_glyph->SetScaleFactor(0.75 * m_extractVOI->GetOutput()->GetSpacing()[0]);
+
+    // hack around bug(?) in vtkExtractVOI
+    m_glyph->SetUpdateExtentToWholeExtent();
 }
