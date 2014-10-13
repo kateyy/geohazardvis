@@ -10,6 +10,7 @@ public:
     ~AttributeArrayComponentMapping() override;
 
     QString name() const override;
+    QString scalarsName() const override;
 
     vtkAlgorithm * createFilter(DataObject * dataObject) override;
     bool usesFilter() const override;

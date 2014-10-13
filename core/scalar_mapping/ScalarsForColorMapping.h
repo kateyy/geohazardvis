@@ -35,9 +35,10 @@ public:
 
 public:
     explicit ScalarsForColorMapping(const QList<DataObject *> & dataObjects, vtkIdType numDataComponents = 1);
-    virtual ~ScalarsForColorMapping() = 0;
+    virtual ~ScalarsForColorMapping();
 
     virtual QString name() const = 0;
+    virtual QString scalarsName() const;
 
     vtkIdType numDataComponents() const;
     vtkIdType dataComponent() const;

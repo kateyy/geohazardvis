@@ -9,6 +9,7 @@
 #include <vtkLineSource.h>
 #include <vtkPlaneSource.h>
 #include <vtkAppendPolyData.h>
+#include <vtkOutlineFilter.h>
 
 #include <vtkImageData.h>
 #include <vtkPointData.h>
@@ -27,6 +28,7 @@
 
 #include <core/vtkhelper.h>
 #include <core/data_objects/VectorGrid3DDataObject.h>
+#include <core/scalar_mapping/ScalarsForColorMapping.h>
 
 
 using namespace reflectionzeug;
@@ -109,6 +111,24 @@ RenderedVectorGrid3D::RenderedVectorGrid3D(VectorGrid3DDataObject * dataObject)
         m_sliceActors[i] = vtkSmartPointer<vtkActor>::New();
         m_sliceActors[i]->SetMapper(mapper);
         m_sliceActors[i]->SetTexture(texture);
+
+        VTK_CREATE(vtkProperty, property);
+        property->LightingOff();
+        m_sliceActors[i]->SetProperty(property);
+
+
+        VTK_CREATE(vtkOutlineFilter, sliceOutline);
+        sliceOutline->SetInputConnection(m_slicePlanes[i]->GetOutputPort());
+
+        VTK_CREATE(vtkPolyDataMapper, outlineMapper);
+        outlineMapper->SetInputConnection(sliceOutline->GetOutputPort());
+        outlineMapper->ScalarVisibilityOff();
+
+        m_sliceOutlineActors[i] = vtkSmartPointer<vtkActor>::New();
+        m_sliceOutlineActors[i]->SetMapper(outlineMapper);
+        VTK_CREATE(vtkProperty, outlineProperty);
+        m_sliceOutlineActors[i]->SetProperty(outlineProperty);
+        outlineProperty->SetColor(0, 0, 0);
     }
 }
 
@@ -235,8 +255,17 @@ QList<vtkActor *> RenderedVectorGrid3D::fetchAttributeActors()
     QList<vtkActor *> actors;
     for (auto actor : m_sliceActors)
         actors << actor;
+    for (auto actor : m_sliceOutlineActors)
+        actors << actor;
 
     return actors;
+}
+
+void RenderedVectorGrid3D::scalarsForColorMappingChangedEvent()
+{
+    bool showSliceScalars = m_scalars->scalarsName() == QString::fromLatin1(dataObject()->dataSet()->GetPointData()->GetVectors()->GetName());
+
+    toggleSlicePlanesOutlines(showSliceScalars);
 }
 
 void RenderedVectorGrid3D::gradientForColorMappingChangedEvent()
@@ -246,6 +275,14 @@ void RenderedVectorGrid3D::gradientForColorMappingChangedEvent()
         vtkTexture * texture = sliceActor->GetTexture();
         assert(texture);
         texture->SetLookupTable(m_lut);
+    }
+}
+
+void RenderedVectorGrid3D::visibilityChangedEvent(bool visible)
+{
+    for (auto sliceActor : m_sliceActors)
+    {
+        sliceActor->SetVisibility(visible);
     }
 }
 
@@ -299,5 +336,15 @@ void RenderedVectorGrid3D::setSlicePosition(int axis, int slicePosition)
         plane->SetPoint1(xMax, yMin, zMin);
         plane->SetPoint2(xMin, yMax, zMin);
         break;
+    }
+}
+
+void RenderedVectorGrid3D::toggleSlicePlanesOutlines(bool showPlanes)
+{
+    bool mainVisibility = mainActor()->GetVisibility() > 0;
+    for (int i = 0; i < 3; ++i)
+    {
+        m_sliceActors[i]->SetVisibility(mainVisibility && showPlanes);
+        m_sliceOutlineActors[i]->SetVisibility(mainVisibility && !showPlanes);
     }
 }

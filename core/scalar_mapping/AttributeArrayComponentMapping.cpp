@@ -119,6 +119,11 @@ QString AttributeArrayComponentMapping::name() const
     return n;
 }
 
+QString AttributeArrayComponentMapping::scalarsName() const
+{
+    return m_dataArrayName;
+}
+
 vtkAlgorithm * AttributeArrayComponentMapping::createFilter(DataObject * dataObject)
 {
     vtkAssignAttribute * filter = vtkAssignAttribute::New();

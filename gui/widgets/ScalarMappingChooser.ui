@@ -73,7 +73,7 @@
           <item row="1" column="1">
            <widget class="QDoubleSpinBox" name="minValueSpinBox">
             <property name="decimals">
-             <number>4</number>
+             <number>10</number>
             </property>
             <property name="maximum">
              <double>0.000000000000000</double>
@@ -96,7 +96,7 @@
           <item row="2" column="1">
            <widget class="QDoubleSpinBox" name="maxValueSpinBox">
             <property name="decimals">
-             <number>4</number>
+             <number>10</number>
             </property>
             <property name="minimum">
              <double>0.000000000000000</double>

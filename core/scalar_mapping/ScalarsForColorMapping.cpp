@@ -20,6 +20,13 @@ ScalarsForColorMapping::ScalarsForColorMapping(const QList<DataObject *> & dataO
 {
 }
 
+ScalarsForColorMapping::~ScalarsForColorMapping() = default;
+
+QString ScalarsForColorMapping::scalarsName() const
+{
+    return "";
+}
+
 vtkIdType ScalarsForColorMapping::numDataComponents() const
 {
     return m_numDataComponents;
@@ -88,8 +95,6 @@ void ScalarsForColorMapping::initialize()
 
     updateBounds();
 }
-
-ScalarsForColorMapping::~ScalarsForColorMapping() = default;
 
 vtkAlgorithm * ScalarsForColorMapping::createFilter(DataObject * /*dataObject*/)
 {

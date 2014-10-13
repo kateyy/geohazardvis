@@ -28,11 +28,14 @@ protected:
     vtkActor * createActor() override;
     QList<vtkActor *> fetchAttributeActors() override;
 
+    void scalarsForColorMappingChangedEvent() override;
     void gradientForColorMappingChangedEvent() override;
+    void visibilityChangedEvent(bool visible) override;
 
 private:
     void setSampleRate(int x, int y, int z);
     void setSlicePosition(int axis, int slicePosition);
+    void toggleSlicePlanesOutlines(bool showPlanes);
 
 private:
     vtkSmartPointer<vtkGlyph3D> m_glyph;
@@ -41,4 +44,5 @@ private:
     std::array<vtkSmartPointer<vtkExtractVOI>, 3> m_extractSlices;
     std::array<vtkSmartPointer<vtkPlaneSource>, 3> m_slicePlanes;
     std::array<vtkSmartPointer<vtkActor>, 3> m_sliceActors;
+    std::array<vtkSmartPointer<vtkActor>, 3> m_sliceOutlineActors;
 };
