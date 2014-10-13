@@ -72,12 +72,6 @@ RenderedVectorGrid3D::RenderedVectorGrid3D(VectorGrid3DDataObject * dataObject)
     vtkImageData * image = static_cast<vtkImageData *>(dataObject->processedDataSet());
 
     m_extractVOI->SetInputConnection(dataObject->processedOutputPort());
-    m_extractVOI->SetIncludeBoundary(1);
-
-    // initialize sample rate to prevent crashing/blocking rendering
-    vtkIdType numPoints = image->GetNumberOfPoints();
-    int sampleRate = std::max(1, (int)std::floor(std::cbrt(float(numPoints) / DefaultMaxNumberOfPoints)));
-    setSampleRate(sampleRate, sampleRate, sampleRate);
 
     vtkSmartPointer<vtkAlgorithm> arrow = createArrow();
     
@@ -86,6 +80,12 @@ RenderedVectorGrid3D::RenderedVectorGrid3D(VectorGrid3DDataObject * dataObject)
     m_glyph->ScalingOn();
     m_glyph->SetScaleModeToDataScalingOff();
     m_glyph->SetVectorModeToUseVector();
+
+
+    // initialize sample rate to prevent crashing/blocking rendering
+    vtkIdType numPoints = image->GetNumberOfPoints();
+    int sampleRate = std::max(1, (int)std::floor(std::cbrt(float(numPoints) / DefaultMaxNumberOfPoints)));
+    setSampleRate(sampleRate, sampleRate, sampleRate);
 
 
     VTK_CREATE(vtkAssignAttribute, assignVectorToScalars);
@@ -255,9 +255,7 @@ void RenderedVectorGrid3D::setSampleRate(int x, int y, int z)
     m_extractVOI->SetSampleRate(x, y, z);
 
     m_extractVOI->Update();
+
     double cellSpacing = m_extractVOI->GetOutput()->GetSpacing()[0];
     m_glyph->SetScaleFactor(0.75 * m_extractVOI->GetOutput()->GetSpacing()[0]);
-
-    // hack around bug(?) in vtkExtractVOI
-    m_glyph->SetUpdateExtentToWholeExtent();
 }
