@@ -1,9 +1,12 @@
 #pragma once
 
+#include <vtkSmartPointer.h>
+
 #include <core/data_objects/DataObject.h>
 
 
 class vtkImageData;
+class vtkAssignAttribute;
 
 
 class VectorGrid3DDataObject : public DataObject
@@ -19,6 +22,13 @@ public:
 
     QString dataTypeName() const override;
 
+    /** @return vtkImageData with 3-component vectors assigned to point scalars */
+    vtkDataSet * processedDataSet() override;
+    vtkAlgorithmOutput * processedOutputPort() override;
+
 protected:
     QVtkTableModel * createTableModel() override;
+
+private:
+    vtkSmartPointer<vtkAssignAttribute> m_vectorsToScalars;
 };

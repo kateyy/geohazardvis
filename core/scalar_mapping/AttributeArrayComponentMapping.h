@@ -6,8 +6,10 @@
 class CORE_API AttributeArrayComponentMapping : public AbstractArrayComponentMapping
 {
 public:
-    AttributeArrayComponentMapping(const QList<DataObject *> & dataObjects, QString dataArrayName, vtkIdType numDataComponents);
+    AttributeArrayComponentMapping(const QList<DataObject *> & dataObjects, QString dataArrayName, int attributeLocation, vtkIdType numDataComponents);
     ~AttributeArrayComponentMapping() override;
+
+    QString name() const override;
 
     vtkAlgorithm * createFilter(DataObject * dataObject) override;
     bool usesFilter() const override;
@@ -21,4 +23,6 @@ protected:
 
 private:
     static const bool s_registered;
+
+    const int m_attributeLocation;
 };
