@@ -212,11 +212,12 @@ void InteractorStyle3D::highlightPickedCell()
         : m_pointPicker->GetActor();
 
     RenderedData * renderedData = m_actorToRenderedData.value(pickedActor);
-    assert(renderedData);
-    
-    emit dataPicked(renderedData);
+    if (renderedData)
+    {
+        emit dataPicked(renderedData);
 
-    emit cellPicked(renderedData->dataObject(), cellId);
+        emit cellPicked(renderedData->dataObject(), cellId);
+    }
 }
 
 void InteractorStyle3D::highlightCell(DataObject * dataObject, vtkIdType cellId)

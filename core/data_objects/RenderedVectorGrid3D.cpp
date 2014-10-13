@@ -92,15 +92,28 @@ RenderedVectorGrid3D::RenderedVectorGrid3D(VectorGrid3DDataObject * dataObject)
     assignVectorToScalars->SetInputConnection(dataObject->processedOutputPort());
     assignVectorToScalars->Assign(vtkDataSetAttributes::VECTORS, vtkDataSetAttributes::SCALARS, vtkAssignAttribute::POINT_DATA);
 
+    int extent[6];
+    image->GetExtent(extent);
+
     for (int i = 0; i < 3; ++i)
     {
         m_extractSlices[i] = vtkSmartPointer<vtkExtractVOI>::New();
         m_extractSlices[i]->SetInputConnection(assignVectorToScalars->GetOutputPort());
 
-        int voi[6];
-        image->GetExtent(voi);
-        voi[2 * i] = voi[2 * i + 1] = (voi[2 * i + 1] - voi[2 * i]) / 2;
-        m_extractSlices[i]->SetVOI(voi);
+        VTK_CREATE(vtkTexture, texture);
+        texture->SetInputConnection(m_extractSlices[i]->GetOutputPort());
+        texture->MapColorScalarsThroughLookupTableOn();
+        texture->InterpolateOn();
+
+        m_slicePlanes[i] = vtkSmartPointer<vtkPlaneSource>::New();
+        setSlicePosition(i, (extent[2 * i + 1] - extent[2 * i]) / 2);
+
+        VTK_CREATE(vtkPolyDataMapper, mapper);
+        mapper->SetInputConnection(m_slicePlanes[i]->GetOutputPort());
+
+        m_sliceActors[i] = vtkSmartPointer<vtkActor>::New();
+        m_sliceActors[i]->SetMapper(mapper);
+        m_sliceActors[i]->SetTexture(texture);
     }
 }
 
@@ -185,17 +198,20 @@ PropertyGroup * RenderedVectorGrid3D::createConfigGroup()
     };
     sampleRate->forEach(optionSetter);
 
-    auto * zSlice = configGroup->addProperty<int>("zSlice",
-        [this] () { return m_extractSlices[2]->GetVOI()[4]; },
-        [this] (int value) {
-        int voi[6];
-        m_extractSlices[2]->GetVOI(voi);
-        voi[4] = voi[5] = value;
-        m_extractSlices[2]->SetVOI(voi);
-        emit geometryChanged();
-    });
-    zSlice->setOption("minimum", 0);
-    zSlice->setOption("maximum", static_cast<vtkImageData *>(dataObject()->processedDataSet())->GetExtent()[5]);
+
+    for (int i = 0; i < 3; ++i)
+    {
+        std::string axis = { char('x' + i) };
+
+        auto * slice_prop = configGroup->addProperty<int>(axis + "Slice",
+            [this, i] () { return m_extractSlices[i]->GetVOI()[2 * i]; },
+            [this, i] (int value) {
+            setSlicePosition(i, value);
+            emit geometryChanged();
+        });
+        slice_prop->setOption("minimum", 0);
+        slice_prop->setOption("maximum", static_cast<vtkImageData *>(dataObject()->processedDataSet())->GetExtent()[2 * i + 1]);
+    }
 
     return configGroup;
 }
@@ -203,8 +219,8 @@ PropertyGroup * RenderedVectorGrid3D::createConfigGroup()
 vtkProperty * RenderedVectorGrid3D::createDefaultRenderProperty() const
 {
     vtkProperty * prop = vtkProperty::New();
-    /*prop->SetColor(1, 0, 0);
-    prop->SetInterpolationToFlat();*/
+    prop->SetColor(1, 0, 0);
+    prop->SetInterpolationToFlat();
     prop->LightingOff();
 
     return prop;
@@ -212,42 +228,32 @@ vtkProperty * RenderedVectorGrid3D::createDefaultRenderProperty() const
 
 vtkActor * RenderedVectorGrid3D::createActor()
 {
-    m_extractSlices[2]->Update();
-    vtkImageData * slice = static_cast<vtkImageData *>(m_extractSlices[2]->GetOutput());
-
-    VTK_CREATE(vtkLookupTable, lut);
-    lut->SetTableRange(slice->GetScalarRange());
-    lut->Build();
-
-    VTK_CREATE(vtkTexture, texture);
-    texture->SetLookupTable(lut);
-    texture->SetInputConnection(m_extractSlices[2]->GetOutputPort());
-    texture->MapColorScalarsThroughLookupTableOn();
-    texture->InterpolateOn();
-
-    const double * extent = slice->GetBounds();
-    double xMin = extent[0], xMax = extent[1], yMin = extent[2], yMax = extent[3], zMin = extent[4], zMax = extent[5];
-
-    VTK_CREATE(vtkPlaneSource, plane);
-    plane->SetXResolution(slice->GetDimensions()[0]);
-    plane->SetYResolution(slice->GetDimensions()[1]);
-    plane->SetOrigin(xMin, yMin, zMin);
-    // zSlice: xy-Plane
-    plane->SetPoint1(xMax, yMin, zMin);
-    plane->SetPoint2(xMin, yMax, zMin);
-
-    VTK_CREATE(vtkAppendPolyData, append);
-    append->AddInputConnection(m_glyph->GetOutputPort());
-    append->AddInputConnection(plane->GetOutputPort());
-
     VTK_CREATE(vtkPolyDataMapper, mapper);
-    mapper->SetInputConnection(append->GetOutputPort());
+    mapper->SetInputConnection(m_glyph->GetOutputPort());
 
     vtkActor * actor = vtkActor::New();
     actor->SetMapper(mapper);
-    actor->SetTexture(texture);
 
     return actor;
+}
+
+QList<vtkActor *> RenderedVectorGrid3D::fetchAttributeActors()
+{
+    QList<vtkActor *> actors;
+    for (auto actor : m_sliceActors)
+        actors << actor;
+
+    return actors;
+}
+
+void RenderedVectorGrid3D::gradientForColorMappingChangedEvent()
+{
+    for (auto sliceActor : m_sliceActors)
+    {
+        vtkTexture * texture = sliceActor->GetTexture();
+        assert(texture);
+        texture->SetLookupTable(m_lut);
+    }
 }
 
 void RenderedVectorGrid3D::setSampleRate(int x, int y, int z)
@@ -258,4 +264,47 @@ void RenderedVectorGrid3D::setSampleRate(int x, int y, int z)
 
     double cellSpacing = m_extractVOI->GetOutput()->GetSpacing()[0];
     m_glyph->SetScaleFactor(0.75 * m_extractVOI->GetOutput()->GetSpacing()[0]);
+}
+
+void RenderedVectorGrid3D::setSlicePosition(int axis, int slicePosition)
+{
+    assert(0 < axis || axis < 3);
+
+    vtkExtractVOI * extractSlice = m_extractSlices[axis];
+
+    int voi[6];
+    static_cast<vtkImageData *>(dataObject()->processedDataSet())->GetExtent(voi);
+    voi[2 * axis] = voi[2 * axis + 1] = slicePosition;
+    extractSlice->SetVOI(voi);
+
+    extractSlice->Update();
+    vtkImageData * slice = extractSlice->GetOutput();
+    double bounds[6];
+    slice->GetBounds(bounds);
+    double xMin = bounds[0], xMax = bounds[1], yMin = bounds[2], yMax = bounds[3], zMin = bounds[4], zMax = bounds[5];
+
+    vtkPlaneSource * plane = m_slicePlanes[axis];
+    plane->SetOrigin(xMin, yMin, zMin);
+
+    switch (axis)
+    {
+    case 0: // x
+        plane->SetXResolution(slice->GetDimensions()[1]);
+        plane->SetYResolution(slice->GetDimensions()[2]);
+        plane->SetPoint1(xMin, yMax, zMin);
+        plane->SetPoint2(xMin, yMin, zMax);
+        break;
+    case 1: // y
+        plane->SetXResolution(slice->GetDimensions()[0]);
+        plane->SetYResolution(slice->GetDimensions()[2]);
+        plane->SetPoint1(xMax, yMin, zMin);
+        plane->SetPoint2(xMin, yMin, zMax);
+        break;
+    case 2: // z
+        plane->SetXResolution(slice->GetDimensions()[0]);
+        plane->SetYResolution(slice->GetDimensions()[1]);
+        plane->SetPoint1(xMax, yMin, zMin);
+        plane->SetPoint2(xMin, yMax, zMin);
+        break;
+    }
 }

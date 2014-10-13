@@ -7,6 +7,7 @@
 
 class vtkGlyph3D;
 class vtkExtractVOI;
+class vtkPlaneSource;
 
 class VectorGrid3DDataObject;
 
@@ -25,13 +26,19 @@ public:
 protected:
     vtkProperty * createDefaultRenderProperty() const override;
     vtkActor * createActor() override;
+    QList<vtkActor *> fetchAttributeActors() override;
+
+    void gradientForColorMappingChangedEvent() override;
 
 private:
     void setSampleRate(int x, int y, int z);
+    void setSlicePosition(int axis, int slicePosition);
 
 private:
     vtkSmartPointer<vtkGlyph3D> m_glyph;
     vtkSmartPointer<vtkExtractVOI> m_extractVOI;
 
     std::array<vtkSmartPointer<vtkExtractVOI>, 3> m_extractSlices;
+    std::array<vtkSmartPointer<vtkPlaneSource>, 3> m_slicePlanes;
+    std::array<vtkSmartPointer<vtkActor>, 3> m_sliceActors;
 };
