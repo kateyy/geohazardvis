@@ -16,7 +16,6 @@
 
 #include <vtkExtractVOI.h>
 #include <vtkGlyph3D.h>
-#include <vtkAssignAttribute.h>
 
 #include <vtkPolyDataMapper.h>
 
@@ -71,7 +70,7 @@ RenderedVectorGrid3D::RenderedVectorGrid3D(VectorGrid3DDataObject * dataObject)
 
     vtkImageData * image = static_cast<vtkImageData *>(dataObject->processedDataSet());
 
-    m_extractVOI->SetInputConnection(dataObject->processedOutputPort());
+    m_extractVOI->SetInputData(dataObject->dataSet());
 
     vtkSmartPointer<vtkAlgorithm> arrow = createArrow();
     
@@ -88,17 +87,13 @@ RenderedVectorGrid3D::RenderedVectorGrid3D(VectorGrid3DDataObject * dataObject)
     setSampleRate(sampleRate, sampleRate, sampleRate);
 
 
-    VTK_CREATE(vtkAssignAttribute, assignVectorToScalars);
-    assignVectorToScalars->SetInputConnection(dataObject->processedOutputPort());
-    assignVectorToScalars->Assign(vtkDataSetAttributes::VECTORS, vtkDataSetAttributes::SCALARS, vtkAssignAttribute::POINT_DATA);
-
     int extent[6];
     image->GetExtent(extent);
 
     for (int i = 0; i < 3; ++i)
     {
         m_extractSlices[i] = vtkSmartPointer<vtkExtractVOI>::New();
-        m_extractSlices[i]->SetInputConnection(assignVectorToScalars->GetOutputPort());
+        m_extractSlices[i]->SetInputConnection(dataObject->processedOutputPort());
 
         VTK_CREATE(vtkTexture, texture);
         texture->SetInputConnection(m_extractSlices[i]->GetOutputPort());
@@ -182,6 +177,19 @@ PropertyGroup * RenderedVectorGrid3D::createConfigGroup()
     arrowLength->setOption("title", "arrow length");
     arrowLength->setOption("step", 0.02f);
 
+    for (int i = 0; i < 3; ++i)
+    {
+        std::string axis = { char('x' + i) };
+
+        auto * slice_prop = configGroup->addProperty<int>(axis + "Slice",
+            [this, i] () { return m_extractSlices[i]->GetVOI()[2 * i]; },
+            [this, i] (int value) {
+            setSlicePosition(i, value);
+            emit geometryChanged();
+        });
+        slice_prop->setOption("minimum", 0);
+        slice_prop->setOption("maximum", static_cast<vtkImageData *>(dataObject()->processedDataSet())->GetExtent()[2 * i + 1]);
+    }
 
     auto * sampleRate = configGroup->addProperty<std::array<int, 3>>("sampleRate",
         [this] (size_t i) { return m_extractVOI->GetSampleRate()[i]; },
@@ -197,21 +205,6 @@ PropertyGroup * RenderedVectorGrid3D::createConfigGroup()
         prop.setOption("minimum", 1);
     };
     sampleRate->forEach(optionSetter);
-
-
-    for (int i = 0; i < 3; ++i)
-    {
-        std::string axis = { char('x' + i) };
-
-        auto * slice_prop = configGroup->addProperty<int>(axis + "Slice",
-            [this, i] () { return m_extractSlices[i]->GetVOI()[2 * i]; },
-            [this, i] (int value) {
-            setSlicePosition(i, value);
-            emit geometryChanged();
-        });
-        slice_prop->setOption("minimum", 0);
-        slice_prop->setOption("maximum", static_cast<vtkImageData *>(dataObject()->processedDataSet())->GetExtent()[2 * i + 1]);
-    }
 
     return configGroup;
 }
