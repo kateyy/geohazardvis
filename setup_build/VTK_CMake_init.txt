@@ -2,9 +2,10 @@
 #
 #   mkdir path_to_VTK_build
 #   cd path_to_VTK_build
-#   cmake -C "path_to_this_file/VTK_CMake_init.txt" path_to_VTK_sources
+#   cmake -C "path_to_this_file/VTK_CMake_init.txt" -G "cmake_generator" path_to_VTK_sources
 #
 # This generates a minimal VTK-CMake build as needed for this project.
+# "cmake_generator" should be "Visual Studio 12" or better "Visual Studio 12 Win64" on Windows.
 
 set(BUILD_DOCUMENTATION OFF CACHE BOOL "Build the VTK documentation")
 set(BUILD_EXAMPLES OFF CACHE BOOL "Build VTK examples.")
