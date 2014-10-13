@@ -43,21 +43,13 @@ QList<ScalarsForColorMapping *> AttributeArrayComponentMapping::newInstances(con
     };
     QMap<QString, ArrayInfo> arrayInfos;
 
-    // list all available array names, check for same number of components
-    for (DataObject * dataObject : dataObjects)
+    auto checkAddAttributeArrays = [&arrayInfos] (vtkDataSetAttributes * attributes, int attributeLocation) -> void
     {
-        vtkDataSet * dataSet = dataObject->processedDataSet();
-        vtkCellData * cellData = dataSet->GetCellData();
-        vtkPointData * pointData = dataSet->GetPointData();
-        const int numCellDataArrays = cellData->GetNumberOfArrays();
-        const int numArrays = numCellDataArrays + pointData->GetNumberOfArrays();
-
-
-        for (vtkIdType i = 0; i < numArrays; ++i)
+        for (vtkIdType i = 0; i < attributes->GetNumberOfArrays(); ++i)
         {
-            vtkDataArray * dataArray = i < numCellDataArrays
-                ? cellData->GetArray(i)
-                : pointData->GetArray(i);
+            vtkDataArray * dataArray = attributes->GetArray(i);
+            if (!dataArray)
+                continue;
 
             // skip arrays that are marked as auxiliary
             vtkInformation * arrayInfo = dataArray->GetInformation();
@@ -76,8 +68,17 @@ QList<ScalarsForColorMapping *> AttributeArrayComponentMapping::newInstances(con
             }
 
             if (!lastNumComp)   // current array isn't yet in our list
-                arrayInfos.insert(name, { currentNumComp, i < numCellDataArrays ? vtkAssignAttribute::CELL_DATA : vtkAssignAttribute::POINT_DATA });
+                arrayInfos.insert(name, { currentNumComp, attributeLocation });
         }
+    };
+
+    // list all available array names, check for same number of components
+    for (DataObject * dataObject : dataObjects)
+    {
+        vtkDataSet * dataSet = dataObject->processedDataSet();
+
+        checkAddAttributeArrays(dataSet->GetCellData(), vtkAssignAttribute::CELL_DATA);
+        checkAddAttributeArrays(dataSet->GetPointData(), vtkAssignAttribute::POINT_DATA);
     }
 
     QList<ScalarsForColorMapping *> instances;
