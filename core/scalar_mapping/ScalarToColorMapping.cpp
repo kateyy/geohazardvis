@@ -29,6 +29,7 @@ ScalarToColorMapping::ScalarToColorMapping()
 
 void ScalarToColorMapping::setRenderedData(const QList<RenderedData *> & renderedData)
 {
+    auto lastRenderedData = m_renderedData;
     m_renderedData = renderedData;
 
     QList<DataObject *> dataObjects;
@@ -39,6 +40,9 @@ void ScalarToColorMapping::setRenderedData(const QList<RenderedData *> & rendere
 
     QString lastScalars = currentScalarsName();
     m_currentScalarsName.clear();
+
+    for (RenderedData * renderedData : lastRenderedData)
+        renderedData->applyScalarsForColorMapping(nullptr);
 
     qDeleteAll(m_scalars);
     m_scalars = ScalarsForColorMappingRegistry::instance().createMappingsValidFor(dataObjects);

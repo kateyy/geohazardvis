@@ -325,11 +325,14 @@ void RenderedVectorGrid3D::updateVisibilies()
         sliceActor->SetVisibility(m_mainVisibility && m_slicesVisible);
     }
 
-    bool showSliceScalars = m_scalars->scalarsName() == QString::fromLatin1(dataObject()->dataSet()->GetPointData()->GetVectors()->GetName());
-    for (int i = 0; i < 3; ++i)
+    if (m_scalars)
     {
-        m_sliceActors[i]->SetVisibility(m_mainVisibility && m_slicesVisible && showSliceScalars);
-        m_sliceOutlineActors[i]->SetVisibility(m_mainVisibility && m_slicesVisible && !showSliceScalars);
+        bool showSliceScalars = m_scalars->scalarsName() == QString::fromLatin1(dataObject()->dataSet()->GetPointData()->GetVectors()->GetName());
+        for (int i = 0; i < 3; ++i)
+        {
+            m_sliceActors[i]->SetVisibility(m_mainVisibility && m_slicesVisible && showSliceScalars);
+            m_sliceOutlineActors[i]->SetVisibility(m_mainVisibility && m_slicesVisible && !showSliceScalars);
+        }
     }
 }
 
