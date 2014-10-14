@@ -88,8 +88,6 @@ set ( SOURCES
     vector_mapping/PolyDataAttributeVectorMapping.cpp
     vector_mapping/RawVectorMapping.h
     vector_mapping/RawVectorMapping.cpp
-    vector_mapping/SurfaceNormalMapping.h
-    vector_mapping/SurfaceNormalMapping.cpp
 )
 
 source_group_by_path(${CMAKE_CURRENT_SOURCE_DIR} "\\\\.cpp$|\\\\.c$|\\\\.h$|\\\\.hpp$|\\\\.ui$|\\\\.inl$"

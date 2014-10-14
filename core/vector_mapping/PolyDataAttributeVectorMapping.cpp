@@ -33,7 +33,7 @@ using namespace reflectionzeug;
 
 QList<VectorMappingData *> PolyDataAttributeVectorMapping::newInstances(RenderedData * renderedData)
 {
-    vtkPolyData * polyData = vtkPolyData::SafeDownCast(renderedData->dataObject()->dataSet());
+    vtkPolyData * polyData = vtkPolyData::SafeDownCast(renderedData->dataObject()->processedDataSet());
     // only polygonal datasets are supported
     if (!polyData)
         return{};
@@ -47,7 +47,7 @@ QList<VectorMappingData *> PolyDataAttributeVectorMapping::newInstances(Rendered
     {
         assert(a);
         QString name(a->GetName());
-        if (name == "centroid" || name == "Normals")
+        if (name == "centroid")
             continue;
 
         if (a->GetInformation()->Has(DataObject::ArrayIsAuxiliaryKey())

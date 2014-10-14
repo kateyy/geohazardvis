@@ -219,7 +219,7 @@ reflectionzeug::PropertyGroup * VectorMappingData::createPropertyGroup()
 {
     reflectionzeug::PropertyGroup * group = new reflectionzeug::PropertyGroup();
 
-    auto prop_representation = group->addProperty<Representation>("representation",
+    auto prop_representation = group->addProperty<Representation>("style",
         [this] () {return representation(); },
         [this] (Representation repr) {
         setRepresentation(repr);
