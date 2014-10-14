@@ -5,7 +5,8 @@
 #include <core/data_objects/RenderedData.h>
 
 
-class vtkGlyph3D;
+class vtkImageData;
+class vtkAlgorithmOutput;
 class vtkExtractVOI;
 class vtkPlaneSource;
 
@@ -14,6 +15,8 @@ class VectorGrid3DDataObject;
 
 class CORE_API RenderedVectorGrid3D : public RenderedData
 {
+    Q_OBJECT
+
 public:
     RenderedVectorGrid3D(VectorGrid3DDataObject * dataObject);
     ~RenderedVectorGrid3D() override;
@@ -23,11 +26,15 @@ public:
 
     reflectionzeug::PropertyGroup * createConfigGroup() override;
 
-    bool arrowsVisible() const;
-    void setArrowVisibility(bool visible);
+    void setSampleRate(int x, int y, int z);
+    void sampleRate(int sampleRate[3]);
+    vtkImageData * resampledDataSet();
+    vtkAlgorithmOutput * resampledOuputPort();
 
-    bool slicesVisible() const;
-    void setSlicesVisiblity(bool visible);
+    void setSlicePosition(int axis, int slicePosition);
+
+signals:
+    void sampleRateChanged(int x, int y, int z);
 
 protected:
     vtkProperty * createDefaultRenderProperty() const override;
@@ -40,16 +47,9 @@ protected:
 
 private:
     void updateVisibilies();
-    void setSampleRate(int x, int y, int z);
-    void setSlicePosition(int axis, int slicePosition);
 
 private:
-    vtkSmartPointer<vtkGlyph3D> m_glyph;
     vtkSmartPointer<vtkExtractVOI> m_extractVOI;
-
-    bool m_mainVisibility;
-    bool m_arrowsVisible;
-    bool m_slicesVisible;
 
     std::array<vtkSmartPointer<vtkExtractVOI>, 3> m_extractSlices;
     std::array<vtkSmartPointer<vtkPlaneSource>, 3> m_slicePlanes;

@@ -82,6 +82,8 @@ set ( SOURCES
     vector_mapping/VectorMappingData.cpp
     vector_mapping/VectorMappingRegistry.h
     vector_mapping/VectorMappingRegistry.cpp
+    vector_mapping/Grid3dVectorMapping.h
+    vector_mapping/Grid3dVectorMapping.cpp
     vector_mapping/PolyDataAttributeVectorMapping.h
     vector_mapping/PolyDataAttributeVectorMapping.cpp
     vector_mapping/RawVectorMapping.h

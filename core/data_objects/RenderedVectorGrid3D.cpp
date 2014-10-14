@@ -6,23 +6,18 @@
 #include <vtkInformationStringKey.h>
 #include <vtkLookupTable.h>
 
-#include <vtkLineSource.h>
 #include <vtkPlaneSource.h>
-#include <vtkAppendPolyData.h>
 #include <vtkOutlineFilter.h>
 
 #include <vtkImageData.h>
 #include <vtkPointData.h>
-#include <vtkDataSetAttributes.h>
 
 #include <vtkExtractVOI.h>
-#include <vtkGlyph3D.h>
 
 #include <vtkPolyDataMapper.h>
 
 #include <vtkProperty.h>
 #include <vtkActor.h>
-
 
 #include <reflectionzeug/PropertyGroup.h>
 
@@ -39,52 +34,17 @@ namespace
 
 const vtkIdType DefaultMaxNumberOfPoints = 1000;
 
-vtkSmartPointer<vtkAlgorithm> createArrow()
-{
-    VTK_CREATE(vtkLineSource, shaft);
-    shaft->SetPoint1(0.f, 0.f, 0.f);
-    shaft->SetPoint2(1.f, 0.f, 0.f);
-
-    VTK_CREATE(vtkLineSource, cone1);
-    cone1->SetPoint1(1.00f, 0.0f, 0.f);
-    cone1->SetPoint2(0.65f, 0.1f, 0.f);
-
-    VTK_CREATE(vtkLineSource, cone2);
-    cone2->SetPoint1(1.00f,  0.0f, 0.f);
-    cone2->SetPoint2(0.65f, -0.1f, 0.f);
-
-    VTK_CREATE(vtkAppendPolyData, arrow);
-    arrow->AddInputConnection(shaft->GetOutputPort());
-    arrow->AddInputConnection(cone1->GetOutputPort());
-    arrow->AddInputConnection(cone2->GetOutputPort());
-
-    return arrow;
-}
-
 }
 
 RenderedVectorGrid3D::RenderedVectorGrid3D(VectorGrid3DDataObject * dataObject)
     : RenderedData(dataObject)
-    , m_glyph(vtkSmartPointer<vtkGlyph3D>::New())
     , m_extractVOI(vtkSmartPointer<vtkExtractVOI>::New())
-    , m_mainVisibility(true)
-    , m_arrowsVisible(true)
-    , m_slicesVisible(true)
 {
     assert(vtkImageData::SafeDownCast(dataObject->processedDataSet()));
 
     vtkImageData * image = static_cast<vtkImageData *>(dataObject->processedDataSet());
 
     m_extractVOI->SetInputData(dataObject->dataSet());
-
-    vtkSmartPointer<vtkAlgorithm> arrow = createArrow();
-    
-    m_glyph->SetInputConnection(m_extractVOI->GetOutputPort());
-    m_glyph->SetSourceConnection(arrow->GetOutputPort());
-    m_glyph->ScalingOn();
-    m_glyph->SetScaleModeToDataScalingOff();
-    m_glyph->SetVectorModeToUseVector();
-
 
     // initialize sample rate to prevent crashing/blocking rendering
     vtkIdType numPoints = image->GetNumberOfPoints();
@@ -151,68 +111,20 @@ PropertyGroup * RenderedVectorGrid3D::createConfigGroup()
 {
     PropertyGroup * configGroup = new PropertyGroup();
 
-    auto representation = configGroup->addGroup("Representation");
-    {
-        representation->addProperty<bool>("arrowsVisible", this,
-            &RenderedVectorGrid3D::arrowsVisible,
-            &RenderedVectorGrid3D::setArrowVisibility)
-            ->setOption("title", "Arrows");
-
-        representation->addProperty<bool>("slicesVisible", this,
-            &RenderedVectorGrid3D::slicesVisible,
-            &RenderedVectorGrid3D::setSlicesVisiblity)
-            ->setOption("title", "Slice images");
-    }
-
-    auto arrowSettings = configGroup->addGroup("Arrows");
-    {
-        auto color = arrowSettings->addProperty<Color>("color",
-            [this] () {
-            double * color = renderProperty()->GetColor();
-            return Color(static_cast<int>(color[0] * 255), static_cast<int>(color[1] * 255), static_cast<int>(color[2] * 255));
-        },
-            [this] (const Color & color) {
-            renderProperty()->SetColor(color.red() / 255.0, color.green() / 255.0, color.blue() / 255.0);
-            emit geometryChanged();
-        });
-
-        auto arrowLength = arrowSettings->addProperty<float>("length",
-            [this] () { return static_cast<float>(m_glyph->GetScaleFactor());  },
-            [this] (float value) {
-            m_glyph->SetScaleFactor(value);
-            emit geometryChanged();
-        });
-        arrowLength->setOption("title", "arrow length");
-        arrowLength->setOption("step", 0.02f);
-
-        auto lineWidth = arrowSettings->addProperty<unsigned>("lineWidth",
-            [this] () {
-            return static_cast<unsigned>(renderProperty()->GetLineWidth());
-        },
-            [this] (unsigned lineWidth) {
-            renderProperty()->SetLineWidth(lineWidth);
-            emit geometryChanged();
-        });
-        lineWidth->setOption("title", "line width");
-        lineWidth->setOption("minimum", 1);
-        lineWidth->setOption("maximum", 100);
-        lineWidth->setOption("step", 1);
-
-        auto sampleRate = arrowSettings->addProperty<std::array<int, 3>>("sampleRate",
-            [this] (size_t i) { return m_extractVOI->GetSampleRate()[i]; },
-            [this] (size_t i, int value) {
-            int rates[3];
-            m_extractVOI->GetSampleRate(rates);
-            rates[i] = value;
-            setSampleRate(rates[0], rates[1], rates[2]);
-            emit geometryChanged();
-        });
-        sampleRate->setOption("title", "sample rate");
-        std::function<void(Property<int> &)> optionSetter = [] (Property<int> & prop){
-            prop.setOption("minimum", 1);
-        };
-        sampleRate->forEach(optionSetter);
-    }
+    auto sampleRate = configGroup->addProperty<std::array<int, 3>>("sampleRate",
+        [this] (size_t i) { return m_extractVOI->GetSampleRate()[i]; },
+        [this] (size_t i, int value) {
+        int rates[3];
+        m_extractVOI->GetSampleRate(rates);
+        rates[i] = value;
+        setSampleRate(rates[0], rates[1], rates[2]);
+        emit geometryChanged();
+    });
+    sampleRate->setOption("title", "sample rate");
+    std::function<void(Property<int> &)> optionSetter = [] (Property<int> & prop){
+        prop.setOption("minimum", 1);
+    };
+    sampleRate->forEach(optionSetter);
 
     auto slicePositions = configGroup->addGroup("SlicePosition");
     slicePositions->setOption("title", "Slice Positions");
@@ -234,53 +146,25 @@ PropertyGroup * RenderedVectorGrid3D::createConfigGroup()
     return configGroup;
 }
 
-bool RenderedVectorGrid3D::arrowsVisible() const
+vtkImageData * RenderedVectorGrid3D::resampledDataSet()
 {
-    return m_arrowsVisible;
+    m_extractVOI->Update();
+    return m_extractVOI->GetOutput();
 }
 
-void RenderedVectorGrid3D::setArrowVisibility(bool visible)
+vtkAlgorithmOutput * RenderedVectorGrid3D::resampledOuputPort()
 {
-    m_arrowsVisible = visible;
-    
-    updateVisibilies();
-
-    emit geometryChanged();
-}
-
-bool RenderedVectorGrid3D::slicesVisible() const
-{
-    return m_slicesVisible;
-}
-
-void RenderedVectorGrid3D::setSlicesVisiblity(bool visible)
-{
-    m_slicesVisible = visible;
-
-    updateVisibilies();
-
-    emit geometryChanged();
+    return m_extractVOI->GetOutputPort();
 }
 
 vtkProperty * RenderedVectorGrid3D::createDefaultRenderProperty() const
 {
-    vtkProperty * prop = vtkProperty::New();
-    prop->SetColor(1, 0, 0);
-    prop->SetInterpolationToFlat();
-    prop->LightingOff();
-
-    return prop;
+    return vtkProperty::New();
 }
 
 vtkActor * RenderedVectorGrid3D::createActor()
 {
-    VTK_CREATE(vtkPolyDataMapper, mapper);
-    mapper->SetInputConnection(m_glyph->GetOutputPort());
-
-    vtkActor * actor = vtkActor::New();
-    actor->SetMapper(mapper);
-
-    return actor;
+    return vtkActor::New();
 }
 
 QList<vtkActor *> RenderedVectorGrid3D::fetchAttributeActors()
@@ -310,20 +194,16 @@ void RenderedVectorGrid3D::gradientForColorMappingChangedEvent()
     }
 }
 
-void RenderedVectorGrid3D::visibilityChangedEvent(bool visible)
+void RenderedVectorGrid3D::visibilityChangedEvent(bool /*visible*/)
 {
-    m_mainVisibility = visible;
-
     updateVisibilies();
 }
 
 void RenderedVectorGrid3D::updateVisibilies()
 {
-    mainActor()->SetVisibility(m_mainVisibility && m_arrowsVisible);
-
     for (auto sliceActor : m_sliceActors)
     {
-        sliceActor->SetVisibility(m_mainVisibility && m_slicesVisible);
+        sliceActor->SetVisibility(isVisible());
     }
 
     if (m_scalars)
@@ -331,8 +211,8 @@ void RenderedVectorGrid3D::updateVisibilies()
         bool showSliceScalars = m_scalars->scalarsName() == QString::fromLatin1(dataObject()->dataSet()->GetPointData()->GetVectors()->GetName());
         for (int i = 0; i < 3; ++i)
         {
-            m_sliceActors[i]->SetVisibility(m_mainVisibility && m_slicesVisible && showSliceScalars);
-            m_sliceOutlineActors[i]->SetVisibility(m_mainVisibility && m_slicesVisible && !showSliceScalars);
+            m_sliceActors[i]->SetVisibility(isVisible() && showSliceScalars);
+            m_sliceOutlineActors[i]->SetVisibility(isVisible() && !showSliceScalars);
         }
     }
 }
@@ -340,11 +220,11 @@ void RenderedVectorGrid3D::updateVisibilies()
 void RenderedVectorGrid3D::setSampleRate(int x, int y, int z)
 {
     m_extractVOI->SetSampleRate(x, y, z);
+}
 
-    m_extractVOI->Update();
-
-    double cellSpacing = m_extractVOI->GetOutput()->GetSpacing()[0];
-    m_glyph->SetScaleFactor(0.75 * m_extractVOI->GetOutput()->GetSpacing()[0]);
+void RenderedVectorGrid3D::sampleRate(int sampleRate[3])
+{
+    m_extractVOI->GetSampleRate(sampleRate);
 }
 
 void RenderedVectorGrid3D::setSlicePosition(int axis, int slicePosition)
