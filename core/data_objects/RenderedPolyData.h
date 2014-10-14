@@ -24,12 +24,9 @@ public:
 protected:
     vtkProperty * createDefaultRenderProperty() const override;
     vtkActor * createActor() override;
-    QList<vtkActor *> fetchAttributeActors() override;
 
     void scalarsForColorMappingChangedEvent() override;
     void gradientForColorMappingChangedEvent() override;
-    void vectorsForSurfaceMappingChangedEvent() override;
-    void visibilityChangedEvent(bool visible) override;
 
 private:
     vtkPolyDataMapper * createDataMapper();

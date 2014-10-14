@@ -285,7 +285,8 @@ vtkActor * RenderedVectorGrid3D::createActor()
 
 QList<vtkActor *> RenderedVectorGrid3D::fetchAttributeActors()
 {
-    QList<vtkActor *> actors;
+    QList<vtkActor *> actors = RenderedData::fetchAttributeActors();
+
     for (auto actor : m_sliceActors)
         actors << actor;
     for (auto actor : m_sliceOutlineActors)

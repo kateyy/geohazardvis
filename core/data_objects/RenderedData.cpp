@@ -7,6 +7,7 @@
 
 #include <core/data_objects/DataObject.h>
 #include <core/vector_mapping/VectorMapping.h>
+#include <core/vector_mapping/VectorMappingData.h>
 
 
 RenderedData::RenderedData(DataObject * dataObject)
@@ -14,10 +15,9 @@ RenderedData::RenderedData(DataObject * dataObject)
     , m_dataObject(dataObject)
     , m_scalars(nullptr)
     , m_lut(nullptr)
-    , m_vectors(new VectorMapping(this))
+    , m_vectors(nullptr)
     , m_isVisible(true)
 {
-    connect(m_vectors, &VectorMapping::vectorsChanged, this, &RenderedData::attributeActorsChanged);
     connect(dataObject, &DataObject::dataChanged, this, &RenderedData::geometryChanged);
 }
 
@@ -76,7 +76,11 @@ void RenderedData::setVisible(bool visible)
 
 QList<vtkActor *> RenderedData::fetchAttributeActors()
 {
-    return{};
+    QList<vtkActor *> actors;
+    for (auto * v : vectorMapping()->vectors())
+        actors << v->actor();
+
+    return actors;
 }
 
 void RenderedData::scalarsForColorMappingChangedEvent()
@@ -91,8 +95,11 @@ void RenderedData::vectorsForSurfaceMappingChangedEvent()
 {
 }
 
-void RenderedData::visibilityChangedEvent(bool /*visible*/)
+void RenderedData::visibilityChangedEvent(bool visible)
 {
+    for (VectorMappingData * vectors : m_vectors->vectors())
+        vectors->actor()->SetVisibility(
+        visible && vectors->isVisible());
 }
 
 DataObject * RenderedData::dataObject()
@@ -107,6 +114,11 @@ const DataObject * RenderedData::dataObject() const
 
 VectorMapping * RenderedData::vectorMapping()
 {
+    if (!m_vectors)
+    {
+        m_vectors = new VectorMapping(this);
+        connect(m_vectors, &VectorMapping::vectorsChanged, this, &RenderedData::attributeActorsChanged);
+    }
     return m_vectors;
 }
 

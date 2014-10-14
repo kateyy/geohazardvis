@@ -74,12 +74,12 @@ private:
 protected:
     ScalarsForColorMapping * m_scalars;
     vtkSmartPointer<vtkLookupTable> m_lut;
-    VectorMapping * m_vectors;
     unsigned long m_lutMTime;
 
 private:
     vtkSmartPointer<vtkProperty> m_renderProperty;
     vtkSmartPointer<vtkActor> m_actor;
+    VectorMapping * m_vectors;
 
     bool m_isVisible;
 };

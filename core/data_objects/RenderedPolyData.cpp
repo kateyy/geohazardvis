@@ -22,8 +22,6 @@
 #include <core/vtkhelper.h>
 #include <core/data_objects/PolyDataObject.h>
 #include <core/scalar_mapping/ScalarsForColorMapping.h>
-#include <core/vector_mapping/VectorMapping.h>
-#include <core/vector_mapping/VectorMappingData.h>
 
 
 using namespace reflectionzeug;
@@ -203,15 +201,6 @@ vtkActor * RenderedPolyData::createActor()
     return actor;
 }
 
-QList<vtkActor *> RenderedPolyData::fetchAttributeActors()
-{
-    QList<vtkActor *> actors;
-    for (auto * v : m_vectors->vectors())
-        actors << v->actor();
-
-    return actors;
-}
-
 void RenderedPolyData::scalarsForColorMappingChangedEvent()
 {
     vtkSmartPointer<vtkMapper> mapper = vtkSmartPointer<vtkMapper>::Take(createDataMapper());
@@ -222,17 +211,6 @@ void RenderedPolyData::gradientForColorMappingChangedEvent()
 {
     vtkSmartPointer<vtkMapper> mapper = vtkSmartPointer<vtkMapper>::Take(createDataMapper());
     mainActor()->SetMapper(mapper);
-}
-
-void RenderedPolyData::vectorsForSurfaceMappingChangedEvent()
-{
-}
-
-void RenderedPolyData::visibilityChangedEvent(bool visible)
-{
-    for (VectorMappingData * vectors : m_vectors->vectors())
-        vectors->actor()->SetVisibility(
-        visible && vectors->isVisible());
 }
 
 vtkPolyDataMapper * RenderedPolyData::createDataMapper()
