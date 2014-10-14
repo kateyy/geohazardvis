@@ -11,8 +11,8 @@
 
 
 class vtkActor;
+class vtkAlgorithm;
 class vtkMapper;
-class vtkArrowSource;
 class vtkGlyph3D;
 
 namespace reflectionzeug
@@ -34,6 +34,13 @@ class CORE_API VectorMappingData : public QObject
 public:
     friend class VectorMappingRegistry;
 
+    enum class Representation
+    {
+        Line,
+        SimpleArrow,
+        CylindricArrow
+    };
+
 public:
     virtual ~VectorMappingData() = 0;
 
@@ -47,6 +54,9 @@ public:
     virtual vtkIdType maximumStartingIndex();
     vtkIdType startingIndex() const;
     void setStartingIndex(vtkIdType index);
+
+    Representation representation() const;
+    void setRepresentation(Representation representation);
 
     float arrowLength() const;
     void setArrowLength(float length);
@@ -88,7 +98,9 @@ private:
 
     vtkIdType m_startingIndex;
 
-    vtkSmartPointer<vtkArrowSource> m_arrowSource;
+    Representation m_representation;
+    QMap<Representation, vtkSmartPointer<vtkAlgorithm>> m_arrowSources;
+
     vtkSmartPointer<vtkGlyph3D> m_arrowGlyph;
     vtkSmartPointer<vtkMapper> m_mapper;
     vtkSmartPointer<vtkActor> m_actor;

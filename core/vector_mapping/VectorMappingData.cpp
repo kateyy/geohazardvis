@@ -4,11 +4,13 @@
 #include <algorithm>
 
 #include <vtkArrowSource.h>
+#include <vtkLineSource.h>
+#include <vtkAppendPolyData.h>
 
 #include <vtkGlyph3D.h>
 #include <vtkPolyData.h>
 
-#include <vtkDataSetMapper.h>
+#include <vtkPolyDataMapper.h>
 
 #include <vtkActor.h>
 #include <vtkProperty.h>
@@ -16,9 +18,37 @@
 #include <reflectionzeug/Property.h>
 #include <reflectionzeug/PropertyGroup.h>
 
+#include <core/vtkhelper.h>
 #include <core/data_objects/DataObject.h>
 #include <core/data_objects/RenderedData.h>
 
+
+namespace
+{
+
+vtkSmartPointer<vtkAlgorithm> createSimpleArrow()
+{
+    VTK_CREATE(vtkLineSource, shaft);
+    shaft->SetPoint1(0.f, 0.f, 0.f);
+    shaft->SetPoint2(1.f, 0.f, 0.f);
+
+    VTK_CREATE(vtkLineSource, cone1);
+    cone1->SetPoint1(1.00f, 0.0f, 0.f);
+    cone1->SetPoint2(0.65f, 0.1f, 0.f);
+
+    VTK_CREATE(vtkLineSource, cone2);
+    cone2->SetPoint1(1.00f, 0.0f, 0.f);
+    cone2->SetPoint2(0.65f, -0.1f, 0.f);
+
+    VTK_CREATE(vtkAppendPolyData, arrow);
+    arrow->AddInputConnection(shaft->GetOutputPort());
+    arrow->AddInputConnection(cone1->GetOutputPort());
+    arrow->AddInputConnection(cone2->GetOutputPort());
+
+    return arrow;
+}
+
+}
 
 VectorMappingData::VectorMappingData(RenderedData * renderedData)
     : m_renderedData(renderedData)
@@ -32,21 +62,28 @@ VectorMappingData::VectorMappingData(RenderedData * renderedData)
     if (!m_isValid)
         return;
 
-    m_arrowSource = vtkSmartPointer<vtkArrowSource>::New();
-    m_arrowSource->SetShaftRadius(0.02);
-    m_arrowSource->SetTipRadius(0.07);
-    m_arrowSource->SetTipLength(0.3);
+    VTK_CREATE(vtkLineSource, lineArrow);
+    m_arrowSources.insert(Representation::Line, lineArrow);
+    
+    m_arrowSources.insert(Representation::SimpleArrow, createSimpleArrow());
+
+    VTK_CREATE(vtkArrowSource, cylindricArrow);
+    m_arrowSources.insert(Representation::CylindricArrow, cylindricArrow);
+    cylindricArrow->SetShaftRadius(0.02);
+    cylindricArrow->SetTipRadius(0.07);
+    cylindricArrow->SetTipLength(0.3);
 
     m_arrowGlyph = vtkSmartPointer<vtkGlyph3D>::New();
+    m_arrowGlyph->ScalingOn();
     m_arrowGlyph->SetScaleModeToScaleByScalar();
     m_arrowGlyph->OrientOn();
     double * bounds = renderedData->dataObject()->dataSet()->GetBounds();
     double maxBoundsSize = std::max(bounds[1] - bounds[0], std::max(bounds[3] - bounds[2], bounds[5] - bounds[4]));
     m_arrowGlyph->SetScaleFactor(maxBoundsSize * 0.1);
-    m_arrowGlyph->SetSourceConnection(m_arrowSource->GetOutputPort());
 
+    setRepresentation(Representation::CylindricArrow);
 
-    m_mapper = vtkSmartPointer<vtkDataSetMapper>::New();
+    m_mapper = vtkSmartPointer<vtkPolyDataMapper>::New();
     m_mapper->SetInputConnection(m_arrowGlyph->GetOutputPort());
 
     m_actor->SetVisibility(m_isVisible);
@@ -95,6 +132,21 @@ void VectorMappingData::setStartingIndex(vtkIdType index)
     startingIndexChangedEvent();
 }
 
+VectorMappingData::Representation VectorMappingData::representation() const
+{
+    return m_representation;
+}
+
+void VectorMappingData::setRepresentation(Representation representation)
+{
+    m_representation = representation;
+
+    arrowGlyph()->SetSourceConnection(
+        m_arrowSources[representation]->GetOutputPort());
+
+    emit geometryChanged();
+}
+
 float VectorMappingData::arrowLength() const
 {
     return static_cast<float>(m_arrowGlyph->GetScaleFactor());
@@ -109,25 +161,37 @@ void VectorMappingData::setArrowLength(float length)
 
 float VectorMappingData::arrowRadius() const
 {
-    return (float)m_arrowSource->GetTipRadius();
+    vtkArrowSource * arrowSouce = vtkArrowSource::SafeDownCast(m_arrowSources[Representation::CylindricArrow]);
+    assert(arrowSouce);
+
+    return (float)arrowSouce->GetTipRadius();
 }
 
 void VectorMappingData::setArrowRadius(float radius)
 {
-    m_arrowSource->SetTipRadius(radius);
-    m_arrowSource->SetShaftRadius(radius * 0.1f);
+    vtkArrowSource * arrowSouce = vtkArrowSource::SafeDownCast(m_arrowSources[Representation::CylindricArrow]);
+    assert(arrowSouce);
+
+    arrowSouce->SetTipRadius(radius);
+    arrowSouce->SetShaftRadius(radius * 0.1f);
 
     emit geometryChanged();
 }
 
 float VectorMappingData::arrowTipLength() const
 {
-    return (float)m_arrowSource->GetTipLength();
+    vtkArrowSource * arrowSouce = vtkArrowSource::SafeDownCast(m_arrowSources[Representation::CylindricArrow]);
+    assert(arrowSouce);
+
+    return (float)arrowSouce->GetTipLength();
 }
 
 void VectorMappingData::setArrowTipLength(float tipLength)
 {
-    m_arrowSource->SetTipLength(tipLength);
+    vtkArrowSource * arrowSouce = vtkArrowSource::SafeDownCast(m_arrowSources[Representation::CylindricArrow]);
+    assert(arrowSouce);
+
+    arrowSouce->SetTipLength(tipLength);
 
     emit geometryChanged();
 }
@@ -135,6 +199,15 @@ void VectorMappingData::setArrowTipLength(float tipLength)
 reflectionzeug::PropertyGroup * VectorMappingData::createPropertyGroup()
 {
     reflectionzeug::PropertyGroup * group = new reflectionzeug::PropertyGroup();
+
+    auto prop_representation = group->addProperty<Representation>("representation", this,
+        &VectorMappingData::representation,
+        &VectorMappingData::setRepresentation);
+    prop_representation->setStrings({
+            { Representation::Line, "line" },
+            { Representation::SimpleArrow, "arrow (lines)" },
+            { Representation::CylindricArrow, "arrow (cylindric)" }
+    });
 
     auto prop_length = group->addProperty<float>("length", this,
         &VectorMappingData::arrowLength, &VectorMappingData::setArrowLength);
