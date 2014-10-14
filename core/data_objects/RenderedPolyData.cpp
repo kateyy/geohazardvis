@@ -22,8 +22,8 @@
 #include <core/vtkhelper.h>
 #include <core/data_objects/PolyDataObject.h>
 #include <core/scalar_mapping/ScalarsForColorMapping.h>
-#include <core/vector_mapping/VectorsToSurfaceMapping.h>
-#include <core/vector_mapping/VectorsForSurfaceMapping.h>
+#include <core/vector_mapping/VectorMapping.h>
+#include <core/vector_mapping/VectorMappingData.h>
 
 
 using namespace reflectionzeug;
@@ -230,7 +230,7 @@ void RenderedPolyData::vectorsForSurfaceMappingChangedEvent()
 
 void RenderedPolyData::visibilityChangedEvent(bool visible)
 {
-    for (VectorsForSurfaceMapping * vectors : m_vectors->vectors())
+    for (VectorMappingData * vectors : m_vectors->vectors())
         vectors->actor()->SetVisibility(
         visible && vectors->isVisible());
 }

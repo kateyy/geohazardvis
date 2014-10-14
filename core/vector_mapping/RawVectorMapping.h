@@ -1,6 +1,6 @@
 #pragma once
 
-#include <core/vector_mapping/VectorsForSurfaceMapping.h>
+#include <core/vector_mapping/VectorMappingData.h>
 
 
 class vtkFloatArray;
@@ -10,7 +10,7 @@ class RawVectorData;
 class PolyDataObject;
 
 
-class RawVectorMapping : public VectorsForSurfaceMapping
+class RawVectorMapping : public VectorMappingData
 {
     Q_OBJECT
 
@@ -22,7 +22,7 @@ public:
     vtkIdType maximumStartingIndex() override;
 
 protected:
-    static QList<VectorsForSurfaceMapping *> newInstances(RenderedData * renderedData);
+    static QList<VectorMappingData *> newInstances(RenderedData * renderedData);
 
     RawVectorMapping(RenderedData * renderedData, RawVectorData * rawVector);
 

@@ -10,23 +10,23 @@
 
 
 class RenderedData;
-class VectorsForSurfaceMapping;
+class VectorMappingData;
 
 
-class CORE_API VectorsForSurfaceMappingRegistry
+class CORE_API VectorMappingRegistry
 {
 public:
-    static VectorsForSurfaceMappingRegistry & instance();
+    static VectorMappingRegistry & instance();
 
-    using MappingCreator = std::function<QList<VectorsForSurfaceMapping *> (RenderedData * renderedData)>;
+    using MappingCreator = std::function<QList<VectorMappingData *> (RenderedData * renderedData)>;
     bool registerImplementation(QString name, const MappingCreator & creator);
 
     /** retrieve a list of vectors that are applicable for the rendered data object */
-    QMap<QString, VectorsForSurfaceMapping *> createMappingsValidFor(RenderedData * renderedData);
+    QMap<QString, VectorMappingData *> createMappingsValidFor(RenderedData * renderedData);
 
 private:
-    VectorsForSurfaceMappingRegistry();
-    ~VectorsForSurfaceMappingRegistry();
+    VectorMappingRegistry();
+    ~VectorMappingRegistry();
 
     const QMap<QString, MappingCreator> & mappingCreators();
 

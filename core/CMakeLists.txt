@@ -75,15 +75,15 @@ set ( SOURCES
     scalar_mapping/RawArrayComponentMapping.h
     scalar_mapping/RawArrayComponentMapping.cpp
 
-    vector_mapping/VectorsToSurfaceMapping.h
-    vector_mapping/VectorsToSurfaceMapping.cpp
-    vector_mapping/VectorsForSurfaceMapping.h
-    vector_mapping/VectorsForSurfaceMapping.hpp
-    vector_mapping/VectorsForSurfaceMapping.cpp
-    vector_mapping/VectorsForSurfaceMappingRegistry.h
-    vector_mapping/VectorsForSurfaceMappingRegistry.cpp
-    vector_mapping/AttributeVectorMapping.h
-    vector_mapping/AttributeVectorMapping.cpp
+    vector_mapping/VectorMapping.h
+    vector_mapping/VectorMapping.cpp
+    vector_mapping/VectorMappingData.h
+    vector_mapping/VectorMappingData.hpp
+    vector_mapping/VectorMappingData.cpp
+    vector_mapping/VectorMappingRegistry.h
+    vector_mapping/VectorMappingRegistry.cpp
+    vector_mapping/PolyDataAttributeVectorMapping.h
+    vector_mapping/PolyDataAttributeVectorMapping.cpp
     vector_mapping/RawVectorMapping.h
     vector_mapping/RawVectorMapping.cpp
     vector_mapping/SurfaceNormalMapping.h

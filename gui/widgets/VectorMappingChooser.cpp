@@ -6,8 +6,8 @@
 
 #include <core/data_objects/DataObject.h>
 #include <core/data_objects/RenderedData.h>
-#include <core/vector_mapping/VectorsToSurfaceMapping.h>
-#include <core/vector_mapping/VectorsForSurfaceMapping.h>
+#include <core/vector_mapping/VectorMapping.h>
+#include <core/vector_mapping/VectorMappingData.h>
 
 #include "VectorMappingChooserListModel.h"
 
@@ -39,7 +39,7 @@ VectorMappingChooser::~VectorMappingChooser()
     delete m_ui;
 }
 
-void VectorMappingChooser::setMapping(int rendererId, VectorsToSurfaceMapping * mapping)
+void VectorMappingChooser::setMapping(int rendererId, VectorMapping * mapping)
 {
     if (mapping == m_mapping)
         return;
@@ -52,7 +52,7 @@ void VectorMappingChooser::setMapping(int rendererId, VectorsToSurfaceMapping * 
     updateVectorsList();
 
     if (m_mapping)
-        connect(m_mapping, &VectorsToSurfaceMapping::vectorsChanged, this, &VectorMappingChooser::updateVectorsList);
+        connect(m_mapping, &VectorMapping::vectorsChanged, this, &VectorMappingChooser::updateVectorsList);
 }
 
 void VectorMappingChooser::updateVectorsList()
@@ -67,10 +67,10 @@ void VectorMappingChooser::updateVectorsList()
 
     if (m_mapping)
     {
-        for (VectorsForSurfaceMapping * vectors : m_mapping->vectors().values())
+        for (VectorMappingData * vectors : m_mapping->vectors().values())
         {
             m_propertyGroups << vectors->createPropertyGroup();
-            connect(vectors, &VectorsForSurfaceMapping::geometryChanged, this, &VectorMappingChooser::renderSetupChanged);
+            connect(vectors, &VectorMappingData::geometryChanged, this, &VectorMappingChooser::renderSetupChanged);
         }
 
         QModelIndex index(m_listModel->index(0, 0));
@@ -83,7 +83,7 @@ int VectorMappingChooser::rendererId() const
     return m_rendererId;
 }
 
-const VectorsToSurfaceMapping * VectorMappingChooser::mapping() const
+const VectorMapping * VectorMappingChooser::mapping() const
 {
     return m_mapping;
 }
@@ -107,7 +107,7 @@ void VectorMappingChooser::updateGuiForSelection(const QItemSelection & selectio
         m_ui->propertyBrowser->setRoot(m_propertyGroups[index]);
         m_ui->propertyBrowserContainer->setTitle(vectorsName);
 
-        VectorsForSurfaceMapping * vectors = m_mapping->vectors()[vectorsName];
+        VectorMappingData * vectors = m_mapping->vectors()[vectorsName];
 
         m_startingIndexConnection =
             connect(m_ui->firstIndexSlider, static_cast<void(QAbstractSlider::*)(int)>(&QAbstractSlider::valueChanged),

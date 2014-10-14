@@ -622,7 +622,7 @@ void RenderView::updateGuiForRemovedData()
     m_scalarMapping.setRenderedData(m_renderedData);
     m_scalarMappingChooser.setMapping(this, &m_scalarMapping);
 
-    VectorsToSurfaceMapping * nextMapping = nextSelection ?
+    VectorMapping * nextMapping = nextSelection ?
         nextSelection->vectorMapping() : nullptr;
     if (m_vectorMappingChooser.rendererId() == index())
         m_vectorMappingChooser.setMapping(index(), nextMapping);

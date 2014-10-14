@@ -4,8 +4,8 @@
 #include <QList>
 
 
-class VectorsToSurfaceMapping;
-class VectorsForSurfaceMapping;
+class VectorMapping;
+class VectorMappingData;
 
 
 class VectorMappingChooserListModel : public QAbstractListModel
@@ -15,7 +15,7 @@ class VectorMappingChooserListModel : public QAbstractListModel
 public:
     explicit VectorMappingChooserListModel(QObject * parent = nullptr);
 
-    void setMapping(VectorsToSurfaceMapping * mapping);
+    void setMapping(VectorMapping * mapping);
 
     QVariant data(const QModelIndex & index, int role = Qt::DisplayRole) const override;
     QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override;
@@ -27,7 +27,7 @@ signals:
     void vectorVisibilityChanged();
 
 private:
-    VectorsToSurfaceMapping * m_mapping;
+    VectorMapping * m_mapping;
     QStringList m_vectorNames;
-    QList<VectorsForSurfaceMapping *> m_vectors;
+    QList<VectorMappingData *> m_vectors;
 };

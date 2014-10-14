@@ -9,25 +9,25 @@
 
 
 class RenderedData;
-class VectorsForSurfaceMapping;
+class VectorMappingData;
 
 
 /**
 Sets up vector to surface mapping for a data object and stores the configuration state.
-Uses VectorsForSurfaceMapping to determine vectors that can be mapped on the supplied data.
+Uses VectorMappingData to determine vectors that can be mapped on the supplied data.
 */
-class CORE_API VectorsToSurfaceMapping : public QObject
+class CORE_API VectorMapping : public QObject
 {
     Q_OBJECT
 
 public:
-    VectorsToSurfaceMapping(RenderedData * renderedData);
-    ~VectorsToSurfaceMapping() override;
+    VectorMapping(RenderedData * renderedData);
+    ~VectorMapping() override;
 
     /** names of vectors that can be used with my data */
     QList<QString> vectorNames() const;
     /** list of vectors that can be used with my data */
-    const QMap<QString, VectorsForSurfaceMapping *> & vectors() const;
+    const QMap<QString, VectorMappingData *> & vectors() const;
 
     const RenderedData * renderedData() const;
 
@@ -41,5 +41,5 @@ private slots:
 private:
     RenderedData * m_renderedData;
 
-    QMap<QString, VectorsForSurfaceMapping *> m_vectors;
+    QMap<QString, VectorMappingData *> m_vectors;
 };

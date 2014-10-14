@@ -3,7 +3,7 @@
 #include <vtkGlyph3D.h>
 
 #include <core/data_objects/PolyDataObject.h>
-#include <core/vector_mapping/VectorsForSurfaceMappingRegistry.h>
+#include <core/vector_mapping/VectorMappingRegistry.h>
 
 
 namespace
@@ -11,14 +11,14 @@ namespace
 const QString s_name = "surface normals";
 }
 
-const bool SurfaceNormalMapping::s_registered = VectorsForSurfaceMappingRegistry::instance().registerImplementation(
+const bool SurfaceNormalMapping::s_registered = VectorMappingRegistry::instance().registerImplementation(
     s_name,
     newInstance<SurfaceNormalMapping>);
 
 using namespace reflectionzeug;
 
 SurfaceNormalMapping::SurfaceNormalMapping(RenderedData * renderedData)
-    : VectorsForSurfaceMapping(renderedData)
+    : VectorMappingData(renderedData)
 {
     PolyDataObject * polyData = dynamic_cast<PolyDataObject *>(dataObject());
 

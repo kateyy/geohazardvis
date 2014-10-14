@@ -1,9 +1,9 @@
 #pragma once
 
-#include <core/vector_mapping/VectorsForSurfaceMapping.h>
+#include <core/vector_mapping/VectorMappingData.h>
 
 
-class CORE_API SurfaceNormalMapping : public VectorsForSurfaceMapping
+class CORE_API SurfaceNormalMapping : public VectorMappingData
 {
     Q_OBJECT
 

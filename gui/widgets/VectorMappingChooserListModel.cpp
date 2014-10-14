@@ -2,8 +2,8 @@
 
 #include <cassert>
 
-#include <core/vector_mapping/VectorsToSurfaceMapping.h>
-#include <core/vector_mapping/VectorsForSurfaceMapping.h>
+#include <core/vector_mapping/VectorMapping.h>
+#include <core/vector_mapping/VectorMappingData.h>
 
 
 VectorMappingChooserListModel::VectorMappingChooserListModel(QObject * parent)
@@ -12,7 +12,7 @@ VectorMappingChooserListModel::VectorMappingChooserListModel(QObject * parent)
 {
 }
 
-void VectorMappingChooserListModel::setMapping(VectorsToSurfaceMapping * mapping)
+void VectorMappingChooserListModel::setMapping(VectorMapping * mapping)
 {
     beginResetModel();
 

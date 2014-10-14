@@ -6,7 +6,7 @@
 #include <vtkInformationIntegerPointerKey.h>
 
 #include <core/data_objects/DataObject.h>
-#include <core/vector_mapping/VectorsToSurfaceMapping.h>
+#include <core/vector_mapping/VectorMapping.h>
 
 
 RenderedData::RenderedData(DataObject * dataObject)
@@ -14,10 +14,10 @@ RenderedData::RenderedData(DataObject * dataObject)
     , m_dataObject(dataObject)
     , m_scalars(nullptr)
     , m_lut(nullptr)
-    , m_vectors(new VectorsToSurfaceMapping(this))
+    , m_vectors(new VectorMapping(this))
     , m_isVisible(true)
 {
-    connect(m_vectors, &VectorsToSurfaceMapping::vectorsChanged, this, &RenderedData::attributeActorsChanged);
+    connect(m_vectors, &VectorMapping::vectorsChanged, this, &RenderedData::attributeActorsChanged);
     connect(dataObject, &DataObject::dataChanged, this, &RenderedData::geometryChanged);
 }
 
@@ -105,7 +105,7 @@ const DataObject * RenderedData::dataObject() const
     return m_dataObject;
 }
 
-VectorsToSurfaceMapping * RenderedData::vectorMapping()
+VectorMapping * RenderedData::vectorMapping()
 {
     return m_vectors;
 }

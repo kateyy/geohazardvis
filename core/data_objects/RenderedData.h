@@ -19,7 +19,7 @@ namespace reflectionzeug
 
 class DataObject;
 class ScalarsForColorMapping;
-class VectorsToSurfaceMapping;
+class VectorMapping;
 
 
 /**
@@ -49,7 +49,7 @@ public:
 
     virtual reflectionzeug::PropertyGroup * createConfigGroup() = 0;
 
-    VectorsToSurfaceMapping * vectorMapping();
+    VectorMapping * vectorMapping();
 
     void applyScalarsForColorMapping(ScalarsForColorMapping * scalars);
     void applyGradientLookupTable(vtkLookupTable * gradient);
@@ -74,7 +74,7 @@ private:
 protected:
     ScalarsForColorMapping * m_scalars;
     vtkSmartPointer<vtkLookupTable> m_lut;
-    VectorsToSurfaceMapping * m_vectors;
+    VectorMapping * m_vectors;
     unsigned long m_lutMTime;
 
 private:

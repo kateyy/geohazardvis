@@ -28,15 +28,15 @@ class RenderedData;
 /**
 Abstract base class for vectors that can be mapped to polygonal surfaces.
 */
-class CORE_API VectorsForSurfaceMapping : public QObject
+class CORE_API VectorMappingData : public QObject
 {
     Q_OBJECT
 
 public:
-    friend class VectorsForSurfaceMappingRegistry;
+    friend class VectorMappingRegistry;
 
 public:
-    virtual ~VectorsForSurfaceMapping() = 0;
+    virtual ~VectorMappingData() = 0;
 
     virtual QString name() const = 0;
 
@@ -68,8 +68,8 @@ signals:
 protected:
     template<typename SubClass>
     /** default function for Registry::MappingCreator, returning a single mapping instance */
-    static QList<VectorsForSurfaceMapping *> newInstance(RenderedData * renderedData);
-    explicit VectorsForSurfaceMapping(RenderedData * renderedData);
+    static QList<VectorMappingData *> newInstance(RenderedData * renderedData);
+    explicit VectorMappingData(RenderedData * renderedData);
 
     virtual void initialize();
 
@@ -101,4 +101,4 @@ protected:
 
 };
 
-#include "VectorsForSurfaceMapping.hpp"
+#include "VectorMappingData.hpp"

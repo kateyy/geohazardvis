@@ -1,4 +1,4 @@
-#include "AttributeVectorMapping.h"
+#include "PolyDataAttributeVectorMapping.h"
 
 #include <cstring>
 
@@ -16,22 +16,22 @@
 #include <core/vtkhelper.h>
 #include <core/data_objects/PolyDataObject.h>
 #include <core/data_objects/RenderedData.h>
-#include <core/vector_mapping/VectorsForSurfaceMappingRegistry.h>
+#include <core/vector_mapping/VectorMappingRegistry.h>
 
 
 namespace
 {
-const QString s_name = "cell data vectors";
+const QString s_name = "poly data attribute vectors";
 }
 
-const bool AttributeVectorMapping::s_registered = VectorsForSurfaceMappingRegistry::instance().registerImplementation(
+const bool PolyDataAttributeVectorMapping::s_registered = VectorMappingRegistry::instance().registerImplementation(
     s_name,
     newInstances);
 
 using namespace reflectionzeug;
 
 
-QList<VectorsForSurfaceMapping *> AttributeVectorMapping::newInstances(RenderedData * renderedData)
+QList<VectorMappingData *> PolyDataAttributeVectorMapping::newInstances(RenderedData * renderedData)
 {
     vtkPolyData * polyData = vtkPolyData::SafeDownCast(renderedData->dataObject()->dataSet());
     // only polygonal datasets are supported
@@ -57,10 +57,10 @@ QList<VectorsForSurfaceMapping *> AttributeVectorMapping::newInstances(RenderedD
         vectorArrays << a;
     }
 
-    QList<VectorsForSurfaceMapping *> instances;
+    QList<VectorMappingData *> instances;
     for (vtkDataArray * vectorsArray : vectorArrays)
     {
-        AttributeVectorMapping * mapping = new AttributeVectorMapping(renderedData, vectorsArray);
+        PolyDataAttributeVectorMapping * mapping = new PolyDataAttributeVectorMapping(renderedData, vectorsArray);
         if (mapping->isValid())
         {
             mapping->initialize();
@@ -73,8 +73,8 @@ QList<VectorsForSurfaceMapping *> AttributeVectorMapping::newInstances(RenderedD
     return instances;
 }
 
-AttributeVectorMapping::AttributeVectorMapping(RenderedData * renderedData, vtkDataArray * vectorData)
-    : VectorsForSurfaceMapping(renderedData)
+PolyDataAttributeVectorMapping::PolyDataAttributeVectorMapping(RenderedData * renderedData, vtkDataArray * vectorData)
+    : VectorMappingData(renderedData)
     , m_polyData(dynamic_cast<PolyDataObject *>(renderedData->dataObject()))
     , m_dataArray(vectorData)
 {
@@ -84,15 +84,15 @@ AttributeVectorMapping::AttributeVectorMapping(RenderedData * renderedData, vtkD
     arrowGlyph()->SetVectorModeToUseVector();
 }
 
-AttributeVectorMapping::~AttributeVectorMapping() = default;
+PolyDataAttributeVectorMapping::~PolyDataAttributeVectorMapping() = default;
 
-QString AttributeVectorMapping::name() const
+QString PolyDataAttributeVectorMapping::name() const
 {
     assert(m_dataArray);
     return QString::fromLatin1(m_dataArray->GetName());
 }
 
-void AttributeVectorMapping::initialize()
+void PolyDataAttributeVectorMapping::initialize()
 {
     VTK_CREATE(vtkAssignAttribute, assignAttribute);
     assignAttribute->SetInputConnection(m_polyData->cellCentersOutputPort());

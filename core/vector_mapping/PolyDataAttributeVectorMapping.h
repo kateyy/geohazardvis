@@ -2,7 +2,7 @@
 
 #include <vtkSmartPointer.h>
 
-#include <core/vector_mapping/VectorsForSurfaceMapping.h>
+#include <core/vector_mapping/VectorMappingData.h>
 
 
 class vtkDataArray;
@@ -10,19 +10,19 @@ class vtkDataArray;
 class PolyDataObject;
 
 
-class CORE_API AttributeVectorMapping : public VectorsForSurfaceMapping
+class CORE_API PolyDataAttributeVectorMapping : public VectorMappingData
 {
 public:
-    ~AttributeVectorMapping() override;
+    ~PolyDataAttributeVectorMapping() override;
 
     QString name() const override;
 
 protected:
     /** create an instance for each 3D vector array found in the renderedData */
-    static QList<VectorsForSurfaceMapping *> newInstances(RenderedData * renderedData);
+    static QList<VectorMappingData *> newInstances(RenderedData * renderedData);
 
     /** create an instances that maps vectors from vectorData to the renderedData's geometry */
-    AttributeVectorMapping(RenderedData * renderedData, vtkDataArray * vectorData);
+    PolyDataAttributeVectorMapping(RenderedData * renderedData, vtkDataArray * vectorData);
 
     void initialize() override;
 

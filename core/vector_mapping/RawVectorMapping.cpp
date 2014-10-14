@@ -18,7 +18,7 @@
 #include <core/data_objects/RawVectorData.h>
 #include <core/data_objects/PolyDataObject.h>
 #include <core/data_objects/RenderedData.h>
-#include <core/vector_mapping/VectorsForSurfaceMappingRegistry.h>
+#include <core/vector_mapping/VectorMappingRegistry.h>
 
 
 namespace
@@ -26,11 +26,11 @@ namespace
 const QString s_name = "attribute array vectors";
 }
 
-const bool RawVectorMapping::s_registered = VectorsForSurfaceMappingRegistry::instance().registerImplementation(
+const bool RawVectorMapping::s_registered = VectorMappingRegistry::instance().registerImplementation(
     s_name,
     newInstances);
 
-QList<VectorsForSurfaceMapping *> RawVectorMapping::newInstances(RenderedData * renderedData)
+QList<VectorMappingData *> RawVectorMapping::newInstances(RenderedData * renderedData)
 {
     QList<RawVectorData *> attrs;
 
@@ -40,7 +40,7 @@ QList<VectorsForSurfaceMapping *> RawVectorMapping::newInstances(RenderedData * 
             attrs << attr;
     }
 
-    QList<VectorsForSurfaceMapping *> instances;
+    QList<VectorMappingData *> instances;
     for (RawVectorData * attr : attrs)
     {
         RawVectorMapping * mapping = new RawVectorMapping(renderedData, attr);
@@ -57,7 +57,7 @@ QList<VectorsForSurfaceMapping *> RawVectorMapping::newInstances(RenderedData * 
 }
 
 RawVectorMapping::RawVectorMapping(RenderedData * renderedData, RawVectorData * rawVector)
-    : VectorsForSurfaceMapping(renderedData)
+    : VectorMappingData(renderedData)
     , m_rawVector(rawVector)
     , m_polyData(dynamic_cast<PolyDataObject *>(renderedData->dataObject()))
 {

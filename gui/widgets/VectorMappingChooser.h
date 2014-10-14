@@ -11,7 +11,7 @@ namespace reflectionzeug
     class PropertyGroup;
 }
 
-class VectorsToSurfaceMapping;
+class VectorMapping;
 class VectorMappingChooserListModel;
 class Ui_VectorMappingChooser;
 
@@ -24,9 +24,9 @@ public:
     VectorMappingChooser(QWidget * parent = 0, Qt::WindowFlags flags = 0);
     ~VectorMappingChooser();
 
-    void setMapping(int rendererId = -1, VectorsToSurfaceMapping * mapping = nullptr);
+    void setMapping(int rendererId = -1, VectorMapping * mapping = nullptr);
     int rendererId() const;
-    const VectorsToSurfaceMapping * mapping() const;
+    const VectorMapping * mapping() const;
 
 signals:
     void renderSetupChanged();
@@ -41,7 +41,7 @@ private:
 private:
     Ui_VectorMappingChooser * m_ui;
     int m_rendererId;
-    VectorsToSurfaceMapping * m_mapping;
+    VectorMapping * m_mapping;
     VectorMappingChooserListModel * m_listModel;
     QList<reflectionzeug::PropertyGroup *> m_propertyGroups;
     QMetaObject::Connection m_startingIndexConnection;

@@ -1,4 +1,4 @@
-#include "VectorsForSurfaceMapping.h"
+#include "VectorMappingData.h"
 
 #include <cassert>
 #include <algorithm>
@@ -20,7 +20,7 @@
 #include <core/data_objects/RenderedData.h>
 
 
-VectorsForSurfaceMapping::VectorsForSurfaceMapping(RenderedData * renderedData)
+VectorMappingData::VectorMappingData(RenderedData * renderedData)
     : m_renderedData(renderedData)
     , m_isVisible(false)
     , m_startingIndex(0ll)
@@ -55,14 +55,14 @@ VectorsForSurfaceMapping::VectorsForSurfaceMapping(RenderedData * renderedData)
     m_actor->SetMapper(m_mapper);
 }
 
-VectorsForSurfaceMapping::~VectorsForSurfaceMapping() = default;
+VectorMappingData::~VectorMappingData() = default;
 
-bool VectorsForSurfaceMapping::isVisible() const
+bool VectorMappingData::isVisible() const
 {
     return m_isVisible;
 }
 
-void VectorsForSurfaceMapping::setVisible(bool visible)
+void VectorMappingData::setVisible(bool visible)
 {
     if (m_isVisible == visible)
         return;
@@ -73,18 +73,18 @@ void VectorsForSurfaceMapping::setVisible(bool visible)
     visibilityChangedEvent();
 }
 
-vtkIdType VectorsForSurfaceMapping::maximumStartingIndex()
+vtkIdType VectorMappingData::maximumStartingIndex()
 {
     return 0;
 }
 
-vtkIdType VectorsForSurfaceMapping::startingIndex() const
+vtkIdType VectorMappingData::startingIndex() const
 {
-    assert(m_startingIndex <= const_cast<VectorsForSurfaceMapping *>(this)->maximumStartingIndex());
+    assert(m_startingIndex <= const_cast<VectorMappingData *>(this)->maximumStartingIndex());
     return m_startingIndex;
 }
 
-void VectorsForSurfaceMapping::setStartingIndex(vtkIdType index)
+void VectorMappingData::setStartingIndex(vtkIdType index)
 {
     vtkIdType newIndex = std::max(0ll, std::min(index, maximumStartingIndex()));
 
@@ -96,24 +96,24 @@ void VectorsForSurfaceMapping::setStartingIndex(vtkIdType index)
     startingIndexChangedEvent();
 }
 
-float VectorsForSurfaceMapping::arrowLength() const
+float VectorMappingData::arrowLength() const
 {
     return static_cast<float>(m_arrowGlyph->GetScaleFactor());
 }
 
-void VectorsForSurfaceMapping::setArrowLength(float length)
+void VectorMappingData::setArrowLength(float length)
 {
     m_arrowGlyph->SetScaleFactor(length);
 
     emit geometryChanged();
 }
 
-float VectorsForSurfaceMapping::arrowRadius() const
+float VectorMappingData::arrowRadius() const
 {
     return (float)m_arrowSource->GetTipRadius();
 }
 
-void VectorsForSurfaceMapping::setArrowRadius(float radius)
+void VectorMappingData::setArrowRadius(float radius)
 {
     m_arrowSource->SetTipRadius(radius);
     m_arrowSource->SetShaftRadius(radius * 0.1f);
@@ -121,36 +121,36 @@ void VectorsForSurfaceMapping::setArrowRadius(float radius)
     emit geometryChanged();
 }
 
-float VectorsForSurfaceMapping::arrowTipLength() const
+float VectorMappingData::arrowTipLength() const
 {
     return (float)m_arrowSource->GetTipLength();
 }
 
-void VectorsForSurfaceMapping::setArrowTipLength(float tipLength)
+void VectorMappingData::setArrowTipLength(float tipLength)
 {
     m_arrowSource->SetTipLength(tipLength);
 
     emit geometryChanged();
 }
 
-reflectionzeug::PropertyGroup * VectorsForSurfaceMapping::createPropertyGroup()
+reflectionzeug::PropertyGroup * VectorMappingData::createPropertyGroup()
 {
     reflectionzeug::PropertyGroup * group = new reflectionzeug::PropertyGroup();
 
     auto prop_length = group->addProperty<float>("length", this,
-        &VectorsForSurfaceMapping::arrowLength, &VectorsForSurfaceMapping::setArrowLength);
+        &VectorMappingData::arrowLength, &VectorMappingData::setArrowLength);
     prop_length->setOption("title", "arrow length");
     prop_length->setOption("minimum", 0.00001f);
     prop_length->setOption("step", 0.1f);
 
     auto prop_radius = group->addProperty<float>("radius", this,
-        &VectorsForSurfaceMapping::arrowRadius, &VectorsForSurfaceMapping::setArrowRadius);
+        &VectorMappingData::arrowRadius, &VectorMappingData::setArrowRadius);
     prop_radius->setOption("title", "tip radius");
     prop_radius->setOption("minimum", 0.00001f);
     prop_radius->setOption("step", 0.01f);
 
     auto prop_tipLength = group->addProperty<float>("tipLength", this,
-        &VectorsForSurfaceMapping::arrowTipLength, &VectorsForSurfaceMapping::setArrowTipLength);
+        &VectorMappingData::arrowTipLength, &VectorMappingData::setArrowTipLength);
     prop_tipLength->setOption("title", "tip length");
     prop_tipLength->setOption("minimum", 0.00001f);
     prop_tipLength->setOption("maximum", 1.f);
@@ -170,44 +170,44 @@ reflectionzeug::PropertyGroup * VectorsForSurfaceMapping::createPropertyGroup()
     return group;
 }
 
-vtkActor * VectorsForSurfaceMapping::actor()
+vtkActor * VectorMappingData::actor()
 {
     return m_actor;
 }
 
-void VectorsForSurfaceMapping::initialize()
+void VectorMappingData::initialize()
 {
 }
 
-DataObject * VectorsForSurfaceMapping::dataObject()
+DataObject * VectorMappingData::dataObject()
 {
     return m_renderedData->dataObject();
 }
 
-RenderedData * VectorsForSurfaceMapping::renderedData()
+RenderedData * VectorMappingData::renderedData()
 {
     return m_renderedData;
 }
 
-bool VectorsForSurfaceMapping::isValid() const
+bool VectorMappingData::isValid() const
 {
     return m_isValid;
 }
 
-vtkPolyData * VectorsForSurfaceMapping::polyData()
+vtkPolyData * VectorMappingData::polyData()
 {
     return m_polyData;
 }
 
-vtkGlyph3D * VectorsForSurfaceMapping::arrowGlyph()
+vtkGlyph3D * VectorMappingData::arrowGlyph()
 {
     return m_arrowGlyph;
 }
 
-void VectorsForSurfaceMapping::visibilityChangedEvent()
+void VectorMappingData::visibilityChangedEvent()
 {
 }
 
-void VectorsForSurfaceMapping::startingIndexChangedEvent()
+void VectorMappingData::startingIndexChangedEvent()
 {
 }
