@@ -11,7 +11,6 @@
 
 
 class vtkActor;
-class vtkPolyData;
 class vtkMapper;
 class vtkArrowSource;
 class vtkGlyph3D;
@@ -77,7 +76,6 @@ protected:
 
     DataObject * dataObject();
     RenderedData * renderedData();
-    vtkPolyData * polyData();
     vtkGlyph3D * arrowGlyph();
 
     virtual void visibilityChangedEvent();
@@ -90,7 +88,6 @@ private:
 
     vtkIdType m_startingIndex;
 
-    vtkSmartPointer<vtkPolyData> m_polyData;
     vtkSmartPointer<vtkArrowSource> m_arrowSource;
     vtkSmartPointer<vtkGlyph3D> m_arrowGlyph;
     vtkSmartPointer<vtkMapper> m_mapper;

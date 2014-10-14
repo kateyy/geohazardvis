@@ -100,7 +100,7 @@ void RawVectorMapping::initialize()
     m_sectionArray->SetNumberOfTuples(numTuples);
     m_sectionArray->SetArray(dataArray->GetPointer(startingIndex() * numComponents), numTuples * numComponents, true);
 
-    polyData()->GetCellData()->AddArray(m_sectionArray);
+    m_polyData->dataSet()->GetCellData()->AddArray(m_sectionArray);
 
     VTK_CREATE(vtkAssignAttribute, assignAttribute);
     assignAttribute->SetInputConnection(m_polyData->cellCentersOutputPort());

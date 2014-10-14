@@ -24,9 +24,8 @@ VectorMappingData::VectorMappingData(RenderedData * renderedData)
     : m_renderedData(renderedData)
     , m_isVisible(false)
     , m_startingIndex(0ll)
-    , m_polyData(vtkPolyData::SafeDownCast(renderedData->dataObject()->dataSet()))
     , m_actor(vtkSmartPointer<vtkActor>::New())
-    , m_isValid(m_polyData && (m_polyData->GetCellType(0) == VTK_TRIANGLE))
+    , m_isValid(true)
 {
     assert(renderedData);
 
@@ -41,7 +40,7 @@ VectorMappingData::VectorMappingData(RenderedData * renderedData)
     m_arrowGlyph = vtkSmartPointer<vtkGlyph3D>::New();
     m_arrowGlyph->SetScaleModeToScaleByScalar();
     m_arrowGlyph->OrientOn();
-    double * bounds = m_polyData->GetBounds();
+    double * bounds = renderedData->dataObject()->dataSet()->GetBounds();
     double maxBoundsSize = std::max(bounds[1] - bounds[0], std::max(bounds[3] - bounds[2], bounds[5] - bounds[4]));
     m_arrowGlyph->SetScaleFactor(maxBoundsSize * 0.1);
     m_arrowGlyph->SetSourceConnection(m_arrowSource->GetOutputPort());
@@ -192,11 +191,6 @@ RenderedData * VectorMappingData::renderedData()
 bool VectorMappingData::isValid() const
 {
     return m_isValid;
-}
-
-vtkPolyData * VectorMappingData::polyData()
-{
-    return m_polyData;
 }
 
 vtkGlyph3D * VectorMappingData::arrowGlyph()
