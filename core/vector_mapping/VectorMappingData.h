@@ -58,6 +58,10 @@ public:
     Representation representation() const;
     void setRepresentation(Representation representation);
 
+    const double * color() const;
+    void color(double color[3]) const;
+    void setColor(double r, double g, double b);
+
     float arrowLength() const;
     void setArrowLength(float length);
 
@@ -66,6 +70,9 @@ public:
 
     float arrowTipLength() const;
     void setArrowTipLength(float tipLength);
+
+    unsigned lineWidth() const;
+    void setLineWidth(unsigned lineWidth);
 
     vtkActor * actor();
 
