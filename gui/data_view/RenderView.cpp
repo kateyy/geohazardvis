@@ -347,9 +347,11 @@ void RenderView::removeDataObject(DataObject * dataObject)
     for (vtkActor * actor : renderedData->actors())
         m_renderer->RemoveViewProp(actor);
 
-    removeFromInternalLists({ dataObject });
+    QList<RenderedData *> toDelete = removeFromInternalLists({ dataObject });
 
     updateGuiForRemovedData();
+
+    qDeleteAll(toDelete);
 }
 
 void RenderView::removeDataObjects(QList<DataObject *> dataObjects)
@@ -370,8 +372,9 @@ void RenderView::clearInternalLists()
     m_dataObjectToRendered.clear();
 }
 
-void RenderView::removeFromInternalLists(QList<DataObject *> dataObjects)
+QList<RenderedData *> RenderView::removeFromInternalLists(QList<DataObject *> dataObjects)
 {
+    QList<RenderedData *> toDelete;
     for (DataObject * dataObject : dataObjects)
     {
         RenderedData * rendered = m_dataObjectToRendered.value(dataObject, nullptr);
@@ -382,8 +385,10 @@ void RenderView::removeFromInternalLists(QList<DataObject *> dataObjects)
         if (!m_renderedData.removeOne(rendered))
             m_renderedDataCache.removeOne(rendered);
 
-        delete rendered;
+        toDelete << rendered;
     }
+
+    return toDelete;
 }
 
 QList<DataObject *> RenderView::dataObjects() const
