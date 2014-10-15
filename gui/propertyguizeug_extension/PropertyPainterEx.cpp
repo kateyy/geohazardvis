@@ -4,7 +4,8 @@
 #include <QSpinBox>
 
 #include <reflectionzeug/Property.h>
-#include <propertyguizeug/ColorButton.h>
+
+#include <gui/propertyguizeug_extension/ColorButtonWithBorder.h>
 
 
 using namespace reflectionzeug;
@@ -24,11 +25,11 @@ void PropertyPainterEx::visit(Property<Color> * property)
     QPoint topLeft(m_option.rect.left(),
         m_option.rect.top() + 4);
 
-    ColorButton::paint(m_painter, topLeft, qcolor);
+    ColorButtonWithBorder::paint(m_painter, topLeft, qcolor);
 
     QRect rect = m_option.rect;
     rect.setLeft(m_option.rect.left() +
-        ColorButton::s_fixedSize.width() + 4);
+        ColorButtonWithBorder::s_fixedSize.width() + 4);
 
     QString colorString = "R: " + QString::number(color.red()) + " G: " + QString::number(color.green()) + " B: " + QString::number(color.blue());
 

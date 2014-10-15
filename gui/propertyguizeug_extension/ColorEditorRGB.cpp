@@ -6,10 +6,10 @@
 #include <QHBoxLayout>
 
 #include <reflectionzeug/Property.h>
-
 #include <reflectionzeug/ColorPropertyInterface.h>
 
-#include <propertyguizeug/ColorButton.h>
+#include <gui/propertyguizeug_extension/ColorButtonWithBorder.h>
+
 
 using namespace reflectionzeug;
 using namespace propertyguizeug;
@@ -24,7 +24,7 @@ ColorEditorRGB::ColorEditorRGB(reflectionzeug::ColorPropertyInterface * property
 
     boxLayout()->setSpacing(2);
 
-    m_button = new ColorButton(this, qcolor);
+    m_button = new ColorButtonWithBorder(this, qcolor);
     boxLayout()->addWidget(m_button);
 
     QHBoxLayout * spinBoxLayout = new QHBoxLayout();

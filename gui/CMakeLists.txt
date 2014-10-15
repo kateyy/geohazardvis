@@ -35,6 +35,8 @@ set ( SOURCES
     propertyguizeug_extension/PropertyEditorFactoryEx.cpp    
     propertyguizeug_extension/PropertyPainterEx.h
     propertyguizeug_extension/PropertyPainterEx.cpp
+    propertyguizeug_extension/ColorButtonWithBorder.h
+    propertyguizeug_extension/ColorButtonWithBorder.cpp
     propertyguizeug_extension/ColorEditorRGB.h
     propertyguizeug_extension/ColorEditorRGB.cpp
 
