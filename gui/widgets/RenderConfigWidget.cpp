@@ -6,6 +6,8 @@
 
 #include <core/data_objects/DataObject.h>
 #include <core/data_objects/RenderedData.h>
+#include <gui/propertyguizeug_extension/PropertyEditorFactoryEx.h>
+#include <gui/propertyguizeug_extension/PropertyPainterEx.h>
 
 
 using namespace reflectionzeug;
@@ -15,13 +17,15 @@ using namespace propertyguizeug;
 RenderConfigWidget::RenderConfigWidget(QWidget * parent)
     : QDockWidget(parent)
     , m_ui(new Ui_RenderConfigWidget())
+    , m_propertyBrowser(new PropertyBrowser(new PropertyEditorFactoryEx(), new PropertyPainterEx(), this))
     , m_propertyRoot(nullptr)
     , m_rendererId(-1)
     , m_renderedData(nullptr)
 {
     m_ui->setupUi(this);
+    m_ui->content->layout()->addWidget(m_propertyBrowser);
 
-    m_ui->propertyBrowser->setAlwaysExpandGroups(true);
+    m_propertyBrowser->setAlwaysExpandGroups(true);
 
     updateTitle();
 }
@@ -38,7 +42,7 @@ void RenderConfigWidget::clear()
 
     updateTitle();
 
-    m_ui->propertyBrowser->setRoot(nullptr);
+    m_propertyBrowser->setRoot(nullptr);
     delete m_propertyRoot;
     m_propertyRoot = nullptr;
 
@@ -58,8 +62,8 @@ void RenderConfigWidget::setRenderedData(int rendererId, RenderedData * rendered
 
     m_propertyRoot = renderedData->createConfigGroup();
 
-    m_ui->propertyBrowser->setRoot(m_propertyRoot);
-    m_ui->propertyBrowser->setColumnWidth(0, 135);
+    m_propertyBrowser->setRoot(m_propertyRoot);
+    m_propertyBrowser->setColumnWidth(0, 135);
 
     emit repaint();
 }

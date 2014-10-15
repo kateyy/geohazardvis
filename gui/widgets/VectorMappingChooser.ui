@@ -81,13 +81,6 @@
           </item>
          </layout>
         </item>
-        <item>
-         <widget class="propertyguizeug::PropertyBrowser" name="propertyBrowser">
-          <attribute name="headerVisible">
-           <bool>false</bool>
-          </attribute>
-         </widget>
-        </item>
        </layout>
       </widget>
      </widget>
@@ -95,13 +88,6 @@
    </layout>
   </widget>
  </widget>
- <customwidgets>
-  <customwidget>
-   <class>propertyguizeug::PropertyBrowser</class>
-   <extends>QTreeView</extends>
-   <header>propertyguizeug/PropertyBrowser.h</header>
-  </customwidget>
- </customwidgets>
  <resources/>
  <connections/>
 </ui>

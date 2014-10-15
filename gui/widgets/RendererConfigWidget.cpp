@@ -12,9 +12,12 @@
 #include <vtkEventQtSlotConnect.h>
 
 #include <reflectionzeug/PropertyGroup.h>
+#include <propertyguizeug/PropertyBrowser.h>
 
 #include <core/vtkcamerahelper.h>
 #include <gui/data_view/RenderView.h>
+#include <gui/propertyguizeug_extension/PropertyEditorFactoryEx.h>
+#include <gui/propertyguizeug_extension/PropertyPainterEx.h>
 
 
 using namespace reflectionzeug;
@@ -34,13 +37,15 @@ enum class CubeAxesTickLocation
 RendererConfigWidget::RendererConfigWidget(QWidget * parent)
     : QDockWidget(parent)
     , m_ui(new Ui_RendererConfigWidget())
+    , m_propertyBrowser(new PropertyBrowser(new PropertyEditorFactoryEx(), new PropertyPainterEx(), this))
     , m_propertyRoot(nullptr)
     , m_activeCamera(nullptr)
     , m_eventConnect(vtkSmartPointer<vtkEventQtSlotConnect>::New())
 {
     m_ui->setupUi(this);
+    m_ui->mainLayout->addWidget(m_propertyBrowser);
 
-    m_ui->propertyBrowser->setAlwaysExpandGroups(true);
+    m_propertyBrowser->setAlwaysExpandGroups(true);
 
     connect(m_ui->relatedRenderer, static_cast<void(QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
         this, static_cast<void(RendererConfigWidget::*)(int)>(&RendererConfigWidget::setCurrentRenderView));
@@ -86,7 +91,7 @@ void RendererConfigWidget::setCurrentRenderView(RenderView * renderView)
 
 void RendererConfigWidget::setCurrentRenderView(int index)
 {
-    m_ui->propertyBrowser->setRoot(nullptr);
+    m_propertyBrowser->setRoot(nullptr);
     delete m_propertyRoot;
     m_propertyRoot = nullptr;
 
@@ -98,8 +103,8 @@ void RendererConfigWidget::setCurrentRenderView(int index)
     assert(renderView);
 
     m_propertyRoot = createPropertyGroup(renderView);
-    m_ui->propertyBrowser->setRoot(m_propertyRoot);
-    m_ui->propertyBrowser->setColumnWidth(0, 135);
+    m_propertyBrowser->setRoot(m_propertyRoot);
+    m_propertyBrowser->setColumnWidth(0, 135);
     m_activeCamera = renderView->renderer()->GetActiveCamera();
 }
 

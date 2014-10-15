@@ -3,8 +3,13 @@
 #include <QDockWidget>
 
 
-namespace reflectionzeug {
+namespace reflectionzeug
+{
     class PropertyGroup;
+}
+namespace propertyguizeug
+{
+    class PropertyBrowser;
 }
 class Ui_RenderConfigWidget;
 class RenderedData;
@@ -30,6 +35,7 @@ protected:
 
 protected:
     Ui_RenderConfigWidget * m_ui;
+    propertyguizeug::PropertyBrowser * m_propertyBrowser;
 
     reflectionzeug::PropertyGroup * m_propertyRoot;
 

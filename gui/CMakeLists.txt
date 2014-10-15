@@ -31,6 +31,13 @@ set ( SOURCES
     data_view/TableView.h
     data_view/TableView.cpp
 
+    propertyguizeug_extension/PropertyEditorFactoryEx.h
+    propertyguizeug_extension/PropertyEditorFactoryEx.cpp    
+    propertyguizeug_extension/PropertyPainterEx.h
+    propertyguizeug_extension/PropertyPainterEx.cpp
+    propertyguizeug_extension/ColorEditorRGB.h
+    propertyguizeug_extension/ColorEditorRGB.cpp
+
     rendering_interaction/InteractorStyle3D.h
     rendering_interaction/InteractorStyle3D.cpp
     rendering_interaction/InteractorStyleImage.h

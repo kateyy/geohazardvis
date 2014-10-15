@@ -10,6 +10,10 @@ namespace reflectionzeug
 {
     class PropertyGroup;
 }
+namespace propertyguizeug
+{
+class PropertyBrowser;
+}
 
 class VectorMapping;
 class VectorMappingChooserListModel;
@@ -40,6 +44,8 @@ private:
 
 private:
     Ui_VectorMappingChooser * m_ui;
+    propertyguizeug::PropertyBrowser * m_propertyBrowser;
+
     int m_rendererId;
     VectorMapping * m_mapping;
     VectorMappingChooserListModel * m_listModel;

@@ -3,23 +3,31 @@
 
 #include <reflectionzeug/PropertyGroup.h>
 #include <reflectionzeug/StringProperty.h>
+#include <propertyguizeug/PropertyBrowser.h>
 
 #include <core/data_objects/DataObject.h>
 #include <core/data_objects/RenderedData.h>
 #include <core/vector_mapping/VectorMapping.h>
 #include <core/vector_mapping/VectorMappingData.h>
+#include <gui/propertyguizeug_extension/PropertyEditorFactoryEx.h>
+#include <gui/propertyguizeug_extension/PropertyPainterEx.h>
 
 #include "VectorMappingChooserListModel.h"
+
+
+using namespace propertyguizeug;
 
 
 VectorMappingChooser::VectorMappingChooser(QWidget * parent, Qt::WindowFlags flags)
     : QDockWidget(parent, flags)
     , m_ui(new Ui_VectorMappingChooser())
+    , m_propertyBrowser(new PropertyBrowser(new PropertyEditorFactoryEx(), new PropertyPainterEx(), this))
     , m_rendererId(-1)
     , m_mapping(nullptr)
     , m_listModel(new VectorMappingChooserListModel())
 {
     m_ui->setupUi(this);
+    m_ui->propertyBrowserContainer->layout()->addWidget(m_propertyBrowser);
 
     m_listModel->setParent(m_ui->vectorsListView);
     m_ui->vectorsListView->setModel(m_listModel);
@@ -59,7 +67,7 @@ void VectorMappingChooser::updateVectorsList()
 {
     updateGuiForSelection();
 
-    m_ui->propertyBrowser->setRoot(nullptr);
+    m_propertyBrowser->setRoot(nullptr);
     qDeleteAll(m_propertyGroups);
     m_propertyGroups.clear();
 
@@ -95,7 +103,7 @@ void VectorMappingChooser::updateGuiForSelection(const QItemSelection & selectio
     if (selection.indexes().isEmpty())
     {
         m_ui->firstIndexSlider->setEnabled(false);
-        m_ui->propertyBrowser->setRoot(nullptr);
+        m_propertyBrowser->setRoot(nullptr);
         m_ui->propertyBrowserContainer->setTitle("(no selection)");
         m_ui->firstIndexLabel->setText("first &index");
     }
@@ -104,7 +112,7 @@ void VectorMappingChooser::updateGuiForSelection(const QItemSelection & selectio
         int index = selection.indexes().first().row();
         QString vectorsName = m_mapping->vectorNames()[index];
 
-        m_ui->propertyBrowser->setRoot(m_propertyGroups[index]);
+        m_propertyBrowser->setRoot(m_propertyGroups[index]);
         m_ui->propertyBrowserContainer->setTitle(vectorsName);
 
         VectorMappingData * vectors = m_mapping->vectors()[vectorsName];

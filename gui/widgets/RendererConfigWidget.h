@@ -13,6 +13,10 @@ namespace reflectionzeug
 {
     class PropertyGroup;
 }
+namespace propertyguizeug
+{
+    class PropertyBrowser;
+}
 class Ui_RendererConfigWidget;
 class RenderView;
 
@@ -41,6 +45,7 @@ private:
 
 private:
     Ui_RendererConfigWidget * m_ui;
+    propertyguizeug::PropertyBrowser * m_propertyBrowser;
 
     reflectionzeug::PropertyGroup * m_propertyRoot;
 
