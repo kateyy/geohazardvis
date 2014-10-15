@@ -194,8 +194,10 @@ void RenderedVectorGrid3D::gradientForColorMappingChangedEvent()
     }
 }
 
-void RenderedVectorGrid3D::visibilityChangedEvent(bool /*visible*/)
+void RenderedVectorGrid3D::visibilityChangedEvent(bool visible)
 {
+    RenderedData::visibilityChangedEvent(visible);
+
     updateVisibilies();
 }
 

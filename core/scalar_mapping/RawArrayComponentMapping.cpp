@@ -4,7 +4,7 @@
 #include <algorithm>
 
 #include <vtkFloatArray.h>
-#include <vtkDataSet.h>
+#include <vtkPolyData.h>
 #include <vtkCellData.h>
 #include <vtkMapper.h>
 #include <vtkAssignAttribute.h>
@@ -32,8 +32,19 @@ QList<ScalarsForColorMapping *> RawArrayComponentMapping::newInstances(const QLi
 {
     QList<RawVectorData *> rawVectors;
 
-    vtkIdType totalNumCells = 0;
+    // support only polygonal surfaces
+    QList<DataObject *> validObjects;
     for (DataObject * dataObject : dataObjects)
+    {
+        if (vtkPolyData::SafeDownCast(dataObject->dataSet()))
+            validObjects << dataObject;
+    }
+
+    if (validObjects.isEmpty())
+        return{};
+
+    vtkIdType totalNumCells = 0;
+    for (DataObject * dataObject : validObjects)
         totalNumCells += dataObject->dataSet()->GetNumberOfCells();
 
     for (RawVectorData * attr : DataSetHandler::instance().rawVectors())
@@ -46,7 +57,7 @@ QList<ScalarsForColorMapping *> RawArrayComponentMapping::newInstances(const QLi
     QList<ScalarsForColorMapping *> instances;
     for (RawVectorData * rawVector : rawVectors)
     {
-        RawArrayComponentMapping * mapping = new RawArrayComponentMapping(dataObjects, rawVector, rawVector->dataArray()->GetNumberOfComponents());
+        RawArrayComponentMapping * mapping = new RawArrayComponentMapping(validObjects, rawVector, rawVector->dataArray()->GetNumberOfComponents());
         if (mapping->isValid())
         {
             mapping->initialize();
@@ -119,7 +130,13 @@ bool RawArrayComponentMapping::usesFilter() const
 
 void RawArrayComponentMapping::configureDataObjectAndMapper(DataObject * dataObject, vtkMapper * mapper)
 {
-    ScalarsForColorMapping::configureDataObjectAndMapper(dataObject, mapper);
+    if (!m_dataObjects.contains(dataObject))
+    {
+        mapper->ScalarVisibilityOff();
+        return;
+    }
+
+    mapper->ScalarVisibilityOn();
 
     vtkIdType secIndex = sectionIndex(dataObject);
     QByteArray sectionName = arraySectionName(dataObject);

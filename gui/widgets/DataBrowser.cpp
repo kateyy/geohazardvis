@@ -76,6 +76,8 @@ void DataBrowser::updateDataList()
 {
     m_tableModel->updateDataList();
 
+    setupGuiFor(m_dataMapping->focusedRenderView());
+
     m_ui->dataTableView->resizeColumnsToContents();
 }
 
