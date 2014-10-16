@@ -59,6 +59,8 @@ VectorMappingData::VectorMappingData(RenderedData * renderedData)
     assert(renderedData);
 
     VTK_CREATE(vtkLineSource, lineArrow);
+    lineArrow->SetPoint1(0.f, 0.f, 0.f);
+    lineArrow->SetPoint2(1.f, 0.f, 0.f);
     m_arrowSources.insert(Representation::Line, lineArrow);
     
     m_arrowSources.insert(Representation::SimpleArrow, createSimpleArrow());
