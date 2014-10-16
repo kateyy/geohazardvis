@@ -69,11 +69,15 @@ void RenderViewStrategyImage2DPlot::resetCamera(vtkCamera & camera)
 
     ImageProfileData * profile = dynamic_cast<ImageProfileData *>(m_context.dataObjects().first());
     QString scalarsName;
+    QString abscissa;
     if (profile)
+    {
+        abscissa = profile->abscissa();
         scalarsName = profile->scalarsName();
+    }
 
     vtkCubeAxesActor & axes = *m_context.axesActor();
-    axes.SetXTitle("position");
+    axes.SetXTitle(abscissa.toLatin1().data());
     axes.SetYTitle(scalarsName.toLatin1().data());
 }
 

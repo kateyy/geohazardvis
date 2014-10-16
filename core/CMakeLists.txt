@@ -52,6 +52,8 @@ set ( SOURCES
     table_model/QVtkTableModelImage.cpp
     table_model/QVtkTableModelPolyData.h
     table_model/QVtkTableModelPolyData.cpp
+    table_model/QVtkTableModelProfileData.h
+    table_model/QVtkTableModelProfileData.cpp
     table_model/QVtkTableModelRawVector.h
     table_model/QVtkTableModelRawVector.cpp
     table_model/QVtkTableModelVectorGrid3D.h

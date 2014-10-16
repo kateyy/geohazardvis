@@ -6,7 +6,6 @@
 #include <vtkMath.h>
 
 #include <vtkImageData.h>
-#include <vtkCellArray.h>
 #include <vtkCellData.h>
 #include <vtkPointData.h>
 
@@ -21,13 +20,13 @@
 #include <core/data_objects/ImageDataObject.h>
 #include <core/data_objects/ImageProfilePlot.h>
 
-#include <core/DataSetHandler.h>
-#include <core/data_objects/PolyDataObject.h>
+#include <core/table_model/QVtkTableModelProfileData.h>
 
 
 ImageProfileData::ImageProfileData(const QString & name, ImageDataObject * imageData)
     : DataObject(name, vtkSmartPointer<vtkImageData>::New())
     , m_imageData(imageData)
+    , m_abscissa("position")
     , m_probeLine(vtkSmartPointer<vtkLineSource>::New())
     , m_transform(vtkSmartPointer<vtkTransformFilter>::New())
     , m_graphLine(vtkSmartPointer<vtkWarpScalar>::New())
@@ -77,6 +76,11 @@ vtkDataSet * ImageProfileData::processedDataSet()
 vtkAlgorithmOutput * ImageProfileData::processedOutputPort()
 {
     return m_graphLine->GetOutputPort();
+}
+
+const QString & ImageProfileData::abscissa() const
+{
+    return m_abscissa;
 }
 
 const QString & ImageProfileData::scalarsName() const
@@ -133,5 +137,8 @@ void ImageProfileData::setPoints(double point1[3], double point2[3])
 
 QVtkTableModel * ImageProfileData::createTableModel()
 {
-    return nullptr;
+    QVtkTableModel * tableModel = new QVtkTableModelProfileData();
+    tableModel->setDataObject(this);
+
+    return tableModel;
 }

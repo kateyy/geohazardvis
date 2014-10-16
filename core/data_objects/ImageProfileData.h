@@ -24,6 +24,7 @@ public:
     vtkDataSet * processedDataSet() override;
     vtkAlgorithmOutput * processedOutputPort() override;
 
+    const QString & abscissa() const;
     const QString & scalarsName() const;
 
     const double * scalarRange();
@@ -39,6 +40,7 @@ protected:
 
 private:
     ImageDataObject * m_imageData;
+    QString m_abscissa;
     QString m_scalarsName;
 
     vtkSmartPointer<vtkLineSource> m_probeLine;
