@@ -48,14 +48,15 @@ public:
 
     QString friendlyName() const override;
 
-    /** add data objects to the view or make already added objects visible again */
-    void addDataObjects(QList<DataObject *> dataObjects);
+    /** Add data objects to the view or make already added objects visible again.
+        @param incompatibleObjects List of objects that are not compatible with current content (e.g. 2D vs. 3D data). */
+    void addDataObjects(const QList<DataObject *> & dataObjects, QList<DataObject *> & incompatibleObjects);
     /** remove rendered representations of data objects, don't delete data and settings */
-    void hideDataObjects(QList<DataObject *> dataObjects);
+    void hideDataObjects(const QList<DataObject *> & dataObjects);
     /** check if the this objects is currently rendered */
     bool isVisible(DataObject * dataObject) const;
     /** remove rendered representations and all references to the data objects */
-    void removeDataObjects(QList<DataObject *> dataObjects);
+    void removeDataObjects(const QList<DataObject *> & dataObjects);
     QList<DataObject *> dataObjects() const;
     QList<const RenderedData *> renderedData() const;
 
@@ -120,8 +121,6 @@ private:
     void updateAxes();
     void createAxes();
     void setupColorMappingLegend();
-
-    void warnIncompatibleObjects(QStringList incompatibleObjects);
 
 private slots:
     /** Updates the RenderConfigWidget to reflect the data's render properties. */

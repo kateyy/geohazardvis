@@ -30,9 +30,10 @@ public:
 
     /** reset camera view/orientation for new content */
     virtual void resetCamera(vtkCamera & camera) = 0;
-    /** reduce list to compatible objects
-        @return names of incompatible objects */
-    virtual QStringList checkCompatibleObjects(QList<DataObject *> & dataObjects) const = 0;
+    /** @param dataObjects Check if we can render these objects with the current view content.
+        @param incompatibleObjects Fills this list with discarded objects.
+        @return compatible objects that we will render. */
+    virtual QList<DataObject *> filterCompatibleObjects(const QList<DataObject *> & dataObjects, QList<DataObject *> & incompatibleObjects) const = 0;
     
     virtual bool canApplyTo(const QList<RenderedData *> & renderedData) = 0;
 

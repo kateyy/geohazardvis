@@ -3,6 +3,7 @@
 #include <cassert>
 
 #include <QCoreApplication>
+#include <QMessageBox>
 
 #include <core/data_objects/DataObject.h>
 
@@ -105,22 +106,25 @@ RenderView * DataMapping::openInRenderView(QList<DataObject *> dataObjects)
     connect(renderView, &RenderView::focused, this, &DataMapping::setFocusedView);
     connect(renderView, &RenderView::closed, this, &DataMapping::renderViewClosed);
 
-    renderView->addDataObjects(dataObjects);
-
-    setFocusedView(renderView);
-
-    emit renderViewsChanged(m_renderViews.values());
+    addToRenderView(dataObjects, renderView);
 
     return renderView;
 }
 
-void DataMapping::addToRenderView(QList<DataObject *> dataObjects, int renderView)
+void DataMapping::addToRenderView(QList<DataObject *> dataObjects, RenderView * renderView)
 {
-    assert(m_renderViews.contains(renderView));
-    RenderView * view = m_renderViews[renderView];
-    view->addDataObjects(dataObjects);
+    assert(m_renderViews.key(renderView, -1) >= 0);
 
-    setFocusedView(view);
+    QList<DataObject *> incompatibleObjects;
+    renderView->addDataObjects(dataObjects, incompatibleObjects);
+
+    // there is something the current view couldn't handle
+    if (!incompatibleObjects.isEmpty() && askForNewRenderView(renderView->friendlyName(), incompatibleObjects))
+    {
+        openInRenderView(incompatibleObjects);
+    }
+
+    setFocusedView(renderView);
 
     emit renderViewsChanged(m_renderViews.values());
 }
@@ -143,7 +147,10 @@ void DataMapping::setFocusedView(AbstractDataView * view)
         m_focusedRenderView = static_cast<RenderView*>(view);
 
         if (m_focusedRenderView)
+        {
             m_focusedRenderView->setCurrent(true);
+            m_focusedRenderView->setFocus();
+        }
 
         emit focusedRenderViewChanged(m_focusedRenderView);
     }
@@ -187,4 +194,16 @@ void DataMapping::renderViewClosed()
     renderView->deleteLater();
 
     emit renderViewsChanged(m_renderViews.values());
+}
+
+bool DataMapping::askForNewRenderView(const QString & rendererName, const QList<DataObject *> & relevantObjects)
+{
+    QString msg = "Cannot add some data to the current render view (" + rendererName + "):\n";
+    for (DataObject * object : relevantObjects)
+        msg += object->name() + ", ";
+    msg.chop(2);
+    msg += "\n\n";
+    msg += "Should we try to open these in a new view?";
+
+    return QMessageBox(QMessageBox::Question, m_mainWindow.windowTitle(), msg, QMessageBox::Yes | QMessageBox::No, &m_mainWindow).exec() == QMessageBox::Yes;
 }

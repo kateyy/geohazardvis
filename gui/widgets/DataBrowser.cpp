@@ -103,7 +103,6 @@ void DataBrowser::changeRenderedVisibility(DataObject * clickedObject)
     if (!renderView)
     {
         renderView = m_dataMapping->openInRenderView(selection);
-        renderView->setFocus();
         updateModel(renderView);
         return;
     }
@@ -125,7 +124,8 @@ void DataBrowser::changeRenderedVisibility(DataObject * clickedObject)
     }
 
     if (setToVisible)
-        renderView->addDataObjects(selection);
+        // dataMapping may open multiple views if needed
+        m_dataMapping->addToRenderView(selection, renderView);
     else
         renderView->hideDataObjects(selection);
 

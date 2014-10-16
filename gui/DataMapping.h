@@ -26,7 +26,7 @@ public:
 
     void openInTable(DataObject * dataObject);
     RenderView * openInRenderView(QList<DataObject *> dataObjects);
-    void addToRenderView(QList<DataObject *> dataObjects, int renderView);
+    void addToRenderView(QList<DataObject *> dataObjects, RenderView * renderView);
 
     RenderView * focusedRenderView();
 
@@ -40,6 +40,9 @@ private slots:
 
     void tableClosed();
     void renderViewClosed();
+
+private:
+    bool askForNewRenderView(const QString & rendererName, const QList<DataObject *> & relevantObjects);
 
 private:
     MainWindow & m_mainWindow;

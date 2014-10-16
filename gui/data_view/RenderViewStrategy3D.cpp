@@ -39,22 +39,19 @@ void RenderViewStrategy3D::resetCamera(vtkCamera & camera)
     TerrainCamera::setVerticalElevation(camera, 45);
 }
 
-QStringList RenderViewStrategy3D::checkCompatibleObjects(QList<DataObject *> & dataObjects) const
+QList<DataObject *> RenderViewStrategy3D::filterCompatibleObjects(const QList<DataObject *> & dataObjects, QList<DataObject *> & incompatibleObjects) const
 {
     QList<DataObject *> compatible;
-    QStringList incompatible;
 
     for (DataObject * dataObject : dataObjects)
     {
         if (dataObject->is3D())
             compatible << dataObject;
         else
-            incompatible << dataObject->name();
+            incompatibleObjects << dataObject;
     }
 
-    dataObjects = compatible;
-
-    return incompatible;
+    return compatible;
 }
 
 bool RenderViewStrategy3D::canApplyTo(const QList<RenderedData *> & renderedData)

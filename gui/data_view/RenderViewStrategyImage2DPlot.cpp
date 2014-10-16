@@ -81,22 +81,19 @@ void RenderViewStrategyImage2DPlot::resetCamera(vtkCamera & camera)
     axes.SetYTitle(scalarsName.toLatin1().data());
 }
 
-QStringList RenderViewStrategyImage2DPlot::checkCompatibleObjects(QList<DataObject *> & dataObjects) const
+QList<DataObject *> RenderViewStrategyImage2DPlot::filterCompatibleObjects(const QList<DataObject *> & dataObjects, QList<DataObject *> & incompatibleObjects) const
 {
     QList<DataObject *> compatible;
-    QStringList incompatible;
 
     for (DataObject * dataObject : dataObjects)
     {
         if (dynamic_cast<ImageProfileData *>(dataObject))
             compatible << dataObject;
         else
-            incompatible << dataObject->name();
+            incompatibleObjects << dataObject;
     }
 
-    dataObjects = compatible;
-
-    return incompatible;
+    return compatible;
 }
 
 bool RenderViewStrategyImage2DPlot::canApplyTo(const QList<RenderedData *> & renderedData)

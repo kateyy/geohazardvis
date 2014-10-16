@@ -20,8 +20,10 @@ void RenderViewStrategyNull::resetCamera(vtkCamera & /*camera*/)
 {
 }
 
-QStringList RenderViewStrategyNull::checkCompatibleObjects(QList<DataObject *> & /*dataObjects*/) const
+QList<DataObject *> RenderViewStrategyNull::filterCompatibleObjects(const QList<DataObject *> & dataObjects, QList<DataObject *> & incompatibleObjects) const
 {
+    incompatibleObjects = dataObjects;
+
     return{};
 }
 

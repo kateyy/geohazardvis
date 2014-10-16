@@ -218,25 +218,22 @@ RenderedData * RenderView::addDataObject(DataObject * dataObject)
     return renderedData;
 }
 
-void RenderView::addDataObjects(QList<DataObject *> dataObjects)
+void RenderView::addDataObjects(const QList<DataObject *> & uncheckedDataObjects, QList<DataObject *> & incompatibleObjects)
 {
-    if (dataObjects.isEmpty())
+    if (uncheckedDataObjects.isEmpty())
         return;
 
     bool wasEmpty = m_renderedData.isEmpty();
 
     if (wasEmpty)
-        emit resetStrategie(dataObjects);
+        emit resetStrategie(uncheckedDataObjects);
 
     RenderedData * aNewObject = nullptr;
 
-    QStringList incompatibleObjects = strategy().checkCompatibleObjects(dataObjects);
+    QList<DataObject *> dataObjects = strategy().filterCompatibleObjects(uncheckedDataObjects, incompatibleObjects);
 
     if (dataObjects.isEmpty())
-    {
-        warnIncompatibleObjects(incompatibleObjects);
         return;
-    }
 
     for (DataObject * dataObject : dataObjects)
     {
@@ -287,12 +284,9 @@ void RenderView::addDataObjects(QList<DataObject *> dataObjects)
         m_renderer->ResetCamera();
         render();
     }
-
-    if (!incompatibleObjects.isEmpty())
-        warnIncompatibleObjects(incompatibleObjects);
 }
 
-void RenderView::hideDataObjects(QList<DataObject *> dataObjects)
+void RenderView::hideDataObjects(const QList<DataObject *> & dataObjects)
 {
     bool changed = false;
     for (DataObject * dataObject : dataObjects)
@@ -354,9 +348,8 @@ void RenderView::removeDataObject(DataObject * dataObject)
     qDeleteAll(toDelete);
 }
 
-void RenderView::removeDataObjects(QList<DataObject *> dataObjects)
+void RenderView::removeDataObjects(const QList<DataObject *> & dataObjects)
 {
-    // TODO optimize as needed
     for (DataObject * dataObject : dataObjects)
         removeDataObject(dataObject);
 
@@ -524,12 +517,6 @@ void RenderView::setupColorMappingLegend()
     m_scalarBarWidget->EnabledOff();
 
     m_renderer->AddViewProp(m_colorMappingLegend);
-}
-
-void RenderView::warnIncompatibleObjects(QStringList incompatibleObjects)
-{
-    QMessageBox::warning(this, "Invalid data selection", QString("Cannot render data of different type in the same render view!")
-        + QString("\nDiscarded objects:\n") + incompatibleObjects.join('\n'));
 }
 
 vtkRenderer * RenderView::renderer()

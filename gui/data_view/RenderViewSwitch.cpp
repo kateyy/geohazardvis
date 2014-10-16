@@ -69,10 +69,9 @@ void RenderViewSwitch::findSuitableStrategy(const QList<DataObject *> & dataObje
     RenderViewStrategy * mostSuitable = nullptr;
     for (auto it = m_strategyStates.begin(); it != m_strategyStates.end(); ++it)
     {
-        QList<DataObject *> list = dataObjects;
-
         RenderViewStrategy * strategy = m_strategies.value(it.key());
-        strategy->checkCompatibleObjects(list);
+        QList<DataObject *> incompatible;
+        QList<DataObject *> list = strategy->filterCompatibleObjects(dataObjects, incompatible);
         
         if (list.length() > mostCompatible)
         {

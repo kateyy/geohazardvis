@@ -16,7 +16,7 @@ public:
 
     void resetCamera(vtkCamera & camera) override;
 
-    QStringList checkCompatibleObjects(QList<DataObject *> & dataObjects) const override;
+    QList<DataObject *> filterCompatibleObjects(const QList<DataObject *> & dataObjects, QList<DataObject *> & incompatibleObjects) const override;
     bool canApplyTo(const QList<RenderedData *> & renderedData) override;
 
 private:

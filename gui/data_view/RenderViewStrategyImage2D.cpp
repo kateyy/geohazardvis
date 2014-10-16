@@ -110,22 +110,19 @@ void RenderViewStrategyImage2D::resetCamera(vtkCamera & camera)
     camera.SetPosition(0, 0, 1);
 }
 
-QStringList RenderViewStrategyImage2D::checkCompatibleObjects(QList<DataObject *> & dataObjects) const
+QList<DataObject *> RenderViewStrategyImage2D::filterCompatibleObjects(const QList<DataObject *> & dataObjects, QList<DataObject *> & incompatibleObjects) const
 {
     QList<DataObject *> compatible;
-    QStringList incompatible;
 
     for (DataObject * dataObject : dataObjects)
     {
         if (dynamic_cast<ImageDataObject *>(dataObject))
             compatible << dataObject;
         else
-            incompatible << dataObject->name();
+            incompatibleObjects << dataObject;
     }
 
-    dataObjects = compatible;
-
-    return incompatible;
+    return compatible;
 }
 
 bool RenderViewStrategyImage2D::canApplyTo(const QList<RenderedData *> & renderedData)
