@@ -1,6 +1,7 @@
 #include "DefaultColorMapping.h"
 
 #include <vtkMapper.h>
+#include <vtkPolyData.h>
 
 #include <core/scalar_mapping/ScalarsForColorMappingRegistry.h>
 #include <core/data_objects/DataObject.h>
@@ -14,11 +15,12 @@ const bool DefaultColorMapping::s_registered = ScalarsForColorMappingRegistry::i
 
 DefaultColorMapping::DefaultColorMapping(const QList<DataObject *> & dataObjects)
     : ScalarsForColorMapping(dataObjects)
+    , m_valid(false)
 {
     // only makes sense if there is a surface which we can color
     for (DataObject * dataObject : dataObjects)
     {
-        if (dataObject->is3D())
+        if (dataObject->is3D() && vtkPolyData::SafeDownCast(dataObject->dataSet()))
         {
             m_valid = true;
             break;
