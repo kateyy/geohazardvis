@@ -5,7 +5,7 @@
 #include <core/table_model/QVtkTableModel.h>
 
 
-class vtkPolyData;
+class vtkDataSet;
 
 
 class CORE_API QVtkTableModelVectorGrid3D : public QVtkTableModel
@@ -24,5 +24,5 @@ protected:
     void resetDisplayData() override;
 
 private:
-    vtkSmartPointer<vtkPolyData> m_gridData;
+    vtkSmartPointer<vtkDataSet> m_gridData;
 };

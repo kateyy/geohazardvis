@@ -2,7 +2,7 @@
 
 #include <cassert>
 
-#include <vtkPolyData.h>
+#include <vtkDataSet.h>
 #include <vtkPointData.h>
 #include <vtkDataArray.h>
 #include <vtkCell.h>
@@ -80,23 +80,46 @@ QVariant QVtkTableModelVectorGrid3D::headerData(int section, Qt::Orientation ori
 
 bool QVtkTableModelVectorGrid3D::setData(const QModelIndex & index, const QVariant & value, int role)
 {
-    if (role != Qt::EditRole || index.column() != 5 || !m_gridData)
+    if (role != Qt::EditRole || index.column() < 4 || !m_gridData)
         return false;
 
-    /** TODO */
+    bool validValue;
+    double newValue = value.toDouble(&validValue);
+    if (!validValue)
+        return false;
+
+    vtkIdType vectorId = index.row();
+
+    vtkDataArray * data = m_gridData->GetPointData()->GetVectors();
+    assert(data);
+
+    int numComponents = data->GetNumberOfComponents();
+    int componentId = index.column() - 4;
+    assert(componentId >= 0 && componentId < numComponents);
+
+
+    double * tuple = new double[numComponents];
+
+    data->GetTuple(vectorId, tuple);
+    tuple[componentId] = newValue;
+    data->SetTuple(vectorId, tuple);
+    data->Modified();
+    m_gridData->Modified();
+
+    delete[] tuple;
 
     return false;
 }
 
 Qt::ItemFlags QVtkTableModelVectorGrid3D::flags(const QModelIndex &index) const
 {
-    //if (index.column() > 3)
-    //    return Qt::ItemIsEditable | QAbstractItemModel::flags(index);
+    if (index.column() > 3)
+        return Qt::ItemIsEditable | QAbstractItemModel::flags(index);
 
     return QAbstractItemModel::flags(index);
 }
 
 void QVtkTableModelVectorGrid3D::resetDisplayData()
 {
-    m_gridData = vtkPolyData::SafeDownCast(dataObject()->dataSet());
+    m_gridData = dataObject()->dataSet();
 }
