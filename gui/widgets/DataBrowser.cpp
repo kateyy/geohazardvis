@@ -1,9 +1,7 @@
 #include "DataBrowser.h"
 #include "ui_DataBrowser.h"
 
-#include <QMessageBox>
 #include <QMouseEvent>
-#include <QDebug>
 
 #include <core/DataSetHandler.h>
 #include <core/data_objects/DataObject.h>
@@ -11,7 +9,7 @@
 
 #include <gui/DataMapping.h>
 #include <gui/data_view/RenderView.h>
-#include "DataBrowserTableModel.h"
+#include <gui/widgets/DataBrowserTableModel.h>
 
 
 DataBrowser::DataBrowser(QWidget* parent, Qt::WindowFlags f)
@@ -27,8 +25,8 @@ DataBrowser::DataBrowser(QWidget* parent, Qt::WindowFlags f)
 
     m_ui->dataTableView->viewport()->installEventFilter(this);
 
-    connect(&DataSetHandler::instance(), &DataSetHandler::dataObjectsChanged, this, &DataBrowser::updateDataList);
-    connect(&DataSetHandler::instance(), &DataSetHandler::rawVectorsChanged, this, &DataBrowser::updateDataList);
+    connect(&DataSetHandler::instance(), &DataSetHandler::dataObjectsChanged, this, &DataBrowser::updateModelForFocusedView);
+    connect(&DataSetHandler::instance(), &DataSetHandler::rawVectorsChanged, this, &DataBrowser::updateModelForFocusedView);
 }
 
 DataBrowser::~DataBrowser()
@@ -39,10 +37,10 @@ DataBrowser::~DataBrowser()
 void DataBrowser::setDataMapping(DataMapping * dataMapping)
 {
     if (m_dataMapping)
-        disconnect(m_dataMapping, &DataMapping::focusedRenderViewChanged, this, &DataBrowser::setupGuiFor);
+        disconnect(m_dataMapping, &DataMapping::focusedRenderViewChanged, this, &DataBrowser::updateModel);
 
     m_dataMapping = dataMapping;
-    connect(m_dataMapping, &DataMapping::focusedRenderViewChanged, this, &DataBrowser::setupGuiFor);
+    connect(m_dataMapping, &DataMapping::focusedRenderViewChanged, this, &DataBrowser::updateModel);
 }
 
 bool DataBrowser::eventFilter(QObject * /*obj*/, QEvent * ev)
@@ -72,11 +70,18 @@ bool DataBrowser::eventFilter(QObject * /*obj*/, QEvent * ev)
     return false;
 }
 
-void DataBrowser::updateDataList()
+void DataBrowser::updateModelForFocusedView()
 {
-    m_tableModel->updateDataList();
+    updateModel(m_dataMapping->focusedRenderView());
+}
 
-    setupGuiFor(m_dataMapping->focusedRenderView());
+void DataBrowser::updateModel(RenderView * renderView)
+{
+    QList<DataObject *> visibleObjects;
+    if (renderView)
+        visibleObjects = renderView->dataObjects();
+
+    m_tableModel->updateDataList(visibleObjects);
 
     m_ui->dataTableView->resizeColumnsToContents();
 }
@@ -99,7 +104,7 @@ void DataBrowser::changeRenderedVisibility(DataObject * clickedObject)
     {
         renderView = m_dataMapping->openInRenderView(selection);
         renderView->setFocus();
-        setupGuiFor(renderView);
+        updateModel(renderView);
         return;
     }
 
@@ -124,7 +129,7 @@ void DataBrowser::changeRenderedVisibility(DataObject * clickedObject)
     else
         renderView->hideDataObjects(selection);
 
-    setupGuiFor(renderView);
+    updateModel(renderView);
 }
 
 void DataBrowser::removeFile()
@@ -133,7 +138,8 @@ void DataBrowser::removeFile()
 
     m_dataMapping->removeDataObjects(selection);
     DataSetHandler::instance().deleteData(selection);
-    m_tableModel->updateDataList();
+
+    updateModelForFocusedView();
 }
 
 void DataBrowser::evaluateItemViewClick(const QModelIndex & index)
@@ -152,30 +158,6 @@ void DataBrowser::evaluateItemViewClick(const QModelIndex & index)
     case 2:
         return removeFile();
     }
-}
-
-void DataBrowser::setupGuiFor(RenderView * renderView)
-{
-    QSet<const DataObject *> allObjects;
-    for (DataObject * dataObject : DataSetHandler::instance().dataSets())
-        allObjects << dataObject;
-
-    if (!renderView)
-    {
-        m_tableModel->setNoRendererFocused();
-        return;
-    }
-
-    for (const RenderedData * renderedData : renderView->renderedData())
-    {
-        allObjects.remove(renderedData->dataObject());
-
-        m_tableModel->setVisibility(renderedData->dataObject(), renderedData->isVisible());
-    }
-
-    // hide all not rendered objects
-    for (const DataObject * dataObject : allObjects)
-        m_tableModel->setVisibility(dataObject, false);
 }
 
 QList<DataObject *> DataBrowser::selectedDataObjects() const

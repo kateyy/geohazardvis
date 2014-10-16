@@ -25,7 +25,8 @@ protected:
     bool eventFilter(QObject * obj, QEvent * ev) override;
 
 private slots:
-    void updateDataList();
+    void updateModelForFocusedView();
+    void updateModel(RenderView * renderView);
 
     /** show and bring to front the table for selected objects */
     void showTable();
@@ -36,9 +37,6 @@ private slots:
     void removeFile();
 
     void evaluateItemViewClick(const QModelIndex & index);
-
-    /** set button states for object visibilities in the renderView */
-    void setupGuiFor(RenderView * renderView);
 
 private:
     QList<DataObject *> selectedDataObjects() const;

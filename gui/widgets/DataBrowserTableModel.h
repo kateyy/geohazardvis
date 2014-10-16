@@ -16,10 +16,7 @@ class DataBrowserTableModel : public QAbstractTableModel
 public:
     DataBrowserTableModel(QObject * parent = nullptr);
 
-    void updateDataList();
-
-    void setVisibility(const DataObject * dataObject, bool visible);
-    void setNoRendererFocused();
+    void updateDataList(const QList<DataObject *> & visibleObjects);
 
     int rowCount(const QModelIndex & parent = QModelIndex()) const override;
     int columnCount(const QModelIndex & parent = QModelIndex()) const override;
@@ -42,8 +39,6 @@ private:
 
 private:
     QMap<const DataObject *, bool> m_visibilities;
-    bool m_rendererFocused;
-
     QMap<QString, QIcon> m_icons;
     int m_numDataObjects;
     int m_numAttributeVectors;

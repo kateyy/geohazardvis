@@ -21,12 +21,11 @@ const int s_btnClms = 3;
 
 DataBrowserTableModel::DataBrowserTableModel(QObject * parent)
     : QAbstractTableModel(parent)
-    , m_rendererFocused(false)
     , m_numDataObjects(0)
     , m_numAttributeVectors(0)
 {
     m_icons.insert("rendered", QIcon(":/icons/painting.svg"));
-    m_icons.insert("notRendered", QIcon(":/icons/painting_faded.svg"));
+    //m_icons.insert("notRendered", QIcon(":/icons/painting_faded.svg"));
     m_icons.insert("table", QIcon(":/icons/table.svg"));
     m_icons.insert("delete_red", QIcon(":/icons/delete_red.svg"));
 
@@ -41,7 +40,7 @@ DataBrowserTableModel::DataBrowserTableModel(QObject * parent)
                 image.setPixel(i, j, qRgba(gray, gray, gray, qAlpha(pixel)));
             };
         }
-        m_icons.insert("noRenderer", QIcon(QPixmap().fromImage(image)));
+        m_icons.insert("notRendered", QIcon(QPixmap().fromImage(image)));
     }
 }
 
@@ -156,7 +155,7 @@ int DataBrowserTableModel::numButtonColumns()
     return s_btnClms;
 }
 
-void DataBrowserTableModel::updateDataList()
+void DataBrowserTableModel::updateDataList(const QList<DataObject *> & visibleObjects)
 {
     beginResetModel();
 
@@ -167,22 +166,11 @@ void DataBrowserTableModel::updateDataList()
 
     m_visibilities.clear();
     for (DataObject * dataObject : dataSets)
-        m_visibilities.insert(dataObject, false);
+        m_visibilities.insert(dataObject, visibleObjects.contains(dataObject));
     for (RawVectorData * attr : rawVectors)
-        m_visibilities.insert(attr, false);
+        m_visibilities.insert(attr, visibleObjects.contains(attr));
 
     endResetModel();
-}
-
-void DataBrowserTableModel::setVisibility(const DataObject * dataObject, bool visible)
-{
-    m_visibilities[dataObject] = visible;
-    m_rendererFocused = true;
-}
-
-void DataBrowserTableModel::setNoRendererFocused()
-{
-    m_rendererFocused = false;
 }
 
 QVariant DataBrowserTableModel::data_dataObject(int row, int column, int role) const
@@ -194,11 +182,9 @@ QVariant DataBrowserTableModel::data_dataObject(int row, int column, int role) c
         case 0:
             return m_icons["table"];
         case 1:
-            if (!m_rendererFocused)
-                return m_icons["noRenderer"];
-            if (m_visibilities[dataObjectAt(row)])
-                return m_icons["rendered"];
-            return m_icons["notRendered"];
+            return m_visibilities[dataObjectAt(row)]
+                ? m_icons["rendered"]
+                : m_icons["notRendered"];
         case 2:
             return m_icons["delete_red"];
         }
