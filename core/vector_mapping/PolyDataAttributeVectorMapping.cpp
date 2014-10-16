@@ -78,8 +78,7 @@ PolyDataAttributeVectorMapping::PolyDataAttributeVectorMapping(RenderedData * re
     , m_polyData(dynamic_cast<PolyDataObject *>(renderedData->dataObject()))
     , m_dataArray(vectorData)
 {
-    if (!m_isValid || !m_polyData)
-        return;
+    m_isValid = m_isValid && m_polyData != nullptr;
 
     arrowGlyph()->SetVectorModeToUseVector();
 }

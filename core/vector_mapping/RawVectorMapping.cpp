@@ -61,8 +61,7 @@ RawVectorMapping::RawVectorMapping(RenderedData * renderedData, RawVectorData * 
     , m_rawVector(rawVector)
     , m_polyData(dynamic_cast<PolyDataObject *>(renderedData->dataObject()))
 {
-    if (!m_isValid || !m_polyData)
-        return;
+    m_isValid = m_isValid && m_polyData != nullptr;
 
     arrowGlyph()->SetVectorModeToUseVector();
 }

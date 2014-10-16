@@ -3,14 +3,11 @@
 #include <cassert>
 #include <algorithm>
 
-#include <QColor>
-
 #include <vtkArrowSource.h>
 #include <vtkLineSource.h>
 #include <vtkAppendPolyData.h>
 
 #include <vtkGlyph3D.h>
-#include <vtkPolyData.h>
 
 #include <vtkPolyDataMapper.h>
 
@@ -60,9 +57,6 @@ VectorMappingData::VectorMappingData(RenderedData * renderedData)
     , m_isValid(true)
 {
     assert(renderedData);
-
-    if (!m_isValid)
-        return;
 
     VTK_CREATE(vtkLineSource, lineArrow);
     m_arrowSources.insert(Representation::Line, lineArrow);

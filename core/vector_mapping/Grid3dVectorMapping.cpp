@@ -70,9 +70,6 @@ Grid3dVectorMapping::Grid3dVectorMapping(RenderedVectorGrid3D * renderedGrid, vt
     , m_renderedGrid(renderedGrid)
     , m_dataArray(dataArray)
 {
-    if (!m_isValid)
-        return;
-
     setVisible(true);
 
     arrowGlyph()->SetVectorModeToUseVector();

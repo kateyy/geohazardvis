@@ -89,7 +89,7 @@ protected:
 
     virtual void initialize();
 
-    virtual bool isValid() const;
+    bool isValid() const;
 
     DataObject * dataObject();
     RenderedData * renderedData();
