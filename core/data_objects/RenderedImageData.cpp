@@ -104,22 +104,23 @@ vtkActor * RenderedImageData::createActor()
 
 void RenderedImageData::scalarsForColorMappingChangedEvent()
 {
-    updateTexture();
+    bool enableColorMapping = false;
+
+    if (m_scalars)
+        enableColorMapping = m_scalars->dataMinValue() != m_scalars->dataMaxValue();
+
+    if (enableColorMapping)
+        mainActor()->SetTexture(m_texture);
+    else
+        mainActor()->SetTexture(nullptr);
 }
 
 void RenderedImageData::gradientForColorMappingChangedEvent()
 {
-    updateTexture();
+    m_texture->SetLookupTable(m_lut);
 }
 
 void RenderedImageData::updateTexture()
 {
-    if (!m_lut)
-        return;
-
-    // not update needed for gradient == nullptr
-    // this happens only when the ScalarMappingChooser / mapping is not fully initialized
-
-    m_lut->SetTableRange(m_scalars->minValue(), m_scalars->maxValue());
     m_texture->SetLookupTable(m_lut);
 }
