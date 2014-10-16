@@ -106,9 +106,8 @@ bool ScalarsForColorMapping::usesFilter() const
     return false;
 }
 
-void ScalarsForColorMapping::configureDataObjectAndMapper(DataObject * dataObject, vtkMapper * /*mapper*/)
+void ScalarsForColorMapping::configureDataObjectAndMapper(DataObject * /*dataObject*/, vtkMapper * /*mapper*/)
 {
-    assert(m_dataObjects.contains(dataObject));
 }
 
 double ScalarsForColorMapping::dataMinValue(vtkIdType component) const

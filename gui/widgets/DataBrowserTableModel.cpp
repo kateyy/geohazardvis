@@ -75,7 +75,8 @@ QVariant DataBrowserTableModel::headerData(int section, Qt::Orientation orientat
     if (role != Qt::DisplayRole)
         return QVariant();
 
-    assert(orientation == Qt::Orientation::Horizontal);
+    if (orientation != Qt::Orientation::Horizontal)
+        return QVariant();
 
     switch (section)
     {
