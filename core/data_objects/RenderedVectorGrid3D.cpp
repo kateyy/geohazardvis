@@ -39,6 +39,7 @@ const vtkIdType DefaultMaxNumberOfPoints = 1000;
 RenderedVectorGrid3D::RenderedVectorGrid3D(VectorGrid3DDataObject * dataObject)
     : RenderedData(dataObject)
     , m_extractVOI(vtkSmartPointer<vtkExtractVOI>::New())
+    , m_slicesEnabled()
 {
     assert(vtkImageData::SafeDownCast(dataObject->processedDataSet()));
 
@@ -92,6 +93,8 @@ RenderedVectorGrid3D::RenderedVectorGrid3D(VectorGrid3DDataObject * dataObject)
         VTK_CREATE(vtkProperty, outlineProperty);
         m_sliceOutlineActors[i]->SetProperty(outlineProperty);
         outlineProperty->SetColor(0, 0, 0);
+
+        m_slicesEnabled[i] = true;
     }
 }
 
@@ -126,11 +129,19 @@ PropertyGroup * RenderedVectorGrid3D::createConfigGroup()
     };
     sampleRate->forEach(optionSetter);
 
+    auto slicesVisible = configGroup->addProperty<std::array<bool, 3>>("SlicesVisible",
+        [this] (size_t i) { return m_slicesEnabled[i]; },
+        [this] (size_t i, bool value) {
+        m_slicesEnabled[i] = value;
+        updateVisibilities();
+    });
     auto slicePositions = configGroup->addGroup("SlicePosition");
     slicePositions->setOption("title", "Slice Positions");
     for (int i = 0; i < 3; ++i)
     {
         std::string axis = { char('X' + i) };
+
+        slicesVisible->asCollection()->at(i)->setOption("title", axis);
 
         auto * slice_prop = slicePositions->addProperty<int>(axis + "Slice",
             [this, i] () { return m_extractSlices[i]->GetVOI()[2 * i]; },
@@ -181,7 +192,7 @@ QList<vtkActor *> RenderedVectorGrid3D::fetchAttributeActors()
 
 void RenderedVectorGrid3D::scalarsForColorMappingChangedEvent()
 {
-    updateVisibilies();
+    updateVisibilities();
 }
 
 void RenderedVectorGrid3D::gradientForColorMappingChangedEvent()
@@ -198,25 +209,24 @@ void RenderedVectorGrid3D::visibilityChangedEvent(bool visible)
 {
     RenderedData::visibilityChangedEvent(visible);
 
-    updateVisibilies();
+    updateVisibilities();
 }
 
-void RenderedVectorGrid3D::updateVisibilies()
+void RenderedVectorGrid3D::updateVisibilities()
 {
-    for (auto sliceActor : m_sliceActors)
-    {
-        sliceActor->SetVisibility(isVisible());
-    }
+    bool showSliceScalars = false;
 
     if (m_scalars)
+        showSliceScalars = m_scalars->scalarsName() == QString::fromLatin1(dataObject()->dataSet()->GetPointData()->GetVectors()->GetName());
+
+    for (int i = 0; i < 3; ++i)
     {
-        bool showSliceScalars = m_scalars->scalarsName() == QString::fromLatin1(dataObject()->dataSet()->GetPointData()->GetVectors()->GetName());
-        for (int i = 0; i < 3; ++i)
-        {
-            m_sliceActors[i]->SetVisibility(isVisible() && showSliceScalars);
-            m_sliceOutlineActors[i]->SetVisibility(isVisible() && !showSliceScalars);
-        }
+        bool showSliceI = showSliceScalars && m_slicesEnabled[i];
+        m_sliceActors[i]->SetVisibility(isVisible() && showSliceI);
+        m_sliceOutlineActors[i]->SetVisibility(isVisible() && !showSliceI);
     }
+
+    emit geometryChanged();
 }
 
 void RenderedVectorGrid3D::setSampleRate(int x, int y, int z)

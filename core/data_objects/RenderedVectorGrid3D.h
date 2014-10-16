@@ -46,13 +46,14 @@ protected:
     void visibilityChangedEvent(bool visible) override;
 
 private:
-    void updateVisibilies();
+    void updateVisibilities();
 
 private:
     vtkSmartPointer<vtkExtractVOI> m_extractVOI;
 
     std::array<vtkSmartPointer<vtkExtractVOI>, 3> m_extractSlices;
     std::array<vtkSmartPointer<vtkPlaneSource>, 3> m_slicePlanes;
+    std::array<bool, 3> m_slicesEnabled;
     std::array<vtkSmartPointer<vtkActor>, 3> m_sliceActors;
     std::array<vtkSmartPointer<vtkActor>, 3> m_sliceOutlineActors;
 };
