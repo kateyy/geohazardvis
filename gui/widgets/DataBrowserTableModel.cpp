@@ -9,6 +9,8 @@
 #include <core/DataSetHandler.h>
 #include <core/data_objects/RawVectorData.h>
 #include <core/data_objects/ImageDataObject.h>
+#include <core/data_objects/ImageProfileData.h>
+#include <core/data_objects/VectorGrid3DDataObject.h>
 
 
 namespace
@@ -51,7 +53,7 @@ int DataBrowserTableModel::rowCount(const QModelIndex &/*parent = QModelIndex()*
 
 int DataBrowserTableModel::columnCount(const QModelIndex &/*parent = QModelIndex()*/) const
 {
-    return s_btnClms + 4;
+    return s_btnClms + 5;
 }
 
 QVariant DataBrowserTableModel::data(const QModelIndex &index, int role /*= Qt::DisplayRole*/) const
@@ -82,7 +84,8 @@ QVariant DataBrowserTableModel::headerData(int section, Qt::Orientation orientat
     case s_btnClms + 0: return "name";
     case s_btnClms + 1: return "data set type";
     case s_btnClms + 2: return "dimensions";
-    case s_btnClms + 3: return "value range";
+    case s_btnClms + 3: return "spatial bounds";
+    case s_btnClms + 4: return "value range";
     }        
 
     return QVariant();
@@ -155,6 +158,13 @@ int DataBrowserTableModel::numButtonColumns()
     return s_btnClms;
 }
 
+QString DataBrowserTableModel::componentName(int component, int numComponents)
+{
+    return numComponents <= 3
+        ? QChar::fromLatin1('x' + component)
+        : "[" + QString::number(component) + "]";
+}
+
 void DataBrowserTableModel::updateDataList(const QList<DataObject *> & visibleObjects)
 {
     beginResetModel();
@@ -198,6 +208,8 @@ QVariant DataBrowserTableModel::data_dataObject(int row, int column, int role) c
 
     DataObject * dataObject = dataSets.at(row);
 
+    QString dataTypeName = dataObject->dataTypeName();
+
     switch (column)
     {
     case s_btnClms:
@@ -205,28 +217,56 @@ QVariant DataBrowserTableModel::data_dataObject(int row, int column, int role) c
     case s_btnClms + 1:
         return dataObject->dataTypeName();
     case s_btnClms + 2:
-        if (dataObject->dataTypeName() == "polygonal mesh")
+        if (dataTypeName == "polygonal mesh")
             return
             QString::number(dataObject->dataSet()->GetNumberOfCells()) + " triangles, " +
             QString::number(dataObject->dataSet()->GetNumberOfPoints()) + " vertices";
-        if (dataObject->dataTypeName() == "regular 2D grid")
+        if (dataTypeName == "regular 2D grid")
         {
             ImageDataObject * imageData = static_cast<ImageDataObject*>(dataObject);
             return QString::number(imageData->dimensions()[0]) + "x" + QString::number(imageData->dimensions()[1]) + " values";
         }
-        if (dataObject->dataTypeName() == "3D vector grid")
-            return  QString::number(dataObject->dataSet()->GetNumberOfPoints()) + " vectors";
+        if (dataTypeName == "image profile")
+        {
+            return QString::number(static_cast<ImageProfileData *>(dataObject)->numberOfScalars()) + " values";
+        }
+        if (dataTypeName == "3D vector grid")
+        {
+            const int * dimensions = static_cast<VectorGrid3DDataObject*>(dataObject)->dimensions();
+            return QString::number(dimensions[0]) + "x" + QString::number(dimensions[1]) + "x" + QString::number(dimensions[2]) + " vectors";
+        }
+        break;
     case s_btnClms + 3:
-        if (dataObject->dataTypeName() == "polygonal mesh" || dataObject->dataTypeName() == "3D vector grid")
-            return
+        return
             "x: " + QString::number(dataObject->bounds()[0]) + "; " + QString::number(dataObject->bounds()[1]) +
             ", y: " + QString::number(dataObject->bounds()[2]) + "; " + QString::number(dataObject->bounds()[3]) +
             ", z: " + QString::number(dataObject->bounds()[4]) + "; " + QString::number(dataObject->bounds()[5]);
-        if (dataObject->dataTypeName() == "regular 2D grid")
+    case s_btnClms + 4:
+        if (dataTypeName == "polygonal mesh")
+            return "";
+        if (dataTypeName == "regular 2D grid")
         {
             const double * minMax = static_cast<ImageDataObject*>(dataObject)->minMaxValue();
             return QString::number(minMax[0]) + "; " + QString::number(minMax[1]);
         }
+        if (dataTypeName == "image profile")
+        {
+            const double * range = static_cast<ImageProfileData *>(dataObject)->scalarRange();
+            return QString::number(range[0]) + "; " + QString::number(range[1]);
+        }
+        if (dataTypeName == "3D vector grid")
+        {
+            VectorGrid3DDataObject * vectorGrid = static_cast<VectorGrid3DDataObject*>(dataObject);
+            QString line;
+            int numComponents = vectorGrid->numberOfComponents();
+            for (int c = 0; c < numComponents; ++c)
+            {
+                line += componentName(c, numComponents) + ": " + QString::number(vectorGrid->scalarRange(c)[0]) + "; " + QString::number(vectorGrid->scalarRange(c)[1]) + ", ";
+            }
+            line.chop(2);
+            return line;
+        }
+        break;
     }
 
     return QVariant();
@@ -265,13 +305,15 @@ QVariant DataBrowserTableModel::data_attributeVector(int row, int column, int ro
     case s_btnClms + 2:
         return QString::number(dataArray->GetNumberOfTuples()) + " tuples";
     case s_btnClms + 3:
+        return "";
+    case s_btnClms + 4:
     {
         QString ranges;
         double range[2];
         for (int c = 0; c < numComponents; ++c)
         {
             dataArray->GetRange(range, c);
-            ranges += "[" + QString::number(c) + "]" + QString::number(range[0]) + "; " + QString::number(range[1]) + ", ";
+            ranges += componentName(c, numComponents) + ": " + QString::number(range[0]) + "; " + QString::number(range[1]) + ", ";
         }
         ranges.remove(ranges.length() - 2, 2);
         return ranges;

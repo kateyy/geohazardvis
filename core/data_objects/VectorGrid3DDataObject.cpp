@@ -1,6 +1,8 @@
 #include "VectorGrid3DDataObject.h"
 
 #include <vtkImageData.h>
+#include <vtkPointData.h>
+#include <vtkDataArray.h>
 #include <vtkAssignAttribute.h>
 
 #include <core/data_objects/RenderedVectorGrid3D.h>
@@ -46,6 +48,26 @@ vtkDataSet * VectorGrid3DDataObject::processedDataSet()
 vtkAlgorithmOutput * VectorGrid3DDataObject::processedOutputPort()
 {
     return m_vectorsToScalars->GetOutputPort();
+}
+
+const int * VectorGrid3DDataObject::dimensions()
+{
+    return static_cast<vtkImageData *>(dataSet())->GetDimensions();
+}
+
+const int * VectorGrid3DDataObject::extent()
+{
+    return static_cast<vtkImageData *>(dataSet())->GetExtent();
+}
+
+int VectorGrid3DDataObject::numberOfComponents()
+{
+    return dataSet()->GetPointData()->GetVectors()->GetNumberOfComponents();
+}
+
+const double * VectorGrid3DDataObject::scalarRange(int component)
+{
+    return dataSet()->GetPointData()->GetVectors()->GetRange(component);
 }
 
 QVtkTableModel * VectorGrid3DDataObject::createTableModel()

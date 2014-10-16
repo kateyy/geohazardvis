@@ -33,6 +33,9 @@ public:
 
     static int numButtonColumns();
 
+    /** nice name for each component (x, y, z for up to three components, [0].. for more) */
+    static QString componentName(int component, int numComponents);
+
 private:
     QVariant data_dataObject(int row, int column, int role) const;
     QVariant data_attributeVector(int row, int column, int role) const;

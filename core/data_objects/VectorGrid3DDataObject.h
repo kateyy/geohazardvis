@@ -9,7 +9,7 @@ class vtkImageData;
 class vtkAssignAttribute;
 
 
-class VectorGrid3DDataObject : public DataObject
+class CORE_API VectorGrid3DDataObject : public DataObject
 {
 public:
     VectorGrid3DDataObject(QString name, vtkImageData * dataSet);
@@ -25,6 +25,15 @@ public:
     /** @return vtkImageData with 3-component vectors assigned to point scalars */
     vtkDataSet * processedDataSet() override;
     vtkAlgorithmOutput * processedOutputPort() override;
+
+    /** number of values on each axis (x, y, z) */
+    const int * dimensions();
+    /** index of first and last point on each axis (min/max per x, y, z) */
+    const int * extent();
+    /** number of vector data components  */
+    int numberOfComponents();
+    /** scalar range for specified vector component */
+    const double * scalarRange(int component);
 
 protected:
     QVtkTableModel * createTableModel() override;

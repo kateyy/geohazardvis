@@ -65,7 +65,7 @@ RenderedData * ImageProfileData::createRendered()
 
 QString ImageProfileData::dataTypeName() const
 {
-    return "image profile plot";
+    return "image profile";
 }
 
 vtkDataSet * ImageProfileData::processedDataSet()
@@ -82,6 +82,17 @@ vtkAlgorithmOutput * ImageProfileData::processedOutputPort()
 const QString & ImageProfileData::scalarsName() const
 {
     return m_scalarsName;
+}
+
+const double * ImageProfileData::scalarRange()
+{
+    // x-y-plot -> value range on the y axis
+    return &processedDataSet()->GetBounds()[2];
+}
+
+int ImageProfileData::numberOfScalars()
+{
+    return processedDataSet()->GetNumberOfPoints();
 }
 
 const double * ImageProfileData::point1() const

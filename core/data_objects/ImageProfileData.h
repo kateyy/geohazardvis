@@ -25,12 +25,17 @@ public:
     vtkAlgorithmOutput * processedOutputPort() override;
 
     const QString & scalarsName() const;
-    const double * point1() const;
-    const double * point2() const;
-    void setPoints(double point1[3], double point2[3]);
+
+    const double * scalarRange();
+    int numberOfScalars();
 
 protected:
     QVtkTableModel * createTableModel() override;
+
+    friend class RenderViewStrategyImage2D;
+    const double * point1() const;
+    const double * point2() const;
+    void setPoints(double point1[3], double point2[3]);
 
 private:
     ImageDataObject * m_imageData;
