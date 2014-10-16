@@ -17,7 +17,7 @@ int QVtkTableModelRawVector::rowCount(const QModelIndex &/*parent*/) const
     if (!m_data)
         return 0;
 
-    return 1 + m_data->GetNumberOfTuples();
+    return m_data->GetNumberOfTuples();
 }
 
 int QVtkTableModelRawVector::columnCount(const QModelIndex &/*parent*/) const
