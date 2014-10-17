@@ -53,6 +53,12 @@
        </layout>
       </widget>
       <widget class="QGroupBox" name="propertyBrowserContainer">
+       <property name="font">
+        <font>
+         <weight>75</weight>
+         <bold>true</bold>
+        </font>
+       </property>
        <property name="title">
         <string>(no selection)</string>
        </property>
@@ -64,6 +70,12 @@
          <layout class="QHBoxLayout" name="horizontalLayout">
           <item>
            <widget class="QLabel" name="firstIndexLabel">
+            <property name="font">
+             <font>
+              <weight>50</weight>
+              <bold>false</bold>
+             </font>
+            </property>
             <property name="text">
              <string>first &amp;index</string>
             </property>

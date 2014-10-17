@@ -2,14 +2,22 @@
 <ui version="4.0">
  <class>ScalarRearrangeObjects</class>
  <widget class="QDialog" name="ScalarRearrangeObjects">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>274</width>
+    <height>314</height>
+   </rect>
+  </property>
   <property name="windowTitle">
-   <string>Dialog</string>
+   <string>Rearrange data</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
     <widget class="QLabel" name="label">
      <property name="text">
-      <string>modify the order of data objects by drag&amp;drop</string>
+      <string>Modify the order of data objects by drag&amp;drop.</string>
      </property>
     </widget>
    </item>

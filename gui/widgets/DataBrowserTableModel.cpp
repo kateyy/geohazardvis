@@ -48,7 +48,7 @@ DataBrowserTableModel::DataBrowserTableModel(QObject * parent)
 
 int DataBrowserTableModel::rowCount(const QModelIndex &/*parent = QModelIndex()*/) const
 {
-    return m_numDataObjects + 1 + m_numAttributeVectors;
+    return m_numDataObjects + m_numAttributeVectors;
 }
 
 int DataBrowserTableModel::columnCount(const QModelIndex &/*parent = QModelIndex()*/) const
@@ -64,10 +64,7 @@ QVariant DataBrowserTableModel::data(const QModelIndex &index, int role /*= Qt::
     if (row < m_numDataObjects)
         return data_dataObject(row, column, role);
 
-    if (row == m_numDataObjects)
-        return QVariant();
-
-    return data_attributeVector(row - 1 - m_numDataObjects, column, role);
+    return data_attributeVector(row - m_numDataObjects, column, role);
 }
 
 QVariant DataBrowserTableModel::headerData(int section, Qt::Orientation orientation,
@@ -96,10 +93,7 @@ DataObject * DataBrowserTableModel::dataObjectAt(int row) const
     if (row < m_numDataObjects)
         return DataSetHandler::instance().dataSets()[row];
 
-    if (row == m_numDataObjects)
-        return nullptr;
-
-    row -= 1 + m_numDataObjects;
+    row -= m_numDataObjects;
     assert(row < m_numAttributeVectors);
 
     return DataSetHandler::instance().rawVectors()[row];
@@ -113,7 +107,7 @@ DataObject * DataBrowserTableModel::dataObjectAt(const QModelIndex & index) cons
 int DataBrowserTableModel::rowForDataObject(DataObject * dataObject) const
 {
     if (RawVectorData * raw = dynamic_cast<RawVectorData *>(dataObject))
-        return m_numDataObjects + 1 + DataSetHandler::instance().rawVectors().indexOf(raw);
+        return m_numDataObjects + DataSetHandler::instance().rawVectors().indexOf(raw);
 
     return DataSetHandler::instance().dataSets().indexOf(dataObject);
 }
