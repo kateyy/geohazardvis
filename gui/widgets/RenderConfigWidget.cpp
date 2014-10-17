@@ -55,7 +55,7 @@ void RenderConfigWidget::setCurrentRenderView(RenderView * renderView)
     clear();
 
     m_renderView = renderView;
-    m_renderedData = renderView->highlightedRenderedData();
+    m_renderedData = renderView ? renderView->highlightedRenderedData() : nullptr;
     updateTitle();
 
     if (!m_renderedData)
