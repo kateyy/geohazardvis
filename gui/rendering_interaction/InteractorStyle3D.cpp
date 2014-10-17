@@ -6,6 +6,8 @@
 #include <QStringList>
 #include <QTime>
 #include <QThread>
+#include <QTimer>
+#include <QDebug>
 
 #include <vtkRenderWindowInteractor.h>
 #include <vtkRenderer.h>
@@ -19,6 +21,7 @@
 
 #include <vtkInformation.h>
 #include <vtkInformationStringKey.h>
+#include <vtkMath.h>
 
 #include <vtkIdTypeArray.h>
 #include <vtkSelectionNode.h>
@@ -47,8 +50,15 @@ InteractorStyle3D::InteractorStyle3D()
     , m_cellPicker(vtkSmartPointer<vtkCellPicker>::New())
     , m_selectedCellActor(vtkSmartPointer<vtkActor>::New())
     , m_selectedCellMapper(vtkSmartPointer<vtkDataSetMapper>::New())
+    , m_highlightFlashTimer(nullptr)
+    , m_highlightFlashTime(new QTime())
     , m_mouseMoved(false)
 {
+}
+
+InteractorStyle3D::~InteractorStyle3D()
+{
+    delete m_highlightFlashTime;
 }
 
 void InteractorStyle3D::setRenderedData(QList<RenderedData *> renderedData)
@@ -263,6 +273,8 @@ void InteractorStyle3D::highlightCell(DataObject * dataObject, vtkIdType cellId)
 
     GetDefaultRenderer()->AddViewProp(m_selectedCellActor);
     GetDefaultRenderer()->GetRenderWindow()->Render();
+
+    flashHightlightedCell();
 }
 
 namespace
@@ -466,6 +478,36 @@ void InteractorStyle3D::lookAtCell(DataObject * dataObject, vtkIdType cellId)
         TerrainCamera::setAzimuth(camera, targetAzimuth);
         TerrainCamera::setVerticalElevation(camera, targetElevation);
     }
+}
+
+void InteractorStyle3D::flashHightlightedCell(int milliseconds)
+{
+    if (!m_highlightFlashTimer)
+    {
+        m_highlightFlashTimer = new QTimer(this);
+        m_highlightFlashTimer->setSingleShot(false);
+        m_highlightFlashTimer->setInterval(1);
+
+        m_highlightFlashTimer = new QTimer(this);
+        connect(m_highlightFlashTimer, &QTimer::timeout,
+            [this] () {
+            int ms = (1000 + m_highlightFlashTime->msec() - QTime::currentTime().msec()) % 1000;
+            qDebug() << ms;
+            if (*m_highlightFlashTime < QTime::currentTime())
+            {
+                m_highlightFlashTimer->stop();
+                ms = 0;
+            }
+            double bg = 0.5 + 0.5 * std::cos(ms * 0.001 * 2.0 * vtkMath::Pi());
+            m_selectedCellActor->GetProperty()->SetColor(1, bg, bg);
+            GetDefaultRenderer()->GetRenderWindow()->Render();
+        });
+    }
+
+    qDebug() << "starting flash: " << QString::number(milliseconds);
+
+    *m_highlightFlashTime = QTime::currentTime().addMSecs(milliseconds);
+    m_highlightFlashTimer->start();
 }
 
 void InteractorStyle3D::sendPointInfo() const

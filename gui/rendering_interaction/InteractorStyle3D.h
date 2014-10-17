@@ -8,6 +8,8 @@
 #include <gui/rendering_interaction/IPickingInteractorStyle.h>
 
 
+class QTime;
+class QTimer;
 class vtkPointPicker;
 class vtkCellPicker;
 class vtkDataSetMapper;
@@ -38,9 +40,11 @@ public:
 public slots:
     void highlightCell(DataObject * dataObject, vtkIdType cellId) override;
     void lookAtCell(DataObject * polyData, vtkIdType cellId) override;
+    void flashHightlightedCell(int milliseconds = 2000);
 
 protected:
     explicit InteractorStyle3D();
+    ~InteractorStyle3D();
 
     void MouseWheelDolly(bool forward);
 
@@ -54,6 +58,9 @@ protected:
     vtkSmartPointer<vtkCellPicker> m_cellPicker;
     vtkSmartPointer<vtkActor> m_selectedCellActor;
     vtkSmartPointer<vtkDataSetMapper> m_selectedCellMapper;
+
+    QTimer * m_highlightFlashTimer;
+    QTime * m_highlightFlashTime;
 
     bool m_mouseMoved;
 };
