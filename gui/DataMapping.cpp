@@ -31,9 +31,19 @@ DataMapping::DataMapping(MainWindow & mainWindow)
 DataMapping::~DataMapping()
 {
     assert(s_instance);
-    qDeleteAll(m_renderViewSwitches);
-    qDeleteAll(m_renderViews);
-    qDeleteAll(m_tableViews);
+
+    // prevent GUI/focus updates
+    auto switches = m_renderViewSwitches;
+    auto renderView = m_renderViews;
+    auto tableViews = m_tableViews;
+    m_renderViewSwitches.clear();
+    m_renderViews.clear();
+    m_tableViews.clear();
+
+    qDeleteAll(switches);
+    qDeleteAll(renderView);
+    qDeleteAll(tableViews);
+
     s_instance = nullptr;
 }
 
