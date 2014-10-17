@@ -16,6 +16,8 @@ vtkStandardNewMacro(PickingInteractorStyleSwitch);
 PickingInteractorStyleSwitch::PickingInteractorStyleSwitch()
     : InteractorStyleSwitch()
     , m_currentPickingStyle(nullptr)
+    , m_highlightedObject(nullptr)
+    , m_highlightedCell(-1)
 {
 }
 
@@ -27,10 +29,26 @@ void PickingInteractorStyleSwitch::setRenderedData(QList<RenderedData *> rendere
 
     if (m_currentPickingStyle)
         m_currentPickingStyle->setRenderedData(m_renderedData);
+
+    m_highlightedObject = nullptr;
+    m_highlightedCell = -1;
+}
+
+DataObject * PickingInteractorStyleSwitch::highlightedObject()
+{
+    return m_highlightedObject;
+}
+
+vtkIdType PickingInteractorStyleSwitch::highlightedCell()
+{
+    return m_highlightedCell;
 }
 
 void PickingInteractorStyleSwitch::highlightCell(DataObject * dataObject, vtkIdType cellId)
 {
+    m_highlightedObject = dataObject;
+    m_highlightedCell = cellId;
+
     if (m_currentPickingStyle)
         m_currentPickingStyle->highlightCell(dataObject, cellId);
 }

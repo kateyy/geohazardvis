@@ -5,7 +5,6 @@
 
 #include <vtkSmartPointer.h>
 
-#include <core/scalar_mapping/ScalarToColorMapping.h>
 #include <gui/data_view/AbstractDataView.h>
 
 
@@ -21,11 +20,9 @@ class vtkLightKit;
 class DataObject;
 class RenderedData;
 
-class ScalarMappingChooser;
-class VectorMappingChooser;
+class ScalarToColorMapping;
 class PickingInteractorStyleSwitch;
 class IPickingInteractorStyle;
-class RenderConfigWidget;
 class Ui_RenderView;
 class RenderViewStrategy;
 
@@ -35,12 +32,7 @@ class GUI_API RenderView : public AbstractDataView
     Q_OBJECT
 
 public:
-    RenderView(
-        int index,
-        ScalarMappingChooser & scalarMappingChooser,
-        VectorMappingChooser & vectorMappingChooser,
-        RenderConfigWidget & renderConfigWidget,
-        QWidget * parent = nullptr, Qt::WindowFlags flags = 0);
+    RenderView(int index, QWidget * parent = nullptr, Qt::WindowFlags flags = 0);
     ~RenderView() override;
 
     bool isTable() const override;
@@ -58,7 +50,12 @@ public:
     /** remove rendered representations and all references to the data objects */
     void removeDataObjects(const QList<DataObject *> & dataObjects);
     QList<DataObject *> dataObjects() const;
-    QList<const RenderedData *> renderedData() const;
+    const QList<RenderedData *> & renderedData() const;
+
+    DataObject * highlightedData() const;
+    RenderedData * highlightedRenderedData() const;
+
+    ScalarToColorMapping * scalarMapping();
 
     const double * getDataBounds() const;
     void getDataBounds(double bounds[6]) const;
@@ -87,6 +84,8 @@ signals:
     /** emitted loading data into an empty view
         @param dataObjects List of objects that are requested for visualization. */
     void resetStrategie(const QList<DataObject *> & dataObjects);
+
+    void selectedDataChanged(RenderView * renderView, DataObject * dataObject);
 
 public slots:
     void render();
@@ -123,8 +122,9 @@ private:
     void setupColorMappingLegend();
 
 private slots:
-    /** Updates the RenderConfigWidget to reflect the data's render properties. */
-    void updateGuiForData(RenderedData * renderedData);
+    /** update configuration widgets to focus on my content. */
+    void updateGuiForContent();
+    void updateGuiForSelectedData(RenderedData * renderedData);
     void updateGuiForRemovedData();
     /** scan all rendered data for changed attribute vectors */
     void fetchAllAttributeActors();
@@ -154,9 +154,5 @@ private:
     vtkScalarBarActor * m_colorMappingLegend;
     vtkSmartPointer<vtkScalarBarWidget> m_scalarBarWidget;
     
-    // configuration widgets
-    ScalarMappingChooser & m_scalarMappingChooser;
-    VectorMappingChooser & m_vectorMappingChooser;
-    ScalarToColorMapping m_scalarMapping;
-    RenderConfigWidget & m_renderConfigWidget;
+    ScalarToColorMapping * m_scalarMapping;
 };

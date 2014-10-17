@@ -25,6 +25,7 @@
 #include <core/vtkcamerahelper.h>
 #include <core/data_objects/DataObject.h>
 #include <core/data_objects/RenderedData.h>
+#include <core/scalar_mapping/ScalarToColorMapping.h>
 
 #include <gui/SelectionHandler.h>
 #include <gui/data_view/RenderViewStrategyNull.h>
@@ -41,18 +42,13 @@ using namespace std;
 
 RenderView::RenderView(
     int index,
-    ScalarMappingChooser & scalarMappingChooser,
-    VectorMappingChooser & vectorMappingChooser,
-    RenderConfigWidget & renderConfigWidget,
     QWidget * parent, Qt::WindowFlags flags)
     : AbstractDataView(index, parent, flags)
     , m_ui(new Ui_RenderView())
     , m_strategy(nullptr)
     , m_emptyStrategy(new RenderViewStrategyNull(*this))
     , m_axesEnabled(true)
-    , m_scalarMappingChooser(scalarMappingChooser)
-    , m_vectorMappingChooser(vectorMappingChooser)
-    , m_renderConfigWidget(renderConfigWidget)
+    , m_scalarMapping(new ScalarToColorMapping())
 {
     m_ui->setupUi(this);
 
@@ -64,41 +60,25 @@ RenderView::RenderView(
 
     updateTitle();
 
-    connect(&m_scalarMappingChooser, &ScalarMappingChooser::renderSetupChanged, this, &RenderView::render);
-    connect(&m_vectorMappingChooser, &VectorMappingChooser::renderSetupChanged, this, &RenderView::render);
-    connect(&m_scalarMapping, &ScalarToColorMapping::colorLegendVisibilityChanged,
+    connect(m_scalarMapping, &ScalarToColorMapping::colorLegendVisibilityChanged,
         [this] (bool visible) {
         m_scalarBarWidget->SetEnabled(visible);
     });
+
+    connect(m_interactorStyle, &PickingInteractorStyleSwitch::dataPicked, this, &RenderView::updateGuiForSelectedData);
 
     SelectionHandler::instance().addRenderView(this);
 }
 
 RenderView::~RenderView()
 {
-    disconnect(&m_scalarMappingChooser, &ScalarMappingChooser::renderSetupChanged, this, &RenderView::render);
-    disconnect(&m_vectorMappingChooser, &VectorMappingChooser::renderSetupChanged, this, &RenderView::render);
-
-    SelectionHandler::instance().removeRenderView(this);
-
-    m_renderConfigWidget.clear();
-
-    if (m_scalarMappingChooser.mapping() == &m_scalarMapping)
-        m_scalarMappingChooser.setMapping();
-
-    for (RenderedData * renderedData : m_renderedData)
-    {
-        if (renderedData->vectorMapping() == m_vectorMappingChooser.mapping())
-        {
-            m_vectorMappingChooser.setMapping();
-            break;
-        }
-    }   
+    SelectionHandler::instance().removeRenderView(this); 
 
     qDeleteAll(m_renderedData);
     qDeleteAll(m_renderedDataCache);
 
     delete m_emptyStrategy;
+    delete m_scalarMapping;
 }
 
 bool RenderView::isTable() const
@@ -165,7 +145,7 @@ void RenderView::setupInteraction()
     m_interactorStyle->addStyle("InteractorStyleImage", vtkSmartPointer<InteractorStyleImage>::New());
 
     connect(m_interactorStyle.Get(), &PickingInteractorStyleSwitch::pointInfoSent, this, &RenderView::ShowInfo);
-    connect(m_interactorStyle.Get(), &PickingInteractorStyleSwitch::dataPicked, this, &RenderView::updateGuiForData);
+    connect(m_interactorStyle.Get(), &PickingInteractorStyleSwitch::dataPicked, this, &RenderView::updateGuiForSelectedData);
     connect(m_interactorStyle.Get(), &PickingInteractorStyleSwitch::cellPicked, this, &AbstractDataView::objectPicked);
 
     m_ui->qvtkMain->GetRenderWindow()->GetInteractor()->SetInteractorStyle(m_interactorStyle);
@@ -267,9 +247,7 @@ void RenderView::addDataObjects(const QList<DataObject *> & uncheckedDataObjects
     {
         updateAxes();
 
-        updateTitle();
-
-        updateGuiForData(aNewObject);
+        updateGuiForSelectedData(aNewObject);
 
         emit renderedDataChanged(m_renderedData);
     }
@@ -393,12 +371,29 @@ QList<DataObject *> RenderView::dataObjects() const
     return objs;
 }
 
-QList<const RenderedData *> RenderView::renderedData() const
+const QList<RenderedData *> & RenderView::renderedData() const
 {
-    QList<const RenderedData *> l;
-    for (auto r : m_renderedData)
-        l << r;
-    return l;
+    return m_renderedData;
+}
+
+DataObject * RenderView::highlightedData() const
+{
+    DataObject * highlighted = m_interactorStyle->highlightedObject();
+
+    if (!highlighted && !m_renderedData.isEmpty())
+        highlighted = m_renderedData.first()->dataObject();
+
+    return highlighted;
+}
+
+RenderedData * RenderView::highlightedRenderedData() const
+{
+    return m_dataObjectToRendered.value(highlightedData());
+}
+
+ScalarToColorMapping * RenderView::scalarMapping()
+{
+    return m_scalarMapping;
 }
 
 const double * RenderView::getDataBounds() const
@@ -484,7 +479,7 @@ void RenderView::createAxes()
 
 void RenderView::setupColorMappingLegend()
 {
-    m_colorMappingLegend = m_scalarMapping.colorMappingLegend();
+    m_colorMappingLegend = m_scalarMapping->colorMappingLegend();
     m_colorMappingLegend->SetAnnotationTextScaling(false);
     m_colorMappingLegend->SetBarRatio(0.2);
     m_colorMappingLegend->SetNumberOfLabels(7);
@@ -586,13 +581,26 @@ bool RenderView::contains3dData() const
     return strategy().contains3dData();
 }
 
-void RenderView::updateGuiForData(RenderedData * renderedData)
+void RenderView::updateGuiForContent()
+{
+    RenderedData * focus = m_dataObjectToRendered.value(m_interactorStyle->highlightedObject());
+    if (!focus)
+        focus = m_renderedData.value(0, nullptr);
+
+    updateGuiForSelectedData(focus);
+}
+
+void RenderView::updateGuiForSelectedData(RenderedData * renderedData)
 {
     m_interactorStyle->setRenderedData(m_renderedData);
-    m_renderConfigWidget.setRenderedData(index(), renderedData);
-    m_scalarMapping.setRenderedData(m_renderedData);
-    m_scalarMappingChooser.setMapping(this,  &m_scalarMapping);
-    m_vectorMappingChooser.setMapping(index(), renderedData->vectorMapping());
+
+    m_scalarMapping->setRenderedData(m_renderedData);
+
+    DataObject * current = renderedData ? renderedData->dataObject() : nullptr;
+
+    updateTitle();
+
+    emit selectedDataChanged(this, current);
 }
 
 void RenderView::updateGuiForRemovedData()
@@ -603,21 +611,7 @@ void RenderView::updateGuiForRemovedData()
     updateAxes();
     m_renderer->ResetCamera();
 
-    updateTitle();
-
-    m_interactorStyle->setRenderedData(m_renderedData);
-
-    if (m_renderConfigWidget.rendererId() == index())
-        if (!m_renderedData.contains(m_renderConfigWidget.renderedData()))
-            m_renderConfigWidget.setRenderedData(index(), nextSelection);
-
-    m_scalarMapping.setRenderedData(m_renderedData);
-    m_scalarMappingChooser.setMapping(this, &m_scalarMapping);
-
-    VectorMapping * nextMapping = nextSelection ?
-        nextSelection->vectorMapping() : nullptr;
-    if (m_vectorMappingChooser.rendererId() == index())
-        m_vectorMappingChooser.setMapping(index(), nextMapping);
+    updateGuiForSelectedData(nextSelection);
 }
 
 void RenderView::fetchAllAttributeActors()

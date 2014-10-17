@@ -110,6 +110,14 @@ DataObject * DataBrowserTableModel::dataObjectAt(const QModelIndex & index) cons
     return dataObjectAt(index.row());
 }
 
+int DataBrowserTableModel::rowForDataObject(DataObject * dataObject) const
+{
+    if (RawVectorData * raw = dynamic_cast<RawVectorData *>(dataObject))
+        return m_numDataObjects + 1 + DataSetHandler::instance().rawVectors().indexOf(raw);
+
+    return DataSetHandler::instance().dataSets().indexOf(dataObject);
+}
+
 QList<DataObject *> DataBrowserTableModel::dataObjects(QModelIndexList indexes)
 {
     QList<DataObject *> result;

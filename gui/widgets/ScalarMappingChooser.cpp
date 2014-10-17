@@ -42,7 +42,7 @@ ScalarMappingChooser::ScalarMappingChooser(QWidget * parent)
     });
     m_ui->legendPositionComboBox->setCurrentText("right");
 
-    setMapping();
+    setCurrentRenderView();
 
     connect(m_ui->rearrangeDataObjectsBtn, &QAbstractButton::clicked, this, &ScalarMappingChooser::rearrangeDataObjects);
 }
@@ -52,36 +52,38 @@ ScalarMappingChooser::~ScalarMappingChooser()
     delete m_ui;
 }
 
-void ScalarMappingChooser::setMapping(RenderView * renderView, ScalarToColorMapping * mapping)
+void ScalarMappingChooser::setCurrentRenderView(RenderView * renderView)
 {
     updateTitle(renderView ? renderView->friendlyName() : "");
 
-    m_mapping = mapping;
+    if (m_renderView)
+        disconnect(this, &ScalarMappingChooser::renderSetupChanged, m_renderView, &RenderView::render);
+    if (m_mapping)
+        disconnect(m_mapping, &ScalarToColorMapping::scalarsChanged, this, &ScalarMappingChooser::rebuildGui);
+
     m_renderView = renderView;
+    m_mapping = renderView ? renderView->scalarMapping() : nullptr;
 
     // setup gradient for newly created mappings
-    if (mapping && !mapping->originalGradient())
-        mapping->setGradient(selectedGradient());
+    if (m_mapping && !m_mapping->originalGradient())
+        m_mapping->setGradient(selectedGradient());
 
     rebuildGui();
 
     m_ui->legendPositionComboBox->setCurrentText("user-defined position");
 
-    if (mapping)
+    if (m_mapping)
     {
-        connect(mapping, &ScalarToColorMapping::scalarsChanged, this, &ScalarMappingChooser::rebuildGui);
+        connect(m_mapping, &ScalarToColorMapping::scalarsChanged, this, &ScalarMappingChooser::rebuildGui);
         vtkEventQtSlotConnect * vtkQtConnect = vtkEventQtSlotConnect::New();
         m_colorLegendConnects.TakeReference(vtkQtConnect);
-        vtkQtConnect->Connect(mapping->colorMappingLegend()->GetPositionCoordinate(), vtkCommand::ModifiedEvent,
+        vtkQtConnect->Connect(m_mapping->colorMappingLegend()->GetPositionCoordinate(), vtkCommand::ModifiedEvent,
             this, SLOT(colorLegendPositionChanged()));
-        vtkQtConnect->Connect(mapping->colorMappingLegend()->GetPosition2Coordinate(), vtkCommand::ModifiedEvent,
+        vtkQtConnect->Connect(m_mapping->colorMappingLegend()->GetPosition2Coordinate(), vtkCommand::ModifiedEvent,
             this, SLOT(colorLegendPositionChanged()));
-    }
-}
 
-const ScalarToColorMapping * ScalarMappingChooser::mapping() const
-{
-    return m_mapping;
+        connect(this, &ScalarMappingChooser::renderSetupChanged, m_renderView, &RenderView::render);
+    }
 }
 
 void ScalarMappingChooser::scalarsSelectionChanged(QString scalarsName)

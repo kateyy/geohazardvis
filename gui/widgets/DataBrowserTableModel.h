@@ -11,8 +11,6 @@ class DataObject;
 
 class DataBrowserTableModel : public QAbstractTableModel
 {
-    Q_OBJECT
-
 public:
     DataBrowserTableModel(QObject * parent = nullptr);
 
@@ -26,6 +24,7 @@ public:
 
     DataObject * dataObjectAt(int row) const;
     DataObject * dataObjectAt(const QModelIndex & index) const;
+    int rowForDataObject(DataObject * dataObject) const;
 
     QList<DataObject *> dataObjects(QModelIndexList indexes);
     QList<DataObject *> dataSets(QModelIndexList indexes);

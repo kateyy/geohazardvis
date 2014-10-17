@@ -21,14 +21,13 @@ public:
     ScalarMappingChooser(QWidget * parent = nullptr);
     ~ScalarMappingChooser() override;
 
-    /** setup UI for a named rendered and a configured scalar to color mapping */
-    void setMapping(RenderView * renderView = nullptr, ScalarToColorMapping * mapping = nullptr);
-    const ScalarToColorMapping * mapping() const;
-
     vtkLookupTable * selectedGradient() const;
 
 signals:
     void renderSetupChanged();
+
+public slots:
+    void setCurrentRenderView(RenderView * renderView = nullptr);
 
 private slots:
     void scalarsSelectionChanged(QString scalarsName);

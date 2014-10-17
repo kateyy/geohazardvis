@@ -27,6 +27,14 @@ DataBrowser::DataBrowser(QWidget* parent, Qt::WindowFlags f)
 
     connect(&DataSetHandler::instance(), &DataSetHandler::dataObjectsChanged, this, &DataBrowser::updateModelForFocusedView);
     connect(&DataSetHandler::instance(), &DataSetHandler::rawVectorsChanged, this, &DataBrowser::updateModelForFocusedView);
+
+    connect(m_ui->dataTableView->selectionModel(), &QItemSelectionModel::selectionChanged,
+        [this] (const QItemSelection &selected, const QItemSelection &) {
+        if (selected.indexes().isEmpty())
+            return;
+        
+        emit selectedDataChanged(m_tableModel->dataObjectAt(selected.indexes().first()));
+    });
 }
 
 DataBrowser::~DataBrowser()
@@ -41,6 +49,12 @@ void DataBrowser::setDataMapping(DataMapping * dataMapping)
 
     m_dataMapping = dataMapping;
     connect(m_dataMapping, &DataMapping::focusedRenderViewChanged, this, &DataBrowser::updateModel);
+}
+
+void DataBrowser::setSelectedData(DataObject * data)
+{
+    m_ui->dataTableView->clearSelection();
+    m_ui->dataTableView->selectRow(m_tableModel->rowForDataObject(data));
 }
 
 bool DataBrowser::eventFilter(QObject * /*obj*/, QEvent * ev)

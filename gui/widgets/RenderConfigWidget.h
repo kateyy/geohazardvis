@@ -12,7 +12,9 @@ namespace propertyguizeug
     class PropertyBrowser;
 }
 class Ui_RenderConfigWidget;
+class DataObject;
 class RenderedData;
+class RenderView;
 
 
 class RenderConfigWidget : public QDockWidget
@@ -23,11 +25,10 @@ public:
     RenderConfigWidget(QWidget * parent = nullptr);
     ~RenderConfigWidget() override;
 
-    /** reset the property browser to contain only configuration options related to the rendered data */
-    void setRenderedData(int rendererId = -1, RenderedData * renderedData = nullptr);
-    int rendererId() const;
-    RenderedData * renderedData();
-
+public slots:
+    void setCurrentRenderView(RenderView * renderView = nullptr);
+    /** switch to specified dataObject, in case it is visible in my current render view */
+    void setSelectedData(DataObject * dataObject);
     void clear();
 
 protected:
@@ -39,6 +40,6 @@ protected:
 
     reflectionzeug::PropertyGroup * m_propertyRoot;
 
-    int m_rendererId;
+    RenderView * m_renderView;
     RenderedData * m_renderedData;
 };

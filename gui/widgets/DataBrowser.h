@@ -21,6 +21,11 @@ public:
 
     void setDataMapping(DataMapping * dataMapping);
 
+    void setSelectedData(DataObject * data);
+
+signals:
+    void selectedDataChanged(DataObject * data);
+
 protected:
     bool eventFilter(QObject * obj, QEvent * ev) override;
 

@@ -8,6 +8,7 @@
 #include <core/data_objects/RenderedData.h>
 #include <gui/propertyguizeug_extension/PropertyEditorFactoryEx.h>
 #include <gui/propertyguizeug_extension/PropertyPainterEx.h>
+#include <gui/data_view/RenderView.h>
 
 
 using namespace reflectionzeug;
@@ -19,7 +20,7 @@ RenderConfigWidget::RenderConfigWidget(QWidget * parent)
     , m_ui(new Ui_RenderConfigWidget())
     , m_propertyBrowser(new PropertyBrowser(new PropertyEditorFactoryEx(), new PropertyPainterEx(), this))
     , m_propertyRoot(nullptr)
-    , m_rendererId(-1)
+    , m_renderView(nullptr)
     , m_renderedData(nullptr)
 {
     m_ui->setupUi(this);
@@ -49,18 +50,18 @@ void RenderConfigWidget::clear()
     emit repaint();
 }
 
-void RenderConfigWidget::setRenderedData(int rendererId, RenderedData * renderedData)
+void RenderConfigWidget::setCurrentRenderView(RenderView * renderView)
 {
     clear();
 
-    m_renderedData = renderedData;
-    m_rendererId = rendererId;
+    m_renderView = renderView;
+    m_renderedData = renderView->highlightedRenderedData();
     updateTitle();
 
-    if (!renderedData)
+    if (!m_renderedData)
         return;
 
-    m_propertyRoot = renderedData->createConfigGroup();
+    m_propertyRoot = m_renderedData->createConfigGroup();
 
     m_propertyBrowser->setRoot(m_propertyRoot);
     m_propertyBrowser->setColumnWidth(0, 135);
@@ -68,23 +69,46 @@ void RenderConfigWidget::setRenderedData(int rendererId, RenderedData * rendered
     emit repaint();
 }
 
-int RenderConfigWidget::rendererId() const
+void RenderConfigWidget::setSelectedData(DataObject * dataObject)
 {
-    return m_rendererId;
-}
+    if (!m_renderView)
+        return;
 
-RenderedData * RenderConfigWidget::renderedData()
-{
-    return m_renderedData;
+    if (!m_renderView->dataObjects().contains(dataObject))
+        return;
+
+    RenderedData * renderedData = nullptr;
+    for (RenderedData * rendered : m_renderView->renderedData())
+    {
+        if (rendered->dataObject() == dataObject)
+        {
+            renderedData = rendered;
+            break;
+        }
+    }
+
+    assert(renderedData);
+
+    if (renderedData == m_renderedData)
+        return;
+
+    clear();
+
+    m_renderedData = renderedData;
+    updateTitle();
+    m_propertyRoot = m_renderedData->createConfigGroup();
+    m_propertyBrowser->setRoot(m_propertyRoot);
+    m_propertyBrowser->setColumnWidth(0, 135);
+    emit repaint();
 }
 
 void RenderConfigWidget::updateTitle()
 {
     QString title;
-    if (!renderedData())
+    if (!m_renderedData)
         title = "(no object selected)";
     else
-        title = QString::number(m_rendererId) + ": " + renderedData()->dataObject()->name();
+        title = QString::number(m_renderView->index()) + ": " + m_renderedData->dataObject()->name();
 
     m_ui->relatedDataObject->setText(title);
 }

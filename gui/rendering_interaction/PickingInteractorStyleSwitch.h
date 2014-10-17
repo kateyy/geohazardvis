@@ -16,6 +16,9 @@ public:
 
     void setRenderedData(QList<RenderedData *> renderedData) override;
 
+    DataObject * highlightedObject();
+    vtkIdType highlightedCell();
+
 public slots:
     void highlightCell(DataObject * dataObject, vtkIdType cellId) override;
     void lookAtCell(DataObject * dataObject, vtkIdType cellId) override;
@@ -30,4 +33,7 @@ protected:
 private:
     QList<RenderedData *> m_renderedData;
     IPickingInteractorStyle * m_currentPickingStyle;
+
+    DataObject * m_highlightedObject;
+    vtkIdType m_highlightedCell;
 };

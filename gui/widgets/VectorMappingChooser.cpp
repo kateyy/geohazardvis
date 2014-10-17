@@ -5,12 +5,14 @@
 #include <reflectionzeug/StringProperty.h>
 #include <propertyguizeug/PropertyBrowser.h>
 
+#include <core/DataSetHandler.h>
 #include <core/data_objects/DataObject.h>
 #include <core/data_objects/RenderedData.h>
 #include <core/vector_mapping/VectorMapping.h>
 #include <core/vector_mapping/VectorMappingData.h>
 #include <gui/propertyguizeug_extension/PropertyEditorFactoryEx.h>
 #include <gui/propertyguizeug_extension/PropertyPainterEx.h>
+#include <gui/data_view/RenderView.h>
 
 #include "VectorMappingChooserListModel.h"
 
@@ -22,7 +24,7 @@ VectorMappingChooser::VectorMappingChooser(QWidget * parent, Qt::WindowFlags fla
     : QDockWidget(parent, flags)
     , m_ui(new Ui_VectorMappingChooser())
     , m_propertyBrowser(new PropertyBrowser(new PropertyEditorFactoryEx(), new PropertyPainterEx(), this))
-    , m_rendererId(-1)
+    , m_renderView(nullptr)
     , m_mapping(nullptr)
     , m_listModel(new VectorMappingChooserListModel())
 {
@@ -42,21 +44,65 @@ VectorMappingChooser::VectorMappingChooser(QWidget * parent, Qt::WindowFlags fla
 
 VectorMappingChooser::~VectorMappingChooser()
 {
-    setMapping();
+    m_renderView = nullptr;
+    m_mapping = nullptr;
+
+    updateVectorsList();
 
     delete m_ui;
 }
 
-void VectorMappingChooser::setMapping(int rendererId, VectorMapping * mapping)
+void VectorMappingChooser::setCurrentRenderView(RenderView * renderView)
 {
-    if (mapping == m_mapping)
-        return;
+    VectorMapping * newMapping = nullptr;
+    if (renderView && renderView->highlightedRenderedData())
+        newMapping = renderView->highlightedRenderedData()->vectorMapping();
 
-    m_rendererId = rendererId;
-    m_mapping = mapping;
+    if (m_renderView)
+        disconnect(this, &VectorMappingChooser::renderSetupChanged, m_renderView, &RenderView::render);
+    if (m_mapping)
+        disconnect(m_mapping, &VectorMapping::vectorsChanged, this, &VectorMappingChooser::updateVectorsList);
+
+    m_renderView = renderView;
+    m_mapping = newMapping;
 
     updateTitle();
 
+    updateVectorsList();
+
+    if (m_mapping)
+        connect(m_mapping, &VectorMapping::vectorsChanged, this, &VectorMappingChooser::updateVectorsList);
+    if (m_renderView)
+        connect(this, &VectorMappingChooser::renderSetupChanged, m_renderView, &RenderView::render);
+}
+
+void VectorMappingChooser::setSelectedData(DataObject * dataObject)
+{
+    if (!m_renderView)
+        return;
+
+    RenderedData * renderedData = nullptr;
+    for (RenderedData * r : m_renderView->renderedData())
+    {
+        if (r->dataObject() == dataObject)
+        {
+            renderedData = r;
+            break;
+        }
+    }
+
+    if (!renderedData)
+        return;
+
+    if (m_mapping == renderedData->vectorMapping())
+        return;
+
+    if (m_mapping)
+        disconnect(m_mapping, &VectorMapping::vectorsChanged, this, &VectorMappingChooser::updateVectorsList);
+
+    m_mapping = renderedData->vectorMapping();
+
+    updateTitle();
     updateVectorsList();
 
     if (m_mapping)
@@ -84,16 +130,6 @@ void VectorMappingChooser::updateVectorsList()
         QModelIndex index(m_listModel->index(0, 0));
         m_ui->vectorsListView->selectionModel()->select(index, QItemSelectionModel::Select);
     }
-}
-
-int VectorMappingChooser::rendererId() const
-{
-    return m_rendererId;
-}
-
-const VectorMapping * VectorMappingChooser::mapping() const
-{
-    return m_mapping;
 }
 
 void VectorMappingChooser::updateGuiForSelection(const QItemSelection & selection)
@@ -135,7 +171,7 @@ void VectorMappingChooser::updateTitle()
     if (!m_mapping)
         title = "(no object selected)";
     else
-        title = QString::number(m_rendererId) + ": " + m_mapping->renderedData()->dataObject()->name();
+        title = QString::number(m_renderView->index()) + ": " + m_mapping->renderedData()->dataObject()->name();
 
     m_ui->relatedDataObject->setText(title);
 }

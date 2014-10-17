@@ -12,6 +12,8 @@
 #include <core/vtkhelper.h>
 #include <core/Loader.h>
 #include <core/DataSetHandler.h>
+#include <core/data_objects/DataObject.h>
+#include <core/data_objects/RenderedData.h>
 
 #include "DataMapping.h"
 #include "SelectionHandler.h"
@@ -51,9 +53,19 @@ MainWindow::MainWindow()
     tabifyDockWidget(m_renderConfigWidget, m_rendererConfigWidget);
     tabbedDockWidgetToFront(m_renderConfigWidget);
 
+    connect(m_dataMapping, &DataMapping::focusedRenderViewChanged, m_scalarMappingChooser, &ScalarMappingChooser::setCurrentRenderView);
+    connect(m_dataMapping, &DataMapping::focusedRenderViewChanged, m_vectorMappingChooser, &VectorMappingChooser::setCurrentRenderView);
+    connect(m_dataMapping, &DataMapping::focusedRenderViewChanged, m_renderConfigWidget, &RenderConfigWidget::setCurrentRenderView);
+
     connect(m_dataMapping, &DataMapping::renderViewsChanged, m_rendererConfigWidget, &RendererConfigWidget::setRenderViews);
     connect(m_dataMapping, &DataMapping::focusedRenderViewChanged,
         m_rendererConfigWidget, static_cast<void(RendererConfigWidget::*)(RenderView*)>(&RendererConfigWidget::setCurrentRenderView));
+
+    connect(m_dataBrowser, &DataBrowser::selectedDataChanged,
+        [this] (DataObject * selected) {
+        m_renderConfigWidget->setSelectedData(selected);
+        m_vectorMappingChooser->setSelectedData(selected);
+    });
 }
 
 MainWindow::~MainWindow()
@@ -95,12 +107,15 @@ void MainWindow::dropEvent(QDropEvent * event)
     openFiles(fileNames);
 }
 
-RenderView * MainWindow::createRenderView(int index)
+void MainWindow::addRenderView(RenderView * renderView)
 {
-    RenderView * renderView = new RenderView(index, *m_scalarMappingChooser, *m_vectorMappingChooser, *m_renderConfigWidget);
     addDockWidget(Qt::DockWidgetArea::TopDockWidgetArea, renderView);
 
-    return renderView;
+    connect(renderView, &RenderView::selectedDataChanged, 
+        [this] (RenderView * renderView, DataObject * selectedData) {
+        m_dataMapping->setFocusedView(renderView);
+        m_dataBrowser->setSelectedData(selectedData);
+    });
 }
 
 void MainWindow::openFiles(QStringList fileNames)

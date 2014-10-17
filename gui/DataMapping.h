@@ -30,12 +30,14 @@ public:
 
     RenderView * focusedRenderView();
 
+public slots:
+    void setFocusedView(AbstractDataView * renderView);
+
 signals:
     void renderViewsChanged(const QList<RenderView *> & widgets);
     void focusedRenderViewChanged(RenderView * renderView);
 
 private slots:
-    void setFocusedView(AbstractDataView * renderView);
     void focusNextRenderView();
 
     void tableClosed();

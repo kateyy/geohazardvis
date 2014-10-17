@@ -98,7 +98,8 @@ void DataMapping::openInTable(DataObject * dataObject)
 
 RenderView * DataMapping::openInRenderView(QList<DataObject *> dataObjects)
 {
-    RenderView * renderView = m_mainWindow.createRenderView(m_nextRenderViewIndex++);
+    RenderView * renderView = new RenderView(m_nextRenderViewIndex++);
+    m_mainWindow.addRenderView(renderView);
     m_renderViews.insert(renderView->index(), renderView);
     RenderViewSwitch * sw = new RenderViewSwitch(*renderView);
     m_renderViewSwitches.insert(renderView, sw);
