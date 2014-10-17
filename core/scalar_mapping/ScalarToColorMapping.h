@@ -27,6 +27,7 @@ class CORE_API ScalarToColorMapping : public QObject
 
 public:
     ScalarToColorMapping();
+    ~ScalarToColorMapping() override;
 
     /** setup a list of scalar mappings which are applicable to the list of rendered data
       * reuse lastly used scalars if possible */

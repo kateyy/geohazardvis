@@ -27,6 +27,11 @@ ScalarToColorMapping::ScalarToColorMapping()
         this, &ScalarToColorMapping::updateAvailableScalars);
 }
 
+ScalarToColorMapping::~ScalarToColorMapping()
+{
+    qDeleteAll(m_scalars);
+}
+
 void ScalarToColorMapping::setRenderedData(const QList<RenderedData *> & renderedData)
 {
     auto lastRenderedData = m_renderedData;
