@@ -417,8 +417,8 @@ void InteractorStyle3D::lookAtCell(DataObject * dataObject, vtkIdType cellId)
     targetElevation = TerrainCamera::getVerticalElevation(*targetCamera);
 
 
-    const double flyTimeSec = 0.2;
-    const double flyDeadlineSec = 0.8;
+    const double flyTimeSec = 0.5;
+    const double flyDeadlineSec = 1;
 
     const int NumberOfFlyFrames = 15;
     double stepFactor = 1.0 / (NumberOfFlyFrames + 1);
