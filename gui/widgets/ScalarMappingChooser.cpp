@@ -54,13 +54,6 @@ ScalarMappingChooser::~ScalarMappingChooser()
 
 void ScalarMappingChooser::setCurrentRenderView(RenderView * renderView)
 {
-    updateTitle(renderView ? renderView->friendlyName() : "");
-
-    if (m_renderView)
-        disconnect(this, &ScalarMappingChooser::renderSetupChanged, m_renderView, &RenderView::render);
-    if (m_mapping)
-        disconnect(m_mapping, &ScalarToColorMapping::scalarsChanged, this, &ScalarMappingChooser::rebuildGui);
-
     m_renderView = renderView;
     m_mapping = renderView ? renderView->scalarMapping() : nullptr;
 
@@ -74,15 +67,12 @@ void ScalarMappingChooser::setCurrentRenderView(RenderView * renderView)
 
     if (m_mapping)
     {
-        connect(m_mapping, &ScalarToColorMapping::scalarsChanged, this, &ScalarMappingChooser::rebuildGui);
         vtkEventQtSlotConnect * vtkQtConnect = vtkEventQtSlotConnect::New();
         m_colorLegendConnects.TakeReference(vtkQtConnect);
         vtkQtConnect->Connect(m_mapping->colorMappingLegend()->GetPositionCoordinate(), vtkCommand::ModifiedEvent,
             this, SLOT(colorLegendPositionChanged()));
         vtkQtConnect->Connect(m_mapping->colorMappingLegend()->GetPosition2Coordinate(), vtkCommand::ModifiedEvent,
             this, SLOT(colorLegendPositionChanged()));
-
-        connect(this, &ScalarMappingChooser::renderSetupChanged, m_renderView, &RenderView::render);
     }
 }
 
@@ -210,13 +200,6 @@ void ScalarMappingChooser::colorLegendPositionChanged()
         m_ui->legendPositionComboBox->setCurrentText("user-defined position");
 }
 
-void ScalarMappingChooser::on_colorLegendGroupBox_toggled(bool on)
-{
-    m_mapping->setColorMappingLegendVisible(on);
-
-    m_renderView->render();
-}
-
 void ScalarMappingChooser::loadGradientImages()
 {
     // navigate to the gradient directory
@@ -282,25 +265,35 @@ void ScalarMappingChooser::updateTitle(QString rendererName)
 
 void ScalarMappingChooser::rebuildGui()
 {
+    updateTitle(m_renderView ? m_renderView->friendlyName() : "");
+
     auto newMapping = m_mapping;
     m_mapping = nullptr;    // disable GUI to mapping events
+
+    for (auto & connection : m_qtConnect)
+        disconnect(connection);
+    m_qtConnect.clear();
 
     m_ui->scalarsComboBox->clear();
     m_ui->gradientGroupBox->setEnabled(false);
     m_ui->colorLegendGroupBox->setEnabled(false);
+    m_ui->colorLegendGroupBox->setChecked(false);
 
     // clear GUI when not rendering
     if (newMapping)
     {
         m_ui->scalarsComboBox->addItems(newMapping->scalarsNames());
 
-        if (m_ui->scalarsComboBox->count() != 0)
-        {
-            m_ui->scalarsComboBox->setCurrentText(newMapping->currentScalarsName());
-            m_ui->gradientComboBox->setCurrentIndex(gradientIndex(newMapping->originalGradient()));
-            m_ui->gradientGroupBox->setEnabled(newMapping->currentScalarsUseMappingLegend());
-            m_ui->colorLegendGroupBox->setEnabled(newMapping->currentScalarsUseMappingLegend());
-        }
+        m_ui->scalarsComboBox->setCurrentText(newMapping->currentScalarsName());
+        m_ui->gradientComboBox->setCurrentIndex(gradientIndex(newMapping->originalGradient()));
+        m_ui->gradientGroupBox->setEnabled(newMapping->currentScalarsUseMappingLegend());
+        m_ui->colorLegendGroupBox->setEnabled(newMapping->currentScalarsUseMappingLegend());
+        m_ui->colorLegendGroupBox->setChecked(newMapping->colorMappingLegendVisible());
+
+        m_qtConnect << connect(m_renderView, &RenderView::renderedDataChanged, this, &ScalarMappingChooser::rebuildGui);
+        m_qtConnect << connect(newMapping, &ScalarToColorMapping::scalarsChanged, this, &ScalarMappingChooser::rebuildGui);
+        m_qtConnect << connect(m_ui->colorLegendGroupBox, &QGroupBox::toggled, newMapping, &ScalarToColorMapping::setColorMappingLegendVisible);
+        m_qtConnect << connect(this, &ScalarMappingChooser::renderSetupChanged, m_renderView, &RenderView::render);
     }
 
     // the mapping can now receive signals from the UI

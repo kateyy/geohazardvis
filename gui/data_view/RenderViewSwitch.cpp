@@ -51,8 +51,10 @@ void RenderViewSwitch::setStrategy(const QString & name)
     m_view.setStrategy(strategy);
 }
 
-void RenderViewSwitch::updateStrategies(const QList<RenderedData *> & renderedData)
+void RenderViewSwitch::updateStrategies()
 {
+    const QList<RenderedData *> & renderedData = m_view.renderedData();
+
     for (auto it = m_strategies.begin(); it != m_strategies.end(); ++it)
     {
         RenderViewStrategy * strategy = it.value();

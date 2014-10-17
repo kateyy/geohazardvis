@@ -249,7 +249,7 @@ void RenderView::addDataObjects(const QList<DataObject *> & uncheckedDataObjects
 
         updateGuiForSelectedData(aNewObject);
 
-        emit renderedDataChanged(m_renderedData);
+        emit renderedDataChanged();
     }
 
     if (wasEmpty)
@@ -292,7 +292,7 @@ void RenderView::hideDataObjects(const QList<DataObject *> & dataObjects)
 
     updateGuiForRemovedData();
 
-    emit renderedDataChanged(m_renderedData);
+    emit renderedDataChanged();
 
     if (m_renderedData.isEmpty())
         setStrategy(nullptr);
@@ -322,6 +322,10 @@ void RenderView::removeDataObject(DataObject * dataObject)
     QList<RenderedData *> toDelete = removeFromInternalLists({ dataObject });
 
     updateGuiForRemovedData();
+
+    emit renderedDataChanged();
+
+    render();
 
     qDeleteAll(toDelete);
 }

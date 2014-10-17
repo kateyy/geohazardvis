@@ -42,7 +42,6 @@ private slots:
 
     void on_legendPositionComboBox_currentIndexChanged(QString position);
     void colorLegendPositionChanged();
-    void on_colorLegendGroupBox_toggled(bool on);
 
 private:
     void loadGradientImages();
@@ -63,4 +62,5 @@ private:
     /** check if we are moving the actor or if the user interacts */
     bool m_movingColorLegend;
     vtkSmartPointer<vtkEventQtSlotConnect> m_colorLegendConnects;
+    QList<QMetaObject::Connection> m_qtConnect;
 };

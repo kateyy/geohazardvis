@@ -27,7 +27,7 @@ signals:
 
 public slots:
     void setStrategy(const QString & name);
-    void updateStrategies(const QList<RenderedData *> & renderedData);
+    void updateStrategies();
     void findSuitableStrategy(const QList<DataObject *> & dataObjects);
 
 private:

@@ -80,7 +80,7 @@ public:
 
 signals:
     /** emitted after changing the list of visible objects */
-    void renderedDataChanged(const QList<RenderedData *> & renderedData);
+    void renderedDataChanged();
     /** emitted loading data into an empty view
         @param dataObjects List of objects that are requested for visualization. */
     void resetStrategie(const QList<DataObject *> & dataObjects);
