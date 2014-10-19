@@ -11,8 +11,8 @@
 ScalarsForColorMapping::ScalarsForColorMapping(const QList<DataObject *> & dataObjects, vtkIdType numDataComponents)
     : m_dataObjects(dataObjects)
     , m_startingIndex(0)
-    , m_dataComponent(0)
     , m_numDataComponents(numDataComponents)
+    , m_dataComponent(0)
     , m_dataMinValue(numDataComponents, std::numeric_limits<double>::max())
     , m_dataMaxValue(numDataComponents, std::numeric_limits<double>::lowest())
     , m_minValue(numDataComponents, std::numeric_limits<double>::max())
@@ -61,7 +61,7 @@ vtkIdType ScalarsForColorMapping::startingIndex() const
 
 void ScalarsForColorMapping::setStartingIndex(vtkIdType index)
 {
-    vtkIdType newIndex = std::max(0ll, std::min(index, maximumStartingIndex()));
+    vtkIdType newIndex = std::max(vtkIdType(0), std::min(index, maximumStartingIndex()));
 
     if (newIndex == m_startingIndex)
         return;

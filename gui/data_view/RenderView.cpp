@@ -65,7 +65,7 @@ RenderView::RenderView(
         m_scalarBarWidget->SetEnabled(visible);
     });
 
-    connect(m_interactorStyle, &PickingInteractorStyleSwitch::dataPicked, this, &RenderView::updateGuiForSelectedData);
+    connect(m_interactorStyle.Get(), &PickingInteractorStyleSwitch::dataPicked, this, &RenderView::updateGuiForSelectedData);
 
     SelectionHandler::instance().addRenderView(this);
 }

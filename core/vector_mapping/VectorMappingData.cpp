@@ -120,7 +120,7 @@ vtkIdType VectorMappingData::startingIndex() const
 
 void VectorMappingData::setStartingIndex(vtkIdType index)
 {
-    vtkIdType newIndex = std::max(0ll, std::min(index, maximumStartingIndex()));
+    vtkIdType newIndex = std::max(vtkIdType(0), std::min(index, maximumStartingIndex()));
 
     if (newIndex == m_startingIndex)
         return;
