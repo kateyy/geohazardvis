@@ -7,7 +7,6 @@
 #include <QTime>
 #include <QThread>
 #include <QTimer>
-#include <QDebug>
 
 #include <vtkRenderWindowInteractor.h>
 #include <vtkRenderer.h>
@@ -492,7 +491,6 @@ void InteractorStyle3D::flashHightlightedCell(int milliseconds)
         connect(m_highlightFlashTimer, &QTimer::timeout,
             [this] () {
             int ms = (1000 + m_highlightFlashTime->msec() - QTime::currentTime().msec()) % 1000;
-            qDebug() << ms;
             if (*m_highlightFlashTime < QTime::currentTime())
             {
                 m_highlightFlashTimer->stop();
@@ -503,8 +501,6 @@ void InteractorStyle3D::flashHightlightedCell(int milliseconds)
             GetDefaultRenderer()->GetRenderWindow()->Render();
         });
     }
-
-    qDebug() << "starting flash: " << QString::number(milliseconds);
 
     *m_highlightFlashTime = QTime::currentTime().addMSecs(milliseconds);
     m_highlightFlashTimer->start();
