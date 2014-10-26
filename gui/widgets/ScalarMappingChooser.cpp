@@ -292,7 +292,11 @@ void ScalarMappingChooser::rebuildGui()
 
         m_qtConnect << connect(m_renderView, &RenderView::renderedDataChanged, this, &ScalarMappingChooser::rebuildGui);
         m_qtConnect << connect(newMapping, &ScalarToColorMapping::scalarsChanged, this, &ScalarMappingChooser::rebuildGui);
-        m_qtConnect << connect(m_ui->colorLegendGroupBox, &QGroupBox::toggled, newMapping, &ScalarToColorMapping::setColorMappingLegendVisible);
+        m_qtConnect << connect(m_ui->colorLegendGroupBox, &QGroupBox::toggled, 
+            [this, newMapping] (bool checked) {
+            newMapping->setColorMappingLegendVisible(checked);
+            m_renderView->render();
+        });
         m_qtConnect << connect(this, &ScalarMappingChooser::renderSetupChanged, m_renderView, &RenderView::render);
     }
 
