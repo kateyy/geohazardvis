@@ -39,8 +39,16 @@ namespace
 
 RenderedPolyData::RenderedPolyData(PolyDataObject * dataObject)
     : RenderedData(dataObject)
+    , m_mapper(vtkSmartPointer<vtkPolyDataMapper>::New())
 {
     assert(vtkPolyData::SafeDownCast(dataObject->dataSet()));
+
+    vtkInformation * mapperInfo = m_mapper->GetInformation();
+    mapperInfo->Set(DataObject::NameKey(), dataObject->name().toLatin1().data());
+    DataObject::setDataObject(mapperInfo, dataObject);
+
+    // don't break the lut configuration
+    m_mapper->UseLookupTableScalarRangeOn();
 }
 
 RenderedPolyData::~RenderedPolyData() = default;
@@ -193,53 +201,32 @@ vtkProperty * RenderedPolyData::createDefaultRenderProperty() const
 vtkActor * RenderedPolyData::createActor()
 {
     vtkActor * actor = vtkActor::New();
-    vtkSmartPointer<vtkMapper> mapper = vtkSmartPointer<vtkMapper>::Take(createDataMapper());
-    actor->SetMapper(mapper);
+    actor->SetMapper(m_mapper);
 
     return actor;
 }
 
 void RenderedPolyData::scalarsForColorMappingChangedEvent()
 {
-    vtkSmartPointer<vtkMapper> mapper = vtkSmartPointer<vtkMapper>::Take(createDataMapper());
-    mainActor()->SetMapper(mapper);
-}
-
-void RenderedPolyData::colorMappingGradientChangedEvent()
-{
-    vtkSmartPointer<vtkMapper> mapper = vtkSmartPointer<vtkMapper>::Take(createDataMapper());
-    mainActor()->SetMapper(mapper);
-}
-
-vtkPolyDataMapper * RenderedPolyData::createDataMapper()
-{
-    vtkPolyDataMapper * mapper = vtkPolyDataMapper::New();
-    
-    vtkInformation * mapperInfo = mapper->GetInformation();
-    mapperInfo->Set(DataObject::NameKey(), dataObject()->name().toLatin1().data());
-    DataObject::setDataObject(mapperInfo, dataObject());
-    
     // no mapping yet, so just render the data set
-    if (!m_scalars || !m_gradient)
+    if (!m_scalars)
     {
-        mapper->SetInputConnection(dataObject()->processedOutputPort());
-        return mapper;
+        m_mapper->SetInputConnection(dataObject()->processedOutputPort());
+        return;
     }
 
-    // don't break the lut configuration
-    mapper->UseLookupTableScalarRangeOn();
-
-    mapper->SetLookupTable(m_gradient);
-
-    m_scalars->configureDataObjectAndMapper(dataObject(), mapper);
+    m_scalars->configureDataObjectAndMapper(dataObject(), m_mapper);
 
     if (m_scalars->usesFilter())
     {
         vtkSmartPointer<vtkAlgorithm> filter = vtkSmartPointer<vtkAlgorithm>::Take(m_scalars->createFilter(dataObject()));
-        mapper->SetInputConnection(filter->GetOutputPort());
+        m_mapper->SetInputConnection(filter->GetOutputPort());
     }
     else
-        mapper->SetInputConnection(dataObject()->processedOutputPort());
+        m_mapper->SetInputConnection(dataObject()->processedOutputPort());
+}
 
-    return mapper;
+void RenderedPolyData::colorMappingGradientChangedEvent()
+{
+    m_mapper->SetLookupTable(m_gradient);
 }

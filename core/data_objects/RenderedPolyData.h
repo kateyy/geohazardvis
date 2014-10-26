@@ -29,5 +29,5 @@ protected:
     void colorMappingGradientChangedEvent() override;
 
 private:
-    vtkPolyDataMapper * createDataMapper();
+    vtkSmartPointer<vtkPolyDataMapper> m_mapper;
 };
