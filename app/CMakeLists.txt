@@ -19,3 +19,10 @@ target_link_libraries( ${TARGET}
     gui )
 
 configure_cxx_target( ${TARGET} )
+
+
+install(TARGETS ${TARGET}
+    RUNTIME DESTINATION ${INSTALL_BIN}
+#   LIBRARY DESTINATION ${INSTALL_SHARED}
+#   ARCHIVE DESTINATION ${INSTALL_LIB}
+)

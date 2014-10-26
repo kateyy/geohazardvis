@@ -1,6 +1,6 @@
+message(STATUS "Configuring for platform Windows/MSVC.")
 
 LIST(APPEND DEFAULT_COMPILE_DEFS
-
     WIN32                       # Windows system
     UNICODE                     # Use unicode
     _UNICODE                    # Use unicode

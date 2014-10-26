@@ -1,22 +1,23 @@
+message(STATUS "Configuring for platform Linux/GCC.")
 
-# support for C++11 etc.
+
+# Enable C++11 support
 
 execute_process(COMMAND ${CMAKE_C_COMPILER} -dumpversion
-	OUTPUT_VARIABLE GCC_VERSION)
+    OUTPUT_VARIABLE GCC_VERSION)
 
 if(NOT GCC_VERSION VERSION_EQUAL 4.9)
     message(WARNING "Warning: only tested with gcc 4.9, but ${GCC_VERSION} was found.")
 endif()
 
 LIST(APPEND DEFAULT_COMPILE_DEFS
-
     LINUX                     # Linux system
     PIC                       # Position-independent code
     _REENTRANT                # Reentrant code
 )
 
 set(LINUX_COMPILE_FLAGS 
-    -std=gnu++11 -pthread -pipe -fPIC -Wreturn-type -Wall -Wextra -Wcast-align -Wno-unused-parameter -Wno-unused-variable -Wno-unused-but-set-variable)
+    -std=gnu++11 -pthread -pipe -fPIC -Wreturn-type -Wall -Wextra -Wfloat-equal -Wshadow -Wcast-align -Wconversion)
 # pthread       -> use pthread library
 # no-rtti       -> disable c++ rtti
 # no-exceptions -> disable exception handling
@@ -26,7 +27,6 @@ set(LINUX_COMPILE_FLAGS
 # -Wshadow -> e.g. when a parameter is named like a member, too many warnings, disabled for now
 
 set(DEFAULT_COMPILE_FLAGS ${LINUX_COMPILE_FLAGS})
-
 
 set(LINUX_LINKER_FLAGS "-pthread")
 

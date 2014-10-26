@@ -125,3 +125,10 @@ include_directories(
 configure_cxx_target( ${TARGET} )
 
 generate_library_export_header(${TARGET})
+
+
+install(TARGETS ${TARGET}
+    RUNTIME DESTINATION ${INSTALL_BIN}
+    LIBRARY DESTINATION ${INSTALL_SHARED}
+    ARCHIVE DESTINATION ${INSTALL_LIB}
+)

@@ -1,28 +1,33 @@
 cmake_minimum_required(VERSION 2.8.12 FATAL_ERROR)
 
-set (META_PROJECT_NAME "GeohazardVis")
-set (META_VERSION_MAJOR "0")
-set (META_VERSION_MINOR "0")
-set (META_VERSION_PATCH "0")
-set (META_VERSION "${META_VERSION_MAJOR}.${META_VERSION_MINOR}.${META_VERSION_PATCH}")
-set (META_AUTHOR_ORGANIZATION "")
-set (META_AUTHOR_DOMAIN "https://github.com/kateyy/geohazardvis")
+set(META_PROJECT_NAME "GeohazardVis")
+set(META_PROJECT_DESCRIPTION "")
+set(META_VERSION_MAJOR "0")
+set(META_VERSION_MINOR "0")
+set(META_VERSION_PATCH "0")
+set(META_VERSION "${META_VERSION_MAJOR}.${META_VERSION_MINOR}.${META_VERSION_PATCH}")
+set(META_AUTHOR_ORGANIZATION "")
+set(META_AUTHOR_DOMAIN "https://github.com/kateyy/geohazardvis")
+set(META_AUTHOR_MAINTAINER "karsten.tausche@student.hpi.de")
 
-project (${META_PROJECT_NAME} CXX)
 
+project (${META_PROJECT_NAME} C CXX)
 
-set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
-include(cmake/Custom.cmake)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 
-set(DEFAULT_COMPILE_DEFS
-    $<$<CONFIG:Debug>:_DEBUG>            # Debug build
-    $<$<CONFIG:Release>:NDEBUG>          # optimized builds
-    $<$<CONFIG:RelWithDebInfo>:NDEBUG>
-    $<$<CONFIG:MinSizeRel>:NDEBUG>
-)
+
+# Generate folders for IDE targets (e.g., VisualStudio solutions)
+set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+
+# Include custom cmake functions
+include(cmake/Custom.cmake)
+include(cmake/GitRevision.cmake)
+
 
 # PLATFORM AND ARCHITECTURE
 
@@ -32,27 +37,66 @@ if(CMAKE_SIZEOF_VOID_P EQUAL 8)
     set(X64 ON)
 endif()
 
-# Check for linux
-if(UNIX AND NOT APPLE)
-    set(LINUX 1)
-endif()
-    
-    
+
+set(DEFAULT_COMPILE_DEFS
+    $<$<CONFIG:Debug>:_DEBUG>            # Debug build
+    $<$<CONFIG:Release>:NDEBUG>          # optimized builds
+    $<$<CONFIG:RelWithDebInfo>:NDEBUG>
+    $<$<CONFIG:MinSizeRel>:NDEBUG>
+)
+
 # Setup platform specifics (compile flags, etc., ...)
 if(MSVC)
-    message(STATUS "Configuring for platform Windows/MSVC.")
     include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/PlatformWindowsMSVC.cmake)
-elseif(LINUX AND CMAKE_COMPILER_IS_GNUCXX)
-    message(STATUS "Configuring for platform Linux/GCC.")
+elseif(UNIX)
     include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/PlatformLinuxGCC.cmake)
 else()
     message(WARNING "Unsupported platform/compiler combination")
 endif()
 
-# Set output directories
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+
+
+#
+# Deployment/installation setup
+#
+
+set(project ${META_PROJECT_NAME})
+if(WIN32)
+    set(INSTALL_ROOT ".")                       # C:\Programme\<project>
+    set(INSTALL_DATA "bin")                     # C:\Programme\<project>
+    set(INSTALL_BIN "bin")                      # C:\Programme\<project>
+    set(INSTALL_SHARED ".")                     # C:\Programme\<project>
+    set(INSTALL_LIB "lib")                      # C:\Programme\<project>\lib
+    set(INSTALL_INCLUDE "include")              # C:\Programme\<project>\include
+    set(INSTALL_DOC "doc")                      # C:\Programme\<project>\doc
+    set(INSTALL_SHORTCUTS ".")                  # Not available under Windows
+    set(INSTALL_ICONS ".")                      # Not available under Windows
+    set(INSTALL_INIT ".")                       # Not available under Windows
+
+else()
+    set(INSTALL_ROOT "share/${project}")        # /usr/[local]/share/<project>
+    set(INSTALL_DATA "share/${project}")        # /usr/[local]/share/<project>
+    set(INSTALL_BIN "bin")                      # /usr/[local]/bin
+    set(INSTALL_SHARED "lib")                   # /usr/[local]/lib
+    set(INSTALL_LIB "lib")                      # /usr/[local]/lib
+    set(INSTALL_INCLUDE "include")              # /usr/[local]/include
+    set(INSTALL_DOC "share/doc/${project}")     # /usr/[local]/share/doc/<project>
+    set(INSTALL_SHORTCUTS "share/applications") # /usr/[local]/share/applications
+    set(INSTALL_ICONS "share/pixmaps")          # /usr/[local]/share/pixmaps
+    set(INSTALL_INIT "/etc/init")               # /etc/init (upstart init scripts)
+endif()
+
+# Install the project meta files
+#install(FILES geohazardvis-config.cmake DESTINATION ${INSTALL_ROOT})
+#install(FILES AUTHORS DESTINATION               ${INSTALL_ROOT})
+install(FILES LICENSE DESTINATION               ${INSTALL_ROOT})
+
+# Install the data directory including the data files it contains.
+install(DIRECTORY ${CMAKE_SOURCE_DIR}/data DESTINATION ${INSTALL_DATA})
+
+# Add a revision file containing the git-head tag for cpack and install. The function
+# "create_revision_file (...)" is defined in cmake/GitRevision.cmake
+create_revision_file(${CMAKE_BINARY_DIR}/revision ${INSTALL_ROOT})
 
 
 find_package(VTK REQUIRED
@@ -100,8 +144,8 @@ include_directories(
 
 configure_file(cmake/config.h.in ${CMAKE_CURRENT_BINARY_DIR}/config.h)
 
-
 add_subdirectory("core")
 add_subdirectory("gui")
 add_subdirectory("app")
 add_subdirectory("docs")
+add_subdirectory(packages)
