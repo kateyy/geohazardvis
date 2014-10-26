@@ -368,7 +368,5 @@ vtkLookupTable * ScalarMappingChooser::buildLookupTable(const QImage & image)
         lut->SetTableValue(i, qRed(color) / 255.0, qGreen(color) / 255.0, qBlue(color) / 255.0, (alphaMask | qAlpha(color)) / 255.0);
     }
 
-    lut->SetVectorModeToComponent();
-
     return lut;
 }

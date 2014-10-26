@@ -8,9 +8,9 @@
 #include <core/core_api.h>
 
 
-class vtkLookupTable;
-class vtkProperty;
 class vtkActor;
+class vtkProperty;
+class vtkScalarsToColors;
 
 namespace reflectionzeug
 {
@@ -51,8 +51,11 @@ public:
 
     VectorMapping * vectorMapping();
 
-    void applyScalarsForColorMapping(ScalarsForColorMapping * scalars);
-    void applyGradientLookupTable(vtkLookupTable * gradient);
+    /** set scalars that will configure color mapping for this data */
+    void setScalarsForColorMapping(ScalarsForColorMapping * scalars);
+    /** Set gradient that will be applied to colored geometries.
+      * ScalarsForColorMapping are responsible for gradient configuration. */
+    void setColorMappingGradient(vtkScalarsToColors * gradient);
 
 signals:
     void geometryChanged();
@@ -64,7 +67,7 @@ protected:
     virtual QList<vtkActor *> fetchAttributeActors();
 
     virtual void scalarsForColorMappingChangedEvent();
-    virtual void gradientForColorMappingChangedEvent();
+    virtual void colorMappingGradientChangedEvent();
     virtual void vectorsForSurfaceMappingChangedEvent();
     virtual void visibilityChangedEvent(bool visible);
 
@@ -73,8 +76,7 @@ private:
 
 protected:
     ScalarsForColorMapping * m_scalars;
-    vtkSmartPointer<vtkLookupTable> m_lut;
-    unsigned long m_lutMTime;
+    vtkSmartPointer<vtkScalarsToColors> m_gradient;
 
 private:
     vtkSmartPointer<vtkProperty> m_renderProperty;

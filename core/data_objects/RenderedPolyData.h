@@ -26,7 +26,7 @@ protected:
     vtkActor * createActor() override;
 
     void scalarsForColorMappingChangedEvent() override;
-    void gradientForColorMappingChangedEvent() override;
+    void colorMappingGradientChangedEvent() override;
 
 private:
     vtkPolyDataMapper * createDataMapper();

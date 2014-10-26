@@ -23,10 +23,7 @@ protected:
     vtkActor * createActor() override;
 
     void scalarsForColorMappingChangedEvent() override;
-    void gradientForColorMappingChangedEvent() override;
-
-private:
-    void updateTexture();
+    void colorMappingGradientChangedEvent() override;
 
 private:
     vtkSmartPointer<vtkTexture> m_texture;

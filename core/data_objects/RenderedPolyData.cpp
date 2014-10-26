@@ -8,8 +8,6 @@
 #include <vtkInformationIntegerPointerKey.h>
 #include <vtkInformationStringKey.h>
 
-#include <vtkLookupTable.h>
-
 #include <vtkPolyData.h>
 
 #include <vtkPolyDataMapper.h>
@@ -207,7 +205,7 @@ void RenderedPolyData::scalarsForColorMappingChangedEvent()
     mainActor()->SetMapper(mapper);
 }
 
-void RenderedPolyData::gradientForColorMappingChangedEvent()
+void RenderedPolyData::colorMappingGradientChangedEvent()
 {
     vtkSmartPointer<vtkMapper> mapper = vtkSmartPointer<vtkMapper>::Take(createDataMapper());
     mainActor()->SetMapper(mapper);
@@ -222,7 +220,7 @@ vtkPolyDataMapper * RenderedPolyData::createDataMapper()
     DataObject::setDataObject(mapperInfo, dataObject());
     
     // no mapping yet, so just render the data set
-    if (!m_scalars || !m_lut)
+    if (!m_scalars || !m_gradient)
     {
         mapper->SetInputConnection(dataObject()->processedOutputPort());
         return mapper;
@@ -231,7 +229,7 @@ vtkPolyDataMapper * RenderedPolyData::createDataMapper()
     // don't break the lut configuration
     mapper->UseLookupTableScalarRangeOn();
 
-    mapper->SetLookupTable(m_lut);
+    mapper->SetLookupTable(m_gradient);
 
     m_scalars->configureDataObjectAndMapper(dataObject(), mapper);
 

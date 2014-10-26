@@ -2,10 +2,6 @@
 
 #include <cassert>
 
-#include <vtkLookupTable.h>
-
-#include <vtkDataSet.h>
-
 #include <vtkPlaneSource.h>
 
 #include <vtkPolyDataMapper.h>
@@ -35,7 +31,7 @@ RenderedImageData::RenderedImageData(ImageDataObject * dataObject)
     : RenderedData(dataObject)
     , m_texture(vtkSmartPointer<vtkTexture>::New())
 {
-    m_texture->SetInputData(dataObject->dataSet());
+    m_texture->SetInputConnection(dataObject->processedOutputPort());
     m_texture->MapColorScalarsThroughLookupTableOn();
     m_texture->InterpolateOn();
     m_texture->SetQualityTo32Bit();
@@ -104,10 +100,7 @@ vtkActor * RenderedImageData::createActor()
 
 void RenderedImageData::scalarsForColorMappingChangedEvent()
 {
-    bool enableColorMapping = false;
-
-    if (m_scalars)
-        enableColorMapping = m_scalars->dataMinValue() != m_scalars->dataMaxValue();
+    bool enableColorMapping = m_scalars && (m_scalars->dataMinValue() != m_scalars->dataMaxValue());
 
     if (enableColorMapping)
         mainActor()->SetTexture(m_texture);
@@ -115,12 +108,7 @@ void RenderedImageData::scalarsForColorMappingChangedEvent()
         mainActor()->SetTexture(nullptr);
 }
 
-void RenderedImageData::gradientForColorMappingChangedEvent()
+void RenderedImageData::colorMappingGradientChangedEvent()
 {
-    m_texture->SetLookupTable(m_lut);
-}
-
-void RenderedImageData::updateTexture()
-{
-    m_texture->SetLookupTable(m_lut);
+    m_texture->SetLookupTable(m_gradient);
 }

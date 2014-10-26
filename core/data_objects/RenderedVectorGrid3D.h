@@ -42,7 +42,7 @@ protected:
     QList<vtkActor *> fetchAttributeActors() override;
 
     void scalarsForColorMappingChangedEvent() override;
-    void gradientForColorMappingChangedEvent() override;
+    void colorMappingGradientChangedEvent() override;
     void visibilityChangedEvent(bool visible) override;
 
 private:

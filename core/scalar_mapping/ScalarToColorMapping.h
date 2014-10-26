@@ -67,8 +67,6 @@ signals:
     void colorLegendVisibilityChanged(bool visible);
 
 private slots:
-    /** apply changed min/max from scalar to color mapping to gradient lookup table */
-    void updateGradientValueRange();
     /** reread the data set list provided by the DataSetHandler for new/deleted data */
     void updateAvailableScalars();
     void updateLegendVisibility();

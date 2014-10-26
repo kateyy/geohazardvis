@@ -7,13 +7,14 @@
 #include <QObject>
 #include <QString>
 
-#include <vtkType.h>
+#include <vtkSmartPointer.h>
 
 #include <core/core_api.h>
 
 
 class vtkAlgorithm;
 class vtkMapper;
+class vtkLookupTable;
 
 class DataObject;
 
@@ -36,6 +37,10 @@ public:
 public:
     explicit ScalarsForColorMapping(const QList<DataObject *> & dataObjects, vtkIdType numDataComponents = 1);
     virtual ~ScalarsForColorMapping();
+
+    /** Call this before using these scalars for rendering.
+      * Sets up the lookup table for the current scene. */
+    void beforeRendering();
 
     virtual QString name() const = 0;
     virtual QString scalarsName() const;
@@ -65,6 +70,8 @@ public:
         @param dataObject must be one of the objects that where passed when calling the mapping's constructor */
     virtual void configureDataObjectAndMapper(DataObject * dataObject, vtkMapper * mapper);
 
+    void setLookupTable(vtkLookupTable * lookupTable);
+
     /** minimal value in the data set 
         @param select a data component to query or use the currently selected component (-1) */
     double dataMinValue(vtkIdType component = -1) const;
@@ -80,6 +87,7 @@ public:
     void setMaxValue(double value, vtkIdType component = -1);
 
 signals:
+    void lookupTableChanged();
     void minMaxChanged();
     void dataMinMaxChanged();
 
@@ -94,6 +102,8 @@ protected:
     void setDataMinMaxValue(double min, double max, vtkIdType component);
 
 protected:
+    virtual void beforeRenderingEvent();
+    virtual void lookupTableChangedEvent();
     virtual void dataComponentChangedEvent();
     virtual void minMaxChangedEvent();
     virtual void startingIndexChangedEvent();
@@ -101,6 +111,7 @@ protected:
 
 protected:
     QList<DataObject *> m_dataObjects;
+    vtkSmartPointer<vtkLookupTable> m_lut;
 
 private:
     vtkIdType m_startingIndex;

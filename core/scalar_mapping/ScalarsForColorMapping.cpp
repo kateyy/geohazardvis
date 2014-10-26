@@ -3,6 +3,9 @@
 #include <cassert>
 #include <limits>
 
+#include <vtkMapper.h>
+#include <vtkLookupTable.h>
+
 #include <QSet>
 
 #include <core/data_objects/DataObject.h>
@@ -21,6 +24,16 @@ ScalarsForColorMapping::ScalarsForColorMapping(const QList<DataObject *> & dataO
 }
 
 ScalarsForColorMapping::~ScalarsForColorMapping() = default;
+
+void ScalarsForColorMapping::beforeRendering()
+{
+    if (m_lut)
+    {
+        m_lut->SetTableRange(minValue(), maxValue());
+    }
+
+    beforeRenderingEvent();
+}
 
 QString ScalarsForColorMapping::scalarsName() const
 {
@@ -45,7 +58,13 @@ void ScalarsForColorMapping::setDataComponent(vtkIdType component)
 
     m_dataComponent = component;
 
+    if (m_lut)
+        m_lut->SetVectorComponent(component);
+
     dataComponentChangedEvent();
+
+    if (m_lut)
+        m_lut->SetTableRange(minValue(), maxValue());
 }
 
 vtkIdType ScalarsForColorMapping::maximumStartingIndex()
@@ -108,6 +127,16 @@ bool ScalarsForColorMapping::usesFilter() const
 
 void ScalarsForColorMapping::configureDataObjectAndMapper(DataObject * /*dataObject*/, vtkMapper * /*mapper*/)
 {
+}
+
+void ScalarsForColorMapping::setLookupTable(vtkLookupTable * lookupTable)
+{
+    if (m_lut == lookupTable)
+        return;
+
+    m_lut = lookupTable;
+
+    lookupTableChangedEvent();
 }
 
 double ScalarsForColorMapping::dataMinValue(vtkIdType component) const
@@ -195,12 +224,28 @@ void ScalarsForColorMapping::setDataMinMaxValue(double min, double max, vtkIdTyp
     setDataMinMaxValue(minMax, component);
 }
 
+void ScalarsForColorMapping::beforeRenderingEvent()
+{
+    if (m_lut)
+    {
+        m_lut->SetVectorModeToComponent();
+        m_lut->SetVectorComponent(dataComponent());
+    }
+}
+
+void ScalarsForColorMapping::lookupTableChangedEvent()
+{
+}
+
 void ScalarsForColorMapping::dataComponentChangedEvent()
 {
 }
 
 void ScalarsForColorMapping::minMaxChangedEvent()
 {
+    if (m_lut)
+        m_lut->SetTableRange(minValue(), maxValue());
+
     emit minMaxChanged();
 }
 

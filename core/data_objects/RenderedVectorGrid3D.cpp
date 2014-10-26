@@ -4,7 +4,6 @@
 
 #include <vtkInformation.h>
 #include <vtkInformationStringKey.h>
-#include <vtkLookupTable.h>
 
 #include <vtkPlaneSource.h>
 #include <vtkOutlineFilter.h>
@@ -195,13 +194,13 @@ void RenderedVectorGrid3D::scalarsForColorMappingChangedEvent()
     updateVisibilities();
 }
 
-void RenderedVectorGrid3D::gradientForColorMappingChangedEvent()
+void RenderedVectorGrid3D::colorMappingGradientChangedEvent()
 {
     for (auto sliceActor : m_sliceActors)
     {
         vtkTexture * texture = sliceActor->GetTexture();
         assert(texture);
-        texture->SetLookupTable(m_lut);
+        texture->SetLookupTable(m_gradient);
     }
 }
 
@@ -214,10 +213,7 @@ void RenderedVectorGrid3D::visibilityChangedEvent(bool visible)
 
 void RenderedVectorGrid3D::updateVisibilities()
 {
-    bool showSliceScalars = false;
-
-    if (m_scalars)
-        showSliceScalars = m_scalars->scalarsName() == QString::fromLatin1(dataObject()->dataSet()->GetPointData()->GetVectors()->GetName());
+    bool showSliceScalars = m_scalars && m_scalars->scalarsName() == QString::fromLatin1(dataObject()->dataSet()->GetPointData()->GetVectors()->GetName());
 
     for (int i = 0; i < 3; ++i)
     {

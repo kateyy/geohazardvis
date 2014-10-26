@@ -5,11 +5,10 @@
 #include <vtkLookupTable.h>
 #include <vtkScalarBarActor.h>
 
-#include "ScalarsForColorMapping.h"
-#include "ScalarsForColorMappingRegistry.h"
-
-#include <core/data_objects/RenderedData.h>
 #include <core/DataSetHandler.h>
+#include <core/data_objects/RenderedData.h>
+#include <core/scalar_mapping/ScalarsForColorMapping.h>
+#include <core/scalar_mapping/ScalarsForColorMappingRegistry.h>
 
 
 ScalarToColorMapping::ScalarToColorMapping()
@@ -34,33 +33,34 @@ ScalarToColorMapping::~ScalarToColorMapping()
 
 void ScalarToColorMapping::setRenderedData(const QList<RenderedData *> & renderedData)
 {
-    auto lastRenderedData = m_renderedData;
-    m_renderedData = renderedData;
-
-    QList<DataObject *> dataObjects;
-    for (RenderedData * rendered : renderedData)
-    {
-        dataObjects << rendered->dataObject();
-    }
+    // clean up old scalars
+    for (RenderedData * renderedData : m_renderedData)
+        renderedData->setScalarsForColorMapping(nullptr);
 
     QString lastScalars = currentScalarsName();
     m_currentScalarsName.clear();
-
-    for (RenderedData * renderedData : lastRenderedData)
-        renderedData->applyScalarsForColorMapping(nullptr);
-
     qDeleteAll(m_scalars);
-    m_scalars = ScalarsForColorMappingRegistry::instance().createMappingsValidFor(dataObjects);
 
+
+    m_renderedData = renderedData;
+
+    QList<DataObject *> dataObjects;
+    for (RenderedData * renderedData : m_renderedData)
+    {
+        dataObjects << renderedData->dataObject();
+        // pass our (persistent) gradient object
+        renderedData->setColorMappingGradient(m_gradient);
+    }
+
+    m_scalars = ScalarsForColorMappingRegistry::instance().createMappingsValidFor(dataObjects);
     for (ScalarsForColorMapping * scalars : m_scalars)
     {
-        connect(scalars, &ScalarsForColorMapping::minMaxChanged,
-            this, &ScalarToColorMapping::updateGradientValueRange);
-
+        scalars->setLookupTable(m_gradient);
         connect(scalars, &ScalarsForColorMapping::dataMinMaxChanged,
             this, &ScalarToColorMapping::scalarsChanged);
     }
 
+    // disable scalar mapping if we couldn't find appropriate data
     if (m_scalars.isEmpty())
     {
         updateLegendVisibility();
@@ -80,13 +80,6 @@ void ScalarToColorMapping::setRenderedData(const QList<RenderedData *> & rendere
     }
 
     setCurrentScalarsByName(newScalarsName);
-
-    updateGradientValueRange();
-
-    for (RenderedData * rendered : renderedData)
-    {
-        rendered->applyGradientLookupTable(gradient());
-    }
 }
 
 void ScalarToColorMapping::clear()
@@ -113,12 +106,10 @@ void ScalarToColorMapping::setCurrentScalarsByName(QString scalarsName)
 {
     m_currentScalarsName = scalarsName;
 
-    ScalarsForColorMapping * scalars = nullptr;
-
-    if (!m_currentScalarsName.isEmpty())
+    ScalarsForColorMapping * scalars = currentScalars();
+    if (scalars)
     {
-        scalars = m_scalars.value(m_currentScalarsName, nullptr);
-        assert(scalars);
+        scalars->beforeRendering();
     }
 
     QByteArray c_name = scalarsName.toLatin1();
@@ -128,7 +119,7 @@ void ScalarToColorMapping::setCurrentScalarsByName(QString scalarsName)
 
     for (RenderedData * renderedData : m_renderedData)
     {
-        renderedData->applyScalarsForColorMapping(scalars);
+        renderedData->setScalarsForColorMapping(scalars);
     }
 }
 
@@ -151,10 +142,7 @@ const ScalarsForColorMapping * ScalarToColorMapping::currentScalars() const
 
 void ScalarToColorMapping::scalarsSetDataComponent(vtkIdType component)
 {
-    m_gradient->SetVectorComponent(component);
     currentScalars()->setDataComponent(component);
-
-    updateGradientValueRange();
 }
 
 vtkLookupTable * ScalarToColorMapping::gradient()
@@ -173,12 +161,7 @@ void ScalarToColorMapping::setGradient(vtkLookupTable * gradient)
 
     m_originalGradient = gradient;
 
-    m_gradient->DeepCopy(gradient);
-
-    updateGradientValueRange();
-
-    for (RenderedData * renderedData : m_renderedData)
-        renderedData->applyGradientLookupTable(m_gradient);
+    m_gradient->SetTable(gradient->GetTable());
 }
 
 vtkScalarBarActor * ScalarToColorMapping::colorMappingLegend()
@@ -205,14 +188,6 @@ void ScalarToColorMapping::setColorMappingLegendVisible(bool visible)
     m_colorMappingLegendVisible = visible;
 
     updateLegendVisibility();
-}
-
-void ScalarToColorMapping::updateGradientValueRange()
-{
-    ScalarsForColorMapping * scalars = currentScalars();
-
-    if (scalars)
-        m_gradient->SetTableRange(scalars->minValue(), scalars->maxValue());
 }
 
 void ScalarToColorMapping::updateAvailableScalars()

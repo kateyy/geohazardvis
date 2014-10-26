@@ -14,7 +14,6 @@ RenderedData::RenderedData(DataObject * dataObject)
     : QObject()
     , m_dataObject(dataObject)
     , m_scalars(nullptr)
-    , m_lut(nullptr)
     , m_vectors(nullptr)
     , m_isVisible(true)
 {
@@ -87,7 +86,7 @@ void RenderedData::scalarsForColorMappingChangedEvent()
 {
 }
 
-void RenderedData::gradientForColorMappingChangedEvent()
+void RenderedData::colorMappingGradientChangedEvent()
 {
 }
 
@@ -122,7 +121,7 @@ VectorMapping * RenderedData::vectorMapping()
     return m_vectors;
 }
 
-void RenderedData::applyScalarsForColorMapping(ScalarsForColorMapping * scalars)
+void RenderedData::setScalarsForColorMapping(ScalarsForColorMapping * scalars)
 {
     if (scalars == m_scalars)
         return;
@@ -132,14 +131,12 @@ void RenderedData::applyScalarsForColorMapping(ScalarsForColorMapping * scalars)
     scalarsForColorMappingChangedEvent();
 }
 
-void RenderedData::applyGradientLookupTable(vtkLookupTable * gradient)
+void RenderedData::setColorMappingGradient(vtkScalarsToColors * gradient)
 {
-    if (gradient && m_lutMTime == gradient->GetMTime())
+    if (m_gradient == gradient)
         return;
 
-    m_lutMTime = gradient->GetMTime();
+    m_gradient = gradient;
 
-    m_lut = gradient;
-
-    gradientForColorMappingChangedEvent();
+    colorMappingGradientChangedEvent();
 }

@@ -130,6 +130,8 @@ bool RawArrayComponentMapping::usesFilter() const
 
 void RawArrayComponentMapping::configureDataObjectAndMapper(DataObject * dataObject, vtkMapper * mapper)
 {
+    ScalarsForColorMapping::configureDataObjectAndMapper(dataObject, mapper);
+
     if (!m_dataObjects.contains(dataObject))
     {
         mapper->ScalarVisibilityOff();
