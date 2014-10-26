@@ -14,6 +14,8 @@ public:
     vtkAlgorithm * createFilter(DataObject * dataObject);
     bool usesFilter() const;
 
+    void configureDataObjectAndMapper(DataObject * dataObject, vtkMapper * mapper) override;
+
 protected:
     static QList<ScalarsForColorMapping *> newInstances(const QList<DataObject *> & dataObjects);
 

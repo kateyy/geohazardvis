@@ -2,6 +2,7 @@
 
 #include <vtkDataSet.h>
 #include <vtkAssignAttribute.h>
+#include <vtkMapper.h>
 
 #include <core/vtkhelper.h>
 #include <core/data_objects/PolyDataObject.h>
@@ -82,6 +83,11 @@ vtkAlgorithm * VertexComponentMapping::createFilter(DataObject * dataObject)
 bool VertexComponentMapping::usesFilter() const
 {
     return true;
+}
+
+void VertexComponentMapping::configureDataObjectAndMapper(DataObject * /*dataObject*/, vtkMapper * mapper)
+{
+    mapper->ScalarVisibilityOn();
 }
 
 bool VertexComponentMapping::isValid() const
