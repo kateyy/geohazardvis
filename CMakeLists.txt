@@ -63,8 +63,8 @@ endif()
 set(project ${META_PROJECT_NAME})
 if(WIN32)
     set(INSTALL_ROOT ".")                       # C:\Programme\<project>
-    set(INSTALL_DATA "bin")                     # C:\Programme\<project>
-    set(INSTALL_BIN "bin")                      # C:\Programme\<project>
+    set(INSTALL_DATA ".")                     # C:\Programme\<project>
+    set(INSTALL_BIN ".")                      # C:\Programme\<project>
     set(INSTALL_SHARED ".")                     # C:\Programme\<project>
     set(INSTALL_LIB "lib")                      # C:\Programme\<project>\lib
     set(INSTALL_INCLUDE "include")              # C:\Programme\<project>\include
@@ -86,6 +86,8 @@ else()
     set(INSTALL_INIT "/etc/init")               # /etc/init (upstart init scripts)
 endif()
 
+set(CPACK_INSTALL_3RDPARTY_DLLS TRUE CACHE BOOL "Include 3rdparty dlls (VTK, Qt) in packages.")
+
 # Install the project meta files
 #install(FILES geohazardvis-config.cmake DESTINATION ${INSTALL_ROOT})
 #install(FILES AUTHORS DESTINATION               ${INSTALL_ROOT})
@@ -97,6 +99,7 @@ install(DIRECTORY ${CMAKE_SOURCE_DIR}/data DESTINATION ${INSTALL_DATA})
 # Add a revision file containing the git-head tag for cpack and install. The function
 # "create_revision_file (...)" is defined in cmake/GitRevision.cmake
 create_revision_file(${CMAKE_BINARY_DIR}/revision ${INSTALL_ROOT})
+install(FILES ${CMAKE_BINARY_DIR}/revision DESTINATION ${INSTALL_ROOT})
 
 
 find_package(VTK REQUIRED
@@ -136,6 +139,35 @@ find_package(libzeug REQUIRED)
 
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
+
+if(MSVC AND CPACK_INSTALL_3RDPARTY_DLLS)
+    set(CMAKE_INSTALL_SYSTEM_RUNTIME_DESTINATION ${INSTALL_BIN})
+    include(InstallRequiredSystemLibraries)
+    
+    # this will only work after compiling in Release mode (the .exe is needed here)
+    set(QT_DEPLOY_DIR ${CMAKE_BINARY_DIR}/Release/qt_deploy)
+    set(EXE ${CMAKE_BINARY_DIR}/Release/${META_PROJECT_NAME}.exe)
+    execute_process(
+        COMMAND windeployqt "${EXE}" --dir "${QT_DEPLOY_DIR}"
+        RESULT_VARIABLE RESULT
+        OUTPUT_VARIABLE QT_DEPLOY_FILES
+        ERROR_VARIABLE ERRORS)
+
+    install(DIRECTORY "${QT_DEPLOY_DIR}/" DESTINATION ${INSTALL_BIN})
+
+    foreach(LIB ${VTK_LIBRARIES})
+        list(APPEND DEPLOY_FILES "${VTK_DIR}/bin/Release/${LIB}-${VTK_MAJOR_VERSION}.${VTK_MINOR_VERSION}.dll")
+    endforeach()
+    
+    list(APPEND DEPLOY_FILES 
+        "${libzeug_DIR}/signalzeug.dll"
+        "${libzeug_DIR}/loggingzeug.dll"
+        "${libzeug_DIR}/reflectionzeug.dll"
+        "${libzeug_DIR}/propertyguizeug.dll")
+    
+    install(FILES ${DEPLOY_FILES} DESTINATION ${INSTALL_BIN})
+endif()
+
 
 include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}

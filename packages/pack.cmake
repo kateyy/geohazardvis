@@ -129,24 +129,7 @@ if(EXISTS "${CMAKE_ROOT}/Modules/CPack.cmake")
     # Package name
 
     set(CPACK_PACKAGE_FILE_NAME "${package_name}-${CPACK_PACKAGE_VERSION}")
-
-    # Optional Preliminaries (i.e., silent Visual Studio Redistributable install)
-
-    if(NOT INSTALL_MSVC_REDIST_FILEPATH)
-        set(INSTALL_MSVC_REDIST_FILEPATH "" CACHE FILEPATH "Visual C++ Redistributable Installer (note: manual match the selected generator)" FORCE)
-    endif()
-
-    if(EXISTS ${INSTALL_MSVC_REDIST_FILEPATH})
-        get_filename_component(MSVC_REDIST_NAME ${INSTALL_MSVC_REDIST_FILEPATH} NAME)
-        string(REGEX REPLACE "/" "\\\\\\\\" INSTALL_MSVC_REDIST_FILEPATH ${INSTALL_MSVC_REDIST_FILEPATH})
-        list(APPEND CPACK_NSIS_EXTRA_INSTALL_COMMANDS "
-            SetOutPath \\\"$TEMP\\\"
-            File \\\"${INSTALL_MSVC_REDIST_FILEPATH}\\\"
-            ExecWait '\\\"$TEMP\\\\${MSVC_REDIST_NAME} /quiet\\\"'
-            Delete \\\"$TEMP\\\\${MSVC_REDIST_NAME}\\\"
-            ")
-    endif()
-
+    
     # Install files
 
     set(CPACK_INSTALL_CMAKE_PROJECTS        "${CMAKE_BINARY_DIR};${project_root};ALL;/")
