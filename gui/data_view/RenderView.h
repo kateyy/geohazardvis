@@ -111,7 +111,6 @@ private:
     // remove some data objects from internal lists
     // @return list of dangling rendered data object that you have to delete.
     QList<RenderedData *> removeFromInternalLists(QList<DataObject *> dataObjects = {});
-    void clearInternalLists();
 
     // GUI / rendering tools
 

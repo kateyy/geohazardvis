@@ -37,9 +37,6 @@
 #include <gui/widgets/RenderConfigWidget.h>
 
 
-using namespace std;
-
-
 RenderView::RenderView(
     int index,
     QWidget * parent, Qt::WindowFlags flags)
@@ -337,14 +334,6 @@ void RenderView::removeDataObjects(const QList<DataObject *> & dataObjects)
 
     if (m_renderedData.isEmpty())
         setStrategy(nullptr);
-}
-
-void RenderView::clearInternalLists()
-{
-    qDeleteAll(m_renderedData);
-
-    m_renderedData.clear();
-    m_dataObjectToRendered.clear();
 }
 
 QList<RenderedData *> RenderView::removeFromInternalLists(QList<DataObject *> dataObjects)
