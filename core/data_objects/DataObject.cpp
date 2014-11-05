@@ -71,6 +71,10 @@ QVtkTableModel * DataObject::tableModel()
     return d_ptr->m_tableModel;
 }
 
+void DataObject::addDataArray(vtkDataArray * /*dataArray*/)
+{
+}
+
 DataObject * DataObject::getDataObject(vtkInformation * information)
 {
     static_assert(sizeof(int*) == sizeof(DataObject*), "");

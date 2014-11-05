@@ -16,6 +16,8 @@ public:
 
     RenderedData * createRendered() override;
 
+    void addDataArray(vtkDataArray * dataArray) override;
+
     QString dataTypeName() const override;
 
     vtkImageData * imageData();

@@ -34,6 +34,11 @@ RenderedData * VectorGrid3DDataObject::createRendered()
     return new RenderedVectorGrid3D(this);
 }
 
+void VectorGrid3DDataObject::addDataArray(vtkDataArray * dataArray)
+{
+    dataSet()->GetPointData()->AddArray(dataArray);
+}
+
 QString VectorGrid3DDataObject::dataTypeName() const
 {
     return s_dataTypeName;

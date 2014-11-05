@@ -8,6 +8,7 @@
 class vtkInformation;
 class vtkInformationStringKey;
 class vtkInformationIntegerKey;
+class vtkDataArray;
 class vtkDataSet;
 class vtkAlgorithmOutput;
 class vtkEventQtSlotConnect;
@@ -44,6 +45,10 @@ public:
     const double * bounds();
 
     QVtkTableModel * tableModel();
+
+    /** assign some kind of data array to my indexes.
+        Let subclasses decide how to proceed with it; ignores this call by default */
+    virtual void addDataArray(vtkDataArray * dataArray);
 
     static vtkInformationStringKey * NameKey();
     static vtkInformationIntegerKey * ArrayIsAuxiliaryKey();

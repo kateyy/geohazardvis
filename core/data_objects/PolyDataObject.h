@@ -23,6 +23,8 @@ public:
     vtkDataSet * processedDataSet() override;
     vtkAlgorithmOutput * processedOutputPort() override;
 
+    void addDataArray(vtkDataArray * dataArray) override;
+
     /** @return centroids with normals, computed from polygonal data set cells */
     vtkPolyData * cellCenters();
     vtkAlgorithmOutput * cellCentersOutputPort();

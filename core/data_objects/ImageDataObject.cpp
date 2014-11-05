@@ -33,6 +33,11 @@ RenderedData * ImageDataObject::createRendered()
     return new RenderedImageData(this);
 }
 
+void ImageDataObject::addDataArray(vtkDataArray * dataArray)
+{
+    dataSet()->GetCellData()->AddArray(dataArray);
+}
+
 QString ImageDataObject::dataTypeName() const
 {
     return s_dataTypeName;

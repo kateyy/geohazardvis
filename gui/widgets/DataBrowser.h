@@ -38,10 +38,12 @@ private slots:
     /** change visibility of selected objects in the current render view */
     void changeRenderedVisibility(DataObject * clickedObject);
 
+    void menuAssignDataToIndexes(const QPoint & position, DataObject * clickedData);
+
     /** unload selected objects, free all data/settings, close views if empty */
     void removeFile();
 
-    void evaluateItemViewClick(const QModelIndex & index);
+    void evaluateItemViewClick(const QModelIndex & index, const QPoint & position);
 
 private:
     QList<DataObject *> selectedDataObjects() const;

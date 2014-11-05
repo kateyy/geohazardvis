@@ -20,6 +20,8 @@ public:
     /** create a rendered instance */
     RenderedData * createRendered() override;
 
+    void addDataArray(vtkDataArray * dataArray) override;
+
     QString dataTypeName() const override;
 
     /** @return vtkImageData with 3-component vectors assigned to point scalars */

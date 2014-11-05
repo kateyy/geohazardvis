@@ -67,6 +67,11 @@ RenderedData * PolyDataObject::createRendered()
     return new RenderedPolyData(this);
 }
 
+void PolyDataObject::addDataArray(vtkDataArray * dataArray)
+{
+    dataSet()->GetCellData()->AddArray(dataArray);
+}
+
 QString PolyDataObject::dataTypeName() const
 {
     return s_dataTypeName;

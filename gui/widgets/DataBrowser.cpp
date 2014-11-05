@@ -2,9 +2,13 @@
 #include "ui_DataBrowser.h"
 
 #include <QMouseEvent>
+#include <QMenu>
+
+#include <vtkFloatArray.h>
 
 #include <core/DataSetHandler.h>
 #include <core/data_objects/DataObject.h>
+#include <core/data_objects/RawVectorData.h>
 #include <core/data_objects/RenderedData.h>
 
 #include <gui/DataMapping.h>
@@ -61,14 +65,16 @@ bool DataBrowser::eventFilter(QObject * /*obj*/, QEvent * ev)
 {
     QModelIndex index;
 
+    QMouseEvent * mouseEvent = static_cast<QMouseEvent *>(ev);
+
     switch (ev->type())
     {
     case QEvent::MouseButtonPress:
-        index = m_ui->dataTableView->indexAt(static_cast<QMouseEvent *>(ev)->pos());
+        index = m_ui->dataTableView->indexAt(mouseEvent->pos());
         break;
     case QEvent::MouseButtonRelease:
-        index = m_ui->dataTableView->indexAt(static_cast<QMouseEvent *>(ev)->pos());
-        evaluateItemViewClick(index);
+        index = m_ui->dataTableView->indexAt(mouseEvent->pos());
+        evaluateItemViewClick(index, mouseEvent->globalPos());
         break;
     default:
         return false;
@@ -146,6 +152,45 @@ void DataBrowser::changeRenderedVisibility(DataObject * clickedObject)
     updateModel(renderView);
 }
 
+void DataBrowser::menuAssignDataToIndexes(const QPoint & position, DataObject * clickedData)
+{
+    QString title = "assign to indexes";
+
+    RawVectorData * rawVector = dynamic_cast<RawVectorData*>(clickedData);
+    if (!rawVector)
+        return;
+
+    vtkDataArray * dataArray = rawVector->dataArray();
+
+    QMenu * assignMenu = new QMenu(title, this);
+    assignMenu->setAttribute(Qt::WA_DeleteOnClose);
+
+    QAction * titleA = assignMenu->addAction(title);
+    titleA->setEnabled(false);
+    QFont titleFont = titleA->font();
+    titleFont.setBold(true);
+    titleA->setFont(titleFont);
+
+    assignMenu->addSeparator();
+    
+    if (DataSetHandler::instance().dataSets().isEmpty())
+    {
+        QAction * loadFirst = assignMenu->addAction("(load geometries/images first)");
+        loadFirst->setEnabled(false);
+    }
+    else
+        for (DataObject * indexes : DataSetHandler::instance().dataSets())
+        {
+        QAction * assignAction = assignMenu->addAction(indexes->name());
+        connect(assignAction, &QAction::triggered,
+            [indexes, dataArray] (bool) {
+            indexes->addDataArray(dataArray);
+        });
+        }
+
+    assignMenu->popup(position);
+}
+
 void DataBrowser::removeFile()
 {
     QList<DataObject *> selection = selectedDataObjects();
@@ -156,7 +201,7 @@ void DataBrowser::removeFile()
     updateModelForFocusedView();
 }
 
-void DataBrowser::evaluateItemViewClick(const QModelIndex & index)
+void DataBrowser::evaluateItemViewClick(const QModelIndex & index, const QPoint & position)
 {
     switch (index.column())
     {
@@ -165,9 +210,10 @@ void DataBrowser::evaluateItemViewClick(const QModelIndex & index)
     case 1:
     {
         DataObject * dataObject = m_tableModel->dataObjectAt(index);
-        if (!dataObject || !dataObject->dataSet())
-            return;
-        return changeRenderedVisibility(dataObject);
+        if (dataObject && dataObject->dataSet())
+            return changeRenderedVisibility(dataObject);
+        if (dataObject /* && !dataObject->dataSet() */)
+            return menuAssignDataToIndexes(position, dataObject);
     }
     case 2:
         return removeFile();
