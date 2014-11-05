@@ -60,6 +60,7 @@ signals:
     void dataChanged();
     void boundsChanged();
     void valueRangeChanged();
+    void attributeArraysChanged();
 
 protected:
     virtual QVtkTableModel * createTableModel() = 0;

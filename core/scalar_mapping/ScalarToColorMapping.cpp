@@ -6,6 +6,7 @@
 #include <vtkScalarBarActor.h>
 
 #include <core/DataSetHandler.h>
+#include <core/data_objects/DataObject.h>
 #include <core/data_objects/RenderedData.h>
 #include <core/scalar_mapping/ScalarsForColorMapping.h>
 #include <core/scalar_mapping/ScalarsForColorMappingRegistry.h>
@@ -47,9 +48,18 @@ void ScalarToColorMapping::setRenderedData(const QList<RenderedData *> & rendere
     QList<DataObject *> dataObjects;
     for (RenderedData * renderedData : m_renderedData)
     {
-        dataObjects << renderedData->dataObject();
+        DataObject * dataObject = renderedData->dataObject();
+        dataObjects << dataObject;
         // pass our (persistent) gradient object
         renderedData->setColorMappingGradient(m_gradient);
+
+        // reread available scalars...
+        connect(dataObject, &DataObject::attributeArraysChanged,
+            [this] () {
+            setRenderedData(m_renderedData);
+
+            emit scalarsChanged();
+        });
     }
 
     m_scalars = ScalarsForColorMappingRegistry::instance().createMappingsValidFor(dataObjects);
