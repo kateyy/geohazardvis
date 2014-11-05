@@ -149,10 +149,8 @@ void VectorMappingChooser::updateGuiForSelection(const QItemSelection & selectio
 
     if (selection.indexes().isEmpty())
     {
-        m_ui->firstIndexSlider->setEnabled(false);
         m_propertyBrowser->setRoot(nullptr);
         m_ui->propertyBrowserContainer->setTitle("(no selection)");
-        m_ui->firstIndexLabel->setText("first &index");
     }
     else
     {
@@ -161,18 +159,6 @@ void VectorMappingChooser::updateGuiForSelection(const QItemSelection & selectio
 
         m_propertyBrowser->setRoot(m_propertyGroups[index]);
         m_ui->propertyBrowserContainer->setTitle(vectorsName);
-
-        VectorMappingData * vectors = m_mapping->vectors()[vectorsName];
-
-        m_startingIndexConnection =
-            connect(m_ui->firstIndexSlider, static_cast<void(QAbstractSlider::*)(int)>(&QAbstractSlider::valueChanged),
-            [this, vectors](int value) {
-            vectors->setStartingIndex(value);
-            m_ui->firstIndexLabel->setText("first &index (" + QString::number(value) + "/" + QString::number(vectors->maximumStartingIndex()) + ")");
-        });
-        m_ui->firstIndexSlider->setMaximum(vectors->maximumStartingIndex());
-        m_ui->firstIndexSlider->setValue(vectors->startingIndex());
-        m_ui->firstIndexSlider->setEnabled(vectors->maximumStartingIndex() > 0);
     }
 }
 

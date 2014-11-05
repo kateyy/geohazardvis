@@ -49,16 +49,6 @@ public:
     vtkIdType dataComponent() const;
     void setDataComponent(vtkIdType component);
 
-    /** when mapping arrays that have more tuples than cells (triangles) exist in the data set:
-        return highest possible index that can be used as first index in the scalar array. */
-    virtual vtkIdType maximumStartingIndex();
-    vtkIdType startingIndex() const;
-    void setStartingIndex(vtkIdType index);
-
-    QList<DataObject *> dataObjects() const;
-    /** set a new order for the data objects. This list must contain exactly the pointers returned by dataObjects() */
-    void rearrangeDataObjets(QList<DataObject *> dataObjects);
-
     /** create a filter to map values to color, applying current min/max settings
       * @param dataObject is required to setup object specific parameters on the filter.
       *        The filter inputs are set as required.
@@ -106,16 +96,12 @@ protected:
     virtual void lookupTableChangedEvent();
     virtual void dataComponentChangedEvent();
     virtual void minMaxChangedEvent();
-    virtual void startingIndexChangedEvent();
-    virtual void objectOrderChangedEvent();
 
 protected:
     QList<DataObject *> m_dataObjects;
     vtkSmartPointer<vtkLookupTable> m_lut;
 
 private:
-    vtkIdType m_startingIndex;
-
     const vtkIdType m_numDataComponents;
     vtkIdType m_dataComponent;
 

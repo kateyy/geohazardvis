@@ -38,8 +38,6 @@ private slots:
 
     void rebuildGui();
 
-    void rearrangeDataObjects();
-
     void on_legendPositionComboBox_currentIndexChanged(QString position);
     void colorLegendPositionChanged();
 

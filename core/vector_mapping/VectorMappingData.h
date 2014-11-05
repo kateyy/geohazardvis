@@ -49,12 +49,6 @@ public:
     bool isVisible() const;
     void setVisible(bool enabled);
 
-    /** when mapping arrays that have more tuples than cells (triangles) exist in the data set:
-        return highest possible index that can be used as first index in the vector array. */
-    virtual vtkIdType maximumStartingIndex();
-    vtkIdType startingIndex() const;
-    void setStartingIndex(vtkIdType index);
-
     Representation representation() const;
     void setRepresentation(Representation representation);
 
@@ -102,8 +96,6 @@ private:
     RenderedData * m_renderedData;
 
     bool m_isVisible;
-
-    vtkIdType m_startingIndex;
 
     Representation m_representation;
     QMap<Representation, vtkSmartPointer<vtkAlgorithm>> m_arrowSources;

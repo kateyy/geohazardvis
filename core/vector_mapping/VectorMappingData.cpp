@@ -52,7 +52,6 @@ vtkSmartPointer<vtkAlgorithm> createSimpleArrow()
 VectorMappingData::VectorMappingData(RenderedData * renderedData)
     : m_renderedData(renderedData)
     , m_isVisible(false)
-    , m_startingIndex(0ll)
     , m_actor(vtkSmartPointer<vtkActor>::New())
     , m_isValid(true)
 {
@@ -105,29 +104,6 @@ void VectorMappingData::setVisible(bool visible)
     m_actor->SetVisibility(visible);
 
     visibilityChangedEvent();
-}
-
-vtkIdType VectorMappingData::maximumStartingIndex()
-{
-    return 0;
-}
-
-vtkIdType VectorMappingData::startingIndex() const
-{
-    assert(m_startingIndex <= const_cast<VectorMappingData *>(this)->maximumStartingIndex());
-    return m_startingIndex;
-}
-
-void VectorMappingData::setStartingIndex(vtkIdType index)
-{
-    vtkIdType newIndex = std::max(vtkIdType(0), std::min(index, maximumStartingIndex()));
-
-    if (newIndex == m_startingIndex)
-        return;
-
-    m_startingIndex = newIndex;
-
-    startingIndexChangedEvent();
 }
 
 VectorMappingData::Representation VectorMappingData::representation() const

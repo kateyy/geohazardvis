@@ -27,9 +27,9 @@ DataBrowserTableModel::DataBrowserTableModel(QObject * parent)
     , m_numAttributeVectors(0)
 {
     m_icons.insert("rendered", QIcon(":/icons/painting.svg"));
-    //m_icons.insert("notRendered", QIcon(":/icons/painting_faded.svg"));
     m_icons.insert("table", QIcon(":/icons/table.svg"));
     m_icons.insert("delete_red", QIcon(":/icons/delete_red.svg"));
+    m_icons.insert("assign_to_geometry", QIcon(":/icons/file_yellow_paintings_open.svg"));
 
     {
         QPixmap pixmap(":/icons/painting.svg"); QImage image = pixmap.toImage();
@@ -280,10 +280,19 @@ QVariant DataBrowserTableModel::data_attributeVector(int row, int column, int ro
     {
         switch (column)
         {
-        case 0:
-            return m_icons["table"];
-        case 2:
-            return m_icons["delete_red"];
+        case 0: return m_icons["table"];
+        case 1: return m_icons["assign_to_geometry"];
+        case 2: return m_icons["delete_red"];
+        default: return QVariant();
+        }
+    }
+
+    if (role == Qt::ToolTipRole)
+    {
+        switch (column)
+        {
+        case 1: return "assign to geometry";
+        default: return QVariant();
         }
     }
 

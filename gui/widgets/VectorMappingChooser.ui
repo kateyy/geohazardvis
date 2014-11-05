@@ -65,35 +65,7 @@
        <property name="flat">
         <bool>false</bool>
        </property>
-       <layout class="QVBoxLayout" name="verticalLayout">
-        <item>
-         <layout class="QHBoxLayout" name="horizontalLayout">
-          <item>
-           <widget class="QLabel" name="firstIndexLabel">
-            <property name="font">
-             <font>
-              <weight>50</weight>
-              <bold>false</bold>
-             </font>
-            </property>
-            <property name="text">
-             <string>first &amp;index</string>
-            </property>
-            <property name="buddy">
-             <cstring>firstIndexSlider</cstring>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QScrollBar" name="firstIndexSlider">
-            <property name="orientation">
-             <enum>Qt::Horizontal</enum>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </item>
-       </layout>
+       <layout class="QVBoxLayout" name="verticalLayout"/>
       </widget>
      </widget>
     </item>

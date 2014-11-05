@@ -74,8 +74,6 @@ set ( SOURCES
     scalar_mapping/AbstractArrayComponentMapping.cpp
     scalar_mapping/AttributeArrayComponentMapping.h
     scalar_mapping/AttributeArrayComponentMapping.cpp
-    scalar_mapping/RawArrayComponentMapping.h
-    scalar_mapping/RawArrayComponentMapping.cpp
 
     vector_mapping/VectorMapping.h
     vector_mapping/VectorMapping.cpp
@@ -88,8 +86,6 @@ set ( SOURCES
     vector_mapping/Grid3dVectorMapping.cpp
     vector_mapping/PolyDataAttributeVectorMapping.h
     vector_mapping/PolyDataAttributeVectorMapping.cpp
-    vector_mapping/RawVectorMapping.h
-    vector_mapping/RawVectorMapping.cpp
 )
 
 source_group_by_path(${CMAKE_CURRENT_SOURCE_DIR} "\\\\.cpp$|\\\\.c$|\\\\.h$|\\\\.hpp$|\\\\.ui$|\\\\.inl$"

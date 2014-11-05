@@ -13,7 +13,6 @@
 
 ScalarsForColorMapping::ScalarsForColorMapping(const QList<DataObject *> & dataObjects, vtkIdType numDataComponents)
     : m_dataObjects(dataObjects)
-    , m_startingIndex(0)
     , m_numDataComponents(numDataComponents)
     , m_dataComponent(0)
     , m_dataMinValue(numDataComponents, std::numeric_limits<double>::max())
@@ -65,46 +64,6 @@ void ScalarsForColorMapping::setDataComponent(vtkIdType component)
 
     if (m_lut)
         m_lut->SetTableRange(minValue(), maxValue());
-}
-
-vtkIdType ScalarsForColorMapping::maximumStartingIndex()
-{
-    return 0;
-}
-
-vtkIdType ScalarsForColorMapping::startingIndex() const
-{
-    assert(m_startingIndex <= const_cast<ScalarsForColorMapping *>(this)->maximumStartingIndex());
-    return m_startingIndex;
-}
-
-void ScalarsForColorMapping::setStartingIndex(vtkIdType index)
-{
-    vtkIdType newIndex = std::max(vtkIdType(0), std::min(index, maximumStartingIndex()));
-
-    if (newIndex == m_startingIndex)
-        return;
-
-    m_startingIndex = newIndex;
-
-    startingIndexChangedEvent();
-}
-
-QList<DataObject *> ScalarsForColorMapping::dataObjects() const
-{
-    return m_dataObjects;
-}
-
-void ScalarsForColorMapping::rearrangeDataObjets(QList<DataObject *> dataObjects)
-{
-    assert(dataObjects.toSet() == m_dataObjects.toSet());
-
-    if (m_dataObjects == dataObjects)
-        return;
-
-    m_dataObjects = dataObjects;
-
-    objectOrderChangedEvent();
 }
 
 void ScalarsForColorMapping::initialize()
@@ -247,12 +206,4 @@ void ScalarsForColorMapping::minMaxChangedEvent()
         m_lut->SetTableRange(minValue(), maxValue());
 
     emit minMaxChanged();
-}
-
-void ScalarsForColorMapping::startingIndexChangedEvent()
-{
-}
-
-void ScalarsForColorMapping::objectOrderChangedEvent()
-{
 }

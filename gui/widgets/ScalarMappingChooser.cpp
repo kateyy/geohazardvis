@@ -20,7 +20,6 @@
 #include <core/scalar_mapping/ScalarsForColorMapping.h>
 #include <core/scalar_mapping/ScalarToColorMapping.h>
 
-#include <gui/widgets/ScalarRearrangeObjects.h>
 #include <gui/data_view/RenderView.h>
 
 
@@ -43,8 +42,6 @@ ScalarMappingChooser::ScalarMappingChooser(QWidget * parent)
     m_ui->legendPositionComboBox->setCurrentText("right");
 
     setCurrentRenderView();
-
-    connect(m_ui->rearrangeDataObjectsBtn, &QAbstractButton::clicked, this, &ScalarMappingChooser::rearrangeDataObjects);
 }
 
 ScalarMappingChooser::~ScalarMappingChooser()
@@ -141,18 +138,6 @@ void ScalarMappingChooser::maxValueChanged(double value)
 vtkLookupTable * ScalarMappingChooser::selectedGradient() const
 {
     return m_gradients[m_ui->gradientComboBox->currentIndex()];
-}
-
-void ScalarMappingChooser::rearrangeDataObjects()
-{
-    if (!m_mapping)
-        return;
-
-    ScalarsForColorMapping * scalars = m_mapping->currentScalars();
-    if (!scalars)
-        return;
-
-    ScalarRearrangeObjects::rearrange(this, m_mapping->currentScalars());
 }
 
 void ScalarMappingChooser::on_legendPositionComboBox_currentIndexChanged(QString position)

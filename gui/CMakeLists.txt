@@ -56,8 +56,6 @@ set ( SOURCES
     widgets/DataBrowserTableModel.cpp
     widgets/ScalarMappingChooser.h
     widgets/ScalarMappingChooser.cpp
-    widgets/ScalarRearrangeObjects.h
-    widgets/ScalarRearrangeObjects.cpp
     widgets/RenderConfigWidget.h
     widgets/RenderConfigWidget.cpp
     widgets/RendererConfigWidget.h
@@ -76,7 +74,6 @@ set ( UIs
     
     widgets/DataBrowser.ui
     widgets/ScalarMappingChooser.ui
-    widgets/ScalarRearrangeObjects.ui
     widgets/RenderConfigWidget.ui
     widgets/RendererConfigWidget.ui
     widgets/VectorMappingChooser.ui
