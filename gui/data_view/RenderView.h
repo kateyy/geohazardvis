@@ -87,6 +87,8 @@ signals:
 
     void selectedDataChanged(RenderView * renderView, DataObject * dataObject);
 
+    void beforeDeleteRenderedData(RenderedData * renderedData);
+
 public slots:
     void render();
 

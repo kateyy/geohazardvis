@@ -59,7 +59,10 @@ void VectorMappingChooser::setCurrentRenderView(RenderView * renderView)
         newMapping = renderView->highlightedRenderedData()->vectorMapping();
 
     if (m_renderView)
+    {
         disconnect(this, &VectorMappingChooser::renderSetupChanged, m_renderView, &RenderView::render);
+        disconnect(renderView, &RenderView::beforeDeleteRenderedData, this, &VectorMappingChooser::checkRemovedData);
+    }
     if (m_mapping)
         disconnect(m_mapping, &VectorMapping::vectorsChanged, this, &VectorMappingChooser::updateVectorsList);
 
@@ -73,7 +76,10 @@ void VectorMappingChooser::setCurrentRenderView(RenderView * renderView)
     if (m_mapping)
         connect(m_mapping, &VectorMapping::vectorsChanged, this, &VectorMappingChooser::updateVectorsList);
     if (m_renderView)
+    {
         connect(this, &VectorMappingChooser::renderSetupChanged, m_renderView, &RenderView::render);
+        connect(renderView, &RenderView::beforeDeleteRenderedData, this, &VectorMappingChooser::checkRemovedData);
+    }
 }
 
 void VectorMappingChooser::setSelectedData(DataObject * dataObject)
@@ -91,16 +97,15 @@ void VectorMappingChooser::setSelectedData(DataObject * dataObject)
         }
     }
 
-    if (!renderedData)
-        return;
+    VectorMapping * newMapping = renderedData ? renderedData->vectorMapping() : nullptr;
 
-    if (m_mapping == renderedData->vectorMapping())
+    if (newMapping == m_mapping)
         return;
 
     if (m_mapping)
         disconnect(m_mapping, &VectorMapping::vectorsChanged, this, &VectorMappingChooser::updateVectorsList);
 
-    m_mapping = renderedData->vectorMapping();
+    m_mapping = newMapping;
 
     updateTitle();
     updateVectorsList();
@@ -130,6 +135,12 @@ void VectorMappingChooser::updateVectorsList()
         QModelIndex index(m_listModel->index(0, 0));
         m_ui->vectorsListView->selectionModel()->select(index, QItemSelectionModel::Select);
     }
+}
+
+void VectorMappingChooser::checkRemovedData(RenderedData * renderedData)
+{
+    if (m_mapping && m_mapping->renderedData() == renderedData)
+        setSelectedData(nullptr);
 }
 
 void VectorMappingChooser::updateGuiForSelection(const QItemSelection & selection)

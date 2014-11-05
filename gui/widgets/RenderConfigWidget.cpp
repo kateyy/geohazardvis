@@ -50,12 +50,23 @@ void RenderConfigWidget::clear()
     emit repaint();
 }
 
+void RenderConfigWidget::checkRemovedData(RenderedData * renderedData)
+{
+    if (m_renderedData == renderedData)
+        clear();
+}
+
 void RenderConfigWidget::setCurrentRenderView(RenderView * renderView)
 {
     clear();
 
+    if (m_renderView)
+        disconnect(m_renderView, &RenderView::beforeDeleteRenderedData, this, &RenderConfigWidget::checkRemovedData);
+
     m_renderView = renderView;
     m_renderedData = renderView ? renderView->highlightedRenderedData() : nullptr;
+    if (renderView)
+        connect(renderView, &RenderView::beforeDeleteRenderedData, this, &RenderConfigWidget::checkRemovedData);
     updateTitle();
 
     if (!m_renderedData)

@@ -71,6 +71,12 @@ RenderView::~RenderView()
 {
     SelectionHandler::instance().removeRenderView(this); 
 
+    for (RenderedData * rendered : m_renderedData)
+        emit beforeDeleteRenderedData(rendered);
+
+    for (RenderedData * rendered : m_renderedDataCache)
+        emit beforeDeleteRenderedData(rendered);
+
     qDeleteAll(m_renderedData);
     qDeleteAll(m_renderedDataCache);
 
@@ -270,6 +276,9 @@ void RenderView::hideDataObjects(const QList<DataObject *> & dataObjects)
         if (!rendered)
             continue;
 
+        // cached data is only accessible internally in the view, so let others know that it's gone for the moment
+        emit beforeDeleteRenderedData(rendered);
+
         // move data to cache if it isn't already invisible
         if (m_renderedData.removeOne(rendered))
         {
@@ -315,6 +324,8 @@ void RenderView::removeDataObject(DataObject * dataObject)
 
     for (vtkActor * actor : renderedData->actors())
         m_renderer->RemoveViewProp(actor);
+
+    emit beforeDeleteRenderedData(renderedData);
 
     QList<RenderedData *> toDelete = removeFromInternalLists({ dataObject });
 

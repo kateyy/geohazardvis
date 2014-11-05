@@ -31,6 +31,10 @@ public slots:
     void setSelectedData(DataObject * dataObject);
     void clear();
 
+private slots:
+    /** remove data from the UI if we currently hold it */
+    void checkRemovedData(RenderedData * renderedData);
+
 protected:
     void updateTitle();
 

@@ -16,6 +16,7 @@ class PropertyBrowser;
 }
 
 class RenderView;
+class RenderedData;
 class VectorMapping;
 class VectorMappingChooserListModel;
 class DataObject;
@@ -41,6 +42,9 @@ public slots:
 private slots:
     void updateGuiForSelection(const QItemSelection & selection = QItemSelection());
     void updateVectorsList();
+
+    /** remove data from the UI if we currently hold it */
+    void checkRemovedData(RenderedData * renderedData);
 
 private:
     void updateTitle();
