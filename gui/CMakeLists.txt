@@ -88,12 +88,8 @@ qt5_add_resources(QRC_Srcs ${QRCs} )
 
 
 # Group source files
-source_group_by_path( ${CMAKE_CURRENT_SOURCE_DIR} "\\\\.cpp$|\\\\.c$|\\\\.h$|\\\\.hpp$|\\\\.inl$"
-    "Source Files" ${SOURCES} )
-source_group_by_path( ${CMAKE_CURRENT_SOURCE_DIR} "\\\\.ui$|\\\\.qrc$"
-    "Ressources" ${UIs} ${QRCs})
-source_group_by_path( ${CMAKE_CURRENT_BINARY_DIR} "\\\\.cpp$|\\\\.c$|\\\\.h$|\\\\.hpp$|\\\\.inl$"
-    "Generated" ${UI_Srcs} ${MOC_Srcs} ${QRC_Srcs})
+source_group_by_path_and_type(${CMAKE_CURRENT_SOURCE_DIR} ${SOURCES} ${UIs} ${QRCs})
+source_group_by_path(${PARENT_PATH} ".*[.](c|cpp|h|hpp|ui)$" "Generated" ${UI_Srcs} ${MOC_Srcs} ${QRC_Srcs})
 
 if (OPTION_BUILD_STATIC)
     add_library(${TARGET} ${SOURCES})

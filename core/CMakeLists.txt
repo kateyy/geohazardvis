@@ -88,8 +88,7 @@ set ( SOURCES
     vector_mapping/PolyDataAttributeVectorMapping.cpp
 )
 
-source_group_by_path(${CMAKE_CURRENT_SOURCE_DIR} "\\\\.cpp$|\\\\.c$|\\\\.h$|\\\\.hpp$|\\\\.ui$|\\\\.inl$"
-    "Source Files" ${SOURCES})
+source_group_by_path_and_type(${CMAKE_CURRENT_SOURCE_DIR} ${SOURCES})
 
 if (OPTION_BUILD_STATIC)
     add_library(${TARGET} ${SOURCES})

@@ -15,32 +15,44 @@ function(configure_cxx_target TARGET)
     )
 endfunction()
 
-# Group source files in folders (e.g. for MSVC solutions)
-# Example: source_group_by_path("${CMAKE_CURRENT_SOURCE_DIR}/src"
-# "\\\\.h$|\\\\.hpp$|\\\\.cpp$|\\\\.c$|\\\\.ui$|\\\\.qrc$" "Source Files" ${sources})
-macro(source_group_by_path PARENT_PATH REGEX GROUP)
+# Define function "source_group_by_path with three mandatory arguments (PARENT_PATH, REGEX, GROUP, ...)
+# to group source files in folders (e.g. for MSVC solutions).
+#
+# Example:
+# source_group_by_path("${CMAKE_CURRENT_SOURCE_DIR}/src" "\\\\.h$|\\\\.hpp$|\\\\.cpp$|\\\\.c$|\\\\.ui$|\\\\.qrc$" "Source Files" ${sources})
+function (source_group_by_path PARENT_PATH REGEX GROUP)
 
-    set(args ${ARGV})
+    foreach (FILENAME ${ARGN})
+        
+        string(REGEX MATCH ${REGEX} regex_match ${FILENAME})
+        
+        if (regex_match)        
+            get_filename_component(FILEPATH "${FILENAME}" REALPATH)
+            file(RELATIVE_PATH FILEPATH ${PARENT_PATH} ${FILEPATH})
+            get_filename_component(FILEPATH "${FILEPATH}" DIRECTORY)
 
-    list(REMOVE_AT args 0)
-    list(REMOVE_AT args 0)
-    list(REMOVE_AT args 0)
-
-    foreach(FILENAME ${args})
-
-        get_filename_component(FILEPATH "${FILENAME}" REALPATH)
-        file(RELATIVE_PATH FILEPATH ${PARENT_PATH} ${FILEPATH})
-        get_filename_component(FILEPATH "${FILEPATH}" PATH)
-
-        string(REPLACE "/" "\\" FILEPATH "${FILEPATH}")
-
-        if(${FILENAME} MATCHES "${REGEX}")
-            source_group("${GROUP}\\${FILEPATH}" FILES ${FILENAME})
+            string(REPLACE "/" "\\" FILEPATH "${FILEPATH}")
+            
+            source_group("${GROUP}\\${FILEPATH}" REGULAR_EXPRESSION "${REGEX}" FILES ${FILENAME})
         endif()
 
     endforeach()
 
-endmacro()
+endfunction (source_group_by_path)
+
+function (source_group_by_path_and_type PARENT_PATH)
+
+    if (IDE_SPLIT_HEADERS_SOURCES)
+        source_group_by_path(${PARENT_PATH} ".*[.](h|hpp)$" "Header Files" ${ARGN})
+        source_group_by_path(${PARENT_PATH} ".*[.](c|cpp)$" "Source Files" ${ARGN})
+    else()
+        source_group_by_path(${PARENT_PATH} ".*[.](cpp|c|h|hpp)" "Source Files" ${ARGN})
+    endif()
+    
+    source_group_by_path(${PARENT_PATH} ".*[.](qrc|ui)$" "Ressources" ${ARGN})
+
+endfunction(source_group_by_path_and_type)
+
 
 include (GenerateExportHeader)
 

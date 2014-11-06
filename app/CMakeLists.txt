@@ -6,6 +6,8 @@ set ( SOURCES
     main.cpp
     Application.h
     Application.cpp )
+    
+source_group_by_path_and_type(${CMAKE_CURRENT_SOURCE_DIR} ${SOURCES})
 
 add_executable ( ${TARGET} ${SOURCES} )
 

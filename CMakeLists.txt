@@ -24,6 +24,8 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 # Generate folders for IDE targets (e.g., VisualStudio solutions)
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
+set(IDE_SPLIT_HEADERS_SOURCES ON CACHE BOOL "List header and source files in different IDE folders.")
+
 # Include custom cmake functions
 include(cmake/Custom.cmake)
 include(cmake/GitRevision.cmake)
