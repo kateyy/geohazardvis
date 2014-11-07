@@ -59,6 +59,9 @@
      <string>&amp;Views</string>
     </property>
     <addaction name="actionNew_Render_View"/>
+    <addaction name="separator"/>
+    <addaction name="action_Export_Rendered_Image"/>
+    <addaction name="action_Quick_Export_with_Current_Settings"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuViews"/>
@@ -126,6 +129,19 @@
   <action name="actionNew_Render_View">
    <property name="text">
     <string>New &amp;Render View</string>
+   </property>
+  </action>
+  <action name="action_Export_Rendered_Image">
+   <property name="text">
+    <string>&amp;Export Rendered Image...</string>
+   </property>
+  </action>
+  <action name="action_Quick_Export_with_Current_Settings">
+   <property name="text">
+    <string>&amp;Quick Export with Current Settings</string>
+   </property>
+   <property name="shortcut">
+    <string>F10</string>
    </property>
   </action>
  </widget>

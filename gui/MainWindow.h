@@ -6,14 +6,15 @@
 #include <gui/gui_api.h>
 
 
-class DataMapping;
-class RenderView;
-class RenderConfigWidget;
-class RendererConfigWidget;
+class CanvasExporter;
 class DataBrowser;
+class DataMapping;
+class RenderConfigWidget;
+class RenderView;
+class RendererConfigWidget;
 class ScalarMappingChooser;
-class VectorMappingChooser;
 class Ui_MainWindow;
+class VectorMappingChooser;
 
 
 class GUI_API MainWindow : public QMainWindow
@@ -51,6 +52,7 @@ private:
     VectorMappingChooser * m_vectorMappingChooser;
     RenderConfigWidget * m_renderConfigWidget;
     RendererConfigWidget * m_rendererConfigWidget;
+    CanvasExporter * m_canvasExporter;
 
     QString m_lastOpenFolder;
 };

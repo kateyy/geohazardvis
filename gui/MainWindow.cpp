@@ -15,13 +15,14 @@
 #include <core/data_objects/DataObject.h>
 #include <core/data_objects/RenderedData.h>
 
-#include "DataMapping.h"
-#include "SelectionHandler.h"
-#include "data_view/RenderView.h"
-#include "widgets/ScalarMappingChooser.h"
-#include "widgets/VectorMappingChooser.h"
-#include "widgets/RenderConfigWidget.h"
-#include "widgets/RendererConfigWidget.h"
+#include <gui/DataMapping.h>
+#include <gui/SelectionHandler.h>
+#include <gui/data_view/RenderView.h>
+#include <gui/widgets/CanvasExporter.h>
+#include <gui/widgets/ScalarMappingChooser.h>
+#include <gui/widgets/VectorMappingChooser.h>
+#include <gui/widgets/RenderConfigWidget.h>
+#include <gui/widgets/RendererConfigWidget.h>
 
 
 MainWindow::MainWindow()
@@ -32,6 +33,7 @@ MainWindow::MainWindow()
     , m_vectorMappingChooser(new VectorMappingChooser())
     , m_renderConfigWidget(new RenderConfigWidget())
     , m_rendererConfigWidget(new RendererConfigWidget())
+    , m_canvasExporter(new CanvasExporter(this))
 {
     m_ui->setupUi(this);
 
@@ -66,6 +68,10 @@ MainWindow::MainWindow()
         m_renderConfigWidget->setSelectedData(selected);
         m_vectorMappingChooser->setSelectedData(selected);
     });
+
+    connect(m_ui->action_Quick_Export_with_Current_Settings, &QAction::triggered, 
+        [this] (bool) { m_canvasExporter->captureScreenshot(); });
+    connect(m_dataMapping, &DataMapping::focusedRenderViewChanged, m_canvasExporter, &CanvasExporter::setRenderView);
 }
 
 MainWindow::~MainWindow()
