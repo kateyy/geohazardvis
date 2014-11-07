@@ -3,7 +3,7 @@ set( TARGET core )
 message( STATUS ${TARGET} )
 
 set ( SOURCES
-    ${TARGET}_api.h
+    ${CMAKE_CURRENT_BINARY_DIR}/${TARGET}_api.h
 
     DataSetHandler.h
     DataSetHandler.cpp
@@ -89,6 +89,8 @@ set ( SOURCES
 )
 
 source_group_by_path_and_type(${CMAKE_CURRENT_SOURCE_DIR} ${SOURCES})
+source_group_by_path(${CMAKE_CURRENT_BINARY_DIR} ".*" "Generated" ${CMAKE_CURRENT_BINARY_DIR}/${TARGET}_api.h)
+source_group_by_path(${CMAKE_CURRENT_SOURCE_DIR} ".*" "" "CMakeLists.txt")
 
 if (OPTION_BUILD_STATIC)
     add_library(${TARGET} ${SOURCES})

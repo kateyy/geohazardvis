@@ -26,7 +26,7 @@ function (source_group_by_path PARENT_PATH REGEX GROUP)
         
         string(REGEX MATCH ${REGEX} regex_match ${FILENAME})
         
-        if (regex_match)        
+        if (regex_match)
             get_filename_component(FILEPATH "${FILENAME}" REALPATH)
             file(RELATIVE_PATH FILEPATH ${PARENT_PATH} ${FILEPATH})
             get_filename_component(FILEPATH "${FILEPATH}" DIRECTORY)
