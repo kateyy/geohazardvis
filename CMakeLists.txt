@@ -104,12 +104,15 @@ create_revision_file(${CMAKE_BINARY_DIR}/revision ${INSTALL_ROOT})
 install(FILES ${CMAKE_BINARY_DIR}/revision DESTINATION ${INSTALL_ROOT})
 
 
-find_package(VTK REQUIRED
+set(VTK_COMPONENTS 
     vtkGUISupportQt         # QVTKWidget
     vtkRenderingAnnotation  # vtkCubeAxesActor, vtkScalarBarActor
     vtkInteractionWidgets
 )
-include(${VTK_USE_FILE})
+
+find_package(VTK REQUIRED ${VTK_COMPONENTS})
+# replaced by explicit calls below (http://www.kitware.com/source/home/post/116)
+#include(${VTK_USE_FILE})
 
 if (NOT ${VTK_VERSION_MAJOR} STREQUAL "6")
     message(FATAL_ERROR "VTK 6 is required! Found ${VTK_VERSION_MAJOR}")
@@ -134,6 +137,19 @@ if ("${VTK_RENDERING_BACKEND}" STREQUAL "OpenGL" OR "${VTK_RENDERING_BACKEND}" S
 else()
     message(FATAL_ERROR "Unsupported VTK Rendering Backend: ${VTK_RENDERING_BACKEND}")
 endif()
+
+
+if(TARGET vtkIOExport)
+    set(VTK_module_IOExport 1)
+    find_package(VTK COMPONENTS ${VTK_COMPONENTS} vtkIOExport)
+else()
+    set(VTK_module_IOExport 0)
+    message("VTK was not build with vtkIOExport, PostScript/EPS export will not be available.")
+endif()
+
+
+include_directories(${VTK_INCLUDE_DIRS})
+set_property(DIRECTORY APPEND PROPERTY COMPILE_DEFINITIONS ${VTK_DEFINITIONS})
 
 
 find_package(Qt5Widgets REQUIRED)

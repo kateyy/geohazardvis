@@ -1,3 +1,4 @@
 #pragma once
 
 #cmakedefine VTK_RENDERING_BACKEND @VTK_RENDERING_BACKEND_VERSION@
+#cmakedefine VTK_module_IOExport @VTK_module_IOExport@
