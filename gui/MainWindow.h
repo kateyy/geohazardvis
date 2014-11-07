@@ -6,7 +6,7 @@
 #include <gui/gui_api.h>
 
 
-class CanvasExporter;
+class CanvasExporterWidget;
 class DataBrowser;
 class DataMapping;
 class RenderConfigWidget;
@@ -52,7 +52,7 @@ private:
     VectorMappingChooser * m_vectorMappingChooser;
     RenderConfigWidget * m_renderConfigWidget;
     RendererConfigWidget * m_rendererConfigWidget;
-    CanvasExporter * m_canvasExporter;
+    CanvasExporterWidget * m_canvasExporter;
 
     QString m_lastOpenFolder;
 };

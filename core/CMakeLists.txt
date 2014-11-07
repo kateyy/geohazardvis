@@ -46,6 +46,17 @@ set ( SOURCES
     filters/CentroidAsScalarsFilter.h
     filters/CentroidAsScalarsFilter.cpp
 
+    canvas_export/CanvasExporter.h
+    canvas_export/CanvasExporter.cpp
+    canvas_export/CanvasExporterRegistry.h
+    canvas_export/CanvasExporterRegistry.cpp
+    canvas_export/CanvasExporterImages.h
+    canvas_export/CanvasExporterImages.cpp
+    canvas_export/CanvasExporterPNG.h
+    canvas_export/CanvasExporterPNG.cpp
+    canvas_export/CanvasExporterPS.h
+    canvas_export/CanvasExporterPS.cpp
+
     table_model/QVtkTableModel.h
     table_model/QVtkTableModel.cpp
     table_model/QVtkTableModelImage.h

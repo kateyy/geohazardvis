@@ -50,8 +50,8 @@ set ( SOURCES
     rendering_interaction/PickingInteractorStyleSwitch.h
     rendering_interaction/PickingInteractorStyleSwitch.cpp
 
-    widgets/CanvasExporter.h
-    widgets/CanvasExporter.cpp
+    widgets/CanvasExporterWidget.h
+    widgets/CanvasExporterWidget.cpp
     widgets/DataBrowser.h
     widgets/DataBrowser.cpp
     widgets/DataBrowserTableModel.h
@@ -74,7 +74,7 @@ set ( UIs
     data_view/RenderView.ui
     data_view/TableView.ui
     
-    widgets/CanvasExporter.ui
+    widgets/CanvasExporterWidget.ui
     widgets/DataBrowser.ui
     widgets/ScalarMappingChooser.ui
     widgets/RenderConfigWidget.ui

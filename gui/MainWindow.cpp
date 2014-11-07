@@ -18,7 +18,7 @@
 #include <gui/DataMapping.h>
 #include <gui/SelectionHandler.h>
 #include <gui/data_view/RenderView.h>
-#include <gui/widgets/CanvasExporter.h>
+#include <gui/widgets/CanvasExporterWidget.h>
 #include <gui/widgets/ScalarMappingChooser.h>
 #include <gui/widgets/VectorMappingChooser.h>
 #include <gui/widgets/RenderConfigWidget.h>
@@ -33,7 +33,7 @@ MainWindow::MainWindow()
     , m_vectorMappingChooser(new VectorMappingChooser())
     , m_renderConfigWidget(new RenderConfigWidget())
     , m_rendererConfigWidget(new RendererConfigWidget())
-    , m_canvasExporter(new CanvasExporter(this))
+    , m_canvasExporter(new CanvasExporterWidget(this))
 {
     m_ui->setupUi(this);
 
@@ -71,7 +71,9 @@ MainWindow::MainWindow()
 
     connect(m_ui->action_Quick_Export_with_Current_Settings, &QAction::triggered, 
         [this] (bool) { m_canvasExporter->captureScreenshot(); });
-    connect(m_dataMapping, &DataMapping::focusedRenderViewChanged, m_canvasExporter, &CanvasExporter::setRenderView);
+    connect(m_dataMapping, &DataMapping::focusedRenderViewChanged, m_canvasExporter, &CanvasExporterWidget::setRenderView);
+    connect(m_ui->action_Export_Rendered_Image, &QAction::triggered,
+        [this] (bool) { m_canvasExporter->exec(); });
 }
 
 MainWindow::~MainWindow()
