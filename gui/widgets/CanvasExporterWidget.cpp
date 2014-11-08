@@ -1,9 +1,12 @@
 #include "CanvasExporterWidget.h"
 #include "ui_CanvasExporterWidget.h"
 
+#include <cassert>
+
 #include <QDebug>
 #include <QDateTime>
 #include <QDir>
+#include <QFileDialog>
 
 #include <propertyguizeug/PropertyBrowser.h>
 
@@ -45,10 +48,44 @@ void CanvasExporterWidget::setRenderView(RenderView * renderView)
 
 void CanvasExporterWidget::captureScreenshot()
 {
+    CanvasExporter * exporter = currentExporter();
+    if (!exporter)
+        return;
+
+    QString exportFolder = currentExportFolder();
+
+    if (!QDir().mkpath(exportFolder))
+    {
+        qDebug() << "CanvasExporterWidget: cannot create output folder: " + exportFolder;
+        return;
+    }
+
+    QDir exportDir(exportFolder);
+    QString fileName = exportDir.absoluteFilePath(fileNameWithTimeStamp());
+
+    saveScreenshotTo(exporter, fileName);
+}
+
+void CanvasExporterWidget::captureScreenshotTo()
+{
+    CanvasExporter * exporter = currentExporter();
+    if (!exporter)
+        return;
+
+    QString target = QFileDialog::getSaveFileName(this, "Export Image", currentExportFolder(), exporter->formatName() + " (*." + exporter->fileExtension() + ")");
+
+    if (target.isEmpty())
+        return;
+
+    saveScreenshotTo(exporter, target);
+}
+
+CanvasExporter * CanvasExporterWidget::currentExporter()
+{
     if (!m_renderView)
     {
         qDebug() << "CanvasExporterWidget: not capturing screenshot, no render view set";
-        return;
+        return nullptr;
     }
 
     QString format = m_ui->fileFormatComboBox->currentText();
@@ -60,30 +97,36 @@ void CanvasExporterWidget::captureScreenshot()
     }
 
     if (!exporter)
-    {
         qDebug() << "CanvasExporterWidget: Selected file format" << format << "is not supported.";
-        return;
-    }
+    else
+        exporter->setRenderWindow(m_renderView->renderWindow());
 
+
+    return exporter;
+}
+
+QString CanvasExporterWidget::currentExportFolder() const
+{
+    QString exportFolder = m_ui->outputFolderEdit->text().isEmpty() ? "." : m_ui->outputFolderEdit->text();
+    exportFolder.replace("\\", "//");
+
+    return exportFolder;
+}
+
+QString CanvasExporterWidget::fileNameWithTimeStamp() const
+{
     QString timestamp = QDateTime::currentDateTime().toString("yyyy-MM-dd HH-mm-ss.zzzz");
     QString baseName = timestamp + " " + m_renderView->windowTitle();
     // http://msdn.microsoft.com/en-us/library/windows/desktop/aa365247%28v=vs.85%29.aspx
     baseName.replace(QRegExp("[<>:\"/\\|?*]"), "_");
 
+    return baseName;
+}
 
-    QString exportFolder = m_ui->outputFolderEdit->text().isEmpty() ? "." : m_ui->outputFolderEdit->text();
-    exportFolder.replace("\\", "//");
-    QDir exportDir(exportFolder);
-
-    if (!QDir().mkpath(exportFolder))
-    {
-        qDebug() << "CanvasExporterWidget: cannot create output folder: " + exportFolder;
-        return;
-    }
-
-    QString fileName = exportDir.absoluteFilePath(baseName);
-
+void CanvasExporterWidget::saveScreenshotTo(CanvasExporter * exporter, const QString & fileName) const
+{
     qDebug() << "exporting image to: " << fileName;
+    assert(exporter);
 
     exporter->setOutputFileName(fileName);
     exporter->setRenderWindow(m_renderView->renderWindow());

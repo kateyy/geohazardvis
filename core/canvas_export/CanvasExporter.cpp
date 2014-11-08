@@ -15,6 +15,16 @@ CanvasExporter::~CanvasExporter()
     delete m_propertyGroup;
 }
 
+QString CanvasExporter::fileExtension() const
+{
+    return outputFormat().toLower();
+}
+
+QString CanvasExporter::formatName() const
+{
+    return outputFormat();
+}
+
 reflectionzeug::PropertyGroup * CanvasExporter::propertyGroup()
 {
     if (!m_propertyGroup)
@@ -33,11 +43,6 @@ vtkRenderWindow * CanvasExporter::renderWindow()
     return m_renderWindow;
 }
 
-const QString & CanvasExporter::outputFormat() const
-{
-    return m_format;
-}
-
 const QString & CanvasExporter::outputFileName() const
 {
     return m_fileName;
@@ -46,6 +51,11 @@ const QString & CanvasExporter::outputFileName() const
 void CanvasExporter::setOutputFileName(const QString & fileName)
 {
     m_fileName = fileName;
+}
+
+const QString & CanvasExporter::outputFormat() const
+{
+    return m_format;
 }
 
 void CanvasExporter::setOutputFormat(const QString & format)

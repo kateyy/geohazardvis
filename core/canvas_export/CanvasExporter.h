@@ -19,12 +19,16 @@ public:
     CanvasExporter();
     virtual ~CanvasExporter();
 
+    /** @return file extension of the configured file format */
+    virtual QString fileExtension() const;
+    /** @return friendly name of the configured file format */
+    virtual QString formatName() const;
+
     reflectionzeug::PropertyGroup * propertyGroup();
 
     void setRenderWindow(vtkRenderWindow * renderWindow);
     vtkRenderWindow * renderWindow();
 
-    const QString & outputFormat() const;
     const QString & outputFileName() const;
     void setOutputFileName(const QString & fileName);
 
@@ -38,6 +42,7 @@ protected:
 
     friend class CanvasExporterRegistry;
     virtual QStringList fileFormats() const = 0;
+    const QString & outputFormat() const;
     void setOutputFormat(const QString & format);
 
 private:

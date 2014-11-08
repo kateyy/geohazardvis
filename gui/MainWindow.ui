@@ -59,13 +59,19 @@
      <string>&amp;Views</string>
     </property>
     <addaction name="actionNew_Render_View"/>
-    <addaction name="separator"/>
-    <addaction name="action_Export_Rendered_Image"/>
-    <addaction name="action_Quick_Export_with_Current_Settings"/>
+   </widget>
+   <widget class="QMenu" name="menuImage_Export">
+    <property name="title">
+     <string>Image &amp;Export</string>
+    </property>
+    <addaction name="actionSetup_Image_Export"/>
+    <addaction name="actionQuick_Export"/>
+    <addaction name="actionExport_To"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuViews"/>
    <addaction name="menuSynchronize_Selections"/>
+   <addaction name="menuImage_Export"/>
    <addaction name="menuHelp"/>
   </widget>
   <action name="actionExit">
@@ -73,31 +79,7 @@
     <string>E&amp;xit</string>
    </property>
    <property name="shortcut">
-    <string>Esc</string>
-   </property>
-  </action>
-  <action name="actionSphere">
-   <property name="text">
-    <string>sphere</string>
-   </property>
-   <property name="shortcut">
-    <string>1</string>
-   </property>
-  </action>
-  <action name="actionVolcano">
-   <property name="text">
-    <string>volcano</string>
-   </property>
-   <property name="shortcut">
-    <string>2</string>
-   </property>
-  </action>
-  <action name="actionObservation">
-   <property name="text">
-    <string>observation</string>
-   </property>
-   <property name="shortcut">
-    <string>3</string>
+    <string>Ctrl+Q</string>
    </property>
   </action>
   <action name="actionOpen">
@@ -108,22 +90,9 @@
     <string>Ctrl+O</string>
    </property>
   </action>
-  <action name="actionOpen_newTab">
-   <property name="text">
-    <string>Open in new &amp;tab...</string>
-   </property>
-   <property name="shortcut">
-    <string>Ctrl+Shift+O</string>
-   </property>
-  </action>
   <action name="actionAbout_Qt">
    <property name="text">
     <string>About Qt</string>
-   </property>
-  </action>
-  <action name="actionNew_render_view">
-   <property name="text">
-    <string>New render view</string>
    </property>
   </action>
   <action name="actionNew_Render_View">
@@ -131,17 +100,28 @@
     <string>New &amp;Render View</string>
    </property>
   </action>
-  <action name="action_Export_Rendered_Image">
+  <action name="actionSetup_Image_Export">
    <property name="text">
-    <string>&amp;Export Rendered Image...</string>
+    <string>&amp;Setup...</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Shift+E</string>
    </property>
   </action>
-  <action name="action_Quick_Export_with_Current_Settings">
+  <action name="actionQuick_Export">
    <property name="text">
-    <string>&amp;Quick Export with Current Settings</string>
+    <string>&amp;Quick Export</string>
    </property>
    <property name="shortcut">
     <string>F10</string>
+   </property>
+  </action>
+  <action name="actionExport_To">
+   <property name="text">
+    <string>&amp;Export To...</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+E</string>
    </property>
   </action>
  </widget>

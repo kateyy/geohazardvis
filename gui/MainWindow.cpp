@@ -69,11 +69,13 @@ MainWindow::MainWindow()
         m_vectorMappingChooser->setSelectedData(selected);
     });
 
-    connect(m_ui->action_Quick_Export_with_Current_Settings, &QAction::triggered, 
+    connect(m_ui->actionSetup_Image_Export, &QAction::triggered,
+        [this] (bool) { m_canvasExporter->show(); });
+    connect(m_ui->actionQuick_Export, &QAction::triggered, 
         [this] (bool) { m_canvasExporter->captureScreenshot(); });
+    connect(m_ui->actionExport_To, &QAction::triggered,
+        [this] (bool) { m_canvasExporter->captureScreenshotTo(); });
     connect(m_dataMapping, &DataMapping::focusedRenderViewChanged, m_canvasExporter, &CanvasExporterWidget::setRenderView);
-    connect(m_ui->action_Export_Rendered_Image, &QAction::triggered,
-        [this] (bool) { m_canvasExporter->exec(); });
 }
 
 MainWindow::~MainWindow()
