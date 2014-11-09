@@ -12,6 +12,8 @@ function(configure_cxx_target TARGET)
         LINK_FLAGS_RELEASE                  "${DEFAULT_LINKER_FLAGS_RELEASE}"
         LINK_FLAGS_RELWITHDEBINFO           "${DEFAULT_LINKER_FLAGS_RELEASE}"
         LINK_FLAGS_MINSIZEREL               "${DEFAULT_LINKER_FLAGS_RELEASE}"
+        DEBUG_POSTFIX                       "d${DEBUG_POSTFIX}"
+        RELWITHDEBINFO_POSTFIX              "rd${DEBUG_POSTFIX}"
     )
 endfunction()
 
