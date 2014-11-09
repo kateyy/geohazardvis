@@ -56,6 +56,8 @@ set ( SOURCES
     canvas_export/CanvasExporterPNG.cpp
     canvas_export/CanvasExporterPS.h
     canvas_export/CanvasExporterPS.cpp
+    canvas_export/CanvasExporterTIFF.h
+    canvas_export/CanvasExporterTIFF.cpp
 
     table_model/QVtkTableModel.h
     table_model/QVtkTableModel.cpp

@@ -2,6 +2,8 @@
 
 #include <core/canvas_export/CanvasExporter.h>
 
+
+class vtkImageWriter;
 class vtkWindowToImageFilter;
 
 
@@ -9,7 +11,10 @@ class vtkWindowToImageFilter;
 class CanvasExporterImages : public CanvasExporter
 {
 public:
-    CanvasExporterImages();
+    /** @param writer Subclasses must provide a vtkImageWriter subclass */
+    CanvasExporterImages(vtkImageWriter * writer);
+
+    bool write() override;
 
 protected:
     /** provides buffer type and magnification property */
@@ -20,4 +25,5 @@ protected:
 
 protected:
     vtkSmartPointer<vtkWindowToImageFilter> m_toImageFilter;
+    vtkSmartPointer<vtkImageWriter> m_writer;
 };

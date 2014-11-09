@@ -2,6 +2,7 @@
 
 #include <QFileInfo>
 
+#include <vtkImageWriter.h>
 #include <vtkRenderWindow.h>
 #include <vtkWindowToImageFilter.h>
 
@@ -20,13 +21,25 @@ enum BufferType
 };
 }
 
-CanvasExporterImages::CanvasExporterImages()
+CanvasExporterImages::CanvasExporterImages(vtkImageWriter * writer)
     : CanvasExporter()
     , m_toImageFilter(vtkSmartPointer<vtkWindowToImageFilter>::New())
+    , m_writer(vtkSmartPointer<vtkImageWriter>::Take(writer))
 {
     m_toImageFilter->SetInput(renderWindow());
     m_toImageFilter->SetInputBufferTypeToRGBA();
     //m_toImageFilter->ReadFrontBufferOff();
+
+    m_writer->SetInputConnection(m_toImageFilter->GetOutputPort());
+}
+
+bool CanvasExporterImages::write()
+{
+    m_toImageFilter->SetInput(renderWindow());
+    m_writer->SetFileName(verifiedFileName().toLatin1().data());
+    m_writer->Write();
+
+    return true;
 }
 
 PropertyGroup * CanvasExporterImages::createPropertyGroup()

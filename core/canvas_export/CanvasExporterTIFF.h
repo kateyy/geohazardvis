@@ -1,10 +1,10 @@
 #include <core/canvas_export/CanvasExporterImages.h>
 
 
-class CanvasExporterPNG : public CanvasExporterImages
+class CanvasExporterTIFF : public CanvasExporterImages
 {
 public:
-    CanvasExporterPNG();
+    CanvasExporterTIFF();
 
 protected:
     reflectionzeug::PropertyGroup * createPropertyGroup() override;

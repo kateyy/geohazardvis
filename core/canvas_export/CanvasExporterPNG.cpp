@@ -3,8 +3,6 @@
 #include <QStringList>
 
 #include <vtkPNGWriter.h>
-#include <vtkRenderWindow.h>
-#include <vtkWindowToImageFilter.h>
 
 #include <reflectionzeug/PropertyGroup.h>
 
@@ -18,32 +16,23 @@ bool isRegistered = CanvasExporterRegistry::registerImplementation(CanvasExporte
 
 
 CanvasExporterPNG::CanvasExporterPNG()
-    : CanvasExporterImages()
-    , m_writer(vtkSmartPointer<vtkPNGWriter>::New())
+    : CanvasExporterImages(vtkPNGWriter::New())
 {
-    m_writer->SetInputConnection(m_toImageFilter->GetOutputPort());
-}
-
-bool CanvasExporterPNG::write()
-{
-    m_toImageFilter->SetInput(renderWindow());
-    m_writer->SetFileName(verifiedFileName().toLatin1().data());
-    m_writer->Write();
-
-    return true;
 }
 
 reflectionzeug::PropertyGroup * CanvasExporterPNG::createPropertyGroup()
 {
     auto group = CanvasExporterImages::createPropertyGroup();
 
+    vtkPNGWriter * pngWriter = static_cast<vtkPNGWriter *>(m_writer.Get());
+
     auto prop_compression = group->addProperty<int>("CompressionLevel",
-        [this] () { return m_writer->GetCompressionLevel(); },
-        [this] (int level) { m_writer->SetCompressionLevel(level); }
+        [pngWriter] () { return pngWriter->GetCompressionLevel(); },
+        [pngWriter] (int level) { pngWriter->SetCompressionLevel(level); }
     );
     prop_compression->setOption("title", "Compression Level");
-    prop_compression->setOption("minimum", m_writer->GetCompressionLevelMinValue());
-    prop_compression->setOption("maximum", m_writer->GetCompressionLevelMaxValue());
+    prop_compression->setOption("minimum", pngWriter->GetCompressionLevelMinValue());
+    prop_compression->setOption("maximum", pngWriter->GetCompressionLevelMaxValue());
 
     return group;
 }
