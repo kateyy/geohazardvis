@@ -22,7 +22,7 @@ public:
     /** @return file extension of the configured file format */
     virtual QString fileExtension() const;
     /** @return friendly name of the configured file format */
-    virtual QString formatName() const;
+    const QString & outputFormat() const;
 
     reflectionzeug::PropertyGroup * propertyGroup();
 
@@ -42,7 +42,6 @@ protected:
 
     friend class CanvasExporterRegistry;
     virtual QStringList fileFormats() const = 0;
-    const QString & outputFormat() const;
     void setOutputFormat(const QString & format);
 
 private:

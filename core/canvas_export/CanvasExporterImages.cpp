@@ -1,5 +1,7 @@
 #include "CanvasExporterImages.h"
 
+#include <QFileInfo>
+
 #include <vtkRenderWindow.h>
 #include <vtkWindowToImageFilter.h>
 
@@ -49,4 +51,14 @@ PropertyGroup * CanvasExporterImages::createPropertyGroup()
     prop_magnification->setOption("maximum", m_toImageFilter->GetMagnificationMaxValue());
 
     return group;
+}
+
+QString CanvasExporterImages::verifiedFileName()
+{
+    QString ext = outputFormat().toLower();
+    QFileInfo info(outputFileName());
+    if (info.suffix().toLower() == ext)
+        return outputFileName();
+    else
+        return outputFileName() + "." + ext;
 }

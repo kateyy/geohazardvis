@@ -1,5 +1,6 @@
 #include "CanvasExporterPS.h"
 
+#include <QFileInfo>
 #include <QStringList>
 
 using namespace reflectionzeug;
@@ -28,23 +29,43 @@ CanvasExporterPS::CanvasExporterPS()
     m_exporter->CompressOff();
 }
 
+QString CanvasExporterPS::fileExtension() const
+{
+    QString format = outputFormat();
+    int prefixLength = QString("PostScript (").length();
+    int length = format.length() - prefixLength - 1;
+
+    QStringRef ext(&format, prefixLength, length);
+
+    return ext.toString().toLower();
+}
+
 bool CanvasExporterPS::write()
 {
+    QString format("PostScript (%1)");
+
     int vtkPSFormat = -1;
-    if (outputFormat() == "PS")
+    if (outputFormat() == format.arg("PS"))
         vtkPSFormat = vtkGL2PSExporter::PS_FILE;
-    else if (outputFormat() == "EPS")
+    else if (outputFormat() == format.arg("EPS"))
         vtkPSFormat = vtkGL2PSExporter::EPS_FILE;
-    else if (outputFormat() == "PDF")
+    else if (outputFormat() == format.arg("PDF"))
         vtkPSFormat = vtkGL2PSExporter::PDF_FILE;
-    else if (outputFormat() == "TEX")
+    else if (outputFormat() == format.arg("TEX"))
         vtkPSFormat = vtkGL2PSExporter::TEX_FILE;
-    else if (outputFormat() == "SVG")
+    else if (outputFormat() == format.arg("SVG"))
         vtkPSFormat = vtkGL2PSExporter::SVG_FILE;
     else
         return false;
 
-    m_exporter->SetFilePrefix(outputFileName().toLatin1().data());
+    // vtkGL2PSExporter always appends a file extensions, so we should cut it if it already exists
+    QString fileName = outputFileName();
+    QString ext = fileExtension();
+    QFileInfo info(fileName);
+    if (info.suffix().toLower() == ext)
+        fileName.truncate(fileName.length() - ext.length() - 1); // cut ".EXT"
+
+    m_exporter->SetFilePrefix(fileName.toLatin1().data());
     m_exporter->SetFileFormat(vtkPSFormat);
     m_exporter->SetRenderWindow(renderWindow());
     m_exporter->Write();
@@ -89,9 +110,16 @@ PropertyGroup * CanvasExporterPS::createPropertyGroup()
 
 QStringList CanvasExporterPS::fileFormats() const
 {
-    return{
+    QString format("PostScript (%1)");
+
+    QStringList formats {
         "PS", "EPS", "PDF", "TEX", "SVG"
     };
+
+    for (QString & f : formats)
+        f = format.arg(f);
+
+    return formats;
 }
 
 

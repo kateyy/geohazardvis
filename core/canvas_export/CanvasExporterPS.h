@@ -11,6 +11,8 @@ class CanvasExporterPS : public CanvasExporter
 public:
     CanvasExporterPS();
 
+    QString fileExtension() const override;
+
     bool write() override;
 
 protected:

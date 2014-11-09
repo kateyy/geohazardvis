@@ -15,6 +15,9 @@ protected:
     /** provides buffer type and magnification property */
     reflectionzeug::PropertyGroup * createPropertyGroup() override;
 
+    /** complete file name with correct file extension */
+    QString verifiedFileName();
+
 protected:
     vtkSmartPointer<vtkWindowToImageFilter> m_toImageFilter;
 };

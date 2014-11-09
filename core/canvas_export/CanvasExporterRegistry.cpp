@@ -17,7 +17,6 @@ CanvasExporterRegistry & CanvasExporterRegistry::instance()
     return reg;
 }
 
-
 QStringList CanvasExporterRegistry::supportedFormatNames()
 {
     return instance().m_formatToExporter.keys();

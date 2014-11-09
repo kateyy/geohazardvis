@@ -25,7 +25,6 @@ CanvasExporterWidget::CanvasExporterWidget(QWidget * parent, Qt::WindowFlags f)
     , m_exporterSettingsBrowser(new PropertyBrowser(new PropertyEditorFactoryEx(), new PropertyPainterEx(), this))
 {
     m_ui->setupUi(this);
-
     m_ui->exporterSettingsGroupBox->layout()->addWidget(m_exporterSettingsBrowser);
 
     connect(m_ui->fileFormatComboBox, &QComboBox::currentTextChanged, this, &CanvasExporterWidget::updateUiForFormat);
@@ -54,11 +53,8 @@ void CanvasExporterWidget::captureScreenshot()
 
     QString exportFolder = currentExportFolder();
 
-    if (!QDir().mkpath(exportFolder))
-    {
-        qDebug() << "CanvasExporterWidget: cannot create output folder: " + exportFolder;
+    if (!QDir().exists(exportFolder))
         return;
-    }
 
     QDir exportDir(exportFolder);
     QString fileName = exportDir.absoluteFilePath(fileNameWithTimeStamp());
@@ -72,7 +68,9 @@ void CanvasExporterWidget::captureScreenshotTo()
     if (!exporter)
         return;
 
-    QString target = QFileDialog::getSaveFileName(this, "Export Image", currentExportFolder(), exporter->formatName() + " (*." + exporter->fileExtension() + ")");
+    QString target = QFileDialog::getSaveFileName(this, "Export Image", 
+        currentExportFolder() + "/" + fileNameWithTimeStamp(),
+        exporter->outputFormat() + " (*." + exporter->fileExtension() + ")");
 
     if (target.isEmpty())
         return;
@@ -109,6 +107,9 @@ QString CanvasExporterWidget::currentExportFolder() const
 {
     QString exportFolder = m_ui->outputFolderEdit->text().isEmpty() ? "." : m_ui->outputFolderEdit->text();
     exportFolder.replace("\\", "//");
+
+    if (!QDir().mkpath(exportFolder))
+        qDebug() << "CanvasExporterWidget: cannot create output folder: " + exportFolder;
 
     return exportFolder;
 }
@@ -147,5 +148,8 @@ void CanvasExporterWidget::updateUiForFormat(const QString & format)
     }
 
     if (exporter)
+    {
         m_exporterSettingsBrowser->setRoot(exporter->propertyGroup());
+        m_exporterSettingsBrowser->resizeColumnToContents(0);
+    }
 }

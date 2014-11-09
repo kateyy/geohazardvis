@@ -27,7 +27,7 @@ CanvasExporterPNG::CanvasExporterPNG()
 bool CanvasExporterPNG::write()
 {
     m_toImageFilter->SetInput(renderWindow());
-    m_writer->SetFileName(outputFileName().toLatin1().data());
+    m_writer->SetFileName(verifiedFileName().toLatin1().data());
     m_writer->Write();
 
     return true;
