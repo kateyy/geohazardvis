@@ -178,10 +178,10 @@ if(MSVC AND CPACK_INSTALL_3RDPARTY_DLLS)
     endforeach()
     
     list(APPEND DEPLOY_FILES 
-        "${libzeug_DIR}/signalzeug.dll"
-        "${libzeug_DIR}/loggingzeug.dll"
-        "${libzeug_DIR}/reflectionzeug.dll"
-        "${libzeug_DIR}/propertyguizeug.dll")
+        "${libzeug_DIR}/bin/signalzeug.dll"
+        "${libzeug_DIR}/bin/loggingzeug.dll"
+        "${libzeug_DIR}/bin/reflectionzeug.dll"
+        "${libzeug_DIR}/bin/propertyguizeug.dll")
     
     install(FILES ${DEPLOY_FILES} DESTINATION ${INSTALL_BIN})
 endif()
