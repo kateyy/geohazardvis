@@ -1,12 +1,12 @@
 #include "CanvasExporterPS.h"
 
+#if VTK_module_IOExport
+
 #include <QFileInfo>
 #include <QStringList>
 
 using namespace reflectionzeug;
 
-#include "config.h"
-#if VTK_module_IOExport
 
 #include <vtkGL2PSExporter.h>
 
@@ -122,26 +122,4 @@ QStringList CanvasExporterPS::fileFormats() const
     return formats;
 }
 
-
-#else
-
-CanvasExporterPS::CanvasExporterPS()
-    : CanvasExporter()
-{
-}
-
-bool CanvasExporterPS::write()
-{
-    return false;
-}
-
-PropertyGroup * CanvasExporterPS::createPropertyGroup()
-{
-    return nullptr;
-}
-
-QStringList CanvasExporterPS::fileFormats() const
-{
-    return{};
-}
 #endif

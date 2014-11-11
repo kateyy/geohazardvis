@@ -1,5 +1,8 @@
 #pragma once
 
+#include "config.h"
+#if VTK_module_IOExport // this module is currently not supported with VTK OpenGL2 rendering back-end 
+
 #include <core/canvas_export/CanvasExporter.h>
 
 
@@ -23,3 +26,5 @@ protected:
 private:
     vtkSmartPointer<vtkGL2PSExporter> m_exporter;
 };
+
+#endif
