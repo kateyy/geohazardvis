@@ -112,11 +112,10 @@ else()
 endif()
 
 target_link_libraries( ${TARGET}
-    ${VTK_LIBRARIES}
-    ${LIBZEUG_SIGNAL_LIBRARY}
     ${LIBZEUG_REFLECTION_LIBRARY}
+    ${LIBZEUG_SIGNAL_LIBRARY}
+    ${VTK_LIBRARIES}
     Qt5::Core
-    Qt5::Gui
 )
 
 include_directories(

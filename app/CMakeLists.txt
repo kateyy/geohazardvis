@@ -12,11 +12,12 @@ source_group_by_path_and_type(${CMAKE_CURRENT_SOURCE_DIR} ${SOURCES})
 add_executable ( ${TARGET} ${SOURCES} )
 
 target_link_libraries( ${TARGET}
-    ${LIBZEUG_SIGNAL_LIBRARY}
-    ${LIBZEUG_REFLECTION_LIBRARY}
     ${LIBZEUG_PROPERTYGUI_LIBRARY}
+    ${LIBZEUG_REFLECTION_LIBRARY}
+    ${LIBZEUG_SIGNAL_LIBRARY}
+    Qt5::Svg
     Qt5::Widgets
-    
+
     core
     gui )
 
