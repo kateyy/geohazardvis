@@ -62,6 +62,8 @@ endif()
 # Deployment/installation setup
 #
 
+set(CMAKE_INSTALL_CONFIGURATION_TYPE "Release" CACHE STRING "Build configuration type that is used for installs/packages.")
+
 set(project ${META_PROJECT_NAME})
 if(WIN32)
     set(INSTALL_ROOT ".")                       # C:\Programme\<project>
@@ -163,8 +165,14 @@ if(MSVC AND CPACK_INSTALL_3RDPARTY_DLLS)
     include(InstallRequiredSystemLibraries)
     
     # this will only work after compiling in Release mode (the .exe is needed here)
-    set(QT_DEPLOY_DIR ${CMAKE_BINARY_DIR}/Release/qt_deploy)
-    set(EXE ${CMAKE_BINARY_DIR}/Release/${META_PROJECT_NAME}.exe)
+    set(QT_DEPLOY_DIR ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_CONFIGURATION_TYPE}/qt_deploy)
+    if(${CMAKE_INSTALL_CONFIGURATION_TYPE} STREQUAL "Debug")
+        set(EXE_POSTFIX "d")
+    elseif(${CMAKE_INSTALL_CONFIGURATION_TYPE} STREQUAL "RelWithDebInfo")
+        set(EXE_POSTFIX "rd")
+    endif()
+
+    set(EXE ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_CONFIGURATION_TYPE}/${META_PROJECT_NAME}${EXE_POSTFIX}.exe)
     execute_process(
         COMMAND windeployqt "${EXE}" --dir "${QT_DEPLOY_DIR}"
         RESULT_VARIABLE RESULT
@@ -174,14 +182,19 @@ if(MSVC AND CPACK_INSTALL_3RDPARTY_DLLS)
     install(DIRECTORY "${QT_DEPLOY_DIR}/" DESTINATION ${INSTALL_BIN})
 
     foreach(LIB ${VTK_LIBRARIES})
-        list(APPEND DEPLOY_FILES "${VTK_DIR}/bin/Release/${LIB}-${VTK_MAJOR_VERSION}.${VTK_MINOR_VERSION}.dll")
+        list(APPEND DEPLOY_FILES "${VTK_DIR}/bin/${CMAKE_INSTALL_CONFIGURATION_TYPE}/${LIB}-${VTK_MAJOR_VERSION}.${VTK_MINOR_VERSION}.dll")
     endforeach()
     
+    if (${CMAKE_INSTALL_CONFIGURATION_TYPE} STREQUAL "Debug")
+        set(LIBZEUG_BUILDTYPE_SUFFIX "d")
+    else()
+        set(LIBZEUG_BUILDTYPE_SUFFIX "")
+    endif()
     list(APPEND DEPLOY_FILES 
-        "${libzeug_DIR}/bin/signalzeug.dll"
-        "${libzeug_DIR}/bin/loggingzeug.dll"
-        "${libzeug_DIR}/bin/reflectionzeug.dll"
-        "${libzeug_DIR}/bin/propertyguizeug.dll")
+        "${libzeug_DIR}/bin/signalzeug${LIBZEUG_BUILDTYPE_SUFFIX}.dll"
+        "${libzeug_DIR}/bin/loggingzeug${LIBZEUG_BUILDTYPE_SUFFIX}.dll"
+        "${libzeug_DIR}/bin/reflectionzeug${LIBZEUG_BUILDTYPE_SUFFIX}.dll"
+        "${libzeug_DIR}/bin/propertyguizeug${LIBZEUG_BUILDTYPE_SUFFIX}.dll")
     
     install(FILES ${DEPLOY_FILES} DESTINATION ${INSTALL_BIN})
 endif()

@@ -129,6 +129,9 @@ if(EXISTS "${CMAKE_ROOT}/Modules/CPack.cmake")
     # Package name
 
     set(CPACK_PACKAGE_FILE_NAME "${package_name}-${CPACK_PACKAGE_VERSION}")
+    if(NOT ${CMAKE_INSTALL_CONFIGURATION_TYPE} STREQUAL "Release")
+        set(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_FILE_NAME}-${CMAKE_INSTALL_CONFIGURATION_TYPE}")
+    endif()
     
     # Install files
 
@@ -161,16 +164,16 @@ endif()
 # Package target
 
 add_custom_target(
-    pack-${project_name}
+    pack-${project_name}-${CMAKE_INSTALL_CONFIGURATION_TYPE}
     COMMAND ${CPACK_COMMAND} --config ${CMAKE_BINARY_DIR}/CPackConfig-${project_name}.cmake
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
 )
-set_target_properties(pack-${project_name} PROPERTIES EXCLUDE_FROM_DEFAULT_BUILD 1)
+set_target_properties(pack-${project_name}-${CMAKE_INSTALL_CONFIGURATION_TYPE} PROPERTIES EXCLUDE_FROM_DEFAULT_BUILD 1)
 
 
 # Dependencies
 
 if(MSVC)
-    add_dependencies(pack-${project_name} ALL_BUILD)
+    add_dependencies(pack-${project_name}-${CMAKE_INSTALL_CONFIGURATION_TYPE} ALL_BUILD)
 endif()
 #add_dependencies(pack pack-${project_name})
