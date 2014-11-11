@@ -154,7 +154,7 @@ include_directories(${VTK_INCLUDE_DIRS})
 set_property(DIRECTORY APPEND PROPERTY COMPILE_DEFINITIONS ${VTK_DEFINITIONS})
 
 
-find_package(Qt5Widgets REQUIRED)
+find_package(Qt5 5.2.1 COMPONENTS Widgets Svg)
 find_package(libzeug REQUIRED)
 
 set(CMAKE_AUTOMOC ON)
