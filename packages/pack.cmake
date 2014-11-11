@@ -163,12 +163,16 @@ endif()
 
 # Package target
 
+set(TARGET_NAME pack-${project_name}-${CMAKE_INSTALL_CONFIGURATION_TYPE})
+
 add_custom_target(
-    pack-${project_name}-${CMAKE_INSTALL_CONFIGURATION_TYPE}
+    ${TARGET_NAME}
     COMMAND ${CPACK_COMMAND} --config ${CMAKE_BINARY_DIR}/CPackConfig-${project_name}.cmake
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
 )
-set_target_properties(pack-${project_name}-${CMAKE_INSTALL_CONFIGURATION_TYPE} PROPERTIES EXCLUDE_FROM_DEFAULT_BUILD 1)
+set_target_properties(${TARGET_NAME} PROPERTIES EXCLUDE_FROM_DEFAULT_BUILD 1)
+
+deployQtBinariesForTarget(${TARGET_NAME})
 
 
 # Dependencies
