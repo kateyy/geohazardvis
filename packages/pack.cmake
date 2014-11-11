@@ -63,7 +63,7 @@ if(EXISTS "${CMAKE_ROOT}/Modules/CPack.cmake")
     set(CPACK_RESOURCE_FILE_WELCOME         "${CMAKE_SOURCE_DIR}/README.md")
     set(CPACK_PACKAGE_DESCRIPTION_FILE      "${CMAKE_SOURCE_DIR}/README.md")
     #set(CPACK_PACKAGE_ICON                  "${CMAKE_SOURCE_DIR}/packages/logo.bmp")
-    set(CPACK_PACKAGE_RELOCATABLE           OFF)
+    set(CPACK_PACKAGE_RELOCATABLE           ON)
 
     # NSIS package information
 
@@ -129,9 +129,6 @@ if(EXISTS "${CMAKE_ROOT}/Modules/CPack.cmake")
     # Package name
 
     set(CPACK_PACKAGE_FILE_NAME "${package_name}-${CPACK_PACKAGE_VERSION}")
-    if(NOT ${CMAKE_INSTALL_CONFIGURATION_TYPE} STREQUAL "Release")
-        set(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_FILE_NAME}-${CMAKE_INSTALL_CONFIGURATION_TYPE}")
-    endif()
     
     # Install files
 
@@ -163,7 +160,7 @@ endif()
 
 # Package target
 
-set(TARGET_NAME pack-${project_name}-${CMAKE_INSTALL_CONFIGURATION_TYPE})
+set(TARGET_NAME pack-${project_name})
 
 add_custom_target(
     ${TARGET_NAME}
@@ -178,6 +175,6 @@ deployQtBinariesForTarget(${TARGET_NAME})
 # Dependencies
 
 if(MSVC)
-    add_dependencies(pack-${project_name}-${CMAKE_INSTALL_CONFIGURATION_TYPE} ALL_BUILD)
+    add_dependencies(pack-${project_name} ALL_BUILD)
 endif()
 #add_dependencies(pack pack-${project_name})

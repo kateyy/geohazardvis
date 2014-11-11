@@ -62,8 +62,6 @@ endif()
 # Deployment/installation setup
 #
 
-set(CMAKE_INSTALL_CONFIGURATION_TYPE "Release" CACHE STRING "Build configuration type that is used for installs/packages.")
-
 set(project ${META_PROJECT_NAME})
 if(WIN32)
     set(INSTALL_ROOT ".")                       # C:\Programme\<project>
@@ -165,19 +163,14 @@ if(MSVC AND CPACK_INSTALL_3RDPARTY_DLLS)
     include(InstallRequiredSystemLibraries)
 
     foreach(LIB ${VTK_LIBRARIES})
-        list(APPEND DEPLOY_FILES "${VTK_DIR}/bin/${CMAKE_INSTALL_CONFIGURATION_TYPE}/${LIB}-${VTK_MAJOR_VERSION}.${VTK_MINOR_VERSION}.dll")
+        list(APPEND DEPLOY_FILES "${VTK_DIR}/bin/$<CONFIG>/${LIB}-${VTK_MAJOR_VERSION}.${VTK_MINOR_VERSION}.dll")
     endforeach()
-    
-    if (${CMAKE_INSTALL_CONFIGURATION_TYPE} STREQUAL "Debug")
-        set(LIBZEUG_BUILDTYPE_SUFFIX "d")
-    else()
-        set(LIBZEUG_BUILDTYPE_SUFFIX "")
-    endif()
+
     list(APPEND DEPLOY_FILES 
-        "${libzeug_DIR}/bin/signalzeug${LIBZEUG_BUILDTYPE_SUFFIX}.dll"
-        "${libzeug_DIR}/bin/loggingzeug${LIBZEUG_BUILDTYPE_SUFFIX}.dll"
-        "${libzeug_DIR}/bin/reflectionzeug${LIBZEUG_BUILDTYPE_SUFFIX}.dll"
-        "${libzeug_DIR}/bin/propertyguizeug${LIBZEUG_BUILDTYPE_SUFFIX}.dll")
+        "${libzeug_DIR}/bin/signalzeug$<$<CONFIG:Debug>:d>.dll"
+        "${libzeug_DIR}/bin/loggingzeug$<$<CONFIG:Debug>:d>.dll"
+        "${libzeug_DIR}/bin/reflectionzeug$<$<CONFIG:Debug>:d>.dll"
+        "${libzeug_DIR}/bin/propertyguizeug$<$<CONFIG:Debug>:d>.dll")
     
     install(FILES ${DEPLOY_FILES} DESTINATION ${INSTALL_BIN})
 endif()
