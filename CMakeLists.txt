@@ -166,15 +166,17 @@ if(MSVC AND CPACK_INSTALL_3RDPARTY_DLLS)
     
     # this will only work after compiling in Release mode (the .exe is needed here)
     set(QT_DEPLOY_DIR ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_CONFIGURATION_TYPE}/qt_deploy)
+    set(QT_DEPLOY_BUILD_TYPE "--release")
     if(${CMAKE_INSTALL_CONFIGURATION_TYPE} STREQUAL "Debug")
         set(EXE_POSTFIX "d")
+        set(QT_DEPLOY_BUILD_TYPE "--debug")
     elseif(${CMAKE_INSTALL_CONFIGURATION_TYPE} STREQUAL "RelWithDebInfo")
         set(EXE_POSTFIX "rd")
     endif()
 
     set(EXE ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_CONFIGURATION_TYPE}/${META_PROJECT_NAME}${EXE_POSTFIX}.exe)
     execute_process(
-        COMMAND windeployqt "${EXE}" --dir "${QT_DEPLOY_DIR}"
+        COMMAND windeployqt "${EXE}" --dir "${QT_DEPLOY_DIR}" "${QT_DEPLOY_BUILD_TYPE}"
         RESULT_VARIABLE RESULT
         OUTPUT_VARIABLE QT_DEPLOY_FILES
         ERROR_VARIABLE ERRORS)
