@@ -1,15 +1,14 @@
 #pragma once
 
-#include <core/data_objects/RenderedData.h>
+#include <core/data_objects/RenderedData3D.h>
 
 
-class vtkPolyDataMapper;
 class vtkTexture;
 
 class ImageDataObject;
 
 
-class CORE_API RenderedImageData : public RenderedData
+class CORE_API RenderedImageData : public RenderedData3D
 {
 public:
     RenderedImageData(ImageDataObject * dataObject);
@@ -20,12 +19,14 @@ public:
 
 protected:
     vtkProperty * createDefaultRenderProperty() const override;
-    vtkActor * createActor() override;
+    vtkSmartPointer<vtkActorCollection> fetchActors() override;
+    vtkActor * imageActor();
 
     void scalarsForColorMappingChangedEvent() override;
     void colorMappingGradientChangedEvent() override;
+    void visibilityChangedEvent(bool visible) override;
 
 private:
     vtkSmartPointer<vtkTexture> m_texture;
-
+    vtkSmartPointer<vtkActor> m_imageActor;
 };

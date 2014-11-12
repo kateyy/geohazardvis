@@ -1,12 +1,12 @@
 #pragma once
 
-#include <core/data_objects/RenderedData.h>
+#include <core/data_objects/RenderedData3D.h>
 
 
 class ImageProfileData;
 
 
-class ImageProfilePlot : public RenderedData
+class ImageProfilePlot : public RenderedData3D
 {
 public:
     ImageProfilePlot(ImageProfileData * dataObject);
@@ -15,5 +15,13 @@ public:
 
 protected:
     vtkProperty * createDefaultRenderProperty() const override;
-    vtkActor * createActor() override;
+
+    vtkSmartPointer<vtkActorCollection> fetchActors() override;
+
+    vtkActor * plotActor();
+
+    void visibilityChangedEvent(bool visible) override;
+
+private:
+    vtkSmartPointer<vtkActor> m_plotActor;
 };

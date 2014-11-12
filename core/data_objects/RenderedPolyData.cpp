@@ -14,6 +14,7 @@
 
 #include <vtkProperty.h>
 #include <vtkActor.h>
+#include <vtkActorCollection.h>
 
 #include <reflectionzeug/PropertyGroup.h>
 
@@ -38,8 +39,9 @@ namespace
 }
 
 RenderedPolyData::RenderedPolyData(PolyDataObject * dataObject)
-    : RenderedData(dataObject)
+    : RenderedData3D(dataObject)
     , m_mapper(vtkSmartPointer<vtkPolyDataMapper>::New())
+    , m_mainActor(vtkSmartPointer<vtkActor>::New())
 {
     assert(vtkPolyData::SafeDownCast(dataObject->dataSet()));
 
@@ -49,6 +51,9 @@ RenderedPolyData::RenderedPolyData(PolyDataObject * dataObject)
 
     // don't break the lut configuration
     m_mapper->UseLookupTableScalarRangeOn();
+
+    m_mainActor->SetMapper(m_mapper);
+    m_mainActor->SetProperty(renderProperty());
 }
 
 RenderedPolyData::~RenderedPolyData() = default;
@@ -198,12 +203,12 @@ vtkProperty * RenderedPolyData::createDefaultRenderProperty() const
     return prop;
 }
 
-vtkActor * RenderedPolyData::createActor()
+vtkSmartPointer<vtkActorCollection> RenderedPolyData::fetchActors()
 {
-    vtkActor * actor = vtkActor::New();
-    actor->SetMapper(m_mapper);
+    vtkSmartPointer<vtkActorCollection> actors = RenderedData3D::fetchActors();
+    actors->AddItem(m_mainActor);
 
-    return actor;
+    return actors;
 }
 
 void RenderedPolyData::scalarsForColorMappingChangedEvent()
@@ -229,4 +234,11 @@ void RenderedPolyData::scalarsForColorMappingChangedEvent()
 void RenderedPolyData::colorMappingGradientChangedEvent()
 {
     m_mapper->SetLookupTable(m_gradient);
+}
+
+void RenderedPolyData::visibilityChangedEvent(bool visible)
+{
+    RenderedData3D::visibilityChangedEvent(visible);
+
+    m_mainActor->SetVisibility(visible);
 }

@@ -7,7 +7,7 @@
 
 #include <core/DataSetHandler.h>
 #include <core/data_objects/DataObject.h>
-#include <core/data_objects/RenderedData.h>
+#include <core/data_objects/RenderedData3D.h>
 #include <core/vector_mapping/VectorMapping.h>
 #include <core/vector_mapping/VectorMappingData.h>
 #include <gui/propertyguizeug_extension/PropertyEditorFactoryEx.h>
@@ -56,7 +56,8 @@ void VectorMappingChooser::setCurrentRenderView(RenderView * renderView)
 {
     VectorMapping * newMapping = nullptr;
     if (renderView && renderView->highlightedRenderedData())
-        newMapping = renderView->highlightedRenderedData()->vectorMapping();
+        if (RenderedData3D * new3D = dynamic_cast<RenderedData3D *>(renderView->highlightedRenderedData()))
+            newMapping = new3D->vectorMapping();
 
     if (m_renderView)
     {
@@ -97,7 +98,10 @@ void VectorMappingChooser::setSelectedData(DataObject * dataObject)
         }
     }
 
-    VectorMapping * newMapping = renderedData ? renderedData->vectorMapping() : nullptr;
+    assert(!renderedData || dynamic_cast<RenderedData3D *>(renderedData));
+    RenderedData3D * rendered3D = static_cast<RenderedData3D *>(renderedData);
+
+    VectorMapping * newMapping = rendered3D ? rendered3D->vectorMapping() : nullptr;
 
     if (newMapping == m_mapping)
         return;

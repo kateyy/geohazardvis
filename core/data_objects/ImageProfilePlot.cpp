@@ -2,6 +2,7 @@
 
 #include <vtkProperty.h>
 #include <vtkActor.h>
+#include <vtkActorCollection.h>
 #include <vtkPolyDataMapper.h>
 
 #include <reflectionzeug/PropertyGroup.h>
@@ -13,7 +14,7 @@ using namespace reflectionzeug;
 
 
 ImageProfilePlot::ImageProfilePlot(ImageProfileData * dataObject)
-    : RenderedData(dataObject)
+    : RenderedData3D(dataObject)
 {
 }
 
@@ -70,12 +71,32 @@ vtkProperty * ImageProfilePlot::createDefaultRenderProperty() const
     return property;
 }
 
-vtkActor * ImageProfilePlot::createActor()
+vtkSmartPointer<vtkActorCollection> ImageProfilePlot::fetchActors()
 {
-    VTK_CREATE(vtkPolyDataMapper, mapper);
-    mapper->SetInputConnection(dataObject()->processedOutputPort());
-    mapper->ScalarVisibilityOff();
-    vtkActor * actor = vtkActor::New();
-    actor->SetMapper(mapper);
-    return actor;
+    vtkSmartPointer<vtkActorCollection> actors = RenderedData3D::fetchActors();
+    actors->AddItem(plotActor());
+
+    return actors;
+}
+
+vtkActor * ImageProfilePlot::plotActor()
+{
+    if (!m_plotActor)
+    {
+        VTK_CREATE(vtkPolyDataMapper, mapper);
+        mapper->SetInputConnection(dataObject()->processedOutputPort());
+        mapper->ScalarVisibilityOff();
+
+        m_plotActor = vtkSmartPointer<vtkActor>::New();
+        m_plotActor->SetMapper(mapper);
+    }
+
+    return m_plotActor;
+}
+
+void ImageProfilePlot::visibilityChangedEvent(bool visible)
+{
+    RenderedData3D::visibilityChangedEvent(visible);
+
+    plotActor()->SetVisibility(visible);
 }

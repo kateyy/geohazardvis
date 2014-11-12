@@ -9,6 +9,7 @@
 
 
 class vtkCellPicker;
+class vtkProp;
 
 
 class GUI_API InteractorStyleImage : public IPickingInteractorStyle, public vtkInteractorStyleImage
@@ -43,7 +44,7 @@ protected:
     void sendPointInfo() const;
 
 protected:
-    QMap<vtkActor *, RenderedData *> m_actorToRenderedData;
+    QMap<vtkProp *, RenderedData *> m_actorToRenderedData;
 
     vtkSmartPointer<vtkCellPicker> m_cellPicker;
     vtkSmartPointer<vtkActor> m_selectedCellActor;

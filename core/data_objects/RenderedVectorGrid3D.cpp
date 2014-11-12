@@ -17,6 +17,7 @@
 
 #include <vtkProperty.h>
 #include <vtkActor.h>
+#include <vtkActorCollection.h>
 
 #include <reflectionzeug/PropertyGroup.h>
 
@@ -36,7 +37,7 @@ const vtkIdType DefaultMaxNumberOfPoints = 1000;
 }
 
 RenderedVectorGrid3D::RenderedVectorGrid3D(VectorGrid3DDataObject * dataObject)
-    : RenderedData(dataObject)
+    : RenderedData3D(dataObject)
     , m_extractVOI(vtkSmartPointer<vtkExtractVOI>::New())
     , m_slicesEnabled()
 {
@@ -167,24 +168,14 @@ vtkAlgorithmOutput * RenderedVectorGrid3D::resampledOuputPort()
     return m_extractVOI->GetOutputPort();
 }
 
-vtkProperty * RenderedVectorGrid3D::createDefaultRenderProperty() const
+vtkSmartPointer<vtkActorCollection> RenderedVectorGrid3D::fetchActors()
 {
-    return vtkProperty::New();
-}
-
-vtkActor * RenderedVectorGrid3D::createActor()
-{
-    return vtkActor::New();
-}
-
-QList<vtkActor *> RenderedVectorGrid3D::fetchAttributeActors()
-{
-    QList<vtkActor *> actors = RenderedData::fetchAttributeActors();
+    vtkSmartPointer<vtkActorCollection> actors = RenderedData3D::fetchActors();
 
     for (auto actor : m_sliceActors)
-        actors << actor;
+        actors->AddItem(actor);
     for (auto actor : m_sliceOutlineActors)
-        actors << actor;
+        actors->AddItem(actor);
 
     return actors;
 }

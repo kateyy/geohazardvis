@@ -34,6 +34,8 @@ set ( SOURCES
     data_objects/RawVectorData.cpp
     data_objects/RenderedData.h
     data_objects/RenderedData.cpp
+    data_objects/RenderedData3D.h
+    data_objects/RenderedData3D.cpp
     data_objects/ImageProfilePlot.h
     data_objects/ImageProfilePlot.cpp
     data_objects/RenderedImageData.h

@@ -1,62 +1,36 @@
 #include "RenderedData.h"
 
+#include <cassert>
+
 #include <vtkLookupTable.h>
-#include <vtkProperty.h>
-#include <vtkActor.h>
+#include <vtkPropCollection.h>
 #include <vtkInformationIntegerPointerKey.h>
 
 #include <core/data_objects/DataObject.h>
-#include <core/vector_mapping/VectorMapping.h>
-#include <core/vector_mapping/VectorMappingData.h>
 
 
 RenderedData::RenderedData(DataObject * dataObject)
     : QObject()
     , m_dataObject(dataObject)
     , m_scalars(nullptr)
-    , m_vectors(nullptr)
+    , m_viewPropsInvalid(true)
     , m_isVisible(true)
 {
     connect(dataObject, &DataObject::dataChanged, this, &RenderedData::geometryChanged);
 }
 
-RenderedData::~RenderedData()
+vtkSmartPointer<vtkPropCollection> RenderedData::viewProps()
 {
-    delete m_vectors;
-}
-
-vtkProperty * RenderedData::renderProperty()
-{
-    if (!m_renderProperty)
+    if (m_viewPropsInvalid)
     {
-        m_renderProperty.TakeReference(createDefaultRenderProperty());
+        m_viewPropsInvalid = false;
+        m_viewProps = fetchViewProps();
     }
 
-    return m_renderProperty;
-}
+    assert(m_viewProps);
+    assert(m_viewProps->GetNumberOfItems() > 0);
 
-QList<vtkActor *> RenderedData::actors()
-{
-    QList<vtkActor *> a;
-    a << mainActor();
-    a << attributeActors();
-    return a;
-}
-
-vtkActor * RenderedData::mainActor()
-{
-    if (!m_actor)
-    {
-        m_actor.TakeReference(createActor());
-        m_actor->SetProperty(renderProperty());
-    }
-
-    return m_actor;
-}
-
-QList<vtkActor *> RenderedData::attributeActors()
-{
-    return fetchAttributeActors();
+    return m_viewProps;
 }
 
 bool RenderedData::isVisible() const
@@ -68,18 +42,14 @@ void RenderedData::setVisible(bool visible)
 {
     m_isVisible = visible;
 
-    mainActor()->SetVisibility(visible);
-
     visibilityChangedEvent(visible);
 }
 
-QList<vtkActor *> RenderedData::fetchAttributeActors()
+void RenderedData::invalidateViewProps()
 {
-    QList<vtkActor *> actors;
-    for (auto * v : vectorMapping()->vectors())
-        actors << v->actor();
+    m_viewPropsInvalid = true;
 
-    return actors;
+    emit viewPropCollectionChanged();
 }
 
 void RenderedData::scalarsForColorMappingChangedEvent()
@@ -90,15 +60,8 @@ void RenderedData::colorMappingGradientChangedEvent()
 {
 }
 
-void RenderedData::vectorsForSurfaceMappingChangedEvent()
+void RenderedData::visibilityChangedEvent(bool /*visible*/)
 {
-}
-
-void RenderedData::visibilityChangedEvent(bool visible)
-{
-    for (VectorMappingData * vectors : m_vectors->vectors())
-        vectors->actor()->SetVisibility(
-        visible && vectors->isVisible());
 }
 
 DataObject * RenderedData::dataObject()
@@ -109,16 +72,6 @@ DataObject * RenderedData::dataObject()
 const DataObject * RenderedData::dataObject() const
 {
     return m_dataObject;
-}
-
-VectorMapping * RenderedData::vectorMapping()
-{
-    if (!m_vectors)
-    {
-        m_vectors = new VectorMapping(this);
-        connect(m_vectors, &VectorMapping::vectorsChanged, this, &RenderedData::attributeActorsChanged);
-    }
-    return m_vectors;
 }
 
 void RenderedData::setScalarsForColorMapping(ScalarsForColorMapping * scalars)

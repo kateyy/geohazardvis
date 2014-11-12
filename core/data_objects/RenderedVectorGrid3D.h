@@ -2,7 +2,7 @@
 
 #include <array>
 
-#include <core/data_objects/RenderedData.h>
+#include <core/data_objects/RenderedData3D.h>
 
 
 class vtkImageData;
@@ -13,7 +13,7 @@ class vtkPlaneSource;
 class VectorGrid3DDataObject;
 
 
-class CORE_API RenderedVectorGrid3D : public RenderedData
+class CORE_API RenderedVectorGrid3D : public RenderedData3D
 {
     Q_OBJECT
 
@@ -37,9 +37,7 @@ signals:
     void sampleRateChanged(int x, int y, int z);
 
 protected:
-    vtkProperty * createDefaultRenderProperty() const override;
-    vtkActor * createActor() override;
-    QList<vtkActor *> fetchAttributeActors() override;
+    vtkSmartPointer<vtkActorCollection> fetchActors() override;
 
     void scalarsForColorMappingChangedEvent() override;
     void colorMappingGradientChangedEvent() override;

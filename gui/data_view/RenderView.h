@@ -14,7 +14,7 @@ class vtkPolyData;
 class vtkCubeAxesActor;
 class vtkScalarBarActor;
 class vtkScalarBarWidget;
-class vtkActor;
+class vtkPropCollection;
 class vtkLightKit;
 
 class DataObject;
@@ -127,8 +127,8 @@ private slots:
     void updateGuiForContent();
     void updateGuiForSelectedData(RenderedData * renderedData);
     void updateGuiForRemovedData();
-    /** scan all rendered data for changed attribute vectors */
-    void fetchAllAttributeActors();
+    /** scan all rendered data for changed vectors */
+    void fetchAllViewProps();
 
 private:
     Ui_RenderView * m_ui;
@@ -140,7 +140,8 @@ private:
     // objects that were loaded to the GPU but are currently not rendered 
     QList<RenderedData *> m_renderedDataCache;
     QMap<DataObject *, RenderedData *> m_dataObjectToRendered;
-    QList<vtkActor *> m_attributeActors;
+    // view props fetched from rendered data
+    vtkSmartPointer<vtkPropCollection> m_dataProps;
 
     double m_dataBounds[6];
 

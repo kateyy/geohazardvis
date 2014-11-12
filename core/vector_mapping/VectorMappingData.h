@@ -11,6 +11,7 @@
 
 
 class vtkActor;
+class vtkProp;
 class vtkAlgorithm;
 class vtkMapper;
 class vtkGlyph3D;
@@ -69,6 +70,7 @@ public:
     void setLineWidth(unsigned lineWidth);
 
     vtkActor * actor();
+    vtkProp * viewProp();
 
     virtual reflectionzeug::PropertyGroup * createPropertyGroup();
 

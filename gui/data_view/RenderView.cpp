@@ -44,6 +44,7 @@ RenderView::RenderView(
     , m_ui(new Ui_RenderView())
     , m_strategy(nullptr)
     , m_emptyStrategy(new RenderViewStrategyNull(*this))
+    , m_dataProps(vtkSmartPointer<vtkPropCollection>::New())
     , m_axesEnabled(true)
     , m_scalarMapping(new ScalarToColorMapping())
 {
@@ -186,11 +187,15 @@ RenderedData * RenderView::addDataObject(DataObject * dataObject)
     if (!renderedData)
         return nullptr;
 
-    m_attributeActors << renderedData->attributeActors();
-    for (vtkActor * actor : renderedData->actors())
-        m_renderer->AddViewProp(actor);
+    vtkCollectionSimpleIterator it;
+    renderedData->viewProps()->InitTraversal(it);
+    while (vtkProp * prop = renderedData->viewProps()->GetNextProp(it))
+    {
+        m_dataProps->AddItem(prop);
+        m_renderer->AddViewProp(prop);
+    }
 
-    connect(renderedData, &RenderedData::attributeActorsChanged, this, &RenderView::fetchAllAttributeActors);
+    connect(renderedData, &RenderedData::viewPropCollectionChanged, this, &RenderView::fetchAllViewProps);
 
     m_renderedData << renderedData;
 
@@ -322,8 +327,10 @@ void RenderView::removeDataObject(DataObject * dataObject)
     if (!renderedData)
         return;
 
-    for (vtkActor * actor : renderedData->actors())
-        m_renderer->RemoveViewProp(actor);
+    vtkCollectionSimpleIterator it;
+    renderedData->viewProps()->InitTraversal(it);
+    while (vtkProp * prop = renderedData->viewProps()->GetNextProp(it))
+        m_renderer->RemoveViewProp(prop);
 
     emit beforeDeleteRenderedData(renderedData);
 
@@ -618,21 +625,35 @@ void RenderView::updateGuiForRemovedData()
     updateGuiForSelectedData(nextSelection);
 }
 
-void RenderView::fetchAllAttributeActors()
+void RenderView::fetchAllViewProps()
 {
-    for (vtkActor * actor : m_attributeActors)
-        m_renderer->RemoveViewProp(actor);
+    vtkCollectionSimpleIterator it;
+    m_dataProps->InitTraversal(it);
+    while (vtkProp * prop = m_dataProps->GetNextProp(it))
+        m_renderer->RemoveViewProp(prop);
 
-    m_attributeActors.clear();
+    m_dataProps->RemoveAllItems();
 
     for (RenderedData * renderedData : m_renderedData)
-        m_attributeActors << renderedData->attributeActors();
+    {
+        vtkSmartPointer<vtkPropCollection> dataViewProps = renderedData->viewProps();
+        dataViewProps->InitTraversal(it);
+        while (vtkProp * prop = dataViewProps->GetNextProp(it))
+        {
+            m_dataProps->AddItem(prop);
+            m_renderer->AddViewProp(prop);
+        }
+    }
 
     for (RenderedData * renderedData : m_renderedDataCache)
-        m_attributeActors << renderedData->attributeActors();
-
-    for (vtkActor * actor : m_attributeActors)
-        m_renderer->AddViewProp(actor);
+    {
+        vtkSmartPointer<vtkPropCollection> dataViewProps = renderedData->viewProps();
+        dataViewProps->InitTraversal(it);
+        while (vtkProp * prop = dataViewProps->GetNextProp(it))
+        {
+            m_dataProps->AddItem(prop);
+        }
+    }
 
     render();
 }

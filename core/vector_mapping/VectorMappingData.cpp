@@ -265,6 +265,11 @@ vtkActor * VectorMappingData::actor()
     return m_actor;
 }
 
+vtkProp * VectorMappingData::viewProp()
+{
+    return actor();
+}
+
 void VectorMappingData::initialize()
 {
 }

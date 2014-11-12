@@ -12,6 +12,7 @@ class QTime;
 class QTimer;
 class vtkPointPicker;
 class vtkCellPicker;
+class vtkProp;
 class vtkDataSetMapper;
 
 
@@ -52,7 +53,7 @@ protected:
     void sendPointInfo() const;
 
 protected:
-    QMap<vtkActor *, RenderedData *> m_actorToRenderedData;
+    QMap<vtkProp *, RenderedData *> m_actorToRenderedData;
 
     vtkSmartPointer<vtkPointPicker> m_pointPicker;
     vtkSmartPointer<vtkCellPicker> m_cellPicker;

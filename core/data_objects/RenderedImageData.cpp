@@ -9,6 +9,7 @@
 #include <vtkProperty.h>
 #include <vtkTexture.h>
 #include <vtkActor.h>
+#include <vtkActorCollection.h>
 
 #include <reflectionzeug/PropertyGroup.h>
 
@@ -28,7 +29,7 @@ namespace
 }
 
 RenderedImageData::RenderedImageData(ImageDataObject * dataObject)
-    : RenderedData(dataObject)
+    : RenderedData3D(dataObject)
     , m_texture(vtkSmartPointer<vtkTexture>::New())
 {
     m_texture->SetInputConnection(dataObject->processedOutputPort());
@@ -75,27 +76,38 @@ vtkProperty * RenderedImageData::createDefaultRenderProperty() const
     return property;
 }
 
-vtkActor * RenderedImageData::createActor()
+vtkSmartPointer<vtkActorCollection> RenderedImageData::fetchActors()
 {
-    ImageDataObject * image = static_cast<ImageDataObject *>(dataObject());
-    const int * extent = image->extent();
-    int xMin = extent[0], xMax = extent[1], yMin = extent[2], yMax = extent[3];
+    vtkSmartPointer<vtkActorCollection> actors = RenderedData3D::fetchActors();
+    actors->AddItem(imageActor());
 
-    VTK_CREATE(vtkPlaneSource, plane);
-    plane->SetXResolution(image->dimensions()[0] -1);
-    plane->SetYResolution(image->dimensions()[1] -1);
-    plane->SetOrigin(xMin, yMin, 0);
-    plane->SetPoint1(xMax, yMin, 0);
-    plane->SetPoint2(xMin, yMax, 0);
+    return actors;
+}
 
-    VTK_CREATE(vtkPolyDataMapper, planeMapper);
-    planeMapper->SetInputConnection(plane->GetOutputPort());
+vtkActor * RenderedImageData::imageActor()
+{
+    if (!m_imageActor)
+    {
+        ImageDataObject * image = static_cast<ImageDataObject *>(dataObject());
+        const int * extent = image->extent();
+        int xMin = extent[0], xMax = extent[1], yMin = extent[2], yMax = extent[3];
 
-    vtkActor * actor = vtkActor::New();
-    actor->SetMapper(planeMapper);
-    actor->SetTexture(m_texture);
+        VTK_CREATE(vtkPlaneSource, plane);
+        plane->SetXResolution(image->dimensions()[0] - 1);
+        plane->SetYResolution(image->dimensions()[1] - 1);
+        plane->SetOrigin(xMin, yMin, 0);
+        plane->SetPoint1(xMax, yMin, 0);
+        plane->SetPoint2(xMin, yMax, 0);
 
-    return actor;
+        VTK_CREATE(vtkPolyDataMapper, planeMapper);
+        planeMapper->SetInputConnection(plane->GetOutputPort());
+
+        m_imageActor = vtkSmartPointer<vtkActor>::New();
+        m_imageActor->SetMapper(planeMapper);
+        m_imageActor->SetTexture(m_texture);
+    }
+
+    return m_imageActor;
 }
 
 void RenderedImageData::scalarsForColorMappingChangedEvent()
@@ -103,12 +115,19 @@ void RenderedImageData::scalarsForColorMappingChangedEvent()
     bool enableColorMapping = m_scalars && (m_scalars->dataMinValue() != m_scalars->dataMaxValue());
 
     if (enableColorMapping)
-        mainActor()->SetTexture(m_texture);
+        imageActor()->SetTexture(m_texture);
     else
-        mainActor()->SetTexture(nullptr);
+        imageActor()->SetTexture(nullptr);
 }
 
 void RenderedImageData::colorMappingGradientChangedEvent()
 {
     m_texture->SetLookupTable(m_gradient);
+}
+
+void RenderedImageData::visibilityChangedEvent(bool visible)
+{
+    RenderedData3D::visibilityChangedEvent(visible);
+
+    imageActor()->SetVisibility(visible);
 }

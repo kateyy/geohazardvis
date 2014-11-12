@@ -122,8 +122,17 @@ void InteractorStyleImage::setRenderedData(QList<RenderedData *> renderedData)
 {
     GetDefaultRenderer()->RemoveViewProp(m_selectedCellActor);
     m_actorToRenderedData.clear();
-    for (auto r : renderedData)
-        m_actorToRenderedData.insert(r->mainActor(), r);
+
+    for (RenderedData * r : renderedData)
+    {
+        vtkCollectionSimpleIterator it;
+        r->viewProps()->InitTraversal(it);
+        while (vtkProp * prop = r->viewProps()->GetNextProp(it))
+        {
+            if (prop->GetPickable())
+                m_actorToRenderedData.insert(prop, r);
+        }
+    }
 }
 
 void InteractorStyleImage::highlightPickedCell()

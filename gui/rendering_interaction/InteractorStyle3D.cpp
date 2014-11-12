@@ -34,6 +34,7 @@
 #include <vtkMath.h>
 #include <vtkPolyData.h>
 #include <vtkCellData.h>
+#include <vtkPropCollection.h>
 
 #include <core/vtkhelper.h>
 #include <core/vtkcamerahelper.h>
@@ -65,7 +66,15 @@ void InteractorStyle3D::setRenderedData(QList<RenderedData *> renderedData)
     m_actorToRenderedData.clear();
     GetDefaultRenderer()->RemoveViewProp(m_selectedCellActor);
     for (RenderedData * r : renderedData)
-        m_actorToRenderedData.insert(r->mainActor(), r);
+    {
+        vtkCollectionSimpleIterator it;
+        r->viewProps()->InitTraversal(it);
+        while (vtkProp * prop = r->viewProps()->GetNextProp(it))
+        {
+            if (prop->GetPickable())
+                m_actorToRenderedData.insert(prop, r);
+        }
+    }
 }
 
 void InteractorStyle3D::OnMouseMove()
