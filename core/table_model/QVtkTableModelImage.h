@@ -23,6 +23,8 @@ public:
 protected:
     void resetDisplayData() override;
 
+    void tableToImageCoord(int tableRow, int & imageRow, int & imageColumn) const;
+
 private:
     vtkSmartPointer<vtkImageData> m_vtkImageData;
 };
