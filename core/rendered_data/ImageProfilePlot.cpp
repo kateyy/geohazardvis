@@ -89,6 +89,7 @@ vtkActor * ImageProfilePlot::plotActor()
 
         m_plotActor = vtkSmartPointer<vtkActor>::New();
         m_plotActor->SetMapper(mapper);
+        m_plotActor->SetProperty(renderProperty());
     }
 
     return m_plotActor;

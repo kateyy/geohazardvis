@@ -105,6 +105,7 @@ vtkActor * RenderedImageData::imageActor()
         m_imageActor = vtkSmartPointer<vtkActor>::New();
         m_imageActor->SetMapper(planeMapper);
         m_imageActor->SetTexture(m_texture);
+        m_imageActor->SetProperty(renderProperty());
     }
 
     return m_imageActor;
