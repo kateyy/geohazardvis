@@ -2,133 +2,97 @@
 
 #include <cassert>
 
-#include <vtkPlaneSource.h>
+#include <vtkPropCollection.h>
 
-#include <vtkPolyDataMapper.h>
+#include <vtkLookupTable.h>
 
-#include <vtkProperty.h>
-#include <vtkTexture.h>
-#include <vtkActor.h>
-#include <vtkActorCollection.h>
+#include <vtkImageSliceMapper.h>
+#include <vtkImageSlice.h>
+#include <vtkImageProperty.h>
 
 #include <reflectionzeug/PropertyGroup.h>
 
-#include <core/data_objects/ImageDataObject.h>
 #include <core/vtkhelper.h>
-#include <core/scalar_mapping/ScalarsForColorMapping.h>
+#include <core/data_objects/ImageDataObject.h>
 
 
 using namespace reflectionzeug;
 
 namespace
 {
-    enum class Interpolation
+    enum Interpolation
     {
-        flat = VTK_FLAT, gouraud = VTK_GOURAUD, phong = VTK_PHONG
+        nearest = VTK_NEAREST_INTERPOLATION,
+        linear = VTK_LINEAR_INTERPOLATION,
+        cubic = VTK_CUBIC_INTERPOLATION
     };
 }
 
 RenderedImageData::RenderedImageData(ImageDataObject * dataObject)
-    : RenderedData3D(dataObject)
-    , m_texture(vtkSmartPointer<vtkTexture>::New())
+    : RenderedData(dataObject)
+    , m_mapper(vtkSmartPointer<vtkImageSliceMapper>::New()) // replace with vtkImageResliceMapper?
 {
-    m_texture->SetInputConnection(dataObject->processedOutputPort());
-    m_texture->MapColorScalarsThroughLookupTableOn();
-    m_texture->InterpolateOn();
-    m_texture->SetQualityTo32Bit();
-}
-
-const ImageDataObject * RenderedImageData::imageDataObject() const
-{
-    assert(dynamic_cast<const ImageDataObject*>(dataObject()));
-    return static_cast<const ImageDataObject*>(dataObject());
+    m_mapper->SetInputConnection(dataObject->processedOutputPort());
 }
 
 reflectionzeug::PropertyGroup * RenderedImageData::createConfigGroup()
 {
     PropertyGroup * renderSettings = new PropertyGroup();
 
-    auto * interpolate = renderSettings->addProperty<bool>("interpolate",
-        [this]() {
-        return m_texture->GetInterpolate() != 0;
+    auto prop_interpolation = renderSettings->addProperty<Interpolation>("Interpolation",
+        [this] () {
+        return static_cast<Interpolation>(property()->GetInterpolationType());
     },
-        [this](bool doInterpolate) {
-        m_texture->SetInterpolate(doInterpolate);
+        [this] (Interpolation interpolation) {
+        property()->SetInterpolationType(static_cast<int>(interpolation));
         emit geometryChanged();
     });
-
-    /*auto * quality = renderSettings->addProperty<bool>("hq",
-        [this]() {
-        return m_texture->GetQuality() == VTK_TEXTURE_QUALITY_32BIT;
-    },
-        [this](bool hq) {
-        m_texture->SetQuality(hq ? VTK_TEXTURE_QUALITY_32BIT : VTK_TEXTURE_QUALITY_16BIT);
-        emit geometryChanged();
-    });*/
+    prop_interpolation->setStrings({
+            { Interpolation::nearest, "nearest" },
+            { Interpolation::linear, "linear" },
+            { Interpolation::cubic, "cubic" }
+    });
 
     return renderSettings;
 }
 
-vtkProperty * RenderedImageData::createDefaultRenderProperty() const
+vtkSmartPointer<vtkPropCollection> RenderedImageData::fetchViewProps()
 {
-    vtkProperty * property = vtkProperty::New();
-    property->LightingOff();
-    return property;
+    VTK_CREATE(vtkPropCollection, props);
+    props->AddItem(slice());
+
+    return props;
 }
 
-vtkSmartPointer<vtkActorCollection> RenderedImageData::fetchActors()
+vtkImageSlice * RenderedImageData::slice()
 {
-    vtkSmartPointer<vtkActorCollection> actors = RenderedData3D::fetchActors();
-    actors->AddItem(imageActor());
-
-    return actors;
-}
-
-vtkActor * RenderedImageData::imageActor()
-{
-    if (!m_imageActor)
+    if (!m_slice)
     {
-        ImageDataObject * image = static_cast<ImageDataObject *>(dataObject());
-        const int * extent = image->extent();
-        int xMin = extent[0], xMax = extent[1], yMin = extent[2], yMax = extent[3];
-
-        VTK_CREATE(vtkPlaneSource, plane);
-        plane->SetXResolution(image->dimensions()[0] - 1);
-        plane->SetYResolution(image->dimensions()[1] - 1);
-        plane->SetOrigin(xMin, yMin, 0);
-        plane->SetPoint1(xMax, yMin, 0);
-        plane->SetPoint2(xMin, yMax, 0);
-
-        VTK_CREATE(vtkPolyDataMapper, planeMapper);
-        planeMapper->SetInputConnection(plane->GetOutputPort());
-
-        m_imageActor = vtkSmartPointer<vtkActor>::New();
-        m_imageActor->SetMapper(planeMapper);
-        m_imageActor->SetTexture(m_texture);
-        m_imageActor->SetProperty(renderProperty());
+        m_slice = vtkSmartPointer<vtkImageSlice>::New();
+        m_slice->SetMapper(m_mapper);
+        m_slice->SetProperty(property());
     }
 
-    return m_imageActor;
+    return m_slice;
 }
 
-void RenderedImageData::scalarsForColorMappingChangedEvent()
+vtkImageProperty * RenderedImageData::property()
 {
-    bool enableColorMapping = m_scalars && (m_scalars->dataMinValue() != m_scalars->dataMaxValue());
+    if (!m_property)
+    {
+        m_property = vtkSmartPointer<vtkImageProperty>::New();
+        m_property->UseLookupTableScalarRangeOn();
+    }
 
-    if (enableColorMapping)
-        imageActor()->SetTexture(m_texture);
-    else
-        imageActor()->SetTexture(nullptr);
+    return m_property;
 }
 
 void RenderedImageData::colorMappingGradientChangedEvent()
 {
-    m_texture->SetLookupTable(m_gradient);
+    property()->SetLookupTable(m_gradient);
 }
 
 void RenderedImageData::visibilityChangedEvent(bool visible)
 {
-    RenderedData3D::visibilityChangedEvent(visible);
-
-    imageActor()->SetVisibility(visible);
+    slice()->SetVisibility(visible);
 }

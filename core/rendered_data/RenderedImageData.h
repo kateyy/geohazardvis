@@ -1,32 +1,33 @@
 #pragma once
 
-#include <core/rendered_data/RenderedData3D.h>
+#include <core/rendered_data/RenderedData.h>
 
 
-class vtkTexture;
+class vtkImageProperty;
+class vtkImageSlice;
+class vtkImageSliceMapper;
 
 class ImageDataObject;
 
 
-class CORE_API RenderedImageData : public RenderedData3D
+class CORE_API RenderedImageData : public RenderedData
 {
 public:
     RenderedImageData(ImageDataObject * dataObject);
 
-    const ImageDataObject * imageDataObject() const;
-
     reflectionzeug::PropertyGroup * createConfigGroup() override;
 
 protected:
-    vtkProperty * createDefaultRenderProperty() const override;
-    vtkSmartPointer<vtkActorCollection> fetchActors() override;
-    vtkActor * imageActor();
+    vtkSmartPointer<vtkPropCollection> fetchViewProps() override;
+    vtkImageSlice * slice();
 
-    void scalarsForColorMappingChangedEvent() override;
+    vtkImageProperty * property();
+
     void colorMappingGradientChangedEvent() override;
     void visibilityChangedEvent(bool visible) override;
 
 private:
-    vtkSmartPointer<vtkTexture> m_texture;
-    vtkSmartPointer<vtkActor> m_imageActor;
+    vtkSmartPointer<vtkImageSliceMapper> m_mapper;
+    vtkSmartPointer<vtkImageSlice> m_slice;
+    vtkSmartPointer<vtkImageProperty> m_property;
 };

@@ -211,6 +211,8 @@ void InteractorStyleImage::sendPointInfo() const
     stream.setRealNumberNotation(QTextStream::RealNumberNotation::ScientificNotation);
     stream.setRealNumberPrecision(17);
 
+    return;
+
     do
     {
         vtkAbstractMapper3D * mapper = m_cellPicker->GetMapper();

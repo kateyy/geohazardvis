@@ -105,8 +105,8 @@ DataObject * Loader::loadGrid2D(QString name, const std::vector<ReadDataset> & d
     int dimensions[3] = { static_cast<int>(inputData->size()), static_cast<int>(inputData->at(0).size()), 1 };
 
     VTK_CREATE(vtkImageData, grid);
-    // assigning the scalars to cells, so the point grid needs dimensions + 1
-    grid->SetExtent(0, dimensions[0], 0, dimensions[1], 0, 0);
+    // assign scalars to points
+    grid->SetExtent(0, dimensions[0] - 1, 0, dimensions[1] - 1, 0, 0);
 
     VTK_CREATE(vtkFloatArray, cellArray);
     cellArray->SetName(name.toLatin1().data());
@@ -123,7 +123,7 @@ DataObject * Loader::loadGrid2D(QString name, const std::vector<ReadDataset> & d
         }
     }
 
-    grid->GetCellData()->SetScalars(cellArray);
+    grid->GetPointData()->SetScalars(cellArray);
 
     return new ImageDataObject(name, grid);
 }

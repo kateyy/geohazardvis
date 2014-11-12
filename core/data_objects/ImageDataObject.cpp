@@ -3,7 +3,7 @@
 #include <cassert>
 
 #include <vtkImageData.h>
-#include <vtkCellData.h>
+#include <vtkPointData.h>
 #include <vtkDataArray.h>
 #include <vtkEventQtSlotConnect.h>
 
@@ -19,7 +19,7 @@ namespace
 ImageDataObject::ImageDataObject(QString name, vtkImageData * dataSet)
     : DataObject(name, dataSet)
 {
-    vtkDataArray * data = dataSet->GetCellData()->GetScalars();
+    vtkDataArray * data = dataSet->GetPointData()->GetScalars();
     vtkQtConnect()->Connect(data, vtkCommand::ModifiedEvent, this, SLOT(_dataChanged()));
 }
 
@@ -35,7 +35,7 @@ RenderedData * ImageDataObject::createRendered()
 
 void ImageDataObject::addDataArray(vtkDataArray * dataArray)
 {
-    dataSet()->GetCellData()->AddArray(dataArray);
+    dataSet()->GetPointData()->AddArray(dataArray);
 
     emit attributeArraysChanged();
 }

@@ -91,6 +91,9 @@ void VectorMappingChooser::setSelectedData(DataObject * dataObject)
     RenderedData * renderedData = nullptr;
     for (RenderedData * r : m_renderView->renderedData())
     {
+        if (!dynamic_cast<RenderedData3D *>(r)) // vector mapping is only implemented for 3D data
+            continue;
+
         if (r->dataObject() == dataObject)
         {
             renderedData = r;
