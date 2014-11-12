@@ -24,7 +24,7 @@
 #include <core/vtkhelper.h>
 #include <core/vtkcamerahelper.h>
 #include <core/data_objects/DataObject.h>
-#include <core/data_objects/RenderedData.h>
+#include <core/rendered_data/RenderedData.h>
 #include <core/scalar_mapping/ScalarToColorMapping.h>
 
 #include <gui/SelectionHandler.h>

@@ -8,7 +8,7 @@
 #include <vtkTextProperty.h>
 
 #include <core/data_objects/ImageProfileData.h>
-#include <core/data_objects/ImageProfilePlot.h>
+#include <core/rendered_data/ImageProfilePlot.h>
 #include <gui/data_view/RenderView.h>
 #include <gui/rendering_interaction/PickingInteractorStyleSwitch.h>
 

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <core/data_objects/RenderedData3D.h>
+#include <core/rendered_data/RenderedData3D.h>
 
 
 class ImageProfileData;

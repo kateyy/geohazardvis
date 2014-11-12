@@ -2,7 +2,7 @@
 
 #include <vtkProperty.h>
 
-#include <core/data_objects/RenderedData.h>
+#include <core/rendered_data/RenderedData.h>
 
 
 class vtkActorCollection;

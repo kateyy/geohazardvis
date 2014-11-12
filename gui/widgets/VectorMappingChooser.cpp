@@ -7,7 +7,7 @@
 
 #include <core/DataSetHandler.h>
 #include <core/data_objects/DataObject.h>
-#include <core/data_objects/RenderedData3D.h>
+#include <core/rendered_data/RenderedData3D.h>
 #include <core/vector_mapping/VectorMapping.h>
 #include <core/vector_mapping/VectorMappingData.h>
 #include <gui/propertyguizeug_extension/PropertyEditorFactoryEx.h>

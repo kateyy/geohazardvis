@@ -19,12 +19,12 @@
 #include <vtkPolyData.h>
 #include <vtkEventQtSlotConnect.h>
 
+#include <core/DataSetHandler.h>
 #include <core/vtkhelper.h>
 #include <core/vtkcamerahelper.h>
 #include <core/data_objects/ImageDataObject.h>
 #include <core/data_objects/ImageProfileData.h>
-#include <core/data_objects/ImageProfilePlot.h>
-#include <core/DataSetHandler.h>
+#include <core/rendered_data/ImageProfilePlot.h>
 #include <gui/DataMapping.h>
 #include <gui/data_view/RenderView.h>
 #include <gui/rendering_interaction/PickingInteractorStyleSwitch.h>

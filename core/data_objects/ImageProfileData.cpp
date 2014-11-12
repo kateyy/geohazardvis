@@ -18,7 +18,7 @@
 
 #include <core/vtkhelper.h>
 #include <core/data_objects/ImageDataObject.h>
-#include <core/data_objects/ImageProfilePlot.h>
+#include <core/rendered_data/ImageProfilePlot.h>
 
 #include <core/table_model/QVtkTableModelProfileData.h>
 

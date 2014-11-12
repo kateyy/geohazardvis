@@ -15,7 +15,7 @@
 
 #include <core/vtkhelper.h>
 #include <core/data_objects/PolyDataObject.h>
-#include <core/data_objects/RenderedData.h>
+#include <core/rendered_data/RenderedData.h>
 #include <core/vector_mapping/VectorMappingRegistry.h>
 
 

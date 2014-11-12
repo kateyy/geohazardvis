@@ -5,7 +5,7 @@
 #include <propertyguizeug/PropertyBrowser.h>
 
 #include <core/data_objects/DataObject.h>
-#include <core/data_objects/RenderedData.h>
+#include <core/rendered_data/RenderedData.h>
 #include <gui/propertyguizeug_extension/PropertyEditorFactoryEx.h>
 #include <gui/propertyguizeug_extension/PropertyPainterEx.h>
 #include <gui/data_view/RenderView.h>

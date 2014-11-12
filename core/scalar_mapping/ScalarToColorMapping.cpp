@@ -7,7 +7,7 @@
 
 #include <core/DataSetHandler.h>
 #include <core/data_objects/DataObject.h>
-#include <core/data_objects/RenderedData.h>
+#include <core/rendered_data/RenderedData.h>
 #include <core/scalar_mapping/ScalarsForColorMapping.h>
 #include <core/scalar_mapping/ScalarsForColorMappingRegistry.h>
 

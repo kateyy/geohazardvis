@@ -5,7 +5,7 @@
 #include <vtkDataArray.h>
 #include <vtkAssignAttribute.h>
 
-#include <core/data_objects/RenderedVectorGrid3D.h>
+#include <core/rendered_data/RenderedVectorGrid3D.h>
 #include <core/table_model/QVtkTableModelVectorGrid3D.h>
 
 

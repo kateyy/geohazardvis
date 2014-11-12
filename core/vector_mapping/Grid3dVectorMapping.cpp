@@ -14,7 +14,7 @@
 
 #include <core/vtkhelper.h>
 #include <core/data_objects/DataObject.h>
-#include <core/data_objects/RenderedVectorGrid3D.h>
+#include <core/rendered_data/RenderedVectorGrid3D.h>
 #include <core/vector_mapping/VectorMappingRegistry.h>
 
 

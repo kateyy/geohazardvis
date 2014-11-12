@@ -13,7 +13,7 @@
 #include <core/Loader.h>
 #include <core/DataSetHandler.h>
 #include <core/data_objects/DataObject.h>
-#include <core/data_objects/RenderedData.h>
+#include <core/rendered_data/RenderedData.h>
 
 #include <gui/DataMapping.h>
 #include <gui/SelectionHandler.h>

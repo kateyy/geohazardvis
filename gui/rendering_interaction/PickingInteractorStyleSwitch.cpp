@@ -7,7 +7,7 @@
 #include <vtkObjectFactory.h>
 
 #include <core/data_objects/DataObject.h>
-#include <core/data_objects/RenderedData.h>
+#include <core/rendered_data/RenderedData.h>
 
 
 vtkStandardNewMacro(PickingInteractorStyleSwitch);

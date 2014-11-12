@@ -7,7 +7,7 @@
 #include <vtkDataArray.h>
 #include <vtkEventQtSlotConnect.h>
 
-#include <core/data_objects/RenderedImageData.h>
+#include <core/rendered_data/RenderedImageData.h>
 #include <core/table_model/QVtkTableModelImage.h>
 
 
