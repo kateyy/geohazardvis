@@ -8,8 +8,9 @@
 #include <gui/rendering_interaction/IPickingInteractorStyle.h>
 
 
-class vtkCellPicker;
+class vtkPointPicker;
 class vtkProp;
+class vtkActor;
 
 
 class GUI_API InteractorStyleImage : public IPickingInteractorStyle, public vtkInteractorStyleImage
@@ -39,15 +40,15 @@ public slots:
 protected:
     explicit InteractorStyleImage();
 
-    void highlightPickedCell();
+    void highlightPickedPoint();
 
     void sendPointInfo() const;
 
 protected:
-    QMap<vtkProp *, RenderedData *> m_actorToRenderedData;
+    QMap<vtkProp *, RenderedData *> m_propToRenderedData;
 
-    vtkSmartPointer<vtkCellPicker> m_cellPicker;
-    vtkSmartPointer<vtkActor> m_selectedCellActor;
+    vtkSmartPointer<vtkPointPicker> m_pointPicker;
+    vtkSmartPointer<vtkActor> m_highlightingActor;
 
     bool m_mouseMoved;
 };

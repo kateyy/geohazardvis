@@ -13,19 +13,14 @@
 #include <vtkRenderWindowInteractor.h>
 #include <vtkRenderer.h>
 #include <vtkRenderWindow.h>
-#include <vtkCamera.h>
-#include <vtkCellPicker.h>
-#include <vtkSelectionNode.h>
-#include <vtkSelection.h>
-#include <vtkExtractSelection.h>
+#include <vtkPointPicker.h>
 
-#include <vtkIdTypeArray.h>
-#include <vtkCellData.h>
+#include <vtkPointData.h>
 #include <vtkImageData.h>
 
-#include <vtkDataSetMapper.h>
+#include <vtkPolyDataMapper.h>
+#include <vtkDiskSource.h>
 #include <vtkActor.h>
-#include <vtkTexture.h>
 #include <vtkProperty.h>
 
 #include <core/vtkhelper.h>
@@ -36,19 +31,31 @@
 vtkStandardNewMacro(InteractorStyleImage);
 
 InteractorStyleImage::InteractorStyleImage()
-    : vtkInteractorStyleImage()
-    , m_cellPicker(vtkSmartPointer<vtkCellPicker>::New())
-    , m_selectedCellActor(vtkSmartPointer<vtkActor>::New())
+    : Superclass()
+    , m_pointPicker(vtkSmartPointer<vtkPointPicker>::New())
+    , m_highlightingActor(vtkSmartPointer<vtkActor>::New())
     , m_mouseMoved(false)
 {
+    VTK_CREATE(vtkDiskSource, highlightingDisc);
+    highlightingDisc->SetRadialResolution(128);
+    highlightingDisc->SetCircumferentialResolution(128);
+    highlightingDisc->SetInnerRadius(1);
+    highlightingDisc->SetOuterRadius(2);
+
+    VTK_CREATE(vtkPolyDataMapper, highlightingMapper);
+    highlightingMapper->SetInputConnection(highlightingDisc->GetOutputPort());
+    m_highlightingActor->SetMapper(highlightingMapper);
+
+    m_highlightingActor->GetProperty()->SetColor(1, 0, 0);
+    m_highlightingActor->PickableOff();
 }
 
 void InteractorStyleImage::OnMouseMove()
 {
-    vtkInteractorStyleImage::OnMouseMove();
+    Superclass::OnMouseMove();
 
     int* clickPos = GetInteractor()->GetEventPosition();
-    m_cellPicker->Pick(clickPos[0], clickPos[1], 0, GetDefaultRenderer());
+    m_pointPicker->Pick(clickPos[0], clickPos[1], 0, GetDefaultRenderer());
 
     sendPointInfo();
 
@@ -71,10 +78,10 @@ void InteractorStyleImage::OnLeftButtonDown()
 
 void InteractorStyleImage::OnLeftButtonUp()
 {
-    vtkInteractorStyleImage::OnLeftButtonUp();
+    Superclass::OnLeftButtonUp();
 
     if (!m_mouseMoved)
-        highlightPickedCell();
+        highlightPickedPoint();
     
     m_mouseMoved = false;
 }
@@ -120,8 +127,8 @@ void InteractorStyleImage::OnChar()
 
 void InteractorStyleImage::setRenderedData(QList<RenderedData *> renderedData)
 {
-    GetDefaultRenderer()->RemoveViewProp(m_selectedCellActor);
-    m_actorToRenderedData.clear();
+    GetDefaultRenderer()->RemoveViewProp(m_highlightingActor);
+    m_propToRenderedData.clear();
 
     for (RenderedData * r : renderedData)
     {
@@ -130,71 +137,52 @@ void InteractorStyleImage::setRenderedData(QList<RenderedData *> renderedData)
         while (vtkProp * prop = r->viewProps()->GetNextProp(it))
         {
             if (prop->GetPickable())
-                m_actorToRenderedData.insert(prop, r);
+                m_propToRenderedData.insert(prop, r);
         }
     }
 }
 
-void InteractorStyleImage::highlightPickedCell()
+void InteractorStyleImage::highlightPickedPoint()
 {
     int* clickPos = GetInteractor()->GetEventPosition();
 
-    m_cellPicker->Pick(clickPos[0], clickPos[1], 0, GetDefaultRenderer());
-    vtkIdType cellId = m_cellPicker->GetCellId();
+    vtkIdType pointId = m_pointPicker->GetPointId();
 
-    vtkActor * pickedActor = m_cellPicker->GetActor();
-    if (!pickedActor)
+    vtkProp * pickedProp = m_pointPicker->GetViewProp();
+    if (!pickedProp)
     {
         highlightCell(nullptr, -1);
         return;
     }
 
-    RenderedData * renderedData = m_actorToRenderedData.value(pickedActor);
+    RenderedData * renderedData = m_propToRenderedData.value(pickedProp);
     assert(renderedData);
     
     emit dataPicked(renderedData);
 
-    emit cellPicked(renderedData->dataObject(), cellId);
+    emit cellPicked(renderedData->dataObject(), pointId);
 }
 
 void InteractorStyleImage::highlightCell(DataObject * dataObject, vtkIdType cellId)
 {
     if (cellId == -1)
     {
-        GetDefaultRenderer()->RemoveViewProp(m_selectedCellActor);
+        GetDefaultRenderer()->RemoveViewProp(m_highlightingActor);
         return;
     }
 
     assert(dataObject);
 
+    vtkImageData * image = vtkImageData::SafeDownCast(dataObject->dataSet());
+    if (!image)
+        return;
 
-    VTK_CREATE(vtkIdTypeArray, ids);
-    ids->SetNumberOfComponents(1);
-    ids->InsertNextValue(cellId);
+    double point[3];
+    image->GetPoint(cellId, point);
+    point[2] += 0.1;    // show in front of the image
+    m_highlightingActor->SetPosition(point);
 
-    VTK_CREATE(vtkSelectionNode, selectionNode);
-    selectionNode->SetFieldType(vtkSelectionNode::CELL);
-    selectionNode->SetContentType(vtkSelectionNode::INDICES);
-    selectionNode->SetSelectionList(ids);
-
-    VTK_CREATE(vtkSelection, selection);
-    selection->AddNode(selectionNode);
-
-    VTK_CREATE(vtkExtractSelection, extractSelection);
-    extractSelection->SetInputData(0, dataObject->dataSet());
-    extractSelection->SetInputData(1, selection);
-    extractSelection->Update();
-
-    VTK_CREATE(vtkDataSetMapper, selectedCellMapper);
-    selectedCellMapper->SetInputConnection(extractSelection->GetOutputPort());
-
-    m_selectedCellActor->SetMapper(selectedCellMapper);
-    m_selectedCellActor->GetProperty()->EdgeVisibilityOn();
-    m_selectedCellActor->GetProperty()->SetEdgeColor(1, 0, 0);
-    m_selectedCellActor->GetProperty()->SetLineWidth(3);
-    m_selectedCellActor->PickableOff();
-
-    GetDefaultRenderer()->AddViewProp(m_selectedCellActor);
+    GetDefaultRenderer()->AddViewProp(m_highlightingActor);
     GetDefaultRenderer()->GetRenderWindow()->Render();
 }
 
@@ -211,11 +199,9 @@ void InteractorStyleImage::sendPointInfo() const
     stream.setRealNumberNotation(QTextStream::RealNumberNotation::ScientificNotation);
     stream.setRealNumberPrecision(17);
 
-    return;
-
     do
     {
-        vtkAbstractMapper3D * mapper = m_cellPicker->GetMapper();
+        vtkAbstractMapper3D * mapper = m_pointPicker->GetMapper();
         if (!mapper)
             break;
 
@@ -226,29 +212,22 @@ void InteractorStyleImage::sendPointInfo() const
         if (inputInfo->Has(DataObject::NameKey()))
             inputname = DataObject::NameKey()->Get(inputInfo);
 
-        double * pos = m_cellPicker->GetPickPosition();
+        double * pos = m_pointPicker->GetPickPosition();
 
-        vtkTexture * texture = m_cellPicker->GetActor()->GetTexture();
-        if (!texture)
-            break;
+        vtkDataObject * dataObject = mapper->GetInputDataObject(0, 0);
+        vtkImageData * image = vtkImageData::SafeDownCast(dataObject);
 
-        vtkImageData * image = texture->GetInput();
         if (!image)
             break;
-        vtkDataArray * data = image->GetCellData()->GetScalars();
-        if (!data)
-            break;
-
-        vtkIdType cellId = m_cellPicker->GetCellId();
-        double value = data->GetTuple(cellId)[0];
+        
+        vtkIdType pointId = m_pointPicker->GetPointId();
+        double value = image->GetPointData()->GetScalars()->GetTuple(pointId)[0];
 
         stream
             << "input file: " << QString::fromStdString(inputname) << endl
-            << "selected cell: " << endl
-            << "value: " << value << endl
             << "row: " << pos[0] << endl
             << "column: " << pos[1] << endl
-            << "id: " << cellId;
+            << "value: " << value << endl;
     } while (false);
 
     QStringList info;

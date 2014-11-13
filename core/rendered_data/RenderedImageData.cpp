@@ -2,6 +2,8 @@
 
 #include <cassert>
 
+#include <vtkInformation.h>
+
 #include <vtkPropCollection.h>
 
 #include <vtkLookupTable.h>
@@ -33,6 +35,10 @@ RenderedImageData::RenderedImageData(ImageDataObject * dataObject)
     , m_mapper(vtkSmartPointer<vtkImageSliceMapper>::New()) // replace with vtkImageResliceMapper?
 {
     m_mapper->SetInputConnection(dataObject->processedOutputPort());
+
+    vtkInformation * mapperInfo = m_mapper->GetInformation();
+    mapperInfo->Set(DataObject::NameKey(), dataObject->name().toLatin1().data());
+    DataObject::setDataObject(mapperInfo, dataObject);
 }
 
 reflectionzeug::PropertyGroup * RenderedImageData::createConfigGroup()
