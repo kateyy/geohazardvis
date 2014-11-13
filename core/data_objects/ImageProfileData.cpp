@@ -31,9 +31,9 @@ ImageProfileData::ImageProfileData(const QString & name, ImageDataObject * image
     , m_transform(vtkSmartPointer<vtkTransformFilter>::New())
     , m_graphLine(vtkSmartPointer<vtkWarpScalar>::New())
 {
-    vtkDataArray * scalars = imageData->processedDataSet()->GetCellData()->GetScalars();
+    vtkDataArray * scalars = imageData->processedDataSet()->GetPointData()->GetScalars();
     if (!scalars)
-        scalars = imageData->processedDataSet()->GetPointData()->GetScalars();
+        scalars = imageData->processedDataSet()->GetCellData()->GetScalars();
     assert(scalars);
     m_scalarsName = QString::fromLatin1(scalars->GetName());
 
