@@ -8,7 +8,7 @@ class GUI_API RenderViewStrategyImage2DPlot : public RenderViewStrategy
     Q_OBJECT
 
 public:
-    RenderViewStrategyImage2DPlot(RenderView & renderView);
+    RenderViewStrategyImage2DPlot(RendererImplementation3D & context);
     ~RenderViewStrategyImage2DPlot() override;
 
     QString name() const override;

@@ -10,14 +10,15 @@
 #include <core/data_objects/ImageProfileData.h>
 #include <core/rendered_data/ImageProfilePlot.h>
 #include <gui/data_view/RenderView.h>
+#include <gui/data_view/RendererImplementation3D.h>
 #include <gui/rendering_interaction/PickingInteractorStyleSwitch.h>
 
 
 const bool RenderViewStrategyImage2DPlot::s_isRegistered = RenderViewStrategy::registerStrategy<RenderViewStrategyImage2DPlot>();
 
 
-RenderViewStrategyImage2DPlot::RenderViewStrategyImage2DPlot(RenderView & renderView)
-    : RenderViewStrategy(renderView)
+RenderViewStrategyImage2DPlot::RenderViewStrategyImage2DPlot(RendererImplementation3D & context)
+    : RenderViewStrategy(context)
     , m_isInitialized(false)
 {
 }
@@ -67,7 +68,7 @@ void RenderViewStrategyImage2DPlot::resetCamera(vtkCamera & camera)
     camera.SetFocalPoint(0, 0, 0);
     camera.SetPosition(0, 0, 1);
 
-    ImageProfileData * profile = dynamic_cast<ImageProfileData *>(m_context.dataObjects().first());
+    ImageProfileData * profile = dynamic_cast<ImageProfileData *>(m_context.renderView().dataObjects().first());
     QString scalarsName;
     QString abscissa;
     if (profile)

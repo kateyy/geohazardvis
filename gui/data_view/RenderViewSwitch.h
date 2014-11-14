@@ -6,7 +6,7 @@
 
 #include <gui/gui_api.h>
 
-class RenderView;
+class RendererImplementation3D;
 class RenderViewStrategy;
 class DataObject;
 class RenderedData;
@@ -17,7 +17,7 @@ class GUI_API RenderViewSwitch : public QObject
     Q_OBJECT
 
 public:
-    RenderViewSwitch(RenderView & renderView);
+    RenderViewSwitch(RendererImplementation3D & renderView);
     ~RenderViewSwitch() override;
 
     const QMap<QString, bool> & applicableStrategies() const;
@@ -31,7 +31,7 @@ public slots:
     void findSuitableStrategy(const QList<DataObject *> & dataObjects);
 
 private:
-    RenderView & m_view;
+    RendererImplementation3D & m_view;
 
     QMap<QString, RenderViewStrategy * > m_strategies;
     QMap<QString, bool> m_strategyStates;

@@ -27,13 +27,14 @@
 #include <core/rendered_data/ImageProfilePlot.h>
 #include <gui/DataMapping.h>
 #include <gui/data_view/RenderView.h>
+#include <gui/data_view/RendererImplementation3D.h>
 #include <gui/rendering_interaction/PickingInteractorStyleSwitch.h>
 
 const bool RenderViewStrategyImage2D::s_isRegistered = RenderViewStrategy::registerStrategy<RenderViewStrategyImage2D>();
 
 
-RenderViewStrategyImage2D::RenderViewStrategyImage2D(RenderView & renderView)
-    : RenderViewStrategy(renderView)
+RenderViewStrategyImage2D::RenderViewStrategyImage2D(RendererImplementation3D & context)
+    : RenderViewStrategy(context)
     , m_isInitialized(false)
     , m_toolbar(nullptr)
     , m_previewProfile(nullptr)
@@ -148,12 +149,12 @@ void RenderViewStrategyImage2D::startProfilePlot()
     VTK_CREATE(vtkLineRepresentation, repr);
     repr->SetLineColor(1, 0, 0);
     m_lineWidget->SetRepresentation(repr);
-    m_lineWidget->SetInteractor(m_context.renderWindow()->GetInteractor());
+    m_lineWidget->SetInteractor(m_context.interactor());
     m_lineWidget->On();
 
     double bounds[6];
 
-    m_context.getDataBounds(bounds);
+    m_context.dataBounds(bounds);
 
     bounds[4] += 0.0001;
     bounds[5] += 0.0001;
@@ -167,7 +168,7 @@ void RenderViewStrategyImage2D::startProfilePlot()
     // create profile preview
 
     ImageDataObject * image = nullptr;
-    for (DataObject * dataObject : m_context.dataObjects())
+    for (DataObject * dataObject : m_context.renderView().dataObjects())
     {
         image = dynamic_cast<ImageDataObject *>(dataObject);
         if (image)

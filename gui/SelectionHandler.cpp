@@ -10,7 +10,6 @@
 
 #include "gui/data_view/TableView.h"
 #include "gui/data_view/RenderView.h"
-#include "gui/rendering_interaction/IPickingInteractorStyle.h"
 
 
 SelectionHandler & SelectionHandler::instance()
@@ -125,7 +124,7 @@ void SelectionHandler::renderViewsLookAt(DataObject * dataObject, vtkIdType item
     {
         if (it.value()->isChecked())
             if (it.key()->dataObjects().contains(dataObject))
-                it.key()->interactorStyle()->lookAtCell(dataObject, itemId);
+                it.key()->lookAtData(dataObject, itemId);
     }
 }
 

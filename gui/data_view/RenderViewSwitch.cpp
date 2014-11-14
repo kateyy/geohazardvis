@@ -7,15 +7,17 @@
 #include <core/data_objects/DataObject.h>
 #include <core/rendered_data/RenderedData.h>
 #include <gui/data_view/RenderView.h>
+#include <gui/data_view/RendererImplementation3D.h>
 #include <gui/data_view/RenderViewStrategy.h>
 
 
 RenderViewSwitch::RenderViewSwitch(
-    RenderView & renderView)
-    : m_view(renderView)
+    RendererImplementation3D & renderViewImpl)
+    : m_view(renderViewImpl)
 {
+    RenderView & renderView = renderViewImpl.renderView();
     connect(&renderView, &RenderView::renderedDataChanged, this, &RenderViewSwitch::updateStrategies);
-    connect(&renderView, &RenderView::resetStrategie, this, &RenderViewSwitch::findSuitableStrategy);
+    connect(&renderViewImpl, &RendererImplementation3D::resetStrategy, this, &RenderViewSwitch::findSuitableStrategy);
 
     for (const RenderViewStrategy::StategyConstructor & constructor : RenderViewStrategy::constructors())
     {
@@ -53,7 +55,7 @@ void RenderViewSwitch::setStrategy(const QString & name)
 
 void RenderViewSwitch::updateStrategies()
 {
-    const QList<RenderedData *> & renderedData = m_view.renderedData();
+    const QList<RenderedData *> & renderedData = m_view.renderView().renderedData();
 
     for (auto it = m_strategies.begin(); it != m_strategies.end(); ++it)
     {

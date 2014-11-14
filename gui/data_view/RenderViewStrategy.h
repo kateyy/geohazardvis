@@ -10,7 +10,7 @@
 
 class vtkCamera;
 
-class RenderView;
+class RendererImplementation3D;
 class DataObject;
 class RenderedData;
 
@@ -18,7 +18,7 @@ class RenderedData;
 class GUI_API RenderViewStrategy : public QObject
 {
 public:
-    RenderViewStrategy(RenderView & renderView);
+    RenderViewStrategy(RendererImplementation3D & context);
     virtual ~RenderViewStrategy();
 
     virtual QString name() const = 0;
@@ -37,14 +37,14 @@ public:
     
     virtual bool canApplyTo(const QList<RenderedData *> & renderedData) = 0;
 
-    using StategyConstructor = std::function<RenderViewStrategy *(RenderView & view)>;
+    using StategyConstructor = std::function<RenderViewStrategy *(RendererImplementation3D & context)>;
     static const QList<StategyConstructor> & constructors();
 
 protected:
     template <typename Strategy> static bool registerStrategy();
 
 protected:
-    RenderView & m_context;
+    RendererImplementation3D & m_context;
 
 private:
     static QList<StategyConstructor> & s_constructors();
@@ -54,7 +54,7 @@ template <typename Strategy>
 bool RenderViewStrategy::registerStrategy()
 {
     s_constructors().append(
-        [] (RenderView & view) { return new Strategy(view); }
+        [] (RendererImplementation3D & context) { return new Strategy(context); }
     );
 
     return true;

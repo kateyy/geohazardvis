@@ -5,15 +5,15 @@
 #include <core/vtkcamerahelper.h>
 #include <core/data_objects/DataObject.h>
 #include <core/rendered_data/RenderedData.h>
-#include <gui/data_view/RenderView.h>
+#include <gui/data_view/RendererImplementation3D.h>
 #include <gui/rendering_interaction/PickingInteractorStyleSwitch.h>
 
 
 const bool RenderViewStrategy3D::s_isRegistered = RenderViewStrategy::registerStrategy<RenderViewStrategy3D>();
 
 
-RenderViewStrategy3D::RenderViewStrategy3D(RenderView & renderView)
-    : RenderViewStrategy(renderView)
+RenderViewStrategy3D::RenderViewStrategy3D(RendererImplementation3D & context)
+    : RenderViewStrategy(context)
 {
 }
 

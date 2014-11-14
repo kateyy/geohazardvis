@@ -108,6 +108,8 @@ set(VTK_COMPONENTS
     vtkGUISupportQt         # QVTKWidget
     vtkRenderingAnnotation  # vtkCubeAxesActor, vtkScalarBarActor
     vtkInteractionWidgets
+    vtkViewsContext2D
+    vtkChartsCore
 )
 
 find_package(VTK REQUIRED ${VTK_COMPONENTS})

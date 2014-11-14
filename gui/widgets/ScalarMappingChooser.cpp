@@ -21,6 +21,7 @@
 #include <core/scalar_mapping/ScalarToColorMapping.h>
 
 #include <gui/data_view/RenderView.h>
+#include <gui/data_view/RendererImplementation3D.h>
 
 
 ScalarMappingChooser::ScalarMappingChooser(QWidget * parent)
@@ -145,7 +146,12 @@ void ScalarMappingChooser::on_legendPositionComboBox_currentIndexChanged(QString
     if (!m_mapping || !m_renderView)
         return;
 
-    vtkScalarBarRepresentation * representation = m_renderView->colorLegendWidget()->GetScalarBarRepresentation();
+    RendererImplementation3D * rendererImpl3D = dynamic_cast<RendererImplementation3D *>(&m_renderView->implementation());
+
+    if (!rendererImpl3D)
+        return;
+
+    vtkScalarBarRepresentation * representation = rendererImpl3D->colorLegendWidget()->GetScalarBarRepresentation();
 
     m_movingColorLegend = true;
 

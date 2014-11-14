@@ -11,6 +11,7 @@
 #include <gui/data_view/TableView.h>
 #include <gui/data_view/RenderView.h>
 #include <gui/data_view/RenderViewSwitch.h>
+#include <gui/data_view/RendererImplementation3D.h>
 
 
 namespace
@@ -111,7 +112,11 @@ RenderView * DataMapping::openInRenderView(QList<DataObject *> dataObjects)
     RenderView * renderView = new RenderView(m_nextRenderViewIndex++);
     m_mainWindow.addRenderView(renderView);
     m_renderViews.insert(renderView->index(), renderView);
-    RenderViewSwitch * sw = new RenderViewSwitch(*renderView);
+
+    // TODO implement impl switch, hide strategy switch
+    RendererImplementation3D * impl3D = dynamic_cast<RendererImplementation3D *>(&renderView->implementation());
+    assert(impl3D);
+    RenderViewSwitch * sw = new RenderViewSwitch(*impl3D);
     m_renderViewSwitches.insert(renderView, sw);
 
     connect(renderView, &RenderView::focused, this, &DataMapping::setFocusedView);

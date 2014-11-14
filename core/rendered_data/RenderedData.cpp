@@ -43,6 +43,8 @@ void RenderedData::setVisible(bool visible)
     m_isVisible = visible;
 
     visibilityChangedEvent(visible);
+
+    emit visibilityChanged(visible);
 }
 
 void RenderedData::invalidateViewProps()

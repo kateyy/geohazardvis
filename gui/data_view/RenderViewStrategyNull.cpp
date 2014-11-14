@@ -1,8 +1,8 @@
 #include "RenderViewStrategyNull.h"
 
 
-RenderViewStrategyNull::RenderViewStrategyNull(RenderView & renderView)
-    : RenderViewStrategy(renderView)
+RenderViewStrategyNull::RenderViewStrategyNull(RendererImplementation3D & context)
+    : RenderViewStrategy(context)
 {
 }
 

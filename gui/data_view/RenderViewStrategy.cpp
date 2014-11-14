@@ -1,8 +1,8 @@
 #include "RenderViewStrategy.h"
 
 
-RenderViewStrategy::RenderViewStrategy(RenderView & renderView)
-    : m_context(renderView)
+RenderViewStrategy::RenderViewStrategy(RendererImplementation3D & context)
+    : m_context(context)
 {
 }
 

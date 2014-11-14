@@ -18,6 +18,12 @@ set ( SOURCES
     data_view/RenderViewSwitch.cpp
     data_view/RenderView.h
     data_view/RenderView.cpp
+    data_view/RendererImplementation.h
+    data_view/RendererImplementation.cpp
+    data_view/RendererImplementationNull.h
+    data_view/RendererImplementationNull.cpp
+    data_view/RendererImplementation3D.h
+    data_view/RendererImplementation3D.cpp
     data_view/RenderViewStrategy.h
     data_view/RenderViewStrategy.cpp
     data_view/RenderViewStrategyNull.h

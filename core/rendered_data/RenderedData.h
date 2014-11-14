@@ -20,6 +20,15 @@ class DataObject;
 class ScalarsForColorMapping;
 
 
+enum class ContentType
+{
+    Rendered3D,
+    Rendered2D,
+    Context2D,
+    invalid
+};
+
+
 /**
 Base class for rendered representations of loaded data objects.
 A data object may be rendered in multiple views, each holding its own
@@ -50,6 +59,7 @@ public:
     void setColorMappingGradient(vtkScalarsToColors * gradient);
 
 signals:
+    void visibilityChanged(bool visible);
     void geometryChanged();
     void viewPropCollectionChanged();
 
