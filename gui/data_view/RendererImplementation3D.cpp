@@ -105,7 +105,7 @@ void RendererImplementation3D::addRenderedData(RenderedData * renderedData)
         [this, renderedData] () { fetchViewProps(renderedData); });
 
     connect(renderedData, &RenderedData::visibilityChanged,
-        [this, renderedData] (bool) { dataSelectionChanged(renderedData); });
+        [this, renderedData] (bool) { dataVisibilityChanged(renderedData); });
 
     dataVisibilityChanged(renderedData);
 }
@@ -153,15 +153,9 @@ void RendererImplementation3D::resetCamera(bool toInitialPosition)
     render();
 }
 
-const double * RendererImplementation3D::dataBounds() const
-{
-    return m_dataBounds;
-}
-
 void RendererImplementation3D::dataBounds(double bounds[6]) const
 {
-    for (int i = 0; i < 6; ++i)
-        bounds[i] = m_dataBounds[i];
+    m_dataBounds.GetBounds(bounds);
 }
 
 void RendererImplementation3D::setAxesVisibility(bool visible)
@@ -258,18 +252,8 @@ void RendererImplementation3D::assignInteractor()
 
 void RendererImplementation3D::updateAxes()
 {
-    vtkBoundingBox bounds;
-
-    for (RenderedData * renderedData : m_renderView.renderedData())
-    {
-        assert(renderedData->isVisible());
-        bounds.AddBounds(renderedData->dataObject()->bounds());
-    }
-
-    bounds.GetBounds(m_dataBounds);
-
     // hide axes if we don't have visible objects
-    if (!bounds.IsValid())
+    if (!m_dataBounds.IsValid())
     {
         m_axesActor->VisibilityOff();
         return;
@@ -277,7 +261,32 @@ void RendererImplementation3D::updateAxes()
 
     m_axesActor->SetVisibility(m_renderView.axesEnabled());
 
-    m_axesActor->SetBounds(m_dataBounds);
+    double bounds[6];
+    m_dataBounds.GetBounds(bounds);
+    m_axesActor->SetBounds(bounds);
+}
+
+void RendererImplementation3D::addToBounds(RenderedData * renderedData)
+{
+    m_dataBounds.AddBounds(renderedData->dataObject()->bounds());
+
+    // TODO update only if necessary
+    updateAxes();
+}
+
+void RendererImplementation3D::removeFromBounds(RenderedData * renderedData)
+{
+    m_dataBounds.Reset();
+
+    for (RenderedData * it : m_renderView.renderedData())
+    {
+        if (it == renderedData)
+            continue;
+
+        m_dataBounds.AddBounds(it->dataObject()->bounds());
+    }
+
+    updateAxes();
 }
 
 void RendererImplementation3D::createAxes()
@@ -391,15 +400,20 @@ void RendererImplementation3D::fetchViewProps(RenderedData * renderedData)
 
 void RendererImplementation3D::dataVisibilityChanged(RenderedData * rendered)
 {
-    updateAxes();
-
     assert(rendered);
 
     if (rendered->isVisible())
+    {
+        addToBounds(rendered);
         connect(rendered->dataObject(), &DataObject::boundsChanged, this, &RendererImplementation3D::updateAxes);
+    }
     else
+    {
+        removeFromBounds(rendered);
         disconnect(rendered->dataObject(), &DataObject::boundsChanged, this, &RendererImplementation3D::updateAxes);
+    }
 
-    //if (m_renderView.renderedData().isEmpty())
-    //    setStrategy(nullptr);
+    // reset strategy if we are empty
+    if (!m_dataBounds.IsValid())
+        setStrategy(nullptr);
 }

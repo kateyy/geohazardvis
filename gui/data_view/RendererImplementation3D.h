@@ -3,6 +3,7 @@
 #include <QMap>
 
 #include <vtkSmartPointer.h>
+#include <vtkBoundingBox.h>
 
 #include <gui/data_view/RendererImplementation.h>
 
@@ -45,7 +46,6 @@ public:
     void lookAtData(DataObject * dataObject, vtkIdType itemId) override;
     void resetCamera(bool toInitialPosition) override;
 
-    const double * dataBounds() const;
     void dataBounds(double bounds[6]) const;
 
     void setAxesVisibility(bool visible) override;
@@ -71,6 +71,8 @@ private:
     void assignInteractor();
 
     void updateAxes();
+    void addToBounds(RenderedData * renderedData);
+    void removeFromBounds(RenderedData * renderedData);
     void createAxes();
     void setupColorMappingLegend();
 
@@ -100,7 +102,7 @@ private:
 
     // view props fetched per rendered data
     QMap<RenderedData *, vtkSmartPointer<vtkPropCollection>> m_dataProps;
-    double m_dataBounds[6];
+    vtkBoundingBox m_dataBounds;
 
     vtkSmartPointer<vtkCubeAxesActor> m_axesActor;
     vtkScalarBarActor * m_colorMappingLegend;
