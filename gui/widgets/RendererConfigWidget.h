@@ -9,6 +9,7 @@
 class vtkObject;
 class vtkCamera;
 class vtkEventQtSlotConnect;
+class vtkRenderer;
 namespace reflectionzeug
 {
     class PropertyGroup;
@@ -19,6 +20,7 @@ namespace propertyguizeug
 }
 class Ui_RendererConfigWidget;
 class RenderView;
+class RendererImplementation3D;
 
 
 class RendererConfigWidget : public QDockWidget
@@ -42,6 +44,7 @@ private slots:
 
 private:
     reflectionzeug::PropertyGroup * createPropertyGroup(RenderView * renderView);
+    reflectionzeug::PropertyGroup * createPropertyGroupRenderer(RenderView * renderView, RendererImplementation3D * impl);
 
 private:
     Ui_RendererConfigWidget * m_ui;
