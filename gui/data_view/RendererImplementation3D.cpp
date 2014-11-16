@@ -180,6 +180,18 @@ PickingInteractorStyleSwitch * RendererImplementation3D::interactorStyleSwitch()
     return m_interactorStyle;
 }
 
+vtkRenderer * RendererImplementation3D::renderer()
+{
+    assert(m_renderer);
+    return m_renderer;
+}
+
+vtkCamera * RendererImplementation3D::camera()
+{
+    assert(renderer());
+    return renderer()->GetActiveCamera();
+}
+
 vtkLightKit * RendererImplementation3D::lightKit()
 {
     return m_lightKit;

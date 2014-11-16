@@ -14,8 +14,10 @@
 #include <reflectionzeug/PropertyGroup.h>
 #include <propertyguizeug/PropertyBrowser.h>
 
+#include <core/types.h>
 #include <core/vtkcamerahelper.h>
 #include <gui/data_view/RenderView.h>
+#include <gui/data_view/RendererImplementation3D.h>
 #include <gui/propertyguizeug_extension/PropertyEditorFactoryEx.h>
 #include <gui/propertyguizeug_extension/PropertyPainterEx.h>
 
@@ -39,7 +41,7 @@ RendererConfigWidget::RendererConfigWidget(QWidget * parent)
     , m_ui(new Ui_RendererConfigWidget())
     , m_propertyBrowser(new PropertyBrowser(new PropertyEditorFactoryEx(), new PropertyPainterEx(), this))
     , m_propertyRoot(nullptr)
-    , m_activeCamera(nullptr)
+    , m_currentRenderView(nullptr)
     , m_eventConnect(vtkSmartPointer<vtkEventQtSlotConnect>::New())
 {
     m_ui->setupUi(this);
@@ -68,16 +70,14 @@ void RendererConfigWidget::setRenderViews(const QList<RenderView *> & renderView
 {
     clear();
 
-    //for (RenderView * renderView : renderViews)
-    //{
-    //    m_ui->relatedRenderer->addItem(
-    //        renderView->friendlyName(),
-    //        reinterpret_cast<qulonglong>(renderView));
+    for (RenderView * renderView : renderViews)
+    {
+        m_ui->relatedRenderer->addItem(
+            renderView->friendlyName(),
+            reinterpret_cast<qulonglong>(renderView));
 
-    //    connect(renderView, &RenderView::windowTitleChanged, this, &RendererConfigWidget::updateRenderViewTitle);
-
-    //    m_eventConnect->Connect(renderView->renderer()->GetActiveCamera(), vtkCommand::ModifiedEvent, this, SLOT(readCameraStats(vtkObject *)), this);
-    //}
+        connect(renderView, &RenderView::windowTitleChanged, this, &RendererConfigWidget::updateRenderViewTitle);
+    }
 
     if (renderViews.isEmpty())
         return;
@@ -98,14 +98,25 @@ void RendererConfigWidget::setCurrentRenderView(int index)
     if (index < 0)
         return;
 
-    RenderView * renderView = reinterpret_cast<RenderView *>(
+    RenderView * lastRenderView = m_currentRenderView;
+    m_currentRenderView = reinterpret_cast<RenderView *>(
         m_ui->relatedRenderer->itemData(index, Qt::UserRole).toULongLong());
-    assert(renderView);
+    assert(m_currentRenderView);
 
-    m_propertyRoot = createPropertyGroup(renderView);
+    m_propertyRoot = createPropertyGroup(m_currentRenderView);
     m_propertyBrowser->setRoot(m_propertyRoot);
     m_propertyBrowser->setColumnWidth(0, 135);
-    //m_activeCamera = renderView->renderer()->GetActiveCamera();
+
+
+    RendererImplementation3D * impl3D;
+    if (lastRenderView && (impl3D = dynamic_cast<RendererImplementation3D *>(&lastRenderView->implementation())))
+    {
+        m_eventConnect->Disconnect(impl3D->camera(), vtkCommand::ModifiedEvent, this, SLOT(readCameraStats(vtkObject *)), this);
+    }
+    if (m_currentRenderView && (impl3D = dynamic_cast<RendererImplementation3D *>(&m_currentRenderView->implementation())))
+    {
+        m_eventConnect->Connect(impl3D->camera(), vtkCommand::ModifiedEvent, this, SLOT(readCameraStats(vtkObject *)), this);
+    }
 }
 
 void RendererConfigWidget::updateRenderViewTitle(const QString & newTitle)
@@ -129,8 +140,8 @@ void RendererConfigWidget::readCameraStats(vtkObject * caller)
 {
     assert(vtkCamera::SafeDownCast(caller));
     vtkCamera * camera = static_cast<vtkCamera *>(caller);
-    if (camera != m_activeCamera)
-        return;
+    assert(m_currentRenderView && dynamic_cast<RendererImplementation3D *>(&m_currentRenderView->implementation()));
+    assert(static_cast<RendererImplementation3D *>(&m_currentRenderView->implementation())->camera() == camera);
 
     std::function<void(AbstractProperty &)> updateFunc = [&updateFunc] (AbstractProperty & property)
     {
@@ -144,27 +155,20 @@ void RendererConfigWidget::readCameraStats(vtkObject * caller)
     if (m_propertyRoot->propertyExists("Camera"))
         cameraGroup = m_propertyRoot->group("Camera");
 
-    if (!cameraGroup)
-        return;
+    if (cameraGroup)
+        cameraGroup->forEach(updateFunc);
 
-    cameraGroup->forEach(updateFunc);
-    
-    //RenderView * renderView = reinterpret_cast<RenderView *>(
-    //    m_ui->relatedRenderer->currentData(Qt::UserRole).toULongLong());
-    //assert(renderView);
+    // update axes text label rotations for terrain view
+    if (m_currentRenderView->contentType() == ContentType::Rendered3D)
+    {
+        RendererImplementation3D & impl3D = static_cast<RendererImplementation3D &>(m_currentRenderView->implementation());
+        double azimuth = TerrainCamera::getAzimuth(*camera);
+        if (TerrainCamera::getVerticalElevation(*camera) < 0)
+            azimuth *= -1;
 
-    //// update axes text label rotations for terrain view
-    //double up[3];
-    //camera->GetViewUp(up);
-    //if (up[2] > up[0] + up[1])
-    //{
-    //    double azimuth = TerrainCamera::getAzimuth(*camera);
-    //    if (TerrainCamera::getVerticalElevation(*camera) < 0)
-    //        azimuth *= -1;
-
-    //    renderView->axesActor()->GetLabelTextProperty(0)->SetOrientation(azimuth - 90);
-    //    renderView->axesActor()->GetLabelTextProperty(1)->SetOrientation(azimuth);
-    //}
+        impl3D.axesActor()->GetLabelTextProperty(0)->SetOrientation(azimuth - 90);
+        impl3D.axesActor()->GetLabelTextProperty(1)->SetOrientation(azimuth);
+    }
 }
 
 PropertyGroup * RendererConfigWidget::createPropertyGroup(RenderView * renderView)

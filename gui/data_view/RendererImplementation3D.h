@@ -8,6 +8,7 @@
 #include <gui/data_view/RendererImplementation.h>
 
 
+class vtkCamera;
 class vtkRenderer;
 class vtkLightKit;
 class vtkPropCollection;
@@ -53,6 +54,9 @@ public:
     IPickingInteractorStyle * interactorStyle();
     const IPickingInteractorStyle * interactorStyle() const;
     PickingInteractorStyleSwitch * interactorStyleSwitch();
+
+    vtkRenderer * renderer();
+    vtkCamera * camera();
 
     vtkLightKit * lightKit();
     vtkScalarBarWidget * colorLegendWidget();

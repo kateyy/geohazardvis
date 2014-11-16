@@ -48,8 +48,6 @@ private:
     propertyguizeug::PropertyBrowser * m_propertyBrowser;
 
     reflectionzeug::PropertyGroup * m_propertyRoot;
-
-    vtkCamera * m_activeCamera;
-
+    RenderView * m_currentRenderView;
     vtkSmartPointer<vtkEventQtSlotConnect> m_eventConnect;
 };
