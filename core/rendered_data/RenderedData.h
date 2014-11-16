@@ -18,15 +18,7 @@ namespace reflectionzeug
 
 class DataObject;
 class ScalarsForColorMapping;
-
-
-enum class ContentType
-{
-    Rendered3D,
-    Rendered2D,
-    Context2D,
-    invalid
-};
+enum class ContentType;
 
 
 /**

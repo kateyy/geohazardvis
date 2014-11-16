@@ -7,6 +7,7 @@
 
 #include <vtkRenderWindow.h>
 
+#include <core/types.h>
 #include <core/vtkhelper.h>
 #include <core/data_objects/DataObject.h>
 #include <core/rendered_data/RenderedData.h>
@@ -76,6 +77,11 @@ QString RenderView::friendlyName() const
     name = QString::number(index()) + ": " + name;
 
     return name;
+}
+
+ContentType RenderView::contentType() const
+{
+    return implementation().contentType();
 }
 
 void RenderView::render()

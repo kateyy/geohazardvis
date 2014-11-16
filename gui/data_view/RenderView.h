@@ -10,6 +10,7 @@
 
 class vtkRenderWindow;
 
+enum class ContentType;
 class DataObject;
 class RenderedData;
 
@@ -30,6 +31,8 @@ public:
     bool isRenderer() const override;
 
     QString friendlyName() const override;
+
+    ContentType contentType() const;
 
     /** Add data objects to the view or make already added objects visible again.
         @param incompatibleObjects List of objects that are not compatible with current content (e.g. 2D vs. 3D data). */

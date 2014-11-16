@@ -11,6 +11,7 @@ set ( SOURCES
     Loader.cpp
     TextFileReader.h
     TextFileReader.cpp
+    types.h
     vtkcamerahelper.h
     vtkcamerahelper.cpp
     vtkhelper.h
