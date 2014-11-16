@@ -67,6 +67,8 @@ public slots:
 
 private:
     void initialize();
+    /** update components that depend on the render window interactor */
+    void assignInteractor();
 
     void updateAxes();
     void createAxes();
@@ -81,6 +83,7 @@ private slots:
     void dataVisibilityChanged(RenderedData * renderedData);
 
 private:
+    bool m_isInitialized;
     RenderViewStrategy * m_strategy;
     RenderViewStrategy * m_emptyStrategy;
 

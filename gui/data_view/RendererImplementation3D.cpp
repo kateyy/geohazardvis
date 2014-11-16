@@ -35,13 +35,12 @@ RendererImplementation3D::RendererImplementation3D(RenderView & renderView, QObj
     : RendererImplementation(renderView, parent)
     , m_strategy(nullptr)
     , m_emptyStrategy(new RenderViewStrategyNull(*this))
+    , m_isInitialized(false)
 {
     connect(renderView.scalarMapping(), &ScalarToColorMapping::colorLegendVisibilityChanged,
         [this] (bool visible) { m_scalarBarWidget->SetEnabled(visible); });
 
-    connect(m_interactorStyle.Get(), &PickingInteractorStyleSwitch::dataPicked, this, &RendererImplementation3D::dataSelectionChanged);
-
-    // hack: replace by impl switch
+    // TODO hack: replace by impl switch
     connect(&renderView, &RenderView::resetImplementation, this, &RendererImplementation3D::resetStrategy);
 }
 
@@ -67,13 +66,14 @@ QList<DataObject *> RendererImplementation3D::filterCompatibleObjects(
 
 void RendererImplementation3D::apply(QVTKWidget * qvtkWidget)
 {
-    if (!m_renderer)
-        initialize();
+    initialize();
 
     qvtkWidget->SetRenderWindow(m_renderWindow);
     m_renderWindow->SetInteractor(qvtkWidget->GetInteractor());
 
     m_renderWindow->GetInteractor()->SetInteractorStyle(m_interactorStyle);
+
+    assignInteractor();
 }
 
 void RendererImplementation3D::render()
@@ -248,6 +248,12 @@ void RendererImplementation3D::initialize()
     connect(m_interactorStyle.Get(), &PickingInteractorStyleSwitch::cellPicked, &m_renderView, &AbstractDataView::objectPicked);
 
     createAxes();
+    setupColorMappingLegend();
+}
+
+void RendererImplementation3D::assignInteractor()
+{
+    m_scalarBarWidget->SetInteractor(m_renderWindow->GetInteractor());
 }
 
 void RendererImplementation3D::updateAxes()
@@ -343,7 +349,6 @@ void RendererImplementation3D::setupColorMappingLegend()
     m_scalarBarWidget = vtkSmartPointer<vtkScalarBarWidget>::New();
     m_scalarBarWidget->SetScalarBarActor(m_colorMappingLegend);
     m_scalarBarWidget->SetRepresentation(repr);
-    m_scalarBarWidget->SetInteractor(m_renderWindow->GetInteractor());
     m_scalarBarWidget->EnabledOff();
 
     m_renderer->AddViewProp(m_colorMappingLegend);
