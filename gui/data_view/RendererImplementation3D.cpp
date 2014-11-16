@@ -208,6 +208,9 @@ void RendererImplementation3D::setStrategy(RenderViewStrategy * strategy)
 
 void RendererImplementation3D::initialize()
 {
+    if (m_isInitialized)
+        return;
+
     // -- render (window) --
 
     m_renderer = vtkSmartPointer<vtkRenderer>::New();
@@ -243,6 +246,8 @@ void RendererImplementation3D::initialize()
 
     createAxes();
     setupColorMappingLegend();
+
+    m_isInitialized = true;
 }
 
 void RendererImplementation3D::assignInteractor()
