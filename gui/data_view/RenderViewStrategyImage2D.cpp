@@ -84,7 +84,7 @@ void RenderViewStrategyImage2D::activate()
 
     m_context.interactorStyleSwitch()->setCurrentStyle("InteractorStyleImage");
 
-    QWidget * content = m_context.findChild<QWidget *>("content", Qt::FindDirectChildrenOnly);
+    QWidget * content = m_context.renderView().findChild<QWidget *>("content", Qt::FindDirectChildrenOnly);
     content->layout()->addWidget(m_toolbar);
 
     m_context.axesActor()->GetLabelTextProperty(0)->SetOrientation(0);
@@ -93,7 +93,7 @@ void RenderViewStrategyImage2D::activate()
 
 void RenderViewStrategyImage2D::deactivate()
 {
-    QWidget * content = m_context.findChild<QWidget *>("content", Qt::FindDirectChildrenOnly);
+    QWidget * content = m_context.renderView().findChild<QWidget *>("content", Qt::FindDirectChildrenOnly);
 
     content->layout()->removeWidget(m_toolbar);
     m_toolbar->setParent(nullptr);
