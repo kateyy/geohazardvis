@@ -7,9 +7,8 @@
 
 
 class vtkObject;
-class vtkCamera;
+class vtkCollection;
 class vtkEventQtSlotConnect;
-class vtkRenderer;
 namespace reflectionzeug
 {
     class PropertyGroup;
@@ -53,4 +52,6 @@ private:
     reflectionzeug::PropertyGroup * m_propertyRoot;
     RenderView * m_currentRenderView;
     vtkSmartPointer<vtkEventQtSlotConnect> m_eventConnect;
+    /** vtkEventQtSlotConnect does not increase the reference count of signal sources, so we do this manually */
+    vtkSmartPointer<vtkCollection> m_eventEmitters;
 };

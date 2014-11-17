@@ -43,6 +43,7 @@ RendererConfigWidget::RendererConfigWidget(QWidget * parent)
     , m_propertyRoot(nullptr)
     , m_currentRenderView(nullptr)
     , m_eventConnect(vtkSmartPointer<vtkEventQtSlotConnect>::New())
+    , m_eventEmitters(vtkSmartPointer<vtkCollection>::New())
 {
     m_ui->setupUi(this);
     m_ui->mainLayout->addWidget(m_propertyBrowser);
@@ -63,15 +64,16 @@ void RendererConfigWidget::clear()
 {
     m_ui->relatedRenderer->clear();
 
+    m_currentRenderView = nullptr;
+    m_eventConnect = vtkSmartPointer<vtkEventQtSlotConnect>::New(); // recreate, discarding all previous connections
+    m_eventEmitters->RemoveAllItems();
+
     setCurrentRenderView(-1);
 }
 
 void RendererConfigWidget::setRenderViews(const QList<RenderView *> & renderViews)
 {
     clear();
-
-    // our current render view may already be deleted
-    m_currentRenderView = nullptr;
 
     for (RenderView * renderView : renderViews)
     {
@@ -115,10 +117,12 @@ void RendererConfigWidget::setCurrentRenderView(int index)
     if (lastRenderView && (impl3D = dynamic_cast<RendererImplementation3D *>(&lastRenderView->implementation())))
     {
         m_eventConnect->Disconnect(impl3D->camera(), vtkCommand::ModifiedEvent, this, SLOT(readCameraStats(vtkObject *)), this);
+        m_eventEmitters->RemoveItem(impl3D->camera());
     }
     if (m_currentRenderView && (impl3D = dynamic_cast<RendererImplementation3D *>(&m_currentRenderView->implementation())))
     {
         m_eventConnect->Connect(impl3D->camera(), vtkCommand::ModifiedEvent, this, SLOT(readCameraStats(vtkObject *)), this);
+        m_eventEmitters->AddItem(impl3D->camera());
     }
 }
 
