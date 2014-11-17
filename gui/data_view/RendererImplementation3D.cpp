@@ -283,6 +283,16 @@ void RendererImplementation3D::updateAxes()
     m_axesActor->SetBounds(bounds);
 }
 
+void RendererImplementation3D::updateBounds()
+{
+    m_dataBounds.Reset();
+
+    for (RenderedData * it : m_renderView.renderedData())
+        m_dataBounds.AddBounds(it->dataObject()->bounds());
+
+    updateAxes();
+}
+
 void RendererImplementation3D::addToBounds(RenderedData * renderedData)
 {
     m_dataBounds.AddBounds(renderedData->dataObject()->bounds());
@@ -422,12 +432,12 @@ void RendererImplementation3D::dataVisibilityChanged(RenderedData * rendered)
     if (rendered->isVisible())
     {
         addToBounds(rendered);
-        connect(rendered->dataObject(), &DataObject::boundsChanged, this, &RendererImplementation3D::updateAxes);
+        connect(rendered->dataObject(), &DataObject::boundsChanged, this, &RendererImplementation3D::updateBounds);
     }
     else
     {
         removeFromBounds(rendered);
-        disconnect(rendered->dataObject(), &DataObject::boundsChanged, this, &RendererImplementation3D::updateAxes);
+        disconnect(rendered->dataObject(), &DataObject::boundsChanged, this, &RendererImplementation3D::updateBounds);
     }
 
     // reset strategy if we are empty

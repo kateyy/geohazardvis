@@ -75,6 +75,7 @@ private:
     void assignInteractor();
 
     void updateAxes();
+    void updateBounds();
     void addToBounds(RenderedData * renderedData);
     void removeFromBounds(RenderedData * renderedData);
     void createAxes();
