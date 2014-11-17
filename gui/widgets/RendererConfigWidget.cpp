@@ -70,6 +70,9 @@ void RendererConfigWidget::setRenderViews(const QList<RenderView *> & renderView
 {
     clear();
 
+    // our current render view may already be deleted
+    m_currentRenderView = nullptr;
+
     for (RenderView * renderView : renderViews)
     {
         m_ui->relatedRenderer->addItem(
