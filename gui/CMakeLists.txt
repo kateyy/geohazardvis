@@ -112,7 +112,6 @@ target_link_libraries( ${TARGET}
     ${LIBZEUG_REFLECTION_LIBRARY}
     ${LIBZEUG_SIGNAL_LIBRARY}
     ${VTK_LIBRARIES}
-    Qt5::Svg
     Qt5::Widgets
 
     core
