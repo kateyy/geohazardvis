@@ -24,8 +24,8 @@ RenderView::RenderView(
     : AbstractDataView(index, parent, flags)
     , m_ui(new Ui_RenderView())
     , m_implementation(nullptr)
-    , m_axesEnabled(true)
     , m_scalarMapping(new ScalarToColorMapping())
+    , m_axesEnabled(true)
 {
     m_ui->setupUi(this);
 

@@ -74,7 +74,7 @@ reflectionzeug::PropertyGroup * RenderedPolyData::createConfigGroup()
 {
     PropertyGroup * renderSettings = new PropertyGroup();
 
-    auto * color = renderSettings->addProperty<Color>("color",
+    renderSettings->addProperty<Color>("color",
         [this]() {
         double * color = renderProperty()->GetColor();
         return Color(static_cast<int>(color[0] * 255), static_cast<int>(color[1] * 255), static_cast<int>(color[2] * 255));

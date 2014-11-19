@@ -84,7 +84,6 @@ DataObject * Loader::loadIndexedTriangles(QString name, const std::vector<ReadDa
         const vtkIdType numCells = polyData->GetNumberOfCells();
         const auto vector = *namedVector.second;
 
-        const vtkIdType tupleSize = vector.size();
         assert(size_t(numCells) == vector.front().size());
 
         vtkSmartPointer<vtkFloatArray> a;

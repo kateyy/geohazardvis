@@ -124,7 +124,6 @@ void ImageProfileData::setPoints(double point1[3], double point2[3])
     double xTranslate = -point1[0];
     double yTranslate = -point1[1];
     // align to x axis
-    const double xAxis[3] = { 1, 0, 0 };
     double angle = vtkMath::DegreesFromRadians(std::atan2(probeVector[1], probeVector[0]));
 
     m->RotateZ(-angle);

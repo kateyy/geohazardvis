@@ -144,8 +144,6 @@ void InteractorStyleImage::setRenderedData(QList<RenderedData *> renderedData)
 
 void InteractorStyleImage::highlightPickedPoint()
 {
-    int* clickPos = GetInteractor()->GetEventPosition();
-
     vtkIdType pointId = m_pointPicker->GetPointId();
 
     vtkProp * pickedProp = m_pointPicker->GetViewProp();

@@ -325,7 +325,7 @@ reflectionzeug::PropertyGroup * RendererConfigWidget::createPropertyGroupRendere
         });
         prop_foregroundGridLines->setOption("title", "foreground grid lines");
 
-        auto prop_ticksVisible = axesGroup->addProperty<bool>("ticks",
+        axesGroup->addProperty<bool>("ticks",
             [axes] () { return axes->GetXAxisTickVisibility() != 0; },
             [axes, renderView] (bool visible) {
             axes->SetXAxisTickVisibility(visible);

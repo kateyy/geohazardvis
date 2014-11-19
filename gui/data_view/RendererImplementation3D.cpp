@@ -33,9 +33,9 @@
 
 RendererImplementation3D::RendererImplementation3D(RenderView & renderView, QObject * parent)
     : RendererImplementation(renderView, parent)
+    , m_isInitialized(false)
     , m_strategy(nullptr)
     , m_emptyStrategy(new RenderViewStrategyNull(*this))
-    , m_isInitialized(false)
 {
     connect(renderView.scalarMapping(), &ScalarToColorMapping::colorLegendVisibilityChanged,
         [this] (bool visible) { m_scalarBarWidget->SetEnabled(visible); });
