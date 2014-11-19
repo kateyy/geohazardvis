@@ -6,7 +6,7 @@ message(STATUS "Configuring for platform Linux/GCC.")
 execute_process(COMMAND ${CMAKE_C_COMPILER} -dumpversion
     OUTPUT_VARIABLE GCC_VERSION)
 
-if(NOT GCC_VERSION VERSION_EQUAL 4.9)
+if(NOT GCC_VERSION VERSION_GREATER 4.9)
     message(WARNING "Warning: only tested with gcc 4.9, but ${GCC_VERSION} was found.")
 endif()
 
@@ -17,7 +17,7 @@ LIST(APPEND DEFAULT_COMPILE_DEFS
 )
 
 set(LINUX_COMPILE_FLAGS 
-    -std=gnu++11 -pthread -pipe -fPIC -Wreturn-type -Wall -Wextra -Wfloat-equal -Wshadow -Wcast-align -Wconversion)
+    -std=gnu++11 -pthread -pipe -fPIC -Wreturn-type -Wall -Wextra -Wcast-align)
 # pthread       -> use pthread library
 # no-rtti       -> disable c++ rtti
 # no-exceptions -> disable exception handling
