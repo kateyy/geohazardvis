@@ -1,3 +1,5 @@
 build*/*
 screenshots*/*
 testing*/*
+.kdev4/*
+*.kdev4
