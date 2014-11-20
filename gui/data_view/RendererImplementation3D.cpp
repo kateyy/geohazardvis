@@ -120,12 +120,13 @@ void RendererImplementation3D::removeRenderedData(RenderedData * renderedData)
     while (vtkProp * prop = props->GetNextProp(it))
         m_renderer->RemoveViewProp(prop);
 
-    updateAxes();
+    removeFromBounds(renderedData);
+
+    // reset strategy if we are empty
+    if (!m_dataBounds.IsValid())
+        setStrategy(nullptr);
 
     m_renderer->ResetCamera();
-
-    if (m_renderView.renderedData().isEmpty())
-        setStrategy(nullptr);
 }
 
 void RendererImplementation3D::highlightData(DataObject * dataObject, vtkIdType itemId)
