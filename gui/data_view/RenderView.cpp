@@ -224,7 +224,7 @@ void RenderView::hideDataObjects(const QList<DataObject *> & dataObjects)
     render();
 }
 
-bool RenderView::isVisible(DataObject * dataObject) const
+bool RenderView::contains(DataObject * dataObject) const
 {
     RenderedData * renderedData = m_dataObjectToRendered.value(dataObject, nullptr);
     if (!renderedData)

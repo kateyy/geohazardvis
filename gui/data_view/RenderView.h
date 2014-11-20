@@ -40,7 +40,7 @@ public:
     /** remove rendered representations of data objects, don't delete data and settings */
     void hideDataObjects(const QList<DataObject *> & dataObjects);
     /** check if the this objects is currently rendered */
-    bool isVisible(DataObject * dataObject) const;
+    bool contains(DataObject * dataObject) const;
     /** remove rendered representations and all references to the data objects */
     void removeDataObjects(const QList<DataObject *> & dataObjects);
     QList<DataObject *> dataObjects() const;

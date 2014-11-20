@@ -127,7 +127,7 @@ void DataBrowser::changeRenderedVisibility(DataObject * clickedObject)
         return;
     }
 
-    bool wasVisible = renderView->isVisible(clickedObject);
+    bool wasVisible = renderView->contains(clickedObject);
 
     // if multiple objects are selected: first change all to the same (current) value
     // and toggle visibility only with the next click
@@ -135,9 +135,9 @@ void DataBrowser::changeRenderedVisibility(DataObject * clickedObject)
     if (selection.size() > 1)
     {
         bool allSame = true;
-        bool firstValue = renderView->isVisible(selection.first());
+        bool firstValue = renderView->contains(selection.first());
         for (DataObject * dataObject : selection)
-            allSame = allSame && (firstValue == renderView->isVisible(dataObject));
+            allSame = allSame && (firstValue == renderView->contains(dataObject));
 
         if (!allSame)
             setToVisible = wasVisible;
