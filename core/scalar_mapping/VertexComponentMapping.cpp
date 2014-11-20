@@ -31,6 +31,9 @@ QList<ScalarsForColorMapping *> VertexComponentMapping::newInstances(const QList
             polyDataObjects << dataObject;
     }
 
+    if (polyDataObjects.isEmpty())
+        return{};
+
     QList<ScalarsForColorMapping *> instances;
     for (vtkIdType component = 0; component < 3; ++component)
     {
