@@ -88,7 +88,8 @@ bool AbstractDataView::eventFilter(QObject * /*obj*/, QEvent * ev)
 
 void AbstractDataView::closeEvent(QCloseEvent * event)
 {
-    emit closed();
+    if (isVisible())
+        emit closed();
 
     QDockWidget::closeEvent(event);
 }

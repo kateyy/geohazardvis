@@ -205,6 +205,12 @@ void RenderViewStrategyImage2D::acceptProfilePlot()
 
 void RenderViewStrategyImage2D::abortProfilePlot()
 {
+    if (!m_previewRenderer)
+        return; // already aborting
+
+    auto oldPreviewRenderer = m_previewRenderer;
+    m_previewRenderer = nullptr;
+
     m_profilePlotAction->setEnabled(true);
     m_profilePlotAcceptAction->setVisible(false);
     m_profilePlotAbortAction->setVisible(false);
@@ -212,8 +218,8 @@ void RenderViewStrategyImage2D::abortProfilePlot()
     m_lineWidget = nullptr;
     m_context.render();
 
-    m_previewRenderer->close();
-    m_previewRenderer = nullptr;
+    oldPreviewRenderer->close();
+
     delete m_previewProfile;
     m_previewProfile = nullptr;
 }
