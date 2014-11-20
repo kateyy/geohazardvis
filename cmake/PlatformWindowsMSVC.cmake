@@ -9,7 +9,7 @@ LIST(APPEND DEFAULT_COMPILE_DEFS
 )
 
 set(WIN32_COMPILE_FLAGS
-    /nologo /Zc:wchar_t /Zc:forScope /GR /Zi /fp:precise /MP /W4 /wd4127 /wd4189 /wd4250 /wd4251 /wd4351 /wd4505 /wd4512 /wd4718
+    /nologo /Zc:wchar_t /Zc:forScope /GR /Zi /fp:precise /MP /W4 /wd4127 /wd4351 /wd4505 /wd4512
     # nologo       -> no logo
     # Zc:wchar_t   -> treat wchar_t as built-in type: yes
     # Zc:forScope  -> force conformance in for loop scope: Yes
@@ -24,13 +24,13 @@ set(WIN32_COMPILE_FLAGS
     # MP           -> build with multiple processes
     # wd           -> disable warning
     #   4100       -> 'identifier' : unreferenced formal parameter
-    #   4127       -> conditional expression is constant
+    #   4127       -> conditional expression is constant (caused by Qt)
     #   4189       -> 'identifier' : local variable is initialized but not referenced  
-    #   4250       -> 'class1' : inherits 'class2::member' via dominance (disabled for libzeug: propertyzeug)
+    #   4250       -> 'class1' : inherits 'class2::member' via dominance
     #   4251       -> 'identifier' : class 'type' needs to have dll-interface to be used by clients of class 'type2'
     #   4267       -> 'var' : conversion from 'size_t' to 'type', possible loss of data
     #   4351       -> new behavior: elements of array '...' will be default initialized
-    #   4505       -> 'function' : unreferenced local function has been removed
+    #   4505       -> 'function' : unreferenced local function has been removed (caused by libzeug)
     #   4512       -> 'class' : assignment operator could not be generated
     #   4718       -> 'function call' : recursive call has no side effects, deleting
     # W4           -> warning level 4
