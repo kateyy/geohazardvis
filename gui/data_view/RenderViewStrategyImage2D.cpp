@@ -39,7 +39,9 @@ RenderViewStrategyImage2D::RenderViewStrategyImage2D(RendererImplementation3D & 
     , m_toolbar(nullptr)
     , m_previewProfile(nullptr)
     , m_previewRenderer(nullptr)
+    , m_currentPlottingImage(nullptr)
 {
+    connect(&context.renderView(), &RenderView::renderedDataChanged, this, &RenderViewStrategyImage2D::checkSourceExists);
 }
 
 RenderViewStrategyImage2D::~RenderViewStrategyImage2D()
@@ -167,6 +169,7 @@ void RenderViewStrategyImage2D::startProfilePlot()
 
     // create profile preview
 
+    assert(!m_currentPlottingImage);
     ImageDataObject * image = nullptr;
     for (DataObject * dataObject : m_context.renderView().dataObjects())
     {
@@ -175,9 +178,10 @@ void RenderViewStrategyImage2D::startProfilePlot()
             break;
     }
     assert(image);
+    m_currentPlottingImage = image;
 
-    QString name = image->name() + " plot";
-    m_previewProfile = new ImageProfileData(name, image);
+    QString name = m_currentPlottingImage->name() + " plot";
+    m_previewProfile = new ImageProfileData(name, m_currentPlottingImage);
     lineMoved();
 
     m_previewRenderer = DataMapping::instance().openInRenderView({ m_previewProfile });
@@ -198,6 +202,7 @@ void RenderViewStrategyImage2D::acceptProfilePlot()
     DataSetHandler::instance().addData({ m_previewProfile });
     m_previewProfile = nullptr;
     m_previewRenderer = nullptr;
+    m_currentPlottingImage = nullptr;
 
     m_lineWidget = nullptr;
     m_context.render();
@@ -210,6 +215,7 @@ void RenderViewStrategyImage2D::abortProfilePlot()
 
     auto oldPreviewRenderer = m_previewRenderer;
     m_previewRenderer = nullptr;
+    m_currentPlottingImage = nullptr;
 
     m_profilePlotAction->setEnabled(true);
     m_profilePlotAcceptAction->setVisible(false);
@@ -234,4 +240,13 @@ void RenderViewStrategyImage2D::lineMoved()
     point1[2] = point2[2] = 0;
 
     m_previewProfile->setPoints(point1, point2);
+}
+
+void RenderViewStrategyImage2D::checkSourceExists()
+{
+    if (!m_currentPlottingImage)
+        return;
+
+    if (!m_context.renderView().dataObjects().contains(m_currentPlottingImage))
+        abortProfilePlot();
 }

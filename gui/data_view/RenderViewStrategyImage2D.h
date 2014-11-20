@@ -10,6 +10,7 @@ class QToolBar;
 class vtkLineWidget2;
 class vtkEventQtSlotConnect;
 
+class ImageDataObject;
 class ImageProfileData;
 class RenderView;
 
@@ -41,6 +42,8 @@ private slots:
 
     void lineMoved();
 
+    void checkSourceExists();
+
 private:
     void initialize();
 
@@ -55,6 +58,8 @@ private:
     QAction * m_profilePlotAbortAction;
     ImageProfileData * m_previewProfile;
     RenderView * m_previewRenderer;
+
+    ImageDataObject * m_currentPlottingImage;
 
     vtkSmartPointer<vtkLineWidget2> m_lineWidget;
     vtkSmartPointer<vtkEventQtSlotConnect> m_vtkConnect;
