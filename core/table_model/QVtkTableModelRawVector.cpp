@@ -87,7 +87,7 @@ bool QVtkTableModelRawVector::setData(const QModelIndex & index, const QVariant 
     tupleData[component] = f_value;
     m_data->SetTuple(tupleId, tupleData);
 
-    delete tupleData;
+    delete[] tupleData;
 
     m_data->Modified();
 
