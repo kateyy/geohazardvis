@@ -9,8 +9,8 @@
 #include <vtkInformationStringKey.h>
 
 #include <vtkPolyData.h>
-
 #include <vtkPolyDataMapper.h>
+#include <vtkPolyDataNormals.h>
 
 #include <vtkProperty.h>
 #include <vtkActor.h>
@@ -42,12 +42,19 @@ RenderedPolyData::RenderedPolyData(PolyDataObject * dataObject)
     : RenderedData3D(dataObject)
     , m_mapper(vtkSmartPointer<vtkPolyDataMapper>::New())
     , m_mainActor(vtkSmartPointer<vtkActor>::New())
+    , m_normals(vtkSmartPointer<vtkPolyDataNormals>::New())
+    , m_mapperInput(m_normals.Get())
 {
     assert(vtkPolyData::SafeDownCast(dataObject->dataSet()));
 
     vtkInformation * mapperInfo = m_mapper->GetInformation();
     mapperInfo->Set(DataObject::NameKey(), dataObject->name().toLatin1().data());
     DataObject::setDataObject(mapperInfo, dataObject);
+
+    m_normals->ComputePointNormalsOn();
+    m_normals->ComputeCellNormalsOff();
+
+    m_mapper->SetInputConnection(m_mapperInput->GetOutputPort());
 
     // don't break the lut configuration
     m_mapper->UseLookupTableScalarRangeOn();
@@ -216,7 +223,7 @@ void RenderedPolyData::scalarsForColorMappingChangedEvent()
     // no mapping yet, so just render the data set
     if (!m_scalars)
     {
-        m_mapper->SetInputConnection(dataObject()->processedOutputPort());
+        m_mapperInput->SetInputConnection(dataObject()->processedOutputPort());
         return;
     }
 
@@ -225,10 +232,10 @@ void RenderedPolyData::scalarsForColorMappingChangedEvent()
     if (m_scalars->usesFilter())
     {
         vtkSmartPointer<vtkAlgorithm> filter = vtkSmartPointer<vtkAlgorithm>::Take(m_scalars->createFilter(dataObject()));
-        m_mapper->SetInputConnection(filter->GetOutputPort());
+        m_mapperInput->SetInputConnection(filter->GetOutputPort());
     }
     else
-        m_mapper->SetInputConnection(dataObject()->processedOutputPort());
+        m_mapperInput->SetInputConnection(dataObject()->processedOutputPort());
 }
 
 void RenderedPolyData::colorMappingGradientChangedEvent()

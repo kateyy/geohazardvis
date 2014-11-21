@@ -3,7 +3,9 @@
 #include <core/rendered_data/RenderedData3D.h>
 
 
+class vtkAlgorithm;
 class vtkPolyDataMapper;
+class vtkPolyDataNormals;
 
 class PolyDataObject;
 
@@ -30,4 +32,7 @@ protected:
 private:
     vtkSmartPointer<vtkPolyDataMapper> m_mapper;
     vtkSmartPointer<vtkActor> m_mainActor;
+
+    vtkSmartPointer<vtkPolyDataNormals> m_normals;      // required for lighting/interpolation
+    vtkAlgorithm * m_mapperInput;
 };
