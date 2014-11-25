@@ -54,6 +54,7 @@ RenderedPolyData::RenderedPolyData(PolyDataObject * dataObject)
     m_normals->ComputePointNormalsOn();
     m_normals->ComputeCellNormalsOff();
 
+    m_mapperInput->SetInputConnection(dataObject->processedOutputPort());
     m_mapper->SetInputConnection(m_mapperInput->GetOutputPort());
 
     // don't break the lut configuration

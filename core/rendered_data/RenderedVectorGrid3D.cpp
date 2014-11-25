@@ -197,7 +197,7 @@ void RenderedVectorGrid3D::colorMappingGradientChangedEvent()
 
 void RenderedVectorGrid3D::visibilityChangedEvent(bool visible)
 {
-    RenderedData::visibilityChangedEvent(visible);
+    RenderedData3D::visibilityChangedEvent(visible);
 
     updateVisibilities();
 }
