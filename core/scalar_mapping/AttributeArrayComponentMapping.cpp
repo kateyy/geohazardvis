@@ -75,6 +75,9 @@ QList<ScalarsForColorMapping *> AttributeArrayComponentMapping::newInstances(con
     // list all available array names, check for same number of components
     for (DataObject * dataObject : dataObjects)
     {
+        if (dataObject->dataTypeName() == "image profile")  // don't try to map colors to a plot
+            continue;
+
         vtkDataSet * dataSet = dataObject->processedDataSet();
 
         checkAddAttributeArrays(dataSet->GetCellData(), vtkAssignAttribute::CELL_DATA);

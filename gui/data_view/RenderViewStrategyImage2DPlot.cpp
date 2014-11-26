@@ -46,7 +46,6 @@ void RenderViewStrategyImage2DPlot::activate()
 
     m_context.interactorStyleSwitch()->setCurrentStyle("InteractorStyleImage");
 
-
     vtkCubeAxesActor & axes = *m_context.axesActor();
     axes.GetLabelTextProperty(0)->SetOrientation(0);
     axes.GetLabelTextProperty(1)->SetOrientation(90);
