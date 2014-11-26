@@ -33,6 +33,11 @@ enum class CubeAxesTickLocation
     outside = VTK_TICKS_OUTSIDE,
     both = VTK_TICKS_BOTH
 };
+enum class ProjectionType
+{
+    parallel,
+    perspective
+};
 }
 
 
@@ -262,6 +267,23 @@ reflectionzeug::PropertyGroup * RendererConfigWidget::createPropertyGroupRendere
             prop_focalPoint->at(i)->setOption("title", std::string(title));
             ++title[0];
         }
+
+
+        if (renderView->contains3dData())
+        {
+            auto prop_projectionType = cameraGroup->addProperty<ProjectionType>("projection",
+                [&camera] () {
+                return camera.GetParallelProjection() != 0 ? ProjectionType::parallel : ProjectionType::perspective;
+            },
+                [&camera, renderView] (ProjectionType type) {
+                camera.SetParallelProjection(type == ProjectionType::parallel);
+                renderView->render();
+            });
+            prop_projectionType->setStrings({
+                    { ProjectionType::parallel, "parallel" },
+                    { ProjectionType::perspective, "perspective" }
+            });
+        }
     }
 
     if (renderView->contains3dData())
@@ -270,7 +292,7 @@ reflectionzeug::PropertyGroup * RendererConfigWidget::createPropertyGroupRendere
 
         auto prop_intensity = lightingGroup->addProperty<double>("intensity",
             [renderView, impl]() { return impl->lightKit()->GetKeyLightIntensity(); },
-            [renderView, impl](double value) {
+            [renderView, impl] (double value) {
             impl->lightKit()->SetKeyLightIntensity(value);
             renderView->render();
         });
