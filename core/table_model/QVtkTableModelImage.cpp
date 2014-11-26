@@ -3,6 +3,8 @@
 #include <cassert>
 
 #include <vtkImageData.h>
+#include <vtkPointData.h>
+#include <vtkDataArray.h>
 
 #include <core/data_objects/DataObject.h>
 
@@ -13,6 +15,8 @@ inline int positive_modulo(int i, int n)
 {
     return (i % n + n) % n;
 }
+
+const int c_firstValueColumn = 2;
 }
 
 
@@ -63,15 +67,17 @@ QVariant QVtkTableModelImage::headerData(int section, Qt::Orientation orientatio
     {
     case 0: return "row (x)";
     case 1: return "column (y)";
-    case 2: return "value";
+    default: // value columns
+        assert(section >= c_firstValueColumn);
+        if (m_vtkImageData->GetNumberOfScalarComponents() > 1)
+            return "value (" + QString::number(section - c_firstValueColumn) + ")";
+        return "value";
     }
-
-    return QVariant();
 }
 
 bool QVtkTableModelImage::setData(const QModelIndex & index, const QVariant & value, int role)
 {
-    if (role != Qt::EditRole || index.column() != 3 || !m_vtkImageData)
+    if (role != Qt::EditRole || index.column() < c_firstValueColumn || !m_vtkImageData)
         return false;
 
     bool ok;
@@ -82,17 +88,19 @@ bool QVtkTableModelImage::setData(const QModelIndex & index, const QVariant & va
     int imageRow, imageColumn;
     tableToImageCoord(index.row(), imageRow, imageColumn);
 
-    int component = index.column() - 2;
+    int component = index.column() - c_firstValueColumn;
     assert(component < m_vtkImageData->GetNumberOfScalarComponents());
 
     m_vtkImageData->SetScalarComponentFromDouble(imageRow, imageColumn, 0, component, f_value);
+    // SetScalarComponentFromDouble does not set the scalar array as modified, so that the pipeline won't be updated
+    m_vtkImageData->GetPointData()->GetScalars()->Modified();
     
     return true;
 }
 
 Qt::ItemFlags QVtkTableModelImage::flags(const QModelIndex &index) const
 {
-    if (index.column() > 1)
+    if (index.column() >= c_firstValueColumn)
         return Qt::ItemIsEditable | QAbstractItemModel::flags(index);
 
     return QAbstractItemModel::flags(index);
