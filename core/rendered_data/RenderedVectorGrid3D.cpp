@@ -135,15 +135,16 @@ PropertyGroup * RenderedVectorGrid3D::createConfigGroup()
         m_slicesEnabled[i] = value;
         updateVisibilities();
     });
+    slicesVisible->setOption("title", "slices visible");
     auto slicePositions = configGroup->addGroup("SlicePosition");
-    slicePositions->setOption("title", "Slice Positions");
+    slicePositions->setOption("title", "slice positions");
     for (int i = 0; i < 3; ++i)
     {
         std::string axis = { char('X' + i) };
 
         slicesVisible->asCollection()->at(i)->setOption("title", axis);
 
-        auto * slice_prop = slicePositions->addProperty<int>(axis + "Slice",
+        auto * slice_prop = slicePositions->addProperty<int>(axis + "slice",
             [this, i] () { return m_extractSlices[i]->GetVOI()[2 * i]; },
             [this, i] (int value) {
             setSlicePosition(i, value);
@@ -153,6 +154,17 @@ PropertyGroup * RenderedVectorGrid3D::createConfigGroup()
         slice_prop->setOption("minimum", 0);
         slice_prop->setOption("maximum", static_cast<vtkImageData *>(dataObject()->processedDataSet())->GetExtent()[2 * i + 1]);
     }
+
+    auto * lightingEnabled = configGroup->addProperty<bool>("lightingEnabled",
+        [this] () {
+        return m_sliceActors.front()->GetProperty()->GetLighting();
+    },
+        [this] (bool enabled) {
+        for (auto & actor : m_sliceActors)
+            actor->GetProperty()->SetLighting(enabled);
+        emit geometryChanged();
+    });
+    lightingEnabled->setOption("title", "lighting enabled");
 
     return configGroup;
 }
