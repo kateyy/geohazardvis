@@ -12,13 +12,13 @@ class DataObject;
 class RenderedData;
 
 
-class GUI_API RenderViewSwitch : public QObject
+class GUI_API RenderViewStrategySwitch : public QObject
 {
     Q_OBJECT
 
 public:
-    RenderViewSwitch(RendererImplementation3D & renderView);
-    ~RenderViewSwitch() override;
+    RenderViewStrategySwitch(RendererImplementation3D & renderView);
+    ~RenderViewStrategySwitch() override;
 
     const QMap<QString, bool> & applicableStrategies() const;
 

@@ -1,4 +1,4 @@
-#include "RenderViewSwitch.h"
+#include "RenderViewStrategySwitch.h"
 
 #include <cassert>
 
@@ -11,13 +11,13 @@
 #include <gui/data_view/RenderViewStrategy.h>
 
 
-RenderViewSwitch::RenderViewSwitch(
+RenderViewStrategySwitch::RenderViewStrategySwitch(
     RendererImplementation3D & renderViewImpl)
     : m_view(renderViewImpl)
 {
     RenderView & renderView = renderViewImpl.renderView();
-    connect(&renderView, &RenderView::contentChanged, this, &RenderViewSwitch::updateStrategies);
-    connect(&renderViewImpl, &RendererImplementation3D::resetStrategy, this, &RenderViewSwitch::findSuitableStrategy);
+    connect(&renderView, &RenderView::contentChanged, this, &RenderViewStrategySwitch::updateStrategies);
+    connect(&renderViewImpl, &RendererImplementation3D::resetStrategy, this, &RenderViewStrategySwitch::findSuitableStrategy);
 
     for (const RenderViewStrategy::StategyConstructor & constructor : RenderViewStrategy::constructors())
     {
@@ -30,18 +30,18 @@ RenderViewSwitch::RenderViewSwitch(
     }
 }
 
-RenderViewSwitch::~RenderViewSwitch()
+RenderViewStrategySwitch::~RenderViewStrategySwitch()
 {
     m_view.setStrategy(nullptr);
     qDeleteAll(m_strategies.values());
 }
 
-const QMap<QString, bool> & RenderViewSwitch::applicableStrategies() const
+const QMap<QString, bool> & RenderViewStrategySwitch::applicableStrategies() const
 {
     return m_strategyStates;
 }
 
-void RenderViewSwitch::setStrategy(const QString & name)
+void RenderViewStrategySwitch::setStrategy(const QString & name)
 {
     RenderViewStrategy * strategy = m_strategies.value(name, nullptr);
     if (!strategy)
@@ -53,7 +53,7 @@ void RenderViewSwitch::setStrategy(const QString & name)
     m_view.setStrategy(strategy);
 }
 
-void RenderViewSwitch::updateStrategies()
+void RenderViewStrategySwitch::updateStrategies()
 {
     const QList<RenderedData *> & renderedData = m_view.renderedData();
 
@@ -67,7 +67,7 @@ void RenderViewSwitch::updateStrategies()
     emit strategiesChanged(m_strategyStates);
 }
 
-void RenderViewSwitch::findSuitableStrategy(const QList<DataObject *> & dataObjects)
+void RenderViewStrategySwitch::findSuitableStrategy(const QList<DataObject *> & dataObjects)
 {
     int mostCompatible = 0;
     RenderViewStrategy * mostSuitable = nullptr;

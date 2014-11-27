@@ -10,7 +10,7 @@
 #include <gui/MainWindow.h>
 #include <gui/data_view/TableView.h>
 #include <gui/data_view/RenderView.h>
-#include <gui/data_view/RenderViewSwitch.h>
+#include <gui/data_view/RenderViewStrategySwitch.h>
 #include <gui/data_view/RendererImplementation3D.h>
 
 
@@ -116,7 +116,7 @@ RenderView * DataMapping::openInRenderView(QList<DataObject *> dataObjects)
     // TODO implement impl switch, hide strategy switch
     RendererImplementation3D * impl3D = dynamic_cast<RendererImplementation3D *>(&renderView->implementation());
     assert(impl3D);
-    RenderViewSwitch * sw = new RenderViewSwitch(*impl3D);
+    RenderViewStrategySwitch * sw = new RenderViewStrategySwitch(*impl3D);
     m_renderViewSwitches.insert(renderView, sw);
 
     connect(renderView, &RenderView::focused, this, &DataMapping::setFocusedView);
@@ -199,7 +199,7 @@ void DataMapping::renderViewClosed()
     RenderView * renderView = dynamic_cast<RenderView*>(sender());
     assert(renderView);
 
-    RenderViewSwitch * sw = m_renderViewSwitches.value(renderView);
+    RenderViewStrategySwitch * sw = m_renderViewSwitches.value(renderView);
     m_renderViewSwitches.remove(renderView);
     m_renderViews.remove(renderView->index());
 
