@@ -5,6 +5,8 @@ message( STATUS ${TARGET} )
 set ( SOURCES
     ${CMAKE_CURRENT_BINARY_DIR}/${TARGET}_api.h
 
+    AbstractVisualizedData.h
+    AbstractVisualizedData.cpp
     DataSetHandler.h
     DataSetHandler.cpp
     Loader.h

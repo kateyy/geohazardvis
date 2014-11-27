@@ -10,10 +10,10 @@ class vtkRenderWindow;
 class vtkRenderWindowInteractor;
 class QVTKWidget;
 
+class AbstractVisualizedData;
 enum class ContentType;
 class RenderView;
 class DataObject;
-class RenderedData;
 
 
 class RendererImplementation : public QObject
@@ -39,9 +39,9 @@ public:
 
     /** add newly created rendered data
         actual data visibility depends on the object's configuration */
-    virtual void addRenderedData(RenderedData * renderedData) = 0;
+    virtual void addContent(AbstractVisualizedData * content) = 0;
     /** remove all references to the object and its contents */
-    virtual void removeRenderedData(RenderedData * renderedData) = 0;
+    virtual void removeContent(AbstractVisualizedData * content) = 0;
 
     /** mark dataObject (and, if set, it's point/cell) as current selection */
     virtual void highlightData(DataObject * dataObject, vtkIdType itemId = -1) = 0;
@@ -54,8 +54,12 @@ public:
 
     virtual void setAxesVisibility(bool visible) = 0;
 
+protected:
+    friend class RenderView;
+    virtual AbstractVisualizedData * requestVisualization(DataObject * dataObject) const = 0;
+
 signals:
-    void dataSelectionChanged(RenderedData * selectedData);
+    void dataSelectionChanged(AbstractVisualizedData * selectedData);
 
 protected:
     RenderView & m_renderView;

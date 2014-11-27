@@ -12,9 +12,8 @@ class vtkRenderWindow;
 
 enum class ContentType;
 class DataObject;
-class RenderedData;
+class AbstractVisualizedData;
 
-class ScalarToColorMapping;
 class Ui_RenderView;
 class RendererImplementation;
 
@@ -44,13 +43,11 @@ public:
     /** remove rendered representations and all references to the data objects */
     void removeDataObjects(const QList<DataObject *> & dataObjects);
     QList<DataObject *> dataObjects() const;
-    const QList<RenderedData *> & renderedData() const;
+    const QList<AbstractVisualizedData *> & contents() const;
 
     DataObject * highlightedData() const;
-    RenderedData * highlightedRenderedData() const;
+    AbstractVisualizedData * highlightedContent() const;
     void lookAtData(DataObject * dataObject, vtkIdType itemId);
-
-    ScalarToColorMapping * scalarMapping();
 
     vtkRenderWindow * renderWindow();
     const vtkRenderWindow * renderWindow() const;
@@ -66,14 +63,14 @@ public:
 
 signals:
     /** emitted after changing the list of visible objects */
-    void renderedDataChanged();
+    void contentChanged();
     /** emitted when loading data into an empty view
         @param dataObjects List of objects that are requested for visualization. */
     void resetImplementation(const QList<DataObject *> & dataObjects);
 
     void selectedDataChanged(RenderView * renderView, DataObject * dataObject);
 
-    void beforeDeleteRenderedData(RenderedData * renderedData);
+    void beforeDeleteContent(AbstractVisualizedData * content);
 
 public slots:
     void render();
@@ -90,18 +87,18 @@ private:
 
     // data handling
 
-    RenderedData * addDataObject(DataObject * dataObject);
+    AbstractVisualizedData * addDataObject(DataObject * dataObject);
     void removeDataObject(DataObject * dataObject);
 
     // remove some data objects from internal lists
     // @return list of dangling rendered data object that you have to delete.
-    QList<RenderedData *> removeFromInternalLists(QList<DataObject *> dataObjects = {});
+    QList<AbstractVisualizedData *> removeFromInternalLists(QList<DataObject *> dataObjects = {});
 
 
 private slots:
     /** update configuration widgets to focus on my content. */
     void updateGuiForContent();
-    void updateGuiForSelectedData(RenderedData * renderedData);
+    void updateGuiForSelectedData(AbstractVisualizedData * content);
     void updateGuiForRemovedData();
 
 private:
@@ -109,12 +106,11 @@ private:
     RendererImplementation * m_implementation;
 
     // rendered representations of data objects for this view
-    QList<RenderedData *> m_renderedData;
+    QList<AbstractVisualizedData *> m_contents;
     // objects that were loaded to the GPU but are currently not rendered 
-    QList<RenderedData *> m_renderedDataCache;
-    QMap<DataObject *, RenderedData *> m_dataObjectToRendered;
+    QList<AbstractVisualizedData *> m_contentCache;
+    QMap<DataObject *, AbstractVisualizedData *> m_dataObjectToVisualization;
 
     // visualization and annotation
-    ScalarToColorMapping * m_scalarMapping;
     bool m_axesEnabled;
 };

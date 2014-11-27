@@ -55,14 +55,14 @@ VectorMappingChooser::~VectorMappingChooser()
 void VectorMappingChooser::setCurrentRenderView(RenderView * renderView)
 {
     VectorMapping * newMapping = nullptr;
-    if (renderView && renderView->highlightedRenderedData())
-        if (RenderedData3D * new3D = dynamic_cast<RenderedData3D *>(renderView->highlightedRenderedData()))
+    if (renderView && renderView->highlightedContent())
+        if (RenderedData3D * new3D = dynamic_cast<RenderedData3D *>(renderView->highlightedContent()))
             newMapping = new3D->vectorMapping();
 
     if (m_renderView)
     {
         disconnect(this, &VectorMappingChooser::renderSetupChanged, m_renderView, &RenderView::render);
-        disconnect(m_renderView, &RenderView::beforeDeleteRenderedData, this, &VectorMappingChooser::checkRemovedData);
+        disconnect(m_renderView, &RenderView::beforeDeleteContent, this, &VectorMappingChooser::checkRemovedData);
     }
     if (m_mapping)
         disconnect(m_mapping, &VectorMapping::vectorsChanged, this, &VectorMappingChooser::updateVectorsList);
@@ -79,7 +79,7 @@ void VectorMappingChooser::setCurrentRenderView(RenderView * renderView)
     if (m_renderView)
     {
         connect(this, &VectorMappingChooser::renderSetupChanged, m_renderView, &RenderView::render);
-        connect(m_renderView, &RenderView::beforeDeleteRenderedData, this, &VectorMappingChooser::checkRemovedData);
+        connect(m_renderView, &RenderView::beforeDeleteContent, this, &VectorMappingChooser::checkRemovedData);
     }
 }
 
@@ -88,13 +88,12 @@ void VectorMappingChooser::setSelectedData(DataObject * dataObject)
     if (!m_renderView)
         return;
 
-    RenderedData * renderedData = nullptr;
-    for (RenderedData * r : m_renderView->renderedData())
+    RenderedData3D * renderedData = nullptr;
+    for (AbstractVisualizedData * it : m_renderView->contents())
     {
-        if (!dynamic_cast<RenderedData3D *>(r)) // vector mapping is only implemented for 3D data
-            continue;
+        RenderedData3D * r = dynamic_cast<RenderedData3D *>(it); // vector mapping is only implemented for 3D data
 
-        if (r->dataObject() == dataObject)
+        if (r && r->dataObject() == dataObject)
         {
             renderedData = r;
             break;
@@ -144,9 +143,9 @@ void VectorMappingChooser::updateVectorsList()
     }
 }
 
-void VectorMappingChooser::checkRemovedData(RenderedData * renderedData)
+void VectorMappingChooser::checkRemovedData(AbstractVisualizedData * content)
 {
-    if (m_mapping && m_mapping->renderedData() == renderedData)
+    if (m_mapping && m_mapping->renderedData() == content)
         setSelectedData(nullptr);
 }
 

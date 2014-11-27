@@ -16,9 +16,11 @@ class vtkCubeAxesActor;
 class vtkScalarBarActor;
 class vtkScalarBarWidget;
 
-class PickingInteractorStyleSwitch;
 class IPickingInteractorStyle;
+class PickingInteractorStyleSwitch;
 class RenderViewStrategy;
+class RenderedData;
+class ScalarToColorMapping;
 
 
 class RendererImplementation3D : public RendererImplementation
@@ -39,8 +41,8 @@ public:
 
     vtkRenderWindowInteractor * interactor() override;
 
-    void addRenderedData(RenderedData * renderedData) override;
-    void removeRenderedData(RenderedData * renderedData) override;
+    void addContent(AbstractVisualizedData * content) override;
+    void removeContent(AbstractVisualizedData * content) override;
 
     void highlightData(DataObject * dataObject, vtkIdType itemId = -1) override;
     virtual DataObject * highlightedData() override;
@@ -51,6 +53,8 @@ public:
 
     void setAxesVisibility(bool visible) override;
 
+    QList<RenderedData *> renderedData();
+
     IPickingInteractorStyle * interactorStyle();
     const IPickingInteractorStyle * interactorStyle() const;
     PickingInteractorStyleSwitch * interactorStyleSwitch();
@@ -59,6 +63,8 @@ public:
     vtkCamera * camera();
 
     vtkLightKit * lightKit();
+
+    ScalarToColorMapping * scalarMapping();
     vtkScalarBarWidget * colorLegendWidget();
 
     vtkCubeAxesActor * axesActor();
@@ -68,6 +74,9 @@ signals:
 
 public slots:
     void setStrategy(RenderViewStrategy * strategy);
+
+protected:
+    AbstractVisualizedData * requestVisualization(DataObject * dataObject) const override;
 
 private:
     void initialize();
@@ -110,6 +119,7 @@ private:
     vtkBoundingBox m_dataBounds;
 
     vtkSmartPointer<vtkCubeAxesActor> m_axesActor;
+    ScalarToColorMapping * m_scalarMapping;
     vtkScalarBarActor * m_colorMappingLegend;
     vtkSmartPointer<vtkScalarBarWidget> m_scalarBarWidget;
 };

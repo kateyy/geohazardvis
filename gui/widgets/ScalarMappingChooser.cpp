@@ -52,8 +52,11 @@ ScalarMappingChooser::~ScalarMappingChooser()
 
 void ScalarMappingChooser::setCurrentRenderView(RenderView * renderView)
 {
-    m_renderView = renderView;
-    m_mapping = renderView ? renderView->scalarMapping() : nullptr;
+    m_renderViewImpl = renderView
+        ? dynamic_cast<RendererImplementation3D *>(&renderView->implementation())
+        : nullptr;
+    m_renderView = m_renderViewImpl ? renderView : nullptr;
+    m_mapping = m_renderView ? m_renderViewImpl->scalarMapping() : nullptr;
 
     // setup gradient for newly created mappings
     if (m_mapping && !m_mapping->originalGradient())
@@ -146,12 +149,7 @@ void ScalarMappingChooser::on_legendPositionComboBox_currentIndexChanged(QString
     if (!m_mapping || !m_renderView)
         return;
 
-    RendererImplementation3D * rendererImpl3D = dynamic_cast<RendererImplementation3D *>(&m_renderView->implementation());
-
-    if (!rendererImpl3D)
-        return;
-
-    vtkScalarBarRepresentation * representation = rendererImpl3D->colorLegendWidget()->GetScalarBarRepresentation();
+    vtkScalarBarRepresentation * representation = m_renderViewImpl->colorLegendWidget()->GetScalarBarRepresentation();
 
     m_movingColorLegend = true;
 
@@ -281,7 +279,7 @@ void ScalarMappingChooser::rebuildGui()
         m_ui->colorLegendGroupBox->setEnabled(newMapping->currentScalarsUseMappingLegend());
         m_ui->colorLegendGroupBox->setChecked(newMapping->colorMappingLegendVisible());
 
-        m_qtConnect << connect(m_renderView, &RenderView::renderedDataChanged, this, &ScalarMappingChooser::rebuildGui);
+        m_qtConnect << connect(m_renderView, &RenderView::contentChanged, this, &ScalarMappingChooser::rebuildGui);
         m_qtConnect << connect(newMapping, &ScalarToColorMapping::scalarsChanged, this, &ScalarMappingChooser::rebuildGui);
         m_qtConnect << connect(m_ui->colorLegendGroupBox, &QGroupBox::toggled, 
             [this, newMapping] (bool checked) {

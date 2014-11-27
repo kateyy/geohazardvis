@@ -16,7 +16,7 @@ RenderViewSwitch::RenderViewSwitch(
     : m_view(renderViewImpl)
 {
     RenderView & renderView = renderViewImpl.renderView();
-    connect(&renderView, &RenderView::renderedDataChanged, this, &RenderViewSwitch::updateStrategies);
+    connect(&renderView, &RenderView::contentChanged, this, &RenderViewSwitch::updateStrategies);
     connect(&renderViewImpl, &RendererImplementation3D::resetStrategy, this, &RenderViewSwitch::findSuitableStrategy);
 
     for (const RenderViewStrategy::StategyConstructor & constructor : RenderViewStrategy::constructors())
@@ -55,7 +55,7 @@ void RenderViewSwitch::setStrategy(const QString & name)
 
 void RenderViewSwitch::updateStrategies()
 {
-    const QList<RenderedData *> & renderedData = m_view.renderView().renderedData();
+    const QList<RenderedData *> & renderedData = m_view.renderedData();
 
     for (auto it = m_strategies.begin(); it != m_strategies.end(); ++it)
     {

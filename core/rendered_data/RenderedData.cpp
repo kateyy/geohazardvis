@@ -6,17 +6,12 @@
 #include <vtkPropCollection.h>
 #include <vtkInformationIntegerPointerKey.h>
 
-#include <core/data_objects/DataObject.h>
-
 
 RenderedData::RenderedData(DataObject * dataObject)
-    : QObject()
-    , m_dataObject(dataObject)
+    : AbstractVisualizedData(dataObject)
     , m_scalars(nullptr)
     , m_viewPropsInvalid(true)
-    , m_isVisible(true)
 {
-    connect(dataObject, &DataObject::dataChanged, this, &RenderedData::geometryChanged);
 }
 
 vtkSmartPointer<vtkPropCollection> RenderedData::viewProps()
@@ -33,20 +28,6 @@ vtkSmartPointer<vtkPropCollection> RenderedData::viewProps()
     return m_viewProps;
 }
 
-bool RenderedData::isVisible() const
-{
-    return m_isVisible;
-}
-
-void RenderedData::setVisible(bool visible)
-{
-    m_isVisible = visible;
-
-    visibilityChangedEvent(visible);
-
-    emit visibilityChanged(visible);
-}
-
 void RenderedData::invalidateViewProps()
 {
     m_viewPropsInvalid = true;
@@ -60,20 +41,6 @@ void RenderedData::scalarsForColorMappingChangedEvent()
 
 void RenderedData::colorMappingGradientChangedEvent()
 {
-}
-
-void RenderedData::visibilityChangedEvent(bool /*visible*/)
-{
-}
-
-DataObject * RenderedData::dataObject()
-{
-    return m_dataObject;
-}
-
-const DataObject * RenderedData::dataObject() const
-{
-    return m_dataObject;
 }
 
 void RenderedData::setScalarsForColorMapping(ScalarsForColorMapping * scalars)

@@ -13,7 +13,7 @@ namespace propertyguizeug
 }
 class Ui_RenderConfigWidget;
 class DataObject;
-class RenderedData;
+class AbstractVisualizedData;
 class RenderView;
 
 
@@ -33,7 +33,7 @@ public slots:
 
 private slots:
     /** remove data from the UI if we currently hold it */
-    void checkRemovedData(RenderedData * renderedData);
+    void checkDeletedContent(AbstractVisualizedData * content);
 
 protected:
     void updateTitle();
@@ -45,5 +45,5 @@ protected:
     reflectionzeug::PropertyGroup * m_propertyRoot;
 
     RenderView * m_renderView;
-    RenderedData * m_renderedData;
+    AbstractVisualizedData * m_content;
 };
