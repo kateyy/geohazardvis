@@ -53,13 +53,7 @@ void ScalarToColorMapping::setRenderedData(const QList<RenderedData *> & rendere
         // pass our (persistent) gradient object
         renderedData->setColorMappingGradient(m_gradient);
 
-        // reread available scalars...
-        connect(dataObject, &DataObject::attributeArraysChanged,
-            [this] () {
-            setRenderedData(m_renderedData);
-
-            emit scalarsChanged();
-        });
+        connect(dataObject, &DataObject::attributeArraysChanged, this, &ScalarToColorMapping::updateAvailableScalars);
     }
 
     m_scalars = ScalarsForColorMappingRegistry::instance().createMappingsValidFor(dataObjects);
