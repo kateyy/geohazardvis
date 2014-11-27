@@ -1,0 +1,12 @@
+$begin
+$ model vectorGrid3D DispVec3D 5slices
+$ vectorGrid3D 8
+$end
+0 0 0 0 0 0
+0 1 0 0 1 0
+1 0 0 1 0 0
+1 1 0 1 1 0
+0 0 1 0 0 1
+0 1 1 0 1 1
+1 0 1 1 0 1
+1 1 1 1 1 1

@@ -62,7 +62,7 @@ void VectorMappingChooser::setCurrentRenderView(RenderView * renderView)
     if (m_renderView)
     {
         disconnect(this, &VectorMappingChooser::renderSetupChanged, m_renderView, &RenderView::render);
-        disconnect(renderView, &RenderView::beforeDeleteRenderedData, this, &VectorMappingChooser::checkRemovedData);
+        disconnect(m_renderView, &RenderView::beforeDeleteRenderedData, this, &VectorMappingChooser::checkRemovedData);
     }
     if (m_mapping)
         disconnect(m_mapping, &VectorMapping::vectorsChanged, this, &VectorMappingChooser::updateVectorsList);
@@ -79,7 +79,7 @@ void VectorMappingChooser::setCurrentRenderView(RenderView * renderView)
     if (m_renderView)
     {
         connect(this, &VectorMappingChooser::renderSetupChanged, m_renderView, &RenderView::render);
-        connect(renderView, &RenderView::beforeDeleteRenderedData, this, &VectorMappingChooser::checkRemovedData);
+        connect(m_renderView, &RenderView::beforeDeleteRenderedData, this, &VectorMappingChooser::checkRemovedData);
     }
 }
 
