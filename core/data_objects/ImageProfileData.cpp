@@ -18,7 +18,7 @@
 
 #include <core/vtkhelper.h>
 #include <core/data_objects/ImageDataObject.h>
-#include <core/rendered_data/ImageProfilePlot.h>
+#include <core/context2D_data/ImageProfileContextPlot.h>
 
 #include <core/table_model/QVtkTableModelProfileData.h>
 
@@ -57,9 +57,9 @@ bool ImageProfileData::is3D() const
     return false;
 }
 
-RenderedData * ImageProfileData::createRendered()
+Context2DData * ImageProfileData::createContextData()
 {
-    return new ImageProfilePlot(this);
+    return new ImageProfileContextPlot(this);
 }
 
 QString ImageProfileData::dataTypeName() const

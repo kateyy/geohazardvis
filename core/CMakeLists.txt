@@ -49,6 +49,13 @@ set ( SOURCES
     rendered_data/RenderedVectorGrid3D.h
     rendered_data/RenderedVectorGrid3D.cpp
 
+    context2D_data/Context2DData.h
+    context2D_data/Context2DData.cpp
+    context2D_data/ImageProfileContextPlot.h
+    context2D_data/ImageProfileContextPlot.cpp
+    context2D_data/vtkContextItemCollection.h
+    context2D_data/vtkContextItemCollection.cpp
+
     filters/CentroidAsScalarsFilter.h
     filters/CentroidAsScalarsFilter.cpp
 

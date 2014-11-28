@@ -14,6 +14,7 @@ class vtkAlgorithmOutput;
 class vtkEventQtSlotConnect;
 class QVtkTableModel;
 class RenderedData;
+class Context2DData;
 
 class DataObjectPrivate;
 
@@ -30,8 +31,12 @@ public:
     /** @return true if this is a 3D geometry (and false if it's image/2D data) */
     virtual bool is3D() const = 0;
 
-    /** create a rendered instance */
-    virtual RenderedData * createRendered() = 0;
+    /** create a visualization instance; Subclasses may implement one or both
+        -> createRendered: flexible/generic rendering 
+        -> createContextData: for specialized views (e.g., plots)
+    */
+    virtual RenderedData * createRendered();
+    virtual Context2DData * createContextData();
 
     QString name() const;
     virtual QString dataTypeName() const = 0;

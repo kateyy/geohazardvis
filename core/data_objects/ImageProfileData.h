@@ -17,7 +17,7 @@ public:
     ImageProfileData(const QString & name, ImageDataObject * imageData);
 
     bool is3D() const override;
-    RenderedData * createRendered() override;
+    Context2DData * createContextData() override;
 
     QString dataTypeName() const override;
 
