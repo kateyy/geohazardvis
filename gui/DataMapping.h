@@ -10,6 +10,7 @@ class DataObject;
 class AbstractDataView;
 class TableView;
 class RenderView;
+class RendererImplementationSwitch;
 class RenderViewStrategySwitch;
 
 
@@ -53,7 +54,7 @@ private:
     int m_nextRenderViewIndex;
     QMap<int, TableView *> m_tableViews;
     QMap<int, RenderView *> m_renderViews;
-    QMap<RenderView *, RenderViewStrategySwitch *> m_renderViewSwitches;
+    QMap<RenderView *, RendererImplementationSwitch *> m_rendererImplSwitches;
 
     RenderView * m_focusedRenderView;
 };

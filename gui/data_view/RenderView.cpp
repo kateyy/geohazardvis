@@ -12,7 +12,6 @@
 #include <core/data_objects/DataObject.h>
 #include <core/AbstractVisualizedData.h>
 #include <gui/data_view/RendererImplementationNull.h>
-#include <gui/data_view/RendererImplementation3D.h>
 
 #include <gui/SelectionHandler.h>
 
@@ -98,15 +97,23 @@ void RenderView::highlightedIdChangedEvent(DataObject * dataObject, vtkIdType it
 
 void RenderView::setupRenderer()
 {
-    m_implementation = new RendererImplementation3D(*this);
-    m_implementation->apply(m_ui->qvtkMain);
-
     connect(m_implementation, &RendererImplementation::dataSelectionChanged, this, &RenderView::updateGuiForSelectedData);
 }
 
 void RenderView::ShowInfo(const QStringList & info)
 {
     setToolTip(info.join('\n'));
+}
+
+void RenderView::setImplementation(RendererImplementation * impl)
+{
+    if (m_implementation)
+        m_implementation->deactivate(m_ui->qvtkMain);
+
+    m_implementation = impl;
+
+    if (m_implementation)
+        m_implementation->activate(m_ui->qvtkMain);
 }
 
 AbstractVisualizedData * RenderView::addDataObject(DataObject * dataObject)
@@ -314,12 +321,10 @@ void RenderView::lookAtData(DataObject * dataObject, vtkIdType itemId)
 
 RendererImplementation & RenderView::implementation() const
 {
-    //static RendererImplementationNull nullImpl;
+    static RendererImplementationNull nullImpl(const_cast<RenderView&>(*this));
 
-    /*if (!m_implementation)
-        return nullImpl;*/
-
-    assert(m_implementation);
+    if (!m_implementation)
+        return nullImpl;
 
     return *m_implementation;
 }

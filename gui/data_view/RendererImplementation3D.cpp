@@ -25,15 +25,20 @@
 #include <core/scalar_mapping/ScalarToColorMapping.h>
 #include <gui/data_view/RenderView.h>
 #include <gui/data_view/RenderViewStrategy.h>
+#include <gui/data_view/RenderViewStrategySwitch.h>
 #include <gui/rendering_interaction/PickingInteractorStyleSwitch.h>
 #include <gui/rendering_interaction/InteractorStyle3D.h>
 #include <gui/rendering_interaction/InteractorStyleImage.h>
 #include <gui/data_view/RenderViewStrategyNull.h>
 
 
+bool RendererImplementation3D::s_isRegistered = RendererImplementation::registerImplementation<RendererImplementation3D>();
+
+
 RendererImplementation3D::RendererImplementation3D(RenderView & renderView, QObject * parent)
     : RendererImplementation(renderView, parent)
     , m_isInitialized(false)
+    , m_strategySwitch(new RenderViewStrategySwitch(*this))
     , m_strategy(nullptr)
     , m_emptyStrategy(new RenderViewStrategyNull(*this))
     , m_scalarMapping(new ScalarToColorMapping())
@@ -43,15 +48,18 @@ RendererImplementation3D::RendererImplementation3D(RenderView & renderView, QObj
 
     connect(&m_renderView, &RenderView::contentChanged,
         [this] () { m_scalarMapping->setRenderedData(renderedData()); });
-
-    // TODO hack: replace by impl switch
-    connect(&renderView, &RenderView::resetImplementation, this, &RendererImplementation3D::resetStrategy);
 }
 
 RendererImplementation3D::~RendererImplementation3D()
 {
+    delete m_strategySwitch;
     delete m_scalarMapping;
     delete m_emptyStrategy;
+}
+
+QString RendererImplementation3D::name() const
+{
+    return "Renderer 3D";
 }
 
 ContentType RendererImplementation3D::contentType() const
@@ -62,14 +70,31 @@ ContentType RendererImplementation3D::contentType() const
         return ContentType::Rendered2D;
 }
 
+bool RendererImplementation3D::canApplyTo(const QList<DataObject *> & data)
+{
+    for (DataObject * obj : data)
+    {
+        if (RenderedData * rendered = obj->createRendered())
+        {
+            delete rendered;
+            return true;
+        }
+    }
+
+    return false;
+}
+
 QList<DataObject *> RendererImplementation3D::filterCompatibleObjects(
     const QList<DataObject *> & dataObjects,
-    QList<DataObject *> & incompatibleObjects) const
+    QList<DataObject *> & incompatibleObjects)
 {
+    if (!m_strategy)
+        emit resetStrategy(dataObjects);
+
     return strategy().filterCompatibleObjects(dataObjects, incompatibleObjects);
 }
 
-void RendererImplementation3D::apply(QVTKWidget * qvtkWidget)
+void RendererImplementation3D::activate(QVTKWidget * qvtkWidget)
 {
     initialize();
 

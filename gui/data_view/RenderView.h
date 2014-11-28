@@ -77,6 +77,8 @@ public slots:
 
     void ShowInfo(const QStringList &info);
 
+    void setImplementation(RendererImplementation * impl);
+
 protected:
     QWidget * contentWidget() override;
     void highlightedIdChangedEvent(DataObject * dataObject, vtkIdType itemId) override;

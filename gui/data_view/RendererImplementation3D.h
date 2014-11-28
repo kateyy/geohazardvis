@@ -19,6 +19,7 @@ class vtkScalarBarWidget;
 class IPickingInteractorStyle;
 class PickingInteractorStyleSwitch;
 class RenderViewStrategy;
+class RenderViewStrategySwitch;
 class RenderedData;
 class ScalarToColorMapping;
 
@@ -31,11 +32,14 @@ public:
     RendererImplementation3D(RenderView & renderView, QObject * parent = nullptr);
     ~RendererImplementation3D() override;
 
+    QString name() const override;
+
     ContentType contentType() const override;
 
-    QList<DataObject *> filterCompatibleObjects(const QList<DataObject *> & dataObjects, QList<DataObject *> & incompatibleObjects) const override;
+    bool canApplyTo(const QList<DataObject *> & data) override;
+    QList<DataObject *> filterCompatibleObjects(const QList<DataObject *> & dataObjects, QList<DataObject *> & incompatibleObjects) override;
 
-    void apply(QVTKWidget * qvtkWidget) override;
+    void activate(QVTKWidget * qvtkWidget) override;
 
     void render() override;
 
@@ -100,6 +104,7 @@ private slots:
 
 private:
     bool m_isInitialized;
+    RenderViewStrategySwitch * m_strategySwitch;
     RenderViewStrategy * m_strategy;
     RenderViewStrategy * m_emptyStrategy;
 
@@ -122,4 +127,6 @@ private:
     ScalarToColorMapping * m_scalarMapping;
     vtkScalarBarActor * m_colorMappingLegend;
     vtkSmartPointer<vtkScalarBarWidget> m_scalarBarWidget;
+
+    static bool s_isRegistered;
 };
