@@ -26,8 +26,6 @@ RenderView::RenderView(
 {
     m_ui->setupUi(this);
 
-    setupRenderer();
-
     updateTitle();
 
     SelectionHandler::instance().addRenderView(this);
@@ -95,11 +93,6 @@ void RenderView::highlightedIdChangedEvent(DataObject * dataObject, vtkIdType it
     implementation().highlightData(dataObject, itemId);
 }
 
-void RenderView::setupRenderer()
-{
-    connect(m_implementation, &RendererImplementation::dataSelectionChanged, this, &RenderView::updateGuiForSelectedData);
-}
-
 void RenderView::ShowInfo(const QStringList & info)
 {
     setToolTip(info.join('\n'));
@@ -147,7 +140,11 @@ void RenderView::addDataObjects(const QList<DataObject *> & uncheckedDataObjects
     bool wasEmpty = m_contents.isEmpty();
 
     if (wasEmpty)
+    {
         emit resetImplementation(uncheckedDataObjects);
+        if (m_implementation)
+            connect(m_implementation, &RendererImplementation::dataSelectionChanged, this, &RenderView::updateGuiForSelectedData);
+    }
 
     AbstractVisualizedData * aNewObject = nullptr;
 

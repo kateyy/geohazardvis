@@ -84,9 +84,6 @@ protected:
     void highlightedIdChangedEvent(DataObject * dataObject, vtkIdType itemId) override;
 
 private:
-    // GUI / rendering tools
-    void setupRenderer();
-
     // data handling
 
     AbstractVisualizedData * addDataObject(DataObject * dataObject);

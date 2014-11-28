@@ -204,14 +204,14 @@ void RendererImplementation3D::setAxesVisibility(bool visible)
 
 QList<RenderedData *> RendererImplementation3D::renderedData()
 {
-    QList<RenderedData *> rendered;
+    QList<RenderedData *> renderedList;
     for (AbstractVisualizedData * vis : m_renderView.contents())
     {
-        assert(dynamic_cast<RenderedData *>(vis));
-        rendered << static_cast<RenderedData *>(vis);
+        if (RenderedData * rendered =  dynamic_cast<RenderedData *>(vis))
+            renderedList << rendered;
     }
 
-    return rendered;
+    return renderedList;
 }
 
 IPickingInteractorStyle * RendererImplementation3D::interactorStyle()
