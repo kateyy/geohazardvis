@@ -18,6 +18,7 @@
 #include <vtkProperty.h>
 #include <vtkActor.h>
 #include <vtkActorCollection.h>
+#include <vtkScalarsToColors.h>
 
 #include <reflectionzeug/PropertyGroup.h>
 

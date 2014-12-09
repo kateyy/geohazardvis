@@ -11,6 +11,7 @@
 #include <vtkPolyData.h>
 #include <vtkPolyDataMapper.h>
 #include <vtkPolyDataNormals.h>
+#include <vtkScalarsToColors.h>
 
 #include <vtkProperty.h>
 #include <vtkActor.h>
