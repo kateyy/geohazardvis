@@ -17,8 +17,8 @@
 
 #include <vtkProperty.h>
 #include <vtkActor.h>
-#include <vtkActorCollection.h>
 #include <vtkScalarsToColors.h>
+#include <vtkProp3DCollection.h>
 
 #include <reflectionzeug/PropertyGroup.h>
 
@@ -181,16 +181,16 @@ vtkAlgorithmOutput * RenderedVectorGrid3D::resampledOuputPort()
     return m_extractVOI->GetOutputPort();
 }
 
-vtkSmartPointer<vtkActorCollection> RenderedVectorGrid3D::fetchActors()
+vtkSmartPointer<vtkProp3DCollection> RenderedVectorGrid3D::fetchViewProps3D()
 {
-    vtkSmartPointer<vtkActorCollection> actors = RenderedData3D::fetchActors();
+    auto props = RenderedData3D::fetchViewProps3D();
 
     for (auto actor : m_sliceActors)
-        actors->AddItem(actor);
+        props->AddItem(actor);
     for (auto actor : m_sliceOutlineActors)
-        actors->AddItem(actor);
+        props->AddItem(actor);
 
-    return actors;
+    return props;
 }
 
 void RenderedVectorGrid3D::scalarsForColorMappingChangedEvent()

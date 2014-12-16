@@ -16,7 +16,7 @@ public:
 protected:
     vtkProperty * createDefaultRenderProperty() const override;
 
-    vtkSmartPointer<vtkActorCollection> fetchActors() override;
+    vtkSmartPointer<vtkProp3DCollection> fetchViewProps3D() override;
 
     vtkActor * plotActor();
 

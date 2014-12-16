@@ -15,7 +15,7 @@
 
 #include <vtkProperty.h>
 #include <vtkActor.h>
-#include <vtkActorCollection.h>
+#include <vtkProp3DCollection.h>
 
 #include <reflectionzeug/PropertyGroup.h>
 
@@ -212,9 +212,9 @@ vtkProperty * RenderedPolyData::createDefaultRenderProperty() const
     return prop;
 }
 
-vtkSmartPointer<vtkActorCollection> RenderedPolyData::fetchActors()
+vtkSmartPointer<vtkProp3DCollection> RenderedPolyData::fetchViewProps3D()
 {
-    vtkSmartPointer<vtkActorCollection> actors = RenderedData3D::fetchActors();
+    auto actors = RenderedData3D::fetchViewProps3D();
     actors->AddItem(m_mainActor);
 
     return actors;

@@ -37,7 +37,7 @@ signals:
     void sampleRateChanged(int x, int y, int z);
 
 protected:
-    vtkSmartPointer<vtkActorCollection> fetchActors() override;
+    vtkSmartPointer<vtkProp3DCollection> fetchViewProps3D() override;
 
     void scalarsForColorMappingChangedEvent() override;
     void colorMappingGradientChangedEvent() override;

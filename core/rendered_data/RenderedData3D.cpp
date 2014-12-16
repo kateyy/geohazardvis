@@ -2,9 +2,10 @@
 
 #include <cassert>
 
-#include <vtkActorCollection.h>
+#include <vtkProp3DCollection.h>
 
 #include <vtkProperty.h>
+#include <vtkActor.h>
 
 #include <core/vtkhelper.h>
 #include <core/vector_mapping/VectorMapping.h>
@@ -22,10 +23,10 @@ RenderedData3D::~RenderedData3D()
     delete m_vectors;
 }
 
-vtkSmartPointer<vtkActorCollection> RenderedData3D::actors()
+vtkSmartPointer<vtkProp3DCollection> RenderedData3D::viewProps3D()
 {
-    assert(vtkActorCollection::SafeDownCast(viewProps().Get()));
-    return static_cast<vtkActorCollection *>(viewProps().Get());
+    assert(vtkProp3DCollection::SafeDownCast(viewProps().Get()));
+    return static_cast<vtkProp3DCollection *>(viewProps().Get());
 }
 
 VectorMapping * RenderedData3D::vectorMapping()
@@ -53,17 +54,17 @@ vtkProperty * RenderedData3D::createDefaultRenderProperty() const
 
 vtkSmartPointer<vtkPropCollection> RenderedData3D::fetchViewProps()
 {
-    return fetchActors();
+    return fetchViewProps3D();
 }
 
-vtkSmartPointer<vtkActorCollection> RenderedData3D::fetchActors()
+vtkSmartPointer<vtkProp3DCollection> RenderedData3D::fetchViewProps3D()
 {
-    VTK_CREATE(vtkActorCollection, actors);
+    VTK_CREATE(vtkProp3DCollection, props);
 
     for (auto * v : vectorMapping()->vectors())
-        actors->AddItem(v->actor());
+        props->AddItem(v->actor());
 
-    return actors;
+    return props;
 }
 
 void RenderedData3D::visibilityChangedEvent(bool visible)

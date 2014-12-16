@@ -2,7 +2,7 @@
 
 #include <vtkProperty.h>
 #include <vtkActor.h>
-#include <vtkActorCollection.h>
+#include <vtkProp3DCollection.h>
 #include <vtkPolyDataMapper.h>
 
 #include <reflectionzeug/PropertyGroup.h>
@@ -71,12 +71,12 @@ vtkProperty * ImageProfilePlot::createDefaultRenderProperty() const
     return property;
 }
 
-vtkSmartPointer<vtkActorCollection> ImageProfilePlot::fetchActors()
+vtkSmartPointer<vtkProp3DCollection> ImageProfilePlot::fetchViewProps3D()
 {
-    vtkSmartPointer<vtkActorCollection> actors = RenderedData3D::fetchActors();
-    actors->AddItem(plotActor());
+    auto props = RenderedData3D::fetchViewProps3D();
+    props->AddItem(plotActor());
 
-    return actors;
+    return props;
 }
 
 vtkActor * ImageProfilePlot::plotActor()

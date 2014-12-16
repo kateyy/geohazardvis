@@ -5,7 +5,7 @@
 #include <core/rendered_data/RenderedData.h>
 
 
-class vtkActorCollection;
+class vtkProp3DCollection;
 class VectorMapping;
 
 
@@ -20,13 +20,13 @@ public:
     RenderedData3D(DataObject * dataObject);
     virtual ~RenderedData3D();
 
-    /** VTK view actors (3D view props) visualizing the data object and possibly additional attributes */
-    vtkSmartPointer<vtkActorCollection> actors();
+    /** VTK 3D view props visualizing the data object and possibly additional attributes */
+    vtkSmartPointer<vtkProp3DCollection> viewProps3D();
 
     VectorMapping * vectorMapping();
 
 protected:
-    virtual vtkSmartPointer<vtkActorCollection> fetchActors();
+    virtual vtkSmartPointer<vtkProp3DCollection> fetchViewProps3D();
 
     vtkProperty * renderProperty();
     virtual vtkProperty * createDefaultRenderProperty() const;
@@ -35,7 +35,7 @@ protected:
     virtual void vectorsForSurfaceMappingChangedEvent();
 
 private:
-    /** subclasses are supposed to provide 3D view props (vtkActor) */
+    /** subclasses are supposed to provide 3D view props (vtkProp3D) */
     vtkSmartPointer<vtkPropCollection> fetchViewProps() override final;
 
 private:
