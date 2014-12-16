@@ -11,7 +11,8 @@
 #include <vtkPolyDataMapper.h>
 #include <vtkActor.h>
 #include <vtkRenderer.h>
-#include <vtkRenderWindow.h>
+#include <vtkOpenGLRenderWindow.h>
+#include <vtkOpenGLExtensionManager.h>
 #include <vtkRenderWindowInteractor.h>
 
 #include <vtkFloatArray.h>
@@ -25,7 +26,22 @@
 
 int main()
 {
-    VectorGrid3DDataObject * grid = dynamic_cast<VectorGrid3DDataObject *>(Loader::readFile("D:/Documents/Studium/GFZ/data/dataSets_meta_2/DispVec_Volumetric_5slices.txt"));
+    VTK_CREATE(vtkRenderer, renderer);
+    renderer->SetBackground(0.9, 0.9, 0.9);
+    renderer->ResetCamera();
+
+    VTK_CREATE(vtkRenderWindow, window);
+    window->AddRenderer(renderer);
+    vtkOpenGLRenderWindow * context = vtkOpenGLRenderWindow::SafeDownCast(window);
+    if (!context)
+        return 2;
+    context->GetExtensionManager()->IgnoreDriverBugsOn();
+
+    VTK_CREATE(vtkRenderWindowInteractor, interactor);
+    interactor->SetRenderWindow(window);
+    interactor->Initialize();
+
+    VectorGrid3DDataObject * grid = dynamic_cast<VectorGrid3DDataObject *>(Loader::readFile("E:/Users/Karsten/Documents/Studium/GFZ/data/dataSets_meta_2/DispVec_Volumetric_5slices.txt"));
     if (!grid)
         return 1;
 
@@ -67,11 +83,11 @@ int main()
     noiseImage->GetPointData()->SetScalars(noiseData);
 
     VTK_CREATE(vtkImageDataLIC2D, lic);
+    lic->SetContext(window);
     lic->SetInputConnection(extractVoi->GetOutputPort());
     lic->SetInputData(1, noiseImage);
     lic->Update();
 
-    auto a = lic->GetOutput();
     VTK_CREATE(vtkImageMapToColors, toColors);
     toColors->SetInputConnection(lic->GetOutputPort());
     toColors->SetOutputFormatToRGB();
@@ -89,17 +105,7 @@ int main()
     VTK_CREATE(vtkImageSlice, slice);
     slice->SetMapper(mapper);
 
-    VTK_CREATE(vtkRenderer, renderer);
     renderer->AddViewProp(slice);
-    renderer->SetBackground(0.9, 0.9, 0.9);
-    renderer->ResetCamera();
-
-    VTK_CREATE(vtkRenderWindow, window);
-    window->AddRenderer(renderer);
-
-    VTK_CREATE(vtkRenderWindowInteractor, interactor);
-    interactor->SetRenderWindow(window);
-    interactor->Initialize();
 
     interactor->Start();
 
