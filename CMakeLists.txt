@@ -107,6 +107,7 @@ install(FILES ${CMAKE_BINARY_DIR}/revision DESTINATION ${INSTALL_ROOT})
 set(VTK_COMPONENTS 
     vtkGUISupportQt         # QVTKWidget
     vtkRenderingAnnotation  # vtkCubeAxesActor, vtkScalarBarActor
+    vtkRenderingLIC
     vtkInteractionWidgets
     vtkViewsContext2D
     vtkChartsCore
@@ -190,3 +191,4 @@ add_subdirectory("gui")
 add_subdirectory("app")
 add_subdirectory("docs")
 add_subdirectory(packages)
+add_subdirectory(lic_testing)
