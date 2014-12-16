@@ -109,6 +109,7 @@ set(VTK_COMPONENTS
     vtkRenderingAnnotation  # vtkCubeAxesActor, vtkScalarBarActor
     vtkRenderingLIC
     vtkInteractionWidgets
+    vtkIOXML
     vtkViewsContext2D
     vtkChartsCore
 )

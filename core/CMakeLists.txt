@@ -7,10 +7,6 @@ set ( SOURCES
 
     DataSetHandler.h
     DataSetHandler.cpp
-    Loader.h
-    Loader.cpp
-    TextFileReader.h
-    TextFileReader.cpp
     types.h
     vtkcamerahelper.h
     vtkcamerahelper.cpp
@@ -18,6 +14,19 @@ set ( SOURCES
     common/ebem3d_common.h
     common/file_parser.h
     common/file_parser.cpp
+
+    canvas_export/CanvasExporter.h
+    canvas_export/CanvasExporter.cpp
+    canvas_export/CanvasExporterRegistry.h
+    canvas_export/CanvasExporterRegistry.cpp
+    canvas_export/CanvasExporterImages.h
+    canvas_export/CanvasExporterImages.cpp
+    canvas_export/CanvasExporterPNG.h
+    canvas_export/CanvasExporterPNG.cpp
+    canvas_export/CanvasExporterPS.h
+    canvas_export/CanvasExporterPS.cpp
+    canvas_export/CanvasExporterTIFF.h
+    canvas_export/CanvasExporterTIFF.cpp
 
     data_objects/DataObject.h
     data_objects/DataObject.cpp
@@ -33,7 +42,17 @@ set ( SOURCES
     data_objects/VectorGrid3DDataObject.cpp
     data_objects/RawVectorData.h
     data_objects/RawVectorData.cpp
-    
+
+    filters/CentroidAsScalarsFilter.h
+    filters/CentroidAsScalarsFilter.cpp
+
+    io/Loader.h
+    io/Loader.cpp
+    io/TextFileReader.h
+    io/TextFileReader.cpp
+    io/MatricesToVtk.h
+    io/MatricesToVtk.cpp
+
     rendered_data/RenderedData.h
     rendered_data/RenderedData.cpp
     rendered_data/RenderedData3D.h
@@ -46,22 +65,6 @@ set ( SOURCES
     rendered_data/RenderedPolyData.cpp
     rendered_data/RenderedVectorGrid3D.h
     rendered_data/RenderedVectorGrid3D.cpp
-
-    filters/CentroidAsScalarsFilter.h
-    filters/CentroidAsScalarsFilter.cpp
-
-    canvas_export/CanvasExporter.h
-    canvas_export/CanvasExporter.cpp
-    canvas_export/CanvasExporterRegistry.h
-    canvas_export/CanvasExporterRegistry.cpp
-    canvas_export/CanvasExporterImages.h
-    canvas_export/CanvasExporterImages.cpp
-    canvas_export/CanvasExporterPNG.h
-    canvas_export/CanvasExporterPNG.cpp
-    canvas_export/CanvasExporterPS.h
-    canvas_export/CanvasExporterPS.cpp
-    canvas_export/CanvasExporterTIFF.h
-    canvas_export/CanvasExporterTIFF.cpp
 
     table_model/QVtkTableModel.h
     table_model/QVtkTableModel.cpp

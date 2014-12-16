@@ -1,61 +1,36 @@
-#include "Loader.h"
+#include "MatricesToVtk.h"
 
-#include <cmath>
-#include <limits>
+#include <cassert>
+#include <map>
 
 #include <QDebug>
-#include <QList>
 #include <QFileInfo>
 
-#include <vtkFloatArray.h>
-#include <vtkPoints.h>
-#include <vtkPointData.h>
-#include <vtkTriangle.h>
+#include <vtkSmartPointer.h>
+
 #include <vtkPolyData.h>
-#include <vtkCellArray.h>
-#include <vtkCellData.h>
 #include <vtkImageData.h>
 
-#include "common/file_parser.h"
-#include "TextFileReader.h"
+#include <vtkCellData.h>
+#include <vtkPointData.h>
+#include <vtkFloatArray.h>
+#include <vtkCellArray.h>
+
+#include <vtkTriangle.h>
+
 #include <core/vtkhelper.h>
-#include <core/data_objects/PolyDataObject.h>
+#include <core/common/file_parser.h>
 #include <core/data_objects/ImageDataObject.h>
-#include <core/data_objects/VectorGrid3DDataObject.h>
+#include <core/data_objects/PolyDataObject.h>
 #include <core/data_objects/RawVectorData.h>
+#include <core/data_objects/VectorGrid3DDataObject.h>
+#include <core/io/TextFileReader.h>
 
 
-DataObject * Loader::readFile(QString filename)
-{
-    std::vector<ReadDataset> readDatasets;
-    std::shared_ptr<InputFileInfo> inputInfo = TextFileReader::read(filename.toStdString(), readDatasets);
-    if (!inputInfo)
-    {
-        qDebug() << "Could not read the input file \"" << filename << "\"";
-        return nullptr;
-    }
-
-    QString dataSetName = QString::fromStdString(inputInfo->name);
-    switch (inputInfo->type)
-    {
-    case ModelType::triangles:
-        return loadIndexedTriangles(dataSetName, readDatasets);
-    case ModelType::grid2D:
-        return loadGrid2D(dataSetName, readDatasets);
-    case ModelType::vectorGrid3D:
-        return loadGrid3D(dataSetName, readDatasets);
-    case ModelType::raw:
-        return readRawFile(filename);
-    default:
-        cerr << "Warning: model type unsupported by the loader: " << int(inputInfo->type) << endl;
-        return nullptr;
-    }
-}
-
-DataObject * Loader::loadIndexedTriangles(QString name, const std::vector<ReadDataset> & datasets)
+DataObject * MatricesToVtk::loadIndexedTriangles(QString name, const std::vector<ReadDataset> & datasets)
 {
     assert(datasets.size() >= 2);
-    
+
     const InputVector * indices = nullptr;
     const InputVector * vertices = nullptr;
     std::map<std::string, const InputVector *> vectorArrays;
@@ -87,14 +62,14 @@ DataObject * Loader::loadIndexedTriangles(QString name, const std::vector<ReadDa
 
         vtkSmartPointer<vtkFloatArray> a;
         a.TakeReference(parseFloatVector(vector, namedVector.first.c_str(), 0, int(vector.size() - 1)));
-        
+
         polyData->GetCellData()->AddArray(a);
     }
 
     return new PolyDataObject(name, polyData);
 }
 
-DataObject * Loader::loadGrid2D(QString name, const std::vector<ReadDataset> & datasets)
+DataObject * MatricesToVtk::loadGrid2D(QString name, const std::vector<ReadDataset> & datasets)
 {
     assert(datasets.size() == 1);
     assert(datasets.begin()->type == DatasetType::grid2D);
@@ -126,7 +101,7 @@ DataObject * Loader::loadGrid2D(QString name, const std::vector<ReadDataset> & d
     return new ImageDataObject(name, grid);
 }
 
-DataObject * Loader::loadGrid3D(QString name, const std::vector<ReadDataset> & datasets)
+DataObject * MatricesToVtk::loadGrid3D(QString name, const std::vector<ReadDataset> & datasets)
 {
     assert(datasets.size() == 1);
     assert(datasets.front().type == DatasetType::vectorGrid3D);
@@ -139,7 +114,7 @@ DataObject * Loader::loadGrid3D(QString name, const std::vector<ReadDataset> & d
     const std::vector<t_FP> & coordY = data[1];
     const std::vector<t_FP> & coordZ = data[2];
     assert((coordX.size() == coordY.size()) && (coordX.size() == coordZ.size()));
-    
+
     if (coordX.size() > (size_t)std::numeric_limits<vtkIdType>::max())
     {
         qDebug() << "cannot read data set (too large to count with vtkIdType, " + QString::number(sizeof(vtkIdType)) + ")";
@@ -190,7 +165,7 @@ DataObject * Loader::loadGrid3D(QString name, const std::vector<ReadDataset> & d
         }
         ++xExtent;
     }
-    
+
     assert(xExtent > 0);
 
     // get number of z-slices
@@ -253,7 +228,7 @@ DataObject * Loader::loadGrid3D(QString name, const std::vector<ReadDataset> & d
     return new VectorGrid3DDataObject(name, image);
 }
 
-vtkPolyData * Loader::parsePoints(const InputVector & parsedData, t_UInt firstColumn)
+vtkPolyData * MatricesToVtk::parsePoints(const InputVector & parsedData, t_UInt firstColumn)
 {
     assert(parsedData.size() > firstColumn);
 
@@ -263,7 +238,8 @@ vtkPolyData * Loader::parsePoints(const InputVector & parsedData, t_UInt firstCo
     std::vector<vtkIdType> pointIds(nbRows);
 
     // copy triangle vertexes to VTK point list
-    for (size_t row = 0; row < nbRows; ++row) {
+    for (size_t row = 0; row < nbRows; ++row)
+    {
         pointIds.at(row) = points->InsertNextPoint(parsedData[firstColumn][row], parsedData[firstColumn + 1][row], parsedData[firstColumn + 2][row]);
     }
 
@@ -278,7 +254,7 @@ vtkPolyData * Loader::parsePoints(const InputVector & parsedData, t_UInt firstCo
     return resultPolyData;
 }
 
-vtkPolyData * Loader::parseIndexedTriangles(
+vtkPolyData * MatricesToVtk::parseIndexedTriangles(
     const InputVector & parsedVertexData, t_UInt vertexIndexColumn, t_UInt firstVertexColumn,
     const InputVector & parsedIndexData, t_UInt firstIndexColumn)
 {
@@ -292,19 +268,21 @@ vtkPolyData * Loader::parseIndexedTriangles(
     // to let the internal indexes start with 0
     t_UInt indexOffset = std::llround(parsedVertexData[vertexIndexColumn][0]);
 
-    for (size_t row = 0; row < nbVertices; ++row) {
+    for (size_t row = 0; row < nbVertices; ++row)
+    {
         points->InsertNextPoint(parsedVertexData[firstVertexColumn][row], parsedVertexData[firstVertexColumn + 1][row], parsedVertexData[firstVertexColumn + 2][row]);
         pointIds.at(row) = std::llround(parsedVertexData[vertexIndexColumn][row]) - indexOffset;
     }
 
     VTK_CREATE(vtkCellArray, triangles);
     VTK_CREATE(vtkTriangle, triangle);
-    for (size_t row = 0; row < nbTriangles; ++row) {
+    for (size_t row = 0; row < nbTriangles; ++row)
+    {
         // set the indexes for the three triangle vertexes
         // hopefully, these indexes map to the vertex indexes from parsedVertexData
         triangle->GetPointIds()->SetId(0, std::llround(parsedIndexData[firstIndexColumn][row]) - indexOffset);
-        triangle->GetPointIds()->SetId(1, std::llround(parsedIndexData[firstIndexColumn+1][row]) - indexOffset);
-        triangle->GetPointIds()->SetId(2, std::llround(parsedIndexData[firstIndexColumn+2][row]) - indexOffset);
+        triangle->GetPointIds()->SetId(1, std::llround(parsedIndexData[firstIndexColumn + 1][row]) - indexOffset);
+        triangle->GetPointIds()->SetId(2, std::llround(parsedIndexData[firstIndexColumn + 2][row]) - indexOffset);
         triangles->InsertNextCell(triangle);    // this copies the triangle data into the list
     }
 
@@ -315,7 +293,7 @@ vtkPolyData * Loader::parseIndexedTriangles(
     return resultPolyData;
 }
 
-DataObject * Loader::readRawFile(QString fileName)
+DataObject * MatricesToVtk::readRawFile(QString fileName)
 {
     InputVector inputVectors;
     populateIOVectors(fileName.toStdString(), inputVectors);
@@ -349,7 +327,7 @@ DataObject * Loader::readRawFile(QString fileName)
     return new RawVectorData(fInfo.baseName(), dataArray);
 }
 
-vtkFloatArray * Loader::parseFloatVector(const InputVector & parsedData, QString arrayName, int firstColumn, int lastColumn)
+vtkFloatArray * MatricesToVtk::parseFloatVector(const InputVector & parsedData, QString arrayName, int firstColumn, int lastColumn)
 {
     assert(firstColumn <= lastColumn);
     assert(parsedData.size() > unsigned(lastColumn));

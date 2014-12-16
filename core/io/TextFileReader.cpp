@@ -34,7 +34,12 @@ InputFileInfo::InputFileInfo(const std::string & name, ModelType type)
 shared_ptr<InputFileInfo> TextFileReader::read(const string & filename, vector<ReadDataset> & readDataSets)
 {
     ifstream inputStream(filename);
-    assert(inputStream.good());
+
+    if (!inputStream.good())
+    {
+        cerr << "Cannot access file: \"" << filename << "\"" << endl;
+        return nullptr;
+    }
 
     vector<DatasetDef> datasetDefs;
     shared_ptr<InputFileInfo> input = readHeader(inputStream, datasetDefs);
