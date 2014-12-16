@@ -74,6 +74,8 @@ RenderedVectorGrid3D::RenderedVectorGrid3D(VectorGrid3DDataObject * dataObject)
 
         VTK_CREATE(vtkImageProperty, property);
         property->UseLookupTableScalarRangeOn();
+        property->SetDiffuse(0.8);
+        property->SetAmbient(0.5);
         m_imageSlicesScalars[i]->SetProperty(property);
 
         m_slicesEnabled[i] = true;
@@ -94,67 +96,112 @@ const VectorGrid3DDataObject * RenderedVectorGrid3D::vectorGrid3DDataObject() co
 
 PropertyGroup * RenderedVectorGrid3D::createConfigGroup()
 {
-    PropertyGroup * configGroup = new PropertyGroup();
+    PropertyGroup * renderSettings = new PropertyGroup();
 
-    auto orop_sampleRate = configGroup->addProperty<std::array<int, 3>>("sampleRate",
-        [this] (size_t i) { return m_extractVOI->GetSampleRate()[i]; },
-        [this] (size_t i, int value) {
-        int rates[3];
-        m_extractVOI->GetSampleRate(rates);
-        rates[i] = value;
-        setSampleRate(rates[0], rates[1], rates[2]);
-        emit geometryChanged();
-    });
-    orop_sampleRate->setOption("title", "sample rate");
-    std::function<void(Property<int> &)> optionSetter = [] (Property<int> & prop){
-        prop.setOption("minimum", 1);
-    };
-    orop_sampleRate->forEach(optionSetter);
-
-    auto prop_slicesVisible = configGroup->addProperty<std::array<bool, 3>>("SlicesVisible",
-        [this] (size_t i) { return m_slicesEnabled[i]; },
-        [this] (size_t i, bool value) {
-        m_slicesEnabled[i] = value;
-        updateVisibilities();
-    });
-    prop_slicesVisible->setOption("title", "slices visible");
-    auto slicePositions = configGroup->addGroup("SlicePosition");
-    slicePositions->setOption("title", "slice positions");
-
-    for (int i = 0; i < 3; ++i)
+    auto group_glyphs = renderSettings->addGroup("Glyphs");
     {
-        std::string axis = { char('X' + i) };
-
-        prop_slicesVisible->asCollection()->at(i)->setOption("title", axis);
-
-        vtkImageSliceMapper * mapper = m_imageSliceMappers[i];
-
-        auto * slice_prop = slicePositions->addProperty<int>(axis + "slice",
-            [mapper] () { return mapper->GetSliceNumber(); },
-            [this, i] (int value) {
-            setSlicePosition(i, value);
+        auto prop_sampleRate = group_glyphs->addProperty<std::array<int, 3>>("sampleRate",
+            [this] (size_t i) { return m_extractVOI->GetSampleRate()[i]; },
+            [this] (size_t i, int value) {
+            int rates[3];
+            m_extractVOI->GetSampleRate(rates);
+            rates[i] = value;
+            setSampleRate(rates[0], rates[1], rates[2]);
             emit geometryChanged();
         });
-        slice_prop->setOption("title", axis);
-        slice_prop->setOption("minimum", mapper->GetSliceNumberMinValue());
-        slice_prop->setOption("maximum", mapper->GetSliceNumberMaxValue());
+        prop_sampleRate->setOption("title", "Sample Rate");
+        prop_sampleRate->forEach(std::function<void(Property<int> &)>( [](Property<int> & prop) {
+            prop.setOption("minimum", 1);
+        }));
     }
 
-    auto prop_interpolation = configGroup->addProperty<Interpolation>("Interpolation",
-        [this] () {
-        return static_cast<Interpolation>(m_imageSlicesScalars[0]->GetProperty()->GetInterpolationType());
-    },
-        [this] (Interpolation interpolation) {
-        m_imageSlicesScalars[0]->GetProperty()->SetInterpolationType(static_cast<int>(interpolation));
-        emit geometryChanged();
-    });
-    prop_interpolation->setStrings({
-            { Interpolation::nearest, "nearest" },
-            { Interpolation::linear, "linear" },
-            { Interpolation::cubic, "cubic" }
-    });
+    auto group_scalarSlices = renderSettings->addGroup("Slices");
+    {
+        auto prop_visibilities = group_scalarSlices->addProperty<std::array<bool, 3>>("Visible",
+            [this] (size_t i) { return m_slicesEnabled[i]; },
+            [this] (size_t i, bool value) {
+            m_slicesEnabled[i] = value;
+            updateVisibilities();
+        });
 
-    return configGroup;
+        auto prop_positions = group_scalarSlices->addGroup("Positions");
+
+        for (int i = 0; i < 3; ++i)
+        {
+            std::string axis = { char('X' + i) };
+
+            prop_visibilities->asCollection()->at(i)->setOption("title", axis);
+
+            vtkImageSliceMapper * mapper = m_imageSliceMappers[i];
+
+            auto * slice_prop = prop_positions->addProperty<int>(axis + "slice",
+                [mapper] () { return mapper->GetSliceNumber(); },
+                [this, i] (int value) {
+                setSlicePosition(i, value);
+                emit geometryChanged();
+            });
+            slice_prop->setOption("title", axis);
+            slice_prop->setOption("minimum", mapper->GetSliceNumberMinValue());
+            slice_prop->setOption("maximum", mapper->GetSliceNumberMaxValue());
+        }
+
+        vtkImageProperty * property = m_imageSlicesScalars[0]->GetProperty();
+
+        auto prop_transparency = group_scalarSlices->addProperty<double>("Transparency",
+            [property ]() {
+            return (1.0 - property->GetOpacity()) * 100;
+        },
+            [this] (double transparency) {
+            for (auto slice : m_imageSlicesScalars)
+                slice->GetProperty()->SetOpacity(1.0 - transparency * 0.01);
+            emit geometryChanged();
+        });
+        prop_transparency->setOption("minimum", 0);
+        prop_transparency->setOption("maximum", 100);
+        prop_transparency->setOption("step", 1);
+        prop_transparency->setOption("suffix", " %");
+
+        auto prop_diffLighting = group_scalarSlices->addProperty<double>("DiffuseLighting",
+            [property] () { return property->GetDiffuse(); },
+            [this] (double diff) {
+            for (auto slice : m_imageSlicesScalars)
+                slice->GetProperty()->SetDiffuse(diff);
+            emit geometryChanged();
+        });
+        prop_diffLighting->setOption("title", "Diffuse Lighting");
+        prop_diffLighting->setOption("minimum", 0);
+        prop_diffLighting->setOption("maximum", 1);
+        prop_diffLighting->setOption("step", 0.05);
+
+        auto prop_ambientLighting = group_scalarSlices->addProperty<double>("AmbientLighting",
+            [property]() { return property->GetAmbient(); },
+            [this] (double ambient) {
+            for (auto slice : m_imageSlicesScalars)
+                slice->GetProperty()->SetAmbient(ambient);
+            emit geometryChanged();
+        });
+        prop_ambientLighting->setOption("title", "Ambient Lighting");
+        prop_ambientLighting->setOption("minimum", 0);
+        prop_ambientLighting->setOption("maximum", 1);
+        prop_ambientLighting->setOption("step", 0.05);
+
+        auto prop_interpolation = group_scalarSlices->addProperty<Interpolation>("Interpolation",
+            [property] () {
+            return static_cast<Interpolation>(property->GetInterpolationType());
+        },
+            [this] (Interpolation interpolation) {
+            for (auto slice : m_imageSlicesScalars)
+                slice->GetProperty()->SetInterpolationType(static_cast<int>(interpolation));
+            emit geometryChanged();
+        });
+        prop_interpolation->setStrings({
+                { Interpolation::nearest, "nearest" },
+                { Interpolation::linear, "linear" },
+                { Interpolation::cubic, "cubic" }
+        });
+    }
+
+    return renderSettings;
 }
 
 vtkImageData * RenderedVectorGrid3D::resampledDataSet()
