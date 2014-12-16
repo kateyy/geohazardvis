@@ -5,10 +5,11 @@
 #include <core/rendered_data/RenderedData3D.h>
 
 
-class vtkImageData;
 class vtkAlgorithmOutput;
 class vtkExtractVOI;
-class vtkPlaneSource;
+class vtkImageData;
+class vtkImageSlice;
+class vtkImageSliceMapper;
 
 class VectorGrid3DDataObject;
 
@@ -49,9 +50,7 @@ private:
 private:
     vtkSmartPointer<vtkExtractVOI> m_extractVOI;
 
-    std::array<vtkSmartPointer<vtkExtractVOI>, 3> m_extractSlices;
-    std::array<vtkSmartPointer<vtkPlaneSource>, 3> m_slicePlanes;
     std::array<bool, 3> m_slicesEnabled;
-    std::array<vtkSmartPointer<vtkActor>, 3> m_sliceActors;
-    std::array<vtkSmartPointer<vtkActor>, 3> m_sliceOutlineActors;
+    std::array<vtkSmartPointer<vtkImageSliceMapper>, 3> m_imageSliceMappers;
+    std::array<vtkSmartPointer<vtkImageSlice>, 3> m_imageSlicesScalars;
 };
