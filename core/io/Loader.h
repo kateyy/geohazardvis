@@ -12,4 +12,7 @@ class CORE_API Loader
 {
 public:
     static DataObject * readFile(const QString & filename);
+
+private:
+    static DataObject * loadTextFile(const QString & fileName);
 };

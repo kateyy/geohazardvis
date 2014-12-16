@@ -108,6 +108,7 @@ set(VTK_COMPONENTS
     vtkGUISupportQt         # QVTKWidget
     vtkRenderingAnnotation  # vtkCubeAxesActor, vtkScalarBarActor
     vtkInteractionWidgets
+    vtkIOXML
     vtkViewsContext2D
     vtkChartsCore
 )
