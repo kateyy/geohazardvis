@@ -30,10 +30,7 @@ DataObject * Loader::readFile(QString filename)
     std::vector<ReadDataset> readDatasets;
     std::shared_ptr<InputFileInfo> inputInfo = TextFileReader::read(filename.toStdString(), readDatasets);
     if (!inputInfo)
-    {
-        qDebug() << "Could not read the input file \"" << filename << "\"";
         return nullptr;
-    }
 
     QString dataSetName = QString::fromStdString(inputInfo->name);
     switch (inputInfo->type)
