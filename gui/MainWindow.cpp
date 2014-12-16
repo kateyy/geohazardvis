@@ -10,9 +10,9 @@
 #include <QDebug>
 
 #include <core/vtkhelper.h>
-#include <core/Loader.h>
 #include <core/DataSetHandler.h>
 #include <core/data_objects/DataObject.h>
+#include <core/io/Loader.h>
 #include <core/rendered_data/RenderedData.h>
 
 #include <gui/DataMapping.h>
