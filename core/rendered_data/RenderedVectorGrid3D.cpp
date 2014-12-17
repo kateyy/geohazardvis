@@ -22,6 +22,7 @@
 
 #include <core/vtkhelper.h>
 #include <core/data_objects/VectorGrid3DDataObject.h>
+#include <core/filters/NoiseImageSource.h>
 #include <core/scalar_mapping/ScalarsForColorMapping.h>
 
 
@@ -60,9 +61,15 @@ RenderedVectorGrid3D::RenderedVectorGrid3D(VectorGrid3DDataObject * dataObject)
 
     for (int i = 0; i < 3; ++i)
     {
+        VTK_CREATE(NoiseImageSource, noise);
+        noise->SetExtent(image->GetExtent());
+        noise->SetSpacing(image->GetSpacing());
+        noise->SetOrigin(image->GetOrigin());
+        noise->SetValueRange(image->GetPointData()->GetScalars()->GetRange(0));
 
         m_sliceMappers[i] = vtkSmartPointer<vtkImageSliceMapper>::New();
-        m_sliceMappers[i]->SetInputConnection(dataObject->processedOutputPort());
+        //m_sliceMappers[i]->SetInputConnection(dataObject->processedOutputPort());
+        m_sliceMappers[i]->SetInputConnection(noise->GetOutputPort());
         m_sliceMappers[i]->SetOrientation(i);  // 0, 1, 2 maps to X, Y, Z
         
         int min = m_sliceMappers[i]->GetSliceNumberMinValue();

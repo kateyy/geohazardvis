@@ -45,6 +45,8 @@ set ( SOURCES
 
     filters/CentroidAsScalarsFilter.h
     filters/CentroidAsScalarsFilter.cpp
+    filters/NoiseImageSource.h
+    filters/NoiseImageSource.cpp
 
     io/Loader.h
     io/Loader.cpp
