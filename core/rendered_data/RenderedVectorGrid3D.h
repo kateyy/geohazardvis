@@ -51,6 +51,7 @@ private:
     vtkSmartPointer<vtkExtractVOI> m_extractVOI;
 
     std::array<bool, 3> m_slicesEnabled;
-    std::array<vtkSmartPointer<vtkImageSliceMapper>, 3> m_imageSliceMappers;
-    std::array<vtkSmartPointer<vtkImageSlice>, 3> m_imageSlicesScalars;
+    std::array<vtkSmartPointer<vtkImageSliceMapper>, 3> m_sliceMappers;
+    std::array<vtkSmartPointer<vtkImageSlice>, 3> m_slices;
+
 };

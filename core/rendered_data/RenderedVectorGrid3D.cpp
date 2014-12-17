@@ -60,23 +60,24 @@ RenderedVectorGrid3D::RenderedVectorGrid3D(VectorGrid3DDataObject * dataObject)
 
     for (int i = 0; i < 3; ++i)
     {
-        m_imageSliceMappers[i] = vtkSmartPointer<vtkImageSliceMapper>::New();
-        m_imageSliceMappers[i]->SetInputConnection(dataObject->processedOutputPort());
-        m_imageSliceMappers[i]->SetOrientation(i);  // 0, 1, 2 maps to X, Y, Z
 
-        int min = m_imageSliceMappers[i]->GetSliceNumberMinValue();
-        int max = m_imageSliceMappers[i]->GetSliceNumberMaxValue();
+        m_sliceMappers[i] = vtkSmartPointer<vtkImageSliceMapper>::New();
+        m_sliceMappers[i]->SetInputConnection(dataObject->processedOutputPort());
+        m_sliceMappers[i]->SetOrientation(i);  // 0, 1, 2 maps to X, Y, Z
+        
+        int min = m_sliceMappers[i]->GetSliceNumberMinValue();
+        int max = m_sliceMappers[i]->GetSliceNumberMaxValue();
 
         setSlicePosition(i, (max - min) / 2);
 
-        m_imageSlicesScalars[i] = vtkSmartPointer<vtkImageSlice>::New();
-        m_imageSlicesScalars[i]->SetMapper(m_imageSliceMappers[i]);
+        m_slices[i] = vtkSmartPointer<vtkImageSlice>::New();
+        m_slices[i]->SetMapper(m_sliceMappers[i]);
 
         VTK_CREATE(vtkImageProperty, property);
         property->UseLookupTableScalarRangeOn();
         property->SetDiffuse(0.8);
         property->SetAmbient(0.5);
-        m_imageSlicesScalars[i]->SetProperty(property);
+        m_slices[i]->SetProperty(property);
 
         m_slicesEnabled[i] = true;
     }
@@ -132,7 +133,7 @@ PropertyGroup * RenderedVectorGrid3D::createConfigGroup()
 
             prop_visibilities->asCollection()->at(i)->setOption("title", axis);
 
-            vtkImageSliceMapper * mapper = m_imageSliceMappers[i];
+            vtkImageSliceMapper * mapper = m_sliceMappers[i];
 
             auto * slice_prop = prop_positions->addProperty<int>(axis + "slice",
                 [mapper] () { return mapper->GetSliceNumber(); },
@@ -145,14 +146,14 @@ PropertyGroup * RenderedVectorGrid3D::createConfigGroup()
             slice_prop->setOption("maximum", mapper->GetSliceNumberMaxValue());
         }
 
-        vtkImageProperty * property = m_imageSlicesScalars[0]->GetProperty();
+        vtkImageProperty * property = m_slices[0]->GetProperty();
 
         auto prop_transparency = group_scalarSlices->addProperty<double>("Transparency",
             [property ]() {
             return (1.0 - property->GetOpacity()) * 100;
         },
             [this] (double transparency) {
-            for (auto slice : m_imageSlicesScalars)
+            for (auto slice : m_slices)
                 slice->GetProperty()->SetOpacity(1.0 - transparency * 0.01);
             emit geometryChanged();
         });
@@ -164,7 +165,7 @@ PropertyGroup * RenderedVectorGrid3D::createConfigGroup()
         auto prop_diffLighting = group_scalarSlices->addProperty<double>("DiffuseLighting",
             [property] () { return property->GetDiffuse(); },
             [this] (double diff) {
-            for (auto slice : m_imageSlicesScalars)
+            for (auto slice : m_slices)
                 slice->GetProperty()->SetDiffuse(diff);
             emit geometryChanged();
         });
@@ -176,7 +177,7 @@ PropertyGroup * RenderedVectorGrid3D::createConfigGroup()
         auto prop_ambientLighting = group_scalarSlices->addProperty<double>("AmbientLighting",
             [property]() { return property->GetAmbient(); },
             [this] (double ambient) {
-            for (auto slice : m_imageSlicesScalars)
+            for (auto slice : m_slices)
                 slice->GetProperty()->SetAmbient(ambient);
             emit geometryChanged();
         });
@@ -190,7 +191,7 @@ PropertyGroup * RenderedVectorGrid3D::createConfigGroup()
             return static_cast<Interpolation>(property->GetInterpolationType());
         },
             [this] (Interpolation interpolation) {
-            for (auto slice : m_imageSlicesScalars)
+            for (auto slice : m_slices)
                 slice->GetProperty()->SetInterpolationType(static_cast<int>(interpolation));
             emit geometryChanged();
         });
@@ -219,7 +220,7 @@ vtkSmartPointer<vtkProp3DCollection> RenderedVectorGrid3D::fetchViewProps3D()
 {
     auto props = RenderedData3D::fetchViewProps3D();
 
-    for (auto prop : m_imageSlicesScalars)
+    for (auto prop : m_slices)
         props->AddItem(prop);
 
     return props;
@@ -232,7 +233,7 @@ void RenderedVectorGrid3D::scalarsForColorMappingChangedEvent()
 
 void RenderedVectorGrid3D::colorMappingGradientChangedEvent()
 {
-    for (auto slice : m_imageSlicesScalars)
+    for (auto slice : m_slices)
     {
         auto property = slice->GetProperty();
         assert(property);
@@ -254,7 +255,7 @@ void RenderedVectorGrid3D::updateVisibilities()
     for (int i = 0; i < 3; ++i)
     {
         bool showSliceI = showSliceScalars && m_slicesEnabled[i];
-        m_imageSlicesScalars[i]->SetVisibility(isVisible() && showSliceI);
+        m_slices[i]->SetVisibility(isVisible() && showSliceI);
     }
 
     emit geometryChanged();
@@ -274,5 +275,5 @@ void RenderedVectorGrid3D::setSlicePosition(int axis, int slicePosition)
 {
     assert(0 < axis || axis < 3);
 
-    m_imageSliceMappers[axis]->SetSliceNumber(slicePosition);
+    m_sliceMappers[axis]->SetSliceNumber(slicePosition);
 }
