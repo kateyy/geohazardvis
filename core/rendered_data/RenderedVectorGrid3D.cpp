@@ -9,14 +9,20 @@
 #include <vtkImageData.h>
 #include <vtkPointData.h>
 
+#include <vtkAssignAttribute.h>
+#include <vtkArrayCalculator.h>
 #include <vtkExtractVOI.h>
+#include <vtkImageBlend.h>
+#include <vtkImageDataLIC2D.h>
+#include <vtkImageMapToColors.h>
+#include <vtkImageTranslateExtent.h>
 
 #include <vtkImageSlice.h>
 #include <vtkImageSliceMapper.h>
 #include <vtkImageProperty.h>
 
 #include <vtkProp3DCollection.h>
-#include <vtkScalarsToColors.h>
+#include <vtkLookupTable.h>
 
 #include <reflectionzeug/PropertyGroup.h>
 
@@ -52,30 +58,37 @@ RenderedVectorGrid3D::RenderedVectorGrid3D(VectorGrid3DDataObject * dataObject)
 
     vtkImageData * image = static_cast<vtkImageData *>(dataObject->processedDataSet());
 
+    int extent[6];
+    image->GetExtent(extent);
+
     m_extractVOI->SetInputData(dataObject->dataSet());
 
-    // initialize sample rate to prevent crashing/blocking rendering
+    // decrease sample rate to prevent crashing/blocking rendering
     vtkIdType numPoints = image->GetNumberOfPoints();
     int sampleRate = std::max(1, (int)std::floor(std::cbrt(float(numPoints) / DefaultMaxNumberOfPoints)));
     setSampleRate(sampleRate, sampleRate, sampleRate);
 
+    std::string vectorsName{ image->GetPointData()->GetVectors()->GetName() };
+    std::string vectorsScaledName{ vectorsName + "_scaled" };
+
+    m_lic2DVectorScale = vtkSmartPointer<vtkArrayCalculator>::New();
+    m_lic2DVectorScale->SetInputData(image);
+    m_lic2DVectorScale->AddVectorArrayName(vectorsName.c_str());
+    m_lic2DVectorScale->SetResultArrayName(vectorsScaledName.c_str());
+
+    setLic2DVectorScaleFactor(100);
+
+    VTK_CREATE(vtkAssignAttribute, assignScaledVectors);
+    assignScaledVectors->SetInputConnection(m_lic2DVectorScale->GetOutputPort());
+    assignScaledVectors->Assign(vectorsScaledName.c_str(),
+        vtkDataSetAttributes::VECTORS, vtkAssignAttribute::POINT_DATA);
+
     for (int i = 0; i < 3; ++i)
     {
-        VTK_CREATE(NoiseImageSource, noise);
-        noise->SetExtent(image->GetExtent());
-        noise->SetSpacing(image->GetSpacing());
-        noise->SetOrigin(image->GetOrigin());
-        noise->SetValueRange(image->GetPointData()->GetScalars()->GetRange(0));
-
+        /** scalar mapping */
         m_sliceMappers[i] = vtkSmartPointer<vtkImageSliceMapper>::New();
-        //m_sliceMappers[i]->SetInputConnection(dataObject->processedOutputPort());
-        m_sliceMappers[i]->SetInputConnection(noise->GetOutputPort());
+        m_sliceMappers[i]->SetInputConnection(dataObject->processedOutputPort());
         m_sliceMappers[i]->SetOrientation(i);  // 0, 1, 2 maps to X, Y, Z
-        
-        int min = m_sliceMappers[i]->GetSliceNumberMinValue();
-        int max = m_sliceMappers[i]->GetSliceNumberMaxValue();
-
-        setSlicePosition(i, (max - min) / 2);
 
         m_slices[i] = vtkSmartPointer<vtkImageSlice>::New();
         m_slices[i]->SetMapper(m_sliceMappers[i]);
@@ -85,6 +98,51 @@ RenderedVectorGrid3D::RenderedVectorGrid3D(VectorGrid3DDataObject * dataObject)
         property->SetDiffuse(0.8);
         property->SetAmbient(0.5);
         m_slices[i]->SetProperty(property);
+
+
+
+        /** Line Integral Convolution 2D */
+
+        m_lic2DVOI[i] = vtkSmartPointer<vtkExtractVOI>::New();
+        m_lic2DVOI[i]->SetInputConnection(assignScaledVectors->GetOutputPort());
+
+        m_lic2DTranslateExtent[i] = vtkSmartPointer<vtkImageTranslateExtent>::New();
+        m_lic2DTranslateExtent[i]->SetInputConnection(m_lic2DVOI[i]->GetOutputPort());
+
+        int min = extent[2 * i];
+        int max = extent[2 * i + 1];
+        setSlicePosition(i, (max - min) / 2);
+
+        int noiseExtent[6];
+        image->GetExtent(noiseExtent);
+        noiseExtent[2 * i] = noiseExtent[2 * i + 1] = 0;
+
+        VTK_CREATE(NoiseImageSource, noise);
+        noise->SetExtent(noiseExtent);
+        noise->SetValueRange(0, 1);
+        noise->SetNumberOfComponents(2);
+
+        m_lic2D[i] = vtkSmartPointer<vtkImageDataLIC2D>::New();
+        m_lic2D[i]->SetInputConnection(0, m_lic2DTranslateExtent[i]->GetOutputPort());
+        m_lic2D[i]->SetInputConnection(1, noise->GetOutputPort());
+
+        //m_licToColors[i] = vtkSmartPointer<vtkImageMapToColors>::New();
+        //m_licToColors[i]->SetInputConnection(m_lic2D[i]->GetOutputPort());
+        //m_licToColors[i]->SetOutputFormatToRGB();
+        //VTK_CREATE(vtkLookupTable, lut);
+        //m_licToColors[i]->SetLookupTable(lut);
+
+        VTK_CREATE(vtkAssignAttribute, assignToColors);
+        assignToColors->SetInputConnection(m_lic2D[i]->GetOutputPort());
+        assignToColors->Assign(vtkDataSetAttributes::VECTORS, vtkDataSetAttributes::SCALARS, vtkAssignAttribute::POINT_DATA);
+
+        VTK_CREATE(vtkImageSliceMapper, licMapper);
+        //licMapper->SetInputConnection(m_licToColors[i]->GetOutputPort());
+        licMapper->SetInputConnection(assignToColors->GetOutputPort());
+        licMapper->SetOrientation(i);
+
+        m_licSlices[i] = vtkSmartPointer<vtkImageSlice>::New();
+        m_licSlices[i]->SetMapper(licMapper);
 
         m_slicesEnabled[i] = true;
     }
@@ -209,6 +267,19 @@ PropertyGroup * RenderedVectorGrid3D::createConfigGroup()
         });
     }
 
+    auto group_LIC2D = renderSettings->addGroup("LIC2D");
+    group_LIC2D->setOption("title", "Line Integral Convolution 2D");
+    {
+        auto prop_vectorScale = group_LIC2D->addProperty<float>("vectorScaleFactor",
+            [this] () { return m_lic2DVectorScaleFactor; },
+            [this] (float f) {
+            setLic2DVectorScaleFactor(f);
+            emit geometryChanged();
+        });
+        prop_vectorScale->setOption("title", "Vector Scale Factor");
+        prop_vectorScale->setOption("minimum", 0);
+    }
+
     return renderSettings;
 }
 
@@ -227,8 +298,11 @@ vtkSmartPointer<vtkProp3DCollection> RenderedVectorGrid3D::fetchViewProps3D()
 {
     auto props = RenderedData3D::fetchViewProps3D();
 
-    for (auto prop : m_slices)
-        props->AddItem(prop);
+    //for (auto prop : m_slices)
+    //    props->AddItem(prop);
+
+    props->AddItem(m_licSlices[0]);
+    props->AddItem(m_licSlices[2]);
 
     return props;
 }
@@ -241,6 +315,13 @@ void RenderedVectorGrid3D::scalarsForColorMappingChangedEvent()
 void RenderedVectorGrid3D::colorMappingGradientChangedEvent()
 {
     for (auto slice : m_slices)
+    {
+        auto property = slice->GetProperty();
+        assert(property);
+        property->SetLookupTable(m_gradient);
+    }
+
+    for (auto slice : m_licSlices)
     {
         auto property = slice->GetProperty();
         assert(property);
@@ -283,4 +364,25 @@ void RenderedVectorGrid3D::setSlicePosition(int axis, int slicePosition)
     assert(0 < axis || axis < 3);
 
     m_sliceMappers[axis]->SetSliceNumber(slicePosition);
+
+    int voi[6];
+    static_cast<vtkImageData *>(dataObject()->dataSet())->GetExtent(voi);
+    voi[2 * axis] = voi[2 * axis + 1] = slicePosition;
+    m_lic2DVOI[axis]->SetVOI(voi);
+
+    m_lic2DTranslateExtent[axis]->SetTranslation(-voi[0], -voi[2], -voi[4]);
+}
+
+void RenderedVectorGrid3D::setLic2DVectorScaleFactor(float f)
+{
+    if (m_lic2DVectorScaleFactor == f)
+        return;
+
+    m_lic2DVectorScaleFactor = f;
+
+    std::string vectorsName = dataObject()->dataSet()->GetPointData()->GetVectors()->GetName();
+
+    std::string fun{ std::to_string(m_lic2DVectorScaleFactor) 
+                     + "*" + vectorsName };
+    m_lic2DVectorScale->SetFunction(fun.c_str());
 }
