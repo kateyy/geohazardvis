@@ -7,7 +7,6 @@
 #include <core/core_api.h>
 
 
-class vtkActor;
 class vtkPropCollection;
 class vtkScalarsToColors;
 
@@ -18,7 +17,6 @@ namespace reflectionzeug
 
 class DataObject;
 class ScalarsForColorMapping;
-enum class ContentType;
 
 
 /**
