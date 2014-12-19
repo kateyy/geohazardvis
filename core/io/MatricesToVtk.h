@@ -4,24 +4,18 @@
 
 #include <QString>
 
-#include "common/ebem3d_common.h"
-
-#include <core/core_api.h>
+#include <core/common/ebem3d_common.h>
 
 
 class vtkPolyData;
 class vtkFloatArray;
-
-struct ReadDataset;
 class DataObject;
+struct ReadDataset;
 
 
-class CORE_API Loader
+class MatricesToVtk
 {
 public:
-    static DataObject * readFile(QString filename);
-
-protected:
     static DataObject * loadIndexedTriangles(QString name, const std::vector<ReadDataset> & datasets);
     static DataObject * loadGrid2D(QString name, const std::vector<ReadDataset> & datasets);
     static DataObject * loadGrid3D(QString name, const std::vector<ReadDataset> & datasets);

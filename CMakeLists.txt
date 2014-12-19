@@ -108,6 +108,7 @@ set(VTK_COMPONENTS
     vtkGUISupportQt         # QVTKWidget
     vtkRenderingAnnotation  # vtkCubeAxesActor, vtkScalarBarActor
     vtkInteractionWidgets
+    vtkIOXML
     vtkViewsContext2D
     vtkChartsCore
 )
@@ -160,7 +161,7 @@ find_package(libzeug REQUIRED)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
-if(MSVC AND CPACK_INSTALL_3RDPARTY_DLLS)
+if(WIN32 AND CPACK_INSTALL_3RDPARTY_DLLS)
     set(CMAKE_INSTALL_SYSTEM_RUNTIME_DESTINATION ${INSTALL_BIN})
     include(InstallRequiredSystemLibraries)
 
