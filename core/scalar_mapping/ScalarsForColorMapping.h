@@ -86,7 +86,7 @@ protected:
     virtual void updateBounds() = 0;
 
     /** check whether these scalar extraction is applicable for the data objects it was created with */
-    virtual bool isValid() const = 0;
+    bool isValid() const;
 
     void setDataMinMaxValue(const double minMax[2], vtkIdType component);
     void setDataMinMaxValue(double min, double max, vtkIdType component);
@@ -98,6 +98,7 @@ protected:
     virtual void minMaxChangedEvent();
 
 protected:
+    bool m_isValid;
     QList<DataObject *> m_dataObjects;
     vtkSmartPointer<vtkLookupTable> m_lut;
 

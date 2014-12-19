@@ -21,8 +21,6 @@ protected:
 
     void updateBounds() override;
 
-    bool isValid() const override;
-
 private:
     static const bool s_registered;
 

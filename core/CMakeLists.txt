@@ -99,8 +99,6 @@ set ( SOURCES
     scalar_mapping/DefaultColorMapping.cpp
     scalar_mapping/VertexComponentMapping.h
     scalar_mapping/VertexComponentMapping.cpp
-    scalar_mapping/AbstractArrayComponentMapping.h
-    scalar_mapping/AbstractArrayComponentMapping.cpp
     scalar_mapping/AttributeArrayComponentMapping.h
     scalar_mapping/AttributeArrayComponentMapping.cpp
 

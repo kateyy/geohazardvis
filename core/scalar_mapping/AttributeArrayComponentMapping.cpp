@@ -26,7 +26,7 @@ namespace
 const QString s_name = "attribute array component";
 }
 
-const bool AttributeArrayComponentMapping::s_registered = ScalarsForColorMappingRegistry::instance().registerImplementation(
+const bool AttributeArrayComponentMapping::s_isRegistered = ScalarsForColorMappingRegistry::instance().registerImplementation(
     s_name,
     newInstances);
 
@@ -102,7 +102,8 @@ QList<ScalarsForColorMapping *> AttributeArrayComponentMapping::newInstances(con
 }
 
 AttributeArrayComponentMapping::AttributeArrayComponentMapping(const QList<DataObject *> & dataObjects, QString dataArrayName, int attributeLocation, vtkIdType numDataComponents)
-    : AbstractArrayComponentMapping(dataObjects, dataArrayName, numDataComponents)
+    : ScalarsForColorMapping(dataObjects, numDataComponents)
+    , m_dataArrayName(dataArrayName)
     , m_attributeLocation(attributeLocation)
 {
     assert(!dataObjects.isEmpty());
@@ -114,7 +115,7 @@ AttributeArrayComponentMapping::~AttributeArrayComponentMapping() = default;
 
 QString AttributeArrayComponentMapping::name() const
 {
-    QString n = AbstractArrayComponentMapping::name();
+    QString n = m_dataArrayName;
 
     if (m_attributeLocation == vtkAssignAttribute::POINT_DATA)
         n += QString(" (point data)");

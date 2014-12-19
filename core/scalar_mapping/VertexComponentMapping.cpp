@@ -54,6 +54,7 @@ VertexComponentMapping::VertexComponentMapping(const QList<DataObject *> & dataO
     : ScalarsForColorMapping(dataObjects)
     , m_component(component)
 {
+    m_isValid = true;
 }
 
 VertexComponentMapping::~VertexComponentMapping() = default;
@@ -88,11 +89,6 @@ bool VertexComponentMapping::usesFilter() const
 void VertexComponentMapping::configureDataObjectAndMapper(DataObject * /*dataObject*/, vtkMapper * mapper)
 {
     mapper->ScalarVisibilityOn();
-}
-
-bool VertexComponentMapping::isValid() const
-{
-    return true;
 }
 
 void VertexComponentMapping::updateBounds()

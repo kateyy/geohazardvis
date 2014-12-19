@@ -9,20 +9,19 @@
 
 const QString DefaultColorMapping::s_name = "user-defined color";
 
-const bool DefaultColorMapping::s_registered = ScalarsForColorMappingRegistry::instance().registerImplementation(
+const bool DefaultColorMapping::s_isRegistered = ScalarsForColorMappingRegistry::instance().registerImplementation(
     s_name,
     newInstance<DefaultColorMapping>);
 
 DefaultColorMapping::DefaultColorMapping(const QList<DataObject *> & dataObjects)
     : ScalarsForColorMapping(dataObjects)
-    , m_valid(false)
 {
     // only makes sense if there is a surface which we can color
     for (DataObject * dataObject : dataObjects)
     {
         if (dataObject->is3D() && vtkPolyData::SafeDownCast(dataObject->dataSet()))
         {
-            m_valid = true;
+            m_isValid = true;
             break;
         }
     }
@@ -45,9 +44,4 @@ void DefaultColorMapping::configureDataObjectAndMapper(DataObject * dataObject, 
 void DefaultColorMapping::updateBounds()
 {
     setDataMinMaxValue(0.0, 0.0, 0);
-}
-
-bool DefaultColorMapping::isValid() const
-{
-    return m_valid;
 }

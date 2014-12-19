@@ -16,11 +16,7 @@ public:
 protected:
     virtual void updateBounds() override;
 
-    virtual bool isValid() const override;
-
 private:
-    bool m_valid;
-
     static const QString s_name;
-    static const bool s_registered;
+    static const bool s_isRegistered;
 };

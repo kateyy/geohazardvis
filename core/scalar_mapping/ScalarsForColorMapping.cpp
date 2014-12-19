@@ -12,7 +12,8 @@
 
 
 ScalarsForColorMapping::ScalarsForColorMapping(const QList<DataObject *> & dataObjects, vtkIdType numDataComponents)
-    : m_dataObjects(dataObjects)
+    : m_isValid(false)
+    , m_dataObjects(dataObjects)
     , m_numDataComponents(numDataComponents)
     , m_dataComponent(0)
     , m_dataMinValue(numDataComponents, std::numeric_limits<double>::max())
@@ -72,6 +73,11 @@ void ScalarsForColorMapping::initialize()
         connect(dataObject, &DataObject::valueRangeChanged, this, &ScalarsForColorMapping::updateBounds);
 
     updateBounds();
+}
+
+bool ScalarsForColorMapping::isValid() const
+{
+    return m_isValid;
 }
 
 vtkAlgorithm * ScalarsForColorMapping::createFilter(DataObject * /*dataObject*/)
