@@ -24,11 +24,20 @@ ImageProfileContextPlot::ImageProfileContextPlot(ImageProfileData * dataObject)
     , m_plotLine(vtkSmartPointer<vtkPlotLine>::New())
 {
     connect(dataObject, &DataObject::dataChanged, this, &ImageProfileContextPlot::updatePlot);
+
+    m_title = dataObject->probedLine()->GetPointData()->GetScalars()->GetName();
 }
 
 PropertyGroup * ImageProfileContextPlot::createConfigGroup()
 {
     PropertyGroup * root = new PropertyGroup();
+
+    root->addProperty<std::string>("Title",
+        [this] () { return title().toStdString(); },
+        [this] (const std::string & s) {
+        setTitle(QString::fromStdString(s));
+        geometryChanged();
+    });
 
     root->addProperty<Color>("Color",
         [this] () {
@@ -66,6 +75,21 @@ PropertyGroup * ImageProfileContextPlot::createConfigGroup()
     return root;
 }
 
+const QString & ImageProfileContextPlot::title() const
+{
+    return m_title;
+}
+
+void ImageProfileContextPlot::setTitle(const QString & title)
+{
+    if (title == m_title)
+        return;
+
+    m_title = title;
+
+    updatePlot();
+}
+
 vtkSmartPointer<vtkPlotCollection> ImageProfileContextPlot::fetchPlots()
 {
     VTK_CREATE(vtkPlotCollection, items);
@@ -85,6 +109,7 @@ void ImageProfileContextPlot::updatePlot()
 
     vtkDataArray * probedValues = probe->GetPointData()->GetScalars();
     assert(probedValues);
+    probedValues->SetName(m_title.toUtf8().data());
 
     // hackish: x-values calculated by translating+rotating the probe line to the x-axis
     vtkDataSet * profilePoints = profileData->processedDataSet();
@@ -94,7 +119,7 @@ void ImageProfileContextPlot::updatePlot()
     VTK_CREATE(vtkTable, table);
     VTK_CREATE(vtkFloatArray, xAxis);
     xAxis->SetNumberOfValues(profilePoints->GetNumberOfPoints());
-    xAxis->SetName(profileData->abscissa().toLatin1().data());
+    xAxis->SetName(profileData->abscissa().toUtf8().data());
     table->AddColumn(xAxis);
     table->AddColumn(probedValues);
 
