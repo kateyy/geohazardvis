@@ -37,11 +37,11 @@ ImageProfileData::ImageProfileData(const QString & name, ImageDataObject * image
     assert(scalars);
     m_scalarsName = QString::fromLatin1(scalars->GetName());
 
-    VTK_CREATE(vtkProbeFilter, probe);
-    probe->SetInputConnection(m_probeLine->GetOutputPort());
-    probe->SetSourceConnection(m_imageData->processedOutputPort());
+    m_probe = vtkSmartPointer<vtkProbeFilter>::New();
+    m_probe->SetInputConnection(m_probeLine->GetOutputPort());
+    m_probe->SetSourceConnection(m_imageData->processedOutputPort());
 
-    m_transform->SetInputConnection(probe->GetOutputPort());
+    m_transform->SetInputConnection(m_probe->GetOutputPort());
 
     VTK_CREATE(vtkAssignAttribute, assign);
     assign->Assign(m_scalarsName.toLatin1().data(), vtkDataSetAttributes::SCALARS, vtkAssignAttribute::POINT_DATA);
@@ -76,6 +76,17 @@ vtkDataSet * ImageProfileData::processedDataSet()
 vtkAlgorithmOutput * ImageProfileData::processedOutputPort()
 {
     return m_graphLine->GetOutputPort();
+}
+
+vtkDataSet * ImageProfileData::probedLine()
+{
+    m_probe->Update();
+    return m_probe->GetOutput();
+}
+
+vtkAlgorithmOutput * ImageProfileData::probedLineOuputPort()
+{
+    return m_probe->GetOutputPort();
 }
 
 const QString & ImageProfileData::abscissa() const

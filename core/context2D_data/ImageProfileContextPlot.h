@@ -4,6 +4,8 @@
 
 
 class vtkChartXY;
+class vtkPlot;
+
 class ImageProfileData;
 
 
@@ -20,5 +22,9 @@ protected:
     void visibilityChangedEvent(bool visible) override;
 
 private:
+    void updatePlot();
+
+private:
     vtkSmartPointer<vtkChartXY> m_chart;
+    vtkSmartPointer<vtkPlot> m_plotLine;
 };
