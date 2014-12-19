@@ -5,7 +5,7 @@
 #include <core/AbstractVisualizedData.h>
 
 
-class vtkContextItemCollection;
+class vtkPlotCollection;
 
 
 class CORE_API Context2DData : public AbstractVisualizedData
@@ -15,16 +15,16 @@ class CORE_API Context2DData : public AbstractVisualizedData
 public:
     Context2DData(DataObject * dataObject);
 
-    vtkSmartPointer<vtkContextItemCollection> contextItems();
+    vtkSmartPointer<vtkPlotCollection> plots();
 
 protected:
-    virtual vtkSmartPointer<vtkContextItemCollection> fetchContextItems() = 0;
+    virtual vtkSmartPointer<vtkPlotCollection> fetchPlots() = 0;
     void invalidateContextItems();
 
 signals:
-    void contextItemCollectionChanged();
+    void plotCollectionChanged();
 
 private:
-    vtkSmartPointer<vtkContextItemCollection> m_viewProps;
-    bool m_contextItemsInvalid;
+    vtkSmartPointer<vtkPlotCollection> m_plots;
+    bool m_plotsInvalidated;
 };

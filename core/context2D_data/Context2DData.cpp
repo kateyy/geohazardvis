@@ -2,32 +2,32 @@
 
 #include <cassert>
 
-#include <core/context2D_data/vtkContextItemCollection.h>
+#include <core/context2D_data/vtkPlotCollection.h>
 
 
 Context2DData::Context2DData(DataObject * dataObject)
     : AbstractVisualizedData(dataObject)
-    , m_contextItemsInvalid(true)
+    , m_plotsInvalidated(true)
 {
 }
 
-vtkSmartPointer<vtkContextItemCollection> Context2DData::contextItems()
+vtkSmartPointer<vtkPlotCollection> Context2DData::plots()
 {
-    if (m_contextItemsInvalid)
+    if (m_plotsInvalidated)
     {
-        m_contextItemsInvalid = false;
-        m_viewProps = fetchContextItems();
+        m_plotsInvalidated = false;
+        m_plots = fetchPlots();
     }
 
-    assert(m_viewProps);
-    assert(m_viewProps->GetNumberOfItems() > 0);
+    assert(m_plots);
+    assert(m_plots->GetNumberOfItems() > 0);
 
-    return m_viewProps;
+    return m_plots;
 }
 
 void Context2DData::invalidateContextItems()
 {
-    m_contextItemsInvalid = true;
+    m_plotsInvalidated = true;
 
-    emit contextItemCollectionChanged();
+    emit plotCollectionChanged();
 }

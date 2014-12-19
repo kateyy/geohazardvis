@@ -3,7 +3,6 @@
 #include <core/context2D_data/Context2DData.h>
 
 
-class vtkChartXY;
 class vtkPlot;
 
 class ImageProfileData;
@@ -17,7 +16,7 @@ public:
     reflectionzeug::PropertyGroup * createConfigGroup() override;
 
 protected:
-    vtkSmartPointer<vtkContextItemCollection> fetchContextItems() override;
+    vtkSmartPointer<vtkPlotCollection> fetchPlots() override;
 
     void visibilityChangedEvent(bool visible) override;
 
@@ -25,6 +24,5 @@ private:
     void updatePlot();
 
 private:
-    vtkSmartPointer<vtkChartXY> m_chart;
     vtkSmartPointer<vtkPlot> m_plotLine;
 };

@@ -2,7 +2,6 @@
 
 #include <cassert>
 
-#include <vtkChartXY.h>
 #include <vtkDataSet.h>
 #include <vtkFloatArray.h>
 #include <vtkPlotLine.h>
@@ -13,7 +12,7 @@
 
 #include <core/vtkhelper.h>
 #include <core/data_objects/ImageProfileData.h>
-#include <core/context2D_data/vtkContextItemCollection.h>
+#include <core/context2D_data/vtkPlotCollection.h>
 
 
 using namespace reflectionzeug;
@@ -33,19 +32,13 @@ PropertyGroup * ImageProfileContextPlot::createConfigGroup()
     return root;
 }
 
-vtkSmartPointer<vtkContextItemCollection> ImageProfileContextPlot::fetchContextItems()
+vtkSmartPointer<vtkPlotCollection> ImageProfileContextPlot::fetchPlots()
 {
-    VTK_CREATE(vtkContextItemCollection, items);
+    VTK_CREATE(vtkPlotCollection, items);
 
-    if (!m_chart)
-    {
-        m_chart = vtkSmartPointer<vtkChartXY>::New();
-        m_chart->AddPlot(m_plotLine);
+    updatePlot();
 
-        updatePlot();
-    }
-
-    items->AddItem(m_chart);
+    items->AddItem(m_plotLine);
 
     return items;
 }

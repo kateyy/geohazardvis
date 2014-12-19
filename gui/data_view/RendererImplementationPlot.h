@@ -7,8 +7,9 @@
 #include <gui/data_view/RendererImplementation.h>
 
 
+class vtkChartXY;
 class vtkContextView;
-class vtkContextItemCollection;
+class vtkPlotCollection;
 
 class Context2DData;
 
@@ -61,11 +62,12 @@ private:
 
     // -- setup --
     vtkSmartPointer<vtkContextView> m_contextView;
+    vtkSmartPointer<vtkChartXY> m_chart;
 
     // -- contents and annotation --
 
-    // context items fetched per visualized data
-    QMap<Context2DData *, vtkSmartPointer<vtkContextItemCollection>> m_dataContextItems;
+    // plots fetched per visualized data
+    QMap<Context2DData *, vtkSmartPointer<vtkPlotCollection>> m_plots;
 
     static bool s_isRegistered;
 };

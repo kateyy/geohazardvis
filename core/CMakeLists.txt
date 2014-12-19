@@ -74,6 +74,8 @@ set ( SOURCES
     context2D_data/ImageProfileContextPlot.cpp
     context2D_data/vtkContextItemCollection.h
     context2D_data/vtkContextItemCollection.cpp
+    context2D_data/vtkPlotCollection.h
+    context2D_data/vtkPlotCollection.cpp
 
     table_model/QVtkTableModel.h
     table_model/QVtkTableModel.cpp

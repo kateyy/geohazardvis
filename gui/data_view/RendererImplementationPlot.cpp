@@ -3,15 +3,17 @@
 #include <cassert>
 
 #include <QVTKWidget.h>
+#include <vtkChartXY.h>
 #include <vtkContextScene.h>
 #include <vtkContextView.h>
+#include <vtkPlot.h>
 #include <vtkRenderWindow.h>
 
 #include <core/types.h>
 #include <core/vtkhelper.h>
 #include <core/data_objects/DataObject.h>
 #include <core/context2D_data/Context2DData.h>
-#include <core/context2D_data/vtkContextItemCollection.h>
+#include <core/context2D_data/vtkPlotCollection.h>
 #include <gui/data_view/RenderView.h>
 
 
@@ -88,20 +90,20 @@ void RendererImplementationPlot::addContent(AbstractVisualizedData * content)
     assert(dynamic_cast<Context2DData *>(content));
     Context2DData * contextData = static_cast<Context2DData *>(content);
 
-    VTK_CREATE(vtkContextItemCollection, items);
+    VTK_CREATE(vtkPlotCollection, items);
 
     vtkCollectionSimpleIterator it;
-    contextData->contextItems()->InitTraversal(it);
-    while (vtkAbstractContextItem * item = contextData->contextItems()->GetNextContextItem(it))
+    contextData->plots()->InitTraversal(it);
+    while (vtkPlot * item = contextData->plots()->GetNextPlot(it))
     {
         items->AddItem(item);
-        m_contextView->GetScene()->AddItem(item);
+        m_chart->AddPlot(item);
     }
 
-    assert(!m_dataContextItems.contains(contextData));
-    m_dataContextItems.insert(contextData, items);
+    assert(!m_plots.contains(contextData));
+    m_plots.insert(contextData, items);
 
-    connect(contextData, &Context2DData::contextItemCollectionChanged,
+    connect(contextData, &Context2DData::plotCollectionChanged,
         [this, contextData] () { fetchContextItems(contextData); });
 
     connect(contextData, &Context2DData::visibilityChanged,
@@ -115,13 +117,13 @@ void RendererImplementationPlot::removeContent(AbstractVisualizedData * content)
     assert(dynamic_cast<Context2DData *>(content));
     Context2DData * contextData = static_cast<Context2DData *>(content);
 
-    vtkSmartPointer<vtkContextItemCollection> items = m_dataContextItems.take(contextData);
+    vtkSmartPointer<vtkContextItemCollection> items = m_plots.take(contextData);
     assert(items);
 
     vtkCollectionSimpleIterator it;
     items->InitTraversal(it);
     while (vtkAbstractContextItem * item = items->GetNextContextItem(it))
-        m_contextView->GetScene()->RemoveItem(item);
+        m_chart->RemoveItem(item);
 
     m_contextView->ResetCamera();
 }
@@ -164,13 +166,15 @@ void RendererImplementationPlot::initialize()
         return;
 
     m_contextView = vtkSmartPointer<vtkContextView>::New();
+    m_chart = vtkSmartPointer<vtkChartXY>::New();
+    m_contextView->GetScene()->AddItem(m_chart);
 
     m_isInitialized = true;
 }
 
 void RendererImplementationPlot::fetchContextItems(Context2DData * data)
 {
-    vtkSmartPointer<vtkContextItemCollection> items = m_dataContextItems.value(data);
+    vtkSmartPointer<vtkPlotCollection> items = m_plots.value(data);
     assert(items);
 
     // TODO add/remove changes only
@@ -178,17 +182,17 @@ void RendererImplementationPlot::fetchContextItems(Context2DData * data)
     // remove all old props from the renderer
     vtkCollectionSimpleIterator it;
     items->InitTraversal(it);
-    while (vtkAbstractContextItem * item = items->GetNextContextItem(it))
-        m_contextView->GetScene()->RemoveItem(item);
+    while (vtkPlot * item = items->GetNextPlot(it))
+        m_chart->RemoveItem(item);
     items->RemoveAllItems();
 
     // insert all new props
 
-    data->contextItems()->InitTraversal(it);
-    while (vtkAbstractContextItem * item = data->contextItems()->GetNextContextItem(it))
+    data->plots()->InitTraversal(it);
+    while (vtkPlot * item = data->plots()->GetNextPlot(it))
     {
         items->AddItem(item);
-        m_contextView->GetScene()->AddItem(item);
+        m_chart->AddItem(item);
     }
 
     render();
