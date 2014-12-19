@@ -18,6 +18,8 @@ public:
     vtkSmartPointer<vtkPlotCollection> plots();
 
 protected:
+    void visibilityChangedEvent(bool visible) override;
+
     virtual vtkSmartPointer<vtkPlotCollection> fetchPlots() = 0;
     void invalidateContextItems();
 

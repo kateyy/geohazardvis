@@ -18,8 +18,6 @@ public:
 protected:
     vtkSmartPointer<vtkPlotCollection> fetchPlots() override;
 
-    void visibilityChangedEvent(bool visible) override;
-
 private:
     void updatePlot();
 

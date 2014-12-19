@@ -2,6 +2,8 @@
 
 #include <cassert>
 
+#include <vtkPlot.h>
+
 #include <core/context2D_data/vtkPlotCollection.h>
 
 
@@ -23,6 +25,14 @@ vtkSmartPointer<vtkPlotCollection> Context2DData::plots()
     assert(m_plots->GetNumberOfItems() > 0);
 
     return m_plots;
+}
+
+void Context2DData::visibilityChangedEvent(bool visible)
+{
+    vtkCollectionSimpleIterator it;
+    plots()->InitTraversal(it);
+    while (vtkPlot * item = plots()->GetNextPlot(it))
+        item->SetVisible(visible);
 }
 
 void Context2DData::invalidateContextItems()

@@ -43,11 +43,6 @@ vtkSmartPointer<vtkPlotCollection> ImageProfileContextPlot::fetchPlots()
     return items;
 }
 
-
-void ImageProfileContextPlot::visibilityChangedEvent(bool /*visible*/)
-{
-}
-
 void ImageProfileContextPlot::updatePlot()
 {
     ImageProfileData * profileData = static_cast<ImageProfileData *>(dataObject());
