@@ -57,7 +57,7 @@ QList<ScalarsForColorMapping *> AttributeArrayComponentMapping::newInstances(con
                 && arrayInfo->Get(DataObject::ArrayIsAuxiliaryKey()))
                 continue;
 
-            QString name = QString::fromLatin1(dataArray->GetName());
+            QString name = QString::fromUtf8(dataArray->GetName());
             int lastNumComp = arrayInfos.value(name).numComponents;
             int currentNumComp = dataArray->GetNumberOfComponents();
 
@@ -132,10 +132,8 @@ vtkAlgorithm * AttributeArrayComponentMapping::createFilter(DataObject * dataObj
 {
     vtkAssignAttribute * filter = vtkAssignAttribute::New();
 
-    QByteArray c_name = m_dataArrayName.toLatin1();
-
     filter->SetInputConnection(dataObject->processedOutputPort());
-    filter->Assign(c_name.data(), vtkDataSetAttributes::SCALARS,
+    filter->Assign(m_dataArrayName.toUtf8().data(), vtkDataSetAttributes::SCALARS,
         m_attributeLocation);
 
     return filter;
@@ -155,12 +153,12 @@ void AttributeArrayComponentMapping::configureDataObjectAndMapper(DataObject * d
         mapper->SetScalarModeToUseCellData();
     else if (m_attributeLocation == vtkAssignAttribute::POINT_DATA)
         mapper->SetScalarModeToUsePointData();
-    mapper->SelectColorArray(m_dataArrayName.toLatin1().data());
+    mapper->SelectColorArray(m_dataArrayName.toUtf8().data());
 }
 
 void AttributeArrayComponentMapping::updateBounds()
 {
-    QByteArray c_name = m_dataArrayName.toLatin1();
+    QByteArray utf8Name = m_dataArrayName.toUtf8();
 
     for (vtkIdType c = 0; c < numDataComponents(); ++c)
     {
@@ -170,9 +168,9 @@ void AttributeArrayComponentMapping::updateBounds()
             vtkDataSet * dataSet = dataObject->processedDataSet();
             vtkDataArray * dataArray = nullptr;
             if (m_attributeLocation == vtkAssignAttribute::CELL_DATA)
-                dataArray = dataSet->GetCellData()->GetArray(c_name.data());
+                dataArray = dataSet->GetCellData()->GetArray(utf8Name.data());
             else if (m_attributeLocation == vtkAssignAttribute::POINT_DATA)
-                dataArray = dataSet->GetPointData()->GetArray(c_name.data());
+                dataArray = dataSet->GetPointData()->GetArray(utf8Name.data());
 
             if (!dataArray)
                 continue;

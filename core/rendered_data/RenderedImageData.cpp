@@ -37,7 +37,7 @@ RenderedImageData::RenderedImageData(ImageDataObject * dataObject)
     m_mapper->SetInputConnection(dataObject->processedOutputPort());
 
     vtkInformation * mapperInfo = m_mapper->GetInformation();
-    mapperInfo->Set(DataObject::NameKey(), dataObject->name().toLatin1().data());
+    mapperInfo->Set(DataObject::NameKey(), dataObject->name().toUtf8().data());
     DataObject::setDataObject(mapperInfo, dataObject);
 }
 

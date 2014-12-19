@@ -75,7 +75,7 @@ vtkAlgorithm * VertexComponentMapping::createFilter(DataObject * dataObject)
 
     vtkAssignAttribute * assign = vtkAssignAttribute::New();
     assign->SetInputConnection(centroids->GetOutputPort());
-    assign->Assign(name().toLatin1().data(), vtkDataSetAttributes::SCALARS,
+    assign->Assign(name().toUtf8().data(), vtkDataSetAttributes::SCALARS,
         vtkAssignAttribute::CELL_DATA);
 
     return assign;
@@ -93,8 +93,6 @@ void VertexComponentMapping::configureDataObjectAndMapper(DataObject * /*dataObj
 
 void VertexComponentMapping::updateBounds()
 {
-    QByteArray c_name = name().toLatin1();
-
     // get min/max coordinate values on our axis/component
 
     double totalRange[2] = { std::numeric_limits<float>::max(), std::numeric_limits<float>::lowest() };

@@ -10,7 +10,7 @@ RawVectorData::RawVectorData(QString name, vtkFloatArray * dataArray)
     : DataObject(name, nullptr)
     , m_dataArray(dataArray)
 {
-    dataArray->SetName(name.toLatin1().data());
+    dataArray->SetName(name.toUtf8().data());
 
     vtkQtConnect()->Connect(dataArray, vtkCommand::ModifiedEvent, this, SLOT(_dataChanged()));
 }

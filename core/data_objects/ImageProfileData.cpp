@@ -35,7 +35,7 @@ ImageProfileData::ImageProfileData(const QString & name, ImageDataObject * image
     if (!scalars)
         scalars = imageData->processedDataSet()->GetCellData()->GetScalars();
     assert(scalars);
-    m_scalarsName = QString::fromLatin1(scalars->GetName());
+    m_scalarsName = QString::fromUtf8(scalars->GetName());
 
     m_probe = vtkSmartPointer<vtkProbeFilter>::New();
     m_probe->SetInputConnection(m_probeLine->GetOutputPort());
@@ -44,7 +44,7 @@ ImageProfileData::ImageProfileData(const QString & name, ImageDataObject * image
     m_transform->SetInputConnection(m_probe->GetOutputPort());
 
     VTK_CREATE(vtkAssignAttribute, assign);
-    assign->Assign(m_scalarsName.toLatin1().data(), vtkDataSetAttributes::SCALARS, vtkAssignAttribute::POINT_DATA);
+    assign->Assign(m_scalarsName.toUtf8().data(), vtkDataSetAttributes::SCALARS, vtkAssignAttribute::POINT_DATA);
     assign->SetInputConnection(m_transform->GetOutputPort());
 
     m_graphLine->UseNormalOn();

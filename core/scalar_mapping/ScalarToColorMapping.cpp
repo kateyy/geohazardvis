@@ -116,8 +116,7 @@ void ScalarToColorMapping::setCurrentScalarsByName(QString scalarsName)
         scalars->beforeRendering();
     }
 
-    QByteArray c_name = scalarsName.toLatin1();
-    m_colorMappingLegend->SetTitle(c_name.data());
+    m_colorMappingLegend->SetTitle(scalarsName.toUtf8().data());
 
     updateLegendVisibility();
 

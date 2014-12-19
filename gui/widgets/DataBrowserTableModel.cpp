@@ -163,7 +163,7 @@ int DataBrowserTableModel::numButtonColumns()
 QString DataBrowserTableModel::componentName(int component, int numComponents)
 {
     return numComponents <= 3
-        ? QChar::fromLatin1('x' + component)
+        ? QString('x' + component)
         : "[" + QString::number(component) + "]";
 }
 
