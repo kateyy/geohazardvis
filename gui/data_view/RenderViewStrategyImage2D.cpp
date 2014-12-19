@@ -24,7 +24,7 @@
 #include <core/vtkcamerahelper.h>
 #include <core/data_objects/ImageDataObject.h>
 #include <core/data_objects/ImageProfileData.h>
-#include <core/rendered_data/ImageProfilePlot.h>
+#include <core/rendered_data/RenderedData.h>
 #include <gui/DataMapping.h>
 #include <gui/data_view/RenderView.h>
 #include <gui/data_view/RendererImplementation3D.h>

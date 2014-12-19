@@ -59,8 +59,6 @@ set ( SOURCES
     rendered_data/RenderedData.cpp
     rendered_data/RenderedData3D.h
     rendered_data/RenderedData3D.cpp
-    rendered_data/ImageProfilePlot.h
-    rendered_data/ImageProfilePlot.cpp
     rendered_data/RenderedImageData.h
     rendered_data/RenderedImageData.cpp
     rendered_data/RenderedPolyData.h
