@@ -117,13 +117,15 @@ void RendererImplementationPlot::removeContent(AbstractVisualizedData * content)
     assert(dynamic_cast<Context2DData *>(content));
     Context2DData * contextData = static_cast<Context2DData *>(content);
 
-    vtkSmartPointer<vtkContextItemCollection> items = m_plots.take(contextData);
+    vtkSmartPointer<vtkPlotCollection> items = m_plots.take(contextData);
     assert(items);
 
     vtkCollectionSimpleIterator it;
     items->InitTraversal(it);
-    while (vtkAbstractContextItem * item = items->GetNextContextItem(it))
-        m_chart->RemoveItem(item);
+    while (vtkPlot * item = items->GetNextPlot(it))
+    {
+        m_chart->RemovePlotInstance(item);
+    }
 
     m_contextView->ResetCamera();
 }
@@ -183,7 +185,7 @@ void RendererImplementationPlot::fetchContextItems(Context2DData * data)
     vtkCollectionSimpleIterator it;
     items->InitTraversal(it);
     while (vtkPlot * item = items->GetNextPlot(it))
-        m_chart->RemoveItem(item);
+        m_chart->RemovePlotInstance(item);
     items->RemoveAllItems();
 
     // insert all new props
