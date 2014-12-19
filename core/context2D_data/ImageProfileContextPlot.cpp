@@ -4,6 +4,7 @@
 
 #include <vtkDataSet.h>
 #include <vtkFloatArray.h>
+#include <vtkPen.h>
 #include <vtkPlotLine.h>
 #include <vtkPointData.h>
 #include <vtkTable.h>
@@ -28,6 +29,39 @@ ImageProfileContextPlot::ImageProfileContextPlot(ImageProfileData * dataObject)
 PropertyGroup * ImageProfileContextPlot::createConfigGroup()
 {
     PropertyGroup * root = new PropertyGroup();
+
+    root->addProperty<Color>("Color",
+        [this] () {
+        unsigned char rgb[3];
+        m_plotLine->GetColor(rgb);
+        return Color(rgb[0], rgb[1], rgb[2], m_plotLine->GetPen()->GetOpacity());
+    },
+        [this] (const Color & color) {
+        m_plotLine->SetColor(color.red(), color.green(), color.blue(), color.alpha());
+        emit geometryChanged();
+    });
+
+    auto prop_transparency = root->addProperty<unsigned char>("Transparency",
+        [this] () {
+        return static_cast<unsigned char>((1.0f - m_plotLine->GetPen()->GetOpacity() / 255.f) * 100);
+    },
+        [this] (unsigned char transparency) {
+        m_plotLine->GetPen()->SetOpacity(static_cast<unsigned char>(
+            (100 - transparency) / 100.f * 255.f));
+        emit geometryChanged();
+    });
+    prop_transparency->setOption("minimum", 0);
+    prop_transparency->setOption("maximum", 100);
+    prop_transparency->setOption("step", 1);
+    prop_transparency->setOption("suffix", " %");
+
+    auto prop_width = root->addProperty<float>("Width",
+        [this] () { return m_plotLine->GetWidth(); },
+        [this] (float width) {
+        m_plotLine->SetWidth(width);
+        emit geometryChanged();
+    });
+    prop_width->setOption("minimum", 0.000001f);
 
     return root;
 }

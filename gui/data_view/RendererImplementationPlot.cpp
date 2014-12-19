@@ -23,6 +23,7 @@ bool RendererImplementationPlot::s_isRegistered = RendererImplementation::regist
 RendererImplementationPlot::RendererImplementationPlot(RenderView & renderView, QObject * parent)
     : RendererImplementation(renderView, parent)
     , m_isInitialized(false)
+    , m_axesAutoUpdate(true)
 {
 }
 
@@ -140,7 +141,7 @@ DataObject * RendererImplementationPlot::highlightedData()
 }
 
 void RendererImplementationPlot::lookAtData(DataObject * /*dataObject*/, vtkIdType /*itemId*/)
-{;
+{
 }
 
 void RendererImplementationPlot::resetCamera(bool /*toInitialPosition*/)
@@ -152,9 +153,26 @@ void RendererImplementationPlot::resetCamera(bool /*toInitialPosition*/)
 
 void RendererImplementationPlot::setAxesVisibility(bool /*visible*/)
 {
-    //m_axesActor->SetVisibility(visible);
+}
 
-    //render();
+bool RendererImplementationPlot::axesAutoUpdate() const
+{
+    return m_axesAutoUpdate;
+}
+
+void RendererImplementationPlot::setAxesAutoUpdate(bool enable)
+{
+    m_axesAutoUpdate = enable;
+}
+
+vtkChartXY * RendererImplementationPlot::chart()
+{
+    return m_chart;
+}
+
+vtkContextView * RendererImplementationPlot::contextView()
+{
+    return m_contextView;
 }
 
 AbstractVisualizedData * RendererImplementationPlot::requestVisualization(DataObject * dataObject) const
@@ -169,9 +187,16 @@ void RendererImplementationPlot::initialize()
 
     m_contextView = vtkSmartPointer<vtkContextView>::New();
     m_chart = vtkSmartPointer<vtkChartXY>::New();
+    m_chart->SetShowLegend(true);
     m_contextView->GetScene()->AddItem(m_chart);
 
     m_isInitialized = true;
+}
+
+void RendererImplementationPlot::updateBounds()
+{
+    if (m_axesAutoUpdate)
+        m_chart->RecalculateBounds();
 }
 
 void RendererImplementationPlot::fetchContextItems(Context2DData * data)
@@ -200,6 +225,10 @@ void RendererImplementationPlot::fetchContextItems(Context2DData * data)
     render();
 }
 
-void RendererImplementationPlot::dataVisibilityChanged(Context2DData * /*data*/)
+void RendererImplementationPlot::dataVisibilityChanged(Context2DData * data)
 {
+    if (data->isVisible())
+        connect(data->dataObject(), &DataObject::boundsChanged, this, &RendererImplementationPlot::updateBounds);
+    else
+        disconnect(data->dataObject(), &DataObject::boundsChanged, this, &RendererImplementationPlot::updateBounds);
 }

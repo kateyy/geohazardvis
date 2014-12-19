@@ -45,11 +45,20 @@ public:
 
     void setAxesVisibility(bool visible) override;
 
+    /** automatically update axes for changed chart contents */
+    bool axesAutoUpdate() const;
+    void setAxesAutoUpdate(bool enable);
+
+    vtkChartXY * chart();
+    vtkContextView * contextView();
+
 protected:
     AbstractVisualizedData * requestVisualization(DataObject * dataObject) const override;
 
 private:
     void initialize();
+
+    void updateBounds();
 
 private slots:
     /** scan data for changed context items */
@@ -65,6 +74,8 @@ private:
     vtkSmartPointer<vtkChartXY> m_chart;
 
     // -- contents and annotation --
+
+    bool m_axesAutoUpdate;
 
     // plots fetched per visualized data
     QMap<Context2DData *, vtkSmartPointer<vtkPlotCollection>> m_plots;

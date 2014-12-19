@@ -20,6 +20,7 @@ namespace propertyguizeug
 class Ui_RendererConfigWidget;
 class RenderView;
 class RendererImplementation3D;
+class RendererImplementationPlot;
 
 
 class RendererConfigWidget : public QDockWidget
@@ -44,6 +45,7 @@ private slots:
 private:
     reflectionzeug::PropertyGroup * createPropertyGroup(RenderView * renderView);
     reflectionzeug::PropertyGroup * createPropertyGroupRenderer(RenderView * renderView, RendererImplementation3D * impl);
+    reflectionzeug::PropertyGroup * createPropertyGroupPlot(RenderView * renderView, RendererImplementationPlot * impl);
 
 private:
     Ui_RendererConfigWidget * m_ui;
