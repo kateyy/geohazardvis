@@ -6,13 +6,14 @@
 
 #include <vtkProperty.h>
 
+#include <core/types.h>
 #include <core/vtkhelper.h>
 #include <core/vector_mapping/VectorMapping.h>
 #include <core/vector_mapping/VectorMappingData.h>
 
 
 RenderedData3D::RenderedData3D(DataObject * dataObject)
-    : RenderedData(dataObject)
+    : RenderedData(ContentType::Rendered3D, dataObject)
     , m_vectors(nullptr)
 {
 }

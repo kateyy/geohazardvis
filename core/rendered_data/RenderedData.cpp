@@ -2,14 +2,11 @@
 
 #include <cassert>
 
-#include <vtkLookupTable.h>
 #include <vtkPropCollection.h>
-#include <vtkInformationIntegerPointerKey.h>
 
 
-RenderedData::RenderedData(DataObject * dataObject)
-    : AbstractVisualizedData(dataObject)
-    , m_scalars(nullptr)
+RenderedData::RenderedData(ContentType contentType, DataObject * dataObject)
+    : AbstractVisualizedData(contentType, dataObject)
     , m_viewPropsInvalid(true)
 {
 }
@@ -33,32 +30,4 @@ void RenderedData::invalidateViewProps()
     m_viewPropsInvalid = true;
 
     emit viewPropCollectionChanged();
-}
-
-void RenderedData::scalarsForColorMappingChangedEvent()
-{
-}
-
-void RenderedData::colorMappingGradientChangedEvent()
-{
-}
-
-void RenderedData::setScalarsForColorMapping(ScalarsForColorMapping * scalars)
-{
-    if (scalars == m_scalars)
-        return;
-
-    m_scalars = scalars;
-
-    scalarsForColorMappingChangedEvent();
-}
-
-void RenderedData::setColorMappingGradient(vtkScalarsToColors * gradient)
-{
-    if (m_gradient == gradient)
-        return;
-
-    m_gradient = gradient;
-
-    colorMappingGradientChangedEvent();
 }
