@@ -8,12 +8,13 @@
 
 #include <QSet>
 
+#include <core/AbstractVisualizedData.h>
 #include <core/data_objects/DataObject.h>
 
 
-ScalarsForColorMapping::ScalarsForColorMapping(const QList<DataObject *> & dataObjects, vtkIdType numDataComponents)
+ScalarsForColorMapping::ScalarsForColorMapping(const QList<AbstractVisualizedData *> & visualizedData, vtkIdType numDataComponents)
     : m_isValid(false)
-    , m_dataObjects(dataObjects)
+    , m_visualizedData(visualizedData)
     , m_numDataComponents(numDataComponents)
     , m_dataComponent(0)
     , m_dataMinValue(numDataComponents, std::numeric_limits<double>::max())
@@ -69,8 +70,12 @@ void ScalarsForColorMapping::setDataComponent(vtkIdType component)
 
 void ScalarsForColorMapping::initialize()
 {
-    for (DataObject * dataObject : m_dataObjects)
+    for (AbstractVisualizedData * vis : m_visualizedData)
+    {
+        DataObject * dataObject = vis->dataObject();
+        assert(dataObject);
         connect(dataObject, &DataObject::valueRangeChanged, this, &ScalarsForColorMapping::updateBounds);
+    }
 
     updateBounds();
 }
@@ -80,7 +85,7 @@ bool ScalarsForColorMapping::isValid() const
     return m_isValid;
 }
 
-vtkAlgorithm * ScalarsForColorMapping::createFilter(DataObject * /*dataObject*/)
+vtkAlgorithm * ScalarsForColorMapping::createFilter(AbstractVisualizedData * /*visualizedData*/)
 {
     return nullptr;
 }
@@ -90,7 +95,7 @@ bool ScalarsForColorMapping::usesFilter() const
     return false;
 }
 
-void ScalarsForColorMapping::configureDataObjectAndMapper(DataObject * /*dataObject*/, vtkMapper * /*mapper*/)
+void ScalarsForColorMapping::configureMapper(AbstractVisualizedData * /*visualizedData*/, vtkMapper * /*mapper*/)
 {
 }
 

@@ -16,12 +16,12 @@ class vtkAlgorithm;
 class vtkMapper;
 class vtkLookupTable;
 
-class DataObject;
+class AbstractVisualizedData;
 
 
 /**
 Abstract base class for scalars that can be used for surface color mappings.
-Scalar mappings extract relevant data from an input data objects and supply their defined scalar values.
+Scalar mappings extract relevant data from input data objects and supply their defined scalar values.
 A subrange of values may be used for the color mapping (setMinValue, setMaxValue).
 */
 class CORE_API ScalarsForColorMapping : public QObject
@@ -32,10 +32,10 @@ public:
     friend class ScalarsForColorMappingRegistry;
 
     template<typename SubClass>
-    static QList<ScalarsForColorMapping *> newInstance(const QList<DataObject*> & dataObjects);
+    static QList<ScalarsForColorMapping *> newInstance(const QList<AbstractVisualizedData*> & visualizedData);
 
 public:
-    explicit ScalarsForColorMapping(const QList<DataObject *> & dataObjects, vtkIdType numDataComponents = 1);
+    explicit ScalarsForColorMapping(const QList<AbstractVisualizedData *> & visualizedData, vtkIdType numDataComponents = 1);
     virtual ~ScalarsForColorMapping();
 
     /** Call this before using these scalars for rendering.
@@ -53,12 +53,12 @@ public:
       * @param dataObject is required to setup object specific parameters on the filter.
       *        The filter inputs are set as required.
       * May be implemented by subclasses, returns nullptr by default. */
-    virtual vtkAlgorithm * createFilter(DataObject * dataObject);
+    virtual vtkAlgorithm * createFilter(AbstractVisualizedData * visualizedData);
     virtual bool usesFilter() const;
 
-    /** set parameters on the data object/data set and the mapper that is used to render the object.
-        @param dataObject must be one of the objects that where passed when calling the mapping's constructor */
-    virtual void configureDataObjectAndMapper(DataObject * dataObject, vtkMapper * mapper);
+    /** set parameters on the mapper that is used to render the visualizedData.
+        @param visualizedData must be one of the objects that where passed when calling the mapping's constructor */
+    virtual void configureMapper(AbstractVisualizedData * visualizedData, vtkMapper * mapper);
 
     void setLookupTable(vtkLookupTable * lookupTable);
 
@@ -99,7 +99,7 @@ protected:
 
 protected:
     bool m_isValid;
-    QList<DataObject *> m_dataObjects;
+    QList<AbstractVisualizedData *> m_visualizedData;
     vtkSmartPointer<vtkLookupTable> m_lut;
 
 private:

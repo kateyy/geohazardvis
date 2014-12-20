@@ -6,18 +6,18 @@
 class CORE_API VertexComponentMapping : public ScalarsForColorMapping
 {
 public:
-    VertexComponentMapping(const QList<DataObject *> & dataObjects, vtkIdType component);
+    VertexComponentMapping(const QList<AbstractVisualizedData*> & visualizedData, vtkIdType component);
     ~VertexComponentMapping() override;
 
     QString name() const override;
 
-    vtkAlgorithm * createFilter(DataObject * dataObject);
-    bool usesFilter() const;
+    vtkAlgorithm * createFilter(AbstractVisualizedData * visualizedData) override;
+    bool usesFilter() const override;
 
-    void configureDataObjectAndMapper(DataObject * dataObject, vtkMapper * mapper) override;
+    void configureMapper(AbstractVisualizedData * visualizedData, vtkMapper * mapper) override;
 
 protected:
-    static QList<ScalarsForColorMapping *> newInstances(const QList<DataObject *> & dataObjects);
+    static QList<ScalarsForColorMapping *> newInstances(const QList<AbstractVisualizedData*> & visualizedData);
 
     void updateBounds() override;
 

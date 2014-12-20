@@ -47,7 +47,7 @@ RendererImplementation3D::RendererImplementation3D(RenderView & renderView, QObj
         [this] (bool visible) { m_scalarBarWidget->SetEnabled(visible); });
 
     connect(&m_renderView, &RenderView::contentChanged,
-        [this] () { m_scalarMapping->setRenderedData(renderedData()); });
+        [this] () { m_scalarMapping->setVisualizedData(m_renderView.contents()); });
 }
 
 RendererImplementation3D::~RendererImplementation3D()

@@ -8,19 +8,19 @@
 class CORE_API AttributeArrayComponentMapping : public ScalarsForColorMapping
 {
 public:
-    AttributeArrayComponentMapping(const QList<DataObject *> & dataObjects, QString dataArrayName, int attributeLocation, vtkIdType numDataComponents);
+    AttributeArrayComponentMapping(const QList<AbstractVisualizedData *> & visualizedData, QString dataArrayName, int attributeLocation, vtkIdType numDataComponents);
     ~AttributeArrayComponentMapping() override;
 
     QString name() const override;
     QString scalarsName() const override;
 
-    vtkAlgorithm * createFilter(DataObject * dataObject) override;
+    vtkAlgorithm * createFilter(AbstractVisualizedData * visualizedData) override;
     bool usesFilter() const override;
 
-    void configureDataObjectAndMapper(DataObject * dataObject, vtkMapper * mapper) override;
+    void configureMapper(AbstractVisualizedData * visualizedData, vtkMapper * mapper) override;
 
 protected:
-    static QList<ScalarsForColorMapping *> newInstances(const QList<DataObject *> & dataObjects);
+    static QList<ScalarsForColorMapping *> newInstances(const QList<AbstractVisualizedData *> & visualizedData);
 
     void updateBounds() override;
 

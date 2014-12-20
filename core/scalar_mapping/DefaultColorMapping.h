@@ -6,12 +6,12 @@
 class CORE_API DefaultColorMapping : public ScalarsForColorMapping
 {
 public:
-    DefaultColorMapping(const QList<DataObject *> & dataObjects);
+    DefaultColorMapping(const QList<AbstractVisualizedData *> & visualizedData);
     ~DefaultColorMapping() override;
 
     QString name() const override;
 
-    void configureDataObjectAndMapper(DataObject * dataObject, vtkMapper * mapper) override;
+    void configureMapper(AbstractVisualizedData * visualizedData, vtkMapper * mapper) override;
 
 protected:
     virtual void updateBounds() override;

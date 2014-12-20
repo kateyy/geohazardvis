@@ -5,7 +5,10 @@
 #include <vtkMapper.h>
 
 #include <core/vtkhelper.h>
+#include <core/AbstractVisualizedData.h>
+#include <core/types.h>
 #include <core/data_objects/PolyDataObject.h>
+#include <core/rendered_data/RenderedPolyData.h>
 #include <core/filters/CentroidAsScalarsFilter.h>
 #include <core/scalar_mapping/ScalarsForColorMappingRegistry.h>
 
@@ -20,15 +23,15 @@ const bool VertexComponentMapping::s_registered = ScalarsForColorMappingRegistry
     newInstances);
 
 
-QList<ScalarsForColorMapping *> VertexComponentMapping::newInstances(const QList<DataObject *> & dataObjects)
+QList<ScalarsForColorMapping *> VertexComponentMapping::newInstances(const QList<AbstractVisualizedData*> & visualizedData)
 {
-    QList<DataObject *> polyDataObjects;
+    QList<AbstractVisualizedData *> polyDataObjects;
 
     // list all available array names, check for same number of components
-    for (DataObject * dataObject : dataObjects)
+    for (AbstractVisualizedData * vis : visualizedData)
     {
-        if ( dynamic_cast<PolyDataObject *>(dataObject))
-            polyDataObjects << dataObject;
+        if (dynamic_cast<RenderedPolyData *>(vis))
+            polyDataObjects << vis;
     }
 
     if (polyDataObjects.isEmpty())
@@ -50,8 +53,8 @@ QList<ScalarsForColorMapping *> VertexComponentMapping::newInstances(const QList
     return instances;
 }
 
-VertexComponentMapping::VertexComponentMapping(const QList<DataObject *> & dataObjects, vtkIdType component)
-    : ScalarsForColorMapping(dataObjects)
+VertexComponentMapping::VertexComponentMapping(const QList<AbstractVisualizedData *> & visualizedData, vtkIdType component)
+    : ScalarsForColorMapping(visualizedData)
     , m_component(component)
 {
     m_isValid = true;
@@ -64,9 +67,9 @@ QString VertexComponentMapping::name() const
     return QString('x' + char(m_component)) + "-coordinate";
 }
 
-vtkAlgorithm * VertexComponentMapping::createFilter(DataObject * dataObject)
+vtkAlgorithm * VertexComponentMapping::createFilter(AbstractVisualizedData * visualizedData)
 {
-    PolyDataObject * polyData = static_cast<PolyDataObject *>(dataObject);
+    PolyDataObject * polyData = static_cast<PolyDataObject *>(visualizedData->dataObject());
 
     VTK_CREATE(CentroidAsScalarsFilter, centroids);
     centroids->SetInputConnection(0, polyData->processedOutputPort());
@@ -86,7 +89,7 @@ bool VertexComponentMapping::usesFilter() const
     return true;
 }
 
-void VertexComponentMapping::configureDataObjectAndMapper(DataObject * /*dataObject*/, vtkMapper * mapper)
+void VertexComponentMapping::configureMapper(AbstractVisualizedData * /*visualizedData*/, vtkMapper * mapper)
 {
     mapper->ScalarVisibilityOn();
 }
@@ -96,9 +99,9 @@ void VertexComponentMapping::updateBounds()
     // get min/max coordinate values on our axis/component
 
     double totalRange[2] = { std::numeric_limits<float>::max(), std::numeric_limits<float>::lowest() };
-    for (DataObject * dataObject : m_dataObjects)
+    for (AbstractVisualizedData * vis: m_visualizedData)
     {
-        const double * objectBounds = dataObject->dataSet()->GetBounds();
+        const double * objectBounds = vis->dataObject()->dataSet()->GetBounds();
 
         totalRange[0] = std::min(totalRange[0], objectBounds[2 * m_component]);
         totalRange[1] = std::max(totalRange[1], objectBounds[2 * m_component + 1]);
