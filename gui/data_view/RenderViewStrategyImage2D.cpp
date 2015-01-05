@@ -24,7 +24,7 @@
 #include <core/vtkcamerahelper.h>
 #include <core/data_objects/ImageDataObject.h>
 #include <core/data_objects/ImageProfileData.h>
-#include <core/rendered_data/ImageProfilePlot.h>
+#include <core/rendered_data/RenderedData.h>
 #include <gui/DataMapping.h>
 #include <gui/data_view/RenderView.h>
 #include <gui/data_view/RendererImplementation3D.h>
@@ -41,7 +41,7 @@ RenderViewStrategyImage2D::RenderViewStrategyImage2D(RendererImplementation3D & 
     , m_previewRenderer(nullptr)
     , m_currentPlottingImage(nullptr)
 {
-    connect(&context.renderView(), &RenderView::renderedDataChanged, this, &RenderViewStrategyImage2D::checkSourceExists);
+    connect(&context.renderView(), &RenderView::contentChanged, this, &RenderViewStrategyImage2D::checkSourceExists);
 }
 
 RenderViewStrategyImage2D::~RenderViewStrategyImage2D()
@@ -49,7 +49,7 @@ RenderViewStrategyImage2D::~RenderViewStrategyImage2D()
     if (m_previewRenderer && m_previewProfile)
     {
         m_previewRenderer->removeDataObjects({ m_previewProfile });
-        if (m_previewRenderer->renderedData().isEmpty())
+        if (m_previewRenderer->contents().isEmpty())
             m_previewRenderer->close();
     }
 

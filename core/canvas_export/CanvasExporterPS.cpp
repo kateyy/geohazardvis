@@ -65,7 +65,7 @@ bool CanvasExporterPS::write()
     if (info.suffix().toLower() == ext)
         fileName.truncate(fileName.length() - ext.length() - 1); // cut ".EXT"
 
-    m_exporter->SetFilePrefix(fileName.toLatin1().data());
+    m_exporter->SetFilePrefix(fileName.toUtf8().data());
     m_exporter->SetFileFormat(vtkPSFormat);
     m_exporter->SetRenderWindow(renderWindow());
     m_exporter->Write();

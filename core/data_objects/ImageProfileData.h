@@ -6,6 +6,7 @@
 
 
 class vtkLineSource;
+class vtkProbeFilter;
 class vtkTransformFilter;
 class vtkWarpScalar;
 class ImageDataObject;
@@ -17,12 +18,14 @@ public:
     ImageProfileData(const QString & name, ImageDataObject * imageData);
 
     bool is3D() const override;
-    RenderedData * createRendered() override;
+    Context2DData * createContextData() override;
 
     QString dataTypeName() const override;
 
     vtkDataSet * processedDataSet() override;
     vtkAlgorithmOutput * processedOutputPort() override;
+    vtkDataSet * probedLine();
+    vtkAlgorithmOutput * probedLineOuputPort();
 
     const QString & abscissa() const;
     const QString & scalarsName() const;
@@ -43,6 +46,7 @@ private:
     QString m_scalarsName;
 
     vtkSmartPointer<vtkLineSource> m_probeLine;
+    vtkSmartPointer<vtkProbeFilter> m_probe;
     vtkSmartPointer<vtkTransformFilter> m_transform;
     vtkSmartPointer<vtkWarpScalar> m_graphLine;
 };

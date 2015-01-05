@@ -82,7 +82,7 @@ DataObject * MatricesToVtk::loadGrid2D(QString name, const std::vector<ReadDatas
     grid->SetExtent(0, dimensions[0] - 1, 0, dimensions[1] - 1, 0, 0);
 
     VTK_CREATE(vtkFloatArray, cellArray);
-    cellArray->SetName(name.toLatin1().data());
+    cellArray->SetName(name.toUtf8().data());
     cellArray->SetNumberOfComponents(1);
     cellArray->SetNumberOfTuples(dimensions[0] * dimensions[1] * dimensions[2]);
     for (int r = 0; r < dimensions[1]; ++r)
@@ -195,7 +195,7 @@ DataObject * MatricesToVtk::loadGrid3D(QString name, const std::vector<ReadDatas
     VTK_CREATE(vtkFloatArray, vectorData);
     vectorData->SetNumberOfComponents(numComponents);
     vectorData->SetNumberOfTuples(numPoints);
-    vectorData->SetName(name.toLatin1().data());
+    vectorData->SetName(name.toUtf8().data());
 
     float * tuple = new float[numComponents];
 
@@ -340,7 +340,7 @@ vtkFloatArray * MatricesToVtk::parseFloatVector(const InputVector & parsedData, 
     }
 
     vtkFloatArray * a = vtkFloatArray::New();
-    a->SetName(arrayName.toLatin1().data());
+    a->SetName(arrayName.toUtf8().data());
     a->SetNumberOfComponents(numComponents);
     a->SetNumberOfTuples(numTuples);
 

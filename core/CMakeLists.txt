@@ -5,6 +5,8 @@ message( STATUS ${TARGET} )
 set ( SOURCES
     ${CMAKE_CURRENT_BINARY_DIR}/${TARGET}_api.h
 
+    AbstractVisualizedData.h
+    AbstractVisualizedData.cpp
     DataSetHandler.h
     DataSetHandler.cpp
     types.h
@@ -59,14 +61,21 @@ set ( SOURCES
     rendered_data/RenderedData.cpp
     rendered_data/RenderedData3D.h
     rendered_data/RenderedData3D.cpp
-    rendered_data/ImageProfilePlot.h
-    rendered_data/ImageProfilePlot.cpp
     rendered_data/RenderedImageData.h
     rendered_data/RenderedImageData.cpp
     rendered_data/RenderedPolyData.h
     rendered_data/RenderedPolyData.cpp
     rendered_data/RenderedVectorGrid3D.h
     rendered_data/RenderedVectorGrid3D.cpp
+
+    context2D_data/Context2DData.h
+    context2D_data/Context2DData.cpp
+    context2D_data/ImageProfileContextPlot.h
+    context2D_data/ImageProfileContextPlot.cpp
+    context2D_data/vtkContextItemCollection.h
+    context2D_data/vtkContextItemCollection.cpp
+    context2D_data/vtkPlotCollection.h
+    context2D_data/vtkPlotCollection.cpp
 
     table_model/QVtkTableModel.h
     table_model/QVtkTableModel.cpp
@@ -92,8 +101,6 @@ set ( SOURCES
     scalar_mapping/DefaultColorMapping.cpp
     scalar_mapping/VertexComponentMapping.h
     scalar_mapping/VertexComponentMapping.cpp
-    scalar_mapping/AbstractArrayComponentMapping.h
-    scalar_mapping/AbstractArrayComponentMapping.cpp
     scalar_mapping/AttributeArrayComponentMapping.h
     scalar_mapping/AttributeArrayComponentMapping.cpp
 

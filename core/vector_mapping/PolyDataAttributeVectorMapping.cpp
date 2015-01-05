@@ -88,7 +88,7 @@ PolyDataAttributeVectorMapping::~PolyDataAttributeVectorMapping() = default;
 QString PolyDataAttributeVectorMapping::name() const
 {
     assert(m_dataArray);
-    return QString::fromLatin1(m_dataArray->GetName());
+    return QString::fromUtf8(m_dataArray->GetName());
 }
 
 void PolyDataAttributeVectorMapping::initialize()

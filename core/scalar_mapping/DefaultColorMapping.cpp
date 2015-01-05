@@ -1,28 +1,27 @@
 #include "DefaultColorMapping.h"
 
 #include <vtkMapper.h>
-#include <vtkPolyData.h>
 
+#include <core/AbstractVisualizedData.h>
+#include <core/types.h>
 #include <core/scalar_mapping/ScalarsForColorMappingRegistry.h>
-#include <core/data_objects/DataObject.h>
 
 
 const QString DefaultColorMapping::s_name = "user-defined color";
 
-const bool DefaultColorMapping::s_registered = ScalarsForColorMappingRegistry::instance().registerImplementation(
+const bool DefaultColorMapping::s_isRegistered = ScalarsForColorMappingRegistry::instance().registerImplementation(
     s_name,
     newInstance<DefaultColorMapping>);
 
-DefaultColorMapping::DefaultColorMapping(const QList<DataObject *> & dataObjects)
-    : ScalarsForColorMapping(dataObjects)
-    , m_valid(false)
+DefaultColorMapping::DefaultColorMapping(const QList<AbstractVisualizedData *> & visualizedData)
+    : ScalarsForColorMapping(visualizedData)
 {
     // only makes sense if there is a surface which we can color
-    for (DataObject * dataObject : dataObjects)
+    for (AbstractVisualizedData * vis : visualizedData)
     {
-        if (dataObject->is3D() && vtkPolyData::SafeDownCast(dataObject->dataSet()))
+        if (vis->contentType() == ContentType::Rendered3D)
         {
-            m_valid = true;
+            m_isValid = true;
             break;
         }
     }
@@ -35,9 +34,9 @@ QString DefaultColorMapping::name() const
     return s_name;
 }
 
-void DefaultColorMapping::configureDataObjectAndMapper(DataObject * dataObject, vtkMapper * mapper)
+void DefaultColorMapping::configureMapper(AbstractVisualizedData * visualizedData, vtkMapper * mapper)
 {
-    ScalarsForColorMapping::configureDataObjectAndMapper(dataObject, mapper);
+    ScalarsForColorMapping::configureMapper(visualizedData, mapper);
 
     mapper->ScalarVisibilityOff();
 }
@@ -45,9 +44,4 @@ void DefaultColorMapping::configureDataObjectAndMapper(DataObject * dataObject, 
 void DefaultColorMapping::updateBounds()
 {
     setDataMinMaxValue(0.0, 0.0, 0);
-}
-
-bool DefaultColorMapping::isValid() const
-{
-    return m_valid;
 }

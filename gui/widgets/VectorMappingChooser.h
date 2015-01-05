@@ -16,7 +16,7 @@ class PropertyBrowser;
 }
 
 class RenderView;
-class RenderedData;
+class AbstractVisualizedData;
 class VectorMapping;
 class VectorMappingChooserListModel;
 class DataObject;
@@ -44,7 +44,7 @@ private slots:
     void updateVectorsList();
 
     /** remove data from the UI if we currently hold it */
-    void checkRemovedData(RenderedData * renderedData);
+    void checkRemovedData(AbstractVisualizedData * content);
 
 private:
     void updateTitle();

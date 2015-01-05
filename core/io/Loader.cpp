@@ -25,7 +25,7 @@ DataObject * Loader::readFile(const QString & filename)
     if (ext == "vti")
     {
         VTK_CREATE(vtkXMLImageDataReader, reader);
-        reader->SetFileName(filename.toLatin1().data());
+        reader->SetFileName(filename.toUtf8().data());
         reader->Update();
         vtkSmartPointer<vtkImageData> image = reader->GetOutput();
 

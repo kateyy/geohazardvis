@@ -13,7 +13,7 @@
 class vtkLookupTable;
 class vtkScalarBarActor;
 
-class RenderedData;
+class AbstractVisualizedData;
 class ScalarsForColorMapping;
 
 
@@ -31,7 +31,7 @@ public:
 
     /** setup a list of scalar mappings which are applicable to the list of rendered data
       * reuse lastly used scalars if possible */
-    void setRenderedData(const QList<RenderedData *> & renderedData);
+    void setVisualizedData(const QList<AbstractVisualizedData *> & visualizedData);
 
     void clear();
 
@@ -72,7 +72,7 @@ private slots:
     void updateLegendVisibility();
 
 private:
-    QList<RenderedData *> m_renderedData;
+    QList<AbstractVisualizedData *> m_visualizedData;
 
     QMap<QString, ScalarsForColorMapping *> m_scalars;
 

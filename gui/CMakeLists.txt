@@ -14,8 +14,8 @@ set ( SOURCES
 
     data_view/AbstractDataView.h
     data_view/AbstractDataView.cpp
-    data_view/RenderViewSwitch.h
-    data_view/RenderViewSwitch.cpp
+    data_view/RenderViewStrategySwitch.h
+    data_view/RenderViewStrategySwitch.cpp
     data_view/RenderView.h
     data_view/RenderView.cpp
     data_view/RendererImplementation.h
@@ -24,6 +24,10 @@ set ( SOURCES
     data_view/RendererImplementationNull.cpp
     data_view/RendererImplementation3D.h
     data_view/RendererImplementation3D.cpp
+    data_view/RendererImplementationPlot.h
+    data_view/RendererImplementationPlot.cpp
+    data_view/RendererImplementationSwitch.h
+    data_view/RendererImplementationSwitch.cpp
     data_view/RenderViewStrategy.h
     data_view/RenderViewStrategy.cpp
     data_view/RenderViewStrategyNull.h
@@ -32,8 +36,6 @@ set ( SOURCES
     data_view/RenderViewStrategy3D.cpp
     data_view/RenderViewStrategyImage2D.h
     data_view/RenderViewStrategyImage2D.cpp
-    data_view/RenderViewStrategyImage2DPlot.h
-    data_view/RenderViewStrategyImage2DPlot.cpp
     data_view/TableView.h
     data_view/TableView.cpp
 

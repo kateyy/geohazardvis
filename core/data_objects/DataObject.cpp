@@ -33,6 +33,16 @@ DataObject::~DataObject()
     delete d_ptr;
 }
 
+RenderedData * DataObject::createRendered()
+{
+    return nullptr;
+}
+
+Context2DData * DataObject::createContextData()
+{
+    return nullptr;
+}
+
 QString DataObject::name() const
 {
     return d_ptr->m_name;

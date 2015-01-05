@@ -14,6 +14,7 @@
 
 #include <reflectionzeug/PropertyGroup.h>
 
+#include <core/types.h>
 #include <core/vtkhelper.h>
 #include <core/data_objects/ImageDataObject.h>
 
@@ -31,13 +32,13 @@ namespace
 }
 
 RenderedImageData::RenderedImageData(ImageDataObject * dataObject)
-    : RenderedData(dataObject)
+    : RenderedData(ContentType::Rendered2D, dataObject)
     , m_mapper(vtkSmartPointer<vtkImageSliceMapper>::New()) // replace with vtkImageResliceMapper?
 {
     m_mapper->SetInputConnection(dataObject->processedOutputPort());
 
     vtkInformation * mapperInfo = m_mapper->GetInformation();
-    mapperInfo->Set(DataObject::NameKey(), dataObject->name().toLatin1().data());
+    mapperInfo->Set(DataObject::NameKey(), dataObject->name().toUtf8().data());
     DataObject::setDataObject(mapperInfo, dataObject);
 }
 

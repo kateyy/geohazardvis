@@ -16,9 +16,12 @@ class vtkCubeAxesActor;
 class vtkScalarBarActor;
 class vtkScalarBarWidget;
 
-class PickingInteractorStyleSwitch;
 class IPickingInteractorStyle;
+class PickingInteractorStyleSwitch;
 class RenderViewStrategy;
+class RenderViewStrategySwitch;
+class RenderedData;
+class ScalarToColorMapping;
 
 
 class RendererImplementation3D : public RendererImplementation
@@ -29,18 +32,21 @@ public:
     RendererImplementation3D(RenderView & renderView, QObject * parent = nullptr);
     ~RendererImplementation3D() override;
 
+    QString name() const override;
+
     ContentType contentType() const override;
 
-    QList<DataObject *> filterCompatibleObjects(const QList<DataObject *> & dataObjects, QList<DataObject *> & incompatibleObjects) const override;
+    bool canApplyTo(const QList<DataObject *> & data) override;
+    QList<DataObject *> filterCompatibleObjects(const QList<DataObject *> & dataObjects, QList<DataObject *> & incompatibleObjects) override;
 
-    void apply(QVTKWidget * qvtkWidget) override;
+    void activate(QVTKWidget * qvtkWidget) override;
 
     void render() override;
 
     vtkRenderWindowInteractor * interactor() override;
 
-    void addRenderedData(RenderedData * renderedData) override;
-    void removeRenderedData(RenderedData * renderedData) override;
+    void addContent(AbstractVisualizedData * content) override;
+    void removeContent(AbstractVisualizedData * content) override;
 
     void highlightData(DataObject * dataObject, vtkIdType itemId = -1) override;
     virtual DataObject * highlightedData() override;
@@ -51,6 +57,8 @@ public:
 
     void setAxesVisibility(bool visible) override;
 
+    QList<RenderedData *> renderedData();
+
     IPickingInteractorStyle * interactorStyle();
     const IPickingInteractorStyle * interactorStyle() const;
     PickingInteractorStyleSwitch * interactorStyleSwitch();
@@ -59,6 +67,8 @@ public:
     vtkCamera * camera();
 
     vtkLightKit * lightKit();
+
+    ScalarToColorMapping * scalarMapping();
     vtkScalarBarWidget * colorLegendWidget();
 
     vtkCubeAxesActor * axesActor();
@@ -68,6 +78,9 @@ signals:
 
 public slots:
     void setStrategy(RenderViewStrategy * strategy);
+
+protected:
+    AbstractVisualizedData * requestVisualization(DataObject * dataObject) const override;
 
 private:
     void initialize();
@@ -91,6 +104,7 @@ private slots:
 
 private:
     bool m_isInitialized;
+    RenderViewStrategySwitch * m_strategySwitch;
     RenderViewStrategy * m_strategy;
     RenderViewStrategy * m_emptyStrategy;
 
@@ -110,6 +124,9 @@ private:
     vtkBoundingBox m_dataBounds;
 
     vtkSmartPointer<vtkCubeAxesActor> m_axesActor;
+    ScalarToColorMapping * m_scalarMapping;
     vtkScalarBarActor * m_colorMappingLegend;
     vtkSmartPointer<vtkScalarBarWidget> m_scalarBarWidget;
+
+    static bool s_isRegistered;
 };

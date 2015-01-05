@@ -84,7 +84,7 @@ Grid3dVectorMapping::Grid3dVectorMapping(RenderedVectorGrid3D * renderedGrid, vt
 QString Grid3dVectorMapping::name() const
 {
     assert(m_dataArray);
-    return QString::fromLatin1(m_dataArray->GetName());
+    return QString::fromUtf8(m_dataArray->GetName());
 }
 
 void Grid3dVectorMapping::initialize()

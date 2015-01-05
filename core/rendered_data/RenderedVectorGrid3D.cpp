@@ -338,7 +338,7 @@ void RenderedVectorGrid3D::visibilityChangedEvent(bool visible)
 
 void RenderedVectorGrid3D::updateVisibilities()
 {
-    bool showSliceScalars = m_scalars && m_scalars->scalarsName() == QString::fromLatin1(dataObject()->dataSet()->GetPointData()->GetVectors()->GetName());
+    bool showSliceScalars = m_scalars && m_scalars->scalarsName() == QString::fromUtf8(dataObject()->dataSet()->GetPointData()->GetVectors()->GetName());
 
     for (int i = 0; i < 3; ++i)
     {

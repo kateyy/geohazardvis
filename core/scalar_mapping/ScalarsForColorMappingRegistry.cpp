@@ -2,7 +2,7 @@
 
 #include <cassert>
 
-#include "ScalarsForColorMapping.h"
+#include <core/scalar_mapping/ScalarsForColorMapping.h>
 
 
 ScalarsForColorMappingRegistry::ScalarsForColorMappingRegistry()
@@ -17,13 +17,13 @@ ScalarsForColorMappingRegistry & ScalarsForColorMappingRegistry::instance()
     return registry;
 }
 
-QMap<QString, ScalarsForColorMapping *> ScalarsForColorMappingRegistry::createMappingsValidFor(const QList<DataObject*> & dataObjects)
+QMap<QString, ScalarsForColorMapping *> ScalarsForColorMappingRegistry::createMappingsValidFor(const QList<AbstractVisualizedData*> & visualizedData)
 {
     QMap<QString, ScalarsForColorMapping *> validScalars;
 
     for (auto creator : m_mappingCreators)
     {
-        QList<ScalarsForColorMapping *> scalars = creator(dataObjects);
+        QList<ScalarsForColorMapping *> scalars = creator(visualizedData);
 
         for (ScalarsForColorMapping * s : scalars)
         {

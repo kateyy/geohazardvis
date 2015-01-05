@@ -12,6 +12,7 @@ class vtkEventQtSlotConnect;
 class Ui_ScalarMappingChooser;
 class ScalarToColorMapping;
 class RenderView;
+class RendererImplementation3D;
 
 class ScalarMappingChooser : public QDockWidget
 {
@@ -57,6 +58,7 @@ private:
 
     ScalarToColorMapping * m_mapping;
     RenderView * m_renderView;
+    RendererImplementation3D * m_renderViewImpl;
     /** check if we are moving the actor or if the user interacts */
     bool m_movingColorLegend;
     vtkSmartPointer<vtkEventQtSlotConnect> m_colorLegendConnects;

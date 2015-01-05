@@ -18,7 +18,7 @@
 
 #include <core/vtkhelper.h>
 #include <core/data_objects/ImageDataObject.h>
-#include <core/rendered_data/ImageProfilePlot.h>
+#include <core/context2D_data/ImageProfileContextPlot.h>
 
 #include <core/table_model/QVtkTableModelProfileData.h>
 
@@ -35,16 +35,16 @@ ImageProfileData::ImageProfileData(const QString & name, ImageDataObject * image
     if (!scalars)
         scalars = imageData->processedDataSet()->GetCellData()->GetScalars();
     assert(scalars);
-    m_scalarsName = QString::fromLatin1(scalars->GetName());
+    m_scalarsName = QString::fromUtf8(scalars->GetName());
 
-    VTK_CREATE(vtkProbeFilter, probe);
-    probe->SetInputConnection(m_probeLine->GetOutputPort());
-    probe->SetSourceConnection(m_imageData->processedOutputPort());
+    m_probe = vtkSmartPointer<vtkProbeFilter>::New();
+    m_probe->SetInputConnection(m_probeLine->GetOutputPort());
+    m_probe->SetSourceConnection(m_imageData->processedOutputPort());
 
-    m_transform->SetInputConnection(probe->GetOutputPort());
+    m_transform->SetInputConnection(m_probe->GetOutputPort());
 
     VTK_CREATE(vtkAssignAttribute, assign);
-    assign->Assign(m_scalarsName.toLatin1().data(), vtkDataSetAttributes::SCALARS, vtkAssignAttribute::POINT_DATA);
+    assign->Assign(m_scalarsName.toUtf8().data(), vtkDataSetAttributes::SCALARS, vtkAssignAttribute::POINT_DATA);
     assign->SetInputConnection(m_transform->GetOutputPort());
 
     m_graphLine->UseNormalOn();
@@ -57,9 +57,9 @@ bool ImageProfileData::is3D() const
     return false;
 }
 
-RenderedData * ImageProfileData::createRendered()
+Context2DData * ImageProfileData::createContextData()
 {
-    return new ImageProfilePlot(this);
+    return new ImageProfileContextPlot(this);
 }
 
 QString ImageProfileData::dataTypeName() const
@@ -76,6 +76,17 @@ vtkDataSet * ImageProfileData::processedDataSet()
 vtkAlgorithmOutput * ImageProfileData::processedOutputPort()
 {
     return m_graphLine->GetOutputPort();
+}
+
+vtkDataSet * ImageProfileData::probedLine()
+{
+    m_probe->Update();
+    return m_probe->GetOutput();
+}
+
+vtkAlgorithmOutput * ImageProfileData::probedLineOuputPort()
+{
+    return m_probe->GetOutputPort();
 }
 
 const QString & ImageProfileData::abscissa() const

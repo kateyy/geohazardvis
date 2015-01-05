@@ -49,7 +49,7 @@ RenderedPolyData::RenderedPolyData(PolyDataObject * dataObject)
     assert(vtkPolyData::SafeDownCast(dataObject->dataSet()));
 
     vtkInformation * mapperInfo = m_mapper->GetInformation();
-    mapperInfo->Set(DataObject::NameKey(), dataObject->name().toLatin1().data());
+    mapperInfo->Set(DataObject::NameKey(), dataObject->name().toUtf8().data());
     DataObject::setDataObject(mapperInfo, dataObject);
 
     m_normals->ComputePointNormalsOn();
@@ -229,11 +229,11 @@ void RenderedPolyData::scalarsForColorMappingChangedEvent()
         return;
     }
 
-    m_scalars->configureDataObjectAndMapper(dataObject(), m_mapper);
+    m_scalars->configureMapper(this, m_mapper);
 
     if (m_scalars->usesFilter())
     {
-        vtkSmartPointer<vtkAlgorithm> filter = vtkSmartPointer<vtkAlgorithm>::Take(m_scalars->createFilter(dataObject()));
+        vtkSmartPointer<vtkAlgorithm> filter = vtkSmartPointer<vtkAlgorithm>::Take(m_scalars->createFilter(this));
         m_mapperInput->SetInputConnection(filter->GetOutputPort());
     }
     else

@@ -25,28 +25,41 @@
 #include <core/scalar_mapping/ScalarToColorMapping.h>
 #include <gui/data_view/RenderView.h>
 #include <gui/data_view/RenderViewStrategy.h>
+#include <gui/data_view/RenderViewStrategySwitch.h>
 #include <gui/rendering_interaction/PickingInteractorStyleSwitch.h>
 #include <gui/rendering_interaction/InteractorStyle3D.h>
 #include <gui/rendering_interaction/InteractorStyleImage.h>
 #include <gui/data_view/RenderViewStrategyNull.h>
 
 
+bool RendererImplementation3D::s_isRegistered = RendererImplementation::registerImplementation<RendererImplementation3D>();
+
+
 RendererImplementation3D::RendererImplementation3D(RenderView & renderView, QObject * parent)
     : RendererImplementation(renderView, parent)
     , m_isInitialized(false)
+    , m_strategySwitch(new RenderViewStrategySwitch(*this))
     , m_strategy(nullptr)
     , m_emptyStrategy(new RenderViewStrategyNull(*this))
+    , m_scalarMapping(new ScalarToColorMapping())
 {
-    connect(renderView.scalarMapping(), &ScalarToColorMapping::colorLegendVisibilityChanged,
+    connect(m_scalarMapping, &ScalarToColorMapping::colorLegendVisibilityChanged,
         [this] (bool visible) { m_scalarBarWidget->SetEnabled(visible); });
 
-    // TODO hack: replace by impl switch
-    connect(&renderView, &RenderView::resetImplementation, this, &RendererImplementation3D::resetStrategy);
+    connect(&m_renderView, &RenderView::contentChanged,
+        [this] () { m_scalarMapping->setVisualizedData(m_renderView.contents()); });
 }
 
 RendererImplementation3D::~RendererImplementation3D()
 {
+    delete m_strategySwitch;
+    delete m_scalarMapping;
     delete m_emptyStrategy;
+}
+
+QString RendererImplementation3D::name() const
+{
+    return "Renderer 3D";
 }
 
 ContentType RendererImplementation3D::contentType() const
@@ -57,14 +70,31 @@ ContentType RendererImplementation3D::contentType() const
         return ContentType::Rendered2D;
 }
 
+bool RendererImplementation3D::canApplyTo(const QList<DataObject *> & data)
+{
+    for (DataObject * obj : data)
+    {
+        if (RenderedData * rendered = obj->createRendered())
+        {
+            delete rendered;
+            return true;
+        }
+    }
+
+    return false;
+}
+
 QList<DataObject *> RendererImplementation3D::filterCompatibleObjects(
     const QList<DataObject *> & dataObjects,
-    QList<DataObject *> & incompatibleObjects) const
+    QList<DataObject *> & incompatibleObjects)
 {
+    if (!m_strategy)
+        emit resetStrategy(dataObjects);
+
     return strategy().filterCompatibleObjects(dataObjects, incompatibleObjects);
 }
 
-void RendererImplementation3D::apply(QVTKWidget * qvtkWidget)
+void RendererImplementation3D::activate(QVTKWidget * qvtkWidget)
 {
     initialize();
 
@@ -86,8 +116,11 @@ vtkRenderWindowInteractor * RendererImplementation3D::interactor()
     return m_renderWindow->GetInteractor();
 }
 
-void RendererImplementation3D::addRenderedData(RenderedData * renderedData)
+void RendererImplementation3D::addContent(AbstractVisualizedData * content)
 {
+    assert(dynamic_cast<RenderedData *>(content));
+    RenderedData * renderedData = static_cast<RenderedData *>(content);
+
     VTK_CREATE(vtkPropCollection, props);
 
     vtkCollectionSimpleIterator it;
@@ -110,8 +143,11 @@ void RendererImplementation3D::addRenderedData(RenderedData * renderedData)
     dataVisibilityChanged(renderedData);
 }
 
-void RendererImplementation3D::removeRenderedData(RenderedData * renderedData)
+void RendererImplementation3D::removeContent(AbstractVisualizedData * content)
 {
+    assert(dynamic_cast<RenderedData *>(content));
+    RenderedData * renderedData = static_cast<RenderedData *>(content);
+
     vtkSmartPointer<vtkPropCollection> props = m_dataProps.take(renderedData);
     assert(props);
 
@@ -166,6 +202,18 @@ void RendererImplementation3D::setAxesVisibility(bool visible)
     render();
 }
 
+QList<RenderedData *> RendererImplementation3D::renderedData()
+{
+    QList<RenderedData *> renderedList;
+    for (AbstractVisualizedData * vis : m_renderView.contents())
+    {
+        if (RenderedData * rendered =  dynamic_cast<RenderedData *>(vis))
+            renderedList << rendered;
+    }
+
+    return renderedList;
+}
+
 IPickingInteractorStyle * RendererImplementation3D::interactorStyle()
 {
     return m_interactorStyle;
@@ -198,6 +246,11 @@ vtkLightKit * RendererImplementation3D::lightKit()
     return m_lightKit;
 }
 
+ScalarToColorMapping * RendererImplementation3D::scalarMapping()
+{
+    return m_scalarMapping;
+}
+
 vtkScalarBarWidget * RendererImplementation3D::colorLegendWidget()
 {
     return m_scalarBarWidget;
@@ -217,6 +270,11 @@ void RendererImplementation3D::setStrategy(RenderViewStrategy * strategy)
 
     if (m_strategy)
         m_strategy->activate();
+}
+
+AbstractVisualizedData * RendererImplementation3D::requestVisualization(DataObject * dataObject) const
+{
+    return dataObject->createRendered();
 }
 
 void RendererImplementation3D::initialize()
@@ -250,8 +308,8 @@ void RendererImplementation3D::initialize()
     m_interactorStyle->addStyle("InteractorStyle3D", vtkSmartPointer<InteractorStyle3D>::New());
     m_interactorStyle->addStyle("InteractorStyleImage", vtkSmartPointer<InteractorStyleImage>::New());
 
-    connect(&m_renderView, &RenderView::renderedDataChanged,
-        [this] () { interactorStyle()->setRenderedData(m_renderView.renderedData()); });
+    connect(&m_renderView, &RenderView::contentChanged,
+        [this] () { interactorStyle()->setRenderedData(renderedData());  });
 
     connect(m_interactorStyle.Get(), &PickingInteractorStyleSwitch::pointInfoSent, &m_renderView, &RenderView::ShowInfo);
     connect(m_interactorStyle.Get(), &PickingInteractorStyleSwitch::dataPicked, this, &RendererImplementation3D::dataSelectionChanged);
@@ -288,7 +346,7 @@ void RendererImplementation3D::updateBounds()
 {
     m_dataBounds.Reset();
 
-    for (RenderedData * it : m_renderView.renderedData())
+    for (AbstractVisualizedData * it : m_renderView.contents())
         m_dataBounds.AddBounds(it->dataObject()->bounds());
 
     updateAxes();
@@ -306,7 +364,7 @@ void RendererImplementation3D::removeFromBounds(RenderedData * renderedData)
 {
     m_dataBounds.Reset();
 
-    for (RenderedData * it : m_renderView.renderedData())
+    for (AbstractVisualizedData * it : m_renderView.contents())
     {
         if (it == renderedData)
             continue;
@@ -357,7 +415,7 @@ void RendererImplementation3D::createAxes()
 
 void RendererImplementation3D::setupColorMappingLegend()
 {
-    m_colorMappingLegend = m_renderView.scalarMapping()->colorMappingLegend();
+    m_colorMappingLegend = m_scalarMapping->colorMappingLegend();
     m_colorMappingLegend->SetAnnotationTextScaling(false);
     m_colorMappingLegend->SetBarRatio(0.2);
     m_colorMappingLegend->SetNumberOfLabels(7);

@@ -5,9 +5,9 @@
 #include <vtkLookupTable.h>
 #include <vtkScalarBarActor.h>
 
+#include <core/AbstractVisualizedData.h>
 #include <core/DataSetHandler.h>
 #include <core/data_objects/DataObject.h>
-#include <core/rendered_data/RenderedData.h>
 #include <core/scalar_mapping/ScalarsForColorMapping.h>
 #include <core/scalar_mapping/ScalarsForColorMappingRegistry.h>
 
@@ -32,31 +32,29 @@ ScalarToColorMapping::~ScalarToColorMapping()
     qDeleteAll(m_scalars);
 }
 
-void ScalarToColorMapping::setRenderedData(const QList<RenderedData *> & renderedData)
+void ScalarToColorMapping::setVisualizedData(const QList<AbstractVisualizedData *> & visualizedData)
 {
     // clean up old scalars
-    for (RenderedData * renderedData : m_renderedData)
-        renderedData->setScalarsForColorMapping(nullptr);
+    for (AbstractVisualizedData * vis : m_visualizedData)
+        vis->setScalarsForColorMapping(nullptr);
 
     QString lastScalars = currentScalarsName();
     m_currentScalarsName.clear();
     qDeleteAll(m_scalars);
 
 
-    m_renderedData = renderedData;
+    m_visualizedData = visualizedData;
 
-    QList<DataObject *> dataObjects;
-    for (RenderedData * renderedData : m_renderedData)
+    for (AbstractVisualizedData * vis : m_visualizedData)
     {
-        DataObject * dataObject = renderedData->dataObject();
-        dataObjects << dataObject;
+        DataObject * dataObject = vis->dataObject();
         // pass our (persistent) gradient object
-        renderedData->setColorMappingGradient(m_gradient);
+        vis->setColorMappingGradient(m_gradient);
 
         connect(dataObject, &DataObject::attributeArraysChanged, this, &ScalarToColorMapping::updateAvailableScalars);
     }
 
-    m_scalars = ScalarsForColorMappingRegistry::instance().createMappingsValidFor(dataObjects);
+    m_scalars = ScalarsForColorMappingRegistry::instance().createMappingsValidFor(visualizedData);
     for (ScalarsForColorMapping * scalars : m_scalars)
     {
         scalars->setLookupTable(m_gradient);
@@ -90,7 +88,7 @@ void ScalarToColorMapping::clear()
 {
     m_currentScalarsName = QString();
 
-    m_renderedData.clear();
+    m_visualizedData.clear();
 
     qDeleteAll(m_scalars.values());
     m_scalars.clear();
@@ -116,14 +114,13 @@ void ScalarToColorMapping::setCurrentScalarsByName(QString scalarsName)
         scalars->beforeRendering();
     }
 
-    QByteArray c_name = scalarsName.toLatin1();
-    m_colorMappingLegend->SetTitle(c_name.data());
+    m_colorMappingLegend->SetTitle(scalarsName.toUtf8().data());
 
     updateLegendVisibility();
 
-    for (RenderedData * renderedData : m_renderedData)
+    for (AbstractVisualizedData * vis: m_visualizedData)
     {
-        renderedData->setScalarsForColorMapping(scalars);
+        vis->setScalarsForColorMapping(scalars);
     }
 }
 
@@ -197,7 +194,7 @@ void ScalarToColorMapping::setColorMappingLegendVisible(bool visible)
 void ScalarToColorMapping::updateAvailableScalars()
 {
     // rerun the factory and update the GUI
-    setRenderedData(m_renderedData);
+    setVisualizedData(m_visualizedData);
 
     emit scalarsChanged();
 }

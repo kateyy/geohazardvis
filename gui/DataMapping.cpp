@@ -10,8 +10,7 @@
 #include <gui/MainWindow.h>
 #include <gui/data_view/TableView.h>
 #include <gui/data_view/RenderView.h>
-#include <gui/data_view/RenderViewSwitch.h>
-#include <gui/data_view/RendererImplementation3D.h>
+#include <gui/data_view/RendererImplementationSwitch.h>
 
 
 namespace
@@ -34,14 +33,14 @@ DataMapping::~DataMapping()
     assert(s_instance);
 
     // prevent GUI/focus updates
-    auto switches = m_renderViewSwitches;
+    auto implSWs = m_rendererImplSwitches;
     auto renderView = m_renderViews;
     auto tableViews = m_tableViews;
-    m_renderViewSwitches.clear();
+    m_rendererImplSwitches.clear();
     m_renderViews.clear();
     m_tableViews.clear();
 
-    qDeleteAll(switches);
+    qDeleteAll(implSWs);
     qDeleteAll(renderView);
     qDeleteAll(tableViews);
 
@@ -113,11 +112,8 @@ RenderView * DataMapping::openInRenderView(QList<DataObject *> dataObjects)
     m_mainWindow.addRenderView(renderView);
     m_renderViews.insert(renderView->index(), renderView);
 
-    // TODO implement impl switch, hide strategy switch
-    RendererImplementation3D * impl3D = dynamic_cast<RendererImplementation3D *>(&renderView->implementation());
-    assert(impl3D);
-    RenderViewSwitch * sw = new RenderViewSwitch(*impl3D);
-    m_renderViewSwitches.insert(renderView, sw);
+    RendererImplementationSwitch * implSwitch = new RendererImplementationSwitch(*renderView);
+    m_rendererImplSwitches.insert(renderView, implSwitch);
 
     connect(renderView, &RenderView::focused, this, &DataMapping::setFocusedView);
     connect(renderView, &RenderView::closed, this, &DataMapping::renderViewClosed);
@@ -199,8 +195,7 @@ void DataMapping::renderViewClosed()
     RenderView * renderView = dynamic_cast<RenderView*>(sender());
     assert(renderView);
 
-    RenderViewSwitch * sw = m_renderViewSwitches.value(renderView);
-    m_renderViewSwitches.remove(renderView);
+    RendererImplementationSwitch * sw = m_rendererImplSwitches.take(renderView);
     m_renderViews.remove(renderView->index());
 
     if (renderView == m_focusedRenderView)
