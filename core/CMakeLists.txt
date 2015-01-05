@@ -103,6 +103,8 @@ set ( SOURCES
     scalar_mapping/VertexComponentMapping.cpp
     scalar_mapping/AttributeArrayComponentMapping.h
     scalar_mapping/AttributeArrayComponentMapping.cpp
+    scalar_mapping/VectorField3DLIC2DPlanes.h
+    scalar_mapping/VectorField3DLIC2DPlanes.cpp
 
     vector_mapping/VectorMapping.h
     vector_mapping/VectorMapping.cpp

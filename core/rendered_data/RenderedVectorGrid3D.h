@@ -54,6 +54,8 @@ private:
     void updateVisibilities();
 
 private:
+    friend class VectorField3DLIC2DPlanes;
+
     vtkSmartPointer<vtkExtractVOI> m_extractVOI;
 
     std::array<bool, 3> m_slicesEnabled;

@@ -1,6 +1,7 @@
 #include "RenderedVectorGrid3D.h"
 
 #include <algorithm>
+#include <limits>
 
 #include <vtkInformation.h>
 #include <vtkInformationStringKey.h>
@@ -76,12 +77,25 @@ RenderedVectorGrid3D::RenderedVectorGrid3D(VectorGrid3DDataObject * dataObject)
     m_lic2DVectorScale->AddVectorArrayName(vectorsName.c_str());
     m_lic2DVectorScale->SetResultArrayName(vectorsScaledName.c_str());
 
-    setLic2DVectorScaleFactor(100);
+    double scalarRange[2] = { std::numeric_limits<double>::max(), std::numeric_limits<double>::lowest() };
+    for (int i = 0; i < 3; ++i)
+    {
+        double r[2];
+        image->GetPointData()->GetVectors()->GetRange(r, i);
+        scalarRange[0] = std::min(scalarRange[0], r[0]);
+        scalarRange[1] = std::max(scalarRange[1], r[1]);
+    }
+    setLic2DVectorScaleFactor(1.0 / std::max(std::abs(scalarRange[0]), std::abs(scalarRange[1])));
 
     VTK_CREATE(vtkAssignAttribute, assignScaledVectors);
     assignScaledVectors->SetInputConnection(m_lic2DVectorScale->GetOutputPort());
     assignScaledVectors->Assign(vectorsScaledName.c_str(),
         vtkDataSetAttributes::VECTORS, vtkAssignAttribute::POINT_DATA);
+
+    VTK_CREATE(vtkImageProperty, property);
+    property->UseLookupTableScalarRangeOn();
+    property->SetDiffuse(0.8);
+    property->SetAmbient(0.5);
 
     for (int i = 0; i < 3; ++i)
     {
@@ -92,11 +106,6 @@ RenderedVectorGrid3D::RenderedVectorGrid3D(VectorGrid3DDataObject * dataObject)
 
         m_slices[i] = vtkSmartPointer<vtkImageSlice>::New();
         m_slices[i]->SetMapper(m_sliceMappers[i]);
-
-        VTK_CREATE(vtkImageProperty, property);
-        property->UseLookupTableScalarRangeOn();
-        property->SetDiffuse(0.8);
-        property->SetAmbient(0.5);
         m_slices[i]->SetProperty(property);
 
 
@@ -143,6 +152,7 @@ RenderedVectorGrid3D::RenderedVectorGrid3D(VectorGrid3DDataObject * dataObject)
 
         m_licSlices[i] = vtkSmartPointer<vtkImageSlice>::New();
         m_licSlices[i]->SetMapper(licMapper);
+        m_licSlices[i]->SetProperty(property);
 
         m_slicesEnabled[i] = true;
     }
@@ -267,18 +277,18 @@ PropertyGroup * RenderedVectorGrid3D::createConfigGroup()
         });
     }
 
-    auto group_LIC2D = renderSettings->addGroup("LIC2D");
-    group_LIC2D->setOption("title", "Line Integral Convolution 2D");
-    {
-        auto prop_vectorScale = group_LIC2D->addProperty<float>("vectorScaleFactor",
-            [this] () { return m_lic2DVectorScaleFactor; },
-            [this] (float f) {
-            setLic2DVectorScaleFactor(f);
-            emit geometryChanged();
-        });
-        prop_vectorScale->setOption("title", "Vector Scale Factor");
-        prop_vectorScale->setOption("minimum", 0);
-    }
+    //auto group_LIC2D = renderSettings->addGroup("LIC2D");
+    //group_LIC2D->setOption("title", "Line Integral Convolution 2D");
+    //{
+    //    auto prop_vectorScale = group_LIC2D->addProperty<float>("vectorScaleFactor",
+    //        [this] () { return m_lic2DVectorScaleFactor; },
+    //        [this] (float f) {
+    //        setLic2DVectorScaleFactor(f);
+    //        emit geometryChanged();
+    //    });
+    //    prop_vectorScale->setOption("title", "Vector Scale Factor");
+    //    prop_vectorScale->setOption("minimum", 0);
+    //}
 
     return renderSettings;
 }
@@ -302,6 +312,7 @@ vtkSmartPointer<vtkProp3DCollection> RenderedVectorGrid3D::fetchViewProps3D()
     //    props->AddItem(prop);
 
     props->AddItem(m_licSlices[0]);
+    //props->AddItem(m_licSlices[1]);
     props->AddItem(m_licSlices[2]);
 
     return props;
