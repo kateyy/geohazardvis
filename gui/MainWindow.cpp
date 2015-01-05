@@ -88,7 +88,8 @@ MainWindow::~MainWindow()
 
 QStringList MainWindow::dialog_inputFileName()
 {
-    QStringList fileNames = QFileDialog::getOpenFileNames(this, "", m_lastOpenFolder, "Text files (*.txt)");
+    QStringList fileNames = QFileDialog::getOpenFileNames(this, "", m_lastOpenFolder,
+        "All Supported Files (*.txt  *.vti);;Text files (*.txt);;VTK XML Image Files (*.vti)");
 
     if (fileNames.isEmpty())
         return {};
