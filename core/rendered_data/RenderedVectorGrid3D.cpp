@@ -111,6 +111,7 @@ RenderedVectorGrid3D::RenderedVectorGrid3D(VectorGrid3DDataObject * dataObject)
         m_lic2D[i] = vtkSmartPointer<vtkImageDataLIC2D>::New();
         m_lic2D[i]->SetInputConnection(0, m_lic2DVOI[i]->GetOutputPort());
         m_lic2D[i]->SetInputConnection(1, noise->GetOutputPort());
+        m_lic2D[i]->SetSteps(50);
 
 
         /** image rendering (LIC/scalars) */
@@ -257,6 +258,47 @@ PropertyGroup * RenderedVectorGrid3D::createConfigGroup()
     auto group_LIC2D = renderSettings->addGroup("LIC2D");
     group_LIC2D->setOption("title", "Line Integral Convolution 2D");
     {
+        auto prop_steps = group_LIC2D->addProperty<int>("Step",
+            [this] () { return m_lic2D[0]->GetSteps(); },
+            [this] (int s) {
+            for (int i = 0; i < 3; ++i)
+            {
+                m_lic2D[i]->SetSteps(s);
+                forceLICUpdate(i);
+            }
+            emit geometryChanged();
+        });
+        prop_steps->setOption("minimum", 1);
+
+        auto prop_stepSize = group_LIC2D->addProperty<double>("StepSize",
+            [this] () { return m_lic2D[0]->GetStepSize(); },
+            [this] (double size) {
+            for (int i = 0; i < 3; ++i)
+            {
+                m_lic2D[i]->SetStepSize(size);
+                forceLICUpdate(i);
+            }
+            emit geometryChanged();
+        });
+        prop_stepSize->setOption("title", "Step Size");
+        prop_stepSize->setOption("minimum", 0.001);
+        prop_stepSize->setOption("precision", 3);
+        prop_stepSize->setOption("step", 0.1);
+
+
+        // bug somewhere in VTK?
+        //auto prop_magnification = group_LIC2D->addProperty<int>("Magnification",
+        //    [this] () { return m_lic2D[0]->GetMagnification(); },
+        //    [this] (int mag) {
+        //    for (int i = 0; i < 3; ++i)
+        //    {
+        //        m_lic2D[i]->SetMagnification(mag);
+        //        forceLICUpdate(i);
+        //    }
+        //    emit geometryChanged();
+        //});
+        //prop_magnification->setOption("minimum", 1);
+
         auto prop_vectorScale = group_LIC2D->addProperty<float>("vectorScaleFactor",
             [this] () { return m_lic2DVectorScaleFactor; },
             [this] (float f) {
