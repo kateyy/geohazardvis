@@ -51,6 +51,7 @@ RenderedVectorGrid3D::RenderedVectorGrid3D(VectorGrid3DDataObject * dataObject)
     : RenderedData3D(dataObject)
     , m_isInitialized(false)
     , m_extractVOI(vtkSmartPointer<vtkExtractVOI>::New())
+    , m_nullImage(vtkSmartPointer<vtkImageData>::New())
     , m_slicesEnabled()
 {
     assert(vtkImageData::SafeDownCast(dataObject->processedDataSet()));
@@ -90,10 +91,10 @@ RenderedVectorGrid3D::RenderedVectorGrid3D(VectorGrid3DDataObject * dataObject)
     assignScaledVectors->Assign(vectorsScaledName.c_str(),
         vtkDataSetAttributes::VECTORS, vtkAssignAttribute::POINT_DATA);
 
-    VTK_CREATE(vtkImageProperty, property);
-    property->UseLookupTableScalarRangeOn();
-    property->SetDiffuse(0.8);
-    property->SetAmbient(0.5);
+    m_imgProperty = vtkSmartPointer<vtkImageProperty>::New();
+    m_imgProperty->UseLookupTableScalarRangeOn();
+    m_imgProperty->SetDiffuse(0.8);
+    m_imgProperty->SetAmbient(0.5);
 
     VTK_CREATE(NoiseImageSource, noise);
     noise->SetExtent(0, 1270, 0, 1270, 0, 0);
@@ -102,17 +103,6 @@ RenderedVectorGrid3D::RenderedVectorGrid3D(VectorGrid3DDataObject * dataObject)
 
     for (int i = 0; i < 3; ++i)
     {
-        /** scalar mapping */
-        m_sliceMappers[i] = vtkSmartPointer<vtkImageSliceMapper>::New();
-        m_sliceMappers[i]->SetInputConnection(dataObject->processedOutputPort());
-        m_sliceMappers[i]->SetOrientation(i);  // 0, 1, 2 maps to X, Y, Z
-
-        m_slices[i] = vtkSmartPointer<vtkImageSlice>::New();
-        m_slices[i]->SetMapper(m_sliceMappers[i]);
-        m_slices[i]->SetProperty(property);
-
-
-
         /** Line Integral Convolution 2D */
 
         m_lic2DVOI[i] = vtkSmartPointer<vtkExtractVOI>::New();
@@ -122,15 +112,14 @@ RenderedVectorGrid3D::RenderedVectorGrid3D(VectorGrid3DDataObject * dataObject)
         m_lic2D[i]->SetInputConnection(0, m_lic2DVOI[i]->GetOutputPort());
         m_lic2D[i]->SetInputConnection(1, noise->GetOutputPort());
 
-        VTK_CREATE(vtkImageSliceMapper, licMapper);
-        licMapper->SetInputConnection(m_lic2D[i]->GetOutputPort());
-        licMapper->SetOrientation(i);
-        licMapper->SetNumberOfThreads(1);
 
-        m_licSlices[i] = vtkSmartPointer<vtkImageSlice>::New();
-        m_licSlices[i]->SetMapper(licMapper);
-        m_licSlices[i]->SetProperty(property);
+        /** image rendering (LIC/scalars) */
+        m_sliceMappers[i] = vtkSmartPointer<vtkImageSliceMapper>::New();
+        m_sliceMappers[i]->SetOrientation(i);  // 0, 1, 2 maps to X, Y, Z
 
+        m_slices[i] = vtkSmartPointer<vtkImageSlice>::New();
+        m_slices[i]->SetMapper(m_sliceMappers[i]);
+        m_slices[i]->SetProperty(m_imgProperty);
 
         int min = extent[2 * i];
         int max = extent[2 * i + 1];
@@ -138,6 +127,9 @@ RenderedVectorGrid3D::RenderedVectorGrid3D(VectorGrid3DDataObject * dataObject)
 
         m_slicesEnabled[i] = true;
     }
+
+
+    setColorMode(ColorMode::UserDefined);
 
     m_isInitialized = true;
 }
@@ -184,6 +176,9 @@ PropertyGroup * RenderedVectorGrid3D::createConfigGroup()
             updateVisibilities();
         });
 
+        int extent[6];
+        static_cast<vtkImageData *>(dataObject()->dataSet())->GetExtent(extent);
+
         auto prop_positions = group_scalarSlices->addGroup("Positions");
 
         for (int i = 0; i < 3; ++i)
@@ -192,23 +187,21 @@ PropertyGroup * RenderedVectorGrid3D::createConfigGroup()
 
             prop_visibilities->asCollection()->at(i)->setOption("title", axis);
 
-            vtkImageSliceMapper * mapper = m_sliceMappers[i];
-
             auto * slice_prop = prop_positions->addProperty<int>(axis + "slice",
-                [mapper] () { return mapper->GetSliceNumber(); },
+                [this, i] () { return m_slicePositions[i]; },
                 [this, i] (int value) {
                 setSlicePosition(i, value);
                 emit geometryChanged();
             });
             slice_prop->setOption("title", axis);
-            slice_prop->setOption("minimum", mapper->GetSliceNumberMinValue());
-            slice_prop->setOption("maximum", mapper->GetSliceNumberMaxValue());
+            slice_prop->setOption("minimum", extent[2 * i]);
+            slice_prop->setOption("maximum", extent[2 * i + 1]);
         }
 
-        vtkImageProperty * property = m_slices[0]->GetProperty();
+        vtkImageProperty * property = m_imgProperty;
 
         auto prop_transparency = group_scalarSlices->addProperty<double>("Transparency",
-            [property ]() {
+            [property]() {
             return (1.0 - property->GetOpacity()) * 100;
         },
             [this] (double transparency) {
@@ -292,10 +285,7 @@ vtkSmartPointer<vtkProp3DCollection> RenderedVectorGrid3D::fetchViewProps3D()
 {
     auto props = RenderedData3D::fetchViewProps3D();
 
-    //for (auto prop : m_slices)
-    //    props->AddItem(prop);
-
-    for (auto prop : m_licSlices)
+    for (auto prop : m_slices)
         props->AddItem(prop);
 
     return props;
@@ -303,24 +293,24 @@ vtkSmartPointer<vtkProp3DCollection> RenderedVectorGrid3D::fetchViewProps3D()
 
 void RenderedVectorGrid3D::scalarsForColorMappingChangedEvent()
 {
+    ColorMode newMode = ColorMode::UserDefined;
+    if (m_scalars)
+    {
+        if (m_scalars->scalarsName() == QString::fromUtf8(
+            dataObject()->dataSet()->GetPointData()->GetVectors()->GetName()))
+            newMode = ColorMode::ScalarMapping;
+        else if (m_scalars->name() == "LIC 2D")
+            newMode = ColorMode::LIC;
+    }
+
+    setColorMode(newMode);
+
     updateVisibilities();
 }
 
 void RenderedVectorGrid3D::colorMappingGradientChangedEvent()
 {
-    for (auto slice : m_slices)
-    {
-        auto property = slice->GetProperty();
-        assert(property);
-        property->SetLookupTable(m_gradient);
-    }
-
-    for (auto slice : m_licSlices)
-    {
-        auto property = slice->GetProperty();
-        assert(property);
-        property->SetLookupTable(m_gradient);
-    }
+    m_imgProperty->SetLookupTable(m_gradient);
 }
 
 void RenderedVectorGrid3D::visibilityChangedEvent(bool visible)
@@ -341,11 +331,9 @@ void RenderedVectorGrid3D::forceLICUpdate(int axis)
 
 void RenderedVectorGrid3D::updateVisibilities()
 {
-    bool showSliceScalars = m_scalars && m_scalars->scalarsName() == QString::fromUtf8(dataObject()->dataSet()->GetPointData()->GetVectors()->GetName());
-
     for (int i = 0; i < 3; ++i)
     {
-        bool showSliceI = showSliceScalars && m_slicesEnabled[i];
+        bool showSliceI = (colorMode() != ColorMode::UserDefined) && m_slicesEnabled[i];
         m_slices[i]->SetVisibility(isVisible() && showSliceI);
     }
 
@@ -365,6 +353,8 @@ void RenderedVectorGrid3D::sampleRate(int sampleRate[3])
 void RenderedVectorGrid3D::setSlicePosition(int axis, int slicePosition)
 {
     assert(0 < axis || axis < 3);
+
+    m_slicePositions[axis] = slicePosition;
 
     m_sliceMappers[axis]->SetSliceNumber(slicePosition);
 
@@ -391,4 +381,28 @@ void RenderedVectorGrid3D::setLic2DVectorScaleFactor(float f)
 
     for (int i = 0; i < 3; ++i)
         forceLICUpdate(i);
+}
+
+RenderedVectorGrid3D::ColorMode RenderedVectorGrid3D::colorMode() const
+{
+    return m_colorMode;
+}
+
+void RenderedVectorGrid3D::setColorMode(ColorMode mode)
+{
+    m_colorMode = mode;
+
+    for (int i = 0; i < 3; ++i)
+    switch (m_colorMode)
+    {
+    case ColorMode::UserDefined:
+        m_sliceMappers[i]->SetInputData(m_nullImage);
+        break;
+    case ColorMode::ScalarMapping:
+        m_sliceMappers[i]->SetInputConnection(dataObject()->processedOutputPort());
+        break;
+    case ColorMode::LIC:
+        m_sliceMappers[i]->SetInputConnection(m_lic2D[i]->GetOutputPort());
+        break;
+    }
 }
