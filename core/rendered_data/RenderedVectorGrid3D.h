@@ -50,11 +50,16 @@ protected:
     void colorMappingGradientChangedEvent() override;
     void visibilityChangedEvent(bool visible) override;
 
+    /** work around missing update after LIC image changes */
+    void forceLICUpdate(int axis);
+
 private:
     void updateVisibilities();
 
 private:
     friend class VectorField3DLIC2DPlanes;
+
+    bool m_isInitialized;
 
     vtkSmartPointer<vtkExtractVOI> m_extractVOI;
 
@@ -65,7 +70,6 @@ private:
     float m_lic2DVectorScaleFactor;
     vtkSmartPointer<vtkArrayCalculator> m_lic2DVectorScale;
     std::array<vtkSmartPointer<vtkExtractVOI>, 3> m_lic2DVOI;
-    std::array<vtkSmartPointer<vtkImageTranslateExtent>, 3> m_lic2DTranslateExtent;
     std::array<vtkSmartPointer<vtkImageDataLIC2D>, 3> m_lic2D;
     std::array<vtkSmartPointer<vtkImageMapToColors>, 3> m_licToColors;
     std::array<vtkSmartPointer<vtkImageSlice>, 3> m_licSlices;
