@@ -14,6 +14,8 @@
 #include <vtkArrayCalculator.h>
 #include <vtkExtractVOI.h>
 #include <vtkImageDataLIC2D.h>
+#include <vtkOpenGLRenderWindow.h>
+#include <vtkOpenGLExtensionManager.h>
 
 #include <vtkImageSlice.h>
 #include <vtkImageSliceMapper.h>
@@ -76,6 +78,13 @@ RenderedVectorGrid3D::RenderedVectorGrid3D(VectorGrid3DDataObject * dataObject)
     m_lic2DVectorScale->AddVectorArrayName(vectorsName.c_str());
     m_lic2DVectorScale->SetResultArrayName(vectorsScaledName.c_str());
 
+    m_glContext = vtkSmartPointer<vtkRenderWindow>::New();
+    vtkOpenGLRenderWindow * openGLContext = vtkOpenGLRenderWindow::SafeDownCast(m_glContext);
+    assert(openGLContext);
+    openGLContext->GetExtensionManager()->IgnoreDriverBugsOn();
+    openGLContext->OffScreenRenderingOn();
+
+
     double scalarRange[2] = { std::numeric_limits<double>::max(), std::numeric_limits<double>::lowest() };
     for (int i = 0; i < 3; ++i)
     {
@@ -112,6 +121,8 @@ RenderedVectorGrid3D::RenderedVectorGrid3D(VectorGrid3DDataObject * dataObject)
         m_lic2D[i]->SetInputConnection(0, m_lic2DVOI[i]->GetOutputPort());
         m_lic2D[i]->SetInputConnection(1, noise->GetOutputPort());
         m_lic2D[i]->SetSteps(50);
+        m_lic2D[i]->GlobalWarningDisplayOff();
+        m_lic2D[i]->SetContext(m_glContext);
 
 
         /** image rendering (LIC/scalars) */
@@ -135,7 +146,11 @@ RenderedVectorGrid3D::RenderedVectorGrid3D(VectorGrid3DDataObject * dataObject)
     m_isInitialized = true;
 }
 
-RenderedVectorGrid3D::~RenderedVectorGrid3D() = default;
+RenderedVectorGrid3D::~RenderedVectorGrid3D()
+{
+    for (auto & lic : m_lic2D)
+        lic->SetContext(nullptr);
+}
 
 VectorGrid3DDataObject * RenderedVectorGrid3D::vectorGrid3DDataObject()
 {

@@ -14,6 +14,7 @@ class vtkImageMapToColors;
 class vtkImageProperty;
 class vtkImageSlice;
 class vtkImageSliceMapper;
+class vtkRenderWindow;
 
 class VectorGrid3DDataObject;
 
@@ -84,4 +85,5 @@ private:
     vtkSmartPointer<vtkArrayCalculator> m_lic2DVectorScale;
     std::array<vtkSmartPointer<vtkExtractVOI>, 3> m_lic2DVOI;
     std::array<vtkSmartPointer<vtkImageDataLIC2D>, 3> m_lic2D;
+    vtkSmartPointer<vtkRenderWindow> m_glContext;
 };
