@@ -60,7 +60,7 @@
           <widget class="QLineEdit" name="outputFolderEdit"/>
          </item>
          <item>
-          <widget class="QPushButton" name="pushButton">
+          <widget class="QPushButton" name="outputFolderButton">
            <property name="text">
             <string>browse...</string>
            </property>

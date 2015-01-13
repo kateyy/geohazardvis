@@ -32,6 +32,12 @@ CanvasExporterWidget::CanvasExporterWidget(QWidget * parent, Qt::WindowFlags f)
     m_ui->fileFormatComboBox->addItems(CanvasExporterRegistry::supportedFormatNames());
 
     m_ui->outputFolderEdit->setText("./screenshots");
+    connect(m_ui->outputFolderButton, &QPushButton::clicked, [this] () {
+        QString res = QFileDialog::getExistingDirectory(this, "Screenshot Output Folder",
+            m_ui->outputFolderEdit->text());
+        if (!res.isEmpty())
+            m_ui->outputFolderEdit->setText(res);
+    });
 }
 
 CanvasExporterWidget::~CanvasExporterWidget()
