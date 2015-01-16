@@ -20,5 +20,8 @@ public:
     bool canApplyTo(const QList<RenderedData *> & renderedData) override;
 
 private:
+    void updateImageWidgets();
+
+private:
     static const bool s_isRegistered;
 };

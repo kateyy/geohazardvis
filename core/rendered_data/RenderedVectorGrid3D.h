@@ -11,10 +11,13 @@ class vtkExtractVOI;
 class vtkImageData;
 class vtkImageDataLIC2D;
 class vtkImageMapToColors;
+class vtkImageOrthoPlanes;
+class vtkImagePlaneWidget;
 class vtkImageProperty;
 class vtkImageSlice;
 class vtkImageSliceMapper;
 class vtkRenderWindow;
+class vtkRenderWindowInteractor;
 
 class VectorGrid3DDataObject;
 
@@ -26,6 +29,9 @@ class CORE_API RenderedVectorGrid3D : public RenderedData3D
 public:
     RenderedVectorGrid3D(VectorGrid3DDataObject * dataObject);
     ~RenderedVectorGrid3D() override;
+
+    /** the interactor needs to be set in order to use the image plane widgets */
+    void setRenderWindowInteractor(vtkRenderWindowInteractor * interactor);
 
     VectorGrid3DDataObject * vectorGrid3DDataObject();
     const VectorGrid3DDataObject * vectorGrid3DDataObject() const;
@@ -74,6 +80,9 @@ private:
 
     ColorMode m_colorMode;
     vtkSmartPointer<vtkImageData> m_nullImage;
+
+    vtkSmartPointer<vtkImageOrthoPlanes> m_orthoPlanes;
+    std::array<vtkSmartPointer<vtkImagePlaneWidget>, 3> m_planeWidgets;
 
     std::array<bool, 3> m_slicesEnabled;
     std::array<vtkSmartPointer<vtkImageSliceMapper>, 3> m_sliceMappers;

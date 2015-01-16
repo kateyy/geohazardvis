@@ -4,7 +4,8 @@
 
 #include <core/vtkcamerahelper.h>
 #include <core/data_objects/DataObject.h>
-#include <core/rendered_data/RenderedData.h>
+#include <core/rendered_data/RenderedVectorGrid3D.h>
+#include <gui/data_view/RenderView.h>
 #include <gui/data_view/RendererImplementation3D.h>
 #include <gui/rendering_interaction/PickingInteractorStyleSwitch.h>
 
@@ -15,6 +16,7 @@ const bool RenderViewStrategy3D::s_isRegistered = RenderViewStrategy::registerSt
 RenderViewStrategy3D::RenderViewStrategy3D(RendererImplementation3D & context)
     : RenderViewStrategy(context)
 {
+    connect(&context.renderView(), &RenderView::contentChanged, this, &RenderViewStrategy3D::updateImageWidgets);
 }
 
 QString RenderViewStrategy3D::name() const
@@ -61,4 +63,13 @@ bool RenderViewStrategy3D::canApplyTo(const QList<RenderedData *> & renderedData
             return false;
 
     return true;
+}
+
+void RenderViewStrategy3D::updateImageWidgets()
+{
+    for (RenderedData * r : m_context.renderedData())
+    {
+        if (RenderedVectorGrid3D * grid = dynamic_cast<RenderedVectorGrid3D *>(r))
+            grid->setRenderWindowInteractor(m_context.interactor());
+    }
 }

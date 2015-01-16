@@ -17,9 +17,14 @@
 #include <vtkOpenGLRenderWindow.h>
 #include <vtkOpenGLExtensionManager.h>
 
+#include <vtkCellPicker.h>
+#include <vtkImageMapToColors.h>
+#include <vtkImageOrthoPlanes.h>
+#include <vtkImagePlaneWidget.h>
+#include <vtkImageProperty.h>
+#include <vtkImageReslice.h>
 #include <vtkImageSlice.h>
 #include <vtkImageSliceMapper.h>
-#include <vtkImageProperty.h>
 
 #include <vtkProp3DCollection.h>
 #include <vtkLookupTable.h>
@@ -110,8 +115,32 @@ RenderedVectorGrid3D::RenderedVectorGrid3D(VectorGrid3DDataObject * dataObject)
     noise->SetValueRange(0, 1);
     noise->SetNumberOfComponents(2);
 
+    m_orthoPlanes = vtkSmartPointer<vtkImageOrthoPlanes>::New();
+
+    VTK_CREATE(vtkCellPicker, planePicker); // shared picker for the plane widgets
+
     for (int i = 0; i < 3; ++i)
     {
+        /** Reslice widgets  */
+        m_planeWidgets[i] = vtkSmartPointer<vtkImagePlaneWidget>::New();
+        // TODO VTK Bug? A pipeline connection from vtkAssignAttribute does not work for some reason
+        //m_planeWidgets[i]->SetInputConnection(dataObject->processedOutputPort());
+        m_planeWidgets[i]->SetInputData(dataObject->processedDataSet());
+        m_planeWidgets[i]->UserControlledLookupTableOn();
+        m_planeWidgets[i]->RestrictPlaneToVolumeOn();
+
+        // this is required to fix picking with multiple planes in a view
+        m_planeWidgets[i]->SetPicker(planePicker);
+        // this is recommended for rendering with other transparent objects
+        m_planeWidgets[i]->GetColorMap()->SetOutputFormatToRGB();
+        m_planeWidgets[i]->GetColorMap()->PassAlphaToOutputOff();
+
+        m_planeWidgets[i]->SetLeftButtonAction(vtkImagePlaneWidget::VTK_SLICE_MOTION_ACTION);
+        m_planeWidgets[i]->SetRightButtonAction(vtkImagePlaneWidget::VTK_CURSOR_ACTION);
+
+
+        m_orthoPlanes->SetPlane(i, m_planeWidgets[i]);
+
         /** Line Integral Convolution 2D */
 
         m_lic2DVOI[i] = vtkSmartPointer<vtkExtractVOI>::New();
@@ -150,6 +179,14 @@ RenderedVectorGrid3D::~RenderedVectorGrid3D()
 {
     for (auto & lic : m_lic2D)
         lic->SetContext(nullptr);
+}
+
+void RenderedVectorGrid3D::setRenderWindowInteractor(vtkRenderWindowInteractor * interactor)
+{
+    for (vtkImagePlaneWidget * widget : m_planeWidgets)
+        widget->SetInteractor(interactor);
+
+    updateVisibilities();
 }
 
 VectorGrid3DDataObject * RenderedVectorGrid3D::vectorGrid3DDataObject()
@@ -342,8 +379,8 @@ vtkSmartPointer<vtkProp3DCollection> RenderedVectorGrid3D::fetchViewProps3D()
 {
     auto props = RenderedData3D::fetchViewProps3D();
 
-    for (auto prop : m_slices)
-        props->AddItem(prop);
+    //for (auto prop : m_slices)
+    //    props->AddItem(prop);
 
     return props;
 }
@@ -368,6 +405,14 @@ void RenderedVectorGrid3D::scalarsForColorMappingChangedEvent()
 void RenderedVectorGrid3D::colorMappingGradientChangedEvent()
 {
     m_imgProperty->SetLookupTable(m_gradient);
+
+    vtkSmartPointer<vtkLookupTable> lut = vtkLookupTable::SafeDownCast(m_gradient);
+    assert(lut);
+
+    for (auto plane : m_planeWidgets)
+        plane->SetLookupTable(lut);
+
+    updateVisibilities();
 }
 
 void RenderedVectorGrid3D::visibilityChangedEvent(bool visible)
@@ -388,13 +433,25 @@ void RenderedVectorGrid3D::forceLICUpdate(int axis)
 
 void RenderedVectorGrid3D::updateVisibilities()
 {
+    bool geoChanged = false;
+
     for (int i = 0; i < 3; ++i)
     {
-        bool showSliceI = (colorMode() != ColorMode::UserDefined) && m_slicesEnabled[i];
-        m_slices[i]->SetVisibility(isVisible() && showSliceI);
+        bool showSliceI = m_gradient // don't show the slice before they can use our gradient
+            && (m_planeWidgets[i]->GetInteractor() != nullptr) // don't enable them without an interactor
+            && (colorMode() != ColorMode::UserDefined) && m_slicesEnabled[i];
+
+        //m_slices[i]->SetVisibility(isVisible() && showSliceI);
+        
+        if ((m_planeWidgets[i]->GetEnabled() != 0) != showSliceI)
+        {
+            m_planeWidgets[i]->SetEnabled(showSliceI);
+            geoChanged = true;
+        }
     }
 
-    emit geometryChanged();
+    if (geoChanged)
+        emit geometryChanged();
 }
 
 void RenderedVectorGrid3D::setSampleRate(int x, int y, int z)
@@ -412,6 +469,8 @@ void RenderedVectorGrid3D::setSlicePosition(int axis, int slicePosition)
     assert(0 < axis || axis < 3);
 
     m_slicePositions[axis] = slicePosition;
+
+    m_planeWidgets[axis]->SetSliceIndex(slicePosition);
 
     m_sliceMappers[axis]->SetSliceNumber(slicePosition);
 
