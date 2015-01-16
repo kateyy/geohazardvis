@@ -83,15 +83,16 @@ RenderedVectorGrid3D::RenderedVectorGrid3D(VectorGrid3DDataObject * dataObject)
     openGLContext->OffScreenRenderingOn();
 
 
-    VTK_CREATE(NoiseImageSource, noise);
-    noise->SetExtent(0, 1270, 0, 1270, 0, 0);
-    noise->SetValueRange(0, 1);
-    noise->SetNumberOfComponents(2);
+    m_noiseImage = vtkSmartPointer<NoiseImageSource>::New();
+    m_noiseImage->SetExtent(0, 1270, 0, 1270, 0, 0);
+    m_noiseImage->SetValueRange(0, 1);
+    m_noiseImage->SetNumberOfComponents(2);
 
     m_orthoPlanes = vtkSmartPointer<vtkImageOrthoPlanes>::New();
 
     m_texturePlaneProperty = vtkSmartPointer<vtkProperty>::New();
     m_texturePlaneProperty->LightingOn();
+    m_texturePlaneProperty->SetInterpolationToFlat(); // interpolation is done by reslice
 
     VTK_CREATE(vtkCellPicker, planePicker); // shared picker for the plane widgets
 
@@ -133,7 +134,7 @@ RenderedVectorGrid3D::RenderedVectorGrid3D(VectorGrid3DDataObject * dataObject)
 
         m_lic2D[i] = vtkSmartPointer<vtkImageDataLIC2D>::New();
         m_lic2D[i]->SetInputConnection(0, assignScaledVectors->GetOutputPort());
-        m_lic2D[i]->SetInputConnection(1, noise->GetOutputPort());
+        m_lic2D[i]->SetInputConnection(1, m_noiseImage->GetOutputPort());
         m_lic2D[i]->SetSteps(50);
         m_lic2D[i]->GlobalWarningDisplayOff();
         m_lic2D[i]->SetContext(m_glContext);
@@ -353,6 +354,17 @@ PropertyGroup * RenderedVectorGrid3D::createConfigGroup()
         });
         prop_vectorScale->setOption("title", "Vector Scale Factor");
         prop_vectorScale->setOption("minimum", 0);
+
+        auto prop_noiseSize = group_LIC2D->addProperty<int>("NoiseSize",
+            [this] () { return m_noiseImage->GetExtent()[1]; },
+            [this] (int size) {
+            m_noiseImage->SetExtent(0, size, 0, size, 0, 0);
+            for (int i = 0; i < 3; ++i)
+                forceLICUpdate(i);
+            emit geometryChanged();
+        });
+        prop_noiseSize->setOption("minimum", 1);
+        prop_noiseSize->setOption("title", "Noise Image Size");
     }
 
     return renderSettings;

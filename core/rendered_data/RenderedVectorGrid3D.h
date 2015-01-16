@@ -16,6 +16,7 @@ class vtkProperty;
 class vtkRenderWindow;
 class vtkRenderWindowInteractor;
 
+class NoiseImageSource;
 class VectorGrid3DDataObject;
 
 
@@ -88,6 +89,7 @@ private:
 
     std::array<bool, 3> m_slicesEnabled;
 
+    vtkSmartPointer<NoiseImageSource> m_noiseImage;
     float m_lic2DVectorScaleFactor;
     std::array<vtkSmartPointer<vtkArrayCalculator>, 3> m_lic2DVectorScale;
     std::array<vtkSmartPointer<vtkImageDataLIC2D>, 3> m_lic2D;
