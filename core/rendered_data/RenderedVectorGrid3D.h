@@ -10,12 +10,9 @@ class vtkArrayCalculator;
 class vtkExtractVOI;
 class vtkImageData;
 class vtkImageDataLIC2D;
-class vtkImageMapToColors;
 class vtkImageOrthoPlanes;
 class vtkImagePlaneWidget;
-class vtkImageProperty;
-class vtkImageSlice;
-class vtkImageSliceMapper;
+class vtkProperty;
 class vtkRenderWindow;
 class vtkRenderWindowInteractor;
 
@@ -43,6 +40,7 @@ public:
     vtkImageData * resampledDataSet();
     vtkAlgorithmOutput * resampledOuputPort();
 
+    int slicePosition(int axis);
     void setSlicePosition(int axis, int slicePosition);
     void setLic2DVectorScaleFactor(float f);
 
@@ -76,23 +74,22 @@ private:
 
     bool m_isInitialized;
 
+    // for vector mapping
     vtkSmartPointer<vtkExtractVOI> m_extractVOI;
 
+
+    // for color mapping / LIC2D planes
+
     ColorMode m_colorMode;
-    vtkSmartPointer<vtkImageData> m_nullImage;
 
     vtkSmartPointer<vtkImageOrthoPlanes> m_orthoPlanes;
+    vtkSmartPointer<vtkProperty> m_texturePlaneProperty;
     std::array<vtkSmartPointer<vtkImagePlaneWidget>, 3> m_planeWidgets;
 
     std::array<bool, 3> m_slicesEnabled;
-    std::array<vtkSmartPointer<vtkImageSliceMapper>, 3> m_sliceMappers;
-    std::array<vtkSmartPointer<vtkImageSlice>, 3> m_slices;
-    std::array<int, 3> m_slicePositions;
-    vtkSmartPointer<vtkImageProperty> m_imgProperty;
 
     float m_lic2DVectorScaleFactor;
-    vtkSmartPointer<vtkArrayCalculator> m_lic2DVectorScale;
-    std::array<vtkSmartPointer<vtkExtractVOI>, 3> m_lic2DVOI;
+    std::array<vtkSmartPointer<vtkArrayCalculator>, 3> m_lic2DVectorScale;
     std::array<vtkSmartPointer<vtkImageDataLIC2D>, 3> m_lic2D;
     vtkSmartPointer<vtkRenderWindow> m_glContext;
 };

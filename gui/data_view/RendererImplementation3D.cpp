@@ -297,6 +297,7 @@ void RendererImplementation3D::initialize()
 
     m_renderer->RemoveAllLights();
     m_lightKit = vtkSmartPointer<vtkLightKit>::New();
+    m_lightKit->SetKeyLightIntensity(1.0);
     m_lightKit->AddLightsToRenderer(m_renderer);
 
 

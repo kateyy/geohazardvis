@@ -5,6 +5,8 @@
 
 #include <vtkInformation.h>
 #include <vtkInformationStringKey.h>
+#include <vtkProp3DCollection.h>
+#include <vtkLookupTable.h>
 
 #include <vtkDataArray.h>
 #include <vtkImageData.h>
@@ -13,21 +15,16 @@
 #include <vtkAssignAttribute.h>
 #include <vtkArrayCalculator.h>
 #include <vtkExtractVOI.h>
-#include <vtkImageDataLIC2D.h>
-#include <vtkOpenGLRenderWindow.h>
-#include <vtkOpenGLExtensionManager.h>
-
 #include <vtkCellPicker.h>
+#include <vtkImageDataLIC2D.h>
 #include <vtkImageMapToColors.h>
 #include <vtkImageOrthoPlanes.h>
 #include <vtkImagePlaneWidget.h>
-#include <vtkImageProperty.h>
 #include <vtkImageReslice.h>
-#include <vtkImageSlice.h>
-#include <vtkImageSliceMapper.h>
-
-#include <vtkProp3DCollection.h>
-#include <vtkLookupTable.h>
+#include <vtkOpenGLRenderWindow.h>
+#include <vtkOpenGLExtensionManager.h>
+#include <vtkProperty.h>
+#include <vtkTexture.h>
 
 #include <reflectionzeug/PropertyGroup.h>
 
@@ -45,12 +42,14 @@ namespace
 
 const vtkIdType DefaultMaxNumberOfPoints = 1000;
 
-enum Interpolation
+enum ResliceInterpolation
 {
-    nearest = VTK_NEAREST_INTERPOLATION,
-    linear = VTK_LINEAR_INTERPOLATION,
-    cubic = VTK_CUBIC_INTERPOLATION
+    nearest = VTK_NEAREST_RESLICE,
+    linear = VTK_LINEAR_RESLICE,
+    cubic = VTK_CUBIC_RESLICE
 };
+
+const std::string s_vectorScaleInputArray = "ImageScalars";
 
 }
 
@@ -58,7 +57,6 @@ RenderedVectorGrid3D::RenderedVectorGrid3D(VectorGrid3DDataObject * dataObject)
     : RenderedData3D(dataObject)
     , m_isInitialized(false)
     , m_extractVOI(vtkSmartPointer<vtkExtractVOI>::New())
-    , m_nullImage(vtkSmartPointer<vtkImageData>::New())
     , m_slicesEnabled()
 {
     assert(vtkImageData::SafeDownCast(dataObject->processedDataSet()));
@@ -78,37 +76,12 @@ RenderedVectorGrid3D::RenderedVectorGrid3D(VectorGrid3DDataObject * dataObject)
     std::string vectorsName{ image->GetPointData()->GetVectors()->GetName() };
     std::string vectorsScaledName{ vectorsName + "_scaled" };
 
-    m_lic2DVectorScale = vtkSmartPointer<vtkArrayCalculator>::New();
-    m_lic2DVectorScale->SetInputData(image);
-    m_lic2DVectorScale->AddVectorArrayName(vectorsName.c_str());
-    m_lic2DVectorScale->SetResultArrayName(vectorsScaledName.c_str());
-
     m_glContext = vtkSmartPointer<vtkRenderWindow>::New();
     vtkOpenGLRenderWindow * openGLContext = vtkOpenGLRenderWindow::SafeDownCast(m_glContext);
     assert(openGLContext);
-    openGLContext->GetExtensionManager()->IgnoreDriverBugsOn();
+    openGLContext->GetExtensionManager()->IgnoreDriverBugsOn(); // required for Intel HD
     openGLContext->OffScreenRenderingOn();
 
-
-    double scalarRange[2] = { std::numeric_limits<double>::max(), std::numeric_limits<double>::lowest() };
-    for (int i = 0; i < 3; ++i)
-    {
-        double r[2];
-        image->GetPointData()->GetVectors()->GetRange(r, i);
-        scalarRange[0] = std::min(scalarRange[0], r[0]);
-        scalarRange[1] = std::max(scalarRange[1], r[1]);
-    }
-    setLic2DVectorScaleFactor(1.0 / std::max(std::abs(scalarRange[0]), std::abs(scalarRange[1])));
-
-    VTK_CREATE(vtkAssignAttribute, assignScaledVectors);
-    assignScaledVectors->SetInputConnection(m_lic2DVectorScale->GetOutputPort());
-    assignScaledVectors->Assign(vectorsScaledName.c_str(),
-        vtkDataSetAttributes::VECTORS, vtkAssignAttribute::POINT_DATA);
-
-    m_imgProperty = vtkSmartPointer<vtkImageProperty>::New();
-    m_imgProperty->UseLookupTableScalarRangeOn();
-    m_imgProperty->SetDiffuse(0.8);
-    m_imgProperty->SetAmbient(0.5);
 
     VTK_CREATE(NoiseImageSource, noise);
     noise->SetExtent(0, 1270, 0, 1270, 0, 0);
@@ -117,11 +90,15 @@ RenderedVectorGrid3D::RenderedVectorGrid3D(VectorGrid3DDataObject * dataObject)
 
     m_orthoPlanes = vtkSmartPointer<vtkImageOrthoPlanes>::New();
 
+    m_texturePlaneProperty = vtkSmartPointer<vtkProperty>::New();
+    m_texturePlaneProperty->LightingOn();
+
     VTK_CREATE(vtkCellPicker, planePicker); // shared picker for the plane widgets
 
     for (int i = 0; i < 3; ++i)
     {
         /** Reslice widgets  */
+
         m_planeWidgets[i] = vtkSmartPointer<vtkImagePlaneWidget>::New();
         // TODO VTK Bug? A pipeline connection from vtkAssignAttribute does not work for some reason
         //m_planeWidgets[i]->SetInputConnection(dataObject->processedOutputPort());
@@ -132,35 +109,35 @@ RenderedVectorGrid3D::RenderedVectorGrid3D(VectorGrid3DDataObject * dataObject)
         // this is required to fix picking with multiple planes in a view
         m_planeWidgets[i]->SetPicker(planePicker);
         // this is recommended for rendering with other transparent objects
-        m_planeWidgets[i]->GetColorMap()->SetOutputFormatToRGB();
-        m_planeWidgets[i]->GetColorMap()->PassAlphaToOutputOff();
+        m_planeWidgets[i]->GetColorMap()->SetOutputFormatToRGBA();
+        m_planeWidgets[i]->GetColorMap()->PassAlphaToOutputOn();
 
         m_planeWidgets[i]->SetLeftButtonAction(vtkImagePlaneWidget::VTK_SLICE_MOTION_ACTION);
         m_planeWidgets[i]->SetRightButtonAction(vtkImagePlaneWidget::VTK_CURSOR_ACTION);
-
+        m_planeWidgets[i]->SetTexturePlaneProperty(m_texturePlaneProperty);
 
         m_orthoPlanes->SetPlane(i, m_planeWidgets[i]);
 
+
         /** Line Integral Convolution 2D */
 
-        m_lic2DVOI[i] = vtkSmartPointer<vtkExtractVOI>::New();
-        m_lic2DVOI[i]->SetInputConnection(assignScaledVectors->GetOutputPort());
+        m_lic2DVectorScale[i] = vtkSmartPointer<vtkArrayCalculator>::New();
+        m_lic2DVectorScale[i]->SetInputConnection(m_planeWidgets[i]->GetReslice()->GetOutputPort());
+        m_lic2DVectorScale[i]->AddVectorArrayName(s_vectorScaleInputArray.c_str());
+        m_lic2DVectorScale[i]->SetResultArrayName(vectorsScaledName.c_str());
+
+        VTK_CREATE(vtkAssignAttribute, assignScaledVectors);
+        assignScaledVectors->SetInputConnection(m_lic2DVectorScale[i]->GetOutputPort());
+        assignScaledVectors->Assign(vectorsScaledName.c_str(),
+            vtkDataSetAttributes::VECTORS, vtkAssignAttribute::POINT_DATA);
 
         m_lic2D[i] = vtkSmartPointer<vtkImageDataLIC2D>::New();
-        m_lic2D[i]->SetInputConnection(0, m_lic2DVOI[i]->GetOutputPort());
+        m_lic2D[i]->SetInputConnection(0, assignScaledVectors->GetOutputPort());
         m_lic2D[i]->SetInputConnection(1, noise->GetOutputPort());
         m_lic2D[i]->SetSteps(50);
         m_lic2D[i]->GlobalWarningDisplayOff();
         m_lic2D[i]->SetContext(m_glContext);
 
-
-        /** image rendering (LIC/scalars) */
-        m_sliceMappers[i] = vtkSmartPointer<vtkImageSliceMapper>::New();
-        m_sliceMappers[i]->SetOrientation(i);  // 0, 1, 2 maps to X, Y, Z
-
-        m_slices[i] = vtkSmartPointer<vtkImageSlice>::New();
-        m_slices[i]->SetMapper(m_sliceMappers[i]);
-        m_slices[i]->SetProperty(m_imgProperty);
 
         int min = extent[2 * i];
         int max = extent[2 * i + 1];
@@ -169,6 +146,15 @@ RenderedVectorGrid3D::RenderedVectorGrid3D(VectorGrid3DDataObject * dataObject)
         m_slicesEnabled[i] = true;
     }
 
+    double scalarRange[2] = { std::numeric_limits<double>::max(), std::numeric_limits<double>::lowest() };
+    for (int i = 0; i < 3; ++i)
+    {
+        double r[2];
+        image->GetPointData()->GetVectors()->GetRange(r, i);
+        scalarRange[0] = std::min(scalarRange[0], r[0]);
+        scalarRange[1] = std::max(scalarRange[1], r[1]);
+    }
+    setLic2DVectorScaleFactor(1.0 / std::max(std::abs(scalarRange[0]), std::abs(scalarRange[1])));
 
     setColorMode(ColorMode::UserDefined);
 
@@ -241,7 +227,7 @@ PropertyGroup * RenderedVectorGrid3D::createConfigGroup()
             prop_visibilities->asCollection()->at(i)->setOption("title", axis);
 
             auto * slice_prop = prop_positions->addProperty<int>(axis + "slice",
-                [this, i] () { return m_slicePositions[i]; },
+                [this, i] () { return slicePosition(i); },
                 [this, i] (int value) {
                 setSlicePosition(i, value);
                 emit geometryChanged();
@@ -251,27 +237,36 @@ PropertyGroup * RenderedVectorGrid3D::createConfigGroup()
             slice_prop->setOption("maximum", extent[2 * i + 1]);
         }
 
-        vtkImageProperty * property = m_imgProperty;
+        vtkProperty * property = m_texturePlaneProperty;
+
+        std::string depthWarning{ "Using transparency and lighting at the same time probably leads to rendering errors." };
 
         auto prop_transparency = group_scalarSlices->addProperty<double>("Transparency",
             [property]() {
             return (1.0 - property->GetOpacity()) * 100;
         },
-            [this] (double transparency) {
-            for (auto slice : m_slices)
-                slice->GetProperty()->SetOpacity(1.0 - transparency * 0.01);
+            [this, property] (double transparency) {
+            property->SetOpacity(1.0 - transparency * 0.01);
             emit geometryChanged();
         });
         prop_transparency->setOption("minimum", 0);
         prop_transparency->setOption("maximum", 100);
         prop_transparency->setOption("step", 1);
         prop_transparency->setOption("suffix", " %");
+        prop_transparency->setOption("tooltip", depthWarning);
+
+        auto prop_lighting = group_scalarSlices->addProperty<bool>("Lighting",
+            [property]() { return property->GetLighting(); },
+            [this, property](bool lighting) {
+            property->SetLighting(lighting);
+            emit geometryChanged();
+        });
+        prop_lighting->setOption("tooltip", depthWarning);
 
         auto prop_diffLighting = group_scalarSlices->addProperty<double>("DiffuseLighting",
             [property] () { return property->GetDiffuse(); },
-            [this] (double diff) {
-            for (auto slice : m_slices)
-                slice->GetProperty()->SetDiffuse(diff);
+            [this, property] (double diff) {
+            property->SetDiffuse(diff);
             emit geometryChanged();
         });
         prop_diffLighting->setOption("title", "Diffuse Lighting");
@@ -281,9 +276,8 @@ PropertyGroup * RenderedVectorGrid3D::createConfigGroup()
 
         auto prop_ambientLighting = group_scalarSlices->addProperty<double>("AmbientLighting",
             [property]() { return property->GetAmbient(); },
-            [this] (double ambient) {
-            for (auto slice : m_slices)
-                slice->GetProperty()->SetAmbient(ambient);
+            [this, property] (double ambient) {
+            property->SetAmbient(ambient);
             emit geometryChanged();
         });
         prop_ambientLighting->setOption("title", "Ambient Lighting");
@@ -291,19 +285,19 @@ PropertyGroup * RenderedVectorGrid3D::createConfigGroup()
         prop_ambientLighting->setOption("maximum", 1);
         prop_ambientLighting->setOption("step", 0.05);
 
-        auto prop_interpolation = group_scalarSlices->addProperty<Interpolation>("Interpolation",
-            [property] () {
-            return static_cast<Interpolation>(property->GetInterpolationType());
+        auto prop_interpolation = group_scalarSlices->addProperty<ResliceInterpolation>("Interpolation",
+            [this] () {
+            return static_cast<ResliceInterpolation>(m_planeWidgets[0]->GetResliceInterpolate());
         },
-            [this] (Interpolation interpolation) {
-            for (auto slice : m_slices)
-                slice->GetProperty()->SetInterpolationType(static_cast<int>(interpolation));
+            [this] (ResliceInterpolation interpolation) {
+            for (auto plane : m_planeWidgets)
+                plane->SetResliceInterpolate(static_cast<int>(interpolation));
             emit geometryChanged();
         });
         prop_interpolation->setStrings({
-                { Interpolation::nearest, "nearest" },
-                { Interpolation::linear, "linear" },
-                { Interpolation::cubic, "cubic" }
+                { ResliceInterpolation::nearest, "nearest" },
+                { ResliceInterpolation::linear, "linear" },
+                { ResliceInterpolation::cubic, "cubic" }
         });
     }
 
@@ -379,9 +373,6 @@ vtkSmartPointer<vtkProp3DCollection> RenderedVectorGrid3D::fetchViewProps3D()
 {
     auto props = RenderedData3D::fetchViewProps3D();
 
-    //for (auto prop : m_slices)
-    //    props->AddItem(prop);
-
     return props;
 }
 
@@ -404,8 +395,6 @@ void RenderedVectorGrid3D::scalarsForColorMappingChangedEvent()
 
 void RenderedVectorGrid3D::colorMappingGradientChangedEvent()
 {
-    m_imgProperty->SetLookupTable(m_gradient);
-
     vtkSmartPointer<vtkLookupTable> lut = vtkLookupTable::SafeDownCast(m_gradient);
     assert(lut);
 
@@ -433,25 +422,18 @@ void RenderedVectorGrid3D::forceLICUpdate(int axis)
 
 void RenderedVectorGrid3D::updateVisibilities()
 {
-    bool geoChanged = false;
-
     for (int i = 0; i < 3; ++i)
     {
-        bool showSliceI = m_gradient // don't show the slice before they can use our gradient
+        bool showSliceI = isVisible()
+            && (colorMode() != ColorMode::UserDefined)
+            && m_gradient // don't show the slice before they can use our gradient
             && (m_planeWidgets[i]->GetInteractor() != nullptr) // don't enable them without an interactor
-            && (colorMode() != ColorMode::UserDefined) && m_slicesEnabled[i];
+            && m_slicesEnabled[i];
 
-        //m_slices[i]->SetVisibility(isVisible() && showSliceI);
-        
-        if ((m_planeWidgets[i]->GetEnabled() != 0) != showSliceI)
-        {
-            m_planeWidgets[i]->SetEnabled(showSliceI);
-            geoChanged = true;
-        }
+        m_planeWidgets[i]->SetEnabled(showSliceI);
     }
 
-    if (geoChanged)
-        emit geometryChanged();
+    emit geometryChanged();
 }
 
 void RenderedVectorGrid3D::setSampleRate(int x, int y, int z)
@@ -464,20 +446,18 @@ void RenderedVectorGrid3D::sampleRate(int sampleRate[3])
     m_extractVOI->GetSampleRate(sampleRate);
 }
 
+int RenderedVectorGrid3D::slicePosition(int axis)
+{
+    assert(0 < axis || axis < 3);
+
+    return m_planeWidgets[axis]->GetSliceIndex();
+}
+
 void RenderedVectorGrid3D::setSlicePosition(int axis, int slicePosition)
 {
     assert(0 < axis || axis < 3);
 
-    m_slicePositions[axis] = slicePosition;
-
     m_planeWidgets[axis]->SetSliceIndex(slicePosition);
-
-    m_sliceMappers[axis]->SetSliceNumber(slicePosition);
-
-    int voi[6];
-    static_cast<vtkImageData *>(dataObject()->dataSet())->GetExtent(voi);
-    voi[2 * axis] = voi[2 * axis + 1] = slicePosition;
-    m_lic2DVOI[axis]->SetVOI(voi);
 
     forceLICUpdate(axis);
 }
@@ -489,11 +469,10 @@ void RenderedVectorGrid3D::setLic2DVectorScaleFactor(float f)
 
     m_lic2DVectorScaleFactor = f;
 
-    std::string vectorsName = dataObject()->dataSet()->GetPointData()->GetVectors()->GetName();
+    std::string fun{ std::to_string(m_lic2DVectorScaleFactor) + "*" + s_vectorScaleInputArray };
 
-    std::string fun{ std::to_string(m_lic2DVectorScaleFactor) 
-                     + "*" + vectorsName };
-    m_lic2DVectorScale->SetFunction(fun.c_str());
+    for (auto vectorScale : m_lic2DVectorScale)
+        vectorScale->SetFunction(fun.c_str());
 
     for (int i = 0; i < 3; ++i)
         forceLICUpdate(i);
@@ -512,13 +491,14 @@ void RenderedVectorGrid3D::setColorMode(ColorMode mode)
     switch (m_colorMode)
     {
     case ColorMode::UserDefined:
-        m_sliceMappers[i]->SetInputData(m_nullImage);
         break;
+
+    // slightly hacked: modify internal pipeline of vtkImagePlaneWidget to allow usage with LIC
     case ColorMode::ScalarMapping:
-        m_sliceMappers[i]->SetInputConnection(dataObject()->processedOutputPort());
+        m_planeWidgets[i]->GetTexture()->SetInputConnection(m_planeWidgets[i]->GetReslice()->GetOutputPort());
         break;
     case ColorMode::LIC:
-        m_sliceMappers[i]->SetInputConnection(m_lic2D[i]->GetOutputPort());
+        m_planeWidgets[i]->GetTexture()->SetInputConnection(m_lic2D[i]->GetOutputPort());
         break;
     }
 }
