@@ -109,8 +109,8 @@ QList<ScalarsForColorMapping *> AttributeArrayComponentMapping::newInstances(con
 
 AttributeArrayComponentMapping::AttributeArrayComponentMapping(const QList<AbstractVisualizedData *> & visualizedData, QString dataArrayName, int attributeLocation, vtkIdType numDataComponents)
     : ScalarsForColorMapping(visualizedData, numDataComponents)
-    , m_dataArrayName(dataArrayName)
     , m_attributeLocation(attributeLocation)
+    , m_dataArrayName(dataArrayName)
 {
     assert(!visualizedData.isEmpty());
 

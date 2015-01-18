@@ -8,7 +8,8 @@
 class CORE_API AttributeArrayComponentMapping : public ScalarsForColorMapping
 {
 public:
-    AttributeArrayComponentMapping(const QList<AbstractVisualizedData *> & visualizedData, QString dataArrayName, int attributeLocation, vtkIdType numDataComponents);
+    AttributeArrayComponentMapping(const QList<AbstractVisualizedData *> & visualizedData,
+        QString dataArrayName, int attributeLocation, vtkIdType numDataComponents);
     ~AttributeArrayComponentMapping() override;
 
     QString name() const override;
@@ -27,7 +28,6 @@ protected:
 private:
     static const bool s_isRegistered;
 
-    QString m_dataArrayName;
-
     const int m_attributeLocation;
+    const QString m_dataArrayName;
 };

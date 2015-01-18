@@ -1,13 +1,22 @@
 #pragma once
 
+#include <QMap>
+
+#include <vtkSmartPointer.h>
+
 #include <core/scalar_mapping/ScalarsForColorMapping.h>
 
 
-class CORE_API VertexComponentMapping : public ScalarsForColorMapping
+class vtkVectorNorm;
+
+
+class CORE_API VectorMagnitudeMapping : public ScalarsForColorMapping
 {
 public:
-    VertexComponentMapping(const QList<AbstractVisualizedData*> & visualizedData, vtkIdType component);
-    ~VertexComponentMapping() override;
+    VectorMagnitudeMapping(
+        const QList<AbstractVisualizedData *> & visualizedData,
+        const QString & dataArrayName, int attributeLocation);
+    ~VectorMagnitudeMapping() override;
 
     QString name() const override;
 
@@ -24,5 +33,8 @@ protected:
 private:
     static const bool s_isRegistered;
 
-    const vtkIdType m_component;
+    const int m_attributeLocation;
+    const QString m_dataArrayName;
+
+    QMap<AbstractVisualizedData *, vtkSmartPointer<vtkVectorNorm>> m_vectorNorms;
 };

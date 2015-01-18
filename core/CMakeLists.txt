@@ -97,10 +97,12 @@ set ( SOURCES
     scalar_mapping/ScalarsForColorMappingRegistry.cpp
     scalar_mapping/DefaultColorMapping.h
     scalar_mapping/DefaultColorMapping.cpp
-    scalar_mapping/VertexComponentMapping.h
-    scalar_mapping/VertexComponentMapping.cpp
     scalar_mapping/AttributeArrayComponentMapping.h
     scalar_mapping/AttributeArrayComponentMapping.cpp
+    scalar_mapping/VectorMagnitudeMapping.h
+    scalar_mapping/VectorMagnitudeMapping.cpp
+    scalar_mapping/VertexComponentMapping.h
+    scalar_mapping/VertexComponentMapping.cpp
 
     vector_mapping/VectorMapping.h
     vector_mapping/VectorMapping.cpp

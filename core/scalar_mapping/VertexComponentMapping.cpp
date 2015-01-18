@@ -18,7 +18,7 @@ namespace
 const QString s_name = "vertex component";
 }
 
-const bool VertexComponentMapping::s_registered = ScalarsForColorMappingRegistry::instance().registerImplementation(
+const bool VertexComponentMapping::s_isRegistered = ScalarsForColorMappingRegistry::instance().registerImplementation(
     s_name,
     newInstances);
 
@@ -89,8 +89,10 @@ bool VertexComponentMapping::usesFilter() const
     return true;
 }
 
-void VertexComponentMapping::configureMapper(AbstractVisualizedData * /*visualizedData*/, vtkMapper * mapper)
+void VertexComponentMapping::configureMapper(AbstractVisualizedData * visualizedData, vtkMapper * mapper)
 {
+    ScalarsForColorMapping::configureMapper(visualizedData, mapper);
+
     mapper->ScalarVisibilityOn();
 }
 
