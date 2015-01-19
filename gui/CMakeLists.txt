@@ -74,6 +74,7 @@ set ( SOURCES
     widgets/RenderConfigWidget.cpp
     widgets/RendererConfigWidget.h
     widgets/RendererConfigWidget.cpp
+    widgets/RendererConfigWidget_Renderer.cpp
 )
 
 set ( UIs
