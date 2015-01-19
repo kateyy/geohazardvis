@@ -15,6 +15,7 @@ class vtkPropCollection;
 class vtkCubeAxesActor;
 class vtkScalarBarActor;
 class vtkScalarBarWidget;
+class vtkTextWidget;
 
 class IPickingInteractorStyle;
 class PickingInteractorStyleSwitch;
@@ -68,6 +69,7 @@ public:
 
     vtkLightKit * lightKit();
 
+    vtkTextWidget * titleWidget();
     ColorMapping * scalarMapping();
     vtkScalarBarWidget * colorLegendWidget();
 
@@ -124,6 +126,7 @@ private:
     vtkBoundingBox m_dataBounds;
 
     vtkSmartPointer<vtkCubeAxesActor> m_axesActor;
+    vtkSmartPointer<vtkTextWidget> m_titleWidget;
     ColorMapping * m_scalarMapping;
     vtkScalarBarActor * m_colorMappingLegend;
     vtkSmartPointer<vtkScalarBarWidget> m_scalarBarWidget;

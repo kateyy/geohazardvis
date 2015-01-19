@@ -8,7 +8,9 @@
 #include <vtkLightKit.h>
 #include <vtkCamera.h>
 #include <vtkCubeAxesActor.h>
+#include <vtkTextActor.h>
 #include <vtkTextProperty.h>
+#include <vtkTextWidget.h>
 
 #include <reflectionzeug/PropertyGroup.h>
 #include <core/types.h>
@@ -75,6 +77,21 @@ reflectionzeug::PropertyGroup * RendererConfigWidget::createPropertyGroupRendere
 {
     PropertyGroup * root = new PropertyGroup();
     vtkRenderer * renderer = impl->renderer();
+
+    root->addProperty<QString>("Title",
+        [impl] () { return QString::fromUtf8(impl->titleWidget()->GetTextActor()->GetInput()); },
+        [impl, renderView] (const QString & title) {
+        impl->titleWidget()->GetTextActor()->SetInput(title.toUtf8().data());
+        renderView->render();
+    });
+
+    root->addProperty<int>("TitleFontSize",
+        [impl] () { return impl->titleWidget()->GetTextActor()->GetTextProperty()->GetFontSize(); },
+        [impl, renderView] (const int & fontSize) {
+        impl->titleWidget()->GetTextActor()->GetTextProperty()->SetFontSize(fontSize);
+        renderView->render();
+    })
+        ->setOption("title", "Title Font Size");
 
     auto backgroundColor = root->addProperty<Color>("backgroundColor",
         [renderer]() {

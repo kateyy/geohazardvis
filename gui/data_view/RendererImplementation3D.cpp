@@ -13,10 +13,13 @@
 
 #include <vtkBoundingBox.h>
 #include <vtkCubeAxesActor.h>
+#include <vtkProperty2D.h>
 #include <vtkScalarBarActor.h>
 #include <vtkScalarBarWidget.h>
 #include <vtkScalarBarRepresentation.h>
-#include <vtkProperty2D.h>
+#include <vtkTextActor.h>
+#include <vtkTextRepresentation.h>
+#include <vtkTextWidget.h>
 
 #include <core/types.h>
 #include <core/vtkhelper.h>
@@ -246,6 +249,11 @@ vtkLightKit * RendererImplementation3D::lightKit()
     return m_lightKit;
 }
 
+vtkTextWidget * RendererImplementation3D::titleWidget()
+{
+    return m_titleWidget;
+}
+
 ColorMapping * RendererImplementation3D::scalarMapping()
 {
     return m_scalarMapping;
@@ -318,12 +326,31 @@ void RendererImplementation3D::initialize()
     createAxes();
     setupColorMappingLegend();
 
+
+    m_titleWidget = vtkSmartPointer<vtkTextWidget>::New();
+
+    VTK_CREATE(vtkTextRepresentation, titleRepr);
+    vtkTextActor * titleActor = titleRepr->GetTextActor();
+    titleActor->SetInput(" ");
+    titleActor->GetTextProperty()->SetColor(0, 0, 0);
+    titleActor->GetTextProperty()->SetVerticalJustificationToTop();
+
+    titleRepr->GetPositionCoordinate()->SetValue(0.2, .85);
+    titleRepr->GetPosition2Coordinate()->SetValue(0.6, .10);
+    titleRepr->GetBorderProperty()->SetColor(0.2, 0.2, 0.2);
+
+    m_titleWidget->SetRepresentation(titleRepr);
+    m_titleWidget->SetTextActor(titleActor);
+    m_titleWidget->SelectableOff();
+
     m_isInitialized = true;
 }
 
 void RendererImplementation3D::assignInteractor()
 {
     m_scalarBarWidget->SetInteractor(m_renderWindow->GetInteractor());
+    m_titleWidget->SetInteractor(m_renderWindow->GetInteractor());
+    m_titleWidget->On();
 }
 
 void RendererImplementation3D::updateAxes()
