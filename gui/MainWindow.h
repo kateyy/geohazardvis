@@ -12,9 +12,9 @@ class DataMapping;
 class RenderConfigWidget;
 class RenderView;
 class RendererConfigWidget;
-class ScalarMappingChooser;
+class ColorMappingChooser;
 class Ui_MainWindow;
-class VectorMappingChooser;
+class GlyphMappingChooser;
 
 
 class GUI_API MainWindow : public QMainWindow
@@ -48,8 +48,8 @@ private:
     QAction * m_addToRendererAction;
     QAction * m_removeLoadedFileAction;
     DataBrowser * m_dataBrowser;
-    ScalarMappingChooser * m_scalarMappingChooser;
-    VectorMappingChooser * m_vectorMappingChooser;
+    ColorMappingChooser * m_scalarMappingChooser;
+    GlyphMappingChooser * m_vectorMappingChooser;
     RenderConfigWidget * m_renderConfigWidget;
     RendererConfigWidget * m_rendererConfigWidget;
     CanvasExporterWidget * m_canvasExporter;

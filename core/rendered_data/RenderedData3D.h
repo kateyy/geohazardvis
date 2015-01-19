@@ -6,7 +6,7 @@
 
 
 class vtkActorCollection;
-class VectorMapping;
+class GlyphMapping;
 
 
 /**
@@ -23,7 +23,7 @@ public:
     /** VTK view actors (3D view props) visualizing the data object and possibly additional attributes */
     vtkSmartPointer<vtkActorCollection> actors();
 
-    VectorMapping * vectorMapping();
+    GlyphMapping * glyphMapping();
 
 protected:
     virtual vtkSmartPointer<vtkActorCollection> fetchActors();
@@ -41,5 +41,5 @@ private:
 private:
     vtkSmartPointer<vtkProperty> m_renderProperty;
 
-    VectorMapping * m_vectors;
+    GlyphMapping * m_vectors;
 };

@@ -15,7 +15,7 @@ namespace reflectionzeug
 
 enum class ContentType;
 class DataObject;
-class ScalarsForColorMapping;
+class ColorMappingData;
 
 
 class CORE_API AbstractVisualizedData : public QObject
@@ -36,9 +36,9 @@ public:
     virtual reflectionzeug::PropertyGroup * createConfigGroup() = 0;
 
     /** set scalars that will configure color mapping for this data */
-    void setScalarsForColorMapping(ScalarsForColorMapping * scalars);
+    void setScalarsForColorMapping(ColorMappingData * scalars);
     /** Set gradient that will be applied to colored geometries.
-    * ScalarsForColorMapping are responsible for gradient configuration. */
+    * ColorMappingData are responsible for gradient configuration. */
     void setColorMappingGradient(vtkScalarsToColors * gradient);
 
 signals:
@@ -51,7 +51,7 @@ protected:
     virtual void colorMappingGradientChangedEvent();
 
 protected:
-    ScalarsForColorMapping * m_scalars;
+    ColorMappingData * m_scalars;
     vtkSmartPointer<vtkScalarsToColors> m_gradient;
 
 private:

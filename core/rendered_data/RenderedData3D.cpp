@@ -8,8 +8,8 @@
 
 #include <core/types.h>
 #include <core/vtkhelper.h>
-#include <core/vector_mapping/VectorMapping.h>
-#include <core/vector_mapping/VectorMappingData.h>
+#include <core/glyph_mapping/GlyphMapping.h>
+#include <core/glyph_mapping/GlyphMappingData.h>
 
 
 RenderedData3D::RenderedData3D(DataObject * dataObject)
@@ -29,12 +29,12 @@ vtkSmartPointer<vtkActorCollection> RenderedData3D::actors()
     return static_cast<vtkActorCollection *>(viewProps().Get());
 }
 
-VectorMapping * RenderedData3D::vectorMapping()
+GlyphMapping * RenderedData3D::glyphMapping()
 {
     if (!m_vectors)
     {
-        m_vectors = new VectorMapping(this);
-        connect(m_vectors, &VectorMapping::vectorsChanged, this, &RenderedData::viewPropCollectionChanged);
+        m_vectors = new GlyphMapping(this);
+        connect(m_vectors, &GlyphMapping::vectorsChanged, this, &RenderedData::viewPropCollectionChanged);
     }
     return m_vectors;
 }
@@ -61,7 +61,7 @@ vtkSmartPointer<vtkActorCollection> RenderedData3D::fetchActors()
 {
     VTK_CREATE(vtkActorCollection, actors);
 
-    for (auto * v : vectorMapping()->vectors())
+    for (auto * v : glyphMapping()->vectors())
         actors->AddItem(v->actor());
 
     return actors;
@@ -69,7 +69,7 @@ vtkSmartPointer<vtkActorCollection> RenderedData3D::fetchActors()
 
 void RenderedData3D::visibilityChangedEvent(bool visible)
 {
-    for (VectorMappingData * vectors : m_vectors->vectors())
+    for (GlyphMappingData * vectors : m_vectors->vectors())
         vectors->viewProp()->SetVisibility(
         visible && vectors->isVisible());
 }

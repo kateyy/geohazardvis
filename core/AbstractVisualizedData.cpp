@@ -48,7 +48,7 @@ void AbstractVisualizedData::setVisible(bool visible)
     emit visibilityChanged(visible);
 }
 
-void AbstractVisualizedData::setScalarsForColorMapping(ScalarsForColorMapping * scalars)
+void AbstractVisualizedData::setScalarsForColorMapping(ColorMappingData * scalars)
 {
     if (scalars == m_scalars)
         return;

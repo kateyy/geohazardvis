@@ -22,7 +22,7 @@
 #include <core/vtkhelper.h>
 #include <core/data_objects/DataObject.h>
 #include <core/rendered_data/RenderedData.h>
-#include <core/scalar_mapping/ScalarToColorMapping.h>
+#include <core/color_mapping/ColorMapping.h>
 #include <gui/data_view/RenderView.h>
 #include <gui/data_view/RenderViewStrategy.h>
 #include <gui/data_view/RenderViewStrategySwitch.h>
@@ -41,9 +41,9 @@ RendererImplementation3D::RendererImplementation3D(RenderView & renderView, QObj
     , m_strategySwitch(new RenderViewStrategySwitch(*this))
     , m_strategy(nullptr)
     , m_emptyStrategy(new RenderViewStrategyNull(*this))
-    , m_scalarMapping(new ScalarToColorMapping())
+    , m_scalarMapping(new ColorMapping())
 {
-    connect(m_scalarMapping, &ScalarToColorMapping::colorLegendVisibilityChanged,
+    connect(m_scalarMapping, &ColorMapping::colorLegendVisibilityChanged,
         [this] (bool visible) { m_scalarBarWidget->SetEnabled(visible); });
 
     connect(&m_renderView, &RenderView::contentChanged,
@@ -246,7 +246,7 @@ vtkLightKit * RendererImplementation3D::lightKit()
     return m_lightKit;
 }
 
-ScalarToColorMapping * RendererImplementation3D::scalarMapping()
+ColorMapping * RendererImplementation3D::scalarMapping()
 {
     return m_scalarMapping;
 }

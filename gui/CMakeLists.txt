@@ -60,20 +60,20 @@ set ( SOURCES
 
     widgets/CanvasExporterWidget.h
     widgets/CanvasExporterWidget.cpp
+    widgets/ColorMappingChooser.h
+    widgets/ColorMappingChooser.cpp
     widgets/DataBrowser.h
     widgets/DataBrowser.cpp
     widgets/DataBrowserTableModel.h
     widgets/DataBrowserTableModel.cpp
-    widgets/ScalarMappingChooser.h
-    widgets/ScalarMappingChooser.cpp
+    widgets/GlyphMappingChooser.h
+    widgets/GlyphMappingChooser.cpp
+    widgets/GlyphMappingChooserListModel.h
+    widgets/GlyphMappingChooserListModel.cpp
     widgets/RenderConfigWidget.h
     widgets/RenderConfigWidget.cpp
     widgets/RendererConfigWidget.h
     widgets/RendererConfigWidget.cpp
-    widgets/VectorMappingChooser.h
-    widgets/VectorMappingChooser.cpp
-    widgets/VectorMappingChooserListModel.h
-    widgets/VectorMappingChooserListModel.cpp
 )
 
 set ( UIs
@@ -83,11 +83,11 @@ set ( UIs
     data_view/TableView.ui
     
     widgets/CanvasExporterWidget.ui
+    widgets/ColorMappingChooser.ui
     widgets/DataBrowser.ui
-    widgets/ScalarMappingChooser.ui
+    widgets/GlyphMappingChooser.ui
     widgets/RenderConfigWidget.ui
     widgets/RendererConfigWidget.ui
-    widgets/VectorMappingChooser.ui
 )
 
 set ( QRCs

@@ -21,7 +21,7 @@
 
 #include <core/vtkhelper.h>
 #include <core/data_objects/PolyDataObject.h>
-#include <core/scalar_mapping/ScalarsForColorMapping.h>
+#include <core/color_mapping/ColorMappingData.h>
 
 
 using namespace reflectionzeug;

@@ -21,7 +21,7 @@ class PickingInteractorStyleSwitch;
 class RenderViewStrategy;
 class RenderViewStrategySwitch;
 class RenderedData;
-class ScalarToColorMapping;
+class ColorMapping;
 
 
 class RendererImplementation3D : public RendererImplementation
@@ -68,7 +68,7 @@ public:
 
     vtkLightKit * lightKit();
 
-    ScalarToColorMapping * scalarMapping();
+    ColorMapping * scalarMapping();
     vtkScalarBarWidget * colorLegendWidget();
 
     vtkCubeAxesActor * axesActor();
@@ -124,7 +124,7 @@ private:
     vtkBoundingBox m_dataBounds;
 
     vtkSmartPointer<vtkCubeAxesActor> m_axesActor;
-    ScalarToColorMapping * m_scalarMapping;
+    ColorMapping * m_scalarMapping;
     vtkScalarBarActor * m_colorMappingLegend;
     vtkSmartPointer<vtkScalarBarWidget> m_scalarBarWidget;
 
