@@ -115,6 +115,10 @@ set ( SOURCES
     glyph_mapping/Grid3dGlyphMapping.cpp
     glyph_mapping/PolyDataAttributeGlyphMapping.h
     glyph_mapping/PolyDataAttributeGlyphMapping.cpp
+    
+    reflectionzeug_extension/QStringProperty.h
+    reflectionzeug_extension/QStringProperty.hpp
+    reflectionzeug_extension/QStringProperty.cpp
 )
 
 source_group_by_path_and_type(${CMAKE_CURRENT_SOURCE_DIR} ${SOURCES})
