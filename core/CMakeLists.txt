@@ -103,6 +103,12 @@ set ( SOURCES
     color_mapping/VectorMagnitudeColorMapping.cpp
     color_mapping/VertexComponentColorMapping.h
     color_mapping/VertexComponentColorMapping.cpp
+    color_mapping/GlyphColorMapping.h
+    color_mapping/GlyphColorMapping.cpp
+    color_mapping/GlyphColorMappingGlyphListener.h
+    color_mapping/GlyphColorMappingGlyphListener.cpp
+    color_mapping/GlyphMagnitudeColorMapping.h
+    color_mapping/GlyphMagnitudeColorMapping.cpp
 
     glyph_mapping/GlyphMapping.h
     glyph_mapping/GlyphMapping.cpp

@@ -6,6 +6,10 @@
 #include <vtkArrowSource.h>
 #include <vtkLineSource.h>
 #include <vtkAppendPolyData.h>
+#include <vtkVectorNorm.h>
+#include <vtkAssignAttribute.h>
+#include <vtkPointData.h>
+#include <vtkLookupTable.h>
 
 #include <vtkGlyph3D.h>
 
@@ -18,6 +22,7 @@
 #include <reflectionzeug/PropertyGroup.h>
 
 #include <core/vtkhelper.h>
+#include <core/color_mapping/ColorMappingData.h>
 #include <core/data_objects/DataObject.h>
 #include <core/rendered_data/RenderedData.h>
 
@@ -53,6 +58,7 @@ GlyphMappingData::GlyphMappingData(RenderedData * renderedData)
     : m_renderedData(renderedData)
     , m_isVisible(false)
     , m_actor(vtkSmartPointer<vtkActor>::New())
+    , m_colorMappingData(nullptr)
     , m_isValid(true)
 {
     assert(renderedData);
@@ -72,8 +78,9 @@ GlyphMappingData::GlyphMappingData(RenderedData * renderedData)
 
     m_arrowGlyph = vtkSmartPointer<vtkGlyph3D>::New();
     m_arrowGlyph->ScalingOn();
-    m_arrowGlyph->SetScaleModeToScaleByScalar();
+    m_arrowGlyph->SetScaleModeToDataScalingOff();
     m_arrowGlyph->OrientOn();
+    //m_arrowGlyph->SetColorModeToColorByScale();
     double * bounds = renderedData->dataObject()->dataSet()->GetBounds();
     double maxBoundsSize = std::max(bounds[1] - bounds[0], std::max(bounds[3] - bounds[2], bounds[5] - bounds[4]));
     m_arrowGlyph->SetScaleFactor(maxBoundsSize * 0.1);
@@ -81,6 +88,7 @@ GlyphMappingData::GlyphMappingData(RenderedData * renderedData)
     setRepresentation(Representation::CylindricArrow);
 
     m_mapper = vtkSmartPointer<vtkPolyDataMapper>::New();
+    m_mapper->UseLookupTableScalarRangeOn();
     m_mapper->SetInputConnection(m_arrowGlyph->GetOutputPort());
 
     m_actor->SetVisibility(m_isVisible);
@@ -104,6 +112,8 @@ void GlyphMappingData::setVisible(bool visible)
     m_actor->SetVisibility(visible);
 
     visibilityChangedEvent();
+
+    emit visibilityChanged(visible);
 }
 
 GlyphMappingData::Representation GlyphMappingData::representation() const
@@ -260,6 +270,36 @@ reflectionzeug::PropertyGroup * GlyphMappingData::createPropertyGroup()
     return group;
 }
 
+ColorMappingData * GlyphMappingData::colorMappingData()
+{
+    return m_colorMappingData;
+}
+
+void GlyphMappingData::setColorMappingData(ColorMappingData * colorMappingData)
+{
+    if (m_colorMappingData == colorMappingData)
+        return;
+
+    m_colorMappingData = colorMappingData;
+
+    colorMappingChangedEvent(colorMappingData);
+}
+
+vtkScalarsToColors * GlyphMappingData::colorMappingGradient()
+{
+    return m_colorMappingGradient;
+}
+
+void GlyphMappingData::setColorMappingGradient(vtkScalarsToColors * gradient)
+{
+    if (m_colorMappingGradient == gradient)
+        return;
+
+    m_colorMappingGradient = gradient;
+
+    colorMappingGradientChangedEvent(gradient);
+}
+
 vtkActor * GlyphMappingData::actor()
 {
     return m_actor;
@@ -272,6 +312,7 @@ vtkProp * GlyphMappingData::viewProp()
 
 void GlyphMappingData::initialize()
 {
+    m_arrowGlyph->SetInputConnection(vectorDataOutputPort());
 }
 
 DataObject * GlyphMappingData::dataObject()
@@ -298,6 +339,24 @@ void GlyphMappingData::visibilityChangedEvent()
 {
 }
 
-void GlyphMappingData::startingIndexChangedEvent()
+void GlyphMappingData::colorMappingChangedEvent(ColorMappingData * colorMappingData)
 {
+    if (colorMappingData && colorMappingData->usesFilter())
+    {
+        vtkSmartPointer<vtkAlgorithm> filter = vtkSmartPointer<vtkAlgorithm>::Take(
+            colorMappingData->createFilter(renderedData()));
+
+        m_arrowGlyph->SetInputConnection(filter->GetOutputPort());
+
+        colorMappingData->configureMapper(renderedData(), m_mapper);
+    }
+    else
+    {
+        m_arrowGlyph->SetInputConnection(vectorDataOutputPort());
+    }
+}
+
+void GlyphMappingData::colorMappingGradientChangedEvent(vtkScalarsToColors * gradient)
+{
+    m_mapper->SetLookupTable(gradient);
 }

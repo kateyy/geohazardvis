@@ -10,10 +10,13 @@
 #include <core/data_objects/DataObject.h>
 #include <core/color_mapping/ColorMappingData.h>
 #include <core/color_mapping/ColorMappingRegistry.h>
+#include <core/color_mapping/GlyphColorMappingGlyphListener.h>
 
 
-ColorMapping::ColorMapping()
-    : m_gradient(vtkSmartPointer<vtkLookupTable>::New())
+ColorMapping::ColorMapping(QObject * parent)
+    : QObject(parent)
+    , m_glyphListener(new GlyphColorMappingGlyphListener(this))
+    , m_gradient(vtkSmartPointer<vtkLookupTable>::New())
     , m_originalGradient(nullptr)
     , m_colorMappingLegend(vtkSmartPointer<vtkScalarBarActor>::New())
     , m_colorMappingLegendVisible(true)
@@ -24,6 +27,9 @@ ColorMapping::ColorMapping()
     clear();
 
     connect(&DataSetHandler::instance(), &DataSetHandler::rawVectorsChanged,
+        this, &ColorMapping::updateAvailableScalars);
+
+    connect(m_glyphListener, &GlyphColorMappingGlyphListener::glyphMappingChanged,
         this, &ColorMapping::updateAvailableScalars);
 }
 
@@ -82,6 +88,8 @@ void ColorMapping::setVisualizedData(const QList<AbstractVisualizedData *> & vis
     }
 
     setCurrentScalarsByName(newScalarsName);
+
+    m_glyphListener->setData(visualizedData);
 }
 
 void ColorMapping::clear()

@@ -11,10 +11,12 @@
 
 
 class vtkActor;
+class vtkAlgorithmOutput;
 class vtkProp;
 class vtkAlgorithm;
 class vtkMapper;
 class vtkGlyph3D;
+class vtkScalarsToColors;
 
 namespace reflectionzeug
 {
@@ -23,6 +25,7 @@ namespace reflectionzeug
 
 class DataObject;
 class RenderedData;
+class ColorMappingData;
 
 
 /**
@@ -44,6 +47,9 @@ public:
 
 public:
     virtual ~GlyphMappingData() = 0;
+
+    DataObject * dataObject();
+    RenderedData * renderedData();
 
     virtual QString name() const = 0;
 
@@ -74,8 +80,16 @@ public:
 
     virtual reflectionzeug::PropertyGroup * createPropertyGroup();
 
+    virtual vtkAlgorithmOutput * vectorDataOutputPort() = 0;
+
+    ColorMappingData * colorMappingData();
+    void setColorMappingData(ColorMappingData * colorMappingData);
+    vtkScalarsToColors * colorMappingGradient();
+    void setColorMappingGradient(vtkScalarsToColors * gradient);
+
 signals:
     void geometryChanged();
+    void visibilityChanged(bool isVisible);
 
 protected:
     template<typename SubClass>
@@ -87,12 +101,11 @@ protected:
 
     bool isValid() const;
 
-    DataObject * dataObject();
-    RenderedData * renderedData();
     vtkGlyph3D * arrowGlyph();
 
     virtual void visibilityChangedEvent();
-    virtual void startingIndexChangedEvent();
+    virtual void colorMappingChangedEvent(ColorMappingData * colorMappingData);
+    virtual void colorMappingGradientChangedEvent(vtkScalarsToColors * gradient);
 
 private:
     RenderedData * m_renderedData;
@@ -105,6 +118,9 @@ private:
     vtkSmartPointer<vtkGlyph3D> m_arrowGlyph;
     vtkSmartPointer<vtkMapper> m_mapper;
     vtkSmartPointer<vtkActor> m_actor;
+
+    ColorMappingData * m_colorMappingData;
+    vtkSmartPointer<vtkScalarsToColors> m_colorMappingGradient;
 
 protected:
     bool m_isValid;

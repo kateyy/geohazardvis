@@ -15,6 +15,7 @@ class vtkScalarBarActor;
 
 class AbstractVisualizedData;
 class ColorMappingData;
+class GlyphColorMappingGlyphListener;
 
 
 /**
@@ -26,7 +27,7 @@ class CORE_API ColorMapping : public QObject
     Q_OBJECT
 
 public:
-    ColorMapping();
+    ColorMapping(QObject * parent = nullptr);
     ~ColorMapping() override;
 
     /** setup a list of color mappings which are applicable to the list of rendered data
@@ -72,6 +73,8 @@ private slots:
     void updateLegendVisibility();
 
 private:
+    GlyphColorMappingGlyphListener * m_glyphListener;
+
     QList<AbstractVisualizedData *> m_visualizedData;
 
     QMap<QString, ColorMappingData *> m_scalars;

@@ -79,6 +79,10 @@ Grid3dGlyphMapping::Grid3dGlyphMapping(RenderedVectorGrid3D * renderedGrid, vtkD
 
     connect(renderedGrid, &RenderedVectorGrid3D::sampleRateChanged, [this] (int, int, int) {
         this->updateArrowLength(); });
+
+    m_assignVectors = vtkSmartPointer<vtkAssignAttribute>::New();
+    m_assignVectors->SetInputConnection(m_renderedGrid->resampledOuputPort());
+    m_assignVectors->Assign(m_dataArray->GetName(), vtkDataSetAttributes::VECTORS, vtkAssignAttribute::POINT_DATA);
 }
 
 QString Grid3dGlyphMapping::name() const
@@ -87,13 +91,9 @@ QString Grid3dGlyphMapping::name() const
     return QString::fromUtf8(m_dataArray->GetName());
 }
 
-void Grid3dGlyphMapping::initialize()
+vtkAlgorithmOutput * Grid3dGlyphMapping::vectorDataOutputPort()
 {
-    VTK_CREATE(vtkAssignAttribute, assignAttribute);
-    assignAttribute->SetInputConnection(m_renderedGrid->resampledOuputPort());
-    assignAttribute->Assign(m_dataArray->GetName(), vtkDataSetAttributes::VECTORS, vtkAssignAttribute::POINT_DATA);
-
-    arrowGlyph()->SetInputConnection(assignAttribute->GetOutputPort());
+    return m_assignVectors->GetOutputPort();
 }
 
 void Grid3dGlyphMapping::updateArrowLength()

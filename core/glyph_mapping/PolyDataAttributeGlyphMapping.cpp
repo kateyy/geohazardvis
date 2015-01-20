@@ -81,6 +81,10 @@ PolyDataAttributeGlyphMapping::PolyDataAttributeGlyphMapping(RenderedData * rend
     m_isValid = m_isValid && m_polyData != nullptr;
 
     arrowGlyph()->SetVectorModeToUseVector();
+
+    m_assignVectors = vtkSmartPointer<vtkAssignAttribute>::New();
+    m_assignVectors->SetInputConnection(m_polyData->cellCentersOutputPort());
+    m_assignVectors->Assign(m_dataArray->GetName(), vtkDataSetAttributes::VECTORS, vtkAssignAttribute::POINT_DATA);
 }
 
 PolyDataAttributeGlyphMapping::~PolyDataAttributeGlyphMapping() = default;
@@ -91,11 +95,7 @@ QString PolyDataAttributeGlyphMapping::name() const
     return QString::fromUtf8(m_dataArray->GetName());
 }
 
-void PolyDataAttributeGlyphMapping::initialize()
+vtkAlgorithmOutput * PolyDataAttributeGlyphMapping::vectorDataOutputPort()
 {
-    VTK_CREATE(vtkAssignAttribute, assignAttribute);
-    assignAttribute->SetInputConnection(m_polyData->cellCentersOutputPort());
-    assignAttribute->Assign(m_dataArray->GetName(), vtkDataSetAttributes::VECTORS, vtkAssignAttribute::POINT_DATA);
-
-    arrowGlyph()->SetInputConnection(assignAttribute->GetOutputPort());
+    return m_assignVectors->GetOutputPort();
 }
