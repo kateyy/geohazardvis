@@ -14,8 +14,6 @@ public:
 
     QString name() const override;
 
-    void configureMapper(AbstractVisualizedData * visualizedData, vtkMapper * mapper) override;
-
 protected:
     QMap<vtkIdType, QPair<double, double>> updateBounds() override;
 

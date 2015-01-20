@@ -49,7 +49,7 @@ enum ResliceInterpolation
     cubic = VTK_CUBIC_RESLICE
 };
 
-const std::string s_vectorScaleInputArray = "ImageScalars";
+const std::string s_resliceOutputArray = "ImageScalars";
 
 }
 
@@ -124,7 +124,7 @@ RenderedVectorGrid3D::RenderedVectorGrid3D(VectorGrid3DDataObject * dataObject)
 
         m_lic2DVectorScale[i] = vtkSmartPointer<vtkArrayCalculator>::New();
         m_lic2DVectorScale[i]->SetInputConnection(m_planeWidgets[i]->GetReslice()->GetOutputPort());
-        m_lic2DVectorScale[i]->AddVectorArrayName(s_vectorScaleInputArray.c_str());
+        m_lic2DVectorScale[i]->AddVectorArrayName(s_resliceOutputArray.c_str());
         m_lic2DVectorScale[i]->SetResultArrayName(vectorsScaledName.c_str());
 
         VTK_CREATE(vtkAssignAttribute, assignScaledVectors);
@@ -393,14 +393,33 @@ void RenderedVectorGrid3D::scalarsForColorMappingChangedEvent()
     RenderedData3D::scalarsForColorMappingChangedEvent();
 
     ColorMode newMode = ColorMode::UserDefined;
-    if (m_scalars)
+
+    if (m_scalars && m_scalars->name() == "LIC 2D")
     {
-        if (m_scalars->scalarsName() == QString::fromUtf8(
-            dataObject()->dataSet()->GetPointData()->GetVectors()->GetName()))
-            newMode = ColorMode::ScalarMapping;
-        else if (m_scalars->name() == "LIC 2D")
-            newMode = ColorMode::LIC;
+        newMode = ColorMode::LIC;
     }
+    else if (m_scalars && m_scalars->usesFilter())
+    {
+        vtkSmartPointer<vtkAlgorithm> filter = vtkSmartPointer<vtkAlgorithm>::Take(m_scalars->createFilter(this));
+        filter->Update();
+        vtkDataSet * dataSet = vtkDataSet::SafeDownCast(filter->GetOutputDataObject(0));
+        assert(dataSet);
+
+        if (dataSet->GetPointData()->GetScalars())
+        {
+            for (auto & plane : m_planeWidgets)
+                plane->SetInputData(dataSet);
+            
+            newMode = ColorMode::ScalarMapping;
+        }
+    }
+
+    if (newMode != ColorMode::ScalarMapping)
+        for (auto & plane : m_planeWidgets)
+            plane->SetInputData(dataObject()->processedDataSet());
+
+
+    resetSlicePositions();
 
     setColorMode(newMode);
 
@@ -429,11 +448,17 @@ void RenderedVectorGrid3D::visibilityChangedEvent(bool visible)
 
 void RenderedVectorGrid3D::forceLICUpdate(int axis)
 {
-    if (!m_isInitialized)
+    if (!m_isInitialized || (m_colorMode != ColorMode::LIC))
         return;
 
     // missing update in vtkImageDataLIC2D?
     m_lic2D[axis]->Update();
+}
+
+void RenderedVectorGrid3D::resetSlicePositions()
+{
+    for (int i = 0; i < 3; ++i)
+        m_planeWidgets[i]->SetSliceIndex(m_slicePositions[i]);
 }
 
 void RenderedVectorGrid3D::updateVisibilities()
@@ -466,12 +491,14 @@ int RenderedVectorGrid3D::slicePosition(int axis)
 {
     assert(0 < axis || axis < 3);
 
-    return m_planeWidgets[axis]->GetSliceIndex();
+    return m_slicePositions[axis];
 }
 
 void RenderedVectorGrid3D::setSlicePosition(int axis, int slicePosition)
 {
     assert(0 < axis || axis < 3);
+
+    m_slicePositions[axis] = slicePosition;
 
     m_planeWidgets[axis]->SetSliceIndex(slicePosition);
 
@@ -485,7 +512,7 @@ void RenderedVectorGrid3D::setLic2DVectorScaleFactor(float f)
 
     m_lic2DVectorScaleFactor = f;
 
-    std::string fun{ std::to_string(m_lic2DVectorScaleFactor) + "*" + s_vectorScaleInputArray };
+    std::string fun{ std::to_string(m_lic2DVectorScaleFactor) + "*" + s_resliceOutputArray };
 
     for (auto vectorScale : m_lic2DVectorScale)
         vectorScale->SetFunction(fun.c_str());

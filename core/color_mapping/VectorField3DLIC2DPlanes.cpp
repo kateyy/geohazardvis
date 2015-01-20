@@ -37,11 +37,6 @@ QString VectorField3DLIC2DPlanes::name() const
     return "LIC 2D";
 }
 
-void VectorField3DLIC2DPlanes::configureMapper(AbstractVisualizedData * visualizedData, vtkMapper * mapper)
-{
-    ColorMappingData::configureMapper(visualizedData, mapper);
-}
-
 QMap<vtkIdType, QPair<double, double>> VectorField3DLIC2DPlanes::updateBounds()
 {
     double totalMin = std::numeric_limits<double>::max();
