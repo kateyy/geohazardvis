@@ -3,7 +3,6 @@
 #include <cassert>
 
 #include <vtkActorCollection.h>
-
 #include <vtkProperty.h>
 
 #include <core/types.h>
@@ -14,13 +13,13 @@
 
 RenderedData3D::RenderedData3D(DataObject * dataObject)
     : RenderedData(ContentType::Rendered3D, dataObject)
-    , m_vectors(nullptr)
+    , m_glyphMapping(nullptr)
 {
 }
 
 RenderedData3D::~RenderedData3D()
 {
-    delete m_vectors;
+    delete m_glyphMapping;
 }
 
 vtkSmartPointer<vtkActorCollection> RenderedData3D::actors()
@@ -31,12 +30,12 @@ vtkSmartPointer<vtkActorCollection> RenderedData3D::actors()
 
 GlyphMapping * RenderedData3D::glyphMapping()
 {
-    if (!m_vectors)
+    if (!m_glyphMapping)
     {
-        m_vectors = new GlyphMapping(this);
-        connect(m_vectors, &GlyphMapping::vectorsChanged, this, &RenderedData::viewPropCollectionChanged);
+        m_glyphMapping = new GlyphMapping(this);
+        connect(m_glyphMapping, &GlyphMapping::vectorsChanged, this, &RenderedData::viewPropCollectionChanged);
     }
-    return m_vectors;
+    return m_glyphMapping;
 }
 
 vtkProperty * RenderedData3D::renderProperty()
@@ -69,7 +68,10 @@ vtkSmartPointer<vtkActorCollection> RenderedData3D::fetchActors()
 
 void RenderedData3D::visibilityChangedEvent(bool visible)
 {
-    for (GlyphMappingData * vectors : m_vectors->vectors())
+    if (!m_glyphMapping)
+        return;
+
+    for (GlyphMappingData * vectors : m_glyphMapping->vectors())
         vectors->viewProp()->SetVisibility(
         visible && vectors->isVisible());
 }

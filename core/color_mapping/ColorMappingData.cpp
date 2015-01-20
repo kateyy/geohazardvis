@@ -3,10 +3,10 @@
 #include <cassert>
 #include <limits>
 
+#include <QSet>
+
 #include <vtkMapper.h>
 #include <vtkLookupTable.h>
-
-#include <QSet>
 
 #include <core/AbstractVisualizedData.h>
 #include <core/data_objects/DataObject.h>
@@ -21,19 +21,29 @@ ColorMappingData::ColorMappingData(const QList<AbstractVisualizedData *> & visua
     , m_dataMaxValue(numDataComponents, std::numeric_limits<double>::lowest())
     , m_minValue(numDataComponents, std::numeric_limits<double>::max())
     , m_maxValue(numDataComponents, std::numeric_limits<double>::lowest())
+    , m_boundsValid(false)
 {
 }
 
 ColorMappingData::~ColorMappingData() = default;
 
-void ColorMappingData::beforeRendering()
+void ColorMappingData::activate()
 {
+    for (AbstractVisualizedData * vis : m_visualizedData)
+        vis->setScalarsForColorMapping(this);
+
     if (m_lut)
     {
         m_lut->SetTableRange(minValue(), maxValue());
+        m_lut->SetVectorModeToComponent();
+        m_lut->SetVectorComponent(dataComponent());
     }
+}
 
-    beforeRenderingEvent();
+void ColorMappingData::deactivate()
+{
+    for (AbstractVisualizedData * vis : m_visualizedData)
+        vis->setScalarsForColorMapping(nullptr);
 }
 
 QString ColorMappingData::scalarsName() const
@@ -76,8 +86,6 @@ void ColorMappingData::initialize()
         assert(dataObject);
         connect(dataObject, &DataObject::valueRangeChanged, this, &ColorMappingData::updateBounds);
     }
-
-    updateBounds();
 }
 
 bool ColorMappingData::isValid() const
@@ -95,8 +103,9 @@ bool ColorMappingData::usesFilter() const
     return false;
 }
 
-void ColorMappingData::configureMapper(AbstractVisualizedData * /*visualizedData*/, vtkMapper * /*mapper*/)
+void ColorMappingData::configureMapper(AbstractVisualizedData * visualizedData, vtkMapper * /*mapper*/)
 {
+    assert(m_visualizedData.contains(visualizedData));
 }
 
 void ColorMappingData::setLookupTable(vtkLookupTable * lookupTable)
@@ -111,6 +120,8 @@ void ColorMappingData::setLookupTable(vtkLookupTable * lookupTable)
 
 double ColorMappingData::dataMinValue(vtkIdType component) const
 {
+    updateBoundsLocked();
+
     assert(m_dataMinValue <= m_dataMaxValue && component < m_numDataComponents);
     if (component < 0)
         component = m_dataComponent;
@@ -119,6 +130,8 @@ double ColorMappingData::dataMinValue(vtkIdType component) const
 
 double ColorMappingData::dataMaxValue(vtkIdType component) const
 {
+    updateBoundsLocked();
+
     assert(m_dataMinValue <= m_dataMaxValue && component < m_numDataComponents);
     if (component < 0)
         component = m_dataComponent;
@@ -127,6 +140,8 @@ double ColorMappingData::dataMaxValue(vtkIdType component) const
 
 double ColorMappingData::minValue(vtkIdType component) const
 {
+    updateBoundsLocked();
+
     if (component < 0)
         component = m_dataComponent;
     return m_minValue[component];
@@ -134,6 +149,8 @@ double ColorMappingData::minValue(vtkIdType component) const
 
 void ColorMappingData::setMinValue(double value, vtkIdType component)
 {
+    updateBoundsLocked();
+
     if (component < 0)
         component = m_dataComponent;
 
@@ -144,6 +161,8 @@ void ColorMappingData::setMinValue(double value, vtkIdType component)
 
 double ColorMappingData::maxValue(vtkIdType component) const
 {
+    updateBoundsLocked();
+
     if (component < 0)
         component = m_dataComponent;
 
@@ -152,55 +171,14 @@ double ColorMappingData::maxValue(vtkIdType component) const
 
 void ColorMappingData::setMaxValue(double value, vtkIdType component)
 {
+    updateBoundsLocked();
+
     if (component < 0)
         component = m_dataComponent;
 
     m_maxValue[component] = std::min(std::max(m_dataMinValue[component], value), m_dataMaxValue[component]);
 
     minMaxChangedEvent();
-}
-
-void ColorMappingData::setDataMinMaxValue(const double minMax[2], vtkIdType component)
-{
-    if (component < 0)
-        component = m_dataComponent;
-
-    m_dataMinValue[component] = minMax[0];
-    m_dataMaxValue[component] = minMax[1];
-
-    bool minMaxChanged = false;
-
-    // reset user selected ranges only if really needed
-    if (m_minValue[component] < m_dataMinValue[component] || m_minValue[component] > m_dataMaxValue[component])
-    {
-        m_minValue[component] = m_dataMinValue[component];
-        minMaxChanged = true;
-    }
-    if (m_maxValue[component] < m_dataMinValue[component] || m_maxValue[component] > m_dataMaxValue[component])
-    {
-        m_maxValue[component] = m_dataMaxValue[component];
-        minMaxChanged = true;
-    }
-
-    if (minMaxChanged)
-        minMaxChangedEvent();
-
-    emit dataMinMaxChanged();
-}
-
-void ColorMappingData::setDataMinMaxValue(double min, double max, vtkIdType component)
-{
-    double minMax[2] = { min, max };
-    setDataMinMaxValue(minMax, component);
-}
-
-void ColorMappingData::beforeRenderingEvent()
-{
-    if (m_lut)
-    {
-        m_lut->SetVectorModeToComponent();
-        m_lut->SetVectorComponent(dataComponent());
-    }
 }
 
 void ColorMappingData::lookupTableChangedEvent()
@@ -217,4 +195,53 @@ void ColorMappingData::minMaxChangedEvent()
         m_lut->SetTableRange(minValue(), maxValue());
 
     emit minMaxChanged();
+}
+
+void ColorMappingData::updateBoundsLocked() const
+{
+    m_boundsUpdateMutex.lock();
+
+    if (m_boundsValid)
+    {
+        m_boundsUpdateMutex.unlock();
+        return;
+    }
+
+    auto & lockedThis = const_cast<ColorMappingData &>(*this);
+
+    auto newBounds = lockedThis.updateBounds();
+
+    bool minMaxChanged = false;
+
+    for (auto it = newBounds.begin(); it != newBounds.end(); ++it)
+    {
+        const vtkIdType & component = it.key();
+        const QPair<double, double> & minMax = it.value();
+
+        assert(minMax.first <= minMax.second);
+
+        lockedThis.m_dataMinValue[component] = minMax.first;
+        lockedThis.m_dataMaxValue[component] = minMax.second;
+
+        // reset user selected ranges only if really needed
+        if (m_minValue[component] < m_dataMinValue[component] || m_minValue[component] > m_dataMaxValue[component])
+        {
+            lockedThis.m_minValue[component] = m_dataMinValue[component];
+            minMaxChanged = true;
+        }
+        if (m_maxValue[component] < m_dataMinValue[component] || m_maxValue[component] > m_dataMaxValue[component])
+        {
+            lockedThis.m_maxValue[component] = m_dataMaxValue[component];
+            minMaxChanged = true;
+        }
+    }
+
+    lockedThis.m_boundsValid = true;
+
+    m_boundsUpdateMutex.unlock();
+
+    if (minMaxChanged)
+        lockedThis.minMaxChangedEvent();
+
+    emit lockedThis.dataMinMaxChanged();
 }

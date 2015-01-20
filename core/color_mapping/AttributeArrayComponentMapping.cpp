@@ -4,7 +4,6 @@
 #include <cassert>
 #include <limits>
 
-#include <QMap>
 #include <QDebug>
 
 #include <vtkInformation.h>
@@ -162,13 +161,17 @@ void AttributeArrayComponentMapping::configureMapper(AbstractVisualizedData * vi
     mapper->SelectColorArray(m_dataArrayName.toUtf8().data());
 }
 
-void AttributeArrayComponentMapping::updateBounds()
+QMap<vtkIdType, QPair<double, double>> AttributeArrayComponentMapping::updateBounds()
 {
     QByteArray utf8Name = m_dataArrayName.toUtf8();
 
+    QMap<vtkIdType, QPair<double, double>> bounds;
+
     for (vtkIdType c = 0; c < numDataComponents(); ++c)
     {
-        double totalRange[2] = { std::numeric_limits<float>::max(), std::numeric_limits<float>::lowest() };
+        double totalMin = std::numeric_limits<double>::max();
+        double totalMax = std::numeric_limits<double>::lowest();
+
         for (AbstractVisualizedData * visualizedData : m_visualizedData)
         {
             vtkDataSet * dataSet = visualizedData->dataObject()->processedDataSet();
@@ -183,10 +186,12 @@ void AttributeArrayComponentMapping::updateBounds()
 
             double range[2];
             dataArray->GetRange(range, c);
-            totalRange[0] = std::min(totalRange[0], range[0]);
-            totalRange[1] = std::max(totalRange[1], range[1]);
+            totalMin = std::min(totalMin, range[0]);
+            totalMax = std::max(totalMax, range[1]);
         }
 
-        setDataMinMaxValue(totalRange, c);
+        bounds.insert(c, { totalMin, totalMax });
     }
+    
+    return bounds;
 }

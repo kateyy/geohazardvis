@@ -222,6 +222,8 @@ vtkSmartPointer<vtkActorCollection> RenderedPolyData::fetchActors()
 
 void RenderedPolyData::scalarsForColorMappingChangedEvent()
 {
+    RenderedData3D::scalarsForColorMappingChangedEvent();
+
     // no mapping yet, so just render the data set
     if (!m_scalars)
     {
@@ -242,6 +244,8 @@ void RenderedPolyData::scalarsForColorMappingChangedEvent()
 
 void RenderedPolyData::colorMappingGradientChangedEvent()
 {
+    RenderedData3D::colorMappingGradientChangedEvent();
+
     m_mapper->SetLookupTable(m_gradient);
 }
 

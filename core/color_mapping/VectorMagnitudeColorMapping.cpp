@@ -33,10 +33,8 @@ const bool VectorMagnitudeColorMapping::s_isRegistered = ColorMappingRegistry::i
 
 QList<ColorMappingData *> VectorMagnitudeColorMapping::newInstances(const QList<AbstractVisualizedData*> & visualizedData)
 {
-    auto checkAddAttributeArrays = [] (vtkDataSetAttributes * attributes, QSet<QString> & arrayNames) -> bool
+    auto checkAddAttributeArrays = [] (AbstractVisualizedData * vis, vtkDataSetAttributes * attributes, QMap<QString, QList<AbstractVisualizedData *>> & arrayNames) -> void
     {
-        bool hasVectors = false;
-
         for (vtkIdType i = 0; i < attributes->GetNumberOfArrays(); ++i)
         {
             vtkDataArray * dataArray = attributes->GetArray(i);
@@ -53,42 +51,27 @@ QList<ColorMappingData *> VectorMagnitudeColorMapping::newInstances(const QList<
             if (dataArray->GetNumberOfComponents() != 3)
                 continue;
 
-            arrayNames << QString::fromUtf8(dataArray->GetName());
-            hasVectors = true;
+            // store a list of relevant objects for each kind of attribute data
+            arrayNames[QString::fromUtf8(dataArray->GetName())] << vis;
         }
-
-        return hasVectors;
     };
 
-    QSet<QString> cellArrays, pointArrays;
-    QMap<AbstractVisualizedData *, bool> hasCellVectorData, hasPointVectorData;
+    QMap<QString, QList<AbstractVisualizedData *>> cellArrays, pointArrays;
 
     for (AbstractVisualizedData * vis : visualizedData)
     {
         vtkDataSet * dataSet = vis->dataObject()->processedDataSet();
 
-        hasCellVectorData[vis] =
-            checkAddAttributeArrays(dataSet->GetCellData(), cellArrays);
-        hasPointVectorData[vis] =
-            checkAddAttributeArrays(dataSet->GetPointData(), pointArrays);
+        checkAddAttributeArrays(vis, dataSet->GetCellData(), cellArrays);
+        checkAddAttributeArrays(vis, dataSet->GetPointData(), pointArrays);
     }
-
-    QList<AbstractVisualizedData *> withCellVectors, withPointVectors;
-
-    for (auto it = hasCellVectorData.begin(); it != hasCellVectorData.end(); ++it)
-        if (it.value())
-            withCellVectors << it.key();
-
-    for (auto it = hasPointVectorData.begin(); it != hasPointVectorData.end(); ++it)
-        if (it.value())
-            withPointVectors << it.key();
 
     QList<VectorMagnitudeColorMapping *> unchecked;
 
-    for (const QString & arrayName : cellArrays)
-        unchecked << new VectorMagnitudeColorMapping(withCellVectors, arrayName, vtkAssignAttribute::CELL_DATA);
-    for (const QString & arrayName : pointArrays)
-        unchecked << new VectorMagnitudeColorMapping(withPointVectors, arrayName, vtkAssignAttribute::POINT_DATA);
+    for (auto it = cellArrays.begin(); it != cellArrays.end(); ++it)
+        unchecked << new VectorMagnitudeColorMapping(it.value(), it.key(), vtkAssignAttribute::CELL_DATA);
+    for (auto it = pointArrays.begin(); it != pointArrays.end(); ++it)
+        unchecked << new VectorMagnitudeColorMapping(it.value(), it.key(), vtkAssignAttribute::POINT_DATA);
 
     QList<ColorMappingData *> instances;
     for (VectorMagnitudeColorMapping * mapping : unchecked)
@@ -172,9 +155,10 @@ void VectorMagnitudeColorMapping::configureMapper(AbstractVisualizedData * visua
         mapper->SetScalarModeToUsePointData();
 }
 
-void VectorMagnitudeColorMapping::updateBounds()
+QMap<vtkIdType, QPair<double, double>> VectorMagnitudeColorMapping::updateBounds()
 {
-    double totalRange[2] = { std::numeric_limits<float>::max(), std::numeric_limits<float>::lowest() };
+    double totalMin = std::numeric_limits<double>::max();
+    double totalMax = std::numeric_limits<double>::lowest();
 
     for (vtkVectorNorm * norm : m_vectorNorms.values())
     {
@@ -189,9 +173,9 @@ void VectorMagnitudeColorMapping::updateBounds()
 
         double range[2];
         normData->GetRange(range);
-        totalRange[0] = std::min(totalRange[0], range[0]);
-        totalRange[1] = std::max(totalRange[1], range[1]);
+        totalMin = std::min(totalMin, range[0]);
+        totalMax = std::max(totalMax, range[1]);
     }
 
-    setDataMinMaxValue(totalRange, 0);
+    return{ { 0, { totalMin, totalMax } } };
 }

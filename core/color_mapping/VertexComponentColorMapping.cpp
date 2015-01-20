@@ -96,18 +96,20 @@ void VertexComponentColorMapping::configureMapper(AbstractVisualizedData * visua
     mapper->ScalarVisibilityOn();
 }
 
-void VertexComponentColorMapping::updateBounds()
+QMap<vtkIdType, QPair<double, double>> VertexComponentColorMapping::updateBounds()
 {
     // get min/max coordinate values on our axis/component
 
-    double totalRange[2] = { std::numeric_limits<float>::max(), std::numeric_limits<float>::lowest() };
+    double totalMin = std::numeric_limits<double>::max();
+    double totalMax = std::numeric_limits<double>::lowest();
+
     for (AbstractVisualizedData * vis: m_visualizedData)
     {
         const double * objectBounds = vis->dataObject()->dataSet()->GetBounds();
 
-        totalRange[0] = std::min(totalRange[0], objectBounds[2 * m_component]);
-        totalRange[1] = std::max(totalRange[1], objectBounds[2 * m_component + 1]);
+        totalMin = std::min(totalMin, objectBounds[2 * m_component]);
+        totalMax = std::max(totalMax, objectBounds[2 * m_component + 1]);
     }
 
-    setDataMinMaxValue(totalRange, 0);
+    return{ { 0, { totalMin, totalMax } } };
 }

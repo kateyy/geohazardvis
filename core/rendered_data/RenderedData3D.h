@@ -41,5 +41,5 @@ private:
 private:
     vtkSmartPointer<vtkProperty> m_renderProperty;
 
-    GlyphMapping * m_vectors;
+    GlyphMapping * m_glyphMapping;
 };

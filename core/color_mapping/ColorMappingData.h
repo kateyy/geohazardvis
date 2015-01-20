@@ -1,5 +1,6 @@
 #pragma once
 
+#include <mutex>
 #include <vector>
 
 #include <QList>
@@ -32,15 +33,14 @@ public:
     friend class ColorMappingRegistry;
 
     template<typename SubClass>
-    static QList<ColorMappingData *> newInstance(const QList<AbstractVisualizedData*> & visualizedData);
+    static QList<ColorMappingData *> newInstance(const QList<AbstractVisualizedData *> & visualizedData);
 
 public:
     explicit ColorMappingData(const QList<AbstractVisualizedData *> & visualizedData, vtkIdType numDataComponents = 1);
-    virtual ~ColorMappingData();
+    virtual ~ColorMappingData() override;
 
-    /** Call this before using these scalars for rendering.
-      * Sets up the lookup table for the current scene. */
-    void beforeRendering();
+    virtual void activate();
+    virtual void deactivate();
 
     virtual QString name() const = 0;
     virtual QString scalarsName() const;
@@ -82,17 +82,16 @@ signals:
     void dataMinMaxChanged();
 
 protected:
-    virtual void initialize();
-    virtual void updateBounds() = 0;
-
     /** check whether these scalar extraction is applicable for the data objects it was created with */
     bool isValid() const;
+    /** call initialize on valid instances */
+    virtual void initialize();
 
-    void setDataMinMaxValue(const double minMax[2], vtkIdType component);
-    void setDataMinMaxValue(double min, double max, vtkIdType component);
+    /** update data bounds
+        @return a map of component -> (min, max) */
+    virtual QMap<vtkIdType, QPair<double, double>> updateBounds() = 0;
 
 protected:
-    virtual void beforeRenderingEvent();
     virtual void lookupTableChangedEvent();
     virtual void dataComponentChangedEvent();
     virtual void minMaxChangedEvent();
@@ -103,6 +102,9 @@ protected:
     vtkSmartPointer<vtkLookupTable> m_lut;
 
 private:
+    void updateBoundsLocked() const;
+
+private:
     const vtkIdType m_numDataComponents;
     vtkIdType m_dataComponent;
 
@@ -111,6 +113,8 @@ private:
     std::vector<double> m_dataMaxValue;
     std::vector<double> m_minValue;
     std::vector<double> m_maxValue;
+    bool m_boundsValid;
+    mutable std::mutex m_boundsUpdateMutex;
 };
 
 #include "ColorMappingData.hpp"

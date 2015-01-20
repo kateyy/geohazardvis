@@ -106,22 +106,23 @@ QString ColorMapping::currentScalarsName() const
 
 void ColorMapping::setCurrentScalarsByName(QString scalarsName)
 {
+    ColorMappingData * oldScalars = currentScalars();
+    if (oldScalars)
+        oldScalars->deactivate();
+
+    // cleanup old mappings
+    for (AbstractVisualizedData * vis : m_visualizedData)
+        vis->setScalarsForColorMapping(nullptr);
+
     m_currentScalarsName = scalarsName;
 
     ColorMappingData * scalars = currentScalars();
     if (scalars)
-    {
-        scalars->beforeRendering();
-    }
+        scalars->activate();
 
     m_colorMappingLegend->SetTitle(scalarsName.toUtf8().data());
 
     updateLegendVisibility();
-
-    for (AbstractVisualizedData * vis: m_visualizedData)
-    {
-        vis->setScalarsForColorMapping(scalars);
-    }
 }
 
 ColorMappingData * ColorMapping::currentScalars()

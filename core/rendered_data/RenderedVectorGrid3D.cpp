@@ -195,11 +195,15 @@ vtkSmartPointer<vtkActorCollection> RenderedVectorGrid3D::fetchActors()
 
 void RenderedVectorGrid3D::scalarsForColorMappingChangedEvent()
 {
+    RenderedData3D::scalarsForColorMappingChangedEvent();
+
     updateVisibilities();
 }
 
 void RenderedVectorGrid3D::colorMappingGradientChangedEvent()
 {
+    RenderedData3D::colorMappingGradientChangedEvent();
+
     for (auto sliceActor : m_sliceActors)
     {
         vtkTexture * texture = sliceActor->GetTexture();
