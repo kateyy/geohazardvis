@@ -120,12 +120,7 @@ AttributeArrayComponentMapping::~AttributeArrayComponentMapping() = default;
 
 QString AttributeArrayComponentMapping::name() const
 {
-    QString n = m_dataArrayName;
-
-    if (m_attributeLocation == vtkAssignAttribute::POINT_DATA)
-        n += QString(" (point data)");
-
-    return n;
+    return m_dataArrayName;
 }
 
 QString AttributeArrayComponentMapping::scalarsName() const
