@@ -29,9 +29,9 @@
 #include <reflectionzeug/PropertyGroup.h>
 
 #include <core/vtkhelper.h>
+#include <core/color_mapping/ColorMappingData.h>
 #include <core/data_objects/VectorGrid3DDataObject.h>
 #include <core/filters/NoiseImageSource.h>
-#include <core/scalar_mapping/ScalarsForColorMapping.h>
 
 
 using namespace reflectionzeug;
@@ -390,6 +390,8 @@ vtkSmartPointer<vtkProp3DCollection> RenderedVectorGrid3D::fetchViewProps3D()
 
 void RenderedVectorGrid3D::scalarsForColorMappingChangedEvent()
 {
+    RenderedData3D::scalarsForColorMappingChangedEvent();
+
     ColorMode newMode = ColorMode::UserDefined;
     if (m_scalars)
     {
@@ -407,6 +409,8 @@ void RenderedVectorGrid3D::scalarsForColorMappingChangedEvent()
 
 void RenderedVectorGrid3D::colorMappingGradientChangedEvent()
 {
+    RenderedData3D::colorMappingGradientChangedEvent();
+
     vtkSmartPointer<vtkLookupTable> lut = vtkLookupTable::SafeDownCast(m_gradient);
     assert(lut);
 

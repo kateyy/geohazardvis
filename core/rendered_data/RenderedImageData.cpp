@@ -96,6 +96,8 @@ vtkImageProperty * RenderedImageData::property()
 
 void RenderedImageData::colorMappingGradientChangedEvent()
 {
+    RenderedData::scalarsForColorMappingChangedEvent();
+
     property()->SetLookupTable(m_gradient);
 }
 

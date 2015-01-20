@@ -11,8 +11,8 @@
 #include <core/vtkhelper.h>
 #include <core/data_objects/DataObject.h>
 #include <core/AbstractVisualizedData.h>
-#include <gui/data_view/RendererImplementationNull.h>
 
+#include <gui/data_view/RendererImplementationNull.h>
 #include <gui/SelectionHandler.h>
 
 

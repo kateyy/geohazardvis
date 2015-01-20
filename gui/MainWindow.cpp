@@ -19,8 +19,8 @@
 #include <gui/SelectionHandler.h>
 #include <gui/data_view/RenderView.h>
 #include <gui/widgets/CanvasExporterWidget.h>
-#include <gui/widgets/ScalarMappingChooser.h>
-#include <gui/widgets/VectorMappingChooser.h>
+#include <gui/widgets/ColorMappingChooser.h>
+#include <gui/widgets/GlyphMappingChooser.h>
 #include <gui/widgets/RenderConfigWidget.h>
 #include <gui/widgets/RendererConfigWidget.h>
 
@@ -29,8 +29,8 @@ MainWindow::MainWindow()
     : QMainWindow()
     , m_ui(new Ui_MainWindow())
     , m_dataMapping(new DataMapping(*this))
-    , m_scalarMappingChooser(new ScalarMappingChooser())
-    , m_vectorMappingChooser(new VectorMappingChooser())
+    , m_scalarMappingChooser(new ColorMappingChooser())
+    , m_vectorMappingChooser(new GlyphMappingChooser())
     , m_renderConfigWidget(new RenderConfigWidget())
     , m_rendererConfigWidget(new RendererConfigWidget())
     , m_canvasExporter(new CanvasExporterWidget(this))
@@ -55,8 +55,8 @@ MainWindow::MainWindow()
     tabifyDockWidget(m_renderConfigWidget, m_rendererConfigWidget);
     tabbedDockWidgetToFront(m_renderConfigWidget);
 
-    connect(m_dataMapping, &DataMapping::focusedRenderViewChanged, m_scalarMappingChooser, &ScalarMappingChooser::setCurrentRenderView);
-    connect(m_dataMapping, &DataMapping::focusedRenderViewChanged, m_vectorMappingChooser, &VectorMappingChooser::setCurrentRenderView);
+    connect(m_dataMapping, &DataMapping::focusedRenderViewChanged, m_scalarMappingChooser, &ColorMappingChooser::setCurrentRenderView);
+    connect(m_dataMapping, &DataMapping::focusedRenderViewChanged, m_vectorMappingChooser, &GlyphMappingChooser::setCurrentRenderView);
     connect(m_dataMapping, &DataMapping::focusedRenderViewChanged, m_renderConfigWidget, &RenderConfigWidget::setCurrentRenderView);
 
     connect(m_dataMapping, &DataMapping::renderViewsChanged, m_rendererConfigWidget, &RendererConfigWidget::setRenderViews);

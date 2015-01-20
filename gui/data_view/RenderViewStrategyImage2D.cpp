@@ -91,6 +91,7 @@ void RenderViewStrategyImage2D::activate()
 
     m_context.axesActor()->GetLabelTextProperty(0)->SetOrientation(0);
     m_context.axesActor()->GetLabelTextProperty(1)->SetOrientation(90);
+    m_context.axesActor()->SetUse2DMode(true);
 }
 
 void RenderViewStrategyImage2D::deactivate()
@@ -99,6 +100,8 @@ void RenderViewStrategyImage2D::deactivate()
 
     content->layout()->removeWidget(m_toolbar);
     m_toolbar->setParent(nullptr);
+
+    m_context.axesActor()->SetUse2DMode(false);
 }
 
 bool RenderViewStrategyImage2D::contains3dData() const

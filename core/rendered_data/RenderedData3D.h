@@ -6,7 +6,7 @@
 
 
 class vtkProp3DCollection;
-class VectorMapping;
+class GlyphMapping;
 
 
 /**
@@ -23,7 +23,7 @@ public:
     /** VTK 3D view props visualizing the data object and possibly additional attributes */
     vtkSmartPointer<vtkProp3DCollection> viewProps3D();
 
-    VectorMapping * vectorMapping();
+    GlyphMapping * glyphMapping();
 
 protected:
     virtual vtkSmartPointer<vtkProp3DCollection> fetchViewProps3D();
@@ -41,5 +41,5 @@ private:
 private:
     vtkSmartPointer<vtkProperty> m_renderProperty;
 
-    VectorMapping * m_vectors;
+    GlyphMapping * m_glyphMapping;
 };

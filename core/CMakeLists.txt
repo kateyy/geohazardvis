@@ -90,33 +90,45 @@ set ( SOURCES
     table_model/QVtkTableModelVectorGrid3D.h
     table_model/QVtkTableModelVectorGrid3D.cpp
 
-    scalar_mapping/ScalarToColorMapping.h
-    scalar_mapping/ScalarToColorMapping.cpp
-    scalar_mapping/ScalarsForColorMapping.h
-    scalar_mapping/ScalarsForColorMapping.hpp
-    scalar_mapping/ScalarsForColorMapping.cpp
-    scalar_mapping/ScalarsForColorMappingRegistry.h
-    scalar_mapping/ScalarsForColorMappingRegistry.cpp
-    scalar_mapping/DefaultColorMapping.h
-    scalar_mapping/DefaultColorMapping.cpp
-    scalar_mapping/VertexComponentMapping.h
-    scalar_mapping/VertexComponentMapping.cpp
-    scalar_mapping/AttributeArrayComponentMapping.h
-    scalar_mapping/AttributeArrayComponentMapping.cpp
-    scalar_mapping/VectorField3DLIC2DPlanes.h
-    scalar_mapping/VectorField3DLIC2DPlanes.cpp
+    color_mapping/ColorMapping.h
+    color_mapping/ColorMapping.cpp
+    color_mapping/ColorMappingData.h
+    color_mapping/ColorMappingData.hpp
+    color_mapping/ColorMappingData.cpp
+    color_mapping/ColorMappingRegistry.h
+    color_mapping/ColorMappingRegistry.cpp
+    color_mapping/DefaultColorMapping.h
+    color_mapping/DefaultColorMapping.cpp
+    color_mapping/AttributeArrayComponentMapping.h
+    color_mapping/AttributeArrayComponentMapping.cpp
+    color_mapping/VectorMagnitudeColorMapping.h
+    color_mapping/VectorMagnitudeColorMapping.cpp
+    color_mapping/VectorField3DLIC2DPlanes.h
+    color_mapping/VectorField3DLIC2DPlanes.cpp
+    color_mapping/VertexComponentColorMapping.h
+    color_mapping/VertexComponentColorMapping.cpp
+    color_mapping/GlyphColorMapping.h
+    color_mapping/GlyphColorMapping.cpp
+    color_mapping/GlyphColorMappingGlyphListener.h
+    color_mapping/GlyphColorMappingGlyphListener.cpp
+    color_mapping/GlyphMagnitudeColorMapping.h
+    color_mapping/GlyphMagnitudeColorMapping.cpp
 
-    vector_mapping/VectorMapping.h
-    vector_mapping/VectorMapping.cpp
-    vector_mapping/VectorMappingData.h
-    vector_mapping/VectorMappingData.hpp
-    vector_mapping/VectorMappingData.cpp
-    vector_mapping/VectorMappingRegistry.h
-    vector_mapping/VectorMappingRegistry.cpp
-    vector_mapping/Grid3dVectorMapping.h
-    vector_mapping/Grid3dVectorMapping.cpp
-    vector_mapping/PolyDataAttributeVectorMapping.h
-    vector_mapping/PolyDataAttributeVectorMapping.cpp
+    glyph_mapping/GlyphMapping.h
+    glyph_mapping/GlyphMapping.cpp
+    glyph_mapping/GlyphMappingData.h
+    glyph_mapping/GlyphMappingData.hpp
+    glyph_mapping/GlyphMappingData.cpp
+    glyph_mapping/GlyphMappingRegistry.h
+    glyph_mapping/GlyphMappingRegistry.cpp
+    glyph_mapping/Grid3dGlyphMapping.h
+    glyph_mapping/Grid3dGlyphMapping.cpp
+    glyph_mapping/PolyDataAttributeGlyphMapping.h
+    glyph_mapping/PolyDataAttributeGlyphMapping.cpp
+    
+    reflectionzeug_extension/QStringProperty.h
+    reflectionzeug_extension/QStringProperty.hpp
+    reflectionzeug_extension/QStringProperty.cpp
 )
 
 source_group_by_path_and_type(${CMAKE_CURRENT_SOURCE_DIR} ${SOURCES})

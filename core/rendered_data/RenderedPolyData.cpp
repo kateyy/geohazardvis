@@ -21,7 +21,7 @@
 
 #include <core/vtkhelper.h>
 #include <core/data_objects/PolyDataObject.h>
-#include <core/scalar_mapping/ScalarsForColorMapping.h>
+#include <core/color_mapping/ColorMappingData.h>
 
 
 using namespace reflectionzeug;
@@ -222,6 +222,8 @@ vtkSmartPointer<vtkProp3DCollection> RenderedPolyData::fetchViewProps3D()
 
 void RenderedPolyData::scalarsForColorMappingChangedEvent()
 {
+    RenderedData3D::scalarsForColorMappingChangedEvent();
+
     // no mapping yet, so just render the data set
     if (!m_scalars)
     {
@@ -242,6 +244,8 @@ void RenderedPolyData::scalarsForColorMappingChangedEvent()
 
 void RenderedPolyData::colorMappingGradientChangedEvent()
 {
+    RenderedData3D::colorMappingGradientChangedEvent();
+
     m_mapper->SetLookupTable(m_gradient);
 }
 

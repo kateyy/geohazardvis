@@ -3,25 +3,24 @@
 #include <cassert>
 
 #include <vtkProp3DCollection.h>
-
 #include <vtkProperty.h>
 #include <vtkActor.h>
 
 #include <core/types.h>
 #include <core/vtkhelper.h>
-#include <core/vector_mapping/VectorMapping.h>
-#include <core/vector_mapping/VectorMappingData.h>
+#include <core/glyph_mapping/GlyphMapping.h>
+#include <core/glyph_mapping/GlyphMappingData.h>
 
 
 RenderedData3D::RenderedData3D(DataObject * dataObject)
     : RenderedData(ContentType::Rendered3D, dataObject)
-    , m_vectors(nullptr)
+    , m_glyphMapping(nullptr)
 {
 }
 
 RenderedData3D::~RenderedData3D()
 {
-    delete m_vectors;
+    delete m_glyphMapping;
 }
 
 vtkSmartPointer<vtkProp3DCollection> RenderedData3D::viewProps3D()
@@ -30,14 +29,14 @@ vtkSmartPointer<vtkProp3DCollection> RenderedData3D::viewProps3D()
     return static_cast<vtkProp3DCollection *>(viewProps().Get());
 }
 
-VectorMapping * RenderedData3D::vectorMapping()
+GlyphMapping * RenderedData3D::glyphMapping()
 {
-    if (!m_vectors)
+    if (!m_glyphMapping)
     {
-        m_vectors = new VectorMapping(this);
-        connect(m_vectors, &VectorMapping::vectorsChanged, this, &RenderedData::viewPropCollectionChanged);
+        m_glyphMapping = new GlyphMapping(this);
+        connect(m_glyphMapping, &GlyphMapping::vectorsChanged, this, &RenderedData::viewPropCollectionChanged);
     }
-    return m_vectors;
+    return m_glyphMapping;
 }
 
 vtkProperty * RenderedData3D::renderProperty()
@@ -62,7 +61,7 @@ vtkSmartPointer<vtkProp3DCollection> RenderedData3D::fetchViewProps3D()
 {
     VTK_CREATE(vtkProp3DCollection, props);
 
-    for (auto * v : vectorMapping()->vectors())
+    for (auto * v : glyphMapping()->vectors())
         props->AddItem(v->actor());
 
     return props;
@@ -70,7 +69,10 @@ vtkSmartPointer<vtkProp3DCollection> RenderedData3D::fetchViewProps3D()
 
 void RenderedData3D::visibilityChangedEvent(bool visible)
 {
-    for (VectorMappingData * vectors : m_vectors->vectors())
+    if (!m_glyphMapping)
+        return;
+
+    for (GlyphMappingData * vectors : m_glyphMapping->vectors())
         vectors->viewProp()->SetVisibility(
         visible && vectors->isVisible());
 }
