@@ -47,8 +47,12 @@ set ( SOURCES
 
     filters/CentroidAsScalarsFilter.h
     filters/CentroidAsScalarsFilter.cpp
+    filters/ArrayRenameFilter.h
+    filters/ArrayRenameFilter.cpp
     filters/NoiseImageSource.h
     filters/NoiseImageSource.cpp
+    filters/vtkImageDataLIC2D.h
+    filters/vtkImageDataLIC2D.cpp
 
     io/Loader.h
     io/Loader.cpp

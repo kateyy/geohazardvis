@@ -16,7 +16,6 @@
 #include <vtkArrayCalculator.h>
 #include <vtkExtractVOI.h>
 #include <vtkCellPicker.h>
-#include <vtkImageDataLIC2D.h>
 #include <vtkImageMapToColors.h>
 #include <vtkImageOrthoPlanes.h>
 #include <vtkImagePlaneWidget.h>
@@ -25,13 +24,16 @@
 #include <vtkOpenGLExtensionManager.h>
 #include <vtkProperty.h>
 #include <vtkTexture.h>
+#include <vtkVectorNorm.h>
 
 #include <reflectionzeug/PropertyGroup.h>
 
 #include <core/vtkhelper.h>
 #include <core/color_mapping/ColorMappingData.h>
 #include <core/data_objects/VectorGrid3DDataObject.h>
+#include <core/filters/ArrayRenameFilter.h>
 #include <core/filters/NoiseImageSource.h>
+#include <core/filters/vtkImageDataLIC2D.h>
 
 
 using namespace reflectionzeug;
@@ -50,6 +52,8 @@ enum ResliceInterpolation
 };
 
 const std::string s_resliceOutputArray = "ImageScalars";
+const std::string s_vectorNorm = "VectorNorm";
+const std::string s_lic2DWithMangnitudes = "LIC2DWithMagnitudes";
 
 }
 
@@ -122,8 +126,24 @@ RenderedVectorGrid3D::RenderedVectorGrid3D(VectorGrid3DDataObject * dataObject)
 
         /** Line Integral Convolution 2D */
 
+        VTK_CREATE(vtkAssignAttribute, assignVectors);
+        assignVectors->SetInputConnection(m_planeWidgets[i]->GetReslice()->GetOutputPort());
+        assignVectors->Assign(s_resliceOutputArray.c_str(), vtkDataSetAttributes::VECTORS, vtkAssignAttribute::POINT_DATA);
+
+        // for color mapping: vector magnitude in original vector scaling
+        VTK_CREATE(vtkVectorNorm, vectorNorm);
+        vectorNorm->SetInputConnection(assignVectors->GetOutputPort());
+
+        VTK_CREATE(ArrayRenameFilter, vectorNormRename);
+        vectorNormRename->SetInputConnection(vectorNorm->GetOutputPort());
+        vectorNormRename->SetScalarsName(s_vectorNorm.c_str());
+
+        VTK_CREATE(vtkAssignAttribute, assignVectorsAgain);
+        assignVectorsAgain->SetInputConnection(vectorNormRename->GetOutputPort());
+        assignVectorsAgain->Assign(s_resliceOutputArray.c_str(), vtkDataSetAttributes::VECTORS, vtkAssignAttribute::POINT_DATA);
+
         m_lic2DVectorScale[i] = vtkSmartPointer<vtkArrayCalculator>::New();
-        m_lic2DVectorScale[i]->SetInputConnection(m_planeWidgets[i]->GetReslice()->GetOutputPort());
+        m_lic2DVectorScale[i]->SetInputConnection(assignVectorsAgain->GetOutputPort());
         m_lic2DVectorScale[i]->AddVectorArrayName(s_resliceOutputArray.c_str());
         m_lic2DVectorScale[i]->SetResultArrayName(vectorsScaledName.c_str());
 
@@ -138,6 +158,18 @@ RenderedVectorGrid3D::RenderedVectorGrid3D(VectorGrid3DDataObject * dataObject)
         m_lic2D[i]->SetSteps(50);
         m_lic2D[i]->GlobalWarningDisplayOff();
         m_lic2D[i]->SetContext(m_glContext);
+
+        m_lic2DColorMagnitude[i] = vtkSmartPointer<vtkArrayCalculator>::New();
+        m_lic2DColorMagnitude[i]->SetInputConnection(m_lic2D[i]->GetOutputPort());
+        m_lic2DColorMagnitude[i]->AddScalarArrayName(s_vectorNorm.c_str());
+        m_lic2DColorMagnitude[i]->AddScalarArrayName("LIC");
+        m_lic2DColorMagnitude[i]->SetResultArrayName(s_lic2DWithMangnitudes.c_str());
+        m_lic2DColorMagnitude[i]->SetFunction((s_vectorNorm + "*LIC").c_str());
+
+        m_lic2DColorMagnitudeScalars[i] = vtkSmartPointer<vtkAssignAttribute>::New();
+        m_lic2DColorMagnitudeScalars[i]->SetInputConnection(m_lic2DColorMagnitude[i]->GetOutputPort());
+        m_lic2DColorMagnitudeScalars[i]->Assign(s_lic2DWithMangnitudes.c_str(),
+            vtkDataSetAttributes::SCALARS, vtkAssignAttribute::POINT_DATA);
 
 
         int min = extent[2 * i];
@@ -541,6 +573,7 @@ void RenderedVectorGrid3D::setColorMode(ColorMode mode)
         m_planeWidgets[i]->GetTexture()->SetInputConnection(m_planeWidgets[i]->GetReslice()->GetOutputPort());
         break;
     case ColorMode::LIC:
+        //m_planeWidgets[i]->GetTexture()->SetInputConnection(m_lic2DColorMagnitudeScalars[i]->GetOutputPort());
         m_planeWidgets[i]->GetTexture()->SetInputConnection(m_lic2D[i]->GetOutputPort());
         break;
     }

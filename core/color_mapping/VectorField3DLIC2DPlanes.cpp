@@ -4,13 +4,14 @@
 #include <cassert>
 #include <limits>
 
+#include <vtkAssignAttribute.h>
 #include <vtkDataArray.h>
 #include <vtkImageData.h>
-#include <vtkImageDataLIC2D.h>
 #include <vtkPointData.h>
 
-#include <core/rendered_data/RenderedVectorGrid3D.h>
 #include <core/color_mapping/ColorMappingRegistry.h>
+#include <core/filters/vtkImageDataLIC2D.h>
+#include <core/rendered_data/RenderedVectorGrid3D.h>
 
 
 const QString VectorField3DLIC2DPlanes::s_name = "Vector Field Line Integral Convolution Planes";
@@ -47,8 +48,13 @@ QMap<vtkIdType, QPair<double, double>> VectorField3DLIC2DPlanes::updateBounds()
 
         for (int i = 0; i < 3; ++i)
         {
+            /*grid->m_lic2DColorMagnitudeScalars[i]->Update();
+            vtkDataSet * output = vtkDataSet::SafeDownCast(grid->m_lic2DColorMagnitudeScalars[i]->GetOutput());*/
             grid->m_lic2D[i]->Update();
-            vtkDataArray * lic = grid->m_lic2D[i]->GetOutput()->GetPointData()->GetScalars();
+            vtkDataSet * output = vtkDataSet::SafeDownCast(grid->m_lic2D[i]->GetOutput());
+            assert(output);
+            vtkDataArray * lic = output->GetPointData()->GetScalars();
+            assert(lic);
 
             double range[2];
             lic->GetRange(range);
