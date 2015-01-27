@@ -39,10 +39,6 @@ set ( SOURCES
     data_view/TableView.h
     data_view/TableView.cpp
 
-    propertyguizeug_extension/PropertyEditorFactoryEx.h
-    propertyguizeug_extension/PropertyEditorFactoryEx.cpp    
-    propertyguizeug_extension/PropertyPainterEx.h
-    propertyguizeug_extension/PropertyPainterEx.cpp
     propertyguizeug_extension/ColorButtonWithBorder.h
     propertyguizeug_extension/ColorButtonWithBorder.cpp
     propertyguizeug_extension/ColorEditorRGB.h
@@ -79,10 +75,10 @@ set ( SOURCES
 
 set ( UIs
     MainWindow.ui
-    
+
     data_view/RenderView.ui
     data_view/TableView.ui
-    
+
     widgets/CanvasExporterWidget.ui
     widgets/ColorMappingChooser.ui
     widgets/DataBrowser.ui
@@ -111,9 +107,7 @@ else()
 endif()
 
 target_link_libraries( ${TARGET}
-    ${LIBZEUG_PROPERTYGUI_LIBRARY}
-    ${LIBZEUG_REFLECTION_LIBRARY}
-    ${LIBZEUG_SIGNAL_LIBRARY}
+    ${LIBZEUG_LIBRARIES}
     ${VTK_LIBRARIES}
     Qt5::Widgets
 

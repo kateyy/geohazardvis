@@ -29,7 +29,11 @@
      <property name="title">
       <string>Format &amp;Settings</string>
      </property>
-     <layout class="QHBoxLayout" name="horizontalLayout"/>
+     <layout class="QHBoxLayout" name="horizontalLayout">
+      <item>
+       <widget class="propertyguizeug::PropertyBrowser" name="exporterSettingsBrowser"/>
+      </item>
+     </layout>
     </widget>
    </item>
    <item row="0" column="0">
@@ -97,6 +101,13 @@
    </item>
   </layout>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>propertyguizeug::PropertyBrowser</class>
+   <extends>QTreeView</extends>
+   <header>propertyguizeug/PropertyBrowser.h</header>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections>
   <connection>

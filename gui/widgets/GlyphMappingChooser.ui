@@ -65,13 +65,24 @@
        <property name="flat">
         <bool>false</bool>
        </property>
-       <layout class="QVBoxLayout" name="verticalLayout"/>
+       <layout class="QVBoxLayout" name="verticalLayout">       
+        <item>
+         <widget class="propertyguizeug::PropertyBrowser" name="propertyBrowser"/>
+        </item>
+       </layout>
       </widget>
      </widget>
     </item>
    </layout>
   </widget>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>propertyguizeug::PropertyBrowser</class>
+   <extends>QTreeView</extends>
+   <header>propertyguizeug/PropertyBrowser.h</header>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>

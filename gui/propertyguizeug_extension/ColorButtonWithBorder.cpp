@@ -2,47 +2,43 @@
 
 #include <QApplication>
 #include <QPainter>
-#include <QPaintEvent>
 #include <QStyleOption>
 
 
 using namespace propertyguizeug;
 
 ColorButtonWithBorder::ColorButtonWithBorder(QWidget * parent, const QColor & initialColor)
-    : ColorButton(parent, initialColor)
+    : ColorButton{ parent, initialColor }
 {
 }
 
 void ColorButtonWithBorder::paint(QPainter * painter, const QPoint & topLeft, const QColor & color)
 {
+    const auto metrics = painter->fontMetrics();
+    const auto size = sizeFromFontHeight(metrics.height());
+    const auto rect = QRect{ topLeft, size };
+
+    auto pixmap = QPixmap{ size };
+    pixmap.fill(Qt::white);
+
     QStyleOptionButton opt;
     opt.state = QStyle::State_Active | QStyle::State_Enabled;
-    opt.rect = QRect(topLeft, s_fixedSize);
+    opt.rect = rect;
 
     QApplication::style()->drawControl(QStyle::CE_PushButton, &opt, painter);
 
-    QSize innserSize = s_fixedSize - QSize(6, 6);
+    QSize innserSize = size - QSize(6, 6);
 
-    QPixmap pixmap(innserSize);
-    pixmap.fill(color);
+    QPixmap innerPixmap(innserSize);
+    innerPixmap.fill(color);
 
-    QRect rect(topLeft + QPoint(3, 3), innserSize);
+    QRect innerRect(topLeft + QPoint(3, 3), innserSize);
 
+    painter->save();
     painter->setBrushOrigin(topLeft);
     painter->fillRect(rect, Qt::BrushStyle::SolidPattern);
     painter->drawPixmap(rect, pixmap);
-}
-
-void ColorButtonWithBorder::paintEvent(QPaintEvent * event)
-{
-    QPixmap pixmap(s_fixedSize);
-    pixmap.fill(Qt::white);
-    setPixmap(pixmap);
-
-    ColorButton::paintEvent(event);
-
-    QPainter painter(this);
-    paint(&painter, QPoint(0,0), m_color);
-
-    event->accept();
+    painter->fillRect(innerRect, Qt::BrushStyle::SolidPattern);
+    painter->drawPixmap(innerRect, innerPixmap);
+    painter->restore();
 }

@@ -10,10 +10,6 @@ namespace reflectionzeug
 {
     class PropertyGroup;
 }
-namespace propertyguizeug
-{
-class PropertyBrowser;
-}
 
 class RenderView;
 class AbstractVisualizedData;
@@ -51,7 +47,6 @@ private:
 
 private:
     Ui_GlyphMappingChooser * m_ui;
-    propertyguizeug::PropertyBrowser * m_propertyBrowser;
 
     RenderView * m_renderView;
     GlyphMapping * m_mapping;

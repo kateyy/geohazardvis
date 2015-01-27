@@ -8,24 +8,19 @@
 #include <QDir>
 #include <QFileDialog>
 
-#include <propertyguizeug/PropertyBrowser.h>
-
 #include <core/canvas_export/CanvasExporter.h>
 #include <core/canvas_export/CanvasExporterRegistry.h>
 #include <gui/data_view/RenderView.h>
-#include <gui/propertyguizeug_extension/PropertyPainterEx.h>
-#include <gui/propertyguizeug_extension/PropertyEditorFactoryEx.h>
+#include <gui/propertyguizeug_extension/ColorEditorRGB.h>
 
-
-using namespace propertyguizeug;
 
 CanvasExporterWidget::CanvasExporterWidget(QWidget * parent, Qt::WindowFlags f)
     : QDialog(parent, f)
     , m_ui(new Ui_CanvasExporterWidget)
-    , m_exporterSettingsBrowser(new PropertyBrowser(new PropertyEditorFactoryEx(), new PropertyPainterEx(), this))
 {
     m_ui->setupUi(this);
-    m_ui->exporterSettingsGroupBox->layout()->addWidget(m_exporterSettingsBrowser);
+    m_ui->exporterSettingsBrowser->addEditorPlugin<ColorEditorRGB>();
+    m_ui->exporterSettingsBrowser->addPainterPlugin<ColorEditorRGB>();
 
     connect(m_ui->fileFormatComboBox, &QComboBox::currentTextChanged, this, &CanvasExporterWidget::updateUiForFormat);
 
@@ -143,7 +138,7 @@ void CanvasExporterWidget::saveScreenshotTo(CanvasExporter * exporter, const QSt
 
 void CanvasExporterWidget::updateUiForFormat(const QString & format)
 {
-    m_exporterSettingsBrowser->setRoot(nullptr);
+    m_ui->exporterSettingsBrowser->setRoot(nullptr);
 
     CanvasExporter * exporter = m_exporters.value(format, nullptr);
 
@@ -155,7 +150,7 @@ void CanvasExporterWidget::updateUiForFormat(const QString & format)
 
     if (exporter)
     {
-        m_exporterSettingsBrowser->setRoot(exporter->propertyGroup());
-        m_exporterSettingsBrowser->resizeColumnToContents(0);
+        m_ui->exporterSettingsBrowser->setRoot(exporter->propertyGroup());
+        m_ui->exporterSettingsBrowser->resizeColumnToContents(0);
     }
 }
