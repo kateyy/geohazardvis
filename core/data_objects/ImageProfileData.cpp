@@ -125,9 +125,15 @@ void ImageProfileData::setPoints(double point1[3], double point2[3])
     m_probeLine->SetPoint1(point1);
     m_probeLine->SetPoint2(point2);
 
+    double pointSpacing[3];
+    m_imageData->imageData()->GetSpacing(pointSpacing);
+
     double probeVector[3];
     vtkMath::Subtract(point2, point1, probeVector);
-    int numProbePoints = static_cast<int>(std::ceil(std::sqrt(vtkMath::Dot(probeVector, probeVector))));
+    double xLength = probeVector[0] / pointSpacing[0];
+    double yLength = probeVector[1] / pointSpacing[1];
+
+    int numProbePoints = static_cast<int>(std::sqrt(xLength * xLength + yLength * yLength));
     m_probeLine->SetResolution(numProbePoints);
 
     VTK_CREATE(vtkTransform, m);
