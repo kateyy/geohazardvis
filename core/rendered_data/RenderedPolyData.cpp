@@ -42,7 +42,6 @@ namespace
 RenderedPolyData::RenderedPolyData(PolyDataObject * dataObject)
     : RenderedData3D(dataObject)
     , m_mapper(vtkSmartPointer<vtkPolyDataMapper>::New())
-    , m_mainActor(vtkSmartPointer<vtkActor>::New())
     , m_normals(vtkSmartPointer<vtkPolyDataNormals>::New())
     , m_mapperInput(m_normals.Get())
 {
@@ -60,9 +59,6 @@ RenderedPolyData::RenderedPolyData(PolyDataObject * dataObject)
 
     // don't break the lut configuration
     m_mapper->UseLookupTableScalarRangeOn();
-
-    m_mainActor->SetMapper(m_mapper);
-    m_mainActor->SetProperty(renderProperty());
 }
 
 RenderedPolyData::~RenderedPolyData() = default;
@@ -215,9 +211,21 @@ vtkProperty * RenderedPolyData::createDefaultRenderProperty() const
 vtkSmartPointer<vtkActorCollection> RenderedPolyData::fetchActors()
 {
     vtkSmartPointer<vtkActorCollection> actors = RenderedData3D::fetchActors();
-    actors->AddItem(m_mainActor);
+    actors->AddItem(mainActor());
 
     return actors;
+}
+
+vtkActor * RenderedPolyData::mainActor()
+{
+    if (m_mainActor)
+        return m_mainActor;
+
+    m_mainActor = vtkSmartPointer<vtkActor>::New();
+    m_mainActor->SetMapper(m_mapper);
+    m_mainActor->SetProperty(renderProperty());
+
+    return m_mainActor;
 }
 
 void RenderedPolyData::scalarsForColorMappingChangedEvent()
@@ -253,5 +261,5 @@ void RenderedPolyData::visibilityChangedEvent(bool visible)
 {
     RenderedData3D::visibilityChangedEvent(visible);
 
-    m_mainActor->SetVisibility(visible);
+    mainActor()->SetVisibility(visible);
 }

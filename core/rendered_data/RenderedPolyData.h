@@ -24,6 +24,7 @@ public:
 protected:
     vtkProperty * createDefaultRenderProperty() const override;
     vtkSmartPointer<vtkActorCollection> fetchActors() override;
+    vtkActor * mainActor();
 
     void scalarsForColorMappingChangedEvent() override;
     void colorMappingGradientChangedEvent() override;
