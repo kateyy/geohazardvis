@@ -64,6 +64,8 @@ DataObject * Loader::loadTextFile(const QString & filename)
     {
     case ModelType::triangles:
         return MatricesToVtk::loadIndexedTriangles(dataSetName, readDatasets);
+    case ModelType::DEM:
+        return MatricesToVtk::loadDEM(dataSetName, readDatasets);
     case ModelType::grid2D:
         return MatricesToVtk::loadGrid2D(dataSetName, readDatasets);
     case ModelType::vectorGrid3D:

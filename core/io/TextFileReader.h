@@ -7,10 +7,12 @@
 #include <memory>
 #include <cinttypes>
 
+#include <vtkSmartPointer.h>
+
 #include "common/ebem3d_common.h"
 
 
-class vtkDataSet;
+class vtkDataObject;
 
 
 enum class DatasetType {
@@ -26,6 +28,7 @@ enum class ModelType
 {
     raw,
     triangles,
+    DEM,
     grid2D,
     vectorGrid3D
 };
@@ -42,6 +45,7 @@ struct ReadDataset {
     DatasetType type;
     std::vector<std::vector<t_FP>> data;
     std::string attributeName;
+    vtkSmartPointer<vtkDataObject> vtkMetaData;
 };
 
 class TextFileReader
@@ -55,6 +59,7 @@ private:
         t_UInt nbLines;
         t_UInt nbColumns;
         std::string attributeName;
+        vtkSmartPointer<vtkDataObject> vtkMetaData;
     };
 
     /// read the file header and leave the input stream at a position directly behind the header end
@@ -62,6 +67,7 @@ private:
     static std::shared_ptr<InputFileInfo> readHeader(std::ifstream & inputStream, std::vector<DatasetDef>& inputDefs);
 
     static bool readHeader_triangles(std::ifstream & inputStream, std::vector<DatasetDef>& inputDefs);
+    static bool readHeader_DEM(std::ifstream & inputStream, std::vector<DatasetDef>& inputDefs);
     static bool readHeader_grid2D(std::ifstream & inputStream, std::vector<DatasetDef>& inputDefs);
     static bool readHeader_vectorGrid3D(std::ifstream & inputStream, std::vector<DatasetDef>& inputDefs);
 
