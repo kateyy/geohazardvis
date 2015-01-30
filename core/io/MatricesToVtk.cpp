@@ -87,6 +87,7 @@ DataObject * MatricesToVtk::loadDEM(QString name, const std::vector<ReadDataset>
         return nullptr;
 
     image->AllocateScalars(VTK_FLOAT, 1);
+    image->GetPointData()->GetScalars()->SetName(name.toUtf8().data());
 
     for (int x = 0; x < dims[0]; ++x)
     {

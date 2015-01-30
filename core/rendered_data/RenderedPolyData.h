@@ -4,6 +4,7 @@
 
 
 class vtkAlgorithm;
+class vtkAlgorithmOutput;
 class vtkPolyDataMapper;
 class vtkPolyDataNormals;
 
@@ -30,10 +31,18 @@ protected:
     void colorMappingGradientChangedEvent() override;
     void visibilityChangedEvent(bool visible) override;
 
+    /** Integrate last pipeline steps. By default, this connects the colorMappingOutput
+        with the mapper. */
+    virtual void finalizePipeline();
+
+    vtkAlgorithmOutput * colorMappingOutput();
+    vtkPolyDataMapper * mapper();
+
 private:
     vtkSmartPointer<vtkPolyDataMapper> m_mapper;
     vtkSmartPointer<vtkActor> m_mainActor;
 
     vtkSmartPointer<vtkPolyDataNormals> m_normals;      // required for lighting/interpolation
-    vtkAlgorithm * m_mapperInput;
+
+    vtkSmartPointer<vtkAlgorithmOutput> m_colorMappingOutput;
 };

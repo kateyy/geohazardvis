@@ -8,6 +8,7 @@
 #include <vtkInformationIntegerPointerKey.h>
 #include <vtkInformationStringKey.h>
 
+#include <vtkAlgorithmOutput.h>
 #include <vtkPolyData.h>
 #include <vtkPolyDataMapper.h>
 #include <vtkPolyDataNormals.h>
@@ -43,7 +44,6 @@ RenderedPolyData::RenderedPolyData(PolyDataObject * dataObject)
     : RenderedData3D(dataObject)
     , m_mapper(vtkSmartPointer<vtkPolyDataMapper>::New())
     , m_normals(vtkSmartPointer<vtkPolyDataNormals>::New())
-    , m_mapperInput(m_normals.Get())
 {
     assert(vtkPolyData::SafeDownCast(dataObject->dataSet()));
 
@@ -51,11 +51,14 @@ RenderedPolyData::RenderedPolyData(PolyDataObject * dataObject)
     mapperInfo->Set(DataObject::NameKey(), dataObject->name().toUtf8().data());
     DataObject::setDataObject(mapperInfo, dataObject);
 
+    m_normals->SetInputConnection(dataObject->processedOutputPort());
     m_normals->ComputePointNormalsOn();
     m_normals->ComputeCellNormalsOff();
 
-    m_mapperInput->SetInputConnection(dataObject->processedOutputPort());
-    m_mapper->SetInputConnection(m_mapperInput->GetOutputPort());
+    // disabled color mapping by default
+    m_colorMappingOutput = dataObject->processedOutputPort();
+
+    m_mapper->SetInputConnection(m_colorMappingOutput);
 
     // don't break the lut configuration
     m_mapper->UseLookupTableScalarRangeOn();
@@ -196,7 +199,7 @@ reflectionzeug::PropertyGroup * RenderedPolyData::createConfigGroup()
 vtkProperty * RenderedPolyData::createDefaultRenderProperty() const
 {
     vtkProperty * prop = vtkProperty::New();
-    prop->SetColor(0, 0.6, 0);
+    prop->SetColor(1, 1, 0);
     prop->SetOpacity(1.0);
     prop->SetInterpolationToFlat();
     prop->SetEdgeVisibility(true);
@@ -235,19 +238,24 @@ void RenderedPolyData::scalarsForColorMappingChangedEvent()
     // no mapping yet, so just render the data set
     if (!m_scalars)
     {
-        m_mapperInput->SetInputConnection(dataObject()->processedOutputPort());
+        m_colorMappingOutput = dataObject()->processedOutputPort();
+        finalizePipeline();
         return;
     }
 
     m_scalars->configureMapper(this, m_mapper);
 
+    vtkSmartPointer<vtkAlgorithm> filter;
+
     if (m_scalars->usesFilter())
     {
-        vtkSmartPointer<vtkAlgorithm> filter = vtkSmartPointer<vtkAlgorithm>::Take(m_scalars->createFilter(this));
-        m_mapperInput->SetInputConnection(filter->GetOutputPort());
+        filter = vtkSmartPointer<vtkAlgorithm>::Take(m_scalars->createFilter(this));
+        m_colorMappingOutput = filter->GetOutputPort();
     }
     else
-        m_mapperInput->SetInputConnection(dataObject()->processedOutputPort());
+        m_colorMappingOutput = dataObject()->processedOutputPort();
+
+    finalizePipeline();
 }
 
 void RenderedPolyData::colorMappingGradientChangedEvent()
@@ -262,4 +270,19 @@ void RenderedPolyData::visibilityChangedEvent(bool visible)
     RenderedData3D::visibilityChangedEvent(visible);
 
     mainActor()->SetVisibility(visible);
+}
+
+void RenderedPolyData::finalizePipeline()
+{
+    m_mapper->SetInputConnection(m_colorMappingOutput);
+}
+
+vtkAlgorithmOutput * RenderedPolyData::colorMappingOutput()
+{
+    return m_colorMappingOutput;
+}
+
+vtkPolyDataMapper * RenderedPolyData::mapper()
+{
+    return m_mapper;
 }

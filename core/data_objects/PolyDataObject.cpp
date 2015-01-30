@@ -2,6 +2,7 @@
 
 #include <cassert>
 #include <cmath>
+#include <limits>
 
 #include <vtkPolyDataNormals.h>
 #include <vtkCellCenters.h>
@@ -14,6 +15,7 @@
 
 #include <core/vtkhelper.h>
 #include <core/rendered_data/RenderedPolyData.h>
+#include <core/rendered_data/RenderedPolyData_2p5D.h>
 #include <core/table_model/QVtkTableModelPolyData.h>
 
 
@@ -26,6 +28,8 @@ PolyDataObject::PolyDataObject(QString name, vtkPolyData * dataSet)
     : DataObject(name, dataSet)
     , m_cellNormals(vtkSmartPointer<vtkPolyDataNormals>::New())
     , m_cellCenters(vtkSmartPointer<vtkCellCenters>::New())
+    , m_is2p5D()
+    , m_checkedIs2p5D(false)
 {
     m_cellNormals->ComputeCellNormalsOn();
     m_cellNormals->ComputePointNormalsOff();
@@ -63,6 +67,9 @@ vtkAlgorithmOutput * PolyDataObject::cellCentersOutputPort()
 
 RenderedData * PolyDataObject::createRendered()
 {
+    if (is2p5D())
+        return new RenderedPolyData_2p5D(this);
+
     return new RenderedPolyData(this);
 }
 
@@ -76,6 +83,29 @@ void PolyDataObject::addDataArray(vtkDataArray * dataArray)
 QString PolyDataObject::dataTypeName() const
 {
     return s_dataTypeName;
+}
+
+bool PolyDataObject::is2p5D()
+{
+    if (m_checkedIs2p5D)
+        return m_is2p5D;
+
+    m_is2p5D = true;
+
+    m_cellNormals->Update();
+    vtkDataArray * normals = m_cellNormals->GetOutput()->GetCellData()->GetNormals();
+    
+    for (vtkIdType i = 0; i < normals->GetNumberOfTuples(); ++i)
+    {
+        if (normals->GetTuple(i)[2] < std::numeric_limits<double>::epsilon())
+        {
+            m_is2p5D = false;
+            break;
+        }
+    }
+
+    m_checkedIs2p5D = true;
+    return m_is2p5D;
 }
 
 bool PolyDataObject::setCellCenterComponent(vtkIdType cellId, int component, double value)

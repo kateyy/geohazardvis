@@ -33,6 +33,8 @@ public:
 
     QString dataTypeName() const override;
 
+    bool is2p5D();
+
     bool setCellCenterComponent(vtkIdType cellId, int component, double value);
     bool setCellNormalComponent(vtkIdType cellId, int component, double value);
 
@@ -41,4 +43,7 @@ protected:
 
     vtkSmartPointer<vtkPolyDataNormals> m_cellNormals;
     vtkSmartPointer<vtkCellCenters> m_cellCenters;
+
+    bool m_is2p5D;
+    bool m_checkedIs2p5D;
 };

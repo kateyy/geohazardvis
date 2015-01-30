@@ -63,6 +63,8 @@ set ( SOURCES
     rendered_data/RenderedImageData.cpp
     rendered_data/RenderedPolyData.h
     rendered_data/RenderedPolyData.cpp
+    rendered_data/RenderedPolyData_2p5D.h
+    rendered_data/RenderedPolyData_2p5D.cpp
     rendered_data/RenderedVectorGrid3D.h
     rendered_data/RenderedVectorGrid3D.cpp
 
