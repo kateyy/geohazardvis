@@ -27,9 +27,14 @@ RenderedData * RawVectorData::createRendered()
     return nullptr;
 }
 
-QString RawVectorData::dataTypeName() const
+const QString & RawVectorData::dataTypeName() const
 {
-    static QString name = "raw vector";
+    return dataTypeName_s();
+}
+
+const QString & RawVectorData::dataTypeName_s()
+{
+    static QString name{ "raw vector" };
     return name;
 }
 

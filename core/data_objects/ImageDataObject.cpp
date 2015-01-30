@@ -11,11 +11,6 @@
 #include <core/table_model/QVtkTableModelImage.h>
 
 
-namespace
-{
-    const QString s_dataTypeName = "regular 2D grid";
-}
-
 ImageDataObject::ImageDataObject(QString name, vtkImageData * dataSet)
     : DataObject(name, dataSet)
 {
@@ -40,10 +35,17 @@ void ImageDataObject::addDataArray(vtkDataArray * dataArray)
     emit attributeArraysChanged();
 }
 
-QString ImageDataObject::dataTypeName() const
+const QString & ImageDataObject::dataTypeName() const
 {
-    return s_dataTypeName;
+    return dataTypeName_s();
 }
+
+const QString & ImageDataObject::dataTypeName_s()
+{
+    static const QString name{ "regular 2D grid" };
+    return name;
+}
+
 
 vtkImageData * ImageDataObject::imageData()
 {

@@ -19,11 +19,6 @@
 #include <core/table_model/QVtkTableModelPolyData.h>
 
 
-namespace
-{
-    const QString s_dataTypeName = "polygonal mesh";
-}
-
 PolyDataObject::PolyDataObject(QString name, vtkPolyData * dataSet)
     : DataObject(name, dataSet)
     , m_cellNormals(vtkSmartPointer<vtkPolyDataNormals>::New())
@@ -80,9 +75,16 @@ void PolyDataObject::addDataArray(vtkDataArray * dataArray)
     emit attributeArraysChanged();
 }
 
-QString PolyDataObject::dataTypeName() const
+const QString & PolyDataObject::dataTypeName() const
 {
-    return s_dataTypeName;
+    return dataTypeName_s();
+}
+
+const QString & PolyDataObject::dataTypeName_s()
+{
+    static const QString name{ "polygonal mesh" };
+
+    return name;
 }
 
 bool PolyDataObject::is2p5D()

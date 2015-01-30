@@ -12,6 +12,7 @@
 #include <core/vtkhelper.h>
 #include <core/DataSetHandler.h>
 #include <core/data_objects/DataObject.h>
+#include <core/io/Exporter.h>
 #include <core/io/Loader.h>
 #include <core/rendered_data/RenderedData.h>
 
@@ -161,6 +162,45 @@ void MainWindow::openFiles(QStringList fileNames)
 void MainWindow::on_actionOpen_triggered()
 {
     openFiles(dialog_inputFileName());
+}
+
+void MainWindow::on_actionExportDataset_triggered()
+{
+    auto toExport = m_dataBrowser->selectedDataObjects();
+    if (toExport.isEmpty())
+    {
+        QMessageBox::information(this, "Dataset Export", "Please select datasets to export in the data browser!");
+        return;
+    }
+
+    QString oldName = windowTitle();
+
+    for (DataObject * data : toExport)
+    {
+        bool isSupported = Exporter::isExportSupported(data);
+        if (!isSupported)
+        {
+            QMessageBox::warning(this, "Unsuppored Operation",
+                "Exporting is currently not supported for the selected data type (" + data->dataTypeName() + ")\n"
+                + "Data set: """ + data->name() + """");
+            continue;
+        }
+
+        QString fileName = QFileDialog::getSaveFileName(this, "", m_lastExportFolder + "/" + data->name(),
+            Exporter::formatFilter(data));
+
+        if (fileName.isEmpty())
+            continue;
+
+        setWindowTitle("Exporting " + QFileInfo(fileName).baseName() + " ...");
+        QApplication::processEvents();
+
+        Exporter::exportData(data, fileName);
+
+        m_lastExportFolder = QFileInfo(fileName).absolutePath();
+    }
+
+    setWindowTitle(oldName);
 }
 
 void MainWindow::on_actionAbout_Qt_triggered()

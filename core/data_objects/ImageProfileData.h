@@ -20,7 +20,8 @@ public:
     bool is3D() const override;
     Context2DData * createContextData() override;
 
-    QString dataTypeName() const override;
+    const QString & dataTypeName() const override;
+    static const QString & dataTypeName_s();
 
     vtkDataSet * processedDataSet() override;
     vtkAlgorithmOutput * processedOutputPort() override;

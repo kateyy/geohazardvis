@@ -48,6 +48,8 @@ set ( SOURCES
     filters/CentroidAsScalarsFilter.h
     filters/CentroidAsScalarsFilter.cpp
 
+    io/Exporter.h
+    io/Exporter.cpp
     io/Loader.h
     io/Loader.cpp
     io/TextFileReader.h
@@ -123,7 +125,7 @@ set ( SOURCES
     glyph_mapping/Grid3dGlyphMapping.cpp
     glyph_mapping/PolyDataAttributeGlyphMapping.h
     glyph_mapping/PolyDataAttributeGlyphMapping.cpp
-    
+
     reflectionzeug_extension/QStringProperty.h
     reflectionzeug_extension/QStringProperty.hpp
     reflectionzeug_extension/QStringProperty.cpp

@@ -29,6 +29,7 @@ public slots:
     void openFiles(QStringList fileNames);
 
     void on_actionOpen_triggered();
+    void on_actionExportDataset_triggered();
     void on_actionAbout_Qt_triggered();
     void on_actionNew_Render_View_triggered();
 
@@ -55,4 +56,5 @@ private:
     CanvasExporterWidget * m_canvasExporter;
 
     QString m_lastOpenFolder;
+    QString m_lastExportFolder;
 };

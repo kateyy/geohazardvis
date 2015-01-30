@@ -31,7 +31,8 @@ public:
 
     RenderedData * createRendered() override;
 
-    QString dataTypeName() const override;
+    const QString & dataTypeName() const override;
+    static const QString & dataTypeName_s();
 
     bool is2p5D();
 

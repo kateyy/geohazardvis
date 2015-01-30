@@ -62,9 +62,15 @@ Context2DData * ImageProfileData::createContextData()
     return new ImageProfileContextPlot(this);
 }
 
-QString ImageProfileData::dataTypeName() const
+const QString & ImageProfileData::dataTypeName() const
 {
-    return "image profile";
+    return dataTypeName_s();
+}
+
+const QString & ImageProfileData::dataTypeName_s()
+{
+    static const QString name{ "image profile" };
+    return name;
 }
 
 vtkDataSet * ImageProfileData::processedDataSet()
