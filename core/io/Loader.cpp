@@ -4,10 +4,13 @@
 #include <QDebug>
 
 #include <vtkImageData.h>
+#include <vtkPolyData.h>
 #include <vtkXMLImageDataReader.h>
+#include <vtkXMLPolyDataReader.h>
 
 #include <core/vtkhelper.h>
 #include <core/data_objects/ImageDataObject.h>
+#include <core/data_objects/PolyDataObject.h>
 #include <core/data_objects/VectorGrid3DDataObject.h>
 #include <core/io/TextFileReader.h>
 #include <core/io/MatricesToVtk.h>
@@ -46,6 +49,22 @@ DataObject * Loader::readFile(const QString & filename)
             qDebug() << "VTK image data format not supported.";
             return nullptr;
         }
+    }
+
+    if (ext == "vtp")
+    {
+        VTK_CREATE(vtkXMLPolyDataReader, reader);
+        reader->SetFileName(filename.toUtf8().data());
+        reader->Update();
+        vtkSmartPointer<vtkPolyData> polyData = reader->GetOutput();
+
+        if (!polyData)
+        {
+            qDebug() << "Invalid VTK PolyData file: " << filename;
+            return nullptr;
+        }
+
+        return new PolyDataObject(baseName, polyData);
     }
 
     // handle all other files as our text file format

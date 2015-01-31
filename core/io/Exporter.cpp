@@ -7,7 +7,6 @@
 #include <QString>
 
 #include <vtkDataSet.h>
-#include <vtkSmartPointer.h>
 
 #include <vtkImageMapToColors.h>
 #include <vtkLookupTable.h>
@@ -16,19 +15,46 @@
 #include <vtkJPEGWriter.h>
 #include <vtkPNGWriter.h>
 #include <vtkXMLImageDataWriter.h>
+#include <vtkXMLPolyDataWriter.h>
 
 #include <core/vtkhelper.h>
 #include <core/data_objects/ImageDataObject.h>
+#include <core/data_objects/PolyDataObject.h>
 #include <core/data_objects/VectorGrid3DDataObject.h>
+
+namespace
+{
+
+bool writeVTKXML(vtkXMLWriter * writer, const QString & fileName)
+{
+    writer->SetFileName(fileName.toUtf8().data());
+    writer->SetHeaderTypeToUInt64();
+    writer->SetIdTypeToInt64();
+    writer->SetCompressorTypeToZLib();
+    writer->SetDataModeToAppended();
+    writer->EncodeAppendedDataOff();
+
+    return writer->Write() == 1;
+}
+
+}
 
 
 bool Exporter::exportData(DataObject * data, const QString & fileName)
 {
     if (auto image = dynamic_cast<ImageDataObject *>(data))
-        return exportImage(image, fileName);
+    {
+        if (QFileInfo(fileName).suffix().toLower() == "vti")
+            return exportVTKXMLImageData(data, fileName);
+
+        return exportImageFormat(image, fileName);
+    }
+
+    if (auto polyData = dynamic_cast<PolyDataObject *>(data))
+        return exportVTKXMLPolyData(polyData, fileName);
 
     if (auto grid = dynamic_cast<VectorGrid3DDataObject *>(data))
-        return exportVectorGrid3D(grid, fileName);
+        return exportVTKXMLImageData(grid, fileName);
 
     return false;
 }
@@ -46,14 +72,15 @@ QString Exporter::formatFilter(DataObject * data)
 const QMap<QString, QString> & Exporter::formatFilters()
 {
     static QMap<QString, QString> ff = {
-        { ImageDataObject::dataTypeName_s(), "Bitmap (*.bmp);;JPEG (*.jpg  *.jpeg);;PNG (*.png);;" },
+        { PolyDataObject::dataTypeName_s(), "VTK XML PolyData Files (*.vtp)" },
+        { ImageDataObject::dataTypeName_s(), "Bitmap (*.bmp);;JPEG (*.jpg  *.jpeg);;PNG (*.png);;VTK XML Image Files (*.vti)" },
         { VectorGrid3DDataObject::dataTypeName_s(), "VTK XML Image Files (*.vti)" }
     };
 
     return ff;
 }
 
-bool Exporter::exportImage(ImageDataObject * image, const QString & fileName)
+bool Exporter::exportImageFormat(ImageDataObject * image, const QString & fileName)
 {
     QString ext = QFileInfo(fileName).suffix().toLower();
 
@@ -89,16 +116,18 @@ bool Exporter::exportImage(ImageDataObject * image, const QString & fileName)
     return true;
 }
 
-bool Exporter::exportVectorGrid3D(VectorGrid3DDataObject * grid, const QString & fileName)
+bool Exporter::exportVTKXMLPolyData(DataObject * polyData, const QString & fileName)
+{
+    VTK_CREATE(vtkXMLPolyDataWriter, writer);
+    writer->SetInputData(polyData->dataSet());
+
+    return writeVTKXML(writer, fileName);
+}
+
+bool Exporter::exportVTKXMLImageData(DataObject * image, const QString & fileName)
 {
     VTK_CREATE(vtkXMLImageDataWriter, writer);
-    writer->SetInputData(grid->dataSet());
-    writer->SetFileName(fileName.toUtf8().data());
-    writer->SetHeaderTypeToUInt64();
-    writer->SetIdTypeToInt64();
-    writer->SetCompressorTypeToZLib();
-    writer->SetDataModeToAppended();
-    writer->EncodeAppendedDataOff();
+    writer->SetInputData(image->dataSet());
 
-    return writer->Write() == 1;
+    return writeVTKXML(writer, fileName);
 }
