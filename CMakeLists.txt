@@ -142,12 +142,12 @@ else()
 endif()
 
 
-if(TARGET vtkIOExport)
-    set(VTK_module_IOExport 1)
-    find_package(VTK COMPONENTS ${VTK_COMPONENTS} vtkIOExport)
+if(TARGET vtkIOExport AND TARGET vtkRenderingGL2PS)
+    set(VTK_has_GLExport2PS 1)
+    find_package(VTK COMPONENTS ${VTK_COMPONENTS} vtkIOExport vtkRenderingGL2PS)
 else()
-    set(VTK_module_IOExport 0)
-    message("VTK was not build with vtkIOExport, PostScript/EPS export will not be available.")
+    set(VTK_has_GLExport2PS 0)
+    message("VTK was not build with vtkIOExport and vtkRenderingGL2PS, PostScript/EPS export will not be available.")
 endif()
 
 
