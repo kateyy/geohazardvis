@@ -1,6 +1,7 @@
 #include "RenderedPolyData_2p5D.h"
 
 #include <cassert>
+#include <cmath>
 
 #include <QDialogButtonBox>
 #include <QComboBox>
@@ -13,9 +14,11 @@
 #include <vtkInformation.h>
 #include <vtkInformationIntegerPointerKey.h>
 #include <vtkInformationStringKey.h>
+#include <vtkMath.h>
 
 #include <vtkIdTypeArray.h>
 #include <vtkImageData.h>
+#include <vtkImageDataToPointSet.h>
 #include <vtkImageShiftScale.h>
 #include <vtkPolyData.h>
 #include <vtkPolyDataMapper.h>
@@ -135,45 +138,63 @@ void RenderedPolyData_2p5D::finalizePipeline()
 {
     if (m_applyDEM)
     {
-        double scale[3];
-        double demBounds[3], dataBounds[3];
-        scale[0] = (m_demData->bounds()[1] - m_demData->bounds()[0]) / (dataObject()->bounds()[1] - dataObject()->bounds()[0]);
-        scale[1] = (m_demData->bounds()[3] - m_demData->bounds()[2]) / (dataObject()->bounds()[3] - dataObject()->bounds()[2]);
-        scale[2] = 0;
-        double translation[3];
-        translation[0] = (m_demData->bounds()[1] + m_demData->bounds()[0]) / 2;
-        translation[1] = (m_demData->bounds()[3] + m_demData->bounds()[2]) / 2;
-        translation[2] = 0;
+        const double earthR = 6378.138;
+        double Fi0 = -25.167916666667;  // latitude 
+        double La0 = -68.5062500000003; // longitude of the origin (~center) of the surface's local coordinate system
 
 
-        VTK_CREATE(vtkTransform, surfaceTransform);
-        surfaceTransform->Translate(translation);
-        surfaceTransform->Scale(scale);
+        // approximations for regions not larger than a few hundreds of kilometers:
+        /*auto transformApprox = [earthR] (double Fi, double La, double Fi0, double La0, double & X, double & Y)
+        {
+            Y = earthR * (Fi - Fi0) * vtkMath::Pi() / 180;
+            X = earthR * (La - La0) * std::cos(Fi0 / 180 * vtkMath::Pi()) * vtkMath::Pi() / 180;
+        };*/
 
-        VTK_CREATE(vtkTransformFilter, surfaceTransformFilter);
-        surfaceTransformFilter->SetTransform(surfaceTransform);
-        surfaceTransformFilter->SetInputConnection(colorMappingOutput());
+        double toLocalTranslation[3] = {
+            -La0,
+            -Fi0,
+            0.0
+        };
+        double toLocalScale[3] = {
+            earthR * std::cos(Fi0 / 180.0 * vtkMath::Pi()) * vtkMath::Pi() / 180.0,
+            earthR * vtkMath::Pi() / 180.0,
+            0  // flattening, elevation is stored in scalars
+        };
 
-        VTK_CREATE(vtkImageShiftScale, imageTransform);
-        imageTransform->SetInputConnection(m_demData->processedOutputPort());
-        imageTransform->SetScale(0.0001); // m to km
+        VTK_CREATE(vtkImageShiftScale, elevationToMeters);
+        elevationToMeters->SetScale(0.001);
+        elevationToMeters->SetInputData(m_demData->dataSet());
+
+        // missing VTK filter to scale/translate images (along the grid orientation)? TODO that later
+        VTK_CREATE(vtkImageDataToPointSet, toPoints);
+        toPoints->SetInputConnection(elevationToMeters->GetOutputPort());
+
+        VTK_CREATE(vtkWarpScalar, warpDEM);   // use point scalars as elevation
+        warpDEM->SetInputConnection(toPoints->GetOutputPort());
+
+        VTK_CREATE(vtkTransform, demTransform);
+        demTransform->Scale(toLocalScale);
+        demTransform->Translate(toLocalTranslation);
+
+        VTK_CREATE(vtkTransformFilter, demTransformFilter);
+        demTransformFilter->SetTransform(demTransform);
+        demTransformFilter->SetInputConnection(warpDEM->GetOutputPort());
+
+        VTK_CREATE(vtkTransform, meshTransform);
+        meshTransform->Scale(5, 5, 0);  // flatten
+        
+        VTK_CREATE(vtkTransformFilter, meshTransformFilter);
+        meshTransformFilter->SetTransform(meshTransform);
+        meshTransformFilter->SetInputConnection(colorMappingOutput());
 
         VTK_CREATE(vtkProbeFilter, probe);
-        probe->SetInputConnection(surfaceTransformFilter->GetOutputPort());
-        probe->SetSourceConnection(imageTransform->GetOutputPort());
+        probe->SetInputConnection(meshTransformFilter->GetOutputPort());
+        probe->SetSourceConnection(demTransformFilter->GetOutputPort());
 
         VTK_CREATE(vtkWarpScalar, warp);
         warp->SetInputConnection(probe->GetOutputPort());
 
-        VTK_CREATE(vtkTransform, reverseTransform);
-        reverseTransform->Scale(1 / scale[0], 1 / scale[1], 1);
-        reverseTransform->Translate(-translation[0], -translation[1], -translation[2]);
-
-        VTK_CREATE(vtkTransformFilter, reverseTransformFilter);
-        reverseTransformFilter->SetTransform(reverseTransform);
-        reverseTransformFilter->SetInputConnection(warp->GetOutputPort());
-
-        mapper()->SetInputConnection(reverseTransformFilter->GetOutputPort());
+        mapper()->SetInputConnection(warp->GetOutputPort());
     }
     else
     {
