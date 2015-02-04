@@ -105,7 +105,7 @@ install(FILES ${CMAKE_BINARY_DIR}/revision DESTINATION ${INSTALL_ROOT})
 
 
 set(VTK_COMPONENTS 
-    vtkGUISupportQt         # QVTKWidget
+    vtkGUISupportQtOpenGL   # QVTKWidget2
     vtkRenderingAnnotation  # vtkCubeAxesActor, vtkScalarBarActor
     vtkInteractionWidgets
     vtkIOXML
