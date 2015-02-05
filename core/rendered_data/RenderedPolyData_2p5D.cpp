@@ -7,7 +7,6 @@
 #include <QComboBox>
 #include <QDialog>
 #include <QGridLayout>
-#include <QImage>
 #include <QLabel>
 #include <QScopedPointer>
 
@@ -16,15 +15,11 @@
 #include <vtkInformationStringKey.h>
 #include <vtkMath.h>
 
-#include <vtkIdTypeArray.h>
+#include <vtkImageChangeInformation.h>
 #include <vtkImageData.h>
-#include <vtkImageDataToPointSet.h>
 #include <vtkImageShiftScale.h>
-#include <vtkPolyData.h>
 #include <vtkPolyDataMapper.h>
-#include <vtkPolyDataNormals.h>
 #include <vtkProbeFilter.h>
-#include <vtkScalarsToColors.h>
 #include <vtkTransform.h>
 #include <vtkTransformFilter.h>
 #include <vtkWarpScalar.h>
@@ -165,23 +160,17 @@ void RenderedPolyData_2p5D::finalizePipeline()
         elevationToMeters->SetScale(0.001);
         elevationToMeters->SetInputData(m_demData->dataSet());
 
-        // missing VTK filter to scale/translate images (along the grid orientation)? TODO that later
-        VTK_CREATE(vtkImageDataToPointSet, toPoints);
-        toPoints->SetInputConnection(elevationToMeters->GetOutputPort());
+        VTK_CREATE(vtkImageChangeInformation, demTranslation);
+        demTranslation->SetInputConnection(elevationToMeters->GetOutputPort());
+        demTranslation->SetOriginTranslation(toLocalTranslation);
 
-        VTK_CREATE(vtkWarpScalar, warpDEM);   // use point scalars as elevation
-        warpDEM->SetInputConnection(toPoints->GetOutputPort());
-
-        VTK_CREATE(vtkTransform, demTransform);
-        demTransform->Scale(toLocalScale);
-        demTransform->Translate(toLocalTranslation);
-
-        VTK_CREATE(vtkTransformFilter, demTransformFilter);
-        demTransformFilter->SetTransform(demTransform);
-        demTransformFilter->SetInputConnection(warpDEM->GetOutputPort());
+        VTK_CREATE(vtkImageChangeInformation, demScale);
+        demScale->SetInputConnection(demTranslation->GetOutputPort());
+        demScale->SetSpacingScale(toLocalScale);
+        demScale->SetOriginScale(toLocalScale);
 
         VTK_CREATE(vtkTransform, meshTransform);
-        meshTransform->Scale(5, 5, 0);  // flatten
+        meshTransform->Scale(1, 1, 0);  // flatten
         
         VTK_CREATE(vtkTransformFilter, meshTransformFilter);
         meshTransformFilter->SetTransform(meshTransform);
@@ -189,7 +178,7 @@ void RenderedPolyData_2p5D::finalizePipeline()
 
         VTK_CREATE(vtkProbeFilter, probe);
         probe->SetInputConnection(meshTransformFilter->GetOutputPort());
-        probe->SetSourceConnection(demTransformFilter->GetOutputPort());
+        probe->SetSourceConnection(demScale->GetOutputPort());
 
         VTK_CREATE(vtkWarpScalar, warp);
         warp->SetInputConnection(probe->GetOutputPort());
