@@ -3,6 +3,7 @@
 #include <QFileInfo>
 #include <QDebug>
 
+#include <vtkExecutive.h>
 #include <vtkImageData.h>
 #include <vtkPolyData.h>
 #include <vtkXMLImageDataReader.h>
@@ -29,8 +30,10 @@ DataObject * Loader::readFile(const QString & filename)
     {
         VTK_CREATE(vtkXMLImageDataReader, reader);
         reader->SetFileName(filename.toUtf8().data());
-        reader->Update();
-        vtkSmartPointer<vtkImageData> image = reader->GetOutput();
+
+        vtkSmartPointer<vtkImageData> image;
+        if (reader->GetExecutive()->Update() == 1)
+            image = reader->GetOutput();
 
         if (!image)
         {
@@ -55,8 +58,10 @@ DataObject * Loader::readFile(const QString & filename)
     {
         VTK_CREATE(vtkXMLPolyDataReader, reader);
         reader->SetFileName(filename.toUtf8().data());
-        reader->Update();
-        vtkSmartPointer<vtkPolyData> polyData = reader->GetOutput();
+
+        vtkSmartPointer<vtkPolyData> polyData;
+        if (reader->GetExecutive()->Update() == 1)
+            polyData = reader->GetOutput();
 
         if (!polyData)
         {

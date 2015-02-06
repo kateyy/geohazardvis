@@ -4,6 +4,7 @@
 #include <cassert>
 
 #include <QFileDialog>
+#include <QFileInfo>
 #include <QMessageBox>
 #include <QDragEnterEvent>
 #include <QMimeData>
@@ -139,6 +140,12 @@ void MainWindow::openFiles(QStringList fileNames)
     for (QString fileName : fileNames)
     {
         qDebug() << " <" << fileName;
+
+        if (!QFileInfo(fileName).exists())
+        {
+            qDebug() << "\t\t File does not exist!";
+            continue;
+        }
 
         setWindowTitle(fileName + " (loading file)");
         QApplication::processEvents();
