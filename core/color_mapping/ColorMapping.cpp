@@ -171,7 +171,14 @@ void ColorMapping::setGradient(vtkLookupTable * gradient)
 
     m_originalGradient = gradient;
 
-    m_gradient->SetTable(gradient->GetTable());
+    if (gradient)
+        m_gradient->SetTable(gradient->GetTable());
+    else
+    {
+        // no gradients loaded, use VTK's default rainbow instead
+        m_gradient->SetTable(nullptr);
+        m_gradient->Build();
+    }
 }
 
 vtkScalarBarActor * ColorMapping::colorMappingLegend()
