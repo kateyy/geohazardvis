@@ -57,6 +57,7 @@ RenderedPolyData::RenderedPolyData(PolyDataObject * dataObject)
 
     // disabled color mapping by default
     m_colorMappingOutput = dataObject->processedOutputPort();
+    m_mapper->ScalarVisibilityOff();
 
     m_mapper->SetInputConnection(m_colorMappingOutput);
 

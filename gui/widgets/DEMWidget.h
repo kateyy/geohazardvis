@@ -6,6 +6,7 @@
 #include <gui/gui_api.h>
 
 
+class vtkImageChangeInformation;
 class vtkImageShiftScale;
 class vtkRenderer;
 class vtkTransformFilter;
@@ -37,6 +38,9 @@ private:
     void updatePreview();
     void setupDEMStages();
 
+    void updateDEMGeoPosition();
+    void updateMeshScale();
+
 private:
     vtkSmartPointer<vtkRenderer> m_renderer;
     Ui_DEMWidget * m_ui;
@@ -44,7 +48,8 @@ private:
     QList<PolyDataObject *> m_surfacesMeshes;
     QList<ImageDataObject *> m_dems;
 
-    vtkSmartPointer<vtkImageShiftScale> m_demTransform;
+    vtkSmartPointer<vtkImageChangeInformation> m_demTranslate;
+    vtkSmartPointer<vtkImageChangeInformation> m_demScale;
     vtkSmartPointer<vtkTransformFilter> m_meshTransform;
     vtkSmartPointer<vtkWarpScalar> m_demWarpElevation;
 

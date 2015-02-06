@@ -53,11 +53,39 @@ DEMWidget::DEMWidget(QWidget * parent, Qt::WindowFlags f)
     for (auto d : m_dems)
         m_ui->demCombo->addItem(d->name());
 
+    setupDEMStages();
+
     connect(m_ui->surfaceMeshCombo, static_cast<void(QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &DEMWidget::updatePreview);
     connect(m_ui->demCombo, static_cast<void(QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &DEMWidget::updatePreview);
 
     connect(m_ui->buttonBox, &QDialogButtonBox::accepted, this, &DEMWidget::saveAndClose);
     connect(m_ui->buttonBox, &QDialogButtonBox::rejected, this, &QWidget::close);
+
+    connect(m_ui->surfaceScaleX, static_cast<void(QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), [this] (double) {
+        updateMeshScale();
+        m_demWarpElevation->Update();
+        m_renderer->ResetCamera();
+        m_ui->qvtkMain->GetRenderWindow()->Render();
+    });
+    connect(m_ui->surfaceScaleY, static_cast<void(QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), [this] (double) {
+        updateMeshScale();
+        m_demWarpElevation->Update();
+        m_renderer->ResetCamera();
+        m_ui->qvtkMain->GetRenderWindow()->Render();
+    });
+
+    connect(m_ui->demLatitude, static_cast<void(QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), [this] (double) {
+        updateDEMGeoPosition();
+        m_demWarpElevation->Update();
+        m_renderer->ResetCamera();
+        m_ui->qvtkMain->GetRenderWindow()->Render();
+    });
+    connect(m_ui->demLongitude, static_cast<void(QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), [this] (double) {
+        updateDEMGeoPosition();
+        m_demWarpElevation->Update();
+        m_renderer->ResetCamera();
+        m_ui->qvtkMain->GetRenderWindow()->Render();
+    });
 }
 
 DEMWidget::~DEMWidget()
@@ -126,8 +154,7 @@ void DEMWidget::updatePreview()
     PolyDataObject * surface = m_surfacesMeshes[surfaceIdx];
 
 
-    setupDEMStages();
-    m_demTransform->SetInputConnection(dem->processedOutputPort());
+    m_demTranslate->SetInputConnection(dem->processedOutputPort());
     m_meshTransform->SetInputConnection(surface->processedOutputPort());
 
     m_demWarpElevation->Update();
@@ -150,13 +177,38 @@ void DEMWidget::updatePreview()
 
 void DEMWidget::setupDEMStages()
 {
-    if (m_demWarpElevation)
-        return;
+    m_demTranslate = vtkSmartPointer<vtkImageChangeInformation>::New();
 
+    m_demScale = vtkSmartPointer<vtkImageChangeInformation>::New();
+    m_demScale = vtkSmartPointer<vtkImageChangeInformation>::New();
+    m_demScale->SetInputConnection(m_demTranslate->GetOutputPort());
+
+    VTK_CREATE(vtkImageShiftScale, scaleToKm);
+    scaleToKm->SetInputConnection(m_demScale->GetOutputPort());
+    scaleToKm->SetScale(0.001);
+
+    updateDEMGeoPosition();
+
+    VTK_CREATE(vtkTransform, meshTransform);
+
+    m_meshTransform = vtkSmartPointer<vtkTransformFilter>::New();
+    m_meshTransform->SetTransform(meshTransform);
+
+    updateMeshScale();
+
+    VTK_CREATE(vtkProbeFilter, probe);
+    probe->SetInputConnection(m_meshTransform->GetOutputPort());
+    probe->SetSourceConnection(scaleToKm->GetOutputPort());
+    probe->PassCellArraysOn();
+    probe->PassPointArraysOn();
+
+    m_demWarpElevation = vtkSmartPointer<vtkWarpScalar>::New();
+    m_demWarpElevation->SetInputConnection(probe->GetOutputPort());
+}
+
+void DEMWidget::updateDEMGeoPosition()
+{
     const double earthR = 6378.138;
-    double Fi0 = -25.167916666667;  // latitude 
-    double La0 = -68.5062500000003; // longitude of the origin (~center) of the surface's local coordinate system
-
 
     // approximations for regions not larger than a few hundreds of kilometers:
     /*auto transformApprox = [earthR] (double Fi, double La, double Fi0, double La0, double & X, double & Y)
@@ -165,9 +217,12 @@ void DEMWidget::setupDEMStages()
     X = earthR * (La - La0) * std::cos(Fi0 / 180 * vtkMath::Pi()) * vtkMath::Pi() / 180;
     };*/
 
+    double Fi0 = m_ui->demLongitude->value();
+    double La0 = m_ui->demLatitude->value();
+
     double toLocalTranslation[3] = {
-        -La0,
         -Fi0,
+        -La0,
         0.0
     };
     double toLocalScale[3] = {
@@ -176,30 +231,20 @@ void DEMWidget::setupDEMStages()
         0  // flattening, elevation is stored in scalars
     };
 
-    m_demTransform = vtkSmartPointer<vtkImageShiftScale>::New();
-    m_demTransform->SetScale(0.001);
+    m_demTranslate->SetOriginTranslation(toLocalTranslation);
 
-    VTK_CREATE(vtkImageChangeInformation, demTranslation);
-    demTranslation->SetInputConnection(m_demTransform->GetOutputPort());
-    demTranslation->SetOriginTranslation(toLocalTranslation);
+    m_demScale->SetSpacingScale(toLocalScale);
+    m_demScale->SetOriginScale(toLocalScale);
 
-    VTK_CREATE(vtkImageChangeInformation, demScale);
-    demScale->SetInputConnection(demTranslation->GetOutputPort());
-    demScale->SetSpacingScale(toLocalScale);
-    demScale->SetOriginScale(toLocalScale);
+}
 
-    VTK_CREATE(vtkTransform, meshTransform);
-    meshTransform->Scale(1, 1, 0);  // flatten
+void DEMWidget::updateMeshScale()
+{
+    auto tr = vtkTransform::SafeDownCast(m_meshTransform->GetTransform());
+    tr->Identity();
+    tr->Scale(
+        m_ui->surfaceScaleX->value(),
+        m_ui->surfaceScaleY->value(),
+        0); // flatten
 
-    m_meshTransform = vtkSmartPointer<vtkTransformFilter>::New();
-    m_meshTransform->SetTransform(meshTransform);
-
-    VTK_CREATE(vtkProbeFilter, probe);
-    probe->SetInputConnection(m_meshTransform->GetOutputPort());
-    probe->SetSourceConnection(demScale->GetOutputPort());
-    probe->PassCellArraysOn();
-    probe->PassPointArraysOn();
-
-    m_demWarpElevation = vtkSmartPointer<vtkWarpScalar>::New();
-    m_demWarpElevation->SetInputConnection(probe->GetOutputPort());
 }
