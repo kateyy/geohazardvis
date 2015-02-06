@@ -3,7 +3,6 @@
 #include <vtkSmartPointer.h>
 
 #include <core/data_objects/DataObject.h>
-#include <core/core_api.h>
 
 
 class vtkPolyData;
@@ -18,6 +17,9 @@ public:
     PolyDataObject(QString name, vtkPolyData * dataSet);
 
     bool is3D() const override;
+
+    vtkPolyData * polyDataSet();
+    const vtkPolyData * polyDataSet() const;
 
     /** @return poly data set with cell normals */
     vtkDataSet * processedDataSet() override;
@@ -42,6 +44,10 @@ public:
 protected:
     QVtkTableModel * createTableModel() override;
 
+private:
+    void setupCellCenters();
+
+private:
     vtkSmartPointer<vtkPolyDataNormals> m_cellNormals;
     vtkSmartPointer<vtkCellCenters> m_cellCenters;
 

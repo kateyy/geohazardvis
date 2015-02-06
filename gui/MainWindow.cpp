@@ -22,6 +22,7 @@
 #include <gui/data_view/RenderView.h>
 #include <gui/widgets/CanvasExporterWidget.h>
 #include <gui/widgets/ColorMappingChooser.h>
+#include <gui/widgets/DEMWidget.h>
 #include <gui/widgets/GlyphMappingChooser.h>
 #include <gui/widgets/RenderConfigWidget.h>
 #include <gui/widgets/RendererConfigWidget.h>
@@ -218,6 +219,14 @@ void MainWindow::on_actionAbout_Qt_triggered()
 void MainWindow::on_actionNew_Render_View_triggered()
 {
     m_dataMapping->openInRenderView({});
+}
+
+void MainWindow::on_actionApply_Digital_Elevation_Model_triggered()
+{
+    DEMWidget * demWidget = new DEMWidget();
+    demWidget->setAttribute(Qt::WA_DeleteOnClose);
+    demWidget->setWindowModality(Qt::ApplicationModal);
+    demWidget->show();
 }
 
 void MainWindow::tabbedDockWidgetToFront(QDockWidget * widget)

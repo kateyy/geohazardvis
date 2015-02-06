@@ -15,27 +15,34 @@
 
 #include <core/vtkhelper.h>
 #include <core/rendered_data/RenderedPolyData.h>
-#include <core/rendered_data/RenderedPolyData_2p5D.h>
 #include <core/table_model/QVtkTableModelPolyData.h>
 
 
 PolyDataObject::PolyDataObject(QString name, vtkPolyData * dataSet)
     : DataObject(name, dataSet)
     , m_cellNormals(vtkSmartPointer<vtkPolyDataNormals>::New())
-    , m_cellCenters(vtkSmartPointer<vtkCellCenters>::New())
+    , m_cellCenters()
     , m_is2p5D()
     , m_checkedIs2p5D(false)
 {
     m_cellNormals->ComputeCellNormalsOn();
     m_cellNormals->ComputePointNormalsOff();
     m_cellNormals->SetInputData(dataSet);
-
-    m_cellCenters->SetInputConnection(m_cellNormals->GetOutputPort());
 }
 
 bool PolyDataObject::is3D() const
 {
     return true;
+}
+
+vtkPolyData * PolyDataObject::polyDataSet()
+{
+    return static_cast<vtkPolyData *>(dataSet());
+}
+
+const vtkPolyData * PolyDataObject::polyDataSet() const
+{
+    return static_cast<const vtkPolyData *>(dataSet());
 }
 
 vtkDataSet * PolyDataObject::processedDataSet()
@@ -51,20 +58,21 @@ vtkAlgorithmOutput * PolyDataObject::processedOutputPort()
 
 vtkPolyData * PolyDataObject::cellCenters()
 {
+    setupCellCenters();
+
     m_cellCenters->Update();
     return m_cellCenters->GetOutput();
 }
 
 vtkAlgorithmOutput * PolyDataObject::cellCentersOutputPort()
 {
+    setupCellCenters();
+
     return m_cellCenters->GetOutputPort();
 }
 
 RenderedData * PolyDataObject::createRendered()
 {
-    if (is2p5D())
-        return new RenderedPolyData_2p5D(this);
-
     return new RenderedPolyData(this);
 }
 
@@ -199,4 +207,13 @@ QVtkTableModel * PolyDataObject::createTableModel()
     model->setDataObject(this);
 
     return model;
+}
+
+void PolyDataObject::setupCellCenters()
+{
+    if (m_cellCenters)
+        return;
+
+    m_cellCenters = vtkSmartPointer<vtkCellCenters>::New();
+    m_cellCenters->SetInputConnection(processedOutputPort());
 }

@@ -199,7 +199,7 @@ reflectionzeug::PropertyGroup * RenderedPolyData::createConfigGroup()
 vtkProperty * RenderedPolyData::createDefaultRenderProperty() const
 {
     vtkProperty * prop = vtkProperty::New();
-    prop->SetColor(1, 1, 0);
+    prop->SetColor(0, 0.6, 0);
     prop->SetOpacity(1.0);
     prop->SetInterpolationToFlat();
     prop->SetEdgeVisibility(true);

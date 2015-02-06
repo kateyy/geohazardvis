@@ -62,6 +62,8 @@ set ( SOURCES
     widgets/DataBrowser.cpp
     widgets/DataBrowserTableModel.h
     widgets/DataBrowserTableModel.cpp
+    widgets/DEMWidget.h
+    widgets/DEMWidget.cpp
     widgets/GlyphMappingChooser.h
     widgets/GlyphMappingChooser.cpp
     widgets/GlyphMappingChooserListModel.h
@@ -82,6 +84,7 @@ set ( UIs
     widgets/CanvasExporterWidget.ui
     widgets/ColorMappingChooser.ui
     widgets/DataBrowser.ui
+    widgets/DEMWidget.ui
     widgets/GlyphMappingChooser.ui
     widgets/RenderConfigWidget.ui
     widgets/RendererConfigWidget.ui

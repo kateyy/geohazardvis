@@ -41,14 +41,6 @@
     <addaction name="separator"/>
     <addaction name="actionExit"/>
    </widget>
-   <widget class="QMenu" name="menuSynchronize_Selections">
-    <property name="enabled">
-     <bool>false</bool>
-    </property>
-    <property name="title">
-     <string>Synchronize Selections</string>
-    </property>
-   </widget>
    <widget class="QMenu" name="menuHelp">
     <property name="title">
      <string>&amp;Help</string>
@@ -59,7 +51,16 @@
     <property name="title">
      <string>&amp;Views</string>
     </property>
+    <widget class="QMenu" name="menuSynchronize_Selections">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <property name="title">
+      <string>Synchronize Selections</string>
+     </property>
+    </widget>
     <addaction name="actionNew_Render_View"/>
+    <addaction name="menuSynchronize_Selections"/>
    </widget>
    <widget class="QMenu" name="menuImage_Export">
     <property name="title">
@@ -69,9 +70,15 @@
     <addaction name="actionQuick_Export"/>
     <addaction name="actionExport_To"/>
    </widget>
+   <widget class="QMenu" name="menu_Data_Sets">
+    <property name="title">
+     <string>&amp;Data Sets</string>
+    </property>
+    <addaction name="actionApply_Digital_Elevation_Model"/>
+   </widget>
    <addaction name="menuFile"/>
+   <addaction name="menu_Data_Sets"/>
    <addaction name="menuViews"/>
-   <addaction name="menuSynchronize_Selections"/>
    <addaction name="menuImage_Export"/>
    <addaction name="menuHelp"/>
   </widget>
@@ -127,7 +134,12 @@
   </action>
   <action name="actionExportDataset">
    <property name="text">
-    <string>&amp;Export Dataset...</string>
+    <string>&amp;Export Data Set...</string>
+   </property>
+  </action>
+  <action name="actionApply_Digital_Elevation_Model">
+   <property name="text">
+    <string>Apply Digital E&amp;levation Model</string>
    </property>
   </action>
  </widget>
