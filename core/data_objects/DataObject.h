@@ -48,6 +48,7 @@ public:
     virtual vtkAlgorithmOutput * processedOutputPort();
 
     const double * bounds();
+    void bounds(double b[6]);
 
     QVtkTableModel * tableModel();
 

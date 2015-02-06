@@ -6,6 +6,7 @@
 #include <gui/gui_api.h>
 
 
+class vtkCubeAxesActor;
 class vtkImageChangeInformation;
 class vtkImageShiftScale;
 class vtkRenderer;
@@ -40,10 +41,12 @@ private:
 
     void updateDEMGeoPosition();
     void updateMeshScale();
+    void updateView();
 
 private:
-    vtkSmartPointer<vtkRenderer> m_renderer;
     Ui_DEMWidget * m_ui;
+    vtkSmartPointer<vtkRenderer> m_renderer;
+    vtkSmartPointer<vtkCubeAxesActor> m_axesActor;
 
     QList<PolyDataObject *> m_surfacesMeshes;
     QList<ImageDataObject *> m_dems;

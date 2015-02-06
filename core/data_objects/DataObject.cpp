@@ -73,6 +73,11 @@ const double * DataObject::bounds()
     return processedDataSet()->GetBounds();
 }
 
+void DataObject::bounds(double b[6])
+{
+    return processedDataSet()->GetBounds(b);
+}
+
 QVtkTableModel * DataObject::tableModel()
 {
     if (!d_ptr->m_tableModel)
