@@ -108,6 +108,7 @@ set(VTK_COMPONENTS
     vtkGUISupportQtOpenGL   # QVTKWidget2
     vtkRenderingAnnotation  # vtkCubeAxesActor, vtkScalarBarActor
     vtkRenderingLIC
+    vtkRenderingVolumeOpenGL
     vtkInteractionWidgets
     vtkIOXML
     vtkViewsContext2D
@@ -192,3 +193,4 @@ add_subdirectory("gui")
 add_subdirectory("app")
 add_subdirectory("docs")
 add_subdirectory(packages)
+add_subdirectory(test_lic3Dstacked)
