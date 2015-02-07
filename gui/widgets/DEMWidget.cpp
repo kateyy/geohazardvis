@@ -182,8 +182,16 @@ void DEMWidget::updatePreview()
     ImageDataObject * dem = m_dems.value(demIndex, nullptr);
     PolyDataObject * surface = m_surfacesMeshes[surfaceIdx];
 
-
-    m_demTranslate->SetInputConnection(dem->processedOutputPort());
+    if (dem)
+        m_demTranslate->SetInputConnection(dem->processedOutputPort());
+    else
+    {
+        VTK_CREATE(vtkImageData, nullDEM);
+        nullDEM->SetExtent(0, 0, 0, 0, 0, 0);
+        nullDEM->AllocateScalars(VTK_FLOAT, 1);
+        reinterpret_cast<float *>(nullDEM->GetScalarPointer())[0] = 0.f;
+        m_demTranslate->SetInputData(nullDEM);
+    }
     m_meshTransform->SetInputConnection(surface->processedOutputPort());
 
     m_demWarpElevation->Update();
