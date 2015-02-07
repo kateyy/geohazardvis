@@ -39,22 +39,32 @@ DEMWidget::DEMWidget(QWidget * parent, Qt::WindowFlags f)
 {
     m_ui->setupUi(this);
 
-    for (DataObject * data : DataSetHandler::instance().dataSets())
+    auto dataObjectsToUi = [this] ()
     {
-        if (auto p = dynamic_cast<PolyDataObject *>(data))
+        m_surfaceMeshes.clear();
+        m_dems.clear();
+        m_ui->surfaceMeshCombo->clear();
+        m_ui->demCombo->clear();
+
+        for (DataObject * data : DataSetHandler::instance().dataSets())
         {
-            if (p->is2p5D())
-                m_surfacesMeshes << p;
+            if (auto p = dynamic_cast<PolyDataObject *>(data))
+            {
+                if (p->is2p5D())
+                    m_surfaceMeshes << p;
+            }
+            else if (auto i = dynamic_cast<ImageDataObject *>(data))
+                m_dems << i;
         }
-        else if (auto i = dynamic_cast<ImageDataObject *>(data))
-            m_dems << i;
-    }
 
-    for (auto p : m_surfacesMeshes)
-        m_ui->surfaceMeshCombo->addItem(p->name());
+        for (auto p : m_surfaceMeshes)
+            m_ui->surfaceMeshCombo->addItem(p->name());
 
-    for (auto d : m_dems)
-        m_ui->demCombo->addItem(d->name());
+        for (auto d : m_dems)
+            m_ui->demCombo->addItem(d->name());
+    };
+
+    dataObjectsToUi();
 
     setupDEMStages();
 
@@ -81,6 +91,9 @@ DEMWidget::DEMWidget(QWidget * parent, Qt::WindowFlags f)
         updateDEMGeoPosition();
         updateView();
     });
+
+
+    connect(&DataSetHandler::instance(), &DataSetHandler::dataObjectsChanged, dataObjectsToUi);
 }
 
 DEMWidget::~DEMWidget()
@@ -180,7 +193,7 @@ void DEMWidget::updatePreview()
 
     int demIndex = m_ui->demCombo->currentIndex();
     ImageDataObject * dem = m_dems.value(demIndex, nullptr);
-    PolyDataObject * surface = m_surfacesMeshes[surfaceIdx];
+    PolyDataObject * surface = m_surfaceMeshes[surfaceIdx];
 
     if (dem)
         m_demTranslate->SetInputConnection(dem->processedOutputPort());

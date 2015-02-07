@@ -48,7 +48,7 @@ private:
     vtkSmartPointer<vtkRenderer> m_renderer;
     vtkSmartPointer<vtkCubeAxesActor> m_axesActor;
 
-    QList<PolyDataObject *> m_surfacesMeshes;
+    QList<PolyDataObject *> m_surfaceMeshes;
     QList<ImageDataObject *> m_dems;
 
     vtkSmartPointer<vtkImageChangeInformation> m_demTranslate;

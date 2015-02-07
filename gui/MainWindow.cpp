@@ -224,7 +224,7 @@ void MainWindow::on_actionApply_Digital_Elevation_Model_triggered()
 {
     DEMWidget * demWidget = new DEMWidget();
     demWidget->setAttribute(Qt::WA_DeleteOnClose);
-    demWidget->setWindowModality(Qt::ApplicationModal);
+    demWidget->setWindowModality(Qt::NonModal);
     demWidget->show();
 }
 
