@@ -1,9 +1,10 @@
 #include "ColorEditorRGB.h"
 
+#include <QApplication>
 #include <QColorDialog>
-#include <QSpinBox>
-#include <QLabel>
 #include <QHBoxLayout>
+#include <QSpinBox>
+#include <QStyleOptionViewItem>
 
 #include <reflectionzeug/Property.h>
 #include <reflectionzeug/ColorPropertyInterface.h>
@@ -14,6 +15,42 @@
 using namespace reflectionzeug;
 using namespace propertyguizeug;
 
+
+void ColorEditorRGB::paint(QPainter * painter,
+    const QStyleOptionViewItem & option,
+    reflectionzeug::ColorPropertyInterface & property)
+{
+    const Color & color = property.toColor();
+
+    QColor qcolor(color.red(),
+        color.green(),
+        color.blue(),
+        color.alpha());
+
+    const auto metrics = option.widget->fontMetrics();
+    const auto buttonSize = ColorButton::sizeFromFontHeight(metrics.height());
+    auto buttonRect = QRect{ option.rect.topLeft(), buttonSize };
+    buttonRect.moveCenter({ buttonRect.center().x(), option.rect.center().y() });
+    const auto topLeft = buttonRect.topLeft();
+
+    auto widget = option.widget;
+    auto style = widget ? widget->style() : QApplication::style();
+
+    ColorButtonWithBorder::paint(painter, topLeft, qcolor);
+
+    auto rect = option.rect;
+    rect.setLeft(option.rect.left() + buttonSize.width() + 4);
+
+    QString colorString = "R: " + QString::number(color.red()) + " G: " + QString::number(color.green()) + " B: " + QString::number(color.blue());
+
+    style->drawItemText(painter,
+        rect,
+        Qt::AlignVCenter,
+        option.palette,
+        true,
+        colorString,
+        QPalette::Text);
+}
 
 ColorEditorRGB::ColorEditorRGB(reflectionzeug::ColorPropertyInterface * property, QWidget * parent)
     : PropertyEditor(parent)
@@ -54,10 +91,11 @@ ColorEditorRGB::~ColorEditorRGB() = default;
 
 void ColorEditorRGB::openColorPicker()
 {
-    QColor qcolor = QColorDialog::getColor(this->qcolor(),
+    QColor qcolor = QColorDialog::getColor(
+        qColor(),
         m_button,
-        "Choose Color",
-        QColorDialog::ShowAlphaChannel);
+        "Choose Color");
+
     if (qcolor.isValid())
         setQColor(qcolor);
 }
@@ -69,7 +107,7 @@ void ColorEditorRGB::readUiColor(int)
     setQColor(uiColor);
 }
 
-QColor ColorEditorRGB::qcolor() const
+QColor ColorEditorRGB::qColor() const
 {
     const Color & color = m_property->toColor();
     return QColor(color.red(), color.green(), color.blue(), color.alpha());

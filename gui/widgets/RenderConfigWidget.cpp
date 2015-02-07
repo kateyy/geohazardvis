@@ -2,31 +2,28 @@
 #include "ui_RenderConfigWidget.h"
 
 #include <reflectionzeug/PropertyGroup.h>
-#include <propertyguizeug/PropertyBrowser.h>
 
 #include <core/data_objects/DataObject.h>
 #include <core/AbstractVisualizedData.h>
-#include <gui/propertyguizeug_extension/PropertyEditorFactoryEx.h>
-#include <gui/propertyguizeug_extension/PropertyPainterEx.h>
 #include <gui/data_view/RenderView.h>
+#include <gui/propertyguizeug_extension/ColorEditorRGB.h>
 
 
 using namespace reflectionzeug;
-using namespace propertyguizeug;
 
 
 RenderConfigWidget::RenderConfigWidget(QWidget * parent)
     : QDockWidget(parent)
     , m_ui(new Ui_RenderConfigWidget())
-    , m_propertyBrowser(new PropertyBrowser(new PropertyEditorFactoryEx(), new PropertyPainterEx(), this))
     , m_propertyRoot(nullptr)
     , m_renderView(nullptr)
     , m_content(nullptr)
 {
     m_ui->setupUi(this);
-    m_ui->content->layout()->addWidget(m_propertyBrowser);
 
-    m_propertyBrowser->setAlwaysExpandGroups(true);
+    m_ui->propertyBrowser->addEditorPlugin<ColorEditorRGB>();
+    m_ui->propertyBrowser->addPainterPlugin<ColorEditorRGB>();
+    m_ui->propertyBrowser->setAlwaysExpandGroups(true);
 
     updateTitle();
 }
@@ -43,7 +40,7 @@ void RenderConfigWidget::clear()
 
     updateTitle();
 
-    m_propertyBrowser->setRoot(nullptr);
+    m_ui->propertyBrowser->setRoot(nullptr);
     delete m_propertyRoot;
     m_propertyRoot = nullptr;
 
@@ -74,8 +71,8 @@ void RenderConfigWidget::setCurrentRenderView(RenderView * renderView)
 
     m_propertyRoot = m_content->createConfigGroup();
 
-    m_propertyBrowser->setRoot(m_propertyRoot);
-    m_propertyBrowser->setColumnWidth(0, 135);
+    m_ui->propertyBrowser->setRoot(m_propertyRoot);
+    m_ui->propertyBrowser->setColumnWidth(0, 135);
 
     emit repaint();
 }
@@ -108,8 +105,8 @@ void RenderConfigWidget::setSelectedData(DataObject * dataObject)
     m_content = content;
     updateTitle();
     m_propertyRoot = m_content->createConfigGroup();
-    m_propertyBrowser->setRoot(m_propertyRoot);
-    m_propertyBrowser->setColumnWidth(0, 135);
+    m_ui->propertyBrowser->setRoot(m_propertyRoot);
+    m_ui->propertyBrowser->setColumnWidth(0, 135);
     emit repaint();
 }
 

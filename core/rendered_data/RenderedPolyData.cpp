@@ -8,6 +8,7 @@
 #include <vtkInformationIntegerPointerKey.h>
 #include <vtkInformationStringKey.h>
 
+#include <vtkAlgorithmOutput.h>
 #include <vtkPolyData.h>
 #include <vtkPolyDataMapper.h>
 #include <vtkPolyDataNormals.h>
@@ -42,9 +43,7 @@ namespace
 RenderedPolyData::RenderedPolyData(PolyDataObject * dataObject)
     : RenderedData3D(dataObject)
     , m_mapper(vtkSmartPointer<vtkPolyDataMapper>::New())
-    , m_mainActor(vtkSmartPointer<vtkActor>::New())
     , m_normals(vtkSmartPointer<vtkPolyDataNormals>::New())
-    , m_mapperInput(m_normals.Get())
 {
     assert(vtkPolyData::SafeDownCast(dataObject->dataSet()));
 
@@ -52,17 +51,18 @@ RenderedPolyData::RenderedPolyData(PolyDataObject * dataObject)
     mapperInfo->Set(DataObject::NameKey(), dataObject->name().toUtf8().data());
     DataObject::setDataObject(mapperInfo, dataObject);
 
+    m_normals->SetInputConnection(dataObject->processedOutputPort());
     m_normals->ComputePointNormalsOn();
     m_normals->ComputeCellNormalsOff();
 
-    m_mapperInput->SetInputConnection(dataObject->processedOutputPort());
-    m_mapper->SetInputConnection(m_mapperInput->GetOutputPort());
+    // disabled color mapping by default
+    m_colorMappingOutput = dataObject->processedOutputPort();
+    m_mapper->ScalarVisibilityOff();
+
+    m_mapper->SetInputConnection(m_colorMappingOutput);
 
     // don't break the lut configuration
     m_mapper->UseLookupTableScalarRangeOn();
-
-    m_mainActor->SetMapper(m_mapper);
-    m_mainActor->SetProperty(renderProperty());
 }
 
 RenderedPolyData::~RenderedPolyData() = default;
@@ -215,9 +215,21 @@ vtkProperty * RenderedPolyData::createDefaultRenderProperty() const
 vtkSmartPointer<vtkProp3DCollection> RenderedPolyData::fetchViewProps3D()
 {
     auto actors = RenderedData3D::fetchViewProps3D();
-    actors->AddItem(m_mainActor);
+    actors->AddItem(mainActor());
 
     return actors;
+}
+
+vtkActor * RenderedPolyData::mainActor()
+{
+    if (m_mainActor)
+        return m_mainActor;
+
+    m_mainActor = vtkSmartPointer<vtkActor>::New();
+    m_mainActor->SetMapper(m_mapper);
+    m_mainActor->SetProperty(renderProperty());
+
+    return m_mainActor;
 }
 
 void RenderedPolyData::scalarsForColorMappingChangedEvent()
@@ -227,19 +239,24 @@ void RenderedPolyData::scalarsForColorMappingChangedEvent()
     // no mapping yet, so just render the data set
     if (!m_scalars)
     {
-        m_mapperInput->SetInputConnection(dataObject()->processedOutputPort());
+        m_colorMappingOutput = dataObject()->processedOutputPort();
+        finalizePipeline();
         return;
     }
 
     m_scalars->configureMapper(this, m_mapper);
 
+    vtkSmartPointer<vtkAlgorithm> filter;
+
     if (m_scalars->usesFilter())
     {
-        vtkSmartPointer<vtkAlgorithm> filter = vtkSmartPointer<vtkAlgorithm>::Take(m_scalars->createFilter(this));
-        m_mapperInput->SetInputConnection(filter->GetOutputPort());
+        filter = vtkSmartPointer<vtkAlgorithm>::Take(m_scalars->createFilter(this));
+        m_colorMappingOutput = filter->GetOutputPort();
     }
     else
-        m_mapperInput->SetInputConnection(dataObject()->processedOutputPort());
+        m_colorMappingOutput = dataObject()->processedOutputPort();
+
+    finalizePipeline();
 }
 
 void RenderedPolyData::colorMappingGradientChangedEvent()
@@ -253,5 +270,20 @@ void RenderedPolyData::visibilityChangedEvent(bool visible)
 {
     RenderedData3D::visibilityChangedEvent(visible);
 
-    m_mainActor->SetVisibility(visible);
+    mainActor()->SetVisibility(visible);
+}
+
+void RenderedPolyData::finalizePipeline()
+{
+    m_mapper->SetInputConnection(m_colorMappingOutput);
+}
+
+vtkAlgorithmOutput * RenderedPolyData::colorMappingOutput()
+{
+    return m_colorMappingOutput;
+}
+
+vtkPolyDataMapper * RenderedPolyData::mapper()
+{
+    return m_mapper;
 }

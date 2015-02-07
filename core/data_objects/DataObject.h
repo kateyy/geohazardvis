@@ -39,7 +39,7 @@ public:
     virtual Context2DData * createContextData();
 
     QString name() const;
-    virtual QString dataTypeName() const = 0;
+    virtual const QString & dataTypeName() const = 0;
 
     vtkDataSet * dataSet();
     const vtkDataSet * dataSet() const;
@@ -48,6 +48,7 @@ public:
     virtual vtkAlgorithmOutput * processedOutputPort();
 
     const double * bounds();
+    void bounds(double b[6]);
 
     QVtkTableModel * tableModel();
 

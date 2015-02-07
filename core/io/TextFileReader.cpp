@@ -1,12 +1,17 @@
 #include "TextFileReader.h"
 
-#include <fstream>
-#include <sstream>
+#include <algorithm>
 #include <cassert>
+#include <fstream>
 #include <list>
+#include <limits>
 #include <map>
+#include <sstream>
 
-#include "common/file_parser.h"
+#include <vtkImageData.h>
+
+#include <core/vtkhelper.h>
+#include <core/common/file_parser.h>
 
 
 using namespace std;
@@ -21,8 +26,16 @@ const map<string, DatasetType> datasetNamesTypes = {
         { "vectorGrid3D", DatasetType::vectorGrid3D } };
 const map<string, ModelType> modelNamesType = {
         { "triangles", ModelType::triangles },
+        { "DEM", ModelType::DEM },
         { "grid2d", ModelType::grid2D },
         { "vectorGrid3D", ModelType::vectorGrid3D } };
+
+
+bool ignoreLine(const std::string & line)
+{
+    return line.empty() || line[0] == '#';
+}
+
 }
 
 InputFileInfo::InputFileInfo(const std::string & name, ModelType type)
@@ -44,14 +57,16 @@ shared_ptr<InputFileInfo> TextFileReader::read(const string & filename, vector<R
     vector<DatasetDef> datasetDefs;
     shared_ptr<InputFileInfo> input = readHeader(inputStream, datasetDefs);
 
-    if (!input) {
+    if (!input)
+    {
         cerr << "could not read input text file: \"" << filename << "\"" << endl;
         return nullptr;
     }
     assert(input);
 
-    for (const DatasetDef & datasetDef : datasetDefs) {
-        ReadDataset readData{datasetDef.type, {}, datasetDef.attributeName};
+    for (const DatasetDef & datasetDef : datasetDefs)
+    {
+        ReadDataset readData{ datasetDef.type, {}, datasetDef.attributeName, datasetDef.vtkMetaData };
 
         if (populateIOVectors(inputStream, readData.data,
             datasetDef.nbLines,
@@ -81,8 +96,7 @@ std::shared_ptr<InputFileInfo> TextFileReader::readHeader(ifstream & inputStream
     {
         getline(inputStream, line);
 
-        // ignore empty lines and comments
-        if (line.empty() || line[0] == '#')
+        if (ignoreLine(line))
             continue;
 
         if (line == "$begin") {
@@ -120,6 +134,9 @@ std::shared_ptr<InputFileInfo> TextFileReader::readHeader(ifstream & inputStream
             case ModelType::triangles:
                 validFile = readHeader_triangles(inputStream, inputDefs);
                 break;
+            case ModelType::DEM:
+                validFile = readHeader_DEM(inputStream, inputDefs);
+                break;
             case ModelType::grid2D:
                 validFile = readHeader_grid2D(inputStream, inputDefs);
                 break;
@@ -156,8 +173,7 @@ bool TextFileReader::readHeader_triangles(ifstream & inputStream, vector<Dataset
     {
         getline(inputStream, line);
 
-        // ignore empty lines and comments
-        if (line.empty() || line[0] == '#')
+        if (ignoreLine(line))
             continue;
 
         // this is the end if the header section, required for valid input files
@@ -215,6 +231,96 @@ bool TextFileReader::readHeader_triangles(ifstream & inputStream, vector<Dataset
     return false;
 }
 
+bool TextFileReader::readHeader_DEM(std::ifstream & inputStream, std::vector<DatasetDef>& inputDefs)
+{
+    string line;
+    int columns = -1, rows = -1;
+    double xCorner, yCorner, nanValue, cellSize;
+    xCorner = yCorner = nanValue = nan("");
+    cellSize = -1;
+
+    bool atEnd = false;
+
+    while (!inputStream.eof())
+    {
+        getline(inputStream, line);
+
+        if (ignoreLine(line))
+            continue;
+
+        if (line == "$end")
+        {
+            atEnd = true;
+            break;
+        }
+
+        if (!(line.substr(0, 2) == "$ "))
+        {
+            cerr << "Invalid line in input file: \n\t" << line << endl;
+            return false;
+        }
+
+        stringstream linestream(line.substr(2, string::npos));
+        string parameter, value;
+        getline(linestream, parameter, ' ');
+        getline(linestream, value);
+        value = value.substr(value.find_first_not_of(' '), string::npos);
+        replace(value.begin(), value.end(), ',', '.');
+
+        if (parameter == "ncols")
+        {
+            columns = stoi(value);
+            continue;
+        }
+        if (parameter == "nrows")
+        {
+            rows = stoi(value);
+            continue;
+        }
+        if (parameter == "xllcorner")
+        {
+            xCorner = stod(value);
+            continue;
+        }
+        if (parameter == "yllcorner")
+        {
+            yCorner = stod(value);
+            continue;
+        }
+        if (parameter == "cellsize")
+        {
+            cellSize = stod(value);
+            continue;
+        }
+        if (parameter == "NODATA_value")
+        {
+            nanValue = stod(value);
+            continue;
+        }
+    }
+
+    if (!atEnd)
+        return false;
+
+    if (columns <= 0 || rows <= 0 || isnan(xCorner) || isnan(yCorner) || cellSize <= 0)
+        return false;
+
+    VTK_CREATE(vtkImageData, image);
+    image->SetExtent(0, columns - 1, 0, rows - 1, 0, 0);
+    image->SetOrigin(xCorner, yCorner, 0);
+    image->SetSpacing(cellSize, cellSize, 0);
+
+    DatasetDef def;
+    def.type = DatasetType::grid2D;
+    def.nbColumns = columns;
+    def.nbLines = rows;
+    def.vtkMetaData = image;
+
+    inputDefs.push_back(def);
+
+    return true;
+}
+
 bool TextFileReader::readHeader_grid2D(ifstream & inputStream, vector<DatasetDef> & inputDefs)
 {
     string line;
@@ -224,7 +330,7 @@ bool TextFileReader::readHeader_grid2D(ifstream & inputStream, vector<DatasetDef
     {
         getline(inputStream, line);
 
-        if (line.empty() || line[0] == '#')
+        if (ignoreLine(line))
             continue;
 
         if (line == "$end")
@@ -272,7 +378,7 @@ bool TextFileReader::readHeader_vectorGrid3D(std::ifstream & inputStream, std::v
     {
         getline(inputStream, line);
 
-        if (line.empty() || line[0] == '#')
+        if (ignoreLine(line))
             continue;
 
         if (line == "$end")

@@ -17,6 +17,7 @@ class MatricesToVtk
 {
 public:
     static DataObject * loadIndexedTriangles(QString name, const std::vector<ReadDataset> & datasets);
+    static DataObject * loadDEM(QString name, const std::vector<ReadDataset> & datasets);
     static DataObject * loadGrid2D(QString name, const std::vector<ReadDataset> & datasets);
     static DataObject * loadGrid3D(QString name, const std::vector<ReadDataset> & datasets);
 

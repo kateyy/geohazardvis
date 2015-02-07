@@ -1,11 +1,9 @@
 #include "VertexComponentColorMapping.h"
 
-#include <vtkDataSet.h>
 #include <vtkAssignAttribute.h>
 #include <vtkMapper.h>
 
 #include <core/vtkhelper.h>
-#include <core/AbstractVisualizedData.h>
 #include <core/types.h>
 #include <core/data_objects/PolyDataObject.h>
 #include <core/rendered_data/RenderedPolyData.h>
@@ -105,7 +103,7 @@ QMap<vtkIdType, QPair<double, double>> VertexComponentColorMapping::updateBounds
 
     for (AbstractVisualizedData * vis: m_visualizedData)
     {
-        const double * objectBounds = vis->dataObject()->dataSet()->GetBounds();
+        const double * objectBounds = vis->dataObject()->bounds();
 
         totalMin = std::min(totalMin, objectBounds[2 * m_component]);
         totalMax = std::max(totalMax, objectBounds[2 * m_component + 1]);

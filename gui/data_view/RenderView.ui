@@ -60,9 +60,9 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>QVTKWidget</class>
-   <extends>QWidget</extends>
-   <header>QVTKWidget.h</header>
+   <class>QVTKWidget2</class>
+   <extends>QGLWidget</extends>
+   <header>QVTKWidget2.h</header>
   </customwidget>
  </customwidgets>
  <resources/>

@@ -54,6 +54,8 @@ set ( SOURCES
     filters/vtkImageDataLIC2D.h
     filters/vtkImageDataLIC2D.cpp
 
+    io/Exporter.h
+    io/Exporter.cpp
     io/Loader.h
     io/Loader.cpp
     io/TextFileReader.h
@@ -129,7 +131,7 @@ set ( SOURCES
     glyph_mapping/Grid3dGlyphMapping.cpp
     glyph_mapping/PolyDataAttributeGlyphMapping.h
     glyph_mapping/PolyDataAttributeGlyphMapping.cpp
-    
+
     reflectionzeug_extension/QStringProperty.h
     reflectionzeug_extension/QStringProperty.hpp
     reflectionzeug_extension/QStringProperty.cpp
@@ -146,8 +148,7 @@ else()
 endif()
 
 target_link_libraries( ${TARGET}
-    ${LIBZEUG_REFLECTION_LIBRARY}
-    ${LIBZEUG_SIGNAL_LIBRARY}
+    ${LIBZEUG_LIBRARIES}
     ${VTK_LIBRARIES}
     Qt5::Core
 )

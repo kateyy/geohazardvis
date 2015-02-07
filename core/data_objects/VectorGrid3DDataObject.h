@@ -22,7 +22,8 @@ public:
 
     void addDataArray(vtkDataArray * dataArray) override;
 
-    QString dataTypeName() const override;
+    const QString & dataTypeName() const override;
+    static const QString & dataTypeName_s();
 
     /** @return vtkImageData with 3-component vectors assigned to point scalars */
     vtkDataSet * processedDataSet() override;

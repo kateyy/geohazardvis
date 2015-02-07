@@ -9,11 +9,6 @@
 #include <core/table_model/QVtkTableModelVectorGrid3D.h>
 
 
-namespace
-{
-const QString s_dataTypeName = "3D vector grid";
-}
-
 VectorGrid3DDataObject::VectorGrid3DDataObject(QString name, vtkImageData * dataSet)
     : DataObject(name, dataSet)
     , m_vectorsToScalars(vtkSmartPointer<vtkAssignAttribute>::New())
@@ -39,9 +34,15 @@ void VectorGrid3DDataObject::addDataArray(vtkDataArray * dataArray)
     dataSet()->GetPointData()->AddArray(dataArray);
 }
 
-QString VectorGrid3DDataObject::dataTypeName() const
+const QString & VectorGrid3DDataObject::dataTypeName() const
 {
-    return s_dataTypeName;
+    return dataTypeName_s();
+}
+
+const QString & VectorGrid3DDataObject::dataTypeName_s()
+{
+    static const QString name{ "3D vector grid" };
+    return name;
 }
 
 vtkDataSet * VectorGrid3DDataObject::processedDataSet()

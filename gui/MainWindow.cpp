@@ -4,6 +4,7 @@
 #include <cassert>
 
 #include <QFileDialog>
+#include <QFileInfo>
 #include <QMessageBox>
 #include <QDragEnterEvent>
 #include <QMimeData>
@@ -12,6 +13,7 @@
 #include <core/vtkhelper.h>
 #include <core/DataSetHandler.h>
 #include <core/data_objects/DataObject.h>
+#include <core/io/Exporter.h>
 #include <core/io/Loader.h>
 #include <core/rendered_data/RenderedData.h>
 
@@ -20,6 +22,7 @@
 #include <gui/data_view/RenderView.h>
 #include <gui/widgets/CanvasExporterWidget.h>
 #include <gui/widgets/ColorMappingChooser.h>
+#include <gui/widgets/DEMWidget.h>
 #include <gui/widgets/GlyphMappingChooser.h>
 #include <gui/widgets/RenderConfigWidget.h>
 #include <gui/widgets/RendererConfigWidget.h>
@@ -139,6 +142,12 @@ void MainWindow::openFiles(QStringList fileNames)
     {
         qDebug() << " <" << fileName;
 
+        if (!QFileInfo(fileName).exists())
+        {
+            qDebug() << "\t\t File does not exist!";
+            continue;
+        }
+
         setWindowTitle(fileName + " (loading file)");
         QApplication::processEvents();
 
@@ -163,6 +172,45 @@ void MainWindow::on_actionOpen_triggered()
     openFiles(dialog_inputFileName());
 }
 
+void MainWindow::on_actionExportDataset_triggered()
+{
+    auto toExport = m_dataBrowser->selectedDataObjects();
+    if (toExport.isEmpty())
+    {
+        QMessageBox::information(this, "Dataset Export", "Please select datasets to export in the data browser!");
+        return;
+    }
+
+    QString oldName = windowTitle();
+
+    for (DataObject * data : toExport)
+    {
+        bool isSupported = Exporter::isExportSupported(data);
+        if (!isSupported)
+        {
+            QMessageBox::warning(this, "Unsuppored Operation",
+                "Exporting is currently not supported for the selected data type (" + data->dataTypeName() + ")\n"
+                + "Data set: """ + data->name() + """");
+            continue;
+        }
+
+        QString fileName = QFileDialog::getSaveFileName(this, "", m_lastExportFolder + "/" + data->name(),
+            Exporter::formatFilter(data));
+
+        if (fileName.isEmpty())
+            continue;
+
+        setWindowTitle("Exporting " + QFileInfo(fileName).baseName() + " ...");
+        QApplication::processEvents();
+
+        Exporter::exportData(data, fileName);
+
+        m_lastExportFolder = QFileInfo(fileName).absolutePath();
+    }
+
+    setWindowTitle(oldName);
+}
+
 void MainWindow::on_actionAbout_Qt_triggered()
 {
     QMessageBox::aboutQt(this);
@@ -171,6 +219,14 @@ void MainWindow::on_actionAbout_Qt_triggered()
 void MainWindow::on_actionNew_Render_View_triggered()
 {
     m_dataMapping->openInRenderView({});
+}
+
+void MainWindow::on_actionApply_Digital_Elevation_Model_triggered()
+{
+    DEMWidget * demWidget = new DEMWidget();
+    demWidget->setAttribute(Qt::WA_DeleteOnClose);
+    demWidget->setWindowModality(Qt::ApplicationModal);
+    demWidget->show();
 }
 
 void MainWindow::tabbedDockWidgetToFront(QDockWidget * widget)

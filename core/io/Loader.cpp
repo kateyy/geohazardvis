@@ -3,11 +3,15 @@
 #include <QFileInfo>
 #include <QDebug>
 
+#include <vtkExecutive.h>
 #include <vtkImageData.h>
+#include <vtkPolyData.h>
 #include <vtkXMLImageDataReader.h>
+#include <vtkXMLPolyDataReader.h>
 
 #include <core/vtkhelper.h>
 #include <core/data_objects/ImageDataObject.h>
+#include <core/data_objects/PolyDataObject.h>
 #include <core/data_objects/VectorGrid3DDataObject.h>
 #include <core/io/TextFileReader.h>
 #include <core/io/MatricesToVtk.h>
@@ -26,8 +30,10 @@ DataObject * Loader::readFile(const QString & filename)
     {
         VTK_CREATE(vtkXMLImageDataReader, reader);
         reader->SetFileName(filename.toUtf8().data());
-        reader->Update();
-        vtkSmartPointer<vtkImageData> image = reader->GetOutput();
+
+        vtkSmartPointer<vtkImageData> image;
+        if (reader->GetExecutive()->Update() == 1)
+            image = reader->GetOutput();
 
         if (!image)
         {
@@ -48,6 +54,24 @@ DataObject * Loader::readFile(const QString & filename)
         }
     }
 
+    if (ext == "vtp")
+    {
+        VTK_CREATE(vtkXMLPolyDataReader, reader);
+        reader->SetFileName(filename.toUtf8().data());
+
+        vtkSmartPointer<vtkPolyData> polyData;
+        if (reader->GetExecutive()->Update() == 1)
+            polyData = reader->GetOutput();
+
+        if (!polyData)
+        {
+            qDebug() << "Invalid VTK PolyData file: " << filename;
+            return nullptr;
+        }
+
+        return new PolyDataObject(baseName, polyData);
+    }
+
     // handle all other files as our text file format
     return loadTextFile(filename);
 }
@@ -64,6 +88,8 @@ DataObject * Loader::loadTextFile(const QString & filename)
     {
     case ModelType::triangles:
         return MatricesToVtk::loadIndexedTriangles(dataSetName, readDatasets);
+    case ModelType::DEM:
+        return MatricesToVtk::loadDEM(dataSetName, readDatasets);
     case ModelType::grid2D:
         return MatricesToVtk::loadGrid2D(dataSetName, readDatasets);
     case ModelType::vectorGrid3D:

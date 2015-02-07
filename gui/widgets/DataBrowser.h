@@ -22,6 +22,9 @@ public:
     void setDataMapping(DataMapping * dataMapping);
 
     void setSelectedData(DataObject * data);
+    QList<DataObject *> selectedDataObjects() const;
+    QList<DataObject *> selectedDataSets() const;
+    QList<DataObject *> selectedAttributeVectors() const;
 
 signals:
     void selectedDataChanged(DataObject * data);
@@ -44,11 +47,6 @@ private slots:
     void removeFile();
 
     void evaluateItemViewClick(const QModelIndex & index, const QPoint & position);
-
-private:
-    QList<DataObject *> selectedDataObjects() const;
-    QList<DataObject *> selectedDataSets() const;
-    QList<DataObject *> selectedAttributeVectors() const;
 
 private:
     Ui_DataBrowser * m_ui;

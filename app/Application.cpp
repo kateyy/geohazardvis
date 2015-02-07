@@ -1,6 +1,5 @@
 #include "Application.h"
 
-#include <QFileInfo>
 #include <QDebug>
 
 #include <gui/MainWindow.h>
@@ -17,12 +16,9 @@ void Application::startup()
     m_mainWindow = new MainWindow();
     m_mainWindow->show();
 
-    QStringList fileNames;
-    
+    QStringList fileNames = arguments();
     // skip the executable path
-    for (int i = 1; i < arguments().size(); ++i)
-        if (QFileInfo(arguments()[i]).exists())
-            fileNames << arguments()[i];
+    fileNames.removeFirst();
 
     if (!fileNames.isEmpty())
         m_mainWindow->openFiles(fileNames);

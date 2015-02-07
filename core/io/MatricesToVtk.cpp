@@ -69,13 +69,47 @@ DataObject * MatricesToVtk::loadIndexedTriangles(QString name, const std::vector
     return new PolyDataObject(name, polyData);
 }
 
+DataObject * MatricesToVtk::loadDEM(QString name, const std::vector<ReadDataset> & datasets)
+{
+    assert(datasets.size() == 1);
+    assert(datasets.begin()->type == DatasetType::grid2D);
+    vtkSmartPointer<vtkImageData> image = vtkImageData::SafeDownCast( datasets.begin()->vtkMetaData);
+    assert(image);
+
+    const auto & data = datasets.begin()->data;
+
+    int dims[3];
+    image->GetDimensions(dims);
+
+    assert(dims[0] > 0 && dims[1] > 0 && dims[2] == 1);
+
+    if (data.size() != dims[1] || data.at(0).size() != dims[0])
+        return nullptr;
+
+    image->AllocateScalars(VTK_FLOAT, 1);
+    image->GetPointData()->GetScalars()->SetName(name.toUtf8().data());
+
+    for (int x = 0; x < dims[0]; ++x)
+    {
+        for (int y = 0; y < dims[1]; ++y)
+        {
+            float * scalars = reinterpret_cast<float *>(image->GetScalarPointer(x, y, 0));
+            *scalars = data.at(y).at(x);
+        }
+    }
+
+    DataObject * dataObject = new ImageDataObject(name, image);
+
+    return dataObject;
+}
+
 DataObject * MatricesToVtk::loadGrid2D(QString name, const std::vector<ReadDataset> & datasets)
 {
     assert(datasets.size() == 1);
     assert(datasets.begin()->type == DatasetType::grid2D);
-    const InputVector * inputData = &datasets.begin()->data;
+    const InputVector & inputData = datasets.begin()->data;
 
-    int dimensions[3] = { static_cast<int>(inputData->size()), static_cast<int>(inputData->at(0).size()), 1 };
+    int dimensions[3] = { static_cast<int>(inputData.size()), static_cast<int>(inputData.at(0).size()), 1 };
 
     VTK_CREATE(vtkImageData, grid);
     // assign scalars to points
@@ -91,7 +125,7 @@ DataObject * MatricesToVtk::loadGrid2D(QString name, const std::vector<ReadDatas
         for (int c = 0; c < dimensions[0]; ++c)
         {
             vtkIdType id = c + rOffset;
-            float value = inputData->at(c).at(r);
+            float value = inputData.at(c).at(r);
             cellArray->SetValue(id, value);
         }
     }

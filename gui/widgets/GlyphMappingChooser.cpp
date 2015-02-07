@@ -3,33 +3,28 @@
 
 #include <reflectionzeug/PropertyGroup.h>
 #include <reflectionzeug/StringProperty.h>
-#include <propertyguizeug/PropertyBrowser.h>
 
 #include <core/DataSetHandler.h>
 #include <core/data_objects/DataObject.h>
 #include <core/rendered_data/RenderedData3D.h>
 #include <core/glyph_mapping/GlyphMapping.h>
 #include <core/glyph_mapping/GlyphMappingData.h>
-#include <gui/propertyguizeug_extension/PropertyEditorFactoryEx.h>
-#include <gui/propertyguizeug_extension/PropertyPainterEx.h>
 #include <gui/data_view/RenderView.h>
+#include <gui/propertyguizeug_extension/ColorEditorRGB.h>
 
 #include "GlyphMappingChooserListModel.h"
-
-
-using namespace propertyguizeug;
 
 
 GlyphMappingChooser::GlyphMappingChooser(QWidget * parent, Qt::WindowFlags flags)
     : QDockWidget(parent, flags)
     , m_ui(new Ui_GlyphMappingChooser())
-    , m_propertyBrowser(new PropertyBrowser(new PropertyEditorFactoryEx(), new PropertyPainterEx(), this))
     , m_renderView(nullptr)
     , m_mapping(nullptr)
     , m_listModel(new GlyphMappingChooserListModel())
 {
     m_ui->setupUi(this);
-    m_ui->propertyBrowserContainer->layout()->addWidget(m_propertyBrowser);
+    m_ui->propertyBrowser->addEditorPlugin<ColorEditorRGB>();
+    m_ui->propertyBrowser->addPainterPlugin<ColorEditorRGB>();
 
     m_listModel->setParent(m_ui->vectorsListView);
     m_ui->vectorsListView->setModel(m_listModel);
@@ -124,7 +119,7 @@ void GlyphMappingChooser::updateVectorsList()
 {
     updateGuiForSelection();
 
-    m_propertyBrowser->setRoot(nullptr);
+    m_ui->propertyBrowser->setRoot(nullptr);
     qDeleteAll(m_propertyGroups);
     m_propertyGroups.clear();
 
@@ -155,7 +150,7 @@ void GlyphMappingChooser::updateGuiForSelection(const QItemSelection & selection
 
     if (selection.indexes().isEmpty())
     {
-        m_propertyBrowser->setRoot(nullptr);
+        m_ui->propertyBrowser->setRoot(nullptr);
         m_ui->propertyBrowserContainer->setTitle("(no selection)");
     }
     else
@@ -163,7 +158,7 @@ void GlyphMappingChooser::updateGuiForSelection(const QItemSelection & selection
         int index = selection.indexes().first().row();
         QString vectorsName = m_mapping->vectorNames()[index];
 
-        m_propertyBrowser->setRoot(m_propertyGroups[index]);
+        m_ui->propertyBrowser->setRoot(m_propertyGroups[index]);
         m_ui->propertyBrowserContainer->setTitle(vectorsName);
     }
 }

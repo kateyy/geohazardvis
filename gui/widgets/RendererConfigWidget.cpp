@@ -15,18 +15,15 @@
 #include <vtkContextView.h>
 
 #include <reflectionzeug/PropertyGroup.h>
-#include <propertyguizeug/PropertyBrowser.h>
 
 #include <core/types.h>
 #include <gui/data_view/RenderView.h>
 #include <gui/data_view/RendererImplementation3D.h>
 #include <gui/data_view/RendererImplementationPlot.h>
-#include <gui/propertyguizeug_extension/PropertyEditorFactoryEx.h>
-#include <gui/propertyguizeug_extension/PropertyPainterEx.h>
+#include <gui/propertyguizeug_extension/ColorEditorRGB.h>
 
 
 using namespace reflectionzeug;
-using namespace propertyguizeug;
 
 namespace
 {
@@ -50,16 +47,16 @@ enum class Notation
 RendererConfigWidget::RendererConfigWidget(QWidget * parent)
     : QDockWidget(parent)
     , m_ui(new Ui_RendererConfigWidget())
-    , m_propertyBrowser(new PropertyBrowser(new PropertyEditorFactoryEx(), new PropertyPainterEx(), this))
     , m_propertyRoot(nullptr)
     , m_currentRenderView(nullptr)
     , m_eventConnect(vtkSmartPointer<vtkEventQtSlotConnect>::New())
     , m_eventEmitters(vtkSmartPointer<vtkCollection>::New())
 {
     m_ui->setupUi(this);
-    m_ui->mainLayout->addWidget(m_propertyBrowser);
 
-    m_propertyBrowser->setAlwaysExpandGroups(true);
+    m_ui->propertyBrowser->addEditorPlugin<ColorEditorRGB>();
+    m_ui->propertyBrowser->addPainterPlugin<ColorEditorRGB>();
+    m_ui->propertyBrowser->setAlwaysExpandGroups(true);
 
     connect(m_ui->relatedRenderer, static_cast<void(QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
         this, static_cast<void(RendererConfigWidget::*)(int)>(&RendererConfigWidget::setCurrentRenderView));
@@ -107,7 +104,7 @@ void RendererConfigWidget::setCurrentRenderView(RenderView * renderView)
 
 void RendererConfigWidget::setCurrentRenderView(int index)
 {
-    m_propertyBrowser->setRoot(nullptr);
+    m_ui->propertyBrowser->setRoot(nullptr);
     delete m_propertyRoot;
     m_propertyRoot = nullptr;
 
@@ -120,8 +117,8 @@ void RendererConfigWidget::setCurrentRenderView(int index)
     assert(m_currentRenderView);
 
     m_propertyRoot = createPropertyGroup(m_currentRenderView);
-    m_propertyBrowser->setRoot(m_propertyRoot);
-    m_propertyBrowser->setColumnWidth(0, 135);
+    m_ui->propertyBrowser->setRoot(m_propertyRoot);
+    m_ui->propertyBrowser->setColumnWidth(0, 135);
 
 
     RendererImplementation3D * impl3D;

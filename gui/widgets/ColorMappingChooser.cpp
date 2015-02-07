@@ -141,7 +141,7 @@ void ColorMappingChooser::maxValueChanged(double value)
 
 vtkLookupTable * ColorMappingChooser::selectedGradient() const
 {
-    return m_gradients[m_ui->gradientComboBox->currentIndex()];
+    return m_gradients.value(m_ui->gradientComboBox->currentIndex());
 }
 
 void ColorMappingChooser::on_legendPositionComboBox_currentIndexChanged(QString position)

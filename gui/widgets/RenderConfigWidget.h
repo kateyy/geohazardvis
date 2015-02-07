@@ -7,10 +7,6 @@ namespace reflectionzeug
 {
     class PropertyGroup;
 }
-namespace propertyguizeug
-{
-    class PropertyBrowser;
-}
 class Ui_RenderConfigWidget;
 class DataObject;
 class AbstractVisualizedData;
@@ -40,7 +36,6 @@ protected:
 
 protected:
     Ui_RenderConfigWidget * m_ui;
-    propertyguizeug::PropertyBrowser * m_propertyBrowser;
 
     reflectionzeug::PropertyGroup * m_propertyRoot;
 
