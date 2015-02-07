@@ -20,6 +20,44 @@
 using namespace std;
 
 
+const QString & Loader::fileFormatFilters()
+{
+    static QString f;
+    if (f.isEmpty())
+    {
+        f = "All Supported Files (";
+        QSet<QString> allExts;
+        for (auto && it : fileFormatExtensions())
+            for (auto && ext : it)
+                allExts << ext;
+
+        for (auto && ext : allExts)
+            f += "*." + ext + " ";
+
+        f += ")";
+
+        for (auto && it = fileFormatExtensions().begin(); it != fileFormatExtensions().end(); ++it)
+        {
+            f += ";;" + it.key() + " (";
+            for (auto && ext : it.value())
+                f += "*." + ext + " ";
+            f += ")";
+        }
+    }
+
+    return f;        
+}
+
+const QMap<QString, QList<QString>> & Loader::fileFormatExtensions()
+{
+    static QMap<QString, QList<QString>> m = { 
+        { "Text files", { "txt" } }, 
+        { "VTK XML Image Files", { "vti" } }, 
+        { "VTK XML PolyData Files", { "vtp" } }
+    };
+    return m;
+}
+
 DataObject * Loader::readFile(const QString & filename)
 {
     QFileInfo fileInfo{ filename };
