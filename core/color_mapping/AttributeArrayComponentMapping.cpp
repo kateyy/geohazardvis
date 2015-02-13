@@ -181,8 +181,18 @@ QMap<vtkIdType, QPair<double, double>> AttributeArrayComponentMapping::updateBou
 
             double range[2];
             dataArray->GetRange(range, c);
+
+            // ignore arrays with invalid data
+            if (range[1] < range[0])
+                continue;
+
             totalMin = std::min(totalMin, range[0]);
             totalMax = std::max(totalMax, range[1]);
+        }
+
+        if (totalMin > totalMax)    // invalid data in all arrays on this component
+        {
+            totalMin = totalMax = 0;
         }
 
         bounds.insert(c, { totalMin, totalMax });
