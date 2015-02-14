@@ -1,5 +1,7 @@
 #pragma once
 
+#include <QString>
+
 #include <core/rendered_data/RenderedData3D.h>
 
 
@@ -21,6 +23,9 @@ public:
     const PolyDataObject * polyDataObject() const;
 
     reflectionzeug::PropertyGroup * createConfigGroup() override;
+
+    const QString & texture() const;
+    void setTexture(const QString & fileName);
 
 protected:
     vtkProperty * createDefaultRenderProperty() const override;
@@ -45,4 +50,6 @@ private:
     vtkSmartPointer<vtkPolyDataNormals> m_normals;      // required for lighting/interpolation
 
     vtkSmartPointer<vtkAlgorithmOutput> m_colorMappingOutput;
+
+    QString m_textureFileName;
 };

@@ -10,6 +10,8 @@ set ( SOURCES
     DataSetHandler.h
     DataSetHandler.cpp
     types.h
+    TextureManager.h
+    TextureManager.cpp
     vtkcamerahelper.h
     vtkcamerahelper.cpp
     vtkhelper.h

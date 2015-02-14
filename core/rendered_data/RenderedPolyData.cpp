@@ -17,10 +17,14 @@
 #include <vtkProperty.h>
 #include <vtkActor.h>
 #include <vtkProp3DCollection.h>
+#include <vtkImageData.h>
+#include <vtkTexture.h>
+#include <vtkTextureMapToPlane.h>
 
 #include <reflectionzeug/PropertyGroup.h>
 
 #include <core/vtkhelper.h>
+#include <core/TextureManager.h>
 #include <core/data_objects/PolyDataObject.h>
 #include <core/color_mapping/ColorMappingData.h>
 
@@ -84,12 +88,20 @@ reflectionzeug::PropertyGroup * RenderedPolyData::createConfigGroup()
     PropertyGroup * renderSettings = new PropertyGroup();
 
     renderSettings->addProperty<Color>("color",
-        [this]() {
+        [this] () {
         double * color = renderProperty()->GetColor();
         return Color(static_cast<int>(color[0] * 255), static_cast<int>(color[1] * 255), static_cast<int>(color[2] * 255));
     },
-        [this](const Color & color) {
+        [this] (const Color & color) {
         renderProperty()->SetColor(color.red() / 255.0, color.green() / 255.0, color.blue() / 255.0);
+        emit geometryChanged();
+    });
+
+    renderSettings->addProperty<FilePath>("texture",
+        [this] () { return texture().toStdString(); },
+        [this] (const FilePath & filePath) {
+        QString file = QString::fromStdString(filePath.toString());
+        setTexture(file);
         emit geometryChanged();
     });
 
@@ -197,6 +209,23 @@ reflectionzeug::PropertyGroup * RenderedPolyData::createConfigGroup()
     return renderSettings;
 }
 
+const QString & RenderedPolyData::texture() const
+{
+    return m_textureFileName;
+}
+
+void RenderedPolyData::setTexture(const QString & fileName)
+{
+    if (m_textureFileName == fileName)
+        return;
+
+    m_textureFileName = fileName;
+
+    auto tex = TextureManager::fromFile(m_textureFileName);
+
+    mainActor()->SetTexture(tex);
+}
+
 vtkProperty * RenderedPolyData::createDefaultRenderProperty() const
 {
     vtkProperty * prop = vtkProperty::New();
@@ -275,7 +304,11 @@ void RenderedPolyData::visibilityChangedEvent(bool visible)
 
 void RenderedPolyData::finalizePipeline()
 {
-    m_mapper->SetInputConnection(m_colorMappingOutput);
+    VTK_CREATE(vtkTextureMapToPlane, textureCoords);
+    textureCoords->SetInputConnection(m_colorMappingOutput);
+    textureCoords->SetNormal(0, 0, 1);
+
+    m_mapper->SetInputConnection(textureCoords->GetOutputPort());
 }
 
 vtkAlgorithmOutput * RenderedPolyData::colorMappingOutput()

@@ -16,6 +16,7 @@
 #include <core/io/Exporter.h>
 #include <core/io/Loader.h>
 #include <core/rendered_data/RenderedData.h>
+#include <core/TextureManager.h>
 
 #include <gui/DataMapping.h>
 #include <gui/SelectionHandler.h>
@@ -38,6 +39,8 @@ MainWindow::MainWindow()
     , m_rendererConfigWidget(new RendererConfigWidget())
     , m_canvasExporter(new CanvasExporterWidget(this))
 {
+    TextureManager::initialize();
+
     m_ui->setupUi(this);
 
     m_dataBrowser = m_ui->centralwidget;
@@ -87,6 +90,8 @@ MainWindow::~MainWindow()
     // wait to close all views
     QApplication::processEvents();
     delete m_ui;
+
+    TextureManager::release();
 }
 
 QStringList MainWindow::dialog_inputFileName()
