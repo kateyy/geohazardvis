@@ -39,6 +39,8 @@ private:
     void updatePreview();
     void setupDEMStages();
 
+    void updateAvailableDataSets();
+
     void updateDEMGeoPosition();
     void updateMeshScale();
     void updateView();

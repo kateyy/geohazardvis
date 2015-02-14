@@ -39,32 +39,7 @@ DEMWidget::DEMWidget(QWidget * parent, Qt::WindowFlags f)
 {
     m_ui->setupUi(this);
 
-    auto dataObjectsToUi = [this] ()
-    {
-        m_surfaceMeshes.clear();
-        m_dems.clear();
-        m_ui->surfaceMeshCombo->clear();
-        m_ui->demCombo->clear();
-
-        for (DataObject * data : DataSetHandler::instance().dataSets())
-        {
-            if (auto p = dynamic_cast<PolyDataObject *>(data))
-            {
-                if (p->is2p5D())
-                    m_surfaceMeshes << p;
-            }
-            else if (auto i = dynamic_cast<ImageDataObject *>(data))
-                m_dems << i;
-        }
-
-        for (auto p : m_surfaceMeshes)
-            m_ui->surfaceMeshCombo->addItem(p->name());
-
-        for (auto d : m_dems)
-            m_ui->demCombo->addItem(d->name());
-    };
-
-    dataObjectsToUi();
+    updateAvailableDataSets();
 
     setupDEMStages();
 
@@ -93,7 +68,7 @@ DEMWidget::DEMWidget(QWidget * parent, Qt::WindowFlags f)
     });
 
 
-    connect(&DataSetHandler::instance(), &DataSetHandler::dataObjectsChanged, dataObjectsToUi);
+    connect(&DataSetHandler::instance(), &DataSetHandler::dataObjectsChanged, this, &DEMWidget::updateAvailableDataSets);
 }
 
 DEMWidget::~DEMWidget()
@@ -258,6 +233,31 @@ void DEMWidget::setupDEMStages()
     m_demWarpElevation->SetInputConnection(probe->GetOutputPort());
 }
 
+void DEMWidget::updateAvailableDataSets()
+{
+    m_surfaceMeshes.clear();
+    m_dems.clear();
+    m_ui->surfaceMeshCombo->clear();
+    m_ui->demCombo->clear();
+
+    for (DataObject * data : DataSetHandler::instance().dataSets())
+    {
+        if (auto p = dynamic_cast<PolyDataObject *>(data))
+        {
+            if (p->is2p5D())
+                m_surfaceMeshes << p;
+        }
+        else if (auto i = dynamic_cast<ImageDataObject *>(data))
+            m_dems << i;
+    }
+
+    for (auto p : m_surfaceMeshes)
+        m_ui->surfaceMeshCombo->addItem(p->name());
+
+    for (auto d : m_dems)
+        m_ui->demCombo->addItem(d->name());
+}
+
 void DEMWidget::updateDEMGeoPosition()
 {
     const double earthR = 6378.138;
@@ -312,6 +312,5 @@ void DEMWidget::updateView()
         m_axesActor->SetBounds(bounds);
     }
 
-    m_renderer->ResetCamera();
     m_ui->qvtkMain->GetRenderWindow()->Render();
 }
