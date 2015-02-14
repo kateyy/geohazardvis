@@ -3,6 +3,7 @@
 
 #include <QMessageBox>
 
+#include <vtkActor.h>
 #include <vtkCamera.h>
 #include <vtkCubeAxesActor.h>
 #include <vtkPropCollection.h>
@@ -192,7 +193,16 @@ void DEMWidget::updatePreview()
     auto props = m_renderedPreview->viewProps();
     props->InitTraversal();
     while (auto p = props->GetNextProp())
+    {
+        vtkActor * actor; vtkProperty * property;
+        if ((actor = vtkActor::SafeDownCast(p)) && (property = actor->GetProperty()))
+        {
+            property->LightingOn();
+            property->EdgeVisibilityOff();
+        }
+
         m_renderer->AddViewProp(p);
+    }
     m_renderer->AddViewProp(m_axesActor);
 
     updateView();
