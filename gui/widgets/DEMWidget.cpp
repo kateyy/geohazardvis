@@ -18,6 +18,7 @@
 #include <vtkImageShiftScale.h>
 #include <vtkMath.h>
 #include <vtkPolyData.h>
+#include <vtkPointData.h>
 #include <vtkProbeFilter.h>
 #include <vtkTransform.h>
 #include <vtkTransformFilter.h>
@@ -28,6 +29,7 @@
 #include <core/vtkhelper.h>
 #include <core/data_objects/ImageDataObject.h>
 #include <core/data_objects/PolyDataObject.h>
+#include <core/filters/DataSetCleaner.h>
 #include <core/rendered_data/RenderedData.h>
 #include <gui/rendering_interaction/InteractorStyle3D.h>
 
@@ -35,6 +37,7 @@
 DEMWidget::DEMWidget(QWidget * parent, Qt::WindowFlags f)
     : QWidget(parent, f)
     , m_ui{ new Ui_DEMWidget }
+    , m_currentDEM{ nullptr }
     , m_dataPreview{ nullptr }
     , m_renderedPreview{ nullptr }
 {
@@ -87,7 +90,10 @@ bool DEMWidget::save()
         return false;
     }
 
-    auto newData = new PolyDataObject(m_ui->newSurfaceModelName->text(), m_dataPreview->polyDataSet());
+    VTK_CREATE(vtkPolyData, surface);
+    surface->DeepCopy(m_dataPreview->polyDataSet());
+
+    auto newData = new PolyDataObject(m_ui->newSurfaceModelName->text(), surface);
     DataSetHandler::instance().addData({ newData });
 
     return true;
@@ -95,8 +101,16 @@ bool DEMWidget::save()
 
 void DEMWidget::saveAndClose()
 {
+    disconnect(&DataSetHandler::instance(), &DataSetHandler::dataObjectsChanged,
+        this, &DEMWidget::updateAvailableDataSets);
+
     if (save())
         close();
+
+    updateAvailableDataSets();
+
+    connect(&DataSetHandler::instance(), &DataSetHandler::dataObjectsChanged,
+        this, &DEMWidget::updateAvailableDataSets);
 }
 
 void DEMWidget::showEvent(QShowEvent * /*event*/)
@@ -168,23 +182,39 @@ void DEMWidget::updatePreview()
         return;
 
     int demIndex = m_ui->demCombo->currentIndex();
-    ImageDataObject * dem = m_dems.value(demIndex, nullptr);
+    m_currentDEM = m_dems.value(demIndex, nullptr);
     PolyDataObject * surface = m_surfaceMeshes[surfaceIdx];
 
-    if (dem)
-        m_demTranslate->SetInputConnection(dem->processedOutputPort());
+    QString demScalarsName;
+
+    if (m_currentDEM)
+    {
+        m_demTranslate->SetInputDataObject(m_currentDEM->dataSet());
+        demScalarsName = QString::fromUtf8(
+            m_currentDEM->dataSet()->GetPointData()->GetScalars()->GetName());
+    }
     else
     {
         VTK_CREATE(vtkImageData, nullDEM);
         nullDEM->SetExtent(0, 0, 0, 0, 0, 0);
         nullDEM->AllocateScalars(VTK_FLOAT, 1);
         reinterpret_cast<float *>(nullDEM->GetScalarPointer())[0] = 0.f;
+        demScalarsName = "DEMdata";
+        nullDEM->GetPointData()->GetScalars()->SetName(
+            demScalarsName.toUtf8().data());
         m_demTranslate->SetInputData(nullDEM);
     }
-    m_meshTransform->SetInputConnection(surface->processedOutputPort());
 
-    m_demWarpElevation->Update();
-    vtkPolyData * newDataSet = vtkPolyData::SafeDownCast(m_demWarpElevation->GetOutput());
+    m_meshTransform->SetInputData(surface->dataSet());
+
+    VTK_CREATE(DataSetCleaner, dataSetCleaner);
+    dataSetCleaner->SetInputConnection(m_demWarpElevation->GetOutputPort());
+    dataSetCleaner->AddArrayToRemove(demScalarsName.toUtf8().data());
+    dataSetCleaner->AddArrayToRemove("vtkValidPointMask");
+    dataSetCleaner->Update();
+
+    vtkPolyData * newDataSet = vtkPolyData::SafeDownCast(
+        dataSetCleaner->GetOutput());
     assert(newDataSet);
 
     m_dataPreview = new PolyDataObject("", newDataSet);
@@ -209,14 +239,13 @@ void DEMWidget::updatePreview()
 
     m_renderer->ResetCamera();
 
-    m_ui->newSurfaceModelName->setText(surface->name() + (dem ? " (" + dem->name() + ")" : ""));
+    m_ui->newSurfaceModelName->setText(surface->name() + (m_currentDEM ? " (" + m_currentDEM->name() + ")" : ""));
 }
 
 void DEMWidget::setupDEMStages()
 {
     m_demTranslate = vtkSmartPointer<vtkImageChangeInformation>::New();
 
-    m_demScale = vtkSmartPointer<vtkImageChangeInformation>::New();
     m_demScale = vtkSmartPointer<vtkImageChangeInformation>::New();
     m_demScale->SetInputConnection(m_demTranslate->GetOutputPort());
 
@@ -279,12 +308,12 @@ void DEMWidget::updateDEMGeoPosition()
     X = earthR * (La - La0) * std::cos(Fi0 / 180 * vtkMath::Pi()) * vtkMath::Pi() / 180;
     };*/
 
-    double Fi0 = m_ui->demLongitude->value();
-    double La0 = m_ui->demLatitude->value();
+    double Fi0 = m_ui->demLatitude->value();
+    double La0 = m_ui->demLongitude->value();
 
     double toLocalTranslation[3] = {
-        -Fi0,
         -La0,
+        -Fi0,
         0.0
     };
     double toLocalScale[3] = {

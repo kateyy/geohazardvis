@@ -47,6 +47,8 @@ set ( SOURCES
 
     filters/CentroidAsScalarsFilter.h
     filters/CentroidAsScalarsFilter.cpp
+    filters/DataSetCleaner.h
+    filters/DataSetCleaner.cpp
 
     io/Exporter.h
     io/Exporter.cpp

@@ -58,6 +58,7 @@ private:
     vtkSmartPointer<vtkTransformFilter> m_meshTransform;
     vtkSmartPointer<vtkWarpScalar> m_demWarpElevation;
 
+    ImageDataObject * m_currentDEM;
     PolyDataObject * m_dataPreview;
     RenderedData * m_renderedPreview;
 };
