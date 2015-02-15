@@ -1,11 +1,17 @@
 #include "Loader.h"
 
+#include <algorithm>
+
 #include <QFileInfo>
 #include <QDebug>
 
 #include <vtkExecutive.h>
 #include <vtkImageData.h>
+#include <vtkPointData.h>
 #include <vtkPolyData.h>
+#include <vtkImageReader2.h>
+#include <vtkImageReader2Collection.h>
+#include <vtkImageReader2Factory.h>
 #include <vtkXMLImageDataReader.h>
 #include <vtkXMLPolyDataReader.h>
 
@@ -18,6 +24,37 @@
 
 
 using namespace std;
+
+namespace
+{
+const QMap<QString, QStringList> & vtkImageFormats()
+{
+    static QMap<QString, QStringList> m;
+    if (m.isEmpty())
+    {
+        VTK_CREATE(vtkImageReader2Collection, readers);
+        vtkImageReader2Factory::GetRegisteredReaders(readers);
+        for (readers->InitTraversal(); auto reader = readers->GetNextItem();)
+        {
+            QString desc = QString::fromUtf8(reader->GetDescriptiveName());
+            QStringList exts = QString::fromUtf8(reader->GetFileExtensions()).split(" ", QString::SkipEmptyParts);
+            std::for_each(exts.begin(), exts.end(), [] (QString & ext) { ext.remove('.'); });
+            m.insert(desc, exts);
+        }
+    }
+    return m;
+}
+
+const QSet<QString> & vtkImageFileExts()
+{
+    static QSet<QString> exts;
+    if (exts.isEmpty())
+        for (const QStringList & f_exts : vtkImageFormats().values())
+            exts += f_exts.toSet();
+
+    return exts;
+}
+}
 
 
 const QString & Loader::fileFormatFilters()
@@ -48,13 +85,19 @@ const QString & Loader::fileFormatFilters()
     return f;        
 }
 
-const QMap<QString, QList<QString>> & Loader::fileFormatExtensions()
+const QMap<QString, QStringList> & Loader::fileFormatExtensions()
 {
-    static QMap<QString, QList<QString>> m = { 
-        { "Text files", { "txt" } }, 
-        { "VTK XML Image Files", { "vti" } }, 
-        { "VTK XML PolyData Files", { "vtp" } }
-    };
+    static QMap<QString, QStringList> m;
+    if (m.isEmpty())
+    {
+        m = {
+            { "Text files", { "txt" } },
+            { "VTK XML Image Files", { "vti" } },
+            { "VTK XML PolyData Files", { "vtp" } }
+        };
+        for (auto it = vtkImageFormats().begin(); it != vtkImageFormats().end(); ++it)
+            m.insert(it.key(), it.value());
+    }
     return m;
 }
 
@@ -108,6 +151,31 @@ DataObject * Loader::readFile(const QString & filename)
         }
 
         return new PolyDataObject(baseName, polyData);
+    }
+
+    if (vtkImageFileExts().contains(ext))
+    {
+        vtkSmartPointer<vtkImageReader2> reader;
+        reader.TakeReference(
+            vtkImageReader2Factory::CreateImageReader2(filename.toUtf8().data()));
+
+        vtkImageData * image = nullptr;
+        reader->SetFileName(filename.toUtf8().data());
+        if (reader->GetExecutive()->Update() == 1)
+            image = reader->GetOutput();
+
+        if (!image)
+        {
+            qDebug() << "Invalid image file: " << filename;
+            return nullptr;
+        }
+
+        vtkDataArray * scalars = image->GetPointData()->GetScalars();
+        // readers set the scalar name to something like "JPEGdata"..
+        if (scalars)
+            scalars->SetName(baseName.toUtf8().data());
+
+        return new ImageDataObject(baseName, reader->GetOutput());
     }
 
     // handle all other files as our text file format
