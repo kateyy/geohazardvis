@@ -34,11 +34,12 @@ QString DefaultColorMapping::name() const
     return s_name;
 }
 
-void DefaultColorMapping::configureMapper(AbstractVisualizedData * visualizedData, vtkMapper * mapper)
+void DefaultColorMapping::configureMapper(AbstractVisualizedData * visualizedData, vtkAbstractMapper * mapper)
 {
     ColorMappingData::configureMapper(visualizedData, mapper);
 
-    mapper->ScalarVisibilityOff();
+    if (auto m = vtkMapper::SafeDownCast(mapper))
+        m->ScalarVisibilityOff();
 }
 
 QMap<vtkIdType, QPair<double, double>> DefaultColorMapping::updateBounds()

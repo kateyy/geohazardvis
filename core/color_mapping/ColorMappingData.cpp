@@ -103,7 +103,7 @@ bool ColorMappingData::usesFilter() const
     return false;
 }
 
-void ColorMappingData::configureMapper(AbstractVisualizedData * visualizedData, vtkMapper * /*mapper*/)
+void ColorMappingData::configureMapper(AbstractVisualizedData * visualizedData, vtkAbstractMapper * /*mapper*/)
 {
     assert(m_visualizedData.contains(visualizedData));
 }

@@ -105,15 +105,18 @@ bool GlyphMagnitudeColorMapping::usesFilter() const
     return true;
 }
 
-void GlyphMagnitudeColorMapping::configureMapper(AbstractVisualizedData * visualizedData, vtkMapper * mapper)
+void GlyphMagnitudeColorMapping::configureMapper(AbstractVisualizedData * visualizedData, vtkAbstractMapper * mapper)
 {
     GlyphColorMapping::configureMapper(visualizedData, mapper);
 
     assert(m_vectorNorms.contains(visualizedData));
 
-    mapper->UseLookupTableScalarRangeOn();
-    mapper->SetLookupTable(m_lut);
-    mapper->ScalarVisibilityOn();
+    if (auto m = vtkMapper::SafeDownCast(mapper))
+    {
+        m->UseLookupTableScalarRangeOn();
+        m->SetLookupTable(m_lut);
+        m->ScalarVisibilityOn();
+    }
 }
 
 QMap<vtkIdType, QPair<double, double>> GlyphMagnitudeColorMapping::updateBounds()

@@ -14,7 +14,7 @@
 
 
 class vtkAlgorithm;
-class vtkMapper;
+class vtkAbstractMapper;
 class vtkLookupTable;
 
 class AbstractVisualizedData;
@@ -58,7 +58,7 @@ public:
 
     /** set parameters on the mapper that is used to render the visualizedData.
         @param visualizedData must be one of the objects that where passed when calling the mapping's constructor */
-    virtual void configureMapper(AbstractVisualizedData * visualizedData, vtkMapper * mapper);
+    virtual void configureMapper(AbstractVisualizedData * visualizedData, vtkAbstractMapper * mapper);
 
     void setLookupTable(vtkLookupTable * lookupTable);
 

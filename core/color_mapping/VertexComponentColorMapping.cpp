@@ -87,11 +87,12 @@ bool VertexComponentColorMapping::usesFilter() const
     return true;
 }
 
-void VertexComponentColorMapping::configureMapper(AbstractVisualizedData * visualizedData, vtkMapper * mapper)
+void VertexComponentColorMapping::configureMapper(AbstractVisualizedData * visualizedData, vtkAbstractMapper * mapper)
 {
     ColorMappingData::configureMapper(visualizedData, mapper);
 
-    mapper->ScalarVisibilityOn();
+    if (auto m = vtkMapper::SafeDownCast(mapper))
+        m->ScalarVisibilityOn();
 }
 
 QMap<vtkIdType, QPair<double, double>> VertexComponentColorMapping::updateBounds()

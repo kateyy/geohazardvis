@@ -143,16 +143,19 @@ bool VectorMagnitudeColorMapping::usesFilter() const
     return true;
 }
 
-void VectorMagnitudeColorMapping::configureMapper(AbstractVisualizedData * visualizedData, vtkMapper * mapper)
+void VectorMagnitudeColorMapping::configureMapper(AbstractVisualizedData * visualizedData, vtkAbstractMapper * mapper)
 {
     ColorMappingData::configureMapper(visualizedData, mapper);
 
-    mapper->ScalarVisibilityOn();
+    if (auto m = vtkMapper::SafeDownCast(mapper))
+    {
+        m->ScalarVisibilityOn();
 
-    if (m_attributeLocation == vtkAssignAttribute::CELL_DATA)
-        mapper->SetScalarModeToUseCellData();
-    else if (m_attributeLocation == vtkAssignAttribute::POINT_DATA)
-        mapper->SetScalarModeToUsePointData();
+        if (m_attributeLocation == vtkAssignAttribute::CELL_DATA)
+            m->SetScalarModeToUseCellData();
+        else if (m_attributeLocation == vtkAssignAttribute::POINT_DATA)
+            m->SetScalarModeToUsePointData();
+    }
 }
 
 QMap<vtkIdType, QPair<double, double>> VectorMagnitudeColorMapping::updateBounds()
