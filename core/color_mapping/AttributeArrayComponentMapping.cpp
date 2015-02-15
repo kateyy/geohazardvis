@@ -9,6 +9,7 @@
 #include <vtkInformation.h>
 #include <vtkInformationIntegerKey.h>
 
+#include <vtkAlgorithmOutput.h>
 #include <vtkDataArray.h>
 #include <vtkDataSet.h>
 #include <vtkCellData.h>
@@ -83,7 +84,7 @@ QList<ColorMappingData *> AttributeArrayComponentMapping::newInstances(const QLi
 
         supportedData << vis;
 
-        vtkDataSet * dataSet = vis->dataObject()->processedDataSet();
+        vtkDataSet * dataSet = vis->colorMappingInputData();
 
         checkAddAttributeArrays(dataSet->GetCellData(), vtkAssignAttribute::CELL_DATA);
         checkAddAttributeArrays(dataSet->GetPointData(), vtkAssignAttribute::POINT_DATA);
@@ -132,7 +133,7 @@ vtkAlgorithm * AttributeArrayComponentMapping::createFilter(AbstractVisualizedDa
 {
     vtkAssignAttribute * filter = vtkAssignAttribute::New();
 
-    filter->SetInputConnection(visualizedData->dataObject()->processedOutputPort());
+    filter->SetInputConnection(visualizedData->colorMappingInput());
     filter->Assign(m_dataArrayName.toUtf8().data(), vtkDataSetAttributes::SCALARS,
         m_attributeLocation);
 
@@ -169,7 +170,7 @@ QMap<vtkIdType, QPair<double, double>> AttributeArrayComponentMapping::updateBou
 
         for (AbstractVisualizedData * visualizedData : m_visualizedData)
         {
-            vtkDataSet * dataSet = visualizedData->dataObject()->processedDataSet();
+            vtkDataSet * dataSet = visualizedData->colorMappingInputData();
             vtkDataArray * dataArray = nullptr;
             if (m_attributeLocation == vtkAssignAttribute::CELL_DATA)
                 dataArray = dataSet->GetCellData()->GetArray(utf8Name.data());

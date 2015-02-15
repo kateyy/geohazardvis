@@ -2,6 +2,9 @@
 
 #include <cassert>
 
+#include <vtkAlgorithm.h>
+#include <vtkAlgorithmOutput.h>
+#include <vtkDataSet.h>
 #include <vtkLookupTable.h>
 
 #include <core/data_objects/DataObject.h>
@@ -66,6 +69,18 @@ void AbstractVisualizedData::setColorMappingGradient(vtkScalarsToColors * gradie
     m_gradient = gradient;
 
     colorMappingGradientChangedEvent();
+}
+
+vtkAlgorithmOutput * AbstractVisualizedData::colorMappingInput()
+{
+    return dataObject()->processedOutputPort();
+}
+
+vtkDataSet * AbstractVisualizedData::colorMappingInputData()
+{
+    auto alg = colorMappingInput()->GetProducer();
+    alg->Update();
+    return vtkDataSet::SafeDownCast(alg->GetOutputDataObject(0));
 }
 
 void AbstractVisualizedData::visibilityChangedEvent(bool /*visible*/)

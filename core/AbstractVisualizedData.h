@@ -7,6 +7,8 @@
 #include <core/core_api.h>
 
 
+class vtkAlgorithmOutput;
+class vtkDataSet;
 class vtkScalarsToColors;
 namespace reflectionzeug
 {
@@ -40,6 +42,9 @@ public:
     /** Set gradient that will be applied to colored geometries.
     * ColorMappingData are responsible for gradient configuration. */
     void setColorMappingGradient(vtkScalarsToColors * gradient);
+
+    virtual vtkAlgorithmOutput * colorMappingInput();
+    vtkDataSet * colorMappingInputData();
 
 signals:
     void visibilityChanged(bool visible);
