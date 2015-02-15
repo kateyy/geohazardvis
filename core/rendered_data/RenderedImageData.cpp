@@ -8,14 +8,17 @@
 
 #include <vtkLookupTable.h>
 
+#include <vtkDataSet.h>
 #include <vtkImageSliceMapper.h>
 #include <vtkImageSlice.h>
 #include <vtkImageProperty.h>
+#include <vtkPointData.h>
 
 #include <reflectionzeug/PropertyGroup.h>
 
 #include <core/types.h>
 #include <core/vtkhelper.h>
+#include <core/color_mapping/ColorMappingData.h>
 #include <core/data_objects/ImageDataObject.h>
 
 
@@ -94,11 +97,50 @@ vtkImageProperty * RenderedImageData::property()
     return m_property;
 }
 
+void RenderedImageData::scalarsForColorMappingChangedEvent()
+{
+    RenderedData::scalarsForColorMappingChangedEvent();
+
+    if (!m_scalars)
+    {
+        m_mapper->SetInputConnection(colorMappingInput());
+        return;
+    }
+
+    m_scalars->configureMapper(this, m_mapper);
+
+    if (m_scalars->usesFilter())
+    {
+        vtkAlgorithm * filter = m_scalars->createFilter(this);
+        filter->Update();
+        vtkDataSet * image = vtkDataSet::SafeDownCast(filter->GetOutputDataObject(0));
+        // use filter only if it outputs scalars. To prevent segfault in image slice.
+        if (image->GetPointData()->GetScalars())
+            m_mapper->SetInputConnection(filter->GetOutputPort());
+        else
+            m_mapper->SetInputConnection(colorMappingInput());
+        filter->Delete();
+    }
+    else
+    {
+        m_mapper->SetInputConnection(colorMappingInput());
+    }
+
+    // hack: how to enforce to use color data directly?
+    if (m_scalars->dataMinValue() == m_scalars->dataMaxValue())
+        property()->SetLookupTable(nullptr);
+    else
+        property()->SetLookupTable(m_gradient);
+}
+
 void RenderedImageData::colorMappingGradientChangedEvent()
 {
     RenderedData::scalarsForColorMappingChangedEvent();
 
-    property()->SetLookupTable(m_gradient);
+    if (m_scalars && (m_scalars->dataMinValue() == m_scalars->dataMaxValue()))
+        property()->SetLookupTable(nullptr);
+    else
+        property()->SetLookupTable(m_gradient);
 }
 
 void RenderedImageData::visibilityChangedEvent(bool visible)
