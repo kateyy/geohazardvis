@@ -58,15 +58,15 @@ RenderedPolyData::RenderedPolyData(PolyDataObject * dataObject)
     mapperInfo->Set(DataObject::NameKey(), dataObject->name().toUtf8().data());
     DataObject::setDataObject(mapperInfo, dataObject);
 
-    m_normals->SetInputConnection(dataObject->processedOutputPort());
     m_normals->ComputePointNormalsOn();
     m_normals->ComputeCellNormalsOff();
 
     // disabled color mapping by default
     m_colorMappingOutput = dataObject->processedOutputPort();
-    m_mapper->ScalarVisibilityOff();
+    m_normals->SetInputConnection(m_colorMappingOutput);
 
-    m_mapper->SetInputConnection(m_colorMappingOutput);
+    m_mapper->ScalarVisibilityOff();
+    m_mapper->SetInputConnection(m_normals->GetOutputPort());
 
     // don't break the lut configuration
     m_mapper->UseLookupTableScalarRangeOn();
@@ -344,11 +344,11 @@ void RenderedPolyData::finalizePipeline()
             (thisCenter[1] - demCenter[1]) / demSize[1],
             0);
 
-        m_mapper->SetInputConnection(transformTexCoords->GetOutputPort());
+        m_normals->SetInputConnection(transformTexCoords->GetOutputPort());
     }
     else
     {
-        m_mapper->SetInputConnection(textureCoords->GetOutputPort());
+        m_normals->SetInputConnection(textureCoords->GetOutputPort());
     }
 }
 
