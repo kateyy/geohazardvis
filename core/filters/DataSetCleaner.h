@@ -7,6 +7,8 @@
 #include <vtkDataSetAlgorithm.h>
 
 
+// TODO missing update extent / information
+// will not propagate upstream changes
 class CORE_API DataSetCleaner : public vtkDataSetAlgorithm
 {
 public:

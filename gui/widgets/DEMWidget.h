@@ -59,6 +59,7 @@ private:
     vtkSmartPointer<vtkWarpScalar> m_demWarpElevation;
 
     ImageDataObject * m_currentDEM;
+    QString m_demScalarsName;
     PolyDataObject * m_dataPreview;
     RenderedData * m_renderedPreview;
 };

@@ -13,6 +13,7 @@
 #include <vtkRenderWindowInteractor.h>
 #include <vtkTextProperty.h>
 
+#include <vtkCellData.h>
 #include <vtkImageChangeInformation.h>
 #include <vtkImageData.h>
 #include <vtkImageShiftScale.h>
@@ -29,7 +30,6 @@
 #include <core/vtkhelper.h>
 #include <core/data_objects/ImageDataObject.h>
 #include <core/data_objects/PolyDataObject.h>
-#include <core/filters/DataSetCleaner.h>
 #include <core/rendered_data/RenderedData.h>
 #include <gui/rendering_interaction/InteractorStyle3D.h>
 
@@ -92,6 +92,10 @@ bool DEMWidget::save()
 
     VTK_CREATE(vtkPolyData, surface);
     surface->DeepCopy(m_dataPreview->polyDataSet());
+
+    // remove arrays that were created while appying the DEM
+    surface->GetPointData()->RemoveArray("vtkValidPointMask");
+    surface->GetPointData()->RemoveArray(m_demScalarsName.toUtf8().data());
 
     auto newData = new PolyDataObject(m_ui->newSurfaceModelName->text(), surface);
     DataSetHandler::instance().addData({ newData });
@@ -185,12 +189,10 @@ void DEMWidget::updatePreview()
     m_currentDEM = m_dems.value(demIndex, nullptr);
     PolyDataObject * surface = m_surfaceMeshes[surfaceIdx];
 
-    QString demScalarsName;
-
     if (m_currentDEM)
     {
         m_demTranslate->SetInputDataObject(m_currentDEM->dataSet());
-        demScalarsName = QString::fromUtf8(
+        m_demScalarsName = QString::fromUtf8(
             m_currentDEM->dataSet()->GetPointData()->GetScalars()->GetName());
     }
     else
@@ -199,22 +201,17 @@ void DEMWidget::updatePreview()
         nullDEM->SetExtent(0, 0, 0, 0, 0, 0);
         nullDEM->AllocateScalars(VTK_FLOAT, 1);
         reinterpret_cast<float *>(nullDEM->GetScalarPointer())[0] = 0.f;
-        demScalarsName = "DEMdata";
+        m_demScalarsName = "DEMdata";
         nullDEM->GetPointData()->GetScalars()->SetName(
-            demScalarsName.toUtf8().data());
+            m_demScalarsName.toUtf8().data());
         m_demTranslate->SetInputData(nullDEM);
     }
 
     m_meshTransform->SetInputData(surface->dataSet());
+    
+    m_demWarpElevation->Update();
 
-    VTK_CREATE(DataSetCleaner, dataSetCleaner);
-    dataSetCleaner->SetInputConnection(m_demWarpElevation->GetOutputPort());
-    dataSetCleaner->AddArrayToRemove(demScalarsName.toUtf8().data());
-    dataSetCleaner->AddArrayToRemove("vtkValidPointMask");
-    dataSetCleaner->Update();
-
-    vtkPolyData * newDataSet = vtkPolyData::SafeDownCast(
-        dataSetCleaner->GetOutput());
+    vtkPolyData * newDataSet = vtkPolyData::SafeDownCast(m_demWarpElevation->GetOutput());
     assert(newDataSet);
 
     m_dataPreview = new PolyDataObject("", newDataSet);
