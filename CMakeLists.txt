@@ -105,7 +105,7 @@ install(FILES ${CMAKE_BINARY_DIR}/revision DESTINATION ${INSTALL_ROOT})
 
 
 set(VTK_COMPONENTS 
-    vtkGUISupportQtOpenGL   # QVTKWidget2
+    vtkGUISupportQt         # QVTKWidget
     vtkRenderingAnnotation  # vtkCubeAxesActor, vtkScalarBarActor
     vtkRenderingLIC
     vtkRenderingVolumeOpenGL
@@ -193,4 +193,4 @@ add_subdirectory("gui")
 add_subdirectory("app")
 add_subdirectory("docs")
 add_subdirectory(packages)
-add_subdirectory(test_lic3Dstacked)
+add_subdirectory(tools)

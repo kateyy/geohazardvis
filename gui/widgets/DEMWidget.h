@@ -39,6 +39,8 @@ private:
     void updatePreview();
     void setupDEMStages();
 
+    void updateAvailableDataSets();
+
     void updateDEMGeoPosition();
     void updateMeshScale();
     void updateView();
@@ -48,7 +50,7 @@ private:
     vtkSmartPointer<vtkRenderer> m_renderer;
     vtkSmartPointer<vtkCubeAxesActor> m_axesActor;
 
-    QList<PolyDataObject *> m_surfacesMeshes;
+    QList<PolyDataObject *> m_surfaceMeshes;
     QList<ImageDataObject *> m_dems;
 
     vtkSmartPointer<vtkImageChangeInformation> m_demTranslate;
@@ -56,6 +58,8 @@ private:
     vtkSmartPointer<vtkTransformFilter> m_meshTransform;
     vtkSmartPointer<vtkWarpScalar> m_demWarpElevation;
 
+    ImageDataObject * m_currentDEM;
+    QString m_demScalarsName;
     PolyDataObject * m_dataPreview;
     RenderedData * m_renderedPreview;
 };

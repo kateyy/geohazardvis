@@ -3,6 +3,7 @@
 
 #include <QMessageBox>
 
+#include <vtkActor.h>
 #include <vtkCamera.h>
 #include <vtkCubeAxesActor.h>
 #include <vtkPropCollection.h>
@@ -12,11 +13,13 @@
 #include <vtkRenderWindowInteractor.h>
 #include <vtkTextProperty.h>
 
+#include <vtkCellData.h>
 #include <vtkImageChangeInformation.h>
 #include <vtkImageData.h>
 #include <vtkImageShiftScale.h>
 #include <vtkMath.h>
 #include <vtkPolyData.h>
+#include <vtkPointData.h>
 #include <vtkProbeFilter.h>
 #include <vtkTransform.h>
 #include <vtkTransformFilter.h>
@@ -34,27 +37,13 @@
 DEMWidget::DEMWidget(QWidget * parent, Qt::WindowFlags f)
     : QWidget(parent, f)
     , m_ui{ new Ui_DEMWidget }
+    , m_currentDEM{ nullptr }
     , m_dataPreview{ nullptr }
     , m_renderedPreview{ nullptr }
 {
     m_ui->setupUi(this);
 
-    for (DataObject * data : DataSetHandler::instance().dataSets())
-    {
-        if (auto p = dynamic_cast<PolyDataObject *>(data))
-        {
-            if (p->is2p5D())
-                m_surfacesMeshes << p;
-        }
-        else if (auto i = dynamic_cast<ImageDataObject *>(data))
-            m_dems << i;
-    }
-
-    for (auto p : m_surfacesMeshes)
-        m_ui->surfaceMeshCombo->addItem(p->name());
-
-    for (auto d : m_dems)
-        m_ui->demCombo->addItem(d->name());
+    updateAvailableDataSets();
 
     setupDEMStages();
 
@@ -81,6 +70,9 @@ DEMWidget::DEMWidget(QWidget * parent, Qt::WindowFlags f)
         updateDEMGeoPosition();
         updateView();
     });
+
+
+    connect(&DataSetHandler::instance(), &DataSetHandler::dataObjectsChanged, this, &DEMWidget::updateAvailableDataSets);
 }
 
 DEMWidget::~DEMWidget()
@@ -98,7 +90,14 @@ bool DEMWidget::save()
         return false;
     }
 
-    auto newData = new PolyDataObject(m_ui->newSurfaceModelName->text(), m_dataPreview->polyDataSet());
+    VTK_CREATE(vtkPolyData, surface);
+    surface->DeepCopy(m_dataPreview->polyDataSet());
+
+    // remove arrays that were created while appying the DEM
+    surface->GetPointData()->RemoveArray("vtkValidPointMask");
+    surface->GetPointData()->RemoveArray(m_demScalarsName.toUtf8().data());
+
+    auto newData = new PolyDataObject(m_ui->newSurfaceModelName->text(), surface);
     DataSetHandler::instance().addData({ newData });
 
     return true;
@@ -106,8 +105,16 @@ bool DEMWidget::save()
 
 void DEMWidget::saveAndClose()
 {
+    disconnect(&DataSetHandler::instance(), &DataSetHandler::dataObjectsChanged,
+        this, &DEMWidget::updateAvailableDataSets);
+
     if (save())
         close();
+
+    updateAvailableDataSets();
+
+    connect(&DataSetHandler::instance(), &DataSetHandler::dataObjectsChanged,
+        this, &DEMWidget::updateAvailableDataSets);
 }
 
 void DEMWidget::showEvent(QShowEvent * /*event*/)
@@ -179,22 +186,31 @@ void DEMWidget::updatePreview()
         return;
 
     int demIndex = m_ui->demCombo->currentIndex();
-    ImageDataObject * dem = m_dems.value(demIndex, nullptr);
-    PolyDataObject * surface = m_surfacesMeshes[surfaceIdx];
+    m_currentDEM = m_dems.value(demIndex, nullptr);
+    PolyDataObject * surface = m_surfaceMeshes[surfaceIdx];
 
-    if (dem)
-        m_demTranslate->SetInputConnection(dem->processedOutputPort());
+    if (m_currentDEM)
+    {
+        m_demTranslate->SetInputDataObject(m_currentDEM->dataSet());
+        m_demScalarsName = QString::fromUtf8(
+            m_currentDEM->dataSet()->GetPointData()->GetScalars()->GetName());
+    }
     else
     {
         VTK_CREATE(vtkImageData, nullDEM);
         nullDEM->SetExtent(0, 0, 0, 0, 0, 0);
         nullDEM->AllocateScalars(VTK_FLOAT, 1);
         reinterpret_cast<float *>(nullDEM->GetScalarPointer())[0] = 0.f;
+        m_demScalarsName = "DEMdata";
+        nullDEM->GetPointData()->GetScalars()->SetName(
+            m_demScalarsName.toUtf8().data());
         m_demTranslate->SetInputData(nullDEM);
     }
-    m_meshTransform->SetInputConnection(surface->processedOutputPort());
 
+    m_meshTransform->SetInputData(surface->dataSet());
+    
     m_demWarpElevation->Update();
+
     vtkPolyData * newDataSet = vtkPolyData::SafeDownCast(m_demWarpElevation->GetOutput());
     assert(newDataSet);
 
@@ -204,21 +220,29 @@ void DEMWidget::updatePreview()
     auto props = m_renderedPreview->viewProps();
     props->InitTraversal();
     while (auto p = props->GetNextProp())
+    {
+        vtkActor * actor; vtkProperty * property;
+        if ((actor = vtkActor::SafeDownCast(p)) && (property = actor->GetProperty()))
+        {
+            property->LightingOn();
+            property->EdgeVisibilityOff();
+        }
+
         m_renderer->AddViewProp(p);
+    }
     m_renderer->AddViewProp(m_axesActor);
 
     updateView();
 
     m_renderer->ResetCamera();
 
-    m_ui->newSurfaceModelName->setText(surface->name() + (dem ? " (" + dem->name() + ")" : ""));
+    m_ui->newSurfaceModelName->setText(surface->name() + (m_currentDEM ? " (" + m_currentDEM->name() + ")" : ""));
 }
 
 void DEMWidget::setupDEMStages()
 {
     m_demTranslate = vtkSmartPointer<vtkImageChangeInformation>::New();
 
-    m_demScale = vtkSmartPointer<vtkImageChangeInformation>::New();
     m_demScale = vtkSmartPointer<vtkImageChangeInformation>::New();
     m_demScale->SetInputConnection(m_demTranslate->GetOutputPort());
 
@@ -245,6 +269,31 @@ void DEMWidget::setupDEMStages()
     m_demWarpElevation->SetInputConnection(probe->GetOutputPort());
 }
 
+void DEMWidget::updateAvailableDataSets()
+{
+    m_surfaceMeshes.clear();
+    m_dems.clear();
+    m_ui->surfaceMeshCombo->clear();
+    m_ui->demCombo->clear();
+
+    for (DataObject * data : DataSetHandler::instance().dataSets())
+    {
+        if (auto p = dynamic_cast<PolyDataObject *>(data))
+        {
+            if (p->is2p5D())
+                m_surfaceMeshes << p;
+        }
+        else if (auto i = dynamic_cast<ImageDataObject *>(data))
+            m_dems << i;
+    }
+
+    for (auto p : m_surfaceMeshes)
+        m_ui->surfaceMeshCombo->addItem(p->name());
+
+    for (auto d : m_dems)
+        m_ui->demCombo->addItem(d->name());
+}
+
 void DEMWidget::updateDEMGeoPosition()
 {
     const double earthR = 6378.138;
@@ -256,12 +305,12 @@ void DEMWidget::updateDEMGeoPosition()
     X = earthR * (La - La0) * std::cos(Fi0 / 180 * vtkMath::Pi()) * vtkMath::Pi() / 180;
     };*/
 
-    double Fi0 = m_ui->demLongitude->value();
-    double La0 = m_ui->demLatitude->value();
+    double Fi0 = m_ui->demLatitude->value();
+    double La0 = m_ui->demLongitude->value();
 
     double toLocalTranslation[3] = {
-        -Fi0,
         -La0,
+        -Fi0,
         0.0
     };
     double toLocalScale[3] = {
@@ -299,6 +348,5 @@ void DEMWidget::updateView()
         m_axesActor->SetBounds(bounds);
     }
 
-    m_renderer->ResetCamera();
     m_ui->qvtkMain->GetRenderWindow()->Render();
 }

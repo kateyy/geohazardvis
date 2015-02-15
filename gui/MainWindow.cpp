@@ -91,8 +91,7 @@ MainWindow::~MainWindow()
 
 QStringList MainWindow::dialog_inputFileName()
 {
-    QStringList fileNames = QFileDialog::getOpenFileNames(this, "", m_lastOpenFolder,
-        "All Supported Files (*.txt  *.vti);;Text files (*.txt);;VTK XML Image Files (*.vti)");
+    QStringList fileNames = QFileDialog::getOpenFileNames(this, "", m_lastOpenFolder, Loader::fileFormatFilters());
 
     if (fileNames.isEmpty())
         return {};
@@ -225,7 +224,7 @@ void MainWindow::on_actionApply_Digital_Elevation_Model_triggered()
 {
     DEMWidget * demWidget = new DEMWidget();
     demWidget->setAttribute(Qt::WA_DeleteOnClose);
-    demWidget->setWindowModality(Qt::ApplicationModal);
+    demWidget->setWindowModality(Qt::NonModal);
     demWidget->show();
 }
 

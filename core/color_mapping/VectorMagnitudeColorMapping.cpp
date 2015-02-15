@@ -60,7 +60,7 @@ QList<ColorMappingData *> VectorMagnitudeColorMapping::newInstances(const QList<
 
     for (AbstractVisualizedData * vis : visualizedData)
     {
-        vtkDataSet * dataSet = vis->dataObject()->processedDataSet();
+        vtkDataSet * dataSet = vis->colorMappingInputData();
 
         checkAddAttributeArrays(vis, dataSet->GetCellData(), cellArrays);
         checkAddAttributeArrays(vis, dataSet->GetPointData(), pointArrays);
@@ -103,7 +103,7 @@ VectorMagnitudeColorMapping::VectorMagnitudeColorMapping(
     {
         VTK_CREATE(vtkAssignAttribute, activeVectors);
         activeVectors->Assign(utf8Name.data(), vtkDataSetAttributes::VECTORS, m_attributeLocation);
-        activeVectors->SetInputConnection(vis->dataObject()->processedOutputPort());
+        activeVectors->SetInputConnection(vis->colorMappingInput());
 
         VTK_CREATE(vtkVectorNorm, norm);
         if (attributeLocation == vtkAssignAttribute::CELL_DATA)

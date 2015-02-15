@@ -70,7 +70,7 @@ vtkAlgorithm * VertexComponentColorMapping::createFilter(AbstractVisualizedData 
     PolyDataObject * polyData = static_cast<PolyDataObject *>(visualizedData->dataObject());
 
     VTK_CREATE(CentroidAsScalarsFilter, centroids);
-    centroids->SetInputConnection(0, polyData->processedOutputPort());
+    centroids->SetInputConnection(0, visualizedData->colorMappingInput());
     centroids->SetInputConnection(1, polyData->cellCentersOutputPort());
     centroids->SetComponent(m_component);
 
