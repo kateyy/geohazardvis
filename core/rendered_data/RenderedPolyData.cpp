@@ -13,7 +13,6 @@
 #include <vtkPolyDataMapper.h>
 #include <vtkPolyDataNormals.h>
 #include <vtkScalarsToColors.h>
-#include <vtkTransformTextureCoords.h>
 
 #include <vtkProperty.h>
 #include <vtkActor.h>
@@ -29,6 +28,7 @@
 #include <core/vtkhelper.h>
 #include <core/TextureManager.h>
 #include <core/data_objects/PolyDataObject.h>
+#include <core/filters/TransformTextureCoords.h>
 #include <core/color_mapping/ColorMappingData.h>
 
 
@@ -333,7 +333,7 @@ void RenderedPolyData::finalizePipeline()
             0.5 * (thisBounds[0] + thisBounds[1]),
             0.5 * (thisBounds[2] + thisBounds[3]) };
 
-        VTK_CREATE(vtkTransformTextureCoords, transformTexCoords);
+        VTK_CREATE(TransformTextureCoords, transformTexCoords);
         transformTexCoords->SetInputConnection(textureCoords->GetOutputPort());
         transformTexCoords->SetScale(   // scale tex coords from surface size to DEM texture size
             thisSize[0] / demSize[0],

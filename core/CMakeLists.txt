@@ -57,6 +57,8 @@ set ( SOURCES
     filters/NoiseImageSource.cpp
     filters/StackedImageDataLIC3D.h
     filters/StackedImageDataLIC3D.cpp
+    filters/TransformTextureCoords.h
+    filters/TransformTextureCoords.cxx
     filters/vtkImageDataLIC2D.h
     filters/vtkImageDataLIC2D.cpp
 
