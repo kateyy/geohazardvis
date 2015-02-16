@@ -3,7 +3,6 @@
 #include <vtkImageData.h>
 #include <vtkPointData.h>
 #include <vtkDataArray.h>
-#include <vtkAssignAttribute.h>
 
 #include <core/rendered_data/RenderedVectorGrid3D.h>
 #include <core/table_model/QVtkTableModelVectorGrid3D.h>
@@ -11,10 +10,34 @@
 
 VectorGrid3DDataObject::VectorGrid3DDataObject(QString name, vtkImageData * dataSet)
     : DataObject(name, dataSet)
-    , m_vectorsToScalars(vtkSmartPointer<vtkAssignAttribute>::New())
 {
-    m_vectorsToScalars->SetInputData(dataSet);
-    m_vectorsToScalars->Assign(vtkDataSetAttributes::VECTORS, vtkDataSetAttributes::SCALARS, vtkAssignAttribute::POINT_DATA);
+    vtkDataArray * data = dataSet->GetPointData()->GetScalars();
+    if (!data)
+    {
+        data = dataSet->GetPointData()->GetVectors();
+        dataSet->GetPointData()->SetScalars(data);
+    }
+
+    if (data->GetNumberOfComponents() == 6)
+    {
+        vtkSmartPointer<vtkDataArray> vectors1 = data->NewInstance();
+        vtkSmartPointer<vtkDataArray> vectors2 = data->NewInstance();
+        vectors1->SetNumberOfComponents(3);
+        vectors2->SetNumberOfComponents(3);
+        vectors1->SetName((QString::fromUtf8(data->GetName()) + " (1)").toUtf8().data());
+        vectors2->SetName((QString::fromUtf8(data->GetName()) + " (2)").toUtf8().data());
+        vtkIdType numTuples = data->GetNumberOfTuples();
+        vectors1->SetNumberOfTuples(numTuples);
+        vectors2->SetNumberOfTuples(numTuples);
+
+        for (vtkIdType i = 0; i < numTuples; ++i)
+        {
+            vectors1->SetTuple(i, data->GetTuple(i));
+            vectors2->SetTuple(i, &data->GetTuple(i)[3]);
+        }
+        dataSet->GetPointData()->AddArray(vectors1);
+        dataSet->GetPointData()->AddArray(vectors2);
+    }
 }
 
 VectorGrid3DDataObject::~VectorGrid3DDataObject() = default;
@@ -45,17 +68,6 @@ const QString & VectorGrid3DDataObject::dataTypeName_s()
     return name;
 }
 
-vtkDataSet * VectorGrid3DDataObject::processedDataSet()
-{
-    m_vectorsToScalars->Update();
-    return vtkDataSet::SafeDownCast(m_vectorsToScalars->GetOutput());
-}
-
-vtkAlgorithmOutput * VectorGrid3DDataObject::processedOutputPort()
-{
-    return m_vectorsToScalars->GetOutputPort();
-}
-
 const int * VectorGrid3DDataObject::dimensions()
 {
     return static_cast<vtkImageData *>(dataSet())->GetDimensions();
@@ -68,12 +80,12 @@ const int * VectorGrid3DDataObject::extent()
 
 int VectorGrid3DDataObject::numberOfComponents()
 {
-    return dataSet()->GetPointData()->GetVectors()->GetNumberOfComponents();
+    return dataSet()->GetPointData()->GetScalars()->GetNumberOfComponents();
 }
 
 const double * VectorGrid3DDataObject::scalarRange(int component)
 {
-    return dataSet()->GetPointData()->GetVectors()->GetRange(component);
+    return dataSet()->GetPointData()->GetScalars()->GetRange(component);
 }
 
 QVtkTableModel * VectorGrid3DDataObject::createTableModel()

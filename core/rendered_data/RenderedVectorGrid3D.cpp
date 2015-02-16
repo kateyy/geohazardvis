@@ -24,7 +24,6 @@
 #include <vtkOpenGLExtensionManager.h>
 #include <vtkProperty.h>
 #include <vtkTexture.h>
-#include <vtkVectorNorm.h>
 
 #include <reflectionzeug/PropertyGroup.h>
 
@@ -57,7 +56,6 @@ enum NoiseSourceType
 };
 
 const std::string s_resliceOutputArray = "ImageScalars";
-const std::string s_vectorNorm = "VectorNorm";
 const std::string s_lic2DWithMangnitudes = "LIC2DWithMagnitudes";
 
 }
@@ -82,7 +80,14 @@ RenderedVectorGrid3D::RenderedVectorGrid3D(VectorGrid3DDataObject * dataObject)
     int sampleRate = std::max(1, (int)std::floor(std::cbrt(float(numPoints) / DefaultMaxNumberOfPoints)));
     setSampleRate(sampleRate, sampleRate, sampleRate);
 
-    std::string vectorsName{ image->GetPointData()->GetVectors()->GetName() };
+    std::string vectorsName;
+    for (int vectorArray = 0; vectorArray < dataObject->dataSet()->GetPointData()->GetNumberOfArrays(); ++vectorArray)
+        if (dataObject->dataSet()->GetPointData()->GetArray(vectorArray)->GetNumberOfComponents() == 3)
+        {
+            vectorsName = dataObject->dataSet()->GetPointData()->GetArray(vectorArray)->GetName();
+            break;
+        }
+
     std::string vectorsScaledName{ vectorsName + "_scaled" };
 
     m_glContext = vtkSmartPointer<vtkRenderWindow>::New();
@@ -105,6 +110,16 @@ RenderedVectorGrid3D::RenderedVectorGrid3D(VectorGrid3DDataObject * dataObject)
 
     VTK_CREATE(vtkCellPicker, planePicker); // shared picker for the plane widgets
 
+
+
+    VTK_CREATE(vtkAssignAttribute, assignVectors);
+    assignVectors->SetInputData(dataObject->dataSet());
+    assignVectors->Assign(vectorsName.c_str(), vtkDataSetAttributes::VECTORS, vtkAssignAttribute::POINT_DATA);
+    assignVectors->Update();
+
+    vtkDataSet * dataSetWithVectors = vtkDataSet::SafeDownCast(assignVectors->GetOutput());
+
+
     for (int i = 0; i < 3; ++i)
     {
         /** Reslice widgets  */
@@ -112,7 +127,7 @@ RenderedVectorGrid3D::RenderedVectorGrid3D(VectorGrid3DDataObject * dataObject)
         m_planeWidgets[i] = vtkSmartPointer<vtkImagePlaneWidget>::New();
         // TODO VTK Bug? A pipeline connection from vtkAssignAttribute does not work for some reason
         //m_planeWidgets[i]->SetInputConnection(dataObject->processedOutputPort());
-        m_planeWidgets[i]->SetInputData(dataObject->processedDataSet());
+        m_planeWidgets[i]->SetInputData(dataSetWithVectors);
         m_planeWidgets[i]->UserControlledLookupTableOn();
         m_planeWidgets[i]->RestrictPlaneToVolumeOn();
 
@@ -135,20 +150,8 @@ RenderedVectorGrid3D::RenderedVectorGrid3D(VectorGrid3DDataObject * dataObject)
         assignVectors->SetInputConnection(m_planeWidgets[i]->GetReslice()->GetOutputPort());
         assignVectors->Assign(s_resliceOutputArray.c_str(), vtkDataSetAttributes::VECTORS, vtkAssignAttribute::POINT_DATA);
 
-        // for color mapping: vector magnitude in original vector scaling
-        VTK_CREATE(vtkVectorNorm, vectorNorm);
-        vectorNorm->SetInputConnection(assignVectors->GetOutputPort());
-
-        VTK_CREATE(ArrayRenameFilter, vectorNormRename);
-        vectorNormRename->SetInputConnection(vectorNorm->GetOutputPort());
-        vectorNormRename->SetScalarsName(s_vectorNorm.c_str());
-
-        VTK_CREATE(vtkAssignAttribute, assignVectorsAgain);
-        assignVectorsAgain->SetInputConnection(vectorNormRename->GetOutputPort());
-        assignVectorsAgain->Assign(s_resliceOutputArray.c_str(), vtkDataSetAttributes::VECTORS, vtkAssignAttribute::POINT_DATA);
-
         m_lic2DVectorScale[i] = vtkSmartPointer<vtkArrayCalculator>::New();
-        m_lic2DVectorScale[i]->SetInputConnection(assignVectorsAgain->GetOutputPort());
+        m_lic2DVectorScale[i]->SetInputConnection(assignVectors->GetOutputPort());
         m_lic2DVectorScale[i]->AddVectorArrayName(s_resliceOutputArray.c_str());
         m_lic2DVectorScale[i]->SetResultArrayName(vectorsScaledName.c_str());
 
@@ -164,19 +167,6 @@ RenderedVectorGrid3D::RenderedVectorGrid3D(VectorGrid3DDataObject * dataObject)
         m_lic2D[i]->GlobalWarningDisplayOff();
         m_lic2D[i]->SetContext(m_glContext);
 
-        m_lic2DColorMagnitude[i] = vtkSmartPointer<vtkArrayCalculator>::New();
-        m_lic2DColorMagnitude[i]->SetInputConnection(m_lic2D[i]->GetOutputPort());
-        m_lic2DColorMagnitude[i]->AddScalarArrayName(s_vectorNorm.c_str());
-        m_lic2DColorMagnitude[i]->AddScalarArrayName("LIC");
-        m_lic2DColorMagnitude[i]->SetResultArrayName(s_lic2DWithMangnitudes.c_str());
-        m_lic2DColorMagnitude[i]->SetFunction((s_vectorNorm + "*LIC").c_str());
-
-        m_lic2DColorMagnitudeScalars[i] = vtkSmartPointer<vtkAssignAttribute>::New();
-        m_lic2DColorMagnitudeScalars[i]->SetInputConnection(m_lic2DColorMagnitude[i]->GetOutputPort());
-        m_lic2DColorMagnitudeScalars[i]->Assign(s_lic2DWithMangnitudes.c_str(),
-            vtkDataSetAttributes::SCALARS, vtkAssignAttribute::POINT_DATA);
-
-
         int min = extent[2 * i];
         int max = extent[2 * i + 1];
         setSlicePosition(i, (max - min) / 2);
@@ -188,7 +178,7 @@ RenderedVectorGrid3D::RenderedVectorGrid3D(VectorGrid3DDataObject * dataObject)
     for (int i = 0; i < 3; ++i)
     {
         double r[2];
-        image->GetPointData()->GetVectors()->GetRange(r, i);
+        image->GetPointData()->GetScalars()->GetRange(r, i);
         scalarRange[0] = std::min(scalarRange[0], r[0]);
         scalarRange[1] = std::max(scalarRange[1], r[1]);
     }

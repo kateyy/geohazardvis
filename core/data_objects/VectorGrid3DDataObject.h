@@ -1,7 +1,5 @@
 #pragma once
 
-#include <vtkSmartPointer.h>
-
 #include <core/data_objects/DataObject.h>
 
 
@@ -25,10 +23,6 @@ public:
     const QString & dataTypeName() const override;
     static const QString & dataTypeName_s();
 
-    /** @return vtkImageData with 3-component vectors assigned to point scalars */
-    vtkDataSet * processedDataSet() override;
-    vtkAlgorithmOutput * processedOutputPort() override;
-
     /** number of values on each axis (x, y, z) */
     const int * dimensions();
     /** index of first and last point on each axis (min/max per x, y, z) */
@@ -40,7 +34,4 @@ public:
 
 protected:
     QVtkTableModel * createTableModel() override;
-
-private:
-    vtkSmartPointer<vtkAssignAttribute> m_vectorsToScalars;
 };

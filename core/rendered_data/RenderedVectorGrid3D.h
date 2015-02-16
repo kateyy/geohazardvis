@@ -97,7 +97,5 @@ private:
     float m_lic2DVectorScaleFactor;
     std::array<vtkSmartPointer<vtkArrayCalculator>, 3> m_lic2DVectorScale;
     std::array<vtkSmartPointer<vtkImageDataLIC2D>, 3> m_lic2D;
-    std::array<vtkSmartPointer<vtkArrayCalculator>, 3> m_lic2DColorMagnitude;
-    std::array<vtkSmartPointer<vtkAssignAttribute>, 3> m_lic2DColorMagnitudeScalars;
     vtkSmartPointer<vtkRenderWindow> m_glContext;
 };

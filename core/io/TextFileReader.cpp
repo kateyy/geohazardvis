@@ -391,9 +391,10 @@ bool TextFileReader::readHeader_vectorGrid3D(std::ifstream & inputStream, std::v
         }
 
         stringstream linestream(line.substr(2, string::npos));
-        string datasetType, parameter;
+        string datasetType, parameter, parameter2;
         getline(linestream, datasetType, ' ');
-        getline(linestream, parameter);
+        getline(linestream, parameter, ' ');
+        getline(linestream, parameter2);
 
         currentDataType = checkDataSetType(datasetType);
 
@@ -404,7 +405,7 @@ bool TextFileReader::readHeader_vectorGrid3D(std::ifstream & inputStream, std::v
         }
 
         t_UInt rows = stoul(parameter);
-        const t_UInt columns = 6u;
+        t_UInt columns = parameter2.empty() ? 6u : 3u + stoul(parameter2);
         inputDefs.push_back({ currentDataType, rows, columns, ""});
     }
 
