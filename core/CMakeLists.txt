@@ -131,6 +131,8 @@ set ( SOURCES
     reflectionzeug_extension/QStringProperty.h
     reflectionzeug_extension/QStringProperty.hpp
     reflectionzeug_extension/QStringProperty.cpp
+    
+    ThirdParty/alphanum.hpp
 )
 
 source_group_by_path_and_type(${CMAKE_CURRENT_SOURCE_DIR} ${SOURCES})

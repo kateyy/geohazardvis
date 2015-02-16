@@ -19,6 +19,7 @@
 #include <core/data_objects/DataObject.h>
 #include <core/color_mapping/ColorMappingData.h>
 #include <core/color_mapping/ColorMapping.h>
+#include <core/ThirdParty/alphanum.hpp>
 
 #include <gui/data_view/RenderView.h>
 #include <gui/data_view/RendererImplementation3D.h>
@@ -271,7 +272,9 @@ void ColorMappingChooser::rebuildGui()
     // clear GUI when not rendering
     if (newMapping)
     {
-        m_ui->scalarsComboBox->addItems(newMapping->scalarsNames());
+        auto items = newMapping->scalarsNames();
+        std::sort(items.begin(), items.end(), doj::alphanum_less<QString>());
+        m_ui->scalarsComboBox->addItems(items);
 
         m_ui->scalarsComboBox->setCurrentText(newMapping->currentScalarsName());
         m_ui->gradientComboBox->setCurrentIndex(gradientIndex(newMapping->originalGradient()));
