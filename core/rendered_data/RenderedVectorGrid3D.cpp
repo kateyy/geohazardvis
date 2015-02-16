@@ -337,6 +337,8 @@ PropertyGroup * RenderedVectorGrid3D::createConfigGroup()
             [this] () { return static_cast<NoiseSourceType>(m_noiseImage->GetNoiseSource()); },
             [this] (NoiseSourceType type) {
             m_noiseImage->SetNoiseSource(static_cast<int>(type));
+            for (int i = 0; i < 3; ++i)
+                forceLICUpdate(i);
             emit geometryChanged();
         });
         prop_noiseSource->setOption("title", "Noise Source");
