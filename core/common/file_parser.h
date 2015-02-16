@@ -10,7 +10,9 @@
 
 #include "ebem3d_common.h"
 
-bool populateIOVectors(const std::string inputFileName,
+#include <core/core_api.h>
+
+bool CORE_API populateIOVectors(const std::string inputFileName,
                        std::vector<std::vector<t_FP> > &ioVectors);
 bool parseIOFile(const std::string inputFileName, std::vector<t_FP> &parsedData, t_UInt & nbColumns);
 bool parseIOStream(std::ifstream & inputStream, std::vector<t_FP> &parsedData, unsigned long numValues);
