@@ -50,6 +50,11 @@ enum ResliceInterpolation
     linear = VTK_LINEAR_RESLICE,
     cubic = VTK_CUBIC_RESLICE
 };
+enum NoiseSourceType
+{
+    cpuUniform = NoiseImageSource::CpuUniformDistribution,
+    gpuPerlin = NoiseImageSource::GpuPerlinNoise
+};
 
 const std::string s_resliceOutputArray = "ImageScalars";
 const std::string s_vectorNorm = "VectorNorm";
@@ -337,6 +342,19 @@ PropertyGroup * RenderedVectorGrid3D::createConfigGroup()
     auto group_LIC2D = renderSettings->addGroup("LIC2D");
     group_LIC2D->setOption("title", "Line Integral Convolution 2D");
     {
+
+        auto prop_noiseSource = group_LIC2D->addProperty<NoiseSourceType>("NoiseSource",
+            [this] () { return static_cast<NoiseSourceType>(m_noiseImage->GetNoiseSource()); },
+            [this] (NoiseSourceType type) {
+            m_noiseImage->SetNoiseSource(static_cast<int>(type));
+            emit geometryChanged();
+        });
+        prop_noiseSource->setOption("title", "Noise Source");
+        prop_noiseSource->setStrings({
+            { NoiseSourceType::cpuUniform, "CPU (uniform distribution)" },
+            { NoiseSourceType::gpuPerlin, "GPU (Perlin Noise" }
+        });
+
         auto prop_steps = group_LIC2D->addProperty<int>("Step",
             [this] () { return m_lic2D[0]->GetSteps(); },
             [this] (int s) {
