@@ -111,22 +111,24 @@ set ( SOURCES
     color_mapping/ColorMappingData.cpp
     color_mapping/ColorMappingRegistry.h
     color_mapping/ColorMappingRegistry.cpp
-    color_mapping/DefaultColorMapping.h
-    color_mapping/DefaultColorMapping.cpp
     color_mapping/AttributeArrayComponentMapping.h
     color_mapping/AttributeArrayComponentMapping.cpp
-    color_mapping/VectorMagnitudeColorMapping.h
-    color_mapping/VectorMagnitudeColorMapping.cpp
-    color_mapping/VectorField3DLIC2DPlanes.h
-    color_mapping/VectorField3DLIC2DPlanes.cpp
-    color_mapping/VertexComponentColorMapping.h
-    color_mapping/VertexComponentColorMapping.cpp
+    color_mapping/DefaultColorMapping.h
+    color_mapping/DefaultColorMapping.cpp
+    color_mapping/DirectImageColors.h
+    color_mapping/DirectImageColors.cpp
     color_mapping/GlyphColorMapping.h
     color_mapping/GlyphColorMapping.cpp
     color_mapping/GlyphColorMappingGlyphListener.h
     color_mapping/GlyphColorMappingGlyphListener.cpp
     color_mapping/GlyphMagnitudeColorMapping.h
     color_mapping/GlyphMagnitudeColorMapping.cpp
+    color_mapping/VectorField3DLIC2DPlanes.h
+    color_mapping/VectorField3DLIC2DPlanes.cpp
+    color_mapping/VectorMagnitudeColorMapping.h
+    color_mapping/VectorMagnitudeColorMapping.cpp
+    color_mapping/VertexComponentColorMapping.h
+    color_mapping/VertexComponentColorMapping.cpp
 
     glyph_mapping/GlyphMapping.h
     glyph_mapping/GlyphMapping.cpp
@@ -143,6 +145,8 @@ set ( SOURCES
     reflectionzeug_extension/QStringProperty.h
     reflectionzeug_extension/QStringProperty.hpp
     reflectionzeug_extension/QStringProperty.cpp
+    
+    ThirdParty/alphanum.hpp
 )
 
 source_group_by_path_and_type(${CMAKE_CURRENT_SOURCE_DIR} ${SOURCES})

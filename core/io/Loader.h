@@ -1,8 +1,7 @@
 #pragma once
 
-#include <QList>
 #include <QMap>
-#include <QString>
+#include <QStringList>
 
 #include <core/core_api.h>
 
@@ -14,7 +13,7 @@ class CORE_API Loader
 {
 public:
     static const QString & fileFormatFilters();
-    static const QMap<QString, QList<QString>> & fileFormatExtensions();
+    static const QMap<QString, QStringList> & fileFormatExtensions();
 
     static DataObject * readFile(const QString & filename);
 

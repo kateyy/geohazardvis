@@ -23,7 +23,7 @@ public:
     vtkAlgorithm * createFilter(AbstractVisualizedData * visualizedData) override;
     bool usesFilter() const override;
 
-    void configureMapper(AbstractVisualizedData * visualizedData, vtkMapper * mapper) override;
+    void configureMapper(AbstractVisualizedData * visualizedData, vtkAbstractMapper * mapper) override;
 
 protected:
     static QList<ColorMappingData *> newInstances(const QList<AbstractVisualizedData*> & visualizedData);

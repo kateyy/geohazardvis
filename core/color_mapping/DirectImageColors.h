@@ -3,13 +3,14 @@
 #include <core/color_mapping/ColorMappingData.h>
 
 
-class CORE_API VertexComponentColorMapping : public ColorMappingData
+class CORE_API DirectImageColors : public ColorMappingData
 {
 public:
-    VertexComponentColorMapping(const QList<AbstractVisualizedData*> & visualizedData, vtkIdType component);
-    ~VertexComponentColorMapping() override;
+    DirectImageColors(const QList<AbstractVisualizedData *> & visualizedData,
+        QString dataArrayName, int attributeLocation);
 
     QString name() const override;
+    QString scalarsName() const override;
 
     vtkAlgorithm * createFilter(AbstractVisualizedData * visualizedData) override;
     bool usesFilter() const override;
@@ -17,12 +18,13 @@ public:
     void configureMapper(AbstractVisualizedData * visualizedData, vtkAbstractMapper * mapper) override;
 
 protected:
-    static QList<ColorMappingData *> newInstances(const QList<AbstractVisualizedData*> & visualizedData);
+    static QList<ColorMappingData *> newInstances(const QList<AbstractVisualizedData *> & visualizedData);
 
     QMap<vtkIdType, QPair<double, double>> updateBounds() override;
 
 private:
     static const bool s_isRegistered;
 
-    const vtkIdType m_component;
+    const int m_attributeLocation;
+    const QString m_dataArrayName;
 };

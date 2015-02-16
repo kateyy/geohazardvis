@@ -145,16 +145,19 @@ bool AttributeArrayComponentMapping::usesFilter() const
     return true;
 }
 
-void AttributeArrayComponentMapping::configureMapper(AbstractVisualizedData * visualizedData, vtkMapper * mapper)
+void AttributeArrayComponentMapping::configureMapper(AbstractVisualizedData * visualizedData, vtkAbstractMapper * mapper)
 {
     ColorMappingData::configureMapper(visualizedData, mapper);
-    
-    mapper->ScalarVisibilityOn();
-    if (m_attributeLocation == vtkAssignAttribute::CELL_DATA)
-        mapper->SetScalarModeToUseCellData();
-    else if (m_attributeLocation == vtkAssignAttribute::POINT_DATA)
-        mapper->SetScalarModeToUsePointData();
-    mapper->SelectColorArray(m_dataArrayName.toUtf8().data());
+  
+    if (auto m = vtkMapper::SafeDownCast(mapper))
+    {
+        m->ScalarVisibilityOn();
+        if (m_attributeLocation == vtkAssignAttribute::CELL_DATA)
+            m->SetScalarModeToUseCellData();
+        else if (m_attributeLocation == vtkAssignAttribute::POINT_DATA)
+            m->SetScalarModeToUsePointData();
+        m->SelectColorArray(m_dataArrayName.toUtf8().data());
+    }
 }
 
 QMap<vtkIdType, QPair<double, double>> AttributeArrayComponentMapping::updateBounds()
