@@ -11,7 +11,6 @@ class vtkAssignAttribute;
 class vtkExtractVOI;
 class vtkImageData;
 class vtkImageDataLIC2D;
-class vtkImageOrthoPlanes;
 class vtkImagePlaneWidget;
 class vtkProperty;
 class vtkRenderWindow;
@@ -86,7 +85,6 @@ private:
 
     ColorMode m_colorMode;
 
-    vtkSmartPointer<vtkImageOrthoPlanes> m_orthoPlanes;
     vtkSmartPointer<vtkProperty> m_texturePlaneProperty;
     std::array<vtkSmartPointer<vtkImagePlaneWidget>, 3> m_planeWidgets;
 

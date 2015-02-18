@@ -17,7 +17,6 @@
 #include <vtkExtractVOI.h>
 #include <vtkCellPicker.h>
 #include <vtkImageMapToColors.h>
-#include <vtkImageOrthoPlanes.h>
 #include <vtkImagePlaneWidget.h>
 #include <vtkImageReslice.h>
 #include <vtkOpenGLRenderWindow.h>
@@ -98,11 +97,9 @@ RenderedVectorGrid3D::RenderedVectorGrid3D(VectorGrid3DDataObject * dataObject)
 
 
     m_noiseImage = vtkSmartPointer<NoiseImageSource>::New();
-    m_noiseImage->SetExtent(0, 1270, 0, 1270, 0, 0);
+    m_noiseImage->SetExtent(0, 1023, 0, 1023, 0, 0);
     m_noiseImage->SetValueRange(0, 1);
-    m_noiseImage->SetNumberOfComponents(2);
-
-    m_orthoPlanes = vtkSmartPointer<vtkImageOrthoPlanes>::New();
+    m_noiseImage->SetNumberOfComponents(2); // this actually is a bug in vtkImageDataLIC2D
 
     m_texturePlaneProperty = vtkSmartPointer<vtkProperty>::New();
     m_texturePlaneProperty->LightingOn();
@@ -130,6 +127,7 @@ RenderedVectorGrid3D::RenderedVectorGrid3D(VectorGrid3DDataObject * dataObject)
         m_planeWidgets[i]->SetInputData(dataSetWithVectors);
         m_planeWidgets[i]->UserControlledLookupTableOn();
         m_planeWidgets[i]->RestrictPlaneToVolumeOn();
+        m_planeWidgets[i]->SetPlaneOrientation(i);
 
         // this is required to fix picking with multiple planes in a view
         m_planeWidgets[i]->SetPicker(planePicker);
@@ -140,8 +138,6 @@ RenderedVectorGrid3D::RenderedVectorGrid3D(VectorGrid3DDataObject * dataObject)
         m_planeWidgets[i]->SetLeftButtonAction(vtkImagePlaneWidget::VTK_SLICE_MOTION_ACTION);
         m_planeWidgets[i]->SetRightButtonAction(vtkImagePlaneWidget::VTK_CURSOR_ACTION);
         m_planeWidgets[i]->SetTexturePlaneProperty(m_texturePlaneProperty);
-
-        m_orthoPlanes->SetPlane(i, m_planeWidgets[i]);
 
 
         /** Line Integral Convolution 2D */
