@@ -5,6 +5,8 @@
 #include <QFileInfo>
 #include <QDebug>
 
+#include <vtkCellData.h>
+#include <vtkCharArray.h>
 #include <vtkExecutive.h>
 #include <vtkImageData.h>
 #include <vtkPointData.h>
@@ -106,6 +108,16 @@ DataObject * Loader::readFile(const QString & filename)
     QFileInfo fileInfo{ filename };
     QString baseName = fileInfo.baseName();
     QString ext = fileInfo.suffix().toLower();
+
+    auto getName = [] (vtkDataSet * dataSet) -> QString {
+        vtkCharArray * nameArray = vtkCharArray::SafeDownCast(dataSet->GetFieldData()->GetArray("Name"));
+        if (!nameArray)
+            return "";
+
+        return QString::fromUtf8(
+            nameArray->GetPointer(0),
+            nameArray->GetSize());
+    };
     
     if (ext == "vti")
     {
@@ -122,12 +134,26 @@ DataObject * Loader::readFile(const QString & filename)
             return nullptr;
         }
 
+        QString dataSetName = getName(image);
+        if (dataSetName.isEmpty())
+        {
+            vtkDataArray * data = nullptr;
+            if (!(data = image->GetPointData()->GetScalars()))
+                if (!(data = image->GetPointData()->GetVectors()))
+                    if (!(data = image->GetCellData()->GetScalars()))
+                        data = image->GetCellData()->GetVectors();
+            if (data && data->GetName())
+                dataSetName = QString::fromUtf8(data->GetName());
+        }
+        if (dataSetName.isEmpty())
+            dataSetName = baseName;
+
         switch (image->GetDataDimension())
         {
         case 2:
-            return new ImageDataObject(baseName, image);
+            return new ImageDataObject(dataSetName, image);
         case 3:
-            return new VectorGrid3DDataObject(baseName, image);
+            return new VectorGrid3DDataObject(dataSetName, image);
 
         default:
             qDebug() << "VTK image data format not supported.";
@@ -150,7 +176,21 @@ DataObject * Loader::readFile(const QString & filename)
             return nullptr;
         }
 
-        return new PolyDataObject(baseName, polyData);
+        QString dataSetName = getName(polyData);
+        if (dataSetName.isEmpty())
+        {
+            vtkDataArray * data = nullptr;
+            if (!(data = polyData->GetCellData()->GetScalars()))
+                if (!(data = polyData->GetPointData()->GetScalars()))
+                    if (!(data = polyData->GetCellData()->GetVectors()))
+                        data = polyData->GetPointData()->GetVectors();
+            if (data && data->GetName())
+                dataSetName = QString::fromUtf8(data->GetName());
+        }
+        if (dataSetName.isEmpty())
+            dataSetName = baseName;
+
+        return new PolyDataObject(dataSetName, polyData);
     }
 
     if (vtkImageFileExts().contains(ext))

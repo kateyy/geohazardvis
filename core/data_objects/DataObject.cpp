@@ -5,12 +5,17 @@
 #include <type_traits>
 
 #include <vtkAlgorithm.h>
+#include <vtkCharArray.h>
+#include <vtkDataSet.h>
+#include <vtkEventQtSlotConnect.h>
+#include <vtkFieldData.h>
 #include <vtkInformation.h>
 #include <vtkInformationStringKey.h>
 #include <vtkInformationIntegerKey.h>
+#include <vtkSmartPointer.h>
 
-#include <vtkDataSet.h>
-#include <vtkEventQtSlotConnect.h>
+#include <core/vtkhelper.h>
+#include <core/vtkstringhelper.h>
 
 
 vtkInformationKeyMacro(DataObject, NameKey, String);
@@ -25,6 +30,22 @@ DataObject::DataObject(QString name, vtkDataSet * dataSet)
         dataSet->GetBounds(d_ptr->m_bounds);
 
         d_ptr->m_vtkQtConnect->Connect(dataSet, vtkCommand::ModifiedEvent, this, SLOT(_dataChanged()));
+
+        bool resetName = true;
+        vtkFieldData * fieldData = dataSet->GetFieldData();
+        if (vtkDataArray * nameArray = fieldData->GetArray("Name"))
+        {
+            QString storedName = vtkArrayToQString(*nameArray);
+            resetName = name != storedName;
+        }
+
+        if (resetName)
+        {
+            fieldData->RemoveArray("Name");
+            vtkSmartPointer<vtkCharArray> newArray = qstringToVtkArray(name);
+            newArray->SetName("Name");
+            fieldData->AddArray(newArray);
+        }
     }
 }
 
