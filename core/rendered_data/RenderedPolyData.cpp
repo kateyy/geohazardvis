@@ -195,6 +195,14 @@ reflectionzeug::PropertyGroup * RenderedPolyData::createConfigGroup()
     transparency->setOption("step", 1);
     transparency->setOption("suffix", " %");
 
+    auto backfaceCulling = renderSettings->addProperty<bool>("BackfaceCulling",
+        [this] () { return renderProperty()->GetBackfaceCulling() != 0; },
+        [this] (bool backfaceCulling) {
+        renderProperty()->SetBackfaceCulling(backfaceCulling);
+        emit geometryChanged();
+    });
+    backfaceCulling->setOption("title", "backface culling");
+
     auto pointSize = renderSettings->addProperty<unsigned>("pointSize",
         [this]() {
         return static_cast<unsigned>(renderProperty()->GetPointSize());
