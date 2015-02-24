@@ -101,10 +101,6 @@ RenderedVectorGrid3D::RenderedVectorGrid3D(VectorGrid3DDataObject * dataObject)
     m_noiseImage->SetValueRange(0, 1);
     m_noiseImage->SetNumberOfComponents(2); // this actually is a bug in vtkImageDataLIC2D
 
-    m_texturePlaneProperty = vtkSmartPointer<vtkProperty>::New();
-    m_texturePlaneProperty->LightingOn();
-    m_texturePlaneProperty->SetInterpolationToFlat(); // interpolation is done by reslice
-
     VTK_CREATE(vtkCellPicker, planePicker); // shared picker for the plane widgets
 
 
@@ -137,7 +133,11 @@ RenderedVectorGrid3D::RenderedVectorGrid3D(VectorGrid3DDataObject * dataObject)
 
         m_planeWidgets[i]->SetLeftButtonAction(vtkImagePlaneWidget::VTK_SLICE_MOTION_ACTION);
         m_planeWidgets[i]->SetRightButtonAction(vtkImagePlaneWidget::VTK_CURSOR_ACTION);
-        m_planeWidgets[i]->SetTexturePlaneProperty(m_texturePlaneProperty);
+
+        VTK_CREATE(vtkProperty, property);
+        property->LightingOn();
+        property->SetInterpolationToPhong();
+        m_planeWidgets[i]->SetTexturePlaneProperty(property);
 
 
         /** Line Integral Convolution 2D */
@@ -239,6 +239,10 @@ PropertyGroup * RenderedVectorGrid3D::createConfigGroup()
             updateVisibilities();
         });
 
+        for (int i = 0; i < 3; ++i)
+            prop_visibilities->asCollection()->at(i)->setOption("title", std::string{ char('X' + i) });
+
+
         int extent[6];
         static_cast<vtkImageData *>(dataObject()->dataSet())->GetExtent(extent);
 
@@ -247,8 +251,6 @@ PropertyGroup * RenderedVectorGrid3D::createConfigGroup()
         for (int i = 0; i < 3; ++i)
         {
             std::string axis = { char('X' + i) };
-
-            prop_visibilities->asCollection()->at(i)->setOption("title", axis);
 
             auto * slice_prop = prop_positions->addProperty<int>(axis + "slice",
                 [this, i] () { return slicePosition(i); },
@@ -261,36 +263,48 @@ PropertyGroup * RenderedVectorGrid3D::createConfigGroup()
             slice_prop->setOption("maximum", extent[2 * i + 1]);
         }
 
-        vtkProperty * property = m_texturePlaneProperty;
-
         std::string depthWarning{ "Using transparency and lighting at the same time probably leads to rendering errors." };
 
-        auto prop_transparency = group_scalarSlices->addProperty<double>("Transparency",
-            [property]() {
-            return (1.0 - property->GetOpacity()) * 100;
-        },
-            [this, property] (double transparency) {
-            property->SetOpacity(1.0 - transparency * 0.01);
-            emit geometryChanged();
-        });
-        prop_transparency->setOption("minimum", 0);
-        prop_transparency->setOption("maximum", 100);
-        prop_transparency->setOption("step", 1);
-        prop_transparency->setOption("suffix", " %");
-        prop_transparency->setOption("tooltip", depthWarning);
+        auto prop_transparencies = group_scalarSlices->addGroup("Transparencies");
+
+        for (int i = 0; i < 3; ++i)
+        {
+            std::string axis = { char('X' + i) };
+
+            vtkProperty * property = m_planeWidgets[i]->GetTexturePlaneProperty();
+
+            auto * slice_prop = prop_transparencies->addProperty<double>(axis + "slice",
+                [property]() {
+                return (1.0 - property->GetOpacity()) * 100;
+            },
+                [this, property] (double transparency) {
+                property->SetOpacity(1.0 - transparency * 0.01);
+                emit geometryChanged();
+            });
+            slice_prop->setOption("title", axis);
+            slice_prop->setOption("minimum", 0);
+            slice_prop->setOption("maximum", 100);
+            slice_prop->setOption("step", 1);
+            slice_prop->setOption("suffix", " %");
+            slice_prop->setOption("tooltip", depthWarning);
+        }
+
+        vtkProperty * property = m_planeWidgets[0]->GetTexturePlaneProperty();
 
         auto prop_lighting = group_scalarSlices->addProperty<bool>("Lighting",
             [property]() { return property->GetLighting(); },
-            [this, property](bool lighting) {
-            property->SetLighting(lighting);
+            [this, property] (bool lighting) {
+            for (auto w : m_planeWidgets)
+                w->GetTexturePlaneProperty()->SetLighting(lighting);
             emit geometryChanged();
         });
         prop_lighting->setOption("tooltip", depthWarning);
 
         auto prop_diffLighting = group_scalarSlices->addProperty<double>("DiffuseLighting",
             [property] () { return property->GetDiffuse(); },
-            [this, property] (double diff) {
-            property->SetDiffuse(diff);
+            [this, property](double diff) {
+            for (auto w : m_planeWidgets)
+                w->GetTexturePlaneProperty()->SetDiffuse(diff);
             emit geometryChanged();
         });
         prop_diffLighting->setOption("title", "Diffuse Lighting");
@@ -301,7 +315,8 @@ PropertyGroup * RenderedVectorGrid3D::createConfigGroup()
         auto prop_ambientLighting = group_scalarSlices->addProperty<double>("AmbientLighting",
             [property]() { return property->GetAmbient(); },
             [this, property] (double ambient) {
-            property->SetAmbient(ambient);
+            for (auto w : m_planeWidgets)
+                w->GetTexturePlaneProperty()->SetAmbient(ambient);
             emit geometryChanged();
         });
         prop_ambientLighting->setOption("title", "Ambient Lighting");

@@ -85,7 +85,6 @@ private:
 
     ColorMode m_colorMode;
 
-    vtkSmartPointer<vtkProperty> m_texturePlaneProperty;
     std::array<vtkSmartPointer<vtkImagePlaneWidget>, 3> m_planeWidgets;
 
     std::array<bool, 3> m_slicesEnabled;
