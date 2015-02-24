@@ -93,8 +93,8 @@ RenderedVectorGrid3D::RenderedVectorGrid3D(VectorGrid3DDataObject * dataObject)
     vtkOpenGLRenderWindow * openGLContext = vtkOpenGLRenderWindow::SafeDownCast(m_glContext);
     assert(openGLContext);
     openGLContext->GetExtensionManager()->IgnoreDriverBugsOn(); // required for Intel HD
-    // sometimes it works, sometimes not
-    //openGLContext->OffScreenRenderingOn();
+    openGLContext->SetMultiSamples(1);  // multi sampling is not implemented for off screen contexts
+    openGLContext->OffScreenRenderingOn();
 
 
     m_noiseImage = vtkSmartPointer<NoiseImageSource>::New();
