@@ -66,8 +66,6 @@ protected:
 
     /** work around missing update after LIC image changes */
     void forceLICUpdate(int axis);
-    /** after updating the reslice inputs: set slice positions to the previous values */
-    void resetSlicePositions();
 
 private:
     void updateVisibilities();
@@ -88,7 +86,7 @@ private:
     std::array<vtkSmartPointer<vtkImagePlaneWidget>, 3> m_planeWidgets;
 
     std::array<bool, 3> m_slicesEnabled;
-    std::array<int, 3> m_slicePositions;
+    std::array<int, 3> m_storedSliceIndexes;
 
     vtkSmartPointer<NoiseImageSource> m_noiseImage;
     float m_lic2DVectorScaleFactor;

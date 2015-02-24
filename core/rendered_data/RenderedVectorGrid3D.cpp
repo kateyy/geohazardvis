@@ -448,6 +448,10 @@ void RenderedVectorGrid3D::scalarsForColorMappingChangedEvent()
 
     ColorMode newMode = ColorMode::UserDefined;
 
+    for (int i = 0; i < 3; ++i)
+        if (m_planeWidgets[i]->GetEnabled() != 0)
+            m_storedSliceIndexes[i] = m_planeWidgets[i]->GetSliceIndex();
+
     if (m_scalars && m_scalars->name() == "LIC 2D")
     {
         newMode = ColorMode::LIC;
@@ -472,10 +476,11 @@ void RenderedVectorGrid3D::scalarsForColorMappingChangedEvent()
         for (auto & plane : m_planeWidgets)
             plane->SetInputData(dataObject()->processedDataSet());
 
-
-    resetSlicePositions();
-
     setColorMode(newMode);
+
+
+    for (int i = 0; i < 3; ++i)
+        m_planeWidgets[i]->SetSliceIndex(m_storedSliceIndexes[i]);
 
     updateVisibilities();
 }
@@ -509,12 +514,6 @@ void RenderedVectorGrid3D::forceLICUpdate(int axis)
     m_lic2D[axis]->Update();
 }
 
-void RenderedVectorGrid3D::resetSlicePositions()
-{
-    for (int i = 0; i < 3; ++i)
-        m_planeWidgets[i]->SetSliceIndex(m_slicePositions[i]);
-}
-
 void RenderedVectorGrid3D::updateVisibilities()
 {
     for (int i = 0; i < 3; ++i)
@@ -545,15 +544,14 @@ int RenderedVectorGrid3D::slicePosition(int axis)
 {
     assert(0 < axis || axis < 3);
 
-    return m_slicePositions[axis];
+    return m_planeWidgets[axis]->GetSliceIndex();
 }
 
 void RenderedVectorGrid3D::setSlicePosition(int axis, int slicePosition)
 {
     assert(0 < axis || axis < 3);
 
-    m_slicePositions[axis] = slicePosition;
-
+    m_storedSliceIndexes[axis] = slicePosition;
     m_planeWidgets[axis]->SetSliceIndex(slicePosition);
 
     forceLICUpdate(axis);
