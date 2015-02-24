@@ -199,6 +199,12 @@ DataObject * Loader::readFile(const QString & filename)
         reader.TakeReference(
             vtkImageReader2Factory::CreateImageReader2(filename.toUtf8().data()));
 
+        if (!reader)
+        {
+            qDebug() << "Unsupported image format: " << filename;
+            return nullptr;
+        }
+
         vtkImageData * image = nullptr;
         reader->SetFileName(filename.toUtf8().data());
         if (reader->GetExecutive()->Update() == 1)
