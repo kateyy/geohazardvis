@@ -489,11 +489,7 @@ void RenderedVectorGrid3D::colorMappingGradientChangedEvent()
 {
     RenderedData3D::colorMappingGradientChangedEvent();
 
-    vtkSmartPointer<vtkLookupTable> lut = vtkLookupTable::SafeDownCast(m_gradient);
-    assert(lut);
-
-    for (auto plane : m_planeWidgets)
-        plane->SetLookupTable(lut);
+    updatePlaneLUT();
 
     updateVisibilities();
 }
@@ -512,6 +508,26 @@ void RenderedVectorGrid3D::forceLICUpdate(int axis)
 
     // missing update in vtkImageDataLIC2D?
     m_lic2D[axis]->Update();
+}
+
+void RenderedVectorGrid3D::updatePlaneLUT()
+{
+    if (!m_blackWhiteLUT)
+    {
+        m_blackWhiteLUT = vtkSmartPointer<vtkLookupTable>::New();
+        m_blackWhiteLUT->SetHueRange(0, 0);
+        m_blackWhiteLUT->SetSaturationRange(0, 0);
+        m_blackWhiteLUT->SetValueRange(0, 1);
+        m_blackWhiteLUT->SetNumberOfTableValues(255);
+        m_blackWhiteLUT->Build();
+    }
+
+    vtkSmartPointer<vtkLookupTable> lut = m_colorMode == ColorMode::LIC
+        ? m_blackWhiteLUT
+        : vtkLookupTable::SafeDownCast(m_gradient);
+
+    for (auto plane : m_planeWidgets)
+        plane->SetLookupTable(lut);
 }
 
 void RenderedVectorGrid3D::updateVisibilities()
@@ -597,4 +613,6 @@ void RenderedVectorGrid3D::setColorMode(ColorMode mode)
         m_planeWidgets[i]->GetTexture()->SetInputConnection(m_lic2D[i]->GetOutputPort());
         break;
     }
+    
+    updatePlaneLUT();
 }

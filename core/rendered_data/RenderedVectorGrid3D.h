@@ -12,6 +12,7 @@ class vtkExtractVOI;
 class vtkImageData;
 class vtkImageDataLIC2D;
 class vtkImagePlaneWidget;
+class vtkLookupTable;
 class vtkProperty;
 class vtkRenderWindow;
 class vtkRenderWindowInteractor;
@@ -66,6 +67,7 @@ protected:
 
     /** work around missing update after LIC image changes */
     void forceLICUpdate(int axis);
+    void updatePlaneLUT();
 
 private:
     void updateVisibilities();
@@ -82,6 +84,7 @@ private:
     // for color mapping / LIC2D planes
 
     ColorMode m_colorMode;
+    vtkSmartPointer<vtkLookupTable> m_blackWhiteLUT;
 
     std::array<vtkSmartPointer<vtkImagePlaneWidget>, 3> m_planeWidgets;
 
