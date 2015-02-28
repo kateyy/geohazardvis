@@ -328,15 +328,12 @@ vtkPolyData * MatricesToVtk::parseIndexedTriangles(
     size_t nbVertices = parsedVertexData[vertexIndexColumn].size();
     size_t nbTriangles = parsedIndexData[firstIndexColumn].size();
 
-    std::vector<vtkIdType> pointIds(nbVertices);
-
     // to let the internal indexes start with 0
     size_t indexOffset = std::llround(parsedVertexData[vertexIndexColumn][0]);
 
     for (size_t row = 0; row < nbVertices; ++row)
     {
         points->InsertNextPoint(parsedVertexData[firstVertexColumn][row], parsedVertexData[firstVertexColumn + 1][row], parsedVertexData[firstVertexColumn + 2][row]);
-        pointIds.at(row) = std::llround(parsedVertexData[vertexIndexColumn][row]) - indexOffset;
     }
 
     VTK_CREATE(vtkCellArray, triangles);
