@@ -100,7 +100,7 @@ RenderedVectorGrid3D::RenderedVectorGrid3D(VectorGrid3DDataObject * dataObject)
     m_noiseImage = vtkSmartPointer<NoiseImageSource>::New();
     m_noiseImage->SetExtent(0, 1023, 0, 1023, 0, 0);
     m_noiseImage->SetValueRange(0, 1);
-    m_noiseImage->SetNumberOfComponents(2); // this actually is a bug in vtkImageDataLIC2D
+    m_noiseImage->SetNumberOfComponents(1);
 
     VTK_CREATE(vtkCellPicker, planePicker); // shared picker for the plane widgets
 
