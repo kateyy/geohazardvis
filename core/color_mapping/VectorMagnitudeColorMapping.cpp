@@ -126,7 +126,7 @@ QString VectorMagnitudeColorMapping::name() const
     return m_dataArrayName + " Magnitude";
 }
 
-vtkAlgorithm * VectorMagnitudeColorMapping::createFilter(AbstractVisualizedData * visualizedData)
+vtkAlgorithm * VectorMagnitudeColorMapping::createFilter(AbstractVisualizedData * visualizedData, int connection)
 {
     /** vtkVectorNorm sets norm array as current scalars; it doesn't set a name */
     vtkVectorNorm * norm = m_vectorNorms.value(visualizedData);

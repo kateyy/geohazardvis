@@ -53,7 +53,7 @@ public:
       * @param dataObject is required to setup object specific parameters on the filter.
       *        The filter inputs are set as required.
       * May be implemented by subclasses, returns nullptr by default. */
-    virtual vtkAlgorithm * createFilter(AbstractVisualizedData * visualizedData);
+    virtual vtkAlgorithm * createFilter(AbstractVisualizedData * visualizedData, int connection = 0);
     virtual bool usesFilter() const;
 
     /** set parameters on the mapper that is used to render the visualizedData.

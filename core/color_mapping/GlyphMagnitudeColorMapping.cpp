@@ -88,7 +88,7 @@ QString GlyphMagnitudeColorMapping::name() const
     return "Glyph Magnitude: " + m_vectorName;
 }
 
-vtkAlgorithm * GlyphMagnitudeColorMapping::createFilter(AbstractVisualizedData * visualizedData)
+vtkAlgorithm * GlyphMagnitudeColorMapping::createFilter(AbstractVisualizedData * visualizedData, int connection)
 {
     vtkAlgorithm * filter = m_vectorNorms.value(visualizedData, nullptr);
     

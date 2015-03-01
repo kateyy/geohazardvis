@@ -65,7 +65,7 @@ QString VertexComponentColorMapping::name() const
     return QString('x' + char(m_component)) + "-coordinate";
 }
 
-vtkAlgorithm * VertexComponentColorMapping::createFilter(AbstractVisualizedData * visualizedData)
+vtkAlgorithm * VertexComponentColorMapping::createFilter(AbstractVisualizedData * visualizedData, int connection)
 {
     PolyDataObject * polyData = static_cast<PolyDataObject *>(visualizedData->dataObject());
 

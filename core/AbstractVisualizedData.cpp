@@ -71,14 +71,21 @@ void AbstractVisualizedData::setColorMappingGradient(vtkScalarsToColors * gradie
     colorMappingGradientChangedEvent();
 }
 
-vtkAlgorithmOutput * AbstractVisualizedData::colorMappingInput()
+int AbstractVisualizedData::numberOfColorMappingInputs() const
 {
+    return 1;
+}
+
+vtkAlgorithmOutput * AbstractVisualizedData::colorMappingInput(int connection)
+{
+    assert(connection == 0);
+
     return dataObject()->processedOutputPort();
 }
 
-vtkDataSet * AbstractVisualizedData::colorMappingInputData()
+vtkDataSet * AbstractVisualizedData::colorMappingInputData(int connection)
 {
-    auto alg = colorMappingInput()->GetProducer();
+    auto alg = colorMappingInput(connection)->GetProducer();
     alg->Update();
     return vtkDataSet::SafeDownCast(alg->GetOutputDataObject(0));
 }

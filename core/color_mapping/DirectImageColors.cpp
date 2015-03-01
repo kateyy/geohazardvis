@@ -99,7 +99,7 @@ QString DirectImageColors::scalarsName() const
     return m_dataArrayName;
 }
 
-vtkAlgorithm * DirectImageColors::createFilter(AbstractVisualizedData * visualizedData)
+vtkAlgorithm * DirectImageColors::createFilter(AbstractVisualizedData * visualizedData, int connection)
 {
     vtkAssignAttribute * filter = vtkAssignAttribute::New();
 

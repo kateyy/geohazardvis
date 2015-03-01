@@ -6,18 +6,13 @@
 
 
 class vtkAlgorithmOutput;
-class vtkArrayCalculator;
 class vtkAssignAttribute;
 class vtkExtractVOI;
 class vtkImageData;
-class vtkImageDataLIC2D;
 class vtkImagePlaneWidget;
 class vtkLookupTable;
-class vtkProperty;
-class vtkRenderWindow;
 class vtkRenderWindowInteractor;
 
-class NoiseImageSource;
 class VectorGrid3DDataObject;
 
 
@@ -44,16 +39,9 @@ public:
 
     int slicePosition(int axis);
     void setSlicePosition(int axis, int slicePosition);
-    void setLic2DVectorScaleFactor(float f);
 
-    enum class ColorMode
-    {
-        UserDefined,
-        ScalarMapping,
-        LIC
-    };
-    ColorMode colorMode() const;
-    void setColorMode(ColorMode mode);
+    int numberOfColorMappingInputs() const override;
+    vtkAlgorithmOutput * colorMappingInput(int connection = 0) override;
 
 signals:
     void sampleRateChanged(int x, int y, int z);
@@ -65,35 +53,25 @@ protected:
     void colorMappingGradientChangedEvent() override;
     void visibilityChangedEvent(bool visible) override;
 
-    /** work around missing update after LIC image changes */
-    void forceLICUpdate(int axis);
     void updatePlaneLUT();
 
 private:
     void updateVisibilities();
 
 private:
-    friend class VectorField3DLIC2DPlanes;
-
     bool m_isInitialized;
+
+    std::string m_vectorsName;
 
     // for vector mapping
     vtkSmartPointer<vtkExtractVOI> m_extractVOI;
 
-
     // for color mapping / LIC2D planes
 
-    ColorMode m_colorMode;
-    vtkSmartPointer<vtkLookupTable> m_blackWhiteLUT;
-
     std::array<vtkSmartPointer<vtkImagePlaneWidget>, 3> m_planeWidgets;
+    std::array<vtkSmartPointer<vtkAssignAttribute>, 3> m_assignedVectors;
+    vtkSmartPointer<vtkLookupTable> m_blackWhiteLUT;
 
     std::array<bool, 3> m_slicesEnabled;
     std::array<int, 3> m_storedSliceIndexes;
-
-    vtkSmartPointer<NoiseImageSource> m_noiseImage;
-    float m_lic2DVectorScaleFactor;
-    std::array<vtkSmartPointer<vtkArrayCalculator>, 3> m_lic2DVectorScale;
-    std::array<vtkSmartPointer<vtkImageDataLIC2D>, 3> m_lic2D;
-    vtkSmartPointer<vtkRenderWindow> m_glContext;
 };

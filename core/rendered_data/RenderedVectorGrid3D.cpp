@@ -1,10 +1,5 @@
 #include "RenderedVectorGrid3D.h"
 
-#include <algorithm>
-#include <limits>
-
-#include <vtkInformation.h>
-#include <vtkInformationStringKey.h>
 #include <vtkProp3DCollection.h>
 #include <vtkLookupTable.h>
 
@@ -13,14 +8,11 @@
 #include <vtkPointData.h>
 
 #include <vtkAssignAttribute.h>
-#include <vtkArrayCalculator.h>
 #include <vtkExtractVOI.h>
 #include <vtkCellPicker.h>
 #include <vtkImageMapToColors.h>
 #include <vtkImagePlaneWidget.h>
 #include <vtkImageReslice.h>
-#include <vtkOpenGLRenderWindow.h>
-#include <vtkOpenGLExtensionManager.h>
 #include <vtkProperty.h>
 #include <vtkTexture.h>
 
@@ -30,8 +22,6 @@
 #include <core/color_mapping/ColorMappingData.h>
 #include <core/data_objects/VectorGrid3DDataObject.h>
 #include <core/filters/ArrayRenameFilter.h>
-#include <core/filters/NoiseImageSource.h>
-#include <core/filters/vtkImageDataLIC2D.h>
 
 
 using namespace reflectionzeug;
@@ -47,11 +37,6 @@ enum ResliceInterpolation
     nearest = VTK_NEAREST_RESLICE,
     linear = VTK_LINEAR_RESLICE,
     cubic = VTK_CUBIC_RESLICE
-};
-enum NoiseSourceType
-{
-    cpuUniform = NoiseImageSource::CpuUniformDistribution,
-    gpuPerlin = NoiseImageSource::GpuPerlinNoise
 };
 
 const std::string s_resliceOutputArray = "ImageScalars";
@@ -79,36 +64,20 @@ RenderedVectorGrid3D::RenderedVectorGrid3D(VectorGrid3DDataObject * dataObject)
     int sampleRate = std::max(1, (int)std::floor(std::cbrt(float(numPoints) / DefaultMaxNumberOfPoints)));
     setSampleRate(sampleRate, sampleRate, sampleRate);
 
-    std::string vectorsName;
     for (int vectorArray = 0; vectorArray < dataObject->dataSet()->GetPointData()->GetNumberOfArrays(); ++vectorArray)
         if (dataObject->dataSet()->GetPointData()->GetArray(vectorArray)->GetNumberOfComponents() == 3)
         {
-            vectorsName = dataObject->dataSet()->GetPointData()->GetArray(vectorArray)->GetName();
+            m_vectorsName = dataObject->dataSet()->GetPointData()->GetArray(vectorArray)->GetName();
             break;
         }
 
-    std::string vectorsScaledName{ vectorsName + "_scaled" };
-
-    m_glContext = vtkSmartPointer<vtkRenderWindow>::New();
-    vtkOpenGLRenderWindow * openGLContext = vtkOpenGLRenderWindow::SafeDownCast(m_glContext);
-    assert(openGLContext);
-    openGLContext->GetExtensionManager()->IgnoreDriverBugsOn(); // required for Intel HD
-    openGLContext->SetMultiSamples(1);  // multi sampling is not implemented for off screen contexts
-    openGLContext->OffScreenRenderingOn();
-
-
-    m_noiseImage = vtkSmartPointer<NoiseImageSource>::New();
-    m_noiseImage->SetExtent(0, 1023, 0, 1023, 0, 0);
-    m_noiseImage->SetValueRange(0, 1);
-    m_noiseImage->SetNumberOfComponents(1);
 
     VTK_CREATE(vtkCellPicker, planePicker); // shared picker for the plane widgets
 
 
-
     VTK_CREATE(vtkAssignAttribute, assignVectors);
     assignVectors->SetInputData(dataObject->dataSet());
-    assignVectors->Assign(vectorsName.c_str(), vtkDataSetAttributes::VECTORS, vtkAssignAttribute::POINT_DATA);
+    assignVectors->Assign(m_vectorsName.c_str(), vtkDataSetAttributes::VECTORS, vtkAssignAttribute::POINT_DATA);
     assignVectors->Update();
 
     vtkDataSet * dataSetWithVectors = vtkDataSet::SafeDownCast(assignVectors->GetOutput());
@@ -141,29 +110,6 @@ RenderedVectorGrid3D::RenderedVectorGrid3D(VectorGrid3DDataObject * dataObject)
         m_planeWidgets[i]->SetTexturePlaneProperty(property);
 
 
-        /** Line Integral Convolution 2D */
-
-        VTK_CREATE(vtkAssignAttribute, assignVectors);
-        assignVectors->SetInputConnection(m_planeWidgets[i]->GetReslice()->GetOutputPort());
-        assignVectors->Assign(s_resliceOutputArray.c_str(), vtkDataSetAttributes::VECTORS, vtkAssignAttribute::POINT_DATA);
-
-        m_lic2DVectorScale[i] = vtkSmartPointer<vtkArrayCalculator>::New();
-        m_lic2DVectorScale[i]->SetInputConnection(assignVectors->GetOutputPort());
-        m_lic2DVectorScale[i]->AddVectorArrayName(s_resliceOutputArray.c_str());
-        m_lic2DVectorScale[i]->SetResultArrayName(vectorsScaledName.c_str());
-
-        VTK_CREATE(vtkAssignAttribute, assignScaledVectors);
-        assignScaledVectors->SetInputConnection(m_lic2DVectorScale[i]->GetOutputPort());
-        assignScaledVectors->Assign(vectorsScaledName.c_str(),
-            vtkDataSetAttributes::VECTORS, vtkAssignAttribute::POINT_DATA);
-
-        m_lic2D[i] = vtkSmartPointer<vtkImageDataLIC2D>::New();
-        m_lic2D[i]->SetInputConnection(0, assignScaledVectors->GetOutputPort());
-        m_lic2D[i]->SetInputConnection(1, m_noiseImage->GetOutputPort());
-        m_lic2D[i]->SetSteps(50);
-        m_lic2D[i]->GlobalWarningDisplayOff();
-        m_lic2D[i]->SetContext(m_glContext);
-
         int min = extent[2 * i];
         int max = extent[2 * i + 1];
         setSlicePosition(i, (max - min) / 2);
@@ -171,25 +117,11 @@ RenderedVectorGrid3D::RenderedVectorGrid3D(VectorGrid3DDataObject * dataObject)
         m_slicesEnabled[i] = true;
     }
 
-    double scalarRange[2] = { std::numeric_limits<double>::max(), std::numeric_limits<double>::lowest() };
-    for (int i = 0; i < 3; ++i)
-    {
-        double r[2];
-        image->GetPointData()->GetScalars()->GetRange(r, i);
-        scalarRange[0] = std::min(scalarRange[0], r[0]);
-        scalarRange[1] = std::max(scalarRange[1], r[1]);
-    }
-    setLic2DVectorScaleFactor(1.0 / std::max(std::abs(scalarRange[0]), std::abs(scalarRange[1])));
-
-    setColorMode(ColorMode::UserDefined);
-
     m_isInitialized = true;
 }
 
 RenderedVectorGrid3D::~RenderedVectorGrid3D()
 {
-    for (auto & lic : m_lic2D)
-        lic->SetContext(nullptr);
 }
 
 void RenderedVectorGrid3D::setRenderWindowInteractor(vtkRenderWindowInteractor * interactor)
@@ -341,86 +273,6 @@ PropertyGroup * RenderedVectorGrid3D::createConfigGroup()
         });
     }
 
-    auto group_LIC2D = renderSettings->addGroup("LIC2D");
-    group_LIC2D->setOption("title", "Line Integral Convolution 2D");
-    {
-
-        auto prop_noiseSource = group_LIC2D->addProperty<NoiseSourceType>("NoiseSource",
-            [this] () { return static_cast<NoiseSourceType>(m_noiseImage->GetNoiseSource()); },
-            [this] (NoiseSourceType type) {
-            m_noiseImage->SetNoiseSource(static_cast<int>(type));
-            for (int i = 0; i < 3; ++i)
-                forceLICUpdate(i);
-            emit geometryChanged();
-        });
-        prop_noiseSource->setOption("title", "Noise Source");
-        prop_noiseSource->setStrings({
-            { NoiseSourceType::cpuUniform, "CPU (uniform distribution)" },
-            { NoiseSourceType::gpuPerlin, "GPU (Perlin Noise" }
-        });
-
-        auto prop_steps = group_LIC2D->addProperty<int>("Step",
-            [this] () { return m_lic2D[0]->GetSteps(); },
-            [this] (int s) {
-            for (int i = 0; i < 3; ++i)
-            {
-                m_lic2D[i]->SetSteps(s);
-                forceLICUpdate(i);
-            }
-            emit geometryChanged();
-        });
-        prop_steps->setOption("minimum", 1);
-
-        auto prop_stepSize = group_LIC2D->addProperty<double>("StepSize",
-            [this] () { return m_lic2D[0]->GetStepSize(); },
-            [this] (double size) {
-            for (int i = 0; i < 3; ++i)
-            {
-                m_lic2D[i]->SetStepSize(size);
-                forceLICUpdate(i);
-            }
-            emit geometryChanged();
-        });
-        prop_stepSize->setOption("title", "Step Size");
-        prop_stepSize->setOption("minimum", 0.001);
-        prop_stepSize->setOption("precision", 3);
-        prop_stepSize->setOption("step", 0.1);
-
-
-        // bug somewhere in VTK?
-        //auto prop_magnification = group_LIC2D->addProperty<int>("Magnification",
-        //    [this] () { return m_lic2D[0]->GetMagnification(); },
-        //    [this] (int mag) {
-        //    for (int i = 0; i < 3; ++i)
-        //    {
-        //        m_lic2D[i]->SetMagnification(mag);
-        //        forceLICUpdate(i);
-        //    }
-        //    emit geometryChanged();
-        //});
-        //prop_magnification->setOption("minimum", 1);
-
-        auto prop_vectorScale = group_LIC2D->addProperty<float>("vectorScaleFactor",
-            [this] () { return m_lic2DVectorScaleFactor; },
-            [this] (float f) {
-            setLic2DVectorScaleFactor(f);
-            emit geometryChanged();
-        });
-        prop_vectorScale->setOption("title", "Vector Scale Factor");
-        prop_vectorScale->setOption("minimum", 0);
-
-        auto prop_noiseSize = group_LIC2D->addProperty<int>("NoiseSize",
-            [this] () { return m_noiseImage->GetExtent()[1]; },
-            [this] (int size) {
-            m_noiseImage->SetExtent(0, size, 0, size, 0, 0);
-            for (int i = 0; i < 3; ++i)
-                forceLICUpdate(i);
-            emit geometryChanged();
-        });
-        prop_noiseSize->setOption("minimum", 1);
-        prop_noiseSize->setOption("title", "Noise Image Size");
-    }
-
     return renderSettings;
 }
 
@@ -446,43 +298,36 @@ void RenderedVectorGrid3D::scalarsForColorMappingChangedEvent()
 {
     RenderedData3D::scalarsForColorMappingChangedEvent();
 
-    ColorMode newMode = ColorMode::UserDefined;
-
     for (int i = 0; i < 3; ++i)
         if (m_planeWidgets[i]->GetEnabled() != 0)
             m_storedSliceIndexes[i] = m_planeWidgets[i]->GetSliceIndex();
 
-    if (m_scalars && m_scalars->name() == "LIC 2D")
+    if (m_scalars && m_scalars->usesFilter())
     {
-        newMode = ColorMode::LIC;
-    }
-    else if (m_scalars && m_scalars->usesFilter())
-    {
-        vtkSmartPointer<vtkAlgorithm> filter = vtkSmartPointer<vtkAlgorithm>::Take(m_scalars->createFilter(this));
-        filter->Update();
-        vtkDataSet * dataSet = vtkDataSet::SafeDownCast(filter->GetOutputDataObject(0));
-        assert(dataSet);
-
-        if (dataSet->GetPointData()->GetScalars())
+        for (int i = 0; i < 3; ++i)
         {
-            for (auto & plane : m_planeWidgets)
-                plane->SetInputData(dataSet);
-            
-            newMode = ColorMode::ScalarMapping;
+            vtkSmartPointer<vtkAlgorithm> filter = vtkSmartPointer<vtkAlgorithm>::Take(
+                m_scalars->createFilter(this, i));
+
+            m_planeWidgets[i]->GetTexture()->SetInputConnection(filter->GetOutputPort());
         }
     }
-
-    if (newMode != ColorMode::ScalarMapping)
-        for (auto & plane : m_planeWidgets)
-            plane->SetInputData(dataObject()->processedDataSet());
-
-    setColorMode(newMode);
-
+    else
+    {
+        for (int i = 0; i < 3; ++i)
+        {
+            m_planeWidgets[i]->GetTexture()->SetInputConnection(
+                m_planeWidgets[i]->GetReslice()->GetOutputPort());
+        }
+    }
 
     for (int i = 0; i < 3; ++i)
         m_planeWidgets[i]->SetSliceIndex(m_storedSliceIndexes[i]);
 
+
     updateVisibilities();
+
+    updatePlaneLUT();
 }
 
 void RenderedVectorGrid3D::colorMappingGradientChangedEvent()
@@ -501,15 +346,6 @@ void RenderedVectorGrid3D::visibilityChangedEvent(bool visible)
     updateVisibilities();
 }
 
-void RenderedVectorGrid3D::forceLICUpdate(int axis)
-{
-    if (!m_isInitialized || (m_colorMode != ColorMode::LIC))
-        return;
-
-    // missing update in vtkImageDataLIC2D?
-    m_lic2D[axis]->Update();
-}
-
 void RenderedVectorGrid3D::updatePlaneLUT()
 {
     if (!m_blackWhiteLUT)
@@ -522,7 +358,7 @@ void RenderedVectorGrid3D::updatePlaneLUT()
         m_blackWhiteLUT->Build();
     }
 
-    vtkSmartPointer<vtkLookupTable> lut = m_colorMode == ColorMode::LIC
+    vtkSmartPointer<vtkLookupTable> lut = (m_scalars && m_scalars->name() == "LIC 2D")
         ? m_blackWhiteLUT
         : vtkLookupTable::SafeDownCast(m_gradient);
 
@@ -532,10 +368,12 @@ void RenderedVectorGrid3D::updatePlaneLUT()
 
 void RenderedVectorGrid3D::updateVisibilities()
 {
+    bool colorMapping = m_scalars && m_scalars->usesFilter();
+
     for (int i = 0; i < 3; ++i)
     {
         bool showSliceI = isVisible()
-            && (colorMode() != ColorMode::UserDefined)
+            && colorMapping
             && m_gradient // don't show the slice before they can use our gradient
             && (m_planeWidgets[i]->GetInteractor() != nullptr) // don't enable them without an interactor
             && m_slicesEnabled[i];
@@ -569,50 +407,29 @@ void RenderedVectorGrid3D::setSlicePosition(int axis, int slicePosition)
 
     m_storedSliceIndexes[axis] = slicePosition;
     m_planeWidgets[axis]->SetSliceIndex(slicePosition);
-
-    forceLICUpdate(axis);
 }
 
-void RenderedVectorGrid3D::setLic2DVectorScaleFactor(float f)
+int RenderedVectorGrid3D::numberOfColorMappingInputs() const
 {
-    if (m_lic2DVectorScaleFactor == f)
-        return;
-
-    m_lic2DVectorScaleFactor = f;
-
-    std::string fun{ std::to_string(m_lic2DVectorScaleFactor) + "*" + s_resliceOutputArray };
-
-    for (auto vectorScale : m_lic2DVectorScale)
-        vectorScale->SetFunction(fun.c_str());
-
-    for (int i = 0; i < 3; ++i)
-        forceLICUpdate(i);
+    return 3;
 }
 
-RenderedVectorGrid3D::ColorMode RenderedVectorGrid3D::colorMode() const
+vtkAlgorithmOutput * RenderedVectorGrid3D::colorMappingInput(int connection)
 {
-    return m_colorMode;
-}
+    assert(connection >= 0 && connection < 3);
 
-void RenderedVectorGrid3D::setColorMode(ColorMode mode)
-{
-    m_colorMode = mode;
+    auto & assign = m_assignedVectors.at(connection);
 
-    for (int i = 0; i < 3; ++i)
-    switch (m_colorMode)
+    if (!assign)
     {
-    case ColorMode::UserDefined:
-        break;
+        VTK_CREATE(ArrayRenameFilter, rename);
+        rename->SetScalarsName(m_vectorsName.c_str());
+        rename->SetInputConnection(m_planeWidgets[connection]->GetReslice()->GetOutputPort());
 
-    // slightly hacked: modify internal pipeline of vtkImagePlaneWidget to allow usage with LIC
-    case ColorMode::ScalarMapping:
-        m_planeWidgets[i]->GetTexture()->SetInputConnection(m_planeWidgets[i]->GetReslice()->GetOutputPort());
-        break;
-    case ColorMode::LIC:
-        //m_planeWidgets[i]->GetTexture()->SetInputConnection(m_lic2DColorMagnitudeScalars[i]->GetOutputPort());
-        m_planeWidgets[i]->GetTexture()->SetInputConnection(m_lic2D[i]->GetOutputPort());
-        break;
+        assign = vtkSmartPointer<vtkAssignAttribute>::New();
+        assign->SetInputConnection(rename->GetOutputPort());
+        assign->Assign(m_vectorsName.c_str(), vtkDataSetAttributes::VECTORS, vtkAssignAttribute::POINT_DATA);
     }
-    
-    updatePlaneLUT();
+
+    return assign->GetOutputPort();
 }

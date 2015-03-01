@@ -12,7 +12,7 @@ public:
     QString name() const override;
     QString scalarsName() const override;
 
-    vtkAlgorithm * createFilter(AbstractVisualizedData * visualizedData) override;
+    vtkAlgorithm * createFilter(AbstractVisualizedData * visualizedData, int connection = 0) override;
     bool usesFilter() const override;
 
     void configureMapper(AbstractVisualizedData * visualizedData, vtkAbstractMapper * mapper) override;

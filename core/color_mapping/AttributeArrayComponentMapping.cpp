@@ -129,7 +129,7 @@ QString AttributeArrayComponentMapping::scalarsName() const
     return m_dataArrayName;
 }
 
-vtkAlgorithm * AttributeArrayComponentMapping::createFilter(AbstractVisualizedData * visualizedData)
+vtkAlgorithm * AttributeArrayComponentMapping::createFilter(AbstractVisualizedData * visualizedData, int connection)
 {
     vtkAssignAttribute * filter = vtkAssignAttribute::New();
 
