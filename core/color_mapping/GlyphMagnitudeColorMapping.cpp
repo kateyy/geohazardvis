@@ -73,7 +73,8 @@ GlyphMagnitudeColorMapping::GlyphMagnitudeColorMapping(
     {
         VTK_CREATE(vtkVectorNorm, norm);
         norm->SetInputConnection(glyphMapping->vectorDataOutputPort());
-        m_vectorNorms.insert(glyphMapping->renderedData(), norm);
+        // if needed: support multiple connections
+        m_vectorNorms.insert(glyphMapping->renderedData(), { norm });
 
         m_isValid = true;
     }
@@ -90,12 +91,16 @@ QString GlyphMagnitudeColorMapping::name() const
 
 vtkAlgorithm * GlyphMagnitudeColorMapping::createFilter(AbstractVisualizedData * visualizedData, int connection)
 {
-    vtkAlgorithm * filter = m_vectorNorms.value(visualizedData, nullptr);
+    auto & filters = m_vectorNorms.value(visualizedData, {});
     
-    if (filter)
-        filter->Register(nullptr);
-    else
-        filter = vtkPassThrough::New();
+    if (filters.isEmpty())  // required/valid filters are already created
+        return vtkPassThrough::New();
+
+    assert(filters.size() > connection);
+    auto filter = filters[connection];
+    assert(filter);
+
+    filter->Register(0);
 
     return filter;
 }
@@ -124,20 +129,23 @@ QMap<vtkIdType, QPair<double, double>> GlyphMagnitudeColorMapping::updateBounds(
     double totalMin = std::numeric_limits<double>::max();
     double totalMax = std::numeric_limits<double>::lowest();
 
-    for (vtkVectorNorm * norm : m_vectorNorms.values())
+    for (auto norms : m_vectorNorms.values())
     {
-        assert(norm->GetNumberOfInputConnections(0) > 0);
-        norm->Update();
-        vtkDataArray * normData =
-            norm->GetOutput()->GetPointData()->GetScalars();
-        if (!normData)
-            norm->GetOutput()->GetCellData()->GetScalars();
-        assert(normData);
+        for (vtkVectorNorm * norm : norms)
+        {
+            assert(norm && norm->GetNumberOfInputConnections(0) > 0);
+            norm->Update();
+            vtkDataArray * normData =
+                norm->GetOutput()->GetPointData()->GetScalars();
+            if (!normData)
+                norm->GetOutput()->GetCellData()->GetScalars();
+            assert(normData);
 
-        double range[2];
-        normData->GetRange(range);
-        totalMin = std::min(totalMin, range[0]);
-        totalMax = std::max(totalMax, range[1]);
+            double range[2];
+            normData->GetRange(range);
+            totalMin = std::min(totalMin, range[0]);
+            totalMax = std::max(totalMax, range[1]);
+        }
     }
 
     return{ { 0, { totalMin, totalMax } } };

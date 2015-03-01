@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QMap>
+#include <QVector>
 
 #include <vtkSmartPointer.h>
 
@@ -36,5 +37,5 @@ private:
     const int m_attributeLocation;
     const QString m_dataArrayName;
 
-    QMap<AbstractVisualizedData *, vtkSmartPointer<vtkVectorNorm>> m_vectorNorms;
+    QMap<AbstractVisualizedData *, QVector<vtkSmartPointer<vtkVectorNorm>>> m_vectorNorms;
 };

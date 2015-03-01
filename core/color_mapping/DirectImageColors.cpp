@@ -57,10 +57,13 @@ QList<ColorMappingData *> DirectImageColors::newInstances(const QList<AbstractVi
 
         supportedData << vis;
 
-        vtkDataSet * dataSet = vis->colorMappingInputData();
+        for (int i = 0; i < vis->numberOfColorMappingInputs(); ++i)
+        {
+            vtkDataSet * dataSet = vis->colorMappingInputData(i);
 
-        checkAddAttributeArrays(dataSet->GetCellData(), vtkAssignAttribute::CELL_DATA);
-        checkAddAttributeArrays(dataSet->GetPointData(), vtkAssignAttribute::POINT_DATA);
+            checkAddAttributeArrays(dataSet->GetCellData(), vtkAssignAttribute::CELL_DATA);
+            checkAddAttributeArrays(dataSet->GetPointData(), vtkAssignAttribute::POINT_DATA);
+        }
     }
 
     QList<ColorMappingData *> instances;
@@ -103,7 +106,7 @@ vtkAlgorithm * DirectImageColors::createFilter(AbstractVisualizedData * visualiz
 {
     vtkAssignAttribute * filter = vtkAssignAttribute::New();
 
-    filter->SetInputConnection(visualizedData->colorMappingInput());
+    filter->SetInputConnection(visualizedData->colorMappingInput(connection));
     filter->Assign(m_dataArrayName.toUtf8().data(), vtkDataSetAttributes::SCALARS,
         m_attributeLocation);
 

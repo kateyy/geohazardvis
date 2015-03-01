@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QMap>
+#include <QVector>
 
 #include <core/color_mapping/GlyphColorMapping.h>
 
@@ -34,5 +35,5 @@ private:
     static const bool s_isRegistered;
 
     const QString m_vectorName;
-    QMap<AbstractVisualizedData *, vtkSmartPointer<vtkVectorNorm>> m_vectorNorms;
+    QMap<AbstractVisualizedData *, QVector<vtkSmartPointer<vtkVectorNorm>>> m_vectorNorms;
 };
