@@ -136,7 +136,7 @@ QString VectorMagnitudeColorMapping::name() const
     return m_dataArrayName + " Magnitude";
 }
 
-vtkAlgorithm * VectorMagnitudeColorMapping::createFilter(AbstractVisualizedData * visualizedData, int connection)
+vtkSmartPointer<vtkAlgorithm> VectorMagnitudeColorMapping::createFilter(AbstractVisualizedData * visualizedData, int connection)
 {
     /** vtkVectorNorm sets norm array as current scalars; it doesn't set a name */
     auto & norms = m_vectorNorms.value(visualizedData);
@@ -144,9 +144,6 @@ vtkAlgorithm * VectorMagnitudeColorMapping::createFilter(AbstractVisualizedData 
     assert(norms.size() > connection);
     vtkVectorNorm * norm = norms[connection];
     assert(norm);
-
-    // the reference count of the output is expected to be +1 ("create..")
-    norm->Register(nullptr);
 
     return norm;
 }

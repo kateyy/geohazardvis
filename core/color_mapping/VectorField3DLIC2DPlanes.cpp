@@ -48,7 +48,7 @@ QString VectorField3DLIC2DPlanes::name() const
     return "LIC 2D";
 }
 
-vtkAlgorithm * VectorField3DLIC2DPlanes::createFilter(AbstractVisualizedData * visualizedData, int connection)
+vtkSmartPointer<vtkAlgorithm> VectorField3DLIC2DPlanes::createFilter(AbstractVisualizedData * visualizedData, int connection)
 {
     auto & lics = m_lic2D[visualizedData];
 
@@ -95,8 +95,6 @@ vtkAlgorithm * VectorField3DLIC2DPlanes::createFilter(AbstractVisualizedData * v
         lic->GlobalWarningDisplayOff();
         lic->SetContext(glContext());
     }
-
-    lic->Register(0);
 
     return lic;
 }

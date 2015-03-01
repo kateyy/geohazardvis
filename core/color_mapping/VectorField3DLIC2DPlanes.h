@@ -20,7 +20,7 @@ public:
 
     QString name() const override;
 
-    vtkAlgorithm * createFilter(AbstractVisualizedData * visualizedData, int connection) override;
+    vtkSmartPointer<vtkAlgorithm> createFilter(AbstractVisualizedData * visualizedData, int connection) override;
     bool usesFilter() const override;
 
 

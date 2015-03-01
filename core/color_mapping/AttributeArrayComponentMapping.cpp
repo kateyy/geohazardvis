@@ -19,6 +19,7 @@
 
 #include <core/AbstractVisualizedData.h>
 #include <core/types.h>
+#include <core/vtkhelper.h>
 #include <core/data_objects/DataObject.h>
 #include <core/color_mapping/ColorMappingRegistry.h>
 
@@ -132,9 +133,9 @@ QString AttributeArrayComponentMapping::scalarsName() const
     return m_dataArrayName;
 }
 
-vtkAlgorithm * AttributeArrayComponentMapping::createFilter(AbstractVisualizedData * visualizedData, int connection)
+vtkSmartPointer<vtkAlgorithm> AttributeArrayComponentMapping::createFilter(AbstractVisualizedData * visualizedData, int connection)
 {
-    vtkAssignAttribute * filter = vtkAssignAttribute::New();
+    VTK_CREATE(vtkAssignAttribute, filter);
 
     filter->SetInputConnection(visualizedData->colorMappingInput(connection));
     filter->Assign(m_dataArrayName.toUtf8().data(), vtkDataSetAttributes::SCALARS,

@@ -306,10 +306,8 @@ void RenderedVectorGrid3D::scalarsForColorMappingChangedEvent()
     {
         for (int i = 0; i < 3; ++i)
         {
-            vtkSmartPointer<vtkAlgorithm> filter = vtkSmartPointer<vtkAlgorithm>::Take(
-                m_scalars->createFilter(this, i));
-
-            m_planeWidgets[i]->GetTexture()->SetInputConnection(filter->GetOutputPort());
+            m_planeWidgets[i]->GetTexture()->SetInputConnection(
+                m_scalars->createFilter(this, i)->GetOutputPort());
         }
     }
     else

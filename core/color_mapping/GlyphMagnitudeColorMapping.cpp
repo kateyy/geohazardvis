@@ -89,7 +89,7 @@ QString GlyphMagnitudeColorMapping::name() const
     return "Glyph Magnitude: " + m_vectorName;
 }
 
-vtkAlgorithm * GlyphMagnitudeColorMapping::createFilter(AbstractVisualizedData * visualizedData, int connection)
+vtkSmartPointer<vtkAlgorithm> GlyphMagnitudeColorMapping::createFilter(AbstractVisualizedData * visualizedData, int connection)
 {
     auto & filters = m_vectorNorms.value(visualizedData, {});
     
@@ -99,8 +99,6 @@ vtkAlgorithm * GlyphMagnitudeColorMapping::createFilter(AbstractVisualizedData *
     assert(filters.size() > connection);
     auto filter = filters[connection];
     assert(filter);
-
-    filter->Register(0);
 
     return filter;
 }

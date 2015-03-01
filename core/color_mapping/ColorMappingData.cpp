@@ -93,7 +93,7 @@ bool ColorMappingData::isValid() const
     return m_isValid;
 }
 
-vtkAlgorithm * ColorMappingData::createFilter(AbstractVisualizedData * /*visualizedData*/, int /*connection*/)
+vtkSmartPointer<vtkAlgorithm> ColorMappingData::createFilter(AbstractVisualizedData * /*visualizedData*/, int /*connection*/)
 {
     return nullptr;
 }
