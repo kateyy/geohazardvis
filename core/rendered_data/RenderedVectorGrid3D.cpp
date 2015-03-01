@@ -64,33 +64,17 @@ RenderedVectorGrid3D::RenderedVectorGrid3D(VectorGrid3DDataObject * dataObject)
     int sampleRate = std::max(1, (int)std::floor(std::cbrt(float(numPoints) / DefaultMaxNumberOfPoints)));
     setSampleRate(sampleRate, sampleRate, sampleRate);
 
-    for (int vectorArray = 0; vectorArray < dataObject->dataSet()->GetPointData()->GetNumberOfArrays(); ++vectorArray)
-        if (dataObject->dataSet()->GetPointData()->GetArray(vectorArray)->GetNumberOfComponents() == 3)
-        {
-            m_vectorsName = dataObject->dataSet()->GetPointData()->GetArray(vectorArray)->GetName();
-            break;
-        }
-
 
     VTK_CREATE(vtkCellPicker, planePicker); // shared picker for the plane widgets
-
-
-    VTK_CREATE(vtkAssignAttribute, assignVectors);
-    assignVectors->SetInputData(dataObject->dataSet());
-    assignVectors->Assign(m_vectorsName.c_str(), vtkDataSetAttributes::VECTORS, vtkAssignAttribute::POINT_DATA);
-    assignVectors->Update();
-
-    vtkDataSet * dataSetWithVectors = vtkDataSet::SafeDownCast(assignVectors->GetOutput());
-
 
     for (int i = 0; i < 3; ++i)
     {
         /** Reslice widgets  */
 
         m_planeWidgets[i] = vtkSmartPointer<vtkImagePlaneWidget>::New();
-        // TODO VTK Bug? A pipeline connection from vtkAssignAttribute does not work for some reason
+        // TODO VTK Bug? A pipeline connection does not work for some reason
         //m_planeWidgets[i]->SetInputConnection(dataObject->processedOutputPort());
-        m_planeWidgets[i]->SetInputData(dataSetWithVectors);
+        m_planeWidgets[i]->SetInputData(dataObject->dataSet());
         m_planeWidgets[i]->UserControlledLookupTableOn();
         m_planeWidgets[i]->RestrictPlaneToVolumeOn();
         m_planeWidgets[i]->SetPlaneOrientation(i);
@@ -416,18 +400,26 @@ vtkAlgorithmOutput * RenderedVectorGrid3D::colorMappingInput(int connection)
 {
     assert(connection >= 0 && connection < 3);
 
-    auto & assign = m_assignedVectors.at(connection);
+    auto & filter = m_colorMappingInputs.at(connection);
 
-    if (!assign)
+    if (!filter)
     {
-        VTK_CREATE(ArrayRenameFilter, rename);
-        rename->SetScalarsName(m_vectorsName.c_str());
-        rename->SetInputConnection(m_planeWidgets[connection]->GetReslice()->GetOutputPort());
+        bool hasVectors = dataObject()->dataSet()->GetPointData()->GetVectors() != nullptr;
 
-        assign = vtkSmartPointer<vtkAssignAttribute>::New();
-        assign->SetInputConnection(rename->GetOutputPort());
-        assign->Assign(m_vectorsName.c_str(), vtkDataSetAttributes::VECTORS, vtkAssignAttribute::POINT_DATA);
+        VTK_CREATE(ArrayRenameFilter, rename);
+        rename->SetScalarsName(dataObject()->dataSet()->GetPointData()->GetScalars()->GetName());
+        rename->SetInputConnection(m_planeWidgets[connection]->GetReslice()->GetOutputPort());
+        filter = rename;
+
+        if (hasVectors)
+        {
+            VTK_CREATE(vtkAssignAttribute, assignVectors);
+            assignVectors->Assign(vtkDataSetAttributes::SCALARS, vtkDataSetAttributes::VECTORS, vtkAssignAttribute::POINT_DATA);
+            assignVectors->SetInputConnection(rename->GetOutputPort());
+            filter = assignVectors;
+        }
+
     }
 
-    return assign->GetOutputPort();
+    return filter->GetOutputPort();
 }

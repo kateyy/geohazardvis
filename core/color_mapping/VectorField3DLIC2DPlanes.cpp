@@ -10,6 +10,7 @@
 #include <vtkImageData.h>
 #include <vtkOpenGLRenderWindow.h>
 #include <vtkOpenGLExtensionManager.h>
+#include <vtkPassThrough.h>
 #include <vtkPointData.h>
 
 #include <core/vtkhelper.h>
@@ -28,14 +29,22 @@ const bool VectorField3DLIC2DPlanes::s_isRegistered = ColorMappingRegistry::inst
 
 VectorField3DLIC2DPlanes::VectorField3DLIC2DPlanes(const QList<AbstractVisualizedData *> & visualizedData)
     : ColorMappingData(visualizedData)
-    , m_noiseImage(vtkSmartPointer<NoiseImageSource>::New())
+    , m_noiseImage{}
 {
+    vtkImageData * image;
     for (AbstractVisualizedData * v : visualizedData)
-        if (auto g = dynamic_cast<RenderedVectorGrid3D *>(v))
-            m_vectorGrids << g;
+        for (int i = 0; !m_isValid && i < v->numberOfColorMappingInputs(); ++i)
+            if ((image = vtkImageData::SafeDownCast(v->colorMappingInputData(i)))
+                && (image->GetPointData()->GetVectors()))
+            {
+                m_isValid = true;
+                break;
+            }
 
-    m_isValid = !m_vectorGrids.isEmpty();
+    if (!m_isValid)
+        return;
 
+    m_noiseImage = vtkSmartPointer<NoiseImageSource>::New();
     m_noiseImage->SetExtent(0, 1023, 0, 1023, 0, 0);
     m_noiseImage->SetNumberOfComponents(1);
     m_noiseImage->SetValueRange(0, 1);
@@ -50,6 +59,19 @@ QString VectorField3DLIC2DPlanes::name() const
 
 vtkSmartPointer<vtkAlgorithm> VectorField3DLIC2DPlanes::createFilter(AbstractVisualizedData * visualizedData, int connection)
 {
+    vtkDataArray * imageVectors = nullptr;
+    vtkImageData * image = vtkImageData::SafeDownCast(visualizedData->colorMappingInputData(connection));
+    if (image)
+        imageVectors = image->GetPointData()->GetVectors();
+
+    if (!imageVectors)
+    {
+        VTK_CREATE(vtkPassThrough, filter);
+        filter->SetInputConnection(visualizedData->colorMappingInput(connection));
+        return filter;
+    }
+
+
     auto & lics = m_lic2D[visualizedData];
 
     static const std::string scaledVectorsName{ "scaledVectors" };
@@ -61,16 +83,13 @@ vtkSmartPointer<vtkAlgorithm> VectorField3DLIC2DPlanes::createFilter(AbstractVis
 
     if (!lic)
     {
-        auto vectors = visualizedData->colorMappingInputData(connection)->GetPointData()->GetVectors();
-        assert(vectors);
-
         double vectorRange[2] = {
             std::numeric_limits<double>::max(),
             std::numeric_limits<double>::lowest() };
         for (int i = 0; i < 3; ++i)
         {
             double r[2];
-            vectors->GetRange(r, i);
+            imageVectors->GetRange(r, i);
             vectorRange[0] = std::min(vectorRange[0], r[0]);
             vectorRange[1] = std::max(vectorRange[1], r[1]);
         }
@@ -79,9 +98,9 @@ vtkSmartPointer<vtkAlgorithm> VectorField3DLIC2DPlanes::createFilter(AbstractVis
 
         VTK_CREATE(vtkArrayCalculator, vectorScale);
         vectorScale->SetInputConnection(visualizedData->colorMappingInput(connection));
-        vectorScale->AddVectorArrayName(vectors->GetName());
+        vectorScale->AddVectorArrayName(imageVectors->GetName());
         vectorScale->SetResultArrayName(scaledVectorsName.c_str());
-        vectorScale->SetFunction((std::to_string(vectorScaleFactor) + "*" + vectors->GetName()).c_str());
+        vectorScale->SetFunction((std::to_string(vectorScaleFactor) + "*" + imageVectors->GetName()).c_str());
 
         VTK_CREATE(vtkAssignAttribute, assignScaledVectors);
         assignScaledVectors->SetInputConnection(vectorScale->GetOutputPort());

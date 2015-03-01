@@ -30,8 +30,6 @@ protected:
     vtkRenderWindow * glContext();
 
 private:
-    QList<RenderedVectorGrid3D *> m_vectorGrids;
-
     vtkSmartPointer<NoiseImageSource> m_noiseImage;
     QMap<AbstractVisualizedData *, QVector<vtkSmartPointer<vtkImageDataLIC2D>>> m_lic2D;
 

@@ -5,8 +5,8 @@
 #include <core/rendered_data/RenderedData3D.h>
 
 
+class vtkAlgorithm;
 class vtkAlgorithmOutput;
-class vtkAssignAttribute;
 class vtkExtractVOI;
 class vtkImageData;
 class vtkImagePlaneWidget;
@@ -61,15 +61,13 @@ private:
 private:
     bool m_isInitialized;
 
-    std::string m_vectorsName;
-
     // for vector mapping
     vtkSmartPointer<vtkExtractVOI> m_extractVOI;
 
     // for color mapping / LIC2D planes
 
     std::array<vtkSmartPointer<vtkImagePlaneWidget>, 3> m_planeWidgets;
-    std::array<vtkSmartPointer<vtkAssignAttribute>, 3> m_assignedVectors;
+    std::array<vtkSmartPointer<vtkAlgorithm>, 3> m_colorMappingInputs;
     vtkSmartPointer<vtkLookupTable> m_blackWhiteLUT;
 
     std::array<bool, 3> m_slicesEnabled;
