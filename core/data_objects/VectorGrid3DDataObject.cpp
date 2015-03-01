@@ -17,27 +17,6 @@ VectorGrid3DDataObject::VectorGrid3DDataObject(QString name, vtkImageData * data
         data = dataSet->GetPointData()->GetVectors();
         dataSet->GetPointData()->SetScalars(data);
     }
-
-    if (data->GetNumberOfComponents() == 6)
-    {
-        vtkSmartPointer<vtkDataArray> vectors1 = data->NewInstance();
-        vtkSmartPointer<vtkDataArray> vectors2 = data->NewInstance();
-        vectors1->SetNumberOfComponents(3);
-        vectors2->SetNumberOfComponents(3);
-        vectors1->SetName((QString::fromUtf8(data->GetName()) + " (1)").toUtf8().data());
-        vectors2->SetName((QString::fromUtf8(data->GetName()) + " (2)").toUtf8().data());
-        vtkIdType numTuples = data->GetNumberOfTuples();
-        vectors1->SetNumberOfTuples(numTuples);
-        vectors2->SetNumberOfTuples(numTuples);
-
-        for (vtkIdType i = 0; i < numTuples; ++i)
-        {
-            vectors1->SetTuple(i, data->GetTuple(i));
-            vectors2->SetTuple(i, &data->GetTuple(i)[3]);
-        }
-        dataSet->GetPointData()->AddArray(vectors1);
-        dataSet->GetPointData()->AddArray(vectors2);
-    }
 }
 
 VectorGrid3DDataObject::~VectorGrid3DDataObject() = default;

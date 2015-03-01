@@ -20,7 +20,6 @@ vtkSmartPointer<vtkPropCollection> RenderedData::viewProps()
     }
 
     assert(m_viewProps);
-    assert(m_viewProps->GetNumberOfItems() > 0);
 
     return m_viewProps;
 }
