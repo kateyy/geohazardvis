@@ -10,6 +10,8 @@ set ( SOURCES
     DataSetHandler.h
     DataSetHandler.cpp
     types.h
+    TextureManager.h
+    TextureManager.cpp
     vtkcamerahelper.h
     vtkcamerahelper.cpp
     vtkhelper.h
@@ -49,8 +51,18 @@ set ( SOURCES
 
     filters/CentroidAsScalarsFilter.h
     filters/CentroidAsScalarsFilter.cpp
+    filters/ArrayRenameFilter.h
+    filters/ArrayRenameFilter.cpp
     filters/DataSetCleaner.h
     filters/DataSetCleaner.cpp
+    filters/NoiseImageSource.h
+    filters/NoiseImageSource.cpp
+    filters/StackedImageDataLIC3D.h
+    filters/StackedImageDataLIC3D.cpp
+    filters/TransformTextureCoords.h
+    filters/TransformTextureCoords.cxx
+    filters/vtkImageDataLIC2D.h
+    filters/vtkImageDataLIC2D.cpp
 
     io/Exporter.h
     io/Exporter.cpp
@@ -113,6 +125,8 @@ set ( SOURCES
     color_mapping/GlyphColorMappingGlyphListener.cpp
     color_mapping/GlyphMagnitudeColorMapping.h
     color_mapping/GlyphMagnitudeColorMapping.cpp
+    color_mapping/VectorField3DLIC2DPlanes.h
+    color_mapping/VectorField3DLIC2DPlanes.cpp
     color_mapping/VectorMagnitudeColorMapping.h
     color_mapping/VectorMagnitudeColorMapping.cpp
     color_mapping/VertexComponentColorMapping.h
@@ -133,6 +147,8 @@ set ( SOURCES
     reflectionzeug_extension/QStringProperty.h
     reflectionzeug_extension/QStringProperty.hpp
     reflectionzeug_extension/QStringProperty.cpp
+    
+    ThirdParty/alphanum.hpp
 )
 
 source_group_by_path_and_type(${CMAKE_CURRENT_SOURCE_DIR} ${SOURCES})

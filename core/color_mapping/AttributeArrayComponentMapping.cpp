@@ -19,6 +19,7 @@
 
 #include <core/AbstractVisualizedData.h>
 #include <core/types.h>
+#include <core/vtkhelper.h>
 #include <core/data_objects/DataObject.h>
 #include <core/color_mapping/ColorMappingRegistry.h>
 
@@ -84,10 +85,13 @@ QList<ColorMappingData *> AttributeArrayComponentMapping::newInstances(const QLi
 
         supportedData << vis;
 
-        vtkDataSet * dataSet = vis->colorMappingInputData();
+        for (int i = 0; i < vis->numberOfColorMappingInputs(); ++i)
+        {
+            vtkDataSet * dataSet = vis->colorMappingInputData(i);
 
-        checkAddAttributeArrays(dataSet->GetCellData(), vtkAssignAttribute::CELL_DATA);
-        checkAddAttributeArrays(dataSet->GetPointData(), vtkAssignAttribute::POINT_DATA);
+            checkAddAttributeArrays(dataSet->GetCellData(), vtkAssignAttribute::CELL_DATA);
+            checkAddAttributeArrays(dataSet->GetPointData(), vtkAssignAttribute::POINT_DATA);
+        }
     }
 
     QList<ColorMappingData *> instances;
@@ -129,11 +133,11 @@ QString AttributeArrayComponentMapping::scalarsName() const
     return m_dataArrayName;
 }
 
-vtkAlgorithm * AttributeArrayComponentMapping::createFilter(AbstractVisualizedData * visualizedData)
+vtkSmartPointer<vtkAlgorithm> AttributeArrayComponentMapping::createFilter(AbstractVisualizedData * visualizedData, int connection)
 {
-    vtkAssignAttribute * filter = vtkAssignAttribute::New();
+    VTK_CREATE(vtkAssignAttribute, filter);
 
-    filter->SetInputConnection(visualizedData->colorMappingInput());
+    filter->SetInputConnection(visualizedData->colorMappingInput(connection));
     filter->Assign(m_dataArrayName.toUtf8().data(), vtkDataSetAttributes::SCALARS,
         m_attributeLocation);
 
@@ -173,25 +177,28 @@ QMap<vtkIdType, QPair<double, double>> AttributeArrayComponentMapping::updateBou
 
         for (AbstractVisualizedData * visualizedData : m_visualizedData)
         {
-            vtkDataSet * dataSet = visualizedData->colorMappingInputData();
-            vtkDataArray * dataArray = nullptr;
-            if (m_attributeLocation == vtkAssignAttribute::CELL_DATA)
-                dataArray = dataSet->GetCellData()->GetArray(utf8Name.data());
-            else if (m_attributeLocation == vtkAssignAttribute::POINT_DATA)
-                dataArray = dataSet->GetPointData()->GetArray(utf8Name.data());
+            for (int i = 0; i < visualizedData->numberOfColorMappingInputs(); ++i)
+            {
+                vtkDataSet * dataSet = visualizedData->colorMappingInputData(i);
+                vtkDataArray * dataArray = nullptr;
+                if (m_attributeLocation == vtkAssignAttribute::CELL_DATA)
+                    dataArray = dataSet->GetCellData()->GetArray(utf8Name.data());
+                else if (m_attributeLocation == vtkAssignAttribute::POINT_DATA)
+                    dataArray = dataSet->GetPointData()->GetArray(utf8Name.data());
 
-            if (!dataArray)
-                continue;
+                if (!dataArray)
+                    continue;
 
-            double range[2];
-            dataArray->GetRange(range, c);
+                double range[2];
+                dataArray->GetRange(range, c);
 
-            // ignore arrays with invalid data
-            if (range[1] < range[0])
-                continue;
+                // ignore arrays with invalid data
+                if (range[1] < range[0])
+                    continue;
 
-            totalMin = std::min(totalMin, range[0]);
-            totalMax = std::max(totalMax, range[1]);
+                totalMin = std::min(totalMin, range[0]);
+                totalMax = std::max(totalMax, range[1]);
+            }
         }
 
         if (totalMin > totalMax)    // invalid data in all arrays on this component

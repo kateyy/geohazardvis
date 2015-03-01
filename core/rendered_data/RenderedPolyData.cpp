@@ -16,12 +16,19 @@
 
 #include <vtkProperty.h>
 #include <vtkActor.h>
-#include <vtkActorCollection.h>
+#include <vtkProp3DCollection.h>
+#include <vtkDoubleArray.h>
+#include <vtkFieldData.h>
+#include <vtkImageData.h>
+#include <vtkTexture.h>
+#include <vtkTextureMapToPlane.h>
 
 #include <reflectionzeug/PropertyGroup.h>
 
 #include <core/vtkhelper.h>
+#include <core/TextureManager.h>
 #include <core/data_objects/PolyDataObject.h>
+#include <core/filters/TransformTextureCoords.h>
 #include <core/color_mapping/ColorMappingData.h>
 
 
@@ -84,14 +91,22 @@ reflectionzeug::PropertyGroup * RenderedPolyData::createConfigGroup()
     PropertyGroup * renderSettings = new PropertyGroup();
 
     renderSettings->addProperty<Color>("color",
-        [this]() {
+        [this] () {
         double * color = renderProperty()->GetColor();
         return Color(static_cast<int>(color[0] * 255), static_cast<int>(color[1] * 255), static_cast<int>(color[2] * 255));
     },
-        [this](const Color & color) {
+        [this] (const Color & color) {
         renderProperty()->SetColor(color.red() / 255.0, color.green() / 255.0, color.blue() / 255.0);
         emit geometryChanged();
     });
+
+    renderSettings->addProperty<FilePath>("DemTexture",
+        [this] () { return texture().toStdString(); },
+        [this] (const FilePath & filePath) {
+        QString file = QString::fromStdString(filePath.toString());
+        setTexture(file);
+        emit geometryChanged();
+    })->setOption("title", "DEM overlay texture");
 
 
     auto * edgesVisible = renderSettings->addProperty<bool>("edgesVisible",
@@ -205,6 +220,27 @@ reflectionzeug::PropertyGroup * RenderedPolyData::createConfigGroup()
     return renderSettings;
 }
 
+const QString & RenderedPolyData::texture() const
+{
+    return m_textureFileName;
+}
+
+void RenderedPolyData::setTexture(const QString & fileName)
+{
+    if (m_textureFileName == fileName)
+        return;
+
+    m_textureFileName = fileName;
+
+    auto tex = TextureManager::fromFile(m_textureFileName);
+    if (tex)
+    {
+        tex->RepeatOff();
+    }
+
+    mainActor()->SetTexture(tex);
+}
+
 vtkProperty * RenderedPolyData::createDefaultRenderProperty() const
 {
     vtkProperty * prop = vtkProperty::New();
@@ -220,9 +256,9 @@ vtkProperty * RenderedPolyData::createDefaultRenderProperty() const
     return prop;
 }
 
-vtkSmartPointer<vtkActorCollection> RenderedPolyData::fetchActors()
+vtkSmartPointer<vtkProp3DCollection> RenderedPolyData::fetchViewProps3D()
 {
-    vtkSmartPointer<vtkActorCollection> actors = RenderedData3D::fetchActors();
+    auto actors = RenderedData3D::fetchViewProps3D();
     actors->AddItem(mainActor());
 
     return actors;
@@ -258,7 +294,7 @@ void RenderedPolyData::scalarsForColorMappingChangedEvent()
 
     if (m_scalars->usesFilter())
     {
-        filter = vtkSmartPointer<vtkAlgorithm>::Take(m_scalars->createFilter(this));
+        filter = m_scalars->createFilter(this);
         m_colorMappingOutput = filter->GetOutputPort();
     }
     else
@@ -283,7 +319,45 @@ void RenderedPolyData::visibilityChangedEvent(bool visible)
 
 void RenderedPolyData::finalizePipeline()
 {
-    m_normals->SetInputConnection(m_colorMappingOutput);
+    VTK_CREATE(vtkTextureMapToPlane, textureCoords);
+    textureCoords->SetInputConnection(m_colorMappingOutput);
+    textureCoords->SetNormal(0, 0, 1);
+
+    vtkDoubleArray * demBoundsArray = vtkDoubleArray::SafeDownCast(
+        dataObject()->dataSet()->GetFieldData()->GetArray("DEM_Bounds"));
+    if (demBoundsArray)
+    {
+        assert(demBoundsArray->GetNumberOfComponents() * demBoundsArray->GetNumberOfTuples() == 6);
+        double * demBounds =  demBoundsArray->GetPointer(0);
+        double demSize[2] = { demBounds[1] - demBounds[0], demBounds[3] - demBounds[2] };
+        double demCenter[2] = {
+            0.5 * (demBounds[0] + demBounds[1]),
+            0.5 * (demBounds[2] + demBounds[3]) };
+
+        double thisBounds[6];
+        dataObject()->bounds(thisBounds);
+        double thisSize[2] = { thisBounds[1] - thisBounds[0], thisBounds[3] - thisBounds[2] };
+        double thisCenter[2] = {
+            0.5 * (thisBounds[0] + thisBounds[1]),
+            0.5 * (thisBounds[2] + thisBounds[3]) };
+
+        VTK_CREATE(TransformTextureCoords, transformTexCoords);
+        transformTexCoords->SetInputConnection(textureCoords->GetOutputPort());
+        transformTexCoords->SetScale(   // scale tex coords from surface size to DEM texture size
+            thisSize[0] / demSize[0],
+            thisSize[1] / demSize[1],
+            1);
+        transformTexCoords->SetPosition(    // in DEM texture space: translate to actual dem position
+            (thisCenter[0] - demCenter[0]) / demSize[0],
+            (thisCenter[1] - demCenter[1]) / demSize[1],
+            0);
+
+        m_normals->SetInputConnection(transformTexCoords->GetOutputPort());
+    }
+    else
+    {
+        m_normals->SetInputConnection(textureCoords->GetOutputPort());
+    }
 }
 
 vtkAlgorithmOutput * RenderedPolyData::colorMappingOutput()

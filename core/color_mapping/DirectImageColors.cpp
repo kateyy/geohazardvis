@@ -10,6 +10,7 @@
 
 #include <core/AbstractVisualizedData.h>
 #include <core/types.h>
+#include <core/vtkhelper.h>
 #include <core/color_mapping/ColorMappingRegistry.h>
 #include <core/data_objects/DataObject.h>
 
@@ -57,10 +58,13 @@ QList<ColorMappingData *> DirectImageColors::newInstances(const QList<AbstractVi
 
         supportedData << vis;
 
-        vtkDataSet * dataSet = vis->colorMappingInputData();
+        for (int i = 0; i < vis->numberOfColorMappingInputs(); ++i)
+        {
+            vtkDataSet * dataSet = vis->colorMappingInputData(i);
 
-        checkAddAttributeArrays(dataSet->GetCellData(), vtkAssignAttribute::CELL_DATA);
-        checkAddAttributeArrays(dataSet->GetPointData(), vtkAssignAttribute::POINT_DATA);
+            checkAddAttributeArrays(dataSet->GetCellData(), vtkAssignAttribute::CELL_DATA);
+            checkAddAttributeArrays(dataSet->GetPointData(), vtkAssignAttribute::POINT_DATA);
+        }
     }
 
     QList<ColorMappingData *> instances;
@@ -99,11 +103,10 @@ QString DirectImageColors::scalarsName() const
     return m_dataArrayName;
 }
 
-vtkAlgorithm * DirectImageColors::createFilter(AbstractVisualizedData * visualizedData)
+vtkSmartPointer<vtkAlgorithm> DirectImageColors::createFilter(AbstractVisualizedData * visualizedData, int connection)
 {
-    vtkAssignAttribute * filter = vtkAssignAttribute::New();
-
-    filter->SetInputConnection(visualizedData->colorMappingInput());
+    VTK_CREATE(vtkAssignAttribute, filter);
+    filter->SetInputConnection(visualizedData->colorMappingInput(connection));
     filter->Assign(m_dataArrayName.toUtf8().data(), vtkDataSetAttributes::SCALARS,
         m_attributeLocation);
 

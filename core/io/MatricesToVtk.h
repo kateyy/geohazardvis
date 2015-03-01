@@ -5,6 +5,7 @@
 #include <QString>
 
 #include <core/common/ebem3d_common.h>
+#include <core/core_api.h>
 
 
 class vtkPolyData;
@@ -13,7 +14,7 @@ class DataObject;
 struct ReadDataset;
 
 
-class MatricesToVtk
+class CORE_API MatricesToVtk
 {
 public:
     static DataObject * loadIndexedTriangles(QString name, const std::vector<ReadDataset> & datasets);

@@ -9,7 +9,7 @@
 
 #include <vtkSmartPointer.h>
 
-#include "common/ebem3d_common.h"
+#include <core/common/ebem3d_common.h>
 
 
 class vtkDataObject;

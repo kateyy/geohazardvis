@@ -65,16 +65,16 @@ QString VertexComponentColorMapping::name() const
     return QString('x' + char(m_component)) + "-coordinate";
 }
 
-vtkAlgorithm * VertexComponentColorMapping::createFilter(AbstractVisualizedData * visualizedData)
+vtkSmartPointer<vtkAlgorithm> VertexComponentColorMapping::createFilter(AbstractVisualizedData * visualizedData, int connection)
 {
     PolyDataObject * polyData = static_cast<PolyDataObject *>(visualizedData->dataObject());
 
     VTK_CREATE(CentroidAsScalarsFilter, centroids);
-    centroids->SetInputConnection(0, visualizedData->colorMappingInput());
+    centroids->SetInputConnection(0, visualizedData->colorMappingInput(connection));
     centroids->SetInputConnection(1, polyData->cellCentersOutputPort());
     centroids->SetComponent(m_component);
 
-    vtkAssignAttribute * assign = vtkAssignAttribute::New();
+    VTK_CREATE(vtkAssignAttribute, assign);
     assign->SetInputConnection(centroids->GetOutputPort());
     assign->Assign(name().toUtf8().data(), vtkDataSetAttributes::SCALARS,
         vtkAssignAttribute::CELL_DATA);

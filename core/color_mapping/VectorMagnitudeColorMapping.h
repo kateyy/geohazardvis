@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QMap>
+#include <QVector>
 
 #include <vtkSmartPointer.h>
 
@@ -20,7 +21,7 @@ public:
 
     QString name() const override;
 
-    vtkAlgorithm * createFilter(AbstractVisualizedData * visualizedData) override;
+    vtkSmartPointer<vtkAlgorithm> createFilter(AbstractVisualizedData * visualizedData, int connection = 0) override;
     bool usesFilter() const override;
 
     void configureMapper(AbstractVisualizedData * visualizedData, vtkAbstractMapper * mapper) override;
@@ -36,5 +37,5 @@ private:
     const int m_attributeLocation;
     const QString m_dataArrayName;
 
-    QMap<AbstractVisualizedData *, vtkSmartPointer<vtkVectorNorm>> m_vectorNorms;
+    QMap<AbstractVisualizedData *, QVector<vtkSmartPointer<vtkVectorNorm>>> m_vectorNorms;
 };

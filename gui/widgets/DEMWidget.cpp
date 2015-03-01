@@ -14,6 +14,8 @@
 #include <vtkTextProperty.h>
 
 #include <vtkCellData.h>
+#include <vtkCharArray.h>
+#include <vtkDoubleArray.h>
 #include <vtkImageChangeInformation.h>
 #include <vtkImageData.h>
 #include <vtkImageShiftScale.h>
@@ -96,6 +98,40 @@ bool DEMWidget::save()
     // remove arrays that were created while appying the DEM
     surface->GetPointData()->RemoveArray("vtkValidPointMask");
     surface->GetPointData()->RemoveArray(m_demScalarsName.toUtf8().data());
+
+    // store size and position of the DEM in the surface's field data
+
+    auto addArray = [surface] (const char * name, const std::vector<double> & values) {
+        VTK_CREATE(vtkDoubleArray, a);
+        a->SetName(name);
+        a->SetNumberOfValues(vtkIdType(values.size()));
+        for (unsigned i = 0; i < values.size(); ++i)
+            a->SetValue(i, values[i]);
+        surface->GetFieldData()->AddArray(a);
+    };
+
+    if (m_currentDEM)
+    {
+        m_demTransformOutput->Update();
+        vtkDataSet * transformedDEM = vtkDataSet::SafeDownCast(m_demTransformOutput->GetOutputDataObject(0));
+        assert(transformedDEM);
+        std::vector<double> demBounds(6u);
+        transformedDEM->GetBounds(demBounds.data());
+
+        assert(surface->GetFieldData()->GetNumberOfArrays() == 0);
+
+        VTK_CREATE(vtkCharArray, demNameArray);
+        demNameArray->SetName("DEM_Name");
+        QByteArray demName = m_currentDEM->name().toUtf8();
+        demNameArray->SetNumberOfValues(demName.size());
+        for (int i = 0; i < demName.size(); ++i)
+            demNameArray->SetValue(i, demName[i]);
+        surface->GetFieldData()->AddArray(demNameArray);
+
+        addArray("DEM_F0", { m_ui->demLatitude->value() });
+        addArray("DEM_La0", { m_ui->demLongitude->value() });
+        addArray("DEM_Bounds", demBounds);
+    }
 
     auto newData = new PolyDataObject(m_ui->newSurfaceModelName->text(), surface);
     DataSetHandler::instance().addData({ newData });
@@ -206,6 +242,8 @@ void DEMWidget::updatePreview()
             m_demScalarsName.toUtf8().data());
         m_demTranslate->SetInputData(nullDEM);
     }
+    
+
 
     m_meshTransform->SetInputData(surface->dataSet());
     
@@ -249,6 +287,7 @@ void DEMWidget::setupDEMStages()
     VTK_CREATE(vtkImageShiftScale, scaleToKm);
     scaleToKm->SetInputConnection(m_demScale->GetOutputPort());
     scaleToKm->SetScale(0.001);
+    m_demTransformOutput = scaleToKm;
 
     updateDEMGeoPosition();
 

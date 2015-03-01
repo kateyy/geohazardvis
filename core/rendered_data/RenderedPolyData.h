@@ -1,5 +1,7 @@
 #pragma once
 
+#include <QString>
+
 #include <core/rendered_data/RenderedData3D.h>
 
 
@@ -22,9 +24,12 @@ public:
 
     reflectionzeug::PropertyGroup * createConfigGroup() override;
 
+    const QString & texture() const;
+    void setTexture(const QString & fileName);
+
 protected:
     vtkProperty * createDefaultRenderProperty() const override;
-    vtkSmartPointer<vtkActorCollection> fetchActors() override;
+    vtkSmartPointer<vtkProp3DCollection> fetchViewProps3D() override;
     vtkActor * mainActor();
 
     void scalarsForColorMappingChangedEvent() override;
@@ -45,4 +50,6 @@ private:
     vtkSmartPointer<vtkPolyDataNormals> m_normals;      // required for lighting/interpolation
 
     vtkSmartPointer<vtkAlgorithmOutput> m_colorMappingOutput;
+
+    QString m_textureFileName;
 };

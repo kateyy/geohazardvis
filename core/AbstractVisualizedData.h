@@ -43,8 +43,9 @@ public:
     * ColorMappingData are responsible for gradient configuration. */
     void setColorMappingGradient(vtkScalarsToColors * gradient);
 
-    virtual vtkAlgorithmOutput * colorMappingInput();
-    vtkDataSet * colorMappingInputData();
+    virtual int numberOfColorMappingInputs() const;
+    virtual vtkAlgorithmOutput * colorMappingInput(int connection = 0);
+    vtkDataSet * colorMappingInputData(int connection = 0);
 
 signals:
     void visibilityChanged(bool visible);

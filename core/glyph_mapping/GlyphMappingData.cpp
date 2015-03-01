@@ -343,10 +343,8 @@ void GlyphMappingData::colorMappingChangedEvent(ColorMappingData * colorMappingD
 {
     if (colorMappingData && colorMappingData->usesFilter())
     {
-        vtkSmartPointer<vtkAlgorithm> filter = vtkSmartPointer<vtkAlgorithm>::Take(
-            colorMappingData->createFilter(renderedData()));
-
-        m_arrowGlyph->SetInputConnection(filter->GetOutputPort());
+        m_arrowGlyph->SetInputConnection(
+            colorMappingData->createFilter(renderedData())->GetOutputPort());
 
         colorMappingData->configureMapper(renderedData(), m_mapper);
     }

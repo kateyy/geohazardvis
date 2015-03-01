@@ -6,6 +6,7 @@
 #include <gui/gui_api.h>
 
 
+class vtkAlgorithm;
 class vtkCubeAxesActor;
 class vtkImageChangeInformation;
 class vtkImageShiftScale;
@@ -55,6 +56,7 @@ private:
 
     vtkSmartPointer<vtkImageChangeInformation> m_demTranslate;
     vtkSmartPointer<vtkImageChangeInformation> m_demScale;
+    vtkSmartPointer<vtkAlgorithm> m_demTransformOutput;
     vtkSmartPointer<vtkTransformFilter> m_meshTransform;
     vtkSmartPointer<vtkWarpScalar> m_demWarpElevation;
 

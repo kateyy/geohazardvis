@@ -24,7 +24,7 @@
 
 namespace
 {
-    const QString s_name = "vertex magnitude";
+    const QString s_name = "vector magnitude";
 }
 
 const bool VectorMagnitudeColorMapping::s_isRegistered = ColorMappingRegistry::instance().registerImplementation(
@@ -60,10 +60,13 @@ QList<ColorMappingData *> VectorMagnitudeColorMapping::newInstances(const QList<
 
     for (AbstractVisualizedData * vis : visualizedData)
     {
-        vtkDataSet * dataSet = vis->colorMappingInputData();
+        for (int i = 0; i < vis->numberOfColorMappingInputs(); ++i)
+        {
+            vtkDataSet * dataSet = vis->colorMappingInputData(i);
 
-        checkAddAttributeArrays(vis, dataSet->GetCellData(), cellArrays);
-        checkAddAttributeArrays(vis, dataSet->GetPointData(), pointArrays);
+            checkAddAttributeArrays(vis, dataSet->GetCellData(), cellArrays);
+            checkAddAttributeArrays(vis, dataSet->GetPointData(), pointArrays);
+        }
     }
 
     QList<VectorMagnitudeColorMapping *> unchecked;
@@ -101,19 +104,26 @@ VectorMagnitudeColorMapping::VectorMagnitudeColorMapping(
 
     for (AbstractVisualizedData * vis : visualizedData)
     {
-        VTK_CREATE(vtkAssignAttribute, activeVectors);
-        activeVectors->Assign(utf8Name.data(), vtkDataSetAttributes::VECTORS, m_attributeLocation);
-        activeVectors->SetInputConnection(vis->colorMappingInput());
+        QVector<vtkSmartPointer<vtkVectorNorm>> norms;
 
-        VTK_CREATE(vtkVectorNorm, norm);
-        if (attributeLocation == vtkAssignAttribute::CELL_DATA)
-            norm->SetAttributeModeToUseCellData();
-        else if (attributeLocation == vtkAssignAttribute::POINT_DATA)
-            norm->SetAttributeModeToUsePointData();
+        for (int i = 0; i < vis->numberOfColorMappingInputs(); ++i)
+        {
+            VTK_CREATE(vtkAssignAttribute, activeVectors);
+            activeVectors->Assign(utf8Name.data(), vtkDataSetAttributes::VECTORS, m_attributeLocation);
+            activeVectors->SetInputConnection(vis->colorMappingInput(i));
 
-        norm->SetInputConnection(activeVectors->GetOutputPort());
+            VTK_CREATE(vtkVectorNorm, norm);
+            if (attributeLocation == vtkAssignAttribute::CELL_DATA)
+                norm->SetAttributeModeToUseCellData();
+            else if (attributeLocation == vtkAssignAttribute::POINT_DATA)
+                norm->SetAttributeModeToUsePointData();
 
-        m_vectorNorms.insert(vis, norm);
+            norm->SetInputConnection(activeVectors->GetOutputPort());
+
+            norms << norm;
+        }
+
+        m_vectorNorms.insert(vis, norms);
     }
 
     m_isValid = true;
@@ -126,14 +136,14 @@ QString VectorMagnitudeColorMapping::name() const
     return m_dataArrayName + " Magnitude";
 }
 
-vtkAlgorithm * VectorMagnitudeColorMapping::createFilter(AbstractVisualizedData * visualizedData)
+vtkSmartPointer<vtkAlgorithm> VectorMagnitudeColorMapping::createFilter(AbstractVisualizedData * visualizedData, int connection)
 {
     /** vtkVectorNorm sets norm array as current scalars; it doesn't set a name */
-    vtkVectorNorm * norm = m_vectorNorms.value(visualizedData);
-    assert(norm);
+    auto & norms = m_vectorNorms.value(visualizedData);
 
-    // the reference count of the output is expected to be +1 ("create..")
-    norm->Register(nullptr);
+    assert(norms.size() > connection);
+    vtkVectorNorm * norm = norms[connection];
+    assert(norm);
 
     return norm;
 }
@@ -163,21 +173,24 @@ QMap<vtkIdType, QPair<double, double>> VectorMagnitudeColorMapping::updateBounds
     double totalMin = std::numeric_limits<double>::max();
     double totalMax = std::numeric_limits<double>::lowest();
 
-    for (vtkVectorNorm * norm : m_vectorNorms.values())
+    for (auto norms : m_vectorNorms.values())
     {
-        norm->Update();
-        vtkDataSet * dataSet = norm->GetOutput();
-        vtkDataArray * normData = nullptr;
-        if (m_attributeLocation == vtkAssignAttribute::CELL_DATA)
-            normData = dataSet->GetCellData()->GetScalars();
-        else if (m_attributeLocation == vtkAssignAttribute::POINT_DATA)
-            normData = dataSet->GetPointData()->GetScalars();
-        assert(normData);
+        for (vtkVectorNorm * norm : norms)
+        {
+            norm->Update();
+            vtkDataSet * dataSet = norm->GetOutput();
+            vtkDataArray * normData = nullptr;
+            if (m_attributeLocation == vtkAssignAttribute::CELL_DATA)
+                normData = dataSet->GetCellData()->GetScalars();
+            else if (m_attributeLocation == vtkAssignAttribute::POINT_DATA)
+                normData = dataSet->GetPointData()->GetScalars();
+            assert(normData);
 
-        double range[2];
-        normData->GetRange(range);
-        totalMin = std::min(totalMin, range[0]);
-        totalMax = std::max(totalMax, range[1]);
+            double range[2];
+            normData->GetRange(range);
+            totalMin = std::min(totalMin, range[0]);
+            totalMax = std::max(totalMax, range[1]);
+        }
     }
 
     return{ { 0, { totalMin, totalMax } } };

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QMap>
+#include <QVector>
 
 #include <core/color_mapping/GlyphColorMapping.h>
 
@@ -20,7 +21,7 @@ public:
 
     QString name() const override;
 
-    vtkAlgorithm * createFilter(AbstractVisualizedData * visualizedData) override;
+    vtkSmartPointer<vtkAlgorithm> createFilter(AbstractVisualizedData * visualizedData, int connection = 0) override;
     bool usesFilter() const override;
 
     void configureMapper(AbstractVisualizedData * visualizedData, vtkAbstractMapper * mapper) override;
@@ -34,5 +35,5 @@ private:
     static const bool s_isRegistered;
 
     const QString m_vectorName;
-    QMap<AbstractVisualizedData *, vtkSmartPointer<vtkVectorNorm>> m_vectorNorms;
+    QMap<AbstractVisualizedData *, QVector<vtkSmartPointer<vtkVectorNorm>>> m_vectorNorms;
 };

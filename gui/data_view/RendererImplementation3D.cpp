@@ -46,9 +46,6 @@ RendererImplementation3D::RendererImplementation3D(RenderView & renderView, QObj
     , m_emptyStrategy(new RenderViewStrategyNull(*this))
     , m_scalarMapping(new ColorMapping())
 {
-    connect(m_scalarMapping, &ColorMapping::colorLegendVisibilityChanged,
-        [this] (bool visible) { m_scalarBarWidget->SetEnabled(visible); });
-
     connect(&m_renderView, &RenderView::contentChanged,
         [this] () { m_scalarMapping->setVisualizedData(m_renderView.contents()); });
 }
@@ -305,6 +302,7 @@ void RendererImplementation3D::initialize()
 
     m_renderer->RemoveAllLights();
     m_lightKit = vtkSmartPointer<vtkLightKit>::New();
+    m_lightKit->SetKeyLightIntensity(1.0);
     m_lightKit->AddLightsToRenderer(m_renderer);
 
 
@@ -474,6 +472,9 @@ void RendererImplementation3D::setupColorMappingLegend()
     m_scalarBarWidget->EnabledOff();
 
     m_renderer->AddViewProp(m_colorMappingLegend);
+
+    connect(m_scalarMapping, &ColorMapping::colorLegendVisibilityChanged,
+        [this] (bool visible) { m_scalarBarWidget->SetEnabled(visible); });
 }
 
 RenderViewStrategy & RendererImplementation3D::strategy() const

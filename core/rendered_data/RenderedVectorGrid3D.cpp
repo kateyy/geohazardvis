@@ -1,30 +1,27 @@
 #include "RenderedVectorGrid3D.h"
 
-#include <algorithm>
+#include <vtkProp3DCollection.h>
+#include <vtkLookupTable.h>
 
-#include <vtkInformation.h>
-#include <vtkInformationStringKey.h>
-
-#include <vtkPlaneSource.h>
-#include <vtkOutlineFilter.h>
-
+#include <vtkDataArray.h>
 #include <vtkImageData.h>
 #include <vtkPointData.h>
 
+#include <vtkAssignAttribute.h>
 #include <vtkExtractVOI.h>
-
-#include <vtkPolyDataMapper.h>
-
+#include <vtkCellPicker.h>
+#include <vtkImageMapToColors.h>
+#include <vtkImagePlaneWidget.h>
+#include <vtkImageReslice.h>
 #include <vtkProperty.h>
-#include <vtkActor.h>
-#include <vtkActorCollection.h>
-#include <vtkScalarsToColors.h>
+#include <vtkTexture.h>
 
 #include <reflectionzeug/PropertyGroup.h>
 
 #include <core/vtkhelper.h>
-#include <core/data_objects/VectorGrid3DDataObject.h>
 #include <core/color_mapping/ColorMappingData.h>
+#include <core/data_objects/VectorGrid3DDataObject.h>
+#include <core/filters/ArrayRenameFilter.h>
 
 
 using namespace reflectionzeug;
@@ -35,10 +32,21 @@ namespace
 
 const vtkIdType DefaultMaxNumberOfPoints = 1000;
 
+enum ResliceInterpolation
+{
+    nearest = VTK_NEAREST_RESLICE,
+    linear = VTK_LINEAR_RESLICE,
+    cubic = VTK_CUBIC_RESLICE
+};
+
+const std::string s_resliceOutputArray = "ImageScalars";
+const std::string s_lic2DWithMangnitudes = "LIC2DWithMagnitudes";
+
 }
 
 RenderedVectorGrid3D::RenderedVectorGrid3D(VectorGrid3DDataObject * dataObject)
     : RenderedData3D(dataObject)
+    , m_isInitialized(false)
     , m_extractVOI(vtkSmartPointer<vtkExtractVOI>::New())
     , m_slicesEnabled()
 {
@@ -46,60 +54,67 @@ RenderedVectorGrid3D::RenderedVectorGrid3D(VectorGrid3DDataObject * dataObject)
 
     vtkImageData * image = static_cast<vtkImageData *>(dataObject->processedDataSet());
 
+    int extent[6];
+    image->GetExtent(extent);
+
     m_extractVOI->SetInputData(dataObject->dataSet());
 
-    // initialize sample rate to prevent crashing/blocking rendering
+    // decrease sample rate to prevent crashing/blocking rendering
     vtkIdType numPoints = image->GetNumberOfPoints();
     int sampleRate = std::max(1, (int)std::floor(std::cbrt(float(numPoints) / DefaultMaxNumberOfPoints)));
     setSampleRate(sampleRate, sampleRate, sampleRate);
 
 
-    int extent[6];
-    image->GetExtent(extent);
+    VTK_CREATE(vtkCellPicker, planePicker); // shared picker for the plane widgets
 
     for (int i = 0; i < 3; ++i)
     {
-        m_extractSlices[i] = vtkSmartPointer<vtkExtractVOI>::New();
-        m_extractSlices[i]->SetInputConnection(dataObject->processedOutputPort());
+        /** Reslice widgets  */
 
-        VTK_CREATE(vtkTexture, texture);
-        texture->SetInputConnection(m_extractSlices[i]->GetOutputPort());
-        texture->MapColorScalarsThroughLookupTableOn();
-        texture->InterpolateOn();
+        m_planeWidgets[i] = vtkSmartPointer<vtkImagePlaneWidget>::New();
+        // TODO VTK Bug? A pipeline connection does not work for some reason
+        //m_planeWidgets[i]->SetInputConnection(dataObject->processedOutputPort());
+        m_planeWidgets[i]->SetInputData(dataObject->dataSet());
+        m_planeWidgets[i]->UserControlledLookupTableOn();
+        m_planeWidgets[i]->RestrictPlaneToVolumeOn();
+        m_planeWidgets[i]->SetPlaneOrientation(i);
 
-        m_slicePlanes[i] = vtkSmartPointer<vtkPlaneSource>::New();
-        setSlicePosition(i, (extent[2 * i + 1] - extent[2 * i]) / 2);
+        // this is required to fix picking with multiple planes in a view
+        m_planeWidgets[i]->SetPicker(planePicker);
+        // this is recommended for rendering with other transparent objects
+        m_planeWidgets[i]->GetColorMap()->SetOutputFormatToRGBA();
+        m_planeWidgets[i]->GetColorMap()->PassAlphaToOutputOn();
 
-        VTK_CREATE(vtkPolyDataMapper, mapper);
-        mapper->SetInputConnection(m_slicePlanes[i]->GetOutputPort());
-
-        m_sliceActors[i] = vtkSmartPointer<vtkActor>::New();
-        m_sliceActors[i]->SetMapper(mapper);
-        m_sliceActors[i]->SetTexture(texture);
+        m_planeWidgets[i]->SetLeftButtonAction(vtkImagePlaneWidget::VTK_SLICE_MOTION_ACTION);
+        m_planeWidgets[i]->SetRightButtonAction(vtkImagePlaneWidget::VTK_CURSOR_ACTION);
 
         VTK_CREATE(vtkProperty, property);
-        property->LightingOff();
-        m_sliceActors[i]->SetProperty(property);
+        property->LightingOn();
+        property->SetInterpolationToPhong();
+        m_planeWidgets[i]->SetTexturePlaneProperty(property);
 
 
-        VTK_CREATE(vtkOutlineFilter, sliceOutline);
-        sliceOutline->SetInputConnection(m_slicePlanes[i]->GetOutputPort());
-
-        VTK_CREATE(vtkPolyDataMapper, outlineMapper);
-        outlineMapper->SetInputConnection(sliceOutline->GetOutputPort());
-        outlineMapper->ScalarVisibilityOff();
-
-        m_sliceOutlineActors[i] = vtkSmartPointer<vtkActor>::New();
-        m_sliceOutlineActors[i]->SetMapper(outlineMapper);
-        VTK_CREATE(vtkProperty, outlineProperty);
-        m_sliceOutlineActors[i]->SetProperty(outlineProperty);
-        outlineProperty->SetColor(0, 0, 0);
+        int min = extent[2 * i];
+        int max = extent[2 * i + 1];
+        setSlicePosition(i, (max - min) / 2);
 
         m_slicesEnabled[i] = true;
     }
+
+    m_isInitialized = true;
 }
 
-RenderedVectorGrid3D::~RenderedVectorGrid3D() = default;
+RenderedVectorGrid3D::~RenderedVectorGrid3D()
+{
+}
+
+void RenderedVectorGrid3D::setRenderWindowInteractor(vtkRenderWindowInteractor * interactor)
+{
+    for (vtkImagePlaneWidget * widget : m_planeWidgets)
+        widget->SetInteractor(interactor);
+
+    updateVisibilities();
+}
 
 VectorGrid3DDataObject * RenderedVectorGrid3D::vectorGrid3DDataObject()
 {
@@ -113,61 +128,136 @@ const VectorGrid3DDataObject * RenderedVectorGrid3D::vectorGrid3DDataObject() co
 
 PropertyGroup * RenderedVectorGrid3D::createConfigGroup()
 {
-    PropertyGroup * configGroup = new PropertyGroup();
+    PropertyGroup * renderSettings = new PropertyGroup();
 
-    auto sampleRate = configGroup->addProperty<std::array<int, 3>>("sampleRate",
-        [this] (size_t i) { return m_extractVOI->GetSampleRate()[i]; },
-        [this] (size_t i, int value) {
-        int rates[3];
-        m_extractVOI->GetSampleRate(rates);
-        rates[i] = value;
-        setSampleRate(rates[0], rates[1], rates[2]);
-        emit geometryChanged();
-    });
-    sampleRate->setOption("title", "sample rate");
-    std::function<void(Property<int> &)> optionSetter = [] (Property<int> & prop){
-        prop.setOption("minimum", 1);
-    };
-    sampleRate->forEach(optionSetter);
-
-    auto slicesVisible = configGroup->addProperty<std::array<bool, 3>>("SlicesVisible",
-        [this] (size_t i) { return m_slicesEnabled[i]; },
-        [this] (size_t i, bool value) {
-        m_slicesEnabled[i] = value;
-        updateVisibilities();
-    });
-    slicesVisible->setOption("title", "slices visible");
-    auto slicePositions = configGroup->addGroup("SlicePosition");
-    slicePositions->setOption("title", "slice positions");
-    for (int i = 0; i < 3; ++i)
+    auto group_glyphs = renderSettings->addGroup("Glyphs");
     {
-        std::string axis = { char('X' + i) };
-
-        slicesVisible->asCollection()->at(i)->setOption("title", axis);
-
-        auto * slice_prop = slicePositions->addProperty<int>(axis + "slice",
-            [this, i] () { return m_extractSlices[i]->GetVOI()[2 * i]; },
-            [this, i] (int value) {
-            setSlicePosition(i, value);
+        auto prop_sampleRate = group_glyphs->addProperty<std::array<int, 3>>("sampleRate",
+            [this] (size_t i) { return m_extractVOI->GetSampleRate()[i]; },
+            [this] (size_t i, int value) {
+            int rates[3];
+            m_extractVOI->GetSampleRate(rates);
+            rates[i] = value;
+            setSampleRate(rates[0], rates[1], rates[2]);
             emit geometryChanged();
         });
-        slice_prop->setOption("title", axis);
-        slice_prop->setOption("minimum", 0);
-        slice_prop->setOption("maximum", static_cast<vtkImageData *>(dataObject()->processedDataSet())->GetExtent()[2 * i + 1]);
+        prop_sampleRate->setOption("title", "Sample Rate");
+        prop_sampleRate->forEach(std::function<void(Property<int> &)>( [](Property<int> & prop) {
+            prop.setOption("minimum", 1);
+        }));
     }
 
-    auto * lightingEnabled = configGroup->addProperty<bool>("lightingEnabled",
-        [this] () {
-        return m_sliceActors.front()->GetProperty()->GetLighting();
-    },
-        [this] (bool enabled) {
-        for (auto & actor : m_sliceActors)
-            actor->GetProperty()->SetLighting(enabled);
-        emit geometryChanged();
-    });
-    lightingEnabled->setOption("title", "lighting enabled");
+    auto group_scalarSlices = renderSettings->addGroup("Slices");
+    {
+        auto prop_visibilities = group_scalarSlices->addProperty<std::array<bool, 3>>("Visible",
+            [this] (size_t i) { return m_slicesEnabled[i]; },
+            [this] (size_t i, bool value) {
+            m_slicesEnabled[i] = value;
+            updateVisibilities();
+        });
 
-    return configGroup;
+        for (int i = 0; i < 3; ++i)
+            prop_visibilities->asCollection()->at(i)->setOption("title", std::string{ char('X' + i) });
+
+
+        int extent[6];
+        static_cast<vtkImageData *>(dataObject()->dataSet())->GetExtent(extent);
+
+        auto prop_positions = group_scalarSlices->addGroup("Positions");
+
+        for (int i = 0; i < 3; ++i)
+        {
+            std::string axis = { char('X' + i) };
+
+            auto * slice_prop = prop_positions->addProperty<int>(axis + "slice",
+                [this, i] () { return slicePosition(i); },
+                [this, i] (int value) {
+                setSlicePosition(i, value);
+                emit geometryChanged();
+            });
+            slice_prop->setOption("title", axis);
+            slice_prop->setOption("minimum", extent[2 * i]);
+            slice_prop->setOption("maximum", extent[2 * i + 1]);
+        }
+
+        std::string depthWarning{ "Using transparency and lighting at the same time probably leads to rendering errors." };
+
+        auto prop_transparencies = group_scalarSlices->addGroup("Transparencies");
+
+        for (int i = 0; i < 3; ++i)
+        {
+            std::string axis = { char('X' + i) };
+
+            vtkProperty * property = m_planeWidgets[i]->GetTexturePlaneProperty();
+
+            auto * slice_prop = prop_transparencies->addProperty<double>(axis + "slice",
+                [property]() {
+                return (1.0 - property->GetOpacity()) * 100;
+            },
+                [this, property] (double transparency) {
+                property->SetOpacity(1.0 - transparency * 0.01);
+                emit geometryChanged();
+            });
+            slice_prop->setOption("title", axis);
+            slice_prop->setOption("minimum", 0);
+            slice_prop->setOption("maximum", 100);
+            slice_prop->setOption("step", 1);
+            slice_prop->setOption("suffix", " %");
+            slice_prop->setOption("tooltip", depthWarning);
+        }
+
+        vtkProperty * property = m_planeWidgets[0]->GetTexturePlaneProperty();
+
+        auto prop_lighting = group_scalarSlices->addProperty<bool>("Lighting",
+            [property]() { return property->GetLighting(); },
+            [this, property] (bool lighting) {
+            for (auto w : m_planeWidgets)
+                w->GetTexturePlaneProperty()->SetLighting(lighting);
+            emit geometryChanged();
+        });
+        prop_lighting->setOption("tooltip", depthWarning);
+
+        auto prop_diffLighting = group_scalarSlices->addProperty<double>("DiffuseLighting",
+            [property] () { return property->GetDiffuse(); },
+            [this, property](double diff) {
+            for (auto w : m_planeWidgets)
+                w->GetTexturePlaneProperty()->SetDiffuse(diff);
+            emit geometryChanged();
+        });
+        prop_diffLighting->setOption("title", "Diffuse Lighting");
+        prop_diffLighting->setOption("minimum", 0);
+        prop_diffLighting->setOption("maximum", 1);
+        prop_diffLighting->setOption("step", 0.05);
+
+        auto prop_ambientLighting = group_scalarSlices->addProperty<double>("AmbientLighting",
+            [property]() { return property->GetAmbient(); },
+            [this, property] (double ambient) {
+            for (auto w : m_planeWidgets)
+                w->GetTexturePlaneProperty()->SetAmbient(ambient);
+            emit geometryChanged();
+        });
+        prop_ambientLighting->setOption("title", "Ambient Lighting");
+        prop_ambientLighting->setOption("minimum", 0);
+        prop_ambientLighting->setOption("maximum", 1);
+        prop_ambientLighting->setOption("step", 0.05);
+
+        auto prop_interpolation = group_scalarSlices->addProperty<ResliceInterpolation>("Interpolation",
+            [this] () {
+            return static_cast<ResliceInterpolation>(m_planeWidgets[0]->GetResliceInterpolate());
+        },
+            [this] (ResliceInterpolation interpolation) {
+            for (auto plane : m_planeWidgets)
+                plane->SetResliceInterpolate(static_cast<int>(interpolation));
+            emit geometryChanged();
+        });
+        prop_interpolation->setStrings({
+                { ResliceInterpolation::nearest, "nearest" },
+                { ResliceInterpolation::linear, "linear" },
+                { ResliceInterpolation::cubic, "cubic" }
+        });
+    }
+
+    return renderSettings;
 }
 
 vtkImageData * RenderedVectorGrid3D::resampledDataSet()
@@ -181,35 +271,54 @@ vtkAlgorithmOutput * RenderedVectorGrid3D::resampledOuputPort()
     return m_extractVOI->GetOutputPort();
 }
 
-vtkSmartPointer<vtkActorCollection> RenderedVectorGrid3D::fetchActors()
+vtkSmartPointer<vtkProp3DCollection> RenderedVectorGrid3D::fetchViewProps3D()
 {
-    vtkSmartPointer<vtkActorCollection> actors = RenderedData3D::fetchActors();
+    auto props = RenderedData3D::fetchViewProps3D();
 
-    for (auto actor : m_sliceActors)
-        actors->AddItem(actor);
-    for (auto actor : m_sliceOutlineActors)
-        actors->AddItem(actor);
-
-    return actors;
+    return props;
 }
 
 void RenderedVectorGrid3D::scalarsForColorMappingChangedEvent()
 {
     RenderedData3D::scalarsForColorMappingChangedEvent();
 
+    for (int i = 0; i < 3; ++i)
+        if (m_planeWidgets[i]->GetEnabled() != 0)
+            m_storedSliceIndexes[i] = m_planeWidgets[i]->GetSliceIndex();
+
+    if (m_scalars && m_scalars->usesFilter())
+    {
+        for (int i = 0; i < 3; ++i)
+        {
+            m_planeWidgets[i]->GetTexture()->SetInputConnection(
+                m_scalars->createFilter(this, i)->GetOutputPort());
+        }
+    }
+    else
+    {
+        for (int i = 0; i < 3; ++i)
+        {
+            m_planeWidgets[i]->GetTexture()->SetInputConnection(
+                m_planeWidgets[i]->GetReslice()->GetOutputPort());
+        }
+    }
+
+    for (int i = 0; i < 3; ++i)
+        m_planeWidgets[i]->SetSliceIndex(m_storedSliceIndexes[i]);
+
+
     updateVisibilities();
+
+    updatePlaneLUT();
 }
 
 void RenderedVectorGrid3D::colorMappingGradientChangedEvent()
 {
     RenderedData3D::colorMappingGradientChangedEvent();
 
-    for (auto sliceActor : m_sliceActors)
-    {
-        vtkTexture * texture = sliceActor->GetTexture();
-        assert(texture);
-        texture->SetLookupTable(m_gradient);
-    }
+    updatePlaneLUT();
+
+    updateVisibilities();
 }
 
 void RenderedVectorGrid3D::visibilityChangedEvent(bool visible)
@@ -219,15 +328,39 @@ void RenderedVectorGrid3D::visibilityChangedEvent(bool visible)
     updateVisibilities();
 }
 
+void RenderedVectorGrid3D::updatePlaneLUT()
+{
+    if (!m_blackWhiteLUT)
+    {
+        m_blackWhiteLUT = vtkSmartPointer<vtkLookupTable>::New();
+        m_blackWhiteLUT->SetHueRange(0, 0);
+        m_blackWhiteLUT->SetSaturationRange(0, 0);
+        m_blackWhiteLUT->SetValueRange(0, 1);
+        m_blackWhiteLUT->SetNumberOfTableValues(255);
+        m_blackWhiteLUT->Build();
+    }
+
+    vtkSmartPointer<vtkLookupTable> lut = (m_scalars && m_scalars->name() == "LIC 2D")
+        ? m_blackWhiteLUT
+        : vtkLookupTable::SafeDownCast(m_gradient);
+
+    for (auto plane : m_planeWidgets)
+        plane->SetLookupTable(lut);
+}
+
 void RenderedVectorGrid3D::updateVisibilities()
 {
-    bool showSliceScalars = m_scalars && m_scalars->scalarsName() == QString::fromUtf8(dataObject()->dataSet()->GetPointData()->GetVectors()->GetName());
+    bool colorMapping = m_scalars && m_scalars->usesFilter();
 
     for (int i = 0; i < 3; ++i)
     {
-        bool showSliceI = showSliceScalars && m_slicesEnabled[i];
-        m_sliceActors[i]->SetVisibility(isVisible() && showSliceI);
-        m_sliceOutlineActors[i]->SetVisibility(isVisible() && !showSliceI);
+        bool showSliceI = isVisible()
+            && colorMapping
+            && m_gradient // don't show the slice before they can use our gradient
+            && (m_planeWidgets[i]->GetInteractor() != nullptr) // don't enable them without an interactor
+            && m_slicesEnabled[i];
+
+        m_planeWidgets[i]->SetEnabled(showSliceI);
     }
 
     emit geometryChanged();
@@ -243,45 +376,50 @@ void RenderedVectorGrid3D::sampleRate(int sampleRate[3])
     m_extractVOI->GetSampleRate(sampleRate);
 }
 
+int RenderedVectorGrid3D::slicePosition(int axis)
+{
+    assert(0 < axis || axis < 3);
+
+    return m_planeWidgets[axis]->GetSliceIndex();
+}
+
 void RenderedVectorGrid3D::setSlicePosition(int axis, int slicePosition)
 {
     assert(0 < axis || axis < 3);
 
-    vtkExtractVOI * extractSlice = m_extractSlices[axis];
+    m_storedSliceIndexes[axis] = slicePosition;
+    m_planeWidgets[axis]->SetSliceIndex(slicePosition);
+}
 
-    int voi[6];
-    static_cast<vtkImageData *>(dataObject()->processedDataSet())->GetExtent(voi);
-    voi[2 * axis] = voi[2 * axis + 1] = slicePosition;
-    extractSlice->SetVOI(voi);
+int RenderedVectorGrid3D::numberOfColorMappingInputs() const
+{
+    return 3;
+}
 
-    extractSlice->Update();
-    vtkImageData * slice = extractSlice->GetOutput();
-    double bounds[6];
-    slice->GetBounds(bounds);
-    double xMin = bounds[0], xMax = bounds[1], yMin = bounds[2], yMax = bounds[3], zMin = bounds[4], zMax = bounds[5];
+vtkAlgorithmOutput * RenderedVectorGrid3D::colorMappingInput(int connection)
+{
+    assert(connection >= 0 && connection < 3);
 
-    vtkPlaneSource * plane = m_slicePlanes[axis];
-    plane->SetOrigin(xMin, yMin, zMin);
+    auto & filter = m_colorMappingInputs.at(connection);
 
-    switch (axis)
+    if (!filter)
     {
-    case 0: // x
-        plane->SetXResolution(slice->GetDimensions()[1]);
-        plane->SetYResolution(slice->GetDimensions()[2]);
-        plane->SetPoint1(xMin, yMax, zMin);
-        plane->SetPoint2(xMin, yMin, zMax);
-        break;
-    case 1: // y
-        plane->SetXResolution(slice->GetDimensions()[0]);
-        plane->SetYResolution(slice->GetDimensions()[2]);
-        plane->SetPoint1(xMax, yMin, zMin);
-        plane->SetPoint2(xMin, yMin, zMax);
-        break;
-    case 2: // z
-        plane->SetXResolution(slice->GetDimensions()[0]);
-        plane->SetYResolution(slice->GetDimensions()[1]);
-        plane->SetPoint1(xMax, yMin, zMin);
-        plane->SetPoint2(xMin, yMax, zMin);
-        break;
+        bool hasVectors = dataObject()->dataSet()->GetPointData()->GetVectors() != nullptr;
+
+        VTK_CREATE(ArrayRenameFilter, rename);
+        rename->SetScalarsName(dataObject()->dataSet()->GetPointData()->GetScalars()->GetName());
+        rename->SetInputConnection(m_planeWidgets[connection]->GetReslice()->GetOutputPort());
+        filter = rename;
+
+        if (hasVectors)
+        {
+            VTK_CREATE(vtkAssignAttribute, assignVectors);
+            assignVectors->Assign(vtkDataSetAttributes::SCALARS, vtkDataSetAttributes::VECTORS, vtkAssignAttribute::POINT_DATA);
+            assignVectors->SetInputConnection(rename->GetOutputPort());
+            filter = assignVectors;
+        }
+
     }
+
+    return filter->GetOutputPort();
 }

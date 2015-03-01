@@ -50,7 +50,7 @@ QVariant QVtkTableModelVectorGrid3D::data(const QModelIndex &index, int role) co
     case 5:
     case 6:
     {
-        vtkDataArray * vectors = m_gridData->GetPointData()->GetVectors();
+        vtkDataArray * vectors = m_gridData->GetPointData()->GetScalars();
         assert(vectors && vectors->GetNumberOfComponents() == 3);
         return vectors->GetTuple(pointId)[index.column() - 4];
     }
@@ -90,7 +90,7 @@ bool QVtkTableModelVectorGrid3D::setData(const QModelIndex & index, const QVaria
 
     vtkIdType vectorId = index.row();
 
-    vtkDataArray * data = m_gridData->GetPointData()->GetVectors();
+    vtkDataArray * data = m_gridData->GetPointData()->GetScalars();
     assert(data);
 
     int numComponents = data->GetNumberOfComponents();

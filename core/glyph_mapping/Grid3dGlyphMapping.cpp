@@ -46,6 +46,9 @@ QList<GlyphMappingData *> Grid3dGlyphMapping::newInstances(RenderedData * render
             && a->GetInformation()->Get(DataObject::ArrayIsAuxiliaryKey()))
             continue;
 
+        if (a->GetNumberOfComponents() != 3)
+            continue;
+
         vectorArrays << a;
     }
 
