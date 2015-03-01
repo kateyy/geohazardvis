@@ -108,7 +108,6 @@ set(VTK_COMPONENTS
     vtkGUISupportQt         # QVTKWidget
     vtkRenderingAnnotation  # vtkCubeAxesActor, vtkScalarBarActor
     vtkRenderingLIC
-    vtkRenderingVolumeOpenGL
     vtkFiltersTexture
     vtkInteractionWidgets
     vtkIOXML
