@@ -14,6 +14,7 @@
 #include <sstream>
 
 using namespace std;
+using namespace io;
 
 namespace FileParser
 {
