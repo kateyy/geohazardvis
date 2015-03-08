@@ -22,10 +22,12 @@
 #include <core/data_objects/PolyDataObject.h>
 #include <core/data_objects/VectorGrid3DDataObject.h>
 #include <core/io/TextFileReader.h>
+#include <core/io/types.h>
 #include <core/io/MatricesToVtk.h>
 
 
 using namespace std;
+using namespace io;
 
 namespace
 {
@@ -230,7 +232,7 @@ DataObject * Loader::readFile(const QString & filename)
 
 DataObject * Loader::loadTextFile(const QString & filename)
 {
-    std::vector<ReadDataset> readDatasets;
+    std::vector<ReadDataSet> readDatasets;
     std::shared_ptr<InputFileInfo> inputInfo = TextFileReader::read(filename.toStdString(), readDatasets);
     if (!inputInfo)
         return nullptr;

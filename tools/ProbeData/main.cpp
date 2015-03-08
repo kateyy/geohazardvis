@@ -22,12 +22,12 @@
 #include <vtkAssignAttribute.h>
 
 #include <core/vtkhelper.h>
-#include <core/io/MatricesToVtk.h>
-#include <core/io/Loader.h>
-#include <core/io/TextFileReader.h>
-#include <core/common/file_parser.h>
-#include <core/io/Exporter.h>
 #include <core/data_objects/PolyDataObject.h>
+#include <core/io/Exporter.h>
+#include <core/io/FileParser.h>
+#include <core/io/Loader.h>
+#include <core/io/MatricesToVtk.h>
+#include <core/io/TextFileReader.h>
 
 
 int main()
@@ -41,8 +41,8 @@ int main()
     vtkSmartPointer<vtkDataSet> highResMesh = highResMeshData->dataSet();
     delete highResMeshData;
 
-    std::vector<std::vector<t_FP>> raw_pointData;
-    populateIOVectors(fileName.toStdString(), raw_pointData);
+    std::vector<std::vector<io::t_FP>> raw_pointData;
+    FileParser::populateIOVectors(fileName.toStdString(), raw_pointData);
     vtkIdType numLazufrePoints = raw_pointData[0].size();
 
 

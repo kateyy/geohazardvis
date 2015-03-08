@@ -19,12 +19,15 @@
 #include <vtkTriangle.h>
 
 #include <core/vtkhelper.h>
-#include <core/common/file_parser.h>
 #include <core/data_objects/ImageDataObject.h>
 #include <core/data_objects/PolyDataObject.h>
 #include <core/data_objects/RawVectorData.h>
 #include <core/data_objects/VectorGrid3DDataObject.h>
 #include <core/io/TextFileReader.h>
+#include <core/io/FileParser.h>
+
+
+using namespace io;
 
 
 namespace
@@ -37,7 +40,7 @@ namespace
 }
 
 
-DataObject * MatricesToVtk::loadIndexedTriangles(QString name, const std::vector<ReadDataset> & datasets)
+DataObject * MatricesToVtk::loadIndexedTriangles(const QString & name, const std::vector<ReadDataSet> & datasets)
 {
     assert(datasets.size() >= 2);
 
@@ -45,15 +48,15 @@ DataObject * MatricesToVtk::loadIndexedTriangles(QString name, const std::vector
     const InputVector * vertices = nullptr;
     std::map<std::string, const InputVector *> vectorArrays;
 
-    for (const ReadDataset & dataSet : datasets)
+    for (const ReadDataSet & dataSet : datasets)
     {
         switch (dataSet.type)
         {
-        case DatasetType::vertices: vertices = &dataSet.data;
+        case DataSetType::vertices: vertices = &dataSet.data;
             break;
-        case DatasetType::indices: indices = &dataSet.data;
+        case DataSetType::indices: indices = &dataSet.data;
             break;
-        case DatasetType::vectors: vectorArrays.emplace(dataSet.attributeName, &dataSet.data);
+        case DataSetType::vectors: vectorArrays.emplace(dataSet.attributeName, &dataSet.data);
             break;
         default:
             assert(false);
@@ -79,10 +82,10 @@ DataObject * MatricesToVtk::loadIndexedTriangles(QString name, const std::vector
     return new PolyDataObject(name, polyData);
 }
 
-DataObject * MatricesToVtk::loadDEM(QString name, const std::vector<ReadDataset> & datasets)
+DataObject * MatricesToVtk::loadDEM(const QString & name, const std::vector<ReadDataSet> & datasets)
 {
     assert(datasets.size() == 1);
-    assert(datasets.begin()->type == DatasetType::grid2D);
+    assert(datasets.begin()->type == DataSetType::grid2D);
     vtkSmartPointer<vtkImageData> image = vtkImageData::SafeDownCast( datasets.begin()->vtkMetaData);
     assert(image);
 
@@ -113,10 +116,10 @@ DataObject * MatricesToVtk::loadDEM(QString name, const std::vector<ReadDataset>
     return dataObject;
 }
 
-DataObject * MatricesToVtk::loadGrid2D(QString name, const std::vector<ReadDataset> & datasets)
+DataObject * MatricesToVtk::loadGrid2D(const QString & name, const std::vector<ReadDataSet> & datasets)
 {
     assert(datasets.size() == 1);
-    assert(datasets.begin()->type == DatasetType::grid2D);
+    assert(datasets.begin()->type == DataSetType::grid2D);
     const InputVector & inputData = datasets.begin()->data;
 
     int dimensions[3] = { static_cast<int>(inputData.size()), static_cast<int>(inputData.at(0).size()), 1 };
@@ -145,10 +148,10 @@ DataObject * MatricesToVtk::loadGrid2D(QString name, const std::vector<ReadDatas
     return new ImageDataObject(name, grid);
 }
 
-DataObject * MatricesToVtk::loadGrid3D(QString name, const std::vector<ReadDataset> & datasets)
+DataObject * MatricesToVtk::loadGrid3D(const QString & name, const std::vector<ReadDataSet> & datasets)
 {
     assert(datasets.size() == 1);
-    assert(datasets.front().type == DatasetType::vectorGrid3D);
+    assert(datasets.front().type == DataSetType::vectorGrid3D);
     const InputVector & data = datasets.front().data;
     // expecting point data and 3D vectors at minimum
     assert(data.size() >= 6);
@@ -290,7 +293,7 @@ DataObject * MatricesToVtk::loadGrid3D(QString name, const std::vector<ReadDatas
     return new VectorGrid3DDataObject(name, image);
 }
 
-vtkPolyData * MatricesToVtk::parsePoints(const InputVector & parsedData, t_UInt firstColumn)
+vtkPolyData * MatricesToVtk::parsePoints(const InputVector & parsedData, size_t firstColumn)
 {
     assert(parsedData.size() > firstColumn);
 
@@ -317,8 +320,8 @@ vtkPolyData * MatricesToVtk::parsePoints(const InputVector & parsedData, t_UInt 
 }
 
 vtkPolyData * MatricesToVtk::parseIndexedTriangles(
-    const InputVector & parsedVertexData, t_UInt vertexIndexColumn, t_UInt firstVertexColumn,
-    const InputVector & parsedIndexData, t_UInt firstIndexColumn)
+    const InputVector & parsedVertexData, size_t vertexIndexColumn, size_t firstVertexColumn,
+    const InputVector & parsedIndexData, size_t firstIndexColumn)
 {
     VTK_CREATE(vtkPoints, points);
 
@@ -328,7 +331,7 @@ vtkPolyData * MatricesToVtk::parseIndexedTriangles(
     std::vector<vtkIdType> pointIds(nbVertices);
 
     // to let the internal indexes start with 0
-    t_UInt indexOffset = std::llround(parsedVertexData[vertexIndexColumn][0]);
+    size_t indexOffset = std::llround(parsedVertexData[vertexIndexColumn][0]);
 
     for (size_t row = 0; row < nbVertices; ++row)
     {
@@ -355,10 +358,10 @@ vtkPolyData * MatricesToVtk::parseIndexedTriangles(
     return resultPolyData;
 }
 
-DataObject * MatricesToVtk::readRawFile(QString fileName)
+DataObject * MatricesToVtk::readRawFile(const QString & fileName)
 {
     InputVector inputVectors;
-    populateIOVectors(fileName.toStdString(), inputVectors);
+    FileParser::populateIOVectors(fileName.toStdString(), inputVectors);
 
     int numColumns = (int)inputVectors.size();
     if (numColumns == 0)
@@ -389,7 +392,7 @@ DataObject * MatricesToVtk::readRawFile(QString fileName)
     return new RawVectorData(fInfo.baseName(), dataArray);
 }
 
-vtkFloatArray * MatricesToVtk::parseFloatVector(const InputVector & parsedData, QString arrayName, int firstColumn, int lastColumn)
+vtkFloatArray * MatricesToVtk::parseFloatVector(const InputVector & parsedData, const QString & arrayName, size_t firstColumn, size_t lastColumn)
 {
     assert(firstColumn <= lastColumn);
     assert(parsedData.size() > unsigned(lastColumn));

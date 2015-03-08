@@ -11,19 +11,20 @@
 #include <vtkImageData.h>
 
 #include <core/vtkhelper.h>
-#include <core/common/file_parser.h>
+#include <core/io/FileParser.h>
 
 
 using namespace std;
+using namespace io;
 
 namespace 
 {
-const map<string, DatasetType> datasetNamesTypes = {
-        { "vertices", DatasetType::vertices },
-        { "indices", DatasetType::indices },
-        { "grid2d", DatasetType::grid2D },
-        { "vectors", DatasetType::vectors },
-        { "vectorGrid3D", DatasetType::vectorGrid3D } };
+const map<string, DataSetType> datasetNamesTypes = {
+        { "vertices", DataSetType::vertices },
+        { "indices", DataSetType::indices },
+        { "grid2d", DataSetType::grid2D },
+        { "vectors", DataSetType::vectors },
+        { "vectorGrid3D", DataSetType::vectorGrid3D } };
 const map<string, ModelType> modelNamesType = {
         { "triangles", ModelType::triangles },
         { "DEM", ModelType::DEM },
@@ -44,7 +45,7 @@ InputFileInfo::InputFileInfo(const std::string & name, ModelType type)
 {
 }
 
-shared_ptr<InputFileInfo> TextFileReader::read(const string & filename, vector<ReadDataset> & readDataSets)
+shared_ptr<InputFileInfo> TextFileReader::read(const string & filename, vector<ReadDataSet> & readDataSets)
 {
     ifstream inputStream(filename);
 
@@ -54,7 +55,7 @@ shared_ptr<InputFileInfo> TextFileReader::read(const string & filename, vector<R
         return nullptr;
     }
 
-    vector<DatasetDef> datasetDefs;
+    vector<DataSetDef> datasetDefs;
     shared_ptr<InputFileInfo> input = readHeader(inputStream, datasetDefs);
 
     if (!input)
@@ -64,11 +65,11 @@ shared_ptr<InputFileInfo> TextFileReader::read(const string & filename, vector<R
     }
     assert(input);
 
-    for (const DatasetDef & datasetDef : datasetDefs)
+    for (const DataSetDef & datasetDef : datasetDefs)
     {
-        ReadDataset readData{ datasetDef.type, {}, datasetDef.attributeName, datasetDef.vtkMetaData };
+        ReadDataSet readData{ datasetDef.type, {}, datasetDef.attributeName, datasetDef.vtkMetaData };
 
-        if (populateIOVectors(inputStream, readData.data,
+        if (FileParser::populateIOVectors(inputStream, readData.data,
             datasetDef.nbLines,
             datasetDef.nbColumns)) {
             readDataSets.push_back(readData);
@@ -81,7 +82,7 @@ shared_ptr<InputFileInfo> TextFileReader::read(const string & filename, vector<R
     return input;
 }
 
-std::shared_ptr<InputFileInfo> TextFileReader::readHeader(ifstream & inputStream, vector<DatasetDef> & inputDefs)
+std::shared_ptr<InputFileInfo> TextFileReader::readHeader(ifstream & inputStream, vector<DataSetDef> & inputDefs)
 {
     assert(inputStream.good());
 
@@ -163,11 +164,11 @@ std::shared_ptr<InputFileInfo> TextFileReader::readHeader(ifstream & inputStream
     return input;
 }
 
-bool TextFileReader::readHeader_triangles(ifstream & inputStream, vector<DatasetDef> & inputDefs)
+bool TextFileReader::readHeader_triangles(ifstream & inputStream, vector<DataSetDef> & inputDefs)
 {
     string line;
-    DatasetType currentDataType(DatasetType::unknown);
-    t_UInt numCells = 0;
+    DataSetType currentDataType(DataSetType::unknown);
+    size_t numCells = 0;
 
     while (!inputStream.eof())
     {
@@ -196,20 +197,20 @@ bool TextFileReader::readHeader_triangles(ifstream & inputStream, vector<Dataset
 
         currentDataType = checkDataSetType(datasetType);
 
-        t_UInt tupleSize = 0;
-        t_UInt numTuples = 0;
+        size_t tupleSize = 0;
+        size_t numTuples = 0;
         switch (currentDataType)
         {
-        case DatasetType::indices:
+        case DataSetType::indices:
             tupleSize = 3;
             numTuples = stoul(parameter);
             numCells = numTuples;
             break;
-        case DatasetType::vertices:
+        case DataSetType::vertices:
             tupleSize = 4;
             numTuples = stoul(parameter);
             break;
-        case DatasetType::vectors:
+        case DataSetType::vectors:
         {
             size_t tupleSizePos = parameter.find(" ", 0);
             tupleSize = stoul(parameter.substr(0, tupleSizePos));
@@ -217,7 +218,7 @@ bool TextFileReader::readHeader_triangles(ifstream & inputStream, vector<Dataset
             attributeName = parameter.substr(tupleSizePos + 1);
             break;
         }
-        case DatasetType::unknown:
+        case DataSetType::unknown:
             return false;
         default:
             cerr << "Data set type \"" + datasetType + "\" not supported with model type \"triangles\"" << endl;
@@ -231,7 +232,7 @@ bool TextFileReader::readHeader_triangles(ifstream & inputStream, vector<Dataset
     return false;
 }
 
-bool TextFileReader::readHeader_DEM(std::ifstream & inputStream, std::vector<DatasetDef>& inputDefs)
+bool TextFileReader::readHeader_DEM(std::ifstream & inputStream, std::vector<DataSetDef>& inputDefs)
 {
     string line;
     int columns = -1, rows = -1;
@@ -310,8 +311,8 @@ bool TextFileReader::readHeader_DEM(std::ifstream & inputStream, std::vector<Dat
     image->SetOrigin(xCorner, yCorner, 0);
     image->SetSpacing(cellSize, cellSize, 0);
 
-    DatasetDef def;
-    def.type = DatasetType::grid2D;
+    DataSetDef def;
+    def.type = DataSetType::grid2D;
     def.nbColumns = columns;
     def.nbLines = rows;
     def.vtkMetaData = image;
@@ -321,10 +322,10 @@ bool TextFileReader::readHeader_DEM(std::ifstream & inputStream, std::vector<Dat
     return true;
 }
 
-bool TextFileReader::readHeader_grid2D(ifstream & inputStream, vector<DatasetDef> & inputDefs)
+bool TextFileReader::readHeader_grid2D(ifstream & inputStream, vector<DataSetDef> & inputDefs)
 {
     string line;
-    DatasetType currentDataType(DatasetType::unknown);
+    DataSetType currentDataType(DataSetType::unknown);
 
     while (!inputStream.eof())
     {
@@ -349,15 +350,15 @@ bool TextFileReader::readHeader_grid2D(ifstream & inputStream, vector<DatasetDef
 
         currentDataType = checkDataSetType(datasetType);
 
-        if (currentDataType != DatasetType::grid2D)
+        if (currentDataType != DataSetType::grid2D)
         {
             cerr << "Data set type " << datasetType << " not supported in model type grid2d" << endl;
             return false;
         }
 
         size_t seperator = parameter.find_first_of(":");
-        t_UInt columns = stoul(parameter.substr(0, seperator));
-        t_UInt rows = stoul(parameter.substr(seperator + 1, string::npos));
+        size_t columns = stoul(parameter.substr(0, seperator));
+        size_t rows = stoul(parameter.substr(seperator + 1, string::npos));
         if (!(columns > 0 && rows > 0))
         {
             cerr << "missing \"columns:rows\" specification for grid2d data set" << endl;
@@ -369,10 +370,10 @@ bool TextFileReader::readHeader_grid2D(ifstream & inputStream, vector<DatasetDef
     return false;
 }
 
-bool TextFileReader::readHeader_vectorGrid3D(std::ifstream & inputStream, std::vector<DatasetDef>& inputDefs)
+bool TextFileReader::readHeader_vectorGrid3D(std::ifstream & inputStream, std::vector<DataSetDef>& inputDefs)
 {
     string line;
-    DatasetType currentDataType(DatasetType::unknown);
+    DataSetType currentDataType(DataSetType::unknown);
 
     while (!inputStream.eof())
     {
@@ -398,27 +399,27 @@ bool TextFileReader::readHeader_vectorGrid3D(std::ifstream & inputStream, std::v
 
         currentDataType = checkDataSetType(datasetType);
 
-        if (currentDataType != DatasetType::vectorGrid3D)
+        if (currentDataType != DataSetType::vectorGrid3D)
         {
             cerr << "Data set type " << datasetType << " not supported in model type vectorGrid3D" << endl;
             return false;
         }
 
-        t_UInt rows = stoul(parameter);
-        t_UInt columns = parameter2.empty() ? 6u : 3u + stoul(parameter2);
+        size_t rows = stoul(parameter);
+        size_t columns = parameter2.empty() ? 6u : 3u + stoul(parameter2);
         inputDefs.push_back({ currentDataType, rows, columns, ""});
     }
 
     return false;
 }
 
-DatasetType TextFileReader::checkDataSetType(const std::string & nameString)
+DataSetType TextFileReader::checkDataSetType(const std::string & nameString)
 {
     auto it = datasetNamesTypes.find(nameString);
     if (it == datasetNamesTypes.end())
     {
         cerr << "Invalid data set type: " << nameString << endl;
-        return DatasetType::unknown;
+        return DataSetType::unknown;
     }
     return it->second;
 }

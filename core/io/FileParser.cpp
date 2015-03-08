@@ -5,15 +5,18 @@
  *      Author: Fahad Khalid
  */
 
-#include "file_parser.h"
+#include <core/io/FileParser.h>
 
 #include <cassert>
+#include <iostream>
+#include <limits>
 #include <fstream>
 #include <sstream>
-#include <limits>
-#include <stdlib.h>
 
 using namespace std;
+
+namespace FileParser
+{
 
 bool populateIOVectors(const string inputFileName,
                         vector<vector<t_FP> > &ioVectors) {
@@ -21,7 +24,7 @@ bool populateIOVectors(const string inputFileName,
 
     vector<t_FP> parsedData;
 
-    t_UInt nbColumns;
+    size_t nbColumns;
 
     if(!parseIOFile(inputFileName, parsedData, nbColumns)) {
         return false;
@@ -36,8 +39,8 @@ bool populateIOVectors(const string inputFileName,
 
 bool populateIOVectors(ifstream & inputStream,
     vector<vector<t_FP> > &ioVectors,
-    unsigned long numTuples,
-    unsigned long componentsPerTuple) {
+    size_t numTuples,
+    size_t componentsPerTuple) {
     assert(ioVectors.empty());
 
     vector<t_FP> parsedData;
@@ -53,7 +56,7 @@ bool populateIOVectors(ifstream & inputStream,
     return true;
 }
 
-bool parseIOStream(ifstream & inputStream, vector<t_FP> &parsedData, unsigned long numValues) {
+bool parseIOStream(ifstream & inputStream, vector<t_FP> &parsedData, size_t numValues) {
     string input;
     t_FP input_FP;
 
@@ -64,7 +67,7 @@ bool parseIOStream(ifstream & inputStream, vector<t_FP> &parsedData, unsigned lo
         return false;
     }
 
-    unsigned long processedValue = 0;
+    size_t processedValue = 0;
     while (processedValue < numValues && !inputStream.eof()) {
         inputStream >> input;
 
@@ -91,7 +94,8 @@ bool parseIOStream(ifstream & inputStream, vector<t_FP> &parsedData, unsigned lo
     return (processedValue == numValues);
 }
 
-bool parseIOFile(const string inputFileName, vector<t_FP> &parsedData, t_UInt & nbColumns) {
+bool parseIOFile(const string inputFileName, vector<t_FP> &parsedData, size_t & nbColumns)
+{
     string input;
     t_FP input_FP;
 
@@ -152,4 +156,6 @@ void populateVectorsFromData(const vector<t_FP> &parsedData,
             ioVectors[j].push_back(parsedData[i+j]);
         }
     }
+}
+
 }
