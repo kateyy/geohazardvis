@@ -4,10 +4,10 @@
 #include <cassert>
 #include <limits>
 
-#include <vtkArrayCalculator.h>
 #include <vtkAssignAttribute.h>
 #include <vtkDataArray.h>
 #include <vtkImageData.h>
+#include <vtkImageNormalize.h>
 #include <vtkOpenGLRenderWindow.h>
 #include <vtkOpenGLExtensionManager.h>
 #include <vtkPassThrough.h>
@@ -84,29 +84,16 @@ vtkSmartPointer<vtkAlgorithm> ImageDataLIC2DMapping::createFilter(AbstractVisual
 
     if (!lic)
     {
-        double vectorRange[2] = {
-            std::numeric_limits<double>::max(),
-            std::numeric_limits<double>::lowest() };
-        for (int i = 0; i < 3; ++i)
-        {
-            double r[2];
-            imageVectors->GetRange(r, i);
-            vectorRange[0] = std::min(vectorRange[0], r[0]);
-            vectorRange[1] = std::max(vectorRange[1], r[1]);
-        }
+        VTK_CREATE(vtkAssignAttribute, assignScalars);
+        assignScalars->SetInputConnection(visualizedData->colorMappingInput(connection));
+        assignScalars->Assign(vtkDataSetAttributes::VECTORS, vtkDataSetAttributes::SCALARS, vtkAssignAttribute::POINT_DATA);
 
-        double vectorScaleFactor = 1.0 / std::max(std::abs(vectorRange[0]), std::abs(vectorRange[1]));
-
-        VTK_CREATE(vtkArrayCalculator, vectorScale);
-        vectorScale->SetInputConnection(visualizedData->colorMappingInput(connection));
-        vectorScale->AddVectorArrayName(imageVectors->GetName());
-        vectorScale->SetResultArrayName(scaledVectorsName.c_str());
-        vectorScale->SetFunction((std::to_string(vectorScaleFactor) + "*" + imageVectors->GetName()).c_str());
+        VTK_CREATE(vtkImageNormalize, normalize);
+        normalize->SetInputConnection(assignScalars->GetOutputPort());
 
         VTK_CREATE(vtkAssignAttribute, assignScaledVectors);
-        assignScaledVectors->SetInputConnection(vectorScale->GetOutputPort());
-        assignScaledVectors->Assign(scaledVectorsName.c_str(),
-            vtkDataSetAttributes::VECTORS, vtkAssignAttribute::POINT_DATA);
+        assignScaledVectors->SetInputConnection(normalize->GetOutputPort());
+        assignScaledVectors->Assign(vtkDataSetAttributes::SCALARS, vtkDataSetAttributes::VECTORS, vtkAssignAttribute::POINT_DATA);
 
         lic = vtkSmartPointer<vtkImageDataLIC2D>::New();
         lic->SetInputConnection(0, assignScaledVectors->GetOutputPort());
