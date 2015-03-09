@@ -613,6 +613,7 @@ int vtkImageDataLIC2D::RequestData(
   LICer->SetNumberOfSteps(this->Steps);
   LICer->SetStepSize(stepSize);
   LICer->SetComponentIds(comp[0], comp[1]);
+  LICer->AntiAliasOn();
   //LICer->SetGridSpacings(spacing[comp[0]], spacing[comp[1]]);
 
   deque<vtkPixelExtent> magLicExtents(1, magLicExtent);
