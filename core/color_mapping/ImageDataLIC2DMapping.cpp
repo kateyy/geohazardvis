@@ -20,7 +20,7 @@
 #include <core/filters/vtkImageDataLIC2D.h>
 
 
-const QString ImageDataLIC2DMapping::s_name = "Vector Field Line Integral Convolution Planes";
+const QString ImageDataLIC2DMapping::s_name = "2D Image Data Line Integral Convolution";
 
 
 const bool ImageDataLIC2DMapping::s_isRegistered = ColorMappingRegistry::instance().registerImplementation(
@@ -35,7 +35,8 @@ ImageDataLIC2DMapping::ImageDataLIC2DMapping(const QList<AbstractVisualizedData 
     for (AbstractVisualizedData * v : visualizedData)
         for (int i = 0; !m_isValid && i < v->numberOfColorMappingInputs(); ++i)
             if ((image = vtkImageData::SafeDownCast(v->colorMappingInputData(i)))
-                && (image->GetPointData()->GetVectors()))
+                && (image->GetPointData()->GetVectors()
+                && (image->GetDataDimension() == 2)))
             {
                 m_isValid = true;
                 break;
@@ -64,7 +65,7 @@ vtkSmartPointer<vtkAlgorithm> ImageDataLIC2DMapping::createFilter(AbstractVisual
     if (image)
         imageVectors = image->GetPointData()->GetVectors();
 
-    if (!imageVectors)
+    if (image->GetDataDimension() != 2 || !imageVectors)
     {
         VTK_CREATE(vtkPassThrough, filter);
         filter->SetInputConnection(visualizedData->colorMappingInput(connection));

@@ -268,6 +268,9 @@ DataObject * MatricesToVtk::loadGrid3D(const QString & name, const std::vector<R
 
     image->GetPointData()->SetScalars(vectorData);
 
+    if (numComponents == 3)
+        image->GetPointData()->SetVectors(vectorData);
+
     // iterate over source data, calculate indexes for vtkImageData
     // data in vtkImageData stored in tupleValues - x - y - z - order
 
