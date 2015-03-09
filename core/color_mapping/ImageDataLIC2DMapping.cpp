@@ -1,4 +1,4 @@
-#include "VectorField3DLIC2DPlanes.h"
+#include "ImageDataLIC2DMapping.h"
 
 #include <algorithm>
 #include <cassert>
@@ -13,21 +13,21 @@
 #include <vtkPassThrough.h>
 #include <vtkPointData.h>
 
+#include <core/AbstractVisualizedData.h>
 #include <core/vtkhelper.h>
 #include <core/color_mapping/ColorMappingRegistry.h>
 #include <core/filters/NoiseImageSource.h>
 #include <core/filters/vtkImageDataLIC2D.h>
-#include <core/rendered_data/RenderedVectorGrid3D.h>
 
 
-const QString VectorField3DLIC2DPlanes::s_name = "Vector Field Line Integral Convolution Planes";
+const QString ImageDataLIC2DMapping::s_name = "Vector Field Line Integral Convolution Planes";
 
 
-const bool VectorField3DLIC2DPlanes::s_isRegistered = ColorMappingRegistry::instance().registerImplementation(
+const bool ImageDataLIC2DMapping::s_isRegistered = ColorMappingRegistry::instance().registerImplementation(
     s_name,
-    newInstance<VectorField3DLIC2DPlanes>);
+    newInstance<ImageDataLIC2DMapping>);
 
-VectorField3DLIC2DPlanes::VectorField3DLIC2DPlanes(const QList<AbstractVisualizedData *> & visualizedData)
+ImageDataLIC2DMapping::ImageDataLIC2DMapping(const QList<AbstractVisualizedData *> & visualizedData)
     : ColorMappingData(visualizedData)
     , m_noiseImage{}
 {
@@ -50,14 +50,14 @@ VectorField3DLIC2DPlanes::VectorField3DLIC2DPlanes(const QList<AbstractVisualize
     m_noiseImage->SetValueRange(0, 1);
 }
 
-VectorField3DLIC2DPlanes::~VectorField3DLIC2DPlanes() = default;
+ImageDataLIC2DMapping::~ImageDataLIC2DMapping() = default;
 
-QString VectorField3DLIC2DPlanes::name() const
+QString ImageDataLIC2DMapping::name() const
 {
     return "LIC 2D";
 }
 
-vtkSmartPointer<vtkAlgorithm> VectorField3DLIC2DPlanes::createFilter(AbstractVisualizedData * visualizedData, int connection)
+vtkSmartPointer<vtkAlgorithm> ImageDataLIC2DMapping::createFilter(AbstractVisualizedData * visualizedData, int connection)
 {
     vtkDataArray * imageVectors = nullptr;
     vtkImageData * image = vtkImageData::SafeDownCast(visualizedData->colorMappingInputData(connection));
@@ -118,17 +118,17 @@ vtkSmartPointer<vtkAlgorithm> VectorField3DLIC2DPlanes::createFilter(AbstractVis
     return lic;
 }
 
-bool VectorField3DLIC2DPlanes::usesFilter() const
+bool ImageDataLIC2DMapping::usesFilter() const
 {
     return true;
 }
 
-QMap<vtkIdType, QPair<double, double>> VectorField3DLIC2DPlanes::updateBounds()
+QMap<vtkIdType, QPair<double, double>> ImageDataLIC2DMapping::updateBounds()
 {
     return{ { 0, { 0, 1 } } };  // by LIC definition
 }
 
-vtkRenderWindow * VectorField3DLIC2DPlanes::glContext()
+vtkRenderWindow * ImageDataLIC2DMapping::glContext()
 {
     if (m_glContext)
         return m_glContext;

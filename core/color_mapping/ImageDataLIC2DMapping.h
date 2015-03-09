@@ -9,14 +9,13 @@ class vtkImageDataLIC2D;
 class vtkRenderWindow;
 
 class NoiseImageSource;
-class RenderedVectorGrid3D;
 
 
-class CORE_API VectorField3DLIC2DPlanes : public ColorMappingData
+class CORE_API ImageDataLIC2DMapping : public ColorMappingData
 {
 public:
-    VectorField3DLIC2DPlanes(const QList<AbstractVisualizedData *> & visualizedData);
-    ~VectorField3DLIC2DPlanes() override;
+    ImageDataLIC2DMapping(const QList<AbstractVisualizedData *> & visualizedData);
+    ~ImageDataLIC2DMapping() override;
 
     QString name() const override;
 
