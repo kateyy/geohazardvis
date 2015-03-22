@@ -193,4 +193,9 @@ add_subdirectory("gui")
 add_subdirectory("app")
 add_subdirectory("docs")
 add_subdirectory(packages)
-add_subdirectory(tools)
+
+set(OPTION_BUILD_TOOLS TRUE CACHE BOOL "")
+
+if (OPTION_BUILD_TOOLS)
+    add_subdirectory(tools)
+endif()
