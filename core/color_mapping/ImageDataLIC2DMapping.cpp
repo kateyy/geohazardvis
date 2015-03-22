@@ -62,10 +62,11 @@ vtkSmartPointer<vtkAlgorithm> ImageDataLIC2DMapping::createFilter(AbstractVisual
 {
     vtkDataArray * imageVectors = nullptr;
     vtkImageData * image = vtkImageData::SafeDownCast(visualizedData->colorMappingInputData(connection));
+
     if (image)
         imageVectors = image->GetPointData()->GetVectors();
 
-    if (image->GetDataDimension() != 2 || !imageVectors)
+    if (!image || image->GetDataDimension() != 2 || !imageVectors)
     {
         VTK_CREATE(vtkPassThrough, filter);
         filter->SetInputConnection(visualizedData->colorMappingInput(connection));

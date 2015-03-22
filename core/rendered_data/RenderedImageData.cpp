@@ -111,7 +111,7 @@ void RenderedImageData::scalarsForColorMappingChangedEvent()
 
     if (m_scalars->usesFilter())
     {
-        vtkAlgorithm * filter = m_scalars->createFilter(this);
+        vtkSmartPointer<vtkAlgorithm> filter = m_scalars->createFilter(this);
         filter->Update();
         vtkDataSet * image = vtkDataSet::SafeDownCast(filter->GetOutputDataObject(0));
         // use filter only if it outputs scalars. To prevent segfault in image slice.
@@ -119,7 +119,6 @@ void RenderedImageData::scalarsForColorMappingChangedEvent()
             m_mapper->SetInputConnection(filter->GetOutputPort());
         else
             m_mapper->SetInputConnection(colorMappingInput());
-        filter->Delete();
     }
     else
     {
