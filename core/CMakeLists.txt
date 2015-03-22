@@ -58,8 +58,6 @@ set ( SOURCES
     filters/StackedImageDataLIC3D.cpp
     filters/TransformTextureCoords.h
     filters/TransformTextureCoords.cxx
-    filters/vtkImageDataLIC2D.h
-    filters/vtkImageDataLIC2D.cpp
 
     io/Exporter.h
     io/Exporter.cpp

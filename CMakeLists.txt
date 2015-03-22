@@ -115,7 +115,7 @@ set(VTK_COMPONENTS
     vtkChartsCore
 )
 
-find_package(VTK REQUIRED ${VTK_COMPONENTS})
+find_package(VTK 6.3 REQUIRED ${VTK_COMPONENTS})
 # replaced by explicit calls below (http://www.kitware.com/source/home/post/116)
 #include(${VTK_USE_FILE})
 

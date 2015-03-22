@@ -7,6 +7,7 @@
 #include <vtkAssignAttribute.h>
 #include <vtkDataArray.h>
 #include <vtkImageData.h>
+#include <vtkImageDataLIC2D.h>
 #include <vtkImageNormalize.h>
 #include <vtkOpenGLRenderWindow.h>
 #include <vtkOpenGLExtensionManager.h>
@@ -17,7 +18,6 @@
 #include <core/vtkhelper.h>
 #include <core/color_mapping/ColorMappingRegistry.h>
 #include <core/filters/NoiseImageSource.h>
-#include <core/filters/vtkImageDataLIC2D.h>
 
 
 const QString ImageDataLIC2DMapping::s_name = "2D Image Data Line Integral Convolution";

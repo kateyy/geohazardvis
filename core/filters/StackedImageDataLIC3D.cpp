@@ -5,6 +5,7 @@
 #include <vtkExtractVOI.h>
 #include <vtkImageAppend.h>
 #include <vtkImageData.h>
+#include <vtkImageDataLIC2D.h>
 #include <vtkObjectFactory.h>
 #include <vtkOpenGLExtensionManager.h>
 #include <vtkOpenGLRenderWindow.h>
@@ -12,7 +13,6 @@
 
 #include <core/vtkhelper.h>
 #include <core/filters/NoiseImageSource.h>
-#include <core/filters/vtkImageDataLIC2D.h>
 
 
 vtkStandardNewMacro(StackedImageDataLIC3D);
