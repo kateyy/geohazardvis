@@ -17,7 +17,7 @@
 using namespace std;
 using namespace io;
 
-namespace 
+namespace
 {
 const map<string, DataSetType> datasetNamesTypes = {
         { "vertices", DataSetType::vertices },
@@ -187,7 +187,7 @@ bool TextFileReader::readHeader_triangles(ifstream & inputStream, vector<DataSet
             cerr << "Invalid line in input file: \n\t" << line << endl;
             return false;
         }
-        
+
         stringstream linestream(line.substr(2, string::npos));
         string datasetType, parameter;
         getline(linestream, datasetType, ' ');
@@ -303,7 +303,7 @@ bool TextFileReader::readHeader_DEM(std::ifstream & inputStream, std::vector<Dat
     if (!atEnd)
         return false;
 
-    if (columns <= 0 || rows <= 0 || isnan(xCorner) || isnan(yCorner) || cellSize <= 0)
+    if (columns <= 0 || rows <= 0 || std::isnan(xCorner) || std::isnan(yCorner) || cellSize <= 0)
         return false;
 
     VTK_CREATE(vtkImageData, image);
@@ -336,7 +336,7 @@ bool TextFileReader::readHeader_grid2D(ifstream & inputStream, vector<DataSetDef
 
         if (line == "$end")
             return true;
-        
+
         if (!(line.substr(0, 2) == "$ "))
         {
             cerr << "Invalid line in input file: \n\t" << line << endl;

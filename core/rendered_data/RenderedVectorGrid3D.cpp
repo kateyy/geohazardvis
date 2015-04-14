@@ -340,8 +340,8 @@ void RenderedVectorGrid3D::updatePlaneLUT()
         m_blackWhiteLUT->Build();
     }
 
-    vtkSmartPointer<vtkLookupTable> lut = (m_scalars && m_scalars->name() == "LIC 2D")
-        ? m_blackWhiteLUT
+    vtkLookupTable * lut = (m_scalars && m_scalars->name() == "LIC 2D")
+        ? m_blackWhiteLUT.Get()
         : vtkLookupTable::SafeDownCast(m_gradient);
 
     for (auto plane : m_planeWidgets)
