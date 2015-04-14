@@ -7,12 +7,17 @@
 #include <vtkImageData.h>
 #include <vtkImageDataLIC2D.h>
 #include <vtkObjectFactory.h>
-#include <vtkOpenGLExtensionManager.h>
 #include <vtkOpenGLRenderWindow.h>
 #include <vtkPointData.h>
 
 #include <core/vtkhelper.h>
 #include <core/filters/NoiseImageSource.h>
+
+#include "config.h"
+
+#if VTK_RENDERING_BACKEND == 1
+#include <vtkOpenGLExtensionManager.h>
+#endif
 
 
 vtkStandardNewMacro(StackedImageDataLIC3D);
@@ -83,10 +88,12 @@ void StackedImageDataLIC3D::initialize()
 
 
     m_glContext = vtkRenderWindow::New();
+#if VTK_RENDERING_BACKEND == 1
     vtkOpenGLRenderWindow * openGLContext = vtkOpenGLRenderWindow::SafeDownCast(m_glContext);
     assert(openGLContext);
     openGLContext->GetExtensionManager()->IgnoreDriverBugsOn(); // required for Intel HD
     openGLContext->OffScreenRenderingOn();
+#endif
 
     m_noiseImage = NoiseImageSource::New();
     m_noiseImage->SetExtent(0, 1270, 0, 1270, 0, 0);

@@ -20,12 +20,17 @@
 #include <vtkPixelBufferObject.h>
 #include <vtkPixelTransfer.h>
 #include <vtkRenderbuffer.h>
-#include <vtkShader2.h>
-#include <vtkShader2Collection.h>
-#include <vtkShaderProgram2.h>
 #include <vtkTextureObject.h>
 
 #include <core/vtkhelper.h>
+
+#include "config.h"
+
+#if VTK_RENDERING_BACKEND == 1
+#include <vtkShader2.h>
+#include <vtkShader2Collection.h>
+#include <vtkShaderProgram2.h>
+#endif
 
 
 vtkStandardNewMacro(NoiseImageSource);
@@ -159,6 +164,7 @@ int NoiseImageSource::ExecuteCPUUniformDist(vtkDataArray * data)
     return 1;
 }
 
+#if VTK_RENDERING_BACKEND == 1
 int NoiseImageSource::ExecuteGpuPerlin(vtkDataArray * data)
 {
     if (Extent[4] != Extent[5])
@@ -289,3 +295,9 @@ int NoiseImageSource::ExecuteGpuPerlin(vtkDataArray * data)
 
     return 1;
 }
+#else
+int NoiseImageSource::ExecuteGpuPerlin(vtkDataArray * /*data*/)
+{
+    return 0;
+}
+#endif

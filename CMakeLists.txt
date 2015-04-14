@@ -107,7 +107,6 @@ install(FILES ${CMAKE_BINARY_DIR}/revision DESTINATION ${INSTALL_ROOT})
 set(VTK_COMPONENTS
     vtkGUISupportQt         # QVTKWidget
     vtkRenderingAnnotation  # vtkCubeAxesActor, vtkScalarBarActor
-    vtkRenderingLIC
     vtkFiltersTexture
     vtkInteractionWidgets
     vtkIOXML
@@ -119,14 +118,8 @@ find_package(VTK 6.3 REQUIRED ${VTK_COMPONENTS})
 # replaced by explicit calls below (http://www.kitware.com/source/home/post/116)
 #include(${VTK_USE_FILE})
 
-if (NOT ${VTK_VERSION_MAJOR} STREQUAL "6")
-    message(FATAL_ERROR "VTK 6 is required! Found ${VTK_VERSION_MAJOR}")
-endif()
-
-if("${VTK_QT_VERSION}" STREQUAL "")
-    message(FATAL_ERROR "VTK was not built with Qt")
-elseif(NOT "${VTK_QT_VERSION}" STREQUAL "5")
-    message(FATAL_ERROR "VTK was a wrong Qt version (${VTK_QT_VERSION}). Only Qt5 is supported.")
+if(NOT "${VTK_QT_VERSION}" STREQUAL "5")
+    message(FATAL_ERROR "VTK was built with Qt version ${VTK_QT_VERSION}, but Qt5 is required.")
 endif()
 
 if ("${VTK_RENDERING_BACKEND}" STREQUAL "")
@@ -144,13 +137,25 @@ else()
 endif()
 
 
+# configuration dependent VTK components
+
+if (${VTK_RENDERING_BACKEND_VERSION} EQUAL 2)
+    list(APPEND VTK_COMPONENTS vtkRenderingLICOpenGL2)
+else()
+    list(APPEND VTK_COMPONENTS vtkRenderingLIC)
+endif()
+
+
 if(TARGET vtkIOExport AND TARGET vtkRenderingGL2PS)
     set(VTK_has_GLExport2PS 1)
-    find_package(VTK COMPONENTS ${VTK_COMPONENTS} vtkIOExport vtkRenderingGL2PS)
+    list(APPEND VTK_COMPONENTS vtkIOExport vtkRenderingGL2PS)
 else()
     set(VTK_has_GLExport2PS 0)
     message("VTK was not build with vtkIOExport and vtkRenderingGL2PS, PostScript/EPS export will not be available.")
 endif()
+
+# find additional VTK components
+find_package(VTK REQUIRED ${VTK_COMPONENTS})
 
 
 include_directories(SYSTEM ${VTK_INCLUDE_DIRS})
@@ -192,10 +197,10 @@ add_subdirectory("core")
 add_subdirectory("gui")
 add_subdirectory("app")
 add_subdirectory("docs")
-add_subdirectory(packages)
+add_subdirectory("packages")
 
 set(OPTION_BUILD_TOOLS TRUE CACHE BOOL "")
 
 if (OPTION_BUILD_TOOLS)
-    add_subdirectory(tools)
+    add_subdirectory("tools")
 endif()

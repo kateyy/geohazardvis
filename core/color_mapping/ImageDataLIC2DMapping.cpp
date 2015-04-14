@@ -10,7 +10,6 @@
 #include <vtkImageDataLIC2D.h>
 #include <vtkImageNormalize.h>
 #include <vtkOpenGLRenderWindow.h>
-#include <vtkOpenGLExtensionManager.h>
 #include <vtkPassThrough.h>
 #include <vtkPointData.h>
 
@@ -18,6 +17,12 @@
 #include <core/vtkhelper.h>
 #include <core/color_mapping/ColorMappingRegistry.h>
 #include <core/filters/NoiseImageSource.h>
+
+#include "config.h"
+
+#if VTK_RENDERING_BACKEND == 1
+#include <vtkOpenGLExtensionManager.h>
+#endif
 
 
 const QString ImageDataLIC2DMapping::s_name = "2D Image Data Line Integral Convolution";
@@ -125,7 +130,9 @@ vtkRenderWindow * ImageDataLIC2DMapping::glContext()
     m_glContext = vtkSmartPointer<vtkRenderWindow>::New();
     vtkOpenGLRenderWindow * openGLContext = vtkOpenGLRenderWindow::SafeDownCast(m_glContext);
     assert(openGLContext);
+#if VTK_RENDERING_BACKEND == 1
     openGLContext->GetExtensionManager()->IgnoreDriverBugsOn(); // required for Intel HD
+#endif
     openGLContext->SetMultiSamples(1);  // multi sampling is not implemented for off screen contexts
     openGLContext->OffScreenRenderingOn();
 
