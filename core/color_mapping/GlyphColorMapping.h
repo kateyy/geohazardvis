@@ -12,7 +12,7 @@ class CORE_API GlyphColorMapping : public ColorMappingData
 public:
     GlyphColorMapping(const QList<AbstractVisualizedData *> & visualizedData,
         const QList<GlyphMappingData *> & glyphMappingData,
-        vtkIdType numDataComponents = 1);
+        int numDataComponents = 1);
 
     /** override superclass activate/deactivate: enable color mapping on glyph representations */
     void activate() override;

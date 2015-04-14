@@ -36,7 +36,7 @@ public:
     static QList<ColorMappingData *> newInstance(const QList<AbstractVisualizedData *> & visualizedData);
 
 public:
-    explicit ColorMappingData(const QList<AbstractVisualizedData *> & visualizedData, vtkIdType numDataComponents = 1);
+    explicit ColorMappingData(const QList<AbstractVisualizedData *> & visualizedData, int numDataComponents = 1);
     virtual ~ColorMappingData() override;
 
     virtual void activate();
@@ -45,9 +45,9 @@ public:
     virtual QString name() const = 0;
     virtual QString scalarsName() const;
 
-    vtkIdType numDataComponents() const;
-    vtkIdType dataComponent() const;
-    void setDataComponent(vtkIdType component);
+    int numDataComponents() const;
+    int dataComponent() const;
+    void setDataComponent(int component);
 
     /** create a filter to map values to color, applying current min/max settings
       * @param dataObject is required to setup object specific parameters on the filter.
@@ -62,19 +62,19 @@ public:
 
     void setLookupTable(vtkLookupTable * lookupTable);
 
-    /** minimal value in the data set 
+    /** minimal value in the data set
         @param select a data component to query or use the currently selected component (-1) */
-    double dataMinValue(vtkIdType component = -1) const;
-    /** maximal value in the data set 
+    double dataMinValue(int component = -1) const;
+    /** maximal value in the data set
         @param select a data component to query or use the currently selected component (-1) */
-    double dataMaxValue(vtkIdType component = -1) const;
+    double dataMaxValue(int component = -1) const;
 
     /** minimal value used for color mapping (clamped to [dataMinValue, dataMaxValue]) */
-    double minValue(vtkIdType component = -1) const;
-    void setMinValue(double value, vtkIdType component = -1);
+    double minValue(int component = -1) const;
+    void setMinValue(double value, int component = -1);
     /** maximal value used for color mapping (clamped to [dataMinValue, dataMaxValue]) */
-    double maxValue(vtkIdType component = -1) const;
-    void setMaxValue(double value, vtkIdType component = -1);
+    double maxValue(int component = -1) const;
+    void setMaxValue(double value, int component = -1);
 
 signals:
     void lookupTableChanged();
@@ -89,7 +89,7 @@ protected:
 
     /** update data bounds
         @return a map of component -> (min, max) */
-    virtual QMap<vtkIdType, QPair<double, double>> updateBounds() = 0;
+    virtual QMap<int, QPair<double, double>> updateBounds() = 0;
 
 protected:
     virtual void lookupTableChangedEvent();
@@ -105,8 +105,8 @@ private:
     void updateBoundsLocked() const;
 
 private:
-    const vtkIdType m_numDataComponents;
-    vtkIdType m_dataComponent;
+    const int m_numDataComponents;
+    int m_dataComponent;
 
     /** per data component: value range and user selected subrange */
     std::vector<double> m_dataMinValue;

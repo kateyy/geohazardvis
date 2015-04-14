@@ -6,7 +6,7 @@
 class CORE_API VertexComponentColorMapping : public ColorMappingData
 {
 public:
-    VertexComponentColorMapping(const QList<AbstractVisualizedData*> & visualizedData, vtkIdType component);
+    VertexComponentColorMapping(const QList<AbstractVisualizedData*> & visualizedData, int component);
     ~VertexComponentColorMapping() override;
 
     QString name() const override;
@@ -19,10 +19,10 @@ public:
 protected:
     static QList<ColorMappingData *> newInstances(const QList<AbstractVisualizedData*> & visualizedData);
 
-    QMap<vtkIdType, QPair<double, double>> updateBounds() override;
+    QMap<int, QPair<double, double>> updateBounds() override;
 
 private:
     static const bool s_isRegistered;
 
-    const vtkIdType m_component;
+    const int m_component;
 };

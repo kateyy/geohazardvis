@@ -68,7 +68,7 @@ int main()
     lazufreElevation->SetNumberOfValues(numLazufrePoints);
     lazufreElevation->SetNumberOfValues(numLazufrePoints);
     for (vtkIdType i = 0; i < numLazufrePoints; ++i)
-        lazufreElevation->SetValue(i, raw_pointData[3][i]); // z coords
+        lazufreElevation->SetValue(i, static_cast<float>(raw_pointData[3][i])); // z coords
 
     lazufrePoints->GetPointData()->AddArray(lazufreElevation);
 
@@ -82,7 +82,7 @@ int main()
         attrData->SetNumberOfComponents(1);
         attrData->SetNumberOfValues(numLazufrePoints);
         for (vtkIdType i = 0; i < numLazufrePoints; ++i)
-            attrData->SetValue(i, raw_pointData[a][i]);
+            attrData->SetValue(i, static_cast<float>(raw_pointData[a][i]));
 
         lazufrePoints->GetPointData()->AddArray(attrData);
     }
@@ -154,7 +154,7 @@ int main()
 
     vtkSmartPointer<vtkPolyData> LazufreMovie = vtkPolyData::SafeDownCast(warpElevation->GetOutput());
     LazufreMovie->GetPointData()->RemoveArray("elevation");
-    LazufreMovie->GetPointData()->RemoveArray("vtkValidPointMask");    
+    LazufreMovie->GetPointData()->RemoveArray("vtkValidPointMask");
 
     LazufreMovie->Print(std::cout);
 

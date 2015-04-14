@@ -36,7 +36,7 @@ QList<ColorMappingData *> VertexComponentColorMapping::newInstances(const QList<
         return{};
 
     QList<ColorMappingData *> instances;
-    for (vtkIdType component = 0; component < 3; ++component)
+    for (int component = 0; component < 3; ++component)
     {
         VertexComponentColorMapping * mapping = new VertexComponentColorMapping(polyDataObjects, component);
         if (mapping->isValid())
@@ -51,7 +51,7 @@ QList<ColorMappingData *> VertexComponentColorMapping::newInstances(const QList<
     return instances;
 }
 
-VertexComponentColorMapping::VertexComponentColorMapping(const QList<AbstractVisualizedData *> & visualizedData, vtkIdType component)
+VertexComponentColorMapping::VertexComponentColorMapping(const QList<AbstractVisualizedData *> & visualizedData, int component)
     : ColorMappingData(visualizedData)
     , m_component(component)
 {
@@ -95,7 +95,7 @@ void VertexComponentColorMapping::configureMapper(AbstractVisualizedData * visua
         m->ScalarVisibilityOn();
 }
 
-QMap<vtkIdType, QPair<double, double>> VertexComponentColorMapping::updateBounds()
+QMap<int, QPair<double, double>> VertexComponentColorMapping::updateBounds()
 {
     // get min/max coordinate values on our axis/component
 

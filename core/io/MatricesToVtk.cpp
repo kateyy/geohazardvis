@@ -96,7 +96,7 @@ DataObject * MatricesToVtk::loadDEM(const QString & name, const std::vector<Read
 
     assert(dims[0] > 0 && dims[1] > 0 && dims[2] == 1);
 
-    if (data.size() != dims[1] || data.at(0).size() != dims[0])
+    if (static_cast<int>(data.size()) != dims[1] || static_cast<int>(data.at(0).size()) != dims[0])
         return nullptr;
 
     image->AllocateScalars(VTK_FLOAT, 1);
@@ -107,7 +107,7 @@ DataObject * MatricesToVtk::loadDEM(const QString & name, const std::vector<Read
         for (int y = 0; y < dims[1]; ++y)
         {
             float * scalars = reinterpret_cast<float *>(image->GetScalarPointer(x, y, 0));
-            *scalars = data.at(y).at(x);
+            *scalars = static_cast<float>(data.at(y).at(x));
         }
     }
 
@@ -138,7 +138,7 @@ DataObject * MatricesToVtk::loadGrid2D(const QString & name, const std::vector<R
         for (int c = 0; c < dimensions[0]; ++c)
         {
             vtkIdType id = c + rOffset;
-            float value = inputData.at(c).at(r);
+            auto value = static_cast<float>(inputData.at(c).at(r));
             cellArray->SetValue(id, value);
         }
     }
@@ -182,7 +182,7 @@ DataObject * MatricesToVtk::loadGrid3D(const QString & name, const std::vector<R
         axis[0] = 2;    // z first
 
     double spacing[3] = { -1, -1, -1 };
-    vtkIdType extent[3] = { -1, -1, -1 };
+    int extent[3] = { -1, -1, -1 };
 
     int firstAxis = axis[0];
 
@@ -243,11 +243,11 @@ DataObject * MatricesToVtk::loadGrid3D(const QString & name, const std::vector<R
     }
     else
     {
-        double f_lastExtent = double(numPoints) / (extent[axis[0]] * extent[axis[1]]);
+        double f_lastExtent = double(numPoints) / double(extent[axis[0]] * extent[axis[1]]);
         double intPart;
         double f_floatPart = std::modf(f_lastExtent, &intPart);
         if (f_floatPart < std::numeric_limits<double>::epsilon())
-            extent[axis[2]] = static_cast<vtkIdType>(intPart);
+            extent[axis[2]] = static_cast<int>(intPart);
     }
 
     if (extent[axis[2]] < 1 || (numPoints != extent[0] * extent[1] * extent[2]))
@@ -286,7 +286,7 @@ DataObject * MatricesToVtk::loadGrid3D(const QString & name, const std::vector<R
                 float * scalar = reinterpret_cast<float *>(image->GetScalarPointer(imageCoord));
 
                 for (int c = 0; c < numComponents; ++c)
-                    scalar[c] = data.at(3 + c).at(sourceIndex);
+                    scalar[c] = static_cast<float>(data.at(3 + c).at(sourceIndex));
 
                 ++sourceIndex;
             }
@@ -381,11 +381,13 @@ DataObject * MatricesToVtk::readRawFile(const QString & fileName)
     if (!switchRowsColumns)
         for (vtkIdType component = 0; component < numColumns; ++component)
             for (vtkIdType cellId = 0; cellId < numRows; ++cellId)
-                dataArray->SetValue(cellId * numColumns + component, inputVectors.at(component).at(cellId));
+                dataArray->SetValue(cellId * numColumns + component,
+                    static_cast<float>(inputVectors.at(component).at(cellId)));
     else
         for (vtkIdType component = 0; component < numColumns; ++component)
             for (vtkIdType cellId = 0; cellId < numRows; ++cellId)
-                dataArray->SetValue(cellId * numColumns + component, inputVectors.at(cellId).at(component));
+                dataArray->SetValue(cellId * numColumns + component,
+                    static_cast<float>(inputVectors.at(cellId).at(component)));
 
     QFileInfo fInfo(fileName);
 
@@ -395,8 +397,8 @@ DataObject * MatricesToVtk::readRawFile(const QString & fileName)
 vtkFloatArray * MatricesToVtk::parseFloatVector(const InputVector & parsedData, const QString & arrayName, size_t firstColumn, size_t lastColumn)
 {
     assert(firstColumn <= lastColumn);
-    assert(parsedData.size() > unsigned(lastColumn));
-    vtkIdType numComponents = lastColumn - firstColumn + 1;
+    assert(parsedData.size() > lastColumn);
+    int numComponents = static_cast<int>(lastColumn - firstColumn + 1);
     vtkIdType numTuples = parsedData.at(lastColumn).size();
 
     for (auto ax : parsedData)
@@ -411,7 +413,8 @@ vtkFloatArray * MatricesToVtk::parseFloatVector(const InputVector & parsedData, 
 
     for (vtkIdType component = 0; component < numComponents; ++component)
         for (vtkIdType cellId = 0; cellId < numTuples; ++cellId)
-            a->SetValue(cellId * numComponents + component, parsedData.at(component).at(cellId));
+            a->SetValue(cellId * numComponents + component,
+                static_cast<float>(parsedData.at(component).at(cellId)));
 
     return a;
 }

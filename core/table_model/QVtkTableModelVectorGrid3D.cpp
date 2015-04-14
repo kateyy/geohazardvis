@@ -21,7 +21,7 @@ int QVtkTableModelVectorGrid3D::rowCount(const QModelIndex &/*parent*/) const
     if (!m_gridData)
         return 0;
 
-    return m_gridData->GetNumberOfPoints();
+    return static_cast<int>(m_gridData->GetNumberOfPoints());
 }
 
 int QVtkTableModelVectorGrid3D::columnCount(const QModelIndex &/*parent*/) const

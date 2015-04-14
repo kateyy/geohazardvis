@@ -9,8 +9,8 @@
 
 GlyphColorMapping::GlyphColorMapping(const QList<AbstractVisualizedData *> & visualizedData,
     const QList<GlyphMappingData *> & glyphMappingData,
-    vtkIdType numDataComponent)
-    : ColorMappingData(visualizedData, numDataComponent)
+    int numDataComponents)
+    : ColorMappingData(visualizedData, numDataComponents)
     , m_glyphMappingData(glyphMappingData)
 {
 }

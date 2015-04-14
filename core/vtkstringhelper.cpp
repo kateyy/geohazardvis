@@ -30,9 +30,9 @@ QString vtkArrayToQString(vtkDataArray & data)
     {
         return QString::fromUtf8(
             chars->GetPointer(0),
-            chars->GetSize());
+            static_cast<int>(chars->GetSize()));
     }
-    
+
     if (vtkStringArray * string = vtkStringArray::SafeDownCast(&data))
     {
         if (string->GetSize() == 0)

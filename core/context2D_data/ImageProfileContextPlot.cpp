@@ -46,7 +46,7 @@ PropertyGroup * ImageProfileContextPlot::createConfigGroup()
         return Color(rgb[0], rgb[1], rgb[2], m_plotLine->GetPen()->GetOpacity());
     },
         [this] (const Color & color) {
-        m_plotLine->SetColor(color.red(), color.green(), color.blue(), color.alpha());
+        m_plotLine->SetColor((unsigned char)(color.red()), (unsigned char)(color.green()), (unsigned char)(color.blue()), (unsigned char)(color.alpha()));
         emit geometryChanged();
     });
 
@@ -56,7 +56,7 @@ PropertyGroup * ImageProfileContextPlot::createConfigGroup()
     },
         [this] (unsigned char transparency) {
         m_plotLine->GetPen()->SetOpacity(static_cast<unsigned char>(
-            (100 - transparency) / 100.f * 255.f));
+            (100.f - transparency) / 100.f * 255.f));
         emit geometryChanged();
     });
     prop_transparency->setOption("minimum", 0);

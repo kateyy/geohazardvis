@@ -30,7 +30,7 @@ QList<ColorMappingData *> DirectImageColors::newInstances(const QList<AbstractVi
 
     auto checkAddAttributeArrays = [&arrayLocs] (vtkDataSetAttributes * attributes, int attributeLocation) -> void
     {
-        for (vtkIdType i = 0; i < attributes->GetNumberOfArrays(); ++i)
+        for (auto i = 0; i < attributes->GetNumberOfArrays(); ++i)
         {
             vtkUnsignedCharArray * colors = vtkUnsignedCharArray::SafeDownCast(attributes->GetArray(i));
             if (!colors || colors->GetNumberOfComponents() != 3)
@@ -58,7 +58,7 @@ QList<ColorMappingData *> DirectImageColors::newInstances(const QList<AbstractVi
 
         supportedData << vis;
 
-        for (int i = 0; i < vis->numberOfColorMappingInputs(); ++i)
+        for (auto i = 0; i < vis->numberOfColorMappingInputs(); ++i)
         {
             vtkDataSet * dataSet = vis->colorMappingInputData(i);
 
@@ -135,7 +135,7 @@ void DirectImageColors::configureMapper(AbstractVisualizedData * visualizedData,
     }
 }
 
-QMap<vtkIdType, QPair<double, double>> DirectImageColors::updateBounds()
+QMap<int, QPair<double, double>> DirectImageColors::updateBounds()
 {
     // value range is 0..0xFF, but is not supposed to be configured in the ui
     return{

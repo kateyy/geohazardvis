@@ -30,7 +30,7 @@ int QVtkTableModelImage::rowCount(const QModelIndex &/*parent*/) const
     if (!m_vtkImageData)
         return 0;
 
-    return m_vtkImageData->GetNumberOfPoints();
+    return static_cast<int>(m_vtkImageData->GetNumberOfPoints());
 }
 
 int QVtkTableModelImage::columnCount(const QModelIndex &/*parent*/) const
@@ -94,7 +94,7 @@ bool QVtkTableModelImage::setData(const QModelIndex & index, const QVariant & va
     m_vtkImageData->SetScalarComponentFromDouble(imageRow, imageColumn, 0, component, f_value);
     // SetScalarComponentFromDouble does not set the scalar array as modified, so that the pipeline won't be updated
     m_vtkImageData->GetPointData()->GetScalars()->Modified();
-    
+
     return true;
 }
 

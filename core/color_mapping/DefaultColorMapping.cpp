@@ -42,7 +42,7 @@ void DefaultColorMapping::configureMapper(AbstractVisualizedData * visualizedDat
         m->ScalarVisibilityOff();
 }
 
-QMap<vtkIdType, QPair<double, double>> DefaultColorMapping::updateBounds()
+QMap<int, QPair<double, double>> DefaultColorMapping::updateBounds()
 {
     return{ { 0, { 0.0, 0.0 } } };
 }

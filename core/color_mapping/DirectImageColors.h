@@ -20,7 +20,7 @@ public:
 protected:
     static QList<ColorMappingData *> newInstances(const QList<AbstractVisualizedData *> & visualizedData);
 
-    QMap<vtkIdType, QPair<double, double>> updateBounds() override;
+    QMap<int, QPair<double, double>> updateBounds() override;
 
 private:
     static const bool s_isRegistered;

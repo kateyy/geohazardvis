@@ -48,7 +48,7 @@ QList<ColorMappingData *> AttributeArrayComponentMapping::newInstances(const QLi
 
     auto checkAddAttributeArrays = [&arrayInfos] (vtkDataSetAttributes * attributes, int attributeLocation) -> void
     {
-        for (vtkIdType i = 0; i < attributes->GetNumberOfArrays(); ++i)
+        for (auto i = 0; i < attributes->GetNumberOfArrays(); ++i)
         {
             vtkDataArray * dataArray = attributes->GetArray(i);
             if (!dataArray)
@@ -85,7 +85,7 @@ QList<ColorMappingData *> AttributeArrayComponentMapping::newInstances(const QLi
 
         supportedData << vis;
 
-        for (int i = 0; i < vis->numberOfColorMappingInputs(); ++i)
+        for (auto i = 0; i < vis->numberOfColorMappingInputs(); ++i)
         {
             vtkDataSet * dataSet = vis->colorMappingInputData(i);
 
@@ -111,7 +111,7 @@ QList<ColorMappingData *> AttributeArrayComponentMapping::newInstances(const QLi
     return instances;
 }
 
-AttributeArrayComponentMapping::AttributeArrayComponentMapping(const QList<AbstractVisualizedData *> & visualizedData, QString dataArrayName, int attributeLocation, vtkIdType numDataComponents)
+AttributeArrayComponentMapping::AttributeArrayComponentMapping(const QList<AbstractVisualizedData *> & visualizedData, QString dataArrayName, int attributeLocation, int numDataComponents)
     : ColorMappingData(visualizedData, numDataComponents)
     , m_attributeLocation(attributeLocation)
     , m_dataArrayName(dataArrayName)
@@ -152,7 +152,7 @@ bool AttributeArrayComponentMapping::usesFilter() const
 void AttributeArrayComponentMapping::configureMapper(AbstractVisualizedData * visualizedData, vtkAbstractMapper * mapper)
 {
     ColorMappingData::configureMapper(visualizedData, mapper);
-  
+
     if (auto m = vtkMapper::SafeDownCast(mapper))
     {
         m->ScalarVisibilityOn();
@@ -164,13 +164,13 @@ void AttributeArrayComponentMapping::configureMapper(AbstractVisualizedData * vi
     }
 }
 
-QMap<vtkIdType, QPair<double, double>> AttributeArrayComponentMapping::updateBounds()
+QMap<int, QPair<double, double>> AttributeArrayComponentMapping::updateBounds()
 {
     QByteArray utf8Name = m_dataArrayName.toUtf8();
 
-    QMap<vtkIdType, QPair<double, double>> bounds;
+    QMap<int, QPair<double, double>> bounds;
 
-    for (vtkIdType c = 0; c < numDataComponents(); ++c)
+    for (auto c = 0; c < numDataComponents(); ++c)
     {
         double totalMin = std::numeric_limits<double>::max();
         double totalMax = std::numeric_limits<double>::lowest();
@@ -208,6 +208,6 @@ QMap<vtkIdType, QPair<double, double>> AttributeArrayComponentMapping::updateBou
 
         bounds.insert(c, { totalMin, totalMax });
     }
-    
+
     return bounds;
 }

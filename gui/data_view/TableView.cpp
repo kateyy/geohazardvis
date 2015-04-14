@@ -30,7 +30,7 @@ TableView::TableView(int index, QWidget * parent, Qt::WindowFlags flags)
     connect(m_ui->tableView->horizontalHeader(), &QHeaderView::customContextMenuRequested, [this] (const QPoint & position) {
         m_selectColumnsMenu->popup(m_ui->tableView->horizontalHeader()->mapToGlobal(position));
     });
-    
+
     SelectionHandler::instance().addTableView(this);
 }
 
@@ -122,7 +122,7 @@ QWidget * TableView::contentWidget()
 
 void TableView::highlightedIdChangedEvent(DataObject * /*dataObject*/, vtkIdType itemId)
 {
-    QModelIndex selection(model()->index(itemId, 0));
+    QModelIndex selection(model()->index(static_cast<int>(itemId), 0));
     m_ui->tableView->scrollTo(selection);
 
     model()->setHighlightItemId(itemId);

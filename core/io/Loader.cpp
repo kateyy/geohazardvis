@@ -86,7 +86,7 @@ const QString & Loader::fileFormatFilters()
         }
     }
 
-    return f;        
+    return f;
 }
 
 const QMap<QString, QStringList> & Loader::fileFormatExtensions()
@@ -118,9 +118,9 @@ DataObject * Loader::readFile(const QString & filename)
 
         return QString::fromUtf8(
             nameArray->GetPointer(0),
-            nameArray->GetSize());
+            static_cast<int>(nameArray->GetSize()));
     };
-    
+
     if (ext == "vti")
     {
         VTK_CREATE(vtkXMLImageDataReader, reader);

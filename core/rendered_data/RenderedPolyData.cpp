@@ -124,7 +124,7 @@ reflectionzeug::PropertyGroup * RenderedPolyData::createConfigGroup()
         return static_cast<unsigned>(renderProperty()->GetLineWidth());
     },
         [this] (unsigned width) {
-        renderProperty()->SetLineWidth(width);
+        renderProperty()->SetLineWidth(static_cast<float>(width));
         emit geometryChanged();
     });
     lineWidth->setOption("title", "line width");
@@ -208,7 +208,7 @@ reflectionzeug::PropertyGroup * RenderedPolyData::createConfigGroup()
         return static_cast<unsigned>(renderProperty()->GetPointSize());
     },
         [this](unsigned pointSize) {
-        renderProperty()->SetPointSize(pointSize);
+        renderProperty()->SetPointSize(static_cast<float>(pointSize));
         emit geometryChanged();
     });
     pointSize->setOption("title", "point size");
@@ -249,7 +249,7 @@ vtkProperty * RenderedPolyData::createDefaultRenderProperty() const
     prop->SetInterpolationToFlat();
     prop->SetEdgeVisibility(true);
     prop->SetEdgeColor(0.1, 0.1, 0.1);
-    prop->SetLineWidth(1.2);
+    prop->SetLineWidth(1.2f);
     prop->SetBackfaceCulling(false);
     prop->SetLighting(false);
 

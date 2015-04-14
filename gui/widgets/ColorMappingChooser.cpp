@@ -111,7 +111,7 @@ void ColorMappingChooser::componentChanged(int guiComponent)
     if (!m_mapping)
         return;
 
-    vtkIdType component = guiComponent - 1;
+    auto component = guiComponent - 1;
 
     m_mapping->scalarsSetDataComponent(component);
 
@@ -284,7 +284,7 @@ void ColorMappingChooser::rebuildGui()
 
         m_qtConnect << connect(m_renderView, &RenderView::contentChanged, this, &ColorMappingChooser::rebuildGui);
         m_qtConnect << connect(newMapping, &ColorMapping::scalarsChanged, this, &ColorMappingChooser::rebuildGui);
-        m_qtConnect << connect(m_ui->colorLegendGroupBox, &QGroupBox::toggled, 
+        m_qtConnect << connect(m_ui->colorLegendGroupBox, &QGroupBox::toggled,
             [this, newMapping] (bool checked) {
             newMapping->setColorMappingLegendVisible(checked);
             m_renderView->render();
@@ -352,7 +352,7 @@ void ColorMappingChooser::updateGuiValueRanges()
 }
 
 vtkLookupTable * ColorMappingChooser::buildLookupTable(const QImage & image)
-{   
+{
     // use alpha = 1.0, if the image doesn't have a alpha channel
     int alphaMask = image.hasAlphaChannel() ? 0x00 : 0xFF;
 

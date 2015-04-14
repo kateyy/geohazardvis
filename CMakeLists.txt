@@ -104,7 +104,7 @@ create_revision_file(${CMAKE_BINARY_DIR}/revision ${INSTALL_ROOT})
 install(FILES ${CMAKE_BINARY_DIR}/revision DESTINATION ${INSTALL_ROOT})
 
 
-set(VTK_COMPONENTS 
+set(VTK_COMPONENTS
     vtkGUISupportQt         # QVTKWidget
     vtkRenderingAnnotation  # vtkCubeAxesActor, vtkScalarBarActor
     vtkRenderingLIC
@@ -153,7 +153,7 @@ else()
 endif()
 
 
-include_directories(${VTK_INCLUDE_DIRS})
+include_directories(SYSTEM ${VTK_INCLUDE_DIRS})
 set_property(DIRECTORY APPEND PROPERTY COMPILE_DEFINITIONS ${VTK_DEFINITIONS})
 
 
@@ -171,12 +171,12 @@ if(WIN32 AND CPACK_INSTALL_3RDPARTY_DLLS)
         list(APPEND DEPLOY_FILES "${VTK_DIR}/bin/$<CONFIG>/${LIB}-${VTK_MAJOR_VERSION}.${VTK_MINOR_VERSION}.dll")
     endforeach()
 
-    list(APPEND DEPLOY_FILES 
+    list(APPEND DEPLOY_FILES
         "${libzeug_DIR}/bin/signalzeug$<$<CONFIG:Debug>:d>.dll"
         "${libzeug_DIR}/bin/loggingzeug$<$<CONFIG:Debug>:d>.dll"
         "${libzeug_DIR}/bin/reflectionzeug$<$<CONFIG:Debug>:d>.dll"
         "${libzeug_DIR}/bin/propertyguizeug$<$<CONFIG:Debug>:d>.dll")
-    
+
     install(FILES ${DEPLOY_FILES} DESTINATION ${INSTALL_BIN})
 endif()
 

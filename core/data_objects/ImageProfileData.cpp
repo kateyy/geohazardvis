@@ -113,7 +113,7 @@ const double * ImageProfileData::scalarRange()
 
 int ImageProfileData::numberOfScalars()
 {
-    return processedDataSet()->GetNumberOfPoints();
+    return static_cast<int>(processedDataSet()->GetNumberOfPoints());
 }
 
 const double * ImageProfileData::point1() const

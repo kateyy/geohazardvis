@@ -35,7 +35,7 @@ QList<ColorMappingData *> VectorMagnitudeColorMapping::newInstances(const QList<
 {
     auto checkAddAttributeArrays = [] (AbstractVisualizedData * vis, vtkDataSetAttributes * attributes, QMap<QString, QList<AbstractVisualizedData *>> & arrayNames) -> void
     {
-        for (vtkIdType i = 0; i < attributes->GetNumberOfArrays(); ++i)
+        for (auto i = 0; i < attributes->GetNumberOfArrays(); ++i)
         {
             vtkDataArray * dataArray = attributes->GetArray(i);
             if (!dataArray)
@@ -168,7 +168,7 @@ void VectorMagnitudeColorMapping::configureMapper(AbstractVisualizedData * visua
     }
 }
 
-QMap<vtkIdType, QPair<double, double>> VectorMagnitudeColorMapping::updateBounds()
+QMap<int, QPair<double, double>> VectorMagnitudeColorMapping::updateBounds()
 {
     double totalMin = std::numeric_limits<double>::max();
     double totalMax = std::numeric_limits<double>::lowest();

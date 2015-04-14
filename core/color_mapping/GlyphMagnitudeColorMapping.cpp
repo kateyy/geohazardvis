@@ -92,7 +92,7 @@ QString GlyphMagnitudeColorMapping::name() const
 vtkSmartPointer<vtkAlgorithm> GlyphMagnitudeColorMapping::createFilter(AbstractVisualizedData * visualizedData, int connection)
 {
     auto & filters = m_vectorNorms.value(visualizedData, {});
-    
+
     if (filters.isEmpty())  // required/valid filters are already created
         return vtkPassThrough::New();
 
@@ -122,7 +122,7 @@ void GlyphMagnitudeColorMapping::configureMapper(AbstractVisualizedData * visual
     }
 }
 
-QMap<vtkIdType, QPair<double, double>> GlyphMagnitudeColorMapping::updateBounds()
+QMap<int, QPair<double, double>> GlyphMagnitudeColorMapping::updateBounds()
 {
     double totalMin = std::numeric_limits<double>::max();
     double totalMax = std::numeric_limits<double>::lowest();

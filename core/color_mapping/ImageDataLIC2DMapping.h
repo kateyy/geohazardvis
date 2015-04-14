@@ -24,7 +24,7 @@ public:
 
 
 protected:
-    QMap<vtkIdType, QPair<double, double>> updateBounds() override;
+    QMap<int, QPair<double, double>> updateBounds() override;
 
     vtkRenderWindow * glContext();
 

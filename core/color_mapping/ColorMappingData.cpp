@@ -12,7 +12,7 @@
 #include <core/data_objects/DataObject.h>
 
 
-ColorMappingData::ColorMappingData(const QList<AbstractVisualizedData *> & visualizedData, vtkIdType numDataComponents)
+ColorMappingData::ColorMappingData(const QList<AbstractVisualizedData *> & visualizedData, int numDataComponents)
     : m_isValid(false)
     , m_visualizedData(visualizedData)
     , m_numDataComponents(numDataComponents)
@@ -51,17 +51,17 @@ QString ColorMappingData::scalarsName() const
     return "";
 }
 
-vtkIdType ColorMappingData::numDataComponents() const
+int ColorMappingData::numDataComponents() const
 {
     return m_numDataComponents;
 }
 
-vtkIdType ColorMappingData::dataComponent() const
+int ColorMappingData::dataComponent() const
 {
     return m_dataComponent;
 }
 
-void ColorMappingData::setDataComponent(vtkIdType component)
+void ColorMappingData::setDataComponent(int component)
 {
     assert(0 <= component && component < m_numDataComponents);
     if (m_dataComponent == component)
@@ -118,7 +118,7 @@ void ColorMappingData::setLookupTable(vtkLookupTable * lookupTable)
     lookupTableChangedEvent();
 }
 
-double ColorMappingData::dataMinValue(vtkIdType component) const
+double ColorMappingData::dataMinValue(int component) const
 {
     updateBoundsLocked();
 
@@ -128,7 +128,7 @@ double ColorMappingData::dataMinValue(vtkIdType component) const
     return m_dataMinValue[component];
 }
 
-double ColorMappingData::dataMaxValue(vtkIdType component) const
+double ColorMappingData::dataMaxValue(int component) const
 {
     updateBoundsLocked();
 
@@ -138,7 +138,7 @@ double ColorMappingData::dataMaxValue(vtkIdType component) const
     return m_dataMaxValue[component];
 }
 
-double ColorMappingData::minValue(vtkIdType component) const
+double ColorMappingData::minValue(int component) const
 {
     updateBoundsLocked();
 
@@ -147,7 +147,7 @@ double ColorMappingData::minValue(vtkIdType component) const
     return m_minValue[component];
 }
 
-void ColorMappingData::setMinValue(double value, vtkIdType component)
+void ColorMappingData::setMinValue(double value, int component)
 {
     updateBoundsLocked();
 
@@ -159,7 +159,7 @@ void ColorMappingData::setMinValue(double value, vtkIdType component)
     minMaxChangedEvent();
 }
 
-double ColorMappingData::maxValue(vtkIdType component) const
+double ColorMappingData::maxValue(int component) const
 {
     updateBoundsLocked();
 
@@ -169,7 +169,7 @@ double ColorMappingData::maxValue(vtkIdType component) const
     return m_maxValue[component];
 }
 
-void ColorMappingData::setMaxValue(double value, vtkIdType component)
+void ColorMappingData::setMaxValue(double value, int component)
 {
     updateBoundsLocked();
 
@@ -215,7 +215,7 @@ void ColorMappingData::updateBoundsLocked() const
 
     for (auto it = newBounds.begin(); it != newBounds.end(); ++it)
     {
-        const vtkIdType & component = it.key();
+        auto component = it.key();
         const QPair<double, double> & minMax = it.value();
 
         assert(minMax.first <= minMax.second);

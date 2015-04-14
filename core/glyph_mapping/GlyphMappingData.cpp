@@ -67,7 +67,7 @@ GlyphMappingData::GlyphMappingData(RenderedData * renderedData)
     lineArrow->SetPoint1(0.f, 0.f, 0.f);
     lineArrow->SetPoint2(1.f, 0.f, 0.f);
     m_arrowSources.insert(Representation::Line, lineArrow);
-    
+
     m_arrowSources.insert(Representation::SimpleArrow, createSimpleArrow());
 
     VTK_CREATE(vtkArrowSource, cylindricArrow);
@@ -194,7 +194,7 @@ unsigned GlyphMappingData::lineWidth() const
 
 void GlyphMappingData::setLineWidth(unsigned lineWidth)
 {
-    m_actor->GetProperty()->SetLineWidth(lineWidth);
+    m_actor->GetProperty()->SetLineWidth(static_cast<float>(lineWidth));
 }
 
 reflectionzeug::PropertyGroup * GlyphMappingData::createPropertyGroup()

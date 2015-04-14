@@ -17,7 +17,7 @@ int QVtkTableModelRawVector::rowCount(const QModelIndex &/*parent*/) const
     if (!m_data)
         return 0;
 
-    return m_data->GetNumberOfTuples();
+    return static_cast<int>(m_data->GetNumberOfTuples());
 }
 
 int QVtkTableModelRawVector::columnCount(const QModelIndex &/*parent*/) const
@@ -37,10 +37,10 @@ QVariant QVtkTableModelRawVector::data(const QModelIndex &index, int role) const
 
     if (index.column() == 0)
         return tupleId;
-    
+
     vtkIdType component = index.column() - 1;
     assert(component < m_data->GetNumberOfComponents());
-    
+
     return m_data->GetTuple(tupleId)[component];
 }
 

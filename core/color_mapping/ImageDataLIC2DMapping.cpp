@@ -112,7 +112,7 @@ bool ImageDataLIC2DMapping::usesFilter() const
     return true;
 }
 
-QMap<vtkIdType, QPair<double, double>> ImageDataLIC2DMapping::updateBounds()
+QMap<int, QPair<double, double>> ImageDataLIC2DMapping::updateBounds()
 {
     return{ { 0, { 0, 1 } } };  // by LIC definition
 }

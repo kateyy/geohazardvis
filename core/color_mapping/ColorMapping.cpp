@@ -150,7 +150,7 @@ const ColorMappingData * ColorMapping::currentScalars() const
     return scalars;
 }
 
-void ColorMapping::scalarsSetDataComponent(vtkIdType component)
+void ColorMapping::scalarsSetDataComponent(int component)
 {
     currentScalars()->setDataComponent(component);
 }

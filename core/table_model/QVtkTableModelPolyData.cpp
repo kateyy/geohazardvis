@@ -21,7 +21,7 @@ int QVtkTableModelPolyData::rowCount(const QModelIndex &/*parent*/) const
     if (!m_polyData)
         return 0;
 
-    return m_polyData->dataSet()->GetNumberOfCells();
+    return static_cast<int>(m_polyData->dataSet()->GetNumberOfCells());
 }
 
 int QVtkTableModelPolyData::columnCount(const QModelIndex &/*parent*/) const
@@ -45,7 +45,7 @@ QVariant QVtkTableModelPolyData::data(const QModelIndex &index, int role) const
         vtkCell * cell = m_polyData->dataSet()->GetCell(cellId);
         assert(cell);
         QString idListString;
-        for (vtkIdType i = 0; i < cell->GetNumberOfPoints(); ++i)
+        for (auto i = 0; i < cell->GetNumberOfPoints(); ++i)
             idListString += QString::number(cell->GetPointId(i)) + ":";
 
         return idListString.left(idListString.length() - 1);

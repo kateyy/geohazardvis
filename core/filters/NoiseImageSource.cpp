@@ -88,9 +88,9 @@ int NoiseImageSource::RequestInformation(vtkInformation * vtkNotUsed(request),
 {
     vtkInformation * outInfo = outputVector->GetInformationObject(0);
 
-    outInfo->Set(vtkDataObject::FIELD_NUMBER_OF_TUPLES(), GetNumberOfTuples());
+    outInfo->Set(vtkDataObject::FIELD_NUMBER_OF_TUPLES(), static_cast<int>(GetNumberOfTuples()));
     outInfo->Set(vtkStreamingDemandDrivenPipeline::WHOLE_EXTENT(), Extent, 6);
-    
+
     vtkDataObject::SetPointDataActiveScalarInfo(outInfo, VTK_FLOAT, NumberOfComponents);
 
     return 1;
@@ -186,17 +186,11 @@ int NoiseImageSource::ExecuteGpuPerlin(vtkDataArray * data)
     context->MakeCurrent();
 
     unsigned int size[2] = {
-        Extent[1] - Extent[0] + 1,
-        Extent[3] - Extent[2] + 1};
+        static_cast<unsigned int>(Extent[1] - Extent[0] + 1),
+        static_cast<unsigned int>(Extent[3] - Extent[2] + 1)};
 
     glViewport(0, 0, size[0], size[1]);
 
-    static const int stripePtIds[] = {
-        1, 2, // xmax|ymin
-        1, 3, // xmax|ymax
-        0, 2, // xmin|ymin
-        0, 3  // xmin|ymax
-    };
     static const float normTexCoords[] = {
         +1.f, -1.f,
         +1.f, +1.f,
