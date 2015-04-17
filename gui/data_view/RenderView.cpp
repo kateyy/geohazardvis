@@ -106,6 +106,10 @@ void RenderView::updateImplementation(const QList<DataObject *> & contents)
     disconnect(&implementation(), &RendererImplementation::dataSelectionChanged,
         this, &RenderView::updateGuiForSelectedData);
 
+    assert(m_contents.isEmpty());
+    m_contentCache.clear();
+    m_dataObjectToVisualization.clear();
+
     m_implementationSwitch->findSuitableImplementation(contents);
 
     implementation().activate(m_ui->qvtkMain);

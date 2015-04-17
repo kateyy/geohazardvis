@@ -28,8 +28,9 @@
 ColorMappingChooser::ColorMappingChooser(QWidget * parent)
     : QDockWidget(parent)
     , m_ui(new Ui_ColorMappingChooser())
-    , m_mapping(nullptr)
     , m_renderView(nullptr)
+    , m_renderViewImpl(nullptr)
+    , m_mapping(nullptr)
     , m_movingColorLegend(false)
 {
     m_ui->setupUi(this);
@@ -53,15 +54,7 @@ ColorMappingChooser::~ColorMappingChooser()
 
 void ColorMappingChooser::setCurrentRenderView(RenderView * renderView)
 {
-    m_renderViewImpl = renderView
-        ? dynamic_cast<RendererImplementation3D *>(&renderView->implementation())
-        : nullptr;
-    m_renderView = m_renderViewImpl ? renderView : nullptr;
-    m_mapping = m_renderView ? m_renderViewImpl->colorMapping() : nullptr;
-
-    // setup gradient for newly created mappings
-    if (m_mapping && !m_mapping->originalGradient())
-        m_mapping->setGradient(selectedGradient());
+    m_renderView = renderView;
 
     rebuildGui();
 
@@ -242,6 +235,25 @@ int ColorMappingChooser::gradientIndex(vtkLookupTable * gradient) const
     return -1;
 }
 
+void ColorMappingChooser::checkRenderViewColorMapping()
+{
+    m_renderViewImpl = nullptr;
+    m_mapping = nullptr;
+
+    if (!m_renderView)
+        return;
+
+    m_renderViewImpl = dynamic_cast<RendererImplementation3D *>(&m_renderView->implementation());
+    if (!m_renderViewImpl)
+        return;
+
+    m_mapping = m_renderViewImpl->colorMapping();
+
+    // setup gradient for newly created mappings
+    if (m_mapping && !m_mapping->originalGradient())
+        m_mapping->setGradient(selectedGradient());
+}
+
 void ColorMappingChooser::updateTitle(QString rendererName)
 {
     QString title;
@@ -255,6 +267,8 @@ void ColorMappingChooser::updateTitle(QString rendererName)
 
 void ColorMappingChooser::rebuildGui()
 {
+    checkRenderViewColorMapping();
+
     updateTitle(m_renderView ? m_renderView->friendlyName() : "");
 
     auto newMapping = m_mapping;

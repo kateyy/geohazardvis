@@ -27,6 +27,11 @@ void RendererImplementation::activate(QVTKWidget * /*qvtkWidget*/)
 
 void RendererImplementation::deactivate(QVTKWidget * /*qvtkWidget*/)
 {
+    for (const auto & list : m_visConnections)
+    {
+        for (auto && c : list)
+            disconnect(c);
+    }
 }
 
 void RendererImplementation::addContent(AbstractVisualizedData * content)

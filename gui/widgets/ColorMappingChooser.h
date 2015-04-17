@@ -46,6 +46,9 @@ private:
     void loadGradientImages();
     int gradientIndex(vtkLookupTable * gradient) const;
 
+    /** A RenderView's implementation and color mapping can change whenever its content changes. */
+    void checkRenderViewColorMapping();
+
     void updateTitle(QString rendererName = "");
     void updateGuiValueRanges();
 
@@ -56,9 +59,9 @@ private:
 
     QList<vtkSmartPointer<vtkLookupTable>> m_gradients;
 
-    ColorMapping * m_mapping;
     RenderView * m_renderView;
     RendererImplementation3D * m_renderViewImpl;
+    ColorMapping * m_mapping;
     /** check if we are moving the actor or if the user interacts */
     bool m_movingColorLegend;
     vtkSmartPointer<vtkEventQtSlotConnect> m_colorLegendConnects;
