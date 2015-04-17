@@ -1,16 +1,18 @@
 #pragma once
 
-#include <QDockWidget>
+#include <QWidget>
 
 #include <vtkType.h>
 
 #include <gui/gui_api.h>
 
 
+class QDockWidget;
+class QToolBar;
 class DataObject;
 
 
-class GUI_API AbstractDataView : public QDockWidget
+class GUI_API AbstractDataView : public QWidget
 {
     Q_OBJECT
 
@@ -20,6 +22,15 @@ public:
     int index() const;
 
     void updateTitle(QString message = {});
+
+    /** @return a QDockWidget, that contains the widget, to be embedded in QMainWindows
+    Creates the QDockWidget instance if required. */
+    QDockWidget * dockWidgetParent();
+    bool hasDockWidgetParent() const;
+
+    QToolBar * toolBar();
+    bool toolBarIsVisible() const;
+    void setToolBarVisible(bool visible);
 
     virtual bool isTable() const = 0;
     virtual bool isRenderer() const = 0;
@@ -60,6 +71,9 @@ protected:
 private:
     const int m_index;
     bool m_initialized;
+
+    QDockWidget * m_dockWidgetParent;
+    QToolBar * m_toolBar;
 
     DataObject * m_highlightedObject;
     vtkIdType m_hightlightedItemId;

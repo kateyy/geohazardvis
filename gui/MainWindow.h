@@ -26,17 +26,17 @@ public:
     ~MainWindow() override;
 
 public slots:
-    void openFiles(QStringList fileNames);
+    void openFiles(const QStringList & fileNames);
+    
+    void addRenderView(RenderView * renderView);
+    void tabbedDockWidgetToFront(QDockWidget * widget);
 
+private slots:
     void on_actionOpen_triggered();
     void on_actionExportDataset_triggered();
     void on_actionAbout_Qt_triggered();
     void on_actionNew_Render_View_triggered();
     void on_actionApply_Digital_Elevation_Model_triggered();
-
-    void tabbedDockWidgetToFront(QDockWidget * widget);
-
-    void addRenderView(RenderView * renderView);
 
 private:
     QStringList dialog_inputFileName();

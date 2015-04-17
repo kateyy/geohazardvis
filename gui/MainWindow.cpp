@@ -3,12 +3,14 @@
 
 #include <cassert>
 
+#include <QDebug>
+#include <QDockWidget>
+#include <QDragEnterEvent>
 #include <QFileDialog>
 #include <QFileInfo>
+#include <QGridLayout>
 #include <QMessageBox>
-#include <QDragEnterEvent>
 #include <QMimeData>
-#include <QDebug>
 
 #include <core/vtkhelper.h>
 #include <core/DataSetHandler.h>
@@ -127,7 +129,7 @@ void MainWindow::dropEvent(QDropEvent * event)
 
 void MainWindow::addRenderView(RenderView * renderView)
 {
-    addDockWidget(Qt::DockWidgetArea::TopDockWidgetArea, renderView);
+    addDockWidget(Qt::DockWidgetArea::TopDockWidgetArea, renderView->dockWidgetParent());
 
     connect(renderView, &RenderView::selectedDataChanged, 
         [this] (RenderView * renderView, DataObject * selectedData) {
@@ -136,7 +138,7 @@ void MainWindow::addRenderView(RenderView * renderView)
     });
 }
 
-void MainWindow::openFiles(QStringList fileNames)
+void MainWindow::openFiles(const QStringList & fileNames)
 {
     QString oldName = windowTitle();
 

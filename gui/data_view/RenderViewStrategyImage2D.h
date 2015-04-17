@@ -6,7 +6,6 @@
 
 
 class QAction;
-class QToolBar;
 class vtkLineWidget2;
 class vtkEventQtSlotConnect;
 
@@ -52,10 +51,10 @@ private:
 
     bool m_isInitialized;
 
-    QToolBar * m_toolbar;
     QAction * m_profilePlotAction;
     QAction * m_profilePlotAcceptAction;
     QAction * m_profilePlotAbortAction;
+    QList<QAction *> m_actions;
     ImageProfileData * m_previewProfile;
     RenderView * m_previewRenderer;
 

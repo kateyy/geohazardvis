@@ -36,7 +36,6 @@ const bool RenderViewStrategyImage2D::s_isRegistered = RenderViewStrategy::regis
 RenderViewStrategyImage2D::RenderViewStrategyImage2D(RendererImplementation3D & context)
     : RenderViewStrategy(context)
     , m_isInitialized(false)
-    , m_toolbar(nullptr)
     , m_previewProfile(nullptr)
     , m_previewRenderer(nullptr)
     , m_currentPlottingImage(nullptr)
@@ -54,8 +53,6 @@ RenderViewStrategyImage2D::~RenderViewStrategyImage2D()
     }
 
     delete m_previewProfile;
-
-    delete m_toolbar;
 }
 
 void RenderViewStrategyImage2D::initialize()
@@ -63,14 +60,16 @@ void RenderViewStrategyImage2D::initialize()
     if (m_isInitialized)
         return;
 
-    m_toolbar = new QToolBar();
-
-    m_toolbar->setToolButtonStyle(Qt::ToolButtonStyle::ToolButtonTextBesideIcon);
-    m_profilePlotAction = m_toolbar->addAction(QIcon(":/icons/graph_line"), "create &profile plot", this, SLOT(startProfilePlot()));
-    m_profilePlotAcceptAction = m_toolbar->addAction(QIcon(":/icons/yes"), "", this, SLOT(acceptProfilePlot()));
+    m_profilePlotAction = new QAction(QIcon(":/icons/graph_line"), "create &profile plot", nullptr);
+    connect(m_profilePlotAction, &QAction::triggered, this, &RenderViewStrategyImage2D::startProfilePlot);
+    m_profilePlotAcceptAction = new QAction(QIcon(":/icons/yes"), "", nullptr);
+    connect(m_profilePlotAcceptAction, &QAction::triggered, this, &RenderViewStrategyImage2D::acceptProfilePlot);
     m_profilePlotAcceptAction->setVisible(false);
-    m_profilePlotAbortAction = m_toolbar->addAction(QIcon(":/icons/no"), "", this, SLOT(abortProfilePlot()));
+    m_profilePlotAbortAction = new QAction(QIcon(":/icons/no"), "", nullptr);
+    connect(m_profilePlotAbortAction, &QAction::triggered, this, &RenderViewStrategyImage2D::abortProfilePlot);
     m_profilePlotAbortAction->setVisible(false);
+
+    m_actions << m_profilePlotAction << m_profilePlotAcceptAction << m_profilePlotAbortAction;
 
     m_isInitialized = true;
 }
@@ -86,8 +85,8 @@ void RenderViewStrategyImage2D::activate()
 
     m_context.interactorStyleSwitch()->setCurrentStyle("InteractorStyleImage");
 
-    QWidget * content = m_context.renderView().findChild<QWidget *>("content", Qt::FindDirectChildrenOnly);
-    content->layout()->addWidget(m_toolbar);
+    m_context.renderView().toolBar()->addActions(m_actions);
+    m_context.renderView().setToolBarVisible(true);
 
     m_context.axesActor()->GetLabelTextProperty(0)->SetOrientation(0);
     m_context.axesActor()->GetLabelTextProperty(1)->SetOrientation(90);
@@ -96,10 +95,12 @@ void RenderViewStrategyImage2D::activate()
 
 void RenderViewStrategyImage2D::deactivate()
 {
-    QWidget * content = m_context.renderView().findChild<QWidget *>("content", Qt::FindDirectChildrenOnly);
-
-    content->layout()->removeWidget(m_toolbar);
-    m_toolbar->setParent(nullptr);
+    for (auto action : m_actions)
+    {
+        m_context.renderView().toolBar()->removeAction(action);
+        action->setParent(nullptr);
+    }
+    m_context.renderView().setToolBarVisible(false);
 
     m_context.axesActor()->SetUse2DMode(false);
 }
