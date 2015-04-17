@@ -16,6 +16,7 @@ class AbstractVisualizedData;
 
 class Ui_RenderView;
 class RendererImplementation;
+class RendererImplementationSwitch;
 
 
 class GUI_API RenderView : public AbstractDataView
@@ -64,9 +65,6 @@ public:
 signals:
     /** emitted after changing the list of visible objects */
     void contentChanged();
-    /** emitted when loading data into an empty view
-        @param dataObjects List of objects that are requested for visualization. */
-    void resetImplementation(const QList<DataObject *> & dataObjects);
 
     void selectedDataChanged(RenderView * renderView, DataObject * dataObject);
 
@@ -77,13 +75,13 @@ public slots:
 
     void ShowInfo(const QStringList &info);
 
-    void setImplementation(RendererImplementation * impl);
-
 protected:
     QWidget * contentWidget() override;
     void highlightedIdChangedEvent(DataObject * dataObject, vtkIdType itemId) override;
 
 private:
+    void updateImplementation(const QList<DataObject *> & contents);
+
     // data handling
 
     AbstractVisualizedData * addDataObject(DataObject * dataObject);
@@ -102,7 +100,7 @@ private slots:
 
 private:
     Ui_RenderView * m_ui;
-    RendererImplementation * m_implementation;
+    RendererImplementationSwitch * m_implementationSwitch;
 
     // rendered representations of data objects for this view
     QList<AbstractVisualizedData *> m_contents;

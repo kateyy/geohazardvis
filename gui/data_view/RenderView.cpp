@@ -12,7 +12,8 @@
 #include <core/data_objects/DataObject.h>
 #include <core/AbstractVisualizedData.h>
 
-#include <gui/data_view/RendererImplementationNull.h>
+#include <gui/data_view/RendererImplementation.h>
+#include <gui/data_view/RendererImplementationSwitch.h>
 #include <gui/SelectionHandler.h>
 
 
@@ -21,7 +22,7 @@ RenderView::RenderView(
     QWidget * parent, Qt::WindowFlags flags)
     : AbstractDataView(index, parent, flags)
     , m_ui(new Ui_RenderView())
-    , m_implementation(nullptr)
+    , m_implementationSwitch(new RendererImplementationSwitch(*this))
     , m_axesEnabled(true)
 {
     m_ui->setupUi(this);
@@ -44,7 +45,7 @@ RenderView::~RenderView()
     qDeleteAll(m_contents);
     qDeleteAll(m_contentCache);
 
-    delete m_implementation;
+    delete m_implementationSwitch;
 }
 
 bool RenderView::isTable() const
@@ -98,15 +99,19 @@ void RenderView::ShowInfo(const QStringList & info)
     setToolTip(info.join('\n'));
 }
 
-void RenderView::setImplementation(RendererImplementation * impl)
+void RenderView::updateImplementation(const QList<DataObject *> & contents)
 {
-    if (m_implementation)
-        m_implementation->deactivate(m_ui->qvtkMain);
+    implementation().deactivate(m_ui->qvtkMain);
 
-    m_implementation = impl;
+    disconnect(&implementation(), &RendererImplementation::dataSelectionChanged,
+        this, &RenderView::updateGuiForSelectedData);
 
-    if (m_implementation)
-        m_implementation->activate(m_ui->qvtkMain);
+    m_implementationSwitch->findSuitableImplementation(contents);
+
+    implementation().activate(m_ui->qvtkMain);
+
+    connect(&implementation(), &RendererImplementation::dataSelectionChanged,
+        this, &RenderView::updateGuiForSelectedData);
 }
 
 AbstractVisualizedData * RenderView::addDataObject(DataObject * dataObject)
@@ -141,9 +146,7 @@ void RenderView::addDataObjects(const QList<DataObject *> & uncheckedDataObjects
 
     if (wasEmpty)
     {
-        emit resetImplementation(uncheckedDataObjects);
-        if (m_implementation)
-            connect(m_implementation, &RendererImplementation::dataSelectionChanged, this, &RenderView::updateGuiForSelectedData);
+        updateImplementation(uncheckedDataObjects);
     }
 
     AbstractVisualizedData * aNewObject = nullptr;
@@ -318,12 +321,7 @@ void RenderView::lookAtData(DataObject * dataObject, vtkIdType itemId)
 
 RendererImplementation & RenderView::implementation() const
 {
-    static RendererImplementationNull nullImpl(const_cast<RenderView&>(*this));
-
-    if (!m_implementation)
-        return nullImpl;
-
-    return *m_implementation;
+    return m_implementationSwitch->currentImplementation();
 }
 
 vtkRenderWindow * RenderView::renderWindow()

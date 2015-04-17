@@ -27,10 +27,6 @@ RendererImplementationPlot::RendererImplementationPlot(RenderView & renderView, 
 {
 }
 
-RendererImplementationPlot::~RendererImplementationPlot()
-{
-}
-
 QString RendererImplementationPlot::name() const
 {
     return "Context View";
@@ -76,6 +72,12 @@ void RendererImplementationPlot::activate(QVTKWidget * qvtkWidget)
     qvtkWidget->SetRenderWindow(m_contextView->GetRenderWindow());
 }
 
+void RendererImplementationPlot::deactivate(QVTKWidget * qvtkWidget)
+{
+    qvtkWidget->SetRenderWindow(nullptr);
+    m_contextView->SetInteractor(nullptr);
+}
+
 void RendererImplementationPlot::render()
 {
     m_contextView->Render();
@@ -86,7 +88,7 @@ vtkRenderWindowInteractor * RendererImplementationPlot::interactor()
     return m_contextView->GetInteractor();
 }
 
-void RendererImplementationPlot::addContent(AbstractVisualizedData * content)
+void RendererImplementationPlot::onAddContent(AbstractVisualizedData * content)
 {
     assert(dynamic_cast<Context2DData *>(content));
     Context2DData * contextData = static_cast<Context2DData *>(content);
@@ -104,16 +106,19 @@ void RendererImplementationPlot::addContent(AbstractVisualizedData * content)
     assert(!m_plots.contains(contextData));
     m_plots.insert(contextData, items);
 
-    connect(contextData, &Context2DData::plotCollectionChanged,
-        [this, contextData] () { fetchContextItems(contextData); });
 
-    connect(contextData, &Context2DData::visibilityChanged,
-        [this, contextData] (bool) { dataVisibilityChanged(contextData); });
+    addConnectionForContent(content, 
+        connect(contextData, &Context2DData::plotCollectionChanged,
+        [this, contextData] () { fetchContextItems(contextData); }));
+
+    addConnectionForContent(content,
+        connect(contextData, &Context2DData::visibilityChanged,
+        [this, contextData] (bool) { dataVisibilityChanged(contextData); }));
 
     dataVisibilityChanged(contextData);
 }
 
-void RendererImplementationPlot::removeContent(AbstractVisualizedData * content)
+void RendererImplementationPlot::onRemoveContent(AbstractVisualizedData * content)
 {
     assert(dynamic_cast<Context2DData *>(content));
     Context2DData * contextData = static_cast<Context2DData *>(content);

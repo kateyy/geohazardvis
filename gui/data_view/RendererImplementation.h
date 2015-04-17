@@ -4,6 +4,7 @@
 
 #include <QObject>
 #include <QList>
+#include <QMap>
 
 #include <vtkType.h>
 
@@ -46,9 +47,9 @@ public:
 
     /** add newly created rendered data
         actual data visibility depends on the object's configuration */
-    virtual void addContent(AbstractVisualizedData * content) = 0;
+    void addContent(AbstractVisualizedData * content);
     /** remove all references to the object and its contents */
-    virtual void removeContent(AbstractVisualizedData * content) = 0;
+    void removeContent(AbstractVisualizedData * content);
 
     /** mark dataObject (and, if set, it's point/cell) as current selection */
     virtual void highlightData(DataObject * dataObject, vtkIdType itemId = -1) = 0;
@@ -70,6 +71,15 @@ protected:
     friend class RenderView;
     virtual AbstractVisualizedData * requestVisualization(DataObject * dataObject) const = 0;
 
+    /** Override to add visual contents to the view.
+        In the overrider, call addConnectionForContent for each Qt signal/slot 
+        connection related to this content */
+    virtual void onAddContent(AbstractVisualizedData * content) = 0;
+    virtual void onRemoveContent(AbstractVisualizedData * content) = 0;
+
+    void addConnectionForContent(AbstractVisualizedData * content,
+        const QMetaObject::Connection & connection);
+
     template <typename ImplType> static bool registerImplementation();
 
 signals:
@@ -80,6 +90,8 @@ protected:
 
 private:
     static QList<ImplementationConstructor> & s_constructors();
+
+    QMap<AbstractVisualizedData *, QList<QMetaObject::Connection>> m_visConnections;
 };
 
 template <typename ImplType>

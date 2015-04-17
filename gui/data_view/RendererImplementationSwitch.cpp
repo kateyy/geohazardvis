@@ -2,54 +2,49 @@
 
 #include <cassert>
 
-#include <QList>
-
-#include <core/data_objects/DataObject.h>
-#include <gui/data_view/RenderView.h>
-#include <gui/data_view/RendererImplementation.h>
+#include <gui/data_view/RendererImplementationNull.h>
 
 
-RendererImplementationSwitch::RendererImplementationSwitch(
-    RenderView & renderView)
+RendererImplementationSwitch::RendererImplementationSwitch(RenderView & renderView)
     : m_view(renderView)
+    , m_currentImpl(nullptr)
+    , m_nullImpl(nullptr)
 {
-    connect(&renderView, &RenderView::resetImplementation, this, &RendererImplementationSwitch::findSuitableImplementation);
-
-    for (const RendererImplementation::ImplementationConstructor & constructor : RendererImplementation::constructors())
-    {
-        RendererImplementation * instance = constructor(m_view);
-
-        m_implementations.insert(instance->name(), instance);
-    }
 }
 
 RendererImplementationSwitch::~RendererImplementationSwitch()
 {
-    m_view.setImplementation(nullptr);
-    qDeleteAll(m_implementations.values());
-}
-
-void RendererImplementationSwitch::setImplementation(const QString & name)
-{
-    RendererImplementation * impl = m_implementations.value(name, nullptr);
-    if (!impl)
-        return;
-
-    m_view.setImplementation(impl);
+    delete m_currentImpl;
+    delete m_nullImpl;
 }
 
 void RendererImplementationSwitch::findSuitableImplementation(const QList<DataObject *> & dataObjects)
 {
     RendererImplementation * suitable = nullptr;
 
-    for (RendererImplementation * impl : m_implementations)
+    for (const RendererImplementation::ImplementationConstructor & constructor : RendererImplementation::constructors())
     {
-        if (impl->canApplyTo(dataObjects))
+        RendererImplementation * instance = constructor(m_view);
+
+        if (instance->canApplyTo(dataObjects))
         {
-            suitable = impl;
+            suitable = instance;
             break;
         }
     }
 
-    m_view.setImplementation(suitable);
+    auto lastImpl = m_currentImpl;
+    m_currentImpl = suitable;
+    delete lastImpl;
+}
+
+RendererImplementation & RendererImplementationSwitch::currentImplementation()
+{
+    if (m_currentImpl)
+        return *m_currentImpl;
+
+    if (!m_nullImpl)
+        m_nullImpl = new RendererImplementationNull(m_view);
+
+    return *m_nullImpl;
 }

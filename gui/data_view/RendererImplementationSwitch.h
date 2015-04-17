@@ -1,30 +1,23 @@
 #pragma once
 
-#include <QMap>
-#include <QObject>
-#include <QString>
+#include <QList>
 
-#include <gui/gui_api.h>
-
-class RenderView;
-class RendererImplementation;
 class DataObject;
+class RendererImplementation;
+class RenderView;
 
 
-class GUI_API RendererImplementationSwitch : public QObject
+class RendererImplementationSwitch
 {
-    Q_OBJECT
-
 public:
     RendererImplementationSwitch(RenderView & renderView);
-    ~RendererImplementationSwitch() override;
+    ~RendererImplementationSwitch();
 
-public slots:
-    void setImplementation(const QString & name);
     void findSuitableImplementation(const QList<DataObject *> & dataObjects);
+    RendererImplementation & currentImplementation();
 
 private:
     RenderView & m_view;
-
-    QMap<QString, RendererImplementation *> m_implementations;
+    RendererImplementation * m_currentImpl;
+    RendererImplementation * m_nullImpl;
 };

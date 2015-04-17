@@ -41,13 +41,11 @@ public:
     QList<DataObject *> filterCompatibleObjects(const QList<DataObject *> & dataObjects, QList<DataObject *> & incompatibleObjects) override;
 
     void activate(QVTKWidget * qvtkWidget) override;
+    void deactivate(QVTKWidget * qvtkWidget) override;
 
     void render() override;
 
     vtkRenderWindowInteractor * interactor() override;
-
-    void addContent(AbstractVisualizedData * content) override;
-    void removeContent(AbstractVisualizedData * content) override;
 
     void highlightData(DataObject * dataObject, vtkIdType itemId = -1) override;
     virtual DataObject * highlightedData() override;
@@ -70,7 +68,7 @@ public:
     vtkLightKit * lightKit();
 
     vtkTextWidget * titleWidget();
-    ColorMapping * scalarMapping();
+    ColorMapping * colorMapping();
     vtkScalarBarWidget * colorLegendWidget();
 
     vtkCubeAxesActor * axesActor();
@@ -83,6 +81,9 @@ public slots:
 
 protected:
     AbstractVisualizedData * requestVisualization(DataObject * dataObject) const override;
+
+    void onAddContent(AbstractVisualizedData * content) override;
+    void onRemoveContent(AbstractVisualizedData * content) override;
 
 private:
     void initialize();
@@ -103,6 +104,7 @@ private slots:
     void fetchViewProps(RenderedData * renderedData);
 
     void dataVisibilityChanged(RenderedData * renderedData);
+    void redirectRenderViewContentChanged();
 
 private:
     bool m_isInitialized;
@@ -127,7 +129,7 @@ private:
 
     vtkSmartPointer<vtkCubeAxesActor> m_axesActor;
     vtkSmartPointer<vtkTextWidget> m_titleWidget;
-    ColorMapping * m_scalarMapping;
+    ColorMapping * m_colorMapping;
     vtkScalarBarActor * m_colorMappingLegend;
     vtkSmartPointer<vtkScalarBarWidget> m_scalarBarWidget;
 

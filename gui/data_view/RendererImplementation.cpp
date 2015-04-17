@@ -9,6 +9,11 @@ RendererImplementation::RendererImplementation(RenderView & renderView, QObject 
 
 RendererImplementation::~RendererImplementation()
 {
+    for (const auto & list : m_visConnections)
+    {
+        for (auto && c : list)
+            disconnect(c);
+    }
 }
 
 RenderView & RendererImplementation::renderView() const
@@ -24,6 +29,20 @@ void RendererImplementation::deactivate(QVTKWidget * /*qvtkWidget*/)
 {
 }
 
+void RendererImplementation::addContent(AbstractVisualizedData * content)
+{
+    onAddContent(content);
+}
+
+void RendererImplementation::removeContent(AbstractVisualizedData * content)
+{
+    auto connectionList = m_visConnections.take(content);
+    for (auto && connection : connectionList)
+        disconnect(connection);
+
+    onRemoveContent(content);
+}
+
 const QList<RendererImplementation::ImplementationConstructor> & RendererImplementation::constructors()
 {
     return s_constructors();
@@ -34,4 +53,10 @@ QList<RendererImplementation::ImplementationConstructor> & RendererImplementatio
     static QList<ImplementationConstructor> list;
 
     return list;
+}
+
+void RendererImplementation::addConnectionForContent(AbstractVisualizedData * content,
+    const QMetaObject::Connection & connection)
+{
+    m_visConnections[content] << connection;
 }

@@ -19,8 +19,6 @@ public:
 
     void render() {}
     vtkRenderWindowInteractor * interactor() { return nullptr; }
-    void addContent(AbstractVisualizedData *) { }
-    void removeContent(AbstractVisualizedData *) { }
     void highlightData(DataObject *, vtkIdType = -1) { }
     DataObject * highlightedData() { return nullptr; }
     void lookAtData(DataObject *, vtkIdType) { }
@@ -30,4 +28,6 @@ public:
 
 protected:
     AbstractVisualizedData * requestVisualization(DataObject *) const { return nullptr; }
+    void onAddContent(AbstractVisualizedData *) { }
+    void onRemoveContent(AbstractVisualizedData *) { }
 };

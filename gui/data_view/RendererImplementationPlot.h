@@ -20,7 +20,6 @@ class RendererImplementationPlot : public RendererImplementation
 
 public:
     RendererImplementationPlot(RenderView & renderView, QObject * parent = nullptr);
-    ~RendererImplementationPlot() override;
 
     QString name() const override;
 
@@ -30,13 +29,11 @@ public:
     QList<DataObject *> filterCompatibleObjects(const QList<DataObject *> & dataObjects, QList<DataObject *> & incompatibleObjects) override;
 
     void activate(QVTKWidget * qvtkWidget) override;
+    void deactivate(QVTKWidget * qvtkWidget) override;
 
     void render() override;
 
     vtkRenderWindowInteractor * interactor() override;
-
-    void addContent(AbstractVisualizedData * content) override;
-    void removeContent(AbstractVisualizedData * content) override;
 
     void highlightData(DataObject * dataObject, vtkIdType itemId = -1) override;
     virtual DataObject * highlightedData() override;
@@ -54,6 +51,9 @@ public:
 
 protected:
     AbstractVisualizedData * requestVisualization(DataObject * dataObject) const override;
+
+    void onAddContent(AbstractVisualizedData * content) override;
+    void onRemoveContent(AbstractVisualizedData * content) override;
 
 private:
     void initialize();

@@ -10,7 +10,6 @@
 #include <gui/MainWindow.h>
 #include <gui/data_view/TableView.h>
 #include <gui/data_view/RenderView.h>
-#include <gui/data_view/RendererImplementationSwitch.h>
 
 
 namespace
@@ -33,14 +32,11 @@ DataMapping::~DataMapping()
     assert(s_instance);
 
     // prevent GUI/focus updates
-    auto implSWs = m_rendererImplSwitches;
     auto renderView = m_renderViews;
     auto tableViews = m_tableViews;
-    m_rendererImplSwitches.clear();
     m_renderViews.clear();
     m_tableViews.clear();
 
-    qDeleteAll(implSWs);
     qDeleteAll(renderView);
     qDeleteAll(tableViews);
 
@@ -83,11 +79,22 @@ void DataMapping::openInTable(DataObject * dataObject)
     {
         table = new TableView(m_nextTableIndex++);
         connect(table, &TableView::closed, this, &DataMapping::tableClosed);
-        m_mainWindow.addDockWidget(Qt::DockWidgetArea::RightDockWidgetArea, table);
+        m_mainWindow.addDockWidget(Qt::DockWidgetArea::RightDockWidgetArea, table->dockWidgetParent());
 
-        if (!m_tableViews.empty())
+        // find the first existing docked table, and tabify with it
+        QDockWidget * tabMaster = nullptr;
+        for (auto other : m_tableViews)
         {
-            m_mainWindow.tabifyDockWidget(m_tableViews.first(), table);
+            if (other->hasDockWidgetParent())
+            {
+                tabMaster = other->dockWidgetParent();
+                assert(tabMaster);
+            }
+        }
+
+        if (tabMaster)
+        {
+            m_mainWindow.tabifyDockWidget(tabMaster, table->dockWidgetParent());
         }
 
         connect(table, &TableView::focused, this, &DataMapping::setFocusedView);
@@ -98,7 +105,7 @@ void DataMapping::openInTable(DataObject * dataObject)
     if (m_tableViews.size() > 1)
     {
         QCoreApplication::processEvents(); // setup GUI before searching for the tabbed widget...
-        m_mainWindow.tabbedDockWidgetToFront(table);
+        m_mainWindow.tabbedDockWidgetToFront(table->dockWidgetParent());
     }
     
     QCoreApplication::processEvents();
@@ -111,9 +118,6 @@ RenderView * DataMapping::openInRenderView(QList<DataObject *> dataObjects)
     RenderView * renderView = new RenderView(m_nextRenderViewIndex++);
     m_mainWindow.addRenderView(renderView);
     m_renderViews.insert(renderView->index(), renderView);
-
-    RendererImplementationSwitch * implSwitch = new RendererImplementationSwitch(*renderView);
-    m_rendererImplSwitches.insert(renderView, implSwitch);
 
     connect(renderView, &RenderView::focused, this, &DataMapping::setFocusedView);
     connect(renderView, &RenderView::closed, this, &DataMapping::renderViewClosed);
@@ -195,13 +199,11 @@ void DataMapping::renderViewClosed()
     RenderView * renderView = dynamic_cast<RenderView*>(sender());
     assert(renderView);
 
-    RendererImplementationSwitch * sw = m_rendererImplSwitches.take(renderView);
     m_renderViews.remove(renderView->index());
 
     if (renderView == m_focusedRenderView)
         focusNextRenderView();
 
-    sw->deleteLater();
     renderView->deleteLater();
 
     emit renderViewsChanged(m_renderViews.values());

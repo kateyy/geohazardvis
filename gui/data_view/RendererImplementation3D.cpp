@@ -44,16 +44,15 @@ RendererImplementation3D::RendererImplementation3D(RenderView & renderView, QObj
     , m_strategySwitch(new RenderViewStrategySwitch(*this))
     , m_strategy(nullptr)
     , m_emptyStrategy(new RenderViewStrategyNull(*this))
-    , m_scalarMapping(new ColorMapping())
+    , m_colorMapping(new ColorMapping())
 {
-    connect(&m_renderView, &RenderView::contentChanged,
-        [this] () { m_scalarMapping->setVisualizedData(m_renderView.contents()); });
+    connect(&m_renderView, &RenderView::contentChanged, this, &RendererImplementation3D::redirectRenderViewContentChanged);
 }
 
 RendererImplementation3D::~RendererImplementation3D()
 {
     delete m_strategySwitch;
-    delete m_scalarMapping;
+    delete m_colorMapping;
     delete m_emptyStrategy;
 }
 
@@ -106,6 +105,12 @@ void RendererImplementation3D::activate(QVTKWidget * qvtkWidget)
     assignInteractor();
 }
 
+void RendererImplementation3D::deactivate(QVTKWidget * qvtkWidget)
+{
+    qvtkWidget->SetRenderWindow(nullptr);
+    m_renderWindow->SetInteractor(nullptr);
+}
+
 void RendererImplementation3D::render()
 {
     m_renderWindow->Render();
@@ -116,7 +121,7 @@ vtkRenderWindowInteractor * RendererImplementation3D::interactor()
     return m_renderWindow->GetInteractor();
 }
 
-void RendererImplementation3D::addContent(AbstractVisualizedData * content)
+void RendererImplementation3D::onAddContent(AbstractVisualizedData * content)
 {
     assert(dynamic_cast<RenderedData *>(content));
     RenderedData * renderedData = static_cast<RenderedData *>(content);
@@ -134,16 +139,18 @@ void RendererImplementation3D::addContent(AbstractVisualizedData * content)
     assert(!m_dataProps.contains(renderedData));
     m_dataProps.insert(renderedData, props);
 
-    connect(renderedData, &RenderedData::viewPropCollectionChanged,
-        [this, renderedData] () { fetchViewProps(renderedData); });
+    addConnectionForContent(content,
+        connect(renderedData, &RenderedData::viewPropCollectionChanged,
+        [this, renderedData] () { fetchViewProps(renderedData); }));
 
-    connect(renderedData, &RenderedData::visibilityChanged,
-        [this, renderedData] (bool) { dataVisibilityChanged(renderedData); });
+    addConnectionForContent(content,
+        connect(renderedData, &RenderedData::visibilityChanged,
+        [this, renderedData] (bool) { dataVisibilityChanged(renderedData); }));
 
     dataVisibilityChanged(renderedData);
 }
 
-void RendererImplementation3D::removeContent(AbstractVisualizedData * content)
+void RendererImplementation3D::onRemoveContent(AbstractVisualizedData * content)
 {
     assert(dynamic_cast<RenderedData *>(content));
     RenderedData * renderedData = static_cast<RenderedData *>(content);
@@ -251,9 +258,9 @@ vtkTextWidget * RendererImplementation3D::titleWidget()
     return m_titleWidget;
 }
 
-ColorMapping * RendererImplementation3D::scalarMapping()
+ColorMapping * RendererImplementation3D::colorMapping()
 {
-    return m_scalarMapping;
+    return m_colorMapping;
 }
 
 vtkScalarBarWidget * RendererImplementation3D::colorLegendWidget()
@@ -313,9 +320,6 @@ void RendererImplementation3D::initialize()
 
     m_interactorStyle->addStyle("InteractorStyle3D", vtkSmartPointer<InteractorStyle3D>::New());
     m_interactorStyle->addStyle("InteractorStyleImage", vtkSmartPointer<InteractorStyleImage>::New());
-
-    connect(&m_renderView, &RenderView::contentChanged,
-        [this] () { interactorStyle()->setRenderedData(renderedData());  });
 
     connect(m_interactorStyle.Get(), &PickingInteractorStyleSwitch::pointInfoSent, &m_renderView, &RenderView::ShowInfo);
     connect(m_interactorStyle.Get(), &PickingInteractorStyleSwitch::dataPicked, this, &RendererImplementation3D::dataSelectionChanged);
@@ -440,7 +444,7 @@ void RendererImplementation3D::createAxes()
 
 void RendererImplementation3D::setupColorMappingLegend()
 {
-    m_colorMappingLegend = m_scalarMapping->colorMappingLegend();
+    m_colorMappingLegend = m_colorMapping->colorMappingLegend();
     m_colorMappingLegend->SetAnnotationTextScaling(false);
     m_colorMappingLegend->SetBarRatio(0.2);
     m_colorMappingLegend->SetNumberOfLabels(7);
@@ -473,7 +477,7 @@ void RendererImplementation3D::setupColorMappingLegend()
 
     m_renderer->AddViewProp(m_colorMappingLegend);
 
-    connect(m_scalarMapping, &ColorMapping::colorLegendVisibilityChanged,
+    connect(m_colorMapping, &ColorMapping::colorLegendVisibilityChanged,
         [this] (bool visible) { m_scalarBarWidget->SetEnabled(visible); });
 }
 
@@ -530,4 +534,11 @@ void RendererImplementation3D::dataVisibilityChanged(RenderedData * rendered)
     // reset strategy if we are empty
     if (!m_dataBounds.IsValid())
         setStrategy(nullptr);
+}
+
+void RendererImplementation3D::redirectRenderViewContentChanged()
+{
+    m_colorMapping->setVisualizedData(m_renderView.contents());
+    if (m_interactorStyle)
+        m_interactorStyle->setRenderedData(renderedData());
 }

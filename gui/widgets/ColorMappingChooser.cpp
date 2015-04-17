@@ -57,7 +57,7 @@ void ColorMappingChooser::setCurrentRenderView(RenderView * renderView)
         ? dynamic_cast<RendererImplementation3D *>(&renderView->implementation())
         : nullptr;
     m_renderView = m_renderViewImpl ? renderView : nullptr;
-    m_mapping = m_renderView ? m_renderViewImpl->scalarMapping() : nullptr;
+    m_mapping = m_renderView ? m_renderViewImpl->colorMapping() : nullptr;
 
     // setup gradient for newly created mappings
     if (m_mapping && !m_mapping->originalGradient())
