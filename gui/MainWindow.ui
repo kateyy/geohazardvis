@@ -61,6 +61,7 @@
     </widget>
     <addaction name="actionNew_Render_View"/>
     <addaction name="menuSynchronize_Selections"/>
+    <addaction name="actionResidual_Test"/>
    </widget>
    <widget class="QMenu" name="menuImage_Export">
     <property name="title">
@@ -140,6 +141,11 @@
   <action name="actionApply_Digital_Elevation_Model">
    <property name="text">
     <string>Apply Digital E&amp;levation Model</string>
+   </property>
+  </action>
+  <action name="actionResidual_Test">
+   <property name="text">
+    <string>Residual Test</string>
    </property>
   </action>
  </widget>

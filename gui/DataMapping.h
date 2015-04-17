@@ -28,6 +28,10 @@ public:
     RenderView * openInRenderView(QList<DataObject *> dataObjects);
     void addToRenderView(QList<DataObject *> dataObjects, RenderView * renderView);
 
+    /** creates a render view but does not add it to the main window
+      * This view can be part of composed views */
+    RenderView * createDanglingRenderView();
+
     RenderView * focusedRenderView();
 
 public slots:

@@ -115,12 +115,9 @@ void DataMapping::openInTable(DataObject * dataObject)
 
 RenderView * DataMapping::openInRenderView(QList<DataObject *> dataObjects)
 {
-    RenderView * renderView = new RenderView(m_nextRenderViewIndex++);
-    m_mainWindow.addRenderView(renderView);
-    m_renderViews.insert(renderView->index(), renderView);
+    auto renderView = createDanglingRenderView();
 
-    connect(renderView, &RenderView::focused, this, &DataMapping::setFocusedView);
-    connect(renderView, &RenderView::closed, this, &DataMapping::renderViewClosed);
+    m_mainWindow.addRenderView(renderView);
 
     addToRenderView(dataObjects, renderView);
 
@@ -143,6 +140,17 @@ void DataMapping::addToRenderView(QList<DataObject *> dataObjects, RenderView * 
     setFocusedView(renderView);
 
     emit renderViewsChanged(m_renderViews.values());
+}
+
+RenderView * DataMapping::createDanglingRenderView()
+{
+    auto renderView = new RenderView(m_nextRenderViewIndex++);
+    m_renderViews.insert(renderView->index(), renderView);
+
+    connect(renderView, &RenderView::focused, this, &DataMapping::setFocusedView);
+    connect(renderView, &RenderView::closed, this, &DataMapping::renderViewClosed);
+
+    return renderView;
 }
 
 RenderView * DataMapping::focusedRenderView()
