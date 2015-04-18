@@ -99,8 +99,8 @@ MainWindow::MainWindow()
             return;
 
         auto view = new ResidualVerificationView(-1);
-        view->setAttribute(Qt::WA_DeleteOnClose);
         view->setObservationData(observation);
+        view->dockWidgetParent()->setAttribute(Qt::WA_DeleteOnClose);
         addDockWidget(Qt::TopDockWidgetArea, view->dockWidgetParent());
     });
 }

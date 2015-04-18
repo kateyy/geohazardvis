@@ -13,6 +13,7 @@
 #include <core/DataSetHandler.h>
 #include <core/vtkhelper.h>
 #include <core/data_objects/ImageDataObject.h>
+#include <gui/DataMapping.h>
 #include <gui/data_view/RenderView.h>
 
 
@@ -22,7 +23,10 @@ ResidualVerificationView::ResidualVerificationView(int index, QWidget * parent, 
     , m_model(nullptr)
     , m_residual(nullptr)
 {
-    setLayout(new QBoxLayout(QBoxLayout::Direction::LeftToRight));
+    auto layout = new QBoxLayout(QBoxLayout::Direction::LeftToRight);
+    layout->setMargin(0);
+    layout->setSpacing(0);
+    setLayout(layout);
 }
 
 bool ResidualVerificationView::isTable() const
@@ -125,7 +129,7 @@ void ResidualVerificationView::initialize()
 
     for (int i = 0; i < 3; ++i)
     {
-        auto view = new RenderView(-1);
+        auto view = DataMapping::instance().createDanglingRenderView();
         m_renderViews << view;
         layout()->addWidget(view);
     }
@@ -143,6 +147,7 @@ void ResidualVerificationView::updateResidual()
 
     VTK_CREATE(vtkFloatArray, res);
     res->SetNumberOfValues(length);
+    res->SetName("Residual");
 
     for (int i = 0; i < length; ++i)
     {
@@ -163,5 +168,10 @@ void ResidualVerificationView::updateResidual()
 
     QList<DataObject *> incompatible;
     m_renderViews[2]->addDataObjects({ residual }, incompatible);
+
+    for (auto view : m_renderViews)
+    {
+        view->setToolBarVisible(false);
+    }
 }
 
