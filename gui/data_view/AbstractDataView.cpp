@@ -137,6 +137,9 @@ bool AbstractDataView::eventFilter(QObject * /*obj*/, QEvent * ev)
     if (ev->type() == QEvent::FocusIn)
         emit focused(this);
 
+    if (ev->type() == QEvent::Close)
+        close();
+
     return false;
 }
 
