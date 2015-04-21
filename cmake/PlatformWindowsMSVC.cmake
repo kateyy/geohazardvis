@@ -9,7 +9,7 @@ LIST(APPEND DEFAULT_COMPILE_DEFS
 )
 
 set(WIN32_COMPILE_FLAGS
-    /nologo /Zc:wchar_t /Zc:forScope /GR /Zi /fp:precise /MP /W4 /wd4127 /wd4351 /wd4505 /wd4512 /wd4718
+    /nologo /Zc:wchar_t /Zc:forScope /GR /Zi /fp:precise /MP /W4 /wd4127 /wd4351 /wd4505 /wd4512 /wd4718 /we4239
     # nologo       -> no logo
     # Zc:wchar_t   -> treat wchar_t as built-in type: yes
     # Zc:forScope  -> force conformance in for loop scope: Yes
@@ -23,9 +23,11 @@ set(WIN32_COMPILE_FLAGS
     # Ot           -> favor fast code
     # MP           -> build with multiple processes
     # wd           -> disable warning
+    # we           -> treat warning as error
     #   4100       -> 'identifier' : unreferenced formal parameter
     #   4127       -> conditional expression is constant (caused by Qt)
     #   4189       -> 'identifier' : local variable is initialized but not referenced  
+    #   4239       -> nonstandard extension used : 'token' : conversion from 'type' to 'type'
     #   4250       -> 'class1' : inherits 'class2::member' via dominance
     #   4251       -> 'identifier' : class 'type' needs to have dll-interface to be used by clients of class 'type2'
     #   4267       -> 'var' : conversion from 'size_t' to 'type', possible loss of data
