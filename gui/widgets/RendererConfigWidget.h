@@ -14,7 +14,7 @@ namespace reflectionzeug
     class PropertyGroup;
 }
 class Ui_RendererConfigWidget;
-class RenderView;
+class AbstractRenderView;
 class RendererImplementation3D;
 class RendererImplementationPlot;
 
@@ -30,8 +30,8 @@ public:
     void clear();
 
 public slots:
-    void setRenderViews(const QList<RenderView *> & renderViews);
-    void setCurrentRenderView(RenderView * renderView);
+    void setRenderViews(const QList<AbstractRenderView *> & renderViews);
+    void setCurrentRenderView(AbstractRenderView * renderView);
 
 private slots:
     void setCurrentRenderView(int index);
@@ -39,15 +39,17 @@ private slots:
     void readCameraStats(vtkObject * caller);
 
 private:
-    reflectionzeug::PropertyGroup * createPropertyGroup(RenderView * renderView);
-    reflectionzeug::PropertyGroup * createPropertyGroupRenderer(RenderView * renderView, RendererImplementation3D * impl);
-    reflectionzeug::PropertyGroup * createPropertyGroupPlot(RenderView * renderView, RendererImplementationPlot * impl);
+    reflectionzeug::PropertyGroup * createPropertyGroup(AbstractRenderView * renderView);
+    reflectionzeug::PropertyGroup * createPropertyGroupRenderer(
+        AbstractRenderView * renderView, RendererImplementation3D * impl);
+    reflectionzeug::PropertyGroup * createPropertyGroupPlot(
+        AbstractRenderView * renderView, RendererImplementationPlot * impl);
 
 private:
     Ui_RendererConfigWidget * m_ui;
 
     reflectionzeug::PropertyGroup * m_propertyRoot;
-    RenderView * m_currentRenderView;
+    AbstractRenderView * m_currentRenderView;
     vtkSmartPointer<vtkEventQtSlotConnect> m_eventConnect;
     /** vtkEventQtSlotConnect does not increase the reference count of signal sources, so we do this manually */
     vtkSmartPointer<vtkCollection> m_eventEmitters;

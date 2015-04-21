@@ -6,10 +6,10 @@
 class RendererImplementationNull : public RendererImplementation
 {
 public:
-    RendererImplementationNull(RenderView & renderView, QObject * parent = nullptr);
+    RendererImplementationNull(AbstractRenderView & renderView, QObject * parent = nullptr);
 
-    QString name() const { return {}; }
-    ContentType contentType() const;
+    QString name() const override { return {}; }
+    ContentType contentType() const override;
 
     QList<DataObject *> filterCompatibleObjects(const QList<DataObject *> & dataObjects, QList<DataObject *> & incompatibleObjects)
     {
@@ -17,17 +17,17 @@ public:
         return{};
     }
 
-    void render() {}
-    vtkRenderWindowInteractor * interactor() { return nullptr; }
-    void highlightData(DataObject *, vtkIdType = -1) { }
-    DataObject * highlightedData() { return nullptr; }
-    void lookAtData(DataObject *, vtkIdType) { }
-    void resetCamera(bool) { }
-    void setAxesVisibility(bool) { }
-    bool canApplyTo(const QList<DataObject *> &) { return false; }
+    void render() override {}
+    vtkRenderWindowInteractor * interactor() override { return nullptr; }
+    void setSelectedData(DataObject *, vtkIdType = -1) override { }
+    DataObject * selectedData() override { return nullptr; }
+    void lookAtData(DataObject *, vtkIdType) override { }
+    void resetCamera(bool) override { }
+    void setAxesVisibility(bool) override { }
+    bool canApplyTo(const QList<DataObject *> &) override { return false; }
 
 protected:
-    AbstractVisualizedData * requestVisualization(DataObject *) const { return nullptr; }
-    void onAddContent(AbstractVisualizedData *) { }
-    void onRemoveContent(AbstractVisualizedData *) { }
+    AbstractVisualizedData * requestVisualization(DataObject *) const override { return nullptr; }
+    void onAddContent(AbstractVisualizedData *) override { }
+    void onRemoveContent(AbstractVisualizedData *) override { }
 };

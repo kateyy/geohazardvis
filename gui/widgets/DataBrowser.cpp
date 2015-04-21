@@ -12,7 +12,7 @@
 #include <core/rendered_data/RenderedData.h>
 
 #include <gui/DataMapping.h>
-#include <gui/data_view/RenderView.h>
+#include <gui/data_view/AbstractRenderView.h>
 #include <gui/widgets/DataBrowserTableModel.h>
 
 
@@ -95,7 +95,7 @@ void DataBrowser::updateModelForFocusedView()
     updateModel(m_dataMapping->focusedRenderView());
 }
 
-void DataBrowser::updateModel(RenderView * renderView)
+void DataBrowser::updateModel(AbstractRenderView * renderView)
 {
     QList<DataObject *> visibleObjects;
     if (renderView)
@@ -118,7 +118,7 @@ void DataBrowser::changeRenderedVisibility(DataObject * clickedObject)
     if (selection.isEmpty())
         return;
 
-    RenderView * renderView = m_dataMapping->focusedRenderView();
+    AbstractRenderView * renderView = m_dataMapping->focusedRenderView();
     // no current render view: add selection to new view
     if (!renderView)
     {

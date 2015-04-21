@@ -8,9 +8,9 @@
 class MainWindow;
 class DataObject;
 class AbstractDataView;
+class AbstractRenderView;
 class TableView;
 class RenderView;
-class RenderViewStrategySwitch;
 
 
 class DataMapping : public QObject
@@ -25,21 +25,17 @@ public:
     void removeDataObjects(QList<DataObject *> dataObjects);
 
     void openInTable(DataObject * dataObject);
-    RenderView * openInRenderView(QList<DataObject *> dataObjects);
-    void addToRenderView(QList<DataObject *> dataObjects, RenderView * renderView);
+    AbstractRenderView * openInRenderView(QList<DataObject *> dataObjects);
+    void addToRenderView(QList<DataObject *> dataObjects, AbstractRenderView * renderView, unsigned int subViewIndex = 0);
 
-    /** creates a render view but does not add it to the main window
-      * This view can be part of composed views */
-    RenderView * createDanglingRenderView();
-
-    RenderView * focusedRenderView();
+    AbstractRenderView * focusedRenderView();
 
 public slots:
     void setFocusedView(AbstractDataView * renderView);
 
 signals:
-    void renderViewsChanged(const QList<RenderView *> & widgets);
-    void focusedRenderViewChanged(RenderView * renderView);
+    void renderViewsChanged(const QList<AbstractRenderView *> & widgets);
+    void focusedRenderViewChanged(AbstractRenderView * renderView);
 
 private slots:
     void focusNextRenderView();
@@ -56,7 +52,7 @@ private:
     int m_nextTableIndex;
     int m_nextRenderViewIndex;
     QMap<int, TableView *> m_tableViews;
-    QMap<int, RenderView *> m_renderViews;
+    QMap<int, AbstractRenderView *> m_renderViews;
 
-    RenderView * m_focusedRenderView;
+    AbstractRenderView * m_focusedRenderView;
 };

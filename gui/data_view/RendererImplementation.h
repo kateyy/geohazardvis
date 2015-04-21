@@ -13,9 +13,9 @@ class vtkRenderWindow;
 class vtkRenderWindowInteractor;
 class QVTKWidget;
 
+class AbstractRenderView;
 class AbstractVisualizedData;
 enum class ContentType;
-class RenderView;
 class DataObject;
 
 
@@ -24,10 +24,10 @@ class RendererImplementation : public QObject
     Q_OBJECT
 
 public:
-    RendererImplementation(RenderView & renderView, QObject * parent = nullptr);
+    RendererImplementation(AbstractRenderView & renderView, QObject * parent = nullptr);
     ~RendererImplementation() override;
 
-    RenderView & renderView() const;
+    AbstractRenderView & renderView() const;
 
     virtual QString name() const = 0;
 
@@ -52,8 +52,8 @@ public:
     void removeContent(AbstractVisualizedData * content);
 
     /** mark dataObject (and, if set, it's point/cell) as current selection */
-    virtual void highlightData(DataObject * dataObject, vtkIdType itemId = -1) = 0;
-    virtual DataObject * highlightedData() = 0;
+    virtual void setSelectedData(DataObject * dataObject, vtkIdType itemId = -1) = 0;
+    virtual DataObject * selectedData() = 0;
     virtual void lookAtData(DataObject * dataObject, vtkIdType itemId) = 0;
 
     /** Resets the camera so that all view content are visible.
@@ -64,12 +64,12 @@ public:
 
     virtual bool canApplyTo(const QList<DataObject *> & data) = 0;
 
-    using ImplementationConstructor = std::function<RendererImplementation *(RenderView & view)>;
+    virtual AbstractVisualizedData * requestVisualization(DataObject * dataObject) const = 0;
+
+    using ImplementationConstructor = std::function<RendererImplementation *(AbstractRenderView & view)>;
     static const QList<ImplementationConstructor> & constructors();
 
 protected:
-    friend class RenderView;
-    virtual AbstractVisualizedData * requestVisualization(DataObject * dataObject) const = 0;
 
     /** Override to add visual contents to the view.
         In the overrider, call addConnectionForContent for each Qt signal/slot 
@@ -86,7 +86,7 @@ signals:
     void dataSelectionChanged(AbstractVisualizedData * selectedData);
 
 protected:
-    RenderView & m_renderView;
+    AbstractRenderView & m_renderView;
 
 private:
     static QList<ImplementationConstructor> & s_constructors();
@@ -98,7 +98,7 @@ template <typename ImplType>
 bool RendererImplementation::registerImplementation()
 {
     s_constructors().append(
-        [] (RenderView & view) { return new ImplType(view); }
+        [] (AbstractRenderView & view) { return new ImplType(view); }
     );
 
     return true;

@@ -5,7 +5,7 @@
 
 #include <core/data_objects/DataObject.h>
 #include <core/AbstractVisualizedData.h>
-#include <gui/data_view/RenderView.h>
+#include <gui/data_view/AbstractRenderView.h>
 #include <gui/propertyguizeug_extension/ColorEditorRGB.h>
 
 
@@ -53,17 +53,19 @@ void RenderConfigWidget::checkDeletedContent(AbstractVisualizedData * content)
         clear();
 }
 
-void RenderConfigWidget::setCurrentRenderView(RenderView * renderView)
+void RenderConfigWidget::setCurrentRenderView(AbstractRenderView * renderView)
 {
     clear();
 
     if (m_renderView)
-        disconnect(m_renderView, &RenderView::beforeDeleteContent, this, &RenderConfigWidget::checkDeletedContent);
+        disconnect(m_renderView, &AbstractRenderView::beforeDeleteVisualization, 
+            this, &RenderConfigWidget::checkDeletedContent);
 
     m_renderView = renderView;
-    m_content = renderView ? renderView->highlightedContent() : nullptr;
+    m_content = renderView ? renderView->selectedDataVisualization() : nullptr;
     if (renderView)
-        connect(renderView, &RenderView::beforeDeleteContent, this, &RenderConfigWidget::checkDeletedContent);
+        connect(renderView, &AbstractRenderView::beforeDeleteVisualization,
+            this, &RenderConfigWidget::checkDeletedContent);
     updateTitle();
 
     if (!m_content)
@@ -86,7 +88,7 @@ void RenderConfigWidget::setSelectedData(DataObject * dataObject)
         return;
 
     AbstractVisualizedData * content = nullptr;
-    for (AbstractVisualizedData * it : m_renderView->contents())
+    for (AbstractVisualizedData * it : m_renderView->visualizations())
     {
         if (it->dataObject() == dataObject)
         {

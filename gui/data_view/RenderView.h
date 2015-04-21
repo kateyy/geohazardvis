@@ -5,21 +5,14 @@
 
 #include <vtkSmartPointer.h>
 
-#include <gui/data_view/AbstractDataView.h>
+#include <gui/data_view/AbstractRenderView.h>
 
-
-class vtkRenderWindow;
-
-enum class ContentType;
-class DataObject;
-class AbstractVisualizedData;
 
 class Ui_RenderView;
-class RendererImplementation;
 class RendererImplementationSwitch;
 
 
-class GUI_API RenderView : public AbstractDataView
+class GUI_API RenderView : public AbstractRenderView
 {
     Q_OBJECT
 
@@ -27,57 +20,39 @@ public:
     RenderView(int index, QWidget * parent = nullptr, Qt::WindowFlags flags = 0);
     ~RenderView() override;
 
-    bool isTable() const override;
-    bool isRenderer() const override;
-
     QString friendlyName() const override;
 
-    ContentType contentType() const;
+    ContentType contentType() const override;
 
-    /** Add data objects to the view or make already added objects visible again.
-        @param incompatibleObjects List of objects that are not compatible with current content (e.g. 2D vs. 3D data). */
-    void addDataObjects(const QList<DataObject *> & dataObjects, QList<DataObject *> & incompatibleObjects);
-    /** remove rendered representations of data objects, don't delete data and settings */
-    void hideDataObjects(const QList<DataObject *> & dataObjects);
-    /** check if the this objects is currently rendered */
-    bool contains(DataObject * dataObject) const;
-    /** remove rendered representations and all references to the data objects */
-    void removeDataObjects(const QList<DataObject *> & dataObjects);
-    QList<DataObject *> dataObjects() const;
-    const QList<AbstractVisualizedData *> & contents() const;
+    DataObject * selectedData() const override;
+    AbstractVisualizedData * selectedDataVisualization() const override;
+    void lookAtData(DataObject * dataObject, vtkIdType itemId) override;
 
-    DataObject * highlightedData() const;
-    AbstractVisualizedData * highlightedContent() const;
-    void lookAtData(DataObject * dataObject, vtkIdType itemId);
+    RendererImplementation & selectedViewImplementation() override;
 
-    vtkRenderWindow * renderWindow();
-    const vtkRenderWindow * renderWindow() const;
-
-    /** show/hide axes in case the render view currently contains data */
-    void setEnableAxes(bool enabled);
-    bool axesEnabled() const;
-
-    bool contains3dData() const;
+    vtkRenderWindow * renderWindow() override;
+    const vtkRenderWindow * renderWindow() const override;
 
     // remove from public interface as soon as possible
     RendererImplementation & implementation() const;
 
-signals:
-    /** emitted after changing the list of visible objects */
-    void contentChanged();
-
-    void selectedDataChanged(RenderView * renderView, DataObject * dataObject);
-
-    void beforeDeleteContent(AbstractVisualizedData * content);
-
 public slots:
-    void render();
-
-    void ShowInfo(const QStringList &info);
+    void render() override;
 
 protected:
     QWidget * contentWidget() override;
+
     void highlightedIdChangedEvent(DataObject * dataObject, vtkIdType itemId) override;
+
+    void addDataObjectsImpl(const QList<DataObject *> & dataObjects,
+        QList<DataObject *> & incompatibleObjects,
+        unsigned int subViewIndex) override;
+    void hideDataObjectsImpl(const QList<DataObject *> & dataObjects, unsigned int subViewIndex) override;
+    void removeDataObjectsImpl(const QList<DataObject *> & dataObjects) override;
+
+    QList<AbstractVisualizedData *> visualizationsImpl(int subViewIndex) const override;
+
+    void axesEnabledChangedEvent(bool enabled) override;
 
 private:
     void updateImplementation(const QList<DataObject *> & contents);
@@ -107,7 +82,4 @@ private:
     // objects that were loaded to the GPU but are currently not rendered 
     QList<AbstractVisualizedData *> m_contentCache;
     QMap<DataObject *, AbstractVisualizedData *> m_dataObjectToVisualization;
-
-    // visualization and annotation
-    bool m_axesEnabled;
 };

@@ -3,7 +3,7 @@
 #include <core/types.h>
 
 
-RendererImplementationNull::RendererImplementationNull(RenderView & renderView, QObject * parent)
+RendererImplementationNull::RendererImplementationNull(AbstractRenderView & renderView, QObject * parent)
     : RendererImplementation(renderView, parent)
 {
 }

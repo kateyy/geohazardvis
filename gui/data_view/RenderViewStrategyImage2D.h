@@ -9,9 +9,9 @@ class QAction;
 class vtkLineWidget2;
 class vtkEventQtSlotConnect;
 
+class AbstractRenderView;
 class ImageDataObject;
 class ImageProfileData;
-class RenderView;
 
 
 class GUI_API RenderViewStrategyImage2D : public RenderViewStrategy
@@ -56,7 +56,7 @@ private:
     QAction * m_profilePlotAbortAction;
     QList<QAction *> m_actions;
     ImageProfileData * m_previewProfile;
-    RenderView * m_previewRenderer;
+    AbstractRenderView * m_previewRenderer;
 
     ImageDataObject * m_currentPlottingImage;
 

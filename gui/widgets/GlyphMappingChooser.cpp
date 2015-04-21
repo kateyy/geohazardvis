@@ -9,7 +9,7 @@
 #include <core/rendered_data/RenderedData3D.h>
 #include <core/glyph_mapping/GlyphMapping.h>
 #include <core/glyph_mapping/GlyphMappingData.h>
-#include <gui/data_view/RenderView.h>
+#include <gui/data_view/AbstractRenderView.h>
 #include <gui/propertyguizeug_extension/ColorEditorRGB.h>
 
 #include "GlyphMappingChooserListModel.h"
@@ -47,17 +47,18 @@ GlyphMappingChooser::~GlyphMappingChooser()
     delete m_ui;
 }
 
-void GlyphMappingChooser::setCurrentRenderView(RenderView * renderView)
+void GlyphMappingChooser::setCurrentRenderView(AbstractRenderView * renderView)
 {
     GlyphMapping * newMapping = nullptr;
-    if (renderView && renderView->highlightedContent())
-        if (RenderedData3D * new3D = dynamic_cast<RenderedData3D *>(renderView->highlightedContent()))
+    if (renderView && renderView->selectedDataVisualization())
+        if (RenderedData3D * new3D = dynamic_cast<RenderedData3D *>(renderView->selectedDataVisualization()))
             newMapping = new3D->glyphMapping();
 
     if (m_renderView)
     {
-        disconnect(this, &GlyphMappingChooser::renderSetupChanged, m_renderView, &RenderView::render);
-        disconnect(m_renderView, &RenderView::beforeDeleteContent, this, &GlyphMappingChooser::checkRemovedData);
+        disconnect(this, &GlyphMappingChooser::renderSetupChanged, m_renderView, &AbstractRenderView::render);
+        disconnect(m_renderView, &AbstractRenderView::beforeDeleteVisualization, 
+            this, &GlyphMappingChooser::checkRemovedData);
     }
     if (m_mapping)
         disconnect(m_mapping, &GlyphMapping::vectorsChanged, this, &GlyphMappingChooser::updateVectorsList);
@@ -73,8 +74,9 @@ void GlyphMappingChooser::setCurrentRenderView(RenderView * renderView)
         connect(m_mapping, &GlyphMapping::vectorsChanged, this, &GlyphMappingChooser::updateVectorsList);
     if (m_renderView)
     {
-        connect(this, &GlyphMappingChooser::renderSetupChanged, m_renderView, &RenderView::render);
-        connect(m_renderView, &RenderView::beforeDeleteContent, this, &GlyphMappingChooser::checkRemovedData);
+        connect(this, &GlyphMappingChooser::renderSetupChanged, m_renderView, &AbstractRenderView::render);
+        connect(m_renderView, &AbstractRenderView::beforeDeleteVisualization, 
+            this, &GlyphMappingChooser::checkRemovedData);
     }
 }
 
@@ -84,7 +86,7 @@ void GlyphMappingChooser::setSelectedData(DataObject * dataObject)
         return;
 
     RenderedData3D * renderedData = nullptr;
-    for (AbstractVisualizedData * it : m_renderView->contents())
+    for (AbstractVisualizedData * it : m_renderView->visualizations())
     {
         RenderedData3D * r = dynamic_cast<RenderedData3D *>(it); // glyph mapping is only implemented for 3D data
 

@@ -52,7 +52,7 @@ ColorMappingChooser::~ColorMappingChooser()
     delete m_ui;
 }
 
-void ColorMappingChooser::setCurrentRenderView(RenderView * renderView)
+void ColorMappingChooser::setCurrentRenderView(AbstractRenderView * renderView)
 {
     m_renderView = renderView;
 
@@ -243,7 +243,10 @@ void ColorMappingChooser::checkRenderViewColorMapping()
     if (!m_renderView)
         return;
 
-    m_renderViewImpl = dynamic_cast<RendererImplementation3D *>(&m_renderView->implementation());
+    RenderView * rv = dynamic_cast<RenderView *>(m_renderView);
+    if (!rv)
+        return;
+    m_renderViewImpl = dynamic_cast<RendererImplementation3D *>(&rv->implementation());
     if (!m_renderViewImpl)
         return;
 
@@ -296,14 +299,15 @@ void ColorMappingChooser::rebuildGui()
         m_ui->colorLegendGroupBox->setEnabled(newMapping->currentScalarsUseMappingLegend());
         m_ui->colorLegendGroupBox->setChecked(newMapping->colorMappingLegendVisible());
 
-        m_qtConnect << connect(m_renderView, &RenderView::contentChanged, this, &ColorMappingChooser::rebuildGui);
+        m_qtConnect << connect(m_renderView, &RenderView::visualizationsChanged, this, &ColorMappingChooser::rebuildGui);
         m_qtConnect << connect(newMapping, &ColorMapping::scalarsChanged, this, &ColorMappingChooser::rebuildGui);
         m_qtConnect << connect(m_ui->colorLegendGroupBox, &QGroupBox::toggled,
             [this, newMapping] (bool checked) {
             newMapping->setColorMappingLegendVisible(checked);
             m_renderView->render();
         });
-        m_qtConnect << connect(this, &ColorMappingChooser::renderSetupChanged, m_renderView, &RenderView::render);
+        m_qtConnect << connect(this, &ColorMappingChooser::renderSetupChanged, 
+            m_renderView, &AbstractRenderView::render);
     }
 
     // the mapping can now receive signals from the UI

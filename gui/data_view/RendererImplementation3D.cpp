@@ -38,7 +38,7 @@
 bool RendererImplementation3D::s_isRegistered = RendererImplementation::registerImplementation<RendererImplementation3D>();
 
 
-RendererImplementation3D::RendererImplementation3D(RenderView & renderView, QObject * parent)
+RendererImplementation3D::RendererImplementation3D(AbstractRenderView & renderView, QObject * parent)
     : RendererImplementation(renderView, parent)
     , m_isInitialized(false)
     , m_strategySwitch(new RenderViewStrategySwitch(*this))
@@ -46,7 +46,8 @@ RendererImplementation3D::RendererImplementation3D(RenderView & renderView, QObj
     , m_emptyStrategy(new RenderViewStrategyNull(*this))
     , m_colorMapping(new ColorMapping())
 {
-    connect(&m_renderView, &RenderView::contentChanged, this, &RendererImplementation3D::redirectRenderViewContentChanged);
+    connect(&m_renderView, &AbstractRenderView::visualizationsChanged, 
+        this, &RendererImplementation3D::redirectRenderViewContentChanged);
 }
 
 RendererImplementation3D::~RendererImplementation3D()
@@ -172,12 +173,12 @@ void RendererImplementation3D::onRemoveContent(AbstractVisualizedData * content)
     m_renderer->ResetCamera();
 }
 
-void RendererImplementation3D::highlightData(DataObject * dataObject, vtkIdType itemId)
+void RendererImplementation3D::setSelectedData(DataObject * dataObject, vtkIdType itemId)
 {
     interactorStyle()->highlightCell(dataObject, itemId);
 }
 
-DataObject * RendererImplementation3D::highlightedData()
+DataObject * RendererImplementation3D::selectedData()
 {
     return m_interactorStyle->highlightedObject();
 }
@@ -212,7 +213,7 @@ void RendererImplementation3D::setAxesVisibility(bool visible)
 QList<RenderedData *> RendererImplementation3D::renderedData()
 {
     QList<RenderedData *> renderedList;
-    for (AbstractVisualizedData * vis : m_renderView.contents())
+    for (AbstractVisualizedData * vis : m_renderView.visualizations())
     {
         if (RenderedData * rendered =  dynamic_cast<RenderedData *>(vis))
             renderedList << rendered;
@@ -321,9 +322,12 @@ void RendererImplementation3D::initialize()
     m_interactorStyle->addStyle("InteractorStyle3D", vtkSmartPointer<InteractorStyle3D>::New());
     m_interactorStyle->addStyle("InteractorStyleImage", vtkSmartPointer<InteractorStyleImage>::New());
 
-    connect(m_interactorStyle.Get(), &PickingInteractorStyleSwitch::pointInfoSent, &m_renderView, &RenderView::ShowInfo);
-    connect(m_interactorStyle.Get(), &PickingInteractorStyleSwitch::dataPicked, this, &RendererImplementation3D::dataSelectionChanged);
-    connect(m_interactorStyle.Get(), &PickingInteractorStyleSwitch::cellPicked, &m_renderView, &AbstractDataView::objectPicked);
+    connect(m_interactorStyle.Get(), &PickingInteractorStyleSwitch::pointInfoSent, 
+        &m_renderView, &AbstractRenderView::ShowInfo);
+    connect(m_interactorStyle.Get(), &PickingInteractorStyleSwitch::dataPicked, 
+        this, &RendererImplementation3D::dataSelectionChanged);
+    connect(m_interactorStyle.Get(), &PickingInteractorStyleSwitch::cellPicked, 
+        &m_renderView, &AbstractDataView::objectPicked);
 
     createAxes();
     setupColorMappingLegend();
@@ -375,7 +379,7 @@ void RendererImplementation3D::updateBounds()
 {
     m_dataBounds.Reset();
 
-    for (AbstractVisualizedData * it : m_renderView.contents())
+    for (AbstractVisualizedData * it : m_renderView.visualizations())
         m_dataBounds.AddBounds(it->dataObject()->bounds());
 
     updateAxes();
@@ -393,7 +397,7 @@ void RendererImplementation3D::removeFromBounds(RenderedData * renderedData)
 {
     m_dataBounds.Reset();
 
-    for (AbstractVisualizedData * it : m_renderView.contents())
+    for (AbstractVisualizedData * it : m_renderView.visualizations())
     {
         if (it == renderedData)
             continue;
@@ -538,7 +542,7 @@ void RendererImplementation3D::dataVisibilityChanged(RenderedData * rendered)
 
 void RendererImplementation3D::redirectRenderViewContentChanged()
 {
-    m_colorMapping->setVisualizedData(m_renderView.contents());
+    m_colorMapping->setVisualizedData(m_renderView.visualizations());
     if (m_interactorStyle)
         m_interactorStyle->setRenderedData(renderedData());
 }

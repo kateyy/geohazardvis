@@ -11,7 +11,7 @@ namespace reflectionzeug
     class PropertyGroup;
 }
 
-class RenderView;
+class AbstractRenderView;
 class AbstractVisualizedData;
 class GlyphMapping;
 class GlyphMappingChooserListModel;
@@ -31,7 +31,7 @@ signals:
     void renderSetupChanged();
 
 public slots:
-    void setCurrentRenderView(RenderView * renderView = nullptr);
+    void setCurrentRenderView(AbstractRenderView * renderView = nullptr);
     /** switch to specified dataObject, in case it is visible in my current render view */
     void setSelectedData(DataObject * dataObject);
 
@@ -48,7 +48,7 @@ private:
 private:
     Ui_GlyphMappingChooser * m_ui;
 
-    RenderView * m_renderView;
+    AbstractRenderView * m_renderView;
     GlyphMapping * m_mapping;
     GlyphMappingChooserListModel * m_listModel;
     QList<reflectionzeug::PropertyGroup *> m_propertyGroups;

@@ -40,7 +40,8 @@ RenderViewStrategyImage2D::RenderViewStrategyImage2D(RendererImplementation3D & 
     , m_previewRenderer(nullptr)
     , m_currentPlottingImage(nullptr)
 {
-    connect(&context.renderView(), &RenderView::contentChanged, this, &RenderViewStrategyImage2D::checkSourceExists);
+    connect(&context.renderView(), &RenderView::visualizationsChanged, 
+        this, &RenderViewStrategyImage2D::checkSourceExists);
 }
 
 RenderViewStrategyImage2D::~RenderViewStrategyImage2D()
@@ -48,7 +49,7 @@ RenderViewStrategyImage2D::~RenderViewStrategyImage2D()
     if (m_previewRenderer && m_previewProfile)
     {
         m_previewRenderer->removeDataObjects({ m_previewProfile });
-        if (m_previewRenderer->contents().isEmpty())
+        if (m_previewRenderer->visualizations().isEmpty())
             m_previewRenderer->close();
     }
 

@@ -5,7 +5,7 @@
 #include <gui/data_view/RendererImplementationNull.h>
 
 
-RendererImplementationSwitch::RendererImplementationSwitch(RenderView & renderView)
+RendererImplementationSwitch::RendererImplementationSwitch(AbstractRenderView & renderView)
     : m_view(renderView)
     , m_currentImpl(nullptr)
     , m_nullImpl(nullptr)

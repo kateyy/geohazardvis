@@ -16,7 +16,7 @@
 #include <core/types.h>
 #include <core/vtkcamerahelper.h>
 #include <core/reflectionzeug_extension/QStringProperty.h>
-#include <gui/data_view/RenderView.h>
+#include <gui/data_view/AbstractRenderView.h>
 #include <gui/data_view/RendererImplementation3D.h>
 
 
@@ -42,8 +42,9 @@ void RendererConfigWidget::readCameraStats(vtkObject * caller)
 {
     assert(vtkCamera::SafeDownCast(caller));
     vtkCamera * camera = static_cast<vtkCamera *>(caller);
-    assert(m_currentRenderView && dynamic_cast<RendererImplementation3D *>(&m_currentRenderView->implementation()));
-    assert(static_cast<RendererImplementation3D *>(&m_currentRenderView->implementation())->camera() == camera);
+    assert(m_currentRenderView && dynamic_cast<RendererImplementation3D *>(
+        &m_currentRenderView->selectedViewImplementation()));
+    assert(static_cast<RendererImplementation3D *>(&m_currentRenderView->selectedViewImplementation())->camera() == camera);
 
     std::function<void(AbstractProperty &)> updateFunc = [&updateFunc] (AbstractProperty & property)
     {
@@ -63,7 +64,7 @@ void RendererConfigWidget::readCameraStats(vtkObject * caller)
     // update axes text label rotations for terrain view
     if (m_currentRenderView->contentType() == ContentType::Rendered3D)
     {
-        RendererImplementation3D & impl3D = static_cast<RendererImplementation3D &>(m_currentRenderView->implementation());
+        RendererImplementation3D & impl3D = static_cast<RendererImplementation3D &>(m_currentRenderView->selectedViewImplementation());
         double azimuth = TerrainCamera::getAzimuth(*camera);
         if (TerrainCamera::getVerticalElevation(*camera) < 0)
             azimuth *= -1;
@@ -73,7 +74,7 @@ void RendererConfigWidget::readCameraStats(vtkObject * caller)
     }
 }
 
-reflectionzeug::PropertyGroup * RendererConfigWidget::createPropertyGroupRenderer(RenderView * renderView, RendererImplementation3D * impl)
+reflectionzeug::PropertyGroup * RendererConfigWidget::createPropertyGroupRenderer(AbstractRenderView * renderView, RendererImplementation3D * impl)
 {
     PropertyGroup * root = new PropertyGroup();
     vtkRenderer * renderer = impl->renderer();
@@ -104,11 +105,13 @@ reflectionzeug::PropertyGroup * RendererConfigWidget::createPropertyGroupRendere
     });
     backgroundColor->setOption("title", "Background Color");
 
+    bool contains3dData = renderView->contentType() == ContentType::Rendered3D;
+
     auto cameraGroup = root->addGroup("Camera");
     {
         vtkCamera & camera = *impl->camera();
 
-        if (renderView->contains3dData())
+        if (contains3dData)
         {
             std::string degreesSuffix = (QString(' ') + QChar(0xB0)).toStdString();
 
@@ -158,7 +161,7 @@ reflectionzeug::PropertyGroup * RendererConfigWidget::createPropertyGroupRendere
         }
 
 
-        if (renderView->contains3dData())
+        if (contains3dData)
         {
             auto prop_projectionType = cameraGroup->addProperty<ProjectionType>("Projection",
                 [&camera] () {
@@ -175,7 +178,7 @@ reflectionzeug::PropertyGroup * RendererConfigWidget::createPropertyGroupRendere
         }
     }
 
-    if (renderView->contains3dData())
+    if (contains3dData)
     {
         PropertyGroup * lightingGroup = root->addGroup("Lighting");
 
@@ -219,8 +222,8 @@ reflectionzeug::PropertyGroup * RendererConfigWidget::createPropertyGroupRendere
     {
         vtkCubeAxesActor * axes = impl->axesActor();
         axesGroup->addProperty<bool>("Visible",
-            std::bind(&RenderView::axesEnabled, renderView),
-            std::bind(&RenderView::setEnableAxes, renderView, std::placeholders::_1));
+            std::bind(&AbstractRenderView::axesEnabled, renderView),
+            std::bind(&AbstractRenderView::setEnableAxes, renderView, std::placeholders::_1));
 
         axesGroup->addProperty<bool>("Show Labels",
             [axes] () { return axes->GetXAxisLabelVisibility() != 0; },

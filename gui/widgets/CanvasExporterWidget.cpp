@@ -41,7 +41,7 @@ CanvasExporterWidget::~CanvasExporterWidget()
     qDeleteAll(m_exporters);
 }
 
-void CanvasExporterWidget::setRenderView(RenderView * renderView)
+void CanvasExporterWidget::setRenderView(AbstractRenderView * renderView)
 {
     m_renderView = renderView;
 }

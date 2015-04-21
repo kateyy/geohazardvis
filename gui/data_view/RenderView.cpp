@@ -20,10 +20,9 @@
 RenderView::RenderView(
     int index,
     QWidget * parent, Qt::WindowFlags flags)
-    : AbstractDataView(index, parent, flags)
+    : AbstractRenderView(index, parent, flags)
     , m_ui(new Ui_RenderView())
     , m_implementationSwitch(new RendererImplementationSwitch(*this))
-    , m_axesEnabled(true)
 {
     m_ui->setupUi(this);
 
@@ -37,25 +36,15 @@ RenderView::~RenderView()
     SelectionHandler::instance().removeRenderView(this); 
 
     for (AbstractVisualizedData * rendered : m_contents)
-        emit beforeDeleteContent(rendered);
+        emit beforeDeleteVisualization(rendered);
 
     for (AbstractVisualizedData * rendered : m_contentCache)
-        emit beforeDeleteContent(rendered);
+        emit beforeDeleteVisualization(rendered);
 
     qDeleteAll(m_contents);
     qDeleteAll(m_contentCache);
 
     delete m_implementationSwitch;
-}
-
-bool RenderView::isTable() const
-{
-    return false;
-}
-
-bool RenderView::isRenderer() const
-{
-    return true;
 }
 
 QString RenderView::friendlyName() const
@@ -91,12 +80,12 @@ QWidget * RenderView::contentWidget()
 
 void RenderView::highlightedIdChangedEvent(DataObject * dataObject, vtkIdType itemId)
 {
-    implementation().highlightData(dataObject, itemId);
+    implementation().setSelectedData(dataObject, itemId);
 }
 
-void RenderView::ShowInfo(const QStringList & info)
+void RenderView::axesEnabledChangedEvent(bool enabled)
 {
-    setToolTip(info.join('\n'));
+    implementation().setAxesVisibility(enabled && !m_contents.isEmpty());
 }
 
 void RenderView::updateImplementation(const QList<DataObject *> & contents)
@@ -123,7 +112,7 @@ AbstractVisualizedData * RenderView::addDataObject(DataObject * dataObject)
     updateTitle(dataObject->name() + " (loading to GPU)");
     QApplication::processEvents();
 
-    assert(dataObject->is3D() == contains3dData());
+    assert(dataObject->is3D() == (contentType() == ContentType::Rendered3D));
 
     AbstractVisualizedData * newContent = implementation().requestVisualization(dataObject);
 
@@ -141,7 +130,7 @@ AbstractVisualizedData * RenderView::addDataObject(DataObject * dataObject)
     return newContent;
 }
 
-void RenderView::addDataObjects(const QList<DataObject *> & uncheckedDataObjects, QList<DataObject *> & incompatibleObjects)
+void RenderView::addDataObjectsImpl(const QList<DataObject *> & uncheckedDataObjects, QList<DataObject *> & incompatibleObjects, unsigned int /*suViewIndex*/)
 {
     if (uncheckedDataObjects.isEmpty())
         return;
@@ -190,7 +179,7 @@ void RenderView::addDataObjects(const QList<DataObject *> & uncheckedDataObjects
     {
         updateGuiForSelectedData(aNewObject);
 
-        emit contentChanged();
+        emit visualizationsChanged();
     }
 
     if (aNewObject)
@@ -199,7 +188,7 @@ void RenderView::addDataObjects(const QList<DataObject *> & uncheckedDataObjects
     }
 }
 
-void RenderView::hideDataObjects(const QList<DataObject *> & dataObjects)
+void RenderView::hideDataObjectsImpl(const QList<DataObject *> & dataObjects, unsigned int /*suViewIndex*/)
 {
     bool changed = false;
     for (DataObject * dataObject : dataObjects)
@@ -209,7 +198,7 @@ void RenderView::hideDataObjects(const QList<DataObject *> & dataObjects)
             continue;
 
         // cached data is only accessible internally in the view, so let others know that it's gone for the moment
-        emit beforeDeleteContent(rendered);
+        emit beforeDeleteVisualization(rendered);
 
         // move data to cache if it isn't already invisible
         if (m_contents.removeOne(rendered))
@@ -228,17 +217,9 @@ void RenderView::hideDataObjects(const QList<DataObject *> & dataObjects)
 
     updateGuiForRemovedData();
 
-    emit contentChanged();
+    emit visualizationsChanged();
 
     render();
-}
-
-bool RenderView::contains(DataObject * dataObject) const
-{
-    AbstractVisualizedData * renderedData = m_dataObjectToVisualization.value(dataObject, nullptr);
-    if (!renderedData)
-        return false;
-    return renderedData->isVisible();
 }
 
 void RenderView::removeDataObject(DataObject * dataObject)
@@ -251,20 +232,20 @@ void RenderView::removeDataObject(DataObject * dataObject)
 
     implementation().removeContent(renderedData);
 
-    emit beforeDeleteContent(renderedData);
+    emit beforeDeleteVisualization(renderedData);
 
     QList<AbstractVisualizedData *> toDelete = removeFromInternalLists({ dataObject });
 
     updateGuiForRemovedData();
 
-    emit contentChanged();
+    emit visualizationsChanged();
 
     render();
 
     qDeleteAll(toDelete);
 }
 
-void RenderView::removeDataObjects(const QList<DataObject *> & dataObjects)
+void RenderView::removeDataObjectsImpl(const QList<DataObject *> & dataObjects)
 {
     for (DataObject * dataObject : dataObjects)
         removeDataObject(dataObject);
@@ -289,38 +270,34 @@ QList<AbstractVisualizedData *> RenderView::removeFromInternalLists(QList<DataOb
     return toDelete;
 }
 
-QList<DataObject *> RenderView::dataObjects() const
-{
-    QList<DataObject *> objs;
-    for (AbstractVisualizedData * r : m_contents)
-        objs << r->dataObject();
-
-    return objs;
-}
-
-const QList<AbstractVisualizedData *> & RenderView::contents() const
+QList<AbstractVisualizedData *> RenderView::visualizationsImpl(int /*subViewIndex*/) const
 {
     return m_contents;
 }
 
-DataObject * RenderView::highlightedData() const
+DataObject * RenderView::selectedData() const
 {
-    DataObject * highlighted = implementation().highlightedData();
+    auto selected = implementation().selectedData();
 
-    if (!highlighted && !m_contents.isEmpty())
-        highlighted = m_contents.first()->dataObject();
+    if (!selected && !m_contents.isEmpty())
+        selected = m_contents.first()->dataObject();
 
-    return highlighted;
+    return selected;
 }
 
-AbstractVisualizedData * RenderView::highlightedContent() const
+AbstractVisualizedData * RenderView::selectedDataVisualization() const
 {
-    return m_dataObjectToVisualization.value(highlightedData());
+    return m_dataObjectToVisualization.value(selectedData());
 }
 
 void RenderView::lookAtData(DataObject * dataObject, vtkIdType itemId)
 {
     implementation().lookAtData(dataObject, itemId);
+}
+
+RendererImplementation & RenderView::selectedViewImplementation()
+{
+    return implementation();
 }
 
 RendererImplementation & RenderView::implementation() const
@@ -338,29 +315,9 @@ const vtkRenderWindow * RenderView::renderWindow() const
     return m_ui->qvtkMain->GetRenderWindow();
 }
 
-void RenderView::setEnableAxes(bool enabled)
-{
-    if (m_axesEnabled == enabled)
-        return;
-
-    m_axesEnabled = enabled;
-
-    implementation().setAxesVisibility(m_axesEnabled && !m_contents.isEmpty());
-}
-
-bool RenderView::axesEnabled() const
-{
-    return m_axesEnabled;
-}
-
-bool RenderView::contains3dData() const
-{
-    return implementation().contentType() == ContentType::Rendered3D;
-}
-
 void RenderView::updateGuiForContent()
 {
-    AbstractVisualizedData * focus = m_dataObjectToVisualization.value(implementation().highlightedData());
+    AbstractVisualizedData * focus = m_dataObjectToVisualization.value(implementation().selectedData());
     if (!focus)
         focus = m_contents.value(0, nullptr);
 

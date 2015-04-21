@@ -14,13 +14,13 @@
 #include <core/data_objects/DataObject.h>
 #include <core/context2D_data/Context2DData.h>
 #include <core/context2D_data/vtkPlotCollection.h>
-#include <gui/data_view/RenderView.h>
+#include <gui/data_view/AbstractRenderView.h>
 
 
 bool RendererImplementationPlot::s_isRegistered = RendererImplementation::registerImplementation<RendererImplementationPlot>();
 
 
-RendererImplementationPlot::RendererImplementationPlot(RenderView & renderView, QObject * parent)
+RendererImplementationPlot::RendererImplementationPlot(AbstractRenderView & renderView, QObject * parent)
     : RendererImplementation(renderView, parent)
     , m_isInitialized(false)
     , m_axesAutoUpdate(true)
@@ -136,11 +136,11 @@ void RendererImplementationPlot::onRemoveContent(AbstractVisualizedData * conten
     m_contextView->ResetCamera();
 }
 
-void RendererImplementationPlot::highlightData(DataObject * /*dataObject*/, vtkIdType /*itemId*/)
+void RendererImplementationPlot::setSelectedData(DataObject * /*dataObject*/, vtkIdType /*itemId*/)
 {
 }
 
-DataObject * RendererImplementationPlot::highlightedData()
+DataObject * RendererImplementationPlot::selectedData()
 {
     return nullptr;
 }

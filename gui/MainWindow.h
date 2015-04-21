@@ -6,11 +6,11 @@
 #include <gui/gui_api.h>
 
 
+class AbstractRenderView;
 class CanvasExporterWidget;
 class DataBrowser;
 class DataMapping;
 class RenderConfigWidget;
-class RenderView;
 class RendererConfigWidget;
 class ColorMappingChooser;
 class Ui_MainWindow;
@@ -28,7 +28,7 @@ public:
 public slots:
     void openFiles(const QStringList & fileNames);
     
-    void addRenderView(RenderView * renderView);
+    void addRenderView(AbstractRenderView * renderView);
     void tabbedDockWidgetToFront(QDockWidget * widget);
 
 private slots:

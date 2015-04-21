@@ -19,7 +19,7 @@ class RendererImplementationPlot : public RendererImplementation
     Q_OBJECT
 
 public:
-    RendererImplementationPlot(RenderView & renderView, QObject * parent = nullptr);
+    RendererImplementationPlot(AbstractRenderView & renderView, QObject * parent = nullptr);
 
     QString name() const override;
 
@@ -35,8 +35,8 @@ public:
 
     vtkRenderWindowInteractor * interactor() override;
 
-    void highlightData(DataObject * dataObject, vtkIdType itemId = -1) override;
-    virtual DataObject * highlightedData() override;
+    void setSelectedData(DataObject * dataObject, vtkIdType itemId = -1) override;
+    virtual DataObject * selectedData() override;
     void lookAtData(DataObject * dataObject, vtkIdType itemId) override;
     void resetCamera(bool toInitialPosition) override;
 

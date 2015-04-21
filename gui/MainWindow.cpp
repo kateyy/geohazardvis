@@ -23,8 +23,8 @@
 
 #include <gui/DataMapping.h>
 #include <gui/SelectionHandler.h>
-#include <gui/data_view/RenderView.h>
-#include <gui/data_view/ResidualVerificationView.h>
+#include <gui/data_view/AbstractRenderView.h>
+//#include <gui/data_view/ResidualVerificationView.h>
 #include <gui/widgets/CanvasExporterWidget.h>
 #include <gui/widgets/ColorMappingChooser.h>
 #include <gui/widgets/DEMWidget.h>
@@ -71,7 +71,7 @@ MainWindow::MainWindow()
 
     connect(m_dataMapping, &DataMapping::renderViewsChanged, m_rendererConfigWidget, &RendererConfigWidget::setRenderViews);
     connect(m_dataMapping, &DataMapping::focusedRenderViewChanged,
-        m_rendererConfigWidget, static_cast<void(RendererConfigWidget::*)(RenderView*)>(&RendererConfigWidget::setCurrentRenderView));
+        m_rendererConfigWidget, static_cast<void(RendererConfigWidget::*)(AbstractRenderView*)>(&RendererConfigWidget::setCurrentRenderView));
 
     connect(m_dataBrowser, &DataBrowser::selectedDataChanged,
         [this] (DataObject * selected) {
@@ -87,7 +87,7 @@ MainWindow::MainWindow()
         [this] (bool) { m_canvasExporter->captureScreenshotTo(); });
     connect(m_dataMapping, &DataMapping::focusedRenderViewChanged, m_canvasExporter, &CanvasExporterWidget::setRenderView);
 
-    connect(m_ui->actionResidual_Test, &QAction::triggered, [this] (bool) {
+    /*connect(m_ui->actionResidual_Test, &QAction::triggered, [this] (bool) {
         ImageDataObject * observation = nullptr;
         for (auto data : DataSetHandler::instance().dataSets())
         {
@@ -102,7 +102,7 @@ MainWindow::MainWindow()
         view->setObservationData(observation);
         view->dockWidgetParent()->setAttribute(Qt::WA_DeleteOnClose);
         addDockWidget(Qt::TopDockWidgetArea, view->dockWidgetParent());
-    });
+    });*/
 }
 
 MainWindow::~MainWindow()
@@ -146,12 +146,12 @@ void MainWindow::dropEvent(QDropEvent * event)
     openFiles(fileNames);
 }
 
-void MainWindow::addRenderView(RenderView * renderView)
+void MainWindow::addRenderView(AbstractRenderView * renderView)
 {
     addDockWidget(Qt::DockWidgetArea::TopDockWidgetArea, renderView->dockWidgetParent());
 
-    connect(renderView, &RenderView::selectedDataChanged, 
-        [this] (RenderView * renderView, DataObject * selectedData) {
+    connect(renderView, &AbstractRenderView::selectedDataChanged,
+        [this] (AbstractRenderView * renderView, DataObject * selectedData) {
         m_dataMapping->setFocusedView(renderView);
         m_dataBrowser->setSelectedData(selectedData);
     });

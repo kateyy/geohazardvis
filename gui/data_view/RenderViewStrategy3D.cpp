@@ -16,7 +16,7 @@ const bool RenderViewStrategy3D::s_isRegistered = RenderViewStrategy::registerSt
 RenderViewStrategy3D::RenderViewStrategy3D(RendererImplementation3D & context)
     : RenderViewStrategy(context)
 {
-    connect(&context.renderView(), &RenderView::contentChanged, this, &RenderViewStrategy3D::updateImageWidgets);
+    connect(&context.renderView(), &RenderView::visualizationsChanged, this, &RenderViewStrategy3D::updateImageWidgets);
 }
 
 QString RenderViewStrategy3D::name() const

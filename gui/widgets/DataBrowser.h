@@ -5,10 +5,10 @@
 
 
 class Ui_DataBrowser;
+class AbstractRenderView;
 class DataBrowserTableModel;
 class DataObject;
 class DataMapping;
-class RenderView;
 
 
 class DataBrowser : public QWidget
@@ -34,7 +34,7 @@ protected:
 
 private slots:
     void updateModelForFocusedView();
-    void updateModel(RenderView * renderView);
+    void updateModel(AbstractRenderView * renderView);
 
     /** show and bring to front the table for selected objects */
     void showTable();

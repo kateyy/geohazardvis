@@ -7,8 +7,8 @@
 #include <gui/gui_api.h>
 
 
+class AbstractRenderView;
 class CanvasExporter;
-class RenderView;
 class Ui_CanvasExporterWidget;
 
 
@@ -21,7 +21,7 @@ public:
     ~CanvasExporterWidget() override;
 
 public slots:
-    void setRenderView(RenderView * renderView);
+    void setRenderView(AbstractRenderView * renderView);
 
     /** capture screenshot with current settings to quick output folder */
     void captureScreenshot();
@@ -40,7 +40,7 @@ private:
 private:
     Ui_CanvasExporterWidget * m_ui;
 
-    RenderView * m_renderView;
+    AbstractRenderView * m_renderView;
 
     QMap<QString, CanvasExporter *> m_exporters;
 };

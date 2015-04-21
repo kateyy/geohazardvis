@@ -79,11 +79,11 @@ void RendererConfigWidget::clear()
     setCurrentRenderView(-1);
 }
 
-void RendererConfigWidget::setRenderViews(const QList<RenderView *> & renderViews)
+void RendererConfigWidget::setRenderViews(const QList<AbstractRenderView *> & renderViews)
 {
     clear();
 
-    for (RenderView * renderView : renderViews)
+    for (AbstractRenderView * renderView : renderViews)
     {
         m_ui->relatedRenderer->addItem(
             renderView->friendlyName(),
@@ -96,7 +96,7 @@ void RendererConfigWidget::setRenderViews(const QList<RenderView *> & renderView
         return;
 }
 
-void RendererConfigWidget::setCurrentRenderView(RenderView * renderView)
+void RendererConfigWidget::setCurrentRenderView(AbstractRenderView * renderView)
 {
     if (renderView)
         m_ui->relatedRenderer->setCurrentText(renderView->friendlyName());
@@ -111,8 +111,8 @@ void RendererConfigWidget::setCurrentRenderView(int index)
     if (index < 0)
         return;
 
-    RenderView * lastRenderView = m_currentRenderView;
-    m_currentRenderView = reinterpret_cast<RenderView *>(
+    auto lastRenderView = m_currentRenderView;
+    m_currentRenderView = reinterpret_cast<AbstractRenderView *>(
         m_ui->relatedRenderer->itemData(index, Qt::UserRole).toULongLong());
     assert(m_currentRenderView);
 
@@ -121,13 +121,15 @@ void RendererConfigWidget::setCurrentRenderView(int index)
     m_ui->propertyBrowser->setColumnWidth(0, 135);
 
 
+    RenderView * lastSingleView = dynamic_cast<RenderView *>(lastRenderView);
+    RenderView * currentSingleView = dynamic_cast<RenderView *>(m_currentRenderView);
     RendererImplementation3D * impl3D;
-    if (lastRenderView && (impl3D = dynamic_cast<RendererImplementation3D *>(&lastRenderView->implementation())))
+    if (lastSingleView && (impl3D = dynamic_cast<RendererImplementation3D *>(&lastSingleView->implementation())))
     {
         m_eventConnect->Disconnect(impl3D->camera(), vtkCommand::ModifiedEvent, this, SLOT(readCameraStats(vtkObject *)), this);
         m_eventEmitters->RemoveItem(impl3D->camera());
     }
-    if (m_currentRenderView && (impl3D = dynamic_cast<RendererImplementation3D *>(&m_currentRenderView->implementation())))
+    if (currentSingleView && (impl3D = dynamic_cast<RendererImplementation3D *>(&currentSingleView->implementation())))
     {
         m_eventConnect->Connect(impl3D->camera(), vtkCommand::ModifiedEvent, this, SLOT(readCameraStats(vtkObject *)), this);
         m_eventEmitters->AddItem(impl3D->camera());
@@ -136,7 +138,7 @@ void RendererConfigWidget::setCurrentRenderView(int index)
 
 void RendererConfigWidget::updateRenderViewTitle(const QString & newTitle)
 {
-    RenderView * renderView = dynamic_cast<RenderView *>(sender());
+    auto renderView = dynamic_cast<AbstractRenderView *>(sender());
     assert(renderView);
     qulonglong ptr = reinterpret_cast<qulonglong>(renderView);
 
@@ -151,20 +153,22 @@ void RendererConfigWidget::updateRenderViewTitle(const QString & newTitle)
     }
 }
 
-PropertyGroup * RendererConfigWidget::createPropertyGroup(RenderView * renderView)
+PropertyGroup * RendererConfigWidget::createPropertyGroup(AbstractRenderView * renderView)
 {
     switch (renderView->contentType())
     {
     case ContentType::Rendered2D:
     case ContentType::Rendered3D:
     {
-        RendererImplementation3D * impl3D = dynamic_cast<RendererImplementation3D *>(&renderView->implementation());
+        RendererImplementation3D * impl3D = dynamic_cast<RendererImplementation3D *>(
+            &renderView->selectedViewImplementation());
         assert(impl3D);
         return createPropertyGroupRenderer(renderView, impl3D);
     }
     case ContentType::Context2D:
     {
-        RendererImplementationPlot * implPlot = dynamic_cast<RendererImplementationPlot *>(&renderView->implementation());
+        RendererImplementationPlot * implPlot = dynamic_cast<RendererImplementationPlot *>(
+            &renderView->selectedViewImplementation());
         assert(implPlot);
         return createPropertyGroupPlot(renderView, implPlot);
     }
@@ -173,7 +177,8 @@ PropertyGroup * RendererConfigWidget::createPropertyGroup(RenderView * renderVie
     }
 }
 
-reflectionzeug::PropertyGroup * RendererConfigWidget::createPropertyGroupPlot(RenderView * /*renderView*/, RendererImplementationPlot * impl)
+reflectionzeug::PropertyGroup * RendererConfigWidget::createPropertyGroupPlot(
+    AbstractRenderView * /*renderView*/, RendererImplementationPlot * impl)
 {
     PropertyGroup * root = new PropertyGroup();
 

@@ -51,8 +51,8 @@ DataMapping & DataMapping::instance()
 
 void DataMapping::removeDataObjects(QList<DataObject *> dataObjects)
 {
-    QList<RenderView*> currentRenderViews = m_renderViews.values();
-    for (RenderView * renderView : currentRenderViews)
+    auto currentRenderViews = m_renderViews.values();
+    for (AbstractRenderView * renderView : currentRenderViews)
         renderView->removeDataObjects(dataObjects);
 
     QList<TableView*> currentTableViews = m_tableViews.values();
@@ -113,9 +113,13 @@ void DataMapping::openInTable(DataObject * dataObject)
     table->showDataObject(dataObject);
 }
 
-RenderView * DataMapping::openInRenderView(QList<DataObject *> dataObjects)
+AbstractRenderView * DataMapping::openInRenderView(QList<DataObject *> dataObjects)
 {
-    auto renderView = createDanglingRenderView();
+    auto renderView = new RenderView(m_nextRenderViewIndex++);
+    m_renderViews.insert(renderView->index(), renderView);
+
+    connect(renderView, &AbstractDataView::focused, this, &DataMapping::setFocusedView);
+    connect(renderView, &AbstractDataView::closed, this, &DataMapping::renderViewClosed);
 
     m_mainWindow.addRenderView(renderView);
 
@@ -124,12 +128,13 @@ RenderView * DataMapping::openInRenderView(QList<DataObject *> dataObjects)
     return renderView;
 }
 
-void DataMapping::addToRenderView(QList<DataObject *> dataObjects, RenderView * renderView)
+void DataMapping::addToRenderView(QList<DataObject *> dataObjects, AbstractRenderView * renderView, unsigned int subViewIndex)
 {
     assert(m_renderViews.key(renderView, -1) >= 0);
+    assert(subViewIndex < renderView->numberOfSubViews());
 
     QList<DataObject *> incompatibleObjects;
-    renderView->addDataObjects(dataObjects, incompatibleObjects);
+    renderView->addDataObjects(dataObjects, incompatibleObjects, subViewIndex);
 
     // there is something the current view couldn't handle
     if (!incompatibleObjects.isEmpty() && askForNewRenderView(renderView->friendlyName(), incompatibleObjects))
@@ -142,18 +147,7 @@ void DataMapping::addToRenderView(QList<DataObject *> dataObjects, RenderView * 
     emit renderViewsChanged(m_renderViews.values());
 }
 
-RenderView * DataMapping::createDanglingRenderView()
-{
-    auto renderView = new RenderView(m_nextRenderViewIndex++);
-    m_renderViews.insert(renderView->index(), renderView);
-
-    connect(renderView, &RenderView::focused, this, &DataMapping::setFocusedView);
-    connect(renderView, &RenderView::closed, this, &DataMapping::renderViewClosed);
-
-    return renderView;
-}
-
-RenderView * DataMapping::focusedRenderView()
+AbstractRenderView * DataMapping::focusedRenderView()
 {
     return m_focusedRenderView;
 }

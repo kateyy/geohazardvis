@@ -8,9 +8,9 @@ namespace reflectionzeug
     class PropertyGroup;
 }
 class Ui_RenderConfigWidget;
-class DataObject;
+class AbstractRenderView;
 class AbstractVisualizedData;
-class RenderView;
+class DataObject;
 
 
 class RenderConfigWidget : public QDockWidget
@@ -22,7 +22,7 @@ public:
     ~RenderConfigWidget() override;
 
 public slots:
-    void setCurrentRenderView(RenderView * renderView = nullptr);
+    void setCurrentRenderView(AbstractRenderView * renderView = nullptr);
     /** switch to specified dataObject, in case it is visible in my current render view */
     void setSelectedData(DataObject * dataObject);
     void clear();
@@ -39,6 +39,6 @@ protected:
 
     reflectionzeug::PropertyGroup * m_propertyRoot;
 
-    RenderView * m_renderView;
+    AbstractRenderView * m_renderView;
     AbstractVisualizedData * m_content;
 };

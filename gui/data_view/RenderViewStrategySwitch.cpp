@@ -6,7 +6,7 @@
 
 #include <core/data_objects/DataObject.h>
 #include <core/rendered_data/RenderedData.h>
-#include <gui/data_view/RenderView.h>
+#include <gui/data_view/AbstractRenderView.h>
 #include <gui/data_view/RendererImplementation3D.h>
 #include <gui/data_view/RenderViewStrategy.h>
 
@@ -15,8 +15,8 @@ RenderViewStrategySwitch::RenderViewStrategySwitch(
     RendererImplementation3D & renderViewImpl)
     : m_view(renderViewImpl)
 {
-    RenderView & renderView = renderViewImpl.renderView();
-    connect(&renderView, &RenderView::contentChanged, this, &RenderViewStrategySwitch::updateStrategies);
+    AbstractRenderView & renderView = renderViewImpl.renderView();
+    connect(&renderView, &AbstractRenderView::visualizationsChanged, this, &RenderViewStrategySwitch::updateStrategies);
     connect(&renderViewImpl, &RendererImplementation3D::resetStrategy, this, &RenderViewStrategySwitch::findSuitableStrategy);
 
     for (const RenderViewStrategy::StategyConstructor & constructor : RenderViewStrategy::constructors())

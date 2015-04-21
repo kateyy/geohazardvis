@@ -10,8 +10,8 @@ class vtkLookupTable;
 class vtkEventQtSlotConnect;
 
 class Ui_ColorMappingChooser;
+class AbstractRenderView;
 class ColorMapping;
-class RenderView;
 class RendererImplementation3D;
 
 class ColorMappingChooser : public QDockWidget
@@ -28,7 +28,7 @@ signals:
     void renderSetupChanged();
 
 public slots:
-    void setCurrentRenderView(RenderView * renderView = nullptr);
+    void setCurrentRenderView(AbstractRenderView * renderView = nullptr);
 
 private slots:
     void scalarsSelectionChanged(QString scalarsName);
@@ -59,7 +59,7 @@ private:
 
     QList<vtkSmartPointer<vtkLookupTable>> m_gradients;
 
-    RenderView * m_renderView;
+    AbstractRenderView * m_renderView;
     RendererImplementation3D * m_renderViewImpl;
     ColorMapping * m_mapping;
     /** check if we are moving the actor or if the user interacts */
