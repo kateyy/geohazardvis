@@ -6,6 +6,7 @@
 
 #include <QBoxLayout>
 
+#include <QVTKWidget.h>
 #include <vtkFloatArray.h>
 #include <vtkImageData.h>
 #include <vtkPointData.h>
@@ -13,12 +14,14 @@
 #include <core/DataSetHandler.h>
 #include <core/vtkhelper.h>
 #include <core/data_objects/ImageDataObject.h>
-#include <gui/DataMapping.h>
-#include <gui/data_view/RenderView.h>
+#include <gui/data_view/RendererImplementation3D.h>
 
 
 ResidualVerificationView::ResidualVerificationView(int index, QWidget * parent, Qt::WindowFlags flags)
-    : AbstractDataView(index, parent, flags)
+    : AbstractRenderView(index, parent, flags)
+    , m_viewObservation(nullptr)
+    , m_viewModel(nullptr)
+    , m_viewResidual(nullptr)
     , m_observation(nullptr)
     , m_model(nullptr)
     , m_residual(nullptr)
@@ -26,17 +29,11 @@ ResidualVerificationView::ResidualVerificationView(int index, QWidget * parent, 
     auto layout = new QBoxLayout(QBoxLayout::Direction::LeftToRight);
     layout->setMargin(0);
     layout->setSpacing(0);
+
+    m_qvtkMain = vtkSmartPointer<QVTKWidget>::New();
+    layout->addWidget(m_qvtkMain);
+
     setLayout(layout);
-}
-
-bool ResidualVerificationView::isTable() const
-{
-    return false;
-}
-
-bool ResidualVerificationView::isRenderer() const
-{
-    return false;
 }
 
 QString ResidualVerificationView::friendlyName() const
@@ -124,8 +121,10 @@ void ResidualVerificationView::highlightedIdChangedEvent(DataObject * dataObject
 
 void ResidualVerificationView::initialize()
 {
-    if (!m_renderViews.isEmpty())
+    if (m_viewObservation)
         return;
+
+    m_viewObservation = new RendererImplementation3D(*this);
 
     for (int i = 0; i < 3; ++i)
     {

@@ -19,7 +19,7 @@ class GUI_API RenderViewStrategyImage2D : public RenderViewStrategy
     Q_OBJECT
 
 public:
-    RenderViewStrategyImage2D(RendererImplementation3D & context);
+    RenderViewStrategyImage2D(RendererImplementationBase3D & context, QObject * parent = nullptr);
     ~RenderViewStrategyImage2D() override;
 
     QString name() const override;

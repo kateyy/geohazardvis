@@ -6,7 +6,7 @@
 class GUI_API RenderViewStrategy3D : public RenderViewStrategy
 {
 public:
-    RenderViewStrategy3D(RendererImplementation3D & context);
+    RenderViewStrategy3D(RendererImplementationBase3D & context, QObject * parent = nullptr);
 
     QString name() const override;
 

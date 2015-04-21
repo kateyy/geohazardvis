@@ -27,14 +27,14 @@
 #include <core/rendered_data/RenderedData.h>
 #include <gui/DataMapping.h>
 #include <gui/data_view/RenderView.h>
-#include <gui/data_view/RendererImplementation3D.h>
+#include <gui/data_view/RendererImplementationBase3D.h>
 #include <gui/rendering_interaction/PickingInteractorStyleSwitch.h>
 
 const bool RenderViewStrategyImage2D::s_isRegistered = RenderViewStrategy::registerStrategy<RenderViewStrategyImage2D>();
 
 
-RenderViewStrategyImage2D::RenderViewStrategyImage2D(RendererImplementation3D & context)
-    : RenderViewStrategy(context)
+RenderViewStrategyImage2D::RenderViewStrategyImage2D(RendererImplementationBase3D & context, QObject * parent)
+    : RenderViewStrategy(context, parent)
     , m_isInitialized(false)
     , m_previewProfile(nullptr)
     , m_previewRenderer(nullptr)

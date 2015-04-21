@@ -26,6 +26,8 @@ set ( SOURCES
     data_view/RendererImplementationNull.cpp
     data_view/RendererImplementation3D.h
     data_view/RendererImplementation3D.cpp
+    data_view/RendererImplementationBase3D.h
+    data_view/RendererImplementationBase3D.cpp
     data_view/RendererImplementationPlot.h
     data_view/RendererImplementationPlot.cpp
     data_view/RendererImplementationSwitch.h

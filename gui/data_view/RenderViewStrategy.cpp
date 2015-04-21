@@ -1,8 +1,9 @@
 #include "RenderViewStrategy.h"
 
 
-RenderViewStrategy::RenderViewStrategy(RendererImplementation3D & context)
-    : m_context(context)
+RenderViewStrategy::RenderViewStrategy(RendererImplementationBase3D & context, QObject * parent)
+    : QObject(parent)
+    , m_context(context)
 {
 }
 

@@ -17,7 +17,7 @@ class GUI_API RenderViewStrategySwitch : public QObject
     Q_OBJECT
 
 public:
-    RenderViewStrategySwitch(RendererImplementation3D & renderView);
+    RenderViewStrategySwitch(RendererImplementation3D & renderView, QObject * parent = nullptr);
     ~RenderViewStrategySwitch() override;
 
     const QMap<QString, bool> & applicableStrategies() const;

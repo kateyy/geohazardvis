@@ -6,15 +6,15 @@
 #include <core/data_objects/DataObject.h>
 #include <core/rendered_data/RenderedVectorGrid3D.h>
 #include <gui/data_view/RenderView.h>
-#include <gui/data_view/RendererImplementation3D.h>
+#include <gui/data_view/RendererImplementationBase3D.h>
 #include <gui/rendering_interaction/PickingInteractorStyleSwitch.h>
 
 
 const bool RenderViewStrategy3D::s_isRegistered = RenderViewStrategy::registerStrategy<RenderViewStrategy3D>();
 
 
-RenderViewStrategy3D::RenderViewStrategy3D(RendererImplementation3D & context)
-    : RenderViewStrategy(context)
+RenderViewStrategy3D::RenderViewStrategy3D(RendererImplementationBase3D & context, QObject * parent)
+    : RenderViewStrategy(context, parent)
 {
     connect(&context.renderView(), &RenderView::visualizationsChanged, this, &RenderViewStrategy3D::updateImageWidgets);
 }

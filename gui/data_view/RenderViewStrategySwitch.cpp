@@ -12,8 +12,9 @@
 
 
 RenderViewStrategySwitch::RenderViewStrategySwitch(
-    RendererImplementation3D & renderViewImpl)
-    : m_view(renderViewImpl)
+    RendererImplementation3D & renderViewImpl, QObject * parent)
+    : QObject(parent)
+    , m_view(renderViewImpl)
 {
     AbstractRenderView & renderView = renderViewImpl.renderView();
     connect(&renderView, &AbstractRenderView::visualizationsChanged, this, &RenderViewStrategySwitch::updateStrategies);
