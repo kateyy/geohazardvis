@@ -20,7 +20,8 @@ public:
     void render() override {}
     vtkRenderWindowInteractor * interactor() override { return nullptr; }
     void setSelectedData(DataObject *, vtkIdType = -1) override { }
-    DataObject * selectedData() override { return nullptr; }
+    DataObject * selectedData() const override { return nullptr; }
+    vtkIdType selectedIndex() const override { return -1; }
     void lookAtData(DataObject *, vtkIdType) override { }
     void resetCamera(bool) override { }
     void setAxesVisibility(bool) override { }

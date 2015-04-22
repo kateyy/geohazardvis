@@ -164,9 +164,14 @@ void RendererImplementationBase3D::setSelectedData(DataObject * dataObject, vtkI
     interactorStyle()->highlightCell(dataObject, itemId);
 }
 
-DataObject * RendererImplementationBase3D::selectedData()
+DataObject * RendererImplementationBase3D::selectedData() const
 {
     return m_interactorStyle->highlightedObject();
+}
+
+vtkIdType RendererImplementationBase3D::selectedIndex() const
+{
+    return m_interactorStyle->highlightedCell();
 }
 
 void RendererImplementationBase3D::lookAtData(DataObject * dataObject, vtkIdType itemId)

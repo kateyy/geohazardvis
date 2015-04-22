@@ -29,6 +29,7 @@ public:
     void lookAtData(DataObject * dataObject, vtkIdType itemId) override;
 
     RendererImplementation & selectedViewImplementation() override;
+    const RendererImplementation & selectedViewImplementation() const override;
 
     vtkRenderWindow * renderWindow() override;
     const vtkRenderWindow * renderWindow() const override;

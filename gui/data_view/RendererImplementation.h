@@ -53,7 +53,8 @@ public:
 
     /** mark dataObject (and, if set, it's point/cell) as current selection */
     virtual void setSelectedData(DataObject * dataObject, vtkIdType itemId = -1) = 0;
-    virtual DataObject * selectedData() = 0;
+    virtual DataObject * selectedData() const = 0;
+    virtual vtkIdType selectedIndex() const = 0;
     virtual void lookAtData(DataObject * dataObject, vtkIdType itemId) = 0;
 
     /** Resets the camera so that all view content are visible.

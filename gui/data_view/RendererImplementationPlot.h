@@ -36,7 +36,8 @@ public:
     vtkRenderWindowInteractor * interactor() override;
 
     void setSelectedData(DataObject * dataObject, vtkIdType itemId = -1) override;
-    virtual DataObject * selectedData() override;
+    virtual DataObject * selectedData() const override;
+    vtkIdType selectedIndex() const override;
     void lookAtData(DataObject * dataObject, vtkIdType itemId) override;
     void resetCamera(bool toInitialPosition) override;
 

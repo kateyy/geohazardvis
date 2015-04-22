@@ -50,15 +50,17 @@ public:
     QList<DataObject *> filterCompatibleObjects(const QList<DataObject *> & dataObjects, 
         QList<DataObject *> & incompatibleObjects) override;
 
+    AbstractVisualizedData * requestVisualization(DataObject * dataObject) const override;
+
     void activate(QVTKWidget * qvtkWidget) override;
-    void deactivate(QVTKWidget * qvtkWidget) override;
 
     void render() override;
 
     vtkRenderWindowInteractor * interactor() override;
 
     void setSelectedData(DataObject * dataObject, vtkIdType itemId = -1) override;
-    virtual DataObject * selectedData() override;
+    DataObject * selectedData() const override;
+    vtkIdType selectedIndex() const override;
     void lookAtData(DataObject * dataObject, vtkIdType itemId) override;
     void resetCamera(bool toInitialPosition) override;
 
@@ -87,7 +89,6 @@ public:
     void setStrategy(RenderViewStrategy * strategy);
 
 protected:
-    AbstractVisualizedData * requestVisualization(DataObject * dataObject) const override;
 
     void onAddContent(AbstractVisualizedData * content) override;
     void onRemoveContent(AbstractVisualizedData * content) override;

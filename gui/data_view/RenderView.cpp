@@ -45,6 +45,8 @@ RenderView::~RenderView()
     qDeleteAll(m_contentCache);
 
     delete m_implementationSwitch;
+
+    delete m_ui;
 }
 
 QString RenderView::friendlyName() const
@@ -296,6 +298,11 @@ void RenderView::lookAtData(DataObject * dataObject, vtkIdType itemId)
 }
 
 RendererImplementation & RenderView::selectedViewImplementation()
+{
+    return implementation();
+}
+
+const RendererImplementation & RenderView::selectedViewImplementation() const
 {
     return implementation();
 }

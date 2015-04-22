@@ -143,9 +143,14 @@ void RendererImplementationPlot::setSelectedData(DataObject * /*dataObject*/, vt
 {
 }
 
-DataObject * RendererImplementationPlot::selectedData()
+DataObject * RendererImplementationPlot::selectedData() const
 {
     return nullptr;
+}
+
+vtkIdType RendererImplementationPlot::selectedIndex() const
+{
+    return -1;
 }
 
 void RendererImplementationPlot::lookAtData(DataObject * /*dataObject*/, vtkIdType /*itemId*/)

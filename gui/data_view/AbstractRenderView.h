@@ -55,6 +55,7 @@ public:
         Simple/composed render views might switch between implementations at runtime, depending on their 
         current contents and visualization styles. */
     virtual RendererImplementation & selectedViewImplementation() = 0;
+    virtual const RendererImplementation & selectedViewImplementation() const = 0;
 
     virtual unsigned int numberOfSubViews() const;
 
