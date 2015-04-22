@@ -18,6 +18,11 @@ RendererImplementation3D::RendererImplementation3D(AbstractRenderView & renderVi
 {
 }
 
+RendererImplementation3D::~RendererImplementation3D()
+{
+    delete m_strategySwitch;
+}
+
 QList<DataObject *> RendererImplementation3D::filterCompatibleObjects(
     const QList<DataObject *> & dataObjects,
     QList<DataObject *> & incompatibleObjects)
@@ -33,7 +38,7 @@ void RendererImplementation3D::activate(QVTKWidget * qvtkWidget)
     RendererImplementationBase3D::activate(qvtkWidget);
 
     if (!m_strategySwitch)
-        m_strategySwitch = new RenderViewStrategySwitch(*this, this);
+        m_strategySwitch = new RenderViewStrategySwitch(*this);
 
     connect(&m_renderView, &AbstractRenderView::visualizationsChanged,
         this, &RendererImplementation3D::updateColorMapping);
