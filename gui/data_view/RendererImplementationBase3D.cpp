@@ -405,7 +405,7 @@ void RendererImplementationBase3D::updateAxes()
         if (!viewport.dataBounds.IsValid())
         {
             viewport.axesActor->VisibilityOff();
-            return;
+            continue;
         }
 
         viewport.axesActor->SetVisibility(m_renderView.axesEnabled());

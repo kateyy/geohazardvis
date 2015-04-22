@@ -40,8 +40,8 @@ set ( SOURCES
     data_view/RenderViewStrategy3D.cpp
     data_view/RenderViewStrategyImage2D.h
     data_view/RenderViewStrategyImage2D.cpp
-    # data_view/ResidualVerificationView.h
-    # data_view/ResidualVerificationView.cpp
+    data_view/ResidualVerificationView.h
+    data_view/ResidualVerificationView.cpp
     data_view/TableView.h
     data_view/TableView.cpp
 

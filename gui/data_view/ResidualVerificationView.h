@@ -1,12 +1,17 @@
 #pragma once
 
+#include <QVector>
+
+#include <vtkSmartPointer.h>
+
 #include <gui/data_view/AbstractRenderView.h>
 
 
 class QVTKWidget;
 
+class ColorMapping;
 class ImageDataObject;
-class RendererImplementation3D;
+class RendererImplementationBase3D;
 
 
 class GUI_API ResidualVerificationView : public AbstractRenderView
@@ -15,6 +20,7 @@ class GUI_API ResidualVerificationView : public AbstractRenderView
 
 public:
     ResidualVerificationView(int index, QWidget * parent = nullptr, Qt::WindowFlags flags = 0);
+    ~ResidualVerificationView() override;
 
     QString friendlyName() const override;
 
@@ -26,15 +32,16 @@ public:
 
     void setObservationData(ImageDataObject * observation);
     void setModelData(ImageDataObject * model);
-
-    RendererImplementation & selectedViewImplementation() override;
+    void setResidualData(ImageDataObject * residual);
 
     unsigned int numberOfSubViews() const override;
 
     vtkRenderWindow * renderWindow() override;
     const vtkRenderWindow * renderWindow() const override;
 
-public slots:
+    RendererImplementation & implementation() const override;
+
+    public slots:
     void render() override;
 
 protected:
@@ -51,20 +58,18 @@ protected:
     void removeDataObjectsImpl(const QList<DataObject *> & dataObjects) override;
     QList<AbstractVisualizedData *> visualizationsImpl(int subViewIndex) const override;
 
-    virtual void axesEnabledChangedEvent(bool enabled) override;
+    void axesEnabledChangedEvent(bool enabled) override;
 
 private:
     void initialize();
 
+    void setData(unsigned int subViewIndex, ImageDataObject * dataObject);
+
     void updateResidual();
 
 private:
-    vtkSmartPointer<QVTKWidget> m_qvtkMain;
-    RendererImplementation3D * m_viewObservation;
-    RendererImplementation3D * m_viewModel;
-    RendererImplementation3D * m_viewResidual;
-
-    ImageDataObject * m_observation;
-    ImageDataObject * m_model;
-    ImageDataObject * m_residual;
+    QVTKWidget * m_qvtkMain;
+    RendererImplementationBase3D * m_implementation;
+    QVector<ImageDataObject *> m_images;
+    QVector<AbstractVisualizedData *> m_visualizations;
 };

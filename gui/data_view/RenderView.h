@@ -28,14 +28,11 @@ public:
     AbstractVisualizedData * selectedDataVisualization() const override;
     void lookAtData(DataObject * dataObject, vtkIdType itemId) override;
 
-    RendererImplementation & selectedViewImplementation() override;
-    const RendererImplementation & selectedViewImplementation() const override;
-
     vtkRenderWindow * renderWindow() override;
     const vtkRenderWindow * renderWindow() const override;
 
     // remove from public interface as soon as possible
-    RendererImplementation & implementation() const;
+    RendererImplementation & implementation() const override;
 
 public slots:
     void render() override;

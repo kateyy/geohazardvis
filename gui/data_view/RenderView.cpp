@@ -297,16 +297,6 @@ void RenderView::lookAtData(DataObject * dataObject, vtkIdType itemId)
     implementation().lookAtData(dataObject, itemId);
 }
 
-RendererImplementation & RenderView::selectedViewImplementation()
-{
-    return implementation();
-}
-
-const RendererImplementation & RenderView::selectedViewImplementation() const
-{
-    return implementation();
-}
-
 RendererImplementation & RenderView::implementation() const
 {
     return m_implementationSwitch->currentImplementation();

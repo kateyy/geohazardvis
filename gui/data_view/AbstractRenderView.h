@@ -50,17 +50,12 @@ public:
     virtual AbstractVisualizedData * selectedDataVisualization() const = 0;
     virtual void lookAtData(DataObject * dataObject, vtkIdType itemId) = 0;
 
-    /** The implementation of the render view the user is currently interacting with.
-        For composed render views, multiple implementations might be used internally. 
-        Simple/composed render views might switch between implementations at runtime, depending on their 
-        current contents and visualization styles. */
-    virtual RendererImplementation & selectedViewImplementation() = 0;
-    virtual const RendererImplementation & selectedViewImplementation() const = 0;
-
     virtual unsigned int numberOfSubViews() const;
 
     virtual vtkRenderWindow * renderWindow() = 0;
     virtual const vtkRenderWindow * renderWindow() const = 0;
+
+    virtual RendererImplementation & implementation() const = 0;
 
     /** show/hide axes in case the render view currently contains data */
     void setEnableAxes(bool enabled);

@@ -160,15 +160,13 @@ PropertyGroup * RendererConfigWidget::createPropertyGroup(AbstractRenderView * r
     case ContentType::Rendered2D:
     case ContentType::Rendered3D:
     {
-        RendererImplementation3D * impl3D = dynamic_cast<RendererImplementation3D *>(
-            &renderView->selectedViewImplementation());
+        RendererImplementation3D * impl3D = dynamic_cast<RendererImplementation3D *>(&renderView->implementation());
         assert(impl3D);
         return createPropertyGroupRenderer(renderView, impl3D);
     }
     case ContentType::Context2D:
     {
-        RendererImplementationPlot * implPlot = dynamic_cast<RendererImplementationPlot *>(
-            &renderView->selectedViewImplementation());
+        RendererImplementationPlot * implPlot = dynamic_cast<RendererImplementationPlot *>(&renderView->implementation());
         assert(implPlot);
         return createPropertyGroupPlot(renderView, implPlot);
     }

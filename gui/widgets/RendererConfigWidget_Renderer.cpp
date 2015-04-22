@@ -42,9 +42,8 @@ void RendererConfigWidget::readCameraStats(vtkObject * caller)
 {
     assert(vtkCamera::SafeDownCast(caller));
     vtkCamera * camera = static_cast<vtkCamera *>(caller);
-    assert(m_currentRenderView && dynamic_cast<RendererImplementation3D *>(
-        &m_currentRenderView->selectedViewImplementation()));
-    assert(static_cast<RendererImplementation3D *>(&m_currentRenderView->selectedViewImplementation())->camera() == camera);
+    assert(m_currentRenderView && dynamic_cast<RendererImplementation3D *>(&m_currentRenderView->implementation()));
+    assert(static_cast<RendererImplementation3D *>(&m_currentRenderView->implementation())->camera() == camera);
 
     std::function<void(AbstractProperty &)> updateFunc = [&updateFunc] (AbstractProperty & property)
     {
@@ -64,7 +63,7 @@ void RendererConfigWidget::readCameraStats(vtkObject * caller)
     // update axes text label rotations for terrain view
     if (m_currentRenderView->contentType() == ContentType::Rendered3D)
     {
-        RendererImplementation3D & impl3D = static_cast<RendererImplementation3D &>(m_currentRenderView->selectedViewImplementation());
+        RendererImplementation3D & impl3D = static_cast<RendererImplementation3D &>(m_currentRenderView->implementation());
         double azimuth = TerrainCamera::getAzimuth(*camera);
         if (TerrainCamera::getVerticalElevation(*camera) < 0)
             azimuth *= -1;
