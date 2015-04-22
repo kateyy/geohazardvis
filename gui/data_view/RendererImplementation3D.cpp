@@ -19,8 +19,6 @@ RendererImplementation3D::RendererImplementation3D(AbstractRenderView & renderVi
     : RendererImplementationBase3D(renderView, new ColorMapping(), vtkSmartPointer<vtkRenderWindow>::New(), parent)
     , m_strategySwitch(new RenderViewStrategySwitch(*this))
 {
-    connect(&m_renderView, &AbstractRenderView::visualizationsChanged, 
-        this, &RendererImplementation3D::updateColorMapping);
 }
 
 RendererImplementation3D::~RendererImplementation3D()
@@ -50,6 +48,8 @@ void RendererImplementation3D::activate(QVTKWidget * qvtkWidget)
 
     // we created the render window, so pass it to the qvtkWidget
     qvtkWidget->SetRenderWindow(renderWindow());
+    connect(&m_renderView, &AbstractRenderView::visualizationsChanged,
+        this, &RendererImplementation3D::updateColorMapping);
 }
 
 void RendererImplementation3D::deactivate(QVTKWidget * qvtkWidget)
@@ -58,6 +58,8 @@ void RendererImplementation3D::deactivate(QVTKWidget * qvtkWidget)
     qvtkWidget->SetRenderWindow(nullptr);
     // the interactor belongs to the widget, we should reference it anymore
     renderWindow()->SetInteractor(nullptr);
+    disconnect(&m_renderView, &AbstractRenderView::visualizationsChanged,
+        this, &RendererImplementation3D::updateColorMapping);
 
     RendererImplementationBase3D::deactivate(qvtkWidget);
 }
