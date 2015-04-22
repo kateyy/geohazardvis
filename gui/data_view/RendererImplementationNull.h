@@ -29,6 +29,8 @@ public:
 
 protected:
     AbstractVisualizedData * requestVisualization(DataObject *) const override { return nullptr; }
-    void onAddContent(AbstractVisualizedData *) override { }
-    void onRemoveContent(AbstractVisualizedData *) override { }
+    void onAddContent(AbstractVisualizedData *, unsigned int) override { }
+    void onRemoveContent(AbstractVisualizedData *, unsigned int) override
+    {
+    }
 };

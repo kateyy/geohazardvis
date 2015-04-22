@@ -25,6 +25,7 @@ RendererImplementationPlot::RendererImplementationPlot(AbstractRenderView & rend
     , m_isInitialized(false)
     , m_axesAutoUpdate(true)
 {
+    assert(renderView.numberOfSubViews() == 1); // multi view not implemented yet. Is that even possible with the vtkContextView?
 }
 
 QString RendererImplementationPlot::name() const
@@ -56,7 +57,7 @@ QList<DataObject *> RendererImplementationPlot::filterCompatibleObjects(const QL
     QList<DataObject *> compatible;
 
     for (DataObject * dataObject : dataObjects)
-        if (dataObject->dataTypeName() == "image profile") // hardcoded for now
+        if (dataObject->dataTypeName() == "image profile") // hard-coded for now
             compatible << dataObject;
         else
             incompatibleObjects << dataObject;
@@ -91,7 +92,7 @@ vtkRenderWindowInteractor * RendererImplementationPlot::interactor()
     return m_contextView->GetInteractor();
 }
 
-void RendererImplementationPlot::onAddContent(AbstractVisualizedData * content)
+void RendererImplementationPlot::onAddContent(AbstractVisualizedData * content, unsigned int /*subViewIndex*/)
 {
     assert(dynamic_cast<Context2DData *>(content));
     Context2DData * contextData = static_cast<Context2DData *>(content);
@@ -121,7 +122,7 @@ void RendererImplementationPlot::onAddContent(AbstractVisualizedData * content)
     dataVisibilityChanged(contextData);
 }
 
-void RendererImplementationPlot::onRemoveContent(AbstractVisualizedData * content)
+void RendererImplementationPlot::onRemoveContent(AbstractVisualizedData * content, unsigned int /*subViewIndex*/)
 {
     assert(dynamic_cast<Context2DData *>(content));
     Context2DData * contextData = static_cast<Context2DData *>(content);

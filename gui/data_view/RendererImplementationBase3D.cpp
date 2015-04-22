@@ -37,18 +37,13 @@
 
 RendererImplementationBase3D::RendererImplementationBase3D(
     AbstractRenderView & renderView,
-    ColorMapping * colorMapping,
-    vtkRenderWindow * renderWindow,
     QObject * parent)
     : RendererImplementation(renderView, parent)
     , m_strategy(nullptr)
     , m_isInitialized(false)
     , m_emptyStrategy(new RenderViewStrategyNull(*this, this))
-    , m_renderWindow(renderWindow)
-    , m_colorMapping(colorMapping)
+    , m_colorMapping(nullptr)
 {
-    assert(m_colorMapping);
-    assert(m_renderWindow);
 }
 
 QString RendererImplementationBase3D::name() const
@@ -86,16 +81,28 @@ QList<DataObject *> RendererImplementationBase3D::filterCompatibleObjects(
     return m_strategy->filterCompatibleObjects(dataObjects, incompatibleObjects);
 }
 
-void RendererImplementationBase3D::activate(QVTKWidget * /*qvtkWidget*/)
+void RendererImplementationBase3D::activate(QVTKWidget * qvtkWidget)
 {
     initialize();
 
-    // by default, assume that our m_renderWindow is the same as
-    // the qvtkWidget's render window, so we don't need to assign it here
+    // make sure to reuse the existing render window interactor
+    m_renderWindow->SetInteractor(qvtkWidget->GetInteractor());
+    // pass my render window to the qvtkWidget
+    qvtkWidget->SetRenderWindow(m_renderWindow);
 
     m_renderWindow->GetInteractor()->SetInteractorStyle(m_interactorStyle);
 
     assignInteractor();
+}
+
+void RendererImplementationBase3D::deactivate(QVTKWidget * qvtkWidget)
+{
+    // this is our render window, so remove it from the widget
+    qvtkWidget->SetRenderWindow(nullptr);
+    // remove out interactor style from the widget's interactor
+    m_renderWindow->GetInteractor()->SetInteractorStyle(nullptr);
+    // the interactor belongs to the widget, we should reference it anymore
+    m_renderWindow->SetInteractor(nullptr);
 }
 
 void RendererImplementationBase3D::render()
@@ -108,55 +115,62 @@ vtkRenderWindowInteractor * RendererImplementationBase3D::interactor()
     return m_renderWindow->GetInteractor();
 }
 
-void RendererImplementationBase3D::onAddContent(AbstractVisualizedData * content)
+void RendererImplementationBase3D::onAddContent(AbstractVisualizedData * content, unsigned int subViewIndex)
 {
     assert(dynamic_cast<RenderedData *>(content));
     RenderedData * renderedData = static_cast<RenderedData *>(content);
 
     VTK_CREATE(vtkPropCollection, props);
 
+    auto renderer = this->renderer(subViewIndex);
+    auto dataProps = m_viewportSetups[subViewIndex].dataProps;
+
     vtkCollectionSimpleIterator it;
     renderedData->viewProps()->InitTraversal(it);
     while (vtkProp * prop = renderedData->viewProps()->GetNextProp(it))
     {
         props->AddItem(prop);
-        m_renderer->AddViewProp(prop);
+        renderer->AddViewProp(prop);
     }
 
-    assert(!m_dataProps.contains(renderedData));
-    m_dataProps.insert(renderedData, props);
+    assert(!dataProps.contains(renderedData));
+    dataProps.insert(renderedData, props);
 
     addConnectionForContent(content,
         connect(renderedData, &RenderedData::viewPropCollectionChanged,
-        [this, renderedData] () { fetchViewProps(renderedData); }));
+        [this, renderedData, subViewIndex] () { fetchViewProps(renderedData, subViewIndex); }));
 
     addConnectionForContent(content,
         connect(renderedData, &RenderedData::visibilityChanged,
-        [this, renderedData] (bool) { dataVisibilityChanged(renderedData); }));
+        [this, renderedData, subViewIndex] (bool) { dataVisibilityChanged(renderedData, subViewIndex); }));
 
-    dataVisibilityChanged(renderedData);
+    dataVisibilityChanged(renderedData, subViewIndex);
 }
 
-void RendererImplementationBase3D::onRemoveContent(AbstractVisualizedData * content)
+void RendererImplementationBase3D::onRemoveContent(AbstractVisualizedData * content, unsigned int subViewIndex)
 {
     assert(dynamic_cast<RenderedData *>(content));
     RenderedData * renderedData = static_cast<RenderedData *>(content);
 
-    vtkSmartPointer<vtkPropCollection> props = m_dataProps.take(renderedData);
+    auto renderer = this->renderer(subViewIndex);
+    auto dataProps = m_viewportSetups[subViewIndex].dataProps;
+    auto dataBounds = m_viewportSetups[subViewIndex].dataBounds;
+
+    vtkSmartPointer<vtkPropCollection> props = dataProps.take(renderedData);
     assert(props);
 
     vtkCollectionSimpleIterator it;
     props->InitTraversal(it);
     while (vtkProp * prop = props->GetNextProp(it))
-        m_renderer->RemoveViewProp(prop);
+        renderer->RemoveViewProp(prop);
 
-    removeFromBounds(renderedData);
+    removeFromBounds(renderedData, subViewIndex);
 
-    // reset strategy if we are empty
-    if (!m_dataBounds.IsValid())
-        setStrategy(nullptr);
+    renderer->ResetCamera();
+}
 
-    m_renderer->ResetCamera();
+void RendererImplementationBase3D::onDataVisibilityChanged(AbstractVisualizedData * /*content*/, unsigned int /*subViewIndex*/)
+{
 }
 
 void RendererImplementationBase3D::setSelectedData(DataObject * dataObject, vtkIdType itemId)
@@ -182,21 +196,23 @@ void RendererImplementationBase3D::lookAtData(DataObject * dataObject, vtkIdType
 void RendererImplementationBase3D::resetCamera(bool toInitialPosition)
 {
     if (toInitialPosition)
-        strategy().resetCamera(*m_renderer->GetActiveCamera());
+        strategy().resetCamera(*camera());
 
-    m_renderer->ResetCamera();
+    for (auto && viewport : m_viewportSetups)
+        viewport.renderer->ResetCamera();
 
     render();
 }
 
-void RendererImplementationBase3D::dataBounds(double bounds[6]) const
+void RendererImplementationBase3D::dataBounds(double bounds[6], unsigned int subViewIndex) const
 {
-    m_dataBounds.GetBounds(bounds);
+    m_viewportSetups[subViewIndex].dataBounds.GetBounds(bounds);
 }
 
 void RendererImplementationBase3D::setAxesVisibility(bool visible)
 {
-    m_axesActor->SetVisibility(visible);
+    for (auto && viewport : m_viewportSetups)
+        viewport.axesActor->SetVisibility(visible);
 
     render();
 }
@@ -234,16 +250,17 @@ vtkRenderWindow * RendererImplementationBase3D::renderWindow()
     return m_renderWindow;
 }
 
-vtkRenderer * RendererImplementationBase3D::renderer()
+vtkRenderer * RendererImplementationBase3D::renderer(unsigned int subViewIndex)
 {
-    assert(m_renderer);
-    return m_renderer;
+    assert((unsigned)m_viewportSetups.size() > subViewIndex);
+    assert(m_viewportSetups[subViewIndex].renderer);
+    return m_viewportSetups[subViewIndex].renderer;
 }
 
 vtkCamera * RendererImplementationBase3D::camera()
 {
-    assert(renderer());
-    return renderer()->GetActiveCamera();
+    // one camera for all
+    return renderer(0)->GetActiveCamera();
 }
 
 vtkLightKit * RendererImplementationBase3D::lightKit()
@@ -251,13 +268,14 @@ vtkLightKit * RendererImplementationBase3D::lightKit()
     return m_lightKit;
 }
 
-vtkTextWidget * RendererImplementationBase3D::titleWidget()
+vtkTextWidget * RendererImplementationBase3D::titleWidget(unsigned int subViewIndex)
 {
-    return m_titleWidget;
+    return m_viewportSetups[subViewIndex].titleWidget;
 }
 
 ColorMapping * RendererImplementationBase3D::colorMapping()
 {
+    assert(m_colorMapping);
     return m_colorMapping;
 }
 
@@ -266,9 +284,9 @@ vtkScalarBarWidget * RendererImplementationBase3D::colorLegendWidget()
     return m_scalarBarWidget;
 }
 
-vtkCubeAxesActor * RendererImplementationBase3D::axesActor()
+vtkCubeAxesActor * RendererImplementationBase3D::axesActor(unsigned int subViewIndex)
 {
-    return m_axesActor;
+    return m_viewportSetups[subViewIndex].axesActor;
 }
 
 void RendererImplementationBase3D::setStrategy(RenderViewStrategy * strategy)
@@ -292,26 +310,65 @@ void RendererImplementationBase3D::initialize()
     if (m_isInitialized)
         return;
 
-    // -- render (window) --
-
-    m_renderer = vtkSmartPointer<vtkRenderer>::New();
-    m_renderer->SetBackground(1, 1, 1);
-
-    assert(m_renderWindow);
-    m_renderWindow->AddRenderer(m_renderer);
-
     // -- lights --
 
-    m_renderer->RemoveAllLights();
     m_lightKit = vtkSmartPointer<vtkLightKit>::New();
     m_lightKit->SetKeyLightIntensity(1.0);
-    m_lightKit->AddLightsToRenderer(m_renderer);
+
+
+    // -- render (window) --
+
+    m_renderWindow = vtkSmartPointer<vtkRenderWindow>::New();
+
+    m_colorMapping = new ColorMapping(this);
+    setupColorMappingLegend();
+
+    VTK_CREATE(vtkCamera, camera);
+
+    m_viewportSetups.resize(renderView().numberOfSubViews());
+
+    for (auto && viewport : m_viewportSetups)
+    {
+        VTK_CREATE(vtkRenderer, renderer);
+        renderer->SetBackground(1, 1, 1);
+        renderer->SetActiveCamera(camera);
+
+        renderer->RemoveAllLights();
+        m_lightKit->AddLightsToRenderer(renderer);
+
+        viewport.renderer = renderer;
+        m_renderWindow->AddRenderer(renderer);
+
+
+        auto && titleWidget = viewport.titleWidget;
+        titleWidget = vtkSmartPointer<vtkTextWidget>::New();
+
+        VTK_CREATE(vtkTextRepresentation, titleRepr);
+        vtkTextActor * titleActor = titleRepr->GetTextActor();
+        titleActor->SetInput(" ");
+        titleActor->GetTextProperty()->SetColor(0, 0, 0);
+        titleActor->GetTextProperty()->SetVerticalJustificationToTop();
+
+        titleRepr->GetPositionCoordinate()->SetValue(0.2, .85);
+        titleRepr->GetPosition2Coordinate()->SetValue(0.6, .10);
+        titleRepr->GetBorderProperty()->SetColor(0.2, 0.2, 0.2);
+
+        titleWidget->SetRepresentation(titleRepr);
+        titleWidget->SetTextActor(titleActor);
+        titleWidget->SelectableOff();
+
+        
+        viewport.axesActor = createAxes(camera);
+        renderer->AddViewProp(viewport.axesActor);
+
+        renderer->AddViewProp(m_colorMappingLegend);
+    }
 
 
     // -- interaction --
 
     m_interactorStyle = vtkSmartPointer<PickingInteractorStyleSwitch>::New();
-    m_interactorStyle->SetDefaultRenderer(m_renderer);
+    m_interactorStyle->SetDefaultRenderer(m_viewportSetups.first().renderer);   // TODO
 
     m_interactorStyle->addStyle("InteractorStyle3D", vtkSmartPointer<InteractorStyle3D>::New());
     m_interactorStyle->addStyle("InteractorStyleImage", vtkSmartPointer<InteractorStyleImage>::New());
@@ -319,29 +376,9 @@ void RendererImplementationBase3D::initialize()
     connect(m_interactorStyle.Get(), &PickingInteractorStyleSwitch::pointInfoSent,
         &m_renderView, &AbstractRenderView::ShowInfo);
     connect(m_interactorStyle.Get(), &PickingInteractorStyleSwitch::dataPicked,
-        this, &RendererImplementationBase3D::dataSelectionChanged);
+        this, &RendererImplementation::dataSelectionChanged);
     connect(m_interactorStyle.Get(), &PickingInteractorStyleSwitch::cellPicked,
         &m_renderView, &AbstractDataView::objectPicked);
-
-    createAxes();
-    setupColorMappingLegend();
-
-
-    m_titleWidget = vtkSmartPointer<vtkTextWidget>::New();
-
-    VTK_CREATE(vtkTextRepresentation, titleRepr);
-    vtkTextActor * titleActor = titleRepr->GetTextActor();
-    titleActor->SetInput(" ");
-    titleActor->GetTextProperty()->SetColor(0, 0, 0);
-    titleActor->GetTextProperty()->SetVerticalJustificationToTop();
-
-    titleRepr->GetPositionCoordinate()->SetValue(0.2, .85);
-    titleRepr->GetPosition2Coordinate()->SetValue(0.6, .10);
-    titleRepr->GetBorderProperty()->SetColor(0.2, 0.2, 0.2);
-
-    m_titleWidget->SetRepresentation(titleRepr);
-    m_titleWidget->SetTextActor(titleActor);
-    m_titleWidget->SelectableOff();
 
     m_isInitialized = true;
 }
@@ -349,95 +386,117 @@ void RendererImplementationBase3D::initialize()
 void RendererImplementationBase3D::assignInteractor()
 {
     m_scalarBarWidget->SetInteractor(m_renderWindow->GetInteractor());
-    m_titleWidget->SetInteractor(m_renderWindow->GetInteractor());
-    m_titleWidget->On();
+
+    for (auto && viewport : m_viewportSetups)
+    {
+        viewport.titleWidget->SetInteractor(m_renderWindow->GetInteractor());
+        viewport.titleWidget->On();
+    }
 }
 
 void RendererImplementationBase3D::updateAxes()
 {
-    // hide axes if we don't have visible objects
-    if (!m_dataBounds.IsValid())
+    // TODO update only for relevant views
+
+    for (auto && viewport : m_viewportSetups)
     {
-        m_axesActor->VisibilityOff();
-        return;
+
+        // hide axes if we don't have visible objects
+        if (!viewport.dataBounds.IsValid())
+        {
+            viewport.axesActor->VisibilityOff();
+            return;
+        }
+
+        viewport.axesActor->SetVisibility(m_renderView.axesEnabled());
+
+        double bounds[6];
+        viewport.dataBounds.GetBounds(bounds);
+        viewport.axesActor->SetBounds(bounds);
     }
-
-    m_axesActor->SetVisibility(m_renderView.axesEnabled());
-
-    double bounds[6];
-    m_dataBounds.GetBounds(bounds);
-    m_axesActor->SetBounds(bounds);
 }
 
 void RendererImplementationBase3D::updateBounds()
 {
-    m_dataBounds.Reset();
+    // TODO update only for relevant views
 
-    for (AbstractVisualizedData * it : m_renderView.visualizations())
-        m_dataBounds.AddBounds(it->dataObject()->bounds());
+    for (auto && viewport : m_viewportSetups)
+    {
+        auto && dataBounds = viewport.dataBounds;
+
+        dataBounds.Reset();
+
+        for (AbstractVisualizedData * it : m_renderView.visualizations())
+            dataBounds.AddBounds(it->dataObject()->bounds());
+
+    }
 
     updateAxes();
 }
 
-void RendererImplementationBase3D::addToBounds(RenderedData * renderedData)
+void RendererImplementationBase3D::addToBounds(RenderedData * renderedData, unsigned int subViewIndex)
 {
-    m_dataBounds.AddBounds(renderedData->dataObject()->bounds());
+    auto && dataBounds = m_viewportSetups[subViewIndex].dataBounds;
+
+    dataBounds.AddBounds(renderedData->dataObject()->bounds());
 
     // TODO update only if necessary
     updateAxes();
 }
 
-void RendererImplementationBase3D::removeFromBounds(RenderedData * renderedData)
+void RendererImplementationBase3D::removeFromBounds(RenderedData * renderedData, unsigned int subViewIndex)
 {
-    m_dataBounds.Reset();
+    auto && dataBounds = m_viewportSetups[subViewIndex].dataBounds;
+
+    dataBounds.Reset();
 
     for (AbstractVisualizedData * it : m_renderView.visualizations())
     {
         if (it == renderedData)
             continue;
 
-        m_dataBounds.AddBounds(it->dataObject()->bounds());
+        dataBounds.AddBounds(it->dataObject()->bounds());
     }
 
     updateAxes();
 }
 
-void RendererImplementationBase3D::createAxes()
+vtkSmartPointer<vtkCubeAxesActor> RendererImplementationBase3D::createAxes(vtkCamera * camera)
 {
-    m_axesActor = vtkSmartPointer<vtkCubeAxesActor>::New();
-    m_axesActor->SetCamera(m_renderer->GetActiveCamera());
-    m_axesActor->SetFlyModeToOuterEdges();
-    m_axesActor->SetGridLineLocation(VTK_GRID_LINES_FURTHEST);
+    VTK_CREATE(vtkCubeAxesActor, axesActor);
+    axesActor->SetCamera(camera);
+    axesActor->SetFlyModeToOuterEdges();
+    axesActor->SetGridLineLocation(VTK_GRID_LINES_FURTHEST);
     //m_axesActor->SetUseTextActor3D(true);
-    m_axesActor->SetTickLocationToBoth();
+    axesActor->SetTickLocationToBoth();
     // fix strange rotation of z-labels
-    m_axesActor->GetLabelTextProperty(2)->SetOrientation(90);
+    axesActor->GetLabelTextProperty(2)->SetOrientation(90);
 
     double axesColor[3] = { 0, 0, 0 };
     double gridColor[3] = { 0.7, 0.7, 0.7 };
 
-    m_axesActor->GetXAxesLinesProperty()->SetColor(axesColor);
-    m_axesActor->GetYAxesLinesProperty()->SetColor(axesColor);
-    m_axesActor->GetZAxesLinesProperty()->SetColor(axesColor);
-    m_axesActor->GetXAxesGridlinesProperty()->SetColor(gridColor);
-    m_axesActor->GetYAxesGridlinesProperty()->SetColor(gridColor);
-    m_axesActor->GetZAxesGridlinesProperty()->SetColor(gridColor);
+    axesActor->GetXAxesLinesProperty()->SetColor(axesColor);
+    axesActor->GetYAxesLinesProperty()->SetColor(axesColor);
+    axesActor->GetZAxesLinesProperty()->SetColor(axesColor);
+    axesActor->GetXAxesGridlinesProperty()->SetColor(gridColor);
+    axesActor->GetYAxesGridlinesProperty()->SetColor(gridColor);
+    axesActor->GetZAxesGridlinesProperty()->SetColor(gridColor);
 
     for (int i = 0; i < 3; ++i)
     {
-        m_axesActor->GetTitleTextProperty(i)->SetColor(axesColor);
-        m_axesActor->GetLabelTextProperty(i)->SetColor(axesColor);
+        axesActor->GetTitleTextProperty(i)->SetColor(axesColor);
+        axesActor->GetLabelTextProperty(i)->SetColor(axesColor);
     }
 
-    m_axesActor->XAxisMinorTickVisibilityOff();
-    m_axesActor->YAxisMinorTickVisibilityOff();
-    m_axesActor->ZAxisMinorTickVisibilityOff();
+    axesActor->XAxisMinorTickVisibilityOff();
+    axesActor->YAxisMinorTickVisibilityOff();
+    axesActor->ZAxisMinorTickVisibilityOff();
 
-    m_axesActor->DrawXGridlinesOn();
-    m_axesActor->DrawYGridlinesOn();
-    m_axesActor->DrawZGridlinesOn();
+    axesActor->DrawXGridlinesOn();
+    axesActor->DrawYGridlinesOn();
+    axesActor->DrawZGridlinesOn();
 
-    m_renderer->AddViewProp(m_axesActor);
+    return axesActor;
 }
 
 void RendererImplementationBase3D::setupColorMappingLegend()
@@ -473,8 +532,6 @@ void RendererImplementationBase3D::setupColorMappingLegend()
     m_scalarBarWidget->SetRepresentation(repr);
     m_scalarBarWidget->EnabledOff();
 
-    m_renderer->AddViewProp(m_colorMappingLegend);
-
     connect(m_colorMapping, &ColorMapping::colorLegendVisibilityChanged,
         [this] (bool visible) { m_scalarBarWidget->SetEnabled(visible); });
 }
@@ -488,9 +545,18 @@ RenderViewStrategy & RendererImplementationBase3D::strategy() const
     return *m_emptyStrategy;
 }
 
-void RendererImplementationBase3D::fetchViewProps(RenderedData * renderedData)
+RendererImplementationBase3D::ViewportSetup & RendererImplementationBase3D::viewportSetup(unsigned int subViewIndex)
 {
-    vtkSmartPointer<vtkPropCollection> props = m_dataProps.value(renderedData);
+    assert(subViewIndex < unsigned(m_viewportSetups.size()));
+    return m_viewportSetups[subViewIndex];
+}
+
+void RendererImplementationBase3D::fetchViewProps(RenderedData * renderedData, unsigned int subViewIndex)
+{
+    auto && dataProps = m_viewportSetups[subViewIndex].dataProps;
+    auto && renderer = m_viewportSetups[subViewIndex].renderer;
+
+    vtkSmartPointer<vtkPropCollection> props = dataProps.value(renderedData);
     assert(props);
 
     // TODO add/remove changes only
@@ -499,7 +565,7 @@ void RendererImplementationBase3D::fetchViewProps(RenderedData * renderedData)
     vtkCollectionSimpleIterator it;
     props->InitTraversal(it);
     while (vtkProp * prop = props->GetNextProp(it))
-        m_renderer->RemoveViewProp(prop);
+        renderer->RemoveViewProp(prop);
     props->RemoveAllItems();
 
     // insert all new props
@@ -508,28 +574,26 @@ void RendererImplementationBase3D::fetchViewProps(RenderedData * renderedData)
     while (vtkProp * prop = renderedData->viewProps()->GetNextProp(it))
     {
         props->AddItem(prop);
-        m_renderer->AddViewProp(prop);
+        renderer->AddViewProp(prop);
     }
 
     render();
 }
 
-void RendererImplementationBase3D::dataVisibilityChanged(RenderedData * rendered)
+void RendererImplementationBase3D::dataVisibilityChanged(RenderedData * rendered, unsigned int subViewIndex)
 {
     assert(rendered);
 
     if (rendered->isVisible())
     {
-        addToBounds(rendered);
+        addToBounds(rendered, subViewIndex);
         connect(rendered->dataObject(), &DataObject::boundsChanged, this, &RendererImplementationBase3D::updateBounds);
     }
     else
     {
-        removeFromBounds(rendered);
+        removeFromBounds(rendered, subViewIndex);
         disconnect(rendered->dataObject(), &DataObject::boundsChanged, this, &RendererImplementationBase3D::updateBounds);
     }
 
-    // reset strategy if we are empty
-    if (!m_dataBounds.IsValid())
-        setStrategy(nullptr);
+    onDataVisibilityChanged(rendered, subViewIndex);
 }

@@ -34,18 +34,18 @@ void RendererImplementation::deactivate(QVTKWidget * /*qvtkWidget*/)
     }
 }
 
-void RendererImplementation::addContent(AbstractVisualizedData * content)
+void RendererImplementation::addContent(AbstractVisualizedData * content, unsigned int subViewIndex)
 {
-    onAddContent(content);
+    onAddContent(content, subViewIndex);
 }
 
-void RendererImplementation::removeContent(AbstractVisualizedData * content)
+void RendererImplementation::removeContent(AbstractVisualizedData * content, unsigned int subViewIndex)
 {
     auto connectionList = m_visConnections.take(content);
     for (auto && connection : connectionList)
         disconnect(connection);
 
-    onRemoveContent(content);
+    onRemoveContent(content, subViewIndex);
 }
 
 const QList<RendererImplementation::ImplementationConstructor> & RendererImplementation::constructors()

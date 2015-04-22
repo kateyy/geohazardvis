@@ -1,6 +1,6 @@
 #pragma once
 
-#include <QMap>
+#include <QVector>
 
 #include <vtkSmartPointer.h>
 #include <vtkBoundingBox.h>
@@ -37,9 +37,7 @@ class RendererImplementationBase3D : public RendererImplementation
 {
 public:
     RendererImplementationBase3D(
-        AbstractRenderView & renderView, 
-        ColorMapping * colorMapping, 
-        vtkRenderWindow * renderWindow,
+        AbstractRenderView & renderView,
         QObject * parent = nullptr);
 
     QString name() const override;
@@ -53,6 +51,7 @@ public:
     AbstractVisualizedData * requestVisualization(DataObject * dataObject) const override;
 
     void activate(QVTKWidget * qvtkWidget) override;
+    void deactivate(QVTKWidget * qvtkWidget) override;
 
     void render() override;
 
@@ -64,7 +63,7 @@ public:
     void lookAtData(DataObject * dataObject, vtkIdType itemId) override;
     void resetCamera(bool toInitialPosition) override;
 
-    void dataBounds(double bounds[6]) const;
+    void dataBounds(double bounds[6], unsigned int subViewIndex = 0) const;
 
     void setAxesVisibility(bool visible) override;
 
@@ -75,25 +74,41 @@ public:
     PickingInteractorStyleSwitch * interactorStyleSwitch();
 
     vtkRenderWindow * renderWindow();
-    vtkRenderer * renderer();
+    vtkRenderer * renderer(unsigned int subViewIndex = 0);
     vtkCamera * camera();
 
     vtkLightKit * lightKit();
 
-    vtkTextWidget * titleWidget();
+    vtkTextWidget * titleWidget(unsigned int subViewIndex = 0);
     ColorMapping * colorMapping();
     vtkScalarBarWidget * colorLegendWidget();
 
-    vtkCubeAxesActor * axesActor();
+    vtkCubeAxesActor * axesActor(unsigned int subViewIndex = 0);
 
     void setStrategy(RenderViewStrategy * strategy);
 
 protected:
+    // per viewport objects
+    struct ViewportSetup
+    {
+        vtkSmartPointer<vtkRenderer> renderer;
 
-    void onAddContent(AbstractVisualizedData * content) override;
-    void onRemoveContent(AbstractVisualizedData * content) override;
+        // view props fetched per rendered data
+        QMap<RenderedData *, vtkSmartPointer<vtkPropCollection>> dataProps;
+        vtkBoundingBox dataBounds;
+
+        vtkSmartPointer<vtkCubeAxesActor> axesActor;
+        vtkSmartPointer<vtkTextWidget> titleWidget;
+    };
+
+protected:
+    void onAddContent(AbstractVisualizedData * content, unsigned int subViewIndex) override;
+    void onRemoveContent(AbstractVisualizedData * content, unsigned int subViewIndex) override;
+    virtual void onDataVisibilityChanged(AbstractVisualizedData * content, unsigned int subViewIndex);
 
     RenderViewStrategy & strategy() const;
+    ViewportSetup & viewportSetup(unsigned int subViewIndex = 0);
+
 
 private:
     void initialize();
@@ -102,16 +117,16 @@ private:
 
     void updateAxes();
     void updateBounds();
-    void addToBounds(RenderedData * renderedData);
-    void removeFromBounds(RenderedData * renderedData);
-    void createAxes();
+    void addToBounds(RenderedData * renderedData, unsigned int subViewIndex);
+    void removeFromBounds(RenderedData * renderedData, unsigned int subViewIndex);
+    vtkSmartPointer<vtkCubeAxesActor> createAxes(vtkCamera * camera);
     void setupColorMappingLegend();
 
 private slots:
     /** scan rendered data for changed attribute props (e.g., vectors) */
-    void fetchViewProps(RenderedData * renderedData);
+    void fetchViewProps(RenderedData * renderedData, unsigned int subViewIndex);
 
-    void dataVisibilityChanged(RenderedData * renderedData);
+    void dataVisibilityChanged(RenderedData * renderedData, unsigned int subViewIndex);
 
 protected:
     RenderViewStrategy * m_strategy;
@@ -122,7 +137,6 @@ private:
 
     // -- setup --
     vtkSmartPointer<vtkRenderWindow> m_renderWindow;
-    vtkSmartPointer<vtkRenderer> m_renderer;
 
     vtkSmartPointer<vtkLightKit> m_lightKit;
 
@@ -131,13 +145,10 @@ private:
 
     // -- contents and annotation --
 
-    // view props fetched per rendered data
-    QMap<RenderedData *, vtkSmartPointer<vtkPropCollection>> m_dataProps;
-    vtkBoundingBox m_dataBounds;
-
-    vtkSmartPointer<vtkCubeAxesActor> m_axesActor;
-    vtkSmartPointer<vtkTextWidget> m_titleWidget;
+    // feature that are used in all viewports
     ColorMapping * m_colorMapping;
-    vtkScalarBarActor * m_colorMappingLegend;
     vtkSmartPointer<vtkScalarBarWidget> m_scalarBarWidget;
+    vtkScalarBarActor * m_colorMappingLegend;
+
+    QVector<ViewportSetup> m_viewportSetups;
 };

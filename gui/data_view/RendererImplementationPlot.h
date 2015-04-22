@@ -53,8 +53,8 @@ public:
 protected:
     AbstractVisualizedData * requestVisualization(DataObject * dataObject) const override;
 
-    void onAddContent(AbstractVisualizedData * content) override;
-    void onRemoveContent(AbstractVisualizedData * content) override;
+    void onAddContent(AbstractVisualizedData * content, unsigned int subViewIndex) override;
+    void onRemoveContent(AbstractVisualizedData * content, unsigned int subViewIndex) override;
 
 private:
     void initialize();

@@ -47,9 +47,9 @@ public:
 
     /** add newly created rendered data
         actual data visibility depends on the object's configuration */
-    void addContent(AbstractVisualizedData * content);
+    void addContent(AbstractVisualizedData * content, unsigned int subViewIndex = 0);
     /** remove all references to the object and its contents */
-    void removeContent(AbstractVisualizedData * content);
+    void removeContent(AbstractVisualizedData * content, unsigned int subViewIndex = 0);
 
     /** mark dataObject (and, if set, it's point/cell) as current selection */
     virtual void setSelectedData(DataObject * dataObject, vtkIdType itemId = -1) = 0;
@@ -75,8 +75,8 @@ protected:
     /** Override to add visual contents to the view.
         In the overrider, call addConnectionForContent for each Qt signal/slot 
         connection related to this content */
-    virtual void onAddContent(AbstractVisualizedData * content) = 0;
-    virtual void onRemoveContent(AbstractVisualizedData * content) = 0;
+    virtual void onAddContent(AbstractVisualizedData * content, unsigned int subViewIndex) = 0;
+    virtual void onRemoveContent(AbstractVisualizedData * content, unsigned int subViewIndex) = 0;
 
     void addConnectionForContent(AbstractVisualizedData * content,
         const QMetaObject::Connection & connection);
