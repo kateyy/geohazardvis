@@ -86,22 +86,16 @@ QList<DataObject *> RendererImplementationBase3D::filterCompatibleObjects(
     return m_strategy->filterCompatibleObjects(dataObjects, incompatibleObjects);
 }
 
-void RendererImplementationBase3D::activate(QVTKWidget * qvtkWidget)
+void RendererImplementationBase3D::activate(QVTKWidget * /*qvtkWidget*/)
 {
     initialize();
 
-    qvtkWidget->SetRenderWindow(m_renderWindow);
-    m_renderWindow->SetInteractor(qvtkWidget->GetInteractor());
+    // by default, assume that our m_renderWindow is the same as
+    // the qvtkWidget's render window, so we don't need to assign it here
 
     m_renderWindow->GetInteractor()->SetInteractorStyle(m_interactorStyle);
 
     assignInteractor();
-}
-
-void RendererImplementationBase3D::deactivate(QVTKWidget * qvtkWidget)
-{
-    qvtkWidget->SetRenderWindow(nullptr);
-    m_renderWindow->SetInteractor(nullptr);
 }
 
 void RendererImplementationBase3D::render()
@@ -227,6 +221,12 @@ const IPickingInteractorStyle * RendererImplementationBase3D::interactorStyle() 
 PickingInteractorStyleSwitch * RendererImplementationBase3D::interactorStyleSwitch()
 {
     return m_interactorStyle;
+}
+
+vtkRenderWindow * RendererImplementationBase3D::renderWindow()
+{
+    assert(m_renderWindow);
+    return m_renderWindow;
 }
 
 vtkRenderer * RendererImplementationBase3D::renderer()

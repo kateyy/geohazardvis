@@ -68,13 +68,16 @@ void RendererImplementationPlot::activate(QVTKWidget * qvtkWidget)
 {
     initialize();
 
+    // see also: vtkRenderViewBase documentation
     m_contextView->SetInteractor(qvtkWidget->GetInteractor());
     qvtkWidget->SetRenderWindow(m_contextView->GetRenderWindow());
 }
 
 void RendererImplementationPlot::deactivate(QVTKWidget * qvtkWidget)
 {
+    // the render window belongs to the context view
     qvtkWidget->SetRenderWindow(nullptr);
+    // the interactor is provided by the qvtkWidget
     m_contextView->SetInteractor(nullptr);
 }
 

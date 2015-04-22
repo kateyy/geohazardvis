@@ -14,6 +14,9 @@ public:
     QList<DataObject *> filterCompatibleObjects(const QList<DataObject *> & dataObjects,
         QList<DataObject *> & incompatibleObjects) override;
 
+    void activate(QVTKWidget * qvtkWidget) override;
+    void deactivate(QVTKWidget * qvtkWidget) override;
+
 signals:
     void resetStrategy(const QList<DataObject *> & dataObjects);
 
