@@ -28,8 +28,8 @@
 #include <vtkWarpScalar.h>
 
 #include <core/DataSetHandler.h>
-#include <core/vtkcamerahelper.h>
-#include <core/vtkhelper.h>
+#include <core/utility/vtkcamerahelper.h>
+#include <core/utility/vtkhelper.h>
 #include <core/data_objects/ImageDataObject.h>
 #include <core/data_objects/PolyDataObject.h>
 #include <core/rendered_data/RenderedData.h>

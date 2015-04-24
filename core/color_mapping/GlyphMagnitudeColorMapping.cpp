@@ -12,7 +12,7 @@
 #include <vtkPointData.h>
 #include <vtkVectorNorm.h>
 
-#include <core/vtkhelper.h>
+#include <core/utility/vtkhelper.h>
 #include <core/color_mapping/ColorMappingRegistry.h>
 #include <core/rendered_data/RenderedData3D.h>
 #include <core/glyph_mapping/GlyphMapping.h>

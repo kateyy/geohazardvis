@@ -14,8 +14,8 @@
 #include <vtkInformationIntegerKey.h>
 #include <vtkSmartPointer.h>
 
-#include <core/vtkhelper.h>
-#include <core/vtkstringhelper.h>
+#include <core/utility/vtkhelper.h>
+#include <core/utility/vtkstringhelper.h>
 
 
 vtkInformationKeyMacro(DataObject, NameKey, String);

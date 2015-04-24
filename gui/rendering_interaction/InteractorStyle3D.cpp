@@ -36,8 +36,8 @@
 #include <vtkCellData.h>
 #include <vtkPropCollection.h>
 
-#include <core/vtkhelper.h>
-#include <core/vtkcamerahelper.h>
+#include <core/utility/vtkhelper.h>
+#include <core/utility/vtkcamerahelper.h>
 #include <core/data_objects/PolyDataObject.h>
 #include <core/rendered_data/RenderedData.h>
 

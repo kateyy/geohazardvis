@@ -12,7 +12,7 @@
 #include <QMessageBox>
 #include <QMimeData>
 
-#include <core/vtkhelper.h>
+#include <core/utility/vtkhelper.h>
 #include <core/DataSetHandler.h>
 #include <core/data_objects/DataObject.h>
 #include <core/data_objects/ImageDataObject.h>

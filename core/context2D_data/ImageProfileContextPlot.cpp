@@ -11,7 +11,7 @@
 
 #include <reflectionzeug/PropertyGroup.h>
 
-#include <core/vtkhelper.h>
+#include <core/utility/vtkhelper.h>
 #include <core/data_objects/ImageProfileData.h>
 #include <core/context2D_data/vtkPlotCollection.h>
 

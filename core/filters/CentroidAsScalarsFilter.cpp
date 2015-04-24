@@ -6,7 +6,7 @@
 #include <vtkPointData.h>
 #include <vtkCellData.h>
 
-#include <core/vtkhelper.h>
+#include <core/utility/vtkhelper.h>
 
 
 vtkStandardNewMacro(CentroidAsScalarsFilter);

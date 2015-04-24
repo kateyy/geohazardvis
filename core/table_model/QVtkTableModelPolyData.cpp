@@ -7,7 +7,7 @@
 #include <vtkCell.h>
 #include <vtkCellTypes.h>
 
-#include <core/vtkhelper.h>
+#include <core/utility/vtkhelper.h>
 #include <core/data_objects/PolyDataObject.h>
 
 

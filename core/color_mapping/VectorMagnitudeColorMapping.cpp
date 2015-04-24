@@ -16,7 +16,7 @@
 
 #include <vtkMapper.h>
 
-#include <core/vtkhelper.h>
+#include <core/utility/vtkhelper.h>
 #include <core/AbstractVisualizedData.h>
 #include <core/data_objects/DataObject.h>
 #include <core/color_mapping/ColorMappingRegistry.h>

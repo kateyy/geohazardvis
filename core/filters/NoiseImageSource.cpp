@@ -22,7 +22,7 @@
 #include <vtkRenderbuffer.h>
 #include <vtkTextureObject.h>
 
-#include <core/vtkhelper.h>
+#include <core/utility/vtkhelper.h>
 
 #include "config.h"
 

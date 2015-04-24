@@ -1,4 +1,4 @@
-#include <core/vtkstringhelper.h>
+#include <core/utility/vtkstringhelper.h>
 
 #include <QString>
 
@@ -6,7 +6,7 @@
 #include <vtkStringArray.h>
 #include <vtkSmartPointer.h>
 
-#include <core/vtkhelper.h>
+#include <core/utility/vtkhelper.h>
 
 
 vtkSmartPointer<vtkCharArray> qstringToVtkArray(const QString & string)

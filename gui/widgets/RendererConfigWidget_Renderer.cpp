@@ -14,7 +14,7 @@
 
 #include <reflectionzeug/PropertyGroup.h>
 #include <core/types.h>
-#include <core/vtkcamerahelper.h>
+#include <core/utility/vtkcamerahelper.h>
 #include <core/reflectionzeug_extension/QStringProperty.h>
 #include <gui/data_view/AbstractRenderView.h>
 #include <gui/data_view/RendererImplementationBase3D.h>

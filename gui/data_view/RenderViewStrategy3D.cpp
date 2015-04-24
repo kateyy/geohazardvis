@@ -2,7 +2,7 @@
 
 #include <vtkCamera.h>
 
-#include <core/vtkcamerahelper.h>
+#include <core/utility/vtkcamerahelper.h>
 #include <core/data_objects/DataObject.h>
 #include <core/rendered_data/RenderedVectorGrid3D.h>
 #include <gui/data_view/RenderView.h>

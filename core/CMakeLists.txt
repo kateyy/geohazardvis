@@ -12,11 +12,6 @@ set ( SOURCES
     types.h
     TextureManager.h
     TextureManager.cpp
-    vtkcamerahelper.h
-    vtkcamerahelper.cpp
-    vtkhelper.h
-    vtkstringhelper.h
-    vtkstringhelper.cpp
 
     canvas_export/CanvasExporter.h
     canvas_export/CanvasExporter.cpp
@@ -145,8 +140,14 @@ set ( SOURCES
     reflectionzeug_extension/QStringProperty.h
     reflectionzeug_extension/QStringProperty.hpp
     reflectionzeug_extension/QStringProperty.cpp
-    
+
     ThirdParty/alphanum.hpp
+
+    utility/vtkcamerahelper.h
+    utility/vtkcamerahelper.cpp
+    utility/vtkhelper.h
+    utility/vtkstringhelper.h
+    utility/vtkstringhelper.cpp
 )
 
 source_group_by_path_and_type(${CMAKE_CURRENT_SOURCE_DIR} ${SOURCES})

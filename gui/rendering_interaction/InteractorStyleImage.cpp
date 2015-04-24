@@ -23,7 +23,7 @@
 #include <vtkActor.h>
 #include <vtkProperty.h>
 
-#include <core/vtkhelper.h>
+#include <core/utility/vtkhelper.h>
 #include <core/data_objects/DataObject.h>
 #include <core/rendered_data/RenderedData.h>
 

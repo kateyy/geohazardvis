@@ -21,7 +21,7 @@
 #include <vtkWarpScalar.h>
 #include <vtkAssignAttribute.h>
 
-#include <core/vtkhelper.h>
+#include <core/utility/vtkhelper.h>
 #include <core/data_objects/PolyDataObject.h>
 #include <core/io/Exporter.h>
 #include <core/io/FileParser.h>

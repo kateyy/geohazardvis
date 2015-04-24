@@ -13,7 +13,7 @@
 #include <vtkSmartPointer.h>
 #include <vtkTexture.h>
 
-#include <core/vtkhelper.h>
+#include <core/utility/vtkhelper.h>
 
 
 namespace

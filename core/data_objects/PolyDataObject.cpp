@@ -13,7 +13,7 @@
 #include <vtkMath.h>
 #include <vtkTransform.h>
 
-#include <core/vtkhelper.h>
+#include <core/utility/vtkhelper.h>
 #include <core/rendered_data/RenderedPolyData.h>
 #include <core/table_model/QVtkTableModelPolyData.h>
 

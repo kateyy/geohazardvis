@@ -16,7 +16,7 @@
 #include <vtkAssignAttribute.h>
 #include <vtkWarpScalar.h>
 
-#include <core/vtkhelper.h>
+#include <core/utility/vtkhelper.h>
 #include <core/data_objects/ImageDataObject.h>
 #include <core/context2D_data/ImageProfileContextPlot.h>
 

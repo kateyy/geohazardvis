@@ -21,7 +21,7 @@
 #include <reflectionzeug/Property.h>
 #include <reflectionzeug/PropertyGroup.h>
 
-#include <core/vtkhelper.h>
+#include <core/utility/vtkhelper.h>
 #include <core/color_mapping/ColorMappingData.h>
 #include <core/data_objects/DataObject.h>
 #include <core/rendered_data/RenderedData.h>

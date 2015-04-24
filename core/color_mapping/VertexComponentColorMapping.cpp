@@ -3,7 +3,7 @@
 #include <vtkAssignAttribute.h>
 #include <vtkMapper.h>
 
-#include <core/vtkhelper.h>
+#include <core/utility/vtkhelper.h>
 #include <core/types.h>
 #include <core/data_objects/PolyDataObject.h>
 #include <core/rendered_data/RenderedPolyData.h>

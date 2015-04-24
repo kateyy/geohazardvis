@@ -17,7 +17,7 @@
 #include <vtkXMLImageDataWriter.h>
 #include <vtkXMLPolyDataWriter.h>
 
-#include <core/vtkhelper.h>
+#include <core/utility/vtkhelper.h>
 #include <core/data_objects/ImageDataObject.h>
 #include <core/data_objects/PolyDataObject.h>
 #include <core/data_objects/VectorGrid3DDataObject.h>

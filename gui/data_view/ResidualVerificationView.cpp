@@ -17,7 +17,7 @@
 #include <core/AbstractVisualizedData.h>
 #include <core/DataSetHandler.h>
 #include <core/types.h>
-#include <core/vtkhelper.h>
+#include <core/utility/vtkhelper.h>
 #include <core/color_mapping/ColorMapping.h>
 #include <core/data_objects/ImageDataObject.h>
 #include <gui/SelectionHandler.h>

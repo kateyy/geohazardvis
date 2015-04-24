@@ -5,7 +5,7 @@
 #include <vtkInformationIntegerPointerKey.h>
 #include <vtkTrivialProducer.h>
 
-#include <core/vtkhelper.h>
+#include <core/utility/vtkhelper.h>
 #include <core/table_model/QVtkTableModel.h>
 
 

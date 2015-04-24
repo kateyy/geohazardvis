@@ -22,7 +22,7 @@
 #include <vtkTextWidget.h>
 
 #include <core/types.h>
-#include <core/vtkhelper.h>
+#include <core/utility/vtkhelper.h>
 #include <core/data_objects/DataObject.h>
 #include <core/rendered_data/RenderedData.h>
 #include <core/color_mapping/ColorMapping.h>

@@ -7,7 +7,7 @@
 #include <vtkActor.h>
 
 #include <core/types.h>
-#include <core/vtkhelper.h>
+#include <core/utility/vtkhelper.h>
 #include <core/glyph_mapping/GlyphMapping.h>
 #include <core/glyph_mapping/GlyphMappingData.h>
 

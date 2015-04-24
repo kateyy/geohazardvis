@@ -25,7 +25,7 @@
 
 #include <reflectionzeug/PropertyGroup.h>
 
-#include <core/vtkhelper.h>
+#include <core/utility/vtkhelper.h>
 #include <core/TextureManager.h>
 #include <core/data_objects/PolyDataObject.h>
 #include <core/filters/TransformTextureCoords.h>

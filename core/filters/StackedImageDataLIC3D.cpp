@@ -10,7 +10,7 @@
 #include <vtkOpenGLRenderWindow.h>
 #include <vtkPointData.h>
 
-#include <core/vtkhelper.h>
+#include <core/utility/vtkhelper.h>
 #include <core/filters/NoiseImageSource.h>
 
 #include "config.h"

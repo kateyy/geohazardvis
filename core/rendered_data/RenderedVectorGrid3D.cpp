@@ -18,7 +18,7 @@
 
 #include <reflectionzeug/PropertyGroup.h>
 
-#include <core/vtkhelper.h>
+#include <core/utility/vtkhelper.h>
 #include <core/color_mapping/ColorMappingData.h>
 #include <core/data_objects/VectorGrid3DDataObject.h>
 #include <core/filters/ArrayRenameFilter.h>

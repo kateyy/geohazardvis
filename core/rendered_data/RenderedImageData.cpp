@@ -17,7 +17,7 @@
 #include <reflectionzeug/PropertyGroup.h>
 
 #include <core/types.h>
-#include <core/vtkhelper.h>
+#include <core/utility/vtkhelper.h>
 #include <core/color_mapping/ColorMappingData.h>
 #include <core/data_objects/ImageDataObject.h>
 

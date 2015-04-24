@@ -14,7 +14,7 @@
 #include <vtkPointData.h>
 
 #include <core/AbstractVisualizedData.h>
-#include <core/vtkhelper.h>
+#include <core/utility/vtkhelper.h>
 #include <core/color_mapping/ColorMappingRegistry.h>
 #include <core/filters/NoiseImageSource.h>
 
