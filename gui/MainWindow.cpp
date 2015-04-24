@@ -100,6 +100,7 @@ MainWindow::MainWindow()
 
         auto view = DataMapping::instance().createRenderView<ResidualVerificationView>();
         view->setObservationData(observation);
+        view->setModelData(observation);
     });
 }
 

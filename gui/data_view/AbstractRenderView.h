@@ -43,6 +43,8 @@ public:
     /** DataObjects visible in the specified subViewIndex, or in any of the sub views (-1) */
     QList<DataObject *> dataObjects(int subViewIndex = -1) const;
     QList<AbstractVisualizedData *> visualizations(int subViewIndex = -1) const;
+    /** @return visualization of dataObject in the specified sub-view. Returns nullptr, if the view currently doesn't visualize the data object*/
+    virtual AbstractVisualizedData * visualizationFor(DataObject * dataObject, int subViewIndex = -1) const = 0;
 
     /** The data object whose visualization is selected by the user. This visualization can be configured in the UI */
     virtual DataObject * selectedData() const = 0;

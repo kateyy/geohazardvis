@@ -356,8 +356,10 @@ void RendererImplementationBase3D::initialize()
         m_renderWindow->AddRenderer(renderer);
 
 
-        auto && titleWidget = viewport.titleWidget;
-        titleWidget = vtkSmartPointer<vtkTextWidget>::New();
+        VTK_CREATE(vtkTextWidget, titleWidget);
+        viewport.titleWidget = titleWidget;
+        titleWidget->SetDefaultRenderer(viewport.renderer);
+        titleWidget->SetCurrentRenderer(viewport.renderer);
 
         VTK_CREATE(vtkTextRepresentation, titleRepr);
         vtkTextActor * titleActor = titleRepr->GetTextActor();
@@ -372,11 +374,9 @@ void RendererImplementationBase3D::initialize()
         titleWidget->SetRepresentation(titleRepr);
         titleWidget->SetTextActor(titleActor);
         titleWidget->SelectableOff();
-
         
         viewport.axesActor = createAxes(camera);
         renderer->AddViewProp(viewport.axesActor);
-
         renderer->AddViewProp(m_colorMappingLegend);
     }
 

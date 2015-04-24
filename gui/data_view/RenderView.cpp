@@ -297,6 +297,14 @@ void RenderView::lookAtData(DataObject * dataObject, vtkIdType itemId)
     implementation().lookAtData(dataObject, itemId);
 }
 
+AbstractVisualizedData * RenderView::visualizationFor(DataObject * dataObject, int subViewIndex) const
+{
+    if (subViewIndex != -1 && subViewIndex != 0)
+        return nullptr;
+
+    return m_dataObjectToVisualization.value(dataObject, nullptr);
+}
+
 RendererImplementation & RenderView::implementation() const
 {
     return m_implementationSwitch->currentImplementation();

@@ -135,10 +135,6 @@ void DataMapping::addToRenderView(QList<DataObject *> dataObjects, AbstractRende
     {
         openInRenderView(incompatibleObjects);
     }
-
-    setFocusedView(renderView);
-
-    emit renderViewsChanged(m_renderViews.values());
 }
 
 AbstractRenderView * DataMapping::focusedRenderView()
@@ -217,6 +213,10 @@ void DataMapping::addRenderView(AbstractRenderView * renderView)
     connect(renderView, &AbstractDataView::closed, this, &DataMapping::renderViewClosed);
 
     m_mainWindow.addRenderView(renderView);
+
+    emit renderViewsChanged(m_renderViews.values());
+
+    setFocusedView(renderView);
 }
 
 bool DataMapping::askForNewRenderView(const QString & rendererName, const QList<DataObject *> & relevantObjects)

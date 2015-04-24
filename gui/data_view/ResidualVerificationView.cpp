@@ -40,6 +40,8 @@ ResidualVerificationView::ResidualVerificationView(int index, QWidget * parent, 
 
     setLayout(layout);
 
+    initialize();   // lazy initialize in not really needed for now
+
     SelectionHandler::instance().addRenderView(this);
 }
 
@@ -80,13 +82,13 @@ DataObject * ResidualVerificationView::selectedData() const
 
 AbstractVisualizedData * ResidualVerificationView::selectedDataVisualization() const
 {
-    if (m_visualizations.isEmpty())
+    auto data = selectedData();
+    if (!data)
         return nullptr;
 
-    // prefer the observation data as reference
     for (auto && vis : m_visualizations)
     {
-        if (vis)
+        if (vis && vis->dataObject() == data)
             return vis;
     }
 
@@ -96,6 +98,26 @@ AbstractVisualizedData * ResidualVerificationView::selectedDataVisualization() c
 void ResidualVerificationView::lookAtData(DataObject * dataObject, vtkIdType itemId)
 {
     m_implementation->lookAtData(dataObject, itemId);
+}
+
+AbstractVisualizedData * ResidualVerificationView::visualizationFor(DataObject * dataObject, int subViewIndex) const
+{
+    if (subViewIndex == -1)
+    {
+        for (int i = 0; i < m_images.size(); ++i)
+        {
+            if (m_images[i] == dataObject && m_visualizations.size() > i)
+                return m_visualizations[i];
+        }
+        return nullptr;
+    }
+
+    assert(subViewIndex >= 0);
+    assert(m_images.size() >= m_visualizations.size());
+    if (m_images[subViewIndex] != dataObject || m_visualizations.size() < subViewIndex)
+        return nullptr;
+
+    return m_visualizations[subViewIndex];
 }
 
 void ResidualVerificationView::setObservationData(ImageDataObject * observation)
@@ -327,7 +349,7 @@ void ResidualVerificationView::setData(unsigned int subViewIndex, ImageDataObjec
         auto newVis = m_implementation->requestVisualization(dataObject);
         assert(newVis);
         m_visualizations[subViewIndex] = newVis;
-        m_implementation->addContent(newVis);
+        m_implementation->addContent(newVis, subViewIndex);
     }
 
     if (subViewIndex != 2)
@@ -338,7 +360,7 @@ void ResidualVerificationView::updateResidual()
 {
     ImageDataObject *  observation = m_images[0];
     ImageDataObject *  model = m_images[1];
-    ImageDataObject *  residual = m_images[2];
+    ImageDataObject * residual = m_images[2];
 
     if (!observation || !model)
     {
@@ -363,7 +385,6 @@ void ResidualVerificationView::updateResidual()
         imageData->AllocateScalars(VTK_FLOAT, 1);
 
         residual = new ImageDataObject("Residual", imageData);
-        m_images[2] = residual;
 
         DataSetHandler::instance().addData({ residual });
     }
@@ -386,6 +407,18 @@ void ResidualVerificationView::updateGuiSelection()
 {
     updateTitle();
 
-    emit selectedDataChanged(this, selectedData());
+    DataObject * selection = nullptr;
+    for (auto vis : m_visualizations)
+    {
+        if (vis)
+        {
+            selection = vis->dataObject();
+            break;
+        }
+    }
+
+    m_implementation->setSelectedData(selection);
+
+    emit selectedDataChanged(this, selection);
 }
 

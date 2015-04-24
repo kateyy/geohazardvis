@@ -76,30 +76,58 @@ void RendererConfigWidget::readCameraStats(vtkObject * caller)
 reflectionzeug::PropertyGroup * RendererConfigWidget::createPropertyGroupRenderer(AbstractRenderView * renderView, RendererImplementationBase3D * impl)
 {
     PropertyGroup * root = new PropertyGroup();
-    vtkRenderer * renderer = impl->renderer();
 
-    root->addProperty<QString>("Title",
-        [impl] () { return QString::fromUtf8(impl->titleWidget()->GetTextActor()->GetInput()); },
-        [impl, renderView] (const QString & title) {
-        impl->titleWidget()->GetTextActor()->SetInput(title.toUtf8().data());
-        renderView->render();
-    });
+    if (renderView->numberOfSubViews() == 1)
+    {
+        root->addProperty<QString>("Title",
+            [impl] () { return QString::fromUtf8(impl->titleWidget()->GetTextActor()->GetInput()); },
+            [impl, renderView] (const QString & title) {
+            impl->titleWidget()->GetTextActor()->SetInput(title.toUtf8().data());
+            renderView->render();
+        });
 
-    root->addProperty<int>("TitleFontSize",
-        [impl] () { return impl->titleWidget()->GetTextActor()->GetTextProperty()->GetFontSize(); },
-        [impl, renderView] (const int & fontSize) {
-        impl->titleWidget()->GetTextActor()->GetTextProperty()->SetFontSize(fontSize);
-        renderView->render();
-    })
-        ->setOption("title", "Title Font Size");
+        root->addProperty<int>("TitleFontSize",
+            [impl] () { return impl->titleWidget()->GetTextActor()->GetTextProperty()->GetFontSize(); },
+            [impl, renderView] (const int & fontSize) {
+            impl->titleWidget()->GetTextActor()->GetTextProperty()->SetFontSize(fontSize);
+            renderView->render();
+        })
+            ->setOption("title", "Title Font Size");
+    }
+    else
+    {
+        auto titlesGroup = root->addGroup("Titles");
+
+        for (unsigned i = 0; i < renderView->numberOfSubViews(); ++i)
+        {
+            titlesGroup->addProperty<QString>("Title" + std::to_string(i),
+                [impl, i] () { return QString::fromUtf8(impl->titleWidget(i)->GetTextActor()->GetInput()); },
+                [impl, renderView, i] (const QString & title) {
+                impl->titleWidget(i)->GetTextActor()->SetInput(title.toUtf8().data());
+                renderView->render();
+            })
+                ->setOption("title", "Title " + std::to_string(i + 1));
+
+            titlesGroup->addProperty<int>("TitleFontSize" + std::to_string(i),
+                [impl, i] () { return impl->titleWidget(i)->GetTextActor()->GetTextProperty()->GetFontSize(); },
+                [impl, renderView, i] (const int & fontSize) {
+                impl->titleWidget(i)->GetTextActor()->GetTextProperty()->SetFontSize(fontSize);
+                renderView->render();
+            })
+                ->setOption("title", "Font Size");
+        }
+    }
+
+    auto firstRenderer = impl->renderer();
 
     auto backgroundColor = root->addProperty<Color>("backgroundColor",
-        [renderer]() {
-        double * color = renderer->GetBackground();
+        [firstRenderer] () {
+        double * color = firstRenderer->GetBackground();
         return Color(static_cast<int>(color[0] * 255), static_cast<int>(color[1] * 255), static_cast<int>(color[2] * 255));
     },
-        [renderView, renderer] (const Color & color) {
-        renderer->SetBackground(color.red() / 255.0, color.green() / 255.0, color.blue() / 255.0);
+        [renderView, impl] (const Color & color) {
+        for (unsigned i = 0; i < renderView->numberOfSubViews(); ++i)
+            impl->renderer(i)->SetBackground(color.red() / 255.0, color.green() / 255.0, color.blue() / 255.0);
         renderView->render();
     });
     backgroundColor->setOption("title", "Background Color");
@@ -118,10 +146,9 @@ reflectionzeug::PropertyGroup * RendererConfigWidget::createPropertyGroupRendere
                 [&camera]() {
                 return TerrainCamera::getAzimuth(camera);
             },
-                [renderView, &camera, renderer] (const double & azimuth) {
+                [&camera, impl] (const double & azimuth) {
                 TerrainCamera::setAzimuth(camera, azimuth);
-                renderer->ResetCamera();
-                renderView->render();
+                impl->resetCamera(false);
             });
             prop_azimuth->setOption("minimum", std::numeric_limits<double>::lowest());
             prop_azimuth->setOption("suffix", degreesSuffix);
@@ -130,10 +157,9 @@ reflectionzeug::PropertyGroup * RendererConfigWidget::createPropertyGroupRendere
                 [&camera]() {
                 return TerrainCamera::getVerticalElevation(camera);
             },
-                [renderView, &camera, renderer] (const double & elevation) {
+                [&camera, impl] (const double & elevation) {
                 TerrainCamera::setVerticalElevation(camera, elevation);
-                renderer->ResetCamera();
-                renderView->render();
+                impl->resetCamera(false);
             });
             prop_elevation->setOption("minimum", -89);
             prop_elevation->setOption("maximum", 89);

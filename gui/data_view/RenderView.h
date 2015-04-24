@@ -28,6 +28,8 @@ public:
     AbstractVisualizedData * selectedDataVisualization() const override;
     void lookAtData(DataObject * dataObject, vtkIdType itemId) override;
 
+    AbstractVisualizedData * visualizationFor(DataObject * dataObject, int subViewIndex = -1) const override;
+
     vtkRenderWindow * renderWindow() override;
     const vtkRenderWindow * renderWindow() const override;
 

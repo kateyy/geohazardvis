@@ -30,6 +30,8 @@ public:
     AbstractVisualizedData * selectedDataVisualization() const override;
     void lookAtData(DataObject * dataObject, vtkIdType itemId) override;
 
+    AbstractVisualizedData * visualizationFor(DataObject * dataObject, int subViewIndex = -1) const override;
+
     /** Convenience API to set the images for the use case specific sub-view.
         These functions have the same effect as calling removeDataObject(currentImage) and
         addDataObject(newImage) for the respective sub-views. */

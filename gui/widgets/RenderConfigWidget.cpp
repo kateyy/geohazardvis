@@ -44,7 +44,7 @@ void RenderConfigWidget::clear()
     delete m_propertyRoot;
     m_propertyRoot = nullptr;
 
-    emit repaint();
+    update();
 }
 
 void RenderConfigWidget::checkDeletedContent(AbstractVisualizedData * content)
@@ -58,14 +58,22 @@ void RenderConfigWidget::setCurrentRenderView(AbstractRenderView * renderView)
     clear();
 
     if (m_renderView)
-        disconnect(m_renderView, &AbstractRenderView::beforeDeleteVisualization, 
+    {
+        disconnect(m_renderView, &AbstractRenderView::beforeDeleteVisualization,
             this, &RenderConfigWidget::checkDeletedContent);
+        disconnect(m_renderView, &AbstractRenderView::selectedDataChanged,
+            this, static_cast<void (RenderConfigWidget::*)(AbstractRenderView *, DataObject *)>(&RenderConfigWidget::setSelectedData));
+    }
 
     m_renderView = renderView;
     m_content = renderView ? renderView->selectedDataVisualization() : nullptr;
     if (renderView)
+    {
         connect(renderView, &AbstractRenderView::beforeDeleteVisualization,
             this, &RenderConfigWidget::checkDeletedContent);
+        connect(m_renderView, &AbstractRenderView::selectedDataChanged,
+            this, static_cast<void (RenderConfigWidget::*)(AbstractRenderView *, DataObject *)>(&RenderConfigWidget::setSelectedData));
+    }
     updateTitle();
 
     if (!m_content)
@@ -76,7 +84,7 @@ void RenderConfigWidget::setCurrentRenderView(AbstractRenderView * renderView)
     m_ui->propertyBrowser->setRoot(m_propertyRoot);
     m_ui->propertyBrowser->setColumnWidth(0, 135);
 
-    emit repaint();
+    update();
 }
 
 void RenderConfigWidget::setSelectedData(DataObject * dataObject)
@@ -84,22 +92,8 @@ void RenderConfigWidget::setSelectedData(DataObject * dataObject)
     if (!m_renderView)
         return;
 
-    if (!m_renderView->dataObjects().contains(dataObject))
-        return;
-
-    AbstractVisualizedData * content = nullptr;
-    for (AbstractVisualizedData * it : m_renderView->visualizations())
-    {
-        if (it->dataObject() == dataObject)
-        {
-            content = it;
-            break;
-        }
-    }
-
-    assert(content);
-
-    if (content == m_content)
+    AbstractVisualizedData * content = m_renderView->visualizationFor(dataObject);
+    if (!content || (content == m_content))
         return;
 
     clear();
@@ -109,7 +103,16 @@ void RenderConfigWidget::setSelectedData(DataObject * dataObject)
     m_propertyRoot = m_content->createConfigGroup();
     m_ui->propertyBrowser->setRoot(m_propertyRoot);
     m_ui->propertyBrowser->setColumnWidth(0, 135);
-    emit repaint();
+
+    update();
+}
+
+void RenderConfigWidget::setSelectedData(AbstractRenderView * renderView, DataObject * dataObject)
+{
+    if (renderView != m_renderView)
+        setCurrentRenderView(renderView);
+
+    setSelectedData(dataObject);
 }
 
 void RenderConfigWidget::updateTitle()

@@ -25,6 +25,7 @@ public slots:
     void setCurrentRenderView(AbstractRenderView * renderView = nullptr);
     /** switch to specified dataObject, in case it is visible in my current render view */
     void setSelectedData(DataObject * dataObject);
+    void setSelectedData(AbstractRenderView * renderView, DataObject * dataObject);
     void clear();
 
 private slots:
