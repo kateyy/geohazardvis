@@ -77,6 +77,7 @@ protected:
         connection related to this content */
     virtual void onAddContent(AbstractVisualizedData * content, unsigned int subViewIndex) = 0;
     virtual void onRemoveContent(AbstractVisualizedData * content, unsigned int subViewIndex) = 0;
+    virtual void onRenderViewVisualizationChanged();
 
     void addConnectionForContent(AbstractVisualizedData * content,
         const QMetaObject::Connection & connection);

@@ -83,6 +83,8 @@ QList<DataObject *> RendererImplementationBase3D::filterCompatibleObjects(
 
 void RendererImplementationBase3D::activate(QVTKWidget * qvtkWidget)
 {
+    RendererImplementation::activate(qvtkWidget);
+
     initialize();
 
     // make sure to reuse the existing render window interactor
@@ -97,6 +99,8 @@ void RendererImplementationBase3D::activate(QVTKWidget * qvtkWidget)
 
 void RendererImplementationBase3D::deactivate(QVTKWidget * qvtkWidget)
 {
+    RendererImplementation::deactivate(qvtkWidget);
+
     // this is our render window, so remove it from the widget
     qvtkWidget->SetRenderWindow(nullptr);
     // remove out interactor style from the widget's interactor
@@ -171,6 +175,15 @@ void RendererImplementationBase3D::onRemoveContent(AbstractVisualizedData * cont
 
 void RendererImplementationBase3D::onDataVisibilityChanged(AbstractVisualizedData * /*content*/, unsigned int /*subViewIndex*/)
 {
+}
+
+void RendererImplementationBase3D::onRenderViewVisualizationChanged()
+{
+    RendererImplementation::onRenderViewVisualizationChanged();
+
+    colorMapping()->setVisualizedData(m_renderView.visualizations());
+    if (interactorStyle())
+        interactorStyle()->setRenderedData(renderedData());
 }
 
 void RendererImplementationBase3D::setSelectedData(DataObject * dataObject, vtkIdType itemId)

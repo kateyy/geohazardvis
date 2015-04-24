@@ -15,7 +15,6 @@ public:
         QList<DataObject *> & incompatibleObjects) override;
 
     void activate(QVTKWidget * qvtkWidget) override;
-    void deactivate(QVTKWidget * qvtkWidget) override;
 
 signals:
     void resetStrategy(const QList<DataObject *> & dataObjects);
@@ -23,9 +22,7 @@ signals:
 protected:
     void onRemoveContent(AbstractVisualizedData * content, unsigned int subViewIndex) override;
     void onDataVisibilityChanged(AbstractVisualizedData * content, unsigned int subViewIndex) override;
-
-private slots:
-    void updateColorMapping();
+    void onRenderViewVisualizationChanged();
 
 private:
     RenderViewStrategySwitch * m_strategySwitch;

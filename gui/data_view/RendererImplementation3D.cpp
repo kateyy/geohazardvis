@@ -39,17 +39,6 @@ void RendererImplementation3D::activate(QVTKWidget * qvtkWidget)
 
     if (!m_strategySwitch)
         m_strategySwitch = new RenderViewStrategySwitch(*this);
-
-    connect(&m_renderView, &AbstractRenderView::visualizationsChanged,
-        this, &RendererImplementation3D::updateColorMapping);
-}
-
-void RendererImplementation3D::deactivate(QVTKWidget * qvtkWidget)
-{
-    disconnect(&m_renderView, &AbstractRenderView::visualizationsChanged,
-        this, &RendererImplementation3D::updateColorMapping);
-
-    RendererImplementationBase3D::deactivate(qvtkWidget);
 }
 
 void RendererImplementation3D::onRemoveContent(AbstractVisualizedData * content, unsigned int subViewIndex)
@@ -68,9 +57,10 @@ void RendererImplementation3D::onDataVisibilityChanged(AbstractVisualizedData * 
         setStrategy(nullptr);
 }
 
-void RendererImplementation3D::updateColorMapping()
+void RendererImplementation3D::onRenderViewVisualizationChanged()
 {
-    colorMapping()->setVisualizedData(m_renderView.visualizations());
+    RendererImplementationBase3D::onRenderViewVisualizationChanged();
+
     if (interactorStyle())
         interactorStyle()->setRenderedData(renderedData());
 }

@@ -1,5 +1,7 @@
 #include "RendererImplementation.h"
 
+#include <data_view/AbstractRenderView.h>
+
 
 RendererImplementation::RendererImplementation(AbstractRenderView & renderView, QObject * parent)
     : QObject(parent)
@@ -23,10 +25,13 @@ AbstractRenderView & RendererImplementation::renderView() const
 
 void RendererImplementation::activate(QVTKWidget * /*qvtkWidget*/)
 {
+    connect(&m_renderView, &AbstractRenderView::visualizationsChanged, this, &RendererImplementation::onRenderViewVisualizationChanged);
 }
 
 void RendererImplementation::deactivate(QVTKWidget * /*qvtkWidget*/)
 {
+    disconnect(&m_renderView, &AbstractRenderView::visualizationsChanged, this, &RendererImplementation::onRenderViewVisualizationChanged);
+
     for (const auto & list : m_visConnections)
     {
         for (auto && c : list)
@@ -58,6 +63,10 @@ QList<RendererImplementation::ImplementationConstructor> & RendererImplementatio
     static QList<ImplementationConstructor> list;
 
     return list;
+}
+
+void RendererImplementation::onRenderViewVisualizationChanged()
+{
 }
 
 void RendererImplementation::addConnectionForContent(AbstractVisualizedData * content,
