@@ -8,6 +8,8 @@ LIST(APPEND DEFAULT_COMPILE_DEFS
 #    _CRT_SECURE_NO_DEPRECATE   # Disable CRT deprecation warnings
 )
 
+set(OPTION_LTCG OFF CACHE BOOL "Enable whole program optimization / link time code generation in release builds")
+
 set(WIN32_COMPILE_FLAGS
     /nologo /Zc:wchar_t /Zc:forScope /GR /Zi /fp:precise /MP /W4 /wd4127 /wd4351 /wd4505 /wd4512 /wd4718 /we4239
     # nologo       -> no logo
@@ -59,9 +61,9 @@ set(WIN32_COMPILE_FLAGS
 set(DEFAULT_COMPILE_FLAGS
     ${WIN32_COMPILE_FLAGS}
     $<$<CONFIG:Debug>:          /MDd /RTC1 /RTCc /Od /GS /sdl /GF- >
-    $<$<CONFIG:Release>:        /MD /Ot /Ob2 /Ox /GS- /GL /GF >
-    $<$<CONFIG:RelWithDebInfo>: /MD /Ot /Ob2 /Ox /GS- /GL /GF /Zo>
-    $<$<CONFIG:MinSizeRel>:     /MD /Os /Ob1 /O1 /GS- /GL /GF >
+    $<$<CONFIG:Release>:        /MD /Ot /Ob2 /Ox /GS- /GF >
+    $<$<CONFIG:RelWithDebInfo>: /MD /Ot /Ob2 /Ox /GS- /GF /Zo>
+    $<$<CONFIG:MinSizeRel>:     /MD /Os /Ob1 /O1 /GS- /GF >
 )
 
 set(WIN32_LINKER_FLAGS
@@ -80,7 +82,7 @@ set(DEFAULT_LINKER_FLAGS_DEBUG
 )
 
 set(DEFAULT_LINKER_FLAGS_RELEASE
-    "${WIN32_LINKER_FLAGS} /OPT:REF /LTCG /OPT:ICF /DELAY:UNLOAD /INCREMENTAL:NO"
+    "${WIN32_LINKER_FLAGS} /OPT:REF /OPT:ICF /DELAY:UNLOAD /INCREMENTAL:NO"
     # OPT:REF      -> references: eliminate unreferenced data
     # OPT:ICF      -> enable comdat folding: remove redundant comdats
     # LTCG         -> link time code generation: use link time code generation
@@ -88,9 +90,14 @@ set(DEFAULT_LINKER_FLAGS_RELEASE
 )
 
 set(DEFAULT_LINKER_FLAGS_RELWITHDEBINFO
-    "${WIN32_LINKER_FLAGS} /OPT:REF /LTCG /OPT:ICF /DELAY:UNLOAD /INCREMENTAL:NO /DEBUG"
+    "${WIN32_LINKER_FLAGS} /OPT:REF /OPT:ICF /DELAY:UNLOAD /INCREMENTAL:NO /DEBUG"
 )
 
+if (OPTION_LTCG)
+    LIST(APPEND DEFAULT_COMPILE_FLAGS $<$<NOT:$<CONFIG:Debug>>: /GL> )
+    set(DEFAULT_LINKER_FLAGS_RELEASE "${DEFAULT_LINKER_FLAGS_RELEASE} /LTCG")
+    set(DEFAULT_LINKER_FLAGS_RELWITHDEBINFO "${DEFAULT_LINKER_FLAGS_RELWITHDEBINFO} /LTCG")
+endif()
 
 # Add platform specific libraries for linking
 set(EXTRA_LIBS "")
