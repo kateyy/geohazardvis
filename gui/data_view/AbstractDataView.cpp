@@ -45,6 +45,7 @@ QDockWidget * AbstractDataView::dockWidgetParent()
     m_dockWidgetParent = new QDockWidget();
     m_dockWidgetParent->setWidget(this);
     m_dockWidgetParent->installEventFilter(this);
+    m_dockWidgetParent->setFocusPolicy(Qt::StrongFocus);
 
     return m_dockWidgetParent;
 }
