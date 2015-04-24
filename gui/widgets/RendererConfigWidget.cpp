@@ -17,8 +17,8 @@
 #include <reflectionzeug/PropertyGroup.h>
 
 #include <core/types.h>
-#include <gui/data_view/RenderView.h>
-#include <gui/data_view/RendererImplementation3D.h>
+#include <gui/data_view/AbstractRenderView.h>
+#include <gui/data_view/RendererImplementationBase3D.h>
 #include <gui/data_view/RendererImplementationPlot.h>
 #include <gui/propertyguizeug_extension/ColorEditorRGB.h>
 
@@ -89,7 +89,7 @@ void RendererConfigWidget::setRenderViews(const QList<AbstractRenderView *> & re
             renderView->friendlyName(),
             reinterpret_cast<qulonglong>(renderView));
 
-        connect(renderView, &RenderView::windowTitleChanged, this, &RendererConfigWidget::updateRenderViewTitle);
+        connect(renderView, &AbstractRenderView::windowTitleChanged, this, &RendererConfigWidget::updateRenderViewTitle);
     }
 
     if (renderViews.isEmpty())
@@ -121,15 +121,15 @@ void RendererConfigWidget::setCurrentRenderView(int index)
     m_ui->propertyBrowser->setColumnWidth(0, 135);
 
 
-    RenderView * lastSingleView = dynamic_cast<RenderView *>(lastRenderView);
-    RenderView * currentSingleView = dynamic_cast<RenderView *>(m_currentRenderView);
-    RendererImplementation3D * impl3D;
-    if (lastSingleView && (impl3D = dynamic_cast<RendererImplementation3D *>(&lastSingleView->implementation())))
+    auto lastSingleView = dynamic_cast<AbstractRenderView *>(lastRenderView);
+    auto currentSingleView = dynamic_cast<AbstractRenderView *>(m_currentRenderView);
+    RendererImplementationBase3D * impl3D;
+    if (lastSingleView && (impl3D = dynamic_cast<RendererImplementationBase3D *>(&lastSingleView->implementation())))
     {
         m_eventConnect->Disconnect(impl3D->camera(), vtkCommand::ModifiedEvent, this, SLOT(readCameraStats(vtkObject *)), this);
         m_eventEmitters->RemoveItem(impl3D->camera());
     }
-    if (currentSingleView && (impl3D = dynamic_cast<RendererImplementation3D *>(&currentSingleView->implementation())))
+    if (currentSingleView && (impl3D = dynamic_cast<RendererImplementationBase3D *>(&currentSingleView->implementation())))
     {
         m_eventConnect->Connect(impl3D->camera(), vtkCommand::ModifiedEvent, this, SLOT(readCameraStats(vtkObject *)), this);
         m_eventEmitters->AddItem(impl3D->camera());
@@ -160,7 +160,7 @@ PropertyGroup * RendererConfigWidget::createPropertyGroup(AbstractRenderView * r
     case ContentType::Rendered2D:
     case ContentType::Rendered3D:
     {
-        RendererImplementation3D * impl3D = dynamic_cast<RendererImplementation3D *>(&renderView->implementation());
+        RendererImplementationBase3D * impl3D = dynamic_cast<RendererImplementationBase3D *>(&renderView->implementation());
         assert(impl3D);
         return createPropertyGroupRenderer(renderView, impl3D);
     }

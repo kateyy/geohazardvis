@@ -12,7 +12,7 @@ class vtkEventQtSlotConnect;
 class Ui_ColorMappingChooser;
 class AbstractRenderView;
 class ColorMapping;
-class RendererImplementation3D;
+class RendererImplementationBase3D;
 
 class ColorMappingChooser : public QDockWidget
 {
@@ -60,7 +60,7 @@ private:
     QList<vtkSmartPointer<vtkLookupTable>> m_gradients;
 
     AbstractRenderView * m_renderView;
-    RendererImplementation3D * m_renderViewImpl;
+    RendererImplementationBase3D * m_renderViewImpl;
     ColorMapping * m_mapping;
     /** check if we are moving the actor or if the user interacts */
     bool m_movingColorLegend;

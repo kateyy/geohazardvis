@@ -98,10 +98,8 @@ MainWindow::MainWindow()
         if (!observation)
             return;
 
-        auto view = new ResidualVerificationView(-1);
+        auto view = DataMapping::instance().createRenderView<ResidualVerificationView>();
         view->setObservationData(observation);
-        view->dockWidgetParent()->setAttribute(Qt::WA_DeleteOnClose);
-        addDockWidget(Qt::TopDockWidgetArea, view->dockWidgetParent());
     });
 }
 

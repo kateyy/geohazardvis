@@ -20,7 +20,9 @@
 #include <core/vtkhelper.h>
 #include <core/color_mapping/ColorMapping.h>
 #include <core/data_objects/ImageDataObject.h>
+#include <gui/SelectionHandler.h>
 #include <gui/data_view/RendererImplementationBase3D.h>
+#include <gui/data_view/RenderViewStrategyImage2D.h>
 
 
 ResidualVerificationView::ResidualVerificationView(int index, QWidget * parent, Qt::WindowFlags flags)
@@ -37,10 +39,14 @@ ResidualVerificationView::ResidualVerificationView(int index, QWidget * parent, 
     layout->addWidget(m_qvtkMain);
 
     setLayout(layout);
+
+    SelectionHandler::instance().addRenderView(this);
 }
 
 ResidualVerificationView::~ResidualVerificationView()
 {
+    SelectionHandler::instance().removeRenderView(this);
+
     for (auto vis : m_visualizations)
     {
         if (!vis)
@@ -74,33 +80,53 @@ DataObject * ResidualVerificationView::selectedData() const
 
 AbstractVisualizedData * ResidualVerificationView::selectedDataVisualization() const
 {
-    //int viewIdx = m_viewImpls.indexOf(m_selectedImplementation);
+    if (m_visualizations.isEmpty())
+        return nullptr;
 
-    //return m_visualizations[viewIdx];
+    // prefer the observation data as reference
+    for (auto && vis : m_visualizations)
+    {
+        if (vis)
+            return vis;
+    }
 
     return nullptr;
 }
 
 void ResidualVerificationView::lookAtData(DataObject * dataObject, vtkIdType itemId)
 {
-    /*int viewIdx = m_viewImpls.indexOf(m_selectedImplementation);
-
-    m_viewImpls[viewIdx]->lookAtData(dataObject, itemId);*/
+    m_implementation->lookAtData(dataObject, itemId);
 }
 
 void ResidualVerificationView::setObservationData(ImageDataObject * observation)
 {
-    setData(0, observation);
+    // we have to call addDataObjects here for consistency with the superclass API
+    const int viewIndex = 0;
+    if (!m_images.isEmpty() && m_images[viewIndex])
+        removeDataObjects({ m_images[viewIndex] });
+    QList<DataObject *> incompatible;
+    addDataObjects({ observation }, incompatible, viewIndex);
+    assert(incompatible.isEmpty()); // the function interface already enforces compatibility
 }
 
 void ResidualVerificationView::setModelData(ImageDataObject * model)
 {
-    setData(1, model);
+    const int viewIndex = 1;
+    if (!m_images.isEmpty() && m_images[viewIndex])
+        removeDataObjects({ m_images[viewIndex] });
+    QList<DataObject *> incompatible;
+    addDataObjects({ model }, incompatible, viewIndex);
+    assert(incompatible.isEmpty());
 }
 
 void ResidualVerificationView::setResidualData(ImageDataObject * residual)
 {
-    setData(2, residual);
+    const int viewIndex = 2;
+    if (!m_images.isEmpty() && m_images[viewIndex])
+        removeDataObjects({ m_images[viewIndex] });
+    QList<DataObject *> incompatible;
+    addDataObjects({ residual }, incompatible, viewIndex);
+    assert(incompatible.isEmpty());
 }
 
 unsigned int ResidualVerificationView::numberOfSubViews() const
@@ -144,7 +170,7 @@ void ResidualVerificationView::showEvent(QShowEvent * event)
 
 QWidget * ResidualVerificationView::contentWidget()
 {
-    return this;
+    return m_qvtkMain;
 }
 
 void ResidualVerificationView::highlightedIdChangedEvent(DataObject * dataObject, vtkIdType itemId)
@@ -165,27 +191,48 @@ void ResidualVerificationView::addDataObjectsImpl(const QList<DataObject *> & da
     auto data = dataObjects.isEmpty() ? nullptr : dataObjects.first();
     auto imageData = dynamic_cast<ImageDataObject *>(data);
     if (!imageData)
-        qDebug() << "ResidualVerificationView only supports ImageDataObjects!";
-
-    switch (subViewIndex)
     {
-    case 0:
-        setObservationData(imageData);
-        break;
-    case 1:
-        setModelData(imageData);
-        break;
-    case 2:
-        setResidualData(imageData);
-        break;
-    default:
-        assert(false);
+        qDebug() << "ResidualVerificationView only supports ImageDataObjects!";
+        incompatibleObjects.prepend(data);
     }
+
+    setData(subViewIndex, imageData);
+
+    emit visualizationsChanged();
+
+    updateGuiSelection();
+
+    if (imageData)
+        implementation().resetCamera(true);
+
+    render();
 }
 
-void ResidualVerificationView::hideDataObjectsImpl(const QList<DataObject *> & /*dataObjects*/, unsigned int /*subViewIndex*/)
+void ResidualVerificationView::hideDataObjectsImpl(const QList<DataObject *> & dataObjects, unsigned int subViewIndex)
 {
-    return; // not implemented...
+    assert(m_visualizations.size() > int(subViewIndex));
+
+    auto && vis = m_visualizations[subViewIndex];
+
+    if (!vis)
+        return;
+
+    for (auto && data : dataObjects)
+    {
+        if (vis->dataObject() != data)
+            continue;
+
+        // don't cache for now
+        emit beforeDeleteVisualization(vis);
+        delete vis;
+        vis = nullptr;
+    }
+
+    updateGuiSelection();
+
+    emit visualizationsChanged();
+
+    render();
 }
 
 void ResidualVerificationView::removeDataObjectsImpl(const QList<DataObject *> & dataObjects)
@@ -198,16 +245,30 @@ void ResidualVerificationView::removeDataObjectsImpl(const QList<DataObject *> &
                 setData(i, nullptr);
         }
     }
+
+    emit visualizationsChanged();
+
+    updateGuiSelection();
+
+    render();
 }
 
 QList<AbstractVisualizedData *> ResidualVerificationView::visualizationsImpl(int subViewIndex) const
 {
+    QList<AbstractVisualizedData *> validVis;
+
     if (subViewIndex == -1)
     {
-        return m_visualizations.toList();
+        for (auto && vis : m_visualizations)
+            if (vis)
+                validVis << vis;
+        return validVis;
     }
 
-    return{ m_visualizations[subViewIndex] };
+    if (m_visualizations[subViewIndex])
+        return{ m_visualizations[subViewIndex] };
+
+    return{};
 }
 
 void ResidualVerificationView::axesEnabledChangedEvent(bool enabled)
@@ -223,10 +284,12 @@ void ResidualVerificationView::initialize()
     m_implementation = new RendererImplementationBase3D(*this);
     m_implementation->activate(m_qvtkMain);
 
+    auto strategy = new RenderViewStrategyImage2D(*m_implementation, m_implementation);
+    m_implementation->setStrategy(strategy);
+
     m_images.resize(3);
     m_visualizations.resize(3);
 
-    // pass the strategy around, set viewports etc
     for (unsigned i = 0; i < numberOfSubViews(); ++i)
     {
         auto renderer = m_implementation->renderer(i);
@@ -316,6 +379,13 @@ void ResidualVerificationView::updateResidual()
         residualData->SetValue(i, value);
     }
 
-    setResidualData(residual);
+    setData(2, residual);
+}
+
+void ResidualVerificationView::updateGuiSelection()
+{
+    updateTitle();
+
+    emit selectedDataChanged(this, selectedData());
 }
 

@@ -30,6 +30,9 @@ public:
     AbstractVisualizedData * selectedDataVisualization() const override;
     void lookAtData(DataObject * dataObject, vtkIdType itemId) override;
 
+    /** Convenience API to set the images for the use case specific sub-view.
+        These functions have the same effect as calling removeDataObject(currentImage) and
+        addDataObject(newImage) for the respective sub-views. */
     void setObservationData(ImageDataObject * observation);
     void setModelData(ImageDataObject * model);
     void setResidualData(ImageDataObject * residual);
@@ -41,7 +44,7 @@ public:
 
     RendererImplementation & implementation() const override;
 
-    public slots:
+public slots:
     void render() override;
 
 protected:
@@ -63,9 +66,11 @@ protected:
 private:
     void initialize();
 
+    // low level function, that won't trigger GUI updates
     void setData(unsigned int subViewIndex, ImageDataObject * dataObject);
-
     void updateResidual();
+
+    void updateGuiSelection();
 
 private:
     QVTKWidget * m_qvtkMain;

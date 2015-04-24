@@ -21,8 +21,8 @@
 #include <core/color_mapping/ColorMapping.h>
 #include <core/ThirdParty/alphanum.hpp>
 
-#include <gui/data_view/RenderView.h>
-#include <gui/data_view/RendererImplementation3D.h>
+#include <gui/data_view/AbstractRenderView.h>
+#include <gui/data_view/RendererImplementationBase3D.h>
 
 
 ColorMappingChooser::ColorMappingChooser(QWidget * parent)
@@ -243,10 +243,8 @@ void ColorMappingChooser::checkRenderViewColorMapping()
     if (!m_renderView)
         return;
 
-    RenderView * rv = dynamic_cast<RenderView *>(m_renderView);
-    if (!rv)
-        return;
-    m_renderViewImpl = dynamic_cast<RendererImplementation3D *>(&rv->implementation());
+    // color mapping is currently only implemented for 3D/render views (not for context/2D/plot views)
+    m_renderViewImpl = dynamic_cast<RendererImplementationBase3D *>(&m_renderView->implementation());
     if (!m_renderViewImpl)
         return;
 
@@ -299,7 +297,7 @@ void ColorMappingChooser::rebuildGui()
         m_ui->colorLegendGroupBox->setEnabled(newMapping->currentScalarsUseMappingLegend());
         m_ui->colorLegendGroupBox->setChecked(newMapping->colorMappingLegendVisible());
 
-        m_qtConnect << connect(m_renderView, &RenderView::visualizationsChanged, this, &ColorMappingChooser::rebuildGui);
+        m_qtConnect << connect(m_renderView, &AbstractRenderView::visualizationsChanged, this, &ColorMappingChooser::rebuildGui);
         m_qtConnect << connect(newMapping, &ColorMapping::scalarsChanged, this, &ColorMappingChooser::rebuildGui);
         m_qtConnect << connect(m_ui->colorLegendGroupBox, &QGroupBox::toggled,
             [this, newMapping] (bool checked) {

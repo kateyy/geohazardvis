@@ -5,12 +5,11 @@
 #include <QMap>
 
 
-class MainWindow;
-class DataObject;
 class AbstractDataView;
 class AbstractRenderView;
+class DataObject;
+class MainWindow;
 class TableView;
-class RenderView;
 
 
 class DataMapping : public QObject
@@ -28,6 +27,9 @@ public:
     AbstractRenderView * openInRenderView(QList<DataObject *> dataObjects);
     void addToRenderView(QList<DataObject *> dataObjects, AbstractRenderView * renderView, unsigned int subViewIndex = 0);
 
+    template<typename T>
+    T * createRenderView();
+
     AbstractRenderView * focusedRenderView();
 
 public slots:
@@ -44,6 +46,7 @@ private slots:
     void renderViewClosed();
 
 private:
+    void addRenderView(AbstractRenderView * renderView);
     bool askForNewRenderView(const QString & rendererName, const QList<DataObject *> & relevantObjects);
 
 private:
@@ -56,3 +59,14 @@ private:
 
     AbstractRenderView * m_focusedRenderView;
 };
+
+
+template<typename T>
+T * DataMapping::createRenderView()
+{
+    auto view = new T(m_nextRenderViewIndex++);
+
+    addRenderView(view);
+
+    return view;
+}

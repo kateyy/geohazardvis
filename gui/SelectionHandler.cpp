@@ -8,8 +8,8 @@
 
 #include <core/data_objects/DataObject.h>
 
-#include "gui/data_view/TableView.h"
-#include "gui/data_view/RenderView.h"
+#include <gui/data_view/AbstractRenderView.h>
+#include <gui/data_view/TableView.h>
 
 
 SelectionHandler & SelectionHandler::instance()
@@ -43,7 +43,7 @@ void SelectionHandler::addTableView(TableView * tableView)
     });
 }
 
-void SelectionHandler::addRenderView(RenderView * renderView)
+void SelectionHandler::addRenderView(AbstractRenderView * renderView)
 {
     QAction * syncToggleAction = addAbstractDataView(renderView);
 
@@ -74,7 +74,7 @@ void SelectionHandler::removeTableView(TableView * tableView)
     delete action;
 }
 
-void SelectionHandler::removeRenderView(RenderView * renderView)
+void SelectionHandler::removeRenderView(AbstractRenderView * renderView)
 {
     QAction * action = m_renderViews[renderView];
 
@@ -97,8 +97,8 @@ void SelectionHandler::hightlightSelection(DataObject * dataObject, vtkIdType hi
         action = m_tableViews[table];
     else
     {
-        assert(dynamic_cast<RenderView *>(sender()));
-        action = m_renderViews.value(static_cast<RenderView *>(sender()));
+        assert(dynamic_cast<AbstractRenderView *>(sender()));
+        action = m_renderViews.value(static_cast<AbstractRenderView *>(sender()));
     }
     assert(action);
 

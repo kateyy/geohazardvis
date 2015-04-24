@@ -15,7 +15,7 @@ namespace reflectionzeug
 }
 class Ui_RendererConfigWidget;
 class AbstractRenderView;
-class RendererImplementation3D;
+class RendererImplementationBase3D;
 class RendererImplementationPlot;
 
 
@@ -41,7 +41,7 @@ private slots:
 private:
     reflectionzeug::PropertyGroup * createPropertyGroup(AbstractRenderView * renderView);
     reflectionzeug::PropertyGroup * createPropertyGroupRenderer(
-        AbstractRenderView * renderView, RendererImplementation3D * impl);
+        AbstractRenderView * renderView, RendererImplementationBase3D * impl);
     reflectionzeug::PropertyGroup * createPropertyGroupPlot(
         AbstractRenderView * renderView, RendererImplementationPlot * impl);
 

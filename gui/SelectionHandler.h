@@ -11,8 +11,8 @@ class QMenu;
 class QAction;
 
 class AbstractDataView;
+class AbstractRenderView;
 class TableView;
-class RenderView;
 class DataObject;
 class IPickingInteractorStyle;
 
@@ -28,8 +28,8 @@ public:
     void addTableView(TableView * tableView);
     void removeTableView(TableView * tableView);
     /** consider this render view when updating selections */
-    void addRenderView(RenderView * renderView);
-    void removeRenderView(RenderView * renderView);
+    void addRenderView(AbstractRenderView * renderView);
+    void removeRenderView(AbstractRenderView * renderView);
 
     void setSyncToggleMenu(QMenu * syncToggleMenu);
 
@@ -47,8 +47,8 @@ private:
     QAction * addAbstractDataView(AbstractDataView * dataView);
 
 private:
-    QMap<TableView*, QAction*> m_tableViews;
-    QMap<RenderView*, QAction*> m_renderViews;
+    QMap<TableView *, QAction *> m_tableViews;
+    QMap<AbstractRenderView *, QAction *> m_renderViews;
 
     QMenu * m_syncToggleMenu;
 };

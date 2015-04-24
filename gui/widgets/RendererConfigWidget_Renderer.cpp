@@ -17,7 +17,7 @@
 #include <core/vtkcamerahelper.h>
 #include <core/reflectionzeug_extension/QStringProperty.h>
 #include <gui/data_view/AbstractRenderView.h>
-#include <gui/data_view/RendererImplementation3D.h>
+#include <gui/data_view/RendererImplementationBase3D.h>
 
 
 using namespace reflectionzeug;
@@ -42,8 +42,8 @@ void RendererConfigWidget::readCameraStats(vtkObject * caller)
 {
     assert(vtkCamera::SafeDownCast(caller));
     vtkCamera * camera = static_cast<vtkCamera *>(caller);
-    assert(m_currentRenderView && dynamic_cast<RendererImplementation3D *>(&m_currentRenderView->implementation()));
-    assert(static_cast<RendererImplementation3D *>(&m_currentRenderView->implementation())->camera() == camera);
+    assert(m_currentRenderView && dynamic_cast<RendererImplementationBase3D *>(&m_currentRenderView->implementation()));
+    assert(static_cast<RendererImplementationBase3D *>(&m_currentRenderView->implementation())->camera() == camera);
 
     std::function<void(AbstractProperty &)> updateFunc = [&updateFunc] (AbstractProperty & property)
     {
@@ -63,7 +63,7 @@ void RendererConfigWidget::readCameraStats(vtkObject * caller)
     // update axes text label rotations for terrain view
     if (m_currentRenderView->contentType() == ContentType::Rendered3D)
     {
-        RendererImplementation3D & impl3D = static_cast<RendererImplementation3D &>(m_currentRenderView->implementation());
+        RendererImplementationBase3D & impl3D = static_cast<RendererImplementationBase3D &>(m_currentRenderView->implementation());
         double azimuth = TerrainCamera::getAzimuth(*camera);
         if (TerrainCamera::getVerticalElevation(*camera) < 0)
             azimuth *= -1;
@@ -73,7 +73,7 @@ void RendererConfigWidget::readCameraStats(vtkObject * caller)
     }
 }
 
-reflectionzeug::PropertyGroup * RendererConfigWidget::createPropertyGroupRenderer(AbstractRenderView * renderView, RendererImplementation3D * impl)
+reflectionzeug::PropertyGroup * RendererConfigWidget::createPropertyGroupRenderer(AbstractRenderView * renderView, RendererImplementationBase3D * impl)
 {
     PropertyGroup * root = new PropertyGroup();
     vtkRenderer * renderer = impl->renderer();

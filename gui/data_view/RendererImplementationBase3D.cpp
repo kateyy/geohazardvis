@@ -212,7 +212,10 @@ void RendererImplementationBase3D::resetCamera(bool toInitialPosition)
         strategy().resetCamera(*camera());
 
     for (auto && viewport : m_viewportSetups)
-        viewport.renderer->ResetCamera();
+    {
+        if (viewport.dataBounds.IsValid())
+            viewport.renderer->ResetCamera();
+    }
 
     render();
 }

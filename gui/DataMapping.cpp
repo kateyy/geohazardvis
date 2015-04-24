@@ -115,13 +115,7 @@ void DataMapping::openInTable(DataObject * dataObject)
 
 AbstractRenderView * DataMapping::openInRenderView(QList<DataObject *> dataObjects)
 {
-    auto renderView = new RenderView(m_nextRenderViewIndex++);
-    m_renderViews.insert(renderView->index(), renderView);
-
-    connect(renderView, &AbstractDataView::focused, this, &DataMapping::setFocusedView);
-    connect(renderView, &AbstractDataView::closed, this, &DataMapping::renderViewClosed);
-
-    m_mainWindow.addRenderView(renderView);
+    auto renderView = createRenderView<RenderView>();
 
     addToRenderView(dataObjects, renderView);
 
@@ -162,7 +156,8 @@ void DataMapping::setFocusedView(AbstractDataView * view)
         if (m_focusedRenderView)
             m_focusedRenderView->setCurrent(false);
 
-        m_focusedRenderView = static_cast<RenderView*>(view);
+        assert(dynamic_cast<AbstractRenderView *>(view));
+        m_focusedRenderView = static_cast<AbstractRenderView *>(view);
 
         if (m_focusedRenderView)
         {
@@ -198,8 +193,8 @@ void DataMapping::tableClosed()
 
 void DataMapping::renderViewClosed()
 {
-    RenderView * renderView = dynamic_cast<RenderView*>(sender());
-    assert(renderView);
+    assert(dynamic_cast<AbstractRenderView *>(sender()));
+    auto renderView = static_cast<AbstractRenderView *>(sender());
 
     m_renderViews.remove(renderView->index());
 
@@ -209,6 +204,19 @@ void DataMapping::renderViewClosed()
     renderView->deleteLater();
 
     emit renderViewsChanged(m_renderViews.values());
+}
+
+void DataMapping::addRenderView(AbstractRenderView * renderView)
+{
+    assert(!m_renderViews.contains(renderView->index()));
+    assert(!m_renderViews.values().contains(renderView));
+
+    m_renderViews.insert(renderView->index(), renderView);
+
+    connect(renderView, &AbstractDataView::focused, this, &DataMapping::setFocusedView);
+    connect(renderView, &AbstractDataView::closed, this, &DataMapping::renderViewClosed);
+
+    m_mainWindow.addRenderView(renderView);
 }
 
 bool DataMapping::askForNewRenderView(const QString & rendererName, const QList<DataObject *> & relevantObjects)
