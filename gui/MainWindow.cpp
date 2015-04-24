@@ -15,7 +15,6 @@
 #include <core/utility/vtkhelper.h>
 #include <core/DataSetHandler.h>
 #include <core/data_objects/DataObject.h>
-#include <core/data_objects/ImageDataObject.h>
 #include <core/io/Exporter.h>
 #include <core/io/Loader.h>
 #include <core/rendered_data/RenderedData.h>
@@ -24,7 +23,6 @@
 #include <gui/DataMapping.h>
 #include <gui/SelectionHandler.h>
 #include <gui/data_view/AbstractRenderView.h>
-#include <gui/data_view/ResidualVerificationView.h>
 #include <gui/widgets/CanvasExporterWidget.h>
 #include <gui/widgets/ColorMappingChooser.h>
 #include <gui/widgets/DEMWidget.h>
@@ -86,22 +84,6 @@ MainWindow::MainWindow()
     connect(m_ui->actionExport_To, &QAction::triggered,
         [this] (bool) { m_canvasExporter->captureScreenshotTo(); });
     connect(m_dataMapping, &DataMapping::focusedRenderViewChanged, m_canvasExporter, &CanvasExporterWidget::setRenderView);
-
-    connect(m_ui->actionResidual_Test, &QAction::triggered, [this] (bool) {
-        ImageDataObject * observation = nullptr;
-        for (auto data : DataSetHandler::instance().dataSets())
-        {
-            observation = dynamic_cast<ImageDataObject *>(data);
-            if (observation)
-                break;
-        }
-        if (!observation)
-            return;
-
-        auto view = DataMapping::instance().createRenderView<ResidualVerificationView>();
-        view->setObservationData(observation);
-        view->setModelData(observation);
-    });
 }
 
 MainWindow::~MainWindow()

@@ -61,7 +61,6 @@
     </widget>
     <addaction name="actionNew_Render_View"/>
     <addaction name="menuSynchronize_Selections"/>
-    <addaction name="actionResidual_Test"/>
    </widget>
    <widget class="QMenu" name="menuImage_Export">
     <property name="title">
