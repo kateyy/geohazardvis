@@ -143,6 +143,8 @@ set ( SOURCES
 
     ThirdParty/alphanum.hpp
 
+    utility/qthelper.h
+    utility/qthelper.cpp
     utility/vtkcamerahelper.h
     utility/vtkcamerahelper.cpp
     utility/vtkhelper.h
