@@ -470,7 +470,7 @@ void ResidualVerificationView::updateResidual()
     {
         float o = (float)observationData->GetTuple(i)[0];
         float m = (float)modelData->GetTuple(i)[0];
-        float d = o - 1000.f * m;
+        float d = o - m;
         residualData->SetValue(i, d);
     }
 
@@ -509,32 +509,50 @@ void ResidualVerificationView::updateComboBoxes()
     m_observationCombo->clear();
     m_modelCombo->clear();
 
-    QStringList imagesAndSurfaces;
+    QList<ImageDataObject *> images;
+    QList<PolyDataObject *> polyData2p5D;
 
-    for (auto && data : DataSetHandler::instance().dataSets())
+    for (DataObject * data : DataSetHandler::instance().dataSets())
     {
-        if (dynamic_cast<ImageDataObject *>(data))
-            imagesAndSurfaces << data->name();
+        qulonglong ptrData = reinterpret_cast<size_t>(data);
 
+        // ImageDataObjects can directly be used as observation/model
+        if (dynamic_cast<ImageDataObject *>(data))
+        {
+            m_observationCombo->addItem(data->name(), ptrData);
+            m_modelCombo->addItem(data->name(), ptrData);
+            continue;
+        }
+
+        // allow to transform 2.5D poly data into model surface grid
         if (auto poly = dynamic_cast<PolyDataObject *>(data))
         {
-            if (poly->is2p5D())
-                imagesAndSurfaces << data->name();
+            if (!poly->is2p5D())
+                continue;
+
+            m_modelCombo->addItem(data->name(), ptrData);
         }
     }
 
-    m_observationCombo->addItems(imagesAndSurfaces);
-    m_modelCombo->addItems(imagesAndSurfaces);
+    m_observationCombo->setCurrentIndex(-1);
+    for (int i = 0; i < m_observationCombo->count(); ++i)
+    {
+        if (m_observationCombo->itemText(i) != oldObservationName)
+            continue;
 
-    if (oldObservationName.isEmpty() || !imagesAndSurfaces.contains(oldObservationName))
-        m_observationCombo->setCurrentIndex(-1);
-    else
-        m_observationCombo->setCurrentText(oldObservationName);
+        m_observationCombo->setCurrentIndex(i);
+        break;
+    }
 
-    if (oldModelName.isEmpty() || !imagesAndSurfaces.contains(oldModelName))
-        m_modelCombo->setCurrentIndex(-1);
-    else
-        m_modelCombo->setCurrentText(oldModelName);
+    m_modelCombo->setCurrentIndex(-1);
+    for (int i = 0; i < m_modelCombo->count(); ++i)
+    {
+        if (m_modelCombo->itemText(i) != oldModelName)
+            continue;
+
+        m_modelCombo->setCurrentIndex(i);
+        break;
+    }
 
     m_disableGuiUpdate = false;
 }
@@ -546,19 +564,10 @@ void ResidualVerificationView::updateObservationFromUi(int index)
 
     m_disableGuiUpdate = true;
 
-    if (DataSetHandler::instance().dataSets().size() <= index || index < 0)
-    {
-        setObservationData(nullptr);
-        return;
-    }
+    auto data = reinterpret_cast<DataObject *>(m_observationCombo->itemData(index, Qt::UserRole).toULongLong());
 
-    DataObject * data = DataSetHandler::instance().dataSets()[index];
     auto image = dynamic_cast<ImageDataObject *>(data);
-    if (!image)
-    {
-        qDebug() << "Only image supported, currently";
-        return;
-    }
+    assert(image);
 
     setObservationData(image);
 
@@ -572,13 +581,8 @@ void ResidualVerificationView::updateModelFromUi(int index)
 
     m_disableGuiUpdate = true;
 
-    if (DataSetHandler::instance().dataSets().size() <= index || index < 0)
-    {
-        setModelData(nullptr);
-        return;
-    }
-
-    DataObject * data = DataSetHandler::instance().dataSets()[index];
+    auto data = reinterpret_cast<DataObject *>(m_modelCombo->itemData(index, Qt::UserRole).toULongLong());
+    
     ImageDataObject * image = dynamic_cast<ImageDataObject *>(data);
 
     QString modelImageName = data->name() + " (2D Grid)";
