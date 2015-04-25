@@ -75,6 +75,7 @@
      <string>&amp;Data Sets</string>
     </property>
     <addaction name="actionApply_Digital_Elevation_Model"/>
+    <addaction name="actionObservation_Model_Residual_View"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menu_Data_Sets"/>
@@ -145,6 +146,11 @@
   <action name="actionResidual_Test">
    <property name="text">
     <string>Residual Test</string>
+   </property>
+  </action>
+  <action name="actionObservation_Model_Residual_View">
+   <property name="text">
+    <string>Observation/Model/Residual View</string>
    </property>
   </action>
  </widget>

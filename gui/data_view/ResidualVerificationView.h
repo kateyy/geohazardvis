@@ -8,6 +8,7 @@
 
 
 class QVTKWidget;
+class QComboBox;
 
 class ColorMapping;
 class ImageDataObject;
@@ -73,9 +74,16 @@ private:
     void updateResidual();
 
     void updateGuiSelection();
+    void updateComboBoxes();
+    void updateObservationFromUi(int index);
+    void updateModelFromUi(int index);
 
 private:
     QVTKWidget * m_qvtkMain;
+    QComboBox * m_observationCombo;
+    QComboBox * m_modelCombo;
+    bool m_disableGuiUpdate;
+
     RendererImplementationBase3D * m_implementation;
     QVector<ImageDataObject *> m_images;
     QVector<AbstractVisualizedData *> m_visualizations;

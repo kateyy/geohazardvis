@@ -6,6 +6,8 @@
 
 #include <QBoxLayout>
 #include <QDebug>
+#include <QComboBox>
+#include <QToolBar>
 
 #include <QVTKWidget.h>
 #include <vtkFloatArray.h>
@@ -14,20 +16,61 @@
 #include <vtkRenderer.h>
 #include <vtkRenderWindow.h>
 
+#include <vtkAssignAttribute.h>
+#include <vtkElevationFilter.h>
+#include <vtkTransform.h>
+#include <vtkTransformFilter.h>
+#include <vtkProbeFilter.h>
+#include <vtkPolyData.h>
+
 #include <core/AbstractVisualizedData.h>
 #include <core/DataSetHandler.h>
 #include <core/types.h>
-#include <core/utility/vtkhelper.h>
 #include <core/color_mapping/ColorMapping.h>
 #include <core/data_objects/ImageDataObject.h>
+#include <core/data_objects/PolyDataObject.h>
+#include <core/utility/vtkhelper.h>
 #include <gui/SelectionHandler.h>
 #include <gui/data_view/RendererImplementationBase3D.h>
 #include <gui/data_view/RenderViewStrategyImage2D.h>
 
 
+namespace
+{
+
+vtkSmartPointer<vtkImageData> createImageFromPoly(vtkImageData * referenceGrid, vtkPolyData * poly)
+{
+    VTK_CREATE(vtkElevationFilter, polyElevationScalars);
+    polyElevationScalars->SetInputData(poly);
+
+    VTK_CREATE(vtkTransform, polyFlattenerTransform);
+    polyFlattenerTransform->Scale(1, 1, 0);
+    VTK_CREATE(vtkTransformFilter, polyFlattener);
+    polyFlattener->SetTransform(polyFlattenerTransform);
+    polyFlattener->SetInputConnection(polyElevationScalars->GetOutputPort());
+
+    VTK_CREATE(vtkImageData, newGridStructure);
+    newGridStructure->CopyStructure(referenceGrid);
+
+    VTK_CREATE(vtkProbeFilter, probe);
+    probe->SetInputData(newGridStructure);
+    probe->SetSourceConnection(polyFlattener->GetOutputPort());
+
+    probe->Update();
+    vtkSmartPointer<vtkImageData> newImage = vtkImageData::SafeDownCast(probe->GetOutput());
+
+    return newImage;
+}
+
+}
+
+
 ResidualVerificationView::ResidualVerificationView(int index, QWidget * parent, Qt::WindowFlags flags)
     : AbstractRenderView(index, parent, flags)
     , m_qvtkMain(nullptr)
+    , m_observationCombo(nullptr)
+    , m_modelCombo(nullptr)
+    , m_disableGuiUpdate(false)
     , m_implementation(nullptr)
 {
     auto layout = new QBoxLayout(QBoxLayout::Direction::TopToBottom);
@@ -40,9 +83,23 @@ ResidualVerificationView::ResidualVerificationView(int index, QWidget * parent, 
 
     setLayout(layout);
 
+    m_observationCombo = new QComboBox();
+    m_modelCombo = new QComboBox();
+    toolBar()->addWidget(m_observationCombo);
+    toolBar()->addWidget(m_modelCombo);
+
     initialize();   // lazy initialize in not really needed for now
 
     SelectionHandler::instance().addRenderView(this);
+
+    connect(&DataSetHandler::instance(), &DataSetHandler::dataObjectsChanged, this, &ResidualVerificationView::updateComboBoxes);
+
+    connect(m_observationCombo, static_cast<void(QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
+        this, &ResidualVerificationView::updateObservationFromUi);
+    connect(m_modelCombo, static_cast<void(QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
+        this, &ResidualVerificationView::updateModelFromUi);
+
+    updateComboBoxes();
 }
 
 ResidualVerificationView::~ResidualVerificationView()
@@ -124,31 +181,46 @@ void ResidualVerificationView::setObservationData(ImageDataObject * observation)
 {
     // we have to call addDataObjects here for consistency with the superclass API
     const int viewIndex = 0;
+    if (m_images.size() > viewIndex && m_images[viewIndex] == observation)
+        return;
     if (!m_images.isEmpty() && m_images[viewIndex])
         removeDataObjects({ m_images[viewIndex] });
-    QList<DataObject *> incompatible;
-    addDataObjects({ observation }, incompatible, viewIndex);
-    assert(incompatible.isEmpty()); // the function interface already enforces compatibility
+    if (observation)
+    {
+        QList<DataObject *> incompatible;
+        addDataObjects({ observation }, incompatible, viewIndex);
+        assert(incompatible.isEmpty()); // the function interface already enforces compatibility
+    }
 }
 
 void ResidualVerificationView::setModelData(ImageDataObject * model)
 {
     const int viewIndex = 1;
+    if (m_images.size() > viewIndex && m_images[viewIndex] == model)
+        return;
     if (!m_images.isEmpty() && m_images[viewIndex])
-        removeDataObjects({ m_images[viewIndex] });
-    QList<DataObject *> incompatible;
-    addDataObjects({ model }, incompatible, viewIndex);
-    assert(incompatible.isEmpty());
+        hideDataObjects({ m_images[viewIndex] });
+    if (model)
+    {
+        QList<DataObject *> incompatible;
+        addDataObjects({ model }, incompatible, viewIndex);
+        assert(incompatible.isEmpty());
+    }
 }
 
 void ResidualVerificationView::setResidualData(ImageDataObject * residual)
 {
     const int viewIndex = 2;
+    if (m_images.size() > viewIndex && m_images[viewIndex] == residual)
+        return;
     if (!m_images.isEmpty() && m_images[viewIndex])
         removeDataObjects({ m_images[viewIndex] });
-    QList<DataObject *> incompatible;
-    addDataObjects({ residual }, incompatible, viewIndex);
-    assert(incompatible.isEmpty());
+    if (residual)
+    {
+        QList<DataObject *> incompatible;
+        addDataObjects({ residual }, incompatible, viewIndex);
+        assert(incompatible.isEmpty());
+    }
 }
 
 unsigned int ResidualVerificationView::numberOfSubViews() const
@@ -370,7 +442,7 @@ void ResidualVerificationView::updateResidual()
     }
 
     auto observationData = observation->imageData()->GetPointData()->GetScalars();
-    auto modelData = observation->imageData()->GetPointData()->GetScalars();
+    auto modelData = model->imageData()->GetPointData()->GetScalars();
     
     if (observationData->GetNumberOfTuples() != modelData->GetNumberOfTuples())
     {
@@ -396,8 +468,10 @@ void ResidualVerificationView::updateResidual()
 
     for (vtkIdType i = 0; i < length; ++i)
     {
-        float value = float(observationData->GetTuple(i)[0] - modelData->GetTuple(i)[0]);
-        residualData->SetValue(i, value);
+        float o = (float)observationData->GetTuple(i)[0];
+        float m = (float)modelData->GetTuple(i)[0];
+        float d = o - 1000.f * m;
+        residualData->SetValue(i, d);
     }
 
     setData(2, residual);
@@ -422,3 +496,134 @@ void ResidualVerificationView::updateGuiSelection()
     emit selectedDataChanged(this, selection);
 }
 
+void ResidualVerificationView::updateComboBoxes()
+{
+    if (m_disableGuiUpdate)
+        return;
+
+    m_disableGuiUpdate = true;
+
+    QString oldObservationName = m_observationCombo->currentText();
+    QString oldModelName = m_modelCombo->currentText();
+
+    m_observationCombo->clear();
+    m_modelCombo->clear();
+
+    QStringList imagesAndSurfaces;
+
+    for (auto && data : DataSetHandler::instance().dataSets())
+    {
+        if (dynamic_cast<ImageDataObject *>(data))
+            imagesAndSurfaces << data->name();
+
+        if (auto poly = dynamic_cast<PolyDataObject *>(data))
+        {
+            if (poly->is2p5D())
+                imagesAndSurfaces << data->name();
+        }
+    }
+
+    m_observationCombo->addItems(imagesAndSurfaces);
+    m_modelCombo->addItems(imagesAndSurfaces);
+
+    if (oldObservationName.isEmpty() || !imagesAndSurfaces.contains(oldObservationName))
+        m_observationCombo->setCurrentIndex(-1);
+    else
+        m_observationCombo->setCurrentText(oldObservationName);
+
+    if (oldModelName.isEmpty() || !imagesAndSurfaces.contains(oldModelName))
+        m_modelCombo->setCurrentIndex(-1);
+    else
+        m_modelCombo->setCurrentText(oldModelName);
+
+    m_disableGuiUpdate = false;
+}
+
+void ResidualVerificationView::updateObservationFromUi(int index)
+{
+    if (m_disableGuiUpdate)
+        return;
+
+    m_disableGuiUpdate = true;
+
+    if (DataSetHandler::instance().dataSets().size() <= index || index < 0)
+    {
+        setObservationData(nullptr);
+        return;
+    }
+
+    DataObject * data = DataSetHandler::instance().dataSets()[index];
+    auto image = dynamic_cast<ImageDataObject *>(data);
+    if (!image)
+    {
+        qDebug() << "Only image supported, currently";
+        return;
+    }
+
+    setObservationData(image);
+
+    m_disableGuiUpdate = false;
+}
+
+void ResidualVerificationView::updateModelFromUi(int index)
+{
+    if (m_disableGuiUpdate)
+        return;
+
+    m_disableGuiUpdate = true;
+
+    if (DataSetHandler::instance().dataSets().size() <= index || index < 0)
+    {
+        setModelData(nullptr);
+        return;
+    }
+
+    DataObject * data = DataSetHandler::instance().dataSets()[index];
+    ImageDataObject * image = dynamic_cast<ImageDataObject *>(data);
+
+    QString modelImageName = data->name() + " (2D Grid)";
+
+    if (!image)
+    {
+        for (auto existing : DataSetHandler::instance().dataSets())
+        {
+            if (existing->name() == modelImageName)
+            {
+                image = dynamic_cast<ImageDataObject *>(existing);
+                if (image)
+                    break;
+            }
+        }
+    }
+
+    bool newModel = false;
+
+    if (!image)
+    {
+        if (m_images.isEmpty() || !m_images[0])
+        {
+            setModelData(nullptr);
+            return;
+        }
+
+        ImageDataObject * observation = m_images[0];
+
+        vtkPolyData * polyModel = vtkPolyData::SafeDownCast(data->dataSet());
+        assert(polyModel);
+
+        auto modelImageData = createImageFromPoly(observation->imageData(), polyModel);
+        if (auto uplus = modelImageData->GetPointData()->GetArray("U+"))
+        {
+            modelImageData->GetPointData()->SetScalars(uplus);
+        }
+
+        image = new ImageDataObject(modelImageName, modelImageData);
+        newModel = true;
+    }
+
+    setModelData(image);
+    if (newModel)
+        DataSetHandler::instance().addData({ image });
+
+    m_disableGuiUpdate = false;
+}

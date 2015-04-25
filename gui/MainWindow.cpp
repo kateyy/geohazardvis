@@ -23,6 +23,7 @@
 #include <gui/DataMapping.h>
 #include <gui/SelectionHandler.h>
 #include <gui/data_view/AbstractRenderView.h>
+#include <gui/data_view/ResidualVerificationView.h>
 #include <gui/widgets/CanvasExporterWidget.h>
 #include <gui/widgets/ColorMappingChooser.h>
 #include <gui/widgets/DEMWidget.h>
@@ -84,6 +85,11 @@ MainWindow::MainWindow()
     connect(m_ui->actionExport_To, &QAction::triggered,
         [this] (bool) { m_canvasExporter->captureScreenshotTo(); });
     connect(m_dataMapping, &DataMapping::focusedRenderViewChanged, m_canvasExporter, &CanvasExporterWidget::setRenderView);
+
+    connect(m_ui->actionObservation_Model_Residual_View, &QAction::triggered,
+        [this] (bool) {
+        DataMapping::instance().createRenderView<ResidualVerificationView>();
+    });
 }
 
 MainWindow::~MainWindow()
