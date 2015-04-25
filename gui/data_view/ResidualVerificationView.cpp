@@ -72,6 +72,7 @@ ResidualVerificationView::ResidualVerificationView(int index, QWidget * parent, 
     , m_modelCombo(nullptr)
     , m_disableGuiUpdate(false)
     , m_implementation(nullptr)
+    , m_strategy(nullptr)
 {
     auto layout = new QBoxLayout(QBoxLayout::Direction::TopToBottom);
     layout->setMargin(0);
@@ -378,8 +379,8 @@ void ResidualVerificationView::initialize()
     m_implementation = new RendererImplementationBase3D(*this);
     m_implementation->activate(m_qvtkMain);
 
-    auto strategy = new RenderViewStrategyImage2D(*m_implementation, m_implementation);
-    m_implementation->setStrategy(strategy);
+    m_strategy = new RenderViewStrategyImage2D(*m_implementation, m_implementation);
+    m_implementation->setStrategy(m_strategy);
 
     m_images.resize(3);
     m_visualizations.resize(3);
@@ -423,6 +424,13 @@ void ResidualVerificationView::setData(unsigned int subViewIndex, ImageDataObjec
         m_visualizations[subViewIndex] = newVis;
         m_implementation->addContent(newVis, subViewIndex);
     }
+
+    QList<ImageDataObject *> validImages;
+    if (m_images[0])
+        validImages << m_images[0];
+    if (m_images[1])
+        validImages << m_images[1];
+    m_strategy->setInputImages(validImages);
 
     if (subViewIndex != 2)
         updateResidual();

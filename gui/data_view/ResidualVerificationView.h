@@ -13,6 +13,7 @@ class QComboBox;
 class ColorMapping;
 class ImageDataObject;
 class RendererImplementationBase3D;
+class RenderViewStrategyImage2D;
 
 
 class GUI_API ResidualVerificationView : public AbstractRenderView
@@ -85,6 +86,7 @@ private:
     bool m_disableGuiUpdate;
 
     RendererImplementationBase3D * m_implementation;
+    RenderViewStrategyImage2D * m_strategy;
     QVector<ImageDataObject *> m_images;
     QVector<AbstractVisualizedData *> m_visualizations;
 };

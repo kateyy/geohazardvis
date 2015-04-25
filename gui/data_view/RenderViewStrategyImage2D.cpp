@@ -36,7 +36,6 @@ const bool RenderViewStrategyImage2D::s_isRegistered = RenderViewStrategy::regis
 RenderViewStrategyImage2D::RenderViewStrategyImage2D(RendererImplementationBase3D & context, QObject * parent)
     : RenderViewStrategy(context, parent)
     , m_isInitialized(false)
-    , m_previewProfile(nullptr)
     , m_previewRenderer(nullptr)
     , m_currentPlottingImage(nullptr)
 {
@@ -46,14 +45,38 @@ RenderViewStrategyImage2D::RenderViewStrategyImage2D(RendererImplementationBase3
 
 RenderViewStrategyImage2D::~RenderViewStrategyImage2D()
 {
-    if (m_previewRenderer && m_previewProfile)
+    if (m_previewRenderer && !m_previewProfiles.isEmpty())
     {
-        m_previewRenderer->removeDataObjects({ m_previewProfile });
+        m_previewRenderer->removeDataObjects(m_previewProfiles);
         if (m_previewRenderer->visualizations().isEmpty())
             m_previewRenderer->close();
     }
 
-    delete m_previewProfile;
+    qDeleteAll(m_previewProfiles);
+}
+
+void RenderViewStrategyImage2D::setInputImages(const QList<ImageDataObject *> & images)
+{
+    bool restartProfilePlot = false;
+    double point1[3], point2[3];
+    if (!m_previewProfiles.isEmpty())   // currently plotting
+    {
+        m_lineWidget->GetLineRepresentation()->GetPoint1WorldPosition(point1);
+        m_lineWidget->GetLineRepresentation()->GetPoint2WorldPosition(point2);
+
+        abortProfilePlot();
+        restartProfilePlot = true;
+    }
+
+    m_inputImages = images;
+
+    if (restartProfilePlot)
+    {
+        startProfilePlot();
+
+        m_lineWidget->GetLineRepresentation()->SetPoint1WorldPosition(point1);
+        m_lineWidget->GetLineRepresentation()->SetPoint2WorldPosition(point2);
+    }
 }
 
 void RenderViewStrategyImage2D::initialize()
@@ -144,7 +167,7 @@ bool RenderViewStrategyImage2D::canApplyTo(const QList<RenderedData *> & rendere
 
 void RenderViewStrategyImage2D::startProfilePlot()
 {
-    assert(!m_previewProfile && !m_previewRenderer);
+    assert(m_previewProfiles.isEmpty() && !m_previewRenderer);
 
     m_profilePlotAction->setEnabled(false);
     m_profilePlotAcceptAction->setVisible(true);
@@ -175,21 +198,37 @@ void RenderViewStrategyImage2D::startProfilePlot()
     // create profile preview
 
     assert(!m_currentPlottingImage);
-    ImageDataObject * image = nullptr;
-    for (DataObject * dataObject : m_context.renderView().dataObjects())
-    {
-        image = dynamic_cast<ImageDataObject *>(dataObject);
-        if (image)
-            break;
-    }
-    assert(image);
-    m_currentPlottingImage = image;
 
-    QString name = m_currentPlottingImage->name() + " plot";
-    m_previewProfile = new ImageProfileData(name, m_currentPlottingImage);
+    QList<ImageDataObject *> currentInputs;
+
+    if (m_inputImages.isEmpty())
+    {
+        ImageDataObject * image = nullptr;
+        for (DataObject * dataObject : m_context.renderView().dataObjects())
+        {
+            image = dynamic_cast<ImageDataObject *>(dataObject);
+            if (image)
+                break;
+        }
+        assert(image);
+        m_currentPlottingImage = image;
+        currentInputs = { m_currentPlottingImage };
+    }
+    else
+    {
+        currentInputs = m_inputImages;
+    }
+
+    for (auto inputImage : currentInputs)
+    {
+        QString name = inputImage->name() + " plot";
+
+        m_previewProfiles << new ImageProfileData(name, inputImage);
+    }
+
     lineMoved();
 
-    m_previewRenderer = DataMapping::instance().openInRenderView({ m_previewProfile });
+    m_previewRenderer = DataMapping::instance().openInRenderView(m_previewProfiles);
     connect(m_previewRenderer, &RenderView::closed, this, &RenderViewStrategyImage2D::abortProfilePlot);
 
     m_vtkConnect = vtkSmartPointer<vtkEventQtSlotConnect>::New();
@@ -204,8 +243,8 @@ void RenderViewStrategyImage2D::acceptProfilePlot()
     m_profilePlotAcceptAction->setVisible(false);
     m_profilePlotAbortAction->setVisible(false);
 
-    DataSetHandler::instance().addData({ m_previewProfile });
-    m_previewProfile = nullptr;
+    DataSetHandler::instance().addData(m_previewProfiles);
+    m_previewProfiles.clear();
     m_previewRenderer = nullptr;
     m_currentPlottingImage = nullptr;
 
@@ -231,20 +270,21 @@ void RenderViewStrategyImage2D::abortProfilePlot()
 
     oldPreviewRenderer->close();
 
-    delete m_previewProfile;
-    m_previewProfile = nullptr;
+    qDeleteAll(m_previewProfiles);
+    m_previewProfiles.clear();
 }
 
 void RenderViewStrategyImage2D::lineMoved()
 {
-    assert(m_previewProfile && m_lineWidget);
+    assert(m_previewProfiles.size() > 0 && m_lineWidget);
 
     double point1[3], point2[3];
     m_lineWidget->GetLineRepresentation()->GetPoint1WorldPosition(point1);
     m_lineWidget->GetLineRepresentation()->GetPoint2WorldPosition(point2);
     point1[2] = point2[2] = 0;
 
-    m_previewProfile->setPoints(point1, point2);
+    for (auto profile : m_previewProfiles)
+        static_cast<ImageProfileData *>(profile)->setPoints(point1, point2);
 }
 
 void RenderViewStrategyImage2D::checkSourceExists()
