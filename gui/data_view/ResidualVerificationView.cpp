@@ -472,6 +472,7 @@ void ResidualVerificationView::updateResidual()
     vtkIdType length = observationData->GetNumberOfTuples();
 
     auto residualData = vtkFloatArray::SafeDownCast(residual->imageData()->GetPointData()->GetScalars());
+    residualData->SetName("Residual");
     assert(residualData);
 
     for (vtkIdType i = 0; i < length; ++i)
