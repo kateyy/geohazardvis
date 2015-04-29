@@ -125,9 +125,7 @@ target_link_libraries( ${TARGET}
 
 include_directories(
     ${CMAKE_CURRENT_BINARY_DIR}
-    ${LIBZEUG_SIGNAL_INCLUDE_DIR}
-    ${LIBZEUG_REFLECTION_INCLUDE_DIR}
-    ${LIBZEUG_PROPERTYGUI_INCLUDE_DIR}
+    ${LIBZEUG_INCLUDES}
 )
 
 

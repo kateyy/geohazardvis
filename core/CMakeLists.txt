@@ -169,8 +169,7 @@ target_link_libraries( ${TARGET}
 )
 
 include_directories(
-    ${LIBZEUG_SIGNAL_INCLUDE_DIR}
-    ${LIBZEUG_REFLECTION_INCLUDE_DIR}
+    ${LIBZEUG_INCLUDES}
 )
 
 

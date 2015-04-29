@@ -23,6 +23,8 @@
 #include <vtkProbeFilter.h>
 #include <vtkPolyData.h>
 
+#include <threadingzeug/parallelfor.h>
+
 #include <core/AbstractVisualizedData.h>
 #include <core/DataSetHandler.h>
 #include <core/types.h>
@@ -475,13 +477,13 @@ void ResidualVerificationView::updateResidual()
     residualData->SetName("Residual");
     assert(residualData);
 
-    for (vtkIdType i = 0; i < length; ++i)
-    {
-        float o = (float)observationData->GetTuple(i)[0];
-        float m = (float)modelData->GetTuple(i)[0];
-        float d = o - m;
-        residualData->SetValue(i, d);
-    }
+    float * obs = reinterpret_cast<float *>(observationData->GetVoidPointer(0));
+    float * mdl = reinterpret_cast<float *>(modelData->GetVoidPointer(0));
+    float * res = reinterpret_cast<float *>(residualData->GetVoidPointer(0));
+
+    threadingzeug::parallel_for(0, length, [obs, mdl, res](int i) {
+        res[i] = obs[i] - mdl[i];
+    });
 
     setData(2, residual);
 }
