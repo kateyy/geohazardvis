@@ -402,7 +402,7 @@ vtkSmartPointer<vtkLookupTable> ColorMappingChooser::buildLookupTable(const QIma
     // use alpha = 1.0, if the image doesn't have a alpha channel
     int alphaMask = image.hasAlphaChannel() ? 0x00 : 0xFF;
 
-    auto lut = vtkLookupTable::New();
+    auto lut = vtkSmartPointer<vtkLookupTable>::New();
     lut->SetNumberOfTableValues(image.width());
     for (int i = 0; i < image.width(); ++i)
     {
