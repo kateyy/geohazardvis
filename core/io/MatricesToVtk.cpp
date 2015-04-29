@@ -119,19 +119,26 @@ DataObject * MatricesToVtk::loadDEM(const QString & name, const std::vector<Read
 DataObject * MatricesToVtk::loadGrid2D(const QString & name, const std::vector<ReadDataSet> & datasets)
 {
     assert(datasets.size() == 1);
-    assert(datasets.begin()->type == DataSetType::grid2D);
-    const InputVector & inputData = datasets.begin()->data;
+    const auto dataDef = datasets.front();
+    assert(dataDef.type == DataSetType::grid2D);
+    const InputVector & inputData = dataDef.data;
+    auto image = vtkImageData::SafeDownCast(dataDef.vtkMetaData);
+    assert(image);
 
-    int dimensions[3] = { static_cast<int>(inputData.size()), static_cast<int>(inputData.at(0).size()), 1 };
+    int dimensions[3];
+    image->GetDimensions(dimensions);
+    if (dimensions[0] != static_cast<int>(inputData.size())
+        || dimensions[1] != static_cast<int>(inputData.at(0).size())
+        || dimensions[2] != 1)
+    {
+        qDebug() << "Image data specification and the size of the provided data set do not match.";
+        return nullptr;
+    }
 
-    VTK_CREATE(vtkImageData, grid);
-    // assign scalars to points
-    grid->SetExtent(0, dimensions[0] - 1, 0, dimensions[1] - 1, 0, 0);
-
-    VTK_CREATE(vtkFloatArray, cellArray);
-    cellArray->SetName(name.toUtf8().data());
-    cellArray->SetNumberOfComponents(1);
-    cellArray->SetNumberOfTuples(dimensions[0] * dimensions[1] * dimensions[2]);
+    VTK_CREATE(vtkFloatArray, pointData);
+    pointData->SetName(name.toUtf8());
+    pointData->SetNumberOfComponents(1);
+    pointData->SetNumberOfTuples(dimensions[0] * dimensions[1] * dimensions[2]);
     for (int r = 0; r < dimensions[1]; ++r)
     {
         vtkIdType rOffset = r * dimensions[0];
@@ -139,13 +146,13 @@ DataObject * MatricesToVtk::loadGrid2D(const QString & name, const std::vector<R
         {
             vtkIdType id = c + rOffset;
             auto value = static_cast<float>(inputData.at(c).at(r));
-            cellArray->SetValue(id, value);
+            pointData->SetValue(id, value);
         }
     }
 
-    grid->GetPointData()->SetScalars(cellArray);
+    image->GetPointData()->SetScalars(pointData);
 
-    return new ImageDataObject(name, grid);
+    return new ImageDataObject(name, image);
 }
 
 DataObject * MatricesToVtk::loadGrid3D(const QString & name, const std::vector<ReadDataSet> & datasets)

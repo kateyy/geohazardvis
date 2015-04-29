@@ -325,7 +325,11 @@ bool TextFileReader::readHeader_DEM(std::ifstream & inputStream, std::vector<Dat
 bool TextFileReader::readHeader_grid2D(ifstream & inputStream, vector<DataSetDef> & inputDefs)
 {
     string line;
-    DataSetType currentDataType(DataSetType::unknown);
+    auto image = vtkSmartPointer<vtkImageData>::New();
+    DataSetDef dataSetDef{ DataSetType::unknown, 0, 0, "", image };
+    double extent[4] = { 1, -1, 1, -1 };  // optional extent defines, combined with the nbRows/lines, the origin and spacing
+
+    bool atEnd = false;
 
     while (!inputStream.eof())
     {
@@ -335,39 +339,100 @@ bool TextFileReader::readHeader_grid2D(ifstream & inputStream, vector<DataSetDef
             continue;
 
         if (line == "$end")
-            return true;
+        {
+            atEnd = true;
+            break;
+        }
 
-        if (!(line.substr(0, 2) == "$ "))
+        stringstream linestream(line);
+        string indicator, paramName, paramValue;
+        getline(linestream, indicator, ' ');
+        getline(linestream, paramName, ' ');
+        getline(linestream, paramValue);
+
+        if (indicator == "$")
+        {
+            if (dataSetDef.type != DataSetType::unknown)
+            {
+                cerr << "Multiple data sets per grid2d file currently not supported." << endl;
+                return false;
+            }
+
+            dataSetDef.type = checkDataSetType(paramName);
+
+            if (dataSetDef.type != DataSetType::grid2D)
+            {
+                cerr << "Data set type " << paramName << " not supported in model type grid2d" << endl;
+                return false;
+            }
+
+            size_t seperator = paramValue.find_first_of(":");
+            size_t columns = stoul(paramValue.substr(0, seperator));
+            size_t rows = stoul(paramValue.substr(seperator + 1, string::npos));
+
+            if (!(columns > 0 && rows > 0))
+            {
+                cerr << "missing \"columns:rows\" specification for grid2d data set" << endl;
+                return false;
+            }
+
+            dataSetDef.nbLines = rows;
+            dataSetDef.nbColumns = columns;
+
+            continue;
+        }
+
+        if (indicator != "$$")
         {
             cerr << "Invalid line in input file: \n\t" << line << endl;
             return false;
         }
 
-        stringstream linestream(line.substr(2, string::npos));
-        string datasetType, parameter;
-        getline(linestream, datasetType, ' ');
-        getline(linestream, parameter);
-
-        currentDataType = checkDataSetType(datasetType);
-
-        if (currentDataType != DataSetType::grid2D)
+        size_t seperator = paramValue.find_first_of(":");
+        double val1 = stod(paramValue.substr(0, seperator));
+        double val2 = stod(paramValue.substr(seperator + 1, string::npos));
+        
+        if (paramName == "xExtent")
         {
-            cerr << "Data set type " << datasetType << " not supported in model type grid2d" << endl;
+            extent[0] = val1;
+            extent[1] = val2;
+        }
+        else if (paramName == "yExtent")
+        {
+            extent[2] = val1;
+            extent[3] = val2;
+        }
+        else
+        {
+            cerr << "Invalid parameter in input file: " << paramName << endl;
             return false;
         }
-
-        size_t seperator = parameter.find_first_of(":");
-        size_t columns = stoul(parameter.substr(0, seperator));
-        size_t rows = stoul(parameter.substr(seperator + 1, string::npos));
-        if (!(columns > 0 && rows > 0))
-        {
-            cerr << "missing \"columns:rows\" specification for grid2d data set" << endl;
-            return false;
-        }
-        inputDefs.push_back({ currentDataType, rows, columns, "" });
     }
 
-    return false;
+    if (!atEnd)
+        return false;
+
+    image->SetExtent(0, static_cast<int>(dataSetDef.nbColumns) - 1, 0, static_cast<int>(dataSetDef.nbLines) - 1, 0, 0);
+
+    double spacing[3] = { 1, 1, 1 };
+
+    if (dataSetDef.nbColumns > 1 && extent[0] <= extent[1])
+        spacing[0] = (extent[1] - extent[0]) / double(dataSetDef.nbColumns - 1);
+    if (dataSetDef.nbLines > 1 && extent[2] <= extent[3])
+        spacing[1] = (extent[3] - extent[2]) / double(dataSetDef.nbLines - 1);
+
+    image->SetSpacing(spacing);
+
+    double origin[3] = { 0, 0, 0 };
+    if (extent[0] <= extent[1])
+        origin[0] = extent[0];
+    if (extent[2] <= extent[3])
+        origin[1] = extent[2];
+    image->SetOrigin(origin);
+
+    inputDefs.push_back(dataSetDef);
+
+    return true;
 }
 
 bool TextFileReader::readHeader_vectorGrid3D(std::ifstream & inputStream, std::vector<DataSetDef>& inputDefs)
