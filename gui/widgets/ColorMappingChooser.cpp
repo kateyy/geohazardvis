@@ -307,6 +307,9 @@ void ColorMappingChooser::rebuildGui()
     m_ui->colorLegendGroupBox->setEnabled(false);
     m_ui->colorLegendGroupBox->setChecked(false);
 
+    if (m_renderView)
+        m_qtConnect << connect(m_renderView, &AbstractRenderView::visualizationsChanged, this, &ColorMappingChooser::rebuildGui);
+
     // clear GUI when not rendering
     if (newMapping)
     {
@@ -325,7 +328,6 @@ void ColorMappingChooser::rebuildGui()
         QColor nanColor(static_cast<int>(nanColorV[0]), static_cast<int>(nanColorV[1]), static_cast<int>(nanColorV[2]), static_cast<int>(nanColorV[3]));
         m_ui->nanColorButton->setStyleSheet(QString("background-color: %1").arg(nanColor.name()));
 
-        m_qtConnect << connect(m_renderView, &AbstractRenderView::visualizationsChanged, this, &ColorMappingChooser::rebuildGui);
         m_qtConnect << connect(newMapping, &ColorMapping::scalarsChanged, this, &ColorMappingChooser::rebuildGui);
         m_qtConnect << connect(m_ui->colorLegendGroupBox, &QGroupBox::toggled,
             [this, newMapping] (bool checked) {
