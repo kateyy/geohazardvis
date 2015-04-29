@@ -4,6 +4,7 @@
 #include <cassert>
 #include <limits>
 
+#include <QColorDialog>
 #include <QDir>
 #include <QDebug>
 #include <QDialog>
@@ -45,6 +46,8 @@ ColorMappingChooser::ColorMappingChooser(QWidget * parent)
     m_ui->legendPositionComboBox->setCurrentText("right");
 
     setCurrentRenderView();
+
+    connect(m_ui->nanColorButton, &QAbstractButton::pressed, this, &ColorMappingChooser::selectNanColor);
 }
 
 ColorMappingChooser::~ColorMappingChooser()
@@ -209,7 +212,7 @@ void ColorMappingChooser::loadGradientImages()
         QString fileName = fileInfo.baseName();
         QString filePath = fileInfo.absoluteFilePath();
         QPixmap pixmap = QPixmap(filePath).scaled(200, 20);
-        m_gradients << vtkSmartPointer<vtkLookupTable>::Take(buildLookupTable(pixmap.toImage()));
+        m_gradients << buildLookupTable(pixmap.toImage());
 
         gradientComboBox->addItem(pixmap, "");
         QVariant fileVariant(filePath);
@@ -266,6 +269,25 @@ void ColorMappingChooser::updateTitle(QString rendererName)
     m_ui->relatedRenderView->setText(title);
 }
 
+void ColorMappingChooser::selectNanColor()
+{
+    assert(m_mapping);
+    auto gradient = m_mapping->gradient();
+    assert(gradient);
+    auto nanColorV = gradient->GetNanColorAsUnsignedChars();
+    QColor nanColor(static_cast<int>(nanColorV[0]), static_cast<int>(nanColorV[1]), static_cast<int>(nanColorV[2]), static_cast<int>(nanColorV[3]));
+
+    nanColor = QColorDialog::getColor(nanColor, nullptr, "Select a color for NaN-values", QColorDialog::ShowAlphaChannel);
+
+    if (!nanColor.isValid())
+        return;
+
+    double colorV[4] = { nanColor.redF(), nanColor.greenF(), nanColor.blueF(), nanColor.alphaF() };
+    gradient->SetNanColor(colorV);
+
+    emit renderSetupChanged();
+}
+
 void ColorMappingChooser::rebuildGui()
 {
     checkRenderViewColorMapping();
@@ -281,6 +303,7 @@ void ColorMappingChooser::rebuildGui()
 
     m_ui->scalarsComboBox->clear();
     m_ui->gradientGroupBox->setEnabled(false);
+    m_ui->nanColorButton->setStyleSheet("");
     m_ui->colorLegendGroupBox->setEnabled(false);
     m_ui->colorLegendGroupBox->setChecked(false);
 
@@ -296,6 +319,11 @@ void ColorMappingChooser::rebuildGui()
         m_ui->gradientGroupBox->setEnabled(newMapping->currentScalarsUseMappingLegend());
         m_ui->colorLegendGroupBox->setEnabled(newMapping->currentScalarsUseMappingLegend());
         m_ui->colorLegendGroupBox->setChecked(newMapping->colorMappingLegendVisible());
+
+        const unsigned char * nanColorV = newMapping->gradient()->GetNanColorAsUnsignedChars();
+
+        QColor nanColor(static_cast<int>(nanColorV[0]), static_cast<int>(nanColorV[1]), static_cast<int>(nanColorV[2]), static_cast<int>(nanColorV[3]));
+        m_ui->nanColorButton->setStyleSheet(QString("background-color: %1").arg(nanColor.name()));
 
         m_qtConnect << connect(m_renderView, &AbstractRenderView::visualizationsChanged, this, &ColorMappingChooser::rebuildGui);
         m_qtConnect << connect(newMapping, &ColorMapping::scalarsChanged, this, &ColorMappingChooser::rebuildGui);
@@ -367,18 +395,20 @@ void ColorMappingChooser::updateGuiValueRanges()
     m_mapping = currentMapping;
 }
 
-vtkLookupTable * ColorMappingChooser::buildLookupTable(const QImage & image)
+vtkSmartPointer<vtkLookupTable> ColorMappingChooser::buildLookupTable(const QImage & image)
 {
     // use alpha = 1.0, if the image doesn't have a alpha channel
     int alphaMask = image.hasAlphaChannel() ? 0x00 : 0xFF;
 
-    vtkLookupTable * lut = vtkLookupTable::New();
+    auto lut = vtkLookupTable::New();
     lut->SetNumberOfTableValues(image.width());
     for (int i = 0; i < image.width(); ++i)
     {
         QRgb color = image.pixel(i, 0);
         lut->SetTableValue(i, qRed(color) / 255.0, qGreen(color) / 255.0, qBlue(color) / 255.0, (alphaMask | qAlpha(color)) / 255.0);
     }
+
+    lut->SetNanColor(1, 1, 1, 0);   // transparent!
 
     return lut;
 }

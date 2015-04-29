@@ -172,7 +172,12 @@ void ColorMapping::setGradient(vtkLookupTable * gradient)
     m_originalGradient = gradient;
 
     if (gradient)
+    {
         m_gradient->SetTable(gradient->GetTable());
+        m_gradient->SetNanColor(gradient->GetNanColor());
+        m_gradient->SetUseAboveRangeColor(gradient->GetUseAboveRangeColor());
+        m_gradient->SetUseBelowRangeColor(gradient->GetUseBelowRangeColor());
+    }
     else
     {
         // no gradients loaded, use VTK's default rainbow instead

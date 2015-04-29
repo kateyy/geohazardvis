@@ -36,6 +36,7 @@ private slots:
     void componentChanged(int guiComponent);
     void minValueChanged(double value);
     void maxValueChanged(double value);
+    void selectNanColor();
 
     void rebuildGui();
 
@@ -52,7 +53,7 @@ private:
     void updateTitle(QString rendererName = "");
     void updateGuiValueRanges();
 
-    static vtkLookupTable * buildLookupTable(const QImage & image);
+    static vtkSmartPointer<vtkLookupTable> buildLookupTable(const QImage & image);
 
 private:
     Ui_ColorMappingChooser * m_ui;
