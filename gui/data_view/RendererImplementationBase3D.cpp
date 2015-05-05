@@ -126,8 +126,8 @@ void RendererImplementationBase3D::onAddContent(AbstractVisualizedData * content
 
     VTK_CREATE(vtkPropCollection, props);
 
-    auto renderer = this->renderer(subViewIndex);
-    auto dataProps = m_viewportSetups[subViewIndex].dataProps;
+    auto && renderer = this->renderer(subViewIndex);
+    auto && dataProps = m_viewportSetups[subViewIndex].dataProps;
 
     vtkCollectionSimpleIterator it;
     renderedData->viewProps()->InitTraversal(it);
@@ -156,9 +156,9 @@ void RendererImplementationBase3D::onRemoveContent(AbstractVisualizedData * cont
     assert(dynamic_cast<RenderedData *>(content));
     RenderedData * renderedData = static_cast<RenderedData *>(content);
 
-    auto renderer = this->renderer(subViewIndex);
-    auto dataProps = m_viewportSetups[subViewIndex].dataProps;
-    auto dataBounds = m_viewportSetups[subViewIndex].dataBounds;
+    auto && renderer = this->renderer(subViewIndex);
+    auto && dataProps = m_viewportSetups[subViewIndex].dataProps;
+    auto && dataBounds = m_viewportSetups[subViewIndex].dataBounds;
 
     vtkSmartPointer<vtkPropCollection> props = dataProps.take(renderedData);
     assert(props);
