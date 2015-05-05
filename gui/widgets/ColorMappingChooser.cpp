@@ -284,6 +284,7 @@ void ColorMappingChooser::selectNanColor()
 
     double colorV[4] = { nanColor.redF(), nanColor.greenF(), nanColor.blueF(), nanColor.alphaF() };
     gradient->SetNanColor(colorV);
+    m_ui->nanColorButton->setStyleSheet(QString("background-color: %1").arg(nanColor.name()));
 
     emit renderSetupChanged();
 }
