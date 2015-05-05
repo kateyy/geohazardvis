@@ -1,6 +1,6 @@
 #include "CanvasExporterPS.h"
 
-#if VTK_module_IOExport
+#if VTK_has_GLExport2PS
 
 #include <QFileInfo>
 #include <QStringList>
