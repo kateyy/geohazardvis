@@ -47,9 +47,9 @@ public:
 
     /** add newly created rendered data
         actual data visibility depends on the object's configuration */
-    void addContent(AbstractVisualizedData * content, unsigned int subViewIndex = 0);
+    void addContent(AbstractVisualizedData * content, unsigned int subViewIndex);
     /** remove all references to the object and its contents */
-    void removeContent(AbstractVisualizedData * content, unsigned int subViewIndex = 0);
+    void removeContent(AbstractVisualizedData * content, unsigned int subViewIndex);
 
     /** mark dataObject (and, if set, it's point/cell) as current selection */
     virtual void setSelectedData(DataObject * dataObject, vtkIdType itemId = -1) = 0;

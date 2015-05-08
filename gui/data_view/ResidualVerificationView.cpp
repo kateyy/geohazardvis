@@ -72,7 +72,6 @@ ResidualVerificationView::ResidualVerificationView(int index, QWidget * parent, 
     , m_qvtkMain(nullptr)
     , m_observationCombo(nullptr)
     , m_modelCombo(nullptr)
-    , m_disableGuiUpdate(false)
     , m_implementation(nullptr)
     , m_strategy(nullptr)
 {
@@ -206,8 +205,8 @@ void ResidualVerificationView::setDataHelper(unsigned int subViewIndex, ImageDat
     setDataInternal(subViewIndex, data, toDeleteInternal);
 
     // create a residual only if we didn't just set one
-    if (data && subViewIndex != 2)
-        updateResidual();
+    if (subViewIndex != 2 || !data)
+        updateResidual(toDeleteInternal);
 
     // update GUI before actually deleting old visualization data
 
@@ -391,20 +390,13 @@ void ResidualVerificationView::setDataInternal(unsigned int subViewIndex, ImageD
 {
     initialize();
 
-    if (m_images[subViewIndex] == dataObject)
-    {
-        if (dataObject) // make sure that we are really showing this data object
-            m_implementation->addContent(m_visualizations[subViewIndex]);
-        return;
-    }
-
     m_images[subViewIndex] = dataObject;
 
     auto && oldVis = m_visualizations[subViewIndex];
 
     if (oldVis)
     {
-        m_implementation->removeContent(oldVis);
+        m_implementation->removeContent(oldVis, subViewIndex);
 
         beforeDeleteVisualization(oldVis);
         toDelete << oldVis;
@@ -420,16 +412,17 @@ void ResidualVerificationView::setDataInternal(unsigned int subViewIndex, ImageD
     }
 }
 
-void ResidualVerificationView::updateResidual()
+void ResidualVerificationView::updateResidual(QList<AbstractVisualizedData *> & toDelete)
 {
-    ImageDataObject *  observation = m_images[0];
-    ImageDataObject *  model = m_images[1];
+    ImageDataObject * observation = m_images[0];
+    ImageDataObject * model = m_images[1];
     ImageDataObject * residual = m_images[2];
 
     if (!observation || !model)
     {
         if (residual)
-            hideDataObjects({ residual }, 2);
+            setDataInternal(2, nullptr, toDelete);
+
         return;
     }
 
@@ -468,7 +461,7 @@ void ResidualVerificationView::updateResidual()
         res[i] = obs[i] - mdl[i];
     });
 
-    setResidualData(residual);
+    setDataInternal(2, residual, toDelete);
 }
 
 void ResidualVerificationView::updateGuiAfterDataChange()
@@ -512,10 +505,9 @@ void ResidualVerificationView::updateGuiSelection()
 
 void ResidualVerificationView::updateComboBoxes()
 {
-    if (m_disableGuiUpdate)
-        return;
+    m_observationCombo->blockSignals(true);
+    m_modelCombo->blockSignals(true);
 
-    m_disableGuiUpdate = true;
 
     QString oldObservationName = m_observationCombo->currentText();
     QString oldModelName = m_modelCombo->currentText();
@@ -568,33 +560,22 @@ void ResidualVerificationView::updateComboBoxes()
         break;
     }
 
-    m_disableGuiUpdate = false;
+    m_observationCombo->blockSignals(false);
+    m_modelCombo->blockSignals(false);
 }
 
 void ResidualVerificationView::updateObservationFromUi(int index)
 {
-    if (m_disableGuiUpdate)
-        return;
-
-    m_disableGuiUpdate = true;
-
     auto data = reinterpret_cast<DataObject *>(m_observationCombo->itemData(index, Qt::UserRole).toULongLong());
 
     auto image = dynamic_cast<ImageDataObject *>(data);
     assert(image);
 
     setObservationData(image);
-
-    m_disableGuiUpdate = false;
 }
 
 void ResidualVerificationView::updateModelFromUi(int index)
 {
-    if (m_disableGuiUpdate)
-        return;
-
-    m_disableGuiUpdate = true;
-
     auto data = reinterpret_cast<DataObject *>(m_modelCombo->itemData(index, Qt::UserRole).toULongLong());
     
     ImageDataObject * image = dynamic_cast<ImageDataObject *>(data);
@@ -642,6 +623,4 @@ void ResidualVerificationView::updateModelFromUi(int index)
     setModelData(image);
     if (newModel)
         DataSetHandler::instance().addData({ image });
-
-    m_disableGuiUpdate = false;
 }

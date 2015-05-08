@@ -77,7 +77,9 @@ private:
     /** Low level function, that won't trigger GUI updates.
         @param toDelete Delete these objects after removing them from dependent components (GUI etc) */
     void setDataInternal(unsigned int subViewIndex, ImageDataObject * dataObject, QList<AbstractVisualizedData *> & toDelete);
-    void updateResidual();
+    /** Update the residual view, show a residual if possible, discard old visualization data 
+      * @param toDelete delete old visualization data after informing the GUI */
+    void updateResidual(QList<AbstractVisualizedData *> & toDelete);
 
     void updateGuiAfterDataChange();
 
@@ -90,7 +92,6 @@ private:
     QVTKWidget * m_qvtkMain;
     QComboBox * m_observationCombo;
     QComboBox * m_modelCombo;
-    bool m_disableGuiUpdate;
 
     RendererImplementationBase3D * m_implementation;
     RenderViewStrategyImage2D * m_strategy;

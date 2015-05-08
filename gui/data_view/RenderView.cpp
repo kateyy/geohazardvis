@@ -121,7 +121,7 @@ AbstractVisualizedData * RenderView::addDataObject(DataObject * dataObject)
     if (!newContent)
         return nullptr;
 
-    implementation().addContent(newContent);
+    implementation().addContent(newContent, 0);
 
     m_contents << newContent;
 
@@ -241,7 +241,7 @@ void RenderView::removeDataObject(DataObject * dataObject)
     if (!renderedData)
         return;
 
-    implementation().removeContent(renderedData);
+    implementation().removeContent(renderedData, 0);
 
     emit beforeDeleteVisualization(renderedData);
 
