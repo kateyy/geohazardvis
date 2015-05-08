@@ -58,11 +58,12 @@ protected:
 
     void highlightedIdChangedEvent(DataObject * dataObject, vtkIdType itemId) override;
 
-    void addDataObjectsImpl(const QList<DataObject *> & dataObjects,
+    void showDataObjectsImpl(const QList<DataObject *> & dataObjects,
         QList<DataObject *> & incompatibleObjects,
         unsigned int subViewIndex) override;
     void hideDataObjectsImpl(const QList<DataObject *> & dataObjects, unsigned int subViewIndex) override;
-    void removeDataObjectsImpl(const QList<DataObject *> & dataObjects) override;
+    QList<DataObject *> dataObjectsImpl(int subViewIndex) const override;
+    void prepareDeleteDataImpl(const QList<DataObject *> & dataObjects) override;
     QList<AbstractVisualizedData *> visualizationsImpl(int subViewIndex) const override;
 
     void axesEnabledChangedEvent(bool enabled) override;
@@ -70,9 +71,15 @@ protected:
 private:
     void initialize();
 
-    // low level function, that won't trigger GUI updates
-    void setData(unsigned int subViewIndex, ImageDataObject * dataObject);
+    // common implementation for the public interface functions
+    // @delayGuiUpdate set to true and delete the objects appended to toDelete yourself, if you intend to call this function multiple times
+    void setDataHelper(unsigned int subViewIndex, ImageDataObject * data, bool delayGuiUpdate = false, QList<AbstractVisualizedData *> * toDelete = nullptr);
+    /** Low level function, that won't trigger GUI updates.
+        @param toDelete Delete these objects after removing them from dependent components (GUI etc) */
+    void setDataInternal(unsigned int subViewIndex, ImageDataObject * dataObject, QList<AbstractVisualizedData *> & toDelete);
     void updateResidual();
+
+    void updateGuiAfterDataChange();
 
     void updateGuiSelection();
     void updateComboBoxes();

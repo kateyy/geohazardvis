@@ -53,7 +53,7 @@ void DataMapping::removeDataObjects(QList<DataObject *> dataObjects)
 {
     auto currentRenderViews = m_renderViews.values();
     for (AbstractRenderView * renderView : currentRenderViews)
-        renderView->removeDataObjects(dataObjects);
+        renderView->prepareDeleteData(dataObjects);
 
     QList<TableView*> currentTableViews = m_tableViews.values();
     for (TableView * tableView : currentTableViews)
@@ -128,7 +128,7 @@ void DataMapping::addToRenderView(QList<DataObject *> dataObjects, AbstractRende
     assert(subViewIndex < renderView->numberOfSubViews());
 
     QList<DataObject *> incompatibleObjects;
-    renderView->addDataObjects(dataObjects, incompatibleObjects, subViewIndex);
+    renderView->showDataObjects(dataObjects, incompatibleObjects, subViewIndex);
 
     // there is something the current view couldn't handle
     if (!incompatibleObjects.isEmpty() && askForNewRenderView(renderView->friendlyName(), incompatibleObjects))

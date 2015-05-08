@@ -47,7 +47,7 @@ RenderViewStrategyImage2D::~RenderViewStrategyImage2D()
 {
     if (m_previewRenderer && !m_previewProfiles.isEmpty())
     {
-        m_previewRenderer->removeDataObjects(m_previewProfiles);
+        m_previewRenderer->prepareDeleteData(m_previewProfiles);
         if (m_previewRenderer->visualizations().isEmpty())
             m_previewRenderer->close();
     }

@@ -158,7 +158,6 @@ void RendererImplementationBase3D::onRemoveContent(AbstractVisualizedData * cont
 
     auto && renderer = this->renderer(subViewIndex);
     auto && dataProps = m_viewportSetups[subViewIndex].dataProps;
-    auto && dataBounds = m_viewportSetups[subViewIndex].dataBounds;
 
     vtkSmartPointer<vtkPropCollection> props = dataProps.take(renderedData);
     assert(props);

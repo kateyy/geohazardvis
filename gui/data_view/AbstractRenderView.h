@@ -27,19 +27,19 @@ public:
     /** Add data objects to the view or make already added objects visible again.
         @param incompatibleObjects Objects that cannot be added to the current contents. 
         @param subViewIndex For composed render view, the sub view that the objects will be added to */
-    void addDataObjects(
+    void showDataObjects(
         const QList<DataObject *> & dataObjects,
         QList<DataObject *> & incompatibleObjects,
         unsigned int subViewIndex = 0);
     /** hide rendered representations of data objects, keep render data and settings */
     void hideDataObjects(const QList<DataObject *> & dataObjects, unsigned int subViewIndex = 0);
-    /** check if the this objects is currently rendered 
-        @param subViewIndex The index of the sub view in composed render views. -1 means to check for the 
-               DataObject in any of the sub views */
+    /** check if the this objects is currently rendered
+        @param subViewIndex The index of the sub view in composed render views. -1 means to check for the
+        DataObject in any of the sub views */
     bool contains(DataObject * dataObject, int subViewIndex = -1) const;
     /** Remove rendered representations and all references to the data objects.
         For composed views, all sub views will be cleared from the specified data objects */
-    void removeDataObjects(const QList<DataObject *> & dataObjects);
+    void prepareDeleteData(const QList<DataObject *> & dataObjects);
     /** DataObjects visible in the specified subViewIndex, or in any of the sub views (-1) */
     QList<DataObject *> dataObjects(int subViewIndex = -1) const;
     QList<AbstractVisualizedData *> visualizations(int subViewIndex = -1) const;
@@ -77,17 +77,16 @@ public slots:
     void ShowInfo(const QStringList &info);
 
 protected:
-    virtual void addDataObjectsImpl(const QList<DataObject *> & dataObjects,
+    virtual void showDataObjectsImpl(const QList<DataObject *> & dataObjects,
         QList<DataObject *> & incompatibleObjects,
         unsigned int subViewIndex) = 0;
     virtual void hideDataObjectsImpl(const QList<DataObject *> & dataObjects, unsigned int subViewIndex) = 0;
-    virtual void removeDataObjectsImpl(const QList<DataObject *> & dataObjects) = 0;
+    virtual QList<DataObject *> dataObjectsImpl(int subViewIndex) const = 0;
+    virtual void prepareDeleteDataImpl(const QList<DataObject *> & dataObjects) = 0;
     virtual QList<AbstractVisualizedData *> visualizationsImpl(int subViewIndex) const = 0;
 
     virtual void axesEnabledChangedEvent(bool enabled) = 0;
 
 private:
-    std::vector<QList<DataObject *>> m_dataObjects;
-
     bool m_axesEnabled;
 };

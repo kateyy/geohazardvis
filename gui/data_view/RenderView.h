@@ -44,11 +44,12 @@ protected:
 
     void highlightedIdChangedEvent(DataObject * dataObject, vtkIdType itemId) override;
 
-    void addDataObjectsImpl(const QList<DataObject *> & dataObjects,
+    void showDataObjectsImpl(const QList<DataObject *> & dataObjects,
         QList<DataObject *> & incompatibleObjects,
         unsigned int subViewIndex) override;
     void hideDataObjectsImpl(const QList<DataObject *> & dataObjects, unsigned int subViewIndex) override;
-    void removeDataObjectsImpl(const QList<DataObject *> & dataObjects) override;
+    QList<DataObject *> dataObjectsImpl(int subViewIndex) const override;
+    void prepareDeleteDataImpl(const QList<DataObject *> & dataObjects) override;
 
     QList<AbstractVisualizedData *> visualizationsImpl(int subViewIndex) const override;
 

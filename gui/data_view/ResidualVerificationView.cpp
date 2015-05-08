@@ -182,47 +182,43 @@ AbstractVisualizedData * ResidualVerificationView::visualizationFor(DataObject *
 
 void ResidualVerificationView::setObservationData(ImageDataObject * observation)
 {
-    // we have to call addDataObjects here for consistency with the superclass API
-    const int viewIndex = 0;
-    if (m_images.size() > viewIndex && m_images[viewIndex] == observation)
-        return;
-    if (!m_images.isEmpty() && m_images[viewIndex])
-        removeDataObjects({ m_images[viewIndex] });
-    if (observation)
-    {
-        QList<DataObject *> incompatible;
-        addDataObjects({ observation }, incompatible, viewIndex);
-        assert(incompatible.isEmpty()); // the function interface already enforces compatibility
-    }
+    setDataHelper(0, observation);
 }
 
 void ResidualVerificationView::setModelData(ImageDataObject * model)
 {
-    const int viewIndex = 1;
-    if (m_images.size() > viewIndex && m_images[viewIndex] == model)
-        return;
-    if (!m_images.isEmpty() && m_images[viewIndex])
-        hideDataObjects({ m_images[viewIndex] });
-    if (model)
-    {
-        QList<DataObject *> incompatible;
-        addDataObjects({ model }, incompatible, viewIndex);
-        assert(incompatible.isEmpty());
-    }
+    setDataHelper(1, model);
 }
 
 void ResidualVerificationView::setResidualData(ImageDataObject * residual)
 {
-    const int viewIndex = 2;
-    if (m_images.size() > viewIndex && m_images[viewIndex] == residual)
+    setDataHelper(2, residual);
+}
+
+void ResidualVerificationView::setDataHelper(unsigned int subViewIndex, ImageDataObject * data, bool skipGuiUpdate, QList<AbstractVisualizedData *> * toDelete)
+{
+    assert(skipGuiUpdate == (toDelete != nullptr));
+
+    if (m_images.size() > int(subViewIndex) && m_images[subViewIndex] == data)
         return;
-    if (!m_images.isEmpty() && m_images[viewIndex])
-        removeDataObjects({ m_images[viewIndex] });
-    if (residual)
+
+    QList<AbstractVisualizedData *> toDeleteInternal;
+    setDataInternal(subViewIndex, data, toDeleteInternal);
+
+    // create a residual only if we didn't just set one
+    if (data && subViewIndex != 2)
+        updateResidual();
+
+    // update GUI before actually deleting old visualization data
+
+    if (skipGuiUpdate)
     {
-        QList<DataObject *> incompatible;
-        addDataObjects({ residual }, incompatible, viewIndex);
-        assert(incompatible.isEmpty());
+        toDelete->append(toDeleteInternal);
+    }
+    else
+    {
+        updateGuiAfterDataChange();
+        qDeleteAll(toDeleteInternal);
     }
 }
 
@@ -275,7 +271,7 @@ void ResidualVerificationView::highlightedIdChangedEvent(DataObject * dataObject
     m_implementation->setSelectedData(dataObject, itemId);
 }
 
-void ResidualVerificationView::addDataObjectsImpl(const QList<DataObject *> & dataObjects,
+void ResidualVerificationView::showDataObjectsImpl(const QList<DataObject *> & dataObjects,
     QList<DataObject *> & incompatibleObjects,
     unsigned int subViewIndex)
 {
@@ -285,69 +281,64 @@ void ResidualVerificationView::addDataObjectsImpl(const QList<DataObject *> & da
     for (int i = 1; i < dataObjects.size(); ++i)
         incompatibleObjects << dataObjects[i];
 
-    auto data = dataObjects.isEmpty() ? nullptr : dataObjects.first();
+    DataObject * data = dataObjects.isEmpty() ? nullptr : dataObjects.first();
     auto imageData = dynamic_cast<ImageDataObject *>(data);
     if (!imageData)
     {
         qDebug() << "ResidualVerificationView only supports ImageDataObjects!";
         incompatibleObjects.prepend(data);
+        return;
     }
 
-    setData(subViewIndex, imageData);
+    assert(m_images.size() < int(subViewIndex) || m_images[subViewIndex] == nullptr || m_images[subViewIndex] == imageData);
 
-    emit visualizationsChanged();
-
-    updateGuiSelection();
-
-    if (imageData)
-        implementation().resetCamera(true);
-
-    render();
+    setDataHelper(subViewIndex, imageData);
 }
 
 void ResidualVerificationView::hideDataObjectsImpl(const QList<DataObject *> & dataObjects, unsigned int subViewIndex)
 {
-    assert(m_visualizations.size() > int(subViewIndex));
+    assert(unsigned(m_images.size()) > subViewIndex);
 
-    auto && vis = m_visualizations[subViewIndex];
-
-    if (!vis)
-        return;
-
-    for (auto && data : dataObjects)
-    {
-        if (vis->dataObject() != data)
-            continue;
-
-        // don't cache for now
-        emit beforeDeleteVisualization(vis);
-        delete vis;
-        vis = nullptr;
-    }
-
-    updateGuiSelection();
-
-    emit visualizationsChanged();
-
-    render();
+    // no caching for now, just remove the object
+    if (dataObjects.contains(m_images[subViewIndex]))
+        setDataHelper(subViewIndex, nullptr);
 }
 
-void ResidualVerificationView::removeDataObjectsImpl(const QList<DataObject *> & dataObjects)
+QList<DataObject *> ResidualVerificationView::dataObjectsImpl(int subViewIndex) const
 {
-    for (auto toDelete : dataObjects)
+    if (subViewIndex == -1)
+    {
+        QList<DataObject *> objects;
+
+        for (auto && image : m_images)
+            if (image)
+                objects << image;
+
+        return objects;
+    }
+
+    if (m_images.size() > subViewIndex && m_images[subViewIndex])
+        return{ m_images[subViewIndex] };
+        
+    return{};
+}
+
+void ResidualVerificationView::prepareDeleteDataImpl(const QList<DataObject *> & dataObjects)
+{
+    QList<AbstractVisualizedData *> toDelete;
+
+    for (auto objectToDelete : dataObjects)
     {
         for (int i = 0; i < m_images.size(); ++i)
         {
-            if (toDelete == m_images[i])
-                setData(i, nullptr);
+            if (objectToDelete == m_images[i])
+                setDataHelper(i, nullptr, true, &toDelete);
         }
     }
 
-    emit visualizationsChanged();
+    updateGuiAfterDataChange();
 
-    updateGuiSelection();
-
-    render();
+    qDeleteAll(toDelete);
 }
 
 QList<AbstractVisualizedData *> ResidualVerificationView::visualizationsImpl(int subViewIndex) const
@@ -396,7 +387,7 @@ void ResidualVerificationView::initialize()
     }
 }
 
-void ResidualVerificationView::setData(unsigned int subViewIndex, ImageDataObject * dataObject)
+void ResidualVerificationView::setDataInternal(unsigned int subViewIndex, ImageDataObject * dataObject, QList<AbstractVisualizedData *> & toDelete)
 {
     initialize();
 
@@ -409,14 +400,15 @@ void ResidualVerificationView::setData(unsigned int subViewIndex, ImageDataObjec
 
     m_images[subViewIndex] = dataObject;
 
-    auto oldVis = m_visualizations[subViewIndex];
+    auto && oldVis = m_visualizations[subViewIndex];
 
     if (oldVis)
     {
         m_implementation->removeContent(oldVis);
 
         beforeDeleteVisualization(oldVis);
-        delete oldVis;
+        toDelete << oldVis;
+        oldVis = nullptr;
     }
 
     if (dataObject)
@@ -426,16 +418,6 @@ void ResidualVerificationView::setData(unsigned int subViewIndex, ImageDataObjec
         m_visualizations[subViewIndex] = newVis;
         m_implementation->addContent(newVis, subViewIndex);
     }
-
-    QList<ImageDataObject *> validImages;
-    if (m_images[0])
-        validImages << m_images[0];
-    if (m_images[1])
-        validImages << m_images[1];
-    m_strategy->setInputImages(validImages);
-
-    if (subViewIndex != 2)
-        updateResidual();
 }
 
 void ResidualVerificationView::updateResidual()
@@ -453,6 +435,7 @@ void ResidualVerificationView::updateResidual()
 
     auto observationData = observation->imageData()->GetPointData()->GetScalars();
     auto modelData = model->imageData()->GetPointData()->GetScalars();
+    assert(vtkFloatArray::SafeDownCast(observationData) && vtkFloatArray::SafeDownCast(modelData)); // TODO generalize the hacks below
     
     if (observationData->GetNumberOfTuples() != modelData->GetNumberOfTuples())
     {
@@ -485,7 +468,27 @@ void ResidualVerificationView::updateResidual()
         res[i] = obs[i] - mdl[i];
     });
 
-    setData(2, residual);
+    setResidualData(residual);
+}
+
+void ResidualVerificationView::updateGuiAfterDataChange()
+{
+    emit visualizationsChanged();
+
+    updateGuiSelection();
+
+
+    QList<ImageDataObject *> validImages;
+    if (m_images[0])
+        validImages << m_images[0];
+    if (m_images[1])
+        validImages << m_images[1];
+    m_strategy->setInputImages(validImages);
+
+    if (!validImages.isEmpty() || m_images[2])
+        implementation().resetCamera(true);
+
+    render();
 }
 
 void ResidualVerificationView::updateGuiSelection()
