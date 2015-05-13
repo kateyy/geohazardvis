@@ -49,7 +49,7 @@ DataMapping & DataMapping::instance()
     return *s_instance;
 }
 
-void DataMapping::removeDataObjects(QList<DataObject *> dataObjects)
+void DataMapping::removeDataObjects(const QList<DataObject *> & dataObjects)
 {
     auto currentRenderViews = m_renderViews.values();
     for (AbstractRenderView * renderView : currentRenderViews)

@@ -22,7 +22,7 @@ vtkInformationKeyMacro(DataObject, NameKey, String);
 vtkInformationKeyMacro(DataObject, ArrayIsAuxiliaryKey, Integer);
 
 
-DataObject::DataObject(QString name, vtkDataSet * dataSet)
+DataObject::DataObject(const QString & name, vtkDataSet * dataSet)
     : d_ptr(new DataObjectPrivate(*this, name, dataSet))
 {
     if (dataSet)
@@ -64,7 +64,7 @@ Context2DData * DataObject::createContextData()
     return nullptr;
 }
 
-QString DataObject::name() const
+const QString & DataObject::name() const
 {
     return d_ptr->m_name;
 }

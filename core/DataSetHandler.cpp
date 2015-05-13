@@ -36,7 +36,7 @@ DataSetHandler & DataSetHandler::instance()
     return instance;
 }
 
-void DataSetHandler::addData(QList<DataObject *> dataObjects)
+void DataSetHandler::addData(const QList<DataObject *> & dataObjects)
 {
     bool dataChanged = false, rawDataChanged = false;
     for (DataObject * dataObject : dataObjects)
@@ -63,7 +63,7 @@ void DataSetHandler::addData(QList<DataObject *> dataObjects)
         emit rawVectorsChanged();
 }
 
-void DataSetHandler::deleteData(QList<DataObject *> dataObjects)
+void DataSetHandler::deleteData(const QList<DataObject *> & dataObjects)
 {
     bool dataChanged = false, rawDataChanged = false;
     for (DataObject * dataObject : dataObjects)

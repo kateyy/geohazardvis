@@ -25,7 +25,7 @@ class CORE_API DataObject : public QObject
     Q_OBJECT
 
 public:
-    DataObject(QString name, vtkDataSet * dataSet);
+    DataObject(const QString & name, vtkDataSet * dataSet);
     virtual ~DataObject();
 
     /** @return true if this is a 3D geometry (and false if it's image/2D data) */
@@ -38,7 +38,7 @@ public:
     virtual RenderedData * createRendered();
     virtual Context2DData * createContextData();
 
-    QString name() const;
+    const QString & name() const;
     virtual const QString & dataTypeName() const = 0;
 
     vtkDataSet * dataSet();

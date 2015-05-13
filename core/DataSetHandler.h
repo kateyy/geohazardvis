@@ -17,8 +17,8 @@ class CORE_API DataSetHandler : public QObject
 public:
     static DataSetHandler & instance();
 
-    void addData(QList<DataObject *> dataObjects);
-    void deleteData(QList<DataObject *> dataObjects);
+    void addData(const QList<DataObject *> & dataObjects);
+    void deleteData(const QList<DataObject *> & dataObjects);
 
     const QList<DataObject *> & dataSets();
     const QList<RawVectorData *> & rawVectors();
