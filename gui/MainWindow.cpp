@@ -14,6 +14,8 @@
 
 #include <vtkQtDebugLeaksView.h>
 
+#include <widgetzeug/dark_fusion_style.hpp>
+
 #include <core/utility/vtkhelper.h>
 #include <core/DataSetHandler.h>
 #include <core/data_objects/DataObject.h>
@@ -45,6 +47,8 @@ MainWindow::MainWindow()
     , m_rendererConfigWidget(new RendererConfigWidget())
     , m_canvasExporter(new CanvasExporterWidget(this))
 {
+    m_defaultPalette = qApp->palette();
+
     TextureManager::initialize();
 
     m_ui->setupUi(this);
@@ -91,6 +95,8 @@ MainWindow::MainWindow()
         auto view = DataMapping::instance().createRenderView<ResidualVerificationView>();
         DataMapping::instance().setFocusedView(view);
     });
+
+    connect(m_ui->actionDark_Style, &QAction::triggered, this, &MainWindow::setDarkFusionStyle);
 
     connect(m_ui->actionShow_Leak_Debugger, &QAction::triggered, m_debugLeaksView, &QWidget::show);
 }
@@ -265,5 +271,26 @@ void MainWindow::tabbedDockWidgetToFront(QDockWidget * widget)
                 return;
             }
         }
+    }
+}
+
+bool MainWindow::darkFusionStyleEnabled() const
+{
+    return m_ui->actionDark_Style->isChecked();
+}
+
+void MainWindow::setDarkFusionStyle(bool enabled)
+{
+    if (enabled)
+        widgetzeug::enableDarkFusionStyle();
+    else
+    {
+#ifdef _WINDOWS
+        qApp->setStyle(QStyleFactory::create("windowsvista"));
+#else
+        qApp->setStyle(QStyleFactory::create("gtk"));
+#endif
+        qApp->setStyleSheet("");
+        qApp->setPalette(m_defaultPalette);
     }
 }

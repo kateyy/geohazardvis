@@ -63,6 +63,8 @@
     </widget>
     <addaction name="actionNew_Render_View"/>
     <addaction name="menuSynchronize_Selections"/>
+    <addaction name="separator"/>
+    <addaction name="actionDark_Style"/>
    </widget>
    <widget class="QMenu" name="menuImage_Export">
     <property name="title">
@@ -158,6 +160,14 @@
   <action name="actionShow_Leak_Debugger">
    <property name="text">
     <string>Show &amp;Leak Debugger</string>
+   </property>
+  </action>
+  <action name="actionDark_Style">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Enable &amp;Dark Style</string>
    </property>
   </action>
  </widget>

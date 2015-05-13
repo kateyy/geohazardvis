@@ -26,11 +26,15 @@ public:
     MainWindow();
     ~MainWindow() override;
 
+    bool darkFusionStyleEnabled() const;
+
 public slots:
     void openFiles(const QStringList & fileNames);
     
     void addRenderView(AbstractRenderView * renderView);
     void tabbedDockWidgetToFront(QDockWidget * widget);
+
+    void setDarkFusionStyle(bool enabled);
 
 private slots:
     void on_actionOpen_triggered();
@@ -47,6 +51,8 @@ private:
 
 private:
     vtkQtDebugLeaksView * m_debugLeaksView;
+    QPalette m_defaultPalette;
+
     Ui_MainWindow * m_ui;
     DataMapping * m_dataMapping;
     QAction * m_addToRendererAction;
