@@ -117,14 +117,17 @@ AbstractRenderView * DataMapping::openInRenderView(QList<DataObject *> dataObjec
 {
     auto renderView = createRenderView<RenderView>();
 
-    addToRenderView(dataObjects, renderView);
+    bool viewStillOpen = addToRenderView(dataObjects, renderView);
+
+    if (!viewStillOpen)
+        return nullptr;
 
     setFocusedView(renderView);
 
     return renderView;
 }
 
-void DataMapping::addToRenderView(QList<DataObject *> dataObjects, AbstractRenderView * renderView, unsigned int subViewIndex)
+bool DataMapping::addToRenderView(const QList<DataObject *> & dataObjects, AbstractRenderView * renderView, unsigned int subViewIndex)
 {
     assert(m_renderViews.key(renderView, -1) >= 0);
     assert(subViewIndex < renderView->numberOfSubViews());
@@ -132,11 +135,22 @@ void DataMapping::addToRenderView(QList<DataObject *> dataObjects, AbstractRende
     QList<DataObject *> incompatibleObjects;
     renderView->showDataObjects(dataObjects, incompatibleObjects, subViewIndex);
 
+    // RenderView::showDataObjects triggers QApplication::processEvents(), so the view might be closed again
+    // in that case, the user probably wants to abort his last action or close the app
+    // so abort everything from here
+    if (!m_renderViews.values().contains(renderView))
+    {
+        qDebug() << "<- DataMapping::addToRenderView false" << dataObjects;
+        return false;
+    }
+
     // there is something the current view couldn't handle
     if (!incompatibleObjects.isEmpty() && askForNewRenderView(renderView->friendlyName(), incompatibleObjects))
     {
         openInRenderView(incompatibleObjects);
     }
+
+    return true;
 }
 
 AbstractRenderView * DataMapping::focusedRenderView()
@@ -146,6 +160,8 @@ AbstractRenderView * DataMapping::focusedRenderView()
 
 void DataMapping::setFocusedView(AbstractDataView * view)
 {
+    assert(view);
+
     if (view->isRenderer())
     {
         if (m_focusedRenderView == view)
@@ -156,6 +172,8 @@ void DataMapping::setFocusedView(AbstractDataView * view)
 
         assert(dynamic_cast<AbstractRenderView *>(view));
         m_focusedRenderView = static_cast<AbstractRenderView *>(view);
+
+        assert(m_renderViews.value(view->index()) == view);
 
         if (m_focusedRenderView)
         {

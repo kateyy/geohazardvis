@@ -229,6 +229,12 @@ void RenderViewStrategyImage2D::startProfilePlot()
     lineMoved();
 
     m_previewRenderer = DataMapping::instance().openInRenderView(m_previewProfiles);
+    if (!m_previewRenderer) // in case the user closed the view again
+    {
+        abortProfilePlot();
+        return;
+    }
+
     connect(m_previewRenderer, &RenderView::closed, this, &RenderViewStrategyImage2D::abortProfilePlot);
 
     m_vtkConnect = vtkSmartPointer<vtkEventQtSlotConnect>::New();

@@ -24,8 +24,13 @@ public:
     void removeDataObjects(QList<DataObject *> dataObjects);
 
     void openInTable(DataObject * dataObject);
+    /** Opens a new render view and calls addToRenderView with the specified dataObjects on it.
+        @return Might return a nullptr, if the user requested to close the view during this function call. */
     AbstractRenderView * openInRenderView(QList<DataObject *> dataObjects);
-    void addToRenderView(QList<DataObject *> dataObjects, AbstractRenderView * renderView, unsigned int subViewIndex = 0);
+    /** Open a data set in the specified render view.
+        @return Might return false, if the user requested to close the view during this function call. 
+            Some render view implementations call QApplication::processEvents to increase interactivity. */
+    bool addToRenderView(const QList<DataObject *> & dataObjects, AbstractRenderView * renderView, unsigned int subViewIndex = 0);
 
     template<typename T>
     T * createRenderView();

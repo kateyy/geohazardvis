@@ -23,6 +23,7 @@ RenderView::RenderView(
     : AbstractRenderView(index, parent, flags)
     , m_ui(new Ui_RenderView())
     , m_implementationSwitch(new RendererImplementationSwitch(*this))
+    , m_closingRequested(false)
 {
     m_ui->setupUi(this);
 
@@ -75,6 +76,13 @@ void RenderView::render()
     implementation().render();
 }
 
+void RenderView::closeEvent(QCloseEvent * event)
+{
+    m_closingRequested = true;
+
+    AbstractRenderView::closeEvent(event);
+}
+
 QWidget * RenderView::contentWidget()
 {
     return m_ui->qvtkMain;
@@ -113,6 +121,10 @@ AbstractVisualizedData * RenderView::addDataObject(DataObject * dataObject)
 {
     updateTitle(dataObject->name() + " (loading to GPU)");
     QApplication::processEvents();
+
+    // abort if we received a close event in QApplication::processEvents 
+    if (m_closingRequested)
+        return nullptr;
 
     assert(dataObject->is3D() == (contentType() == ContentType::Rendered3D));
 
@@ -159,6 +171,10 @@ void RenderView::showDataObjectsImpl(const QList<DataObject *> & uncheckedDataOb
         if (!cachedRendered)
         {
             aNewObject = addDataObject(dataObject);
+
+            if (m_closingRequested) // just abort here, if we processed a close event while addDataObject()
+                return;
+
             continue;
         }
 

@@ -40,6 +40,8 @@ public slots:
     void render() override;
 
 protected:
+    void closeEvent(QCloseEvent * event) override;
+
     QWidget * contentWidget() override;
 
     void highlightedIdChangedEvent(DataObject * dataObject, vtkIdType itemId) override;
@@ -77,6 +79,7 @@ private slots:
 private:
     Ui_RenderView * m_ui;
     RendererImplementationSwitch * m_implementationSwitch;
+    bool m_closingRequested;
 
     // rendered representations of data objects for this view
     QList<AbstractVisualizedData *> m_contents;
