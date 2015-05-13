@@ -72,6 +72,10 @@ void ColorMappingChooser::setCurrentRenderView(AbstractRenderView * renderView)
         vtkQtConnect->Connect(m_mapping->colorMappingLegend()->GetPosition2Coordinate(), vtkCommand::ModifiedEvent,
             this, SLOT(colorLegendPositionChanged()));
     }
+    else
+    {
+        m_colorLegendConnects = nullptr;
+    }
 }
 
 void ColorMappingChooser::scalarsSelectionChanged(QString scalarsName)

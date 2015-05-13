@@ -119,6 +119,8 @@ AbstractRenderView * DataMapping::openInRenderView(QList<DataObject *> dataObjec
 
     addToRenderView(dataObjects, renderView);
 
+    setFocusedView(renderView);
+
     return renderView;
 }
 
@@ -215,8 +217,6 @@ void DataMapping::addRenderView(AbstractRenderView * renderView)
     m_mainWindow.addRenderView(renderView);
 
     emit renderViewsChanged(m_renderViews.values());
-
-    setFocusedView(renderView);
 }
 
 bool DataMapping::askForNewRenderView(const QString & rendererName, const QList<DataObject *> & relevantObjects)

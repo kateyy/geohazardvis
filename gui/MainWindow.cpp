@@ -85,7 +85,8 @@ MainWindow::MainWindow()
 
     connect(m_ui->actionObservation_Model_Residual_View, &QAction::triggered,
         [this] (bool) {
-        DataMapping::instance().createRenderView<ResidualVerificationView>();
+        auto view = DataMapping::instance().createRenderView<ResidualVerificationView>();
+        DataMapping::instance().setFocusedView(view);
     });
 }
 
