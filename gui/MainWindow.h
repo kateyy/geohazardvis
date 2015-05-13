@@ -6,6 +6,7 @@
 #include <gui/gui_api.h>
 
 
+class vtkQtDebugLeaksView;
 class AbstractRenderView;
 class CanvasExporterWidget;
 class DataBrowser;
@@ -45,6 +46,7 @@ private:
     void dropEvent(QDropEvent * event) override;
 
 private:
+    vtkQtDebugLeaksView * m_debugLeaksView;
     Ui_MainWindow * m_ui;
     DataMapping * m_dataMapping;
     QAction * m_addToRendererAction;

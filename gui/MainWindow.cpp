@@ -12,6 +12,8 @@
 #include <QMessageBox>
 #include <QMimeData>
 
+#include <vtkQtDebugLeaksView.h>
+
 #include <core/utility/vtkhelper.h>
 #include <core/DataSetHandler.h>
 #include <core/data_objects/DataObject.h>
@@ -34,6 +36,7 @@
 
 MainWindow::MainWindow()
     : QMainWindow()
+    , m_debugLeaksView(new vtkQtDebugLeaksView())
     , m_ui(new Ui_MainWindow())
     , m_dataMapping(new DataMapping(*this))
     , m_scalarMappingChooser(new ColorMappingChooser())
@@ -88,6 +91,8 @@ MainWindow::MainWindow()
         auto view = DataMapping::instance().createRenderView<ResidualVerificationView>();
         DataMapping::instance().setFocusedView(view);
     });
+
+    connect(m_ui->actionShow_Leak_Debugger, &QAction::triggered, m_debugLeaksView, &QWidget::show);
 }
 
 MainWindow::~MainWindow()
@@ -98,6 +103,8 @@ MainWindow::~MainWindow()
     delete m_ui;
 
     TextureManager::release();
+
+    delete m_debugLeaksView;
 }
 
 QStringList MainWindow::dialog_inputFileName()

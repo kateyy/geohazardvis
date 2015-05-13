@@ -46,6 +46,8 @@
      <string>&amp;Help</string>
     </property>
     <addaction name="actionAbout_Qt"/>
+    <addaction name="separator"/>
+    <addaction name="actionShow_Leak_Debugger"/>
    </widget>
    <widget class="QMenu" name="menuViews">
     <property name="title">
@@ -151,6 +153,11 @@
   <action name="actionObservation_Model_Residual_View">
    <property name="text">
     <string>Observation/Model/Residual View</string>
+   </property>
+  </action>
+  <action name="actionShow_Leak_Debugger">
+   <property name="text">
+    <string>Show &amp;Leak Debugger</string>
    </property>
   </action>
  </widget>
