@@ -140,7 +140,6 @@ bool DataMapping::addToRenderView(const QList<DataObject *> & dataObjects, Abstr
     // so abort everything from here
     if (!m_renderViews.values().contains(renderView))
     {
-        qDebug() << "<- DataMapping::addToRenderView false" << dataObjects;
         return false;
     }
 

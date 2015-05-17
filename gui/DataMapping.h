@@ -21,7 +21,7 @@ public:
     ~DataMapping() override;
     static DataMapping & instance();
 
-    void removeDataObjects(QList<DataObject *> dataObjects);
+    void removeDataObjects(const QList<DataObject *> & dataObjects);
 
     void openInTable(DataObject * dataObject);
     /** Opens a new render view and calls addToRenderView with the specified dataObjects on it.
