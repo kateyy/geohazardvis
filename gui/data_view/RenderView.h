@@ -2,6 +2,7 @@
 
 #include <QList>
 #include <QMap>
+#include <QSet>
 
 #include <vtkSmartPointer.h>
 
@@ -86,4 +87,6 @@ private:
     // objects that were loaded to the GPU but are currently not rendered 
     QList<AbstractVisualizedData *> m_contentCache;
     QMap<DataObject *, AbstractVisualizedData *> m_dataObjectToVisualization;
+    // DataObjects, that emitted deleted() and that we didn't remove yet
+    QSet<DataObject *> m_deletedData;
 };

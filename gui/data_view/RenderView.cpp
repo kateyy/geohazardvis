@@ -126,6 +126,9 @@ AbstractVisualizedData * RenderView::addDataObject(DataObject * dataObject)
     if (m_closingRequested)
         return nullptr;
 
+    if (m_deletedData.remove(dataObject))
+        return nullptr;
+
     assert(dataObject->is3D() == (contentType() == ContentType::Rendered3D));
 
     AbstractVisualizedData * newContent = implementation().requestVisualization(dataObject);
@@ -204,6 +207,8 @@ void RenderView::showDataObjectsImpl(const QList<DataObject *> & uncheckedDataOb
     {
         implementation().resetCamera(wasEmpty);
     }
+
+    updateTitle();
 }
 
 void RenderView::hideDataObjectsImpl(const QList<DataObject *> & dataObjects, unsigned int /*suViewIndex*/)
@@ -252,6 +257,9 @@ QList<DataObject *> RenderView::dataObjectsImpl(int /*subViewIndex*/) const
 void RenderView::removeDataObject(DataObject * dataObject)
 {
     AbstractVisualizedData * renderedData = m_dataObjectToVisualization.value(dataObject, nullptr);
+
+    // for the case that we are currently loading this object
+    m_deletedData << dataObject;
 
     // we didn't render this object
     if (!renderedData)
