@@ -10,7 +10,7 @@
 
 #include <core/canvas_export/CanvasExporter.h>
 #include <core/canvas_export/CanvasExporterRegistry.h>
-#include <gui/data_view/RenderView.h>
+#include <gui/data_view/AbstractRenderView.h>
 #include <gui/propertyguizeug_extension/ColorEditorRGB.h>
 
 

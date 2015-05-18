@@ -5,7 +5,7 @@
 #include <core/utility/vtkcamerahelper.h>
 #include <core/data_objects/DataObject.h>
 #include <core/rendered_data/RenderedVectorGrid3D.h>
-#include <gui/data_view/RenderView.h>
+#include <gui/data_view/AbstractRenderView.h>
 #include <gui/data_view/RendererImplementationBase3D.h>
 #include <gui/rendering_interaction/PickingInteractorStyleSwitch.h>
 
@@ -16,7 +16,7 @@ const bool RenderViewStrategy3D::s_isRegistered = RenderViewStrategy::registerSt
 RenderViewStrategy3D::RenderViewStrategy3D(RendererImplementationBase3D & context, QObject * parent)
     : RenderViewStrategy(context, parent)
 {
-    connect(&context.renderView(), &RenderView::visualizationsChanged, this, &RenderViewStrategy3D::updateImageWidgets);
+    connect(&context.renderView(), &AbstractRenderView::visualizationsChanged, this, &RenderViewStrategy3D::updateImageWidgets);
 }
 
 QString RenderViewStrategy3D::name() const

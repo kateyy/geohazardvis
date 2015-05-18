@@ -26,7 +26,7 @@
 #include <core/data_objects/ImageProfileData.h>
 #include <core/rendered_data/RenderedData.h>
 #include <gui/DataMapping.h>
-#include <gui/data_view/RenderView.h>
+#include <gui/data_view/AbstractRenderView.h>
 #include <gui/data_view/RendererImplementationBase3D.h>
 #include <gui/rendering_interaction/PickingInteractorStyleSwitch.h>
 
@@ -39,7 +39,7 @@ RenderViewStrategyImage2D::RenderViewStrategyImage2D(RendererImplementationBase3
     , m_previewRenderer(nullptr)
     , m_currentPlottingImage(nullptr)
 {
-    connect(&context.renderView(), &RenderView::visualizationsChanged, 
+    connect(&context.renderView(), &AbstractRenderView::visualizationsChanged, 
         this, &RenderViewStrategyImage2D::checkSourceExists);
 }
 
@@ -235,7 +235,7 @@ void RenderViewStrategyImage2D::startProfilePlot()
         return;
     }
 
-    connect(m_previewRenderer, &RenderView::closed, this, &RenderViewStrategyImage2D::abortProfilePlot);
+    connect(m_previewRenderer, &AbstractDataView::closed, this, &RenderViewStrategyImage2D::abortProfilePlot);
 
     m_vtkConnect = vtkSmartPointer<vtkEventQtSlotConnect>::New();
     m_vtkConnect->Connect(m_lineWidget->GetLineRepresentation()->GetLineHandleRepresentation(), vtkCommand::ModifiedEvent, this, SLOT(lineMoved()));
