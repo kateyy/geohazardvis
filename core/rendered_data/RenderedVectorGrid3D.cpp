@@ -104,10 +104,6 @@ RenderedVectorGrid3D::RenderedVectorGrid3D(VectorGrid3DDataObject * dataObject)
     m_isInitialized = true;
 }
 
-RenderedVectorGrid3D::~RenderedVectorGrid3D()
-{
-}
-
 void RenderedVectorGrid3D::setRenderWindowInteractor(vtkRenderWindowInteractor * interactor)
 {
     for (vtkImagePlaneWidget * widget : m_planeWidgets)
@@ -351,6 +347,7 @@ void RenderedVectorGrid3D::updatePlaneLUT()
 void RenderedVectorGrid3D::updateVisibilities()
 {
     bool colorMapping = m_scalars && m_scalars->usesFilter();
+    bool changed = false;
 
     for (int i = 0; i < 3; ++i)
     {
@@ -360,10 +357,15 @@ void RenderedVectorGrid3D::updateVisibilities()
             && (m_planeWidgets[i]->GetInteractor() != nullptr) // don't enable them without an interactor
             && m_slicesEnabled[i];
 
-        m_planeWidgets[i]->SetEnabled(showSliceI);
+        if ((m_planeWidgets[i]->GetEnabled() != 0) != showSliceI)   // prevent interactor not set warning
+        {
+            m_planeWidgets[i]->SetEnabled(showSliceI);
+            changed = true;
+        }
     }
 
-    emit geometryChanged();
+    if (changed)
+        emit geometryChanged();
 }
 
 void RenderedVectorGrid3D::setSampleRate(int x, int y, int z)

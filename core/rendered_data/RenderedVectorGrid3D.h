@@ -22,7 +22,6 @@ class CORE_API RenderedVectorGrid3D : public RenderedData3D
 
 public:
     RenderedVectorGrid3D(VectorGrid3DDataObject * dataObject);
-    ~RenderedVectorGrid3D() override;
 
     /** the interactor needs to be set in order to use the image plane widgets */
     void setRenderWindowInteractor(vtkRenderWindowInteractor * interactor);
