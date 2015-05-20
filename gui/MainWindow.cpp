@@ -12,7 +12,7 @@
 #include <QMessageBox>
 #include <QMimeData>
 
-#include <vtkQtDebugLeaksView.h>
+//#include <vtkQtDebugLeaksView.h>
 
 #include <widgetzeug/dark_fusion_style.hpp>
 
@@ -38,7 +38,7 @@
 
 MainWindow::MainWindow()
     : QMainWindow()
-    , m_debugLeaksView(new vtkQtDebugLeaksView())
+    //, m_debugLeaksView(new vtkQtDebugLeaksView())
     , m_ui(new Ui_MainWindow())
     , m_dataMapping(new DataMapping(*this))
     , m_scalarMappingChooser(new ColorMappingChooser())
@@ -98,7 +98,7 @@ MainWindow::MainWindow()
 
     connect(m_ui->actionDark_Style, &QAction::triggered, this, &MainWindow::setDarkFusionStyle);
 
-    connect(m_ui->actionShow_Leak_Debugger, &QAction::triggered, m_debugLeaksView, &QWidget::show);
+    //connect(m_ui->actionShow_Leak_Debugger, &QAction::triggered, m_debugLeaksView, &QWidget::show);
 }
 
 MainWindow::~MainWindow()
@@ -110,7 +110,7 @@ MainWindow::~MainWindow()
 
     TextureManager::release();
 
-    delete m_debugLeaksView;
+    //delete m_debugLeaksView;
 }
 
 QStringList MainWindow::dialog_inputFileName()
