@@ -180,7 +180,9 @@ if(WIN32 AND CPACK_INSTALL_3RDPARTY_DLLS)
         "${libzeug_DIR}/bin/signalzeug$<$<CONFIG:Debug>:d>.dll"
         "${libzeug_DIR}/bin/loggingzeug$<$<CONFIG:Debug>:d>.dll"
         "${libzeug_DIR}/bin/reflectionzeug$<$<CONFIG:Debug>:d>.dll"
-        "${libzeug_DIR}/bin/propertyguizeug$<$<CONFIG:Debug>:d>.dll")
+        "${libzeug_DIR}/bin/propertyguizeug$<$<CONFIG:Debug>:d>.dll"
+        "${libzeug_DIR}/bin/threadingzeug$<$<CONFIG:Debug>:d>.dll"
+    )
 
     install(FILES ${DEPLOY_FILES} DESTINATION ${INSTALL_BIN})
 endif()
