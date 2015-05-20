@@ -61,6 +61,12 @@ const QSet<QString> & vtkImageFileExts()
 }
 
 
+void Loader::initialize()
+{
+    fileFormatExtensions();
+    fileFormatExtensions();
+}
+
 const QString & Loader::fileFormatFilters()
 {
     static QString f;

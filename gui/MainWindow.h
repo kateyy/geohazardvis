@@ -1,11 +1,14 @@
 #pragma once
 
 #include <QMainWindow>
+#include <QMap>
 #include <QStringList>
 
 #include <gui/gui_api.h>
 
 
+template<typename T> class QFutureWatcher;
+class QMutex;
 class vtkQtDebugLeaksView;
 class AbstractRenderView;
 class CanvasExporterWidget;
@@ -30,6 +33,7 @@ public:
 
 public slots:
     void openFiles(const QStringList & fileNames);
+    void openFilesAsync(const QStringList & fileNames);
     
     void addRenderView(AbstractRenderView * renderView);
     void tabbedDockWidgetToFront(QDockWidget * widget);
@@ -43,11 +47,14 @@ private slots:
     void on_actionNew_Render_View_triggered();
     void on_actionApply_Digital_Elevation_Model_triggered();
 
-private:
-    QStringList dialog_inputFileName();
-
+protected:
     void dragEnterEvent(QDragEnterEvent * event) override;
     void dropEvent(QDropEvent * event) override;
+
+private:
+    QStringList dialog_inputFileName();
+    void updateWindowTitle();
+    void handleAsyncLoadFinished();
 
 private:
     vtkQtDebugLeaksView * m_debugLeaksView;
@@ -66,4 +73,7 @@ private:
 
     QString m_lastOpenFolder;
     QString m_lastExportFolder;
+
+    QMutex * m_loadWatchersMutex;
+    QMap<QFutureWatcher<void> *, QStringList> m_loadWatchers;
 };

@@ -5,6 +5,7 @@
 #include <core/core_api.h>
 
 template <typename T> class QList;
+class QMutex;
 
 class DataObject;
 class RawVectorData;
@@ -30,4 +31,6 @@ signals:
 private:
     DataSetHandler();
     ~DataSetHandler();
+
+    QMutex * m_mutex;
 };

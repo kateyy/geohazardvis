@@ -8,9 +8,11 @@
 #include <QDragEnterEvent>
 #include <QFileDialog>
 #include <QFileInfo>
+#include <QFutureWatcher>
 #include <QGridLayout>
 #include <QMessageBox>
 #include <QMimeData>
+#include <QtConcurrent/QtConcurrentRun>
 
 //#include <vtkQtDebugLeaksView.h>
 
@@ -35,10 +37,14 @@
 #include <gui/widgets/RenderConfigWidget.h>
 #include <gui/widgets/RendererConfigWidget.h>
 
+namespace
+{
+    const char s_defaultAppTitle[] = "GeohazardVis";
+}
 
 MainWindow::MainWindow()
     : QMainWindow()
-    //, m_debugLeaksView(new vtkQtDebugLeaksView())
+    //, m_debugLeaksView(new vtkQtDebugLeaksView()) // not usable in multi-threaded application
     , m_ui(new Ui_MainWindow())
     , m_dataMapping(new DataMapping(*this))
     , m_scalarMappingChooser(new ColorMappingChooser())
@@ -46,10 +52,12 @@ MainWindow::MainWindow()
     , m_renderConfigWidget(new RenderConfigWidget())
     , m_rendererConfigWidget(new RendererConfigWidget())
     , m_canvasExporter(new CanvasExporterWidget(this))
+    , m_loadWatchersMutex(new QMutex())
 {
     m_defaultPalette = qApp->palette();
 
     TextureManager::initialize();
+    Loader::initialize();
 
     m_ui->setupUi(this);
 
@@ -103,9 +111,25 @@ MainWindow::MainWindow()
 
 MainWindow::~MainWindow()
 {
+    while (true)
+    {
+        QFutureWatcher<void> * watcher;
+        {
+            QMutexLocker lock(m_loadWatchersMutex);
+            if (m_loadWatchers.isEmpty())
+                break;
+
+            watcher = m_loadWatchers.begin().key();
+        }
+        watcher->waitForFinished();
+        QApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
+    }
+    delete m_loadWatchersMutex;
+
     delete m_dataMapping;
     // wait to close all views
-    QApplication::processEvents();
+    QApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
+
     delete m_ui;
 
     TextureManager::release();
@@ -141,7 +165,7 @@ void MainWindow::dropEvent(QDropEvent * event)
     for (const QUrl & url : event->mimeData()->urls())
         fileNames << url.toLocalFile();
 
-    openFiles(fileNames);
+    openFilesAsync(fileNames);
 }
 
 void MainWindow::addRenderView(AbstractRenderView * renderView)
@@ -171,9 +195,6 @@ void MainWindow::openFiles(const QStringList & fileNames)
             continue;
         }
 
-        setWindowTitle(fileName + " (loading file)");
-        QApplication::processEvents();
-
         DataObject * dataObject = Loader::readFile(fileName);
         if (!dataObject)
         {
@@ -186,13 +207,27 @@ void MainWindow::openFiles(const QStringList & fileNames)
     }
 
     DataSetHandler::instance().addData(newData);
+}
 
-    setWindowTitle(oldName);
+void MainWindow::openFilesAsync(const QStringList & fileNames)
+{
+    auto watcher = new QFutureWatcher<void>(this);
+    connect(watcher, &QFutureWatcher<void>::finished, this, &MainWindow::handleAsyncLoadFinished);
+
+    m_loadWatchersMutex->lock();
+    m_loadWatchers.insert(watcher, fileNames);
+    m_loadWatchersMutex->unlock();
+
+    watcher->setFuture(
+        QtConcurrent::run(this, &MainWindow::openFiles, fileNames));
+
+    updateWindowTitle();
+    QApplication::processEvents();
 }
 
 void MainWindow::on_actionOpen_triggered()
 {
-    openFiles(dialog_inputFileName());
+    openFilesAsync(dialog_inputFileName());
 }
 
 void MainWindow::on_actionExportDataset_triggered()
@@ -293,4 +328,40 @@ void MainWindow::setDarkFusionStyle(bool enabled)
         qApp->setStyleSheet("");
         qApp->setPalette(m_defaultPalette);
     }
+}
+
+void MainWindow::updateWindowTitle()
+{
+    QMutexLocker lock(m_loadWatchersMutex);
+
+    QString title = s_defaultAppTitle;
+
+    if (!m_loadWatchers.isEmpty())
+    {
+        title += " -  Loading Files: ";
+
+        for (auto & fileNames : m_loadWatchers.values())
+        {
+            for (auto & fileName : fileNames)
+            {
+                title += QFileInfo(fileName).fileName() + ", ";
+            }
+        }
+
+        title.truncate(title.length() - 2);
+    }
+
+    setWindowTitle(title);    
+}
+
+void MainWindow::handleAsyncLoadFinished()
+{
+    {
+        QMutexLocker lock(m_loadWatchersMutex);
+        assert(dynamic_cast<QFutureWatcher<void> *>(sender()));
+        auto watcher = static_cast<QFutureWatcher<void> *>(sender());
+        m_loadWatchers.remove(watcher);
+    }
+
+    updateWindowTitle();
 }
