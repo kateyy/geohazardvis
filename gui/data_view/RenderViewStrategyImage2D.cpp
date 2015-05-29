@@ -3,6 +3,7 @@
 #include <cassert>
 
 #include <QAction>
+#include <QDockWidget>
 #include <QIcon>
 #include <QLayout>
 #include <QToolBar>
@@ -48,7 +49,7 @@ RenderViewStrategyImage2D::~RenderViewStrategyImage2D()
     {
         m_previewRenderer->prepareDeleteData(m_previewProfiles);
         if (m_previewRenderer->visualizations().isEmpty())
-            m_previewRenderer->close();
+            m_previewRenderer->dockWidgetParent()->close();
     }
 
     qDeleteAll(m_previewProfiles);
@@ -282,9 +283,9 @@ void RenderViewStrategyImage2D::abortProfilePlot()
     m_lineWidget = nullptr;
     m_context.render();
 
-    // in case the user close the viewer while we were starting a plot
+    // this becomes nullptr in case the user closed the viewer while we were starting a plot
     if (oldPreviewRenderer)
-        oldPreviewRenderer->close();
+        oldPreviewRenderer->dockWidgetParent()->close();
 
     qDeleteAll(m_previewProfiles);
     m_previewProfiles.clear();
