@@ -33,6 +33,12 @@
 
 const bool RenderViewStrategyImage2D::s_isRegistered = RenderViewStrategy::registerStrategy<RenderViewStrategyImage2D>();
 
+namespace
+{
+    // ensures that the line is placed in front of other contents
+    const float g_lineZOffset = 0.00001f;
+}
+
 
 RenderViewStrategyImage2D::RenderViewStrategyImage2D(RendererImplementationBase3D & context, QObject * parent)
     : RenderViewStrategy(context, parent)
@@ -218,8 +224,8 @@ void RenderViewStrategyImage2D::startProfilePlot()
 
     m_context.dataBounds(bounds);
 
-    bounds[4] += 0.0001;
-    bounds[5] += 0.0001;
+    bounds[4] += g_lineZOffset;
+    bounds[5] += g_lineZOffset;
 
     repr->PlaceWidget(bounds);
 
@@ -300,7 +306,8 @@ void RenderViewStrategyImage2D::lineMoved()
     double point1[3], point2[3];
     m_lineWidget->GetLineRepresentation()->GetPoint1WorldPosition(point1);
     m_lineWidget->GetLineRepresentation()->GetPoint2WorldPosition(point2);
-    point1[2] = point2[2] = 0;
+    point1[2] -= g_lineZOffset;
+    point2[2] -= g_lineZOffset;
 
     for (auto profile : m_previewProfiles)
         static_cast<ImageProfileData *>(profile)->setPoints(point1, point2);
