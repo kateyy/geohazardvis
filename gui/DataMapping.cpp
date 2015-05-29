@@ -172,13 +172,16 @@ void DataMapping::setFocusedView(AbstractDataView * view)
         assert(dynamic_cast<AbstractRenderView *>(view));
         m_focusedRenderView = static_cast<AbstractRenderView *>(view);
 
-        assert(m_renderViews.value(view->index()) == view);
-
-        if (m_focusedRenderView)
+        // check if the user clicked on a view that we are currently closing
+        if (m_renderViews.value(view->index()) != view) 
         {
-            m_focusedRenderView->setCurrent(true);
-            m_focusedRenderView->setFocus();
+            assert(!view->isVisible());
+            focusNextRenderView();
+            return;
         }
+
+        m_focusedRenderView->setCurrent(true);
+        m_focusedRenderView->setFocus();
 
         emit focusedRenderViewChanged(m_focusedRenderView);
     }
