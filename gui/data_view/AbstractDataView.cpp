@@ -61,6 +61,9 @@ QToolBar * AbstractDataView::toolBar()
         return m_toolBar;
 
     m_toolBar = new QToolBar();
+    auto font = m_toolBar->font();
+    font.setBold(false);
+    m_toolBar->setFont(font);
     m_toolBar->setToolButtonStyle(Qt::ToolButtonStyle::ToolButtonTextBesideIcon);
 
     layout()->addWidget(m_toolBar);
