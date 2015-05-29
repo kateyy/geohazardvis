@@ -7,6 +7,7 @@
 
 #include <vtkCellData.h>
 #include <vtkCharArray.h>
+#include <vtkDEMReader.h>
 #include <vtkExecutive.h>
 #include <vtkImageData.h>
 #include <vtkPointData.h>
@@ -14,6 +15,7 @@
 #include <vtkImageReader2.h>
 #include <vtkImageReader2Collection.h>
 #include <vtkImageReader2Factory.h>
+#include <vtkNew.h>
 #include <vtkXMLImageDataReader.h>
 #include <vtkXMLPolyDataReader.h>
 
@@ -103,7 +105,8 @@ const QMap<QString, QStringList> & Loader::fileFormatExtensions()
         m = {
             { "Text files", { "txt" } },
             { "VTK XML Image Files", { "vti" } },
-            { "VTK XML PolyData Files", { "vtp" } }
+            { "VTK XML PolyData Files", { "vtp" } },
+            { "Digital Elevation Model", { "dem" } }
         };
         for (auto it = vtkImageFormats().begin(); it != vtkImageFormats().end(); ++it)
             m.insert(it.key(), it.value());
@@ -127,20 +130,40 @@ DataObject * Loader::readFile(const QString & filename)
             static_cast<int>(nameArray->GetSize()));
     };
 
-    if (ext == "vti")
+    if (ext == "vti" || ext == "dem")
     {
-        VTK_CREATE(vtkXMLImageDataReader, reader);
-        reader->SetFileName(filename.toUtf8().data());
-
         vtkSmartPointer<vtkImageData> image;
-        if (reader->GetExecutive()->Update() == 1)
-            image = reader->GetOutput();
 
-        if (!image)
+        if (ext == "vti")
         {
-            qDebug() << "Invalid VTK image file: " << filename;
-            return nullptr;
+            vtkNew<vtkXMLImageDataReader> reader;
+            reader->SetFileName(filename.toUtf8().data());
+
+            if (reader->GetExecutive()->Update() == 1)
+                image = reader->GetOutput();
+
+            if (!image)
+            {
+                qDebug() << "Invalid VTK image file: " << filename;
+                return nullptr;
+            }
         }
+        else if (ext == "dem")
+        {
+            vtkNew<vtkDEMReader> reader;
+            reader->SetFileName(filename.toUtf8().data());
+
+            if (reader->GetExecutive()->Update() == 1)
+                image = reader->GetOutput();
+
+            if (!image)
+            {
+                qDebug() << "Invalid DEM file: " << filename;
+                return nullptr;
+            }
+        }
+
+        assert(image);
 
         QString dataSetName = getName(image);
         if (dataSetName.isEmpty())
