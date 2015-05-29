@@ -63,9 +63,10 @@ private:
     QList<QAction *> m_actions;
     QList<DataObject *> m_previewProfiles;
     AbstractRenderView * m_previewRenderer;
+    QList<QMetaObject::Connection> m_previewRendererConnections;
 
-    ImageDataObject * m_currentPlottingImage;
-    QList<ImageDataObject *> m_inputImages;
+    QList<ImageDataObject *> m_currentPlottingImages; // currently used input images
+    QList<ImageDataObject *> m_inputImages; // input images that were explicitly set
 
     vtkSmartPointer<vtkLineWidget2> m_lineWidget;
     vtkSmartPointer<vtkEventQtSlotConnect> m_vtkConnect;

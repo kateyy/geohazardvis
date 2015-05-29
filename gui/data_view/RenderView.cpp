@@ -120,7 +120,7 @@ void RenderView::updateImplementation(const QList<DataObject *> & contents)
 AbstractVisualizedData * RenderView::addDataObject(DataObject * dataObject)
 {
     updateTitle(dataObject->name() + " (loading to GPU)");
-    QApplication::processEvents();
+    QApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
 
     // abort if we received a close event in QApplication::processEvents 
     if (m_closingRequested)
