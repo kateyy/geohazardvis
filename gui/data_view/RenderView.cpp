@@ -30,6 +30,8 @@ RenderView::RenderView(
     updateTitle();
 
     SelectionHandler::instance().addRenderView(this);
+
+    updateImplementation({});
 }
 
 RenderView::~RenderView()
