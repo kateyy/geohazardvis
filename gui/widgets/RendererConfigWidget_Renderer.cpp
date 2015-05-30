@@ -8,6 +8,7 @@
 #include <vtkLightKit.h>
 #include <vtkCamera.h>
 #include <vtkCubeAxesActor.h>
+#include <vtkMath.h>
 #include <vtkTextActor.h>
 #include <vtkTextProperty.h>
 #include <vtkTextWidget.h>
@@ -148,7 +149,8 @@ reflectionzeug::PropertyGroup * RendererConfigWidget::createPropertyGroupRendere
             },
                 [&camera, impl] (const double & azimuth) {
                 TerrainCamera::setAzimuth(camera, azimuth);
-                impl->resetCamera(false);
+                impl->renderer()->ResetCameraClippingRange();
+                impl->render();
             });
             prop_azimuth->setOption("minimum", std::numeric_limits<double>::lowest());
             prop_azimuth->setOption("suffix", degreesSuffix);
@@ -159,10 +161,11 @@ reflectionzeug::PropertyGroup * RendererConfigWidget::createPropertyGroupRendere
             },
                 [&camera, impl] (const double & elevation) {
                 TerrainCamera::setVerticalElevation(camera, elevation);
-                impl->resetCamera(false);
+                impl->renderer()->ResetCameraClippingRange();
+                impl->render();
             });
-            prop_elevation->setOption("minimum", -89);
-            prop_elevation->setOption("maximum", 89);
+            prop_elevation->setOption("minimum", -87);
+            prop_elevation->setOption("maximum", 87);
             prop_elevation->setOption("suffix", degreesSuffix);
         }
 
@@ -170,21 +173,42 @@ reflectionzeug::PropertyGroup * RendererConfigWidget::createPropertyGroupRendere
             [&camera](size_t component) {
             return camera.GetFocalPoint()[component];
         },
-            [&camera, renderView](size_t component, const double & value) {
+            [&camera, impl](size_t component, const double & value) {
             double foc[3];
             camera.GetFocalPoint(foc);
             foc[component] = value;
             camera.SetFocalPoint(foc);
-            renderView->render();
+            impl->renderer()->ResetCameraClippingRange();
+            impl->render();
         });
         prop_focalPoint->setOption("title", "Focal Point");
-        char title[2] {'x', 0};
+        char title[2] {'X', 0};
         for (quint8 i = 0; i < 3; ++i)
         {
-            prop_focalPoint->at(i)->setOption("title", std::string(title));
+            prop_focalPoint->at(i)->setOptions({
+                { "title", std::string(title) },
+                { "minimum", std::numeric_limits<float>::lowest() } });
             ++title[0];
         }
 
+        auto prop_distance = cameraGroup->addProperty<double>("distance",
+            [&camera] (){ return camera.GetDistance(); },
+            [&camera, impl] (double d) {
+            double viewVec[3], focalPoint[3], position[3];
+            camera.GetDirectionOfProjection(viewVec);
+            camera.GetFocalPoint(focalPoint);
+            
+            vtkMath::MultiplyScalar(viewVec, d);
+            vtkMath::Subtract(focalPoint, viewVec, position);
+            camera.SetPosition(position);
+
+            impl->renderer()->ResetCameraClippingRange();
+            impl->render();
+        });
+        prop_distance->setOptions({
+            { "title", "Distance" },
+            { "minimum", 0.001f }
+        });
 
         if (contains3dData)
         {
@@ -192,9 +216,10 @@ reflectionzeug::PropertyGroup * RendererConfigWidget::createPropertyGroupRendere
                 [&camera] () {
                 return camera.GetParallelProjection() != 0 ? ProjectionType::parallel : ProjectionType::perspective;
             },
-                [&camera, renderView] (ProjectionType type) {
+                [&camera, impl] (ProjectionType type) {
                 camera.SetParallelProjection(type == ProjectionType::parallel);
-                renderView->render();
+                impl->renderer()->ResetCameraClippingRange();
+                impl->render();
             });
             prop_projectionType->setStrings({
                     { ProjectionType::parallel, "parallel" },
