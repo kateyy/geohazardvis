@@ -1,7 +1,10 @@
 #include "CanvasExporterImages.h"
 
+#include <limits>
+
 #include <QFileInfo>
 
+#include <vtkImageShiftScale.h>
 #include <vtkImageWriter.h>
 #include <vtkRenderWindow.h>
 #include <vtkWindowToImageFilter.h>
@@ -30,13 +33,24 @@ CanvasExporterImages::CanvasExporterImages(vtkImageWriter * writer)
     m_toImageFilter->SetInputBufferTypeToRGBA();
     //m_toImageFilter->ReadFrontBufferOff();
 
-    m_writer->SetInputConnection(m_toImageFilter->GetOutputPort());
+    m_depthToUChar = vtkSmartPointer<vtkImageShiftScale>::New();
+    m_depthToUChar->SetOutputScalarTypeToUnsignedChar();
+    m_depthToUChar->SetInputConnection(m_toImageFilter->GetOutputPort());
+
+    m_writer->SetInputConnection(m_depthToUChar->GetOutputPort());
 }
 
 bool CanvasExporterImages::write()
 {
     m_toImageFilter->SetInput(nullptr); // the filter does not update its image after one successful export without this line
     m_toImageFilter->SetInput(renderWindow());
+
+    double valueScale = m_toImageFilter->GetInputBufferType() == VTK_ZBUFFER
+        ? (double)std::numeric_limits<unsigned char>::max()
+        : 1.0;
+
+    m_depthToUChar->SetScale(valueScale);
+
     m_writer->SetFileName(verifiedFileName().toUtf8().data());
     m_writer->Write();
 

@@ -4,6 +4,7 @@
 
 
 class vtkImageWriter;
+class vtkImageShiftScale;
 class vtkWindowToImageFilter;
 
 
@@ -25,5 +26,6 @@ protected:
 
 protected:
     vtkSmartPointer<vtkWindowToImageFilter> m_toImageFilter;
+    vtkSmartPointer<vtkImageShiftScale> m_depthToUChar;
     vtkSmartPointer<vtkImageWriter> m_writer;
 };
