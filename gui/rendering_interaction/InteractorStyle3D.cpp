@@ -16,23 +16,21 @@
 #include <vtkObjectFactory.h>
 #include <vtkPointPicker.h>
 #include <vtkCellPicker.h>
-#include <vtkAbstractMapper3D.h>
 
 #include <vtkInformation.h>
 #include <vtkInformationStringKey.h>
 #include <vtkMath.h>
 
+#include <vtkCellArray.h>
 #include <vtkIdTypeArray.h>
-#include <vtkSelectionNode.h>
-#include <vtkSelection.h>
-#include <vtkExtractSelection.h>
-#include <vtkDataSetMapper.h>
 #include <vtkActor.h>
+#include <vtkPolygon.h>
 #include <vtkProperty.h>
 #include <vtkCamera.h>
 #include <vtkPolygon.h>
 #include <vtkMath.h>
 #include <vtkPolyData.h>
+#include <vtkPolyDataMapper.h>
 #include <vtkCellData.h>
 #include <vtkPropCollection.h>
 
@@ -49,11 +47,18 @@ InteractorStyle3D::InteractorStyle3D()
     , m_pointPicker(vtkSmartPointer<vtkPointPicker>::New())
     , m_cellPicker(vtkSmartPointer<vtkCellPicker>::New())
     , m_selectedCellActor(vtkSmartPointer<vtkActor>::New())
-    , m_selectedCellMapper(vtkSmartPointer<vtkDataSetMapper>::New())
+    , m_selectedCellData(vtkSmartPointer<vtkPolyData>::New())
     , m_highlightFlashTimer(nullptr)
     , m_highlightFlashTime(new QTime())
     , m_mouseMoved(false)
 {
+    auto selectionMapper = vtkSmartPointer<vtkPolyDataMapper>::New();
+    selectionMapper->SetInputData(m_selectedCellData);
+    m_selectedCellActor->SetMapper(selectionMapper);
+    m_selectedCellActor->GetProperty()->EdgeVisibilityOn();
+    m_selectedCellActor->GetProperty()->SetEdgeColor(1, 0, 0);
+    m_selectedCellActor->GetProperty()->SetLineWidth(3);
+    m_selectedCellActor->PickableOff();
 }
 
 InteractorStyle3D::~InteractorStyle3D()
@@ -253,31 +258,38 @@ void InteractorStyle3D::highlightCell(DataObject * dataObject, vtkIdType cellId)
 
 
     // extract picked triangle and create highlighting geometry
+    // create two shifted polygons to work around occlusion
 
-    VTK_CREATE(vtkIdTypeArray, ids);
-    ids->SetNumberOfComponents(1);
-    ids->InsertNextValue(cellId);
+    vtkCell * selection = dataObject->dataSet()->GetCell(cellId);
+    vtkIdType numberOfPoints = selection->GetNumberOfPoints();
 
-    VTK_CREATE(vtkSelectionNode, selectionNode);
-    selectionNode->SetFieldType(vtkSelectionNode::CELL);
-    selectionNode->SetContentType(vtkSelectionNode::INDICES);
-    selectionNode->SetSelectionList(ids);
+    double cellNormal[3];
+    vtkPolygon::ComputeNormal(selection->GetPoints(), cellNormal);
+    vtkMath::MultiplyScalar(cellNormal, 0.001);
 
-    VTK_CREATE(vtkSelection, selection);
-    selection->AddNode(selectionNode);
+    VTK_CREATE(vtkPoints, points);
+    points->SetNumberOfPoints(numberOfPoints * 2);
+    std::vector<vtkIdType> front, back;
+    VTK_CREATE(vtkCellArray, polys);
+    for (vtkIdType i = 0; i < numberOfPoints; ++i)
+    {
+        double original[3], shifted[3];
+        selection->GetPoints()->GetPoint(i, original);
 
-    VTK_CREATE(vtkExtractSelection, extractSelection);
-    extractSelection->SetInputData(0, dataObject->dataSet());
-    extractSelection->SetInputData(1, selection);
-    extractSelection->Update();
+        vtkMath::Add(original, cellNormal, shifted);
+        points->InsertPoint(i, shifted);
+        front.push_back(i);
 
-    m_selectedCellMapper->SetInputConnection(extractSelection->GetOutputPort());
+        vtkMath::Subtract(original, cellNormal, shifted);
+        points->InsertPoint(i + numberOfPoints, shifted);
+        back.push_back(i + numberOfPoints);
+    }
 
-    m_selectedCellActor->SetMapper(m_selectedCellMapper);
-    m_selectedCellActor->GetProperty()->EdgeVisibilityOn();
-    m_selectedCellActor->GetProperty()->SetEdgeColor(1, 0, 0);
-    m_selectedCellActor->GetProperty()->SetLineWidth(3);
-    m_selectedCellActor->PickableOff();
+    polys->InsertNextCell(numberOfPoints, front.data());
+    polys->InsertNextCell(numberOfPoints, back.data());
+
+    m_selectedCellData->SetPoints(points);
+    m_selectedCellData->SetPolys(polys);
 
     GetDefaultRenderer()->AddViewProp(m_selectedCellActor);
     GetDefaultRenderer()->GetRenderWindow()->Render();

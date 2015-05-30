@@ -12,8 +12,8 @@ class QTime;
 class QTimer;
 class vtkPointPicker;
 class vtkCellPicker;
+class vtkPolyData;
 class vtkProp;
-class vtkDataSetMapper;
 
 
 class GUI_API InteractorStyle3D : public IPickingInteractorStyle, public vtkInteractorStyleTerrain
@@ -58,7 +58,7 @@ protected:
     vtkSmartPointer<vtkPointPicker> m_pointPicker;
     vtkSmartPointer<vtkCellPicker> m_cellPicker;
     vtkSmartPointer<vtkActor> m_selectedCellActor;
-    vtkSmartPointer<vtkDataSetMapper> m_selectedCellMapper;
+    vtkSmartPointer<vtkPolyData> m_selectedCellData;
 
     QTimer * m_highlightFlashTimer;
     QTime * m_highlightFlashTime;
