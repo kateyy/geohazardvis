@@ -10,6 +10,14 @@ LIST(APPEND DEFAULT_COMPILE_DEFS
 
 set(OPTION_LTCG OFF CACHE BOOL "Enable whole program optimization / link time code generation in release builds")
 
+set(OPTION_WIN32_GUI_APP ON CACHE BOOL "Build an executable with a WinMain entry point on windows. This disables the console window")
+if(OPTION_WIN32_GUI_APP)
+    set(WIN32_EXE_FLAG WIN32)
+else()
+    set (WIN32_EXE_FLAG "")
+endif()
+
+
 set(WIN32_COMPILE_FLAGS
     /nologo /Zc:wchar_t /Zc:forScope /GR /Zi /fp:precise /MP /W4 /wd4127 /wd4351 /wd4505 /wd4512 /wd4718 /we4239
     # nologo       -> no logo

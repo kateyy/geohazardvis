@@ -9,7 +9,7 @@ set ( SOURCES
     
 source_group_by_path_and_type(${CMAKE_CURRENT_SOURCE_DIR} ${SOURCES})
 
-add_executable ( ${TARGET} ${SOURCES} )
+add_executable ( ${TARGET} ${WIN32_EXE_FLAG} ${SOURCES} )
 
 target_link_libraries( ${TARGET}
     gui   
