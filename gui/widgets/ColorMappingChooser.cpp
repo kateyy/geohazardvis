@@ -3,6 +3,7 @@
 
 #include <algorithm>
 #include <cassert>
+#include <cmath>
 #include <limits>
 
 #include <QColorDialog>
@@ -403,15 +404,22 @@ void ColorMappingChooser::updateGuiValueRanges()
     auto currentMapping = m_mapping;
     m_mapping = nullptr;
 
+    // around 100 steps to scroll through the full range, but step only on one digit
+    double stepLog = std::log10((max - min) / 100.0);
+    stepLog = std::ceil(std::abs(stepLog)) * (stepLog >= 0.0 ? 1.0 : -1.0);
+    double step = std::pow(10, stepLog);
+
     m_ui->componentSpinBox->setMinimum(1);
     m_ui->componentSpinBox->setMaximum(numComponents);
     m_ui->componentSpinBox->setValue(currentComponent + 1);
     m_ui->minValueSpinBox->setMinimum(min);
     m_ui->minValueSpinBox->setMaximum(max);
     m_ui->minValueSpinBox->setValue(currentMin);
+    m_ui->minValueSpinBox->setSingleStep(step);
     m_ui->maxValueSpinBox->setMinimum(min);
     m_ui->maxValueSpinBox->setMaximum(max);
     m_ui->maxValueSpinBox->setValue(currentMax);
+    m_ui->maxValueSpinBox->setSingleStep(step);
 
     m_ui->componentLabel->setText("component (" + QString::number(numComponents) + ")");
     m_ui->minLabel->setText("min (data: " + QString::number(min) + ")");
