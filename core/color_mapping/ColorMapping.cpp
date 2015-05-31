@@ -112,7 +112,7 @@ QString ColorMapping::currentScalarsName() const
     return m_currentScalarsName;
 }
 
-void ColorMapping::setCurrentScalarsByName(QString scalarsName)
+void ColorMapping::setCurrentScalarsByName(const QString & scalarsName)
 {
     ColorMappingData * oldScalars = currentScalars();
     if (oldScalars)

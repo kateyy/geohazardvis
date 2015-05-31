@@ -49,9 +49,15 @@ ColorMappingChooser::ColorMappingChooser(QWidget * parent)
 
     setCurrentRenderView();
 
-    connect(m_ui->nanColorButton, &QAbstractButton::pressed, this, &ColorMappingChooser::selectNanColor);
-    connect(m_ui->minLabel, &QLabel::linkActivated, this, &ColorMappingChooser::resetMinToData);
-    connect(m_ui->maxLabel, &QLabel::linkActivated, this, &ColorMappingChooser::resetMaxToData);
+    connect(m_ui->scalarsComboBox, &QComboBox::currentTextChanged, this, &ColorMappingChooser::guiScalarsSelectionChanged);
+    connect(m_ui->componentSpinBox, static_cast<void(QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &ColorMappingChooser::guiComponentChanged);
+    connect(m_ui->minValueSpinBox, static_cast<void(QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), this, &ColorMappingChooser::guiMinValueChanged);
+    connect(m_ui->maxValueSpinBox, static_cast<void(QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), this, &ColorMappingChooser::guiMaxValueChanged);
+    connect(m_ui->minLabel, &QLabel::linkActivated, this, &ColorMappingChooser::guiResetMinToData);
+    connect(m_ui->maxLabel, &QLabel::linkActivated, this, &ColorMappingChooser::guiResetMaxToData);
+    connect(m_ui->gradientComboBox, static_cast<void(QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &ColorMappingChooser::guiGradientSelectionChanged);
+    connect(m_ui->nanColorButton, &QAbstractButton::pressed, this, &ColorMappingChooser::guiSelectNanColor);
+    connect(m_ui->legendPositionComboBox, &QComboBox::currentTextChanged, this, &ColorMappingChooser::guiLegendPositionChanged);
 }
 
 ColorMappingChooser::~ColorMappingChooser()
@@ -82,7 +88,7 @@ void ColorMappingChooser::setCurrentRenderView(AbstractRenderView * renderView)
     }
 }
 
-void ColorMappingChooser::scalarsSelectionChanged(QString scalarsName)
+void ColorMappingChooser::guiScalarsSelectionChanged(const QString & scalarsName)
 {
     if (!m_mapping)
         return;
@@ -100,7 +106,7 @@ void ColorMappingChooser::scalarsSelectionChanged(QString scalarsName)
     emit renderSetupChanged();
 }
 
-void ColorMappingChooser::gradientSelectionChanged(int /*selection*/)
+void ColorMappingChooser::guiGradientSelectionChanged(int /*selection*/)
 {
     if (!m_mapping)
         return;
@@ -110,7 +116,7 @@ void ColorMappingChooser::gradientSelectionChanged(int /*selection*/)
     emit renderSetupChanged();
 }
 
-void ColorMappingChooser::componentChanged(int guiComponent)
+void ColorMappingChooser::guiComponentChanged(int guiComponent)
 {
     if (!m_mapping)
         return;
@@ -124,7 +130,7 @@ void ColorMappingChooser::componentChanged(int guiComponent)
     emit renderSetupChanged();
 }
 
-void ColorMappingChooser::minValueChanged(double value)
+void ColorMappingChooser::guiMinValueChanged(double value)
 {
     if (!m_mapping)
         return;
@@ -143,7 +149,7 @@ void ColorMappingChooser::minValueChanged(double value)
     emit renderSetupChanged();
 }
 
-void ColorMappingChooser::maxValueChanged(double value)
+void ColorMappingChooser::guiMaxValueChanged(double value)
 {
     if (!m_mapping)
         return;
@@ -162,7 +168,7 @@ void ColorMappingChooser::maxValueChanged(double value)
     emit renderSetupChanged();
 }
 
-void ColorMappingChooser::resetMinToData()
+void ColorMappingChooser::guiResetMinToData()
 {
     if (!m_mapping)
         return;
@@ -170,7 +176,7 @@ void ColorMappingChooser::resetMinToData()
     m_ui->minValueSpinBox->setValue(m_mapping->currentScalars()->dataMinValue());
 }
 
-void ColorMappingChooser::resetMaxToData()
+void ColorMappingChooser::guiResetMaxToData()
 {
     if (!m_mapping)
         return;
@@ -183,7 +189,7 @@ vtkLookupTable * ColorMappingChooser::selectedGradient() const
     return m_gradients.value(m_ui->gradientComboBox->currentIndex());
 }
 
-void ColorMappingChooser::on_legendPositionComboBox_currentIndexChanged(QString position)
+void ColorMappingChooser::guiLegendPositionChanged(const QString & position)
 {
     if (!m_mapping || !m_renderView)
         return;
@@ -332,7 +338,7 @@ void ColorMappingChooser::updateTitle(QString rendererName)
     m_ui->relatedRenderView->setText(title);
 }
 
-void ColorMappingChooser::selectNanColor()
+void ColorMappingChooser::guiSelectNanColor()
 {
     assert(m_mapping);
     auto gradient = m_mapping->gradient();

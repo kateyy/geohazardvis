@@ -42,7 +42,7 @@ public:
     const QMap<QString, const ColorMappingData *> & scalars() const;
 
     QString currentScalarsName() const;
-    void setCurrentScalarsByName(QString scalarsName);
+    void setCurrentScalarsByName(const QString & scalarsName);
     ColorMappingData * currentScalars();
     const ColorMappingData * currentScalars() const;
 

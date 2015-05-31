@@ -31,19 +31,20 @@ public:
 signals:
     void renderSetupChanged();
 
-private slots:
-    void scalarsSelectionChanged(QString scalarsName);
-    void gradientSelectionChanged(int selection);
-    void componentChanged(int guiComponent);
-    void minValueChanged(double value);
-    void maxValueChanged(double value);
-    void resetMinToData();
-    void resetMaxToData();
-    void selectNanColor();
+private:
+    void guiScalarsSelectionChanged(const QString & scalarsName);
+    void guiGradientSelectionChanged(int selection);
+    void guiComponentChanged(int guiComponent);
+    void guiMinValueChanged(double value);
+    void guiMaxValueChanged(double value);
+    void guiResetMinToData();
+    void guiResetMaxToData();
+    void guiSelectNanColor();
+    void guiLegendPositionChanged(const QString & position);
 
     void rebuildGui();
 
-    void on_legendPositionComboBox_currentIndexChanged(QString position);
+private slots:
     void colorLegendPositionChanged();
 
 private:
