@@ -55,7 +55,7 @@ RenderViewStrategyImage2D::~RenderViewStrategyImage2D()
     {
         m_previewRenderer->prepareDeleteData(m_previewProfiles);
         if (m_previewRenderer->visualizations().isEmpty())
-            m_previewRenderer->dockWidgetParent()->close();
+            m_previewRenderer->close();
     }
 
     qDeleteAll(m_previewProfiles);
@@ -291,7 +291,7 @@ void RenderViewStrategyImage2D::abortProfilePlot()
 
     // this becomes nullptr in case the user closed the viewer while we were starting a plot
     if (oldPreviewRenderer)
-        oldPreviewRenderer->dockWidgetParent()->close();
+        oldPreviewRenderer->close();
 
     qDeleteAll(m_previewProfiles);
     m_previewProfiles.clear();

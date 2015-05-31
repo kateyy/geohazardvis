@@ -152,5 +152,8 @@ void AbstractDataView::closeEvent(QCloseEvent * event)
     if (isVisible())
         emit closed();
 
+    if (m_dockWidgetParent)
+        m_dockWidgetParent->close();
+
     QWidget::closeEvent(event);
 }
