@@ -129,7 +129,16 @@ void ColorMappingChooser::minValueChanged(double value)
     if (!m_mapping)
         return;
 
-    m_mapping->currentScalars()->setMinValue(value);
+    auto scalars = m_mapping->currentScalars();
+    double correctValue = std::min(scalars->maxValue(), value);
+    if (value != correctValue)
+    {
+        m_ui->minValueSpinBox->blockSignals(true);
+        m_ui->minValueSpinBox->setValue(correctValue);
+        m_ui->minValueSpinBox->blockSignals(false);
+    }
+
+    scalars->setMinValue(correctValue);
 
     emit renderSetupChanged();
 }
@@ -139,7 +148,16 @@ void ColorMappingChooser::maxValueChanged(double value)
     if (!m_mapping)
         return;
 
-    m_mapping->currentScalars()->setMaxValue(value);
+    auto scalars = m_mapping->currentScalars();
+    double correctValue = std::max(scalars->minValue(), value);
+    if (value != correctValue)
+    {
+        m_ui->maxValueSpinBox->blockSignals(true);
+        m_ui->maxValueSpinBox->setValue(correctValue);
+        m_ui->maxValueSpinBox->blockSignals(false);
+    }
+
+    scalars->setMaxValue(correctValue);
 
     emit renderSetupChanged();
 }
