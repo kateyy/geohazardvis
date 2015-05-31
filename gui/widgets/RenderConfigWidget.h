@@ -2,6 +2,8 @@
 
 #include <QDockWidget>
 
+#include <gui/gui_api.h>
+
 
 namespace reflectionzeug
 {
@@ -13,7 +15,7 @@ class AbstractVisualizedData;
 class DataObject;
 
 
-class RenderConfigWidget : public QDockWidget
+class GUI_API RenderConfigWidget : public QDockWidget
 {
     Q_OBJECT
 

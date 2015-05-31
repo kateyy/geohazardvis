@@ -141,6 +141,7 @@ endif()
 
 if (${VTK_RENDERING_BACKEND_VERSION} EQUAL 2)
     list(APPEND VTK_COMPONENTS vtkRenderingLICOpenGL2)
+    list(APPEND VTK_COMPONENTS vtkRenderingContextOpenGL2)
 else()
     list(APPEND VTK_COMPONENTS vtkRenderingLIC)
 endif()

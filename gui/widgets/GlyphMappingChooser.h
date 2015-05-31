@@ -3,6 +3,8 @@
 #include <QDockWidget>
 #include <QItemSelection>
 
+#include <gui/gui_api.h>
+
 
 class QItemSelection;
 
@@ -19,7 +21,7 @@ class DataObject;
 class Ui_GlyphMappingChooser;
 
 
-class GlyphMappingChooser : public QDockWidget
+class GUI_API GlyphMappingChooser : public QDockWidget
 {
     Q_OBJECT
 

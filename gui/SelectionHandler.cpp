@@ -130,6 +130,9 @@ void SelectionHandler::renderViewsLookAt(DataObject * dataObject, vtkIdType item
 
 void SelectionHandler::updateSyncToggleMenu()
 {
+    if (!m_syncToggleMenu)  // for standalone / testing usage
+        return;
+
     m_syncToggleMenu->clear();
 
     m_syncToggleMenu->setEnabled(!m_tableViews.empty() || !m_renderViews.empty());

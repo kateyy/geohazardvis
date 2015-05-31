@@ -5,6 +5,8 @@
 
 #include <vtkSmartPointer.h>
 
+#include <gui/gui_api.h>
+
 
 class vtkLookupTable;
 class vtkEventQtSlotConnect;
@@ -14,7 +16,7 @@ class AbstractRenderView;
 class ColorMapping;
 class RendererImplementationBase3D;
 
-class ColorMappingChooser : public QDockWidget
+class GUI_API ColorMappingChooser : public QDockWidget
 {
     Q_OBJECT
 
@@ -24,11 +26,10 @@ public:
 
     vtkLookupTable * selectedGradient() const;
 
+    void setCurrentRenderView(AbstractRenderView * renderView = nullptr);
+
 signals:
     void renderSetupChanged();
-
-public slots:
-    void setCurrentRenderView(AbstractRenderView * renderView = nullptr);
 
 private slots:
     void scalarsSelectionChanged(QString scalarsName);

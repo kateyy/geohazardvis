@@ -1,9 +1,10 @@
 #pragma once
 
 #include <QDockWidget>
-#include <QMap>
 
 #include <vtkSmartPointer.h>
+
+#include <gui/gui_api.h>
 
 
 class vtkObject;
@@ -19,7 +20,7 @@ class RendererImplementationBase3D;
 class RendererImplementationPlot;
 
 
-class RendererConfigWidget : public QDockWidget
+class GUI_API RendererConfigWidget : public QDockWidget
 {
     Q_OBJECT
 

@@ -4,6 +4,8 @@
 #include <QList>
 #include <QMap>
 
+#include <gui/gui_api.h>
+
 
 class AbstractDataView;
 class AbstractRenderView;
@@ -12,7 +14,7 @@ class MainWindow;
 class TableView;
 
 
-class DataMapping : public QObject
+class GUI_API DataMapping : public QObject
 {
     Q_OBJECT
 
