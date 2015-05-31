@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>glyph mapping</string>
+   <string>Glyph Mapping</string>
   </property>
   <widget class="QWidget" name="content">
    <layout class="QVBoxLayout" name="verticalLayout_2">
@@ -30,7 +30,7 @@
        </font>
       </property>
       <property name="text">
-       <string>(no object selected)</string>
+       <string>(No object selected)</string>
       </property>
      </widget>
     </item>
@@ -60,12 +60,12 @@
         </font>
        </property>
        <property name="title">
-        <string>(no selection)</string>
+        <string>(No selection)</string>
        </property>
        <property name="flat">
         <bool>false</bool>
        </property>
-       <layout class="QVBoxLayout" name="verticalLayout">       
+       <layout class="QVBoxLayout" name="verticalLayout">
         <item>
          <widget class="propertyguizeug::PropertyBrowser" name="propertyBrowser"/>
         </item>

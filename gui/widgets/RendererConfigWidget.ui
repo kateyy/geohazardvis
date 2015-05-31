@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>render view</string>
+   <string>Render View</string>
   </property>
   <widget class="QWidget" name="content">
    <layout class="QVBoxLayout" name="mainLayout">

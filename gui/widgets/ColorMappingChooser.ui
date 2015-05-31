@@ -6,20 +6,32 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>213</width>
-    <height>337</height>
+    <width>252</width>
+    <height>304</height>
    </rect>
   </property>
   <property name="sizePolicy">
-   <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+   <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
     <horstretch>0</horstretch>
     <verstretch>0</verstretch>
    </sizepolicy>
   </property>
   <property name="windowTitle">
-   <string>color mapping</string>
+   <string>Color Mapping</string>
   </property>
   <widget class="QWidget" name="content">
+   <property name="sizePolicy">
+    <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+     <horstretch>0</horstretch>
+     <verstretch>0</verstretch>
+    </sizepolicy>
+   </property>
+   <property name="maximumSize">
+    <size>
+     <width>16777215</width>
+     <height>282</height>
+    </size>
+   </property>
    <layout class="QVBoxLayout" name="mainLayout">
     <item>
      <widget class="QLabel" name="relatedRenderView">
@@ -30,7 +42,7 @@
        </font>
       </property>
       <property name="text">
-       <string>(no render view selected)</string>
+       <string>(No Render View selected)</string>
       </property>
       <property name="alignment">
        <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
@@ -46,7 +58,7 @@
        </sizepolicy>
       </property>
       <property name="title">
-       <string>scalars</string>
+       <string>Scalars</string>
       </property>
       <property name="alignment">
        <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
@@ -85,14 +97,14 @@
              </sizepolicy>
             </property>
             <property name="text">
-             <string>min</string>
+             <string>Min</string>
             </property>
            </widget>
           </item>
           <item row="0" column="0">
            <widget class="QLabel" name="componentLabel">
             <property name="text">
-             <string>component</string>
+             <string>Component</string>
             </property>
            </widget>
           </item>
@@ -105,7 +117,7 @@
              </sizepolicy>
             </property>
             <property name="text">
-             <string>max</string>
+             <string>Max</string>
             </property>
            </widget>
           </item>
@@ -134,7 +146,7 @@
        </sizepolicy>
       </property>
       <property name="title">
-       <string>gradient</string>
+       <string>Gradient</string>
       </property>
       <layout class="QVBoxLayout" name="gradientGroupLayout">
        <item>
@@ -147,23 +159,46 @@
          </property>
         </widget>
        </item>
-      </layout>
-     </widget>
-    </item>
-    <item>
-     <widget class="QGroupBox" name="colorLegendGroupBox">
-      <property name="enabled">
-       <bool>false</bool>
-      </property>
-      <property name="title">
-       <string>legend</string>
-      </property>
-      <property name="checkable">
-       <bool>true</bool>
-      </property>
-      <layout class="QVBoxLayout" name="verticalLayout_2">
        <item>
-        <widget class="QComboBox" name="legendPositionComboBox"/>
+        <widget class="QWidget" name="widget_2" native="true">
+         <layout class="QGridLayout" name="gridLayout_2">
+          <property name="leftMargin">
+           <number>0</number>
+          </property>
+          <property name="topMargin">
+           <number>9</number>
+          </property>
+          <property name="rightMargin">
+           <number>0</number>
+          </property>
+          <property name="bottomMargin">
+           <number>0</number>
+          </property>
+          <item row="0" column="1">
+           <widget class="QComboBox" name="legendPositionComboBox">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="0">
+           <widget class="QCheckBox" name="colorLegendCheckBox">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="text">
+             <string>Legend</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
        </item>
       </layout>
      </widget>

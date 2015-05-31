@@ -98,8 +98,7 @@ void ColorMappingChooser::guiScalarsSelectionChanged(const QString & scalarsName
 
     bool gradients = m_mapping->currentScalarsUseMappingLegend();
     m_ui->gradientGroupBox->setEnabled(gradients);
-    m_ui->colorLegendGroupBox->setEnabled(gradients);
-    m_ui->colorLegendGroupBox->setChecked(m_mapping->colorMappingLegendVisible());
+    m_ui->colorLegendCheckBox->setChecked(m_mapping->colorMappingLegendVisible());
     if (gradients)
         m_mapping->setGradient(selectedGradient());
 
@@ -331,7 +330,7 @@ void ColorMappingChooser::updateTitle(QString rendererName)
 {
     QString title;
     if (rendererName.isEmpty())
-        title = "(no render view selected)";
+        title = "(No Render View selected)";
     else
         title = rendererName;
 
@@ -374,8 +373,7 @@ void ColorMappingChooser::rebuildGui()
     m_ui->scalarsComboBox->clear();
     m_ui->gradientGroupBox->setEnabled(false);
     m_ui->nanColorButton->setStyleSheet("");
-    m_ui->colorLegendGroupBox->setEnabled(false);
-    m_ui->colorLegendGroupBox->setChecked(false);
+    m_ui->colorLegendCheckBox->setChecked(false);
 
     if (m_renderView)
         m_qtConnect << connect(m_renderView, &AbstractRenderView::visualizationsChanged, this, &ColorMappingChooser::rebuildGui);
@@ -390,8 +388,7 @@ void ColorMappingChooser::rebuildGui()
         m_ui->scalarsComboBox->setCurrentText(newMapping->currentScalarsName());
         m_ui->gradientComboBox->setCurrentIndex(gradientIndex(newMapping->originalGradient()));
         m_ui->gradientGroupBox->setEnabled(newMapping->currentScalarsUseMappingLegend());
-        m_ui->colorLegendGroupBox->setEnabled(newMapping->currentScalarsUseMappingLegend());
-        m_ui->colorLegendGroupBox->setChecked(newMapping->colorMappingLegendVisible());
+        m_ui->colorLegendCheckBox->setChecked(newMapping->colorMappingLegendVisible());
 
         const unsigned char * nanColorV = newMapping->gradient()->GetNanColorAsUnsignedChars();
 
@@ -399,7 +396,7 @@ void ColorMappingChooser::rebuildGui()
         m_ui->nanColorButton->setStyleSheet(QString("background-color: %1").arg(nanColor.name()));
 
         m_qtConnect << connect(newMapping, &ColorMapping::scalarsChanged, this, &ColorMappingChooser::rebuildGui);
-        m_qtConnect << connect(m_ui->colorLegendGroupBox, &QGroupBox::toggled,
+        m_qtConnect << connect(m_ui->colorLegendCheckBox, &QAbstractButton::toggled,
             [this, newMapping] (bool checked) {
             newMapping->setColorMappingLegendVisible(checked);
             m_renderView->render();

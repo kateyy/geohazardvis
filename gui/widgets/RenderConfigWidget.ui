@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>render property</string>
+   <string>Render Property</string>
   </property>
   <widget class="QWidget" name="content">
    <layout class="QVBoxLayout" name="mainLayout">
@@ -24,7 +24,7 @@
        </font>
       </property>
       <property name="text">
-       <string>(no object selected)</string>
+       <string>(No object selected)</string>
       </property>
      </widget>
     </item>

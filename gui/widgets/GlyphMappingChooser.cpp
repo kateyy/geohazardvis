@@ -169,7 +169,7 @@ void GlyphMappingChooser::updateGuiForSelection(const QItemSelection & selection
     if (selection.indexes().isEmpty())
     {
         m_ui->propertyBrowser->setRoot(nullptr);
-        m_ui->propertyBrowserContainer->setTitle("(no selection)");
+        m_ui->propertyBrowserContainer->setTitle("(No selection)");
     }
     else
     {
@@ -185,7 +185,7 @@ void GlyphMappingChooser::updateTitle()
 {
     QString title;
     if (!m_mapping)
-        title = "(no object selected)";
+        title = "(No object selected)";
     else
         title = QString::number(m_renderView->index()) + ": " + m_mapping->renderedData()->dataObject()->name();
 
