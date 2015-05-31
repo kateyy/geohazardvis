@@ -1,6 +1,7 @@
 #include "ColorMappingChooser.h"
 #include "ui_ColorMappingChooser.h"
 
+#include <algorithm>
 #include <cassert>
 #include <limits>
 
@@ -192,41 +193,62 @@ void ColorMappingChooser::colorLegendPositionChanged()
 
 void ColorMappingChooser::loadGradientImages()
 {
-    // navigate to the gradient directory
-    QDir dir;
-    if (!dir.cd("data/gradients"))
-    {
-        qDebug() << "gradient directory does not exist; no gradients will be available";
-        return;
-    }
-
-    // only retrieve png and jpeg files
-    dir.setFilter(QDir::Files | QDir::Hidden | QDir::NoSymLinks);
-    QStringList filters;
-    filters << "*.png" << "*.jpg" << "*.jpeg";
-    dir.setNameFilters(filters);
-    QFileInfoList list = dir.entryInfoList();
+    const QSize gradientImageSize{ 200, 20 };
 
     QComboBox * gradientComboBox = m_ui->gradientComboBox;
+
     // load the files and add them to the combobox
     gradientComboBox->blockSignals(true);
 
-    for (QFileInfo fileInfo : list)
+    // navigate to the gradient directory
+    QDir dir;
+    if (!dir.cd("data/gradients"))
+        qDebug() << "gradient directory does not exist; only a fallback gradient will be available";
+    else
     {
-        QString fileName = fileInfo.baseName();
-        QString filePath = fileInfo.absoluteFilePath();
-        QPixmap pixmap = QPixmap(filePath).scaled(200, 20);
-        m_gradients << buildLookupTable(pixmap.toImage());
+        // only retrieve png and jpeg files
+        dir.setFilter(QDir::Files | QDir::Hidden | QDir::NoSymLinks);
+        QStringList filters;
+        filters << "*.png" << "*.jpg" << "*.jpeg";
+        dir.setNameFilters(filters);
+        QFileInfoList list = dir.entryInfoList();
 
-        gradientComboBox->addItem(pixmap, "");
-        QVariant fileVariant(filePath);
-        gradientComboBox->setItemData(gradientComboBox->count() - 1, fileVariant, Qt::UserRole);
+        for (QFileInfo fileInfo : list)
+        {
+            QString fileName = fileInfo.baseName();
+            QString filePath = fileInfo.absoluteFilePath();
+            QPixmap pixmap = QPixmap(filePath).scaled(gradientImageSize);
+            m_gradients << buildLookupTable(pixmap.toImage());
+
+            gradientComboBox->addItem(pixmap, "");
+        }
     }
 
-    gradientComboBox->setIconSize(QSize(200, 20));
+    // fallback, in case we didn't find any gradient images
+    if (m_gradients.isEmpty())
+    {
+        auto gradient = vtkSmartPointer<vtkLookupTable>::New();
+        gradient->SetNumberOfTableValues(gradientImageSize.width());
+        gradient->Build();
+
+        QImage image(gradientImageSize, QImage::Format_RGBA8888);
+        for (int i = 0; i < gradientImageSize.width(); ++i)
+        {
+            double colorF[4];
+            gradient->GetTableValue(i, colorF);
+            auto colorUI = QColor(colorF[0] * 0xFF, colorF[1] * 0xFF, colorF[2] * 0xFF, colorF[3] * 0xFF).rgba();
+            for (int l = 0; l < gradientImageSize.height(); ++l)
+                image.setPixel(i, l, colorUI);
+        }
+
+        m_gradients << gradient;
+        gradientComboBox->addItem(QPixmap::fromImage(image), "");
+    }
+
+    gradientComboBox->setIconSize(gradientImageSize);
     gradientComboBox->blockSignals(false);
     // set the "default" gradient
-    gradientComboBox->setCurrentIndex(32);
+    gradientComboBox->setCurrentIndex(std::min(32, gradientComboBox->count() - 1));
 }
 
 int ColorMappingChooser::gradientIndex(vtkLookupTable * gradient) const
