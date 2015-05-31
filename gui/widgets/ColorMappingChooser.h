@@ -37,6 +37,8 @@ private slots:
     void componentChanged(int guiComponent);
     void minValueChanged(double value);
     void maxValueChanged(double value);
+    void resetMinToData();
+    void resetMaxToData();
     void selectNanColor();
 
     void rebuildGui();

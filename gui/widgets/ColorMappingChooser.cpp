@@ -50,6 +50,8 @@ ColorMappingChooser::ColorMappingChooser(QWidget * parent)
     setCurrentRenderView();
 
     connect(m_ui->nanColorButton, &QAbstractButton::pressed, this, &ColorMappingChooser::selectNanColor);
+    connect(m_ui->minLabel, &QLabel::linkActivated, this, &ColorMappingChooser::resetMinToData);
+    connect(m_ui->maxLabel, &QLabel::linkActivated, this, &ColorMappingChooser::resetMaxToData);
 }
 
 ColorMappingChooser::~ColorMappingChooser()
@@ -140,6 +142,22 @@ void ColorMappingChooser::maxValueChanged(double value)
     m_mapping->currentScalars()->setMaxValue(value);
 
     emit renderSetupChanged();
+}
+
+void ColorMappingChooser::resetMinToData()
+{
+    if (!m_mapping)
+        return;
+
+    m_ui->minValueSpinBox->setValue(m_mapping->currentScalars()->dataMinValue());
+}
+
+void ColorMappingChooser::resetMaxToData()
+{
+    if (!m_mapping)
+        return;
+
+    m_ui->maxValueSpinBox->setValue(m_mapping->currentScalars()->dataMaxValue());
 }
 
 vtkLookupTable * ColorMappingChooser::selectedGradient() const
@@ -422,8 +440,9 @@ void ColorMappingChooser::updateGuiValueRanges()
     m_ui->maxValueSpinBox->setSingleStep(step);
 
     m_ui->componentLabel->setText("component (" + QString::number(numComponents) + ")");
-    m_ui->minLabel->setText("min (data: " + QString::number(min) + ")");
-    m_ui->maxLabel->setText("max (data: " + QString::number(max) + ")");
+    QString resetLink = enableRangeGui ? "resetToData" : "";
+    m_ui->minLabel->setText("min (data: <a href=\"" + resetLink + "\">" + QString::number(min) + "</a>)");
+    m_ui->maxLabel->setText("max (data: <a href=\"" + resetLink + "\">" + QString::number(max) + "</a>)");
 
     m_ui->componentSpinBox->setEnabled(numComponents > 1);
     m_ui->minValueSpinBox->setEnabled(enableRangeGui);
