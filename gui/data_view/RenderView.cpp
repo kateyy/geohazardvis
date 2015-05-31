@@ -170,10 +170,10 @@ void RenderView::showDataObjectsImpl(const QList<DataObject *> & uncheckedDataOb
 
     for (DataObject * dataObject : dataObjects)
     {
-        AbstractVisualizedData * cachedRendered = m_dataObjectToVisualization.value(dataObject);
+        AbstractVisualizedData * previouslyRendered = m_dataObjectToVisualization.value(dataObject);
 
         // create new rendered representation
-        if (!cachedRendered)
+        if (!previouslyRendered)
         {
             aNewObject = addDataObject(dataObject);
 
@@ -183,19 +183,21 @@ void RenderView::showDataObjectsImpl(const QList<DataObject *> & uncheckedDataOb
             continue;
         }
 
-        aNewObject = cachedRendered;
+        // reuse currently rendered / cached data
 
-        // reuse cached data
-        if (m_contents.contains(cachedRendered))
+        if (m_contents.contains(previouslyRendered))
         {
-            assert(false);
+            assert(m_contents.count(previouslyRendered) == 1);
+            assert(!m_contentCache.contains(previouslyRendered));
             continue;
         }
 
-        assert(m_contentCache.count(cachedRendered) == 1);
-        m_contentCache.removeOne(cachedRendered);
-        m_contents << cachedRendered;
-        cachedRendered->setVisible(true);
+        aNewObject = previouslyRendered;
+
+        assert(m_contentCache.count(previouslyRendered) == 1);
+        m_contentCache.removeOne(previouslyRendered);
+        m_contents << previouslyRendered;
+        previouslyRendered->setVisible(true);
     }
 
     if (aNewObject)
