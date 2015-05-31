@@ -28,6 +28,12 @@
 #include <gui/data_view/RendererImplementationBase3D.h>
 
 
+namespace
+{
+    const int Default_gradient_index = 32;
+}
+
+
 ColorMappingChooser::ColorMappingChooser(QWidget * parent)
     : QDockWidget(parent)
     , m_ui(new Ui_ColorMappingChooser())
@@ -290,7 +296,7 @@ void ColorMappingChooser::loadGradientImages()
     gradientComboBox->setIconSize(gradientImageSize);
     gradientComboBox->blockSignals(false);
     // set the "default" gradient
-    gradientComboBox->setCurrentIndex(std::min(32, gradientComboBox->count() - 1));
+    gradientComboBox->setCurrentIndex(std::min(Default_gradient_index, gradientComboBox->count() - 1));
 }
 
 int ColorMappingChooser::gradientIndex(vtkLookupTable * gradient) const
@@ -323,7 +329,11 @@ void ColorMappingChooser::checkRenderViewColorMapping()
 
     // setup gradient for newly created mappings
     if (m_mapping && !m_mapping->originalGradient())
+    {
+        m_ui->gradientComboBox->setCurrentIndex(    // use default gradient for new mappings
+            std::min(m_ui->gradientComboBox->count() - 1, Default_gradient_index));
         m_mapping->setGradient(selectedGradient());
+    }
 }
 
 void ColorMappingChooser::updateTitle(QString rendererName)
