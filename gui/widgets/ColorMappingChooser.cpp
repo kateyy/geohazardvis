@@ -423,9 +423,18 @@ void ColorMappingChooser::updateGuiValueRanges()
     m_mapping = nullptr;
 
     // around 100 steps to scroll through the full range, but step only on one digit
-    double stepLog = std::log10((max - min) / 100.0);
-    stepLog = std::ceil(std::abs(stepLog)) * (stepLog >= 0.0 ? 1.0 : -1.0);
-    double step = std::pow(10, stepLog);
+    double delta = max - min;
+    double step = 0.0;
+    int decimals = 0;
+    if (std::abs(delta) > std::numeric_limits<double>::epsilon())
+    {
+        double stepLog = std::log10(delta / 100.0);
+        int stepLogI = static_cast<int>(std::ceil(std::abs(stepLog)) * (stepLog >= 0.0 ? 1.0 : -1.0));
+        step = std::pow(10, stepLogI);
+
+        // display three decimals after the step digit
+        decimals = std::max(0, -stepLogI + 3);
+    }
 
     m_ui->componentSpinBox->setMinimum(1);
     m_ui->componentSpinBox->setMaximum(numComponents);
@@ -434,10 +443,12 @@ void ColorMappingChooser::updateGuiValueRanges()
     m_ui->minValueSpinBox->setMaximum(max);
     m_ui->minValueSpinBox->setValue(currentMin);
     m_ui->minValueSpinBox->setSingleStep(step);
+    m_ui->minValueSpinBox->setDecimals(decimals);
     m_ui->maxValueSpinBox->setMinimum(min);
     m_ui->maxValueSpinBox->setMaximum(max);
     m_ui->maxValueSpinBox->setValue(currentMax);
     m_ui->maxValueSpinBox->setSingleStep(step);
+    m_ui->maxValueSpinBox->setDecimals(decimals);
 
     m_ui->componentLabel->setText("component (" + QString::number(numComponents) + ")");
     QString resetLink = enableRangeGui ? "resetToData" : "";

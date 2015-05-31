@@ -71,14 +71,7 @@
            <number>0</number>
           </property>
           <item row="2" column="1">
-           <widget class="QDoubleSpinBox" name="minValueSpinBox">
-            <property name="decimals">
-             <number>10</number>
-            </property>
-            <property name="maximum">
-             <double>0.000000000000000</double>
-            </property>
-           </widget>
+           <widget class="QDoubleSpinBox" name="minValueSpinBox"/>
           </item>
           <item row="0" column="1">
            <widget class="QSpinBox" name="componentSpinBox"/>
@@ -118,15 +111,6 @@
           </item>
           <item row="1" column="1">
            <widget class="QDoubleSpinBox" name="maxValueSpinBox">
-            <property name="decimals">
-             <number>10</number>
-            </property>
-            <property name="minimum">
-             <double>0.000000000000000</double>
-            </property>
-            <property name="maximum">
-             <double>0.000000000000000</double>
-            </property>
             <property name="value">
              <double>0.000000000000000</double>
             </property>
