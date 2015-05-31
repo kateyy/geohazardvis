@@ -36,6 +36,7 @@ public slots:
     void setCurrentRenderView(AbstractRenderView * renderView = nullptr);
     /** switch to specified dataObject, in case it is visible in my current render view */
     void setSelectedData(DataObject * dataObject);
+    void setSelectedData(AbstractRenderView * renderView, DataObject * dataObject);
 
 private slots:
     void updateGuiForSelection(const QItemSelection & selection = QItemSelection());
@@ -46,6 +47,9 @@ private slots:
 
 private:
     void updateTitle();
+
+    /** remove data from the UI if we currently hold it */
+    void checkDeletedContent(AbstractVisualizedData * content);
 
 private:
     Ui_GlyphMappingChooser * m_ui;

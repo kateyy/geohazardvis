@@ -30,14 +30,13 @@ public slots:
     void setSelectedData(AbstractRenderView * renderView, DataObject * dataObject);
     void clear();
 
-private slots:
+private:
     /** remove data from the UI if we currently hold it */
     void checkDeletedContent(AbstractVisualizedData * content);
 
-protected:
     void updateTitle();
 
-protected:
+private:
     Ui_RenderConfigWidget * m_ui;
 
     reflectionzeug::PropertyGroup * m_propertyRoot;
