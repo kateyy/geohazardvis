@@ -446,7 +446,7 @@ void ColorMappingChooser::updateGuiValueRanges()
     int decimals = 0;
     if (std::abs(delta) > std::numeric_limits<double>::epsilon())
     {
-        double stepLog = std::log10(delta / 100.0);
+        double stepLog = std::log10(delta / 50.0);
         int stepLogI = static_cast<int>(std::ceil(std::abs(stepLog)) * (stepLog >= 0.0 ? 1.0 : -1.0));
         step = std::pow(10, stepLogI);
 
