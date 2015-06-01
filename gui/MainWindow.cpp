@@ -287,6 +287,11 @@ void MainWindow::on_actionApply_Digital_Elevation_Model_triggered()
     demWidget->show();
 }
 
+void MainWindow::on_actionExit_triggered()
+{
+    qApp->exit();
+}
+
 void MainWindow::tabbedDockWidgetToFront(QDockWidget * widget)
 {
     // http://qt-project.org/faq/answer/how_can_i_check_which_tab_is_the_current_one_in_a_tabbed_qdockwidget

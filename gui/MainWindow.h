@@ -46,6 +46,7 @@ private slots:
     void on_actionAbout_Qt_triggered();
     void on_actionNew_Render_View_triggered();
     void on_actionApply_Digital_Elevation_Model_triggered();
+    void on_actionExit_triggered();
 
 protected:
     void dragEnterEvent(QDragEnterEvent * event) override;
