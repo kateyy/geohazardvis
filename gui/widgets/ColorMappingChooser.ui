@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>252</width>
-    <height>304</height>
+    <height>351</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -21,16 +21,10 @@
   </property>
   <widget class="QWidget" name="content">
    <property name="sizePolicy">
-    <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+    <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
      <horstretch>0</horstretch>
      <verstretch>0</verstretch>
     </sizepolicy>
-   </property>
-   <property name="maximumSize">
-    <size>
-     <width>16777215</width>
-     <height>282</height>
-    </size>
    </property>
    <layout class="QVBoxLayout" name="mainLayout">
     <item>
@@ -51,12 +45,6 @@
     </item>
     <item>
      <widget class="QGroupBox" name="scalarsGroupBox">
-      <property name="sizePolicy">
-       <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-        <horstretch>0</horstretch>
-        <verstretch>0</verstretch>
-       </sizepolicy>
-      </property>
       <property name="title">
        <string>Scalars</string>
       </property>
@@ -90,12 +78,6 @@
           </item>
           <item row="2" column="0">
            <widget class="QLabel" name="minLabel">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
             <property name="text">
              <string>Min</string>
             </property>
@@ -110,12 +92,6 @@
           </item>
           <item row="1" column="0">
            <widget class="QLabel" name="maxLabel">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
             <property name="text">
              <string>Max</string>
             </property>
@@ -138,12 +114,6 @@
      <widget class="QGroupBox" name="gradientGroupBox">
       <property name="enabled">
        <bool>false</bool>
-      </property>
-      <property name="sizePolicy">
-       <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-        <horstretch>0</horstretch>
-        <verstretch>0</verstretch>
-       </sizepolicy>
       </property>
       <property name="title">
        <string>Gradient</string>
@@ -175,23 +145,10 @@
            <number>0</number>
           </property>
           <item row="0" column="1">
-           <widget class="QComboBox" name="legendPositionComboBox">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-           </widget>
+           <widget class="QComboBox" name="legendPositionComboBox"/>
           </item>
           <item row="0" column="0">
            <widget class="QCheckBox" name="colorLegendCheckBox">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
             <property name="text">
              <string>Legend</string>
             </property>
