@@ -88,7 +88,9 @@ else()
     set(INSTALL_INIT "/etc/init")               # /etc/init (upstart init scripts)
 endif()
 
-set(CPACK_INSTALL_3RDPARTY_DLLS TRUE CACHE BOOL "Include 3rdparty dlls (VTK, Qt) in packages.")
+if(Win32)
+    set(CPACK_INSTALL_3RDPARTY_DLLS TRUE CACHE BOOL "Include 3rdparty dlls (VTK, Qt) in packages.")
+endif()
 
 # Install the project meta files
 #install(FILES geohazardvis-config.cmake DESTINATION ${INSTALL_ROOT})
@@ -168,6 +170,12 @@ find_package(libzeug REQUIRED)
 
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
+
+include_directories(SYSTEM # disable warnings produced by Qt headers (GCC)
+    ${Qt5Core_INCLUDE_DIRS}
+    ${Qt5Gui_INCLUDE_DIRS}
+)
+
 
 if(WIN32 AND CPACK_INSTALL_3RDPARTY_DLLS)
     set(CMAKE_INSTALL_SYSTEM_RUNTIME_DESTINATION ${INSTALL_BIN})
