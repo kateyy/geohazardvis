@@ -54,6 +54,8 @@ bool CanvasExporterImages::write()
     m_writer->SetFileName(verifiedFileName().toUtf8().data());
     m_writer->Write();
 
+    renderWindow()->Render();
+
     return true;
 }
 
