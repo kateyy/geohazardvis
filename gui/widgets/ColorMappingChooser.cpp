@@ -23,6 +23,7 @@
 #include <core/color_mapping/ColorMappingData.h>
 #include <core/color_mapping/ColorMapping.h>
 #include <core/ThirdParty/alphanum.hpp>
+#include <core/utility/qthelper.h>
 
 #include <gui/data_view/AbstractRenderView.h>
 #include <gui/data_view/RendererImplementationBase3D.h>
@@ -284,7 +285,7 @@ void ColorMappingChooser::loadGradientImages()
         {
             double colorF[4];
             gradient->GetTableValue(i, colorF);
-            auto colorUI = QColor(colorF[0] * 0xFF, colorF[1] * 0xFF, colorF[2] * 0xFF, colorF[3] * 0xFF).rgba();
+            auto colorUI = vtkColorToQColor(colorF).rgba();
             for (int l = 0; l < gradientImageSize.height(); ++l)
                 image.setPixel(i, l, colorUI);
         }
@@ -411,7 +412,7 @@ void ColorMappingChooser::rebuildGui()
             newMapping->setColorMappingLegendVisible(checked);
             m_renderView->render();
         });
-        m_qtConnect << connect(this, &ColorMappingChooser::renderSetupChanged, 
+        m_qtConnect << connect(this, &ColorMappingChooser::renderSetupChanged,
             m_renderView, &AbstractRenderView::render);
     }
 

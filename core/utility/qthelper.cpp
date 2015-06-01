@@ -1,5 +1,6 @@
 #include "qthelper.h"
 
+#include <QColor>
 #include <QDebug>
 #include <QEvent>
 #include <QMetaEnum>
@@ -21,4 +22,12 @@ QDebug operator<<(QDebug str, const QEvent * ev)
         str << (void*)ev;
     }
     return str.maybeSpace();
+}
+
+QColor vtkColorToQColor(double colorF[4])
+{
+    return QColor(int(colorF[0] * 0xFF),
+                  int(colorF[1] * 0xFF),
+                  int(colorF[2] * 0xFF),
+                  int(colorF[3] * 0xFF));
 }

@@ -108,7 +108,7 @@ void InteractorStyle3D::OnLeftButtonUp()
 
     if (!m_mouseMoved)
         highlightPickedCell();
-    
+
     m_mouseMoved = false;
 }
 
@@ -303,7 +303,7 @@ namespace
 /** @return -1 if value < 0, 1 else */
 template <typename T> char sgn(const T & value)
 {
-    return (T(0) <= value) - (value < T(0));
+    return static_cast<char>((T(0) <= value) - (value < T(0)));
 }
 
 bool circleLineIntersection(double radius, double P0[2], double P1[2], double intersection1[2], double intersection2[2])
@@ -351,7 +351,7 @@ void InteractorStyle3D::lookAtCell(DataObject * dataObject, vtkIdType cellId)
     double objectCenter[3], startingPosition[3];
     dataSet->GetCenter(objectCenter);
     camera.GetPosition(startingPosition);
-    
+
     double targetPositionXY[2];
 
     double objectToEye[3];
@@ -408,7 +408,7 @@ void InteractorStyle3D::lookAtCell(DataObject * dataObject, vtkIdType cellId)
         // so assume a circle center of (0,0) in the calculations
         bool intersects =
             circleLineIntersection(viewDistanceXY, selectionCenterXY, selectionFrontXY, &intersections[0], &intersections[2]);
-        
+
         // ignore for now
         if (!intersects)
         {
