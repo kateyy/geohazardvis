@@ -12,4 +12,4 @@ class QEvent;
   * Gives human-readable event type information. */
 QDebug CORE_API operator<<(QDebug str, const QEvent * ev);
 
-QColor vtkColorToQColor(double colorF[3]);
+QColor CORE_API vtkColorToQColor(double colorF[3]);
