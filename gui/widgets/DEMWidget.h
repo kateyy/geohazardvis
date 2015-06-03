@@ -1,3 +1,5 @@
+#pragma once
+
 #include <QList>
 #include <QWidget>
 
@@ -23,13 +25,11 @@ class Ui_DEMWidget;
 
 class GUI_API DEMWidget : public QWidget
 {
-    Q_OBJECT
-
 public:
     DEMWidget(QWidget * parent = nullptr, Qt::WindowFlags f = 0);
     ~DEMWidget() override;
 
-public slots:
+public:
     bool save();
     void saveAndClose();
 

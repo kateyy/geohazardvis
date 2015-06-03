@@ -18,9 +18,7 @@ DataSetCleaner::DataSetCleaner()
 {
 }
 
-DataSetCleaner::~DataSetCleaner()
-{
-}
+DataSetCleaner::~DataSetCleaner() = default;
 
 int DataSetCleaner::RequestData(
     vtkInformation *vtkNotUsed(request),

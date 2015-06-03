@@ -1,7 +1,5 @@
 #pragma once
 
-#include <vector>
-
 #include <gui/data_view/AbstractDataView.h>
 
 
@@ -71,7 +69,7 @@ signals:
 
     void beforeDeleteVisualization(AbstractVisualizedData * content);
 
-public slots:
+public:
     virtual void render() = 0;
 
     void ShowInfo(const QStringList &info);

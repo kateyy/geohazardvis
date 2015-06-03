@@ -2,9 +2,11 @@
 
 #include <QMap>
 #include <QObject>
-#include <QString>
 
 #include <gui/gui_api.h>
+
+
+class QString;
 
 class RendererImplementation3D;
 class RenderViewStrategy;

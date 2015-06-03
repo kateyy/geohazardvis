@@ -1,6 +1,7 @@
 #pragma once
 
-#include <QList>
+
+template<typename T> class QList;
 
 class AbstractRenderView;
 class DataObject;

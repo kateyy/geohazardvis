@@ -1,11 +1,12 @@
 #pragma once
 
 #include <QObject>
-#include <QList>
 #include <QMap>
 
 #include <gui/gui_api.h>
 
+
+template<typename T> class QList;
 
 class AbstractDataView;
 class AbstractRenderView;
@@ -39,14 +40,14 @@ public:
 
     AbstractRenderView * focusedRenderView();
 
-public slots:
+public:
     void setFocusedView(AbstractDataView * renderView);
 
 signals:
     void renderViewsChanged(const QList<AbstractRenderView *> & widgets);
     void focusedRenderViewChanged(AbstractRenderView * renderView);
 
-private slots:
+private:
     void focusNextRenderView();
 
     void tableClosed();

@@ -15,8 +15,6 @@ class vtkActor;
 
 class GUI_API InteractorStyleImage : public IPickingInteractorStyle, public vtkInteractorStyleImage
 {
-    Q_OBJECT
-
 public:
     static InteractorStyleImage * New();
     vtkTypeMacro(InteractorStyleImage, vtkInteractorStyleImage);
@@ -33,7 +31,7 @@ public:
 
     void setRenderedData(QList<RenderedData *> renderedData) override;
 
-public slots:
+public:
     void highlightCell(DataObject * dataObject, vtkIdType cellId) override;
     void lookAtCell(DataObject * dataObject, vtkIdType cellId) override;
 

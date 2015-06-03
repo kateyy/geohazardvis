@@ -1,6 +1,6 @@
 #pragma once
 
-#include "AbstractDataView.h"
+#include <gui/data_view/AbstractDataView.h>
 
 #include <vtkType.h>
 
@@ -14,7 +14,7 @@ class QVtkTableModel;
 class DataObject;
 
 
-class TableView : public AbstractDataView
+class GUI_API TableView : public AbstractDataView
 {
     Q_OBJECT
 

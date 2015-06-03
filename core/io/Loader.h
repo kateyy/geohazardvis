@@ -1,10 +1,11 @@
 #pragma once
 
-#include <QMap>
-#include <QStringList>
-
 #include <core/core_api.h>
 
+
+template<typename K, typename V> class QMap;
+class QString;
+class QStringList;
 
 class DataObject;
 

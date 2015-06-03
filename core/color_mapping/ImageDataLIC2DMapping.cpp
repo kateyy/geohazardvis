@@ -4,6 +4,8 @@
 #include <cassert>
 #include <limits>
 
+#include <QVector>
+
 #include <vtkAssignAttribute.h>
 #include <vtkDataArray.h>
 #include <vtkImageData.h>

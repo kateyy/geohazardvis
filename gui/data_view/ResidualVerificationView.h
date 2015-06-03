@@ -2,8 +2,6 @@
 
 #include <QVector>
 
-#include <vtkSmartPointer.h>
-
 #include <gui/data_view/AbstractRenderView.h>
 
 
@@ -18,8 +16,6 @@ class RenderViewStrategyImage2D;
 
 class GUI_API ResidualVerificationView : public AbstractRenderView
 {
-    Q_OBJECT
-
 public:
     ResidualVerificationView(int index, QWidget * parent = nullptr, Qt::WindowFlags flags = 0);
     ~ResidualVerificationView() override;
@@ -48,7 +44,7 @@ public:
 
     RendererImplementation & implementation() const override;
 
-public slots:
+public:
     void render() override;
 
 protected:

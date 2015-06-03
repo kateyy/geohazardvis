@@ -17,7 +17,7 @@ class QVtkTableModel;
 class DataObjectPrivate
 {
 public:
-    DataObjectPrivate(DataObject & dataObject, QString name, vtkDataSet * dataSet);
+    DataObjectPrivate(DataObject & dataObject, const QString & name, vtkDataSet * dataSet);
 
     virtual ~DataObjectPrivate();
 

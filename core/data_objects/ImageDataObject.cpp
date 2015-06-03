@@ -11,7 +11,7 @@
 #include <core/table_model/QVtkTableModelImage.h>
 
 
-ImageDataObject::ImageDataObject(QString name, vtkImageData * dataSet)
+ImageDataObject::ImageDataObject(const QString & name, vtkImageData * dataSet)
     : DataObject(name, dataSet)
 {
     vtkDataArray * data = dataSet->GetPointData()->GetScalars();

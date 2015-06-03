@@ -19,8 +19,6 @@ class IPickingInteractorStyle;
 
 class SelectionHandler : public QObject
 {
-    Q_OBJECT
-
 public:
     static SelectionHandler & instance();
 
@@ -33,7 +31,7 @@ public:
 
     void setSyncToggleMenu(QMenu * syncToggleMenu);
 
-private slots:
+private:
     void hightlightSelection(DataObject * dataObject, vtkIdType highlightedItemId);
 
     void renderViewsLookAt(DataObject * dataObject, vtkIdType itemId);

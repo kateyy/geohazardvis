@@ -2,11 +2,12 @@
 
 #include <QList>
 #include <QMap>
-#include <QString>
 #include <QObject>
 
 #include <core/core_api.h>
 
+
+class QString;
 
 class RenderedData;
 class GlyphMappingData;

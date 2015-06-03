@@ -8,8 +8,6 @@
 
 class GUI_API PickingInteractorStyleSwitch : public IPickingInteractorStyle, public InteractorStyleSwitch
 {
-    Q_OBJECT
-
 public:
     static PickingInteractorStyleSwitch * New();
     vtkTypeMacro(PickingInteractorStyleSwitch, InteractorStyleSwitch);
@@ -19,7 +17,7 @@ public:
     DataObject * highlightedObject();
     vtkIdType highlightedCell();
 
-public slots:
+public:
     void highlightCell(DataObject * dataObject, vtkIdType cellId) override;
     void lookAtCell(DataObject * dataObject, vtkIdType cellId) override;
     

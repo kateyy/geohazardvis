@@ -18,7 +18,7 @@
 #include <core/table_model/QVtkTableModelPolyData.h>
 
 
-PolyDataObject::PolyDataObject(QString name, vtkPolyData * dataSet)
+PolyDataObject::PolyDataObject(const QString & name, vtkPolyData * dataSet)
     : DataObject(name, dataSet)
     , m_cellNormals(vtkSmartPointer<vtkPolyDataNormals>::New())
     , m_cellCenters()

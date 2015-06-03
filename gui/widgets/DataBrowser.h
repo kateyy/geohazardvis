@@ -1,8 +1,9 @@
 #pragma once
 
 #include <QWidget>
-#include <QList>
 
+
+template<typename T> class QList;
 
 class Ui_DataBrowser;
 class AbstractRenderView;
@@ -32,7 +33,7 @@ signals:
 protected:
     bool eventFilter(QObject * obj, QEvent * ev) override;
 
-private slots:
+private:
     void updateModelForFocusedView();
     void updateModel(AbstractRenderView * renderView);
 

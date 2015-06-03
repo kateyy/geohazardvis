@@ -2,13 +2,13 @@
 
 #include <QMainWindow>
 #include <QMap>
-#include <QStringList>
 
 #include <gui/gui_api.h>
 
 
 template<typename T> class QFutureWatcher;
 class QMutex;
+class QStringList;
 class vtkQtDebugLeaksView;
 class AbstractRenderView;
 class CanvasExporterWidget;
@@ -23,15 +23,13 @@ class GlyphMappingChooser;
 
 class GUI_API MainWindow : public QMainWindow
 {
-    Q_OBJECT
-
 public:
     MainWindow();
     ~MainWindow() override;
 
     bool darkFusionStyleEnabled() const;
 
-public slots:
+public:
     void openFiles(const QStringList & fileNames);
     void openFilesAsync(const QStringList & fileNames);
     
@@ -40,19 +38,13 @@ public slots:
 
     void setDarkFusionStyle(bool enabled);
 
-private slots:
-    void on_actionOpen_triggered();
-    void on_actionExportDataset_triggered();
-    void on_actionAbout_Qt_triggered();
-    void on_actionNew_Render_View_triggered();
-    void on_actionApply_Digital_Elevation_Model_triggered();
-    void on_actionExit_triggered();
-
 protected:
     void dragEnterEvent(QDragEnterEvent * event) override;
     void dropEvent(QDropEvent * event) override;
 
 private:
+    void showDEMWidget();
+    void dialog_exportDataSet();
     QStringList dialog_inputFileName();
     void updateWindowTitle();
     void handleAsyncLoadFinished();

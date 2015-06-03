@@ -42,7 +42,7 @@ const QMap<QString, GlyphMappingRegistry::MappingCreator> & GlyphMappingRegistry
     return m_mappingCreators;
 }
 
-bool GlyphMappingRegistry::registerImplementation(QString name, const MappingCreator & constructor)
+bool GlyphMappingRegistry::registerImplementation(const QString & name, const MappingCreator & constructor)
 {
     assert(!m_mappingCreators.contains(name));
     if (m_mappingCreators.contains(name))

@@ -18,8 +18,6 @@ class vtkProp;
 
 class GUI_API InteractorStyle3D : public IPickingInteractorStyle, public vtkInteractorStyleTerrain
 {
-    Q_OBJECT
-
 public:
     static InteractorStyle3D * New();
     vtkTypeMacro(InteractorStyle3D, vtkInteractorStyleTerrain);
@@ -38,7 +36,7 @@ public:
 
     void OnChar() override;
 
-public slots:
+public:
     void highlightCell(DataObject * dataObject, vtkIdType cellId) override;
     void lookAtCell(DataObject * polyData, vtkIdType cellId) override;
     void flashHightlightedCell(int milliseconds = 2000);

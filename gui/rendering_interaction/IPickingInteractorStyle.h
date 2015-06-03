@@ -27,7 +27,7 @@ signals:
     void dataPicked(RenderedData * renderedData);
     void cellPicked(DataObject * dataObject, vtkIdType cellId) const;
 
-public slots:
+public:
     virtual void highlightCell(DataObject * dataObject, vtkIdType cellId) = 0;
     virtual void lookAtCell(DataObject * dataObject, vtkIdType cellId) = 0;
 };

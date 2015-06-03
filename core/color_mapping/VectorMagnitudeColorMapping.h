@@ -1,12 +1,11 @@
 #pragma once
 
 #include <QMap>
-#include <QVector>
-
-#include <vtkSmartPointer.h>
 
 #include <core/color_mapping/ColorMappingData.h>
 
+
+template<typename T> class QVector;
 
 class vtkVectorNorm;
 

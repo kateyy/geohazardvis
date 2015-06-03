@@ -1,7 +1,6 @@
 #pragma once
 
 #include <QDockWidget>
-#include <QItemSelection>
 
 #include <gui/gui_api.h>
 
@@ -32,14 +31,14 @@ public:
 signals:
     void renderSetupChanged();
 
-public slots:
+public:
     void setCurrentRenderView(AbstractRenderView * renderView = nullptr);
     /** switch to specified dataObject, in case it is visible in my current render view */
     void setSelectedData(DataObject * dataObject);
     void setSelectedData(AbstractRenderView * renderView, DataObject * dataObject);
 
-private slots:
-    void updateGuiForSelection(const QItemSelection & selection = QItemSelection());
+private:
+    void updateGuiForSelection(const QItemSelection & selection);
     void updateVectorsList();
 
     /** remove data from the UI if we currently hold it */

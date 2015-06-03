@@ -3,13 +3,13 @@
 #include <QList>
 #include <QMap>
 #include <QObject>
-#include <QString>
 
 #include <vtkSmartPointer.h>
 
 #include <core/core_api.h>
 
 
+class QString;
 class vtkActor;
 class vtkAlgorithmOutput;
 class vtkProp;

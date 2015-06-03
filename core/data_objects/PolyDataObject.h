@@ -14,7 +14,7 @@ class vtkAlgorithmOutput;
 class CORE_API PolyDataObject : public DataObject
 {
 public:
-    PolyDataObject(QString name, vtkPolyData * dataSet);
+    PolyDataObject(const QString & name, vtkPolyData * dataSet);
 
     bool is3D() const override;
 

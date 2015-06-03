@@ -6,13 +6,13 @@
 #include <QList>
 #include <QMap>
 #include <QObject>
-#include <QString>
 
 #include <vtkSmartPointer.h>
 
 #include <core/core_api.h>
 
 
+class QString;
 class vtkAlgorithm;
 class vtkAbstractMapper;
 class vtkLookupTable;
@@ -37,7 +37,6 @@ public:
 
 public:
     explicit ColorMappingData(const QList<AbstractVisualizedData *> & visualizedData, int numDataComponents = 1);
-    virtual ~ColorMappingData() override;
 
     virtual void activate();
     virtual void deactivate();

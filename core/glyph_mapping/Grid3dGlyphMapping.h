@@ -12,8 +12,6 @@ class RenderedVectorGrid3D;
 
 class CORE_API Grid3dGlyphMapping : public GlyphMappingData
 {
-    Q_OBJECT
-
 public:
     QString name() const override;
 
@@ -25,7 +23,7 @@ protected:
 
     Grid3dGlyphMapping(RenderedVectorGrid3D * renderedGrid, vtkDataArray * dataArray);
 
-protected slots:
+protected:
     void updateArrowLength();
 
 private:

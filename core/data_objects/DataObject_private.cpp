@@ -12,7 +12,7 @@
 vtkInformationKeyMacro(DataObjectPrivate, DataObjectKey, IntegerPointer);
 
 
-DataObjectPrivate::DataObjectPrivate(DataObject & dataObject, QString name, vtkDataSet * dataSet)
+DataObjectPrivate::DataObjectPrivate(DataObject & dataObject, const QString & name, vtkDataSet * dataSet)
     : m_name(name)
     , m_dataSet(dataSet)
     , m_tableModel(nullptr)

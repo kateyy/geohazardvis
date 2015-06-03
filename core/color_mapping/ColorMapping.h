@@ -67,7 +67,7 @@ signals:
     void scalarsChanged();
     void colorLegendVisibilityChanged(bool visible);
 
-private slots:
+private:
     /** reread the data set list provided by the DataSetHandler for new/deleted data */
     void updateAvailableScalars();
     void updateLegendVisibility();

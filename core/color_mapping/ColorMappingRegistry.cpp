@@ -9,8 +9,6 @@ ColorMappingRegistry::ColorMappingRegistry()
 {
 }
 
-ColorMappingRegistry::~ColorMappingRegistry() = default;
-
 ColorMappingRegistry & ColorMappingRegistry::instance()
 {
     static ColorMappingRegistry registry;
@@ -42,7 +40,7 @@ const QMap<QString, ColorMappingRegistry::MappingCreator> & ColorMappingRegistry
     return m_mappingCreators;
 }
 
-bool ColorMappingRegistry::registerImplementation(QString name, const MappingCreator & creator)
+bool ColorMappingRegistry::registerImplementation(const QString & name, const MappingCreator & creator)
 {
     assert(!m_mappingCreators.contains(name));
     if (m_mappingCreators.contains(name))

@@ -3,7 +3,6 @@
 #include <functional>
 
 #include <QObject>
-#include <QStringList>
 
 #include <gui/gui_api.h>
 

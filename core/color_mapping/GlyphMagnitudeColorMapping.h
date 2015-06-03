@@ -1,11 +1,11 @@
 #pragma once
 
 #include <QMap>
-#include <QVector>
 
 #include <core/color_mapping/GlyphColorMapping.h>
 
 
+template<typename T> class QVector;
 class vtkVectorNorm;
 
 class GlyphMappingData;

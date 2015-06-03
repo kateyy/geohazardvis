@@ -5,6 +5,7 @@
 #include <core/rendered_data/RenderedData3D.h>
 
 
+class vtkActor;
 class vtkAlgorithm;
 class vtkAlgorithmOutput;
 class vtkPolyDataMapper;

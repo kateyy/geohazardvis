@@ -8,7 +8,7 @@
 #include <core/table_model/QVtkTableModelVectorGrid3D.h>
 
 
-VectorGrid3DDataObject::VectorGrid3DDataObject(QString name, vtkImageData * dataSet)
+VectorGrid3DDataObject::VectorGrid3DDataObject(const QString & name, vtkImageData * dataSet)
     : DataObject(name, dataSet)
 {
     vtkDataArray * data = dataSet->GetPointData()->GetScalars();

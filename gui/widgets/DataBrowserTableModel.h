@@ -1,10 +1,10 @@
 #pragma once
 
 #include <QAbstractTableModel>
-#include <QList>
 #include <QMap>
-#include <QIcon>
 
+
+class QIcon;
 
 class DataObject;
 

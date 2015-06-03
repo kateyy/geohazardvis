@@ -1,9 +1,10 @@
 #pragma once
 
-#include <fstream>
+#include <iosfwd>
 #include <memory>
 
 #include <core/io/types.h>
+
 
 
 struct InputFileInfo

@@ -1,11 +1,11 @@
 #pragma once
 
-#include <vtkProperty.h>
-
 #include <core/rendered_data/RenderedData.h>
 
 
 class vtkProp3DCollection;
+class vtkProperty;
+
 class GlyphMapping;
 
 

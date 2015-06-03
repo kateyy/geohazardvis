@@ -61,6 +61,15 @@ MainWindow::MainWindow()
 
     m_ui->setupUi(this);
 
+    connect(m_ui->actionOpen, &QAction::triggered, [this] () { openFilesAsync(dialog_inputFileName()); });
+    connect(m_ui->actionExportDataset, &QAction::triggered, this, &MainWindow::dialog_exportDataSet);
+    connect(m_ui->actionAbout_Qt, &QAction::triggered, [this] () { QMessageBox::aboutQt(this); });
+    connect(m_ui->actionApply_Digital_Elevation_Model, &QAction::triggered, this, &MainWindow::showDEMWidget);
+    connect(m_ui->actionNew_Render_View, &QAction::triggered, 
+        [this] () { m_dataMapping->openInRenderView({}); });
+    connect(m_ui->actionExit, &QAction::triggered, [this] () { qApp->quit(); });
+
+
     m_dataBrowser = m_ui->centralwidget;
     m_dataBrowser->setDataMapping(m_dataMapping);
 
@@ -225,12 +234,7 @@ void MainWindow::openFilesAsync(const QStringList & fileNames)
     QApplication::processEvents();
 }
 
-void MainWindow::on_actionOpen_triggered()
-{
-    openFilesAsync(dialog_inputFileName());
-}
-
-void MainWindow::on_actionExportDataset_triggered()
+void MainWindow::dialog_exportDataSet()
 {
     auto toExport = m_dataBrowser->selectedDataObjects();
     if (toExport.isEmpty())
@@ -269,27 +273,12 @@ void MainWindow::on_actionExportDataset_triggered()
     setWindowTitle(oldName);
 }
 
-void MainWindow::on_actionAbout_Qt_triggered()
-{
-    QMessageBox::aboutQt(this);
-}
-
-void MainWindow::on_actionNew_Render_View_triggered()
-{
-    m_dataMapping->openInRenderView({});
-}
-
-void MainWindow::on_actionApply_Digital_Elevation_Model_triggered()
+void MainWindow::showDEMWidget()
 {
     DEMWidget * demWidget = new DEMWidget();
     demWidget->setAttribute(Qt::WA_DeleteOnClose);
     demWidget->setWindowModality(Qt::NonModal);
     demWidget->show();
-}
-
-void MainWindow::on_actionExit_triggered()
-{
-    qApp->exit();
 }
 
 void MainWindow::tabbedDockWidgetToFront(QDockWidget * widget)

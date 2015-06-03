@@ -12,8 +12,6 @@ class DataObject;
 
 class CORE_API QVtkTableModel : public QAbstractTableModel
 {
-    Q_OBJECT
-
 public:
     QVtkTableModel(QObject * parent = nullptr);
 
@@ -27,7 +25,7 @@ public:
     /** @return cell/point/etc id for a table cell. This is the row by default. */
     virtual vtkIdType itemIdAt(const QModelIndex & index) const;
 
-public slots:
+public:
     void setHighlightItemId(vtkIdType id);
 
 protected:

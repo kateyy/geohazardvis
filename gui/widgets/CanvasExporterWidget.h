@@ -1,11 +1,12 @@
 #pragma once
 
 #include <QDialog>
-#include <QString>
 #include <QMap>
 
 #include <gui/gui_api.h>
 
+
+class QString;
 
 class AbstractRenderView;
 class CanvasExporter;
@@ -14,13 +15,11 @@ class Ui_CanvasExporterWidget;
 
 class GUI_API CanvasExporterWidget : public QDialog
 {
-    Q_OBJECT
-
 public:
     CanvasExporterWidget(QWidget * parent = nullptr, Qt::WindowFlags f = 0);
     ~CanvasExporterWidget() override;
 
-public slots:
+public:
     void setRenderView(AbstractRenderView * renderView);
 
     /** capture screenshot with current settings to quick output folder */
@@ -28,7 +27,7 @@ public slots:
     /** capture screenshot with current settings and ask user for the target file name */
     void captureScreenshotTo();
 
-private slots:
+private:
     void updateUiForFormat(const QString & format);
 
 private:

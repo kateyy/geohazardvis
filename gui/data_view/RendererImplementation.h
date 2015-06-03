@@ -3,12 +3,12 @@
 #include <functional>
 
 #include <QObject>
-#include <QList>
 #include <QMap>
 
 #include <vtkType.h>
 
 
+template<typename T> class QList;
 class vtkRenderWindow;
 class vtkRenderWindowInteractor;
 class QVTKWidget;

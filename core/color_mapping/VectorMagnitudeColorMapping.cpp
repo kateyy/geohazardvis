@@ -2,7 +2,7 @@
 
 #include <cassert>
 
-#include <QSet>
+#include <QVector>
 
 #include <vtkInformation.h>
 

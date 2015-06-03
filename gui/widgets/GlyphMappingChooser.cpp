@@ -135,7 +135,7 @@ void GlyphMappingChooser::setSelectedData(AbstractRenderView * renderView, DataO
 
 void GlyphMappingChooser::updateVectorsList()
 {
-    updateGuiForSelection();
+    updateGuiForSelection({});
 
     m_ui->propertyBrowser->setRoot(nullptr);
     qDeleteAll(m_propertyGroups);

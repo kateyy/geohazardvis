@@ -16,8 +16,6 @@ class Context2DData;
 
 class RendererImplementationPlot : public RendererImplementation
 {
-    Q_OBJECT
-
 public:
     RendererImplementationPlot(AbstractRenderView & renderView, QObject * parent = nullptr);
 
@@ -61,7 +59,7 @@ private:
 
     void updateBounds();
 
-private slots:
+private:
     /** scan data for changed context items */
     void fetchContextItems(Context2DData * data);
 

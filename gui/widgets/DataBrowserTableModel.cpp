@@ -3,6 +3,8 @@
 #include <cassert>
 #include <algorithm>
 
+#include <QIcon>
+
 #include <vtkDataSet.h>
 #include <vtkFloatArray.h>
 

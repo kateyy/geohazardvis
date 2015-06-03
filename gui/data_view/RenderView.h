@@ -4,8 +4,6 @@
 #include <QMap>
 #include <QSet>
 
-#include <vtkSmartPointer.h>
-
 #include <gui/data_view/AbstractRenderView.h>
 
 
@@ -15,8 +13,6 @@ class RendererImplementationSwitch;
 
 class GUI_API RenderView : public AbstractRenderView
 {
-    Q_OBJECT
-
 public:
     RenderView(int index, QWidget * parent = nullptr, Qt::WindowFlags flags = 0);
     ~RenderView() override;
@@ -37,7 +33,7 @@ public:
     // remove from public interface as soon as possible
     RendererImplementation & implementation() const override;
 
-public slots:
+public:
     void render() override;
 
 protected:
@@ -71,7 +67,7 @@ private:
     QList<AbstractVisualizedData *> removeFromInternalLists(QList<DataObject *> dataObjects = {});
 
 
-private slots:
+private:
     /** update configuration widgets to focus on my content. */
     void updateGuiForContent();
     void updateGuiForSelectedData(AbstractVisualizedData * content);

@@ -1,10 +1,11 @@
 #pragma once
 
-#include <core/core_api.h>
 #include <string>
 #include <vector>
 
 #include <vtkDataSetAlgorithm.h>
+
+#include <core/core_api.h>
 
 
 // TODO missing update extent / information

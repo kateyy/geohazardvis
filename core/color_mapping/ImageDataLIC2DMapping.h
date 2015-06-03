@@ -1,10 +1,9 @@
 #pragma once
 
-#include <QVector>
-
 #include <core/color_mapping/ColorMappingData.h>
 
 
+template<typename T> class QVector;
 class vtkImageDataLIC2D;
 class vtkRenderWindow;
 

@@ -6,7 +6,7 @@
 #include <core/table_model/QVtkTableModelRawVector.h>
 
 
-RawVectorData::RawVectorData(QString name, vtkFloatArray * dataArray)
+RawVectorData::RawVectorData(const QString & name, vtkFloatArray * dataArray)
     : DataObject(name, nullptr)
     , m_dataArray(dataArray)
 {

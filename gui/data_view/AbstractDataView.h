@@ -50,7 +50,7 @@ signals:
     /** user selected some content */
     void objectPicked(DataObject * dataObject, vtkIdType selectionId);
 
-public slots:
+public:
     /** highlight this view as currently selected of its type */
     void setCurrent(bool isCurrent);
 

@@ -4,7 +4,6 @@
 
 #include <QList>
 #include <QMap>
-#include <QString>
 
 #include <core/core_api.h>
 
@@ -19,7 +18,7 @@ public:
     static GlyphMappingRegistry & instance();
 
     using MappingCreator = std::function<QList<GlyphMappingData *> (RenderedData * renderedData)>;
-    bool registerImplementation(QString name, const MappingCreator & creator);
+    bool registerImplementation(const QString & name, const MappingCreator & creator);
 
     /** retrieve a list of vectors that are applicable for the rendered data object */
     QMap<QString, GlyphMappingData *> createMappingsValidFor(RenderedData * renderedData);
