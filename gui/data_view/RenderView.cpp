@@ -357,15 +357,6 @@ const vtkRenderWindow * RenderView::renderWindow() const
     return m_ui->qvtkMain->GetRenderWindow();
 }
 
-void RenderView::updateGuiForContent()
-{
-    AbstractVisualizedData * focus = m_dataObjectToVisualization.value(implementation().selectedData());
-    if (!focus)
-        focus = m_contents.value(0, nullptr);
-
-    updateGuiForSelectedData(focus);
-}
-
 void RenderView::updateGuiForSelectedData(AbstractVisualizedData * renderedData)
 {
     DataObject * current = renderedData ? renderedData->dataObject() : nullptr;

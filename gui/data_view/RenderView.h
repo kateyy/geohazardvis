@@ -69,7 +69,6 @@ private:
 
 private:
     /** update configuration widgets to focus on my content. */
-    void updateGuiForContent();
     void updateGuiForSelectedData(AbstractVisualizedData * content);
     void updateGuiForRemovedData();
 
