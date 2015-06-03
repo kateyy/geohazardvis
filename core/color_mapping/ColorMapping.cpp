@@ -3,7 +3,6 @@
 #include <cassert>
 
 #include <vtkLookupTable.h>
-#include <vtkScalarBarActor.h>
 
 #include <core/AbstractVisualizedData.h>
 #include <core/DataSetHandler.h>
@@ -11,6 +10,7 @@
 #include <core/color_mapping/ColorMappingData.h>
 #include <core/color_mapping/ColorMappingRegistry.h>
 #include <core/color_mapping/GlyphColorMappingGlyphListener.h>
+#include <core/ThirdParty/vtkPVScalarBarActor.h>
 
 
 ColorMapping::ColorMapping(QObject * parent)
@@ -18,7 +18,7 @@ ColorMapping::ColorMapping(QObject * parent)
     , m_glyphListener(new GlyphColorMappingGlyphListener(this))
     , m_gradient(vtkSmartPointer<vtkLookupTable>::New())
     , m_originalGradient(nullptr)
-    , m_colorMappingLegend(vtkSmartPointer<vtkScalarBarActor>::New())
+    , m_colorMappingLegend(vtkSmartPointer<vtkPVScalarBarActor>::New())
     , m_colorMappingLegendVisible(true)
 {
     m_colorMappingLegend->SetLookupTable(m_gradient);

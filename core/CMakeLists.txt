@@ -142,6 +142,8 @@ set ( SOURCES
     reflectionzeug_extension/QStringProperty.cpp
 
     ThirdParty/alphanum.hpp
+    ThirdParty/vtkPVScalarBarActor.h
+    ThirdParty/vtkPVScalarBarActor.cxx
 
     utility/qthelper.h
     utility/qthelper.cpp

@@ -517,15 +517,10 @@ vtkSmartPointer<vtkCubeAxesActor> RendererImplementationBase3D::createAxes(vtkCa
 void RendererImplementationBase3D::setupColorMappingLegend()
 {
     m_colorMappingLegend = m_colorMapping->colorMappingLegend();
-    m_colorMappingLegend->SetAnnotationTextScaling(false);
-    m_colorMappingLegend->SetBarRatio(0.2);
+    m_colorMappingLegend->GetLabelTextProperty()->SetFontSize(7);
+    m_colorMappingLegend->GetTitleTextProperty()->SetFontSize(5);
     m_colorMappingLegend->SetNumberOfLabels(7);
-    m_colorMappingLegend->SetDrawBackground(true);
-    m_colorMappingLegend->GetBackgroundProperty()->SetColor(1, 1, 1);
-    m_colorMappingLegend->SetDrawFrame(true);
-    m_colorMappingLegend->GetFrameProperty()->SetColor(0, 0, 0);
-    m_colorMappingLegend->SetVerticalTitleSeparation(5);
-    m_colorMappingLegend->SetTextPad(3);
+    m_colorMappingLegend->DrawBackgroundOn();
 
     vtkTextProperty * labelProp = m_colorMappingLegend->GetLabelTextProperty();
     labelProp->SetShadow(false);
