@@ -37,7 +37,7 @@
 #include "vtkSmartPointer.h" // For ivars
 #include <vector> // For ivars
 
-#include <core_api.h>
+#include <core/core_api.h>
 
 class CORE_API vtkPVScalarBarActor : public vtkScalarBarActor
 {

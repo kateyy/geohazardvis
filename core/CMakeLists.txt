@@ -147,6 +147,8 @@ set ( SOURCES
 
     utility/qthelper.h
     utility/qthelper.cpp
+    utility/ScalarBarActor.h
+    utility/ScalarBarActor.cpp
     utility/vtkcamerahelper.h
     utility/vtkcamerahelper.cpp
     utility/vtkhelper.h

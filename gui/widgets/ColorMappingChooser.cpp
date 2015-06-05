@@ -13,17 +13,18 @@
 #include <QListWidget>
 #include <QDialogButtonBox>
 
+#include <vtkCommand.h>
 #include <vtkLookupTable.h>
-#include <vtkEventQtSlotConnect.h>
-#include <vtkScalarBarActor.h>
 #include <vtkScalarBarRepresentation.h>
 #include <vtkScalarBarWidget.h>
+#include <vtkTextProperty.h>
 
 #include <core/data_objects/DataObject.h>
 #include <core/color_mapping/ColorMappingData.h>
 #include <core/color_mapping/ColorMapping.h>
 #include <core/ThirdParty/alphanum.hpp>
 #include <core/utility/qthelper.h>
+#include <core/utility/ScalarBarActor.h>
 
 #include <gui/data_view/AbstractRenderView.h>
 #include <gui/data_view/RendererImplementationBase3D.h>
@@ -41,6 +42,7 @@ ColorMappingChooser::ColorMappingChooser(QWidget * parent)
     , m_renderView(nullptr)
     , m_renderViewImpl(nullptr)
     , m_mapping(nullptr)
+    , m_legend(nullptr)
     , m_movingColorLegend(false)
 {
     m_ui->setupUi(this);
@@ -65,6 +67,48 @@ ColorMappingChooser::ColorMappingChooser(QWidget * parent)
     connect(m_ui->gradientComboBox, static_cast<void(QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &ColorMappingChooser::guiGradientSelectionChanged);
     connect(m_ui->nanColorButton, &QAbstractButton::pressed, this, &ColorMappingChooser::guiSelectNanColor);
     connect(m_ui->legendPositionComboBox, &QComboBox::currentTextChanged, this, &ColorMappingChooser::guiLegendPositionChanged);
+
+    connect(m_ui->legendTitleFontSize, static_cast<void(QSpinBox::*)(int)>(&QSpinBox::valueChanged), [this] (int fontSize) {
+        if (!m_legend)
+            return;
+        auto property = m_legend->GetTitleTextProperty();
+        auto currentSize = property->GetFontSize();
+        if (currentSize == fontSize)
+            return;
+        property->SetFontSize(fontSize);
+        emit renderSetupChanged();
+    });
+
+    connect(m_ui->legendLabelFontSize, static_cast<void(QSpinBox::*)(int)>(&QSpinBox::valueChanged), [this] (int fontSize) {
+        if (!m_legend)
+            return;
+        auto property = m_legend->GetLabelTextProperty();
+        auto currentSize = property->GetFontSize();
+        if (currentSize == fontSize)
+            return;
+        property->SetFontSize(fontSize);
+        emit renderSetupChanged();
+    });
+
+    connect(m_ui->legendAlignTitleCheckBox, &QAbstractButton::toggled, [this] (bool checked) {
+        if (!m_legend)
+            return;
+        bool currentlyAligned = m_legend->GetTitleAlignedWithColorBar();
+        if (currentlyAligned == checked)
+            return;
+        m_legend->SetTitleAlignedWithColorBar(checked);
+        emit renderSetupChanged();
+    });
+
+    connect(m_ui->legendBackgroundCheckBox, &QAbstractButton::toggled, [this] (bool checked) {
+        if (!m_legend)
+            return;
+        bool currentlyOn = m_legend->GetDrawBackground();
+        if (currentlyOn == checked)
+            return;
+        m_legend->SetDrawBackground(checked);
+        emit renderSetupChanged();
+    });
 }
 
 ColorMappingChooser::~ColorMappingChooser()
@@ -76,22 +120,32 @@ void ColorMappingChooser::setCurrentRenderView(AbstractRenderView * renderView)
 {
     m_renderView = renderView;
 
+    if (m_mapping == nullptr)
+    {
+        assert(m_colorLegendObserverIds.isEmpty());
+    }
+    for (auto it = m_colorLegendObserverIds.begin(); it != m_colorLegendObserverIds.end(); ++it)
+    {
+        it.key()->RemoveObserver(it.value());
+    }
+    m_colorLegendObserverIds.clear();
+
     rebuildGui();
 
     m_ui->legendPositionComboBox->setCurrentText("user-defined position");
 
     if (m_mapping)
     {
-        vtkEventQtSlotConnect * vtkQtConnect = vtkEventQtSlotConnect::New();
-        m_colorLegendConnects.TakeReference(vtkQtConnect);
-        vtkQtConnect->Connect(m_mapping->colorMappingLegend()->GetPositionCoordinate(), vtkCommand::ModifiedEvent,
-            this, SLOT(colorLegendPositionChanged()));
-        vtkQtConnect->Connect(m_mapping->colorMappingLegend()->GetPosition2Coordinate(), vtkCommand::ModifiedEvent,
-            this, SLOT(colorLegendPositionChanged()));
-    }
-    else
-    {
-        m_colorLegendConnects = nullptr;
+        auto addObserver = [this] (vtkObject * subject, void(ColorMappingChooser::* callback)()) {
+            m_colorLegendObserverIds.insert(subject,
+                subject->AddObserver(vtkCommand::ModifiedEvent, this, callback));
+        };
+
+        addObserver(m_mapping->colorMappingLegend()->GetPositionCoordinate(), &ColorMappingChooser::colorLegendPositionChanged);
+        addObserver(m_mapping->colorMappingLegend()->GetPosition2Coordinate(), &ColorMappingChooser::colorLegendPositionChanged);
+        addObserver(m_mapping->colorMappingLegend()->GetTitleTextProperty(), &ColorMappingChooser::updateLegendTitleFont);
+        addObserver(m_mapping->colorMappingLegend()->GetLabelTextProperty(), &ColorMappingChooser::updateLegendLabelFont);
+        addObserver(m_mapping->colorMappingLegend(), &ColorMappingChooser::updateLegendConfig);
     }
 }
 
@@ -240,6 +294,27 @@ void ColorMappingChooser::colorLegendPositionChanged()
         m_ui->legendPositionComboBox->setCurrentText("user-defined position");
 }
 
+void ColorMappingChooser::updateLegendTitleFont()
+{
+    assert(m_legend);
+    m_ui->legendTitleFontSize->setValue(
+        m_legend->GetTitleTextProperty()->GetFontSize());
+}
+
+void ColorMappingChooser::updateLegendLabelFont()
+{
+    assert(m_legend);
+    m_ui->legendLabelFontSize->setValue(
+        m_legend->GetLabelTextProperty()->GetFontSize());
+}
+
+void ColorMappingChooser::updateLegendConfig()
+{
+    assert(m_legend);
+    m_ui->legendAlignTitleCheckBox->setChecked(m_legend->GetTitleAlignedWithColorBar());
+    m_ui->legendBackgroundCheckBox->setChecked(m_legend->GetDrawBackground() != 0);
+}
+
 void ColorMappingChooser::loadGradientImages()
 {
     const QSize gradientImageSize{ 200, 20 };
@@ -317,6 +392,7 @@ void ColorMappingChooser::checkRenderViewColorMapping()
 {
     m_renderViewImpl = nullptr;
     m_mapping = nullptr;
+    m_legend = nullptr;
 
     if (!m_renderView)
         return;
@@ -327,6 +403,8 @@ void ColorMappingChooser::checkRenderViewColorMapping()
         return;
 
     m_mapping = m_renderViewImpl->colorMapping();
+    if (m_mapping)
+        m_legend = dynamic_cast<OrientedScalarBarActor *>(m_mapping->colorMappingLegend());
 
     // setup gradient for newly created mappings
     if (m_mapping && !m_mapping->originalGradient())
@@ -375,7 +453,9 @@ void ColorMappingChooser::rebuildGui()
     updateTitle(m_renderView ? m_renderView->friendlyName() : "");
 
     auto newMapping = m_mapping;
+    auto newLegend = m_legend;
     m_mapping = nullptr;    // disable GUI to mapping events
+    m_legend = nullptr;
 
     for (auto & connection : m_qtConnect)
         disconnect(connection);
@@ -418,6 +498,7 @@ void ColorMappingChooser::rebuildGui()
 
     // the mapping can now receive signals from the UI
     m_mapping = newMapping;
+    m_legend = newLegend;
 
     updateGuiValueRanges();
 
@@ -452,7 +533,9 @@ void ColorMappingChooser::updateGuiValueRanges()
 
     // disable mapping updates
     auto currentMapping = m_mapping;
+    auto currentLegend = m_legend;
     m_mapping = nullptr;
+    m_legend = nullptr;
 
     // around 100 steps to scroll through the full range, but step only on one digit
     double delta = max - min;
@@ -491,7 +574,19 @@ void ColorMappingChooser::updateGuiValueRanges()
     m_ui->minValueSpinBox->setEnabled(enableRangeGui);
     m_ui->maxValueSpinBox->setEnabled(enableRangeGui);
 
+
+    if (currentMapping)
+    {
+        auto legend = dynamic_cast<OrientedScalarBarActor *>(currentMapping->colorMappingLegend());
+        assert(legend);
+        m_ui->legendAlignTitleCheckBox->setChecked(legend->GetTitleAlignedWithColorBar());
+        m_ui->legendTitleFontSize->setValue(legend->GetTitleTextProperty()->GetFontSize());
+        m_ui->legendLabelFontSize->setValue(legend->GetLabelTextProperty()->GetFontSize());
+        m_ui->legendBackgroundCheckBox->setChecked(legend->GetDrawBackground() != 0);
+    }
+
     m_mapping = currentMapping;
+    m_legend = currentLegend;
 }
 
 vtkSmartPointer<vtkLookupTable> ColorMappingChooser::buildLookupTable(const QImage & image)

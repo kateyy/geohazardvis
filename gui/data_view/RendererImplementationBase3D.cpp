@@ -517,22 +517,6 @@ vtkSmartPointer<vtkCubeAxesActor> RendererImplementationBase3D::createAxes(vtkCa
 void RendererImplementationBase3D::setupColorMappingLegend()
 {
     m_colorMappingLegend = m_colorMapping->colorMappingLegend();
-    m_colorMappingLegend->GetLabelTextProperty()->SetFontSize(7);
-    m_colorMappingLegend->GetTitleTextProperty()->SetFontSize(5);
-    m_colorMappingLegend->SetNumberOfLabels(7);
-    m_colorMappingLegend->DrawBackgroundOn();
-
-    vtkTextProperty * labelProp = m_colorMappingLegend->GetLabelTextProperty();
-    labelProp->SetShadow(false);
-    labelProp->SetColor(0, 0, 0);
-    labelProp->SetBold(false);
-    labelProp->SetItalic(false);
-
-    vtkTextProperty * titleProp = m_colorMappingLegend->GetTitleTextProperty();
-    titleProp->SetShadow(false);
-    titleProp->SetColor(0, 0, 0);
-    titleProp->SetBold(false);
-    titleProp->SetItalic(false);
 
     VTK_CREATE(vtkScalarBarRepresentation, repr);
     repr->SetScalarBarActor(m_colorMappingLegend);

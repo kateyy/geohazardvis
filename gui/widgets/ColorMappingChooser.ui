@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>252</width>
-    <height>351</height>
+    <height>435</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -21,7 +21,7 @@
   </property>
   <widget class="QWidget" name="content">
    <property name="sizePolicy">
-    <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+    <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
      <horstretch>0</horstretch>
      <verstretch>0</verstretch>
     </sizepolicy>
@@ -44,7 +44,7 @@
      </widget>
     </item>
     <item>
-     <widget class="QGroupBox" name="scalarsGroupBox">
+     <widget class="CollapsibleGroupBox" name="scalarsGroupBox">
       <property name="title">
        <string>Scalars</string>
       </property>
@@ -111,7 +111,7 @@
      </widget>
     </item>
     <item>
-     <widget class="QGroupBox" name="gradientGroupBox">
+     <widget class="CollapsibleGroupBox" name="gradientGroupBox">
       <property name="enabled">
        <bool>false</bool>
       </property>
@@ -129,32 +129,70 @@
          </property>
         </widget>
        </item>
-       <item>
-        <widget class="QWidget" name="widget_2" native="true">
-         <layout class="QGridLayout" name="gridLayout_2">
-          <property name="leftMargin">
-           <number>0</number>
-          </property>
-          <property name="topMargin">
-           <number>9</number>
-          </property>
-          <property name="rightMargin">
-           <number>0</number>
-          </property>
-          <property name="bottomMargin">
-           <number>0</number>
-          </property>
-          <item row="0" column="1">
-           <widget class="QComboBox" name="legendPositionComboBox"/>
-          </item>
-          <item row="0" column="0">
-           <widget class="QCheckBox" name="colorLegendCheckBox">
-            <property name="text">
-             <string>Legend</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
+      </layout>
+     </widget>
+    </item>
+    <item>
+     <widget class="CollapsibleGroupBox" name="legendGroupBox">
+      <property name="title">
+       <string>Color Legend</string>
+      </property>
+      <layout class="QGridLayout" name="gridLayout_3">
+       <item row="4" column="0">
+        <widget class="QLabel" name="label_2">
+         <property name="text">
+          <string>Label Font Size</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="0">
+        <widget class="QCheckBox" name="colorLegendCheckBox">
+         <property name="text">
+          <string>Visible</string>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="1">
+        <widget class="QSpinBox" name="legendTitleFontSize"/>
+       </item>
+       <item row="4" column="1">
+        <widget class="QSpinBox" name="legendLabelFontSize"/>
+       </item>
+       <item row="1" column="1">
+        <widget class="QComboBox" name="legendPositionComboBox">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="0" colspan="2">
+        <widget class="QCheckBox" name="legendAlignTitleCheckBox">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="text">
+          <string>Align title with color bar</string>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="0">
+        <widget class="QLabel" name="label">
+         <property name="text">
+          <string>Title Font Size</string>
+         </property>
+        </widget>
+       </item>
+       <item row="5" column="0" colspan="2">
+        <widget class="QCheckBox" name="legendBackgroundCheckBox">
+         <property name="text">
+          <string>Opaque Background</string>
+         </property>
         </widget>
        </item>
       </layout>
@@ -163,6 +201,14 @@
    </layout>
   </widget>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>CollapsibleGroupBox</class>
+   <extends>QGroupBox</extends>
+   <header>gui/widgets/CollapsibleGroupBox.h</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>

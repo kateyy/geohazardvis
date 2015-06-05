@@ -2,6 +2,7 @@
 
 #include <QDockWidget>
 #include <QList>
+#include <QMap>
 
 #include <vtkSmartPointer.h>
 
@@ -9,12 +10,14 @@
 
 
 class vtkLookupTable;
-class vtkEventQtSlotConnect;
+class vtkObject;
 
 class Ui_ColorMappingChooser;
 class AbstractRenderView;
 class ColorMapping;
 class RendererImplementationBase3D;
+class OrientedScalarBarActor;
+
 
 class GUI_API ColorMappingChooser : public QDockWidget
 {
@@ -44,8 +47,11 @@ private:
 
     void rebuildGui();
 
-private slots:
+private:
     void colorLegendPositionChanged();
+    void updateLegendTitleFont();
+    void updateLegendLabelFont();
+    void updateLegendConfig();
 
 private:
     void loadGradientImages();
@@ -67,8 +73,10 @@ private:
     AbstractRenderView * m_renderView;
     RendererImplementationBase3D * m_renderViewImpl;
     ColorMapping * m_mapping;
+    OrientedScalarBarActor * m_legend;
     /** check if we are moving the actor or if the user interacts */
     bool m_movingColorLegend;
-    vtkSmartPointer<vtkEventQtSlotConnect> m_colorLegendConnects;
+    /** Mapping from subject (color legend coordinate, text property, etc) to observer id */
+    QMap<vtkObject *, int> m_colorLegendObserverIds;
     QList<QMetaObject::Connection> m_qtConnect;
 };
