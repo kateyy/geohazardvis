@@ -31,6 +31,7 @@ set(WIN32_COMPILE_FLAGS
     # fp:precise   -> floating point model: precise
     # fp:fast      -> floating point model: fast
     # Ot           -> favor fast code
+    # bigobj       -> Increase Number of Sections in .Obj file (required for libzeug and MSVC 14)
     # MP           -> build with multiple processes
     # wd           -> disable warning
     # we           -> treat warning as error
@@ -42,6 +43,7 @@ set(WIN32_COMPILE_FLAGS
     #   4251       -> 'identifier' : class 'type' needs to have dll-interface to be used by clients of class 'type2'
     #   4267       -> 'var' : conversion from 'size_t' to 'type', possible loss of data
     #   4351       -> new behavior: elements of array '...' will be default initialized
+    #   4458       -> declaration of 'x' hides class member
     #   4505       -> 'function' : unreferenced local function has been removed (caused by libzeug)
     #   4512       -> 'class' : assignment operator could not be generated
     #   4718       -> 'function call' : recursive call has no side effects, deleting (QMapNode/qmap.h)
@@ -65,6 +67,10 @@ set(WIN32_COMPILE_FLAGS
     # GL           -> whole program optimization: enable link-time code generation
     # arch:SSE2    -> enable enhanced instruction set: streaming simd extensions 2
 )
+
+if(MSVC_VERSION VERSION_GREATER 1800)
+    list(APPEND WIN32_COMPILE_FLAGS /bigobj /wd4458)
+endif()
 
 set(DEFAULT_COMPILE_FLAGS
     ${WIN32_COMPILE_FLAGS}

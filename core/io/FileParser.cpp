@@ -97,7 +97,7 @@ bool parseIOStream(ifstream & inputStream, vector<t_FP> &parsedData, size_t numV
 
 bool parseIOFile(const string inputFileName, vector<t_FP> &parsedData, size_t & nbColumns)
 {
-    string input;
+    string inputValue;
     t_FP input_FP;
 
     assert(parsedData.empty());
@@ -125,14 +125,14 @@ bool parseIOFile(const string inputFileName, vector<t_FP> &parsedData, size_t & 
         return false;
     }
 
-    while(stream >> input) {
-        if(input == "NaN") {
+    while(stream >> inputValue) {
+        if(inputValue == "NaN") {
             input_FP = std::numeric_limits<double>::quiet_NaN();
         }
         else
         {
 #if defined(_WIN32)
-            input_FP = atof(input.c_str());
+            input_FP = atof(inputValue.c_str());
 #else
             stringstream f_stream(input);
             f_stream >> input_FP;
