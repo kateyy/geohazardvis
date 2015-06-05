@@ -8,5 +8,7 @@
     <file alias="painting_faded.svg">../data/toolbaricons.sourceforge.net/painting_faded.svg</file>
     <file alias="table.svg">../data/toolbaricons.sourceforge.net/table.svg</file>
     <file alias="yes.svg">../data/toolbaricons.sourceforge.net/yes.svg</file>
+    <file alias="plus_green.svg">../data/toolbaricons.sourceforge.net/plus_green.svg</file>
+    <file alias="minus_green.svg">../data/toolbaricons.sourceforge.net/minus_green.svg</file>
   </qresource>
 </RCC>

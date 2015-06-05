@@ -64,6 +64,8 @@ set ( SOURCES
     widgets/CanvasExporterWidget.cpp
     widgets/ColorMappingChooser.h
     widgets/ColorMappingChooser.cpp
+    widgets/CollapsibleGroupBox.h
+    widgets/CollapsibleGroupBox.cpp
     widgets/DataBrowser.h
     widgets/DataBrowser.cpp
     widgets/DataBrowserTableModel.h
