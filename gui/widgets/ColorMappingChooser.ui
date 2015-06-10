@@ -44,7 +44,7 @@
      </widget>
     </item>
     <item>
-     <widget class="CollapsibleGroupBox" name="scalarsGroupBox">
+     <widget class="QGroupBox" name="scalarsGroupBox">
       <property name="title">
        <string>Scalars</string>
       </property>
@@ -111,7 +111,7 @@
      </widget>
     </item>
     <item>
-     <widget class="CollapsibleGroupBox" name="gradientGroupBox">
+     <widget class="QGroupBox" name="gradientGroupBox">
       <property name="enabled">
        <bool>true</bool>
       </property>
@@ -154,7 +154,7 @@
      </widget>
     </item>
     <item>
-     <widget class="CollapsibleGroupBox" name="legendGroupBox">
+     <widget class="QGroupBox" name="legendGroupBox">
       <property name="enabled">
        <bool>true</bool>
       </property>
@@ -249,14 +249,6 @@
    </layout>
   </widget>
  </widget>
- <customwidgets>
-  <customwidget>
-   <class>CollapsibleGroupBox</class>
-   <extends>QGroupBox</extends>
-   <header>gui/widgets/CollapsibleGroupBox.h</header>
-   <container>1</container>
-  </customwidget>
- </customwidgets>
  <resources/>
  <connections/>
 </ui>
