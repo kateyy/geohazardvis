@@ -150,23 +150,23 @@ void InteractorStyleImage::highlightPickedPoint()
     vtkProp * pickedProp = m_pointPicker->GetViewProp();
     if (!pickedProp)
     {
-        highlightCell(nullptr, -1);
+        highlightIndex(nullptr, -1);
         return;
     }
 
     RenderedData * renderedData = m_propToRenderedData.value(pickedProp);
     assert(renderedData);
 
-    highlightCell(renderedData->dataObject(), pointId);
+    highlightIndex(renderedData->dataObject(), pointId);
     
     emit dataPicked(renderedData);
 
-    emit cellPicked(renderedData->dataObject(), pointId);
+    emit indexPicked(renderedData->dataObject(), pointId);
 }
 
-void InteractorStyleImage::highlightCell(DataObject * dataObject, vtkIdType cellId)
+void InteractorStyleImage::highlightIndex(DataObject * dataObject, vtkIdType index)
 {
-    if (cellId == -1)
+    if (index == -1)
     {
         if (m_currentlyHighlighted.second < 0)
             return;
@@ -179,7 +179,7 @@ void InteractorStyleImage::highlightCell(DataObject * dataObject, vtkIdType cell
 
     assert(dataObject);
 
-    if (m_currentlyHighlighted == QPair<DataObject *, vtkIdType>(dataObject, cellId))
+    if (m_currentlyHighlighted == QPair<DataObject *, vtkIdType>(dataObject, index))
         return;
 
     vtkImageData * image = vtkImageData::SafeDownCast(dataObject->dataSet());
@@ -187,17 +187,17 @@ void InteractorStyleImage::highlightCell(DataObject * dataObject, vtkIdType cell
         return;
 
     double point[3];
-    image->GetPoint(cellId, point);
+    image->GetPoint(index, point);
     point[2] += 0.1;    // show in front of the image
     m_highlightingActor->SetPosition(point);
 
     GetDefaultRenderer()->AddViewProp(m_highlightingActor);
     GetDefaultRenderer()->GetRenderWindow()->Render();
 
-    m_currentlyHighlighted = { dataObject, cellId };
+    m_currentlyHighlighted = { dataObject, index };
 }
 
-void InteractorStyleImage::lookAtCell(DataObject * /*polyData*/, vtkIdType /*cellId*/)
+void InteractorStyleImage::lookAtIndex(DataObject * /*polyData*/, vtkIdType /*index*/)
 {
 }
 

@@ -37,8 +37,8 @@ public:
     void OnChar() override;
 
 public:
-    void highlightCell(DataObject * dataObject, vtkIdType cellId) override;
-    void lookAtCell(DataObject * polyData, vtkIdType cellId) override;
+    void highlightIndex(DataObject * dataObject, vtkIdType index) override;
+    void lookAtIndex(DataObject * polyData, vtkIdType index) override;
     void flashHightlightedCell(int milliseconds = 2000);
 
 protected:
@@ -47,7 +47,7 @@ protected:
 
     void MouseWheelDolly(bool forward);
 
-    void highlightPickedCell();
+    void highlightPickedIndex();
     void sendPointInfo() const;
 
 protected:

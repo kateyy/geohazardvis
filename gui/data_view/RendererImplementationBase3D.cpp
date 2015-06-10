@@ -187,7 +187,7 @@ void RendererImplementationBase3D::onRenderViewVisualizationChanged()
 
 void RendererImplementationBase3D::setSelectedData(DataObject * dataObject, vtkIdType itemId)
 {
-    interactorStyle()->highlightCell(dataObject, itemId);
+    interactorStyle()->highlightIndex(dataObject, itemId);
 }
 
 DataObject * RendererImplementationBase3D::selectedData() const
@@ -197,12 +197,12 @@ DataObject * RendererImplementationBase3D::selectedData() const
 
 vtkIdType RendererImplementationBase3D::selectedIndex() const
 {
-    return m_interactorStyle->highlightedCell();
+    return m_interactorStyle->highlightedIndex();
 }
 
 void RendererImplementationBase3D::lookAtData(DataObject * dataObject, vtkIdType itemId)
 {
-    m_interactorStyle->lookAtCell(dataObject, itemId);
+    m_interactorStyle->lookAtIndex(dataObject, itemId);
 }
 
 void RendererImplementationBase3D::resetCamera(bool toInitialPosition)
@@ -392,7 +392,7 @@ void RendererImplementationBase3D::initialize()
         &m_renderView, &AbstractRenderView::ShowInfo);
     connect(m_interactorStyle.Get(), &PickingInteractorStyleSwitch::dataPicked,
         this, &RendererImplementation::dataSelectionChanged);
-    connect(m_interactorStyle.Get(), &PickingInteractorStyleSwitch::cellPicked,
+    connect(m_interactorStyle.Get(), &PickingInteractorStyleSwitch::indexPicked,
         &m_renderView, &AbstractDataView::objectPicked);
 
     m_isInitialized = true;

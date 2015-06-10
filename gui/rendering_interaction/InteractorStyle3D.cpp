@@ -108,7 +108,7 @@ void InteractorStyle3D::OnLeftButtonUp()
     Superclass::OnLeftButtonUp();
 
     if (!m_mouseMoved)
-        highlightPickedCell();
+        highlightPickedIndex();
 
     m_mouseMoved = false;
 }
@@ -221,7 +221,7 @@ void InteractorStyle3D::MouseWheelDolly(bool forward)
     Interactor->Render();
 }
 
-void InteractorStyle3D::highlightPickedCell()
+void InteractorStyle3D::highlightPickedIndex()
 {
     // assume cells and points picked (in OnMouseMove)
 
@@ -230,7 +230,7 @@ void InteractorStyle3D::highlightPickedCell()
 
     if (cellId == -1 && pointId == -1)
     {
-        highlightCell(nullptr , - 1);
+        highlightIndex(nullptr , - 1);
         return;
     }
 
@@ -241,18 +241,18 @@ void InteractorStyle3D::highlightPickedCell()
     RenderedData * renderedData = m_actorToRenderedData.value(pickedActor);
     if (renderedData)
     {
-        vtkIdType itemId = cellId >= 0 ? cellId : pointId;
-        highlightCell(renderedData->dataObject(), itemId);
+        vtkIdType index = cellId >= 0 ? cellId : pointId;
+        highlightIndex(renderedData->dataObject(), index);
 
         emit dataPicked(renderedData);
 
-        emit cellPicked(renderedData->dataObject(), itemId);
+        emit indexPicked(renderedData->dataObject(), index);
     }
 }
 
-void InteractorStyle3D::highlightCell(DataObject * dataObject, vtkIdType cellId)
+void InteractorStyle3D::highlightIndex(DataObject * dataObject, vtkIdType index)
 {
-    if (cellId == -1)
+    if (index == -1)
     {
         if (m_currentlyHighlighted.second < 0)
             return;
@@ -266,7 +266,7 @@ void InteractorStyle3D::highlightCell(DataObject * dataObject, vtkIdType cellId)
     assert(dataObject);
 
     // already highlighting this cell, so just flash again
-    if (m_currentlyHighlighted == QPair<DataObject *, vtkIdType>(dataObject, cellId))
+    if (m_currentlyHighlighted == QPair<DataObject *, vtkIdType>(dataObject, index))
     {
         flashHightlightedCell();
         return;
@@ -275,7 +275,7 @@ void InteractorStyle3D::highlightCell(DataObject * dataObject, vtkIdType cellId)
     // extract picked triangle and create highlighting geometry
     // create two shifted polygons to work around occlusion
 
-    vtkCell * selection = dataObject->dataSet()->GetCell(cellId);
+    vtkCell * selection = dataObject->dataSet()->GetCell(index);
 
     // this is probably a glyph or the like; we don't have an implementation for that in the moment
     if (selection->GetCellType() == VTK_VOXEL)
@@ -314,7 +314,7 @@ void InteractorStyle3D::highlightCell(DataObject * dataObject, vtkIdType cellId)
     GetDefaultRenderer()->AddViewProp(m_selectedCellActor);
     GetDefaultRenderer()->GetRenderWindow()->Render();
 
-    m_currentlyHighlighted = { dataObject, cellId };
+    m_currentlyHighlighted = { dataObject, index };
 
     flashHightlightedCell();
 }
@@ -352,7 +352,7 @@ bool circleLineIntersection(double radius, double P0[2], double P1[2], double in
 }
 }
 
-void InteractorStyle3D::lookAtCell(DataObject * dataObject, vtkIdType cellId)
+void InteractorStyle3D::lookAtIndex(DataObject * dataObject, vtkIdType index)
 {
     vtkDataSet * dataSet = dataObject->dataSet();
     vtkPolyData * polyData = vtkPolyData::SafeDownCast(dataObject->dataSet());
@@ -380,7 +380,7 @@ void InteractorStyle3D::lookAtCell(DataObject * dataObject, vtkIdType cellId)
     vtkMath::Subtract(startingPosition, objectCenter, objectToEye);
     double viewDistanceXY = vtkMath::Normalize2D(objectToEye);
 
-    vtkCell * cell = dataSet->GetCell(cellId);
+    vtkCell * cell = dataSet->GetCell(index);
     assert(cell);
 
     double centroid[3];

@@ -15,11 +15,11 @@ public:
     void setRenderedData(const QList<RenderedData *> & renderedData) override;
 
     DataObject * highlightedObject();
-    vtkIdType highlightedCell();
+    vtkIdType highlightedIndex();
 
 public:
-    void highlightCell(DataObject * dataObject, vtkIdType cellId) override;
-    void lookAtCell(DataObject * dataObject, vtkIdType cellId) override;
+    void highlightIndex(DataObject * dataObject, vtkIdType index) override;
+    void lookAtIndex(DataObject * dataObject, vtkIdType index) override;
     
 protected:
     PickingInteractorStyleSwitch();
@@ -33,5 +33,5 @@ private:
     IPickingInteractorStyle * m_currentPickingStyle;
 
     DataObject * m_highlightedObject;
-    vtkIdType m_highlightedCell;
+    vtkIdType m_highlightedIndex;
 };

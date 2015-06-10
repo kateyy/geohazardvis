@@ -25,9 +25,9 @@ signals:
     /** rendered data at the mouse position, after releasing (and not moving) the left mouse button
         This is only emitted if a actor was picked at the mouse position. */
     void dataPicked(RenderedData * renderedData);
-    void cellPicked(DataObject * dataObject, vtkIdType cellId) const;
+    void indexPicked(DataObject * dataObject, vtkIdType index) const;
 
 public:
-    virtual void highlightCell(DataObject * dataObject, vtkIdType cellId) = 0;
-    virtual void lookAtCell(DataObject * dataObject, vtkIdType cellId) = 0;
+    virtual void highlightIndex(DataObject * dataObject, vtkIdType index) = 0;
+    virtual void lookAtIndex(DataObject * dataObject, vtkIdType index) = 0;
 };

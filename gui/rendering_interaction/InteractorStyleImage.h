@@ -32,8 +32,8 @@ public:
     void setRenderedData(const QList<RenderedData *> & renderedData) override;
 
 public:
-    void highlightCell(DataObject * dataObject, vtkIdType cellId) override;
-    void lookAtCell(DataObject * dataObject, vtkIdType cellId) override;
+    void highlightIndex(DataObject * dataObject, vtkIdType index) override;
+    void lookAtIndex(DataObject * dataObject, vtkIdType index) override;
 
 protected:
     explicit InteractorStyleImage();

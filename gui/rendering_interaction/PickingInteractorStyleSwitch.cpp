@@ -17,7 +17,7 @@ PickingInteractorStyleSwitch::PickingInteractorStyleSwitch()
     : InteractorStyleSwitch()
     , m_currentPickingStyle(nullptr)
     , m_highlightedObject(nullptr)
-    , m_highlightedCell(-1)
+    , m_highlightedIndex(-1)
 {
 }
 
@@ -31,7 +31,7 @@ void PickingInteractorStyleSwitch::setRenderedData(const QList<RenderedData *> &
         m_currentPickingStyle->setRenderedData(m_renderedData);
 
     m_highlightedObject = nullptr;
-    m_highlightedCell = -1;
+    m_highlightedIndex = -1;
 }
 
 DataObject * PickingInteractorStyleSwitch::highlightedObject()
@@ -39,24 +39,24 @@ DataObject * PickingInteractorStyleSwitch::highlightedObject()
     return m_highlightedObject;
 }
 
-vtkIdType PickingInteractorStyleSwitch::highlightedCell()
+vtkIdType PickingInteractorStyleSwitch::highlightedIndex()
 {
-    return m_highlightedCell;
+    return m_highlightedIndex;
 }
 
-void PickingInteractorStyleSwitch::highlightCell(DataObject * dataObject, vtkIdType cellId)
+void PickingInteractorStyleSwitch::highlightIndex(DataObject * dataObject, vtkIdType index)
 {
     m_highlightedObject = dataObject;
-    m_highlightedCell = cellId;
+    m_highlightedIndex = index;
 
     if (m_currentPickingStyle)
-        m_currentPickingStyle->highlightCell(dataObject, cellId);
+        m_currentPickingStyle->highlightIndex(dataObject, index);
 }
 
-void PickingInteractorStyleSwitch::lookAtCell(DataObject * dataObject, vtkIdType cellId)
+void PickingInteractorStyleSwitch::lookAtIndex(DataObject * dataObject, vtkIdType index)
 {
     if (m_currentPickingStyle)
-        m_currentPickingStyle->lookAtCell(dataObject, cellId);
+        m_currentPickingStyle->lookAtIndex(dataObject, index);
 }
 
 void PickingInteractorStyleSwitch::styleAddedEvent(vtkInteractorStyle * style)
@@ -70,7 +70,7 @@ void PickingInteractorStyleSwitch::styleAddedEvent(vtkInteractorStyle * style)
 
     connect(pickingStyle, &IPickingInteractorStyle::pointInfoSent, this, &IPickingInteractorStyle::pointInfoSent);
     connect(pickingStyle, &IPickingInteractorStyle::dataPicked, this, &IPickingInteractorStyle::dataPicked);
-    connect(pickingStyle, &IPickingInteractorStyle::cellPicked, this, &IPickingInteractorStyle::cellPicked);
+    connect(pickingStyle, &IPickingInteractorStyle::indexPicked, this, &IPickingInteractorStyle::indexPicked);
 }
 
 void PickingInteractorStyleSwitch::currentStyleChangedEvent()
