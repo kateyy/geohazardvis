@@ -36,7 +36,9 @@ public:
 
     void OnChar() override;
 
-public:
+    DataObject * highlightedDataObject() const override;
+    vtkIdType highlightedIndex() const override;
+
     void highlightIndex(DataObject * dataObject, vtkIdType index) override;
     void lookAtIndex(DataObject * polyData, vtkIdType index) override;
     void flashHightlightedCell(int milliseconds = 2000);

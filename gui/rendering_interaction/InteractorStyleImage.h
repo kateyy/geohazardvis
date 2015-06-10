@@ -31,7 +31,9 @@ public:
 
     void setRenderedData(const QList<RenderedData *> & renderedData) override;
 
-public:
+    DataObject * highlightedDataObject() const override;
+    vtkIdType highlightedIndex() const override;
+
     void highlightIndex(DataObject * dataObject, vtkIdType index) override;
     void lookAtIndex(DataObject * dataObject, vtkIdType index) override;
 

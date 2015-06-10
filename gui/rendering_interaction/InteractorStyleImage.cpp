@@ -164,6 +164,16 @@ void InteractorStyleImage::highlightPickedPoint()
     emit indexPicked(renderedData->dataObject(), pointId);
 }
 
+DataObject * InteractorStyleImage::highlightedDataObject() const
+{
+    return m_currentlyHighlighted.first;
+}
+
+vtkIdType InteractorStyleImage::highlightedIndex() const
+{
+    return m_currentlyHighlighted.second;
+}
+
 void InteractorStyleImage::highlightIndex(DataObject * dataObject, vtkIdType index)
 {
     if (index == -1)

@@ -192,7 +192,7 @@ void RendererImplementationBase3D::setSelectedData(DataObject * dataObject, vtkI
 
 DataObject * RendererImplementationBase3D::selectedData() const
 {
-    return m_interactorStyle->highlightedObject();
+    return m_interactorStyle->highlightedDataObject();
 }
 
 vtkIdType RendererImplementationBase3D::selectedIndex() const

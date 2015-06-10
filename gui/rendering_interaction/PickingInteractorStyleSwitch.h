@@ -14,10 +14,9 @@ public:
 
     void setRenderedData(const QList<RenderedData *> & renderedData) override;
 
-    DataObject * highlightedObject();
-    vtkIdType highlightedIndex();
+    DataObject * highlightedDataObject() const override;
+    vtkIdType highlightedIndex() const override;
 
-public:
     void highlightIndex(DataObject * dataObject, vtkIdType index) override;
     void lookAtIndex(DataObject * dataObject, vtkIdType index) override;
     
@@ -31,7 +30,4 @@ protected:
 private:
     QList<RenderedData *> m_renderedData;
     IPickingInteractorStyle * m_currentPickingStyle;
-
-    DataObject * m_highlightedObject;
-    vtkIdType m_highlightedIndex;
 };

@@ -250,6 +250,16 @@ void InteractorStyle3D::highlightPickedIndex()
     }
 }
 
+DataObject * InteractorStyle3D::highlightedDataObject() const
+{
+    return m_currentlyHighlighted.first;
+}
+
+vtkIdType InteractorStyle3D::highlightedIndex() const
+{
+    return m_currentlyHighlighted.second;
+}
+
 void InteractorStyle3D::highlightIndex(DataObject * dataObject, vtkIdType index)
 {
     if (index == -1)

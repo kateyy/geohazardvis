@@ -30,4 +30,7 @@ signals:
 public:
     virtual void highlightIndex(DataObject * dataObject, vtkIdType index) = 0;
     virtual void lookAtIndex(DataObject * dataObject, vtkIdType index) = 0;
+
+    virtual vtkIdType highlightedIndex() const = 0;
+    virtual DataObject * highlightedDataObject() const = 0;
 };
