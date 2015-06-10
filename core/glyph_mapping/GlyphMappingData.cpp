@@ -80,7 +80,6 @@ GlyphMappingData::GlyphMappingData(RenderedData * renderedData)
     m_arrowGlyph->ScalingOn();
     m_arrowGlyph->SetScaleModeToDataScalingOff();
     m_arrowGlyph->OrientOn();
-    //m_arrowGlyph->SetColorModeToColorByScale();
     double * bounds = renderedData->dataObject()->dataSet()->GetBounds();
     double maxBoundsSize = std::max(bounds[1] - bounds[0], std::max(bounds[3] - bounds[2], bounds[5] - bounds[4]));
     m_arrowGlyph->SetScaleFactor(maxBoundsSize * 0.1);
@@ -90,6 +89,7 @@ GlyphMappingData::GlyphMappingData(RenderedData * renderedData)
     m_mapper = vtkSmartPointer<vtkPolyDataMapper>::New();
     m_mapper->UseLookupTableScalarRangeOn();
     m_mapper->SetInputConnection(m_arrowGlyph->GetOutputPort());
+    m_mapper->ScalarVisibilityOff();
 
     m_actor->SetVisibility(m_isVisible);
     m_actor->PickableOff();
@@ -351,6 +351,7 @@ void GlyphMappingData::colorMappingChangedEvent(ColorMappingData * colorMappingD
     else
     {
         m_arrowGlyph->SetInputConnection(vectorDataOutputPort());
+        m_mapper->ScalarVisibilityOff();
     }
 }
 

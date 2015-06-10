@@ -4,6 +4,7 @@
 
 #include <QVector>
 
+#include <vtkAssignAttribute.h>
 #include <vtkCellData.h>
 #include <vtkDataSet.h>
 #include <vtkLookupTable.h>
@@ -12,7 +13,6 @@
 #include <vtkPointData.h>
 #include <vtkVectorNorm.h>
 
-#include <core/utility/vtkhelper.h>
 #include <core/color_mapping/ColorMappingRegistry.h>
 #include <core/rendered_data/RenderedData3D.h>
 #include <core/glyph_mapping/GlyphMapping.h>
@@ -71,17 +71,19 @@ GlyphMagnitudeColorMapping::GlyphMagnitudeColorMapping(
 {
     for (GlyphMappingData * glyphMapping : glyphMappingData)
     {
-        VTK_CREATE(vtkVectorNorm, norm);
+        auto norm = vtkSmartPointer<vtkVectorNorm>::New();
         norm->SetInputConnection(glyphMapping->vectorDataOutputPort());
+
+        auto assignVectors = vtkSmartPointer<vtkAssignAttribute>::New();
+        assignVectors->Assign(vectorsName.toUtf8().data(), vtkDataSetAttributes::VECTORS, vtkAssignAttribute::POINT_DATA);
+        assignVectors->SetInputConnection(norm->GetOutputPort());
+
         // if needed: support multiple connections
         m_vectorNorms.insert(glyphMapping->renderedData(), { norm });
+        m_assignedVectors.insert(glyphMapping->renderedData(), { assignVectors });
 
         m_isValid = true;
     }
-}
-
-GlyphMagnitudeColorMapping::~GlyphMagnitudeColorMapping()
-{
 }
 
 QString GlyphMagnitudeColorMapping::name() const
@@ -91,7 +93,7 @@ QString GlyphMagnitudeColorMapping::name() const
 
 vtkSmartPointer<vtkAlgorithm> GlyphMagnitudeColorMapping::createFilter(AbstractVisualizedData * visualizedData, int connection)
 {
-    auto & filters = m_vectorNorms.value(visualizedData, {});
+    auto & filters = m_assignedVectors.value(visualizedData, {});
 
     if (filters.isEmpty())  // required/valid filters are already created
         return vtkPassThrough::New();
@@ -113,6 +115,7 @@ void GlyphMagnitudeColorMapping::configureMapper(AbstractVisualizedData * visual
     GlyphColorMapping::configureMapper(visualizedData, mapper);
 
     assert(m_vectorNorms.contains(visualizedData));
+    assert(m_assignedVectors.contains(visualizedData));
 
     if (auto m = vtkMapper::SafeDownCast(mapper))
     {

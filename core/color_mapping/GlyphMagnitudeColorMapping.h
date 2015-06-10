@@ -6,6 +6,7 @@
 
 
 template<typename T> class QVector;
+class vtkAssignAttribute;
 class vtkVectorNorm;
 
 class GlyphMappingData;
@@ -17,7 +18,6 @@ public:
     GlyphMagnitudeColorMapping(const QList<AbstractVisualizedData *> & visualizedData,
         const QList<GlyphMappingData *> & glyphMappingData,
         const QString & vectorsName);
-    ~GlyphMagnitudeColorMapping() override;
 
     QString name() const override;
 
@@ -36,4 +36,5 @@ private:
 
     const QString m_vectorName;
     QMap<AbstractVisualizedData *, QVector<vtkSmartPointer<vtkVectorNorm>>> m_vectorNorms;
+    QMap<AbstractVisualizedData *, QVector<vtkSmartPointer<vtkAssignAttribute>>> m_assignedVectors;
 };
