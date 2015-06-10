@@ -1,7 +1,5 @@
 #include "Application.h"
 
-#include <QDebug>
-
 #include <gui/MainWindow.h>
 
 
