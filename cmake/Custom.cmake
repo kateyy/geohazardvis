@@ -46,9 +46,9 @@ function (source_group_by_path_and_type PARENT_PATH)
 
     if (IDE_SPLIT_HEADERS_SOURCES)
         source_group_by_path(${PARENT_PATH} ".*[.](h|hpp)$" "Header Files" ${ARGN})
-        source_group_by_path(${PARENT_PATH} ".*[.](c|cpp)$" "Source Files" ${ARGN})
+        source_group_by_path(${PARENT_PATH} ".*[.](c|cpp|cxx)$" "Source Files" ${ARGN})
     else()
-        source_group_by_path(${PARENT_PATH} ".*[.](cpp|c|h|hpp)" "Source Files" ${ARGN})
+        source_group_by_path(${PARENT_PATH} ".*[.](cpp|cxx|c|h|hpp)" "Source Files" ${ARGN})
     endif()
     
     source_group_by_path(${PARENT_PATH} ".*[.](qrc|ui)$" "Ressources" ${ARGN})
