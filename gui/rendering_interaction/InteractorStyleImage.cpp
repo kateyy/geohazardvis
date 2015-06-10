@@ -155,6 +155,8 @@ void InteractorStyleImage::highlightPickedPoint()
 
     RenderedData * renderedData = m_propToRenderedData.value(pickedProp);
     assert(renderedData);
+
+    highlightCell(renderedData->dataObject(), pointId);
     
     emit dataPicked(renderedData);
 
@@ -166,6 +168,7 @@ void InteractorStyleImage::highlightCell(DataObject * dataObject, vtkIdType cell
     if (cellId == -1)
     {
         GetDefaultRenderer()->RemoveViewProp(m_highlightingActor);
+        GetDefaultRenderer()->GetRenderWindow()->Render();
         return;
     }
 

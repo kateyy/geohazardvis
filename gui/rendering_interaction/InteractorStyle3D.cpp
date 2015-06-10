@@ -240,6 +240,8 @@ void InteractorStyle3D::highlightPickedCell()
     RenderedData * renderedData = m_actorToRenderedData.value(pickedActor);
     if (renderedData)
     {
+        highlightCell(renderedData->dataObject(), cellId);
+
         emit dataPicked(renderedData);
 
         emit cellPicked(renderedData->dataObject(), cellId);
@@ -251,6 +253,7 @@ void InteractorStyle3D::highlightCell(DataObject * dataObject, vtkIdType cellId)
     if (cellId == -1)
     {
         GetDefaultRenderer()->RemoveViewProp(m_selectedCellActor);
+        GetDefaultRenderer()->GetRenderWindow()->Render();
         return;
     }
 
