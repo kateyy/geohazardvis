@@ -1,16 +1,12 @@
 #include "Grid3dGlyphMapping.h"
 
-#include <cstring>
-
-#include <vtkPointData.h>
-
-#include <vtkGlyph3D.h>
-
-#include <vtkImageData.h>
+#include <vtkActor.h>
 #include <vtkAssignAttribute.h>
-
+#include <vtkGlyph3D.h>
+#include <vtkImageData.h>
 #include <vtkInformation.h>
 #include <vtkInformationIntegerKey.h>
+#include <vtkPointData.h>
 
 #include <core/utility/vtkhelper.h>
 #include <core/data_objects/DataObject.h>
@@ -75,6 +71,7 @@ Grid3dGlyphMapping::Grid3dGlyphMapping(RenderedVectorGrid3D * renderedGrid, vtkD
 {
     setVisible(true);
 
+    actor()->PickableOn();
     arrowGlyph()->SetVectorModeToUseVector();
     setRepresentation(Representation::SimpleArrow);
     setColor(1, 0, 0);

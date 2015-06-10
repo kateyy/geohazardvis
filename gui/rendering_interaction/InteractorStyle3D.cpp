@@ -241,11 +241,12 @@ void InteractorStyle3D::highlightPickedCell()
     RenderedData * renderedData = m_actorToRenderedData.value(pickedActor);
     if (renderedData)
     {
-        highlightCell(renderedData->dataObject(), cellId);
+        vtkIdType itemId = cellId >= 0 ? cellId : pointId;
+        highlightCell(renderedData->dataObject(), itemId);
 
         emit dataPicked(renderedData);
 
-        emit cellPicked(renderedData->dataObject(), cellId);
+        emit cellPicked(renderedData->dataObject(), itemId);
     }
 }
 
@@ -275,6 +276,11 @@ void InteractorStyle3D::highlightCell(DataObject * dataObject, vtkIdType cellId)
     // create two shifted polygons to work around occlusion
 
     vtkCell * selection = dataObject->dataSet()->GetCell(cellId);
+
+    // this is probably a glyph or the like; we don't have an implementation for that in the moment
+    if (selection->GetCellType() == VTK_VOXEL)
+        return;
+
     vtkIdType numberOfPoints = selection->GetNumberOfPoints();
 
     double cellNormal[3];
