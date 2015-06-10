@@ -29,7 +29,7 @@ public:
 
     void OnChar() override;
 
-    void setRenderedData(QList<RenderedData *> renderedData) override;
+    void setRenderedData(const QList<RenderedData *> & renderedData) override;
 
 public:
     void highlightCell(DataObject * dataObject, vtkIdType cellId) override;

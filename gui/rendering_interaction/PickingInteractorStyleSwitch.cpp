@@ -23,7 +23,7 @@ PickingInteractorStyleSwitch::PickingInteractorStyleSwitch()
 
 PickingInteractorStyleSwitch::~PickingInteractorStyleSwitch() = default;
 
-void PickingInteractorStyleSwitch::setRenderedData(QList<RenderedData *> renderedData)
+void PickingInteractorStyleSwitch::setRenderedData(const QList<RenderedData *> & renderedData)
 {
     m_renderedData = renderedData;
 

@@ -126,7 +126,7 @@ void InteractorStyleImage::OnChar()
     // disable magic keys for now
 }
 
-void InteractorStyleImage::setRenderedData(QList<RenderedData *> renderedData)
+void InteractorStyleImage::setRenderedData(const QList<RenderedData *> & renderedData)
 {
     GetDefaultRenderer()->RemoveViewProp(m_highlightingActor);
     m_propToRenderedData.clear();

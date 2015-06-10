@@ -18,7 +18,7 @@ class GUI_API IPickingInteractorStyle : public QObject
     Q_OBJECT
 
 public:
-    virtual void setRenderedData(QList<RenderedData *> renderedData) = 0;
+    virtual void setRenderedData(const QList<RenderedData *> & renderedData) = 0;
 
 signals:
     void pointInfoSent(const QStringList &info) const;

@@ -22,7 +22,7 @@ public:
     static InteractorStyle3D * New();
     vtkTypeMacro(InteractorStyle3D, vtkInteractorStyleTerrain);
 
-    void setRenderedData(QList<RenderedData *> renderedData);
+    void setRenderedData(const QList<RenderedData *> & renderedData) override;
 
     void OnMouseMove() override;
     void OnLeftButtonDown() override;

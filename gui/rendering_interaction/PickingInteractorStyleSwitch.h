@@ -12,7 +12,7 @@ public:
     static PickingInteractorStyleSwitch * New();
     vtkTypeMacro(PickingInteractorStyleSwitch, InteractorStyleSwitch);
 
-    void setRenderedData(QList<RenderedData *> renderedData) override;
+    void setRenderedData(const QList<RenderedData *> & renderedData) override;
 
     DataObject * highlightedObject();
     vtkIdType highlightedCell();

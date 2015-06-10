@@ -67,7 +67,7 @@ InteractorStyle3D::~InteractorStyle3D()
     delete m_highlightFlashTime;
 }
 
-void InteractorStyle3D::setRenderedData(QList<RenderedData *> renderedData)
+void InteractorStyle3D::setRenderedData(const QList<RenderedData *> & renderedData)
 {
     m_actorToRenderedData.clear();
     GetDefaultRenderer()->RemoveViewProp(m_selectedCellActor);
