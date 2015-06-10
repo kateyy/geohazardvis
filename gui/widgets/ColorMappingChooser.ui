@@ -56,7 +56,7 @@
         <widget class="QComboBox" name="scalarsComboBox"/>
        </item>
        <item>
-        <widget class="QWidget" name="widget" native="true">
+        <widget class="QWidget" name="widget">
          <layout class="QGridLayout" name="gridLayout">
           <property name="leftMargin">
            <number>0</number>
@@ -113,20 +113,41 @@
     <item>
      <widget class="CollapsibleGroupBox" name="gradientGroupBox">
       <property name="enabled">
-       <bool>false</bool>
+       <bool>true</bool>
       </property>
       <property name="title">
        <string>Gradient</string>
       </property>
       <layout class="QVBoxLayout" name="gradientGroupLayout">
        <item>
-        <widget class="QComboBox" name="gradientComboBox"/>
-       </item>
-       <item>
-        <widget class="QPushButton" name="nanColorButton">
-         <property name="text">
-          <string>NaN-Color</string>
+        <widget class="QWidget" name="gradientGroupBoxContents">
+         <property name="enabled">
+          <bool>false</bool>
          </property>
+         <layout class="QVBoxLayout" name="verticalLayout_2">
+          <property name="leftMargin">
+           <number>0</number>
+          </property>
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <property name="rightMargin">
+           <number>0</number>
+          </property>
+          <property name="bottomMargin">
+           <number>0</number>
+          </property>
+          <item>
+           <widget class="QComboBox" name="gradientComboBox"/>
+          </item>
+          <item>
+           <widget class="QPushButton" name="nanColorButton">
+            <property name="text">
+             <string>NaN-Color</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
         </widget>
        </item>
       </layout>
@@ -134,65 +155,92 @@
     </item>
     <item>
      <widget class="CollapsibleGroupBox" name="legendGroupBox">
+      <property name="enabled">
+       <bool>true</bool>
+      </property>
       <property name="title">
        <string>Color Legend</string>
       </property>
       <layout class="QGridLayout" name="gridLayout_3">
-       <item row="4" column="0">
-        <widget class="QLabel" name="label_2">
-         <property name="text">
-          <string>Label Font Size</string>
+       <property name="spacing">
+        <number>0</number>
+       </property>
+       <item row="7" column="0">
+        <widget class="QWidget" name="legendGroupBoxContents">
+         <property name="enabled">
+          <bool>false</bool>
          </property>
-        </widget>
-       </item>
-       <item row="1" column="0">
-        <widget class="QCheckBox" name="colorLegendCheckBox">
-         <property name="text">
-          <string>Visible</string>
-         </property>
-        </widget>
-       </item>
-       <item row="3" column="1">
-        <widget class="QSpinBox" name="legendTitleFontSize"/>
-       </item>
-       <item row="4" column="1">
-        <widget class="QSpinBox" name="legendLabelFontSize"/>
-       </item>
-       <item row="1" column="1">
-        <widget class="QComboBox" name="legendPositionComboBox">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-        </widget>
-       </item>
-       <item row="2" column="0" colspan="2">
-        <widget class="QCheckBox" name="legendAlignTitleCheckBox">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="text">
-          <string>Align title with color bar</string>
-         </property>
-        </widget>
-       </item>
-       <item row="3" column="0">
-        <widget class="QLabel" name="label">
-         <property name="text">
-          <string>Title Font Size</string>
-         </property>
-        </widget>
-       </item>
-       <item row="5" column="0" colspan="2">
-        <widget class="QCheckBox" name="legendBackgroundCheckBox">
-         <property name="text">
-          <string>Opaque Background</string>
-         </property>
+         <layout class="QGridLayout" name="gridLayout_2">
+          <property name="leftMargin">
+           <number>0</number>
+          </property>
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <property name="rightMargin">
+           <number>0</number>
+          </property>
+          <property name="bottomMargin">
+           <number>0</number>
+          </property>
+          <item row="0" column="0">
+           <widget class="QCheckBox" name="colorLegendCheckBox">
+            <property name="text">
+             <string>Visible</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QComboBox" name="legendPositionComboBox">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0" colspan="2">
+           <widget class="QCheckBox" name="legendAlignTitleCheckBox">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="text">
+             <string>Align title with color bar</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0">
+           <widget class="QLabel" name="label_2">
+            <property name="text">
+             <string>Label Font Size</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="1">
+           <widget class="QSpinBox" name="legendTitleFontSize"/>
+          </item>
+          <item row="3" column="0">
+           <widget class="QLabel" name="label">
+            <property name="text">
+             <string>Title Font Size</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="1">
+           <widget class="QSpinBox" name="legendLabelFontSize"/>
+          </item>
+          <item row="4" column="0" colspan="2">
+           <widget class="QCheckBox" name="legendBackgroundCheckBox">
+            <property name="text">
+             <string>Opaque Background</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
         </widget>
        </item>
       </layout>

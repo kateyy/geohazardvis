@@ -10,8 +10,6 @@
 #include <QDir>
 #include <QDebug>
 #include <QDialog>
-#include <QListWidget>
-#include <QDialogButtonBox>
 
 #include <vtkCommand.h>
 #include <vtkLookupTable.h>
@@ -158,7 +156,8 @@ void ColorMappingChooser::guiScalarsSelectionChanged(const QString & scalarsName
     updateGuiValueRanges();
 
     bool gradients = m_mapping->currentScalarsUseMappingLegend();
-    m_ui->gradientGroupBox->setEnabled(gradients);
+    m_ui->gradientGroupBoxContents->setEnabled(gradients);
+    m_ui->legendGroupBoxContents->setEnabled(gradients);
     m_ui->colorLegendCheckBox->setChecked(m_mapping->colorMappingLegendVisible());
     if (gradients)
         m_mapping->setGradient(selectedGradient());
@@ -462,7 +461,8 @@ void ColorMappingChooser::rebuildGui()
     m_qtConnect.clear();
 
     m_ui->scalarsComboBox->clear();
-    m_ui->gradientGroupBox->setEnabled(false);
+    m_ui->gradientGroupBoxContents->setEnabled(false);
+    m_ui->legendGroupBoxContents->setEnabled(false);
     m_ui->nanColorButton->setStyleSheet("");
     m_ui->colorLegendCheckBox->setChecked(false);
 
@@ -478,7 +478,8 @@ void ColorMappingChooser::rebuildGui()
 
         m_ui->scalarsComboBox->setCurrentText(newMapping->currentScalarsName());
         m_ui->gradientComboBox->setCurrentIndex(gradientIndex(newMapping->originalGradient()));
-        m_ui->gradientGroupBox->setEnabled(newMapping->currentScalarsUseMappingLegend());
+        m_ui->gradientGroupBoxContents->setEnabled(newMapping->currentScalarsUseMappingLegend());
+        m_ui->legendGroupBoxContents->setEnabled(newMapping->currentScalarsUseMappingLegend());
         m_ui->colorLegendCheckBox->setChecked(newMapping->colorMappingLegendVisible());
 
         const unsigned char * nanColorV = newMapping->gradient()->GetNanColorAsUnsignedChars();
