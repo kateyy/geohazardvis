@@ -48,6 +48,7 @@ InteractorStyle3D::InteractorStyle3D()
     , m_cellPicker(vtkSmartPointer<vtkCellPicker>::New())
     , m_selectedCellActor(vtkSmartPointer<vtkActor>::New())
     , m_selectedCellData(vtkSmartPointer<vtkPolyData>::New())
+    , m_currentlyHighlighted(nullptr, -1)
     , m_highlightFlashTimer(nullptr)
     , m_highlightFlashTime(new QTime())
     , m_mouseMoved(false)
@@ -252,13 +253,23 @@ void InteractorStyle3D::highlightCell(DataObject * dataObject, vtkIdType cellId)
 {
     if (cellId == -1)
     {
+        if (m_currentlyHighlighted.second < 0)
+            return;
+
         GetDefaultRenderer()->RemoveViewProp(m_selectedCellActor);
         GetDefaultRenderer()->GetRenderWindow()->Render();
+        m_currentlyHighlighted = { nullptr, -1 };
         return;
     }
 
     assert(dataObject);
 
+    // already highlighting this cell, so just flash again
+    if (m_currentlyHighlighted == QPair<DataObject *, vtkIdType>(dataObject, cellId))
+    {
+        flashHightlightedCell();
+        return;
+    }
 
     // extract picked triangle and create highlighting geometry
     // create two shifted polygons to work around occlusion
@@ -296,6 +307,8 @@ void InteractorStyle3D::highlightCell(DataObject * dataObject, vtkIdType cellId)
 
     GetDefaultRenderer()->AddViewProp(m_selectedCellActor);
     GetDefaultRenderer()->GetRenderWindow()->Render();
+
+    m_currentlyHighlighted = { dataObject, cellId };
 
     flashHightlightedCell();
 }
@@ -524,6 +537,10 @@ void InteractorStyle3D::flashHightlightedCell(int milliseconds)
             m_selectedCellActor->GetProperty()->SetColor(1, bg, bg);
             GetDefaultRenderer()->GetRenderWindow()->Render();
         });
+    }
+    else if (m_highlightFlashTimer->isActive())
+    {
+        return;
     }
 
     *m_highlightFlashTime = QTime::currentTime().addMSecs(milliseconds);

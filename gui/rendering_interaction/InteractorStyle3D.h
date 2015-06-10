@@ -57,6 +57,7 @@ protected:
     vtkSmartPointer<vtkCellPicker> m_cellPicker;
     vtkSmartPointer<vtkActor> m_selectedCellActor;
     vtkSmartPointer<vtkPolyData> m_selectedCellData;
+    QPair<DataObject *, vtkIdType> m_currentlyHighlighted;
 
     QTimer * m_highlightFlashTimer;
     QTime * m_highlightFlashTime;

@@ -47,6 +47,7 @@ protected:
 
     vtkSmartPointer<vtkPointPicker> m_pointPicker;
     vtkSmartPointer<vtkActor> m_highlightingActor;
+    QPair<DataObject *, vtkIdType> m_currentlyHighlighted;
 
     bool m_mouseMoved;
 };

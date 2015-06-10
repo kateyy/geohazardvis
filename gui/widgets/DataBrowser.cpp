@@ -57,6 +57,12 @@ void DataBrowser::setDataMapping(DataMapping * dataMapping)
 
 void DataBrowser::setSelectedData(DataObject * data)
 {
+    int row = m_tableModel->rowForDataObject(data);
+
+    auto currentSelection = m_ui->dataTableView->selectionModel()->selectedRows();
+    if (currentSelection.size() == 1 && currentSelection.first().row() == row)
+        return;
+
     m_ui->dataTableView->clearSelection();
     m_ui->dataTableView->selectRow(m_tableModel->rowForDataObject(data));
 }

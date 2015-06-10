@@ -34,6 +34,7 @@ InteractorStyleImage::InteractorStyleImage()
     : Superclass()
     , m_pointPicker(vtkSmartPointer<vtkPointPicker>::New())
     , m_highlightingActor(vtkSmartPointer<vtkActor>::New())
+    , m_currentlyHighlighted(nullptr, -1)
     , m_mouseMoved(false)
 {
     VTK_CREATE(vtkDiskSource, highlightingDisc);
@@ -167,12 +168,19 @@ void InteractorStyleImage::highlightCell(DataObject * dataObject, vtkIdType cell
 {
     if (cellId == -1)
     {
+        if (m_currentlyHighlighted.second < 0)
+            return;
+
         GetDefaultRenderer()->RemoveViewProp(m_highlightingActor);
         GetDefaultRenderer()->GetRenderWindow()->Render();
+        m_currentlyHighlighted = { nullptr, -1 };
         return;
     }
 
     assert(dataObject);
+
+    if (m_currentlyHighlighted == QPair<DataObject *, vtkIdType>(dataObject, cellId))
+        return;
 
     vtkImageData * image = vtkImageData::SafeDownCast(dataObject->dataSet());
     if (!image)
@@ -185,6 +193,8 @@ void InteractorStyleImage::highlightCell(DataObject * dataObject, vtkIdType cell
 
     GetDefaultRenderer()->AddViewProp(m_highlightingActor);
     GetDefaultRenderer()->GetRenderWindow()->Render();
+
+    m_currentlyHighlighted = { dataObject, cellId };
 }
 
 void InteractorStyleImage::lookAtCell(DataObject * /*polyData*/, vtkIdType /*cellId*/)
