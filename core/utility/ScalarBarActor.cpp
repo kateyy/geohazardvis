@@ -20,13 +20,15 @@ OrientedScalarBarActor::OrientedScalarBarActor()
     this->TitleTextProperty->BoldOff();
     this->TitleTextProperty->ItalicOff();
 
-    //m_colorMappingLegend->SetNumberOfLabels(7);
-
     this->LabelTextProperty->SetFontSize(5);
     this->LabelTextProperty->ShadowOff();
     this->LabelTextProperty->SetColor(0, 0, 0);
     this->LabelTextProperty->BoldOff();
     this->LabelTextProperty->ItalicOff();
+
+    this->NumberOfLabels = 7;
+    this->AddRangeLabels = true;
+    this->AddRangeAnnotations = false;
 }
 
 void OrientedScalarBarActor::PrintSelf(ostream &os, vtkIndent indent)
