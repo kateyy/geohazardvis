@@ -62,6 +62,7 @@
      </property>
     </widget>
     <addaction name="actionNew_Render_View"/>
+    <addaction name="actionObservation_Model_Residual_View"/>
     <addaction name="menuSynchronize_Selections"/>
     <addaction name="separator"/>
     <addaction name="actionDark_Style"/>
@@ -79,7 +80,6 @@
      <string>&amp;Data Sets</string>
     </property>
     <addaction name="actionApply_Digital_Elevation_Model"/>
-    <addaction name="actionObservation_Model_Residual_View"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menu_Data_Sets"/>
