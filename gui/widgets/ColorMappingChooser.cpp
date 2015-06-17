@@ -124,7 +124,8 @@ void ColorMappingChooser::setCurrentRenderView(AbstractRenderView * renderView)
     }
     for (auto it = m_colorLegendObserverIds.begin(); it != m_colorLegendObserverIds.end(); ++it)
     {
-        it.key()->RemoveObserver(it.value());
+        if (it.key())
+            it.key()->RemoveObserver(it.value());
     }
     m_colorLegendObserverIds.clear();
 

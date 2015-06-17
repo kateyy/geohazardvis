@@ -5,6 +5,7 @@
 #include <QMap>
 
 #include <vtkSmartPointer.h>
+#include <vtkWeakPointer.h>
 
 #include <gui/gui_api.h>
 
@@ -77,6 +78,6 @@ private:
     /** check if we are moving the actor or if the user interacts */
     bool m_movingColorLegend;
     /** Mapping from subject (color legend coordinate, text property, etc) to observer id */
-    QMap<vtkObject *, int> m_colorLegendObserverIds;
+    QMap<vtkWeakPointer<vtkObject>, int> m_colorLegendObserverIds;
     QList<QMetaObject::Connection> m_qtConnect;
 };
