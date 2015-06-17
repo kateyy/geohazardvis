@@ -11,7 +11,6 @@ class CORE_API VectorGrid3DDataObject : public DataObject
 {
 public:
     VectorGrid3DDataObject(const QString & name, vtkImageData * dataSet);
-    ~VectorGrid3DDataObject() override;
 
     bool is3D() const override;
 

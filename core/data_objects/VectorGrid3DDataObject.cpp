@@ -19,8 +19,6 @@ VectorGrid3DDataObject::VectorGrid3DDataObject(const QString & name, vtkImageDat
     }
 }
 
-VectorGrid3DDataObject::~VectorGrid3DDataObject() = default;
-
 bool VectorGrid3DDataObject::is3D() const
 {
     return true;
