@@ -5,6 +5,7 @@
 #include <type_traits>
 
 #include <vtkAlgorithm.h>
+#include <vtkCellData.h>
 #include <vtkCharArray.h>
 #include <vtkDataSet.h>
 #include <vtkEventQtSlotConnect.h>
@@ -12,6 +13,7 @@
 #include <vtkInformation.h>
 #include <vtkInformationStringKey.h>
 #include <vtkInformationIntegerKey.h>
+#include <vtkPointData.h>
 #include <vtkSmartPointer.h>
 
 #include <core/utility/vtkhelper.h>
@@ -30,6 +32,10 @@ DataObject::DataObject(const QString & name, vtkDataSet * dataSet)
         dataSet->GetBounds(d_ptr->m_bounds);
 
         connectObserver("dataChanged", *dataSet, vtkCommand::ModifiedEvent, *this, &DataObject::_dataChanged);
+
+        connectObserver("attributeArraysChanged", *dataSet->GetPointData(), vtkCommand::ModifiedEvent, *this, &DataObject::_attributeArraysChanged);
+        connectObserver("attributeArraysChanged", *dataSet->GetCellData(), vtkCommand::ModifiedEvent, *this, &DataObject::_attributeArraysChanged);
+        connectObserver("attributeArraysChanged", *dataSet->GetFieldData(), vtkCommand::ModifiedEvent, *this, &DataObject::_attributeArraysChanged);
 
         bool resetName = true;
         vtkFieldData * fieldData = dataSet->GetFieldData();

@@ -2,7 +2,8 @@
 
 #include <cassert>
 
-#include <core/DataSetHandler.h>
+#include <core/data_objects/DataObject.h>
+#include <core/rendered_data/RenderedData.h>
 #include <core/glyph_mapping/GlyphMappingData.h>
 #include <core/glyph_mapping/GlyphMappingRegistry.h>
 
@@ -12,8 +13,9 @@ GlyphMapping::GlyphMapping(RenderedData * renderedData)
 {
     m_vectors = GlyphMappingRegistry::instance().createMappingsValidFor(m_renderedData);
 
-    connect(&DataSetHandler::instance(), &DataSetHandler::rawVectorsChanged,
-        this, &GlyphMapping::updateAvailableVectors);
+    // after adding an attribute array, updateAvailableVectors() will again trigger the Modified event on point/cell/field data
+    // in that case, the next event should only be processed after updateAvailableVectors() finished
+    connect(renderedData->dataObject(), &DataObject::attributeArraysChanged, this, &GlyphMapping::updateAvailableVectors, Qt::QueuedConnection);
 }
 
 GlyphMapping::~GlyphMapping()

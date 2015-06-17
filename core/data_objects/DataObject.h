@@ -81,6 +81,7 @@ protected:
     void disconnectAllEvents();
 
     void _dataChanged();
+    void _attributeArraysChanged(vtkObject * caller, unsigned long event, void * callData);
 
 protected:
     /** when data set values changed, check whether this also affects the bounds*/

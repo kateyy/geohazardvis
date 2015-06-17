@@ -34,7 +34,7 @@ GlyphMapping * RenderedData3D::glyphMapping()
     if (!m_glyphMapping)
     {
         m_glyphMapping = new GlyphMapping(this);
-        connect(m_glyphMapping, &GlyphMapping::vectorsChanged, this, &RenderedData::viewPropCollectionChanged);
+        connect(m_glyphMapping, &GlyphMapping::vectorsChanged, this, &RenderedData3D::invalidateViewProps);
     }
     return m_glyphMapping;
 }

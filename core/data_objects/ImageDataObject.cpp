@@ -34,8 +34,6 @@ RenderedData * ImageDataObject::createRendered()
 void ImageDataObject::addDataArray(vtkDataArray * dataArray)
 {
     dataSet()->GetPointData()->AddArray(dataArray);
-
-    emit attributeArraysChanged();
 }
 
 const QString & ImageDataObject::dataTypeName() const

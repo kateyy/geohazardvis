@@ -79,8 +79,6 @@ RenderedData * PolyDataObject::createRendered()
 void PolyDataObject::addDataArray(vtkDataArray * dataArray)
 {
     dataSet()->GetCellData()->AddArray(dataArray);
-
-    emit attributeArraysChanged();
 }
 
 const QString & PolyDataObject::dataTypeName() const

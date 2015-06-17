@@ -5,7 +5,6 @@
 #include <vtkLookupTable.h>
 
 #include <core/AbstractVisualizedData.h>
-#include <core/DataSetHandler.h>
 #include <core/data_objects/DataObject.h>
 #include <core/color_mapping/ColorMappingData.h>
 #include <core/color_mapping/ColorMappingRegistry.h>
@@ -26,11 +25,8 @@ ColorMapping::ColorMapping(QObject * parent)
 
     clear();
 
-    connect(&DataSetHandler::instance(), &DataSetHandler::rawVectorsChanged,
-        this, &ColorMapping::updateAvailableScalars);
-
     connect(m_glyphListener, &GlyphColorMappingGlyphListener::glyphMappingChanged,
-        this, &ColorMapping::updateAvailableScalars);
+        this, &ColorMapping::updateAvailableScalars, Qt::QueuedConnection);
 }
 
 ColorMapping::~ColorMapping()
@@ -57,7 +53,7 @@ void ColorMapping::setVisualizedData(const QList<AbstractVisualizedData *> & vis
         // pass our (persistent) gradient object
         vis->setColorMappingGradient(m_gradient);
 
-        connect(dataObject, &DataObject::attributeArraysChanged, this, &ColorMapping::updateAvailableScalars);
+        connect(dataObject, &DataObject::attributeArraysChanged, this, &ColorMapping::updateAvailableScalars, Qt::QueuedConnection);
     }
 
     m_scalars = ColorMappingRegistry::instance().createMappingsValidFor(visualizedData);
