@@ -15,7 +15,10 @@ ImageDataObject::ImageDataObject(const QString & name, vtkImageData * dataSet)
     : DataObject(name, dataSet)
 {
     vtkDataArray * data = dataSet->GetPointData()->GetScalars();
-    vtkQtConnect()->Connect(data, vtkCommand::ModifiedEvent, this, SLOT(_dataChanged()));
+    if (data)
+    {
+        connectObserver("dataChanged", *data, vtkCommand::ModifiedEvent, *this, &ImageDataObject::_dataChanged);
+    }
 }
 
 bool ImageDataObject::is3D() const

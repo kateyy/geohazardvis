@@ -1,14 +1,16 @@
 #pragma once
 
+#include <QMap>
 #include <QString>
 
 #include <vtkSmartPointer.h>
+#include <vtkWeakPointer.h>
 
 
-class vtkDataSet;
-class vtkEventQtSlotConnect;
-class vtkInformationIntegerPointerKey;
 class vtkAlgorithm;
+class vtkDataSet;
+class vtkInformationIntegerPointerKey;
+class vtkObject;
 
 class DataObject;
 class QVtkTableModel;
@@ -25,6 +27,9 @@ public:
 
     vtkAlgorithm * trivialProducer();
 
+    void disconnectEventGroup(const QString & eventName);
+    void disconnectAllEvents();
+
 public:
     QString m_name;
 
@@ -33,7 +38,7 @@ public:
 
     double m_bounds[6];
 
-    vtkSmartPointer<vtkEventQtSlotConnect> m_vtkQtConnect;
+    QMap<QString, QMap<vtkWeakPointer<vtkObject>, unsigned long>> m_namedObserverIds;
 
 protected:
     DataObject & q_ptr;

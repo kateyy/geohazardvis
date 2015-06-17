@@ -11,7 +11,7 @@ class vtkInformationIntegerKey;
 class vtkDataArray;
 class vtkDataSet;
 class vtkAlgorithmOutput;
-class vtkEventQtSlotConnect;
+class vtkObject;
 class QVtkTableModel;
 class RenderedData;
 class Context2DData;
@@ -71,8 +71,15 @@ signals:
 protected:
     virtual QVtkTableModel * createTableModel() = 0;
 
-    vtkEventQtSlotConnect * vtkQtConnect();
-protected slots:
+    template<typename U, typename T>
+    void connectObserver(const QString & eventName, vtkObject & subject,
+        unsigned long event, U & observer, void(T::* slot)(void));
+    template<typename U, typename T>
+    void connectObserver(const QString & eventName, vtkObject & subject,
+        unsigned long event, U & observer, void(T::* slot)(vtkObject*, unsigned long, void*));
+    void disconnectEventGroup(const QString & eventName);
+    void disconnectAllEvents();
+
     void _dataChanged();
 
 protected:
@@ -85,5 +92,22 @@ protected:
     virtual void valueRangeChangedEvent();
 
 private:
+    void addObserver(const QString & eventName, vtkObject & subject, unsigned long tag);
+
+private:
     DataObjectPrivate * d_ptr;
 };
+
+template<typename U, typename T>
+void DataObject::connectObserver(const QString & eventName, vtkObject & subject, unsigned long event, U & observer, void(T::* slot)(void))
+{
+    addObserver(eventName, subject,
+        subject.AddObserver(event, &observer, slot));
+}
+
+template<typename U, typename T>
+void DataObject::connectObserver(const QString & eventName, vtkObject & subject, unsigned long event, U & observer, void(T::* slot)(vtkObject*, unsigned long, void*))
+{
+    addObserver(eventName, subject,
+        subject.AddObserver(event, &observer, slot));
+}

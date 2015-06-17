@@ -29,7 +29,7 @@ DataObject::DataObject(const QString & name, vtkDataSet * dataSet)
     {
         dataSet->GetBounds(d_ptr->m_bounds);
 
-        d_ptr->m_vtkQtConnect->Connect(dataSet, vtkCommand::ModifiedEvent, this, SLOT(_dataChanged()));
+        connectObserver("dataChanged", *dataSet, vtkCommand::ModifiedEvent, *this, &DataObject::_dataChanged);
 
         bool resetName = true;
         vtkFieldData * fieldData = dataSet->GetFieldData();
@@ -51,6 +51,7 @@ DataObject::DataObject(const QString & name, vtkDataSet * dataSet)
 
 DataObject::~DataObject()
 {
+    disconnectAllEvents();
     delete d_ptr;
 }
 
@@ -129,11 +130,6 @@ void DataObject::setDataObject(vtkInformation * information, DataObject * dataOb
     information->Set(DataObjectPrivate::DataObjectKey(), reinterpret_cast<int *>(dataObject), 1);
 }
 
-vtkEventQtSlotConnect * DataObject::vtkQtConnect()
-{
-    return d_ptr->m_vtkQtConnect;
-}
-
 bool DataObject::checkIfBoundsChanged()
 {
     double newBounds[6];
@@ -172,6 +168,16 @@ void DataObject::valueRangeChangedEvent()
 {
 }
 
+void DataObject::disconnectEventGroup(const QString & eventName)
+{
+    d_ptr->disconnectEventGroup(eventName);
+}
+
+void DataObject::disconnectAllEvents()
+{
+    d_ptr->disconnectAllEvents();
+}
+
 void DataObject::_dataChanged()
 {
     dataChangedEvent();
@@ -191,4 +197,14 @@ void DataObject::_dataChanged()
 
         emit valueRangeChanged();
     }
+}
+
+void DataObject::_attributeArraysChanged(vtkObject * /*caller*/, unsigned long /*event*/, void * /*callData*/)
+{
+    emit attributeArraysChanged();
+}
+
+void DataObject::addObserver(const QString & eventName, vtkObject & subject, unsigned long tag)
+{
+    d_ptr->m_namedObserverIds[eventName].insert(&subject, tag);
 }

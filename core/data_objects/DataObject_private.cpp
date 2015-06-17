@@ -1,7 +1,6 @@
 #include "DataObject_private.h"
 
 #include <vtkDataSet.h>
-#include <vtkEventQtSlotConnect.h>
 #include <vtkInformationIntegerPointerKey.h>
 #include <vtkTrivialProducer.h>
 
@@ -17,7 +16,6 @@ DataObjectPrivate::DataObjectPrivate(DataObject & dataObject, const QString & na
     , m_dataSet(dataSet)
     , m_tableModel(nullptr)
     , m_bounds()
-    , m_vtkQtConnect(vtkSmartPointer<vtkEventQtSlotConnect>::New())
     , q_ptr(dataObject)
 {
 }
@@ -37,4 +35,25 @@ vtkAlgorithm * DataObjectPrivate::trivialProducer()
     }
 
     return m_trivialProducer;
+}
+
+void DataObjectPrivate::disconnectEventGroup(const QString & eventName)
+{
+    auto && map = m_namedObserverIds[eventName];
+    for (auto it = map.begin(); it != map.end(); ++it)
+    {
+        if (!it.key())    // subject already deleted
+            return;
+
+        it.key()->RemoveObserver(it.value());
+    }
+    m_namedObserverIds.remove(eventName);
+}
+
+void DataObjectPrivate::disconnectAllEvents()
+{
+    for (auto eventName : m_namedObserverIds.keys())
+    {
+        disconnectEventGroup(eventName);
+    }
 }

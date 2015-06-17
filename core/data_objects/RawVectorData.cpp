@@ -12,7 +12,7 @@ RawVectorData::RawVectorData(const QString & name, vtkFloatArray * dataArray)
 {
     dataArray->SetName(name.toUtf8().data());
 
-    vtkQtConnect()->Connect(dataArray, vtkCommand::ModifiedEvent, this, SLOT(_dataChanged()));
+    connectObserver("dataChanged", *dataArray, vtkCommand::ModifiedEvent, *this, &RawVectorData::_dataChanged);
 }
 
 RawVectorData::~RawVectorData() = default;
