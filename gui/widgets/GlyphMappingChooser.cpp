@@ -105,10 +105,11 @@ void GlyphMappingChooser::setSelectedData(DataObject * dataObject)
         }
     }
 
-    assert(!renderedData || dynamic_cast<RenderedData3D *>(renderedData));
-    RenderedData3D * rendered3D = static_cast<RenderedData3D *>(renderedData);
+    // here the user selected an object in the Browser, that is not rendered in the current view
+    if (dataObject && !renderedData)
+        return;
 
-    GlyphMapping * newMapping = rendered3D ? rendered3D->glyphMapping() : nullptr;
+    GlyphMapping * newMapping = renderedData ? renderedData->glyphMapping() : nullptr;
 
     if (newMapping == m_mapping)
         return;
