@@ -190,7 +190,8 @@ void DataBrowser::menuAssignDataToIndexes(const QPoint & position, DataObject * 
         QAction * assignAction = assignMenu->addAction(indexes->name());
         connect(assignAction, &QAction::triggered,
             [indexes, dataArray] (bool) {
-            indexes->addDataArray(dataArray);
+            assert(dataArray);
+            indexes->addDataArray(*dataArray);
         });
         }
 

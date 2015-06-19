@@ -5,7 +5,7 @@
 #include <vtkPropCollection.h>
 
 
-RenderedData::RenderedData(ContentType contentType, DataObject * dataObject)
+RenderedData::RenderedData(ContentType contentType, DataObject & dataObject)
     : AbstractVisualizedData(contentType, dataObject)
     , m_viewPropsInvalid(true)
 {

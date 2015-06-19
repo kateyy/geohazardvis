@@ -10,16 +10,14 @@
 #include <core/data_objects/DataObject.h>
 
 
-AbstractVisualizedData::AbstractVisualizedData(ContentType contentType, DataObject * dataObject, QObject * parent)
+AbstractVisualizedData::AbstractVisualizedData(ContentType contentType, DataObject & dataObject, QObject * parent)
     : QObject(parent)
     , m_scalars(nullptr)
     , m_contentType(contentType)
     , m_dataObject(dataObject)
     , m_isVisible(true)
 {
-    assert(m_dataObject);
-
-    connect(dataObject, &DataObject::dataChanged, this, &AbstractVisualizedData::geometryChanged);
+    connect(&dataObject, &DataObject::dataChanged, this, &AbstractVisualizedData::geometryChanged);
 }
 
 ContentType AbstractVisualizedData::contentType() const
@@ -27,12 +25,12 @@ ContentType AbstractVisualizedData::contentType() const
     return m_contentType;
 }
 
-DataObject * AbstractVisualizedData::dataObject()
+DataObject & AbstractVisualizedData::dataObject()
 {
     return m_dataObject;
 }
 
-const DataObject * AbstractVisualizedData::dataObject() const
+const DataObject & AbstractVisualizedData::dataObject() const
 {
     return m_dataObject;
 }
@@ -80,7 +78,7 @@ vtkAlgorithmOutput * AbstractVisualizedData::colorMappingInput(int connection)
 {
     assert(connection == 0);
 
-    return dataObject()->processedOutputPort();
+    return dataObject().processedOutputPort();
 }
 
 vtkDataSet * AbstractVisualizedData::colorMappingInputData(int connection)

@@ -18,8 +18,8 @@
 #include <core/table_model/QVtkTableModelPolyData.h>
 
 
-PolyDataObject::PolyDataObject(const QString & name, vtkPolyData * dataSet)
-    : DataObject(name, dataSet)
+PolyDataObject::PolyDataObject(const QString & name, vtkPolyData & dataSet)
+    : DataObject(name, &dataSet)
     , m_cellNormals(vtkSmartPointer<vtkPolyDataNormals>::New())
     , m_cellCenters()
     , m_is2p5D()
@@ -27,7 +27,7 @@ PolyDataObject::PolyDataObject(const QString & name, vtkPolyData * dataSet)
 {
     m_cellNormals->ComputeCellNormalsOn();
     m_cellNormals->ComputePointNormalsOff();
-    m_cellNormals->SetInputData(dataSet);
+    m_cellNormals->SetInputData(&dataSet);
 }
 
 bool PolyDataObject::is3D() const
@@ -73,12 +73,12 @@ vtkAlgorithmOutput * PolyDataObject::cellCentersOutputPort()
 
 RenderedData * PolyDataObject::createRendered()
 {
-    return new RenderedPolyData(this);
+    return new RenderedPolyData(*this);
 }
 
-void PolyDataObject::addDataArray(vtkDataArray * dataArray)
+void PolyDataObject::addDataArray(vtkDataArray & dataArray)
 {
-    dataSet()->GetCellData()->AddArray(dataArray);
+    dataSet()->GetCellData()->AddArray(&dataArray);
 }
 
 const QString & PolyDataObject::dataTypeName() const

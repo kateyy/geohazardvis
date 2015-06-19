@@ -54,15 +54,13 @@ vtkSmartPointer<vtkAlgorithm> createSimpleArrow()
 
 }
 
-GlyphMappingData::GlyphMappingData(RenderedData * renderedData)
+GlyphMappingData::GlyphMappingData(RenderedData & renderedData)
     : m_renderedData(renderedData)
     , m_isVisible(false)
     , m_actor(vtkSmartPointer<vtkActor>::New())
     , m_colorMappingData(nullptr)
     , m_isValid(true)
 {
-    assert(renderedData);
-
     VTK_CREATE(vtkLineSource, lineArrow);
     lineArrow->SetPoint1(0.f, 0.f, 0.f);
     lineArrow->SetPoint2(1.f, 0.f, 0.f);
@@ -80,7 +78,7 @@ GlyphMappingData::GlyphMappingData(RenderedData * renderedData)
     m_arrowGlyph->ScalingOn();
     m_arrowGlyph->SetScaleModeToDataScalingOff();
     m_arrowGlyph->OrientOn();
-    double * bounds = renderedData->dataObject()->dataSet()->GetBounds();
+    double * bounds = renderedData.dataObject().dataSet()->GetBounds();
     double maxBoundsSize = std::max(bounds[1] - bounds[0], std::max(bounds[3] - bounds[2], bounds[5] - bounds[4]));
     m_arrowGlyph->SetScaleFactor(maxBoundsSize * 0.1);
 
@@ -95,8 +93,6 @@ GlyphMappingData::GlyphMappingData(RenderedData * renderedData)
     m_actor->PickableOff();
     m_actor->SetMapper(m_mapper);
 }
-
-GlyphMappingData::~GlyphMappingData() = default;
 
 bool GlyphMappingData::isVisible() const
 {
@@ -315,12 +311,12 @@ void GlyphMappingData::initialize()
     m_arrowGlyph->SetInputConnection(vectorDataOutputPort());
 }
 
-DataObject * GlyphMappingData::dataObject()
+DataObject & GlyphMappingData::dataObject()
 {
-    return m_renderedData->dataObject();
+    return m_renderedData.dataObject();
 }
 
-RenderedData * GlyphMappingData::renderedData()
+RenderedData & GlyphMappingData::renderedData()
 {
     return m_renderedData;
 }
@@ -344,9 +340,9 @@ void GlyphMappingData::colorMappingChangedEvent(ColorMappingData * colorMappingD
     if (colorMappingData && colorMappingData->usesFilter())
     {
         m_arrowGlyph->SetInputConnection(
-            colorMappingData->createFilter(renderedData())->GetOutputPort());
+            colorMappingData->createFilter(&renderedData())->GetOutputPort());
 
-        colorMappingData->configureMapper(renderedData(), m_mapper);
+        colorMappingData->configureMapper(&renderedData(), m_mapper);
     }
     else
     {

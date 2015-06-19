@@ -25,12 +25,12 @@ class CORE_API AbstractVisualizedData : public QObject
     Q_OBJECT
 
 public:
-    AbstractVisualizedData(ContentType contentType, DataObject * dataObject, QObject * parent = nullptr);
+    AbstractVisualizedData(ContentType contentType, DataObject & dataObject, QObject * parent = nullptr);
 
     ContentType contentType() const;
 
-    DataObject * dataObject();
-    const DataObject * dataObject() const;
+    DataObject & dataObject();
+    const DataObject & dataObject() const;
 
     bool isVisible() const;
     void setVisible(bool visible);
@@ -62,7 +62,7 @@ protected:
 
 private:
     const ContentType m_contentType;
-    DataObject * m_dataObject;
+    DataObject & m_dataObject;
 
     bool m_isVisible;
 };

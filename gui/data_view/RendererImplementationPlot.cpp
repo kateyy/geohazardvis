@@ -242,7 +242,7 @@ void RendererImplementationPlot::fetchContextItems(Context2DData * data)
 void RendererImplementationPlot::dataVisibilityChanged(Context2DData * data)
 {
     if (data->isVisible())
-        connect(data->dataObject(), &DataObject::boundsChanged, this, &RendererImplementationPlot::updateBounds);
+        connect(&data->dataObject(), &DataObject::boundsChanged, this, &RendererImplementationPlot::updateBounds);
     else
-        disconnect(data->dataObject(), &DataObject::boundsChanged, this, &RendererImplementationPlot::updateBounds);
+        disconnect(&data->dataObject(), &DataObject::boundsChanged, this, &RendererImplementationPlot::updateBounds);
 }

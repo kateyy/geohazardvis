@@ -79,7 +79,7 @@ DataObject * MatricesToVtk::loadIndexedTriangles(const QString & name, const std
         polyData->GetCellData()->AddArray(a);
     }
 
-    return new PolyDataObject(name, polyData);
+    return new PolyDataObject(name, *polyData);
 }
 
 DataObject * MatricesToVtk::loadDEM(const QString & name, const std::vector<ReadDataSet> & datasets)
@@ -111,7 +111,7 @@ DataObject * MatricesToVtk::loadDEM(const QString & name, const std::vector<Read
         }
     }
 
-    DataObject * dataObject = new ImageDataObject(name, image);
+    DataObject * dataObject = new ImageDataObject(name, *image);
 
     return dataObject;
 }
@@ -152,7 +152,7 @@ DataObject * MatricesToVtk::loadGrid2D(const QString & name, const std::vector<R
 
     image->GetPointData()->SetScalars(pointData);
 
-    return new ImageDataObject(name, image);
+    return new ImageDataObject(name, *image);
 }
 
 DataObject * MatricesToVtk::loadGrid3D(const QString & name, const std::vector<ReadDataSet> & datasets)
@@ -300,7 +300,7 @@ DataObject * MatricesToVtk::loadGrid3D(const QString & name, const std::vector<R
         }
     }
 
-    return new VectorGrid3DDataObject(name, image);
+    return new VectorGrid3DDataObject(name, *image);
 }
 
 vtkPolyData * MatricesToVtk::parsePoints(const InputVector & parsedData, size_t firstColumn)
@@ -398,7 +398,7 @@ DataObject * MatricesToVtk::readRawFile(const QString & fileName)
 
     QFileInfo fInfo(fileName);
 
-    return new RawVectorData(fInfo.baseName(), dataArray);
+    return new RawVectorData(fInfo.baseName(), *dataArray);
 }
 
 vtkFloatArray * MatricesToVtk::parseFloatVector(const InputVector & parsedData, const QString & arrayName, size_t firstColumn, size_t lastColumn)

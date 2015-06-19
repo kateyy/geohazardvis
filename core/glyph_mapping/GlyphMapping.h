@@ -22,7 +22,7 @@ class CORE_API GlyphMapping : public QObject
     Q_OBJECT
 
 public:
-    GlyphMapping(RenderedData * renderedData);
+    GlyphMapping(RenderedData & renderedData);
     ~GlyphMapping() override;
 
     /** names of vectors that can be used with my data */
@@ -30,7 +30,7 @@ public:
     /** list of vector data that can be used with my data */
     const QMap<QString, GlyphMappingData *> & vectors() const;
 
-    const RenderedData * renderedData() const;
+    const RenderedData & renderedData() const;
 
 signals:
     void vectorsChanged();
@@ -40,7 +40,7 @@ private slots:
     void updateAvailableVectors();
 
 private:
-    RenderedData * m_renderedData;
+    RenderedData & m_renderedData;
 
     QMap<QString, GlyphMappingData *> m_vectors;
 };

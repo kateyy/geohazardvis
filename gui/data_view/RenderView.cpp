@@ -56,7 +56,7 @@ QString RenderView::friendlyName() const
 {
     QString name;
     for (AbstractVisualizedData * renderedData : m_contents)
-        name += ", " + renderedData->dataObject()->name();
+        name += ", " + renderedData->dataObject().name();
 
     if (name.isEmpty())
         name = "(empty)";
@@ -253,7 +253,7 @@ QList<DataObject *> RenderView::dataObjectsImpl(int /*subViewIndex*/) const
 {
     QList<DataObject *> dataObjects;
     for (auto && vis : m_contents)
-        dataObjects << vis->dataObject();
+        dataObjects << &vis->dataObject();
 
     return dataObjects;
 }
@@ -319,7 +319,7 @@ DataObject * RenderView::selectedData() const
     auto selected = implementation().selectedData();
 
     if (!selected && !m_contents.isEmpty())
-        selected = m_contents.first()->dataObject();
+        selected = &m_contents.first()->dataObject();
 
     return selected;
 }
@@ -359,7 +359,7 @@ const vtkRenderWindow * RenderView::renderWindow() const
 
 void RenderView::updateGuiForSelectedData(AbstractVisualizedData * renderedData)
 {
-    DataObject * current = renderedData ? renderedData->dataObject() : nullptr;
+    DataObject * current = renderedData ? &renderedData->dataObject() : nullptr;
 
     updateTitle();
 

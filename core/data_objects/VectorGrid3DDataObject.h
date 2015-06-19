@@ -10,14 +10,14 @@ class vtkAssignAttribute;
 class CORE_API VectorGrid3DDataObject : public DataObject
 {
 public:
-    VectorGrid3DDataObject(const QString & name, vtkImageData * dataSet);
+    VectorGrid3DDataObject(const QString & name, vtkImageData & dataSet);
 
     bool is3D() const override;
 
     /** create a rendered instance */
     RenderedData * createRendered() override;
 
-    void addDataArray(vtkDataArray * dataArray) override;
+    void addDataArray(vtkDataArray & dataArray) override;
 
     const QString & dataTypeName() const override;
     static const QString & dataTypeName_s();

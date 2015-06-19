@@ -165,7 +165,7 @@ QList<DataObject *> RenderViewStrategyImage2D::filterCompatibleObjects(const QLi
 bool RenderViewStrategyImage2D::canApplyTo(const QList<RenderedData *> & renderedData)
 {
     for (RenderedData * rendered : renderedData)
-        if (!dynamic_cast<ImageDataObject *>(rendered->dataObject()))
+        if (!dynamic_cast<ImageDataObject *>(&rendered->dataObject()))
             return false;
 
     return true;
@@ -208,7 +208,7 @@ void RenderViewStrategyImage2D::startProfilePlot()
     {
         QString name = inputImage->name() + " plot";
 
-        m_previewProfiles << new ImageProfileData(name, inputImage);
+        m_previewProfiles << new ImageProfileData(name, *inputImage);
     }
 
     // place the line widget

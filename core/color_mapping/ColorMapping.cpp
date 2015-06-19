@@ -40,7 +40,7 @@ void ColorMapping::setVisualizedData(const QList<AbstractVisualizedData *> & vis
     for (AbstractVisualizedData * vis : m_visualizedData)
     {
         vis->setScalarsForColorMapping(nullptr);
-        disconnect(vis->dataObject(), &DataObject::attributeArraysChanged, this, &ColorMapping::updateAvailableScalars);
+        disconnect(&vis->dataObject(), &DataObject::attributeArraysChanged, this, &ColorMapping::updateAvailableScalars);
     }
 
     QString lastScalars = currentScalarsName();
@@ -52,11 +52,10 @@ void ColorMapping::setVisualizedData(const QList<AbstractVisualizedData *> & vis
 
     for (AbstractVisualizedData * vis : m_visualizedData)
     {
-        DataObject * dataObject = vis->dataObject();
         // pass our (persistent) gradient object
         vis->setColorMappingGradient(m_gradient);
 
-        connect(dataObject, &DataObject::attributeArraysChanged, this, &ColorMapping::updateAvailableScalars, Qt::QueuedConnection);
+        connect(&vis->dataObject(), &DataObject::attributeArraysChanged, this, &ColorMapping::updateAvailableScalars, Qt::QueuedConnection);
     }
 
     m_scalars = ColorMappingRegistry::instance().createMappingsValidFor(visualizedData);

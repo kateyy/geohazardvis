@@ -9,13 +9,13 @@ class vtkImageData;
 class CORE_API ImageDataObject : public DataObject
 {
 public:
-    ImageDataObject(const QString & name, vtkImageData * dataSet);
+    ImageDataObject(const QString & name, vtkImageData & dataSet);
 
     bool is3D() const override;
 
     RenderedData * createRendered() override;
 
-    void addDataArray(vtkDataArray * dataArray) override;
+    void addDataArray(vtkDataArray & dataArray) override;
 
     const QString & dataTypeName() const override;
     static const QString & dataTypeName_s();

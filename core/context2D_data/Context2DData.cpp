@@ -8,7 +8,7 @@
 #include <core/context2D_data/vtkPlotCollection.h>
 
 
-Context2DData::Context2DData(DataObject * dataObject)
+Context2DData::Context2DData(DataObject & dataObject)
     : AbstractVisualizedData(ContentType::Context2D, dataObject)
     , m_plotsInvalidated(true)
 {

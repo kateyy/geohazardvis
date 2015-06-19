@@ -12,7 +12,7 @@
 #include <core/glyph_mapping/GlyphMappingData.h>
 
 
-RenderedData3D::RenderedData3D(DataObject * dataObject)
+RenderedData3D::RenderedData3D(DataObject & dataObject)
     : RenderedData(ContentType::Rendered3D, dataObject)
     , m_glyphMapping(nullptr)
 {
@@ -29,14 +29,14 @@ vtkSmartPointer<vtkProp3DCollection> RenderedData3D::viewProps3D()
     return static_cast<vtkProp3DCollection *>(viewProps().Get());
 }
 
-GlyphMapping * RenderedData3D::glyphMapping()
+GlyphMapping & RenderedData3D::glyphMapping()
 {
     if (!m_glyphMapping)
     {
-        m_glyphMapping = new GlyphMapping(this);
+        m_glyphMapping = new GlyphMapping(*this);
         connect(m_glyphMapping, &GlyphMapping::vectorsChanged, this, &RenderedData3D::invalidateViewProps);
     }
-    return m_glyphMapping;
+    return *m_glyphMapping;
 }
 
 vtkProperty * RenderedData3D::renderProperty()
@@ -61,7 +61,7 @@ vtkSmartPointer<vtkProp3DCollection> RenderedData3D::fetchViewProps3D()
 {
     VTK_CREATE(vtkProp3DCollection, props);
 
-    for (auto * v : glyphMapping()->vectors())
+    for (auto * v : glyphMapping().vectors())
         props->AddItem(v->actor());
 
     return props;

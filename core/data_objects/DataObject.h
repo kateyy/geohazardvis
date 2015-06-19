@@ -54,7 +54,7 @@ public:
 
     /** assign some kind of data array to my indexes.
         Let subclasses decide how to proceed with it; ignores this call by default */
-    virtual void addDataArray(vtkDataArray * dataArray);
+    virtual void addDataArray(vtkDataArray & dataArray);
 
     /** Queue signals and events such as dataChanged(), boundsChanged() until executeDeferredEvents is called. 
       * This is required, when changing significant parts of the underlaying data set. 
@@ -67,8 +67,11 @@ public:
     static vtkInformationStringKey * NameKey();
     static vtkInformationIntegerKey * ArrayIsAuxiliaryKey();
 
-    static DataObject * getDataObject(vtkInformation * information);
-    static void setDataObject(vtkInformation * information, DataObject * dataObject);
+    static DataObject * getDataObject(vtkInformation & information);
+    static void setDataObject(vtkInformation & information, DataObject * dataObject);
+
+    DataObject(const DataObject &) = delete;
+    void operator=(const DataObject &) = delete;
 
 signals:
     void dataChanged();

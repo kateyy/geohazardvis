@@ -8,14 +8,14 @@
 #include <core/glyph_mapping/GlyphMappingRegistry.h>
 
 
-GlyphMapping::GlyphMapping(RenderedData * renderedData)
+GlyphMapping::GlyphMapping(RenderedData & renderedData)
     : m_renderedData(renderedData)
 {
     m_vectors = GlyphMappingRegistry::instance().createMappingsValidFor(m_renderedData);
 
     // after adding an attribute array, updateAvailableVectors() will again trigger the Modified event on point/cell/field data
     // in that case, the next event should only be processed after updateAvailableVectors() finished
-    connect(renderedData->dataObject(), &DataObject::attributeArraysChanged, this, &GlyphMapping::updateAvailableVectors, Qt::QueuedConnection);
+    connect(&renderedData.dataObject(), &DataObject::attributeArraysChanged, this, &GlyphMapping::updateAvailableVectors, Qt::QueuedConnection);
 }
 
 GlyphMapping::~GlyphMapping()
@@ -33,7 +33,7 @@ const QMap<QString, GlyphMappingData *> & GlyphMapping::vectors() const
     return m_vectors;
 }
 
-const RenderedData * GlyphMapping::renderedData() const
+const RenderedData & GlyphMapping::renderedData() const
 {
     return m_renderedData;
 }

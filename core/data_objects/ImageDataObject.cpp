@@ -11,10 +11,10 @@
 #include <core/table_model/QVtkTableModelImage.h>
 
 
-ImageDataObject::ImageDataObject(const QString & name, vtkImageData * dataSet)
-    : DataObject(name, dataSet)
+ImageDataObject::ImageDataObject(const QString & name, vtkImageData & dataSet)
+    : DataObject(name, &dataSet)
 {
-    vtkDataArray * data = dataSet->GetPointData()->GetScalars();
+    vtkDataArray * data = dataSet.GetPointData()->GetScalars();
     if (data)
     {
         connectObserver("dataChanged", *data, vtkCommand::ModifiedEvent, *this, &ImageDataObject::_dataChanged);
@@ -28,12 +28,12 @@ bool ImageDataObject::is3D() const
 
 RenderedData * ImageDataObject::createRendered()
 {
-    return new RenderedImageData(this);
+    return new RenderedImageData(*this);
 }
 
-void ImageDataObject::addDataArray(vtkDataArray * dataArray)
+void ImageDataObject::addDataArray(vtkDataArray & dataArray)
 {
-    dataSet()->GetPointData()->AddArray(dataArray);
+    dataSet()->GetPointData()->AddArray(&dataArray);
 }
 
 const QString & ImageDataObject::dataTypeName() const

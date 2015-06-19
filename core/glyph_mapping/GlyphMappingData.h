@@ -46,10 +46,8 @@ public:
     };
 
 public:
-    virtual ~GlyphMappingData() = 0;
-
-    DataObject * dataObject();
-    RenderedData * renderedData();
+    DataObject & dataObject();
+    RenderedData & renderedData();
 
     virtual QString name() const = 0;
 
@@ -94,8 +92,8 @@ signals:
 protected:
     template<typename SubClass>
     /** default function for Registry::MappingCreator, returning a single mapping instance */
-    static QList<GlyphMappingData *> newInstance(RenderedData * renderedData);
-    explicit GlyphMappingData(RenderedData * renderedData);
+    static QList<GlyphMappingData *> newInstance(RenderedData & renderedData);
+    explicit GlyphMappingData(RenderedData & renderedData);
 
     virtual void initialize();
 
@@ -108,7 +106,7 @@ protected:
     virtual void colorMappingGradientChangedEvent(vtkScalarsToColors * gradient);
 
 private:
-    RenderedData * m_renderedData;
+    RenderedData & m_renderedData;
 
     bool m_isVisible;
 

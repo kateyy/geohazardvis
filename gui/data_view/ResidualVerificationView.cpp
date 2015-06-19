@@ -147,7 +147,7 @@ AbstractVisualizedData * ResidualVerificationView::selectedDataVisualization() c
 
     for (auto && vis : m_visualizations)
     {
-        if (vis && vis->dataObject() == data)
+        if (vis && &vis->dataObject() == data)
             return vis;
     }
 
@@ -442,7 +442,7 @@ void ResidualVerificationView::updateResidual(QList<AbstractVisualizedData *> & 
         imageData->CopyStructure(observation->imageData());
         imageData->AllocateScalars(VTK_FLOAT, 1);
 
-        residual = new ImageDataObject("Residual", imageData);
+        residual = new ImageDataObject("Residual", *imageData);
 
         DataSetHandler::instance().addData({ residual });
     }
@@ -493,7 +493,7 @@ void ResidualVerificationView::updateGuiSelection()
     {
         if (vis)
         {
-            selection = vis->dataObject();
+            selection = &vis->dataObject();
             break;
         }
     }
@@ -616,7 +616,7 @@ void ResidualVerificationView::updateModelFromUi(int index)
             modelImageData->GetPointData()->SetScalars(uplus);
         }
 
-        image = new ImageDataObject(modelImageName, modelImageData);
+        image = new ImageDataObject(modelImageName, *modelImageData);
         newModel = true;
     }
 

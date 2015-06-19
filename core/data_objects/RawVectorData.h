@@ -11,7 +11,7 @@ class vtkFloatArray;
 class CORE_API RawVectorData : public DataObject
 {
 public:
-    RawVectorData(const QString & name, vtkFloatArray * dataArray);
+    RawVectorData(const QString & name, vtkFloatArray & dataArray);
 
     bool is3D() const override;
 

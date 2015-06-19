@@ -114,7 +114,7 @@ QVtkTableModel * DataObject::tableModel()
     return d_ptr->m_tableModel;
 }
 
-void DataObject::addDataArray(vtkDataArray * /*dataArray*/)
+void DataObject::addDataArray(vtkDataArray & /*dataArray*/)
 {
 }
 
@@ -143,22 +143,22 @@ void DataObject::executeDeferredEvents()
     process_executeDeferredEvents();
 }
 
-DataObject * DataObject::getDataObject(vtkInformation * information)
+DataObject * DataObject::getDataObject(vtkInformation & information)
 {
     static_assert(sizeof(int*) == sizeof(DataObject*), "");
 
-    if (information->Has(DataObjectPrivate::DataObjectKey()))
+    if (information.Has(DataObjectPrivate::DataObjectKey()))
     {
-        assert(information->Length(DataObjectPrivate::DataObjectKey()) == 1);
-        return reinterpret_cast<DataObject *>(information->Get(DataObjectPrivate::DataObjectKey()));
+        assert(information.Length(DataObjectPrivate::DataObjectKey()) == 1);
+        return reinterpret_cast<DataObject *>(information.Get(DataObjectPrivate::DataObjectKey()));
     }
 
     else return nullptr;
 }
 
-void DataObject::setDataObject(vtkInformation * information, DataObject * dataObject)
+void DataObject::setDataObject(vtkInformation & information, DataObject * dataObject)
 {
-    information->Set(DataObjectPrivate::DataObjectKey(), reinterpret_cast<int *>(dataObject), 1);
+    information.Set(DataObjectPrivate::DataObjectKey(), reinterpret_cast<int *>(&dataObject), 1);
 }
 
 bool DataObject::checkIfBoundsChanged()

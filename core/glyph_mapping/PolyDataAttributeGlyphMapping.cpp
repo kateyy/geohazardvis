@@ -31,9 +31,9 @@ const bool PolyDataAttributeGlyphMapping::s_registered = GlyphMappingRegistry::i
 using namespace reflectionzeug;
 
 
-QList<GlyphMappingData *> PolyDataAttributeGlyphMapping::newInstances(RenderedData * renderedData)
+QList<GlyphMappingData *> PolyDataAttributeGlyphMapping::newInstances(RenderedData & renderedData)
 {
-    vtkPolyData * polyData = vtkPolyData::SafeDownCast(renderedData->dataObject()->processedDataSet());
+    vtkPolyData * polyData = vtkPolyData::SafeDownCast(renderedData.dataObject().processedDataSet());
     // only polygonal datasets are supported
     if (!polyData)
         return{};
@@ -73,21 +73,19 @@ QList<GlyphMappingData *> PolyDataAttributeGlyphMapping::newInstances(RenderedDa
     return instances;
 }
 
-PolyDataAttributeGlyphMapping::PolyDataAttributeGlyphMapping(RenderedData * renderedData, vtkDataArray * vectorData)
+PolyDataAttributeGlyphMapping::PolyDataAttributeGlyphMapping(RenderedData & renderedData, vtkDataArray * vectorData)
     : GlyphMappingData(renderedData)
-    , m_polyData(dynamic_cast<PolyDataObject *>(renderedData->dataObject()))
     , m_dataArray(vectorData)
 {
-    m_isValid = m_isValid && m_polyData != nullptr;
+    auto polyData = dynamic_cast<PolyDataObject *>(&renderedData.dataObject());
+    m_isValid = m_isValid && polyData != nullptr;
 
     arrowGlyph()->SetVectorModeToUseVector();
 
     m_assignVectors = vtkSmartPointer<vtkAssignAttribute>::New();
-    m_assignVectors->SetInputConnection(m_polyData->cellCentersOutputPort());
+    m_assignVectors->SetInputConnection(polyData->cellCentersOutputPort());
     m_assignVectors->Assign(m_dataArray->GetName(), vtkDataSetAttributes::VECTORS, vtkAssignAttribute::POINT_DATA);
 }
-
-PolyDataAttributeGlyphMapping::~PolyDataAttributeGlyphMapping() = default;
 
 QString PolyDataAttributeGlyphMapping::name() const
 {

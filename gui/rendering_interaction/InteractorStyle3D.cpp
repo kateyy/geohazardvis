@@ -242,11 +242,11 @@ void InteractorStyle3D::highlightPickedIndex()
     if (renderedData)
     {
         vtkIdType index = cellId >= 0 ? cellId : pointId;
-        highlightIndex(renderedData->dataObject(), index);
+        highlightIndex(&renderedData->dataObject(), index);
 
         emit dataPicked(renderedData);
 
-        emit indexPicked(renderedData->dataObject(), index);
+        emit indexPicked(&renderedData->dataObject(), index);
     }
 }
 
@@ -595,7 +595,7 @@ void InteractorStyle3D::sendPointInfo() const
     PolyDataObject * polyData = nullptr;
     if (cellMapper)
     {
-        DataObject * dataObject = DataObject::getDataObject(cellMapper->GetInformation());
+        DataObject * dataObject = DataObject::getDataObject(*cellMapper->GetInformation());
         polyData = dynamic_cast<PolyDataObject *>(dataObject);
     }
     // for poly data: centroid and scalar information if available

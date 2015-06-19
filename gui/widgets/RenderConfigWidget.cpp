@@ -121,7 +121,7 @@ void RenderConfigWidget::updateTitle()
     if (!m_content)
         title = "(No object selected)";
     else
-        title = QString::number(m_renderView->index()) + ": " + m_content->dataObject()->name();
+        title = QString::number(m_renderView->index()) + ": " + m_content->dataObject().name();
 
     m_ui->relatedDataObject->setText(title);
 }

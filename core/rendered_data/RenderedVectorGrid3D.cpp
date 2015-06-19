@@ -44,20 +44,20 @@ const std::string s_lic2DWithMangnitudes = "LIC2DWithMagnitudes";
 
 }
 
-RenderedVectorGrid3D::RenderedVectorGrid3D(VectorGrid3DDataObject * dataObject)
+RenderedVectorGrid3D::RenderedVectorGrid3D(VectorGrid3DDataObject & dataObject)
     : RenderedData3D(dataObject)
     , m_isInitialized(false)
     , m_extractVOI(vtkSmartPointer<vtkExtractVOI>::New())
     , m_slicesEnabled()
 {
-    assert(vtkImageData::SafeDownCast(dataObject->processedDataSet()));
+    assert(vtkImageData::SafeDownCast(dataObject.processedDataSet()));
 
-    vtkImageData * image = static_cast<vtkImageData *>(dataObject->processedDataSet());
+    vtkImageData * image = static_cast<vtkImageData *>(dataObject.processedDataSet());
 
     int extent[6];
     image->GetExtent(extent);
 
-    m_extractVOI->SetInputData(dataObject->dataSet());
+    m_extractVOI->SetInputData(dataObject.dataSet());
 
     // decrease sample rate to prevent crashing/blocking rendering
     vtkIdType numPoints = image->GetNumberOfPoints();
@@ -74,7 +74,7 @@ RenderedVectorGrid3D::RenderedVectorGrid3D(VectorGrid3DDataObject * dataObject)
         m_planeWidgets[i] = vtkSmartPointer<vtkImagePlaneWidget>::New();
         // TODO VTK Bug? A pipeline connection does not work for some reason
         //m_planeWidgets[i]->SetInputConnection(dataObject->processedOutputPort());
-        m_planeWidgets[i]->SetInputData(dataObject->dataSet());
+        m_planeWidgets[i]->SetInputData(dataObject.dataSet());
         m_planeWidgets[i]->UserControlledLookupTableOn();
         m_planeWidgets[i]->RestrictPlaneToVolumeOn();
         m_planeWidgets[i]->SetPlaneOrientation(i);
@@ -112,14 +112,14 @@ void RenderedVectorGrid3D::setRenderWindowInteractor(vtkRenderWindowInteractor *
     updateVisibilities();
 }
 
-VectorGrid3DDataObject * RenderedVectorGrid3D::vectorGrid3DDataObject()
+VectorGrid3DDataObject & RenderedVectorGrid3D::vectorGrid3DDataObject()
 {
-    return static_cast<VectorGrid3DDataObject *>(dataObject());
+    return static_cast<VectorGrid3DDataObject &>(dataObject());
 }
 
-const VectorGrid3DDataObject * RenderedVectorGrid3D::vectorGrid3DDataObject() const
+const VectorGrid3DDataObject & RenderedVectorGrid3D::vectorGrid3DDataObject() const
 {
-    return static_cast<const VectorGrid3DDataObject *>(dataObject());
+    return static_cast<const VectorGrid3DDataObject &>(dataObject());
 }
 
 PropertyGroup * RenderedVectorGrid3D::createConfigGroup()
@@ -157,7 +157,7 @@ PropertyGroup * RenderedVectorGrid3D::createConfigGroup()
 
 
         int extent[6];
-        static_cast<vtkImageData *>(dataObject()->dataSet())->GetExtent(extent);
+        static_cast<vtkImageData *>(dataObject().dataSet())->GetExtent(extent);
 
         auto prop_positions = group_scalarSlices->addGroup("Positions");
 
@@ -406,10 +406,10 @@ vtkAlgorithmOutput * RenderedVectorGrid3D::colorMappingInput(int connection)
 
     if (!filter)
     {
-        bool hasVectors = dataObject()->dataSet()->GetPointData()->GetVectors() != nullptr;
+        bool hasVectors = dataObject().dataSet()->GetPointData()->GetVectors() != nullptr;
 
         VTK_CREATE(ArrayRenameFilter, rename);
-        rename->SetScalarsName(dataObject()->dataSet()->GetPointData()->GetScalars()->GetName());
+        rename->SetScalarsName(dataObject().dataSet()->GetPointData()->GetScalars()->GetName());
         rename->SetInputConnection(m_planeWidgets[connection]->GetReslice()->GetOutputPort());
         filter = rename;
 

@@ -14,16 +14,14 @@ Base class for rendered data represented as vtkActors.
 */
 class CORE_API RenderedData3D : public RenderedData
 {
-    Q_OBJECT
-
 public:
-    RenderedData3D(DataObject * dataObject);
-    virtual ~RenderedData3D();
+    RenderedData3D(DataObject & dataObject);
+    ~RenderedData3D() override;
 
     /** VTK 3D view props visualizing the data object and possibly additional attributes */
     vtkSmartPointer<vtkProp3DCollection> viewProps3D();
 
-    GlyphMapping * glyphMapping();
+    GlyphMapping & glyphMapping();
 
 protected:
     virtual vtkSmartPointer<vtkProp3DCollection> fetchViewProps3D();

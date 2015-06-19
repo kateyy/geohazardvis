@@ -26,9 +26,9 @@ const bool Grid3dGlyphMapping::s_registered = GlyphMappingRegistry::instance().r
 using namespace reflectionzeug;
 
 
-QList<GlyphMappingData *> Grid3dGlyphMapping::newInstances(RenderedData * renderedData)
+QList<GlyphMappingData *> Grid3dGlyphMapping::newInstances(RenderedData & renderedData)
 {
-    RenderedVectorGrid3D * renderedGrid = dynamic_cast<RenderedVectorGrid3D *>(renderedData);
+    RenderedVectorGrid3D * renderedGrid = dynamic_cast<RenderedVectorGrid3D *>(&renderedData);
     if (!renderedGrid)
         return{};
 
@@ -51,7 +51,7 @@ QList<GlyphMappingData *> Grid3dGlyphMapping::newInstances(RenderedData * render
     QList<GlyphMappingData *> instances;
     for (vtkDataArray * vectorArray : vectorArrays)
     {
-        Grid3dGlyphMapping * mapping = new Grid3dGlyphMapping(renderedGrid, vectorArray);
+        Grid3dGlyphMapping * mapping = new Grid3dGlyphMapping(*renderedGrid, vectorArray);
         if (mapping->isValid())
         {
             mapping->initialize();
@@ -64,7 +64,7 @@ QList<GlyphMappingData *> Grid3dGlyphMapping::newInstances(RenderedData * render
     return instances;
 }
 
-Grid3dGlyphMapping::Grid3dGlyphMapping(RenderedVectorGrid3D * renderedGrid, vtkDataArray * dataArray)
+Grid3dGlyphMapping::Grid3dGlyphMapping(RenderedVectorGrid3D & renderedGrid, vtkDataArray * dataArray)
     : GlyphMappingData(renderedGrid)
     , m_renderedGrid(renderedGrid)
     , m_dataArray(dataArray)
@@ -77,11 +77,11 @@ Grid3dGlyphMapping::Grid3dGlyphMapping(RenderedVectorGrid3D * renderedGrid, vtkD
     setColor(1, 0, 0);
     updateArrowLength();
 
-    connect(renderedGrid, &RenderedVectorGrid3D::sampleRateChanged, [this] (int, int, int) {
+    connect(&renderedGrid, &RenderedVectorGrid3D::sampleRateChanged, [this] (int, int, int) {
         this->updateArrowLength(); });
 
     m_assignVectors = vtkSmartPointer<vtkAssignAttribute>::New();
-    m_assignVectors->SetInputConnection(m_renderedGrid->resampledOuputPort());
+    m_assignVectors->SetInputConnection(m_renderedGrid.resampledOuputPort());
     m_assignVectors->Assign(m_dataArray->GetName(), vtkDataSetAttributes::VECTORS, vtkAssignAttribute::POINT_DATA);
 }
 
@@ -98,7 +98,7 @@ vtkAlgorithmOutput * Grid3dGlyphMapping::vectorDataOutputPort()
 
 void Grid3dGlyphMapping::updateArrowLength()
 {
-    double cellSpacing = m_renderedGrid->resampledDataSet()->GetSpacing()[0];
+    double cellSpacing = m_renderedGrid.resampledDataSet()->GetSpacing()[0];
     arrowGlyph()->SetScaleFactor(0.75 * cellSpacing);
 
     emit geometryChanged();

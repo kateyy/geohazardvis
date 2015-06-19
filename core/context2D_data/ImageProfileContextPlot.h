@@ -16,7 +16,7 @@ class ImageProfileData;
 class CORE_API ImageProfileContextPlot : public Context2DData
 {
 public:
-    ImageProfileContextPlot(ImageProfileData * dataObject);
+    ImageProfileContextPlot(ImageProfileData & dataObject);
 
     reflectionzeug::PropertyGroup * createConfigGroup() override;
 

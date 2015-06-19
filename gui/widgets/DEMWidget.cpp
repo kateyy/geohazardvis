@@ -133,7 +133,7 @@ bool DEMWidget::save()
         addArray("DEM_Bounds", demBounds);
     }
 
-    auto newData = new PolyDataObject(m_ui->newSurfaceModelName->text(), surface);
+    auto newData = new PolyDataObject(m_ui->newSurfaceModelName->text(), *surface);
     DataSetHandler::instance().addData({ newData });
 
     return true;
@@ -252,7 +252,7 @@ void DEMWidget::updatePreview()
     vtkPolyData * newDataSet = vtkPolyData::SafeDownCast(m_demWarpElevation->GetOutput());
     assert(newDataSet);
 
-    m_dataPreview = new PolyDataObject("", newDataSet);
+    m_dataPreview = new PolyDataObject("", *newDataSet);
     m_renderedPreview = m_dataPreview->createRendered();
 
     auto props = m_renderedPreview->viewProps();

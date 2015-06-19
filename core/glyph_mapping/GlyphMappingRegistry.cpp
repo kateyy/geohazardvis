@@ -17,7 +17,7 @@ GlyphMappingRegistry & GlyphMappingRegistry::instance()
     return registry;
 }
 
-QMap<QString, GlyphMappingData *> GlyphMappingRegistry::createMappingsValidFor(RenderedData * renderedData)
+QMap<QString, GlyphMappingData *> GlyphMappingRegistry::createMappingsValidFor(RenderedData & renderedData)
 {
     QMap<QString, GlyphMappingData *> validVectors;
 

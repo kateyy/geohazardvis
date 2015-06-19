@@ -23,7 +23,7 @@
 #include <core/table_model/QVtkTableModelProfileData.h>
 
 
-ImageProfileData::ImageProfileData(const QString & name, ImageDataObject * imageData)
+ImageProfileData::ImageProfileData(const QString & name, ImageDataObject & imageData)
     : DataObject(name, vtkSmartPointer<vtkImageData>::New())
     , m_imageData(imageData)
     , m_abscissa("position")
@@ -31,15 +31,15 @@ ImageProfileData::ImageProfileData(const QString & name, ImageDataObject * image
     , m_transform(vtkSmartPointer<vtkTransformFilter>::New())
     , m_graphLine(vtkSmartPointer<vtkWarpScalar>::New())
 {
-    vtkDataArray * scalars = imageData->processedDataSet()->GetPointData()->GetScalars();
+    vtkDataArray * scalars = imageData.processedDataSet()->GetPointData()->GetScalars();
     if (!scalars)
-        scalars = imageData->processedDataSet()->GetCellData()->GetScalars();
+        scalars = imageData.processedDataSet()->GetCellData()->GetScalars();
     assert(scalars);
     m_scalarsName = QString::fromUtf8(scalars->GetName());
 
     m_probe = vtkSmartPointer<vtkProbeFilter>::New();
     m_probe->SetInputConnection(m_probeLine->GetOutputPort());
-    m_probe->SetSourceConnection(m_imageData->processedOutputPort());
+    m_probe->SetSourceConnection(m_imageData.processedOutputPort());
 
     m_transform->SetInputConnection(m_probe->GetOutputPort());
 
@@ -59,7 +59,7 @@ bool ImageProfileData::is3D() const
 
 Context2DData * ImageProfileData::createContextData()
 {
-    return new ImageProfileContextPlot(this);
+    return new ImageProfileContextPlot(*this);
 }
 
 const QString & ImageProfileData::dataTypeName() const
@@ -132,7 +132,7 @@ void ImageProfileData::setPoints(double point1[3], double point2[3])
     m_probeLine->SetPoint2(point2);
 
     double pointSpacing[3];
-    m_imageData->imageData()->GetSpacing(pointSpacing);
+    m_imageData.imageData()->GetSpacing(pointSpacing);
 
     double probeVector[3];
     vtkMath::Subtract(point2, point1, probeVector);

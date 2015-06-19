@@ -6,13 +6,13 @@
 #include <core/table_model/QVtkTableModelRawVector.h>
 
 
-RawVectorData::RawVectorData(const QString & name, vtkFloatArray * dataArray)
+RawVectorData::RawVectorData(const QString & name, vtkFloatArray & dataArray)
     : DataObject(name, nullptr)
-    , m_dataArray(dataArray)
+    , m_dataArray(&dataArray)
 {
-    dataArray->SetName(name.toUtf8().data());
+    dataArray.SetName(name.toUtf8().data());
 
-    connectObserver("dataChanged", *dataArray, vtkCommand::ModifiedEvent, *this, &RawVectorData::_dataChanged);
+    connectObserver("dataChanged", dataArray, vtkCommand::ModifiedEvent, *this, &RawVectorData::_dataChanged);
 }
 
 bool RawVectorData::is3D() const

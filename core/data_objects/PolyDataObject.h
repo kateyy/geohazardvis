@@ -14,7 +14,7 @@ class vtkAlgorithmOutput;
 class CORE_API PolyDataObject : public DataObject
 {
 public:
-    PolyDataObject(const QString & name, vtkPolyData * dataSet);
+    PolyDataObject(const QString & name, vtkPolyData & dataSet);
 
     bool is3D() const override;
 
@@ -25,7 +25,7 @@ public:
     vtkDataSet * processedDataSet() override;
     vtkAlgorithmOutput * processedOutputPort() override;
 
-    void addDataArray(vtkDataArray * dataArray) override;
+    void addDataArray(vtkDataArray & dataArray) override;
 
     /** @return centroids with normals, computed from polygonal data set cells */
     vtkPolyData * cellCenters();

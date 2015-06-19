@@ -157,11 +157,11 @@ void InteractorStyleImage::highlightPickedPoint()
     RenderedData * renderedData = m_propToRenderedData.value(pickedProp);
     assert(renderedData);
 
-    highlightIndex(renderedData->dataObject(), pointId);
+    highlightIndex(&renderedData->dataObject(), pointId);
     
     emit dataPicked(renderedData);
 
-    emit indexPicked(renderedData->dataObject(), pointId);
+    emit indexPicked(&renderedData->dataObject(), pointId);
 }
 
 DataObject * InteractorStyleImage::highlightedDataObject() const

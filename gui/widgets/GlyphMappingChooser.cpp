@@ -52,7 +52,7 @@ void GlyphMappingChooser::setCurrentRenderView(AbstractRenderView * renderView)
     GlyphMapping * newMapping = nullptr;
     if (renderView && renderView->selectedDataVisualization())
         if (RenderedData3D * new3D = dynamic_cast<RenderedData3D *>(renderView->selectedDataVisualization()))
-            newMapping = new3D->glyphMapping();
+            newMapping = &new3D->glyphMapping();
 
     if (m_renderView)
     {
@@ -98,7 +98,7 @@ void GlyphMappingChooser::setSelectedData(DataObject * dataObject)
     {
         RenderedData3D * r = dynamic_cast<RenderedData3D *>(it); // glyph mapping is only implemented for 3D data
 
-        if (r && r->dataObject() == dataObject)
+        if (r && &r->dataObject() == dataObject)
         {
             renderedData = r;
             break;
@@ -109,7 +109,7 @@ void GlyphMappingChooser::setSelectedData(DataObject * dataObject)
     if (dataObject && !renderedData)
         return;
 
-    GlyphMapping * newMapping = renderedData ? renderedData->glyphMapping() : nullptr;
+    GlyphMapping * newMapping = renderedData ? &renderedData->glyphMapping() : nullptr;
 
     if (newMapping == m_mapping)
         return;
@@ -159,7 +159,7 @@ void GlyphMappingChooser::updateVectorsList()
 
 void GlyphMappingChooser::checkRemovedData(AbstractVisualizedData * content)
 {
-    if (m_mapping && m_mapping->renderedData() == content)
+    if (m_mapping && &m_mapping->renderedData() == content)
         setSelectedData(nullptr);
 }
 
@@ -188,7 +188,7 @@ void GlyphMappingChooser::updateTitle()
     if (!m_mapping)
         title = "(No object selected)";
     else
-        title = QString::number(m_renderView->index()) + ": " + m_mapping->renderedData()->dataObject()->name();
+        title = QString::number(m_renderView->index()) + ": " + m_mapping->renderedData().dataObject().name();
 
     m_ui->relatedDataObject->setText(title);
 }
@@ -202,6 +202,6 @@ void GlyphMappingChooser::checkDeletedContent(AbstractVisualizedData * content)
     if (!rendered)
         return;
 
-    if (rendered->glyphMapping() == m_mapping)
+    if (&rendered->glyphMapping() == m_mapping)
         setSelectedData(nullptr);
 }

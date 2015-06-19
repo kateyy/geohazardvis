@@ -47,22 +47,22 @@ namespace
     };
 }
 
-RenderedPolyData::RenderedPolyData(PolyDataObject * dataObject)
+RenderedPolyData::RenderedPolyData(PolyDataObject & dataObject)
     : RenderedData3D(dataObject)
     , m_mapper(vtkSmartPointer<vtkPolyDataMapper>::New())
     , m_normals(vtkSmartPointer<vtkPolyDataNormals>::New())
 {
-    assert(vtkPolyData::SafeDownCast(dataObject->dataSet()));
+    assert(vtkPolyData::SafeDownCast(dataObject.dataSet()));
 
     vtkInformation * mapperInfo = m_mapper->GetInformation();
-    mapperInfo->Set(DataObject::NameKey(), dataObject->name().toUtf8().data());
-    DataObject::setDataObject(mapperInfo, dataObject);
+    mapperInfo->Set(DataObject::NameKey(), dataObject.name().toUtf8().data());
+    DataObject::setDataObject(*mapperInfo, &dataObject);
 
     m_normals->ComputePointNormalsOn();
     m_normals->ComputeCellNormalsOff();
 
     // disabled color mapping by default
-    m_colorMappingOutput = dataObject->processedOutputPort();
+    m_colorMappingOutput = dataObject.processedOutputPort();
     m_normals->SetInputConnection(m_colorMappingOutput);
 
     m_mapper->ScalarVisibilityOff();
@@ -72,18 +72,14 @@ RenderedPolyData::RenderedPolyData(PolyDataObject * dataObject)
     m_mapper->UseLookupTableScalarRangeOn();
 }
 
-RenderedPolyData::~RenderedPolyData() = default;
-
-PolyDataObject * RenderedPolyData::polyDataObject()
+PolyDataObject & RenderedPolyData::polyDataObject()
 {
-    assert(dynamic_cast<PolyDataObject*>(dataObject()));
-    return static_cast<PolyDataObject *>(dataObject());
+    return static_cast<PolyDataObject &>(dataObject());
 }
 
-const PolyDataObject * RenderedPolyData::polyDataObject() const
+const PolyDataObject & RenderedPolyData::polyDataObject() const
 {
-    assert(dynamic_cast<const PolyDataObject*>(dataObject()));
-    return static_cast<const PolyDataObject *>(dataObject());
+    return static_cast<const PolyDataObject &>(dataObject());
 }
 
 reflectionzeug::PropertyGroup * RenderedPolyData::createConfigGroup()
@@ -283,7 +279,7 @@ void RenderedPolyData::scalarsForColorMappingChangedEvent()
     // no mapping yet, so just render the data set
     if (!m_scalars)
     {
-        m_colorMappingOutput = dataObject()->processedOutputPort();
+        m_colorMappingOutput = dataObject().processedOutputPort();
         finalizePipeline();
         return;
     }
@@ -298,7 +294,7 @@ void RenderedPolyData::scalarsForColorMappingChangedEvent()
         m_colorMappingOutput = filter->GetOutputPort();
     }
     else
-        m_colorMappingOutput = dataObject()->processedOutputPort();
+        m_colorMappingOutput = dataObject().processedOutputPort();
 
     finalizePipeline();
 }
@@ -324,7 +320,7 @@ void RenderedPolyData::finalizePipeline()
     textureCoords->SetNormal(0, 0, 1);
 
     vtkDoubleArray * demBoundsArray = vtkDoubleArray::SafeDownCast(
-        dataObject()->dataSet()->GetFieldData()->GetArray("DEM_Bounds"));
+        dataObject().dataSet()->GetFieldData()->GetArray("DEM_Bounds"));
     if (demBoundsArray)
     {
         assert(demBoundsArray->GetNumberOfComponents() * demBoundsArray->GetNumberOfTuples() == 6);
@@ -335,7 +331,7 @@ void RenderedPolyData::finalizePipeline()
             0.5 * (demBounds[2] + demBounds[3]) };
 
         double thisBounds[6];
-        dataObject()->bounds(thisBounds);
+        dataObject().bounds(thisBounds);
         double thisSize[2] = { thisBounds[1] - thisBounds[0], thisBounds[3] - thisBounds[2] };
         double thisCenter[2] = {
             0.5 * (thisBounds[0] + thisBounds[1]),

@@ -80,9 +80,7 @@ void ColorMappingData::initialize()
 {
     for (AbstractVisualizedData * vis : m_visualizedData)
     {
-        DataObject * dataObject = vis->dataObject();
-        assert(dataObject);
-        connect(dataObject, &DataObject::valueRangeChanged, this, &ColorMappingData::updateBounds);
+        connect(&vis->dataObject(), &DataObject::valueRangeChanged, this, &ColorMappingData::updateBounds);
     }
 }
 

@@ -17,11 +17,10 @@ class PolyDataObject;
 class CORE_API RenderedPolyData : public RenderedData3D
 {
 public:
-    RenderedPolyData(PolyDataObject * dataObject);
-    ~RenderedPolyData() override;
+    RenderedPolyData(PolyDataObject & dataObject);
 
-    PolyDataObject * polyDataObject();
-    const PolyDataObject * polyDataObject() const;
+    PolyDataObject & polyDataObject();
+    const PolyDataObject & polyDataObject() const;
 
     reflectionzeug::PropertyGroup * createConfigGroup() override;
 

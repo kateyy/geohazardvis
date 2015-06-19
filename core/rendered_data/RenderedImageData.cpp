@@ -34,15 +34,15 @@ namespace
     };
 }
 
-RenderedImageData::RenderedImageData(ImageDataObject * dataObject)
+RenderedImageData::RenderedImageData(ImageDataObject & dataObject)
     : RenderedData(ContentType::Rendered2D, dataObject)
     , m_mapper(vtkSmartPointer<vtkImageSliceMapper>::New()) // replace with vtkImageResliceMapper?
 {
-    m_mapper->SetInputConnection(dataObject->processedOutputPort());
+    m_mapper->SetInputConnection(dataObject.processedOutputPort());
 
     vtkInformation * mapperInfo = m_mapper->GetInformation();
-    mapperInfo->Set(DataObject::NameKey(), dataObject->name().toUtf8().data());
-    DataObject::setDataObject(mapperInfo, dataObject);
+    mapperInfo->Set(DataObject::NameKey(), dataObject.name().toUtf8().data());
+    DataObject::setDataObject(*mapperInfo, &dataObject);
 }
 
 reflectionzeug::PropertyGroup * RenderedImageData::createConfigGroup()

@@ -19,9 +19,9 @@ public:
 
 protected:
     /** create an instance for each 3D vector array found in the renderedData */
-    static QList<GlyphMappingData *> newInstances(RenderedData * renderedData);
+    static QList<GlyphMappingData *> newInstances(RenderedData & renderedData);
 
-    Grid3dGlyphMapping(RenderedVectorGrid3D * renderedGrid, vtkDataArray * dataArray);
+    Grid3dGlyphMapping(RenderedVectorGrid3D & renderedGrid, vtkDataArray * dataArray);
 
 protected:
     void updateArrowLength();
@@ -30,6 +30,6 @@ private:
     static const bool s_registered;
 
     vtkSmartPointer<vtkAssignAttribute> m_assignVectors;
-    RenderedVectorGrid3D * m_renderedGrid;
+    RenderedVectorGrid3D & m_renderedGrid;
     vtkDataArray * m_dataArray;
 };

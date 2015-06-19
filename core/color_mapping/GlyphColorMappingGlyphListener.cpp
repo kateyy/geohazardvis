@@ -28,11 +28,11 @@ void GlyphColorMappingGlyphListener::setData(const QList<AbstractVisualizedData 
 
         m_data << rendered3D;
 
-        GlyphMapping * glyphMapping = rendered3D->glyphMapping();
-        m_connects << connect(glyphMapping, &GlyphMapping::vectorsChanged,
+        auto & glyphMapping = rendered3D->glyphMapping();
+        m_connects << connect(&glyphMapping, &GlyphMapping::vectorsChanged,
             this, &GlyphColorMappingGlyphListener::glyphMappingChanged);
 
-        for (GlyphMappingData * data : glyphMapping->vectors())
+        for (GlyphMappingData * data : glyphMapping.vectors().values())
             m_connects << connect(data, &GlyphMappingData::visibilityChanged,
                 this, &GlyphColorMappingGlyphListener::glyphMappingChanged);
     }

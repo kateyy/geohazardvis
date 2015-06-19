@@ -13,7 +13,7 @@ class ImageDataObject;
 class CORE_API RenderedImageData : public RenderedData
 {
 public:
-    RenderedImageData(ImageDataObject * dataObject);
+    RenderedImageData(ImageDataObject & dataObject);
 
     reflectionzeug::PropertyGroup * createConfigGroup() override;
 

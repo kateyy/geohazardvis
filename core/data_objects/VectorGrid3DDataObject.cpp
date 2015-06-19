@@ -8,14 +8,14 @@
 #include <core/table_model/QVtkTableModelVectorGrid3D.h>
 
 
-VectorGrid3DDataObject::VectorGrid3DDataObject(const QString & name, vtkImageData * dataSet)
-    : DataObject(name, dataSet)
+VectorGrid3DDataObject::VectorGrid3DDataObject(const QString & name, vtkImageData & dataSet)
+    : DataObject(name, &dataSet)
 {
-    vtkDataArray * data = dataSet->GetPointData()->GetScalars();
+    vtkDataArray * data = dataSet.GetPointData()->GetScalars();
     if (!data)
     {
-        data = dataSet->GetPointData()->GetVectors();
-        dataSet->GetPointData()->SetScalars(data);
+        data = dataSet.GetPointData()->GetVectors();
+        dataSet.GetPointData()->SetScalars(data);
     }
 }
 
@@ -26,12 +26,12 @@ bool VectorGrid3DDataObject::is3D() const
 
 RenderedData * VectorGrid3DDataObject::createRendered()
 {
-    return new RenderedVectorGrid3D(this);
+    return new RenderedVectorGrid3D(*this);
 }
 
-void VectorGrid3DDataObject::addDataArray(vtkDataArray * dataArray)
+void VectorGrid3DDataObject::addDataArray(vtkDataArray & dataArray)
 {
-    dataSet()->GetPointData()->AddArray(dataArray);
+    dataSet()->GetPointData()->AddArray(&dataArray);
 }
 
 const QString & VectorGrid3DDataObject::dataTypeName() const

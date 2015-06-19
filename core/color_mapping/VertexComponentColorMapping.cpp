@@ -67,7 +67,7 @@ QString VertexComponentColorMapping::name() const
 
 vtkSmartPointer<vtkAlgorithm> VertexComponentColorMapping::createFilter(AbstractVisualizedData * visualizedData, int connection)
 {
-    PolyDataObject * polyData = static_cast<PolyDataObject *>(visualizedData->dataObject());
+    PolyDataObject * polyData = static_cast<PolyDataObject *>(&visualizedData->dataObject());
 
     VTK_CREATE(CentroidAsScalarsFilter, centroids);
     centroids->SetInputConnection(0, visualizedData->colorMappingInput(connection));
@@ -104,7 +104,7 @@ QMap<int, QPair<double, double>> VertexComponentColorMapping::updateBounds()
 
     for (AbstractVisualizedData * vis: m_visualizedData)
     {
-        const double * objectBounds = vis->dataObject()->bounds();
+        const double * objectBounds = vis->dataObject().bounds();
 
         totalMin = std::min(totalMin, objectBounds[2 * m_component]);
         totalMax = std::max(totalMax, objectBounds[2 * m_component + 1]);

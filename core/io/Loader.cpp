@@ -182,9 +182,9 @@ DataObject * Loader::readFile(const QString & filename)
         switch (image->GetDataDimension())
         {
         case 2:
-            return new ImageDataObject(dataSetName, image);
+            return new ImageDataObject(dataSetName, *image);
         case 3:
-            return new VectorGrid3DDataObject(dataSetName, image);
+            return new VectorGrid3DDataObject(dataSetName, *image);
 
         default:
             qDebug() << "VTK image data format not supported.";
@@ -221,7 +221,7 @@ DataObject * Loader::readFile(const QString & filename)
         if (dataSetName.isEmpty())
             dataSetName = baseName;
 
-        return new PolyDataObject(dataSetName, polyData);
+        return new PolyDataObject(dataSetName, *polyData);
     }
 
     if (vtkImageFileExts().contains(ext))
@@ -252,7 +252,7 @@ DataObject * Loader::readFile(const QString & filename)
         if (scalars)
             scalars->SetName(baseName.toUtf8().data());
 
-        return new ImageDataObject(baseName, reader->GetOutput());
+        return new ImageDataObject(baseName, *image);
     }
 
     // handle all other files as our text file format

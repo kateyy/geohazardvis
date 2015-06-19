@@ -37,7 +37,7 @@ QList<ColorMappingData *> GlyphMagnitudeColorMapping::newInstances(const QList<A
         if (!data)
             continue;
 
-        const QMap<QString, GlyphMappingData *> & vectors = data->glyphMapping()->vectors();
+        const QMap<QString, GlyphMappingData *> & vectors = data->glyphMapping().vectors();
         for (auto it = vectors.begin(); it != vectors.end(); ++it)
         {
             GlyphMappingData * vectorData = it.value();
@@ -79,8 +79,8 @@ GlyphMagnitudeColorMapping::GlyphMagnitudeColorMapping(
         assignVectors->SetInputConnection(norm->GetOutputPort());
 
         // if needed: support multiple connections
-        m_vectorNorms.insert(glyphMapping->renderedData(), { norm });
-        m_assignedVectors.insert(glyphMapping->renderedData(), { assignVectors });
+        m_vectorNorms.insert(&glyphMapping->renderedData(), { norm });
+        m_assignedVectors.insert(&glyphMapping->renderedData(), { assignVectors });
 
         m_isValid = true;
     }

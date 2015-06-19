@@ -19,13 +19,13 @@
 using namespace reflectionzeug;
 
 
-ImageProfileContextPlot::ImageProfileContextPlot(ImageProfileData * dataObject)
+ImageProfileContextPlot::ImageProfileContextPlot(ImageProfileData & dataObject)
     : Context2DData(dataObject)
     , m_plotLine(vtkSmartPointer<vtkPlotLine>::New())
 {
-    connect(dataObject, &DataObject::dataChanged, this, &ImageProfileContextPlot::updatePlot);
+    connect(&dataObject, &DataObject::dataChanged, this, &ImageProfileContextPlot::updatePlot);
 
-    m_title = dataObject->probedLine()->GetPointData()->GetScalars()->GetName();
+    m_title = dataObject.probedLine()->GetPointData()->GetScalars()->GetName();
 }
 
 PropertyGroup * ImageProfileContextPlot::createConfigGroup()
@@ -103,23 +103,23 @@ vtkSmartPointer<vtkPlotCollection> ImageProfileContextPlot::fetchPlots()
 
 void ImageProfileContextPlot::updatePlot()
 {
-    ImageProfileData * profileData = static_cast<ImageProfileData *>(dataObject());
+    auto & profileData = static_cast<ImageProfileData &>(dataObject());
 
-    vtkDataSet * probe = profileData->probedLine();
+    vtkDataSet * probe = profileData.probedLine();
 
     vtkDataArray * probedValues = probe->GetPointData()->GetScalars();
     assert(probedValues);
     probedValues->SetName(m_title.toUtf8().data());
 
     // hackish: x-values calculated by translating+rotating the probe line to the x-axis
-    vtkDataSet * profilePoints = profileData->processedDataSet();
+    vtkDataSet * profilePoints = profileData.processedDataSet();
 
     assert(probedValues->GetNumberOfTuples() == profilePoints->GetNumberOfPoints());
 
     VTK_CREATE(vtkTable, table);
     VTK_CREATE(vtkFloatArray, xAxis);
     xAxis->SetNumberOfValues(profilePoints->GetNumberOfPoints());
-    xAxis->SetName(profileData->abscissa().toUtf8().data());
+    xAxis->SetName(profileData.abscissa().toUtf8().data());
     table->AddColumn(xAxis);
     table->AddColumn(probedValues);
 

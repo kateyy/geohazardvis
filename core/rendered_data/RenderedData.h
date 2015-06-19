@@ -16,7 +16,7 @@ class CORE_API RenderedData : public AbstractVisualizedData
     Q_OBJECT
 
 public:
-    RenderedData(ContentType contentType, DataObject * dataObject);
+    RenderedData(ContentType contentType, DataObject & dataObject);
 
     /** VTK view props visualizing the data set object and possibly additional attributes */
     vtkSmartPointer<vtkPropCollection> viewProps();

@@ -442,7 +442,7 @@ void RendererImplementationBase3D::updateBounds()
         dataBounds.Reset();
 
         for (AbstractVisualizedData * it : m_renderView.visualizations())
-            dataBounds.AddBounds(it->dataObject()->bounds());
+            dataBounds.AddBounds(it->dataObject().bounds());
 
         viewport.renderer->ResetCameraClippingRange();
 
@@ -455,7 +455,7 @@ void RendererImplementationBase3D::addToBounds(RenderedData * renderedData, unsi
 {
     auto && dataBounds = m_viewportSetups[subViewIndex].dataBounds;
 
-    dataBounds.AddBounds(renderedData->dataObject()->bounds());
+    dataBounds.AddBounds(renderedData->dataObject().bounds());
 
     // TODO update only if necessary
     updateAxes();
@@ -472,7 +472,7 @@ void RendererImplementationBase3D::removeFromBounds(RenderedData * renderedData,
         if (it == renderedData)
             continue;
 
-        dataBounds.AddBounds(it->dataObject()->bounds());
+        dataBounds.AddBounds(it->dataObject().bounds());
     }
 
     updateAxes();
@@ -583,12 +583,12 @@ void RendererImplementationBase3D::dataVisibilityChanged(RenderedData * rendered
     if (rendered->isVisible())
     {
         addToBounds(rendered, subViewIndex);
-        connect(rendered->dataObject(), &DataObject::boundsChanged, this, &RendererImplementationBase3D::updateBounds);
+        connect(&rendered->dataObject(), &DataObject::boundsChanged, this, &RendererImplementationBase3D::updateBounds);
     }
     else
     {
         removeFromBounds(rendered, subViewIndex);
-        disconnect(rendered->dataObject(), &DataObject::boundsChanged, this, &RendererImplementationBase3D::updateBounds);
+        disconnect(&rendered->dataObject(), &DataObject::boundsChanged, this, &RendererImplementationBase3D::updateBounds);
     }
 
     onDataVisibilityChanged(rendered, subViewIndex);
