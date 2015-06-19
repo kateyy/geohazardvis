@@ -444,6 +444,8 @@ void RendererImplementationBase3D::updateBounds()
         for (AbstractVisualizedData * it : m_renderView.visualizations())
             dataBounds.AddBounds(it->dataObject()->bounds());
 
+        viewport.renderer->ResetCameraClippingRange();
+
     }
 
     updateAxes();
