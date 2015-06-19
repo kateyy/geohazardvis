@@ -38,7 +38,10 @@ void ColorMapping::setVisualizedData(const QList<AbstractVisualizedData *> & vis
 {
     // clean up old scalars
     for (AbstractVisualizedData * vis : m_visualizedData)
+    {
         vis->setScalarsForColorMapping(nullptr);
+        disconnect(vis->dataObject(), &DataObject::attributeArraysChanged, this, &ColorMapping::updateAvailableScalars);
+    }
 
     QString lastScalars = currentScalarsName();
     m_currentScalarsName.clear();
