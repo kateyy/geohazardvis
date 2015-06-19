@@ -118,6 +118,31 @@ void DataObject::addDataArray(vtkDataArray * /*dataArray*/)
 {
 }
 
+void DataObject::deferEvents()
+{
+    d_ptr->m_deferEventsRequests += 1;
+}
+
+bool DataObject::deferringEvents() const
+{
+    assert(d_ptr->m_deferEventsRequests >= 0);
+    return d_ptr->m_deferEventsRequests > 0;
+}
+
+void DataObject::executeDeferredEvents()
+{
+    d_ptr->m_deferEventsRequests -= 1;
+
+    if (deferringEvents())
+        return;
+
+    // stack is clear, so execute deferred events
+    d_ptr->executeDeferredEvents();
+
+    // for sub-classes
+    process_executeDeferredEvents();
+}
+
 DataObject * DataObject::getDataObject(vtkInformation * information)
 {
     static_assert(sizeof(int*) == sizeof(DataObject*), "");
@@ -174,6 +199,10 @@ void DataObject::valueRangeChangedEvent()
 {
 }
 
+void DataObject::process_executeDeferredEvents()
+{
+}
+
 void DataObject::disconnectEventGroup(const QString & eventName)
 {
     d_ptr->disconnectEventGroup(eventName);
@@ -186,6 +215,12 @@ void DataObject::disconnectAllEvents()
 
 void DataObject::_dataChanged()
 {
+    if (deferringEvents())
+    {
+        d_ptr->addDeferredEvent("dataChanged", std::bind(&DataObject::_dataChanged, this));
+        return;
+    }
+
     dataChangedEvent();
 
     emit dataChanged();
@@ -205,8 +240,14 @@ void DataObject::_dataChanged()
     }
 }
 
-void DataObject::_attributeArraysChanged(vtkObject * /*caller*/, unsigned long /*event*/, void * /*callData*/)
+void DataObject::_attributeArraysChanged()
 {
+    if (deferringEvents())
+    {
+        d_ptr->addDeferredEvent("_attributeArraysChanged", std::bind(&DataObject::_attributeArraysChanged, this));
+        return;
+    }
+
     emit attributeArraysChanged();
 }
 

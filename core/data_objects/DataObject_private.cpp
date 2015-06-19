@@ -16,6 +16,7 @@ DataObjectPrivate::DataObjectPrivate(DataObject & dataObject, const QString & na
     , m_dataSet(dataSet)
     , m_tableModel(nullptr)
     , m_bounds()
+    , m_deferEventsRequests(0)
     , q_ptr(dataObject)
 {
 }
@@ -56,4 +57,20 @@ void DataObjectPrivate::disconnectAllEvents()
     {
         disconnectEventGroup(eventName);
     }
+}
+
+void DataObjectPrivate::addDeferredEvent(const QString & name, const EventMemberPointer & event)
+{
+    if (!m_deferredEvents.contains(name))
+        m_deferredEvents.insert(name, event);
+}
+
+void DataObjectPrivate::executeDeferredEvents()
+{
+    for (auto eventIt = m_deferredEvents.begin(); eventIt != m_deferredEvents.end(); ++eventIt)
+    {
+        eventIt.value()();
+    }
+
+    m_deferredEvents.clear();
 }

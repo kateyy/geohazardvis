@@ -1,5 +1,7 @@
 #pragma once
 
+#include <functional>
+
 #include <QMap>
 #include <QString>
 
@@ -40,9 +42,15 @@ public:
 
     QMap<QString, QMap<vtkWeakPointer<vtkObject>, unsigned long>> m_namedObserverIds;
 
+    int m_deferEventsRequests;
+    using EventMemberPointer = std::function<void()>;
+    void addDeferredEvent(const QString & name, const EventMemberPointer & event);
+    void executeDeferredEvents();
+
 protected:
     DataObject & q_ptr;
 
 private:
     vtkSmartPointer<vtkAlgorithm> m_trivialProducer;
+    QMap<QString, EventMemberPointer> m_deferredEvents;
 };
