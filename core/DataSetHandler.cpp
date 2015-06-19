@@ -53,16 +53,22 @@ void DataSetHandler::addData(const QList<DataObject *> & dataObjects)
         for (DataObject * dataObject : dataObjects)
         {
             assert(dataObject);
-            assert(!s_dataSets->contains(dataObject));
-
             if (dataObject->dataSet())
             {
+                if (s_dataSets->contains(dataObject))
+                    continue;
+
                 s_dataSets->append(dataObject);
                 dataChanged = true;
             }
             else
             {
-                assert(dynamic_cast<RawVectorData*>(dataObject));
+                auto rawData = dynamic_cast<RawVectorData *>(dataObject);
+                assert(rawData);
+                assert(!s_dataSets->contains(dataObject));
+                if (s_rawVectors->contains(rawData))
+                    continue;
+
                 s_rawVectors->append(static_cast<RawVectorData *>(dataObject));
                 rawDataChanged = true;
             }
