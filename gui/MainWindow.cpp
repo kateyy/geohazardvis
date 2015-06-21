@@ -192,7 +192,7 @@ void MainWindow::openFiles(const QStringList & fileNames)
 {
     QString oldName = windowTitle();
 
-    QList<DataObject *> newData;
+    std::vector<std::unique_ptr<DataObject>> newData;
 
     for (QString fileName : fileNames)
     {
@@ -204,7 +204,7 @@ void MainWindow::openFiles(const QStringList & fileNames)
             continue;
         }
 
-        DataObject * dataObject = Loader::readFile(fileName);
+        auto dataObject = Loader::readFile(fileName);
         if (!dataObject)
         {
             QMessageBox::critical(this, "File error", "Could not open the selected input file (unsupported format).");
@@ -212,10 +212,10 @@ void MainWindow::openFiles(const QStringList & fileNames)
             continue;
         }
 
-        newData << dataObject;
+        newData.push_back(std::move(dataObject));
     }
 
-    DataSetHandler::instance().addData(newData);
+    DataSetHandler::instance().takeData(std::move(newData));
 }
 
 void MainWindow::openFilesAsync(const QStringList & fileNames)

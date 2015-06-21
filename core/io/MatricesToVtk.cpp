@@ -40,7 +40,7 @@ namespace
 }
 
 
-DataObject * MatricesToVtk::loadIndexedTriangles(const QString & name, const std::vector<ReadDataSet> & datasets)
+std::unique_ptr<DataObject> MatricesToVtk::loadIndexedTriangles(const QString & name, const std::vector<ReadDataSet> & datasets)
 {
     assert(datasets.size() >= 2);
 
@@ -65,7 +65,7 @@ DataObject * MatricesToVtk::loadIndexedTriangles(const QString & name, const std
 
     assert(indices != nullptr && vertices != nullptr);
 
-    vtkSmartPointer<vtkPolyData> polyData = vtkSmartPointer<vtkPolyData>::Take(parseIndexedTriangles(*vertices, 0, 1, *indices, 0));
+    vtkSmartPointer<vtkPolyData> polyData = parseIndexedTriangles(*vertices, 0, 1, *indices, 0);
 
     for (auto namedVector : vectorArrays)
     {
@@ -73,16 +73,15 @@ DataObject * MatricesToVtk::loadIndexedTriangles(const QString & name, const std
 
         assert(size_t(polyData->GetNumberOfCells()) == vector.front().size());
 
-        vtkSmartPointer<vtkFloatArray> a;
-        a.TakeReference(parseFloatVector(vector, namedVector.first.c_str(), 0, int(vector.size() - 1)));
+        vtkSmartPointer<vtkFloatArray> a = parseFloatVector(vector, namedVector.first.c_str(), 0, int(vector.size() - 1));
 
         polyData->GetCellData()->AddArray(a);
     }
 
-    return new PolyDataObject(name, *polyData);
+    return std::make_unique<PolyDataObject>(name, *polyData);
 }
 
-DataObject * MatricesToVtk::loadDEM(const QString & name, const std::vector<ReadDataSet> & datasets)
+std::unique_ptr<DataObject> MatricesToVtk::loadDEM(const QString & name, const std::vector<ReadDataSet> & datasets)
 {
     assert(datasets.size() == 1);
     assert(datasets.begin()->type == DataSetType::grid2D);
@@ -111,12 +110,10 @@ DataObject * MatricesToVtk::loadDEM(const QString & name, const std::vector<Read
         }
     }
 
-    DataObject * dataObject = new ImageDataObject(name, *image);
-
-    return dataObject;
+    return std::make_unique<ImageDataObject>(name, *image);
 }
 
-DataObject * MatricesToVtk::loadGrid2D(const QString & name, const std::vector<ReadDataSet> & datasets)
+std::unique_ptr<DataObject> MatricesToVtk::loadGrid2D(const QString & name, const std::vector<ReadDataSet> & datasets)
 {
     assert(datasets.size() == 1);
     const auto dataDef = datasets.front();
@@ -152,10 +149,10 @@ DataObject * MatricesToVtk::loadGrid2D(const QString & name, const std::vector<R
 
     image->GetPointData()->SetScalars(pointData);
 
-    return new ImageDataObject(name, *image);
+    return std::make_unique<ImageDataObject>(name, *image);
 }
 
-DataObject * MatricesToVtk::loadGrid3D(const QString & name, const std::vector<ReadDataSet> & datasets)
+std::unique_ptr<DataObject> MatricesToVtk::loadGrid3D(const QString & name, const std::vector<ReadDataSet> & datasets)
 {
     assert(datasets.size() == 1);
     assert(datasets.front().type == DataSetType::vectorGrid3D);
@@ -300,10 +297,10 @@ DataObject * MatricesToVtk::loadGrid3D(const QString & name, const std::vector<R
         }
     }
 
-    return new VectorGrid3DDataObject(name, *image);
+    return std::make_unique<VectorGrid3DDataObject>(name, *image);
 }
 
-vtkPolyData * MatricesToVtk::parsePoints(const InputVector & parsedData, size_t firstColumn)
+vtkSmartPointer<vtkPolyData> MatricesToVtk::parsePoints(const InputVector & parsedData, size_t firstColumn)
 {
     assert(parsedData.size() > firstColumn);
 
@@ -322,14 +319,14 @@ vtkPolyData * MatricesToVtk::parsePoints(const InputVector & parsedData, size_t 
     VTK_CREATE(vtkCellArray, vertices);
     vertices->InsertNextCell(nbRows, pointIds.data());
 
-    vtkPolyData * resultPolyData = vtkPolyData::New();
+    auto resultPolyData = vtkSmartPointer<vtkPolyData>::New();
     resultPolyData->SetPoints(points);
     resultPolyData->SetVerts(vertices);
 
     return resultPolyData;
 }
 
-vtkPolyData * MatricesToVtk::parseIndexedTriangles(
+vtkSmartPointer<vtkPolyData> MatricesToVtk::parseIndexedTriangles(
     const InputVector & parsedVertexData, size_t vertexIndexColumn, size_t firstVertexColumn,
     const InputVector & parsedIndexData, size_t firstIndexColumn)
 {
@@ -358,14 +355,14 @@ vtkPolyData * MatricesToVtk::parseIndexedTriangles(
         triangles->InsertNextCell(triangle);    // this copies the triangle data into the list
     }
 
-    vtkPolyData * resultPolyData = vtkPolyData::New();
+    auto resultPolyData = vtkSmartPointer<vtkPolyData>::New();
     resultPolyData->SetPoints(points);
     resultPolyData->SetPolys(triangles);
 
     return resultPolyData;
 }
 
-DataObject * MatricesToVtk::readRawFile(const QString & fileName)
+std::unique_ptr<DataObject> MatricesToVtk::readRawFile(const QString & fileName)
 {
     InputVector inputVectors;
     FileParser::populateIOVectors(fileName.toStdString(), inputVectors);
@@ -398,10 +395,10 @@ DataObject * MatricesToVtk::readRawFile(const QString & fileName)
 
     QFileInfo fInfo(fileName);
 
-    return new RawVectorData(fInfo.baseName(), *dataArray);
+    return std::make_unique<RawVectorData>(fInfo.baseName(), *dataArray);
 }
 
-vtkFloatArray * MatricesToVtk::parseFloatVector(const InputVector & parsedData, const QString & arrayName, size_t firstColumn, size_t lastColumn)
+vtkSmartPointer<vtkFloatArray> MatricesToVtk::parseFloatVector(const InputVector & parsedData, const QString & arrayName, size_t firstColumn, size_t lastColumn)
 {
     assert(firstColumn <= lastColumn);
     assert(parsedData.size() > lastColumn);
@@ -413,7 +410,7 @@ vtkFloatArray * MatricesToVtk::parseFloatVector(const InputVector & parsedData, 
         assert(ax.size() == size_t(numTuples));
     }
 
-    vtkFloatArray * a = vtkFloatArray::New();
+    auto a = vtkSmartPointer<vtkFloatArray>::New();
     a->SetName(arrayName.toUtf8().data());
     a->SetNumberOfComponents(numComponents);
     a->SetNumberOfTuples(numTuples);

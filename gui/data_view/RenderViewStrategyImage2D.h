@@ -1,5 +1,8 @@
 #pragma once
 
+#include <memory>
+#include <vector>
+
 #include <vtkSmartPointer.h>
 
 #include <gui/data_view/RenderViewStrategy.h>
@@ -61,7 +64,7 @@ private:
     QAction * m_profilePlotAcceptAction;
     QAction * m_profilePlotAbortAction;
     QList<QAction *> m_actions;
-    QList<DataObject *> m_previewProfiles;
+    std::vector<std::unique_ptr<DataObject>> m_previewProfiles;
     AbstractRenderView * m_previewRenderer;
     QList<QMetaObject::Connection> m_previewRendererConnections;
 

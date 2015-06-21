@@ -133,8 +133,8 @@ bool DEMWidget::save()
         addArray("DEM_Bounds", demBounds);
     }
 
-    auto newData = new PolyDataObject(m_ui->newSurfaceModelName->text(), *surface);
-    DataSetHandler::instance().addData({ newData });
+    auto newData = std::make_unique<PolyDataObject>(m_ui->newSurfaceModelName->text(), *surface);
+    DataSetHandler::instance().takeData(std::move(newData));
 
     return true;
 }

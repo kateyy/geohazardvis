@@ -71,7 +71,9 @@ public:
     static void setDataObject(vtkInformation & information, DataObject * dataObject);
 
     DataObject(const DataObject &) = delete;
+    DataObject(DataObject &&) = delete;
     void operator=(const DataObject &) = delete;
+    void operator=(DataObject &&) = delete;
 
 signals:
     void dataChanged();

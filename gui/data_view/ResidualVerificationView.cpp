@@ -442,9 +442,10 @@ void ResidualVerificationView::updateResidual(QList<AbstractVisualizedData *> & 
         imageData->CopyStructure(observation->imageData());
         imageData->AllocateScalars(VTK_FLOAT, 1);
 
-        residual = new ImageDataObject("Residual", *imageData);
+        auto residualData = std::make_unique<ImageDataObject>("Residual", *imageData);
+        residual = residualData.get();
 
-        DataSetHandler::instance().addData({ residual });
+        DataSetHandler::instance().takeData(std::move(residualData));
     }
 
     vtkIdType length = observationData->GetNumberOfTuples();
@@ -595,7 +596,7 @@ void ResidualVerificationView::updateModelFromUi(int index)
         }
     }
 
-    bool newModel = false;
+    std::unique_ptr<ImageDataObject> newModelImage;
 
     if (!image)
     {
@@ -616,11 +617,11 @@ void ResidualVerificationView::updateModelFromUi(int index)
             modelImageData->GetPointData()->SetScalars(uplus);
         }
 
-        image = new ImageDataObject(modelImageName, *modelImageData);
-        newModel = true;
+        newModelImage = std::make_unique<ImageDataObject>(modelImageName, *modelImageData);
+        image = newModelImage.get();
     }
 
     setModelData(image);
-    if (newModel)
-        DataSetHandler::instance().addData({ image });
+    if (newModelImage)
+        DataSetHandler::instance().takeData(std::move(newModelImage));
 }

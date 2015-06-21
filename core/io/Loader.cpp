@@ -114,7 +114,7 @@ const QMap<QString, QStringList> & Loader::fileFormatExtensions()
     return m;
 }
 
-DataObject * Loader::readFile(const QString & filename)
+std::unique_ptr<DataObject> Loader::readFile(const QString & filename)
 {
     QFileInfo fileInfo{ filename };
     QString baseName = fileInfo.baseName();
@@ -182,9 +182,9 @@ DataObject * Loader::readFile(const QString & filename)
         switch (image->GetDataDimension())
         {
         case 2:
-            return new ImageDataObject(dataSetName, *image);
+            return std::make_unique<ImageDataObject>(dataSetName, *image);
         case 3:
-            return new VectorGrid3DDataObject(dataSetName, *image);
+            return std::make_unique<VectorGrid3DDataObject>(dataSetName, *image);
 
         default:
             qDebug() << "VTK image data format not supported.";
@@ -221,7 +221,7 @@ DataObject * Loader::readFile(const QString & filename)
         if (dataSetName.isEmpty())
             dataSetName = baseName;
 
-        return new PolyDataObject(dataSetName, *polyData);
+        return std::make_unique<PolyDataObject>(dataSetName, *polyData);
     }
 
     if (vtkImageFileExts().contains(ext))
@@ -252,14 +252,14 @@ DataObject * Loader::readFile(const QString & filename)
         if (scalars)
             scalars->SetName(baseName.toUtf8().data());
 
-        return new ImageDataObject(baseName, *image);
+        return std::make_unique<ImageDataObject>(baseName, *image);
     }
 
     // handle all other files as our text file format
     return loadTextFile(filename);
 }
 
-DataObject * Loader::loadTextFile(const QString & filename)
+std::unique_ptr<DataObject> Loader::loadTextFile(const QString & filename)
 {
     std::vector<ReadDataSet> readDatasets;
     std::shared_ptr<InputFileInfo> inputInfo = TextFileReader::read(filename.toStdString(), readDatasets);

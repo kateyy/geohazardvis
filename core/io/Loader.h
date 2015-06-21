@@ -1,5 +1,7 @@
 #pragma once
 
+#include <memory>
+
 #include <core/core_api.h>
 
 
@@ -20,8 +22,8 @@ public:
     static const QString & fileFormatFilters();
     static const QMap<QString, QStringList> & fileFormatExtensions();
 
-    static DataObject * readFile(const QString & filename);
+    static std::unique_ptr<DataObject> readFile(const QString & filename);
 
 private:
-    static DataObject * loadTextFile(const QString & fileName);
+    static std::unique_ptr<DataObject> loadTextFile(const QString & fileName);
 };

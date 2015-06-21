@@ -1,5 +1,8 @@
 #pragma once
 
+#include <memory>
+#include <vector>
+
 #include <QObject>
 
 #include <core/core_api.h>
@@ -18,7 +21,8 @@ class CORE_API DataSetHandler : public QObject
 public:
     static DataSetHandler & instance();
 
-    void addData(const QList<DataObject *> & dataObjects);
+    void takeData(std::unique_ptr<DataObject> dataObject);
+    void takeData(std::vector<std::unique_ptr<DataObject>> dataObjects);
     void deleteData(const QList<DataObject *> & dataObjects);
 
     const QList<DataObject *> & dataSets();
@@ -31,6 +35,8 @@ signals:
 private:
     DataSetHandler();
     ~DataSetHandler();
+    DataSetHandler(const DataSetHandler&) = delete;
+    void operator=(const DataSetHandler&) = delete;
 
-    QMutex * m_mutex;
+    std::unique_ptr<QMutex> m_mutex;
 };
