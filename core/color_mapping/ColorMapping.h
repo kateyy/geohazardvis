@@ -1,5 +1,7 @@
 #pragma once
 
+#include <memory>
+
 #include <QList>
 #include <QMap>
 #include <QString>
@@ -73,7 +75,7 @@ private:
     void updateLegendVisibility();
 
 private:
-    GlyphColorMappingGlyphListener * m_glyphListener;
+    std::unique_ptr<GlyphColorMappingGlyphListener> m_glyphListener;
 
     QList<AbstractVisualizedData *> m_visualizedData;
 

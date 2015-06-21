@@ -14,7 +14,7 @@
 
 ColorMapping::ColorMapping(QObject * parent)
     : QObject(parent)
-    , m_glyphListener(new GlyphColorMappingGlyphListener(this))
+    , m_glyphListener(std::make_unique<GlyphColorMappingGlyphListener>())
     , m_gradient(vtkSmartPointer<vtkLookupTable>::New())
     , m_originalGradient(nullptr)
     , m_colorMappingLegend(vtkSmartPointer<OrientedScalarBarActor>::New())
@@ -25,7 +25,7 @@ ColorMapping::ColorMapping(QObject * parent)
 
     clear();
 
-    connect(m_glyphListener, &GlyphColorMappingGlyphListener::glyphMappingChanged,
+    connect(m_glyphListener.get(), &GlyphColorMappingGlyphListener::glyphMappingChanged,
         this, &ColorMapping::updateAvailableScalars, Qt::QueuedConnection);
 }
 

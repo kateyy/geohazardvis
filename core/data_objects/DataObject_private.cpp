@@ -23,6 +23,8 @@ DataObjectPrivate::DataObjectPrivate(DataObject & dataObject, const QString & na
 
 DataObjectPrivate::~DataObjectPrivate()
 {
+    disconnectAllEvents();
+
     delete m_tableModel;
 }
 

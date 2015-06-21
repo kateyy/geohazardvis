@@ -11,7 +11,7 @@ Application::Application(int & argc, char ** argv)
 
 void Application::startup()
 {
-    m_mainWindow = new MainWindow();
+    m_mainWindow = std::make_unique<MainWindow>();
     m_mainWindow->show();
 
     QStringList fileNames = arguments();
@@ -20,9 +20,4 @@ void Application::startup()
 
     if (!fileNames.isEmpty())
         m_mainWindow->openFiles(fileNames);
-}
-
-Application::~Application()
-{
-    delete m_mainWindow;
 }

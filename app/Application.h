@@ -1,5 +1,7 @@
 #pragma once
 
+#include <memory>
+
 #include <QApplication>
 
 
@@ -9,10 +11,9 @@ class Application : public QApplication
 {
 public:
     Application(int & argc, char ** argv);
-    virtual ~Application() override;
 
-    virtual void startup();
+    void startup();
 
 private:
-    MainWindow * m_mainWindow;
+    std::unique_ptr<MainWindow> m_mainWindow;
 };

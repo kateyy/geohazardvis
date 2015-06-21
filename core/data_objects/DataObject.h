@@ -1,5 +1,7 @@
 #pragma once
 
+#include <memory>
+
 #include <QObject>
 
 #include <core/core_api.h>
@@ -26,7 +28,7 @@ class CORE_API DataObject : public QObject
 
 public:
     DataObject(const QString & name, vtkDataSet * dataSet);
-    virtual ~DataObject();
+    ~DataObject() override;
 
     /** @return true if this is a 3D geometry (and false if it's image/2D data) */
     virtual bool is3D() const = 0;
@@ -112,7 +114,7 @@ private:
     void addObserver(const QString & eventName, vtkObject & subject, unsigned long tag);
 
 private:
-    DataObjectPrivate * const d_ptr;
+    std::unique_ptr<DataObjectPrivate> d_ptr;
 };
 
 template<typename U, typename T>

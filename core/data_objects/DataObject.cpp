@@ -25,7 +25,7 @@ vtkInformationKeyMacro(DataObject, ArrayIsAuxiliaryKey, Integer);
 
 
 DataObject::DataObject(const QString & name, vtkDataSet * dataSet)
-    : d_ptr(new DataObjectPrivate(*this, name, dataSet))
+    : d_ptr(std::make_unique<DataObjectPrivate>(*this, name, dataSet))
 {
     if (dataSet)
     {
@@ -58,7 +58,6 @@ DataObject::DataObject(const QString & name, vtkDataSet * dataSet)
 DataObject::~DataObject()
 {
     disconnectAllEvents();
-    delete d_ptr;
 }
 
 RenderedData * DataObject::createRendered()
@@ -210,7 +209,6 @@ void DataObject::disconnectEventGroup(const QString & eventName)
 
 void DataObject::disconnectAllEvents()
 {
-    d_ptr->disconnectAllEvents();
 }
 
 void DataObject::_dataChanged()
