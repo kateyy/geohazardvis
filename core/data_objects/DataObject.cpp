@@ -158,7 +158,7 @@ DataObject * DataObject::getDataObject(vtkInformation & information)
 
 void DataObject::setDataObject(vtkInformation & information, DataObject * dataObject)
 {
-    information.Set(DataObjectPrivate::DataObjectKey(), reinterpret_cast<int *>(&dataObject), 1);
+    information.Set(DataObjectPrivate::DataObjectKey(), reinterpret_cast<int *>(dataObject), 1);
 }
 
 bool DataObject::checkIfBoundsChanged()
