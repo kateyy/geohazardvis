@@ -16,7 +16,7 @@ int main()
     QString fileName{ "E:/Users/Karsten/Documents/Studium/GFZ/data/VTK XML data/Lazufre dem_90msrtm__raster.vti" };
     QString exportFN{ "E:/Users/Karsten/Documents/Studium/GFZ/data/VTK XML data/Lazufre dem_90msrtm__raster_fixed.vti" };
 
-    QScopedPointer<DataObject> data{ Loader::readFile(fileName) };
+    auto data = Loader::readFile(fileName);
 
     vtkSmartPointer<vtkImageData> image = vtkImageData::SafeDownCast(data->dataSet());
 
@@ -94,7 +94,7 @@ int main()
             qDebug() << "Fixed " << x << " " << y << " to " << v_fixed;
         }
 
-    qDebug() << Exporter::exportData(data.data(), exportFN);
+    qDebug() << Exporter::exportData(data.get(), exportFN);
 
     return 0;
 }

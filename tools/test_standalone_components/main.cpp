@@ -27,7 +27,7 @@ int main(int argc, char **argv)
 {
     QString fileName{ "C:/develop/$sync/GFZ/data/VTK XML data/Volcano 2 topo.vtp" };
 
-    QScopedPointer<DataObject> data{ Loader::readFile(fileName) };
+    auto data = Loader::readFile(fileName);
 
     QApplication app(argc, argv);
     QMainWindow window;
@@ -58,7 +58,7 @@ int main(int argc, char **argv)
     QPushButton button;
     button.connect(&button, &QPushButton::clicked, [&renderView, &data] (){
         QList<DataObject *> incomp;
-        renderView.showDataObjects({ data.data() }, incomp);
+        renderView.showDataObjects({ data.get() }, incomp);
     });
     button.show();
 

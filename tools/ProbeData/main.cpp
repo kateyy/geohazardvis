@@ -37,9 +37,9 @@ int main()
 
     QString exportFN{ "C:/develop/$sync/GFZ/data/Lazufre_movie.vtp" };
 
-    DataObject * highResMeshData = Loader::readFile(highResMeshFN);
+    auto highResMeshData = Loader::readFile(highResMeshFN);
     vtkSmartPointer<vtkDataSet> highResMesh = highResMeshData->dataSet();
-    delete highResMeshData;
+    highResMeshData.release();
 
     std::vector<std::vector<io::t_FP>> raw_pointData;
     FileParser::populateIOVectors(fileName.toStdString(), raw_pointData);
@@ -158,7 +158,7 @@ int main()
 
     LazufreMovie->Print(std::cout);
 
-    PolyDataObject lazufrePolyData("Lazufre", LazufreMovie);
+    PolyDataObject lazufrePolyData("Lazufre", *LazufreMovie);
     Exporter::exportData(&lazufrePolyData, exportFN);
 
 
