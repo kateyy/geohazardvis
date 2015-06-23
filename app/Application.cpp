@@ -9,6 +9,8 @@ Application::Application(int & argc, char ** argv)
 {
 }
 
+Application::~Application() = default;
+
 void Application::startup()
 {
     m_mainWindow = std::make_unique<MainWindow>();
