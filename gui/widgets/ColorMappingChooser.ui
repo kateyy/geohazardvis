@@ -216,7 +216,7 @@
           <item row="2" column="0">
            <widget class="QLabel" name="label_2">
             <property name="text">
-             <string>Label Font Size</string>
+             <string>Title Font Size</string>
             </property>
            </widget>
           </item>
@@ -226,7 +226,7 @@
           <item row="3" column="0">
            <widget class="QLabel" name="label">
             <property name="text">
-             <string>Title Font Size</string>
+             <string>Label Font Size</string>
             </property>
            </widget>
           </item>
