@@ -93,7 +93,6 @@ private:
     void updateComboBoxes();
     void updateObservationFromUi(int index);
     void updateModelFromUi(int index);
-    void updateModelImage();
 
 private:
     QVTKWidget * m_qvtkMain;

@@ -60,10 +60,11 @@ vtkSmartPointer<vtkDataArray> surfaceVectorsToInSAR(vtkDataArray & vectors, vtkV
     return output;
 }
 
-vtkSmartPointer<vtkImageData> createImageFromPoly(vtkImageData * referenceGrid, vtkPolyData * poly)
+vtkSmartPointer<vtkImageData> createImageFromPoly(vtkImageData & referenceGrid, vtkPolyData & poly)
 {
+    // this will set the elevation as active scalars!
     VTK_CREATE(vtkElevationFilter, polyElevationScalars);
-    polyElevationScalars->SetInputData(poly);
+    polyElevationScalars->SetInputData(&poly);
 
     VTK_CREATE(vtkTransform, polyFlattenerTransform);
     polyFlattenerTransform->Scale(1, 1, 0);
@@ -72,7 +73,7 @@ vtkSmartPointer<vtkImageData> createImageFromPoly(vtkImageData * referenceGrid, 
     polyFlattener->SetInputConnection(polyElevationScalars->GetOutputPort());
 
     VTK_CREATE(vtkImageData, newGridStructure);
-    newGridStructure->CopyStructure(referenceGrid);
+    newGridStructure->CopyStructure(&referenceGrid);
 
     VTK_CREATE(vtkProbeFilter, probe);
     probe->SetInputData(newGridStructure);
@@ -119,7 +120,6 @@ ResidualVerificationView::ResidualVerificationView(int index, QWidget * parent, 
         losEdit->setValue(m_inSARLineOfSight[i]);
         connect(losEdit, static_cast<void(QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), [this, i, losEdit] (double val) {
             m_inSARLineOfSight[i] = val;
-            updateModelImage();
         });
         connect(this, &ResidualVerificationView::lineOfSightChanged, [losEdit, i] (const vtkVector3d & los) {
             losEdit->setValue(los[i]);
@@ -234,8 +234,6 @@ void ResidualVerificationView::setResidualData(ImageDataObject * residual)
 void ResidualVerificationView::setInSARLineOfSight(const vtkVector3d & los)
 {
     m_inSARLineOfSight = los;
-    
-    updateModelImage();
 
     emit lineOfSightChanged(los);
 }
@@ -505,8 +503,10 @@ void ResidualVerificationView::updateResidual(QList<AbstractVisualizedData *> & 
     assert(residualData);
     residualData->SetName("Residual");
 
-    threadingzeug::parallel_for(0, length, [observationData, modelData, residualData] (int i) {
-        residualData->SetValue(i, observationData->GetTuple(i)[0] - (modelData->GetTuple(i)[0]));
+    // parallel_for create artifacts (related to NaN values, FPU status in the threads? (see _statusfp(), _controlfp())
+    threadingzeug::sequential_for(0, length, [observationData, modelData, residualData] (int i) {
+        auto d = observationData->GetTuple(i)[0] - (modelData->GetTuple(i)[0]);
+        residualData->SetValue(i, d);
     });
 
     setDataInternal(2, residual, toDelete);
@@ -658,15 +658,18 @@ void ResidualVerificationView::updateModelFromUi(int index)
         vtkPolyData * polyModel = vtkPolyData::SafeDownCast(data->dataSet());
         assert(polyModel);
 
+        std::string modelScalarsName = "Modeled InSAR";
         auto surfaceVectors = polyModel->GetCellData()->GetArray("U-");
         if (surfaceVectors)
         {
             auto InSAR = surfaceVectorsToInSAR(*surfaceVectors, m_inSARLineOfSight);
-            InSAR->SetName("Modeled InSAR");
+            InSAR->SetName(modelScalarsName.c_str());
             polyModel->GetCellData()->SetScalars(InSAR);
         }
 
-        auto modelImageData = createImageFromPoly(observation->imageData(), polyModel);
+        auto modelImageData = createImageFromPoly(*observation->imageData(), *polyModel);
+        // make sure to use the InSAR model for further computations
+        modelImageData->GetPointData()->SetActiveScalars(modelScalarsName.c_str());
 
         newModelImage = std::make_unique<ImageDataObject>(modelImageName, *modelImageData);
         image = newModelImage.get();
@@ -675,8 +678,5 @@ void ResidualVerificationView::updateModelFromUi(int index)
     setModelData(image);
     if (newModelImage)
         DataSetHandler::instance().takeData(std::move(newModelImage));
-}
 
-void ResidualVerificationView::updateModelImage()
-{
 }
