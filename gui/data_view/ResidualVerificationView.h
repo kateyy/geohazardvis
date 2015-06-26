@@ -2,6 +2,8 @@
 
 #include <QVector>
 
+#include <vtkVector.h>
+
 #include <gui/data_view/AbstractRenderView.h>
 
 
@@ -16,6 +18,8 @@ class RenderViewStrategyImage2D;
 
 class GUI_API ResidualVerificationView : public AbstractRenderView
 {
+    Q_OBJECT
+
 public:
     ResidualVerificationView(int index, QWidget * parent = nullptr, Qt::WindowFlags flags = 0);
     ~ResidualVerificationView() override;
@@ -36,6 +40,9 @@ public:
     void setObservationData(ImageDataObject * observation);
     void setModelData(ImageDataObject * model);
     void setResidualData(ImageDataObject * residual);
+
+    void setInSARLineOfSight(const vtkVector3d & los);
+    const vtkVector3d & inSARLineOfSight() const;
 
     unsigned int numberOfSubViews() const override;
 
@@ -64,6 +71,9 @@ protected:
 
     void axesEnabledChangedEvent(bool enabled) override;
 
+signals:
+    void lineOfSightChanged(const vtkVector3d & los);
+
 private:
     void initialize();
 
@@ -83,11 +93,14 @@ private:
     void updateComboBoxes();
     void updateObservationFromUi(int index);
     void updateModelFromUi(int index);
+    void updateModelImage();
 
 private:
     QVTKWidget * m_qvtkMain;
     QComboBox * m_observationCombo;
     QComboBox * m_modelCombo;
+
+    vtkVector3d m_inSARLineOfSight;
 
     RendererImplementationBase3D * m_implementation;
     RenderViewStrategyImage2D * m_strategy;

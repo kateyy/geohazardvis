@@ -5,23 +5,25 @@
 #include <random>
 
 #include <QBoxLayout>
-#include <QDebug>
 #include <QComboBox>
+#include <QDebug>
+#include <QDoubleSpinBox>
 #include <QToolBar>
 
 #include <QVTKWidget.h>
+#include <vtkAssignAttribute.h>
+#include <vtkCellData.h>
+#include <vtkElevationFilter.h>
 #include <vtkFloatArray.h>
 #include <vtkImageData.h>
+#include <vtkMath.h>
 #include <vtkPointData.h>
-#include <vtkRenderer.h>
+#include <vtkPolyData.h>
+#include <vtkProbeFilter.h>
 #include <vtkRenderWindow.h>
-
-#include <vtkAssignAttribute.h>
-#include <vtkElevationFilter.h>
+#include <vtkRenderer.h>
 #include <vtkTransform.h>
 #include <vtkTransformFilter.h>
-#include <vtkProbeFilter.h>
-#include <vtkPolyData.h>
 
 #include <threadingzeug/parallelfor.h>
 
@@ -39,6 +41,24 @@
 
 namespace
 {
+
+vtkSmartPointer<vtkDataArray> surfaceVectorsToInSAR(vtkDataArray & vectors, vtkVector3d lineOfSight)
+{
+    auto output = vtkSmartPointer<vtkDataArray>::Take(vectors.NewInstance());
+    output->SetNumberOfComponents(1);
+    output->SetNumberOfTuples(vectors.GetNumberOfTuples());
+
+    lineOfSight.Normalize();
+
+    auto projection = [output, &vectors, &lineOfSight] (int i) {
+        double scalarProjection = vtkMath::Dot(vectors.GetTuple(i), lineOfSight.GetData());
+        output->SetTuple(i, &scalarProjection);
+    };
+
+    threadingzeug::parallel_for(0, output->GetNumberOfTuples(), projection);
+
+    return output;
+}
 
 vtkSmartPointer<vtkImageData> createImageFromPoly(vtkImageData * referenceGrid, vtkPolyData * poly)
 {
@@ -72,6 +92,7 @@ ResidualVerificationView::ResidualVerificationView(int index, QWidget * parent, 
     , m_qvtkMain(nullptr)
     , m_observationCombo(nullptr)
     , m_modelCombo(nullptr)
+    , m_inSARLineOfSight(0, 0, 1)
     , m_implementation(nullptr)
     , m_strategy(nullptr)
 {
@@ -89,6 +110,22 @@ ResidualVerificationView::ResidualVerificationView(int index, QWidget * parent, 
     m_modelCombo = new QComboBox();
     toolBar()->addWidget(m_observationCombo);
     toolBar()->addWidget(m_modelCombo);
+
+    for (int i = 0; i < 3; ++i)
+    {
+        auto losEdit = new QDoubleSpinBox();
+        losEdit->setRange(0, 1);
+        losEdit->setSingleStep(0.01);
+        losEdit->setValue(m_inSARLineOfSight[i]);
+        connect(losEdit, static_cast<void(QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), [this, i, losEdit] (double val) {
+            m_inSARLineOfSight[i] = val;
+            updateModelImage();
+        });
+        connect(this, &ResidualVerificationView::lineOfSightChanged, [losEdit, i] (const vtkVector3d & los) {
+            losEdit->setValue(los[i]);
+        });
+        toolBar()->addWidget(losEdit);
+    }
 
     initialize();   // lazy initialize in not really needed for now
 
@@ -192,6 +229,20 @@ void ResidualVerificationView::setModelData(ImageDataObject * model)
 void ResidualVerificationView::setResidualData(ImageDataObject * residual)
 {
     setDataHelper(2, residual);
+}
+
+void ResidualVerificationView::setInSARLineOfSight(const vtkVector3d & los)
+{
+    m_inSARLineOfSight = los;
+    
+    updateModelImage();
+
+    emit lineOfSightChanged(los);
+}
+
+const vtkVector3d & ResidualVerificationView::inSARLineOfSight() const
+{
+    return m_inSARLineOfSight;
 }
 
 void ResidualVerificationView::setDataHelper(unsigned int subViewIndex, ImageDataObject * data, bool skipGuiUpdate, QList<AbstractVisualizedData *> * toDelete)
@@ -451,15 +502,11 @@ void ResidualVerificationView::updateResidual(QList<AbstractVisualizedData *> & 
     vtkIdType length = observationData->GetNumberOfTuples();
 
     auto residualData = vtkFloatArray::SafeDownCast(residual->imageData()->GetPointData()->GetScalars());
-    residualData->SetName("Residual");
     assert(residualData);
+    residualData->SetName("Residual");
 
-    float * obs = reinterpret_cast<float *>(observationData->GetVoidPointer(0));
-    float * mdl = reinterpret_cast<float *>(modelData->GetVoidPointer(0));
-    float * res = reinterpret_cast<float *>(residualData->GetVoidPointer(0));
-
-    threadingzeug::parallel_for(0, length, [obs, mdl, res](int i) {
-        res[i] = obs[i] - mdl[i];
+    threadingzeug::parallel_for(0, length, [observationData, modelData, residualData] (int i) {
+        residualData->SetValue(i, observationData->GetTuple(i)[0] - (modelData->GetTuple(i)[0]));
     });
 
     setDataInternal(2, residual, toDelete);
@@ -611,11 +658,15 @@ void ResidualVerificationView::updateModelFromUi(int index)
         vtkPolyData * polyModel = vtkPolyData::SafeDownCast(data->dataSet());
         assert(polyModel);
 
-        auto modelImageData = createImageFromPoly(observation->imageData(), polyModel);
-        if (auto uplus = modelImageData->GetPointData()->GetArray("U+"))
+        auto surfaceVectors = polyModel->GetCellData()->GetArray("U-");
+        if (surfaceVectors)
         {
-            modelImageData->GetPointData()->SetScalars(uplus);
+            auto InSAR = surfaceVectorsToInSAR(*surfaceVectors, m_inSARLineOfSight);
+            InSAR->SetName("Modeled InSAR");
+            polyModel->GetCellData()->SetScalars(InSAR);
         }
+
+        auto modelImageData = createImageFromPoly(observation->imageData(), polyModel);
 
         newModelImage = std::make_unique<ImageDataObject>(modelImageName, *modelImageData);
         image = newModelImage.get();
@@ -624,4 +675,8 @@ void ResidualVerificationView::updateModelFromUi(int index)
     setModelData(image);
     if (newModelImage)
         DataSetHandler::instance().takeData(std::move(newModelImage));
+}
+
+void ResidualVerificationView::updateModelImage()
+{
 }
