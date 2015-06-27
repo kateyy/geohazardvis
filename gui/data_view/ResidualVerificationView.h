@@ -12,8 +12,9 @@ class QComboBox;
 
 class ColorMapping;
 class ImageDataObject;
+class PolyDataObject;
 class RendererImplementationBase3D;
-class RenderViewStrategyImage2D;
+class RenderViewStrategy;
 
 
 class GUI_API ResidualVerificationView : public AbstractRenderView
@@ -38,11 +39,14 @@ public:
         These functions have the same effect as calling removeDataObject(currentImage) and
         addDataObject(newImage) for the respective sub-views. */
     void setObservationData(ImageDataObject * observation);
-    void setModelData(ImageDataObject * model);
-    void setResidualData(ImageDataObject * residual);
+    void setModelData(DataObject * model);
+    void setResidualData(DataObject * residual);
 
     void setInSARLineOfSight(const vtkVector3d & los);
     const vtkVector3d & inSARLineOfSight() const;
+
+    void setInterpolateModelOnObservation(bool modelToObservation);
+    bool interpolatemodelOnObservation() const;
 
     unsigned int numberOfSubViews() const override;
 
@@ -79,10 +83,10 @@ private:
 
     // common implementation for the public interface functions
     // @delayGuiUpdate set to true and delete the objects appended to toDelete yourself, if you intend to call this function multiple times
-    void setDataHelper(unsigned int subViewIndex, ImageDataObject * data, bool delayGuiUpdate = false, QList<AbstractVisualizedData *> * toDelete = nullptr);
+    void setDataHelper(unsigned int subViewIndex, DataObject * data, bool delayGuiUpdate = false, QList<AbstractVisualizedData *> * toDelete = nullptr);
     /** Low level function, that won't trigger GUI updates.
         @param toDelete Delete these objects after removing them from dependent components (GUI etc) */
-    void setDataInternal(unsigned int subViewIndex, ImageDataObject * dataObject, QList<AbstractVisualizedData *> & toDelete);
+    void setDataInternal(unsigned int subViewIndex, DataObject * dataObject, QList<AbstractVisualizedData *> & toDelete);
     /** Update the residual view, show a residual if possible, discard old visualization data 
       * @param toDelete delete old visualization data after informing the GUI */
     void updateResidual(QList<AbstractVisualizedData *> & toDelete);
@@ -100,9 +104,10 @@ private:
     QComboBox * m_modelCombo;
 
     vtkVector3d m_inSARLineOfSight;
+    bool m_interpolateModelOnObservation;
 
     RendererImplementationBase3D * m_implementation;
-    RenderViewStrategyImage2D * m_strategy;
-    QVector<ImageDataObject *> m_images;
+    RenderViewStrategy * m_strategy;
+    QVector<DataObject *> m_dataSets;
     QVector<AbstractVisualizedData *> m_visualizations;
 };

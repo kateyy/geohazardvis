@@ -5,6 +5,7 @@
 #include <random>
 
 #include <QBoxLayout>
+#include <QCheckBox>
 #include <QComboBox>
 #include <QDebug>
 #include <QDoubleSpinBox>
@@ -18,12 +19,14 @@
 #include <vtkImageData.h>
 #include <vtkMath.h>
 #include <vtkPointData.h>
+#include <vtkPointDataToCellData.h>
 #include <vtkPolyData.h>
 #include <vtkProbeFilter.h>
 #include <vtkRenderWindow.h>
 #include <vtkRenderer.h>
 #include <vtkTransform.h>
 #include <vtkTransformFilter.h>
+#include <vtkWarpScalar.h>
 
 #include <threadingzeug/parallelfor.h>
 
@@ -33,10 +36,10 @@
 #include <core/color_mapping/ColorMapping.h>
 #include <core/data_objects/ImageDataObject.h>
 #include <core/data_objects/PolyDataObject.h>
-#include <core/utility/vtkhelper.h>
 #include <gui/SelectionHandler.h>
 #include <gui/data_view/RendererImplementationBase3D.h>
 #include <gui/data_view/RenderViewStrategyImage2D.h>
+#include <gui/data_view/RenderViewStrategy3D.h>
 
 
 namespace
@@ -63,19 +66,20 @@ vtkSmartPointer<vtkDataArray> surfaceVectorsToInSAR(vtkDataArray & vectors, vtkV
 vtkSmartPointer<vtkImageData> createImageFromPoly(vtkImageData & referenceGrid, vtkPolyData & poly)
 {
     // this will set the elevation as active scalars!
-    VTK_CREATE(vtkElevationFilter, polyElevationScalars);
+    auto polyElevationScalars = vtkSmartPointer<vtkElevationFilter>::New();
     polyElevationScalars->SetInputData(&poly);
 
-    VTK_CREATE(vtkTransform, polyFlattenerTransform);
+    auto polyFlattenerTransform = vtkSmartPointer<vtkTransform>::New();
     polyFlattenerTransform->Scale(1, 1, 0);
-    VTK_CREATE(vtkTransformFilter, polyFlattener);
+    auto polyFlattener = vtkSmartPointer<vtkTransformFilter>::New();
     polyFlattener->SetTransform(polyFlattenerTransform);
     polyFlattener->SetInputConnection(polyElevationScalars->GetOutputPort());
 
-    VTK_CREATE(vtkImageData, newGridStructure);
+    // create new data set, to not pass the referenceGrid's attributes to the output
+    auto newGridStructure = vtkSmartPointer<vtkImageData>::New();
     newGridStructure->CopyStructure(&referenceGrid);
 
-    VTK_CREATE(vtkProbeFilter, probe);
+    auto probe = vtkSmartPointer<vtkProbeFilter>::New();
     probe->SetInputData(newGridStructure);
     probe->SetSourceConnection(polyFlattener->GetOutputPort());
 
@@ -83,6 +87,43 @@ vtkSmartPointer<vtkImageData> createImageFromPoly(vtkImageData & referenceGrid, 
     vtkSmartPointer<vtkImageData> newImage = vtkImageData::SafeDownCast(probe->GetOutput());
 
     return newImage;
+}
+
+vtkSmartPointer<vtkPolyData> interpolateImageOnPoly(vtkPolyData & referencePoly, vtkImageData & image)
+{
+    auto newPolyStructure = vtkSmartPointer<vtkPolyData>::New();
+    // better using DeepCopy here?
+    newPolyStructure->ShallowCopy(&referencePoly);
+
+    auto polyElevationScalars = vtkSmartPointer<vtkElevationFilter>::New();
+    polyElevationScalars->SetInputData(newPolyStructure);
+
+    auto polyFlattenerTransform = vtkSmartPointer<vtkTransform>::New();
+    polyFlattenerTransform->Scale(1, 1, 0);
+    auto polyFlattener = vtkSmartPointer<vtkTransformFilter>::New();
+    polyFlattener->SetTransform(polyFlattenerTransform);
+    polyFlattener->SetInputConnection(polyElevationScalars->GetOutputPort());
+
+    // interpolate image data to the flattened surface
+    auto probe = vtkSmartPointer<vtkProbeFilter>::New();
+    probe->SetInputConnection(polyFlattener->GetOutputPort());
+    probe->SetSourceData(&image);
+
+    // restore the elevation
+    auto elevate = vtkSmartPointer<vtkWarpScalar>::New();
+    elevate->UseNormalOn();
+    elevate->SetNormal(0, 0, 1);
+    elevate->SetInputConnection(probe->GetOutputPort());
+    elevate->Update();
+
+    // vtkProbeFilter interpolates at point positions, we need cell attributes
+    // alternatively, probe on referencePoly's centroids to omit the additional interpolation step
+    auto pointToCellData = vtkSmartPointer<vtkPointDataToCellData>::New();
+    pointToCellData->SetInputConnection(elevate->GetOutputPort());
+    pointToCellData->Update();
+
+    vtkSmartPointer<vtkPolyData> outputPoly = vtkPolyData::SafeDownCast(pointToCellData->GetOutput());
+    return outputPoly;
 }
 
 }
@@ -94,6 +135,7 @@ ResidualVerificationView::ResidualVerificationView(int index, QWidget * parent, 
     , m_observationCombo(nullptr)
     , m_modelCombo(nullptr)
     , m_inSARLineOfSight(0, 0, 1)
+    , m_interpolateModelOnObservation(false)
     , m_implementation(nullptr)
     , m_strategy(nullptr)
 {
@@ -106,6 +148,12 @@ ResidualVerificationView::ResidualVerificationView(int index, QWidget * parent, 
     layout->addWidget(m_qvtkMain);
 
     setLayout(layout);
+
+    auto interpolationSwitch = new QCheckBox();
+    interpolationSwitch->setChecked(m_interpolateModelOnObservation);
+    // TODO correctly link in both ways
+    connect(interpolationSwitch, &QAbstractButton::toggled, this, &ResidualVerificationView::setInterpolateModelOnObservation);
+    toolBar()->addWidget(interpolationSwitch);
 
     m_observationCombo = new QComboBox();
     m_modelCombo = new QComboBox();
@@ -200,17 +248,17 @@ AbstractVisualizedData * ResidualVerificationView::visualizationFor(DataObject *
 {
     if (subViewIndex == -1)
     {
-        for (int i = 0; i < m_images.size(); ++i)
+        for (int i = 0; i < m_dataSets.size(); ++i)
         {
-            if (m_images[i] == dataObject && m_visualizations.size() > i)
+            if (m_dataSets[i] == dataObject && m_visualizations.size() > i)
                 return m_visualizations[i];
         }
         return nullptr;
     }
 
     assert(subViewIndex >= 0);
-    assert(m_images.size() >= m_visualizations.size());
-    if (m_images[subViewIndex] != dataObject || m_visualizations.size() < subViewIndex)
+    assert(m_dataSets.size() >= m_visualizations.size());
+    if (m_dataSets[subViewIndex] != dataObject || m_visualizations.size() < subViewIndex)
         return nullptr;
 
     return m_visualizations[subViewIndex];
@@ -221,12 +269,12 @@ void ResidualVerificationView::setObservationData(ImageDataObject * observation)
     setDataHelper(0, observation);
 }
 
-void ResidualVerificationView::setModelData(ImageDataObject * model)
+void ResidualVerificationView::setModelData(DataObject * model)
 {
     setDataHelper(1, model);
 }
 
-void ResidualVerificationView::setResidualData(ImageDataObject * residual)
+void ResidualVerificationView::setResidualData(DataObject * residual)
 {
     setDataHelper(2, residual);
 }
@@ -243,11 +291,21 @@ const vtkVector3d & ResidualVerificationView::inSARLineOfSight() const
     return m_inSARLineOfSight;
 }
 
-void ResidualVerificationView::setDataHelper(unsigned int subViewIndex, ImageDataObject * data, bool skipGuiUpdate, QList<AbstractVisualizedData *> * toDelete)
+void ResidualVerificationView::setInterpolateModelOnObservation(bool modelToObservation)
+{
+    m_interpolateModelOnObservation = modelToObservation;
+}
+
+bool ResidualVerificationView::interpolatemodelOnObservation() const
+{
+    return m_interpolateModelOnObservation;
+}
+
+void ResidualVerificationView::setDataHelper(unsigned int subViewIndex, DataObject * data, bool skipGuiUpdate, QList<AbstractVisualizedData *> * toDelete)
 {
     assert(skipGuiUpdate == (toDelete != nullptr));
 
-    if (m_images.size() > int(subViewIndex) && m_images[subViewIndex] == data)
+    if (m_dataSets.size() > int(subViewIndex) && m_dataSets[subViewIndex] == data)
         return;
 
     QList<AbstractVisualizedData *> toDeleteInternal;
@@ -338,17 +396,17 @@ void ResidualVerificationView::showDataObjectsImpl(const QList<DataObject *> & d
         return;
     }
 
-    assert(m_images.size() < int(subViewIndex) || m_images[subViewIndex] == nullptr || m_images[subViewIndex] == imageData);
+    assert(m_dataSets.size() < int(subViewIndex) || m_dataSets[subViewIndex] == nullptr || m_dataSets[subViewIndex] == imageData);
 
     setDataHelper(subViewIndex, imageData);
 }
 
 void ResidualVerificationView::hideDataObjectsImpl(const QList<DataObject *> & dataObjects, unsigned int subViewIndex)
 {
-    assert(unsigned(m_images.size()) > subViewIndex);
+    assert(unsigned(m_dataSets.size()) > subViewIndex);
 
     // no caching for now, just remove the object
-    if (dataObjects.contains(m_images[subViewIndex]))
+    if (dataObjects.contains(m_dataSets[subViewIndex]))
         setDataHelper(subViewIndex, nullptr);
 }
 
@@ -358,15 +416,15 @@ QList<DataObject *> ResidualVerificationView::dataObjectsImpl(int subViewIndex) 
     {
         QList<DataObject *> objects;
 
-        for (auto && image : m_images)
+        for (auto && image : m_dataSets)
             if (image)
                 objects << image;
 
         return objects;
     }
 
-    if (m_images.size() > subViewIndex && m_images[subViewIndex])
-        return{ m_images[subViewIndex] };
+    if (m_dataSets.size() > subViewIndex && m_dataSets[subViewIndex])
+        return{ m_dataSets[subViewIndex] };
         
     return{};
 }
@@ -377,9 +435,9 @@ void ResidualVerificationView::prepareDeleteDataImpl(const QList<DataObject *> &
 
     for (auto objectToDelete : dataObjects)
     {
-        for (int i = 0; i < m_images.size(); ++i)
+        for (int i = 0; i < m_dataSets.size(); ++i)
         {
-            if (objectToDelete == m_images[i])
+            if (objectToDelete == m_dataSets[i])
                 setDataHelper(i, nullptr, true, &toDelete);
         }
     }
@@ -420,10 +478,11 @@ void ResidualVerificationView::initialize()
     m_implementation = new RendererImplementationBase3D(*this);
     m_implementation->activate(m_qvtkMain);
 
-    m_strategy = new RenderViewStrategyImage2D(*m_implementation, m_implementation);
+    //m_strategy = new RenderViewStrategyImage2D(*m_implementation, m_implementation);
+    m_strategy = new RenderViewStrategy3D(*m_implementation, m_implementation);
     m_implementation->setStrategy(m_strategy);
 
-    m_images.resize(3);
+    m_dataSets.resize(3);
     m_visualizations.resize(3);
 
     for (unsigned i = 0; i < numberOfSubViews(); ++i)
@@ -435,11 +494,11 @@ void ResidualVerificationView::initialize()
     }
 }
 
-void ResidualVerificationView::setDataInternal(unsigned int subViewIndex, ImageDataObject * dataObject, QList<AbstractVisualizedData *> & toDelete)
+void ResidualVerificationView::setDataInternal(unsigned int subViewIndex, DataObject * dataObject, QList<AbstractVisualizedData *> & toDelete)
 {
     initialize();
 
-    m_images[subViewIndex] = dataObject;
+    m_dataSets[subViewIndex] = dataObject;
 
     auto && oldVis = m_visualizations[subViewIndex];
 
@@ -463,9 +522,9 @@ void ResidualVerificationView::setDataInternal(unsigned int subViewIndex, ImageD
 
 void ResidualVerificationView::updateResidual(QList<AbstractVisualizedData *> & toDelete)
 {
-    ImageDataObject * observation = m_images[0];
-    ImageDataObject * model = m_images[1];
-    ImageDataObject * residual = m_images[2];
+    DataObject * observation = m_dataSets[0];
+    DataObject * model = m_dataSets[1];
+    DataObject * residual = m_dataSets[2];
 
     if (!observation || !model)
     {
@@ -475,33 +534,84 @@ void ResidualVerificationView::updateResidual(QList<AbstractVisualizedData *> & 
         return;
     }
 
-    auto observationData = observation->imageData()->GetPointData()->GetScalars();
-    auto modelData = model->imageData()->GetPointData()->GetScalars();
-    assert(vtkFloatArray::SafeDownCast(observationData) && vtkFloatArray::SafeDownCast(modelData)); // TODO generalize the hacks below
+    assert(dynamic_cast<ImageDataObject *>((observation)));
+
+    vtkSmartPointer<vtkDataArray> observationData;
+    vtkSmartPointer<vtkDataArray> modelData;
+    vtkSmartPointer<vtkFloatArray> residualData;
     
-    if (observationData->GetNumberOfTuples() != modelData->GetNumberOfTuples())
+    // fetch relevant data - ImageData vs. PolyData - PointData vs. CellData
+    if (m_interpolateModelOnObservation)
     {
-        qDebug() << "Observation/model sizes differ, aborting";
-        return;
+        observationData = static_cast<ImageDataObject *>(observation)->imageData()->GetPointData()->GetScalars();
+
+        auto modelImage = dynamic_cast<ImageDataObject *>(model);
+        assert(modelImage);
+        modelData = modelImage->imageData()->GetPointData()->GetScalars();
+
+        if (observationData->GetNumberOfTuples() != modelData->GetNumberOfTuples())
+        {
+            qDebug() << "Observation/model sizes differ, aborting";
+            return;
+        }
+
+        if (!dynamic_cast<ImageDataObject *>(residual))
+        {
+            auto imageData = vtkSmartPointer<vtkImageData>::New();
+            imageData->CopyStructure(observation->dataSet());
+            imageData->AllocateScalars(VTK_FLOAT, 1);
+            residualData = vtkFloatArray::SafeDownCast(imageData->GetPointData()->GetScalars());
+
+            auto residualDataObject = std::make_unique<ImageDataObject>("Residual Image", *imageData);
+            residual = residualDataObject.get();
+
+            DataSetHandler::instance().takeData(std::move(residualDataObject));
+        }
+    }
+    else
+    {
+        auto observationImageData = static_cast<ImageDataObject *>(observation)->imageData();
+
+        auto modelPoly = dynamic_cast<PolyDataObject *>(model);
+        assert(modelPoly);
+
+        std::string observationScalars = observationImageData->GetPointData()->GetScalars()->GetName();
+        auto observationPoly = interpolateImageOnPoly(*modelPoly->polyDataSet(), *observationImageData);
+
+        observationPoly->GetCellData()->SetActiveScalars(observationScalars.c_str());
+        observationData = observationPoly->GetCellData()->GetScalars();
+        modelData = modelPoly->polyDataSet()->GetCellData()->GetScalars();  // simulated vectors should be projected to InSAR LoS up to here
+        assert(modelData);
+
+        if (!dynamic_cast<PolyDataObject *>(residual))
+        {
+            auto polyData = vtkSmartPointer<vtkPolyData>::New();
+            polyData->CopyStructure(observationPoly);
+            
+            residualData = vtkSmartPointer<vtkFloatArray>::New();
+            residualData->SetNumberOfComponents(1);
+            residualData->SetNumberOfTuples(polyData->GetNumberOfCells());
+            polyData->GetCellData()->SetScalars(residualData);
+
+            auto residualDataObject = std::make_unique<PolyDataObject>("Residual PolyData", *polyData);
+            residual = residualDataObject.get();
+
+            DataSetHandler::instance().takeData(std::move(residualDataObject));
+        }
     }
 
-    if (!residual)
-    {
-        VTK_CREATE(vtkImageData, imageData);
-        imageData->CopyStructure(observation->imageData());
-        imageData->AllocateScalars(VTK_FLOAT, 1);
 
-        auto residualData = std::make_unique<ImageDataObject>("Residual", *imageData);
-        residual = residualData.get();
-
-        DataSetHandler::instance().takeData(std::move(residualData));
-    }
+    assert(observationData && modelData && residualData);
 
     vtkIdType length = observationData->GetNumberOfTuples();
+    assert(modelData->GetNumberOfTuples() == length);
+    assert(residualData->GetNumberOfTuples() == length);
 
-    auto residualData = vtkFloatArray::SafeDownCast(residual->imageData()->GetPointData()->GetScalars());
-    assert(residualData);
-    residualData->SetName("Residual");
+    //residualData->SetName("Residual");
+    std::string name = observationData->GetName();
+    name += " .";
+    modelData->SetName(name.c_str());
+    residualData->SetName(name.c_str());
 
     // parallel_for create artifacts (related to NaN values, FPU status in the threads? (see _statusfp(), _controlfp())
     threadingzeug::sequential_for(0, length, [observationData, modelData, residualData] (int i) {
@@ -519,14 +629,14 @@ void ResidualVerificationView::updateGuiAfterDataChange()
     updateGuiSelection();
 
 
-    QList<ImageDataObject *> validImages;
-    if (m_images[0])
-        validImages << m_images[0];
-    if (m_images[1])
-        validImages << m_images[1];
-    m_strategy->setInputImages(validImages);
+    QList<DataObject *> validImages;
+    if (m_dataSets[0])
+        validImages << m_dataSets[0];
+    if (m_dataSets[1])
+        validImages << m_dataSets[1];
+    //m_strategy->setInputImages(validImages);
 
-    if (!validImages.isEmpty() || m_images[2])
+    if (!validImages.isEmpty() || m_dataSets[2])
         implementation().resetCamera(true);
 
     render();
@@ -626,57 +736,77 @@ void ResidualVerificationView::updateModelFromUi(int index)
 {
     auto data = reinterpret_cast<DataObject *>(m_modelCombo->itemData(index, Qt::UserRole).toULongLong());
     
-    ImageDataObject * image = dynamic_cast<ImageDataObject *>(data);
+    DataObject * modelData = nullptr;
 
-    QString modelImageName = data->name() + " (2D Grid)";
+    std::string modelVectorsName = "U-";
+    std::string modelScalarsName = "Modeled InSAR";
 
-    if (!image)
+    vtkPolyData * polyModel = vtkPolyData::SafeDownCast(data->dataSet());
+    if (polyModel)
     {
-        for (auto existing : DataSetHandler::instance().dataSets())
-        {
-            if (existing->name() == modelImageName)
-            {
-                image = dynamic_cast<ImageDataObject *>(existing);
-                if (image)
-                    break;
-            }
-        }
-    }
-
-    std::unique_ptr<ImageDataObject> newModelImage;
-
-    if (!image)
-    {
-        if (m_images.isEmpty() || !m_images[0])
-        {
-            setModelData(nullptr);
-            return;
-        }
-
-        ImageDataObject * observation = m_images[0];
-
-        vtkPolyData * polyModel = vtkPolyData::SafeDownCast(data->dataSet());
-        assert(polyModel);
-
-        std::string modelScalarsName = "Modeled InSAR";
-        auto surfaceVectors = polyModel->GetCellData()->GetArray("U-");
+        auto surfaceVectors = polyModel->GetCellData()->GetArray(modelVectorsName.c_str());
         if (surfaceVectors)
         {
             auto InSAR = surfaceVectorsToInSAR(*surfaceVectors, m_inSARLineOfSight);
             InSAR->SetName(modelScalarsName.c_str());
             polyModel->GetCellData()->SetScalars(InSAR);
         }
-
-        auto modelImageData = createImageFromPoly(*observation->imageData(), *polyModel);
-        // make sure to use the InSAR model for further computations
-        modelImageData->GetPointData()->SetActiveScalars(modelScalarsName.c_str());
-
-        newModelImage = std::make_unique<ImageDataObject>(modelImageName, *modelImageData);
-        image = newModelImage.get();
     }
 
-    setModelData(image);
-    if (newModelImage)
-        DataSetHandler::instance().takeData(std::move(newModelImage));
+    
+    if (m_interpolateModelOnObservation)
+    {
+        // we need the model as Image data here, so create one if the input is not an image
 
+        ImageDataObject * inputModelImage = dynamic_cast<ImageDataObject *>(data);
+        QString modelImageName = data->name() + " (2D Grid)";
+
+        if (!inputModelImage)
+        {
+            for (auto existing : DataSetHandler::instance().dataSets())
+            {
+                if (existing->name() == modelImageName)
+                {
+                    inputModelImage = dynamic_cast<ImageDataObject *>(existing);
+                    if (inputModelImage)
+                        break;
+                }
+            }
+        }
+
+        std::unique_ptr<ImageDataObject> newModelImage;
+
+        if (!inputModelImage)
+        {
+            ImageDataObject * observation = dynamic_cast<ImageDataObject *>(m_dataSets[0]);
+
+            if (m_dataSets.isEmpty() || !observation)
+            {
+                setModelData(nullptr);
+                return;
+            }
+
+            assert(polyModel);
+
+            auto modelImageData = createImageFromPoly(*observation->imageData(), *polyModel);
+            // make sure to use the InSAR model for further computations
+            modelImageData->GetPointData()->SetActiveScalars(modelScalarsName.c_str());
+
+            newModelImage = std::make_unique<ImageDataObject>(modelImageName, *modelImageData);
+            modelData = newModelImage.get();
+        }
+
+        if (newModelImage)
+            DataSetHandler::instance().takeData(std::move(newModelImage));
+    }
+    else
+    {
+        // pass trough the model poly data
+        PolyDataObject * inputModelPoly = dynamic_cast<PolyDataObject *>(data);
+        assert(inputModelPoly);
+        modelData = inputModelPoly;
+    }
+
+
+    setModelData(modelData);
 }
