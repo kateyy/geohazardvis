@@ -19,7 +19,7 @@ endif()
 
 
 set(WIN32_COMPILE_FLAGS
-    /nologo /Zc:wchar_t /Zc:forScope /GR /Zi /fp:precise /MP /W4 /we4150 /we4239 /wd4127 /wd4351 /wd4505 /wd4512 /wd4718
+    /nologo /Zc:wchar_t /Zc:forScope /GR /Zi /fp:precise /MP /W4 /we4150 /we4239 /we4456 /we4457 /wd4127 /wd4351 /wd4458 /wd4505 /wd4512 /wd4718
     # nologo       -> no logo
     # Zc:wchar_t   -> treat wchar_t as built-in type: yes
     # Zc:forScope  -> force conformance in for loop scope: Yes
@@ -43,6 +43,8 @@ set(WIN32_COMPILE_FLAGS
     #   4251       -> 'identifier' : class 'type' needs to have dll-interface to be used by clients of class 'type2'
     #   4267       -> 'var' : conversion from 'size_t' to 'type', possible loss of data
     #   4351       -> new behavior: elements of array '...' will be default initialized
+    #   4456       -> declaration of 'x' hides previous local declaration
+    #   4457       -> declaration of 'x' hides function parameter
     #   4458       -> declaration of 'x' hides class member
     #   4505       -> 'function' : unreferenced local function has been removed (caused by libzeug)
     #   4512       -> 'class' : assignment operator could not be generated
@@ -69,7 +71,7 @@ set(WIN32_COMPILE_FLAGS
 )
 
 if(MSVC_VERSION VERSION_GREATER 1800)
-    list(APPEND WIN32_COMPILE_FLAGS /bigobj /wd4458)
+    list(APPEND WIN32_COMPILE_FLAGS /bigobj)
 endif()
 
 set(DEFAULT_COMPILE_FLAGS
