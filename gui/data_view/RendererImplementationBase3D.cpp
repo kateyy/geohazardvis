@@ -435,16 +435,18 @@ void RendererImplementationBase3D::updateBounds()
 {
     // TODO update only for relevant views
 
-    for (auto && viewport : m_viewportSetups)
+    for (int viewportIndex = 0; viewportIndex < m_viewportSetups.size(); ++viewportIndex)
     {
-        auto && dataBounds = viewport.dataBounds;
+        auto & viewportSetup = m_viewportSetups[viewportIndex];
+
+        auto & dataBounds = viewportSetup.dataBounds;
 
         dataBounds.Reset();
 
-        for (AbstractVisualizedData * it : m_renderView.visualizations())
+        for (AbstractVisualizedData * it : m_renderView.visualizations(viewportIndex))
             dataBounds.AddBounds(it->dataObject().bounds());
 
-        viewport.renderer->ResetCameraClippingRange();
+        viewportSetup.renderer->ResetCameraClippingRange();
 
     }
 
