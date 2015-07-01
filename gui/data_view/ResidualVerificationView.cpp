@@ -606,14 +606,13 @@ void ResidualVerificationView::updateResidual(QList<AbstractVisualizedData *> & 
     vtkIdType length = observationData->GetNumberOfTuples();
     assert(modelData->GetNumberOfTuples() == length);
     assert(residualData->GetNumberOfTuples() == length);
+    
+    // TODO: more flexible color mapping: use same setup for scalars with different names
+    // TODO: use separate mapping for the residual view
+    modelData->SetName(observationData->GetName());
+    residualData->SetName(observationData->GetName());
 
-    //residualData->SetName("Residual");
-    std::string name = observationData->GetName();
-    name += " .";
-    modelData->SetName(name.c_str());
-    residualData->SetName(name.c_str());
-
-    // parallel_for create artifacts (related to NaN values, FPU status in the threads? (see _statusfp(), _controlfp())
+    // TODO: parallel_for create artifacts (related to NaN values, FPU status in the threads? (see _statusfp(), _controlfp())
     threadingzeug::sequential_for(0, length, [observationData, modelData, residualData] (int i) {
         auto d = observationData->GetTuple(i)[0] - (modelData->GetTuple(i)[0]);
         residualData->SetValue(i, d);

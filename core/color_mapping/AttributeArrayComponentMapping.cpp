@@ -13,13 +13,13 @@
 #include <vtkDataArray.h>
 #include <vtkDataSet.h>
 #include <vtkCellData.h>
+#include <vtkPassThrough.h>
 #include <vtkPointData.h>
 #include <vtkMapper.h>
 #include <vtkAssignAttribute.h>
 
 #include <core/AbstractVisualizedData.h>
 #include <core/types.h>
-#include <core/utility/vtkhelper.h>
 #include <core/data_objects/DataObject.h>
 #include <core/color_mapping/ColorMappingRegistry.h>
 
@@ -37,16 +37,15 @@ QList<ColorMappingData *> AttributeArrayComponentMapping::newInstances(const QLi
 {
     struct ArrayInfo
     {
-        ArrayInfo(int comp = 0, int attr = -1)
-            : numComponents(comp), attributeLocation(attr)
+        ArrayInfo(int comp = 0)
+            : numComponents(comp)
         {
         }
         int numComponents;
-        int attributeLocation;
+        QMap<AbstractVisualizedData *, int> attributeLocations;
     };
-    QMap<QString, ArrayInfo> arrayInfos;
 
-    auto checkAddAttributeArrays = [&arrayInfos] (vtkDataSetAttributes * attributes, int attributeLocation) -> void
+    auto checkAttributeArrays = [] (AbstractVisualizedData * vis, vtkDataSetAttributes * attributes, int attributeLocation, QMap<QString, ArrayInfo> & arrayInfos) -> void
     {
         for (auto i = 0; i < attributes->GetNumberOfArrays(); ++i)
         {
@@ -55,27 +54,35 @@ QList<ColorMappingData *> AttributeArrayComponentMapping::newInstances(const QLi
                 continue;
 
             // skip arrays that are marked as auxiliary
-            vtkInformation * arrayInfo = dataArray->GetInformation();
-            if (arrayInfo->Has(DataObject::ArrayIsAuxiliaryKey())
-                && arrayInfo->Get(DataObject::ArrayIsAuxiliaryKey()))
+            vtkInformation * dataArrayInfo = dataArray->GetInformation();
+            if (dataArrayInfo->Has(DataObject::ArrayIsAuxiliaryKey())
+                && dataArrayInfo->Get(DataObject::ArrayIsAuxiliaryKey()))
                 continue;
 
             QString name = QString::fromUtf8(dataArray->GetName());
-            int lastNumComp = arrayInfos.value(name).numComponents;
+            ArrayInfo & arrayInfo = arrayInfos[name];
+
+            int lastNumComp = arrayInfo.numComponents;
             int currentNumComp = dataArray->GetNumberOfComponents();
 
             if (lastNumComp && lastNumComp != currentNumComp)
             {
-                qDebug() << "found array named" << name << "with different number of components (" << lastNumComp << "," << dataArray->GetNumberOfComponents() << ")";
+                qDebug() << "Array named" << name << "found with different number of components (" << lastNumComp << "," << dataArray->GetNumberOfComponents() << ")";
+                continue;
+            }
+            if (arrayInfo.attributeLocations.contains(vis))
+            {
+                qDebug() << "Array named" << name << "found in different attribute locations in the same data set";
                 continue;
             }
 
-            if (!lastNumComp)   // current array isn't yet in our list
-                arrayInfos.insert(name, { currentNumComp, attributeLocation });
+            arrayInfo.numComponents = currentNumComp;
+            arrayInfo.attributeLocations[vis] = attributeLocation;
         }
     };
 
     QList<AbstractVisualizedData *> supportedData;
+    QMap<QString, ArrayInfo> arrayInfos;
 
     // list all available array names, check for same number of components
     for (AbstractVisualizedData * vis : visualizedData)
@@ -89,8 +96,9 @@ QList<ColorMappingData *> AttributeArrayComponentMapping::newInstances(const QLi
         {
             vtkDataSet * dataSet = vis->colorMappingInputData(i);
 
-            checkAddAttributeArrays(dataSet->GetCellData(), vtkAssignAttribute::CELL_DATA);
-            checkAddAttributeArrays(dataSet->GetPointData(), vtkAssignAttribute::POINT_DATA);
+            // in case of conflicts, prefer point over cell arrays (as they probably have a higher precision)
+            checkAttributeArrays(vis, dataSet->GetPointData(), vtkAssignAttribute::POINT_DATA, arrayInfos);
+            checkAttributeArrays(vis, dataSet->GetCellData(), vtkAssignAttribute::CELL_DATA, arrayInfos);
         }
     }
 
@@ -98,7 +106,11 @@ QList<ColorMappingData *> AttributeArrayComponentMapping::newInstances(const QLi
     for (auto it = arrayInfos.begin(); it != arrayInfos.end(); ++it)
     {
         const auto & arrayInfo = it.value();
-        AttributeArrayComponentMapping * mapping = new AttributeArrayComponentMapping(supportedData, it.key(), arrayInfo.attributeLocation, arrayInfo.numComponents);
+        AttributeArrayComponentMapping * mapping = new AttributeArrayComponentMapping(
+            supportedData, 
+            it.key(), 
+            arrayInfo.numComponents,
+            arrayInfo.attributeLocations);
         if (mapping->isValid())
         {
             mapping->initialize();
@@ -111,17 +123,17 @@ QList<ColorMappingData *> AttributeArrayComponentMapping::newInstances(const QLi
     return instances;
 }
 
-AttributeArrayComponentMapping::AttributeArrayComponentMapping(const QList<AbstractVisualizedData *> & visualizedData, QString dataArrayName, int attributeLocation, int numDataComponents)
+AttributeArrayComponentMapping::AttributeArrayComponentMapping(
+    const QList<AbstractVisualizedData *> & visualizedData, const QString & dataArrayName, 
+    int numDataComponents, const QMap<AbstractVisualizedData *, int> & attributeLocations)
     : ColorMappingData(visualizedData, numDataComponents)
-    , m_attributeLocation(attributeLocation)
     , m_dataArrayName(dataArrayName)
+    , m_attributeLocations(attributeLocations)
 {
     assert(!visualizedData.isEmpty());
 
     m_isValid = true;
 }
-
-AttributeArrayComponentMapping::~AttributeArrayComponentMapping() = default;
 
 QString AttributeArrayComponentMapping::name() const
 {
@@ -135,12 +147,18 @@ QString AttributeArrayComponentMapping::scalarsName() const
 
 vtkSmartPointer<vtkAlgorithm> AttributeArrayComponentMapping::createFilter(AbstractVisualizedData * visualizedData, int connection)
 {
-    VTK_CREATE(vtkAssignAttribute, filter);
+    int attributeLocation = m_attributeLocations.value(visualizedData, -1);
 
+    if (attributeLocation == -1)
+    {
+        auto filter = vtkSmartPointer<vtkPassThrough>::New();
+        filter->SetInputConnection(visualizedData->colorMappingInput(connection));
+        return filter;
+    }
+
+    auto filter = vtkSmartPointer<vtkAssignAttribute>::New();
     filter->SetInputConnection(visualizedData->colorMappingInput(connection));
-    filter->Assign(m_dataArrayName.toUtf8().data(), vtkDataSetAttributes::SCALARS,
-        m_attributeLocation);
-
+    filter->Assign(m_dataArrayName.toUtf8().data(), vtkDataSetAttributes::SCALARS, attributeLocation);
     return filter;
 }
 
@@ -149,18 +167,26 @@ bool AttributeArrayComponentMapping::usesFilter() const
     return true;
 }
 
-void AttributeArrayComponentMapping::configureMapper(AbstractVisualizedData * visualizedData, vtkAbstractMapper * mapper)
+void AttributeArrayComponentMapping::configureMapper(AbstractVisualizedData * visualizedData, vtkAbstractMapper * abstractMapper)
 {
-    ColorMappingData::configureMapper(visualizedData, mapper);
+    ColorMappingData::configureMapper(visualizedData, abstractMapper);
 
-    if (auto m = vtkMapper::SafeDownCast(mapper))
+    int attributeLocation = m_attributeLocations.value(visualizedData, -1);
+    auto mapper = vtkMapper::SafeDownCast(abstractMapper);
+
+    if (mapper && attributeLocation != -1)
     {
-        m->ScalarVisibilityOn();
-        if (m_attributeLocation == vtkAssignAttribute::CELL_DATA)
-            m->SetScalarModeToUseCellData();
-        else if (m_attributeLocation == vtkAssignAttribute::POINT_DATA)
-            m->SetScalarModeToUsePointData();
-        m->SelectColorArray(m_dataArrayName.toUtf8().data());
+        mapper->ScalarVisibilityOn();
+
+        if (attributeLocation == vtkAssignAttribute::CELL_DATA)
+            mapper->SetScalarModeToUseCellData();
+        else if (attributeLocation == vtkAssignAttribute::POINT_DATA)
+            mapper->SetScalarModeToUsePointData();
+        mapper->SelectColorArray(m_dataArrayName.toUtf8().data());
+    }
+    else if (mapper)
+    {
+        mapper->ScalarVisibilityOff();
     }
 }
 
@@ -177,14 +203,17 @@ QMap<int, QPair<double, double>> AttributeArrayComponentMapping::updateBounds()
 
         for (AbstractVisualizedData * visualizedData : m_visualizedData)
         {
+            int attributeLocation = m_attributeLocations.value(visualizedData, -1);
+            if (attributeLocation == -1)
+                continue;
+
             for (int i = 0; i < visualizedData->numberOfColorMappingInputs(); ++i)
             {
                 vtkDataSet * dataSet = visualizedData->colorMappingInputData(i);
-                vtkDataArray * dataArray = nullptr;
-                if (m_attributeLocation == vtkAssignAttribute::CELL_DATA)
-                    dataArray = dataSet->GetCellData()->GetArray(utf8Name.data());
-                else if (m_attributeLocation == vtkAssignAttribute::POINT_DATA)
-                    dataArray = dataSet->GetPointData()->GetArray(utf8Name.data());
+                vtkDataArray * dataArray = 
+                    attributeLocation == vtkAssignAttribute::CELL_DATA ? dataSet->GetCellData()->GetArray(utf8Name.data())
+                    : (attributeLocation == vtkAssignAttribute::POINT_DATA ? dataArray = dataSet->GetPointData()->GetArray(utf8Name.data())
+                    : nullptr);
 
                 if (!dataArray)
                     continue;
