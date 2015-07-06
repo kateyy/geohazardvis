@@ -13,10 +13,15 @@ class vtkPlot;
 class ImageProfileData;
 
 
+/**
+    Line plot for an image data profile.
+
+    This class expects to find its scalars (named by scalarsName parameter in constructor) in the plot lines point data.
+*/
 class CORE_API ImageProfileContextPlot : public Context2DData
 {
 public:
-    ImageProfileContextPlot(ImageProfileData & dataObject);
+    ImageProfileContextPlot(ImageProfileData & dataObject, const QString & scalarsName);
 
     reflectionzeug::PropertyGroup * createConfigGroup() override;
 
@@ -31,5 +36,8 @@ private:
 
 private:
     vtkSmartPointer<vtkPlot> m_plotLine;
+
+    const QString m_scalarsName;
+
     QString m_title;
 };

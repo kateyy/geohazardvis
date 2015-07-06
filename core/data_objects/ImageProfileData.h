@@ -9,13 +9,15 @@ class vtkLineSource;
 class vtkProbeFilter;
 class vtkTransformFilter;
 class vtkWarpScalar;
-class ImageDataObject;
 
 
 class CORE_API ImageProfileData : public DataObject
 {
 public:
-    ImageProfileData(const QString & name, ImageDataObject & imageData);
+    ImageProfileData(const QString & name, DataObject & sourceData, const QString & scalarsName);
+
+    /** @return whether valid scalar data was found in the constructor. Otherwise, just delete your instance.. */
+    bool isValid() const;
 
     bool is3D() const override;
     std::unique_ptr<Context2DData> createContextData() override;
@@ -42,9 +44,11 @@ protected:
     std::unique_ptr<QVtkTableModel> createTableModel() override;
 
 private:
-    ImageDataObject & m_imageData;
+    bool m_isValid;
+    DataObject & m_sourceData;
     QString m_abscissa;
     QString m_scalarsName;
+    int m_scalarsLocation;
 
     vtkSmartPointer<vtkLineSource> m_probeLine;
     vtkSmartPointer<vtkProbeFilter> m_probe;

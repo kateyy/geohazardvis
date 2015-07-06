@@ -475,8 +475,8 @@ void ResidualVerificationView::initialize()
     m_implementation = std::make_unique<RendererImplementationBase3D>(*this);
     m_implementation->activate(m_qvtkMain);
 
-    //m_strategy = new RenderViewStrategyImage2D(*m_implementation, m_implementation);
-    m_strategy = new RenderViewStrategy3D(*m_implementation, m_implementation.get());
+    m_strategy = new RenderViewStrategyImage2D(*m_implementation, m_implementation.get());
+
     m_implementation->setStrategy(m_strategy);
 
     m_dataSets.resize(3);
@@ -624,15 +624,14 @@ void ResidualVerificationView::updateGuiAfterDataChange()
 
     updateGuiSelection();
 
-
-    QList<DataObject *> validImages;
+    QList<DataObject *> validInputData;
     if (m_dataSets[0])
-        validImages << m_dataSets[0];
+        validInputData << m_dataSets[0];
     if (m_dataSets[1])
-        validImages << m_dataSets[1];
-    //m_strategy->setInputImages(validImages);
+        validInputData << m_dataSets[1];
+    m_strategy->setInputData(validInputData);
 
-    if (!validImages.isEmpty() || m_dataSets[2])
+    if (!validInputData.isEmpty() || (m_dataSets[1] != nullptr))
         implementation().resetCamera(true);
 
     render();
@@ -684,7 +683,7 @@ void ResidualVerificationView::updateComboBoxes()
             continue;
         }
 
-        // allow to transform 2.5D poly data into model surface grid
+        // allow to transform 2.5D polygonal data into model surface grid
         if (auto poly = dynamic_cast<PolyDataObject *>(data))
         {
             if (!poly->is2p5D())

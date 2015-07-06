@@ -1,6 +1,7 @@
 #include "RenderViewStrategyImage2D.h"
 
 #include <cassert>
+#include <memory>
 
 #include <QAction>
 #include <QDockWidget>
@@ -22,6 +23,7 @@
 
 #include <core/DataSetHandler.h>
 #include <core/utility/vtkcamerahelper.h>
+#include <core/color_mapping/ColorMapping.h>
 #include <core/data_objects/ImageDataObject.h>
 #include <core/data_objects/ImageProfileData.h>
 #include <core/rendered_data/RenderedData.h>
@@ -61,7 +63,7 @@ RenderViewStrategyImage2D::~RenderViewStrategyImage2D()
     }
 }
 
-void RenderViewStrategyImage2D::setInputImages(const QList<ImageDataObject *> & images)
+void RenderViewStrategyImage2D::setInputData(const QList<DataObject *> & inputData)
 {
     bool restartProfilePlot = false;
     double point1[3], point2[3];
@@ -74,7 +76,7 @@ void RenderViewStrategyImage2D::setInputImages(const QList<ImageDataObject *> & 
         restartProfilePlot = true;
     }
 
-    m_inputImages = images;
+    m_inputData = inputData;
 
     if (restartProfilePlot)
     {
@@ -153,10 +155,18 @@ QList<DataObject *> RenderViewStrategyImage2D::filterCompatibleObjects(const QLi
 
     for (DataObject * dataObject : dataObjects)
     {
+        // TODO limit the automatic strategy switch to 2D image data, until there is a gui switch for 2D/3D interaction.
+
         if (dynamic_cast<ImageDataObject *>(dataObject))
             compatible << dataObject;
         else
             incompatibleObjects << dataObject;
+
+        /*std::unique_ptr<RenderedData> rendered{ dataObject->createRendered() };
+        if (rendered)
+            compatible << dataObject;
+        else
+            incompatibleObjects << dataObject;*/
     }
 
     return compatible;
@@ -164,10 +174,12 @@ QList<DataObject *> RenderViewStrategyImage2D::filterCompatibleObjects(const QLi
 
 bool RenderViewStrategyImage2D::canApplyTo(const QList<RenderedData *> & renderedData)
 {
+    // TODO limit the automatic strategy switch to 2D image data, until there is a gui switch for 2D/3D interaction.
     for (RenderedData * rendered : renderedData)
         if (!dynamic_cast<ImageDataObject *>(&rendered->dataObject()))
             return false;
 
+    // just exclude context data (the profile plots etc), but they don't apply heres
     return true;
 }
 
@@ -180,19 +192,14 @@ void RenderViewStrategyImage2D::startProfilePlot()
     assert(m_currentPlottingImages.isEmpty());
 
     // no inputs set, fetch data from our context
-    if (m_inputImages.isEmpty())
+    if (m_inputData.isEmpty())
     {
-        ImageDataObject * image = nullptr;
-        for (DataObject * dataObject : m_context.renderView().dataObjects())
-        {
-            image = dynamic_cast<ImageDataObject *>(dataObject);
-            m_currentPlottingImages << image;
-        }
+        m_currentPlottingImages = m_context.renderView().dataObjects();
     }
     // inputs explicitly set
     else
     {
-        m_currentPlottingImages = m_inputImages;
+        m_currentPlottingImages = m_inputData;
     }
 
     // if there are no inputs, just ignore the request
@@ -204,11 +211,23 @@ void RenderViewStrategyImage2D::startProfilePlot()
 
     // create profiles
 
+    auto scalars = m_context.colorMapping()->currentScalarsName();
+
     for (auto inputImage : m_currentPlottingImages)
     {
         QString name = inputImage->name() + " plot";
 
-        m_previewProfiles.emplace(m_previewProfiles.end(), new ImageProfileData(name, *inputImage));
+        auto profile = std::make_unique<ImageProfileData>(name, *inputImage, scalars);
+        if (!profile->isValid())
+            continue;
+
+        m_previewProfiles.push_back(std::move(profile));
+    }
+
+    if (m_previewProfiles.empty())
+    {
+        abortProfilePlot();
+        return;
     }
 
     // place the line widget
@@ -318,10 +337,10 @@ void RenderViewStrategyImage2D::lineMoved()
 void RenderViewStrategyImage2D::checkSourceExists()
 {
     // don't check here, if the user of this class explicitly set the inputs
-    if (!m_inputImages.isEmpty())
+    if (!m_inputData.isEmpty())
         return;
 
-    // recreate the plot, if any of the automatically fetches objects was removed from the coutext
+    // recreate the plot, if any of the automatically fetches objects was removed from the context
     for (auto img : m_currentPlottingImages)
     {
         if (m_context.renderView().dataObjects().contains(img))

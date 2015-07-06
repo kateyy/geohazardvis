@@ -2,6 +2,8 @@
 
 #include <cassert>
 
+#include <vtkAssignAttribute.h>
+#include <vtkCellData.h>
 #include <vtkDataSet.h>
 #include <vtkFloatArray.h>
 #include <vtkPen.h>
@@ -18,13 +20,13 @@
 using namespace reflectionzeug;
 
 
-ImageProfileContextPlot::ImageProfileContextPlot(ImageProfileData & dataObject)
+ImageProfileContextPlot::ImageProfileContextPlot(ImageProfileData & dataObject, const QString & scalarsName)
     : Context2DData(dataObject)
     , m_plotLine(vtkSmartPointer<vtkPlotLine>::New())
+    , m_scalarsName(scalarsName)
+    , m_title(m_scalarsName)
 {
     connect(&dataObject, &DataObject::dataChanged, this, &ImageProfileContextPlot::updatePlot);
-
-    m_title = dataObject.probedLine()->GetPointData()->GetScalars()->GetName();
 }
 
 PropertyGroup * ImageProfileContextPlot::createConfigGroup()
@@ -106,14 +108,13 @@ void ImageProfileContextPlot::updatePlot()
 
     vtkDataSet * probe = profileData.probedLine();
 
-    vtkDataArray * probedValues = probe->GetPointData()->GetScalars();
-    assert(probedValues);
-    probedValues->SetName(m_title.toUtf8().data());
-
-    // hackish: x-values calculated by translating+rotating the probe line to the x-axis
     vtkDataSet * profilePoints = profileData.processedDataSet();
 
-    assert(probedValues->GetNumberOfTuples() == profilePoints->GetNumberOfPoints());
+    vtkDataArray * probedValues = probe->GetPointData()->GetArray(m_scalarsName.toUtf8().data());
+    assert(probedValues && probedValues->GetNumberOfTuples() == profilePoints->GetNumberOfPoints());
+
+    // TODO is renaming the input array really a good idea?
+    probedValues->SetName(m_title.toUtf8().data());
 
     auto table = vtkSmartPointer<vtkTable>::New();
     auto xAxis = vtkSmartPointer<vtkFloatArray>::New();

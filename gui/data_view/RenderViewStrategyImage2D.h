@@ -14,8 +14,6 @@ class vtkEventQtSlotConnect;
 
 class AbstractRenderView;
 class DataObject;
-class ImageDataObject;
-class ImageProfileData;
 
 
 class GUI_API RenderViewStrategyImage2D : public RenderViewStrategy
@@ -29,7 +27,7 @@ public:
     /** Explicitly define a list of images to create a profile plot for. 
         The same plot line will be applied to all images.
         When specifying an empty list here, the first image contained in the Strategy's context will be used. */
-    void setInputImages(const QList<ImageDataObject *> & images);
+    void setInputData(const QList<DataObject *> & images);
 
     QString name() const override;
 
@@ -68,8 +66,8 @@ private:
     AbstractRenderView * m_previewRenderer;
     QList<QMetaObject::Connection> m_previewRendererConnections;
 
-    QList<ImageDataObject *> m_currentPlottingImages; // currently used input images
-    QList<ImageDataObject *> m_inputImages; // input images that were explicitly set
+    QList<DataObject *> m_currentPlottingImages; // currently used input images
+    QList<DataObject *> m_inputData;             // input images that were explicitly set
 
     vtkSmartPointer<vtkLineWidget2> m_lineWidget;
     vtkSmartPointer<vtkEventQtSlotConnect> m_vtkConnect;

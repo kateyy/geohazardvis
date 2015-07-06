@@ -15,7 +15,7 @@ class ColorMapping;
 class ImageDataObject;
 class PolyDataObject;
 class RendererImplementationBase3D;
-class RenderViewStrategy;
+class RenderViewStrategyImage2D;
 
 
 class GUI_API ResidualVerificationView : public AbstractRenderView
@@ -108,7 +108,7 @@ private:
     bool m_interpolateModelOnObservation;
 
     std::unique_ptr<RendererImplementationBase3D> m_implementation;
-    RenderViewStrategy * m_strategy;
+    RenderViewStrategyImage2D * m_strategy;
     std::vector<DataObject *> m_dataSets;
     std::vector<std::unique_ptr<AbstractVisualizedData>> m_visualizations;
 };
