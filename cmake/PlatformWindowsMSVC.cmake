@@ -70,8 +70,16 @@ set(WIN32_COMPILE_FLAGS
     # arch:SSE2    -> enable enhanced instruction set: streaming simd extensions 2
 )
 
+# version specific flags
+# 1800: Visual Studio 12 2013
+# 1900: Visual Studio 14 2015
+
 if(MSVC_VERSION VERSION_GREATER 1800)
-    list(APPEND WIN32_COMPILE_FLAGS /bigobj)
+    list(APPEND WIN32_COMPILE_FLAGS
+        /bigobj
+        /wd4458
+        /guard:cf
+    )
 endif()
 
 set(DEFAULT_COMPILE_FLAGS
