@@ -15,8 +15,6 @@ public:
 
     bool is3D() const override;
 
-    RenderedData * createRendered() override;
-
     const QString & dataTypeName() const override;
     static const QString & dataTypeName_s();
 

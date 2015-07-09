@@ -8,6 +8,7 @@
 #include <vtkRenderWindow.h>
 
 #include <core/types.h>
+#include <core/utility/memory.h>
 #include <core/utility/vtkhelper.h>
 #include <core/data_objects/DataObject.h>
 #include <core/AbstractVisualizedData.h>
@@ -38,14 +39,14 @@ RenderView::~RenderView()
 {
     SelectionHandler::instance().removeRenderView(this); 
 
-    for (AbstractVisualizedData * rendered : m_contents)
-        emit beforeDeleteVisualization(rendered);
+    for (auto & rendered : m_contents)
+        emit beforeDeleteVisualization(rendered.get());
 
-    for (AbstractVisualizedData * rendered : m_contentCache)
-        emit beforeDeleteVisualization(rendered);
+    for (auto & rendered : m_contentCache)
+        emit beforeDeleteVisualization(rendered.get());
 
-    qDeleteAll(m_contents);
-    qDeleteAll(m_contentCache);
+    m_contents.clear();
+    m_contentCache.clear();
 
     delete m_implementationSwitch;
 
@@ -55,7 +56,7 @@ RenderView::~RenderView()
 QString RenderView::friendlyName() const
 {
     QString name;
-    for (AbstractVisualizedData * renderedData : m_contents)
+    for (auto & renderedData : m_contents)
         name += ", " + renderedData->dataObject().name();
 
     if (name.isEmpty())
@@ -97,7 +98,7 @@ void RenderView::highlightedIdChangedEvent(DataObject * dataObject, vtkIdType it
 
 void RenderView::axesEnabledChangedEvent(bool enabled)
 {
-    implementation().setAxesVisibility(enabled && !m_contents.isEmpty());
+    implementation().setAxesVisibility(enabled && !m_contents.empty());
 }
 
 void RenderView::updateImplementation(const QList<DataObject *> & contents)
@@ -107,7 +108,7 @@ void RenderView::updateImplementation(const QList<DataObject *> & contents)
     disconnect(&implementation(), &RendererImplementation::dataSelectionChanged,
         this, &RenderView::updateGuiForSelectedData);
 
-    assert(m_contents.isEmpty());
+    assert(m_contents.empty());
     m_contentCache.clear();
     m_dataObjectToVisualization.clear();
 
@@ -133,20 +134,21 @@ AbstractVisualizedData * RenderView::addDataObject(DataObject * dataObject)
 
     assert(dataObject->is3D() == (contentType() == ContentType::Rendered3D));
 
-    AbstractVisualizedData * newContent = implementation().requestVisualization(dataObject);
+    auto newContent = implementation().requestVisualization(*dataObject);
 
     if (!newContent)
         return nullptr;
 
-    implementation().addContent(newContent, 0);
+    implementation().addContent(newContent.get(), 0);
 
-    m_contents << newContent;
+    auto * newContentPtr = newContent.get();
+    m_contents.push_back(std::move(newContent));
 
-    connect(newContent, &AbstractVisualizedData::geometryChanged, this, &RenderView::render);
+    connect(newContentPtr, &AbstractVisualizedData::geometryChanged, this, &RenderView::render);
 
-    m_dataObjectToVisualization.insert(dataObject, newContent);
+    m_dataObjectToVisualization.insert(dataObject, newContentPtr);
 
-    return newContent;
+    return newContentPtr;
 }
 
 void RenderView::showDataObjectsImpl(const QList<DataObject *> & uncheckedDataObjects, QList<DataObject *> & incompatibleObjects, unsigned int /*suViewIndex*/)
@@ -154,7 +156,7 @@ void RenderView::showDataObjectsImpl(const QList<DataObject *> & uncheckedDataOb
     if (uncheckedDataObjects.isEmpty())
         return;
 
-    bool wasEmpty = m_contents.isEmpty();
+    bool wasEmpty = m_contents.empty();
 
     if (wasEmpty)
     {
@@ -185,18 +187,18 @@ void RenderView::showDataObjectsImpl(const QList<DataObject *> & uncheckedDataOb
 
         // reuse currently rendered / cached data
 
-        if (m_contents.contains(previouslyRendered))
+        auto contensIt = findUnique(m_contents, previouslyRendered);
+        if (contensIt != m_contents.end())
         {
-            assert(m_contents.count(previouslyRendered) == 1);
-            assert(!m_contentCache.contains(previouslyRendered));
             continue;
         }
 
         aNewObject = previouslyRendered;
 
-        assert(m_contentCache.count(previouslyRendered) == 1);
-        m_contentCache.removeOne(previouslyRendered);
-        m_contents << previouslyRendered;
+        auto cacheIt = findUnique(m_contentCache, previouslyRendered);
+        m_contents.push_back(std::move(*cacheIt));
+        m_contentCache.erase(cacheIt);
+
         previouslyRendered->setVisible(true);
     }
 
@@ -228,15 +230,18 @@ void RenderView::hideDataObjectsImpl(const QList<DataObject *> & dataObjects, un
         emit beforeDeleteVisualization(rendered);
 
         // move data to cache if it isn't already invisible
-        if (m_contents.removeOne(rendered))
+        auto contentsIt = findUnique(m_contents, rendered);
+        if (contentsIt != m_contents.end())
         {
+            m_contentCache.push_back(std::move(*contentsIt));
+            m_contents.erase(contentsIt);
+
             rendered->setVisible(false);
-            m_contentCache << rendered;
 
             changed = true;
         }
-        assert(!m_contents.contains(rendered));
-        assert(m_contentCache.count(rendered) == 1);
+        assert(findUnique(m_contents, (AbstractVisualizedData*)nullptr) == m_contents.end());
+        assert(findUnique(m_contents, (AbstractVisualizedData*)nullptr) == m_contents.end());
     }
 
     if (!changed)
@@ -273,7 +278,7 @@ void RenderView::removeDataObject(DataObject * dataObject)
 
     emit beforeDeleteVisualization(renderedData);
 
-    QList<AbstractVisualizedData *> toDelete = removeFromInternalLists({ dataObject });
+    auto toDelete = removeFromInternalLists({ dataObject });
 
     updateGuiForRemovedData();
 
@@ -281,7 +286,7 @@ void RenderView::removeDataObject(DataObject * dataObject)
 
     render();
 
-    qDeleteAll(toDelete);
+    toDelete.clear();
 }
 
 void RenderView::prepareDeleteDataImpl(const QList<DataObject *> & dataObjects)
@@ -290,20 +295,31 @@ void RenderView::prepareDeleteDataImpl(const QList<DataObject *> & dataObjects)
         removeDataObject(dataObject);
 }
 
-QList<AbstractVisualizedData *> RenderView::removeFromInternalLists(QList<DataObject *> dataObjects)
+std::vector<std::unique_ptr<AbstractVisualizedData>> RenderView::removeFromInternalLists(QList<DataObject *> dataObjects)
 {
-    QList<AbstractVisualizedData *> toDelete;
+    std::vector<std::unique_ptr<AbstractVisualizedData>> toDelete;
     for (DataObject * dataObject : dataObjects)
     {
         AbstractVisualizedData * rendered = m_dataObjectToVisualization.value(dataObject, nullptr);
         assert(rendered);
 
         m_dataObjectToVisualization.remove(dataObject);
-        assert(m_contents.count(rendered) + m_contentCache.count(rendered) == 1);
-        if (!m_contents.removeOne(rendered))
-            m_contentCache.removeOne(rendered);
 
-        toDelete << rendered;
+        auto contentsIt = findUnique(m_contents, rendered);
+        if (contentsIt != m_contents.end())
+        {
+            toDelete.push_back(std::move(*contentsIt));
+            m_contents.erase(contentsIt);
+        }
+        else
+        {
+            auto cacheIt = findUnique(m_contentCache, rendered);
+            if (cacheIt != m_contentCache.end())
+            {
+                toDelete.push_back(std::move(*cacheIt));
+                m_contentCache.erase(cacheIt);
+            }
+        }
     }
 
     return toDelete;
@@ -311,15 +327,19 @@ QList<AbstractVisualizedData *> RenderView::removeFromInternalLists(QList<DataOb
 
 QList<AbstractVisualizedData *> RenderView::visualizationsImpl(int /*subViewIndex*/) const
 {
-    return m_contents;
+    QList<AbstractVisualizedData *> vis;
+    for (auto & content : m_contents)
+        vis << content.get();
+
+    return vis;
 }
 
 DataObject * RenderView::selectedData() const
 {
     auto selected = implementation().selectedData();
 
-    if (!selected && !m_contents.isEmpty())
-        selected = &m_contents.first()->dataObject();
+    if (!selected && !m_contents.empty())
+        selected = &m_contents.front()->dataObject();
 
     return selected;
 }
@@ -368,8 +388,8 @@ void RenderView::updateGuiForSelectedData(AbstractVisualizedData * renderedData)
 
 void RenderView::updateGuiForRemovedData()
 {
-    AbstractVisualizedData * nextSelection = m_contents.isEmpty()
-        ? nullptr : m_contents.first();
+    AbstractVisualizedData * nextSelection = m_contents.empty()
+        ? nullptr : m_contents.front().get();
     
     updateGuiForSelectedData(nextSelection);
 }

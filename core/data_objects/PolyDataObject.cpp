@@ -71,9 +71,9 @@ vtkAlgorithmOutput * PolyDataObject::cellCentersOutputPort()
     return m_cellCenters->GetOutputPort();
 }
 
-RenderedData * PolyDataObject::createRendered()
+std::unique_ptr<RenderedData> PolyDataObject::createRendered()
 {
-    return new RenderedPolyData(*this);
+    return std::make_unique<RenderedPolyData>(*this);
 }
 
 void PolyDataObject::addDataArray(vtkDataArray & dataArray)

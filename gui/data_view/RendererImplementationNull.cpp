@@ -4,6 +4,7 @@
 #include <vtkRenderWindow.h>
 #include <QVTKWidget.h>
 
+#include <core/AbstractVisualizedData.h>
 #include <core/types.h>
 
 
@@ -85,7 +86,7 @@ bool RendererImplementationNull::canApplyTo(const QList<DataObject *> &)
     return false;
 }
 
-AbstractVisualizedData * RendererImplementationNull::requestVisualization(DataObject *) const
+std::unique_ptr<AbstractVisualizedData> RendererImplementationNull::requestVisualization(DataObject &) const
 {
     return nullptr;
 }

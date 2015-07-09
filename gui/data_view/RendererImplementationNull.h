@@ -32,7 +32,7 @@ public:
     bool canApplyTo(const QList<DataObject *> &) override;
 
 protected:
-    AbstractVisualizedData * requestVisualization(DataObject *) const override;
+    std::unique_ptr<AbstractVisualizedData> requestVisualization(DataObject &) const override;
     void onAddContent(AbstractVisualizedData *, unsigned int) override;
     void onRemoveContent(AbstractVisualizedData *, unsigned int) override;
 

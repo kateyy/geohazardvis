@@ -1,5 +1,7 @@
 #pragma once
 
+#include <memory>
+
 #include <QList>
 #include <QWidget>
 
@@ -62,6 +64,6 @@ private:
 
     ImageDataObject * m_currentDEM;
     QString m_demScalarsName;
-    PolyDataObject * m_dataPreview;
-    RenderedData * m_renderedPreview;
+    std::unique_ptr<PolyDataObject> m_dataPreview;
+    std::unique_ptr<RenderedData> m_renderedPreview;
 };

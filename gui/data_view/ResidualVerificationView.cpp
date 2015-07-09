@@ -193,13 +193,13 @@ ResidualVerificationView::~ResidualVerificationView()
 {
     SelectionHandler::instance().removeRenderView(this);
 
-    for (auto vis : m_visualizations)
+    for (auto & vis : m_visualizations)
     {
         if (!vis)
             continue;
 
-        beforeDeleteVisualization(vis);
-        delete vis;
+        beforeDeleteVisualization(vis.get());
+        vis.release();
     }
 
     if (m_implementation)
@@ -233,7 +233,7 @@ AbstractVisualizedData * ResidualVerificationView::selectedDataVisualization() c
     for (auto && vis : m_visualizations)
     {
         if (vis && &vis->dataObject() == data)
-            return vis;
+            return vis.get();
     }
 
     return nullptr;
@@ -248,20 +248,20 @@ AbstractVisualizedData * ResidualVerificationView::visualizationFor(DataObject *
 {
     if (subViewIndex == -1)
     {
-        for (int i = 0; i < m_dataSets.size(); ++i)
+        for (size_t i = 0; i < m_dataSets.size(); ++i)
         {
             if (m_dataSets[i] == dataObject && m_visualizations.size() > i)
-                return m_visualizations[i];
+                return m_visualizations[i].get();
         }
         return nullptr;
     }
 
     assert(subViewIndex >= 0);
     assert(m_dataSets.size() >= m_visualizations.size());
-    if (m_dataSets[subViewIndex] != dataObject || m_visualizations.size() < subViewIndex)
+    if (m_dataSets[subViewIndex] != dataObject || m_visualizations.size() < static_cast<size_t>(subViewIndex))
         return nullptr;
 
-    return m_visualizations[subViewIndex];
+    return m_visualizations[subViewIndex].get();
 }
 
 void ResidualVerificationView::setObservationData(ImageDataObject * observation)
@@ -301,14 +301,14 @@ bool ResidualVerificationView::interpolatemodelOnObservation() const
     return m_interpolateModelOnObservation;
 }
 
-void ResidualVerificationView::setDataHelper(unsigned int subViewIndex, DataObject * data, bool skipGuiUpdate, QList<AbstractVisualizedData *> * toDelete)
+void ResidualVerificationView::setDataHelper(unsigned int subViewIndex, DataObject * data, bool skipGuiUpdate, std::vector<std::unique_ptr<AbstractVisualizedData>> * toDelete)
 {
     assert(skipGuiUpdate == (toDelete != nullptr));
 
-    if (m_dataSets.size() > int(subViewIndex) && m_dataSets[subViewIndex] == data)
+    if (m_dataSets.size() > subViewIndex && m_dataSets[subViewIndex] == data)
         return;
 
-    QList<AbstractVisualizedData *> toDeleteInternal;
+    std::vector<std::unique_ptr<AbstractVisualizedData>> toDeleteInternal;
     setDataInternal(subViewIndex, data, toDeleteInternal);
 
     // create a residual only if we didn't just set one
@@ -319,12 +319,12 @@ void ResidualVerificationView::setDataHelper(unsigned int subViewIndex, DataObje
 
     if (skipGuiUpdate)
     {
-        toDelete->append(toDeleteInternal);
+        for (auto & it : toDeleteInternal)
+            toDelete->push_back(std::move(it));
     }
     else
     {
         updateGuiAfterDataChange();
-        qDeleteAll(toDeleteInternal);
     }
 }
 
@@ -396,7 +396,7 @@ void ResidualVerificationView::showDataObjectsImpl(const QList<DataObject *> & d
         return;
     }
 
-    assert(m_dataSets.size() < int(subViewIndex) || m_dataSets[subViewIndex] == nullptr || m_dataSets[subViewIndex] == imageData);
+    assert(m_dataSets.size() < subViewIndex || m_dataSets[subViewIndex] == nullptr || m_dataSets[subViewIndex] == imageData);
 
     setDataHelper(subViewIndex, imageData);
 }
@@ -423,7 +423,7 @@ QList<DataObject *> ResidualVerificationView::dataObjectsImpl(int subViewIndex) 
         return objects;
     }
 
-    if (m_dataSets.size() > subViewIndex && m_dataSets[subViewIndex])
+    if (m_dataSets.size() > static_cast<size_t>(subViewIndex) && m_dataSets[subViewIndex])
         return{ m_dataSets[subViewIndex] };
         
     return{};
@@ -431,20 +431,18 @@ QList<DataObject *> ResidualVerificationView::dataObjectsImpl(int subViewIndex) 
 
 void ResidualVerificationView::prepareDeleteDataImpl(const QList<DataObject *> & dataObjects)
 {
-    QList<AbstractVisualizedData *> toDelete;
+    std::vector<std::unique_ptr<AbstractVisualizedData>> toDelete;
 
     for (auto objectToDelete : dataObjects)
     {
-        for (int i = 0; i < m_dataSets.size(); ++i)
+        for (size_t i = 0; i < m_dataSets.size(); ++i)
         {
             if (objectToDelete == m_dataSets[i])
-                setDataHelper(i, nullptr, true, &toDelete);
+                setDataHelper(static_cast<unsigned int>(i), nullptr, true, &toDelete);
         }
     }
 
     updateGuiAfterDataChange();
-
-    qDeleteAll(toDelete);
 }
 
 QList<AbstractVisualizedData *> ResidualVerificationView::visualizationsImpl(int subViewIndex) const
@@ -453,14 +451,14 @@ QList<AbstractVisualizedData *> ResidualVerificationView::visualizationsImpl(int
 
     if (subViewIndex == -1)
     {
-        for (auto && vis : m_visualizations)
+        for (auto & vis : m_visualizations)
             if (vis)
-                validVis << vis;
+                validVis << vis.get();
         return validVis;
     }
 
     if (m_visualizations[subViewIndex])
-        return{ m_visualizations[subViewIndex] };
+        return{ m_visualizations[subViewIndex].get() };
 
     return{};
 }
@@ -494,33 +492,32 @@ void ResidualVerificationView::initialize()
     }
 }
 
-void ResidualVerificationView::setDataInternal(unsigned int subViewIndex, DataObject * dataObject, QList<AbstractVisualizedData *> & toDelete)
+void ResidualVerificationView::setDataInternal(unsigned int subViewIndex, DataObject * dataObject, std::vector<std::unique_ptr<AbstractVisualizedData>> & toDelete)
 {
     initialize();
 
     m_dataSets[subViewIndex] = dataObject;
 
-    auto && oldVis = m_visualizations[subViewIndex];
+    auto & oldVis = m_visualizations[subViewIndex];
 
     if (oldVis)
     {
-        m_implementation->removeContent(oldVis, subViewIndex);
+        m_implementation->removeContent(oldVis.get(), subViewIndex);
 
-        beforeDeleteVisualization(oldVis);
-        toDelete << oldVis;
-        oldVis = nullptr;
+        beforeDeleteVisualization(oldVis.get());
+        toDelete.push_back(std::move(oldVis));
     }
 
     if (dataObject)
     {
-        auto newVis = m_implementation->requestVisualization(dataObject);
+        auto newVis = m_implementation->requestVisualization(*dataObject);
         assert(newVis);
-        m_visualizations[subViewIndex] = newVis;
-        m_implementation->addContent(newVis, subViewIndex);
+        m_visualizations[subViewIndex] = std::move(newVis);
+        m_implementation->addContent(newVis.get(), subViewIndex);
     }
 }
 
-void ResidualVerificationView::updateResidual(QList<AbstractVisualizedData *> & toDelete)
+void ResidualVerificationView::updateResidual(std::vector<std::unique_ptr<AbstractVisualizedData>> & toDelete)
 {
     DataObject * observation = m_dataSets[0];
     DataObject * model = m_dataSets[1];
@@ -615,7 +612,7 @@ void ResidualVerificationView::updateResidual(QList<AbstractVisualizedData *> & 
     // TODO: parallel_for create artifacts (related to NaN values, FPU status in the threads? (see _statusfp(), _controlfp())
     threadingzeug::sequential_for(0, length, [observationData, modelData, residualData] (int i) {
         auto d = observationData->GetTuple(i)[0] - (modelData->GetTuple(i)[0]);
-        residualData->SetValue(i, d);
+        residualData->SetValue(i, static_cast<float>(d));
     });
 
     setDataInternal(2, residual, toDelete);
@@ -646,7 +643,7 @@ void ResidualVerificationView::updateGuiSelection()
     updateTitle();
 
     DataObject * selection = nullptr;
-    for (auto vis : m_visualizations)
+    for (auto & vis : m_visualizations)
     {
         if (vis)
         {
@@ -779,7 +776,7 @@ void ResidualVerificationView::updateModelFromUi(int index)
         {
             ImageDataObject * observation = dynamic_cast<ImageDataObject *>(m_dataSets[0]);
 
-            if (m_dataSets.isEmpty() || !observation)
+            if (m_dataSets.empty() || !observation)
             {
                 setModelData(nullptr);
                 return;

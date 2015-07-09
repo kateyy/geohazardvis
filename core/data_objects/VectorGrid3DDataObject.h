@@ -14,8 +14,7 @@ public:
 
     bool is3D() const override;
 
-    /** create a rendered instance */
-    RenderedData * createRendered() override;
+    std::unique_ptr<RenderedData> createRendered() override;
 
     void addDataArray(vtkDataArray & dataArray) override;
 

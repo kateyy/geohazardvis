@@ -1,6 +1,7 @@
 #pragma once
 
 #include <functional>
+#include <memory>
 
 #include <QObject>
 #include <QMap>
@@ -65,7 +66,7 @@ public:
 
     virtual bool canApplyTo(const QList<DataObject *> & data) = 0;
 
-    virtual AbstractVisualizedData * requestVisualization(DataObject * dataObject) const = 0;
+    virtual std::unique_ptr<AbstractVisualizedData> requestVisualization(DataObject & dataObject) const = 0;
 
     using ImplementationConstructor = std::function<RendererImplementation *(AbstractRenderView & view)>;
     static const QList<ImplementationConstructor> & constructors();

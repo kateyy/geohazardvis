@@ -48,7 +48,7 @@ public:
     QList<DataObject *> filterCompatibleObjects(const QList<DataObject *> & dataObjects, 
         QList<DataObject *> & incompatibleObjects) override;
 
-    AbstractVisualizedData * requestVisualization(DataObject * dataObject) const override;
+    std::unique_ptr<AbstractVisualizedData> requestVisualization(DataObject & dataObject) const override;
 
     void activate(QVTKWidget * qvtkWidget) override;
     void deactivate(QVTKWidget * qvtkWidget) override;

@@ -31,7 +31,7 @@ public:
     vtkPolyData * cellCenters();
     vtkAlgorithmOutput * cellCentersOutputPort();
 
-    RenderedData * createRendered() override;
+    std::unique_ptr<RenderedData> createRendered() override;
 
     const QString & dataTypeName() const override;
     static const QString & dataTypeName_s();

@@ -63,9 +63,8 @@ bool RendererImplementationBase3D::canApplyTo(const QList<DataObject *> & data)
 {
     for (DataObject * obj : data)
     {
-        if (RenderedData * rendered = obj->createRendered())
+        if (auto && rendered = obj->createRendered())
         {
-            delete rendered;
             return true;
         }
     }
@@ -315,9 +314,9 @@ void RendererImplementationBase3D::setStrategy(RenderViewStrategy * strategy)
         m_strategy->activate();
 }
 
-AbstractVisualizedData * RendererImplementationBase3D::requestVisualization(DataObject * dataObject) const
+std::unique_ptr<AbstractVisualizedData> RendererImplementationBase3D::requestVisualization(DataObject & dataObject) const
 {
-    return dataObject->createRendered();
+    return dataObject.createRendered();
 }
 
 void RendererImplementationBase3D::initialize()

@@ -80,8 +80,6 @@ DEMWidget::DEMWidget(QWidget * parent, Qt::WindowFlags f)
 DEMWidget::~DEMWidget()
 {
     m_renderer->RemoveAllViewProps();
-    delete m_renderedPreview;
-    delete m_dataPreview;
 }
 
 bool DEMWidget::save()
@@ -212,10 +210,8 @@ void DEMWidget::showEvent(QShowEvent * /*event*/)
 void DEMWidget::updatePreview()
 {
     m_renderer->RemoveAllViewProps();
-    delete m_renderedPreview;
-    delete m_dataPreview;
-    m_dataPreview = nullptr;
-    m_renderedPreview = nullptr;
+    m_renderedPreview.release();
+    m_dataPreview.release();
 
     int surfaceIdx = m_ui->surfaceMeshCombo->currentIndex();
     if (surfaceIdx == -1)
@@ -252,7 +248,7 @@ void DEMWidget::updatePreview()
     vtkPolyData * newDataSet = vtkPolyData::SafeDownCast(m_demWarpElevation->GetOutput());
     assert(newDataSet);
 
-    m_dataPreview = new PolyDataObject("", *newDataSet);
+    m_dataPreview = std::make_unique<PolyDataObject>("", *newDataSet);
     m_renderedPreview = m_dataPreview->createRendered();
 
     auto props = m_renderedPreview->viewProps();

@@ -24,9 +24,9 @@ bool VectorGrid3DDataObject::is3D() const
     return true;
 }
 
-RenderedData * VectorGrid3DDataObject::createRendered()
+std::unique_ptr<RenderedData> VectorGrid3DDataObject::createRendered()
 {
-    return new RenderedVectorGrid3D(*this);
+    return std::make_unique<RenderedVectorGrid3D>(*this);
 }
 
 void VectorGrid3DDataObject::addDataArray(vtkDataArray & dataArray)

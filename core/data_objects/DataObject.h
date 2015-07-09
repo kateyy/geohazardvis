@@ -4,6 +4,8 @@
 
 #include <QObject>
 
+#include <vtkObject.h>
+
 #include <core/core_api.h>
 
 
@@ -13,7 +15,6 @@ class vtkInformationIntegerKey;
 class vtkDataArray;
 class vtkDataSet;
 class vtkAlgorithmOutput;
-class vtkObject;
 class QVtkTableModel;
 class RenderedData;
 class Context2DData;
@@ -37,8 +38,8 @@ public:
         -> createRendered: flexible/generic rendering 
         -> createContextData: for specialized views (e.g., plots)
     */
-    virtual RenderedData * createRendered();
-    virtual Context2DData * createContextData();
+    virtual std::unique_ptr<RenderedData> createRendered();
+    virtual std::unique_ptr<Context2DData> createContextData();
 
     const QString & name() const;
     virtual const QString & dataTypeName() const = 0;

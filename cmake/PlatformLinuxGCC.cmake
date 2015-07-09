@@ -32,7 +32,7 @@ else()
 endif()
 
 set(LINUX_COMPILE_FLAGS
-      -std=gnu++11
+      -std=c++1y
 
       ${EXCEPTION_FLAG}
       -pthread      # -> use pthread library

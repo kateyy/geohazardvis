@@ -42,9 +42,8 @@ bool RendererImplementationPlot::canApplyTo(const QList<DataObject *> & dataObje
 {
     for (DataObject * dataObject : dataObjects)
     {
-        if (Context2DData * cd = dataObject->createContextData())
+        if (auto && cd = dataObject->createContextData())
         {
-            delete cd;
             return true;
         }
     }
@@ -189,9 +188,9 @@ vtkContextView * RendererImplementationPlot::contextView()
     return m_contextView;
 }
 
-AbstractVisualizedData * RendererImplementationPlot::requestVisualization(DataObject * dataObject) const
+std::unique_ptr<AbstractVisualizedData> RendererImplementationPlot::requestVisualization(DataObject & dataObject) const
 {
-    return dataObject->createContextData();
+    return dataObject.createContextData();
 }
 
 void RendererImplementationPlot::initialize()

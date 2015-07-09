@@ -26,9 +26,9 @@ bool ImageDataObject::is3D() const
     return false;
 }
 
-RenderedData * ImageDataObject::createRendered()
+std::unique_ptr<RenderedData> ImageDataObject::createRendered()
 {
-    return new RenderedImageData(*this);
+    return std::make_unique<RenderedImageData>(*this);
 }
 
 void ImageDataObject::addDataArray(vtkDataArray & dataArray)

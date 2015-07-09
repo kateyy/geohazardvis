@@ -48,9 +48,9 @@ public:
     vtkChartXY * chart();
     vtkContextView * contextView();
 
-protected:
-    AbstractVisualizedData * requestVisualization(DataObject * dataObject) const override;
+    std::unique_ptr<AbstractVisualizedData> requestVisualization(DataObject & dataObject) const override;
 
+protected:
     void onAddContent(AbstractVisualizedData * content, unsigned int subViewIndex) override;
     void onRemoveContent(AbstractVisualizedData * content, unsigned int subViewIndex) override;
 

@@ -1,5 +1,8 @@
 #pragma once
 
+#include <memory>
+#include <vector>
+
 #include <QList>
 #include <QMap>
 #include <QSet>
@@ -64,7 +67,7 @@ private:
 
     // remove some data objects from internal lists
     // @return list of dangling rendered data object that you have to delete.
-    QList<AbstractVisualizedData *> removeFromInternalLists(QList<DataObject *> dataObjects = {});
+    std::vector<std::unique_ptr<AbstractVisualizedData>> removeFromInternalLists(QList<DataObject *> dataObjects = {});
 
 
 private:
@@ -78,9 +81,9 @@ private:
     bool m_closingRequested;
 
     // rendered representations of data objects for this view
-    QList<AbstractVisualizedData *> m_contents;
+    std::vector<std::unique_ptr<AbstractVisualizedData>> m_contents;
     // objects that were loaded to the GPU but are currently not rendered 
-    QList<AbstractVisualizedData *> m_contentCache;
+    std::vector<std::unique_ptr<AbstractVisualizedData>> m_contentCache;
     QMap<DataObject *, AbstractVisualizedData *> m_dataObjectToVisualization;
     // DataObjects, that emitted deleted() and that we didn't remove yet
     QSet<DataObject *> m_deletedData;

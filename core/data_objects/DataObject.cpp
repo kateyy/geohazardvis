@@ -16,6 +16,8 @@
 #include <vtkPointData.h>
 #include <vtkSmartPointer.h>
 
+#include <core/context2D_data/Context2DData.h>
+#include <core/rendered_data/RenderedData.h>
 #include <core/utility/vtkhelper.h>
 #include <core/utility/vtkstringhelper.h>
 
@@ -60,12 +62,12 @@ DataObject::~DataObject()
     disconnectAllEvents();
 }
 
-RenderedData * DataObject::createRendered()
+std::unique_ptr<RenderedData> DataObject::createRendered()
 {
     return nullptr;
 }
 
-Context2DData * DataObject::createContextData()
+std::unique_ptr<Context2DData> DataObject::createContextData()
 {
     return nullptr;
 }

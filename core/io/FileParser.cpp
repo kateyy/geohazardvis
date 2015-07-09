@@ -134,7 +134,7 @@ bool parseIOFile(const string inputFileName, vector<t_FP> &parsedData, size_t & 
 #if defined(_WIN32)
             input_FP = atof(inputValue.c_str());
 #else
-            stringstream f_stream(input);
+            stringstream f_stream(inputValue);
             f_stream >> input_FP;
 #endif
         }

@@ -57,9 +57,9 @@ bool ImageProfileData::is3D() const
     return false;
 }
 
-Context2DData * ImageProfileData::createContextData()
+std::unique_ptr<Context2DData> ImageProfileData::createContextData()
 {
-    return new ImageProfileContextPlot(*this);
+    return std::make_unique<ImageProfileContextPlot>(*this);
 }
 
 const QString & ImageProfileData::dataTypeName() const

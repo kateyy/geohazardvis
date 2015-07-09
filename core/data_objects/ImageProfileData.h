@@ -18,7 +18,7 @@ public:
     ImageProfileData(const QString & name, ImageDataObject & imageData);
 
     bool is3D() const override;
-    Context2DData * createContextData() override;
+    std::unique_ptr<Context2DData> createContextData() override;
 
     const QString & dataTypeName() const override;
     static const QString & dataTypeName_s();

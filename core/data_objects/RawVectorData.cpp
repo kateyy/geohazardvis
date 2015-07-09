@@ -1,7 +1,7 @@
 #include "RawVectorData.h"
 
+#include <vtkCommand.h>
 #include <vtkFloatArray.h>
-#include <vtkEventQtSlotConnect.h>
 
 #include <core/table_model/QVtkTableModelRawVector.h>
 
@@ -18,11 +18,6 @@ RawVectorData::RawVectorData(const QString & name, vtkFloatArray & dataArray)
 bool RawVectorData::is3D() const
 {
     return false;
-}
-
-RenderedData * RawVectorData::createRendered()
-{
-    return nullptr;
 }
 
 const QString & RawVectorData::dataTypeName() const
