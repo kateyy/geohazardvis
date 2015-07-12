@@ -1,6 +1,7 @@
 #pragma once
 
 #include <functional>
+#include <memory>
 
 #include <QMap>
 #include <QString>
@@ -16,9 +17,9 @@ class CORE_API CanvasExporterRegistry
 {
 public:
     static QStringList supportedFormatNames();
-    static CanvasExporter * createExporter(const QString & formatName);
+    static std::unique_ptr<CanvasExporter> createExporter(const QString & formatName);
 
-    using ExporterConstructor = std::function<CanvasExporter*()>;
+    using ExporterConstructor = std::function<std::unique_ptr<CanvasExporter>()>;
     static bool registerImplementation(const ExporterConstructor & ctor);
 
 private:

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <memory>
+
 #include <QString>
 
 #include <vtkSmartPointer.h>
@@ -35,7 +37,7 @@ public:
     virtual bool write() = 0;
 
     template<typename T> 
-    static CanvasExporter * newInstance();
+    static std::unique_ptr<CanvasExporter> newInstance();
 
 protected:
     virtual reflectionzeug::PropertyGroup * createPropertyGroup() = 0;
@@ -54,7 +56,7 @@ private:
 };
 
 template<typename T>
-CanvasExporter * CanvasExporter::newInstance()
+std::unique_ptr<CanvasExporter> CanvasExporter::newInstance()
 {
-    return new T();
+    return std::make_unique<T>();
 }

@@ -1,7 +1,9 @@
 #pragma once
 
+#include <map>
+#include <memory>
+
 #include <QDialog>
-#include <QMap>
 
 #include <gui/gui_api.h>
 
@@ -41,5 +43,5 @@ private:
 
     AbstractRenderView * m_renderView;
 
-    QMap<QString, CanvasExporter *> m_exporters;
+    std::map<QString, std::unique_ptr<CanvasExporter>> m_exporters;
 };

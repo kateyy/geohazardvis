@@ -38,7 +38,6 @@ CanvasExporterWidget::CanvasExporterWidget(QWidget * parent, Qt::WindowFlags f)
 CanvasExporterWidget::~CanvasExporterWidget()
 {
     delete m_ui;
-    qDeleteAll(m_exporters);
 }
 
 void CanvasExporterWidget::setRenderView(AbstractRenderView * renderView)
@@ -88,11 +87,13 @@ CanvasExporter * CanvasExporterWidget::currentExporter()
     }
 
     QString format = m_ui->fileFormatComboBox->currentText();
-    CanvasExporter * exporter = m_exporters.value(format, nullptr);
-    if (!exporter)
+    auto exporterIt = m_exporters.find(format);
+    auto exporter = exporterIt->second.get();
+    if (exporterIt == m_exporters.end())
     {
-        exporter = CanvasExporterRegistry::createExporter(format);
-        m_exporters.insert(format, exporter);
+        auto newExporter = CanvasExporterRegistry::createExporter(format);
+        m_exporters.emplace(format, std::move(newExporter));
+        exporter = newExporter.get();
     }
 
     if (!exporter)
@@ -140,12 +141,14 @@ void CanvasExporterWidget::updateUiForFormat(const QString & format)
 {
     m_ui->exporterSettingsBrowser->setRoot(nullptr);
 
-    CanvasExporter * exporter = m_exporters.value(format, nullptr);
+    auto exporterIt = m_exporters.find(format);
+    auto exporter = exporterIt->second.get();
 
-    if (!exporter)
+    if (exporterIt == m_exporters.end())
     {
-        exporter = CanvasExporterRegistry::createExporter(format);
-        m_exporters.insert(format, exporter);
+        auto newExporter = CanvasExporterRegistry::createExporter(format);
+        m_exporters.emplace(format, std::move(newExporter));
+        exporter = newExporter.get();
     }
 
     if (exporter)

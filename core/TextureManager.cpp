@@ -1,6 +1,7 @@
 #include <core/TextureManager.h>
 
 #include <cassert>
+#include <memory>
 
 #include <QDebug>
 #include <QFileInfo>
@@ -24,21 +25,20 @@ struct TextureManager_private
     QMap<QString, vtkSmartPointer<vtkTexture>> fileToTexture;
 };
 
-TextureManager_private * s_instance = nullptr;
+std::unique_ptr<TextureManager_private> s_instance;
 }
 
 
 void TextureManager::initialize()
 {
     assert(!s_instance);
-    s_instance = new TextureManager_private;
+    s_instance = std::make_unique<TextureManager_private>();
 }
 
 void TextureManager::release()
 {
     assert(s_instance);
-    delete s_instance;
-    s_instance = nullptr;
+    s_instance.release();
 }
 
 vtkImageData * TextureManager::imageFromFile(const QString & fileName)

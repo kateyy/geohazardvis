@@ -1,7 +1,6 @@
 #include "CanvasExporterRegistry.h"
 
 #include <QDebug>
-#include <QScopedPointer>
 #include <QStringList>
 
 #include <core/canvas_export/CanvasExporter.h>
@@ -22,13 +21,13 @@ QStringList CanvasExporterRegistry::supportedFormatNames()
     return instance().m_formatToExporter.keys();
 }
 
-CanvasExporter * CanvasExporterRegistry::createExporter(const QString & formatName)
+std::unique_ptr<CanvasExporter> CanvasExporterRegistry::createExporter(const QString & formatName)
 {
     const ExporterConstructor & ctor = instance().m_formatToExporter.value(formatName, nullptr);
     if (!ctor)
         return nullptr;
 
-    CanvasExporter * exporter = ctor();
+    auto exporter = ctor();
     exporter->setOutputFormat(formatName);
 
     return exporter;
@@ -36,7 +35,7 @@ CanvasExporter * CanvasExporterRegistry::createExporter(const QString & formatNa
 
 bool CanvasExporterRegistry::registerImplementation(const ExporterConstructor & ctor)
 {
-    QScopedPointer<CanvasExporter> exporter(ctor());
+    auto exporter(ctor());
 
     bool okay = true;
 
