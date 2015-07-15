@@ -1,12 +1,16 @@
 #pragma once
 
+#include "GlyphMappingData.h"
+
 
 template<typename SubClass>
-QList<GlyphMappingData *> GlyphMappingData::newInstance(RenderedData & renderedData)
+std::vector<std::unique_ptr<GlyphMappingData>> GlyphMappingData::newInstance(RenderedData & renderedData)
 {
-    GlyphMappingData * mapping = new SubClass(renderedData);
+    auto mapping = std::make_unique<SubClass>(renderedData);
     if (mapping->isValid())
         mapping->initialize();
 
-    return{ mapping };
+    std::vector<std::unique_ptr<GlyphMappingData>> result;
+    result.push_back(std::move(mapping));
+    return result;
 }

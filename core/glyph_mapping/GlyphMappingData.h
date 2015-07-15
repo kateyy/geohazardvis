@@ -1,6 +1,8 @@
 #pragma once
 
-#include <QList>
+#include <memory>
+#include <vector>
+
 #include <QMap>
 #include <QObject>
 
@@ -46,6 +48,8 @@ public:
     };
 
 public:
+    explicit GlyphMappingData(RenderedData & renderedData);
+
     DataObject & dataObject();
     RenderedData & renderedData();
 
@@ -92,8 +96,7 @@ signals:
 protected:
     template<typename SubClass>
     /** default function for Registry::MappingCreator, returning a single mapping instance */
-    static QList<GlyphMappingData *> newInstance(RenderedData & renderedData);
-    explicit GlyphMappingData(RenderedData & renderedData);
+    static std::vector<std::unique_ptr<GlyphMappingData>> newInstance(RenderedData & renderedData);
 
     virtual void initialize();
 

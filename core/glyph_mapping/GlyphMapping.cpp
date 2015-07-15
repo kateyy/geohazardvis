@@ -18,21 +18,22 @@ GlyphMapping::GlyphMapping(RenderedData & renderedData)
     connect(&renderedData.dataObject(), &DataObject::attributeArraysChanged, this, &GlyphMapping::updateAvailableVectors, Qt::QueuedConnection);
 }
 
-GlyphMapping::~GlyphMapping()
-{
-    qDeleteAll(m_vectors.values());
-}
+GlyphMapping::~GlyphMapping() = default;
 
 QList<QString> GlyphMapping::vectorNames() const
 {
-    return m_vectors.keys();
+    QList<QString> result;
+    for (auto & v : m_vectors)
+        result << v.first;
+
+    return result;
 }
 
-QList<GlyphMappingData*> GlyphMapping::vectors() const
+QList<GlyphMappingData *> GlyphMapping::vectors() const
 {
-    QList<GlyphMappingData*> result;
+    QList<GlyphMappingData *> result;
     for (auto & v : m_vectors)
-        result << v;
+        result << v.second.get();
 
     return result;
 }
@@ -44,36 +45,39 @@ const RenderedData & GlyphMapping::renderedData() const
 
 void GlyphMapping::updateAvailableVectors()
 {
-    auto newlyCreated = GlyphMappingRegistry::instance().createMappingsValidFor(m_renderedData);
-
-    QMap<QString, GlyphMappingData *> newValidList;
+    decltype(m_vectors) newlyCreated = GlyphMappingRegistry::instance().createMappingsValidFor(m_renderedData);
+    decltype(m_vectors) newValidList;
 
     bool _vectorsChanged = false;
 
-    for (GlyphMappingData * vectors : newlyCreated)
-    {
-        auto * oldInstance = m_vectors.value(vectors->name(), nullptr);
+    auto oldInstances = std::move(m_vectors);
 
-        // not new -> keep old
-        if (oldInstance)
+    for (auto & newIt : newlyCreated)
+    {
+        auto & vectorsName = newIt.first;
+        auto & newVectors = newIt.second;
+
+        auto oldIt = oldInstances.find(vectorsName);
+
+        if (oldIt != m_vectors.end())
         {
-            delete vectors;
-            // move to the new list, so later, we can delete all vectors that are not valid anymore
-            newValidList.insert(oldInstance->name(), oldInstance);
-            m_vectors.remove(oldInstance->name());
+            // not new -> keep old
+            newVectors.release();
+            newValidList.emplace(vectorsName, std::move(oldIt->second));
+            oldInstances.erase(oldIt);
         }
         else
         {
             // it's really new, so use it
-            newValidList.insert(vectors->name(), vectors);
+            newValidList.emplace(vectorsName, std::move(newVectors));
             _vectorsChanged = true;
         }
     }
 
-    _vectorsChanged = _vectorsChanged || !m_vectors.isEmpty();   // something new or old vectors to delete?
+    _vectorsChanged = _vectorsChanged || !oldInstances.empty();   // something new or obsolete old instances?
 
-    qDeleteAll(m_vectors.values());
-    m_vectors = newValidList;
+    oldInstances.clear();
+    m_vectors = std::move(newValidList);
 
     if (_vectorsChanged)
         emit vectorsChanged();

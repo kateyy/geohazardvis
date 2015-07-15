@@ -1,12 +1,14 @@
 #pragma once
 
-#include <QList>
-#include <QMap>
+#include <map>
+#include <memory>
+
 #include <QObject>
 
 #include <core/core_api.h>
 
 
+template<typename T> class QList;
 class QString;
 
 class RenderedData;
@@ -42,5 +44,5 @@ private slots:
 private:
     RenderedData & m_renderedData;
 
-    QMap<QString, GlyphMappingData *> m_vectors;
+    std::map<QString, std::unique_ptr<GlyphMappingData>> m_vectors;
 };

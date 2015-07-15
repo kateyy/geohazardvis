@@ -17,20 +17,18 @@ GlyphMappingRegistry & GlyphMappingRegistry::instance()
     return registry;
 }
 
-QMap<QString, GlyphMappingData *> GlyphMappingRegistry::createMappingsValidFor(RenderedData & renderedData)
+std::map<QString, std::unique_ptr<GlyphMappingData>> GlyphMappingRegistry::createMappingsValidFor(RenderedData & renderedData)
 {
-    QMap<QString, GlyphMappingData *> validVectors;
+    std::map<QString, std::unique_ptr<GlyphMappingData>> validVectors;
 
     for (auto creator : m_mappingCreators)
     {
-        QList<GlyphMappingData *> vectors = creator(renderedData);
+        auto vectors = creator(renderedData);
 
-        for (GlyphMappingData * v : vectors)
+        for (auto & v : vectors)
         {
             if (v->isValid())
-                validVectors.insert(v->name(), v);
-            else
-                delete v;
+                validVectors.emplace(v->name(), std::move(v));
         }
     }
 

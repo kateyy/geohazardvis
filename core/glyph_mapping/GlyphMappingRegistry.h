@@ -1,8 +1,10 @@
 #pragma once
 
 #include <functional>
+#include <map>
+#include <memory>
+#include <vector>
 
-#include <QList>
 #include <QMap>
 
 #include <core/core_api.h>
@@ -17,11 +19,11 @@ class CORE_API GlyphMappingRegistry
 public:
     static GlyphMappingRegistry & instance();
 
-    using MappingCreator = std::function<QList<GlyphMappingData *> (RenderedData & renderedData)>;
+    using MappingCreator = std::function<std::vector<std::unique_ptr<GlyphMappingData>>(RenderedData & renderedData)>;
     bool registerImplementation(const QString & name, const MappingCreator & creator);
 
     /** retrieve a list of vectors that are applicable for the rendered data object */
-    QMap<QString, GlyphMappingData *> createMappingsValidFor(RenderedData & renderedData);
+    std::map<QString, std::unique_ptr<GlyphMappingData>> createMappingsValidFor(RenderedData & renderedData);
 
 private:
     GlyphMappingRegistry();

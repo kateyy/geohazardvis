@@ -31,7 +31,7 @@ const bool PolyDataAttributeGlyphMapping::s_registered = GlyphMappingRegistry::i
 using namespace reflectionzeug;
 
 
-QList<GlyphMappingData *> PolyDataAttributeGlyphMapping::newInstances(RenderedData & renderedData)
+std::vector<std::unique_ptr<GlyphMappingData>> PolyDataAttributeGlyphMapping::newInstances(RenderedData & renderedData)
 {
     vtkPolyData * polyData = vtkPolyData::SafeDownCast(renderedData.dataObject().processedDataSet());
     // only polygonal datasets are supported
@@ -57,17 +57,15 @@ QList<GlyphMappingData *> PolyDataAttributeGlyphMapping::newInstances(RenderedDa
         vectorArrays << a;
     }
 
-    QList<GlyphMappingData *> instances;
+    std::vector<std::unique_ptr<GlyphMappingData>> instances;
     for (vtkDataArray * vectorsArray : vectorArrays)
     {
-        PolyDataAttributeGlyphMapping * mapping = new PolyDataAttributeGlyphMapping(renderedData, vectorsArray);
+        auto mapping = std::make_unique<PolyDataAttributeGlyphMapping>(renderedData, vectorsArray);
         if (mapping->isValid())
         {
             mapping->initialize();
-            instances << mapping;
+            instances.push_back(std::move(mapping));
         }
-        else
-            delete mapping;
     }
 
     return instances;

@@ -26,7 +26,7 @@ const bool Grid3dGlyphMapping::s_registered = GlyphMappingRegistry::instance().r
 using namespace reflectionzeug;
 
 
-QList<GlyphMappingData *> Grid3dGlyphMapping::newInstances(RenderedData & renderedData)
+std::vector<std::unique_ptr<GlyphMappingData>> Grid3dGlyphMapping::newInstances(RenderedData & renderedData)
 {
     RenderedVectorGrid3D * renderedGrid = dynamic_cast<RenderedVectorGrid3D *>(&renderedData);
     if (!renderedGrid)
@@ -48,17 +48,15 @@ QList<GlyphMappingData *> Grid3dGlyphMapping::newInstances(RenderedData & render
         vectorArrays << a;
     }
 
-    QList<GlyphMappingData *> instances;
+    std::vector<std::unique_ptr<GlyphMappingData>> instances;
     for (vtkDataArray * vectorArray : vectorArrays)
     {
-        Grid3dGlyphMapping * mapping = new Grid3dGlyphMapping(*renderedGrid, vectorArray);
+        auto mapping = std::make_unique<Grid3dGlyphMapping>(*renderedGrid, vectorArray);
         if (mapping->isValid())
         {
             mapping->initialize();
-            instances << mapping;
+            instances.push_back(std::move(mapping));
         }
-        else
-            delete mapping;
     }
 
     return instances;
