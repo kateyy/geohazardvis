@@ -81,13 +81,11 @@ bool QVtkTableModelRawVector::setData(const QModelIndex & index, const QVariant 
 
     assert(component < components && tupleId < m_data->GetNumberOfTuples());
 
-    double * tupleData = new double[components];
+    std::vector<double> tupleData(components);
 
-    m_data->GetTuple(tupleId, tupleData);
+    m_data->GetTuple(tupleId, tupleData.data());
     tupleData[component] = f_value;
-    m_data->SetTuple(tupleId, tupleData);
-
-    delete[] tupleData;
+    m_data->SetTuple(tupleId, tupleData.data());
 
     m_data->Modified();
 

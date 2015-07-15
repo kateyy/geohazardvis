@@ -98,15 +98,13 @@ bool QVtkTableModelVectorGrid3D::setData(const QModelIndex & index, const QVaria
     assert(componentId >= 0 && componentId < numComponents);
 
 
-    double * tuple = new double[numComponents];
+    std::vector<double> tuple(numComponents);
 
-    data->GetTuple(vectorId, tuple);
+    data->GetTuple(vectorId, tuple.data());
     tuple[componentId] = newValue;
-    data->SetTuple(vectorId, tuple);
+    data->SetTuple(vectorId, tuple.data());
     data->Modified();
     m_gridData->Modified();
-
-    delete[] tuple;
 
     return false;
 }

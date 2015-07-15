@@ -148,18 +148,16 @@ int NoiseImageSource::ExecuteCPUUniformDist(vtkDataArray * data)
         static_cast<double>(ValueRange[0]),
         static_cast<double>(ValueRange[1]));
 
-    double * randTuple = new double[NumberOfComponents];
+    std::vector<double> randTuple(NumberOfComponents);
 
     vtkIdType numTuples = GetNumberOfTuples();
     for (vtkIdType i = 0; i < numTuples; ++i)
     {
         for (int comp = 0; comp < NumberOfComponents; ++comp)
-            randTuple[comp] = rand(engine);
+            randTuple.at(comp) = rand(engine);
 
-        data->SetTuple(i, randTuple);
+        data->SetTuple(i, randTuple.data());
     }
-
-    delete[] randTuple;
 
     return 1;
 }
