@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QDockWidget>
+#include <QScopedPointer>
 
 #include <gui/gui_api.h>
 
@@ -51,7 +52,7 @@ private:
     void checkDeletedContent(AbstractVisualizedData * content);
 
 private:
-    Ui_GlyphMappingChooser * m_ui;
+    QScopedPointer<Ui_GlyphMappingChooser> m_ui;
 
     AbstractRenderView * m_renderView;
     GlyphMapping * m_mapping;

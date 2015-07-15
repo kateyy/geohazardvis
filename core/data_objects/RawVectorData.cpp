@@ -36,9 +36,9 @@ vtkFloatArray * RawVectorData::dataArray()
     return m_dataArray;
 }
 
-QVtkTableModel * RawVectorData::createTableModel()
+std::unique_ptr<QVtkTableModel> RawVectorData::createTableModel()
 {
-    QVtkTableModel * model = new QVtkTableModelRawVector;
+    std::unique_ptr<QVtkTableModel> model = std::make_unique<QVtkTableModelRawVector>();
     model->setDataObject(this);
 
     return model;

@@ -12,30 +12,20 @@ RendererImplementationSwitch::RendererImplementationSwitch(AbstractRenderView & 
 {
 }
 
-RendererImplementationSwitch::~RendererImplementationSwitch()
-{
-    delete m_currentImpl;
-    delete m_nullImpl;
-}
+RendererImplementationSwitch::~RendererImplementationSwitch() = default;
 
 void RendererImplementationSwitch::findSuitableImplementation(const QList<DataObject *> & dataObjects)
 {
-    RendererImplementation * suitable = nullptr;
-
     for (const RendererImplementation::ImplementationConstructor & constructor : RendererImplementation::constructors())
     {
-        RendererImplementation * instance = constructor(m_view);
+        auto instance = constructor(m_view);
 
         if (instance->canApplyTo(dataObjects))
         {
-            suitable = instance;
+            m_currentImpl = std::move(instance);
             break;
         }
     }
-
-    auto lastImpl = m_currentImpl;
-    m_currentImpl = suitable;
-    delete lastImpl;
 }
 
 RendererImplementation & RendererImplementationSwitch::currentImplementation()
@@ -44,7 +34,7 @@ RendererImplementation & RendererImplementationSwitch::currentImplementation()
         return *m_currentImpl;
 
     if (!m_nullImpl)
-        m_nullImpl = new RendererImplementationNull(m_view);
+        m_nullImpl = std::make_unique<RendererImplementationNull>(m_view);
 
     return *m_nullImpl;
 }

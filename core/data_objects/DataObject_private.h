@@ -1,12 +1,15 @@
 #pragma once
 
 #include <functional>
+#include <memory>
 
 #include <QMap>
 #include <QString>
 
 #include <vtkSmartPointer.h>
 #include <vtkWeakPointer.h>
+
+#include <core/table_model/QVtkTableModel.h>
 
 
 class vtkAlgorithm;
@@ -15,7 +18,6 @@ class vtkInformationIntegerPointerKey;
 class vtkObject;
 
 class DataObject;
-class QVtkTableModel;
 
 
 class DataObjectPrivate
@@ -36,7 +38,7 @@ public:
     QString m_name;
 
     vtkSmartPointer<vtkDataSet> m_dataSet;
-    QVtkTableModel * m_tableModel;
+    std::unique_ptr<QVtkTableModel> m_tableModel;
 
     double m_bounds[6];
 

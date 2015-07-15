@@ -1,8 +1,10 @@
 #pragma once
 
-#include <gui/data_view/AbstractDataView.h>
+#include <QScopedPointer>
 
 #include <vtkType.h>
+
+#include <gui/data_view/AbstractDataView.h>
 
 
 class QTableView;
@@ -43,7 +45,7 @@ protected:
     bool eventFilter(QObject * obj, QEvent * ev) override;
 
 private:
-    Ui_TableView * m_ui;
+    QScopedPointer<Ui_TableView> m_ui;
     DataObject * m_dataObject;
     QMenu * m_selectColumnsMenu;
 

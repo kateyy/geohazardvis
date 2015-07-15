@@ -62,7 +62,7 @@ void GlyphMapping::updateAvailableVectors()
         if (oldIt != m_vectors.end())
         {
             // not new -> keep old
-            newVectors.release();
+            newVectors.reset();
             newValidList.emplace(vectorsName, std::move(oldIt->second));
             oldInstances.erase(oldIt);
         }

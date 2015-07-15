@@ -76,8 +76,8 @@ private:
     void updateGuiForRemovedData();
 
 private:
-    Ui_RenderView * m_ui;
-    RendererImplementationSwitch * m_implementationSwitch;
+    std::unique_ptr<Ui_RenderView> m_ui;
+    std::unique_ptr<RendererImplementationSwitch> m_implementationSwitch;
     bool m_closingRequested;
 
     // rendered representations of data objects for this view

@@ -31,7 +31,6 @@ RenderConfigWidget::RenderConfigWidget(QWidget * parent)
 RenderConfigWidget::~RenderConfigWidget()
 {
     clear();
-    delete m_ui;
 }
 
 void RenderConfigWidget::clear()

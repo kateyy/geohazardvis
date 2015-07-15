@@ -5,7 +5,6 @@
 #include <vtkTrivialProducer.h>
 
 #include <core/utility/vtkhelper.h>
-#include <core/table_model/QVtkTableModel.h>
 
 
 vtkInformationKeyMacro(DataObjectPrivate, DataObjectKey, IntegerPointer);
@@ -14,7 +13,7 @@ vtkInformationKeyMacro(DataObjectPrivate, DataObjectKey, IntegerPointer);
 DataObjectPrivate::DataObjectPrivate(DataObject & dataObject, const QString & name, vtkDataSet * dataSet)
     : m_name(name)
     , m_dataSet(dataSet)
-    , m_tableModel(nullptr)
+    , m_tableModel()
     , m_bounds()
     , m_deferEventsRequests(0)
     , q_ptr(dataObject)
@@ -24,8 +23,6 @@ DataObjectPrivate::DataObjectPrivate(DataObject & dataObject, const QString & na
 DataObjectPrivate::~DataObjectPrivate()
 {
     disconnectAllEvents();
-
-    delete m_tableModel;
 }
 
 vtkAlgorithm * DataObjectPrivate::trivialProducer()

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <memory>
+
 #include <core/rendered_data/RenderedData.h>
 
 
@@ -39,5 +41,5 @@ private:
 private:
     vtkSmartPointer<vtkProperty> m_renderProperty;
 
-    GlyphMapping * m_glyphMapping;
+    std::unique_ptr<GlyphMapping> m_glyphMapping;
 };

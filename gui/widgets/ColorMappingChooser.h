@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QDockWidget>
+#include <QScopedPointer>
 #include <QList>
 #include <QMap>
 
@@ -67,7 +68,7 @@ private:
     static vtkSmartPointer<vtkLookupTable> buildLookupTable(const QImage & image);
 
 private:
-    Ui_ColorMappingChooser * m_ui;
+    QScopedPointer<Ui_ColorMappingChooser> m_ui;
 
     QList<vtkSmartPointer<vtkLookupTable>> m_gradients;
 

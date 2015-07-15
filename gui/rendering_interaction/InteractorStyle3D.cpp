@@ -62,10 +62,7 @@ InteractorStyle3D::InteractorStyle3D()
     m_selectedCellActor->PickableOff();
 }
 
-InteractorStyle3D::~InteractorStyle3D()
-{
-    delete m_highlightFlashTime;
-}
+InteractorStyle3D::~InteractorStyle3D() = default;
 
 void InteractorStyle3D::setRenderedData(const QList<RenderedData *> & renderedData)
 {

@@ -38,7 +38,7 @@ void TextureManager::initialize()
 void TextureManager::release()
 {
     assert(s_instance);
-    s_instance.release();
+    s_instance.reset();
 }
 
 vtkImageData * TextureManager::imageFromFile(const QString & fileName)

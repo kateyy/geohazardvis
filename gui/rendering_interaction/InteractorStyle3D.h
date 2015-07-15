@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QMap>
+#include <QScopedPointer>
 
 #include <vtkInteractorStyleTerrain.h>
 #include <vtkSmartPointer.h>
@@ -62,7 +63,7 @@ protected:
     QPair<DataObject *, vtkIdType> m_currentlyHighlighted;
 
     QTimer * m_highlightFlashTimer;
-    QTime * m_highlightFlashTime;
+    QScopedPointer<QTime> m_highlightFlashTime;
 
     bool m_mouseMoved;
 };

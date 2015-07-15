@@ -210,8 +210,8 @@ void DEMWidget::showEvent(QShowEvent * /*event*/)
 void DEMWidget::updatePreview()
 {
     m_renderer->RemoveAllViewProps();
-    m_renderedPreview.release();
-    m_dataPreview.release();
+    m_renderedPreview.reset();
+    m_dataPreview.reset();
 
     int surfaceIdx = m_ui->surfaceMeshCombo->currentIndex();
     if (surfaceIdx == -1)

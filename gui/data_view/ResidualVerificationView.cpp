@@ -199,13 +199,12 @@ ResidualVerificationView::~ResidualVerificationView()
             continue;
 
         beforeDeleteVisualization(vis.get());
-        vis.release();
+        vis.reset();
     }
 
     if (m_implementation)
     {
         m_implementation->deactivate(m_qvtkMain);
-        delete m_implementation;
     }
 }
 
@@ -473,11 +472,11 @@ void ResidualVerificationView::initialize()
     if (m_implementation)
         return;
 
-    m_implementation = new RendererImplementationBase3D(*this);
+    m_implementation = std::make_unique<RendererImplementationBase3D>(*this);
     m_implementation->activate(m_qvtkMain);
 
     //m_strategy = new RenderViewStrategyImage2D(*m_implementation, m_implementation);
-    m_strategy = new RenderViewStrategy3D(*m_implementation, m_implementation);
+    m_strategy = new RenderViewStrategy3D(*m_implementation, m_implementation.get());
     m_implementation->setStrategy(m_strategy);
 
     m_dataSets.resize(3);

@@ -43,8 +43,6 @@ GlyphMappingChooser::~GlyphMappingChooser()
     m_mapping = nullptr;
 
     updateVectorsList();
-
-    delete m_ui;
 }
 
 void GlyphMappingChooser::setCurrentRenderView(AbstractRenderView * renderView)

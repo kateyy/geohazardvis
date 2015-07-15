@@ -37,8 +37,6 @@ TableView::TableView(int index, QWidget * parent, Qt::WindowFlags flags)
 TableView::~TableView()
 {
     SelectionHandler::instance().removeTableView(this);
-
-    delete m_ui;
 }
 
 bool TableView::isTable() const

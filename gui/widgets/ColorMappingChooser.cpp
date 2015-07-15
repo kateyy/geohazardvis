@@ -109,10 +109,7 @@ ColorMappingChooser::ColorMappingChooser(QWidget * parent)
     });
 }
 
-ColorMappingChooser::~ColorMappingChooser()
-{
-    delete m_ui;
-}
+ColorMappingChooser::~ColorMappingChooser() = default;
 
 void ColorMappingChooser::setCurrentRenderView(AbstractRenderView * renderView)
 {

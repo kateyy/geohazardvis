@@ -1,7 +1,9 @@
 #pragma once
 
+#include <map>
+#include <memory>
+
 #include <QMainWindow>
-#include <QMap>
 
 #include <gui/gui_api.h>
 
@@ -53,8 +55,8 @@ private:
     vtkQtDebugLeaksView * m_debugLeaksView;
     QPalette m_defaultPalette;
 
-    Ui_MainWindow * m_ui;
-    DataMapping * m_dataMapping;
+    std::unique_ptr<Ui_MainWindow> m_ui;
+    std::unique_ptr<DataMapping> m_dataMapping;
     QAction * m_addToRendererAction;
     QAction * m_removeLoadedFileAction;
     DataBrowser * m_dataBrowser;
@@ -67,6 +69,6 @@ private:
     QString m_lastOpenFolder;
     QString m_lastExportFolder;
 
-    QMutex * m_loadWatchersMutex;
-    QMap<QFutureWatcher<void> *, QStringList> m_loadWatchers;
+    std::unique_ptr<QMutex> m_loadWatchersMutex;
+    std::map<std::unique_ptr<QFutureWatcher<void>>, QStringList> m_loadWatchers;
 };

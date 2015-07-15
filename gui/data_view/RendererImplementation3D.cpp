@@ -14,14 +14,10 @@ bool RendererImplementation3D::s_isRegistered = RendererImplementation::register
 
 RendererImplementation3D::RendererImplementation3D(AbstractRenderView & renderView, QObject * parent)
     : RendererImplementationBase3D(renderView, parent)
-    , m_strategySwitch(nullptr)
 {
 }
 
-RendererImplementation3D::~RendererImplementation3D()
-{
-    delete m_strategySwitch;
-}
+RendererImplementation3D::~RendererImplementation3D() = default;
 
 QList<DataObject *> RendererImplementation3D::filterCompatibleObjects(
     const QList<DataObject *> & dataObjects,
@@ -38,7 +34,7 @@ void RendererImplementation3D::activate(QVTKWidget * qvtkWidget)
     RendererImplementationBase3D::activate(qvtkWidget);
 
     if (!m_strategySwitch)
-        m_strategySwitch = new RenderViewStrategySwitch(*this);
+        m_strategySwitch = std::make_unique<RenderViewStrategySwitch>(*this);
 }
 
 void RendererImplementation3D::onRemoveContent(AbstractVisualizedData * content, unsigned int subViewIndex)

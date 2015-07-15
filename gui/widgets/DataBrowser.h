@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QWidget>
+#include <QScopedPointer>
 
 
 template<typename T> class QList;
@@ -50,7 +51,7 @@ private:
     void evaluateItemViewClick(const QModelIndex & index, const QPoint & position);
 
 private:
-    Ui_DataBrowser * m_ui;
+    QScopedPointer<Ui_DataBrowser> m_ui;
     DataBrowserTableModel * m_tableModel;
     DataMapping * m_dataMapping;
 };

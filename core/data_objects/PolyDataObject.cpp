@@ -199,9 +199,9 @@ bool PolyDataObject::setCellNormalComponent(vtkIdType cellId, int component, dou
     return true;
 }
 
-QVtkTableModel * PolyDataObject::createTableModel()
+std::unique_ptr<QVtkTableModel> PolyDataObject::createTableModel()
 {
-    QVtkTableModel * model = new QVtkTableModelPolyData();
+    std::unique_ptr<QVtkTableModel> model = std::make_unique<QVtkTableModelPolyData>();
     model->setDataObject(this);
 
     return model;

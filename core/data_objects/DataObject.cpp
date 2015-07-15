@@ -112,7 +112,7 @@ QVtkTableModel * DataObject::tableModel()
     if (!d_ptr->m_tableModel)
         d_ptr->m_tableModel = createTableModel();
 
-    return d_ptr->m_tableModel;
+    return d_ptr->m_tableModel.get();
 }
 
 void DataObject::addDataArray(vtkDataArray & /*dataArray*/)

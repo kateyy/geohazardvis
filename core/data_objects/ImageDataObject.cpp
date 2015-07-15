@@ -73,9 +73,9 @@ const double * ImageDataObject::minMaxValue()
     return imageData()->GetScalarRange();
 }
 
-QVtkTableModel * ImageDataObject::createTableModel()
+std::unique_ptr<QVtkTableModel> ImageDataObject::createTableModel()
 {
-    QVtkTableModelImage * model = new QVtkTableModelImage();
+    std::unique_ptr<QVtkTableModel> model = std::make_unique<QVtkTableModelImage>();
     model->setDataObject(this);
 
     return model;

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <memory>
+
 #include <gui/data_view/RendererImplementationBase3D.h>
 
 
@@ -25,7 +27,7 @@ protected:
     void onRenderViewVisualizationChanged();
 
 private:
-    RenderViewStrategySwitch * m_strategySwitch;
+    std::unique_ptr<RenderViewStrategySwitch> m_strategySwitch;
 
     static bool s_isRegistered;
 };

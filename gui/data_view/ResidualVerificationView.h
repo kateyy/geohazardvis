@@ -107,7 +107,7 @@ private:
     vtkVector3d m_inSARLineOfSight;
     bool m_interpolateModelOnObservation;
 
-    RendererImplementationBase3D * m_implementation;
+    std::unique_ptr<RendererImplementationBase3D> m_implementation;
     RenderViewStrategy * m_strategy;
     std::vector<DataObject *> m_dataSets;
     std::vector<std::unique_ptr<AbstractVisualizedData>> m_visualizations;

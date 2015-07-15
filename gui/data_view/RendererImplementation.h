@@ -68,7 +68,7 @@ public:
 
     virtual std::unique_ptr<AbstractVisualizedData> requestVisualization(DataObject & dataObject) const = 0;
 
-    using ImplementationConstructor = std::function<RendererImplementation *(AbstractRenderView & view)>;
+    using ImplementationConstructor = std::function<std::unique_ptr<RendererImplementation>(AbstractRenderView & view)>;
     static const QList<ImplementationConstructor> & constructors();
 
 protected:
@@ -101,7 +101,7 @@ template <typename ImplType>
 bool RendererImplementation::registerImplementation()
 {
     s_constructors().append(
-        [] (AbstractRenderView & view) { return new ImplType(view); }
+        [](AbstractRenderView & view) { return std::make_unique<ImplType>(view); }
     );
 
     return true;

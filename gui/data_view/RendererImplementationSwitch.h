@@ -1,5 +1,7 @@
 #pragma once
 
+#include <memory>
+
 
 template<typename T> class QList;
 
@@ -19,6 +21,6 @@ public:
 
 private:
     AbstractRenderView & m_view;
-    RendererImplementation * m_currentImpl;
-    RendererImplementation * m_nullImpl;
+    std::unique_ptr<RendererImplementation> m_currentImpl;
+    std::unique_ptr<RendererImplementation> m_nullImpl;
 };

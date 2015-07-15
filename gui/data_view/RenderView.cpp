@@ -22,8 +22,8 @@ RenderView::RenderView(
     int index,
     QWidget * parent, Qt::WindowFlags flags)
     : AbstractRenderView(index, parent, flags)
-    , m_ui(new Ui_RenderView())
-    , m_implementationSwitch(new RendererImplementationSwitch(*this))
+    , m_ui(std::make_unique<Ui_RenderView>())
+    , m_implementationSwitch(std::make_unique<RendererImplementationSwitch>(*this))
     , m_closingRequested(false)
 {
     m_ui->setupUi(this);
@@ -47,10 +47,6 @@ RenderView::~RenderView()
 
     m_contents.clear();
     m_contentCache.clear();
-
-    delete m_implementationSwitch;
-
-    delete m_ui;
 }
 
 QString RenderView::friendlyName() const

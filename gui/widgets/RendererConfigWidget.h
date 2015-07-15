@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QDockWidget>
+#include <QScopedPointer>
 
 #include <vtkSmartPointer.h>
 
@@ -48,7 +49,7 @@ private:
         AbstractRenderView * renderView, RendererImplementationPlot * impl);
 
 private:
-    Ui_RendererConfigWidget * m_ui;
+    QScopedPointer<Ui_RendererConfigWidget> m_ui;
 
     reflectionzeug::PropertyGroup * m_propertyRoot;
     AbstractRenderView * m_currentRenderView;

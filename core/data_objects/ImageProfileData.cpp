@@ -157,9 +157,9 @@ void ImageProfileData::setPoints(double point1[3], double point2[3])
     emit boundsChanged();
 }
 
-QVtkTableModel * ImageProfileData::createTableModel()
+std::unique_ptr<QVtkTableModel> ImageProfileData::createTableModel()
 {
-    QVtkTableModel * tableModel = new QVtkTableModelProfileData();
+    std::unique_ptr<QVtkTableModel> tableModel = std::make_unique<QVtkTableModelProfileData>();
     tableModel->setDataObject(this);
 
     return tableModel;

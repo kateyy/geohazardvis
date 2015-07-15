@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QDockWidget>
+#include <QScopedPointer>
 
 #include <gui/gui_api.h>
 
@@ -35,7 +36,7 @@ private:
     void updateTitle();
 
 private:
-    Ui_RenderConfigWidget * m_ui;
+    QScopedPointer<Ui_RenderConfigWidget> m_ui;
 
     reflectionzeug::PropertyGroup * m_propertyRoot;
 

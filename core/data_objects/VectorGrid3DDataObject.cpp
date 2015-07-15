@@ -65,9 +65,9 @@ const double * VectorGrid3DDataObject::scalarRange(int component)
     return dataSet()->GetPointData()->GetScalars()->GetRange(component);
 }
 
-QVtkTableModel * VectorGrid3DDataObject::createTableModel()
+std::unique_ptr<QVtkTableModel> VectorGrid3DDataObject::createTableModel()
 {
-    QVtkTableModel * model = new QVtkTableModelVectorGrid3D();
+    std::unique_ptr<QVtkTableModel> model = std::make_unique<QVtkTableModelVectorGrid3D>();
     model->setDataObject(this);
 
     return model;

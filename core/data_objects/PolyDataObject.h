@@ -42,7 +42,7 @@ public:
     bool setCellNormalComponent(vtkIdType cellId, int component, double value);
 
 protected:
-    QVtkTableModel * createTableModel() override;
+    std::unique_ptr<QVtkTableModel> createTableModel() override;
 
 private:
     void setupCellCenters();

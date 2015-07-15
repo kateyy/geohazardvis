@@ -18,10 +18,7 @@ RenderedData3D::RenderedData3D(DataObject & dataObject)
 {
 }
 
-RenderedData3D::~RenderedData3D()
-{
-    delete m_glyphMapping;
-}
+RenderedData3D::~RenderedData3D() = default;
 
 vtkSmartPointer<vtkProp3DCollection> RenderedData3D::viewProps3D()
 {
@@ -33,8 +30,8 @@ GlyphMapping & RenderedData3D::glyphMapping()
 {
     if (!m_glyphMapping)
     {
-        m_glyphMapping = new GlyphMapping(*this);
-        connect(m_glyphMapping, &GlyphMapping::vectorsChanged, this, &RenderedData3D::invalidateViewProps);
+        m_glyphMapping = std::make_unique<GlyphMapping>(*this);
+        connect(m_glyphMapping.get(), &GlyphMapping::vectorsChanged, this, &RenderedData3D::invalidateViewProps);
     }
     return *m_glyphMapping;
 }

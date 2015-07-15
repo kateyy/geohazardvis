@@ -41,10 +41,7 @@ DataBrowser::DataBrowser(QWidget* parent, Qt::WindowFlags f)
     });
 }
 
-DataBrowser::~DataBrowser()
-{
-    delete m_ui;
-}
+DataBrowser::~DataBrowser() = default;
 
 void DataBrowser::setDataMapping(DataMapping * dataMapping)
 {

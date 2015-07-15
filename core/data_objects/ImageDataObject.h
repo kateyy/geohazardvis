@@ -31,5 +31,5 @@ public:
     const double * minMaxValue();
 
 protected:
-    QVtkTableModel * createTableModel() override;
+    std::unique_ptr<QVtkTableModel> createTableModel() override;
 };

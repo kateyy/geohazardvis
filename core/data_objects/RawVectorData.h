@@ -21,7 +21,7 @@ public:
     vtkFloatArray * dataArray();
 
 protected:
-    QVtkTableModel * createTableModel() override;
+    std::unique_ptr<QVtkTableModel> createTableModel() override;
 
 private:
     vtkSmartPointer<vtkFloatArray> m_dataArray;

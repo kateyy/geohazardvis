@@ -7,6 +7,7 @@
 #include <vtkObject.h>
 
 #include <core/core_api.h>
+#include <core/table_model/QVtkTableModel.h>
 
 
 class vtkInformation;
@@ -15,7 +16,6 @@ class vtkInformationIntegerKey;
 class vtkDataArray;
 class vtkDataSet;
 class vtkAlgorithmOutput;
-class QVtkTableModel;
 class RenderedData;
 class Context2DData;
 
@@ -85,7 +85,7 @@ signals:
     void attributeArraysChanged();
 
 protected:
-    virtual QVtkTableModel * createTableModel() = 0;
+    virtual std::unique_ptr<QVtkTableModel> createTableModel() = 0;
 
     template<typename U, typename T>
     void connectObserver(const QString & eventName, vtkObject & subject,

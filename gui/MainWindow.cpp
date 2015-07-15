@@ -18,13 +18,13 @@
 
 #include <widgetzeug/dark_fusion_style.hpp>
 
-#include <core/utility/vtkhelper.h>
 #include <core/DataSetHandler.h>
+#include <core/TextureManager.h>
 #include <core/data_objects/DataObject.h>
 #include <core/io/Exporter.h>
 #include <core/io/Loader.h>
 #include <core/rendered_data/RenderedData.h>
-#include <core/TextureManager.h>
+#include <core/utility/vtkhelper.h>
 
 #include <gui/DataMapping.h>
 #include <gui/SelectionHandler.h>
@@ -45,14 +45,14 @@ namespace
 MainWindow::MainWindow()
     : QMainWindow()
     //, m_debugLeaksView(new vtkQtDebugLeaksView()) // not usable in multi-threaded application
-    , m_ui(new Ui_MainWindow())
-    , m_dataMapping(new DataMapping(*this))
+    , m_ui(std::make_unique<Ui_MainWindow>())
+    , m_dataMapping(std::make_unique<DataMapping>(*this))
     , m_scalarMappingChooser(new ColorMappingChooser())
     , m_vectorMappingChooser(new GlyphMappingChooser())
     , m_renderConfigWidget(new RenderConfigWidget())
     , m_rendererConfigWidget(new RendererConfigWidget())
     , m_canvasExporter(new CanvasExporterWidget(this))
-    , m_loadWatchersMutex(new QMutex())
+    , m_loadWatchersMutex(std::make_unique<QMutex>())
 {
     m_defaultPalette = qApp->palette();
 
@@ -71,7 +71,7 @@ MainWindow::MainWindow()
 
 
     m_dataBrowser = m_ui->centralwidget;
-    m_dataBrowser->setDataMapping(m_dataMapping);
+    m_dataBrowser->setDataMapping(m_dataMapping.get());
 
     SelectionHandler::instance().setSyncToggleMenu(m_ui->menuSynchronize_Selections);
 
@@ -88,12 +88,12 @@ MainWindow::MainWindow()
     tabifyDockWidget(m_renderConfigWidget, m_rendererConfigWidget);
     tabbedDockWidgetToFront(m_renderConfigWidget);
 
-    connect(m_dataMapping, &DataMapping::focusedRenderViewChanged, m_scalarMappingChooser, &ColorMappingChooser::setCurrentRenderView);
-    connect(m_dataMapping, &DataMapping::focusedRenderViewChanged, m_vectorMappingChooser, &GlyphMappingChooser::setCurrentRenderView);
-    connect(m_dataMapping, &DataMapping::focusedRenderViewChanged, m_renderConfigWidget, &RenderConfigWidget::setCurrentRenderView);
+    connect(m_dataMapping.get(), &DataMapping::focusedRenderViewChanged, m_scalarMappingChooser, &ColorMappingChooser::setCurrentRenderView);
+    connect(m_dataMapping.get(), &DataMapping::focusedRenderViewChanged, m_vectorMappingChooser, &GlyphMappingChooser::setCurrentRenderView);
+    connect(m_dataMapping.get(), &DataMapping::focusedRenderViewChanged, m_renderConfigWidget, &RenderConfigWidget::setCurrentRenderView);
 
-    connect(m_dataMapping, &DataMapping::renderViewsChanged, m_rendererConfigWidget, &RendererConfigWidget::setRenderViews);
-    connect(m_dataMapping, &DataMapping::focusedRenderViewChanged,
+    connect(m_dataMapping.get(), &DataMapping::renderViewsChanged, m_rendererConfigWidget, &RendererConfigWidget::setRenderViews);
+    connect(m_dataMapping.get(), &DataMapping::focusedRenderViewChanged,
         m_rendererConfigWidget, static_cast<void(RendererConfigWidget::*)(AbstractRenderView*)>(&RendererConfigWidget::setCurrentRenderView));
 
     connect(m_dataBrowser, &DataBrowser::selectedDataChanged,
@@ -105,7 +105,7 @@ MainWindow::MainWindow()
     connect(m_ui->actionSetup_Image_Export, &QAction::triggered, m_canvasExporter, &CanvasExporterWidget::show);
     connect(m_ui->actionQuick_Export, &QAction::triggered, m_canvasExporter, &CanvasExporterWidget::captureScreenshot);
     connect(m_ui->actionExport_To, &QAction::triggered, m_canvasExporter, &CanvasExporterWidget::captureScreenshotTo);
-    connect(m_dataMapping, &DataMapping::focusedRenderViewChanged, m_canvasExporter, &CanvasExporterWidget::setRenderView);
+    connect(m_dataMapping.get(), &DataMapping::focusedRenderViewChanged, m_canvasExporter, &CanvasExporterWidget::setRenderView);
 
     connect(m_ui->actionObservation_Model_Residual_View, &QAction::triggered,
         [this] (bool) {
@@ -124,22 +124,21 @@ MainWindow::~MainWindow()
     {
         QFutureWatcher<void> * watcher;
         {
-            QMutexLocker lock(m_loadWatchersMutex);
-            if (m_loadWatchers.isEmpty())
+            QMutexLocker lock(m_loadWatchersMutex.get());
+            if (m_loadWatchers.empty())
                 break;
 
-            watcher = m_loadWatchers.begin().key();
+            watcher = m_loadWatchers.begin()->first.get();
         }
         watcher->waitForFinished();
         QApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
     }
-    delete m_loadWatchersMutex;
 
-    delete m_dataMapping;
+    m_dataMapping.reset();
     // wait to close all views
     QApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
 
-    delete m_ui;
+    m_ui.reset();
 
     TextureManager::release();
 
@@ -220,14 +219,15 @@ void MainWindow::openFiles(const QStringList & fileNames)
 
 void MainWindow::openFilesAsync(const QStringList & fileNames)
 {
-    auto watcher = new QFutureWatcher<void>(this);
-    connect(watcher, &QFutureWatcher<void>::finished, this, &MainWindow::handleAsyncLoadFinished);
+    auto watcher = std::make_unique<QFutureWatcher<void>>();
+    auto watcherPtr = watcher.get();
+    connect(watcherPtr, &QFutureWatcher<void>::finished, this, &MainWindow::handleAsyncLoadFinished);
 
     m_loadWatchersMutex->lock();
-    m_loadWatchers.insert(watcher, fileNames);
+    m_loadWatchers.emplace(std::move(watcher), fileNames);
     m_loadWatchersMutex->unlock();
 
-    watcher->setFuture(
+    watcherPtr->setFuture(
         QtConcurrent::run(this, &MainWindow::openFiles, fileNames));
 
     updateWindowTitle();
@@ -326,17 +326,17 @@ void MainWindow::setDarkFusionStyle(bool enabled)
 
 void MainWindow::updateWindowTitle()
 {
-    QMutexLocker lock(m_loadWatchersMutex);
+    QMutexLocker lock(m_loadWatchersMutex.get());
 
     QString title = s_defaultAppTitle;
 
-    if (!m_loadWatchers.isEmpty())
+    if (!m_loadWatchers.empty())
     {
         title += " -  Loading Files: ";
 
-        for (auto & fileNames : m_loadWatchers.values())
+        for (auto & it : m_loadWatchers)
         {
-            for (auto & fileName : fileNames)
+            for (auto & fileName : it.second)
             {
                 title += QFileInfo(fileName).fileName() + ", ";
             }
@@ -351,10 +351,18 @@ void MainWindow::updateWindowTitle()
 void MainWindow::handleAsyncLoadFinished()
 {
     {
-        QMutexLocker lock(m_loadWatchersMutex);
+        QMutexLocker lock(m_loadWatchersMutex.get());
         assert(dynamic_cast<QFutureWatcher<void> *>(sender()));
         auto watcher = static_cast<QFutureWatcher<void> *>(sender());
-        m_loadWatchers.remove(watcher);
+
+        decltype(m_loadWatchers)::iterator toDeleteIt;
+        for (toDeleteIt = m_loadWatchers.begin(); toDeleteIt != m_loadWatchers.end(); ++toDeleteIt)
+        {
+            if (toDeleteIt->first.get() == watcher)
+                break;
+        }
+        assert(toDeleteIt != m_loadWatchers.end());
+        m_loadWatchers.erase(toDeleteIt);
     }
 
     updateWindowTitle();

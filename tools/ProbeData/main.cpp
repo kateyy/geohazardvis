@@ -39,7 +39,7 @@ int main()
 
     auto highResMeshData = Loader::readFile(highResMeshFN);
     vtkSmartPointer<vtkDataSet> highResMesh = highResMeshData->dataSet();
-    highResMeshData.release();
+    highResMeshData.reset();
 
     std::vector<std::vector<io::t_FP>> raw_pointData;
     FileParser::populateIOVectors(fileName.toStdString(), raw_pointData);
