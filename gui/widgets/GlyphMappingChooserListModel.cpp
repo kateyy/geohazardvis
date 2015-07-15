@@ -21,7 +21,7 @@ void GlyphMappingChooserListModel::setMapping(GlyphMapping * mapping)
     if (m_mapping)
     {
         m_vectorNames = m_mapping->vectorNames();
-        m_vectors = m_mapping->vectors().values();
+        m_vectors = m_mapping->vectors();
         assert(m_vectorNames.size() == m_vectors.size());
     }
     else

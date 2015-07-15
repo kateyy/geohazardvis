@@ -37,10 +37,8 @@ std::vector<std::unique_ptr<ColorMappingData>> GlyphMagnitudeColorMapping::newIn
         if (!data)
             continue;
 
-        const QMap<QString, GlyphMappingData *> & vectors = data->glyphMapping().vectors();
-        for (auto it = vectors.begin(); it != vectors.end(); ++it)
+        for (auto & vectorData : data->glyphMapping().vectors())
         {
-            GlyphMappingData * vectorData = it.value();
             if (vectorData->isVisible())
                 glyphMappings[vectorData->name()] << vectorData;
         }

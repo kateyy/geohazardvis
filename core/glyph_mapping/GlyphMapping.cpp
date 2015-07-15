@@ -28,9 +28,13 @@ QList<QString> GlyphMapping::vectorNames() const
     return m_vectors.keys();
 }
 
-const QMap<QString, GlyphMappingData *> & GlyphMapping::vectors() const
+QList<GlyphMappingData*> GlyphMapping::vectors() const
 {
-    return m_vectors;
+    QList<GlyphMappingData*> result;
+    for (auto & v : m_vectors)
+        result << v;
+
+    return result;
 }
 
 const RenderedData & GlyphMapping::renderedData() const

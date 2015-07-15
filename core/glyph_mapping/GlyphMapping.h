@@ -28,7 +28,7 @@ public:
     /** names of vectors that can be used with my data */
     QList<QString> vectorNames() const;
     /** list of vector data that can be used with my data */
-    const QMap<QString, GlyphMappingData *> & vectors() const;
+    QList<GlyphMappingData *> vectors() const;
 
     const RenderedData & renderedData() const;
 

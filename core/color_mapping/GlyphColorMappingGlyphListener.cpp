@@ -32,7 +32,7 @@ void GlyphColorMappingGlyphListener::setData(const QList<AbstractVisualizedData 
         m_connects << connect(&glyphMapping, &GlyphMapping::vectorsChanged,
             this, &GlyphColorMappingGlyphListener::glyphMappingChanged);
 
-        for (GlyphMappingData * data : glyphMapping.vectors().values())
+        for (GlyphMappingData * data : glyphMapping.vectors())
             m_connects << connect(data, &GlyphMappingData::visibilityChanged,
                 this, &GlyphColorMappingGlyphListener::glyphMappingChanged);
     }

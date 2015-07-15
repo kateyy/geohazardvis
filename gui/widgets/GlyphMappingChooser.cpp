@@ -146,7 +146,7 @@ void GlyphMappingChooser::updateVectorsList()
 
     if (m_mapping)
     {
-        for (GlyphMappingData * vectors : m_mapping->vectors().values())
+        for (GlyphMappingData * vectors : m_mapping->vectors())
         {
             m_propertyGroups << vectors->createPropertyGroup();
             connect(vectors, &GlyphMappingData::geometryChanged, this, &GlyphMappingChooser::renderSetupChanged);
