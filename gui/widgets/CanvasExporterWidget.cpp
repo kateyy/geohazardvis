@@ -16,7 +16,7 @@
 
 CanvasExporterWidget::CanvasExporterWidget(QWidget * parent, Qt::WindowFlags f)
     : QDialog(parent, f)
-    , m_ui(new Ui_CanvasExporterWidget)
+    , m_ui(std::make_unique<Ui_CanvasExporterWidget>())
 {
     m_ui->setupUi(this);
     m_ui->exporterSettingsBrowser->addEditorPlugin<ColorEditorRGB>();
@@ -35,10 +35,7 @@ CanvasExporterWidget::CanvasExporterWidget(QWidget * parent, Qt::WindowFlags f)
     });
 }
 
-CanvasExporterWidget::~CanvasExporterWidget()
-{
-    delete m_ui;
-}
+CanvasExporterWidget::~CanvasExporterWidget() = default;
 
 void CanvasExporterWidget::setRenderView(AbstractRenderView * renderView)
 {
@@ -47,24 +44,25 @@ void CanvasExporterWidget::setRenderView(AbstractRenderView * renderView)
 
 void CanvasExporterWidget::captureScreenshot()
 {
-    CanvasExporter * exporter = currentExporter();
+    CanvasExporter * exporter = currentExporterConfigured();
     if (!exporter)
         return;
 
     QString exportFolder = currentExportFolder();
 
-    if (!QDir().exists(exportFolder))
+    QDir exportDir(exportFolder);
+
+    if (!exportDir.exists())
         return;
 
-    QDir exportDir(exportFolder);
     QString fileName = exportDir.absoluteFilePath(fileNameWithTimeStamp());
 
-    saveScreenshotTo(exporter, fileName);
+    saveScreenshotTo(*exporter, fileName);
 }
 
 void CanvasExporterWidget::captureScreenshotTo()
 {
-    CanvasExporter * exporter = currentExporter();
+    CanvasExporter * exporter = currentExporterConfigured();
     if (!exporter)
         return;
 
@@ -75,10 +73,34 @@ void CanvasExporterWidget::captureScreenshotTo()
     if (target.isEmpty())
         return;
 
-    saveScreenshotTo(exporter, target);
+    saveScreenshotTo(*exporter, target);
 }
 
 CanvasExporter * CanvasExporterWidget::currentExporter()
+{
+    QString format = m_ui->fileFormatComboBox->currentText();
+    auto exporterIt = m_exporters.find(format);
+
+    CanvasExporter * exporter = nullptr;
+
+    if (exporterIt == m_exporters.end())
+    {
+        auto newExporter = CanvasExporterRegistry::createExporter(format);
+        exporter = newExporter.get();
+        m_exporters.emplace(format, std::move(newExporter));
+    }
+    else
+    {
+        exporter = exporterIt->second.get();
+    }
+
+    if (!exporter)
+        qDebug() << "CanvasExporterWidget: Selected file format" << format << "is not supported.";
+
+    return exporter;
+}
+
+CanvasExporter * CanvasExporterWidget::currentExporterConfigured()
 {
     if (!m_renderView)
     {
@@ -86,21 +108,11 @@ CanvasExporter * CanvasExporterWidget::currentExporter()
         return nullptr;
     }
 
-    QString format = m_ui->fileFormatComboBox->currentText();
-    auto exporterIt = m_exporters.find(format);
-    auto exporter = exporterIt->second.get();
-    if (exporterIt == m_exporters.end())
+    auto exporter = currentExporter();
+    if (exporter)
     {
-        auto newExporter = CanvasExporterRegistry::createExporter(format);
-        m_exporters.emplace(format, std::move(newExporter));
-        exporter = newExporter.get();
-    }
-
-    if (!exporter)
-        qDebug() << "CanvasExporterWidget: Selected file format" << format << "is not supported.";
-    else
         exporter->setRenderWindow(m_renderView->renderWindow());
-
+    }
 
     return exporter;
 }
@@ -126,34 +138,24 @@ QString CanvasExporterWidget::fileNameWithTimeStamp() const
     return baseName;
 }
 
-void CanvasExporterWidget::saveScreenshotTo(CanvasExporter * exporter, const QString & fileName) const
+void CanvasExporterWidget::saveScreenshotTo(CanvasExporter & exporter, const QString & fileName) const
 {
     qDebug() << "exporting image to: " << fileName;
-    assert(exporter);
 
-    exporter->setOutputFileName(fileName);
-    exporter->setRenderWindow(m_renderView->renderWindow());
+    exporter.setOutputFileName(fileName);
+    exporter.setRenderWindow(m_renderView->renderWindow());
 
-    exporter->write();
+    exporter.write();
 }
 
-void CanvasExporterWidget::updateUiForFormat(const QString & format)
+void CanvasExporterWidget::updateUiForFormat()
 {
     m_ui->exporterSettingsBrowser->setRoot(nullptr);
 
-    auto exporterIt = m_exporters.find(format);
-    auto exporter = exporterIt->second.get();
+    auto exporter = currentExporter();
+    if (!exporter)
+        return;
 
-    if (exporterIt == m_exporters.end())
-    {
-        auto newExporter = CanvasExporterRegistry::createExporter(format);
-        m_exporters.emplace(format, std::move(newExporter));
-        exporter = newExporter.get();
-    }
-
-    if (exporter)
-    {
-        m_ui->exporterSettingsBrowser->setRoot(exporter->propertyGroup());
-        m_ui->exporterSettingsBrowser->resizeColumnToContents(0);
-    }
+    m_ui->exporterSettingsBrowser->setRoot(exporter->propertyGroup());
+    m_ui->exporterSettingsBrowser->resizeColumnToContents(0);
 }

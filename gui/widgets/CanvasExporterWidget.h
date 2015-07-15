@@ -30,16 +30,16 @@ public:
     void captureScreenshotTo();
 
 private:
-    void updateUiForFormat(const QString & format);
+    void updateUiForFormat();
 
-private:
     CanvasExporter * currentExporter();
+    CanvasExporter * currentExporterConfigured();
     QString currentExportFolder() const;
     QString fileNameWithTimeStamp() const;
-    void saveScreenshotTo(CanvasExporter * exporter,  const QString & fileName) const;
+    void saveScreenshotTo(CanvasExporter & exporter,  const QString & fileName) const;
 
 private:
-    Ui_CanvasExporterWidget * m_ui;
+    std::unique_ptr<Ui_CanvasExporterWidget> m_ui;
 
     AbstractRenderView * m_renderView;
 
