@@ -1,5 +1,6 @@
 #pragma once
 
+#include <map>
 #include <memory>
 
 #include <QList>
@@ -79,7 +80,7 @@ private:
 
     QList<AbstractVisualizedData *> m_visualizedData;
 
-    QMap<QString, ColorMappingData *> m_scalars;
+    std::map<QString, std::unique_ptr<ColorMappingData>> m_scalars;
 
     QString m_currentScalarsName;
     vtkSmartPointer<vtkLookupTable> m_gradient;

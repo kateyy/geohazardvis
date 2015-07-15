@@ -21,7 +21,7 @@ const bool VertexComponentColorMapping::s_isRegistered = ColorMappingRegistry::i
     newInstances);
 
 
-QList<ColorMappingData *> VertexComponentColorMapping::newInstances(const QList<AbstractVisualizedData*> & visualizedData)
+std::vector<std::unique_ptr<ColorMappingData>> VertexComponentColorMapping::newInstances(const QList<AbstractVisualizedData*> & visualizedData)
 {
     QList<AbstractVisualizedData *> polyDataObjects;
 
@@ -35,17 +35,15 @@ QList<ColorMappingData *> VertexComponentColorMapping::newInstances(const QList<
     if (polyDataObjects.isEmpty())
         return{};
 
-    QList<ColorMappingData *> instances;
+    std::vector<std::unique_ptr<ColorMappingData>> instances;
     for (int component = 0; component < 3; ++component)
     {
-        VertexComponentColorMapping * mapping = new VertexComponentColorMapping(polyDataObjects, component);
+        auto mapping = std::make_unique<VertexComponentColorMapping>(polyDataObjects, component);
         if (mapping->isValid())
         {
             mapping->initialize();
-            instances << mapping;
+            instances.push_back(std::move(mapping));
         }
-        else
-            delete mapping;
     }
 
     return instances;

@@ -24,7 +24,7 @@ const bool DirectImageColors::s_isRegistered = ColorMappingRegistry::instance().
     s_name,
     newInstances);
 
-QList<ColorMappingData *> DirectImageColors::newInstances(const QList<AbstractVisualizedData *> & visualizedData)
+std::vector<std::unique_ptr<ColorMappingData>> DirectImageColors::newInstances(const QList<AbstractVisualizedData *> & visualizedData)
 {
     QMultiMap<QString, int> arrayLocs;
 
@@ -67,17 +67,15 @@ QList<ColorMappingData *> DirectImageColors::newInstances(const QList<AbstractVi
         }
     }
 
-    QList<ColorMappingData *> instances;
+    std::vector<std::unique_ptr<ColorMappingData>> instances;
     for (auto it = arrayLocs.begin(); it != arrayLocs.end(); ++it)
     {
-        DirectImageColors * mapping = new DirectImageColors(supportedData, it.key(), it.value());
+        auto mapping = std::make_unique<DirectImageColors>(supportedData, it.key(), it.value());
         if (mapping->isValid())
         {
             mapping->initialize();
-            instances << mapping;
+            instances.push_back(std::move(mapping));
         }
-        else
-            delete mapping;
     }
 
     return instances;

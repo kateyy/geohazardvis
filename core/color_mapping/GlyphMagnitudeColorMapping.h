@@ -27,7 +27,7 @@ public:
     void configureMapper(AbstractVisualizedData * visualizedData, vtkAbstractMapper * mapper) override;
 
 protected:
-    static QList<ColorMappingData *> newInstances(const QList<AbstractVisualizedData*> & visualizedData);
+    static std::vector<std::unique_ptr<ColorMappingData>> newInstances(const QList<AbstractVisualizedData*> & visualizedData);
 
     QMap<int, QPair<double, double>> updateBounds() override;
 

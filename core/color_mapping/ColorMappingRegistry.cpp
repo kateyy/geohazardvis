@@ -9,26 +9,26 @@ ColorMappingRegistry::ColorMappingRegistry()
 {
 }
 
+ColorMappingRegistry::~ColorMappingRegistry() = default;
+
 ColorMappingRegistry & ColorMappingRegistry::instance()
 {
     static ColorMappingRegistry registry;
     return registry;
 }
 
-QMap<QString, ColorMappingData *> ColorMappingRegistry::createMappingsValidFor(const QList<AbstractVisualizedData*> & visualizedData)
+std::map<QString, std::unique_ptr<ColorMappingData>> ColorMappingRegistry::createMappingsValidFor(const QList<AbstractVisualizedData*> & visualizedData)
 {
-    QMap<QString, ColorMappingData *> validScalars;
+    std::map<QString, std::unique_ptr<ColorMappingData>> validScalars;
 
     for (auto creator : m_mappingCreators)
     {
-        QList<ColorMappingData *> scalars = creator(visualizedData);
+        auto scalars = creator(visualizedData);
 
-        for (ColorMappingData * s : scalars)
+        for (auto & s : scalars)
         {
             if (s->isValid())
-                validScalars.insert(s->name(), s);
-            else
-                delete s;
+                validScalars.emplace(s->name(), std::move(s));
         }
     }
 

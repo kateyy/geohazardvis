@@ -29,10 +29,7 @@ ColorMapping::ColorMapping(QObject * parent)
         this, &ColorMapping::updateAvailableScalars, Qt::QueuedConnection);
 }
 
-ColorMapping::~ColorMapping()
-{
-    qDeleteAll(m_scalars);
-}
+ColorMapping::~ColorMapping() = default;
 
 void ColorMapping::setVisualizedData(const QList<AbstractVisualizedData *> & visualizedData)
 {
@@ -45,7 +42,7 @@ void ColorMapping::setVisualizedData(const QList<AbstractVisualizedData *> & vis
 
     QString lastScalars = currentScalarsName();
     m_currentScalarsName.clear();
-    qDeleteAll(m_scalars);
+    m_scalars.clear();
 
 
     m_visualizedData = visualizedData;
@@ -59,15 +56,16 @@ void ColorMapping::setVisualizedData(const QList<AbstractVisualizedData *> & vis
     }
 
     m_scalars = ColorMappingRegistry::instance().createMappingsValidFor(visualizedData);
-    for (ColorMappingData * scalars : m_scalars)
+    for (auto & pair : m_scalars)
     {
+        auto & scalars = pair.second;
         scalars->setLookupTable(m_gradient);
-        connect(scalars, &ColorMappingData::dataMinMaxChanged,
+        connect(scalars.get(), &ColorMappingData::dataMinMaxChanged,
             this, &ColorMapping::scalarsChanged);
     }
 
     // disable color mapping if we couldn't find appropriate data
-    if (m_scalars.isEmpty())
+    if (m_scalars.empty())
     {
         updateLegendVisibility();
         return;
@@ -75,14 +73,14 @@ void ColorMapping::setVisualizedData(const QList<AbstractVisualizedData *> & vis
 
     QString newScalarsName;
     // reuse last configuration if possible
-    if (m_scalars.contains(lastScalars))
+    if (m_scalars.find(lastScalars) != m_scalars.end())
         newScalarsName = lastScalars;
     else
     {
-        if (m_scalars.contains("user-defined color"))
+        if (m_scalars.find("user-defined color") != m_scalars.end())
             newScalarsName = "user-defined color";
         else
-            newScalarsName = m_scalars.first()->name();
+            newScalarsName = m_scalars.begin()->first; // ordered by QString::operator<
     }
 
     setCurrentScalarsByName(newScalarsName);
@@ -96,13 +94,16 @@ void ColorMapping::clear()
 
     m_visualizedData.clear();
 
-    qDeleteAll(m_scalars.values());
     m_scalars.clear();
 }
 
 QList<QString> ColorMapping::scalarsNames() const
 {
-    return m_scalars.keys();
+    QList<QString> names;
+    for (auto & s : m_scalars)
+        names << s.first;
+
+    return names;
 }
 
 QString ColorMapping::currentScalarsName() const
@@ -142,10 +143,12 @@ const ColorMappingData * ColorMapping::currentScalars() const
     if (currentScalarsName().isEmpty())
         return nullptr;
 
-    auto * scalars = m_scalars.value(currentScalarsName());
-    assert(scalars);
+    auto it = m_scalars.find(currentScalarsName());
+    assert(it != m_scalars.end());
+    if (it == m_scalars.end())
+        return nullptr;
 
-    return scalars;
+    return it->second.get();
 }
 
 void ColorMapping::scalarsSetDataComponent(int component)

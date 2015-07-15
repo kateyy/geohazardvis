@@ -28,7 +28,7 @@ const bool GlyphMagnitudeColorMapping::s_isRegistered = ColorMappingRegistry::in
     s_name, newInstances);
 
 
-QList<ColorMappingData *> GlyphMagnitudeColorMapping::newInstances(const QList<AbstractVisualizedData*> & visualizedData)
+std::vector<std::unique_ptr<ColorMappingData>> GlyphMagnitudeColorMapping::newInstances(const QList<AbstractVisualizedData*> & visualizedData)
 {
     QMap<QString, QList<GlyphMappingData *>> glyphMappings;
     for (auto vis : visualizedData)
@@ -46,17 +46,15 @@ QList<ColorMappingData *> GlyphMagnitudeColorMapping::newInstances(const QList<A
         }
     }
 
-    QList<ColorMappingData *> instances;
+    std::vector<std::unique_ptr<ColorMappingData>> instances;
     for (auto it = glyphMappings.begin(); it != glyphMappings.end(); ++it)
     {
-        auto instance = new GlyphMagnitudeColorMapping(visualizedData, it.value(), it.key());
+        auto instance = std::make_unique<GlyphMagnitudeColorMapping>(visualizedData, it.value(), it.key());
         if (instance->isValid())
         {
             instance->initialize();
-            instances << instance;
+            instances.push_back(std::move(instance));
         }
-        else
-            delete instance;
     }
 
     return instances;

@@ -33,7 +33,7 @@ const bool AttributeArrayComponentMapping::s_isRegistered = ColorMappingRegistry
     s_name,
     newInstances);
 
-QList<ColorMappingData *> AttributeArrayComponentMapping::newInstances(const QList<AbstractVisualizedData *> & visualizedData)
+std::vector<std::unique_ptr<ColorMappingData>> AttributeArrayComponentMapping::newInstances(const QList<AbstractVisualizedData *> & visualizedData)
 {
     struct ArrayInfo
     {
@@ -102,11 +102,11 @@ QList<ColorMappingData *> AttributeArrayComponentMapping::newInstances(const QLi
         }
     }
 
-    QList<ColorMappingData *> instances;
+    std::vector<std::unique_ptr<ColorMappingData>> instances;
     for (auto it = arrayInfos.begin(); it != arrayInfos.end(); ++it)
     {
         const auto & arrayInfo = it.value();
-        AttributeArrayComponentMapping * mapping = new AttributeArrayComponentMapping(
+        auto mapping = std::make_unique<AttributeArrayComponentMapping>(
             supportedData, 
             it.key(), 
             arrayInfo.numComponents,
@@ -114,10 +114,8 @@ QList<ColorMappingData *> AttributeArrayComponentMapping::newInstances(const QLi
         if (mapping->isValid())
         {
             mapping->initialize();
-            instances << mapping;
+            instances.push_back(std::move(mapping));
         }
-        else
-            delete mapping;
     }
 
     return instances;

@@ -31,7 +31,7 @@ const bool VectorMagnitudeColorMapping::s_isRegistered = ColorMappingRegistry::i
     s_name,
     newInstances);
 
-QList<ColorMappingData *> VectorMagnitudeColorMapping::newInstances(const QList<AbstractVisualizedData*> & visualizedData)
+std::vector<std::unique_ptr<ColorMappingData>> VectorMagnitudeColorMapping::newInstances(const QList<AbstractVisualizedData*> & visualizedData)
 {
     auto checkAddAttributeArrays = [] (AbstractVisualizedData * vis, vtkDataSetAttributes * attributes, QMap<QString, QList<AbstractVisualizedData *>> & arrayNames) -> void
     {
@@ -69,23 +69,23 @@ QList<ColorMappingData *> VectorMagnitudeColorMapping::newInstances(const QList<
         }
     }
 
-    QList<VectorMagnitudeColorMapping *> unchecked;
+    std::vector<std::unique_ptr<VectorMagnitudeColorMapping>> unchecked;
 
     for (auto it = cellArrays.begin(); it != cellArrays.end(); ++it)
-        unchecked << new VectorMagnitudeColorMapping(it.value(), it.key(), vtkAssignAttribute::CELL_DATA);
+        unchecked.push_back(
+            std::make_unique<VectorMagnitudeColorMapping>(it.value(), it.key(), vtkAssignAttribute::CELL_DATA));
     for (auto it = pointArrays.begin(); it != pointArrays.end(); ++it)
-        unchecked << new VectorMagnitudeColorMapping(it.value(), it.key(), vtkAssignAttribute::POINT_DATA);
+        unchecked.push_back(
+            std::make_unique<VectorMagnitudeColorMapping>(it.value(), it.key(), vtkAssignAttribute::POINT_DATA));
 
-    QList<ColorMappingData *> instances;
-    for (VectorMagnitudeColorMapping * mapping : unchecked)
+    std::vector<std::unique_ptr<ColorMappingData>> instances;
+    for (auto & mapping : unchecked)
     {
         if (mapping->isValid())
         {
             mapping->initialize();
-            instances << mapping;
+            instances.push_back(std::move(mapping));
         }
-        else
-            delete mapping;
     }
 
     return instances;

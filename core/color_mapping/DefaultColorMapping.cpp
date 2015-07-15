@@ -1,4 +1,6 @@
-#include "DefaultColorMapping.h"
+#include <core/color_mapping/DefaultColorMapping.h>
+
+#include <QString>
 
 #include <vtkMapper.h>
 

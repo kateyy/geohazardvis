@@ -1,5 +1,6 @@
 #pragma once
 
+#include <memory>
 #include <mutex>
 #include <vector>
 
@@ -33,7 +34,7 @@ public:
     friend class ColorMappingRegistry;
 
     template<typename SubClass>
-    static QList<ColorMappingData *> newInstance(const QList<AbstractVisualizedData *> & visualizedData);
+    static std::vector<std::unique_ptr<ColorMappingData>> newInstance(const QList<AbstractVisualizedData *> & visualizedData);
 
 public:
     explicit ColorMappingData(const QList<AbstractVisualizedData *> & visualizedData, int numDataComponents = 1);
