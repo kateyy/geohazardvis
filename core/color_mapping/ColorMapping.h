@@ -41,8 +41,6 @@ public:
 
     /** list of scalar names that can be used with my rendered data */
     QList<QString> scalarsNames() const;
-    /** list of scalars that can be used with my rendered data */
-    const QMap<QString, const ColorMappingData *> & scalars() const;
 
     QString currentScalarsName() const;
     void setCurrentScalarsByName(const QString & scalarsName);
