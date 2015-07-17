@@ -11,7 +11,6 @@
 
 #include <reflectionzeug/PropertyGroup.h>
 
-#include <core/utility/vtkhelper.h>
 #include <core/data_objects/ImageProfileData.h>
 #include <core/context2D_data/vtkPlotCollection.h>
 
@@ -92,7 +91,7 @@ void ImageProfileContextPlot::setTitle(const QString & title)
 
 vtkSmartPointer<vtkPlotCollection> ImageProfileContextPlot::fetchPlots()
 {
-    VTK_CREATE(vtkPlotCollection, items);
+    auto items = vtkSmartPointer<vtkPlotCollection>::New();
 
     updatePlot();
 
@@ -116,8 +115,8 @@ void ImageProfileContextPlot::updatePlot()
 
     assert(probedValues->GetNumberOfTuples() == profilePoints->GetNumberOfPoints());
 
-    VTK_CREATE(vtkTable, table);
-    VTK_CREATE(vtkFloatArray, xAxis);
+    auto table = vtkSmartPointer<vtkTable>::New();
+    auto xAxis = vtkSmartPointer<vtkFloatArray>::New();
     xAxis->SetNumberOfValues(profilePoints->GetNumberOfPoints());
     xAxis->SetName(profileData.abscissa().toUtf8().data());
     table->AddColumn(xAxis);

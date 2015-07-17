@@ -25,7 +25,6 @@
 
 #include <reflectionzeug/PropertyGroup.h>
 
-#include <core/utility/vtkhelper.h>
 #include <core/TextureManager.h>
 #include <core/data_objects/PolyDataObject.h>
 #include <core/filters/TransformTextureCoords.h>
@@ -315,7 +314,7 @@ void RenderedPolyData::visibilityChangedEvent(bool visible)
 
 void RenderedPolyData::finalizePipeline()
 {
-    VTK_CREATE(vtkTextureMapToPlane, textureCoords);
+    auto textureCoords = vtkSmartPointer<vtkTextureMapToPlane>::New();
     textureCoords->SetInputConnection(m_colorMappingOutput);
     textureCoords->SetNormal(0, 0, 1);
 
@@ -337,7 +336,7 @@ void RenderedPolyData::finalizePipeline()
             0.5 * (thisBounds[0] + thisBounds[1]),
             0.5 * (thisBounds[2] + thisBounds[3]) };
 
-        VTK_CREATE(TransformTextureCoords, transformTexCoords);
+        auto transformTexCoords = vtkSmartPointer<TransformTextureCoords>::New();
         transformTexCoords->SetInputConnection(textureCoords->GetOutputPort());
         transformTexCoords->SetScale(   // scale tex coords from surface size to DEM texture size
             thisSize[0] / demSize[0],

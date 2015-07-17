@@ -16,7 +16,6 @@
 #include <vtkPointData.h>
 
 #include <core/AbstractVisualizedData.h>
-#include <core/utility/vtkhelper.h>
 #include <core/color_mapping/ColorMappingRegistry.h>
 #include <core/filters/NoiseImageSource.h>
 
@@ -75,7 +74,7 @@ vtkSmartPointer<vtkAlgorithm> ImageDataLIC2DMapping::createFilter(AbstractVisual
 
     if (!image || image->GetDataDimension() != 2 || !imageVectors)
     {
-        VTK_CREATE(vtkPassThrough, filter);
+        auto filter = vtkSmartPointer<vtkPassThrough>::New();
         filter->SetInputConnection(visualizedData->colorMappingInput(connection));
         return filter;
     }
@@ -92,14 +91,14 @@ vtkSmartPointer<vtkAlgorithm> ImageDataLIC2DMapping::createFilter(AbstractVisual
 
     if (!lic)
     {
-        VTK_CREATE(vtkAssignAttribute, assignScalars);
+        auto assignScalars = vtkSmartPointer<vtkAssignAttribute>::New();
         assignScalars->SetInputConnection(visualizedData->colorMappingInput(connection));
         assignScalars->Assign(vtkDataSetAttributes::VECTORS, vtkDataSetAttributes::SCALARS, vtkAssignAttribute::POINT_DATA);
 
-        VTK_CREATE(vtkImageNormalize, normalize);
+        auto normalize = vtkSmartPointer<vtkImageNormalize>::New();
         normalize->SetInputConnection(assignScalars->GetOutputPort());
 
-        VTK_CREATE(vtkAssignAttribute, assignScaledVectors);
+        auto assignScaledVectors = vtkSmartPointer<vtkAssignAttribute>::New();
         assignScaledVectors->SetInputConnection(normalize->GetOutputPort());
         assignScaledVectors->Assign(vtkDataSetAttributes::SCALARS, vtkDataSetAttributes::VECTORS, vtkAssignAttribute::POINT_DATA);
 

@@ -17,7 +17,6 @@
 #include <reflectionzeug/PropertyGroup.h>
 
 #include <core/types.h>
-#include <core/utility/vtkhelper.h>
 #include <core/color_mapping/ColorMappingData.h>
 #include <core/data_objects/ImageDataObject.h>
 
@@ -68,7 +67,7 @@ reflectionzeug::PropertyGroup * RenderedImageData::createConfigGroup()
 
 vtkSmartPointer<vtkPropCollection> RenderedImageData::fetchViewProps()
 {
-    VTK_CREATE(vtkPropCollection, props);
+    auto props = vtkSmartPointer<vtkPropCollection>::New();
     props->AddItem(slice());
 
     return props;

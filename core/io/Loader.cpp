@@ -19,7 +19,6 @@
 #include <vtkXMLImageDataReader.h>
 #include <vtkXMLPolyDataReader.h>
 
-#include <core/utility/vtkhelper.h>
 #include <core/data_objects/ImageDataObject.h>
 #include <core/data_objects/PolyDataObject.h>
 #include <core/data_objects/VectorGrid3DDataObject.h>
@@ -38,7 +37,7 @@ const QMap<QString, QStringList> & vtkImageFormats()
     static QMap<QString, QStringList> m;
     if (m.isEmpty())
     {
-        VTK_CREATE(vtkImageReader2Collection, readers);
+        auto readers = vtkSmartPointer<vtkImageReader2Collection>::New();
         vtkImageReader2Factory::GetRegisteredReaders(readers);
         for (readers->InitTraversal(); auto reader = readers->GetNextItem();)
         {
@@ -194,7 +193,7 @@ std::unique_ptr<DataObject> Loader::readFile(const QString & filename)
 
     if (ext == "vtp")
     {
-        VTK_CREATE(vtkXMLPolyDataReader, reader);
+        auto reader = vtkSmartPointer<vtkXMLPolyDataReader>::New();
         reader->SetFileName(filename.toUtf8().data());
 
         vtkSmartPointer<vtkPolyData> polyData;

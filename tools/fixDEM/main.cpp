@@ -4,8 +4,8 @@
 #include <QScopedPointer>
 
 #include <vtkImageData.h>
+#include <vtkSmartPointer.h>
 
-#include <core/utility/vtkhelper.h>
 #include <core/io/Loader.h>
 #include <core/io/Exporter.h>
 #include <core/data_objects/DataObject.h>

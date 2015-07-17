@@ -17,7 +17,6 @@
 #include <vtkXMLImageDataWriter.h>
 #include <vtkXMLPolyDataWriter.h>
 
-#include <core/utility/vtkhelper.h>
 #include <core/data_objects/ImageDataObject.h>
 #include <core/data_objects/PolyDataObject.h>
 #include <core/data_objects/VectorGrid3DDataObject.h>
@@ -95,11 +94,11 @@ bool Exporter::exportImageFormat(ImageDataObject * image, const QString & fileNa
 
     assert(writer);
 
-    VTK_CREATE(vtkImageMapToColors, toUChar);
+    auto toUChar = vtkSmartPointer<vtkImageMapToColors>::New();
     toUChar->SetInputData(image->dataSet());
     toUChar->SetOutputFormatToLuminance();
 
-    VTK_CREATE(vtkLookupTable, lut);
+    auto lut = vtkSmartPointer<vtkLookupTable>::New();
     const double * range = image->minMaxValue();
     lut->SetTableRange(range[0], range[1]);
     lut->SetNumberOfTableValues(0xFF);
@@ -118,7 +117,7 @@ bool Exporter::exportImageFormat(ImageDataObject * image, const QString & fileNa
 
 bool Exporter::exportVTKXMLPolyData(DataObject * polyData, const QString & fileName)
 {
-    VTK_CREATE(vtkXMLPolyDataWriter, writer);
+    auto writer = vtkSmartPointer<vtkXMLPolyDataWriter>::New();
     writer->SetInputData(polyData->dataSet());
 
     return writeVTKXML(writer, fileName);
@@ -126,7 +125,7 @@ bool Exporter::exportVTKXMLPolyData(DataObject * polyData, const QString & fileN
 
 bool Exporter::exportVTKXMLImageData(DataObject * image, const QString & fileName)
 {
-    VTK_CREATE(vtkXMLImageDataWriter, writer);
+    auto writer = vtkSmartPointer<vtkXMLImageDataWriter>::New();
     writer->SetInputData(image->dataSet());
 
     return writeVTKXML(writer, fileName);

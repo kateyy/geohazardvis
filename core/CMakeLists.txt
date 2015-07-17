@@ -153,7 +153,6 @@ set ( SOURCES
     utility/ScalarBarActor.cpp
     utility/vtkcamerahelper.h
     utility/vtkcamerahelper.cpp
-    utility/vtkhelper.h
     utility/vtkstringhelper.h
     utility/vtkstringhelper.cpp
 )

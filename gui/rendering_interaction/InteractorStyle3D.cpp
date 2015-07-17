@@ -34,7 +34,6 @@
 #include <vtkCellData.h>
 #include <vtkPropCollection.h>
 
-#include <core/utility/vtkhelper.h>
 #include <core/utility/vtkcamerahelper.h>
 #include <core/data_objects/PolyDataObject.h>
 #include <core/rendered_data/RenderedData.h>
@@ -294,10 +293,10 @@ void InteractorStyle3D::highlightIndex(DataObject * dataObject, vtkIdType index)
     vtkPolygon::ComputeNormal(selection->GetPoints(), cellNormal);
     vtkMath::MultiplyScalar(cellNormal, 0.001);
 
-    VTK_CREATE(vtkPoints, points);
+    auto points = vtkSmartPointer<vtkPoints>::New();
     points->SetNumberOfPoints(numberOfPoints * 2);
     std::vector<vtkIdType> front, back;
-    VTK_CREATE(vtkCellArray, polys);
+    auto polys = vtkSmartPointer<vtkCellArray>::New();
     for (vtkIdType i = 0; i < numberOfPoints; ++i)
     {
         double original[3], shifted[3];
@@ -391,7 +390,7 @@ void InteractorStyle3D::lookAtIndex(DataObject * dataObject, vtkIdType index)
     assert(cell);
 
     double centroid[3];
-    VTK_CREATE(vtkIdTypeArray, cellPointIds);
+    auto cellPointIds = vtkSmartPointer<vtkIdTypeArray>::New();
     cellPointIds->SetArray(cell->GetPointIds()->GetPointer(0), cell->GetNumberOfPoints(), true);
     vtkPolygon::ComputeCentroid(cellPointIds, polyData->GetPoints(), centroid);
     double selectionCenterXY[2] = { centroid[0], centroid[1] };
@@ -457,7 +456,7 @@ void InteractorStyle3D::lookAtIndex(DataObject * dataObject, vtkIdType index)
         }
     }
 
-    VTK_CREATE(vtkCamera, targetCamera);
+    auto targetCamera = vtkSmartPointer<vtkCamera>::New();
     targetCamera->SetPosition(targetPositionXY[0], targetPositionXY[1], startingPosition[2]);
     targetCamera->SetFocalPoint(targetFocalPoint);
     targetCamera->SetViewUp(camera.GetViewUp());

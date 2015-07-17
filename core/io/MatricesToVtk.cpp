@@ -18,7 +18,6 @@
 
 #include <vtkTriangle.h>
 
-#include <core/utility/vtkhelper.h>
 #include <core/data_objects/ImageDataObject.h>
 #include <core/data_objects/PolyDataObject.h>
 #include <core/data_objects/RawVectorData.h>
@@ -132,7 +131,7 @@ std::unique_ptr<DataObject> MatricesToVtk::loadGrid2D(const QString & name, cons
         return nullptr;
     }
 
-    VTK_CREATE(vtkFloatArray, pointData);
+    auto pointData = vtkSmartPointer<vtkFloatArray>::New();
     pointData->SetName(name.toUtf8());
     pointData->SetNumberOfComponents(1);
     pointData->SetNumberOfTuples(dimensions[0] * dimensions[1] * dimensions[2]);
@@ -260,12 +259,12 @@ std::unique_ptr<DataObject> MatricesToVtk::loadGrid3D(const QString & name, cons
         return nullptr;
     }
 
-    VTK_CREATE(vtkImageData, image);
+    auto image = vtkSmartPointer<vtkImageData>::New();
     image->SetOrigin(origin);
     image->SetExtent(0, extent[0] - 1, 0, extent[1] - 1, 0, extent[2] - 1);
     image->SetSpacing(spacing);
 
-    VTK_CREATE(vtkFloatArray, vectorData);
+    auto vectorData = vtkSmartPointer<vtkFloatArray>::New();
     vectorData->SetNumberOfComponents(numComponents);
     vectorData->SetNumberOfTuples(numPoints);
     vectorData->SetName(name.toUtf8().data());
@@ -304,7 +303,7 @@ vtkSmartPointer<vtkPolyData> MatricesToVtk::parsePoints(const InputVector & pars
 {
     assert(parsedData.size() > firstColumn);
 
-    VTK_CREATE(vtkPoints, points);
+    auto points = vtkSmartPointer<vtkPoints>::New();
 
     size_t nbRows = parsedData.at(firstColumn).size();
     std::vector<vtkIdType> pointIds(nbRows);
@@ -316,7 +315,7 @@ vtkSmartPointer<vtkPolyData> MatricesToVtk::parsePoints(const InputVector & pars
     }
 
     // Create the topology of the point (a vertex)
-    VTK_CREATE(vtkCellArray, vertices);
+    auto vertices = vtkSmartPointer<vtkCellArray>::New();
     vertices->InsertNextCell(nbRows, pointIds.data());
 
     auto resultPolyData = vtkSmartPointer<vtkPolyData>::New();
@@ -330,7 +329,7 @@ vtkSmartPointer<vtkPolyData> MatricesToVtk::parseIndexedTriangles(
     const InputVector & parsedVertexData, size_t vertexIndexColumn, size_t firstVertexColumn,
     const InputVector & parsedIndexData, size_t firstIndexColumn)
 {
-    VTK_CREATE(vtkPoints, points);
+    auto points = vtkSmartPointer<vtkPoints>::New();
 
     size_t nbVertices = parsedVertexData[vertexIndexColumn].size();
     size_t nbTriangles = parsedIndexData[firstIndexColumn].size();
@@ -343,8 +342,8 @@ vtkSmartPointer<vtkPolyData> MatricesToVtk::parseIndexedTriangles(
         points->InsertNextPoint(parsedVertexData[firstVertexColumn][row], parsedVertexData[firstVertexColumn + 1][row], parsedVertexData[firstVertexColumn + 2][row]);
     }
 
-    VTK_CREATE(vtkCellArray, triangles);
-    VTK_CREATE(vtkTriangle, triangle);
+    auto triangles = vtkSmartPointer<vtkCellArray>::New();
+    auto triangle = vtkSmartPointer<vtkTriangle>::New();
     for (size_t row = 0; row < nbTriangles; ++row)
     {
         // set the indexes for the three triangle vertexes

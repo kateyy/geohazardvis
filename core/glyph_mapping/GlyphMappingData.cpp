@@ -21,7 +21,6 @@
 #include <reflectionzeug/Property.h>
 #include <reflectionzeug/PropertyGroup.h>
 
-#include <core/utility/vtkhelper.h>
 #include <core/color_mapping/ColorMappingData.h>
 #include <core/data_objects/DataObject.h>
 #include <core/rendered_data/RenderedData.h>
@@ -32,19 +31,19 @@ namespace
 
 vtkSmartPointer<vtkAlgorithm> createSimpleArrow()
 {
-    VTK_CREATE(vtkLineSource, shaft);
+    auto shaft = vtkSmartPointer<vtkLineSource>::New();
     shaft->SetPoint1(0.f, 0.f, 0.f);
     shaft->SetPoint2(1.f, 0.f, 0.f);
 
-    VTK_CREATE(vtkLineSource, cone1);
+    auto cone1 = vtkSmartPointer<vtkLineSource>::New();
     cone1->SetPoint1(1.00f, 0.0f, 0.f);
     cone1->SetPoint2(0.65f, 0.1f, 0.f);
 
-    VTK_CREATE(vtkLineSource, cone2);
+    auto cone2 = vtkSmartPointer<vtkLineSource>::New();
     cone2->SetPoint1(1.00f, 0.0f, 0.f);
     cone2->SetPoint2(0.65f, -0.1f, 0.f);
 
-    VTK_CREATE(vtkAppendPolyData, arrow);
+    auto arrow = vtkSmartPointer<vtkAppendPolyData>::New();
     arrow->AddInputConnection(shaft->GetOutputPort());
     arrow->AddInputConnection(cone1->GetOutputPort());
     arrow->AddInputConnection(cone2->GetOutputPort());
@@ -61,14 +60,14 @@ GlyphMappingData::GlyphMappingData(RenderedData & renderedData)
     , m_colorMappingData(nullptr)
     , m_isValid(true)
 {
-    VTK_CREATE(vtkLineSource, lineArrow);
+    auto lineArrow = vtkSmartPointer<vtkLineSource>::New();
     lineArrow->SetPoint1(0.f, 0.f, 0.f);
     lineArrow->SetPoint2(1.f, 0.f, 0.f);
     m_arrowSources.insert(Representation::Line, lineArrow);
 
     m_arrowSources.insert(Representation::SimpleArrow, createSimpleArrow());
 
-    VTK_CREATE(vtkArrowSource, cylindricArrow);
+    auto cylindricArrow = vtkSmartPointer<vtkArrowSource>::New();
     m_arrowSources.insert(Representation::CylindricArrow, cylindricArrow);
     cylindricArrow->SetShaftRadius(0.02);
     cylindricArrow->SetTipRadius(0.07);

@@ -7,7 +7,6 @@
 #include <vtkCell.h>
 #include <vtkCellTypes.h>
 
-#include <core/utility/vtkhelper.h>
 #include <core/data_objects/PolyDataObject.h>
 
 
@@ -138,7 +137,7 @@ void QVtkTableModelPolyData::resetDisplayData()
     if (m_polyData)
     {
         vtkDataSet * dataSet = m_polyData->dataSet();
-        VTK_CREATE(vtkCellTypes, cellTypes);
+        auto cellTypes = vtkSmartPointer<vtkCellTypes>::New();
         dataSet->GetCellTypes(cellTypes);
 
         if (cellTypes->GetNumberOfTypes() == 1 && dataSet->GetCellType(0) == VTK_TRIANGLE)

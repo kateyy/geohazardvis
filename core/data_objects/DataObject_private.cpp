@@ -4,8 +4,6 @@
 #include <vtkInformationIntegerPointerKey.h>
 #include <vtkTrivialProducer.h>
 
-#include <core/utility/vtkhelper.h>
-
 
 vtkInformationKeyMacro(DataObjectPrivate, DataObjectKey, IntegerPointer);
 
@@ -29,7 +27,7 @@ vtkAlgorithm * DataObjectPrivate::trivialProducer()
 {
     if (!m_trivialProducer)
     {
-        VTK_CREATE(vtkTrivialProducer, tp);
+        auto tp = vtkSmartPointer<vtkTrivialProducer>::New();
         tp->SetOutput(m_dataSet);
         m_trivialProducer = tp;
     }

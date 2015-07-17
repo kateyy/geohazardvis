@@ -16,7 +16,6 @@
 #include <vtkAssignAttribute.h>
 #include <vtkWarpScalar.h>
 
-#include <core/utility/vtkhelper.h>
 #include <core/data_objects/ImageDataObject.h>
 #include <core/context2D_data/ImageProfileContextPlot.h>
 
@@ -43,7 +42,7 @@ ImageProfileData::ImageProfileData(const QString & name, ImageDataObject & image
 
     m_transform->SetInputConnection(m_probe->GetOutputPort());
 
-    VTK_CREATE(vtkAssignAttribute, assign);
+    auto assign = vtkSmartPointer<vtkAssignAttribute>::New();
     assign->Assign(m_scalarsName.toUtf8().data(), vtkDataSetAttributes::SCALARS, vtkAssignAttribute::POINT_DATA);
     assign->SetInputConnection(m_transform->GetOutputPort());
 
@@ -142,7 +141,7 @@ void ImageProfileData::setPoints(double point1[3], double point2[3])
     int numProbePoints = static_cast<int>(std::sqrt(xLength * xLength + yLength * yLength));
     m_probeLine->SetResolution(numProbePoints);
 
-    VTK_CREATE(vtkTransform, m);
+    auto m = vtkSmartPointer<vtkTransform>::New();
     // move to origin
     double xTranslate = -point1[0];
     double yTranslate = -point1[1];

@@ -6,14 +6,12 @@
 #include <vtkStringArray.h>
 #include <vtkSmartPointer.h>
 
-#include <core/utility/vtkhelper.h>
-
 
 vtkSmartPointer<vtkCharArray> qstringToVtkArray(const QString & string)
 {
     auto bytes = string.toUtf8();
 
-    VTK_CREATE(vtkCharArray, array);
+    auto array = vtkSmartPointer<vtkCharArray>::New();
     array->SetNumberOfValues(bytes.size());
 
     for (int i = 0; i < bytes.size(); ++i)

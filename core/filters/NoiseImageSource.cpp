@@ -22,8 +22,6 @@
 #include <vtkRenderbuffer.h>
 #include <vtkTextureObject.h>
 
-#include <core/utility/vtkhelper.h>
-
 #include "config.h"
 
 #if VTK_RENDERING_BACKEND == 1
@@ -177,7 +175,7 @@ int NoiseImageSource::ExecuteGpuPerlin(vtkDataArray * data)
 
     QByteArray shaderSource = shaderFile.readAll();
 
-    VTK_CREATE(vtkRenderWindow, window);
+    auto window = vtkSmartPointer<vtkRenderWindow>::New();
     window->OffScreenRenderingOn();
 
     vtkOpenGLRenderWindow * context = vtkOpenGLRenderWindow::SafeDownCast(window);
@@ -220,10 +218,10 @@ int NoiseImageSource::ExecuteGpuPerlin(vtkDataArray * data)
         v.tex[1] = normTexCoords[qq + 1];
     }
 
-    VTK_CREATE(vtkShaderProgram2, prog);
+    auto prog = vtkSmartPointer<vtkShaderProgram2>::New();
     prog->SetContext(context);
 
-    VTK_CREATE(vtkShader2, shader);
+    auto shader = vtkSmartPointer<vtkShader2>::New();
     shader->SetContext(context);
     shader->SetType(VTK_SHADER_TYPE_FRAGMENT);
     shader->SetSourceCode(shaderSource.data());
@@ -241,15 +239,15 @@ int NoiseImageSource::ExecuteGpuPerlin(vtkDataArray * data)
 
     prog->Use();
 
-    VTK_CREATE(vtkTextureObject, tex);
+    auto tex = vtkSmartPointer<vtkTextureObject>::New();
     tex->SetContext(context);
     tex->Create2D(size[0], size[1], 4, VTK_FLOAT, false);
 
-    VTK_CREATE(vtkRenderbuffer, depth);
+    auto depth = vtkSmartPointer<vtkRenderbuffer>::New();
     depth->SetContext(context);
     depth->CreateDepthAttachment(size[0], size[1]);
 
-    VTK_CREATE(vtkFrameBufferObject2, fbo);
+    auto fbo = vtkSmartPointer<vtkFrameBufferObject2>::New();
     fbo->SetContext(context);
     fbo->AddColorAttachment(vtkgl::DRAW_FRAMEBUFFER, 0U, tex);
     fbo->AddRenDepthAttachment(vtkgl::DRAW_FRAMEBUFFER, depth->GetHandle());

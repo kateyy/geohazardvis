@@ -14,8 +14,6 @@
 #include <vtkSmartPointer.h>
 #include <vtkTexture.h>
 
-#include <core/utility/vtkhelper.h>
-
 
 namespace
 {

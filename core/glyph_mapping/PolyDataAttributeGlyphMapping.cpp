@@ -13,7 +13,6 @@
 #include <vtkInformation.h>
 #include <vtkInformationIntegerKey.h>
 
-#include <core/utility/vtkhelper.h>
 #include <core/data_objects/PolyDataObject.h>
 #include <core/rendered_data/RenderedData.h>
 #include <core/glyph_mapping/GlyphMappingRegistry.h>

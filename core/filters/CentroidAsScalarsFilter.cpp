@@ -6,8 +6,6 @@
 #include <vtkPointData.h>
 #include <vtkCellData.h>
 
-#include <core/utility/vtkhelper.h>
-
 
 vtkStandardNewMacro(CentroidAsScalarsFilter);
 
@@ -43,7 +41,7 @@ int CentroidAsScalarsFilter::RequestData(vtkInformation *vtkNotUsed(request),
         return 1;
     }
 
-    VTK_CREATE(vtkFloatArray, centroidScalars);
+    auto centroidScalars = vtkSmartPointer<vtkFloatArray>::New();
     centroidScalars->SetNumberOfTuples(numCells);
     centroidScalars->SetNumberOfComponents(1);
 

@@ -10,7 +10,6 @@
 
 #include <vtkImageData.h>
 
-#include <core/utility/vtkhelper.h>
 #include <core/io/FileParser.h>
 
 
@@ -306,7 +305,7 @@ bool TextFileReader::readHeader_DEM(std::ifstream & inputStream, std::vector<Dat
     if (columns <= 0 || rows <= 0 || std::isnan(xCorner) || std::isnan(yCorner) || cellSize <= 0)
         return false;
 
-    VTK_CREATE(vtkImageData, image);
+    auto image = vtkSmartPointer<vtkImageData>::New();
     image->SetExtent(0, columns - 1, 0, rows - 1, 0, 0);
     image->SetOrigin(xCorner, yCorner, 0);
     image->SetSpacing(cellSize, cellSize, 0);

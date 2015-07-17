@@ -23,7 +23,6 @@
 #include <vtkActor.h>
 #include <vtkProperty.h>
 
-#include <core/utility/vtkhelper.h>
 #include <core/data_objects/DataObject.h>
 #include <core/rendered_data/RenderedData.h>
 
@@ -37,13 +36,13 @@ InteractorStyleImage::InteractorStyleImage()
     , m_currentlyHighlighted(nullptr, -1)
     , m_mouseMoved(false)
 {
-    VTK_CREATE(vtkDiskSource, highlightingDisc);
+    auto highlightingDisc = vtkSmartPointer<vtkDiskSource>::New();
     highlightingDisc->SetRadialResolution(128);
     highlightingDisc->SetCircumferentialResolution(128);
     highlightingDisc->SetInnerRadius(1);
     highlightingDisc->SetOuterRadius(2);
 
-    VTK_CREATE(vtkPolyDataMapper, highlightingMapper);
+    auto highlightingMapper = vtkSmartPointer<vtkPolyDataMapper>::New();
     highlightingMapper->SetInputConnection(highlightingDisc->GetOutputPort());
     m_highlightingActor->SetMapper(highlightingMapper);
 

@@ -10,7 +10,6 @@
 #include <vtkRenderWindow.h>
 
 #include <core/types.h>
-#include <core/utility/vtkhelper.h>
 #include <core/data_objects/DataObject.h>
 #include <core/context2D_data/Context2DData.h>
 #include <core/context2D_data/vtkPlotCollection.h>
@@ -96,7 +95,7 @@ void RendererImplementationPlot::onAddContent(AbstractVisualizedData * content, 
     assert(dynamic_cast<Context2DData *>(content));
     Context2DData * contextData = static_cast<Context2DData *>(content);
 
-    VTK_CREATE(vtkPlotCollection, items);
+    auto items = vtkSmartPointer<vtkPlotCollection>::New();
 
     vtkCollectionSimpleIterator it;
     contextData->plots()->InitTraversal(it);

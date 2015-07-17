@@ -22,7 +22,6 @@
 #include <vtkTextWidget.h>
 
 #include <core/types.h>
-#include <core/utility/vtkhelper.h>
 #include <core/data_objects/DataObject.h>
 #include <core/rendered_data/RenderedData.h>
 #include <core/color_mapping/ColorMapping.h>
@@ -123,7 +122,7 @@ void RendererImplementationBase3D::onAddContent(AbstractVisualizedData * content
     assert(dynamic_cast<RenderedData *>(content));
     RenderedData * renderedData = static_cast<RenderedData *>(content);
 
-    VTK_CREATE(vtkPropCollection, props);
+    auto props = vtkSmartPointer<vtkPropCollection>::New();
 
     auto && renderer = this->renderer(subViewIndex);
     auto && dataProps = m_viewportSetups[subViewIndex].dataProps;
@@ -337,13 +336,13 @@ void RendererImplementationBase3D::initialize()
     m_colorMapping = new ColorMapping(this);
     setupColorMappingLegend();
 
-    VTK_CREATE(vtkCamera, camera);
+    auto camera = vtkSmartPointer<vtkCamera>::New();
 
     m_viewportSetups.resize(renderView().numberOfSubViews());
 
     for (auto && viewport : m_viewportSetups)
     {
-        VTK_CREATE(vtkRenderer, renderer);
+        auto renderer = vtkSmartPointer<vtkRenderer>::New();
         renderer->SetBackground(1, 1, 1);
         renderer->SetActiveCamera(camera);
 
@@ -354,12 +353,12 @@ void RendererImplementationBase3D::initialize()
         m_renderWindow->AddRenderer(renderer);
 
 
-        VTK_CREATE(vtkTextWidget, titleWidget);
+        auto titleWidget = vtkSmartPointer<vtkTextWidget>::New();
         viewport.titleWidget = titleWidget;
         titleWidget->SetDefaultRenderer(viewport.renderer);
         titleWidget->SetCurrentRenderer(viewport.renderer);
 
-        VTK_CREATE(vtkTextRepresentation, titleRepr);
+        auto titleRepr = vtkSmartPointer<vtkTextRepresentation>::New();
         vtkTextActor * titleActor = titleRepr->GetTextActor();
         titleActor->SetInput(" ");
         titleActor->GetTextProperty()->SetColor(0, 0, 0);
@@ -481,7 +480,7 @@ void RendererImplementationBase3D::removeFromBounds(RenderedData * renderedData,
 
 vtkSmartPointer<vtkCubeAxesActor> RendererImplementationBase3D::createAxes(vtkCamera * camera)
 {
-    VTK_CREATE(vtkCubeAxesActor, axesActor);
+    auto axesActor = vtkSmartPointer<vtkCubeAxesActor>::New();
     axesActor->SetCamera(camera);
     axesActor->SetFlyModeToOuterEdges();
     axesActor->SetGridLineLocation(VTK_GRID_LINES_FURTHEST);
@@ -521,7 +520,7 @@ void RendererImplementationBase3D::setupColorMappingLegend()
 {
     m_colorMappingLegend = m_colorMapping->colorMappingLegend();
 
-    VTK_CREATE(vtkScalarBarRepresentation, repr);
+    auto repr = vtkSmartPointer<vtkScalarBarRepresentation>::New();
     repr->SetScalarBarActor(m_colorMappingLegend);
 
     m_scalarBarWidget = vtkSmartPointer<vtkScalarBarWidget>::New();

@@ -13,7 +13,6 @@
 #include <vtkMath.h>
 #include <vtkTransform.h>
 
-#include <core/utility/vtkhelper.h>
 #include <core/rendered_data/RenderedPolyData.h>
 #include <core/table_model/QVtkTableModelPolyData.h>
 
@@ -175,7 +174,7 @@ bool PolyDataObject::setCellNormalComponent(vtkIdType cellId, int component, dou
     // use rotation axis, apply it at the polygon center
     double center[3];
     cellCenters()->GetPoint(cellId, center);
-    VTK_CREATE(vtkTransform, rotation);
+    auto rotation = vtkSmartPointer<vtkTransform>::New();
     rotation->Translate(center);
     rotation->RotateWXYZ(vtkMath::DegreesFromRadians(angleRad), rotationAxis);
     rotation->Translate(-center[0], -center[1], -center[2]);

@@ -29,7 +29,6 @@
 
 #include <core/DataSetHandler.h>
 #include <core/utility/vtkcamerahelper.h>
-#include <core/utility/vtkhelper.h>
 #include <core/data_objects/ImageDataObject.h>
 #include <core/data_objects/PolyDataObject.h>
 #include <core/rendered_data/RenderedData.h>
@@ -90,7 +89,7 @@ bool DEMWidget::save()
         return false;
     }
 
-    VTK_CREATE(vtkPolyData, surface);
+    auto surface = vtkSmartPointer<vtkPolyData>::New();
     surface->DeepCopy(m_dataPreview->polyDataSet());
 
     // remove arrays that were created while appying the DEM
@@ -100,7 +99,7 @@ bool DEMWidget::save()
     // store size and position of the DEM in the surface's field data
 
     auto addArray = [surface] (const char * name, const std::vector<double> & values) {
-        VTK_CREATE(vtkDoubleArray, a);
+        auto a = vtkSmartPointer<vtkDoubleArray>::New();
         a->SetName(name);
         a->SetNumberOfValues(vtkIdType(values.size()));
         for (unsigned i = 0; i < values.size(); ++i)
@@ -118,7 +117,7 @@ bool DEMWidget::save()
 
         assert(surface->GetFieldData()->GetNumberOfArrays() == 0);
 
-        VTK_CREATE(vtkCharArray, demNameArray);
+        auto demNameArray = vtkSmartPointer<vtkCharArray>::New();
         demNameArray->SetName("DEM_Name");
         QByteArray demName = m_currentDEM->name().toUtf8();
         demNameArray->SetNumberOfValues(demName.size());
@@ -229,7 +228,7 @@ void DEMWidget::updatePreview()
     }
     else
     {
-        VTK_CREATE(vtkImageData, nullDEM);
+        auto nullDEM = vtkSmartPointer<vtkImageData>::New();
         nullDEM->SetExtent(0, 0, 0, 0, 0, 0);
         nullDEM->AllocateScalars(VTK_FLOAT, 1);
         reinterpret_cast<float *>(nullDEM->GetScalarPointer())[0] = 0.f;
@@ -280,21 +279,21 @@ void DEMWidget::setupDEMStages()
     m_demScale = vtkSmartPointer<vtkImageChangeInformation>::New();
     m_demScale->SetInputConnection(m_demTranslate->GetOutputPort());
 
-    VTK_CREATE(vtkImageShiftScale, scaleToKm);
+    auto scaleToKm = vtkSmartPointer<vtkImageShiftScale>::New();
     scaleToKm->SetInputConnection(m_demScale->GetOutputPort());
     scaleToKm->SetScale(0.001);
     m_demTransformOutput = scaleToKm;
 
     updateDEMGeoPosition();
 
-    VTK_CREATE(vtkTransform, meshTransform);
+    auto meshTransform = vtkSmartPointer<vtkTransform>::New();
 
     m_meshTransform = vtkSmartPointer<vtkTransformFilter>::New();
     m_meshTransform->SetTransform(meshTransform);
 
     updateMeshScale();
 
-    VTK_CREATE(vtkProbeFilter, probe);
+    auto probe = vtkSmartPointer<vtkProbeFilter>::New();
     probe->SetInputConnection(m_meshTransform->GetOutputPort());
     probe->SetSourceConnection(scaleToKm->GetOutputPort());
     probe->PassCellArraysOn();

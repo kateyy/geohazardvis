@@ -3,7 +3,6 @@
 #include <vtkAssignAttribute.h>
 #include <vtkMapper.h>
 
-#include <core/utility/vtkhelper.h>
 #include <core/types.h>
 #include <core/data_objects/PolyDataObject.h>
 #include <core/rendered_data/RenderedPolyData.h>
@@ -67,12 +66,12 @@ vtkSmartPointer<vtkAlgorithm> VertexComponentColorMapping::createFilter(Abstract
 {
     PolyDataObject * polyData = static_cast<PolyDataObject *>(&visualizedData->dataObject());
 
-    VTK_CREATE(CentroidAsScalarsFilter, centroids);
+    auto centroids = vtkSmartPointer<CentroidAsScalarsFilter>::New();
     centroids->SetInputConnection(0, visualizedData->colorMappingInput(connection));
     centroids->SetInputConnection(1, polyData->cellCentersOutputPort());
     centroids->SetComponent(m_component);
 
-    VTK_CREATE(vtkAssignAttribute, assign);
+    auto assign = vtkSmartPointer<vtkAssignAttribute>::New();
     assign->SetInputConnection(centroids->GetOutputPort());
     assign->Assign(name().toUtf8().data(), vtkDataSetAttributes::SCALARS,
         vtkAssignAttribute::CELL_DATA);

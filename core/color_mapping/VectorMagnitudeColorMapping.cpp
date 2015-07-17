@@ -16,7 +16,6 @@
 
 #include <vtkMapper.h>
 
-#include <core/utility/vtkhelper.h>
 #include <core/AbstractVisualizedData.h>
 #include <core/data_objects/DataObject.h>
 #include <core/color_mapping/ColorMappingRegistry.h>
@@ -108,11 +107,11 @@ VectorMagnitudeColorMapping::VectorMagnitudeColorMapping(
 
         for (int i = 0; i < vis->numberOfColorMappingInputs(); ++i)
         {
-            VTK_CREATE(vtkAssignAttribute, activeVectors);
+            auto activeVectors = vtkSmartPointer<vtkAssignAttribute>::New();
             activeVectors->Assign(utf8Name.data(), vtkDataSetAttributes::VECTORS, m_attributeLocation);
             activeVectors->SetInputConnection(vis->colorMappingInput(i));
 
-            VTK_CREATE(vtkVectorNorm, norm);
+            auto norm = vtkSmartPointer<vtkVectorNorm>::New();
             if (attributeLocation == vtkAssignAttribute::CELL_DATA)
                 norm->SetAttributeModeToUseCellData();
             else if (attributeLocation == vtkAssignAttribute::POINT_DATA)

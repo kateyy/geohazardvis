@@ -21,7 +21,6 @@
 #include <vtkEventQtSlotConnect.h>
 
 #include <core/DataSetHandler.h>
-#include <core/utility/vtkhelper.h>
 #include <core/utility/vtkcamerahelper.h>
 #include <core/data_objects/ImageDataObject.h>
 #include <core/data_objects/ImageProfileData.h>
@@ -215,7 +214,7 @@ void RenderViewStrategyImage2D::startProfilePlot()
     // place the line widget
     
     m_lineWidget = vtkSmartPointer<vtkLineWidget2>::New();
-    VTK_CREATE(vtkLineRepresentation, repr);
+    auto repr = vtkSmartPointer<vtkLineRepresentation>::New();
     repr->SetLineColor(1, 0, 0);
     m_lineWidget->SetRepresentation(repr);
     m_lineWidget->SetInteractor(m_context.interactor());

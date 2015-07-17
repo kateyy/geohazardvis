@@ -8,7 +8,6 @@
 #include <vtkInformationIntegerKey.h>
 #include <vtkPointData.h>
 
-#include <core/utility/vtkhelper.h>
 #include <core/data_objects/DataObject.h>
 #include <core/rendered_data/RenderedVectorGrid3D.h>
 #include <core/glyph_mapping/GlyphMappingRegistry.h>

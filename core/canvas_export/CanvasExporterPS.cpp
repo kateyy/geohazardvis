@@ -12,7 +12,6 @@ using namespace reflectionzeug;
 
 #include <reflectionzeug/PropertyGroup.h>
 
-#include <core/utility/vtkhelper.h>
 #include <core/canvas_export/CanvasExporterRegistry.h>
 
 

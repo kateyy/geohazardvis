@@ -7,7 +7,6 @@
 #include <vtkActor.h>
 
 #include <core/types.h>
-#include <core/utility/vtkhelper.h>
 #include <core/glyph_mapping/GlyphMapping.h>
 #include <core/glyph_mapping/GlyphMappingData.h>
 
@@ -56,7 +55,7 @@ vtkSmartPointer<vtkPropCollection> RenderedData3D::fetchViewProps()
 
 vtkSmartPointer<vtkProp3DCollection> RenderedData3D::fetchViewProps3D()
 {
-    VTK_CREATE(vtkProp3DCollection, props);
+    auto props = vtkSmartPointer<vtkProp3DCollection>::New();
 
     for (auto * v : glyphMapping().vectors())
         props->AddItem(v->actor());

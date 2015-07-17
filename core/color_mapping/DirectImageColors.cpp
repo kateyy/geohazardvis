@@ -10,7 +10,6 @@
 
 #include <core/AbstractVisualizedData.h>
 #include <core/types.h>
-#include <core/utility/vtkhelper.h>
 #include <core/color_mapping/ColorMappingRegistry.h>
 #include <core/data_objects/DataObject.h>
 
@@ -103,7 +102,7 @@ QString DirectImageColors::scalarsName() const
 
 vtkSmartPointer<vtkAlgorithm> DirectImageColors::createFilter(AbstractVisualizedData * visualizedData, int connection)
 {
-    VTK_CREATE(vtkAssignAttribute, filter);
+    auto filter = vtkSmartPointer<vtkAssignAttribute>::New();
     filter->SetInputConnection(visualizedData->colorMappingInput(connection));
     filter->Assign(m_dataArrayName.toUtf8().data(), vtkDataSetAttributes::SCALARS,
         m_attributeLocation);

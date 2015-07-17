@@ -18,7 +18,6 @@
 
 #include <reflectionzeug/PropertyGroup.h>
 
-#include <core/utility/vtkhelper.h>
 #include <core/color_mapping/ColorMappingData.h>
 #include <core/data_objects/VectorGrid3DDataObject.h>
 #include <core/filters/ArrayRenameFilter.h>
@@ -65,7 +64,7 @@ RenderedVectorGrid3D::RenderedVectorGrid3D(VectorGrid3DDataObject & dataObject)
     setSampleRate(sampleRate, sampleRate, sampleRate);
 
 
-    VTK_CREATE(vtkCellPicker, planePicker); // shared picker for the plane widgets
+    auto planePicker = vtkSmartPointer<vtkCellPicker>::New(); // shared picker for the plane widgets
 
     for (int i = 0; i < 3; ++i)
     {
@@ -88,7 +87,7 @@ RenderedVectorGrid3D::RenderedVectorGrid3D(VectorGrid3DDataObject & dataObject)
         m_planeWidgets[i]->SetLeftButtonAction(vtkImagePlaneWidget::VTK_SLICE_MOTION_ACTION);
         m_planeWidgets[i]->SetRightButtonAction(vtkImagePlaneWidget::VTK_CURSOR_ACTION);
 
-        VTK_CREATE(vtkProperty, property);
+        auto property = vtkSmartPointer<vtkProperty>::New();
         property->LightingOn();
         property->SetInterpolationToPhong();
         m_planeWidgets[i]->SetTexturePlaneProperty(property);
@@ -408,14 +407,14 @@ vtkAlgorithmOutput * RenderedVectorGrid3D::colorMappingInput(int connection)
     {
         bool hasVectors = dataObject().dataSet()->GetPointData()->GetVectors() != nullptr;
 
-        VTK_CREATE(ArrayRenameFilter, rename);
+        auto rename = vtkSmartPointer<ArrayRenameFilter>::New();
         rename->SetScalarsName(dataObject().dataSet()->GetPointData()->GetScalars()->GetName());
         rename->SetInputConnection(m_planeWidgets[connection]->GetReslice()->GetOutputPort());
         filter = rename;
 
         if (hasVectors)
         {
-            VTK_CREATE(vtkAssignAttribute, assignVectors);
+            auto assignVectors = vtkSmartPointer<vtkAssignAttribute>::New();
             assignVectors->Assign(vtkDataSetAttributes::SCALARS, vtkDataSetAttributes::VECTORS, vtkAssignAttribute::POINT_DATA);
             assignVectors->SetInputConnection(rename->GetOutputPort());
             filter = assignVectors;

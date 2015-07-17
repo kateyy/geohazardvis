@@ -24,7 +24,6 @@
 #include <core/io/Exporter.h>
 #include <core/io/Loader.h>
 #include <core/rendered_data/RenderedData.h>
-#include <core/utility/vtkhelper.h>
 
 #include <gui/DataMapping.h>
 #include <gui/SelectionHandler.h>

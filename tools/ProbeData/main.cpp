@@ -21,7 +21,6 @@
 #include <vtkWarpScalar.h>
 #include <vtkAssignAttribute.h>
 
-#include <core/utility/vtkhelper.h>
 #include <core/data_objects/PolyDataObject.h>
 #include <core/io/Exporter.h>
 #include <core/io/FileParser.h>
@@ -46,8 +45,8 @@ int main()
     vtkIdType numLazufrePoints = raw_pointData[0].size();
 
 
-    VTK_CREATE(vtkPoints, points);
-    VTK_CREATE(vtkCellArray, verts);
+    auto points = vtkSmartPointer<vtkPoints>::New();
+    auto verts = vtkSmartPointer<vtkCellArray>::New();
     std::vector<vtkIdType> pointIds(numLazufrePoints);
     points->SetNumberOfPoints(numLazufrePoints);
     for (vtkIdType i = 0; i < numLazufrePoints; ++i)
@@ -57,12 +56,12 @@ int main()
     }
     verts->InsertNextCell(numLazufrePoints, pointIds.data());
 
-    VTK_CREATE(vtkPolyData, lazufrePoints);
+    auto lazufrePoints = vtkSmartPointer<vtkPolyData>::New();
     lazufrePoints->SetPoints(points);
     lazufrePoints->SetVerts(verts);
 
 
-    VTK_CREATE(vtkFloatArray, lazufreElevation);
+    auto lazufreElevation = vtkSmartPointer<vtkFloatArray>::New();
     lazufreElevation->SetName("elevation");
     lazufreElevation->SetNumberOfComponents(1);
     lazufreElevation->SetNumberOfValues(numLazufrePoints);
@@ -76,7 +75,7 @@ int main()
     vtkIdType lastAttr = raw_pointData.size() - 1;
     for (vtkIdType a = firstAttr; a <= lastAttr; ++a)
     {
-        VTK_CREATE(vtkFloatArray, attrData);
+        auto attrData = vtkSmartPointer<vtkFloatArray>::New();
         QString n = "line of sight (km) " + QString::number(a + 1 - firstAttr);
         attrData->SetName(n.toLatin1().data());
         attrData->SetNumberOfComponents(1);
@@ -88,12 +87,12 @@ int main()
     }
 
 
-    VTK_CREATE(vtkDelaunay2D, delaunay);    // probe won't work on simple point set
+    auto delaunay = vtkSmartPointer<vtkDelaunay2D>::New(); // probe won't work on simple point set
     delaunay->SetInputData(lazufrePoints);
 
-    VTK_CREATE(vtkTransform, lazufreFlattener);
+    auto lazufreFlattener = vtkSmartPointer<vtkTransform>::New();
     lazufreFlattener->Scale(1, 1, 0);
-    VTK_CREATE(vtkTransformFilter, lazufreFlattenerFilter);
+    auto lazufreFlattenerFilter = vtkSmartPointer<vtkTransformFilter>::New();
     lazufreFlattenerFilter->SetTransform(lazufreFlattener);
     //lazufreFlattenerFilter->SetInputData(lazufrePoints);
     lazufreFlattenerFilter->SetInputConnection(delaunay->GetOutputPort());
@@ -115,13 +114,13 @@ int main()
 
     double scaleEpsilon = 0.95;  // better a bit smaller, to prevent artifacts at data set borders
 
-    VTK_CREATE(vtkTransform, meshToPointsTransform);
+    auto meshToPointsTransform = vtkSmartPointer<vtkTransform>::New();
     meshToPointsTransform->PostMultiply();
     meshToPointsTransform->Translate(-meshCenter[0], -meshCenter[1], 0);
     meshToPointsTransform->Scale(scaleEpsilon * lazufreSize[0] / meshSize[0], scaleEpsilon * lazufreSize[1] / meshSize[1], 0); // also flattening
     meshToPointsTransform->Translate(lazufreCenter[0], lazufreCenter[1], 0);
 
-    VTK_CREATE(vtkTransformFilter, meshToPointsTransformFilter);
+    auto meshToPointsTransformFilter = vtkSmartPointer<vtkTransformFilter>::New();
     meshToPointsTransformFilter->SetTransform(meshToPointsTransform);
     meshToPointsTransformFilter->SetInputData(highResMesh);
 
@@ -131,7 +130,7 @@ int main()
     lazufreFlattenerFilter->Update();
     lazufreFlattenerFilter->GetOutput()->GetBounds(lazufreBounds);
 
-    VTK_CREATE(vtkProbeFilter, probe);
+    auto probe = vtkSmartPointer<vtkProbeFilter>::New();
     probe->SetInputConnection(meshToPointsTransformFilter->GetOutputPort());
     probe->SetSourceConnection(lazufreFlattenerFilter->GetOutputPort());
     probe->PassCellArraysOn();
@@ -143,11 +142,11 @@ int main()
     qDebug() << "Valid probe points: " << probe->GetValidPoints()->GetNumberOfTuples();
 
 
-    VTK_CREATE(vtkAssignAttribute, assignHeightsToScalars);
+    auto assignHeightsToScalars = vtkSmartPointer<vtkAssignAttribute>::New();
     assignHeightsToScalars->Assign("elevation", vtkDataSetAttributes::SCALARS, vtkAssignAttribute::POINT_DATA);
     assignHeightsToScalars->SetInputConnection(probe->GetOutputPort());
 
-    VTK_CREATE(vtkWarpScalar, warpElevation);
+    auto warpElevation = vtkSmartPointer<vtkWarpScalar>::New();
     warpElevation->SetInputConnection(assignHeightsToScalars->GetOutputPort());
 
     warpElevation->Update();
@@ -162,19 +161,19 @@ int main()
     Exporter::exportData(&lazufrePolyData, exportFN);
 
 
-    VTK_CREATE(vtkRenderWindow, window);
-    VTK_CREATE(vtkRenderWindowInteractor, interactor);
+    auto window = vtkSmartPointer<vtkRenderWindow>::New();
+    auto interactor = vtkSmartPointer<vtkRenderWindowInteractor>::New();
     interactor->SetRenderWindow(window);
     window->SetInteractor(interactor);
 
-    VTK_CREATE(vtkRenderer, ren);
+    auto ren = vtkSmartPointer<vtkRenderer>::New();
     ren->SetBackground(1, 1, 1);
     window->AddRenderer(ren);
 
-    VTK_CREATE(vtkPolyDataMapper, mapper);
+    auto mapper = vtkSmartPointer<vtkPolyDataMapper>::New();
     mapper->SetInputData(vtkPolyData::SafeDownCast(LazufreMovie));
 
-    VTK_CREATE(vtkActor, actor);
+    auto actor = vtkSmartPointer<vtkActor>::New();
     actor->SetMapper(mapper);
     actor->GetProperty()->SetColor(1, 0, 0);
     actor->GetProperty()->SetEdgeColor(0, 1, 0);

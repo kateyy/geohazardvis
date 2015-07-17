@@ -9,8 +9,8 @@
 #include <vtkObjectFactory.h>
 #include <vtkOpenGLRenderWindow.h>
 #include <vtkPointData.h>
+#include <vtkSmartPointer.h>
 
-#include <core/utility/vtkhelper.h>
 #include <core/filters/NoiseImageSource.h>
 
 #include "config.h"
@@ -51,7 +51,7 @@ void StackedImageDataLIC3D::SimpleExecute(vtkImageData * input, vtkImageData * o
 
     initialize();
 
-    VTK_CREATE(vtkImageAppend, appendTo3D);
+    auto appendTo3D = vtkSmartPointer<vtkImageAppend>::New();
     appendTo3D->SetAppendAxis(2);
 
     int inputExtent[6];
@@ -63,11 +63,11 @@ void StackedImageDataLIC3D::SimpleExecute(vtkImageData * input, vtkImageData * o
         input->GetExtent(sliceExtent);
         sliceExtent[4] = sliceExtent[5] = position;
 
-        VTK_CREATE(vtkExtractVOI, slice);
+        auto slice = vtkSmartPointer<vtkExtractVOI>::New();
         slice->SetVOI(sliceExtent);
         slice->SetInputData(input);
 
-        VTK_CREATE(vtkImageDataLIC2D, lic2D);
+        auto lic2D = vtkSmartPointer<vtkImageDataLIC2D>::New();
         lic2D->SetInputConnection(0, slice->GetOutputPort());
         lic2D->SetInputConnection(1, m_noiseImage->GetOutputPort());
         lic2D->SetSteps(50);

@@ -9,7 +9,6 @@
 
 #include <core/types.h>
 #include <core/utility/memory.h>
-#include <core/utility/vtkhelper.h>
 #include <core/data_objects/DataObject.h>
 #include <core/AbstractVisualizedData.h>
 
