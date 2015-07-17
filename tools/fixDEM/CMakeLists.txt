@@ -12,10 +12,6 @@ source_group_by_path(${CMAKE_CURRENT_SOURCE_DIR} ".*" "" "CMakeLists.txt")
 
 add_executable ( ${TARGET} ${SOURCES} )
 
-set_target_properties( ${TARGET} PROPERTIES
-    FOLDER "${IDE_FOLDER}"
-)
-
 target_link_libraries( ${TARGET}
     # ${LIBZEUG_REFLECTION_LIBRARY}
     # ${LIBZEUG_SIGNAL_LIBRARY}

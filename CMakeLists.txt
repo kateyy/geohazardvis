@@ -14,6 +14,9 @@ set(META_AUTHOR_MAINTAINER "karsten.tausche@student.hpi.de")
 project (${META_PROJECT_NAME} C CXX)
 
 
+option(OPTION_BUILD_TOOLS "" ON)
+
+
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
@@ -204,14 +207,17 @@ include_directories(
 
 configure_file(cmake/config.h.in ${CMAKE_CURRENT_BINARY_DIR}/config.h)
 
+set(IDE_FOLDER "")
 add_subdirectory("core")
 add_subdirectory("gui")
 add_subdirectory("app")
 add_subdirectory("docs")
+
+set(IDE_FOLDER "Deployment")
 add_subdirectory("packages")
 
-set(OPTION_BUILD_TOOLS TRUE CACHE BOOL "")
 
 if (OPTION_BUILD_TOOLS)
+    set(IDE_FOLDER "Tools")
     add_subdirectory("tools")
 endif()

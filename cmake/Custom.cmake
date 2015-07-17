@@ -14,6 +14,7 @@ function(configure_cxx_target TARGET)
         LINK_FLAGS_MINSIZEREL               "${DEFAULT_LINKER_FLAGS_RELEASE}"
         DEBUG_POSTFIX                       "d${DEBUG_POSTFIX}"
         RELWITHDEBINFO_POSTFIX              "rd${DEBUG_POSTFIX}"
+        FOLDER                              "${IDE_FOLDER}"
     )
 endfunction()
 

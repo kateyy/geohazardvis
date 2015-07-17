@@ -10,6 +10,10 @@ if(WIN32 AND ${CMAKE_VERSION} VERSION_GREATER 3.0)
         COMMAND windeployqt "${CMAKE_BINARY_DIR}/$<CONFIG>/${META_PROJECT_NAME}$<$<CONFIG:Debug>:d>$<$<CONFIG:RelWithDebInfo>:rd>.exe" --dir "${QT_DEPLOY_DIR}" $<$<CONFIG:Debug>:--debug>$<$<NOT:$<CONFIG:Debug>>:--release>
         VERBATIM
     )
+    set_target_properties(PrepareQtDeploy 
+        PROPERTIES
+        FOLDER  "${IDE_FOLDER}"
+    )
 elseif(WIN32)
     # WIN32 and old CMake
     message(WARNING "Automated Qt is only implemented for CMake version >= 3.0!")
