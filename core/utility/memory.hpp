@@ -4,19 +4,25 @@
 
 
 template<typename InIt, typename Ty>
-InIt findUnique(InIt First, InIt Last, const Ty * Val)
+InIt findUnique(InIt First, InIt Last, const Ty * value)
 {
     auto it = First;
     for (; it != Last; ++it)
     {
-        if (it->get() == Val)
+        if (it->get() == value)
             break;
     }
     return it;
 }
 
 template<typename T>
-typename std::vector<std::unique_ptr<T>>::iterator findUnique(std::vector<std::unique_ptr<T>> & vector, const T * Val)
+typename std::vector<std::unique_ptr<T>>::iterator findUnique(std::vector<std::unique_ptr<T>> & vector, const T * value)
 {
-    return findUnique(vector.begin(), vector.end(), Val);
+    return findUnique(vector.begin(), vector.end(), value);
+}
+
+template<typename T>
+bool containsUnique(std::vector<std::unique_ptr<T>> & vector, const T * value)
+{
+    return findUnique(vector, value) != vector.end();
 }
