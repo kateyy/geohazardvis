@@ -14,6 +14,7 @@ set(META_AUTHOR_MAINTAINER "karsten.tausche@student.hpi.de")
 project (${META_PROJECT_NAME} C CXX)
 
 
+option(OPTION_BUILD_TESTS "Build tests (if gtest is found)." ON)
 option(OPTION_BUILD_TOOLS "" ON)
 
 
@@ -216,6 +217,8 @@ add_subdirectory("docs")
 set(IDE_FOLDER "Deployment")
 add_subdirectory("packages")
 
+set(IDE_FOLDER "Tests")
+add_subdirectory("tests")
 
 if (OPTION_BUILD_TOOLS)
     set(IDE_FOLDER "Tools")

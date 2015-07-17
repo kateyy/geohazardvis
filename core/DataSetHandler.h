@@ -51,6 +51,7 @@ public:
 private:
     DataSetHandler();
     ~DataSetHandler();
+    friend class DataSetHandler_test;
 
     std::unique_ptr<DataSetHandlerPrivate> d_ptr;
 };
