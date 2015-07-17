@@ -511,8 +511,9 @@ void ResidualVerificationView::setDataInternal(unsigned int subViewIndex, DataOb
     {
         auto newVis = m_implementation->requestVisualization(*dataObject);
         assert(newVis);
+        auto newVisPtr = newVis.get();
         m_visualizations[subViewIndex] = std::move(newVis);
-        m_implementation->addContent(newVis.get(), subViewIndex);
+        m_implementation->addContent(newVisPtr, subViewIndex);
     }
 }
 
