@@ -39,6 +39,7 @@ public:
 
     const QMap<DataObject *, bool> & dataSetOwnerships();
     const QMap<RawVectorData *, bool> & rawVectorOwnerships();
+    bool ownsData(DataObject * data);
 
 signals:
     void dataObjectsChanged();

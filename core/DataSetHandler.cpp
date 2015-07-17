@@ -328,3 +328,11 @@ const QMap<RawVectorData*, bool>& DataSetHandler::rawVectorOwnerships()
 
     return d_ptr->rawVectorOwnerships;
 }
+
+bool DataSetHandler::ownsData(DataObject * data)
+{
+    if (auto rawVector = dynamic_cast<RawVectorData*>(data))
+        return rawVectorOwnerships().value(rawVector, false);
+
+    return dataSetOwnerships().value(data, false);
+}

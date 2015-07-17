@@ -198,9 +198,15 @@ void DataBrowser::menuAssignDataToIndexes(const QPoint & position, DataObject * 
 void DataBrowser::removeFile()
 {
     QList<DataObject *> selection = selectedDataObjects();
+    QList<DataObject *> deletable;
+    for (auto & data : selection)
+    {
+        if (DataSetHandler::instance().ownsData(data))
+            deletable << data;
+    }
 
-    m_dataMapping->removeDataObjects(selection);
-    DataSetHandler::instance().deleteData(selection);
+    m_dataMapping->removeDataObjects(deletable);
+    DataSetHandler::instance().deleteData(deletable);
 
     updateModelForFocusedView();
 }

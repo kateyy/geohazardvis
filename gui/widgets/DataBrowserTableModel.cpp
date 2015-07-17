@@ -189,6 +189,11 @@ void DataBrowserTableModel::updateDataList(const QList<DataObject *> & visibleOb
 
 QVariant DataBrowserTableModel::data_dataObject(int row, int column, int role) const
 {
+    const QList<DataObject *> & dataSets = DataSetHandler::instance().dataSets();
+    assert(row < dataSets.size());
+
+    DataObject * dataObject = dataSets.at(row);
+
     if (role == Qt::DecorationRole)
     {
         switch (column)
@@ -200,17 +205,14 @@ QVariant DataBrowserTableModel::data_dataObject(int row, int column, int role) c
                 ? m_icons["rendered"]
                 : m_icons["notRendered"];
         case 2:
-            return m_icons["delete_red"];
+            return DataSetHandler::instance().dataSetOwnerships().value(dataObject, false)
+                ? QVariant(m_icons["delete_red"])
+                : QVariant();
         }
     }
 
     if (role != Qt::DisplayRole)
         return QVariant();
-
-    const QList<DataObject *> & dataSets = DataSetHandler::instance().dataSets();
-    assert(row < dataSets.size());
-
-    DataObject * dataObject = dataSets.at(row);
 
     QString dataTypeName = dataObject->dataTypeName();
 
@@ -278,13 +280,21 @@ QVariant DataBrowserTableModel::data_dataObject(int row, int column, int role) c
 
 QVariant DataBrowserTableModel::data_attributeVector(int row, int column, int role) const
 {
+    const QList<RawVectorData *> & rawVectors = DataSetHandler::instance().rawVectors();
+    assert(row < rawVectors.size());
+
+    RawVectorData * attributeVector = rawVectors.at(row);
+
     if (role == Qt::DecorationRole)
     {
         switch (column)
         {
         case 0: return m_icons["table"];
         case 1: return m_icons["assign_to_geometry"];
-        case 2: return m_icons["delete_red"];
+        case 2:
+            return DataSetHandler::instance().rawVectorOwnerships().value(attributeVector, false)
+                ? QVariant(m_icons["delete_red"])
+                : QVariant();
         default: return QVariant();
         }
     }
@@ -300,11 +310,6 @@ QVariant DataBrowserTableModel::data_attributeVector(int row, int column, int ro
 
     if (role != Qt::DisplayRole)
         return QVariant();
-
-    const QList<RawVectorData *> & rawVectors = DataSetHandler::instance().rawVectors();
-    assert(row < rawVectors.size());
-
-    RawVectorData * attributeVector = rawVectors.at(row);
 
     vtkDataArray * dataArray = attributeVector->dataArray();
     int numComponents = dataArray->GetNumberOfComponents();
