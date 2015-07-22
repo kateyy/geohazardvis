@@ -1,6 +1,6 @@
 message(STATUS "Configuring for platform Windows/MSVC.")
 
-LIST(APPEND DEFAULT_COMPILE_DEFS
+list(APPEND DEFAULT_COMPILE_DEFS
     WIN32                       # Windows system
     UNICODE                     # Use unicode
     _UNICODE                    # Use unicode
@@ -8,9 +8,10 @@ LIST(APPEND DEFAULT_COMPILE_DEFS
 #    _CRT_SECURE_NO_DEPRECATE   # Disable CRT deprecation warnings
 )
 
-set(OPTION_LTCG OFF CACHE BOOL "Enable whole program optimization / link time code generation in release builds")
+option(OPTION_LTCG "Enable whole program optimization / link time code generation in release builds" OFF)
+option(OPTION_DEBUG_ADDITIONAL_RUNTME_CHECKS "Include all available runtime checks in debug builds." OFF)
 
-set(OPTION_WIN32_GUI_APP ON CACHE BOOL "Build an executable with a WinMain entry point on windows. This disables the console window")
+option(OPTION_WIN32_GUI_APP "Build an executable with a WinMain entry point on windows. This disables the console window" ON)
 if(OPTION_WIN32_GUI_APP)
     set(WIN32_EXE_FLAG WIN32)
 else()
@@ -18,7 +19,7 @@ else()
 endif()
 
 
-set(WIN32_COMPILE_FLAGS
+set(DEFAULT_COMPILE_FLAGS
     /nologo /Zc:wchar_t /Zc:forScope /GR /Zi /fp:precise /MP /W4 /we4150 /we4239 /we4456 /we4457 /wd4127 /wd4351 /wd4458 /wd4505 /wd4512 /wd4718
     # nologo       -> no logo
     # Zc:wchar_t   -> treat wchar_t as built-in type: yes
@@ -75,20 +76,25 @@ set(WIN32_COMPILE_FLAGS
 # 1900: Visual Studio 14 2015
 
 if(MSVC_VERSION VERSION_GREATER 1800)
-    list(APPEND WIN32_COMPILE_FLAGS
+    list(APPEND DEFAULT_COMPILE_FLAGS
         /bigobj
         /wd4458
         /guard:cf
     )
 endif()
 
-set(DEFAULT_COMPILE_FLAGS
-    ${WIN32_COMPILE_FLAGS}
-    $<$<CONFIG:Debug>:          /MDd /RTC1 /RTCc /Od /GS /sdl /GF- >
+list(APPEND DEFAULT_COMPILE_FLAGS
+    $<$<CONFIG:Debug>:          /MDd /RTC1 /Od /GF- >
     $<$<CONFIG:Release>:        /MD /Ot /Ob2 /Ox /GS- /GF >
     $<$<CONFIG:RelWithDebInfo>: /MD /Ot /Ob2 /Ox /GS- /GF /Zo>
     $<$<CONFIG:MinSizeRel>:     /MD /Os /Ob1 /O1 /GS- /GF >
 )
+
+if (OPTION_DEBUG_ADDITIONAL_RUNTME_CHECKS)
+    list(APPEND DEFAULT_COMPILE_FLAGS
+        $<$<CONFIG:Debug>:      /RTCc /GS /sdl >
+    )
+endif()
 
 set(WIN32_LINKER_FLAGS
     "/NOLOGO /NXCOMPAT"
@@ -118,7 +124,7 @@ set(DEFAULT_LINKER_FLAGS_RELWITHDEBINFO
 )
 
 if (OPTION_LTCG)
-    LIST(APPEND DEFAULT_COMPILE_FLAGS $<$<NOT:$<CONFIG:Debug>>: /GL> )
+    list(APPEND DEFAULT_COMPILE_FLAGS $<$<NOT:$<CONFIG:Debug>>: /GL> )
     set(DEFAULT_LINKER_FLAGS_RELEASE "${DEFAULT_LINKER_FLAGS_RELEASE} /LTCG")
     set(DEFAULT_LINKER_FLAGS_RELWITHDEBINFO "${DEFAULT_LINKER_FLAGS_RELWITHDEBINFO} /LTCG")
 endif()
