@@ -19,6 +19,7 @@ set_target_properties( ${TARGET} PROPERTIES
 target_link_libraries( ${TARGET}
     # ${LIBZEUG_REFLECTION_LIBRARY}
     # ${LIBZEUG_SIGNAL_LIBRARY}
+    ${LIBZEUG_LIBRARIES}
     ${VTK_LIBRARIES}
     # Qt5::Widgets
     
@@ -26,9 +27,9 @@ target_link_libraries( ${TARGET}
     # gui
 )
 
-# include_directories(
-    # ${LIBZEUG_SIGNAL_INCLUDE_DIR}
-    # ${LIBZEUG_REFLECTION_INCLUDE_DIR}
-# )
+
+include_directories(
+    ${LIBZEUG_INCLUDES}
+)
 
 configure_cxx_target( ${TARGET} )
