@@ -38,88 +38,10 @@
 #include <core/io/TextFileReader.h>
 #include <core/rendered_data/RenderedData.h>
 #include <core/color_mapping/ColorMapping.h>
+#include <core/utility/DataExtent.h>
 
 #include <threadingzeug/parallelfor.h>
 
-
-
-template<typename T, size_t Dimensions = 3>
-class DataExtent
-{
-public:
-    DataExtent()
-    {
-        for (size_t i = 0; i < Dimensions; ++i)
-        {
-            m_extent[2 * i] = std::numeric_limits<T>::max();
-            m_extent[2 * i + 1] = std::numeric_limits<T>::lowest();
-        }
-    }
-    DataExtent(T extent[Dimensions * 2])
-    {
-        std::copy(extent, extent + Dimensions * 2, m_extent);
-    }
-
-    void Add(const T other[Dimensions * 2])
-    {
-        for (int i = 0; i < Dimensions; ++i)
-        {
-            if (m_extents[2 * i] < other[2 * i])
-                m_extents[2 * i] = other[2 * i];
-
-            if (m_extents[2 * i + 1] > other[2 * i + 1])
-                m_extents[2 * i + 1] = other[2 * i + 1];
-        }
-    }
-
-    void Add(const DataExtent & other)
-    {
-        Add(other.m_extent);
-    }
-
-    T operator[] (size_t index) const
-    {
-        assert(index < Dimensions * 2);
-        return m_extent[index];
-    }
-
-    T & operator[] (size_t index)
-    {
-        assert(index < Dimensions * 2);
-        return m_extent[index];
-    }
-
-    bool operator==(const T other[Dimensions * 2]) const
-    {
-        for (size_t i = 0; i < Dimensions * 2; ++i)
-        {
-            if (m_extent[i] != other[i])
-                return false;
-        }
-        return true;
-    }
-
-    bool operator==(const DataExtent & other) const
-    {
-        return operator==(other.m_extent);
-    }
-
-    const T * Data() const
-    {
-        return m_extent;
-    }
-
-    // unsafe workaround for non-const VTK interfaces (e.g., vtkImageData)
-    T * Data()
-    {
-        return m_extent;
-    }
-
-private:
-    T m_extent[Dimensions * 2];
-};
-
-using ImageExtent = DataExtent<int, 3>;
 
 
 vtkSmartPointer<vtkDataArray> projectToLineOfSight(vtkDataArray & vectors, vtkVector3d lineOfSight)

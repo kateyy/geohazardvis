@@ -145,6 +145,11 @@ set ( SOURCES
     ThirdParty/vtkPVScalarBarActor.h
     ThirdParty/vtkPVScalarBarActor.cxx
 
+    utility/DataExtent.h
+    utility/DataExtent.hpp
+    utility/DataExtent.cpp
+    utility/InterpolationHelper.h
+    utility/InterpolationHelper.cpp
     utility/qthelper.h
     utility/qthelper.cpp
     utility/memory.h
