@@ -45,7 +45,7 @@ endfunction (source_group_by_path)
 
 function (source_group_by_path_and_type PARENT_PATH)
 
-    if (IDE_SPLIT_HEADERS_SOURCES)
+    if (OPTION_IDE_SPLIT_HEADERS_SOURCES)
         source_group_by_path(${PARENT_PATH} ".*[.](h|hpp)$" "Header Files" ${ARGN})
         source_group_by_path(${PARENT_PATH} ".*[.](c|cpp|cxx)$" "Source Files" ${ARGN})
     else()
