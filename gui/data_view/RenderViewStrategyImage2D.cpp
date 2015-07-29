@@ -41,8 +41,8 @@ namespace
 }
 
 
-RenderViewStrategyImage2D::RenderViewStrategyImage2D(RendererImplementationBase3D & context, QObject * parent)
-    : RenderViewStrategy(context, parent)
+RenderViewStrategyImage2D::RenderViewStrategyImage2D(RendererImplementationBase3D & context)
+    : RenderViewStrategy(context)
     , m_isInitialized(false)
     , m_previewRenderer(nullptr)
 {

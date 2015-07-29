@@ -136,7 +136,7 @@ private:
     std::unique_ptr<DataObject> m_residual;
 
     std::unique_ptr<RendererImplementationResidual> m_implementation;
-    RenderViewStrategyImage2D * m_strategy;
+    std::unique_ptr<RenderViewStrategyImage2D> m_strategy;
 
     std::array<std::unique_ptr<AbstractVisualizedData>, 3> m_visualizations;
 };

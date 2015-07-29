@@ -1,6 +1,8 @@
 #pragma once
 
 #include <functional>
+#include <memory>
+#include <vector>
 
 #include <QObject>
 
@@ -17,7 +19,7 @@ class RenderedData;
 class GUI_API RenderViewStrategy : public QObject
 {
 public:
-    RenderViewStrategy(RendererImplementationBase3D & context, QObject * parent = nullptr);
+    RenderViewStrategy(RendererImplementationBase3D & context);
     virtual ~RenderViewStrategy();
 
     virtual QString name() const = 0;
@@ -36,8 +38,8 @@ public:
     
     virtual bool canApplyTo(const QList<RenderedData *> & renderedData) = 0;
 
-    using StategyConstructor = std::function<RenderViewStrategy *(RendererImplementationBase3D & context)>;
-    static const QList<StategyConstructor> & constructors();
+    using StategyConstructor = std::function<std::unique_ptr<RenderViewStrategy> (RendererImplementationBase3D & context)>;
+    static const std::vector<StategyConstructor> & constructors();
 
 protected:
     template <typename Strategy> static bool registerStrategy();
@@ -46,14 +48,14 @@ protected:
     RendererImplementationBase3D & m_context;
 
 private:
-    static QList<StategyConstructor> & s_constructors();
+    static std::vector<StategyConstructor> & s_constructors();
 };
 
 template <typename Strategy>
 bool RenderViewStrategy::registerStrategy()
 {
-    s_constructors().append(
-        [] (RendererImplementationBase3D & context) { return new Strategy(context); }
+    s_constructors().push_back(
+        [] (RendererImplementationBase3D & context) { return std::make_unique<Strategy>(context); }
     );
 
     return true;

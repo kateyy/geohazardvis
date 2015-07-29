@@ -413,9 +413,9 @@ void ResidualVerificationView::initialize()
     m_implementation = std::make_unique<RendererImplementationResidual>(*this);
     m_implementation->activate(m_qvtkMain);
 
-    m_strategy = new RenderViewStrategyImage2D(*m_implementation, m_implementation.get());
+    m_strategy = std::make_unique<RenderViewStrategyImage2D>(*m_implementation);
 
-    m_implementation->setStrategy(m_strategy);
+    m_implementation->setStrategy(m_strategy.get());
 
     for (unsigned i = 0; i < numberOfSubViews(); ++i)
     {

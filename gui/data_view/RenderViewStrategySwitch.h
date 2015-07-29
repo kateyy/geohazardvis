@@ -1,5 +1,8 @@
 #pragma once
 
+#include <map>
+#include <memory>
+
 #include <QMap>
 #include <QObject>
 
@@ -19,7 +22,7 @@ class GUI_API RenderViewStrategySwitch : public QObject
     Q_OBJECT
 
 public:
-    RenderViewStrategySwitch(RendererImplementation3D & renderView, QObject * parent = nullptr);
+    RenderViewStrategySwitch(RendererImplementation3D & renderView);
     ~RenderViewStrategySwitch() override;
 
     const QMap<QString, bool> & applicableStrategies() const;
@@ -35,6 +38,6 @@ public slots:
 private:
     RendererImplementation3D & m_view;
 
-    QMap<QString, RenderViewStrategy * > m_strategies;
+    std::map<QString, std::unique_ptr<RenderViewStrategy>> m_strategies;
     QMap<QString, bool> m_strategyStates;
 };

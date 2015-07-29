@@ -1,8 +1,8 @@
 #include "RenderViewStrategy.h"
 
 
-RenderViewStrategy::RenderViewStrategy(RendererImplementationBase3D & context, QObject * parent)
-    : QObject(parent)
+RenderViewStrategy::RenderViewStrategy(RendererImplementationBase3D & context)
+    : QObject()
     , m_context(context)
 {
 }
@@ -17,14 +17,14 @@ void RenderViewStrategy::deactivate()
 {
 }
 
-const QList<RenderViewStrategy::StategyConstructor> & RenderViewStrategy::constructors()
+const std::vector<RenderViewStrategy::StategyConstructor> & RenderViewStrategy::constructors()
 {
     return s_constructors();
 }
 
-QList<RenderViewStrategy::StategyConstructor> & RenderViewStrategy::s_constructors()
+std::vector<RenderViewStrategy::StategyConstructor> & RenderViewStrategy::s_constructors()
 {
-    static QList<StategyConstructor> list;
+    static std::vector<StategyConstructor> list;
 
     return list;
 }

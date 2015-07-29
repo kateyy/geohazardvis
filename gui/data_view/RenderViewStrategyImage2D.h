@@ -21,7 +21,7 @@ class GUI_API RenderViewStrategyImage2D : public RenderViewStrategy
     Q_OBJECT
 
 public:
-    RenderViewStrategyImage2D(RendererImplementationBase3D & context, QObject * parent = nullptr);
+    RenderViewStrategyImage2D(RendererImplementationBase3D & context);
     ~RenderViewStrategyImage2D() override;
 
     /** Explicitly define a list of images to create a profile plot for. 

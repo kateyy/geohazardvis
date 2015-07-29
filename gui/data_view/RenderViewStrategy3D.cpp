@@ -13,8 +13,8 @@
 const bool RenderViewStrategy3D::s_isRegistered = RenderViewStrategy::registerStrategy<RenderViewStrategy3D>();
 
 
-RenderViewStrategy3D::RenderViewStrategy3D(RendererImplementationBase3D & context, QObject * parent)
-    : RenderViewStrategy(context, parent)
+RenderViewStrategy3D::RenderViewStrategy3D(RendererImplementationBase3D & context)
+    : RenderViewStrategy(context)
 {
     connect(&context.renderView(), &AbstractRenderView::visualizationsChanged, this, &RenderViewStrategy3D::updateImageWidgets);
 }

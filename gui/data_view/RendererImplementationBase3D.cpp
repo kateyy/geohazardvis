@@ -40,9 +40,11 @@ RendererImplementationBase3D::RendererImplementationBase3D(AbstractRenderView & 
     : RendererImplementation(renderView)
     , m_strategy(nullptr)
     , m_isInitialized(false)
-    , m_emptyStrategy(new RenderViewStrategyNull(*this, this))
+    , m_emptyStrategy(std::make_unique<RenderViewStrategyNull>(*this))
 {
 }
+
+RendererImplementationBase3D::~RendererImplementationBase3D() = default;
 
 ContentType RendererImplementationBase3D::contentType() const
 {

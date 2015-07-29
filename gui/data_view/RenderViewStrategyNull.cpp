@@ -1,8 +1,8 @@
 #include "RenderViewStrategyNull.h"
 
 
-RenderViewStrategyNull::RenderViewStrategyNull(RendererImplementationBase3D & context, QObject * parent)
-    : RenderViewStrategy(context, parent)
+RenderViewStrategyNull::RenderViewStrategyNull(RendererImplementationBase3D & context)
+    : RenderViewStrategy(context)
 {
 }
 

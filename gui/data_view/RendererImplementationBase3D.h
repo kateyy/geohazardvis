@@ -37,6 +37,7 @@ class RendererImplementationBase3D : public RendererImplementation
 {
 public:
     RendererImplementationBase3D(AbstractRenderView & renderView);
+    ~RendererImplementationBase3D() override;
 
     ContentType contentType() const override;
 
@@ -144,7 +145,7 @@ protected:
 
 private:
     bool m_isInitialized;
-    RenderViewStrategy * m_emptyStrategy;
+    std::unique_ptr<RenderViewStrategy> m_emptyStrategy;
 
     // -- setup --
     vtkSmartPointer<vtkRenderWindow> m_renderWindow;
