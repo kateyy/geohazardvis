@@ -30,6 +30,7 @@ public:
     ~ColorMappingChooser() override;
 
     vtkLookupTable * selectedGradient() const;
+    vtkLookupTable * defaultGradient() const;
 
     void setCurrentRenderView(AbstractRenderView * renderView = nullptr);
 
@@ -58,6 +59,7 @@ private:
 private:
     void loadGradientImages();
     int gradientIndex(vtkLookupTable * gradient) const;
+    int defaultGradientIndex() const;
 
     /** A RenderView's implementation and color mapping can change whenever its content changes. */
     void checkRenderViewColorMapping();

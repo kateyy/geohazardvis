@@ -246,6 +246,11 @@ vtkLookupTable * ColorMappingChooser::selectedGradient() const
     return m_gradients.value(m_ui->gradientComboBox->currentIndex());
 }
 
+vtkLookupTable * ColorMappingChooser::defaultGradient() const
+{
+    return m_gradients.value(defaultGradientIndex());
+}
+
 void ColorMappingChooser::guiLegendPositionChanged(const QString & position)
 {
     if (!m_mapping || !m_renderView)
@@ -370,7 +375,7 @@ void ColorMappingChooser::loadGradientImages()
     gradientComboBox->setIconSize(gradientImageSize);
     gradientComboBox->blockSignals(false);
     // set the "default" gradient
-    gradientComboBox->setCurrentIndex(std::min(Default_gradient_index, gradientComboBox->count() - 1));
+    gradientComboBox->setCurrentIndex(defaultGradientIndex());
 }
 
 int ColorMappingChooser::gradientIndex(vtkLookupTable * gradient) const
@@ -384,6 +389,11 @@ int ColorMappingChooser::gradientIndex(vtkLookupTable * gradient) const
     }
     assert(false);
     return -1;
+}
+
+int ColorMappingChooser::defaultGradientIndex() const
+{
+    return std::min(m_gradients.size() - 1, Default_gradient_index);
 }
 
 void ColorMappingChooser::checkRenderViewColorMapping()
@@ -404,12 +414,23 @@ void ColorMappingChooser::checkRenderViewColorMapping()
     if (m_mapping)
         m_legend = dynamic_cast<OrientedScalarBarActor *>(m_mapping->colorMappingLegend());
 
-    // setup gradient for newly created mappings
+    // setup gradients for newly created mappings
     if (m_mapping && !m_mapping->originalGradient())
     {
-        m_ui->gradientComboBox->setCurrentIndex(    // use default gradient for new mappings
-            std::min(m_ui->gradientComboBox->count() - 1, Default_gradient_index));
+        m_ui->gradientComboBox->setCurrentIndex(defaultGradientIndex());
         m_mapping->setGradient(selectedGradient());
+    }
+    // ensure to have a valid gradient in all other sub-views, for complete and consistent multi-view setup
+    for (unsigned int i = 0; i < m_renderView->numberOfSubViews(); ++i)
+    {
+        if (i == m_renderView->activeSubViewIndex())
+            continue;
+        auto mapping = m_renderViewImpl->colorMapping(i);
+        if (!mapping)
+            continue;
+        if (mapping->originalGradient())
+            continue;
+        mapping->setGradient(defaultGradient());
     }
 }
 

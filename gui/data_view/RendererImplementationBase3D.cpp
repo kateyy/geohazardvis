@@ -546,7 +546,10 @@ void RendererImplementationBase3D::setupColorMapping(unsigned int subViewIndex, 
     viewportSetup.scalarBarWidget->EnabledOff();
 
     connect(viewportSetup.colorMapping, &ColorMapping::colorLegendVisibilityChanged,
-        [&viewportSetup] (bool visible) { viewportSetup.scalarBarWidget->SetEnabled(visible); });
+        [&viewportSetup] (bool visible) 
+    { 
+        viewportSetup.scalarBarWidget->SetEnabled(visible);
+    });
 }
 
 void RendererImplementationBase3D::updateActiveSubView(unsigned int subViewIndex)
