@@ -12,7 +12,6 @@
 template<typename T> class QFutureWatcher;
 class QMutex;
 class QStringList;
-class vtkQtDebugLeaksView;
 class AbstractRenderView;
 class CanvasExporterWidget;
 class DataBrowser;
@@ -53,7 +52,6 @@ private:
     void handleAsyncLoadFinished();
 
 private:
-    vtkQtDebugLeaksView * m_debugLeaksView;
     QPalette m_defaultPalette;
 
     std::unique_ptr<Ui_MainWindow> m_ui;

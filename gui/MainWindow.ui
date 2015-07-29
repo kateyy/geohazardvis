@@ -46,8 +46,6 @@
      <string>&amp;Help</string>
     </property>
     <addaction name="actionAbout_Qt"/>
-    <addaction name="separator"/>
-    <addaction name="actionShow_Leak_Debugger"/>
    </widget>
    <widget class="QMenu" name="menuViews">
     <property name="title">
@@ -62,7 +60,7 @@
      </property>
     </widget>
     <addaction name="actionNew_Render_View"/>
-    <addaction name="actionObservation_Model_Residual_View"/>
+    <addaction name="actionResidual_Verification_View"/>
     <addaction name="menuSynchronize_Selections"/>
     <addaction name="separator"/>
     <addaction name="actionDark_Style"/>
@@ -152,9 +150,9 @@
     <string>Residual Test</string>
    </property>
   </action>
-  <action name="actionObservation_Model_Residual_View">
+  <action name="actionResidual_Verification_View">
    <property name="text">
-    <string>Observation/Model/Residual View</string>
+    <string>New Residual Verification View</string>
    </property>
   </action>
   <action name="actionShow_Leak_Debugger">

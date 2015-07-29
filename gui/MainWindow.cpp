@@ -14,8 +14,6 @@
 #include <QMimeData>
 #include <QtConcurrent/QtConcurrentRun>
 
-//#include <vtkQtDebugLeaksView.h>
-
 #include <widgetzeug/dark_fusion_style.hpp>
 
 #include <core/DataSetHandler.h>
@@ -43,7 +41,6 @@ namespace
 
 MainWindow::MainWindow()
     : QMainWindow()
-    //, m_debugLeaksView(new vtkQtDebugLeaksView()) // not usable in multi-threaded application
     , m_ui(std::make_unique<Ui_MainWindow>())
     , m_dataMapping(std::make_unique<DataMapping>(*this))
     , m_scalarMappingChooser(new ColorMappingChooser())
@@ -106,15 +103,13 @@ MainWindow::MainWindow()
     connect(m_ui->actionExport_To, &QAction::triggered, m_canvasExporter, &CanvasExporterWidget::captureScreenshotTo);
     connect(m_dataMapping.get(), &DataMapping::focusedRenderViewChanged, m_canvasExporter, &CanvasExporterWidget::setRenderView);
 
-    connect(m_ui->actionObservation_Model_Residual_View, &QAction::triggered,
+    connect(m_ui->actionResidual_Verification_View, &QAction::triggered,
         [this] (bool) {
         auto view = DataMapping::instance().createRenderView<ResidualVerificationView>();
         DataMapping::instance().setFocusedView(view);
     });
 
     connect(m_ui->actionDark_Style, &QAction::triggered, this, &MainWindow::setDarkFusionStyle);
-
-    //connect(m_ui->actionShow_Leak_Debugger, &QAction::triggered, m_debugLeaksView, &QWidget::show);
 }
 
 MainWindow::~MainWindow()
@@ -143,8 +138,6 @@ MainWindow::~MainWindow()
     m_ui.reset();
 
     TextureManager::release();
-
-    //delete m_debugLeaksView;
 }
 
 QStringList MainWindow::dialog_inputFileName()
