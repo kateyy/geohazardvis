@@ -13,6 +13,8 @@ struct InputFileInfo
 
     const std::string name;
     const io::ModelType type;
+
+    void operator=(const InputFileInfo &) = delete;
 };
 
 
