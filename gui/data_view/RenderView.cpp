@@ -8,9 +8,10 @@
 #include <vtkRenderWindow.h>
 
 #include <core/types.h>
-#include <core/utility/memory.h>
-#include <core/data_objects/DataObject.h>
 #include <core/AbstractVisualizedData.h>
+#include <core/data_objects/DataObject.h>
+#include <core/utility/macros.h>
+#include <core/utility/memory.h>
 
 #include <gui/data_view/RendererImplementation.h>
 #include <gui/data_view/RendererImplementationSwitch.h>
@@ -339,7 +340,7 @@ AbstractVisualizedData * RenderView::selectedDataVisualization() const
     return m_dataObjectToVisualization.value(selectedData());
 }
 
-void RenderView::lookAtData(DataObject * dataObject, vtkIdType itemId, int subViewIndex)
+void RenderView::lookAtData(DataObject * dataObject, vtkIdType itemId, int DEBUG_ONLY(subViewIndex))
 {
     assert(subViewIndex == 0);
     implementation().lookAtData(dataObject, itemId, 0);

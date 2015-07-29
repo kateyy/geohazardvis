@@ -10,6 +10,7 @@
 
 #include <core/AbstractVisualizedData.h>
 #include <core/data_objects/DataObject.h>
+#include <core/utility/macros.h>
 
 
 ColorMappingData::ColorMappingData(const QList<AbstractVisualizedData *> & visualizedData, int numDataComponents)
@@ -99,7 +100,7 @@ bool ColorMappingData::usesFilter() const
     return false;
 }
 
-void ColorMappingData::configureMapper(AbstractVisualizedData * visualizedData, vtkAbstractMapper * /*mapper*/)
+void ColorMappingData::configureMapper(AbstractVisualizedData * DEBUG_ONLY(visualizedData), vtkAbstractMapper * /*mapper*/)
 {
     assert(m_visualizedData.contains(visualizedData));
 }

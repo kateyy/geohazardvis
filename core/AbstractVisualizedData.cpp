@@ -8,6 +8,7 @@
 #include <vtkLookupTable.h>
 
 #include <core/data_objects/DataObject.h>
+#include <core/utility/macros.h>
 
 
 AbstractVisualizedData::AbstractVisualizedData(ContentType contentType, DataObject & dataObject, QObject * parent)
@@ -74,7 +75,7 @@ int AbstractVisualizedData::numberOfColorMappingInputs() const
     return 1;
 }
 
-vtkAlgorithmOutput * AbstractVisualizedData::colorMappingInput(int connection)
+vtkAlgorithmOutput * AbstractVisualizedData::colorMappingInput(int DEBUG_ONLY(connection))
 {
     assert(connection == 0);
 

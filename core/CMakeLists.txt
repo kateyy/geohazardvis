@@ -152,6 +152,7 @@ set ( SOURCES
     utility/InterpolationHelper.cpp
     utility/qthelper.h
     utility/qthelper.cpp
+    utility/macros.h
     utility/memory.h
     utility/memory.hpp
     utility/ScalarBarActor.h
