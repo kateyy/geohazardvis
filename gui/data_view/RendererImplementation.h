@@ -46,6 +46,8 @@ public:
 
     virtual vtkRenderWindowInteractor * interactor() = 0;
 
+    virtual unsigned int subViewIndexAtPos(const QPoint pixelCoordinate) const;
+
     /** add newly created rendered data
         actual data visibility depends on the object's configuration */
     void addContent(AbstractVisualizedData * content, unsigned int subViewIndex);

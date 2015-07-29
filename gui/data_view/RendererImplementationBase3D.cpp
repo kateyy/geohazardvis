@@ -89,16 +89,11 @@ void RendererImplementationBase3D::activate(QVTKWidget * qvtkWidget)
     m_renderWindow->GetInteractor()->SetInteractorStyle(m_interactorStyle);
 
     assignInteractor();
-
-    qvtkWidget->installEventFilter(this);
-    connect(&m_renderView, &AbstractRenderView::activeSubViewChanged, this, &RendererImplementationBase3D::updateActiveSubView);
 }
 
 void RendererImplementationBase3D::deactivate(QVTKWidget * qvtkWidget)
 {
     RendererImplementation::deactivate(qvtkWidget);
-
-    qvtkWidget->removeEventFilter(this);
 
     // this is our render window, so remove it from the widget
     qvtkWidget->SetRenderWindow(nullptr);
@@ -119,17 +114,6 @@ void RendererImplementationBase3D::render()
 vtkRenderWindowInteractor * RendererImplementationBase3D::interactor()
 {
     return m_renderWindow->GetInteractor();
-}
-
-bool RendererImplementationBase3D::eventFilter(QObject * /*watched*/, QEvent * event)
-{
-    if (event->type() != QEvent::MouseMove)
-        return false;
-
-    auto mouseMove = static_cast<QMouseEvent *>(event);
-    m_renderView.setActiveSubView(subViewIndexAtPos(mouseMove->pos()));
-
-    return false;
 }
 
 void RendererImplementationBase3D::onAddContent(AbstractVisualizedData * content, unsigned int subViewIndex)
@@ -555,12 +539,6 @@ void RendererImplementationBase3D::setupColorMapping(unsigned int subViewIndex, 
     { 
         viewportSetup.scalarBarWidget->SetEnabled(visible);
     });
-}
-
-void RendererImplementationBase3D::updateActiveSubView(unsigned int subViewIndex)
-{
-    auto & viewport = m_viewportSetups[subViewIndex];
-    m_interactorStyle->SetDefaultRenderer(viewport.renderer);
 }
 
 RenderViewStrategy & RendererImplementationBase3D::strategy() const

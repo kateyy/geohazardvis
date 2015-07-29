@@ -78,6 +78,9 @@ public:
     void ShowInfo(const QStringList &info);
 
 protected:
+    bool eventFilter(QObject * watched, QEvent * event) override;
+    void showEvent(QShowEvent * event) override;
+
     virtual void showDataObjectsImpl(const QList<DataObject *> & dataObjects,
         QList<DataObject *> & incompatibleObjects,
         unsigned int subViewIndex) = 0;
@@ -90,6 +93,8 @@ protected:
     virtual void axesEnabledChangedEvent(bool enabled) = 0;
 
 private:
+    bool m_isInitialized;
+
     bool m_axesEnabled;
 
     unsigned int m_activeSubViewIndex;

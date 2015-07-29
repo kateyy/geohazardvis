@@ -66,7 +66,8 @@ InteractorStyle3D::~InteractorStyle3D() = default;
 void InteractorStyle3D::setRenderedData(const QList<RenderedData *> & renderedData)
 {
     m_actorToRenderedData.clear();
-    GetDefaultRenderer()->RemoveViewProp(m_selectedCellActor);
+    if (auto renderer = GetCurrentRenderer())
+        renderer->RemoveViewProp(m_selectedCellActor);
     for (RenderedData * r : renderedData)
     {
         vtkCollectionSimpleIterator it;
@@ -84,8 +85,10 @@ void InteractorStyle3D::OnMouseMove()
     Superclass::OnMouseMove();
 
     int* clickPos = GetInteractor()->GetEventPosition();
-    m_pointPicker->Pick(clickPos[0], clickPos[1], 0, GetDefaultRenderer());
-    m_cellPicker->Pick(clickPos[0], clickPos[1], 0, GetDefaultRenderer());
+    FindPokedRenderer(clickPos[0], clickPos[1]);
+
+    m_pointPicker->Pick(clickPos[0], clickPos[1], 0, GetCurrentRenderer());
+    m_cellPicker->Pick(clickPos[0], clickPos[1], 0, GetCurrentRenderer());
 
     sendPointInfo();
 
@@ -263,8 +266,8 @@ void InteractorStyle3D::highlightIndex(DataObject * dataObject, vtkIdType index)
         if (m_currentlyHighlighted.second < 0)
             return;
 
-        GetDefaultRenderer()->RemoveViewProp(m_selectedCellActor);
-        GetDefaultRenderer()->GetRenderWindow()->Render();
+        GetCurrentRenderer()->RemoveViewProp(m_selectedCellActor);
+        GetCurrentRenderer()->GetRenderWindow()->Render();
         m_currentlyHighlighted = { nullptr, -1 };
         return;
     }
@@ -317,8 +320,8 @@ void InteractorStyle3D::highlightIndex(DataObject * dataObject, vtkIdType index)
     m_selectedCellData->SetPoints(points);
     m_selectedCellData->SetPolys(polys);
 
-    GetDefaultRenderer()->AddViewProp(m_selectedCellActor);
-    GetDefaultRenderer()->GetRenderWindow()->Render();
+    GetCurrentRenderer()->AddViewProp(m_selectedCellActor);
+    GetCurrentRenderer()->GetRenderWindow()->Render();
 
     m_currentlyHighlighted = { dataObject, index };
 
@@ -363,7 +366,7 @@ void InteractorStyle3D::lookAtIndex(DataObject * dataObject, vtkIdType index)
     vtkDataSet * dataSet = dataObject->dataSet();
     vtkPolyData * polyData = vtkPolyData::SafeDownCast(dataObject->dataSet());
 
-    vtkCamera & camera = *GetDefaultRenderer()->GetActiveCamera();
+    vtkCamera & camera = *GetCurrentRenderer()->GetActiveCamera();
 
     double startingFocalPoint[3], targetFocalPoint[3];
     double startingAzimuth, targetAzimuth;
@@ -509,8 +512,8 @@ void InteractorStyle3D::lookAtIndex(DataObject * dataObject, vtkIdType index)
         TerrainCamera::setAzimuth(camera, intermediateAzimuth);
         TerrainCamera::setVerticalElevation(camera, intermediateElevation);
 
-        GetDefaultRenderer()->ResetCameraClippingRange();
-        GetDefaultRenderer()->GetRenderWindow()->Render();
+        GetCurrentRenderer()->ResetCameraClippingRange();
+        GetCurrentRenderer()->GetRenderWindow()->Render();
 
         if (QTime::currentTime() > deadline)
             break;
@@ -547,7 +550,7 @@ void InteractorStyle3D::flashHightlightedCell(int milliseconds)
             }
             double bg = 0.5 + 0.5 * std::cos(ms * 0.001 * 2.0 * vtkMath::Pi());
             m_selectedCellActor->GetProperty()->SetColor(1, bg, bg);
-            GetDefaultRenderer()->GetRenderWindow()->Render();
+            GetCurrentRenderer()->GetRenderWindow()->Render();
         });
     }
     else if (m_highlightFlashTimer->isActive())

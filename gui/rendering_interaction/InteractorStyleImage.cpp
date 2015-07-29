@@ -54,8 +54,11 @@ void InteractorStyleImage::OnMouseMove()
 {
     Superclass::OnMouseMove();
 
-    int* clickPos = GetInteractor()->GetEventPosition();
-    m_pointPicker->Pick(clickPos[0], clickPos[1], 0, GetDefaultRenderer());
+    int clickPos[2];
+    GetInteractor()->GetEventPosition(clickPos);
+    FindPokedRenderer(clickPos[0], clickPos[1]);
+
+    m_pointPicker->Pick(clickPos[0], clickPos[1], 0, GetCurrentRenderer());
 
     sendPointInfo();
 
@@ -64,8 +67,6 @@ void InteractorStyleImage::OnMouseMove()
 
 void InteractorStyleImage::OnLeftButtonDown()
 {
-    FindPokedRenderer(GetInteractor()->GetEventPosition()[0], GetInteractor()->GetEventPosition()[1]);
-
     if (!GetCurrentRenderer())
         return;
 
@@ -88,7 +89,9 @@ void InteractorStyleImage::OnLeftButtonUp()
 
 void InteractorStyleImage::OnMiddleButtonDown()
 {
-    FindPokedRenderer(GetInteractor()->GetEventPosition()[0], GetInteractor()->GetEventPosition()[1]);
+    int eventPos[2];
+    GetInteractor()->GetEventPosition(eventPos);
+    FindPokedRenderer(eventPos[0], eventPos[1]);
 
     if (!GetCurrentRenderer())
         return;
@@ -127,7 +130,8 @@ void InteractorStyleImage::OnChar()
 
 void InteractorStyleImage::setRenderedData(const QList<RenderedData *> & renderedData)
 {
-    GetDefaultRenderer()->RemoveViewProp(m_highlightingActor);
+    if (auto renderer = GetCurrentRenderer())
+        renderer->RemoveViewProp(m_highlightingActor);
     m_propToRenderedData.clear();
 
     for (RenderedData * r : renderedData)
@@ -180,8 +184,8 @@ void InteractorStyleImage::highlightIndex(DataObject * dataObject, vtkIdType ind
         if (m_currentlyHighlighted.second < 0)
             return;
 
-        GetDefaultRenderer()->RemoveViewProp(m_highlightingActor);
-        GetDefaultRenderer()->GetRenderWindow()->Render();
+        GetCurrentRenderer()->RemoveViewProp(m_highlightingActor);
+        GetCurrentRenderer()->GetRenderWindow()->Render();
         m_currentlyHighlighted = { nullptr, -1 };
         return;
     }
@@ -200,8 +204,8 @@ void InteractorStyleImage::highlightIndex(DataObject * dataObject, vtkIdType ind
     point[2] += 0.1;    // show in front of the image
     m_highlightingActor->SetPosition(point);
 
-    GetDefaultRenderer()->AddViewProp(m_highlightingActor);
-    GetDefaultRenderer()->GetRenderWindow()->Render();
+    GetCurrentRenderer()->AddViewProp(m_highlightingActor);
+    GetCurrentRenderer()->GetRenderWindow()->Render();
 
     m_currentlyHighlighted = { dataObject, index };
 }

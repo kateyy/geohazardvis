@@ -3,10 +3,14 @@
 #include <cassert>
 
 #include <QDebug>
+#include <QMouseEvent>
+
+#include <gui/data_view/RendererImplementation.h>
 
 
 AbstractRenderView::AbstractRenderView(int index, QWidget * parent, Qt::WindowFlags flags)
     : AbstractDataView(index, parent, flags)
+    , m_isInitialized(false)
     , m_activeSubViewIndex(0)
     , m_axesEnabled(true)
 {
@@ -122,6 +126,27 @@ bool AbstractRenderView::axesEnabled() const
 void AbstractRenderView::ShowInfo(const QStringList & info)
 {
     setToolTip(info.join('\n'));
+}
+
+bool AbstractRenderView::eventFilter(QObject * watched, QEvent * event)
+{
+    if (event->type() != QEvent::MouseButtonPress || watched != contentWidget())
+        return false;
+
+    auto mouseEvent = static_cast<QMouseEvent *>(event);
+    setActiveSubView(implementation().subViewIndexAtPos(mouseEvent->pos()));
+
+    return false;
+}
+
+void AbstractRenderView::showEvent(QShowEvent * /*event*/)
+{
+    if (m_isInitialized)
+        return;
+
+    // allow to receive mouse events
+    installEventFilter(contentWidget());
+    m_isInitialized = true;
 }
 
 void AbstractRenderView::activeSubViewChangedEvent(unsigned int /*subViewIndex*/)

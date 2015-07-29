@@ -104,8 +104,6 @@ protected:
     };
 
 protected:
-    bool eventFilter(QObject * watched, QEvent * event) override;
-
     void onAddContent(AbstractVisualizedData * content, unsigned int subViewIndex) override;
     void onRemoveContent(AbstractVisualizedData * content, unsigned int subViewIndex) override;
     virtual void onDataVisibilityChanged(AbstractVisualizedData * content, unsigned int subViewIndex);
@@ -114,7 +112,7 @@ protected:
     RenderViewStrategy & strategy() const;
     ViewportSetup & viewportSetup(unsigned int subViewIndex = 0);
 
-    unsigned int subViewIndexAtPos(const QPoint pixelCoordinate) const;
+    unsigned int subViewIndexAtPos(const QPoint pixelCoordinate) const override;
 
     /** Provide a ColorMapping instance to be used with the specified sub-view.
       * The ownership of the ColorMapping will remain in sub-classes that implement this function. */
@@ -131,8 +129,6 @@ private:
     void removeFromBounds(RenderedData * renderedData, unsigned int subViewIndex);
     vtkSmartPointer<vtkCubeAxesActor> createAxes(vtkCamera * camera);
     void setupColorMapping(unsigned int subViewIndex, ViewportSetup & viewportSetup);
-
-    void updateActiveSubView(unsigned int subViewIndex);
 
 private slots:
     /** scan rendered data for changed attribute props (e.g., vectors) */

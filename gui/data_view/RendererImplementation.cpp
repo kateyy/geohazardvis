@@ -1,5 +1,7 @@
 #include "RendererImplementation.h"
 
+#include <cassert>
+
 #include <data_view/AbstractRenderView.h>
 
 
@@ -37,6 +39,13 @@ void RendererImplementation::deactivate(QVTKWidget * /*qvtkWidget*/)
         for (auto && c : list)
             disconnect(c);
     }
+}
+
+unsigned int RendererImplementation::subViewIndexAtPos(const QPoint /*pixelCoordinate*/) const
+{
+    // override this, if it is not trivial
+    assert(m_renderView.numberOfSubViews() == 1u);
+    return 0u;
 }
 
 void RendererImplementation::addContent(AbstractVisualizedData * content, unsigned int subViewIndex)
