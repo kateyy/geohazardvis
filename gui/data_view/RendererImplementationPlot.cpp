@@ -82,6 +82,9 @@ void RendererImplementationPlot::deactivate(QVTKWidget * qvtkWidget)
 
 void RendererImplementationPlot::render()
 {
+    if (!m_renderView.isVisible())
+        return;
+
     m_contextView->Render();
 }
 

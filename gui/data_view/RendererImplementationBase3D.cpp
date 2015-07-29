@@ -110,6 +110,9 @@ void RendererImplementationBase3D::deactivate(QVTKWidget * qvtkWidget)
 
 void RendererImplementationBase3D::render()
 {
+    if (!m_renderView.isVisible())
+        return;
+
     m_renderWindow->Render();
 }
 
