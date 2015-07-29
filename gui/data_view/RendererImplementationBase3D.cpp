@@ -515,6 +515,9 @@ vtkSmartPointer<vtkCubeAxesActor> RendererImplementationBase3D::createAxes(vtkCa
     axesActor->DrawXGridlinesOn();
     axesActor->DrawYGridlinesOn();
     axesActor->DrawZGridlinesOn();
+    
+    // Will be shown when needed
+    axesActor->VisibilityOff();
 
     return axesActor;
 }
