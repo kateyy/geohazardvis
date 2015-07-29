@@ -209,19 +209,26 @@ void RenderViewStrategyImage2D::startProfilePlot()
     m_profilePlotAction->setEnabled(false);
 
 
-    // create profiles
-
-    auto scalars = m_context.colorMapping(0)->currentScalarsName();
-
-    for (auto inputImage : m_currentPlottingImages)
+    // for each sub-view, check which combinations of active scalars and input images we have to plot
+    for (unsigned int i = 0; i < m_context.renderView().numberOfSubViews(); ++i)
     {
-        QString name = inputImage->name() + " plot";
+        auto & scalars = m_context.colorMapping(i)->currentScalarsName();
 
-        auto profile = std::make_unique<ImageProfileData>(name, *inputImage, scalars);
-        if (!profile->isValid())
-            continue;
+        for (auto inputImage : m_currentPlottingImages)
+        {
+            if (!m_context.renderView().contains(inputImage, i))
+                continue;
 
-        m_previewProfiles.push_back(std::move(profile));
+            auto profile = std::make_unique<ImageProfileData>(
+                inputImage->name() + " plot",
+                *inputImage,
+                scalars);
+
+            if (!profile->isValid())
+                continue;
+
+            m_previewProfiles.push_back(std::move(profile));
+        }
     }
 
     if (m_previewProfiles.empty())
@@ -237,6 +244,7 @@ void RenderViewStrategyImage2D::startProfilePlot()
     repr->SetLineColor(1, 0, 0);
     m_lineWidget->SetRepresentation(repr);
     m_lineWidget->SetInteractor(m_context.interactor());
+    m_lineWidget->SetCurrentRenderer(m_context.renderer(0u));   // put the widget in the first renderer, for now
     m_lineWidget->On();
 
     double bounds[6];
