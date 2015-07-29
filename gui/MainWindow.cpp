@@ -133,6 +133,9 @@ MainWindow::~MainWindow()
         QApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
     }
 
+    for (auto & connection : m_renderViewConnects)
+        disconnect(connection);
+
     m_dataMapping.reset();
     // wait to close all views
     QApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
@@ -179,7 +182,7 @@ void MainWindow::addRenderView(AbstractRenderView * renderView)
 {
     addDockWidget(Qt::DockWidgetArea::TopDockWidgetArea, renderView->dockWidgetParent());
 
-    connect(renderView, &AbstractRenderView::selectedDataChanged,
+    m_renderViewConnects << connect(renderView, &AbstractRenderView::selectedDataChanged,
         [this] (AbstractRenderView * renderView, DataObject * selectedData) {
         m_dataMapping->setFocusedView(renderView);
         m_dataBrowser->setSelectedData(selectedData);

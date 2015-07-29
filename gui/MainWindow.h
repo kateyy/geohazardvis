@@ -4,6 +4,7 @@
 #include <memory>
 
 #include <QMainWindow>
+#include <QVector>
 
 #include <gui/gui_api.h>
 
@@ -65,6 +66,8 @@ private:
     RenderConfigWidget * m_renderConfigWidget;
     RendererConfigWidget * m_rendererConfigWidget;
     CanvasExporterWidget * m_canvasExporter;
+
+    QVector<QMetaObject::Connection> m_renderViewConnects;
 
     QString m_lastOpenFolder;
     QString m_lastExportFolder;
