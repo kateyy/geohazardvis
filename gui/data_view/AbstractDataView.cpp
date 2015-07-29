@@ -46,6 +46,7 @@ QDockWidget * AbstractDataView::dockWidgetParent()
     m_dockWidgetParent->setWidget(this);
     m_dockWidgetParent->installEventFilter(this);
     m_dockWidgetParent->setFocusPolicy(Qt::StrongFocus);
+    m_dockWidgetParent->setWindowTitle(windowTitle());
 
     return m_dockWidgetParent;
 }
@@ -85,6 +86,11 @@ void AbstractDataView::setToolBarVisible(bool visible)
         return;
 
     toolBar()->setVisible(visible);
+}
+
+QString AbstractDataView::subViewFriendlyName(unsigned int /*subViewIndex*/) const
+{
+    return "";
 }
 
 vtkIdType AbstractDataView::highlightedItemId() const

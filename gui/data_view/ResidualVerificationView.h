@@ -50,6 +50,7 @@ public:
     ~ResidualVerificationView() override;
 
     QString friendlyName() const override;
+    QString subViewFriendlyName(unsigned int subViewIndex) const override;
 
     ContentType contentType() const override;
 

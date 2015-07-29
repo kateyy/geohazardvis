@@ -118,6 +118,8 @@ ResidualVerificationView::ResidualVerificationView(int index, QWidget * parent, 
 
     initialize();   // lazy initialize in not really needed for now
 
+    updateTitle();
+
     SelectionHandler::instance().addRenderView(this);
 
     connect(&DataSetHandler::instance(), &DataSetHandler::dataObjectsChanged, this, &ResidualVerificationView::updateComboBoxes);
@@ -151,7 +153,26 @@ ResidualVerificationView::~ResidualVerificationView()
 
 QString ResidualVerificationView::friendlyName() const
 {
-    return "Observation, Model, Residual";
+    return QString::number(index()) + ": Residual Verification View";
+}
+
+QString ResidualVerificationView::subViewFriendlyName(unsigned int subViewIndex) const
+{
+    QString name;
+    switch (subViewIndex)
+    {
+    case 0u:
+        name = "Observation";
+        break;
+    case 1u:
+        name = "Model";
+        break; 
+    case 2u:
+        name = "Residual";
+        break;
+    }
+
+    return name;
 }
 
 ContentType ResidualVerificationView::contentType() const

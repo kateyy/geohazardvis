@@ -37,6 +37,8 @@ public:
 
     /** name the id and represented data */
     virtual QString friendlyName() const = 0;
+    /** A title specifying contents of a sub-view */
+    virtual QString subViewFriendlyName(unsigned int subViewIndex) const;
 
     vtkIdType highlightedItemId() const;
     DataObject * highlightedObject();
