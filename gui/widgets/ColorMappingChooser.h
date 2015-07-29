@@ -64,7 +64,7 @@ private:
     /** A RenderView's implementation and color mapping can change whenever its content changes. */
     void checkRenderViewColorMapping();
 
-    void updateTitle(QString rendererName = "");
+    void updateTitle(const AbstractRenderView * renderView = nullptr);
     void updateGuiValueRanges();
 
     static vtkSmartPointer<vtkLookupTable> buildLookupTable(const QImage & image);

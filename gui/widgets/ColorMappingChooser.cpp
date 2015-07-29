@@ -434,13 +434,20 @@ void ColorMappingChooser::checkRenderViewColorMapping()
     }
 }
 
-void ColorMappingChooser::updateTitle(QString rendererName)
+void ColorMappingChooser::updateTitle(const AbstractRenderView * renderView)
 {
     QString title;
-    if (rendererName.isEmpty())
-        title = "(No Render View selected)";
+    if (renderView)
+        title = renderView->friendlyName();
     else
-        title = rendererName;
+        title = "(No Render View selected)";
+
+    title = "<b>" + title + "</b>";
+
+    if (renderView && renderView->numberOfSubViews() > 1)
+    {
+        title += " <i>" + renderView->subViewFriendlyName(renderView->activeSubViewIndex()) + "</i>";
+    }
 
     m_ui->relatedRenderView->setText(title);
 }
@@ -469,7 +476,7 @@ void ColorMappingChooser::rebuildGui()
 {
     checkRenderViewColorMapping();
 
-    updateTitle(m_renderView ? m_renderView->friendlyName() : "");
+    updateTitle(m_renderView);
 
     auto newMapping = m_mapping;
     auto newLegend = m_legend;
@@ -487,7 +494,10 @@ void ColorMappingChooser::rebuildGui()
     m_ui->colorLegendCheckBox->setChecked(false);
 
     if (m_renderView)
+    {
         m_qtConnect << connect(m_renderView, &AbstractRenderView::visualizationsChanged, this, &ColorMappingChooser::rebuildGui);
+        m_qtConnect << connect(m_renderView, &AbstractRenderView::activeSubViewChanged, this, &ColorMappingChooser::rebuildGui);
+    }
 
     // clear GUI when not rendering
     if (newMapping)

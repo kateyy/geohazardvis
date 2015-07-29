@@ -29,14 +29,8 @@
    <layout class="QVBoxLayout" name="mainLayout">
     <item>
      <widget class="QLabel" name="relatedRenderView">
-      <property name="font">
-       <font>
-        <weight>75</weight>
-        <bold>true</bold>
-       </font>
-      </property>
       <property name="text">
-       <string>(No Render View selected)</string>
+       <string>&lt;b&gt;(No Render View selected)&lt;/b&gt;</string>
       </property>
       <property name="alignment">
        <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
