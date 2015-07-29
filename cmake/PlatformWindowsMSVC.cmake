@@ -8,7 +8,7 @@ list(APPEND DEFAULT_COMPILE_DEFS
 #    _CRT_SECURE_NO_DEPRECATE   # Disable CRT deprecation warnings
 )
 
-option(OPTION_LTCG "Enable whole program optimization / link time code generation in release builds" OFF)
+option(OPTION_RELEASE_LTCG "Enable whole program optimization / link time code generation in release builds" OFF)
 option(OPTION_DEBUG_ADDITIONAL_RUNTME_CHECKS "Include all available runtime checks in debug builds." OFF)
 
 option(OPTION_WIN32_GUI_APP "Build an executable with a WinMain entry point on windows. This disables the console window" ON)
@@ -123,7 +123,7 @@ set(DEFAULT_LINKER_FLAGS_RELWITHDEBINFO
     "${WIN32_LINKER_FLAGS} /OPT:REF /OPT:ICF /DELAY:UNLOAD /INCREMENTAL:NO /DEBUG"
 )
 
-if (OPTION_LTCG)
+if (OPTION_RELEASE_LTCG)
     list(APPEND DEFAULT_COMPILE_FLAGS $<$<NOT:$<CONFIG:Debug>>: /GL> )
     set(DEFAULT_LINKER_FLAGS_RELEASE "${DEFAULT_LINKER_FLAGS_RELEASE} /LTCG")
     set(DEFAULT_LINKER_FLAGS_RELWITHDEBINFO "${DEFAULT_LINKER_FLAGS_RELWITHDEBINFO} /LTCG")
