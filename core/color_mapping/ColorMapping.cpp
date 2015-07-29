@@ -12,8 +12,8 @@
 #include <core/utility/ScalarBarActor.h>
 
 
-ColorMapping::ColorMapping(QObject * parent)
-    : QObject(parent)
+ColorMapping::ColorMapping()
+    : QObject()
     , m_glyphListener(std::make_unique<GlyphColorMappingGlyphListener>())
     , m_gradient(vtkSmartPointer<vtkLookupTable>::New())
     , m_originalGradient(nullptr)
@@ -40,7 +40,7 @@ void ColorMapping::setVisualizedData(const QList<AbstractVisualizedData *> & vis
         disconnect(&vis->dataObject(), &DataObject::attributeArraysChanged, this, &ColorMapping::updateAvailableScalars);
     }
 
-    QString lastScalars = currentScalarsName();
+    auto lastScalars = currentScalarsName();
     m_currentScalarsName.clear();
     m_scalars.clear();
 
@@ -106,7 +106,7 @@ QList<QString> ColorMapping::scalarsNames() const
     return names;
 }
 
-QString ColorMapping::currentScalarsName() const
+const QString & ColorMapping::currentScalarsName() const
 {
     return m_currentScalarsName;
 }

@@ -30,7 +30,7 @@ class CORE_API ColorMapping : public QObject
     Q_OBJECT
 
 public:
-    ColorMapping(QObject * parent = nullptr);
+    ColorMapping();
     ~ColorMapping() override;
 
     /** setup a list of color mappings which are applicable to the list of rendered data
@@ -42,7 +42,7 @@ public:
     /** list of scalar names that can be used with my rendered data */
     QList<QString> scalarsNames() const;
 
-    QString currentScalarsName() const;
+    const QString & currentScalarsName() const;
     void setCurrentScalarsByName(const QString & scalarsName);
     ColorMappingData * currentScalars();
     const ColorMappingData * currentScalars() const;
