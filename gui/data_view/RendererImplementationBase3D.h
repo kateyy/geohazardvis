@@ -112,8 +112,6 @@ protected:
     RenderViewStrategy & strategy() const;
     ViewportSetup & viewportSetup(unsigned int subViewIndex = 0);
 
-    unsigned int subViewIndexAtPos(const QPoint pixelCoordinate) const override;
-
     /** Provide a ColorMapping instance to be used with the specified sub-view.
       * The ownership of the ColorMapping will remain in sub-classes that implement this function. */
     virtual ColorMapping * colorMappingForSubView(unsigned int subViewIndex) = 0;

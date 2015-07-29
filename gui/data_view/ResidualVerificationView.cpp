@@ -17,8 +17,6 @@
 #include <vtkMath.h>
 #include <vtkPointData.h>
 #include <vtkPolyData.h>
-#include <vtkRenderWindow.h>
-#include <vtkRenderer.h>
 
 #include <threadingzeug/parallelfor.h>
 
@@ -320,15 +318,6 @@ RendererImplementation & ResidualVerificationView::implementation() const
     return *m_implementation;
 }
 
-void ResidualVerificationView::render()
-{
-    if (!isVisible())
-        return;
-
-    assert(m_qvtkMain);
-    m_qvtkMain->GetRenderWindow()->Render();
-}
-
 void ResidualVerificationView::showEvent(QShowEvent * event)
 {
     AbstractDataView::showEvent(event);
@@ -437,14 +426,6 @@ void ResidualVerificationView::initialize()
     m_strategy = std::make_unique<RenderViewStrategyImage2D>(*m_implementation);
 
     m_implementation->setStrategy(m_strategy.get());
-
-    for (unsigned i = 0; i < numberOfSubViews(); ++i)
-    {
-        auto renderer = m_implementation->renderer(i);
-        renderer->SetViewport(  // left to right placement
-            double(i) / double(numberOfSubViews()), 0,
-            double(i + 1) / double(numberOfSubViews()), 1);
-    }
 }
 
 void ResidualVerificationView::setDataInternal(unsigned int subViewIndex, DataObject * dataObject, std::vector<std::unique_ptr<AbstractVisualizedData>> & toDelete)

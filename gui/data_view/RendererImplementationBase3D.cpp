@@ -556,14 +556,6 @@ RendererImplementationBase3D::ViewportSetup & RendererImplementationBase3D::view
     return m_viewportSetups[subViewIndex];
 }
 
-unsigned int RendererImplementationBase3D::subViewIndexAtPos(const QPoint pixelCoordinate) const
-{
-    float uncheckedIndex = std::trunc(float(pixelCoordinate.x()) / m_renderView.width() * m_renderView.numberOfSubViews());
-
-    return static_cast<unsigned int>(
-        std::max(0.0f, std::min(uncheckedIndex, float(m_renderView.numberOfSubViews() - 1u))));
-}
-
 void RendererImplementationBase3D::fetchViewProps(RenderedData * renderedData, unsigned int subViewIndex)
 {
     auto && dataProps = m_viewportSetups[subViewIndex].dataProps;

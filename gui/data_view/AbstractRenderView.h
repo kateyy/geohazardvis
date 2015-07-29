@@ -63,6 +63,10 @@ public:
     void setEnableAxes(bool enabled);
     bool axesEnabled() const;
 
+    void render();
+
+    void ShowInfo(const QStringList &info);
+
 signals:
     /** emitted after changing the list of visible objects */
     void visualizationsChanged();
@@ -71,11 +75,6 @@ signals:
     void activeSubViewChanged(unsigned int activeSubViewIndex);
 
     void beforeDeleteVisualization(AbstractVisualizedData * content);
-
-public:
-    virtual void render() = 0;
-
-    void ShowInfo(const QStringList &info);
 
 protected:
     bool eventFilter(QObject * watched, QEvent * event) override;

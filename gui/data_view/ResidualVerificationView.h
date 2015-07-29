@@ -67,8 +67,6 @@ public:
 
     RendererImplementation & implementation() const override;
 
-    void render() override;
-
 protected:
     void showEvent(QShowEvent * event) override;
 

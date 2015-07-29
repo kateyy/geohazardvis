@@ -36,9 +36,6 @@ public:
     // remove from public interface as soon as possible
     RendererImplementation & implementation() const override;
 
-public:
-    void render() override;
-
 protected:
     void closeEvent(QCloseEvent * event) override;
 

@@ -69,11 +69,6 @@ ContentType RenderView::contentType() const
     return implementation().contentType();
 }
 
-void RenderView::render()
-{
-    implementation().render();
-}
-
 void RenderView::closeEvent(QCloseEvent * event)
 {
     m_closingRequested = true;

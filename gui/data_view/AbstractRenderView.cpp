@@ -123,6 +123,11 @@ bool AbstractRenderView::axesEnabled() const
     return m_axesEnabled;
 }
 
+void AbstractRenderView::render()
+{
+    implementation().render();
+}
+
 void AbstractRenderView::ShowInfo(const QStringList & info)
 {
     setToolTip(info.join('\n'));
