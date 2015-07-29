@@ -2,10 +2,10 @@
 
 #include <cassert>
 
+#include <vtkCommand.h>
 #include <vtkImageData.h>
 #include <vtkPointData.h>
 #include <vtkDataArray.h>
-#include <vtkEventQtSlotConnect.h>
 
 #include <core/rendered_data/RenderedImageData.h>
 #include <core/table_model/QVtkTableModelImage.h>

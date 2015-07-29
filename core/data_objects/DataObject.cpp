@@ -7,8 +7,8 @@
 #include <vtkAlgorithm.h>
 #include <vtkCellData.h>
 #include <vtkCharArray.h>
+#include <vtkCommand.h>
 #include <vtkDataSet.h>
-#include <vtkEventQtSlotConnect.h>
 #include <vtkFieldData.h>
 #include <vtkInformation.h>
 #include <vtkInformationStringKey.h>

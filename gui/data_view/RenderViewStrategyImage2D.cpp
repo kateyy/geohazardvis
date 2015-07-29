@@ -10,16 +10,15 @@
 #include <QToolBar>
 
 #include <vtkCamera.h>
-#include <vtkRenderWindow.h>
+#include <vtkCommand.h>
 #include <vtkCubeAxesActor.h>
-#include <vtkTextProperty.h>
-#include <vtkProperty.h>
-
-#include <vtkLineWidget2.h>
 #include <vtkLineRepresentation.h>
+#include <vtkLineWidget2.h>
 #include <vtkPointHandleRepresentation3D.h>
 #include <vtkPolyData.h>
-#include <vtkEventQtSlotConnect.h>
+#include <vtkProperty.h>
+#include <vtkRenderWindow.h>
+#include <vtkTextProperty.h>
 
 #include <core/DataSetHandler.h>
 #include <core/utility/vtkcamerahelper.h>
@@ -274,10 +273,21 @@ void RenderViewStrategyImage2D::startProfilePlot()
     m_previewRendererConnections << 
         connect(m_previewRenderer, &AbstractDataView::closed, this, &RenderViewStrategyImage2D::abortProfilePlot);
 
-    m_vtkConnect = vtkSmartPointer<vtkEventQtSlotConnect>::New();
-    m_vtkConnect->Connect(m_lineWidget->GetLineRepresentation()->GetLineHandleRepresentation(), vtkCommand::ModifiedEvent, this, SLOT(lineMoved()));
-    m_vtkConnect->Connect(m_lineWidget->GetLineRepresentation()->GetPoint1Representation(), vtkCommand::ModifiedEvent, this, SLOT(lineMoved()));
-    m_vtkConnect->Connect(m_lineWidget->GetLineRepresentation()->GetPoint2Representation(), vtkCommand::ModifiedEvent, this, SLOT(lineMoved()));
+    for (auto it = m_observerTags.begin(); it != m_observerTags.end(); ++it)
+    {
+        it.key()->RemoveObserver(it.value());
+    }
+    m_observerTags.clear();
+
+    auto addLineObservation = [this] (vtkObject * subject)
+    {
+        auto tag = subject->AddObserver(vtkCommand::ModifiedEvent, this, &RenderViewStrategyImage2D::lineMoved);
+        m_observerTags.insert(subject, tag);
+    };
+
+    addLineObservation(m_lineWidget->GetLineRepresentation()->GetLineHandleRepresentation());
+    addLineObservation(m_lineWidget->GetLineRepresentation()->GetPoint1Representation());
+    addLineObservation(m_lineWidget->GetLineRepresentation()->GetPoint2Representation());
 
     m_profilePlotAcceptAction->setVisible(true);
     m_profilePlotAbortAction->setVisible(true);

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QDockWidget>
+#include <QMap>
 #include <QScopedPointer>
 
 #include <vtkSmartPointer.h>
@@ -8,9 +9,8 @@
 #include <gui/gui_api.h>
 
 
+class vtkCamera;
 class vtkObject;
-class vtkCollection;
-class vtkEventQtSlotConnect;
 namespace reflectionzeug
 {
     class PropertyGroup;
@@ -23,8 +23,6 @@ class RendererImplementationPlot;
 
 class GUI_API RendererConfigWidget : public QDockWidget
 {
-    Q_OBJECT
-
 public:
     RendererConfigWidget(QWidget * parent = nullptr);
     ~RendererConfigWidget() override;
@@ -35,10 +33,9 @@ public:
     void setRenderViews(const QList<AbstractRenderView *> & renderViews);
     void setCurrentRenderView(AbstractRenderView * renderView);
 
-private slots:
-    void readCameraStats(vtkObject * caller);
-
 private:
+    void readCameraStats(vtkObject * caller, unsigned long, void *);
+
     void setCurrentRenderView(int index);
     void updateRenderViewTitle(const QString & newTitle);
 
@@ -53,7 +50,5 @@ private:
 
     reflectionzeug::PropertyGroup * m_propertyRoot;
     AbstractRenderView * m_currentRenderView;
-    vtkSmartPointer<vtkEventQtSlotConnect> m_eventConnect;
-    /** vtkEventQtSlotConnect does not increase the reference count of signal sources, so we do this manually */
-    vtkSmartPointer<vtkCollection> m_eventEmitters;
+    QMap<vtkSmartPointer<vtkCamera>, unsigned long> m_cameraObserverTags;
 };

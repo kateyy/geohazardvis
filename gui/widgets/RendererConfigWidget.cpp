@@ -3,15 +3,13 @@
 
 #include <cassert>
 
-#include <vtkCamera.h>
-#include <vtkCollection.h>
-#include <vtkTextProperty.h>
-#include <vtkEventQtSlotConnect.h>
-
 #include <vtkAxis.h>
+#include <vtkCamera.h>
 #include <vtkChartXY.h>
+#include <vtkCommand.h>
 #include <vtkContextScene.h>
 #include <vtkContextView.h>
+#include <vtkTextProperty.h>
 
 #include <reflectionzeug/PropertyGroup.h>
 
@@ -48,8 +46,6 @@ RendererConfigWidget::RendererConfigWidget(QWidget * parent)
     , m_ui(new Ui_RendererConfigWidget())
     , m_propertyRoot(nullptr)
     , m_currentRenderView(nullptr)
-    , m_eventConnect(vtkSmartPointer<vtkEventQtSlotConnect>::New())
-    , m_eventEmitters(vtkSmartPointer<vtkCollection>::New())
 {
     m_ui->setupUi(this);
 
@@ -71,8 +67,11 @@ void RendererConfigWidget::clear()
     m_ui->relatedRenderer->clear();
 
     m_currentRenderView = nullptr;
-    m_eventConnect = vtkSmartPointer<vtkEventQtSlotConnect>::New(); // recreate, discarding all previous connections
-    m_eventEmitters->RemoveAllItems();
+    for (auto it = m_cameraObserverTags.begin(); it != m_cameraObserverTags.end(); ++it)
+    {
+        it.key()->RemoveObserver(it.value());
+    }
+    m_cameraObserverTags.clear();
 
     setCurrentRenderView(-1);
 }
@@ -125,14 +124,14 @@ void RendererConfigWidget::setCurrentRenderView(int index)
     if (lastSingleView && (impl3D = dynamic_cast<RendererImplementationBase3D *>(&lastSingleView->implementation())))
     {
         auto camera = impl3D->camera(0);  // assuming synchronized cameras
-        m_eventConnect->Disconnect(camera, vtkCommand::ModifiedEvent, this, SLOT(readCameraStats(vtkObject *)), this);
-        m_eventEmitters->RemoveItem(camera);
+        auto tag = m_cameraObserverTags.take(camera);
+        camera->RemoveObserver(tag);
     }
     if (currentSingleView && (impl3D = dynamic_cast<RendererImplementationBase3D *>(&currentSingleView->implementation())))
     {
         auto camera = impl3D->camera(0);  // assuming synchronized cameras
-        m_eventConnect->Connect(camera, vtkCommand::ModifiedEvent, this, SLOT(readCameraStats(vtkObject *)), this);
-        m_eventEmitters->AddItem(camera);
+        auto tag = camera->AddObserver(vtkCommand::ModifiedEvent, this, &RendererConfigWidget::readCameraStats);
+        m_cameraObserverTags.insert(camera, tag);
     }
 }
 

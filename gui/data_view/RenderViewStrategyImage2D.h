@@ -3,14 +3,16 @@
 #include <memory>
 #include <vector>
 
+#include <QMap>
+
 #include <vtkSmartPointer.h>
 
 #include <gui/data_view/RenderViewStrategy.h>
 
 
 class QAction;
+class vtkObject;
 class vtkLineWidget2;
-class vtkEventQtSlotConnect;
 
 class AbstractRenderView;
 class DataObject;
@@ -18,8 +20,6 @@ class DataObject;
 
 class GUI_API RenderViewStrategyImage2D : public RenderViewStrategy
 {
-    Q_OBJECT
-
 public:
     RenderViewStrategyImage2D(RendererImplementationBase3D & context);
     ~RenderViewStrategyImage2D() override;
@@ -41,7 +41,9 @@ public:
     QList<DataObject *> filterCompatibleObjects(const QList<DataObject *> & dataObjects, QList<DataObject *> & incompatibleObjects) const override;
     bool canApplyTo(const QList<RenderedData *> & renderedData) override;
 
-private slots:
+private:
+    void initialize();
+
     void startProfilePlot();
     void acceptProfilePlot();
     void abortProfilePlot();
@@ -49,9 +51,6 @@ private slots:
     void lineMoved();
 
     void checkSourceExists();
-
-private:
-    void initialize();
 
 private:
     static const bool s_isRegistered;
@@ -70,5 +69,5 @@ private:
     QList<DataObject *> m_inputData;             // input images that were explicitly set
 
     vtkSmartPointer<vtkLineWidget2> m_lineWidget;
-    vtkSmartPointer<vtkEventQtSlotConnect> m_vtkConnect;
+    QMultiMap<vtkSmartPointer<vtkObject>, unsigned long> m_observerTags;
 };

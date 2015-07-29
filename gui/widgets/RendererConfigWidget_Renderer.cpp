@@ -39,7 +39,7 @@ enum class ProjectionType
 };
 }
 
-void RendererConfigWidget::readCameraStats(vtkObject * caller)
+void RendererConfigWidget::readCameraStats(vtkObject * caller, unsigned long, void *)
 {
     assert(vtkCamera::SafeDownCast(caller));
     vtkCamera * camera = static_cast<vtkCamera *>(caller);
