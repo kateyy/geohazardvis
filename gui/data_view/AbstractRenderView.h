@@ -48,7 +48,7 @@ public:
     virtual DataObject * selectedData() const = 0;
     /** The data visualization that is currently selected by the user. It can be configured in the UI. */
     virtual AbstractVisualizedData * selectedDataVisualization() const = 0;
-    virtual void lookAtData(DataObject * dataObject, vtkIdType itemId) = 0;
+    virtual void lookAtData(DataObject * dataObject, vtkIdType itemId, int subViewIndex = -1) = 0;
 
     virtual unsigned int numberOfSubViews() const;
     unsigned int activeSubViewIndex() const;

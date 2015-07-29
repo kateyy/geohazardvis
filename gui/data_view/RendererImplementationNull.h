@@ -26,8 +26,8 @@ public:
     void setSelectedData(DataObject *, vtkIdType = -1) override;
     DataObject * selectedData() const override;
     vtkIdType selectedIndex() const override;
-    void lookAtData(DataObject *, vtkIdType) override;
-    void resetCamera(bool) override;
+    void lookAtData(DataObject *, vtkIdType, unsigned int) override;
+    void resetCamera(bool, unsigned int) override;
     void setAxesVisibility(bool) override;
     bool canApplyTo(const QList<DataObject *> &) override;
 

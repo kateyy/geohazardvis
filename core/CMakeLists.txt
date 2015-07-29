@@ -158,6 +158,8 @@ set ( SOURCES
     utility/ScalarBarActor.cpp
     utility/vtkcamerahelper.h
     utility/vtkcamerahelper.cpp
+    utility/vtkCameraSynchronization.h
+    utility/vtkCameraSynchronization.cpp
     utility/vtkstringhelper.h
     utility/vtkstringhelper.cpp
 )

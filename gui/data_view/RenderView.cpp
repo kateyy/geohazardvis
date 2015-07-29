@@ -141,7 +141,7 @@ AbstractVisualizedData * RenderView::addDataObject(DataObject * dataObject)
     return newContentPtr;
 }
 
-void RenderView::showDataObjectsImpl(const QList<DataObject *> & uncheckedDataObjects, QList<DataObject *> & incompatibleObjects, unsigned int /*suViewIndex*/)
+void RenderView::showDataObjectsImpl(const QList<DataObject *> & uncheckedDataObjects, QList<DataObject *> & incompatibleObjects, unsigned int /*subViewIndex*/)
 {
     if (uncheckedDataObjects.isEmpty())
         return;
@@ -201,7 +201,7 @@ void RenderView::showDataObjectsImpl(const QList<DataObject *> & uncheckedDataOb
 
     if (aNewObject)
     {
-        implementation().resetCamera(wasEmpty);
+        implementation().resetCamera(wasEmpty, 0);
     }
 
     updateTitle();
@@ -339,9 +339,10 @@ AbstractVisualizedData * RenderView::selectedDataVisualization() const
     return m_dataObjectToVisualization.value(selectedData());
 }
 
-void RenderView::lookAtData(DataObject * dataObject, vtkIdType itemId)
+void RenderView::lookAtData(DataObject * dataObject, vtkIdType itemId, int subViewIndex)
 {
-    implementation().lookAtData(dataObject, itemId);
+    assert(subViewIndex == 0);
+    implementation().lookAtData(dataObject, itemId, 0);
 }
 
 AbstractVisualizedData * RenderView::visualizationFor(DataObject * dataObject, int subViewIndex) const

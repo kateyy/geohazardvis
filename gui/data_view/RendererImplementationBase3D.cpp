@@ -200,21 +200,21 @@ vtkIdType RendererImplementationBase3D::selectedIndex() const
     return m_interactorStyle->highlightedIndex();
 }
 
-void RendererImplementationBase3D::lookAtData(DataObject * dataObject, vtkIdType itemId)
+void RendererImplementationBase3D::lookAtData(DataObject * dataObject, vtkIdType itemId, unsigned int subViewIndex)
 {
+    m_interactorStyle->SetCurrentRenderer(m_viewportSetups[subViewIndex].renderer);
+
     m_interactorStyle->lookAtIndex(dataObject, itemId);
 }
 
-void RendererImplementationBase3D::resetCamera(bool toInitialPosition)
+void RendererImplementationBase3D::resetCamera(bool toInitialPosition, unsigned int subViewIndex)
 {
     if (toInitialPosition)
-        strategy().resetCamera(*camera());
+        strategy().resetCamera(*camera(subViewIndex));
 
-    for (auto && viewport : m_viewportSetups)
-    {
-        if (viewport.dataBounds.IsValid())
-            viewport.renderer->ResetCamera();
-    }
+    auto & viewport = m_viewportSetups[subViewIndex];
+    if (viewport.dataBounds.IsValid())
+        viewport.renderer->ResetCamera();
 
     render();
 }
@@ -272,10 +272,9 @@ vtkRenderer * RendererImplementationBase3D::renderer(unsigned int subViewIndex)
     return m_viewportSetups[subViewIndex].renderer;
 }
 
-vtkCamera * RendererImplementationBase3D::camera()
+vtkCamera * RendererImplementationBase3D::camera(unsigned int subViewIndex)
 {
-    // one camera for all
-    return renderer(0)->GetActiveCamera();
+    return renderer(subViewIndex)->GetActiveCamera();
 }
 
 vtkLightKit * RendererImplementationBase3D::lightKit()
@@ -336,8 +335,6 @@ void RendererImplementationBase3D::initialize()
 
     m_renderWindow = vtkSmartPointer<vtkRenderWindow>::New();
 
-    auto camera = vtkSmartPointer<vtkCamera>::New();
-
     m_viewportSetups.resize(renderView().numberOfSubViews());
 
     for (unsigned int subViewIndex = 0; subViewIndex < renderView().numberOfSubViews(); ++subViewIndex)
@@ -346,7 +343,6 @@ void RendererImplementationBase3D::initialize()
 
         auto renderer = vtkSmartPointer<vtkRenderer>::New();
         renderer->SetBackground(1, 1, 1);
-        renderer->SetActiveCamera(camera);
 
         renderer->RemoveAllLights();
         m_lightKit->AddLightsToRenderer(renderer);
@@ -376,7 +372,7 @@ void RendererImplementationBase3D::initialize()
 
         setupColorMapping(subViewIndex, viewport);
         
-        viewport.axesActor = createAxes(camera);
+        viewport.axesActor = createAxes(renderer->GetActiveCamera());
         renderer->AddViewProp(viewport.axesActor);
         renderer->AddViewProp(viewport.colorMappingLegend);
     }
@@ -385,7 +381,7 @@ void RendererImplementationBase3D::initialize()
     // -- interaction --
 
     m_interactorStyle = vtkSmartPointer<PickingInteractorStyleSwitch>::New();
-    m_interactorStyle->SetDefaultRenderer(m_viewportSetups.front().renderer);
+    m_interactorStyle->SetCurrentRenderer(m_viewportSetups.front().renderer);
 
     m_interactorStyle->addStyle("InteractorStyle3D", vtkSmartPointer<InteractorStyle3D>::New());
     m_interactorStyle->addStyle("InteractorStyleImage", vtkSmartPointer<InteractorStyleImage>::New());
@@ -402,11 +398,11 @@ void RendererImplementationBase3D::initialize()
 
 void RendererImplementationBase3D::assignInteractor()
 {
-    for (auto && viewport : m_viewportSetups)
+    for (auto & viewportSetup : m_viewportSetups)
     {
-        viewport.scalarBarWidget->SetInteractor(m_renderWindow->GetInteractor());
-        viewport.titleWidget->SetInteractor(m_renderWindow->GetInteractor());
-        viewport.titleWidget->On();
+        viewportSetup.scalarBarWidget->SetInteractor(m_renderWindow->GetInteractor());
+        viewportSetup.titleWidget->SetInteractor(m_renderWindow->GetInteractor());
+        viewportSetup.titleWidget->On();
     }
 }
 
@@ -414,21 +410,23 @@ void RendererImplementationBase3D::updateAxes()
 {
     // TODO update only for relevant views
 
-    for (auto && viewport : m_viewportSetups)
+    for (auto & viewportSetup : m_viewportSetups)
     {
 
         // hide axes if we don't have visible objects
-        if (!viewport.dataBounds.IsValid())
+        if (!viewportSetup.dataBounds.IsValid())
         {
-            viewport.axesActor->VisibilityOff();
+            viewportSetup.axesActor->VisibilityOff();
             continue;
         }
 
-        viewport.axesActor->SetVisibility(m_renderView.axesEnabled());
+        viewportSetup.axesActor->SetVisibility(m_renderView.axesEnabled());
 
         double bounds[6];
-        viewport.dataBounds.GetBounds(bounds);
-        viewport.axesActor->SetBounds(bounds);
+        viewportSetup.dataBounds.GetBounds(bounds);
+        viewportSetup.axesActor->SetBounds(bounds);
+
+        viewportSetup.renderer->ResetCameraClippingRange();
     }
 }
 
@@ -438,16 +436,12 @@ void RendererImplementationBase3D::updateBounds()
 
     for (int viewportIndex = 0; viewportIndex < m_viewportSetups.size(); ++viewportIndex)
     {
-        auto & viewportSetup = m_viewportSetups[viewportIndex];
-
-        auto & dataBounds = viewportSetup.dataBounds;
+        auto & dataBounds = m_viewportSetups[viewportIndex].dataBounds;
 
         dataBounds.Reset();
 
         for (AbstractVisualizedData * it : m_renderView.visualizations(viewportIndex))
             dataBounds.AddBounds(it->dataObject().bounds());
-
-        viewportSetup.renderer->ResetCameraClippingRange();
 
     }
 
@@ -456,7 +450,7 @@ void RendererImplementationBase3D::updateBounds()
 
 void RendererImplementationBase3D::addToBounds(RenderedData * renderedData, unsigned int subViewIndex)
 {
-    auto && dataBounds = m_viewportSetups[subViewIndex].dataBounds;
+    auto & dataBounds = m_viewportSetups[subViewIndex].dataBounds;
 
     dataBounds.AddBounds(renderedData->dataObject().bounds());
 
@@ -466,11 +460,11 @@ void RendererImplementationBase3D::addToBounds(RenderedData * renderedData, unsi
 
 void RendererImplementationBase3D::removeFromBounds(RenderedData * renderedData, unsigned int subViewIndex)
 {
-    auto && dataBounds = m_viewportSetups[subViewIndex].dataBounds;
+    auto & dataBounds = m_viewportSetups[subViewIndex].dataBounds;
 
     dataBounds.Reset();
 
-    for (AbstractVisualizedData * it : m_renderView.visualizations())
+    for (AbstractVisualizedData * it : m_renderView.visualizations(subViewIndex))
     {
         if (it == renderedData)
             continue;

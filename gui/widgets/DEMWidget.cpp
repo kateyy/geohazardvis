@@ -167,7 +167,7 @@ void DEMWidget::showEvent(QShowEvent * /*event*/)
 
     vtkSmartPointer<InteractorStyle3D> interactorStyle = vtkSmartPointer<InteractorStyle3D>::New();
     m_ui->qvtkMain->GetInteractor()->SetInteractorStyle(interactorStyle);
-    interactorStyle->SetDefaultRenderer(m_renderer);
+    interactorStyle->SetCurrentRenderer(m_renderer);
 
 
     m_axesActor = vtkSmartPointer<vtkCubeAxesActor>::New();

@@ -26,7 +26,7 @@ public:
 
     DataObject * selectedData() const override;
     AbstractVisualizedData * selectedDataVisualization() const override;
-    void lookAtData(DataObject * dataObject, vtkIdType itemId) override;
+    void lookAtData(DataObject * dataObject, vtkIdType itemId, int subViewIndex = -1) override;
 
     AbstractVisualizedData * visualizationFor(DataObject * dataObject, int subViewIndex = -1) const override;
 

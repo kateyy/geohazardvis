@@ -3,7 +3,6 @@
 
 #include <cassert>
 
-#include <vtkBrush.h>
 #include <vtkCamera.h>
 #include <vtkCollection.h>
 #include <vtkTextProperty.h>
@@ -125,13 +124,15 @@ void RendererConfigWidget::setCurrentRenderView(int index)
     RendererImplementationBase3D * impl3D;
     if (lastSingleView && (impl3D = dynamic_cast<RendererImplementationBase3D *>(&lastSingleView->implementation())))
     {
-        m_eventConnect->Disconnect(impl3D->camera(), vtkCommand::ModifiedEvent, this, SLOT(readCameraStats(vtkObject *)), this);
-        m_eventEmitters->RemoveItem(impl3D->camera());
+        auto camera = impl3D->camera(0);  // assuming synchronized cameras
+        m_eventConnect->Disconnect(camera, vtkCommand::ModifiedEvent, this, SLOT(readCameraStats(vtkObject *)), this);
+        m_eventEmitters->RemoveItem(camera);
     }
     if (currentSingleView && (impl3D = dynamic_cast<RendererImplementationBase3D *>(&currentSingleView->implementation())))
     {
-        m_eventConnect->Connect(impl3D->camera(), vtkCommand::ModifiedEvent, this, SLOT(readCameraStats(vtkObject *)), this);
-        m_eventEmitters->AddItem(impl3D->camera());
+        auto camera = impl3D->camera(0);  // assuming synchronized cameras
+        m_eventConnect->Connect(camera, vtkCommand::ModifiedEvent, this, SLOT(readCameraStats(vtkObject *)), this);
+        m_eventEmitters->AddItem(camera);
     }
 }
 

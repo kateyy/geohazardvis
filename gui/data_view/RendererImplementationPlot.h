@@ -36,8 +36,8 @@ public:
     void setSelectedData(DataObject * dataObject, vtkIdType itemId = -1) override;
     virtual DataObject * selectedData() const override;
     vtkIdType selectedIndex() const override;
-    void lookAtData(DataObject * dataObject, vtkIdType itemId) override;
-    void resetCamera(bool toInitialPosition) override;
+    void lookAtData(DataObject * dataObject, vtkIdType itemId, unsigned int subViewIndex) override;
+    void resetCamera(bool toInitialPosition, unsigned int subViewIndex) override;
 
     void setAxesVisibility(bool visible) override;
 

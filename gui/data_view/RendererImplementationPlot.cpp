@@ -155,11 +155,11 @@ vtkIdType RendererImplementationPlot::selectedIndex() const
     return -1;
 }
 
-void RendererImplementationPlot::lookAtData(DataObject * /*dataObject*/, vtkIdType /*itemId*/)
+void RendererImplementationPlot::lookAtData(DataObject * /*dataObject*/, vtkIdType /*itemId*/, unsigned int /*subViewIndex*/)
 {
 }
 
-void RendererImplementationPlot::resetCamera(bool /*toInitialPosition*/)
+void RendererImplementationPlot::resetCamera(bool /*toInitialPosition*/, unsigned int /*subViewIndex*/)
 {
     m_contextView->ResetCamera();
 

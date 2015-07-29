@@ -69,11 +69,11 @@ vtkIdType RendererImplementationNull::selectedIndex() const
     return -1;
 }
 
-void RendererImplementationNull::lookAtData(DataObject *, vtkIdType)
+void RendererImplementationNull::lookAtData(DataObject *, vtkIdType, unsigned int)
 {
 }
 
-void RendererImplementationNull::resetCamera(bool)
+void RendererImplementationNull::resetCamera(bool, unsigned int)
 {
 }
 

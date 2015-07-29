@@ -28,6 +28,7 @@
 #include <core/data_objects/PolyDataObject.h>
 #include <core/utility/DataExtent.h>
 #include <core/utility/InterpolationHelper.h>
+#include <core/utility/vtkCameraSynchronization.h>
 
 #include <gui/SelectionHandler.h>
 #include <gui/data_view/RendererImplementationResidual.h>
@@ -198,9 +199,20 @@ AbstractVisualizedData * ResidualVerificationView::selectedDataVisualization() c
     return nullptr;
 }
 
-void ResidualVerificationView::lookAtData(DataObject * dataObject, vtkIdType itemId)
+void ResidualVerificationView::lookAtData(DataObject * dataObject, vtkIdType itemId, int subViewIndex)
 {
-    m_implementation->lookAtData(dataObject, itemId);
+    if (subViewIndex == -1)
+    {
+        for (unsigned int i = 0; i < numberOfSubViews(); ++i)
+        {
+            if (dataAt(i) != dataObject)
+                continue;
+
+            m_implementation->lookAtData(dataObject, itemId, i);
+        }
+    }
+
+    m_implementation->lookAtData(dataObject, itemId, static_cast<unsigned int>(subViewIndex));
 }
 
 AbstractVisualizedData * ResidualVerificationView::visualizationFor(DataObject * dataObject, int subViewIndex) const
@@ -426,6 +438,10 @@ void ResidualVerificationView::initialize()
     m_strategy = std::make_unique<RenderViewStrategyImage2D>(*m_implementation);
 
     m_implementation->setStrategy(m_strategy.get());
+
+    m_cameraSync = std::make_unique<vtkCameraSynchronization>();
+    for (unsigned int i = 0; i < numberOfSubViews(); ++i)
+        m_cameraSync->add(m_implementation->renderer(i));
 }
 
 void ResidualVerificationView::setDataInternal(unsigned int subViewIndex, DataObject * dataObject, std::vector<std::unique_ptr<AbstractVisualizedData>> & toDelete)
@@ -670,7 +686,7 @@ void ResidualVerificationView::updateGuiAfterDataChange()
     m_strategy->setInputData(validInputData);
 
     if (!validInputData.isEmpty())
-        implementation().resetCamera(true);
+        implementation().resetCamera(true, 0);
 
     render();
 }

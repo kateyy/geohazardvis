@@ -17,6 +17,7 @@ class ImageDataObject;
 class PolyDataObject;
 class RendererImplementationResidual;
 class RenderViewStrategyImage2D;
+class vtkCameraSynchronization;
 
 
 class GUI_API ResidualVerificationView : public AbstractRenderView
@@ -56,7 +57,7 @@ public:
 
     DataObject * selectedData() const override;
     AbstractVisualizedData * selectedDataVisualization() const override;
-    void lookAtData(DataObject * dataObject, vtkIdType itemId) override;
+    void lookAtData(DataObject * dataObject, vtkIdType itemId, int subViewIndex = -1) override;
 
     AbstractVisualizedData * visualizationFor(DataObject * dataObject, int subViewIndex = -1) const override;
 
@@ -136,6 +137,7 @@ private:
 
     std::unique_ptr<RendererImplementationResidual> m_implementation;
     std::unique_ptr<RenderViewStrategyImage2D> m_strategy;
+    std::unique_ptr<vtkCameraSynchronization> m_cameraSync;
 
     std::array<std::unique_ptr<AbstractVisualizedData>, 3> m_visualizations;
 };

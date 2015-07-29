@@ -44,7 +44,8 @@ void RendererConfigWidget::readCameraStats(vtkObject * caller)
     assert(vtkCamera::SafeDownCast(caller));
     vtkCamera * camera = static_cast<vtkCamera *>(caller);
     assert(m_currentRenderView && dynamic_cast<RendererImplementationBase3D *>(&m_currentRenderView->implementation()));
-    assert(static_cast<RendererImplementationBase3D *>(&m_currentRenderView->implementation())->camera() == camera);
+    // assuming synchronized cameras for now
+    assert(static_cast<RendererImplementationBase3D *>(&m_currentRenderView->implementation())->camera(0) == camera);
 
     std::function<void(AbstractProperty &)> updateFunc = [&updateFunc] (AbstractProperty & property)
     {
@@ -137,7 +138,8 @@ reflectionzeug::PropertyGroup * RendererConfigWidget::createPropertyGroupRendere
 
     auto cameraGroup = root->addGroup("Camera");
     {
-        vtkCamera & camera = *impl->camera();
+        // assmuming synchronized cameras for now
+        vtkCamera & camera = *impl->camera(0);
 
         if (contains3dData)
         {
