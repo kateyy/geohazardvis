@@ -2,6 +2,8 @@
 
 #include <cassert>
 
+#include <QMouseEvent>
+
 #include <QVTKWidget.h>
 #include <vtkRenderer.h>
 #include <vtkRenderWindow.h>
@@ -41,13 +43,7 @@ RendererImplementationBase3D::RendererImplementationBase3D(
     , m_strategy(nullptr)
     , m_isInitialized(false)
     , m_emptyStrategy(new RenderViewStrategyNull(*this, this))
-    , m_colorMapping(nullptr)
 {
-}
-
-QString RendererImplementationBase3D::name() const
-{
-    return "Renderer 3D";
 }
 
 ContentType RendererImplementationBase3D::contentType() const
@@ -93,11 +89,16 @@ void RendererImplementationBase3D::activate(QVTKWidget * qvtkWidget)
     m_renderWindow->GetInteractor()->SetInteractorStyle(m_interactorStyle);
 
     assignInteractor();
+
+    qvtkWidget->installEventFilter(this);
+    connect(&m_renderView, &AbstractRenderView::activeSubViewChanged, this, &RendererImplementationBase3D::updateActiveSubView);
 }
 
 void RendererImplementationBase3D::deactivate(QVTKWidget * qvtkWidget)
 {
     RendererImplementation::deactivate(qvtkWidget);
+
+    qvtkWidget->removeEventFilter(this);
 
     // this is our render window, so remove it from the widget
     qvtkWidget->SetRenderWindow(nullptr);
@@ -115,6 +116,17 @@ void RendererImplementationBase3D::render()
 vtkRenderWindowInteractor * RendererImplementationBase3D::interactor()
 {
     return m_renderWindow->GetInteractor();
+}
+
+bool RendererImplementationBase3D::eventFilter(QObject * /*watched*/, QEvent * event)
+{
+    if (event->type() != QEvent::MouseMove)
+        return false;
+
+    auto mouseMove = static_cast<QMouseEvent *>(event);
+    m_renderView.setActiveSubView(subViewIndexAtPos(mouseMove->pos()));
+
+    return false;
 }
 
 void RendererImplementationBase3D::onAddContent(AbstractVisualizedData * content, unsigned int subViewIndex)
@@ -178,9 +190,12 @@ void RendererImplementationBase3D::onRenderViewVisualizationChanged()
 {
     RendererImplementation::onRenderViewVisualizationChanged();
 
-    colorMapping()->setVisualizedData(m_renderView.visualizations());
-    if (interactorStyle())
-        interactorStyle()->setRenderedData(renderedData());
+    for (unsigned int i = 0; i < m_renderView.numberOfSubViews(); ++i)
+    {
+        colorMapping(i)->setVisualizedData(m_renderView.visualizations(i));
+        if (interactorStyle())
+            interactorStyle()->setRenderedData(renderedData());
+    }
 }
 
 void RendererImplementationBase3D::setSelectedData(DataObject * dataObject, vtkIdType itemId)
@@ -286,15 +301,16 @@ vtkTextWidget * RendererImplementationBase3D::titleWidget(unsigned int subViewIn
     return m_viewportSetups[subViewIndex].titleWidget;
 }
 
-ColorMapping * RendererImplementationBase3D::colorMapping()
+ColorMapping * RendererImplementationBase3D::colorMapping(unsigned int subViewIndex)
 {
-    assert(m_colorMapping);
-    return m_colorMapping;
+    assert(m_viewportSetups[subViewIndex].colorMapping);
+    return m_viewportSetups[subViewIndex].colorMapping;
 }
 
-vtkScalarBarWidget * RendererImplementationBase3D::colorLegendWidget()
+vtkScalarBarWidget * RendererImplementationBase3D::colorLegendWidget(unsigned int subViewIndex)
 {
-    return m_scalarBarWidget;
+    assert(m_viewportSetups[subViewIndex].scalarBarWidget);
+    return m_viewportSetups[subViewIndex].scalarBarWidget;
 }
 
 vtkCubeAxesActor * RendererImplementationBase3D::axesActor(unsigned int subViewIndex)
@@ -333,15 +349,14 @@ void RendererImplementationBase3D::initialize()
 
     m_renderWindow = vtkSmartPointer<vtkRenderWindow>::New();
 
-    m_colorMapping = new ColorMapping(this);
-    setupColorMappingLegend();
-
     auto camera = vtkSmartPointer<vtkCamera>::New();
 
     m_viewportSetups.resize(renderView().numberOfSubViews());
 
-    for (auto && viewport : m_viewportSetups)
+    for (unsigned int subViewIndex = 0; subViewIndex < renderView().numberOfSubViews(); ++subViewIndex)
     {
+        auto & viewport = m_viewportSetups[subViewIndex];
+
         auto renderer = vtkSmartPointer<vtkRenderer>::New();
         renderer->SetBackground(1, 1, 1);
         renderer->SetActiveCamera(camera);
@@ -371,17 +386,19 @@ void RendererImplementationBase3D::initialize()
         titleWidget->SetRepresentation(titleRepr);
         titleWidget->SetTextActor(titleActor);
         titleWidget->SelectableOff();
+
+        setupColorMapping(subViewIndex, viewport);
         
         viewport.axesActor = createAxes(camera);
         renderer->AddViewProp(viewport.axesActor);
-        renderer->AddViewProp(m_colorMappingLegend);
+        renderer->AddViewProp(viewport.colorMappingLegend);
     }
 
 
     // -- interaction --
 
     m_interactorStyle = vtkSmartPointer<PickingInteractorStyleSwitch>::New();
-    m_interactorStyle->SetDefaultRenderer(m_viewportSetups.first().renderer);   // TODO
+    m_interactorStyle->SetDefaultRenderer(m_viewportSetups.front().renderer);
 
     m_interactorStyle->addStyle("InteractorStyle3D", vtkSmartPointer<InteractorStyle3D>::New());
     m_interactorStyle->addStyle("InteractorStyleImage", vtkSmartPointer<InteractorStyleImage>::New());
@@ -398,10 +415,9 @@ void RendererImplementationBase3D::initialize()
 
 void RendererImplementationBase3D::assignInteractor()
 {
-    m_scalarBarWidget->SetInteractor(m_renderWindow->GetInteractor());
-
     for (auto && viewport : m_viewportSetups)
     {
+        viewport.scalarBarWidget->SetInteractor(m_renderWindow->GetInteractor());
         viewport.titleWidget->SetInteractor(m_renderWindow->GetInteractor());
         viewport.titleWidget->On();
     }
@@ -516,20 +532,29 @@ vtkSmartPointer<vtkCubeAxesActor> RendererImplementationBase3D::createAxes(vtkCa
     return axesActor;
 }
 
-void RendererImplementationBase3D::setupColorMappingLegend()
+void RendererImplementationBase3D::setupColorMapping(unsigned int subViewIndex, ViewportSetup & viewportSetup)
 {
-    m_colorMappingLegend = m_colorMapping->colorMappingLegend();
+    viewportSetup.colorMapping = colorMappingForSubView(subViewIndex);
+
+    viewportSetup.colorMappingLegend = viewportSetup.colorMapping->colorMappingLegend();
 
     auto repr = vtkSmartPointer<vtkScalarBarRepresentation>::New();
-    repr->SetScalarBarActor(m_colorMappingLegend);
+    repr->SetScalarBarActor(viewportSetup.colorMappingLegend);
 
-    m_scalarBarWidget = vtkSmartPointer<vtkScalarBarWidget>::New();
-    m_scalarBarWidget->SetScalarBarActor(m_colorMappingLegend);
-    m_scalarBarWidget->SetRepresentation(repr);
-    m_scalarBarWidget->EnabledOff();
+    viewportSetup.scalarBarWidget = vtkSmartPointer<vtkScalarBarWidget>::New();
+    viewportSetup.scalarBarWidget->SetScalarBarActor(viewportSetup.colorMappingLegend);
+    viewportSetup.scalarBarWidget->SetRepresentation(repr);
+    viewportSetup.scalarBarWidget->SetCurrentRenderer(viewportSetup.renderer);
+    viewportSetup.scalarBarWidget->EnabledOff();
 
-    connect(m_colorMapping, &ColorMapping::colorLegendVisibilityChanged,
-        [this] (bool visible) { m_scalarBarWidget->SetEnabled(visible); });
+    connect(viewportSetup.colorMapping, &ColorMapping::colorLegendVisibilityChanged,
+        [&viewportSetup] (bool visible) { viewportSetup.scalarBarWidget->SetEnabled(visible); });
+}
+
+void RendererImplementationBase3D::updateActiveSubView(unsigned int subViewIndex)
+{
+    auto & viewport = m_viewportSetups[subViewIndex];
+    m_interactorStyle->SetDefaultRenderer(viewport.renderer);
 }
 
 RenderViewStrategy & RendererImplementationBase3D::strategy() const
@@ -545,6 +570,14 @@ RendererImplementationBase3D::ViewportSetup & RendererImplementationBase3D::view
 {
     assert(subViewIndex < unsigned(m_viewportSetups.size()));
     return m_viewportSetups[subViewIndex];
+}
+
+unsigned int RendererImplementationBase3D::subViewIndexAtPos(const QPoint pixelCoordinate) const
+{
+    float uncheckedIndex = std::trunc(float(pixelCoordinate.x()) / m_renderView.width() * m_renderView.numberOfSubViews());
+
+    return static_cast<unsigned int>(
+        std::max(0.0f, std::min(uncheckedIndex, float(m_renderView.numberOfSubViews()))));
 }
 
 void RendererImplementationBase3D::fetchViewProps(RenderedData * renderedData, unsigned int subViewIndex)

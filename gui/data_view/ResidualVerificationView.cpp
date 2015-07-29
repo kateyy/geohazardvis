@@ -32,7 +32,7 @@
 #include <core/utility/InterpolationHelper.h>
 
 #include <gui/SelectionHandler.h>
-#include <gui/data_view/RendererImplementationBase3D.h>
+#include <gui/data_view/RendererImplementationResidual.h>
 #include <gui/data_view/RenderViewStrategyImage2D.h>
 #include <gui/data_view/RenderViewStrategy3D.h>
 
@@ -410,7 +410,7 @@ void ResidualVerificationView::initialize()
     if (m_implementation)
         return;
 
-    m_implementation = std::make_unique<RendererImplementationBase3D>(*this);
+    m_implementation = std::make_unique<RendererImplementationResidual>(*this);
     m_implementation->activate(m_qvtkMain);
 
     m_strategy = new RenderViewStrategyImage2D(*m_implementation, m_implementation.get());

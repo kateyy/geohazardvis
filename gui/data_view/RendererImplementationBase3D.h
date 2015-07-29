@@ -40,8 +40,6 @@ public:
         AbstractRenderView & renderView,
         QObject * parent = nullptr);
 
-    QString name() const override;
-
     ContentType contentType() const override;
 
     bool canApplyTo(const QList<DataObject *> & data) override;
@@ -79,9 +77,9 @@ public:
 
     vtkLightKit * lightKit();
 
-    vtkTextWidget * titleWidget(unsigned int subViewIndex = 0);
-    ColorMapping * colorMapping();
-    vtkScalarBarWidget * colorLegendWidget();
+    vtkTextWidget * titleWidget(unsigned int subViewIndex);
+    ColorMapping * colorMapping(unsigned int subViewIndex);
+    vtkScalarBarWidget * colorLegendWidget(unsigned int subViewIndex);
 
     vtkCubeAxesActor * axesActor(unsigned int subViewIndex = 0);
 
@@ -97,11 +95,18 @@ protected:
         QMap<RenderedData *, vtkSmartPointer<vtkPropCollection>> dataProps;
         vtkBoundingBox dataBounds;
 
+        // Color mapping that is used for this sub-view. It may be shared with another view
+        ColorMapping * colorMapping;
+        vtkSmartPointer<vtkScalarBarWidget> scalarBarWidget;
+        vtkScalarBarActor * colorMappingLegend;
+
         vtkSmartPointer<vtkCubeAxesActor> axesActor;
         vtkSmartPointer<vtkTextWidget> titleWidget;
     };
 
 protected:
+    bool eventFilter(QObject * watched, QEvent * event) override;
+
     void onAddContent(AbstractVisualizedData * content, unsigned int subViewIndex) override;
     void onRemoveContent(AbstractVisualizedData * content, unsigned int subViewIndex) override;
     virtual void onDataVisibilityChanged(AbstractVisualizedData * content, unsigned int subViewIndex);
@@ -110,6 +115,11 @@ protected:
     RenderViewStrategy & strategy() const;
     ViewportSetup & viewportSetup(unsigned int subViewIndex = 0);
 
+    unsigned int subViewIndexAtPos(const QPoint pixelCoordinate) const;
+
+    /** Provide a ColorMapping instance to be used with the specified sub-view.
+      * The ownership of the ColorMapping will remain in sub-classes that implement this function. */
+    virtual ColorMapping * colorMappingForSubView(unsigned int subViewIndex) = 0;
 
 private:
     void initialize();
@@ -121,7 +131,9 @@ private:
     void addToBounds(RenderedData * renderedData, unsigned int subViewIndex);
     void removeFromBounds(RenderedData * renderedData, unsigned int subViewIndex);
     vtkSmartPointer<vtkCubeAxesActor> createAxes(vtkCamera * camera);
-    void setupColorMappingLegend();
+    void setupColorMapping(unsigned int subViewIndex, ViewportSetup & viewportSetup);
+
+    void updateActiveSubView(unsigned int subViewIndex);
 
 private slots:
     /** scan rendered data for changed attribute props (e.g., vectors) */
@@ -143,13 +155,6 @@ private:
 
     vtkSmartPointer<PickingInteractorStyleSwitch> m_interactorStyle;
 
-
     // -- contents and annotation --
-
-    // feature that are used in all viewports
-    ColorMapping * m_colorMapping;
-    vtkSmartPointer<vtkScalarBarWidget> m_scalarBarWidget;
-    vtkScalarBarActor * m_colorMappingLegend;
-
     QVector<ViewportSetup> m_viewportSetups;
 };

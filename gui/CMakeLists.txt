@@ -30,6 +30,8 @@ set ( SOURCES
     data_view/RendererImplementationBase3D.cpp
     data_view/RendererImplementationPlot.h
     data_view/RendererImplementationPlot.cpp
+    data_view/RendererImplementationResidual.h
+    data_view/RendererImplementationResidual.cpp
     data_view/RendererImplementationSwitch.h
     data_view/RendererImplementationSwitch.cpp
     data_view/RenderViewStrategy.h

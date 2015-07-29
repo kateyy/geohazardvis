@@ -19,6 +19,11 @@ RendererImplementation3D::RendererImplementation3D(AbstractRenderView & renderVi
 
 RendererImplementation3D::~RendererImplementation3D() = default;
 
+QString RendererImplementation3D::name() const
+{
+    return "Renderer 3D";
+}
+
 QList<DataObject *> RendererImplementation3D::filterCompatibleObjects(
     const QList<DataObject *> & dataObjects,
     QList<DataObject *> & incompatibleObjects)
@@ -59,4 +64,13 @@ void RendererImplementation3D::onRenderViewVisualizationChanged()
 
     if (interactorStyle())
         interactorStyle()->setRenderedData(renderedData());
+}
+
+ColorMapping * RendererImplementation3D::colorMappingForSubView(unsigned int /*subViewIndex*/)
+{
+    if (!m_colorMapping)
+    {
+        m_colorMapping = std::make_unique<ColorMapping>();
+    }
+    return m_colorMapping.get();
 }

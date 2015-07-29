@@ -81,16 +81,16 @@ reflectionzeug::PropertyGroup * RendererConfigWidget::createPropertyGroupRendere
     if (renderView->numberOfSubViews() == 1)
     {
         root->addProperty<QString>("Title",
-            [impl] () { return QString::fromUtf8(impl->titleWidget()->GetTextActor()->GetInput()); },
+            [impl] () { return QString::fromUtf8(impl->titleWidget(0)->GetTextActor()->GetInput()); },
             [impl, renderView] (const QString & title) {
-            impl->titleWidget()->GetTextActor()->SetInput(title.toUtf8().data());
+            impl->titleWidget(0)->GetTextActor()->SetInput(title.toUtf8().data());
             renderView->render();
         });
 
         root->addProperty<int>("TitleFontSize",
-            [impl] () { return impl->titleWidget()->GetTextActor()->GetTextProperty()->GetFontSize(); },
+            [impl] () { return impl->titleWidget(0)->GetTextActor()->GetTextProperty()->GetFontSize(); },
             [impl, renderView] (const int & fontSize) {
-            impl->titleWidget()->GetTextActor()->GetTextProperty()->SetFontSize(fontSize);
+            impl->titleWidget(0)->GetTextActor()->GetTextProperty()->SetFontSize(fontSize);
             renderView->render();
         })
             ->setOption("title", "Title Font Size");

@@ -7,6 +7,7 @@
 
 AbstractRenderView::AbstractRenderView(int index, QWidget * parent, Qt::WindowFlags flags)
     : AbstractDataView(index, parent, flags)
+    , m_activeSubViewIndex(0)
     , m_axesEnabled(true)
 {
 }
@@ -82,6 +83,27 @@ unsigned int AbstractRenderView::numberOfSubViews() const
     return 1;
 }
 
+unsigned int AbstractRenderView::activeSubViewIndex() const
+{
+    return m_activeSubViewIndex;
+}
+
+void AbstractRenderView::setActiveSubView(unsigned int subViewIndex)
+{
+    assert(subViewIndex < numberOfSubViews());
+    if (subViewIndex >= numberOfSubViews())
+        return;
+
+    if (m_activeSubViewIndex == subViewIndex)
+        return;
+
+    m_activeSubViewIndex = subViewIndex;
+
+    activeSubViewChangedEvent(m_activeSubViewIndex);
+
+    emit activeSubViewChanged(m_activeSubViewIndex);
+}
+
 void AbstractRenderView::setEnableAxes(bool enabled)
 {
     if (m_axesEnabled == enabled)
@@ -100,4 +122,8 @@ bool AbstractRenderView::axesEnabled() const
 void AbstractRenderView::ShowInfo(const QStringList & info)
 {
     setToolTip(info.join('\n'));
+}
+
+void AbstractRenderView::activeSubViewChangedEvent(unsigned int /*subViewIndex*/)
+{
 }

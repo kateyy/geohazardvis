@@ -51,6 +51,8 @@ public:
     virtual void lookAtData(DataObject * dataObject, vtkIdType itemId) = 0;
 
     virtual unsigned int numberOfSubViews() const;
+    unsigned int activeSubViewIndex() const;
+    void setActiveSubView(unsigned int subViewIndex);
 
     virtual vtkRenderWindow * renderWindow() = 0;
     virtual const vtkRenderWindow * renderWindow() const = 0;
@@ -66,6 +68,7 @@ signals:
     void visualizationsChanged();
 
     void selectedDataChanged(AbstractRenderView * renderView, DataObject * dataObject);
+    void activeSubViewChanged(unsigned int activeSubViewIndex);
 
     void beforeDeleteVisualization(AbstractVisualizedData * content);
 
@@ -83,8 +86,11 @@ protected:
     virtual void prepareDeleteDataImpl(const QList<DataObject *> & dataObjects) = 0;
     virtual QList<AbstractVisualizedData *> visualizationsImpl(int subViewIndex) const = 0;
 
+    virtual void activeSubViewChangedEvent(unsigned int subViewIndex);
     virtual void axesEnabledChangedEvent(bool enabled) = 0;
 
 private:
     bool m_axesEnabled;
+
+    unsigned int m_activeSubViewIndex;
 };

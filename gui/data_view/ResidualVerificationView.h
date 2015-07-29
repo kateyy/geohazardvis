@@ -15,7 +15,7 @@ class QComboBox;
 class ColorMapping;
 class ImageDataObject;
 class PolyDataObject;
-class RendererImplementationBase3D;
+class RendererImplementationResidual;
 class RenderViewStrategyImage2D;
 
 
@@ -135,7 +135,7 @@ private:
     DataObject * m_modelData;
     std::unique_ptr<DataObject> m_residual;
 
-    std::unique_ptr<RendererImplementationBase3D> m_implementation;
+    std::unique_ptr<RendererImplementationResidual> m_implementation;
     RenderViewStrategyImage2D * m_strategy;
 
     std::array<std::unique_ptr<AbstractVisualizedData>, 3> m_visualizations;

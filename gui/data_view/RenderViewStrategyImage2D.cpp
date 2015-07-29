@@ -211,7 +211,7 @@ void RenderViewStrategyImage2D::startProfilePlot()
 
     // create profiles
 
-    auto scalars = m_context.colorMapping()->currentScalarsName();
+    auto scalars = m_context.colorMapping(0)->currentScalarsName();
 
     for (auto inputImage : m_currentPlottingImages)
     {

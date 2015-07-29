@@ -251,7 +251,8 @@ void ColorMappingChooser::guiLegendPositionChanged(const QString & position)
     if (!m_mapping || !m_renderView)
         return;
 
-    vtkScalarBarRepresentation * representation = m_renderViewImpl->colorLegendWidget()->GetScalarBarRepresentation();
+    unsigned int activeViewIndex = m_renderView->activeSubViewIndex();
+    vtkScalarBarRepresentation * representation = m_renderViewImpl->colorLegendWidget(activeViewIndex)->GetScalarBarRepresentation();
 
     m_movingColorLegend = true;
 
@@ -399,7 +400,7 @@ void ColorMappingChooser::checkRenderViewColorMapping()
     if (!m_renderViewImpl)
         return;
 
-    m_mapping = m_renderViewImpl->colorMapping();
+    m_mapping = m_renderViewImpl->colorMapping(m_renderView->activeSubViewIndex());
     if (m_mapping)
         m_legend = dynamic_cast<OrientedScalarBarActor *>(m_mapping->colorMappingLegend());
 
