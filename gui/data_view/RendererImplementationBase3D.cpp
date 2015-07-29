@@ -36,10 +36,8 @@
 #include <gui/data_view/RenderViewStrategyNull.h>
 
 
-RendererImplementationBase3D::RendererImplementationBase3D(
-    AbstractRenderView & renderView,
-    QObject * parent)
-    : RendererImplementation(renderView, parent)
+RendererImplementationBase3D::RendererImplementationBase3D(AbstractRenderView & renderView)
+    : RendererImplementation(renderView)
     , m_strategy(nullptr)
     , m_isInitialized(false)
     , m_emptyStrategy(new RenderViewStrategyNull(*this, this))

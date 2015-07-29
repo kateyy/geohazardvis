@@ -17,7 +17,7 @@ class Context2DData;
 class RendererImplementationPlot : public RendererImplementation
 {
 public:
-    RendererImplementationPlot(AbstractRenderView & renderView, QObject * parent = nullptr);
+    RendererImplementationPlot(AbstractRenderView & renderView);
 
     QString name() const override;
 

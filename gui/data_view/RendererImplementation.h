@@ -25,7 +25,7 @@ class RendererImplementation : public QObject
     Q_OBJECT
 
 public:
-    RendererImplementation(AbstractRenderView & renderView, QObject * parent = nullptr);
+    RendererImplementation(AbstractRenderView & renderView);
     ~RendererImplementation() override;
 
     AbstractRenderView & renderView() const;

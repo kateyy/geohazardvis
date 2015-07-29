@@ -11,7 +11,7 @@ class vtkRenderer;
 class RendererImplementationNull : public RendererImplementation
 {
 public:
-    RendererImplementationNull(AbstractRenderView & renderView, QObject * parent = nullptr);
+    RendererImplementationNull(AbstractRenderView & renderView);
 
     QString name() const override;
     ContentType contentType() const override;

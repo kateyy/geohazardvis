@@ -36,9 +36,7 @@ This class requires a valid ColorMapping and vtkRenderWindow to be passed to the
 class RendererImplementationBase3D : public RendererImplementation
 {
 public:
-    RendererImplementationBase3D(
-        AbstractRenderView & renderView,
-        QObject * parent = nullptr);
+    RendererImplementationBase3D(AbstractRenderView & renderView);
 
     ContentType contentType() const override;
 

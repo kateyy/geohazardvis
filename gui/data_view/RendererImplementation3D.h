@@ -10,7 +10,7 @@ class RendererImplementation3D : public RendererImplementationBase3D
     Q_OBJECT
 
 public:
-    RendererImplementation3D(AbstractRenderView & renderView, QObject * parent = nullptr);
+    RendererImplementation3D(AbstractRenderView & renderView);
     ~RendererImplementation3D() override;
 
     QString name() const override;

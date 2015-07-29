@@ -3,8 +3,8 @@
 #include <data_view/AbstractRenderView.h>
 
 
-RendererImplementation::RendererImplementation(AbstractRenderView & renderView, QObject * parent)
-    : QObject(parent)
+RendererImplementation::RendererImplementation(AbstractRenderView & renderView)
+    : QObject()
     , m_renderView(renderView)
 {
 }

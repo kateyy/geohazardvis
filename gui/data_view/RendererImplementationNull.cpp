@@ -8,8 +8,8 @@
 #include <core/types.h>
 
 
-RendererImplementationNull::RendererImplementationNull(AbstractRenderView & renderView, QObject * parent)
-    : RendererImplementation(renderView, parent)
+RendererImplementationNull::RendererImplementationNull(AbstractRenderView & renderView)
+    : RendererImplementation(renderView)
 {
 }
 

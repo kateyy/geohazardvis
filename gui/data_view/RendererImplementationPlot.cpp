@@ -19,8 +19,8 @@
 bool RendererImplementationPlot::s_isRegistered = RendererImplementation::registerImplementation<RendererImplementationPlot>();
 
 
-RendererImplementationPlot::RendererImplementationPlot(AbstractRenderView & renderView, QObject * parent)
-    : RendererImplementation(renderView, parent)
+RendererImplementationPlot::RendererImplementationPlot(AbstractRenderView & renderView)
+    : RendererImplementation(renderView)
     , m_isInitialized(false)
     , m_axesAutoUpdate(true)
 {

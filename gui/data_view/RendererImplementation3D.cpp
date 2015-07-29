@@ -12,8 +12,8 @@
 bool RendererImplementation3D::s_isRegistered = RendererImplementation::registerImplementation<RendererImplementation3D>();
 
 
-RendererImplementation3D::RendererImplementation3D(AbstractRenderView & renderView, QObject * parent)
-    : RendererImplementationBase3D(renderView, parent)
+RendererImplementation3D::RendererImplementation3D(AbstractRenderView & renderView)
+    : RendererImplementationBase3D(renderView)
 {
 }
 
