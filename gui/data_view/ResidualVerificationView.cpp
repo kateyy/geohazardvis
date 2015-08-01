@@ -10,6 +10,7 @@
 #include <QDebug>
 #include <QDoubleSpinBox>
 #include <QToolBar>
+#include <QtConcurrent/QtConcurrent>
 
 #include <QVTKWidget.h>
 #include <vtkCellData.h>
@@ -73,7 +74,10 @@ ResidualVerificationView::ResidualVerificationView(int index, QWidget * parent, 
     , m_modelData(nullptr)
     , m_implementation(nullptr)
     , m_strategy(nullptr)
+    , m_updateWatcher(std::make_unique<QFutureWatcher<void>>())
 {
+    connect(m_updateWatcher.get(), &QFutureWatcher<void>::finished, this, &ResidualVerificationView::handleUpdateFinished);
+
     auto layout = new QBoxLayout(QBoxLayout::Direction::TopToBottom);
     layout->setMargin(0);
     layout->setSpacing(0);
@@ -108,6 +112,7 @@ ResidualVerificationView::ResidualVerificationView(int index, QWidget * parent, 
         losEdit->setValue(m_inSARLineOfSight[i]);
         connect(losEdit, static_cast<void(QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), [this, i, losEdit] (double val) {
             m_inSARLineOfSight[i] = val;
+            updateResidualAsync();
         });
         connect(this, &ResidualVerificationView::lineOfSightChanged, [losEdit, i] (const vtkVector3d & los) {
             losEdit->setValue(los[i]);
@@ -270,7 +275,7 @@ void ResidualVerificationView::setInterpolationMode(InterpolationMode mode)
 
     m_interpolationMode = mode;
 
-    //updateResidual();
+    updateResidualAsync();
 }
 
 ResidualVerificationView::InterpolationMode ResidualVerificationView::interpolationMode() const
@@ -288,11 +293,8 @@ void ResidualVerificationView::setDataHelper(unsigned int subViewIndex, DataObje
     std::vector<std::unique_ptr<AbstractVisualizedData>> toDeleteInternal;
     setDataInternal(subViewIndex, data, toDeleteInternal);
 
-    std::unique_ptr<DataObject> oldResidual; // to be deleted at the end of this function
-
-    // create a residual only if we didn't just set one
-    if (subViewIndex != 2 || !data)
-        oldResidual = updateResidual(toDeleteInternal);
+    if (subViewIndex != residualIndex)
+        updateResidualAsync();
 
     // update GUI before actually deleting old visualization data
 
@@ -401,6 +403,8 @@ void ResidualVerificationView::prepareDeleteDataImpl(const QList<DataObject *> &
         setDataHelper(modelIndex, nullptr, true, &toDelete);
     assert(!dataObjects.contains(m_residual.get()));
 
+    updateResidualAsync();
+
     updateGuiAfterDataChange();
 }
 
@@ -478,16 +482,61 @@ void ResidualVerificationView::setDataInternal(unsigned int subViewIndex, DataOb
     }
 }
 
-std::unique_ptr<DataObject> ResidualVerificationView::updateResidual(std::vector<std::unique_ptr<AbstractVisualizedData>> & toDelete)
+void ResidualVerificationView::updateResidualAsync()
 {
+    assert(!m_updateWatcher->isRunning());
+
+    if (m_updateWatcher->isRunning())
+    {
+        qDebug() << "Residual update still running!";
+        return;
+    }
+
+    toolBar()->setEnabled(false);
+    QCoreApplication::processEvents();
+
+    assert(!m_newResidual);
+
+    auto future = QtConcurrent::run(this, &ResidualVerificationView::updateResidual);
+    m_updateWatcher->setFuture(future);
+}
+
+void ResidualVerificationView::handleUpdateFinished()
+{
+    auto oldResidual = std::move(m_residual);
+    std::vector<std::unique_ptr<AbstractVisualizedData>> oldVisList;
+
+    // TODO replace the double set
+    setDataInternal(residualIndex, nullptr, oldVisList);
+    assert(oldVisList.size() <= 1);
+
+    std::unique_ptr<AbstractVisualizedData> oldVis;
+    if (!oldVisList.empty())
+    {
+        oldVis = std::move(oldVisList.front());
+        oldVisList.pop_back();
+        assert(oldVisList.empty());
+    }
+
+    if (m_newResidual)
+    {
+        m_residual = std::move(m_newResidual);
+        setDataInternal(residualIndex, m_residual.get(), oldVisList);
+        assert(oldVisList.empty());
+    }
+
+    updateGuiAfterDataChange();
+
+    toolBar()->setEnabled(true);
+}
+
+void ResidualVerificationView::updateResidual()
+{
+    assert(!m_newResidual);
+
     if (!m_observationData || !m_modelData)
     {
-        if (!m_residual)
-            return{};
-
-        auto oldResidual = std::move(m_residual);
-        setDataInternal(residualIndex, nullptr, toDelete);
-        return oldResidual;
+        return;
     }
 
     QString observationAttributeName;
@@ -551,12 +600,8 @@ std::unique_ptr<DataObject> ResidualVerificationView::updateResidual(std::vector
     if (observationAttributeName.isEmpty() || modelAttributeName.isEmpty())
     {
         qDebug() << "Cannot find suitable data attributes";
-        if (!m_residual)
-            return{};
 
-        auto oldResidual = std::move(m_residual);
-        setDataInternal(residualIndex, nullptr, toDelete);
-        return oldResidual;
+        return;
     }
 
 
@@ -583,12 +628,8 @@ std::unique_ptr<DataObject> ResidualVerificationView::updateResidual(std::vector
     if (!observationData || !modelData)
     {
         qDebug() << "Observation/Model interpolation failed";
-        if (!m_residual)
-            return{};
 
-        auto oldResidual = std::move(m_residual);
-        setDataInternal(residualIndex, nullptr, toDelete);
-        return oldResidual;
+        return;
     }
 
     // project vectors if needed
@@ -655,21 +696,11 @@ std::unique_ptr<DataObject> ResidualVerificationView::updateResidual(std::vector
     else
     {
         qDebug() << "Residual creation failed";
-        if (!m_residual)
-            return{};
 
-        auto oldResidual = std::move(m_residual);
-        setDataInternal(residualIndex, nullptr, toDelete);
-        return oldResidual;
+        return;
     }
 
-
-    // TODO improve the switch performance
-    auto oldResidual = std::move(m_residual);
-    setDataInternal(residualIndex, nullptr, toDelete);
-    m_residual = std::move(residualReplacement);
-    setDataInternal(residualIndex, m_residual.get(), toDelete);
-    return oldResidual;
+    m_newResidual = std::move(residualReplacement);
 }
 
 void ResidualVerificationView::updateGuiAfterDataChange()

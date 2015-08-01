@@ -2,6 +2,7 @@
 
 #include <array>
 #include <memory>
+#include <mutex>
 #include <vector>
 
 #include <vtkVector.h>
@@ -9,8 +10,9 @@
 #include <gui/data_view/AbstractRenderView.h>
 
 
-class QVTKWidget;
 class QComboBox;
+class QVTKWidget;
+template<typename T> class QFutureWatcher;
 
 class ColorMapping;
 class ImageDataObject;
@@ -106,10 +108,14 @@ private:
     /** Low level function, that won't trigger GUI updates.
         @param toDelete Delete these objects after removing them from dependent components (GUI etc) */
     void setDataInternal(unsigned int subViewIndex, DataObject * dataObject, std::vector<std::unique_ptr<AbstractVisualizedData>> & toDelete);
+
+    void updateResidualAsync();
+    void handleUpdateFinished();
+
     /** Update the residual view, show a residual if possible, discard old visualization data 
       * @param toDelete delete old visualization data after informing the GUI
       * @return Old residual object that needs to be deleted after informing the GUI */
-    std::unique_ptr<DataObject> updateResidual(std::vector<std::unique_ptr<AbstractVisualizedData>> & toDelete);
+    void updateResidual();
 
     void updateGuiAfterDataChange();
 
@@ -140,4 +146,7 @@ private:
     std::unique_ptr<vtkCameraSynchronization> m_cameraSync;
 
     std::array<std::unique_ptr<AbstractVisualizedData>, 3> m_visualizations;
+
+    std::unique_ptr<QFutureWatcher<void>> m_updateWatcher;
+    std::unique_ptr<DataObject> m_newResidual;
 };
