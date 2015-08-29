@@ -17,6 +17,7 @@ target_link_libraries( ${TARGET}
 
 
 configure_cxx_target( ${TARGET} )
+setupProjectUserConfig(${TARGET})
 
 install(TARGETS ${TARGET}
     RUNTIME DESTINATION ${INSTALL_BIN}

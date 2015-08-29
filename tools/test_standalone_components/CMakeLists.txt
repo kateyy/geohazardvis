@@ -32,3 +32,4 @@ include_directories(
 )
 
 configure_cxx_target( ${TARGET} )
+setupProjectUserConfig(${TARGET})

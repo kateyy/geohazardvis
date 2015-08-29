@@ -27,3 +27,4 @@ add_executable(${target} ${sources})
 target_link_libraries(${target} ${libs})
 
 configure_cxx_target( ${target} )
+setupProjectUserConfig(${target})

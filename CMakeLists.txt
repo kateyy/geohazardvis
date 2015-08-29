@@ -33,6 +33,7 @@ option(OPTION_IDE_SPLIT_HEADERS_SOURCES "List header and source files in differe
 # Include custom cmake functions
 include(cmake/Custom.cmake)
 include(cmake/GitRevision.cmake)
+include(cmake/ProjectConfigSetup.cmake)
 
 
 # PLATFORM AND ARCHITECTURE
