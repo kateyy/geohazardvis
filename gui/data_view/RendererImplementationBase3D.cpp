@@ -528,12 +528,17 @@ void RendererImplementationBase3D::setupColorMapping(unsigned int subViewIndex, 
     viewportSetup.scalarBarWidget = vtkSmartPointer<vtkScalarBarWidget>::New();
     viewportSetup.scalarBarWidget->SetScalarBarActor(viewportSetup.colorMappingLegend);
     viewportSetup.scalarBarWidget->SetRepresentation(repr);
-    viewportSetup.scalarBarWidget->SetCurrentRenderer(viewportSetup.renderer);
     viewportSetup.scalarBarWidget->EnabledOff();
 
     connect(viewportSetup.colorMapping, &ColorMapping::colorLegendVisibilityChanged,
         [&viewportSetup] (bool visible) 
-    { 
+    {
+        if (visible)
+        {
+            // vtkAbstractWidget clears the current renderer when disabling and uses FindPokedRenderer while enabling
+            // so ensure to always use the correct (not necessarily lastly clicked) renderer
+            viewportSetup.scalarBarWidget->SetCurrentRenderer(viewportSetup.renderer);
+        }
         viewportSetup.scalarBarWidget->SetEnabled(visible);
     });
 }
