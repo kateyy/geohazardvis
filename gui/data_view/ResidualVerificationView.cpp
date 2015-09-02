@@ -9,6 +9,8 @@
 #include <QComboBox>
 #include <QDebug>
 #include <QDoubleSpinBox>
+#include <QPushButton>
+#include <QProgressBar>
 #include <QToolBar>
 #include <QtConcurrent/QtConcurrent>
 
@@ -89,7 +91,7 @@ ResidualVerificationView::ResidualVerificationView(int index, QWidget * parent, 
 
     setLayout(layout);
 
-    auto interpolationSwitch = new QCheckBox();
+    auto interpolationSwitch = new QCheckBox("Interpolate Model to Observation");
     interpolationSwitch->setChecked(m_interpolationMode == InterpolationMode::observationToModel);
     // TODO correctly link in both ways
     connect(interpolationSwitch, &QAbstractButton::toggled, [this](bool checked)
@@ -120,6 +122,23 @@ ResidualVerificationView::ResidualVerificationView(int index, QWidget * parent, 
         });
         toolBar()->addWidget(losEdit);
     }
+
+    auto updateButton = new QPushButton("Update");
+    connect(updateButton, &QAbstractButton::clicked, this, &ResidualVerificationView::updateResidualAsync);
+    toolBar()->addWidget(updateButton);
+
+    m_progressBar = new QProgressBar();
+    m_progressBar->setRange(0, 0);
+    m_progressBar->setValue(-1);
+
+    auto progressBarContainer = new QWidget();
+    progressBarContainer->setMaximumWidth(100);
+    auto pbcLayout = new QHBoxLayout();
+    progressBarContainer->setLayout(pbcLayout);
+    pbcLayout->setContentsMargins(0, 0, 0, 0);
+    pbcLayout->addWidget(m_progressBar);
+    m_progressBar->hide();
+    toolBar()->addWidget(progressBarContainer);
 
     initialize();   // lazy initialize in not really needed for now
 
@@ -498,6 +517,7 @@ void ResidualVerificationView::updateResidualAsync()
         return;
     }
 
+    m_progressBar->show();
     toolBar()->setEnabled(false);
     QCoreApplication::processEvents();
 
@@ -534,6 +554,7 @@ void ResidualVerificationView::handleUpdateFinished()
     updateGuiAfterDataChange();
 
     toolBar()->setEnabled(true);
+    m_progressBar->hide();
 }
 
 void ResidualVerificationView::updateResidual()

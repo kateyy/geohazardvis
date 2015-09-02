@@ -12,6 +12,7 @@
 
 class QComboBox;
 template<typename T> class QFutureWatcher;
+class QProgressBar;
 
 class vtkDataSet;
 class QVTKWidget;
@@ -135,6 +136,8 @@ private:
     QVTKWidget * m_qvtkMain;
     QComboBox * m_observationCombo;
     QComboBox * m_modelCombo;
+
+    QProgressBar * m_progressBar;
 
     vtkVector3d m_inSARLineOfSight;
     InterpolationMode m_interpolationMode;
