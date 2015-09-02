@@ -77,6 +77,7 @@ ResidualVerificationView::ResidualVerificationView(int index, QWidget * parent, 
     , m_updateWatcher(std::make_unique<QFutureWatcher<void>>())
 {
     connect(m_updateWatcher.get(), &QFutureWatcher<void>::finished, this, &ResidualVerificationView::handleUpdateFinished);
+    m_attributeNamesLocations[residualIndex].first = "Residual"; // TODO add GUI option?
 
     auto layout = new QBoxLayout(QBoxLayout::Direction::TopToBottom);
     layout->setMargin(0);
@@ -292,6 +293,11 @@ void ResidualVerificationView::setDataHelper(unsigned int subViewIndex, DataObje
 
     std::vector<std::unique_ptr<AbstractVisualizedData>> toDeleteInternal;
     setDataInternal(subViewIndex, data, toDeleteInternal);
+
+    assert(data->dataSet());
+    auto & dataSet = *data->dataSet();
+
+    m_attributeNamesLocations[subViewIndex] = findDataSetAttributeName(dataSet, subViewIndex);
 
     if (subViewIndex != residualIndex)
         updateResidualAsync();
@@ -539,62 +545,10 @@ void ResidualVerificationView::updateResidual()
         return;
     }
 
-    QString observationAttributeName;
-    bool useObservationCellData = false;
-    QString modelAttributeName;
-    bool useModelCellData = false;
-
-    assert(m_observationData->dataSet());
-    auto & observationDataSet = *m_observationData->dataSet();
-    assert(m_modelData->dataSet());
-    auto & modelDataSet = *m_modelData->dataSet();
-
-
-    // ***** a bit of magic to find the correct source data
-
-    auto checkImageAttributeName = [](vtkDataSet & image) -> QString
-    {
-        if (auto scalars = image.GetPointData()->GetScalars())
-        {
-            if (auto name = scalars->GetName())
-                return QString::fromUtf8(name);
-        }
-        else
-        {
-            if (auto firstArray = image.GetPointData()->GetArray(0))
-            {
-                if (auto name = firstArray->GetName())
-                    return QString::fromUtf8(name);
-            }
-        }
-        return{};
-    };
-
-    observationAttributeName = checkImageAttributeName(observationDataSet);
-
-    if (auto poly = vtkPolyData::SafeDownCast(m_modelData->dataSet()))
-    {
-        // assuming that we store attributes in polygonal data always per cell
-        auto scalars = poly->GetCellData()->GetScalars();
-        if (!scalars)
-            scalars = poly->GetCellData()->GetArray("displacement vectors");
-        if (!scalars)
-            scalars = poly->GetCellData()->GetArray("U+");
-        if (scalars)
-        {
-            auto name = scalars->GetName();
-            if (name)
-                modelAttributeName = QString::fromUtf8(name);
-            qDebug() << modelAttributeName << scalars->GetRange()[0] << scalars->GetRange()[1];
-        }
-
-        useModelCellData = true;
-    }
-    else
-    {
-        modelAttributeName = checkImageAttributeName(modelDataSet);
-        useModelCellData = false;
-    }
+    const auto & observationAttributeName = m_attributeNamesLocations[observationIndex].first;
+    bool useObservationCellData = m_attributeNamesLocations[observationIndex].second;
+    const auto & modelAttributeName = m_attributeNamesLocations[modelIndex].first;
+    bool useModelCellData = m_attributeNamesLocations[modelIndex].second;
 
 
     if (observationAttributeName.isEmpty() || modelAttributeName.isEmpty())
@@ -604,15 +558,17 @@ void ResidualVerificationView::updateResidual()
         return;
     }
 
+    assert(m_observationData->dataSet());
+    auto & observationDataSet = *m_observationData->dataSet();
+    assert(m_modelData->dataSet());
+    auto & modelDataSet = *m_modelData->dataSet();
 
     vtkSmartPointer<vtkDataArray> observationData;
     vtkSmartPointer<vtkDataArray> modelData;
 
     if (m_interpolationMode == InterpolationMode::modelToObservation)
     {
-        observationData = observationAttributeName.isEmpty()
-            ? observationDataSet.GetPointData()->GetScalars()
-            : observationDataSet.GetPointData()->GetArray(observationAttributeName.toUtf8().data());
+        observationData = observationDataSet.GetPointData()->GetArray(observationAttributeName.toUtf8().data());
 
         modelData = InterpolationHelper::interpolate(observationDataSet, modelDataSet, modelAttributeName, useModelCellData);
     }
@@ -654,7 +610,7 @@ void ResidualVerificationView::updateResidual()
         : modelDataSet;
 
     auto residualData = vtkSmartPointer<vtkDataArray>::Take(modelData->NewInstance());
-    residualData->SetName("Residual");
+    residualData->SetName(m_attributeNamesLocations[residualIndex].first.toUtf8().data());
     residualData->SetNumberOfTuples(modelData->GetNumberOfTuples());
     residualData->SetNumberOfComponents(1);
 
@@ -706,6 +662,15 @@ void ResidualVerificationView::updateResidual()
 void ResidualVerificationView::updateGuiAfterDataChange()
 {
     emit visualizationsChanged();
+
+    for (unsigned int i = 0; i < numberOfSubViews(); ++i)
+    {
+        if (!dataAt(i))
+            continue;
+
+        m_implementation->colorMapping(i)->setCurrentScalarsByName(
+            m_attributeNamesLocations[i].first);
+    }
 
     updateGuiSelection();
 
@@ -850,4 +815,113 @@ bool ResidualVerificationView::setDataAt(unsigned int i, DataObject * data)
         return false;
     }
     return true;
+}
+
+std::pair<QString, bool> ResidualVerificationView::findDataSetAttributeName(vtkDataSet & dataSet, unsigned int inputType)
+{
+    auto checkDefaultScalars = [] (vtkDataSet & dataSet) -> std::pair<QString, bool>
+    {
+        if (auto scalars = dataSet.GetPointData()->GetScalars())
+        {
+            if (auto name = scalars->GetName())
+                return std::make_pair(QString::fromUtf8(name), false);
+        }
+        else
+        {
+            if (auto firstArray = dataSet.GetPointData()->GetArray(0))
+            {
+                if (auto name = firstArray->GetName())
+                    return std::make_pair(QString::fromUtf8(name), false);
+            }
+        }
+
+        if (auto scalars = dataSet.GetCellData()->GetScalars())
+        {
+            if (auto name = scalars->GetName())
+                return std::make_pair(QString::fromUtf8(name), true);
+        }
+        else
+        {
+            if (auto firstArray = dataSet.GetCellData()->GetArray(0))
+            {
+                if (auto name = firstArray->GetName())
+                    return std::make_pair(QString::fromUtf8(name), true);
+            }
+        }
+        return{};
+    };
+
+    auto checkDefaultVectors = [] (vtkDataSet & dataSet) -> std::pair<QString, bool>
+    {
+        if (auto scalars = dataSet.GetPointData()->GetVectors())
+        {
+            if (auto name = scalars->GetName())
+                return std::make_pair(QString::fromUtf8(name), false);
+        }
+        else
+        {
+            for (vtkIdType i = 0; i < dataSet.GetPointData()->GetNumberOfArrays(); ++i)
+            {
+                auto array = dataSet.GetPointData()->GetArray(i);
+                if (array->GetNumberOfComponents() != 3)
+                    continue;
+
+                if (auto name = array->GetName())
+                    return std::make_pair(QString::fromUtf8(name), false);
+            }
+        }
+
+        if (auto scalars = dataSet.GetCellData()->GetVectors())
+        {
+            if (auto name = scalars->GetName())
+                return std::make_pair(QString::fromUtf8(name), true);
+        }
+        else
+        {
+            for (vtkIdType i = 0; i < dataSet.GetCellData()->GetNumberOfArrays(); ++i)
+            {
+                auto array = dataSet.GetCellData()->GetArray(i);
+                if (array->GetNumberOfComponents() != 3)
+                    continue;
+
+                if (auto name = array->GetName())
+                    return std::make_pair(QString::fromUtf8(name), false);
+            }
+        }
+        return{};
+    };
+
+    bool isPoly = vtkPolyData::SafeDownCast(&dataSet) != nullptr;
+
+    if (inputType == observationIndex)
+    {
+        return checkDefaultScalars(dataSet);
+    }
+
+    if (inputType == modelIndex)
+    {
+        if (isPoly)
+        {
+            // assuming that we store attributes in polygonal data always per cell
+            auto scalars = dataSet.GetCellData()->GetScalars();
+            if (!scalars)
+                scalars = dataSet.GetCellData()->GetArray("displacement vectors");
+            if (!scalars)
+                scalars = dataSet.GetCellData()->GetArray("U+");
+            if (scalars)
+            {
+                auto name = scalars->GetName();
+                if (name)
+                    return std::make_pair(QString::fromUtf8(name), true);
+            }
+        }
+
+        auto result = checkDefaultVectors(dataSet);
+        if (!result.first.isEmpty())
+            return result;
+
+        return checkDefaultScalars(dataSet);
+    }
+
+    return std::make_pair(QString("Residual"), true);
 }

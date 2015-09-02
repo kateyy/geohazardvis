@@ -11,8 +11,10 @@
 
 
 class QComboBox;
-class QVTKWidget;
 template<typename T> class QFutureWatcher;
+
+class vtkDataSet;
+class QVTKWidget;
 
 class ColorMapping;
 class ImageDataObject;
@@ -127,6 +129,8 @@ private:
     DataObject * dataAt(unsigned int i) const;
     bool setDataAt(unsigned int i, DataObject * data);
 
+    static std::pair<QString, bool> findDataSetAttributeName(vtkDataSet & dataSet, unsigned int inputType);
+
 private:
     QVTKWidget * m_qvtkMain;
     QComboBox * m_observationCombo;
@@ -145,7 +149,8 @@ private:
     std::unique_ptr<RenderViewStrategyImage2D> m_strategy;
     std::unique_ptr<vtkCameraSynchronization> m_cameraSync;
 
-    std::array<std::unique_ptr<AbstractVisualizedData>, 3> m_visualizations;
+    std::array<std::unique_ptr<AbstractVisualizedData>, numberOfViews> m_visualizations;
+    std::array<std::pair<QString, bool>, numberOfViews> m_attributeNamesLocations;
 
     std::unique_ptr<QFutureWatcher<void>> m_updateWatcher;
     std::unique_ptr<DataObject> m_newResidual;
