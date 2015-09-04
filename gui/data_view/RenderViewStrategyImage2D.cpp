@@ -45,10 +45,11 @@ namespace
 RenderViewStrategyImage2D::RenderViewStrategyImage2D(RendererImplementationBase3D & context)
     : RenderViewStrategy(context)
     , m_isInitialized(false)
+    , m_profilePlotAction(nullptr)
+    , m_profilePlotAcceptAction(nullptr)
+    , m_profilePlotAbortAction(nullptr)
     , m_previewRenderer(nullptr)
 {
-    connect(&context.renderView(), &AbstractRenderView::visualizationsChanged, 
-        this, &RenderViewStrategyImage2D::updateAutomaticPlots);
 }
 
 RenderViewStrategyImage2D::~RenderViewStrategyImage2D()
@@ -130,10 +131,18 @@ void RenderViewStrategyImage2D::activate()
     m_context.axesActor()->GetLabelTextProperty(0)->SetOrientation(0);
     m_context.axesActor()->GetLabelTextProperty(1)->SetOrientation(90);
     m_context.axesActor()->SetUse2DMode(true);
+
+    updateAutomaticPlots();
+
+    connect(&m_context.renderView(), &AbstractRenderView::visualizationsChanged,
+        this, &RenderViewStrategyImage2D::updateAutomaticPlots);
 }
 
 void RenderViewStrategyImage2D::deactivate()
 {
+    disconnect(&m_context.renderView(), &AbstractRenderView::visualizationsChanged,
+        this, &RenderViewStrategyImage2D::updateAutomaticPlots);
+
     for (auto action : m_actions)
     {
         m_context.renderView().toolBar()->removeAction(action);

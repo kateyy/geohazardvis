@@ -145,7 +145,9 @@ AbstractVisualizedData * RenderView::addDataObject(DataObject * dataObject)
 void RenderView::showDataObjectsImpl(const QList<DataObject *> & uncheckedDataObjects, QList<DataObject *> & incompatibleObjects, unsigned int /*subViewIndex*/)
 {
     if (uncheckedDataObjects.isEmpty())
+    {
         return;
+    }
 
     bool wasEmpty = m_contents.empty();
 
@@ -159,7 +161,9 @@ void RenderView::showDataObjectsImpl(const QList<DataObject *> & uncheckedDataOb
     QList<DataObject *> dataObjects = implementation().filterCompatibleObjects(uncheckedDataObjects, incompatibleObjects);
 
     if (dataObjects.isEmpty())
+    {
         return;
+    }
 
     for (DataObject * dataObject : dataObjects)
     {
@@ -278,6 +282,8 @@ void RenderView::removeDataObject(DataObject * dataObject)
     render();
 
     toDelete.clear();
+
+    m_deletedData.clear();
 }
 
 void RenderView::prepareDeleteDataImpl(const QList<DataObject *> & dataObjects)

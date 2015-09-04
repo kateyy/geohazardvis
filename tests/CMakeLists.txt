@@ -34,5 +34,6 @@ if(OPTION_BUILD_TESTS AND GTEST_FOUND)
 
     # Tests
     add_test_without_ctest(core-test)
+    add_test_without_ctest(gui-test)
 
 endif()
