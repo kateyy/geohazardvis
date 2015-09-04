@@ -154,6 +154,7 @@ private:
 
     std::array<std::unique_ptr<AbstractVisualizedData>, numberOfViews> m_visualizations;
     std::array<std::pair<QString, bool>, numberOfViews> m_attributeNamesLocations;
+    std::array<QString, numberOfViews> m_projectedAttributeNames;
 
     std::unique_ptr<QFutureWatcher<void>> m_updateWatcher;
     std::unique_ptr<DataObject> m_newResidual;

@@ -609,14 +609,41 @@ void ResidualVerificationView::updateResidual()
         return;
     }
 
-    // project vectors if needed
+    // project vectors if needed and assign arrays accordingly
     if (observationData->GetNumberOfComponents() == 3)
     {
         observationData = projectToLineOfSight(*observationData, m_inSARLineOfSight);
+
+        m_projectedAttributeNames[observationIndex] = observationAttributeName + " (projected)";
+        auto projectedName = m_projectedAttributeNames[observationIndex].toUtf8();
+        observationData->SetName(projectedName.data());
+
+        if (useObservationCellData)
+            observationDataSet.GetCellData()->AddArray(observationData);
+        else
+            observationDataSet.GetPointData()->AddArray(observationData);
     }
+    else
+    {
+        m_projectedAttributeNames[observationIndex] = "";
+    }
+
     if (modelData->GetNumberOfComponents() == 3)
     {
         modelData = projectToLineOfSight(*modelData, m_inSARLineOfSight);
+
+        m_projectedAttributeNames[modelIndex] = modelAttributeName + " (projected)";
+        auto projectedName = m_projectedAttributeNames[modelIndex].toUtf8();
+        modelData->SetName(projectedName.data());
+
+        if (useModelCellData)
+            modelDataSet.GetCellData()->AddArray(modelData);
+        else
+            modelDataSet.GetPointData()->AddArray(modelData);
+    }
+    else
+    {
+        m_projectedAttributeNames[modelIndex] = "";
     }
 
     assert(modelData->GetNumberOfComponents() == 1);
@@ -688,8 +715,11 @@ void ResidualVerificationView::updateGuiAfterDataChange()
         if (!dataAt(i))
             continue;
 
-        m_implementation->colorMapping(i)->setCurrentScalarsByName(
-            m_attributeNamesLocations[i].first);
+        auto attributeName = m_projectedAttributeNames[i];
+        if (attributeName.isEmpty())
+            attributeName = m_attributeNamesLocations[i].first;
+
+        m_implementation->colorMapping(i)->setCurrentScalarsByName(attributeName);
     }
 
     updateGuiSelection();
