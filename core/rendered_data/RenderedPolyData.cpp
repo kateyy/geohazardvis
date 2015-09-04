@@ -112,7 +112,7 @@ reflectionzeug::PropertyGroup * RenderedPolyData::createConfigGroup()
         renderProperty()->SetEdgeVisibility(vis);
         emit geometryChanged();
     });
-    edgesVisible->setOption("title", "edge visible");
+    edgesVisible->setOption("title", "Edges");
 
     auto * lineWidth = renderSettings->addProperty<unsigned>("lineWidth",
         [this] () {
@@ -122,7 +122,7 @@ reflectionzeug::PropertyGroup * RenderedPolyData::createConfigGroup()
         renderProperty()->SetLineWidth(static_cast<float>(width));
         emit geometryChanged();
     });
-    lineWidth->setOption("title", "line width");
+    lineWidth->setOption("title", "Edge Width");
     lineWidth->setOption("minimum", 1);
     lineWidth->setOption("maximum", std::numeric_limits<unsigned>::max());
     lineWidth->setOption("step", 1);
@@ -137,10 +137,10 @@ reflectionzeug::PropertyGroup * RenderedPolyData::createConfigGroup()
         renderProperty()->SetEdgeColor(color.red() / 255.0, color.green() / 255.0, color.blue() / 255.0);
         emit geometryChanged();
     });
-    edgeColor->setOption("title", "edge color");
+    edgeColor->setOption("title", "Edge Color");
 
 
-    auto * representation = renderSettings->addProperty<Representation>("representation",
+    auto * representation = renderSettings->addProperty<Representation>("Representation",
         [this]() {
         return static_cast<Representation>(renderProperty()->GetRepresentation());
     },
@@ -160,9 +160,9 @@ reflectionzeug::PropertyGroup * RenderedPolyData::createConfigGroup()
         renderProperty()->SetLighting(enabled);
         emit geometryChanged();
     });
-    lightingEnabled->setOption("title", "lighting enabled");
+    lightingEnabled->setOption("title", "Lighting");
 
-    auto * interpolation = renderSettings->addProperty<Interpolation>("interpolation",
+    auto * interpolation = renderSettings->addProperty<Interpolation>("Interpolation",
         [this]() {
         return static_cast<Interpolation>(renderProperty()->GetInterpolation());
     },
@@ -170,14 +170,13 @@ reflectionzeug::PropertyGroup * RenderedPolyData::createConfigGroup()
         renderProperty()->SetInterpolation(static_cast<int>(i));
         emit geometryChanged();
     });
-    interpolation->setOption("title", "interpolation");
     interpolation->setStrings({
             { Interpolation::flat, "flat" },
             { Interpolation::gouraud, "gouraud" },
             { Interpolation::phong, "phong" }
     });
 
-    auto transparency = renderSettings->addProperty<double>("transparency",
+    auto transparency = renderSettings->addProperty<double>("Transparency",
         [this]() {
         return (1.0 - renderProperty()->GetOpacity()) * 100;
     },
@@ -196,7 +195,7 @@ reflectionzeug::PropertyGroup * RenderedPolyData::createConfigGroup()
         renderProperty()->SetBackfaceCulling(backfaceCulling);
         emit geometryChanged();
     });
-    backfaceCulling->setOption("title", "backface culling");
+    backfaceCulling->setOption("title", "Back-face culling");
 
     auto pointSize = renderSettings->addProperty<unsigned>("pointSize",
         [this]() {
@@ -206,7 +205,7 @@ reflectionzeug::PropertyGroup * RenderedPolyData::createConfigGroup()
         renderProperty()->SetPointSize(static_cast<float>(pointSize));
         emit geometryChanged();
     });
-    pointSize->setOption("title", "point size");
+    pointSize->setOption("title", "Point Size");
     pointSize->setOption("minimum", 1);
     pointSize->setOption("maximum", 20);
     pointSize->setOption("step", 1);

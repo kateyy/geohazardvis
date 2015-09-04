@@ -62,6 +62,20 @@ reflectionzeug::PropertyGroup * RenderedImageData::createConfigGroup()
             { Interpolation::cubic, "cubic" }
     });
 
+
+    auto transparency = renderSettings->addProperty<double>("Transparency",
+        [this] () {
+        return (1.0 - property()->GetOpacity()) * 100;
+    },
+        [this] (double transparency) {
+        property()->SetOpacity(1.0 - transparency * 0.01);
+        emit geometryChanged();
+    });
+    transparency->setOption("minimum", 0);
+    transparency->setOption("maximum", 100);
+    transparency->setOption("step", 1);
+    transparency->setOption("suffix", " %");
+
     return renderSettings;
 }
 
