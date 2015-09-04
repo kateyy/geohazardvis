@@ -136,12 +136,12 @@ void AbstractRenderView::ShowInfo(const QStringList & info)
 bool AbstractRenderView::eventFilter(QObject * watched, QEvent * event)
 {
     if (event->type() != QEvent::MouseButtonPress || watched != contentWidget())
-        return false;
+        return AbstractDataView::eventFilter(watched, event);
 
     auto mouseEvent = static_cast<QMouseEvent *>(event);
     setActiveSubView(implementation().subViewIndexAtPos(mouseEvent->pos()));
 
-    return false;
+    return AbstractDataView::eventFilter(watched, event);
 }
 
 void AbstractRenderView::showEvent(QShowEvent * /*event*/)
@@ -150,7 +150,7 @@ void AbstractRenderView::showEvent(QShowEvent * /*event*/)
         return;
 
     // allow to receive mouse events
-    installEventFilter(contentWidget());
+    contentWidget()->installEventFilter(this);
     m_isInitialized = true;
 }
 

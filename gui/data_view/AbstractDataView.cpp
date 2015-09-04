@@ -18,6 +18,8 @@ AbstractDataView::AbstractDataView(
 {
 }
 
+AbstractDataView::~AbstractDataView() = default;
+
 int AbstractDataView::index() const
 {
     return m_index;
@@ -47,6 +49,7 @@ QDockWidget * AbstractDataView::dockWidgetParent()
     m_dockWidgetParent->installEventFilter(this);
     m_dockWidgetParent->setFocusPolicy(Qt::StrongFocus);
     m_dockWidgetParent->setWindowTitle(windowTitle());
+    m_dockWidgetParent->setAttribute(Qt::WA_DeleteOnClose);
 
     return m_dockWidgetParent;
 }
@@ -148,7 +151,10 @@ bool AbstractDataView::eventFilter(QObject * /*obj*/, QEvent * ev)
         emit focused(this);
 
     if (ev->type() == QEvent::Close)
+    {
+        m_dockWidgetParent = nullptr;
         close();
+    }
 
     return false;
 }

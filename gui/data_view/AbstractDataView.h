@@ -18,6 +18,7 @@ class GUI_API AbstractDataView : public QWidget
 
 public:
     AbstractDataView(int index, QWidget * parent = nullptr, Qt::WindowFlags flags = 0);
+    ~AbstractDataView() override;
 
     int index() const;
 
