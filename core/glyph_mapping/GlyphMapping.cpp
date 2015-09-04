@@ -59,7 +59,7 @@ void GlyphMapping::updateAvailableVectors()
 
         auto oldIt = oldInstances.find(vectorsName);
 
-        if (oldIt != m_vectors.end())
+        if (oldIt != oldInstances.end())
         {
             // not new -> keep old
             newVectors.reset();
