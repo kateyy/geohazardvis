@@ -7,7 +7,10 @@
 #include <core/data_objects/PolyDataObject.h>
 
 #include <gui/data_view/RenderView.h>
+#include <gui/data_view/RendererImplementationBase3D.h>
+#include <gui/data_view/RenderViewStrategyImage2D.h>
 
+#include "app_helper.h"
 #include "RenderView_test_tools.h"
 
 
@@ -17,10 +20,8 @@ public:
     void SetUp() override
     {
         int argc = 1;
-        char * argv_str = "noPath";
-        char * argv[1] = { argv_str };
 
-        app = std::make_unique<QApplication>(argc, argv);
+        app = std::make_unique<QApplication>(argc, main_argv);
     }
     void TearDown() override
     {
@@ -69,3 +70,4 @@ TEST_F(RenderView_test, DontMissNewDataAtSameLocation)
     ASSERT_EQ(incompatible.size(), 0);
     ASSERT_EQ(renderView->dataObjects().size(), 1);
 }
+

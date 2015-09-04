@@ -157,4 +157,6 @@ private:
 
     std::unique_ptr<QFutureWatcher<void>> m_updateWatcher;
     std::unique_ptr<DataObject> m_newResidual;
+
+    friend class RenderViewStrategy_testHelper;
 };

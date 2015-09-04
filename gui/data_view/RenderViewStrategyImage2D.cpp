@@ -226,6 +226,7 @@ void RenderViewStrategyImage2D::startProfilePlot()
 
 
     // for each sub-view, check which combinations of active scalars and input images we have to plot
+    QSet<QPair<DataObject *, QString>> createdPlots;
     for (unsigned int i = 0; i < m_context.renderView().numberOfSubViews(); ++i)
     {
         auto & scalars = m_context.colorMapping(i)->currentScalarsName();
@@ -234,6 +235,13 @@ void RenderViewStrategyImage2D::startProfilePlot()
         {
             if (!m_context.renderView().contains(inputImage, i))
                 continue;
+
+            // don't plot the same data multiple times
+            QPair<DataObject *, QString> currentPlotCombination = { inputImage, scalars };
+            if (createdPlots.contains(currentPlotCombination))
+                continue;
+
+            createdPlots << currentPlotCombination;
 
             auto profile = std::make_unique<ImageProfileData>(
                 inputImage->name() + " plot",

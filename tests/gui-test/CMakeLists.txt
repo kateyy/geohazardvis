@@ -16,9 +16,11 @@ set(libs
 
 set(sources
     main.cpp
+    app_helper.h
     RenderView_test.cpp
     RenderView_test_tools.h
     RenderView_test_tools.cpp
+    RenderViewStrategy_test.cpp
 )
 
 

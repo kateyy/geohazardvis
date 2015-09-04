@@ -41,13 +41,13 @@ public:
     QList<DataObject *> filterCompatibleObjects(const QList<DataObject *> & dataObjects, QList<DataObject *> & incompatibleObjects) const override;
     bool canApplyTo(const QList<RenderedData *> & renderedData) override;
 
-private:
-    void initialize();
-
     /** Start or refresh the current profile plot, open a new preview renderer if required. */
     void startProfilePlot();
     void acceptProfilePlot();
     void abortProfilePlot();
+
+private:
+    void initialize();
 
     /** Delete current plots, but do not change the GUI state */
     void clearProfilePlots();
