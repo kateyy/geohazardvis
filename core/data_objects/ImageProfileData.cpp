@@ -6,7 +6,6 @@
 #include <vtkAssignAttribute.h>
 #include <vtkBoundingBox.h>
 #include <vtkCellData.h>
-#include <vtkCellDataToPointData.h>
 #include <vtkImageData.h>
 #include <vtkLineSource.h>
 #include <vtkMath.h>
@@ -59,16 +58,21 @@ ImageProfileData::ImageProfileData(const QString & name, DataObject & sourceData
     m_probe = vtkSmartPointer<vtkProbeFilter>::New();
     m_probe->SetInputConnection(m_probeLine->GetOutputPort());
 
-    if (m_scalarsLocation == vtkAssignAttribute::POINT_DATA)
+
+    // for polygonal source data, flatten first
+    if (vtkPolyData::SafeDownCast(m_sourceData.dataSet()))
     {
-        m_probe->SetSourceConnection(m_sourceData.processedOutputPort());
+        auto flattenerTransform = vtkSmartPointer<vtkTransform>::New();
+        flattenerTransform->Scale(1, 1, 0);
+        auto flattener = vtkSmartPointer<vtkTransformFilter>::New();
+        flattener->SetTransform(flattenerTransform);
+        flattener->SetInputConnection(m_sourceData.processedOutputPort());
+
+        m_probe->SetSourceConnection(flattener->GetOutputPort());
     }
     else
     {
-        assert(m_scalarsLocation == vtkAssignAttribute::CELL_DATA);
-        auto toPointData = vtkSmartPointer<vtkCellDataToPointData>::New();
-        toPointData->SetInputConnection(m_sourceData.processedOutputPort());
-        m_probe->SetSourceConnection(toPointData->GetOutputPort());
+        m_probe->SetSourceConnection(m_sourceData.processedOutputPort());
     }
 
     m_transform->SetInputConnection(m_probe->GetOutputPort());
