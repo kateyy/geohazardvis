@@ -80,11 +80,11 @@ QVariant DataBrowserTableModel::headerData(int section, Qt::Orientation orientat
 
     switch (section)
     {
-    case s_btnClms + 0: return "name";
-    case s_btnClms + 1: return "data set type";
-    case s_btnClms + 2: return "dimensions";
-    case s_btnClms + 3: return "spatial bounds";
-    case s_btnClms + 4: return "value range";
+    case s_btnClms + 0: return "Name";
+    case s_btnClms + 1: return "Data Set Type";
+    case s_btnClms + 2: return "Dimensions";
+    case s_btnClms + 3: return "Spatial Extent";
+    case s_btnClms + 4: return "Value Range";
     }        
 
     return QVariant();
@@ -303,7 +303,7 @@ QVariant DataBrowserTableModel::data_attributeVector(int row, int column, int ro
     {
         switch (column)
         {
-        case 1: return "assign to geometry";
+        case 1: return "Assign to Geometry";
         default: return QVariant();
         }
     }

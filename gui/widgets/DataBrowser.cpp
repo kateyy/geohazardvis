@@ -157,7 +157,7 @@ void DataBrowser::changeRenderedVisibility(DataObject * clickedObject)
 
 void DataBrowser::menuAssignDataToIndexes(const QPoint & position, DataObject * clickedData)
 {
-    QString title = "assign to indexes";
+    QString title = "Assign to Data Set";
 
     RawVectorData * rawVector = dynamic_cast<RawVectorData*>(clickedData);
     if (!rawVector)
@@ -178,7 +178,7 @@ void DataBrowser::menuAssignDataToIndexes(const QPoint & position, DataObject * 
     
     if (DataSetHandler::instance().dataSets().isEmpty())
     {
-        QAction * loadFirst = assignMenu->addAction("(load geometries/images first)");
+        QAction * loadFirst = assignMenu->addAction("(Load data sets first)");
         loadFirst->setEnabled(false);
     }
     else
