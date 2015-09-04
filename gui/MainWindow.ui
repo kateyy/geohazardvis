@@ -71,6 +71,7 @@
     </property>
     <addaction name="actionSetup_Image_Export"/>
     <addaction name="actionQuick_Export"/>
+    <addaction name="actionOpen_Export_Folder"/>
     <addaction name="actionExport_To"/>
    </widget>
    <widget class="QMenu" name="menu_Data_Sets">
@@ -166,6 +167,11 @@
    </property>
    <property name="text">
     <string>Enable &amp;Dark Style</string>
+   </property>
+  </action>
+  <action name="actionOpen_Export_Folder">
+   <property name="text">
+    <string>Open Export &amp;Folder</string>
    </property>
   </action>
  </widget>

@@ -4,6 +4,7 @@
 #include <cassert>
 
 #include <QDebug>
+#include <QDesktopServices>
 #include <QDockWidget>
 #include <QDragEnterEvent>
 #include <QFileDialog>
@@ -100,6 +101,11 @@ MainWindow::MainWindow()
 
     connect(m_ui->actionSetup_Image_Export, &QAction::triggered, m_canvasExporter, &CanvasExporterWidget::show);
     connect(m_ui->actionQuick_Export, &QAction::triggered, m_canvasExporter, &CanvasExporterWidget::captureScreenshot);
+    connect(m_ui->actionOpen_Export_Folder, &QAction::triggered, [this] () {
+        // check: https://stackoverflow.com/questions/3490336/how-to-reveal-in-finder-or-show-in-explorer-with-qt
+        auto path = QFileInfo(m_canvasExporter->currentExportFolder()).absoluteFilePath();
+        QDesktopServices::openUrl(QUrl::fromLocalFile(path));
+    });
     connect(m_ui->actionExport_To, &QAction::triggered, m_canvasExporter, &CanvasExporterWidget::captureScreenshotTo);
     connect(m_dataMapping.get(), &DataMapping::focusedRenderViewChanged, m_canvasExporter, &CanvasExporterWidget::setRenderView);
 

@@ -29,12 +29,13 @@ public:
     /** capture screenshot with current settings and ask user for the target file name */
     void captureScreenshotTo();
 
+    QString currentExportFolder() const;
+
 private:
     void updateUiForFormat();
 
     CanvasExporter * currentExporter();
     CanvasExporter * currentExporterConfigured();
-    QString currentExportFolder() const;
     QString fileNameWithTimeStamp() const;
     void saveScreenshotTo(CanvasExporter & exporter,  const QString & fileName) const;
 
