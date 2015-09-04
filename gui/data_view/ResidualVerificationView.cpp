@@ -654,7 +654,6 @@ void ResidualVerificationView::updateResidual()
     if (auto residualImage = vtkImageData::SafeDownCast(residual))
     {
         assert(residualData->GetNumberOfTuples() == residual->GetNumberOfPoints());
-        qDebug() << residualData->GetName();
 
         residual->GetPointData()->SetScalars(residualData);
 
