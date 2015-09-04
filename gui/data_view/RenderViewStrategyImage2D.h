@@ -44,13 +44,17 @@ public:
 private:
     void initialize();
 
+    /** Start or refresh the current profile plot, open a new preview renderer if required. */
     void startProfilePlot();
     void acceptProfilePlot();
     void abortProfilePlot();
 
+    /** Delete current plots, but do not change the GUI state */
+    void clearProfilePlots();
+
     void lineMoved();
 
-    void checkSourceExists();
+    void updateAutomaticPlots();
 
 private:
     static const bool s_isRegistered;

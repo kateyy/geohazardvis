@@ -32,6 +32,7 @@
 #include <gui/data_view/RendererImplementationBase3D.h>
 #include <gui/rendering_interaction/PickingInteractorStyleSwitch.h>
 
+
 const bool RenderViewStrategyImage2D::s_isRegistered = RenderViewStrategy::registerStrategy<RenderViewStrategyImage2D>();
 
 namespace
@@ -47,7 +48,7 @@ RenderViewStrategyImage2D::RenderViewStrategyImage2D(RendererImplementationBase3
     , m_previewRenderer(nullptr)
 {
     connect(&context.renderView(), &AbstractRenderView::visualizationsChanged, 
-        this, &RenderViewStrategyImage2D::checkSourceExists);
+        this, &RenderViewStrategyImage2D::updateAutomaticPlots);
 }
 
 RenderViewStrategyImage2D::~RenderViewStrategyImage2D()
@@ -68,25 +69,28 @@ void RenderViewStrategyImage2D::setInputData(const QList<DataObject *> & inputDa
     if (m_inputData.toSet() == inputData.toSet())
         return;
 
-    bool restartProfilePlot = false;
-    double point1[3], point2[3];
-    if (!m_previewProfiles.empty())   // currently plotting
+    // reuse an existing preview renderer
+    if (m_previewRenderer)
     {
-        m_lineWidget->GetLineRepresentation()->GetPoint1WorldPosition(point1);
-        m_lineWidget->GetLineRepresentation()->GetPoint2WorldPosition(point2);
+        assert(!m_previewProfiles.empty());
 
-        abortProfilePlot();
-        restartProfilePlot = true;
+        if (inputData.isEmpty())    // nothing to plot
+        {
+            abortProfilePlot();
+        }
+        else
+        {
+            // (re)create all plots later, clear the preview renderer for now
+            clearProfilePlots();
+        }
     }
 
     m_inputData = inputData;
 
-    if (restartProfilePlot)
+    // start plot only if we were plotting before (setInputData is not meant to start a plot
+    if (m_previewRenderer && !m_inputData.isEmpty())
     {
         startProfilePlot();
-
-        m_lineWidget->GetLineRepresentation()->SetPoint1WorldPosition(point1);
-        m_lineWidget->GetLineRepresentation()->SetPoint2WorldPosition(point2);
     }
 }
 
@@ -188,7 +192,7 @@ bool RenderViewStrategyImage2D::canApplyTo(const QList<RenderedData *> & rendere
 
 void RenderViewStrategyImage2D::startProfilePlot()
 {
-    assert(m_previewProfiles.empty() && !m_previewRenderer);
+    assert(m_previewProfiles.empty());
 
     // check input images
 
@@ -240,58 +244,77 @@ void RenderViewStrategyImage2D::startProfilePlot()
         return;
     }
 
-    // place the line widget
-    
-    m_lineWidget = vtkSmartPointer<vtkLineWidget2>::New();
-    auto repr = vtkSmartPointer<vtkLineRepresentation>::New();
-    repr->SetLineColor(1, 0, 0);
-    m_lineWidget->SetRepresentation(repr);
-    m_lineWidget->SetInteractor(m_context.interactor());
-    m_lineWidget->SetCurrentRenderer(m_context.renderer(0u));   // put the widget in the first renderer, for now
-    m_lineWidget->On();
 
-    double bounds[6];
+    bool creatingNewRenderer = m_previewRenderer == nullptr;
 
-    m_context.dataBounds(bounds);
+    if (creatingNewRenderer) // if starting a new plot: create the line widget
+    {
+        assert(!m_lineWidget);
+        m_lineWidget = vtkSmartPointer<vtkLineWidget2>::New();
+        auto repr = vtkSmartPointer<vtkLineRepresentation>::New();
+        repr->SetLineColor(1, 0, 0);
+        m_lineWidget->SetRepresentation(repr);
+        m_lineWidget->SetInteractor(m_context.interactor());
+        m_lineWidget->SetCurrentRenderer(m_context.renderer(0u));   // put the widget in the first renderer, for now
+        m_lineWidget->On();
 
-    bounds[4] += g_lineZOffset;
-    bounds[5] += g_lineZOffset;
+        double bounds[6];
+        m_context.dataBounds(bounds);
 
-    repr->PlaceWidget(bounds);
+        bounds[4] += g_lineZOffset;
+        bounds[5] += g_lineZOffset;
 
-    m_context.render();
+        m_lineWidget->GetRepresentation()->PlaceWidget(bounds);
 
+        m_context.render();
+    }
 
+    // applies the transformation defined by the line to the plots
     lineMoved();
 
     QList<DataObject *> profiles;
     for (auto && profile : m_previewProfiles)
         profiles << profile.get();
-    m_previewRenderer = DataMapping::instance().openInRenderView(profiles);
+
+    if (creatingNewRenderer)
+    {
+        m_previewRenderer = DataMapping::instance().openInRenderView(profiles);
+    }
+    else
+    {
+        QList<DataObject *> incompatible;
+        m_previewRenderer->showDataObjects(profiles, incompatible);
+        assert(incompatible.isEmpty());
+    }
+
     if (!m_previewRenderer) // in case the user closed the view again
     {
         abortProfilePlot();
         return;
     }
 
-    m_previewRendererConnections << 
-        connect(m_previewRenderer, &AbstractDataView::closed, this, &RenderViewStrategyImage2D::abortProfilePlot);
-
-    for (auto it = m_observerTags.begin(); it != m_observerTags.end(); ++it)
+    if (creatingNewRenderer)
     {
-        it.key()->RemoveObserver(it.value());
+        m_previewRendererConnections <<
+            connect(m_previewRenderer, &AbstractDataView::closed, this, &RenderViewStrategyImage2D::abortProfilePlot);
+
+
+        for (auto it = m_observerTags.begin(); it != m_observerTags.end(); ++it)
+        {
+            it.key()->RemoveObserver(it.value());
+        }
+        m_observerTags.clear();
+
+        auto addLineObservation = [this] (vtkObject * subject)
+        {
+            auto tag = subject->AddObserver(vtkCommand::ModifiedEvent, this, &RenderViewStrategyImage2D::lineMoved);
+            m_observerTags.insert(subject, tag);
+        };
+
+        addLineObservation(m_lineWidget->GetLineRepresentation()->GetLineHandleRepresentation());
+        addLineObservation(m_lineWidget->GetLineRepresentation()->GetPoint1Representation());
+        addLineObservation(m_lineWidget->GetLineRepresentation()->GetPoint2Representation());
     }
-    m_observerTags.clear();
-
-    auto addLineObservation = [this] (vtkObject * subject)
-    {
-        auto tag = subject->AddObserver(vtkCommand::ModifiedEvent, this, &RenderViewStrategyImage2D::lineMoved);
-        m_observerTags.insert(subject, tag);
-    };
-
-    addLineObservation(m_lineWidget->GetLineRepresentation()->GetLineHandleRepresentation());
-    addLineObservation(m_lineWidget->GetLineRepresentation()->GetPoint1Representation());
-    addLineObservation(m_lineWidget->GetLineRepresentation()->GetPoint2Representation());
 
     m_profilePlotAcceptAction->setVisible(true);
     m_profilePlotAbortAction->setVisible(true);
@@ -342,6 +365,19 @@ void RenderViewStrategyImage2D::abortProfilePlot()
     m_profilePlotAction->setEnabled(true);
 }
 
+void RenderViewStrategyImage2D::clearProfilePlots()
+{
+    QList<DataObject *> toDelete;
+    for (auto & plot : m_previewProfiles)
+    {
+        toDelete << plot.get();
+    }
+    m_previewRenderer->prepareDeleteData(toDelete);
+
+    m_previewProfiles.clear();
+    m_currentPlottingImages.clear();
+}
+
 void RenderViewStrategyImage2D::lineMoved()
 {
     assert(m_previewProfiles.size() > 0 && m_lineWidget);
@@ -356,20 +392,21 @@ void RenderViewStrategyImage2D::lineMoved()
         static_cast<ImageProfileData *>(profile.get())->setPoints(point1, point2);
 }
 
-void RenderViewStrategyImage2D::checkSourceExists()
+void RenderViewStrategyImage2D::updateAutomaticPlots()
 {
     // don't check here, if the user of this class explicitly set the inputs
     if (!m_inputData.isEmpty())
         return;
 
-    // recreate the plot, if any of the automatically fetches objects was removed from the context
-    for (auto img : m_currentPlottingImages)
+    // refresh the automatically fetched plots
+    if (m_previewRenderer)
     {
-        if (m_context.renderView().dataObjects().contains(img))
-            continue;
-
-        abortProfilePlot();
+        clearProfilePlots();
         startProfilePlot();
-        return;
+    }
+
+    if (m_currentPlottingImages.isEmpty())
+    {
+        abortProfilePlot();
     }
 }
