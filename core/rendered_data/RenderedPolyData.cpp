@@ -162,7 +162,7 @@ reflectionzeug::PropertyGroup * RenderedPolyData::createConfigGroup()
     });
     lightingEnabled->setOption("title", "Lighting");
 
-    auto * interpolation = renderSettings->addProperty<Interpolation>("Interpolation",
+    auto * interpolation = renderSettings->addProperty<Interpolation>("ShadingModel",
         [this]() {
         return static_cast<Interpolation>(renderProperty()->GetInterpolation());
     },
@@ -170,9 +170,10 @@ reflectionzeug::PropertyGroup * RenderedPolyData::createConfigGroup()
         renderProperty()->SetInterpolation(static_cast<int>(i));
         emit geometryChanged();
     });
+    interpolation->setOption("title", "Shading Model");
     interpolation->setStrings({
             { Interpolation::flat, "flat" },
-            { Interpolation::gouraud, "gouraud" },
+            //{ Interpolation::gouraud, "gouraud" },
             { Interpolation::phong, "phong" }
     });
 
