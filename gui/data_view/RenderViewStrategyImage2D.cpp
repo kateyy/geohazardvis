@@ -7,6 +7,7 @@
 #include <QDockWidget>
 #include <QIcon>
 #include <QLayout>
+#include <QSet>
 #include <QToolBar>
 
 #include <vtkCamera.h>
@@ -64,6 +65,9 @@ RenderViewStrategyImage2D::~RenderViewStrategyImage2D()
 
 void RenderViewStrategyImage2D::setInputData(const QList<DataObject *> & inputData)
 {
+    if (m_inputData.toSet() == inputData.toSet())
+        return;
+
     bool restartProfilePlot = false;
     double point1[3], point2[3];
     if (!m_previewProfiles.empty())   // currently plotting
