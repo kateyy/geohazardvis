@@ -69,8 +69,8 @@ private:
     AbstractRenderView * m_previewRenderer;
     QList<QMetaObject::Connection> m_previewRendererConnections;
 
-    QList<DataObject *> m_currentPlottingImages; // currently used input images
-    QList<DataObject *> m_inputData;             // input images that were explicitly set
+    QList<DataObject *> m_activeInputData;  // currently used input data
+    QList<DataObject *> m_inputData;        // input data that was explicitly set
 
     vtkSmartPointer<vtkLineWidget2> m_lineWidget;
     QMultiMap<vtkSmartPointer<vtkObject>, unsigned long> m_observerTags;

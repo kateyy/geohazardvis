@@ -205,21 +205,21 @@ void RenderViewStrategyImage2D::startProfilePlot()
 
     // check input images
 
-    assert(m_currentPlottingImages.isEmpty());
+    assert(m_activeInputData.isEmpty());
 
     // no inputs set, fetch data from our context
     if (m_inputData.isEmpty())
     {
-        m_currentPlottingImages = m_context.renderView().dataObjects();
+        m_activeInputData = m_context.renderView().dataObjects();
     }
     // inputs explicitly set
     else
     {
-        m_currentPlottingImages = m_inputData;
+        m_activeInputData = m_inputData;
     }
 
     // if there are no inputs, just ignore the request
-    if (m_currentPlottingImages.isEmpty())
+    if (m_activeInputData.isEmpty())
         return;
 
     m_profilePlotAction->setEnabled(false);
@@ -231,21 +231,21 @@ void RenderViewStrategyImage2D::startProfilePlot()
     {
         auto & scalars = m_context.colorMapping(i)->currentScalarsName();
 
-        for (auto inputImage : m_currentPlottingImages)
+        for (auto data : m_activeInputData)
         {
-            if (!m_context.renderView().contains(inputImage, i))
+            if (!m_context.renderView().contains(data, i))
                 continue;
 
             // don't plot the same data multiple times
-            QPair<DataObject *, QString> currentPlotCombination = { inputImage, scalars };
+            QPair<DataObject *, QString> currentPlotCombination = { data, scalars };
             if (createdPlots.contains(currentPlotCombination))
                 continue;
 
             createdPlots << currentPlotCombination;
 
             auto profile = std::make_unique<ImageProfileData>(
-                inputImage->name() + " plot",
-                *inputImage,
+                data->name() + " plot",
+                *data,
                 scalars);
 
             if (!profile->isValid())
@@ -349,7 +349,7 @@ void RenderViewStrategyImage2D::acceptProfilePlot()
     m_previewRendererConnections.clear();
 
     m_previewRenderer = nullptr;
-    m_currentPlottingImages.clear();
+    m_activeInputData.clear();
 
     m_lineWidget = nullptr;
     m_context.render();
@@ -365,7 +365,7 @@ void RenderViewStrategyImage2D::abortProfilePlot()
 
     auto oldPreviewRenderer = m_previewRenderer;
     m_previewRenderer = nullptr;
-    m_currentPlottingImages.clear();
+    m_activeInputData.clear();
 
     m_profilePlotAcceptAction->setVisible(false);
     m_profilePlotAbortAction->setVisible(false);
@@ -392,7 +392,7 @@ void RenderViewStrategyImage2D::clearProfilePlots()
     m_previewRenderer->prepareDeleteData(toDelete);
 
     m_previewProfiles.clear();
-    m_currentPlottingImages.clear();
+    m_activeInputData.clear();
 }
 
 void RenderViewStrategyImage2D::lineMoved()
@@ -422,7 +422,7 @@ void RenderViewStrategyImage2D::updateAutomaticPlots()
         startProfilePlot();
     }
 
-    if (m_currentPlottingImages.isEmpty())
+    if (m_activeInputData.isEmpty())
     {
         abortProfilePlot();
     }
