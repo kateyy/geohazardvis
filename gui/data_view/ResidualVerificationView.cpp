@@ -313,10 +313,16 @@ void ResidualVerificationView::setDataHelper(unsigned int subViewIndex, DataObje
     std::vector<std::unique_ptr<AbstractVisualizedData>> toDeleteInternal;
     setDataInternal(subViewIndex, data, toDeleteInternal);
 
-    assert(data->dataSet());
-    auto & dataSet = *data->dataSet();
-
-    m_attributeNamesLocations[subViewIndex] = findDataSetAttributeName(dataSet, subViewIndex);
+    if (data)
+    {
+        assert(data->dataSet());
+        auto & dataSet = *data->dataSet();
+        m_attributeNamesLocations[subViewIndex] = findDataSetAttributeName(dataSet, subViewIndex);
+    }
+    else
+    {
+        m_attributeNamesLocations[subViewIndex] = {};
+    }
 
     if (subViewIndex != residualIndex)
         updateResidualAsync();
@@ -509,13 +515,7 @@ void ResidualVerificationView::setDataInternal(unsigned int subViewIndex, DataOb
 
 void ResidualVerificationView::updateResidualAsync()
 {
-    assert(!m_updateWatcher->isRunning());
-
-    if (m_updateWatcher->isRunning())
-    {
-        qDebug() << "Residual update still running!";
-        return;
-    }
+    m_updateWatcher->waitForFinished();
 
     m_progressBar->show();
     toolBar()->setEnabled(false);
