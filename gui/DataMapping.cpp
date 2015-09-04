@@ -51,9 +51,16 @@ DataMapping & DataMapping::instance()
 
 void DataMapping::removeDataObjects(const QList<DataObject *> & dataObjects)
 {
+    // copy, as this list can change while we are processing it
+    // e.g., deleting an image -> delete related plots -> close related plot renderer
     auto currentRenderViews = m_renderViews.values();
     for (AbstractRenderView * renderView : currentRenderViews)
+    {
+        if (!m_renderViews.values().contains(renderView))
+            continue;
+
         renderView->prepareDeleteData(dataObjects);
+    }
 
     QList<TableView*> currentTableViews = m_tableViews.values();
     for (TableView * tableView : currentTableViews)
