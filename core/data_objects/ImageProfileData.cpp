@@ -36,7 +36,8 @@ ImageProfileData::ImageProfileData(const QString & name, DataObject & sourceData
 
     if (!scalars)
     {
-        if (scalars = inputData->GetCellData()->GetArray(scalarsName.toUtf8().data()))
+        scalars = inputData->GetCellData()->GetArray(scalarsName.toUtf8().data());
+        if (scalars)
             m_scalarsLocation = vtkAssignAttribute::CELL_DATA;
     }
 
@@ -45,7 +46,9 @@ ImageProfileData::ImageProfileData(const QString & name, DataObject & sourceData
         scalars = inputData->GetPointData()->GetScalars();
     if (!scalars)
     {
-        if (scalars = inputData->GetCellData()->GetArray(scalarsName.toUtf8().data()))
+        scalars = inputData->GetCellData()->GetArray(scalarsName.toUtf8().data());
+
+        if (scalars)
             m_scalarsLocation = vtkAssignAttribute::CELL_DATA;
     }
 
@@ -191,7 +194,7 @@ void ImageProfileData::setPoints(double point1[3], double point2[3])
         vtkBoundingBox bbox(bounds);
         auto diagonalLength = bbox.GetDiagonalLength();
 
-        int numElements = 0;
+        vtkIdType numElements = 0;
 
         if (m_scalarsLocation == vtkAssignAttribute::CELL_DATA)
         {
@@ -203,8 +206,8 @@ void ImageProfileData::setPoints(double point1[3], double point2[3])
         }
 
         // assuming that the points/cells are somehow uniformly distributed (and sized)
-        numProbePoints = static_cast<int>(numElements * vectorLength / diagonalLength);
-        numProbePoints = std::max(10, numProbePoints);
+        numProbePoints = static_cast<int>(double(numElements) * vectorLength / diagonalLength);
+        numProbePoints = static_cast<int>(std::max(10, numProbePoints));
     }
 
     m_probeLine->SetResolution(numProbePoints);

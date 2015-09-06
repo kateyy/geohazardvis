@@ -1,6 +1,10 @@
 
 #include <core/utility/DataExtent.h>
 
+#include <algorithm>
+#include <cassert>
+#include <limits>
+
 
 template<typename T, size_t Dimensions>
 DataExtent<T, Dimensions>::DataExtent()
@@ -21,13 +25,13 @@ DataExtent<T, Dimensions>::DataExtent(T extent[Dimensions * 2])
 template<typename T, size_t Dimensions>
 void DataExtent<T, Dimensions>::Add(const T other[Dimensions * 2])
 {
-    for (int i = 0; i < Dimensions; ++i)
+    for (size_t i = 0; i < Dimensions; ++i)
     {
-        if (m_extents[2 * i] < other[2 * i])
-            m_extents[2 * i] = other[2 * i];
+        if (m_extent[2 * i] < other[2 * i])
+            m_extent[2 * i] = other[2 * i];
 
-        if (m_extents[2 * i + 1] > other[2 * i + 1])
-            m_extents[2 * i + 1] = other[2 * i + 1];
+        if (m_extent[2 * i + 1] > other[2 * i + 1])
+            m_extent[2 * i + 1] = other[2 * i + 1];
     }
 }
 

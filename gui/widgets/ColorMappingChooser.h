@@ -81,6 +81,6 @@ private:
     /** check if we are moving the actor or if the user interacts */
     bool m_movingColorLegend;
     /** Mapping from subject (color legend coordinate, text property, etc) to observer id */
-    QMap<vtkWeakPointer<vtkObject>, int> m_colorLegendObserverIds;
+    QMap<vtkWeakPointer<vtkObject>, unsigned long> m_colorLegendObserverIds;
     QList<QMetaObject::Connection> m_qtConnect;
 };

@@ -11,8 +11,8 @@
 AbstractRenderView::AbstractRenderView(int index, QWidget * parent, Qt::WindowFlags flags)
     : AbstractDataView(index, parent, flags)
     , m_isInitialized(false)
-    , m_activeSubViewIndex(0)
     , m_axesEnabled(true)
+    , m_activeSubViewIndex(0u)
 {
 }
 

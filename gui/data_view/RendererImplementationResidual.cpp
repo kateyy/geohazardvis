@@ -54,7 +54,7 @@ ColorMapping * RendererImplementationResidual::colorMappingForSubView(unsigned i
 
 unsigned int RendererImplementationResidual::subViewIndexAtPos(const QPoint pixelCoordinate) const
 {
-    float uncheckedIndex = std::trunc(float(pixelCoordinate.x()) / m_renderView.width() * m_renderView.numberOfSubViews());
+    float uncheckedIndex = std::trunc(float(pixelCoordinate.x() * m_renderView.numberOfSubViews()) / float(m_renderView.width()));
 
     return static_cast<unsigned int>(
         std::max(0.0f, std::min(uncheckedIndex, float(m_renderView.numberOfSubViews() - 1u))));

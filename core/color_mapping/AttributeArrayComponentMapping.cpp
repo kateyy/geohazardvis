@@ -210,7 +210,7 @@ QMap<int, QPair<double, double>> AttributeArrayComponentMapping::updateBounds()
                 vtkDataSet * dataSet = visualizedData->colorMappingInputData(i);
                 vtkDataArray * dataArray = 
                     attributeLocation == vtkAssignAttribute::CELL_DATA ? dataSet->GetCellData()->GetArray(utf8Name.data())
-                    : (attributeLocation == vtkAssignAttribute::POINT_DATA ? dataArray = dataSet->GetPointData()->GetArray(utf8Name.data())
+                    : (attributeLocation == vtkAssignAttribute::POINT_DATA ? dataSet->GetPointData()->GetArray(utf8Name.data())
                     : nullptr);
 
                 if (!dataArray)
