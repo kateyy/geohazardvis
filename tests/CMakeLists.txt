@@ -10,15 +10,43 @@ function(add_test_without_ctest target)
 
     add_subdirectory(${target})
     add_dependencies(test ${target})
-    add_custom_command(TARGET test POST_BUILD 
+    add_dependencies(${target} gtest)
+    add_custom_command(TARGET test POST_BUILD
         COMMAND $<TARGET_FILE:${target}> --gtest_output=xml:gtests.xml)
 
 endfunction()
 
+include(CMakeDependentOption)
+
+CMAKE_DEPENDENT_OPTION(OPTION_USE_SYSTEM_GTEST "Search for installed Google Test Libraries instead of compiling them" OFF
+    "OPTION_BUILD_TESTS" OFF)
+
 if(OPTION_BUILD_TESTS)
-    find_package(GTEST)
+
+    if (OPTION_USE_SYSTEM_GTEST)
+        find_package(GTEST)
+    else()
+        set(GTEST_FOUND 1)
+        set(GTEST_DIR "${PROJECT_SOURCE_DIR}/ThirdParty/gtest")
+
+        include(ExternalProject)
+
+        ExternalProject_Add(gtest
+            PREFIX ${GTEST_DIR}
+            EXCLUDE_FROM_ALL 1
+            GIT_REPOSITORY "https://github.com/google/googletest"
+            GIT_TAG "release-1.7.0"
+            CMAKE_CACHE_ARGS
+                -Dgtest_force_shared_crt:bool=ON
+            INSTALL_COMMAND ""  # skip install for gtest: target does not exist
+        )
+
+        set(GTEST_LIBRARIES "${GTEST_DIR}/src/gtest-build/$<CONFIG>/gtest.lib")
+        set(GTEST_INCLUDE_DIR "${GTEST_DIR}/src/gtest/include")
+    endif()
+
     if(NOT GTEST_FOUND)
-        message("Tests skipped: gtest not found")
+        message(WARNING "Tests skipped: gtest not found")
     endif()
 endif()
 
