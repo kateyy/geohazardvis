@@ -3,3 +3,4 @@ screenshots*/*
 testing*/*
 .kdev4/*
 *.kdev4
+*settings.ini

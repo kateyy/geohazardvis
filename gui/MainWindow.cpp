@@ -13,6 +13,7 @@
 #include <QGridLayout>
 #include <QMessageBox>
 #include <QMimeData>
+#include <QSettings>
 #include <QtConcurrent/QtConcurrentRun>
 
 #include <widgetzeug/dark_fusion_style.hpp>
@@ -38,6 +39,7 @@
 namespace
 {
     const char s_defaultAppTitle[] = "GeohazardVis";
+    const char s_settingsFileName[] = "GeohazardVis_settings.ini";
 }
 
 MainWindow::MainWindow()
@@ -116,6 +118,10 @@ MainWindow::MainWindow()
     });
 
     connect(m_ui->actionDark_Style, &QAction::triggered, this, &MainWindow::setDarkFusionStyle);
+
+    QSettings settings(s_settingsFileName, QSettings::IniFormat);
+    restoreGeometry(settings.value("geometry").toByteArray());
+    restoreState(settings.value("windowState").toByteArray());
 }
 
 MainWindow::~MainWindow()
@@ -156,6 +162,15 @@ QStringList MainWindow::dialog_inputFileName()
     m_lastOpenFolder = QFileInfo(fileNames.first()).absolutePath();
 
     return fileNames;
+}
+
+void MainWindow::closeEvent(QCloseEvent * event)
+{
+    QSettings settings(s_settingsFileName, QSettings::IniFormat);
+    settings.setValue("geometry", saveGeometry());
+    settings.setValue("windowState", saveState());
+
+    QMainWindow::closeEvent(event);
 }
 
 void MainWindow::dragEnterEvent(QDragEnterEvent * event)
