@@ -93,8 +93,8 @@ else()
     set(INSTALL_INIT "/etc/init")               # /etc/init (upstart init scripts)
 endif()
 
-if(Win32)
-    set(CPACK_INSTALL_3RDPARTY_DLLS TRUE CACHE BOOL "Include 3rdparty dlls (VTK, Qt) in packages.")
+if(WIN32)
+    option(CPACK_INSTALL_3RDPARTY_DLLS "Include 3rdparty dlls (VTK, Qt) in packages." ON)
 endif()
 
 # Install the project meta files
