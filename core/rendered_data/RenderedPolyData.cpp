@@ -276,20 +276,20 @@ void RenderedPolyData::scalarsForColorMappingChangedEvent()
     RenderedData3D::scalarsForColorMappingChangedEvent();
 
     // no mapping yet, so just render the data set
-    if (!m_scalars)
+    if (!m_colorMappingData)
     {
         m_colorMappingOutput = dataObject().processedOutputPort();
         finalizePipeline();
         return;
     }
 
-    m_scalars->configureMapper(this, m_mapper);
+    m_colorMappingData->configureMapper(this, m_mapper);
 
     vtkSmartPointer<vtkAlgorithm> filter;
 
-    if (m_scalars->usesFilter())
+    if (m_colorMappingData->usesFilter())
     {
-        filter = m_scalars->createFilter(this);
+        filter = m_colorMappingData->createFilter(this);
         m_colorMappingOutput = filter->GetOutputPort();
     }
     else

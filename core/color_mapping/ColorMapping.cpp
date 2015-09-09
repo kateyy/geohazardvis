@@ -42,7 +42,7 @@ void ColorMapping::setVisualizedData(const QList<AbstractVisualizedData *> & vis
 
     auto lastScalars = currentScalarsName();
     m_currentScalarsName.clear();
-    m_scalars.clear();
+    m_data.clear();
 
 
     m_visualizedData = visualizedData;
@@ -55,8 +55,8 @@ void ColorMapping::setVisualizedData(const QList<AbstractVisualizedData *> & vis
         connect(&vis->dataObject(), &DataObject::attributeArraysChanged, this, &ColorMapping::updateAvailableScalars, Qt::QueuedConnection);
     }
 
-    m_scalars = ColorMappingRegistry::instance().createMappingsValidFor(visualizedData);
-    for (auto & pair : m_scalars)
+    m_data = ColorMappingRegistry::instance().createMappingsValidFor(visualizedData);
+    for (auto & pair : m_data)
     {
         auto & scalars = pair.second;
         scalars->setLookupTable(m_gradient);
@@ -65,7 +65,7 @@ void ColorMapping::setVisualizedData(const QList<AbstractVisualizedData *> & vis
     }
 
     // disable color mapping if we couldn't find appropriate data
-    if (m_scalars.empty())
+    if (m_data.empty())
     {
         updateLegendVisibility();
         return;
@@ -73,14 +73,14 @@ void ColorMapping::setVisualizedData(const QList<AbstractVisualizedData *> & vis
 
     QString newScalarsName;
     // reuse last configuration if possible
-    if (m_scalars.find(lastScalars) != m_scalars.end())
+    if (m_data.find(lastScalars) != m_data.end())
         newScalarsName = lastScalars;
     else
     {
-        if (m_scalars.find("user-defined color") != m_scalars.end())
+        if (m_data.find("user-defined color") != m_data.end())
             newScalarsName = "user-defined color";
         else
-            newScalarsName = m_scalars.begin()->first; // ordered by QString::operator<
+            newScalarsName = m_data.begin()->first; // ordered by QString::operator<
     }
 
     setCurrentScalarsByName(newScalarsName);
@@ -94,13 +94,13 @@ void ColorMapping::clear()
 
     m_visualizedData.clear();
 
-    m_scalars.clear();
+    m_data.clear();
 }
 
 QList<QString> ColorMapping::scalarsNames() const
 {
     QList<QString> names;
-    for (auto & s : m_scalars)
+    for (auto & s : m_data)
         names << s.first;
 
     return names;
@@ -143,9 +143,9 @@ const ColorMappingData * ColorMapping::currentScalars() const
     if (currentScalarsName().isEmpty())
         return nullptr;
 
-    auto it = m_scalars.find(currentScalarsName());
-    assert(it != m_scalars.end());
-    if (it == m_scalars.end())
+    auto it = m_data.find(currentScalarsName());
+    assert(it != m_data.end());
+    if (it == m_data.end())
         return nullptr;
 
     return it->second.get();

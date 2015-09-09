@@ -13,7 +13,7 @@
 
 AbstractVisualizedData::AbstractVisualizedData(ContentType contentType, DataObject & dataObject, QObject * parent)
     : QObject(parent)
-    , m_scalars(nullptr)
+    , m_colorMappingData(nullptr)
     , m_contentType(contentType)
     , m_dataObject(dataObject)
     , m_isVisible(true)
@@ -52,10 +52,10 @@ void AbstractVisualizedData::setVisible(bool visible)
 
 void AbstractVisualizedData::setScalarsForColorMapping(ColorMappingData * scalars)
 {
-    if (scalars == m_scalars)
+    if (scalars == m_colorMappingData)
         return;
 
-    m_scalars = scalars;
+    m_colorMappingData = scalars;
 
     scalarsForColorMappingChangedEvent();
 }

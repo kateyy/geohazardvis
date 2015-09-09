@@ -114,17 +114,17 @@ void RenderedImageData::scalarsForColorMappingChangedEvent()
 {
     RenderedData::scalarsForColorMappingChangedEvent();
 
-    if (!m_scalars)
+    if (!m_colorMappingData)
     {
         m_mapper->SetInputConnection(colorMappingInput());
         return;
     }
 
-    m_scalars->configureMapper(this, m_mapper);
+    m_colorMappingData->configureMapper(this, m_mapper);
 
-    if (m_scalars->usesFilter())
+    if (m_colorMappingData->usesFilter())
     {
-        vtkSmartPointer<vtkAlgorithm> filter = m_scalars->createFilter(this);
+        vtkSmartPointer<vtkAlgorithm> filter = m_colorMappingData->createFilter(this);
         filter->Update();
         vtkDataSet * image = vtkDataSet::SafeDownCast(filter->GetOutputDataObject(0));
         // use filter only if it outputs scalars. To prevent segfault in image slice.
@@ -139,7 +139,7 @@ void RenderedImageData::scalarsForColorMappingChangedEvent()
     }
 
     // hack: how to enforce to use color data directly?
-    if (m_scalars->dataMinValue() == m_scalars->dataMaxValue())
+    if (m_colorMappingData->dataMinValue() == m_colorMappingData->dataMaxValue())
         property()->SetLookupTable(nullptr);
     else
         property()->SetLookupTable(m_gradient);
@@ -149,7 +149,7 @@ void RenderedImageData::colorMappingGradientChangedEvent()
 {
     RenderedData::scalarsForColorMappingChangedEvent();
 
-    if (m_scalars && (m_scalars->dataMinValue() == m_scalars->dataMaxValue()))
+    if (m_colorMappingData && (m_colorMappingData->dataMinValue() == m_colorMappingData->dataMaxValue()))
         property()->SetLookupTable(nullptr);
     else
         property()->SetLookupTable(m_gradient);

@@ -281,12 +281,12 @@ void RenderedVectorGrid3D::scalarsForColorMappingChangedEvent()
         if (m_planeWidgets[i]->GetEnabled() != 0)
             m_storedSliceIndexes[i] = m_planeWidgets[i]->GetSliceIndex();
 
-    if (m_scalars && m_scalars->usesFilter())
+    if (m_colorMappingData && m_colorMappingData->usesFilter())
     {
         for (int i = 0; i < 3; ++i)
         {
             m_planeWidgets[i]->GetTexture()->SetInputConnection(
-                m_scalars->createFilter(this, i)->GetOutputPort());
+                m_colorMappingData->createFilter(this, i)->GetOutputPort());
         }
     }
     else
@@ -335,7 +335,7 @@ void RenderedVectorGrid3D::updatePlaneLUT()
         m_blackWhiteLUT->Build();
     }
 
-    vtkLookupTable * lut = (m_scalars && m_scalars->name() == "LIC 2D")
+    vtkLookupTable * lut = (m_colorMappingData && m_colorMappingData->name() == "LIC 2D")
         ? m_blackWhiteLUT.Get()
         : vtkLookupTable::SafeDownCast(m_gradient);
 
@@ -345,7 +345,7 @@ void RenderedVectorGrid3D::updatePlaneLUT()
 
 void RenderedVectorGrid3D::updateVisibilities()
 {
-    bool colorMapping = m_scalars && m_scalars->usesFilter();
+    bool colorMapping = m_colorMappingData && m_colorMappingData->usesFilter();
     bool changed = false;
 
     for (int i = 0; i < 3; ++i)

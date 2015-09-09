@@ -78,7 +78,7 @@ private:
 
     QList<AbstractVisualizedData *> m_visualizedData;
 
-    std::map<QString, std::unique_ptr<ColorMappingData>> m_scalars;
+    std::map<QString, std::unique_ptr<ColorMappingData>> m_data;
 
     QString m_currentScalarsName;
     vtkSmartPointer<vtkLookupTable> m_gradient;

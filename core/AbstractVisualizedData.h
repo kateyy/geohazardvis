@@ -57,7 +57,7 @@ protected:
     virtual void colorMappingGradientChangedEvent();
 
 protected:
-    ColorMappingData * m_scalars;
+    ColorMappingData * m_colorMappingData;
     vtkSmartPointer<vtkScalarsToColors> m_gradient;
 
 private:
