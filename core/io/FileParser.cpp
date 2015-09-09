@@ -19,15 +19,17 @@ using namespace io;
 namespace FileParser
 {
 
-bool populateIOVectors(const string inputFileName,
-                        vector<vector<t_FP> > &ioVectors) {
+bool populateIOVectors(const string & inputFileName,
+    vector<vector<t_FP> > &ioVectors)
+{
     assert(ioVectors.empty());
 
     vector<t_FP> parsedData;
 
     size_t nbColumns;
 
-    if(!parseIOFile(inputFileName, parsedData, nbColumns)) {
+    if (!parseIOFile(inputFileName, parsedData, nbColumns))
+    {
         return false;
     }
 
@@ -39,14 +41,16 @@ bool populateIOVectors(const string inputFileName,
 }
 
 bool populateIOVectors(ifstream & inputStream,
-    vector<vector<t_FP> > &ioVectors,
+    io::InputVector &ioVectors,
     size_t numTuples,
-    size_t componentsPerTuple) {
+    size_t componentsPerTuple)
+{
     assert(ioVectors.empty());
 
     vector<t_FP> parsedData;
 
-    if (!parseIOStream(inputStream, parsedData, numTuples * componentsPerTuple)) {
+    if (!parseIOStream(inputStream, parsedData, numTuples * componentsPerTuple))
+    {
         return false;
     }
 
@@ -57,25 +61,29 @@ bool populateIOVectors(ifstream & inputStream,
     return true;
 }
 
-bool parseIOStream(ifstream & inputStream, vector<t_FP> &parsedData, size_t numValues) {
+bool parseIOStream(ifstream & inputStream, vector<t_FP> &parsedData, size_t numValues)
+{
     string input;
     t_FP input_FP;
 
     assert(parsedData.empty());
 
-    if (inputStream.fail()) {
-        cout << endl << "\t" << "parseIOStream --- failed!" << endl;
+    if (inputStream.fail())
+    {
         return false;
     }
 
     size_t processedValue = 0;
-    while (processedValue < numValues && !inputStream.eof()) {
+    while (processedValue < numValues && !inputStream.eof())
+    {
         inputStream >> input;
 
-        if (input == "NaN") {
+        if (input == "NaN")
+        {
             input_FP = std::numeric_limits<double>::quiet_NaN();
         }
-        else {
+        else
+        {
 #if defined(_WIN32)
             input_FP = atof(input.c_str());
 #else
@@ -90,12 +98,12 @@ bool parseIOStream(ifstream & inputStream, vector<t_FP> &parsedData, size_t numV
     }
 
     if (processedValue < numValues)
-        cout << endl << "\t" << "parseIOStream --- failed! (read less values than expected)" << endl;
+        cerr << "\t" << "parseIOStream --- failed! (read less values than expected)" << endl;
 
     return (processedValue == numValues);
 }
 
-bool parseIOFile(const string inputFileName, vector<t_FP> &parsedData, size_t & nbColumns)
+bool parseIOFile(const string & inputFileName, vector<t_FP> &parsedData, size_t & nbColumns)
 {
     string inputValue;
     t_FP input_FP;
@@ -110,7 +118,8 @@ bool parseIOFile(const string inputFileName, vector<t_FP> &parsedData, size_t & 
         getline(input, line);
         string columnElement;
         stringstream columnCounter(line);
-        while (!columnCounter.eof()) {
+        while (!columnCounter.eof())
+        {
             getline(columnCounter, columnElement, ' ');
             if (columnElement != "")
                 ++nbColumns;
@@ -120,13 +129,15 @@ bool parseIOFile(const string inputFileName, vector<t_FP> &parsedData, size_t & 
     ifstream stream;
     stream.open(inputFileName.c_str(), ios::in);
 
-    if(stream.fail()) {
-        cout << endl << "\t" << "parseIOFile --- failed!" << endl;
+    if (stream.fail())
+    {
         return false;
     }
 
-    while(stream >> inputValue) {
-        if(inputValue == "NaN") {
+    while (stream >> inputValue)
+    {
+        if (inputValue == "NaN")
+        {
             input_FP = std::numeric_limits<double>::quiet_NaN();
         }
         else
@@ -147,14 +158,17 @@ bool parseIOFile(const string inputFileName, vector<t_FP> &parsedData, size_t & 
 }
 
 void populateVectorsFromData(const vector<t_FP> &parsedData,
-                             vector<vector<t_FP> > &ioVectors) {
+    vector<vector<t_FP> > &ioVectors)
+{
     size_t i, j, numOfVectors;
     numOfVectors = ioVectors.size();
     assert(numOfVectors > 0);
 
-    for(i = 0; i < parsedData.size(); i+=numOfVectors) {
-        for(j = 0; j < numOfVectors; j++) {
-            ioVectors[j].push_back(parsedData[i+j]);
+    for (i = 0; i < parsedData.size(); i += numOfVectors)
+    {
+        for (j = 0; j < numOfVectors; j++)
+        {
+            ioVectors[j].push_back(parsedData[i + j]);
         }
     }
 }
