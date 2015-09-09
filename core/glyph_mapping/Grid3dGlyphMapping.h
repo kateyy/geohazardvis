@@ -29,5 +29,7 @@ private:
 
     vtkSmartPointer<vtkAssignAttribute> m_assignVectors;
     RenderedVectorGrid3D & m_renderedGrid;
-    vtkDataArray * m_dataArray;
+    /** The data array here is only the resampled copy of the original data. It can be released by its source algorithm, 
+      * so keep a reference here */
+    vtkSmartPointer<vtkDataArray> m_dataArray;
 };
