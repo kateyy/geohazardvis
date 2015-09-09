@@ -30,7 +30,7 @@
 
 namespace
 {
-    const int Default_gradient_index = 32;
+    const char * Default_gradient_name = "_0012_Blue-Red_copy";
 }
 
 
@@ -340,14 +340,15 @@ void ColorMappingChooser::loadGradientImages()
         dir.setNameFilters(filters);
         QFileInfoList list = dir.entryInfoList();
 
-        for (QFileInfo fileInfo : list)
+        for (const QFileInfo & fileInfo : list)
         {
-            QString fileName = fileInfo.baseName();
+            QString baseName = fileInfo.baseName();
             QString filePath = fileInfo.absoluteFilePath();
             QPixmap pixmap = QPixmap(filePath).scaled(gradientImageSize);
             m_gradients << buildLookupTable(pixmap.toImage());
 
             gradientComboBox->addItem(pixmap, "");
+            gradientComboBox->setItemData(gradientComboBox->count() - 1, baseName);
         }
     }
 
@@ -393,7 +394,9 @@ int ColorMappingChooser::gradientIndex(vtkLookupTable * gradient) const
 
 int ColorMappingChooser::defaultGradientIndex() const
 {
-    return std::min(m_gradients.size() - 1, Default_gradient_index);
+    assert(m_ui->gradientComboBox->count() > 0);
+    int defautltIndex = m_ui->gradientComboBox->findData(Default_gradient_name);
+    return std::max(defautltIndex, 0);
 }
 
 void ColorMappingChooser::checkRenderViewColorMapping()
