@@ -35,6 +35,7 @@ include(cmake/Custom.cmake)
 include(cmake/GitRevision.cmake)
 include(cmake/ProjectConfigSetup.cmake)
 
+include(CMakeDependentOption)
 
 # PLATFORM AND ARCHITECTURE
 
@@ -111,6 +112,11 @@ create_revision_file(${CMAKE_BINARY_DIR}/revision ${INSTALL_ROOT})
 install(FILES ${CMAKE_BINARY_DIR}/revision DESTINATION ${INSTALL_ROOT})
 
 
+# Find / add third-party components
+
+set(THIRD_PARTY_DIR "${PROJECT_SOURCE_DIR}/ThirdParty")
+include(ExternalProject)
+
 set(VTK_COMPONENTS
     vtkGUISupportQt         # QVTKWidget
     vtkRenderingAnnotation  # vtkCubeAxesActor, vtkScalarBarActor
@@ -170,8 +176,40 @@ include_directories(SYSTEM ${VTK_INCLUDE_DIRS})
 set_property(DIRECTORY APPEND PROPERTY COMPILE_DEFINITIONS ${VTK_DEFINITIONS})
 
 
-find_package(Qt5 5.2.1 COMPONENTS Widgets)
-find_package(libzeug REQUIRED)
+option(OPTION_USE_SYSTEM_LIBZEUG "Search for installed Libzeug Libraries instead of compiling them" OFF)
+if(OPTION_USE_SYSTEM_LIBZEUG)
+    find_package(libzeug REQUIRED)
+else()
+    set(LIBZEUG_FOUND 1)
+    set(LIBZEUG_PREFIX "${THIRD_PARTY_DIR}/libzeug")
+    set(libzeug_DIR "${LIBZEUG_PREFIX}/install")
+
+    find_package(Qt5 COMPONENTS OpenGL)
+
+    ExternalProject_Add(libzeug
+        PREFIX ${LIBZEUG_PREFIX}
+        GIT_REPOSITORY "https://github.com/kateyy/libzeug.git"
+        GIT_TAG "fix_guiValueUpdateSignals"
+        CMAKE_CACHE_ARGS
+            -DOPTION_BUILD_TESTS:bool=OFF
+            -DQt5Core_DIR:path=${Qt5Core_DIR}
+            -DQt5Gui_DIR:path=${Qt5Gui_DIR}
+            -DQt5OpenGL_DIR:path=${Qt5OpenGL_DIR}
+            -DQt5Widgets_DIR:path=${Qt5Widgets_DIR}
+            -DCMAKE_INSTALL_PREFIX:path=${libzeug_DIR}
+        )
+
+        set(LIBZEUG_INCLUDES
+            "${libzeug_DIR}/include"
+        )
+        set(LIBZEUG_LIBRARIES
+            "${libzeug_DIR}/lib/signalzeug$<$<CONFIG:Debug>:d>.lib"
+            "${libzeug_DIR}/lib/loggingzeug$<$<CONFIG:Debug>:d>.lib"
+            "${libzeug_DIR}/lib/reflectionzeug$<$<CONFIG:Debug>:d>.lib"
+            "${libzeug_DIR}/lib/propertyguizeug$<$<CONFIG:Debug>:d>.lib"
+            "${libzeug_DIR}/lib/threadingzeug$<$<CONFIG:Debug>:d>.lib"
+        )
+endif()
 
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)

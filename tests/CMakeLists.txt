@@ -16,7 +16,6 @@ function(add_test_without_ctest target)
 
 endfunction()
 
-include(CMakeDependentOption)
 
 CMAKE_DEPENDENT_OPTION(OPTION_USE_SYSTEM_GTEST "Search for installed Google Test Libraries instead of compiling them" OFF
     "OPTION_BUILD_TESTS" OFF)
@@ -27,9 +26,7 @@ if(OPTION_BUILD_TESTS)
         find_package(GTEST)
     else()
         set(GTEST_FOUND 1)
-        set(GTEST_DIR "${PROJECT_SOURCE_DIR}/ThirdParty/gtest")
-
-        include(ExternalProject)
+        set(GTEST_DIR "${THIRD_PARTY_DIR}/gtest")
 
         ExternalProject_Add(gtest
             PREFIX ${GTEST_DIR}

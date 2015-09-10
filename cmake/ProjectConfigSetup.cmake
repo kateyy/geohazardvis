@@ -42,7 +42,7 @@ function(setupProjectUserConfig TARGET)
         list(APPEND PROJECT_PATHS "${VTK_DIR}\\bin\\${CONFIG_TYPE}")
 
         # libzeug
-        list(APPEND PROJECT_PATHS "${LIBZEUG_DIR}\\bin")
+        list(APPEND PROJECT_PATHS "${libzeug_DIR}\\bin")
 
         # TODO Qt
 
