@@ -120,8 +120,6 @@ else()
 endif()
 
 target_link_libraries( ${TARGET}
-    ${LIBZEUG_LIBRARIES}
-    ${VTK_LIBRARIES}
     Qt5::Widgets
 
     core
