@@ -10,7 +10,9 @@ function(add_test_without_ctest target)
 
     add_subdirectory(${target})
     add_dependencies(test ${target})
-    add_dependencies(${target} gtest)
+    if(TARGET gtest)
+        add_dependencies(${target} gtest)
+    endif()
     add_custom_command(TARGET test POST_BUILD
         COMMAND $<TARGET_FILE:${target}> --gtest_output=xml:gtests.xml)
 

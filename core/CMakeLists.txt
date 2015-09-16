@@ -185,7 +185,9 @@ else()
     add_library(${TARGET} SHARED ${SOURCES})
 endif()
 
-add_dependencies(${TARGET} libzeug)
+if(TARGET libzeug)
+    add_dependencies(${TARGET} libzeug)
+endif()
 
 target_link_libraries( ${TARGET}
     ${LIBZEUG_LIBRARIES}
