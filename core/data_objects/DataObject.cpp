@@ -28,6 +28,8 @@ vtkInformationKeyMacro(DataObject, ArrayIsAuxiliaryKey, Integer);
 DataObject::DataObject(const QString & name, vtkDataSet * dataSet)
     : d_ptr(std::make_unique<DataObjectPrivate>(*this, name, dataSet))
 {
+    setObjectName(name);
+
     if (dataSet)
     {
         dataSet->GetBounds(d_ptr->m_bounds);
