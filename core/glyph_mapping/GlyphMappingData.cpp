@@ -3,20 +3,19 @@
 #include <cassert>
 #include <algorithm>
 
-#include <vtkArrowSource.h>
-#include <vtkLineSource.h>
-#include <vtkAppendPolyData.h>
-#include <vtkVectorNorm.h>
-#include <vtkAssignAttribute.h>
-#include <vtkPointData.h>
-#include <vtkLookupTable.h>
-
-#include <vtkGlyph3D.h>
-
-#include <vtkPolyDataMapper.h>
-
 #include <vtkActor.h>
+#include <vtkAppendPolyData.h>
+#include <vtkArrowSource.h>
+#include <vtkAssignAttribute.h>
+#include <vtkGlyph3D.h>
+#include <vtkInformation.h>
+#include <vtkInformationStringKey.h>
+#include <vtkLineSource.h>
+#include <vtkLookupTable.h>
+#include <vtkPointData.h>
+#include <vtkPolyDataMapper.h>
 #include <vtkProperty.h>
+#include <vtkVectorNorm.h>
 
 #include <reflectionzeug/Property.h>
 #include <reflectionzeug/PropertyGroup.h>
@@ -87,6 +86,9 @@ GlyphMappingData::GlyphMappingData(RenderedData & renderedData)
     m_mapper->UseLookupTableScalarRangeOn();
     m_mapper->SetInputConnection(m_arrowGlyph->GetOutputPort());
     m_mapper->ScalarVisibilityOff();
+
+    m_mapper->GetInformation()->Set(DataObject::NameKey(), renderedData.dataObject().name().toUtf8().data());
+    DataObject::setDataObject(*m_mapper->GetInformation(), &renderedData.dataObject());
 
     m_actor->SetVisibility(m_isVisible);
     m_actor->PickableOff();
