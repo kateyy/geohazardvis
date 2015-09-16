@@ -185,6 +185,8 @@ else()
     add_library(${TARGET} SHARED ${SOURCES})
 endif()
 
+add_dependencies(${TARGET} libzeug)
+
 target_link_libraries( ${TARGET}
     ${LIBZEUG_LIBRARIES}
     ${VTK_LIBRARIES}

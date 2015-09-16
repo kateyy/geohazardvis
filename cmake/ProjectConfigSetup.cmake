@@ -6,6 +6,21 @@ if(MSVC)
         ON)
 endif()
 
+if(NOT OPTION_MSVC_AUTOMATIC_PROJECT_CONFIG)
+
+    function(setupProjectUserConfig TARGET)
+    endfunction()
+
+    return()
+
+endif()
+
+
+# find path where the qmake executable resides, to be able to add it to the debug PATH
+find_program(Qt5QMake_PATH qmake
+    DOC "Path to the qmake executable of the currently used Qt5 installation.")
+
+
 function(setupProjectUserConfig TARGET)
 
     if(NOT OPTION_MSVC_AUTOMATIC_PROJECT_CONFIG)
@@ -42,9 +57,12 @@ function(setupProjectUserConfig TARGET)
         list(APPEND PROJECT_PATHS "${VTK_DIR}\\bin\\${CONFIG_TYPE}")
 
         # libzeug
-        list(APPEND PROJECT_PATHS "${LIBZEUG_DIR}\\bin")
+        list(APPEND PROJECT_PATHS "${libzeug_DIR}\\bin")
 
-        # TODO Qt
+        # Qt
+        get_filename_component(Qt5QMake_DIR ${Qt5QMake_PATH} DIRECTORY)
+        list(APPEND PROJECT_PATHS "${Qt5QMake_DIR}")
+
 
         set(PROJECT_PATH "")
         foreach(PATH_ENTRY ${PROJECT_PATHS})
