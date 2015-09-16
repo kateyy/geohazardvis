@@ -8,31 +8,29 @@
 #include <QThread>
 #include <QTimer>
 
-#include <vtkRenderWindowInteractor.h>
-#include <vtkRenderer.h>
-#include <vtkRenderWindow.h>
+#include <vtkActor.h>
 #include <vtkCallbackCommand.h>
-
-#include <vtkObjectFactory.h>
-#include <vtkPointPicker.h>
+#include <vtkCamera.h>
+#include <vtkCellArray.h>
+#include <vtkCellData.h>
 #include <vtkCellPicker.h>
-
+#include <vtkIdTypeArray.h>
 #include <vtkInformation.h>
 #include <vtkInformationStringKey.h>
 #include <vtkMath.h>
-
-#include <vtkCellArray.h>
-#include <vtkIdTypeArray.h>
-#include <vtkActor.h>
-#include <vtkPolygon.h>
-#include <vtkProperty.h>
-#include <vtkCamera.h>
-#include <vtkPolygon.h>
 #include <vtkMath.h>
+#include <vtkObjectFactory.h>
+#include <vtkPointPicker.h>
 #include <vtkPolyData.h>
 #include <vtkPolyDataMapper.h>
-#include <vtkCellData.h>
+#include <vtkPolygon.h>
+#include <vtkPolygon.h>
 #include <vtkPropCollection.h>
+#include <vtkProperty.h>
+#include <vtkRenderWindow.h>
+#include <vtkRenderWindowInteractor.h>
+#include <vtkRenderer.h>
+#include <vtkScalarsToColors.h>
 
 #include <core/utility/vtkcamerahelper.h>
 #include <core/data_objects/PolyDataObject.h>
@@ -566,7 +564,21 @@ void InteractorStyle3D::sendPointInfo() const
 {
     vtkAbstractMapper3D * cellMapper = m_cellPicker->GetMapper();
     vtkAbstractMapper3D * pointMapper = m_pointPicker->GetMapper();
-    if (!cellMapper && ! pointMapper)    // no object at cursor position
+
+    if (!cellMapper && !pointMapper)    // no object at cursor position
+    {
+        emit pointInfoSent({});
+        return;
+    }
+
+    auto mapper = cellMapper ? cellMapper : pointMapper;
+    assert(mapper);
+
+    auto dataObject = DataObject::getDataObject(*pointMapper->GetInformation());
+    auto polyData = dynamic_cast<PolyDataObject *>(dataObject);
+
+    // don't list unreferenced points for triangular data
+    if (polyData && !cellMapper)
     {
         emit pointInfoSent({});
         return;
@@ -589,14 +601,8 @@ void InteractorStyle3D::sendPointInfo() const
         inputName = DataObject::NameKey()->Get(inputInfo);
 
     stream
-        << "data set: " << inputName << endl;
+        << "Data Set: " << inputName << endl;
 
-    PolyDataObject * polyData = nullptr;
-    if (cellMapper)
-    {
-        DataObject * dataObject = DataObject::getDataObject(*cellMapper->GetInformation());
-        polyData = dynamic_cast<PolyDataObject *>(dataObject);
-    }
     // for poly data: centroid and scalar information if available
     if (polyData)
     {
@@ -604,22 +610,27 @@ void InteractorStyle3D::sendPointInfo() const
         double centroid[3];
         polyData->cellCenters()->GetPoint(cellId, centroid);
         stream
-            << "triangle index: " << cellId << endl
-            << "x: " << centroid[0] << endl
-            << "y: " << centroid[1] << endl
-            << "z: " << centroid[2];
+            << "Triangle Index: " << cellId << endl
+            << "X = " << centroid[0] << endl
+            << "Y = " << centroid[1] << endl
+            << "Z = " << centroid[2];
 
         vtkMapper * concreteMapper = vtkMapper::SafeDownCast(cellMapper);
         assert(concreteMapper);
-        vtkDataArray * scalars = polyData->processedDataSet()->GetCellData()->GetScalars();
-        if (concreteMapper && scalars)
+        auto arrayName = concreteMapper->GetArrayName();
+        vtkDataArray * scalars = arrayName ? polyData->processedDataSet()->GetCellData()->GetArray(arrayName) : nullptr;
+        if (scalars)
         {
+            auto component = concreteMapper->GetLookupTable()->GetVectorComponent();
+            assert(component >= 0);
             double value =
-                scalars->GetTuple(cellId)[concreteMapper->GetArrayComponent()];
-            stream << endl << "scalar value: " << value;
+                scalars->GetTuple(cellId)[component];
+
+            stream  << endl << endl << "Attribute: " << QString::fromUtf8(arrayName) << " (" << + component << ")" << endl;
+            stream << "Value: " << value;
         }
     }
-    // for 3D vectors, or poly data fallback
+    // for 3D vectors
     else
     {
         double* pos = m_pointPicker->GetPickPosition();
@@ -632,7 +643,8 @@ void InteractorStyle3D::sendPointInfo() const
 
     QStringList info;
     QString line;
-    while ((line = stream.readLine()) != QString())
+
+    while (stream.readLineInto(&line))
         info.push_back(line);
 
     emit pointInfoSent(info);
