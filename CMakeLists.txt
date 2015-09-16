@@ -189,7 +189,7 @@ else()
     ExternalProject_Add(libzeug
         PREFIX ${LIBZEUG_PREFIX}
         GIT_REPOSITORY "https://github.com/kateyy/libzeug.git"
-        GIT_TAG "fix_guiValueUpdateSignals"
+        GIT_TAG "geohazardvis_2015_09"
         CMAKE_CACHE_ARGS
             -DOPTION_BUILD_TESTS:bool=OFF
             -DQt5Core_DIR:path=${Qt5Core_DIR}
