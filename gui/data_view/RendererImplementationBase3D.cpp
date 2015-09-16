@@ -14,7 +14,6 @@
 #include <vtkTextProperty.h>
 
 #include <vtkBoundingBox.h>
-#include <vtkCubeAxesActor.h>
 #include <vtkProperty2D.h>
 #include <vtkScalarBarActor.h>
 #include <vtkScalarBarWidget.h>
@@ -27,6 +26,7 @@
 #include <core/data_objects/DataObject.h>
 #include <core/rendered_data/RenderedData.h>
 #include <core/color_mapping/ColorMapping.h>
+#include <core/ThirdParty/ParaView/vtkGridAxes3DActor.h>
 #include <gui/data_view/AbstractRenderView.h>
 #include <gui/data_view/RenderViewStrategy.h>
 #include <gui/data_view/RenderViewStrategySwitch.h>
@@ -299,7 +299,7 @@ vtkScalarBarWidget * RendererImplementationBase3D::colorLegendWidget(unsigned in
     return m_viewportSetups[subViewIndex].scalarBarWidget;
 }
 
-vtkCubeAxesActor * RendererImplementationBase3D::axesActor(unsigned int subViewIndex)
+vtkGridAxes3DActor * RendererImplementationBase3D::axesActor(unsigned int subViewIndex)
 {
     return m_viewportSetups[subViewIndex].axesActor;
 }
@@ -372,7 +372,7 @@ void RendererImplementationBase3D::initialize()
 
         setupColorMapping(subViewIndex, viewport);
         
-        viewport.axesActor = createAxes(renderer->GetActiveCamera());
+        viewport.axesActor = createAxes();
         renderer->AddViewProp(viewport.axesActor);
         renderer->AddViewProp(viewport.colorMappingLegend);
     }
@@ -424,7 +424,7 @@ void RendererImplementationBase3D::updateAxes()
 
         double bounds[6];
         viewportSetup.dataBounds.GetBounds(bounds);
-        viewportSetup.axesActor->SetBounds(bounds);
+        viewportSetup.axesActor->SetGridBounds(bounds);
 
         viewportSetup.renderer->ResetCameraClippingRange();
     }
@@ -475,45 +475,35 @@ void RendererImplementationBase3D::removeFromBounds(RenderedData * renderedData,
     updateAxes();
 }
 
-vtkSmartPointer<vtkCubeAxesActor> RendererImplementationBase3D::createAxes(vtkCamera * camera)
+vtkSmartPointer<vtkGridAxes3DActor> RendererImplementationBase3D::createAxes()
 {
-    auto axesActor = vtkSmartPointer<vtkCubeAxesActor>::New();
-    axesActor->SetCamera(camera);
-    axesActor->SetFlyModeToOuterEdges();
-    axesActor->SetGridLineLocation(VTK_GRID_LINES_FURTHEST);
-    //m_axesActor->SetUseTextActor3D(true);
-    axesActor->SetTickLocationToBoth();
-    // fix strange rotation of z-labels
-    axesActor->GetLabelTextProperty(2)->SetOrientation(90);
-
     double axesColor[3] = { 0, 0, 0 };
-    double gridColor[3] = { 0.7, 0.7, 0.7 };
+    double labelColor[3] = { 0, 0, 0 };
 
-    axesActor->GetXAxesLinesProperty()->SetColor(axesColor);
-    axesActor->GetYAxesLinesProperty()->SetColor(axesColor);
-    axesActor->GetZAxesLinesProperty()->SetColor(axesColor);
-    axesActor->GetXAxesGridlinesProperty()->SetColor(gridColor);
-    axesActor->GetYAxesGridlinesProperty()->SetColor(gridColor);
-    axesActor->GetZAxesGridlinesProperty()->SetColor(gridColor);
+    auto gridAxes = vtkSmartPointer<vtkGridAxes3DActor>::New();
+    gridAxes->SetFaceMask(0xFF);
+    gridAxes->GenerateGridOn();
+    gridAxes->GenerateEdgesOn();
+    gridAxes->GenerateTicksOn();
+    gridAxes->EnableLayerSupportOff();
+
+    // we need to set a new vtkProperty object here, otherwise the changes will not apply to all faces/axes
+    auto gridAxesProp = vtkSmartPointer<vtkProperty>::New();
+    gridAxesProp->DeepCopy(gridAxes->GetProperty());
+
+    gridAxesProp->BackfaceCullingOff();
+    gridAxesProp->FrontfaceCullingOn();
+    gridAxesProp->SetColor(axesColor);
+
+    gridAxes->SetProperty(gridAxesProp);
 
     for (int i = 0; i < 3; ++i)
-    {
-        axesActor->GetTitleTextProperty(i)->SetColor(axesColor);
-        axesActor->GetLabelTextProperty(i)->SetColor(axesColor);
-    }
-
-    axesActor->XAxisMinorTickVisibilityOff();
-    axesActor->YAxisMinorTickVisibilityOff();
-    axesActor->ZAxisMinorTickVisibilityOff();
-
-    axesActor->DrawXGridlinesOn();
-    axesActor->DrawYGridlinesOn();
-    axesActor->DrawZGridlinesOn();
+        gridAxes->GetLabelTextProperty(i)->SetColor(labelColor);
     
     // Will be shown when needed
-    axesActor->VisibilityOff();
+    gridAxes->VisibilityOff();
 
-    return axesActor;
+    return gridAxes;
 }
 
 void RendererImplementationBase3D::setupColorMapping(unsigned int subViewIndex, ViewportSetup & viewportSetup)

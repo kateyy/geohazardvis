@@ -7,16 +7,18 @@
 #include <vtkRenderer.h>
 #include <vtkLightKit.h>
 #include <vtkCamera.h>
-#include <vtkCubeAxesActor.h>
 #include <vtkMath.h>
+#include <vtkProperty.h>
 #include <vtkTextActor.h>
 #include <vtkTextProperty.h>
 #include <vtkTextWidget.h>
 
 #include <reflectionzeug/PropertyGroup.h>
+
 #include <core/types.h>
 #include <core/utility/vtkcamerahelper.h>
 #include <core/reflectionzeug_extension/QStringProperty.h>
+#include <core/ThirdParty/ParaView/vtkGridAxes3DActor.h>
 #include <gui/data_view/AbstractRenderView.h>
 #include <gui/data_view/RendererImplementationBase3D.h>
 
@@ -26,12 +28,6 @@ using namespace propertyguizeug;
 
 namespace
 {
-enum class CubeAxesTickLocation
-{
-    inside = VTK_TICKS_INSIDE,
-    outside = VTK_TICKS_OUTSIDE,
-    both = VTK_TICKS_BOTH
-};
 enum class ProjectionType
 {
     parallel,
@@ -61,18 +57,6 @@ void RendererConfigWidget::readCameraStats(vtkObject * caller, unsigned long, vo
 
     if (cameraGroup)
         cameraGroup->forEach(updateFunc);
-
-    // update axes text label rotations for terrain view
-    if (m_currentRenderView->contentType() == ContentType::Rendered3D)
-    {
-        RendererImplementationBase3D & impl3D = static_cast<RendererImplementationBase3D &>(m_currentRenderView->implementation());
-        double azimuth = TerrainCamera::getAzimuth(*camera);
-        if (TerrainCamera::getVerticalElevation(*camera) < 0)
-            azimuth *= -1;
-
-        impl3D.axesActor()->GetLabelTextProperty(0)->SetOrientation(azimuth - 90);
-        impl3D.axesActor()->GetLabelTextProperty(1)->SetOrientation(azimuth);
-    }
 }
 
 reflectionzeug::PropertyGroup * RendererConfigWidget::createPropertyGroupRenderer(AbstractRenderView * renderView, RendererImplementationBase3D * impl)
@@ -120,7 +104,7 @@ reflectionzeug::PropertyGroup * RendererConfigWidget::createPropertyGroupRendere
         }
     }
 
-    auto firstRenderer = impl->renderer();
+    auto firstRenderer = impl->renderer(0);
 
     auto backgroundColor = root->addProperty<Color>("backgroundColor",
         [firstRenderer] () {
@@ -151,7 +135,7 @@ reflectionzeug::PropertyGroup * RendererConfigWidget::createPropertyGroupRendere
             },
                 [&camera, impl] (const double & azimuth) {
                 TerrainCamera::setAzimuth(camera, azimuth);
-                impl->renderer()->ResetCameraClippingRange();
+                impl->renderer(0)->ResetCameraClippingRange();
                 impl->render();
             });
             prop_azimuth->setOption("minimum", std::numeric_limits<double>::lowest());
@@ -163,7 +147,7 @@ reflectionzeug::PropertyGroup * RendererConfigWidget::createPropertyGroupRendere
             },
                 [&camera, impl] (const double & elevation) {
                 TerrainCamera::setVerticalElevation(camera, elevation);
-                impl->renderer()->ResetCameraClippingRange();
+                impl->renderer(0)->ResetCameraClippingRange();
                 impl->render();
             });
             prop_elevation->setOption("minimum", -87);
@@ -180,7 +164,7 @@ reflectionzeug::PropertyGroup * RendererConfigWidget::createPropertyGroupRendere
             camera.GetFocalPoint(foc);
             foc[component] = value;
             camera.SetFocalPoint(foc);
-            impl->renderer()->ResetCameraClippingRange();
+            impl->renderer(0)->ResetCameraClippingRange();
             impl->render();
         });
         prop_focalPoint->setOption("title", "Focal Point");
@@ -204,7 +188,7 @@ reflectionzeug::PropertyGroup * RendererConfigWidget::createPropertyGroupRendere
             vtkMath::Subtract(focalPoint, viewVec, position);
             camera.SetPosition(position);
 
-            impl->renderer()->ResetCameraClippingRange();
+            impl->renderer(0)->ResetCameraClippingRange();
             impl->render();
         });
         prop_distance->setOptions({
@@ -220,7 +204,7 @@ reflectionzeug::PropertyGroup * RendererConfigWidget::createPropertyGroupRendere
             },
                 [&camera, impl] (ProjectionType type) {
                 camera.SetParallelProjection(type == ProjectionType::parallel);
-                impl->renderer()->ResetCameraClippingRange();
+                impl->renderer(0)->ResetCameraClippingRange();
                 impl->render();
             });
             prop_projectionType->setStrings({
@@ -248,27 +232,18 @@ reflectionzeug::PropertyGroup * RendererConfigWidget::createPropertyGroupRendere
     auto axisTitlesGroup = root->addGroup("AxisTitles");
     axisTitlesGroup->setOption("title", "Axis Titles");
     {
-        axisTitlesGroup->addProperty<QString>("X",
-            [impl] () { return QString::fromUtf8(impl->axesActor()->GetXTitle()); },
-            [impl, renderView] (const QString & label) {
-            for (unsigned int i = 0; i < renderView->numberOfSubViews(); ++i)
-                impl->axesActor(i)->SetXTitle(label.toUtf8().data());
-            renderView->render();
-        });
-        axisTitlesGroup->addProperty<QString>("Y",
-            [impl] () { return QString::fromUtf8(impl->axesActor()->GetYTitle()); },
-            [impl, renderView] (const QString & label) {
-            for (unsigned int i = 0; i < renderView->numberOfSubViews(); ++i)
-                impl->axesActor(i)->SetYTitle(label.toUtf8().data());
-            renderView->render();
-        });
-        axisTitlesGroup->addProperty<QString>("Z",
-            [impl] () { return QString::fromUtf8(impl->axesActor()->GetZTitle()); },
-            [impl, renderView] (const QString & label) {
-            for (unsigned int i = 0; i < renderView->numberOfSubViews(); ++i)
-                impl->axesActor(i)->SetZTitle(label.toUtf8().data());
-            renderView->render();
-        });
+        for (char axis = 0; axis < 3; ++axis)
+        {
+            auto title = std::string{ char('X' + axis) };
+
+            axisTitlesGroup->addProperty<std::string>(title,
+                [impl, axis] () { return impl->axesActor(0)->GetTitle(axis); },
+                [impl, renderView, axis] (const std::string & label) {
+                for (unsigned int i = 0; i < renderView->numberOfSubViews(); ++i)
+                    impl->axesActor(i)->SetTitle(axis, label);
+                renderView->render();
+            });
+        }
     }
 
     auto axesGroup = root->addGroup("Axes");
@@ -277,95 +252,72 @@ reflectionzeug::PropertyGroup * RendererConfigWidget::createPropertyGroupRendere
             std::bind(&AbstractRenderView::axesEnabled, renderView),
             std::bind(&AbstractRenderView::setEnableAxes, renderView, std::placeholders::_1));
 
-        axesGroup->addProperty<bool>("Show Labels",
-            [impl] () { return impl->axesActor()->GetXAxisLabelVisibility() != 0; },
-            [impl, renderView] (bool visible) {
-            for (unsigned int i = 0; i < renderView->numberOfSubViews(); ++i)
-            {
-                impl->axesActor(i)->SetXAxisLabelVisibility(visible);
-                impl->axesActor(i)->SetYAxisLabelVisibility(visible);
-                impl->axesActor(i)->SetZAxisLabelVisibility(visible);
-            }
+        axesGroup->addProperty<Color>("Color",
+            [impl] () {
+            const double * color = impl->axesActor(0)->GetProperty()->GetColor();
+            return Color(static_cast<int>(color[0] * 255), static_cast<int>(color[1] * 255), static_cast<int>(color[2] * 255));
+        },
+            [renderView, impl] (const Color & color) {
+            for (unsigned i = 0; i < renderView->numberOfSubViews(); ++i)
+                impl->axesActor(i)->GetProperty()->SetColor(color.red() / 255.0, color.green() / 255.0, color.blue() / 255.0);
             renderView->render();
         });
 
-        auto prop_gridVisible = axesGroup->addProperty<bool>("gridLines",
-            [impl] () { return impl->axesActor()->GetDrawXGridlines() != 0; },
+        axesGroup->addProperty<bool>("ShowLabels",
+            [impl] () { return impl->axesActor(0)->GetLabelMask() != 0; },
             [impl, renderView] (bool visible) {
             for (unsigned int i = 0; i < renderView->numberOfSubViews(); ++i)
             {
-                impl->axesActor(i)->SetDrawXGridlines(visible);
-                impl->axesActor(i)->SetDrawYGridlines(visible);
-                impl->axesActor(i)->SetDrawZGridlines(visible);
+                impl->axesActor(i)->SetLabelMask(visible ? 0xFF : 0x00);
             }
             renderView->render();
-        });
-        prop_gridVisible->setOption("title", "Grid Lines");
+        })
+            ->setOption("title", "Show Labels");
 
-        auto prop_innerGridVisible = axesGroup->addProperty<bool>("innerGridLines",
-            [impl] () { return impl->axesActor()->GetDrawXInnerGridlines() != 0; },
+        axesGroup->addProperty<bool>("gridLines",
+            [impl] () { return impl->axesActor(0)->GetGenerateGrid(); },
             [impl, renderView] (bool visible) {
             for (unsigned int i = 0; i < renderView->numberOfSubViews(); ++i)
             {
-                impl->axesActor(i)->SetDrawXInnerGridlines(visible);
-                impl->axesActor(i)->SetDrawYInnerGridlines(visible);
-                impl->axesActor(i)->SetDrawZInnerGridlines(visible);
+                impl->axesActor(i)->SetGenerateGrid(visible);
             }
             renderView->render();
-        });
-        prop_innerGridVisible->setOption("title", "Inner Grid Lines");
+        })
+            ->setOption("title", "Grid Lines");
 
-        auto prop_foregroundGridLines = axesGroup->addProperty<bool>("foregroundGridLines",
-            [impl] () { return impl->axesActor()->GetGridLineLocation() == VTK_GRID_LINES_ALL; },
+        axesGroup->addProperty<bool>("foregroundGridLines",
+            [impl] () { return impl->axesActor(0)->GetProperty()->GetFrontfaceCulling() == 0; },
             [impl, renderView] (bool v) {
             for (unsigned int i = 0; i < renderView->numberOfSubViews(); ++i)
             {
-                impl->axesActor(i)->SetGridLineLocation(v
-                    ? VTK_GRID_LINES_ALL
-                    : VTK_GRID_LINES_FURTHEST);
+                impl->axesActor(i)->GetProperty()->SetFrontfaceCulling(!v);
+                // render unique labels only if we skip foreground axes
+                // otherwise, we won't have any labels when rendering all axes
+                impl->axesActor(i)->SetLabelUniqueEdgesOnly(!v);
             }
             renderView->render();
-        });
-        prop_foregroundGridLines->setOption("title", "Foreground Grid Lines");
+        })
+            ->setOption("title", "Foreground Grid Lines");
 
         axesGroup->addProperty<bool>("Ticks",
-            [impl] () { return impl->axesActor()->GetXAxisTickVisibility() != 0; },
+            [impl] () { return impl->axesActor(0)->GetGenerateTicks(); },
             [impl, renderView] (bool visible) {
             for (unsigned int i = 0; i < renderView->numberOfSubViews(); ++i)
             {
-                impl->axesActor(i)->SetXAxisTickVisibility(visible);
-                impl->axesActor(i)->SetYAxisTickVisibility(visible);
-                impl->axesActor(i)->SetZAxisTickVisibility(visible);
+                impl->axesActor(i)->SetGenerateTicks(visible);
             }
             renderView->render();
         });
 
-        auto prop_minorTicksVisible = axesGroup->addProperty<bool>("minorTicks",
-            [impl] () { return impl->axesActor()->GetXAxisMinorTickVisibility() != 0; },
+        axesGroup->addProperty<bool>("Edges",
+            [impl] () { return impl->axesActor(0)->GetGenerateEdges(); },
             [impl, renderView] (bool visible) {
             for (unsigned int i = 0; i < renderView->numberOfSubViews(); ++i)
             {
-                impl->axesActor(i)->SetXAxisMinorTickVisibility(visible);
-                impl->axesActor(i)->SetYAxisMinorTickVisibility(visible);
-                impl->axesActor(i)->SetZAxisMinorTickVisibility(visible);
+                impl->axesActor(i)->SetGenerateEdges(visible);
             }
             renderView->render();
         });
-        prop_minorTicksVisible->setOption("title", "Minor Ticks");
-
-        auto prop_tickLocation = axesGroup->addProperty<CubeAxesTickLocation>("tickLocation",
-            [impl] () { return static_cast<CubeAxesTickLocation>(impl->axesActor()->GetTickLocation()); },
-            [impl, renderView] (CubeAxesTickLocation mode) {
-            for (unsigned int i = 0; i < renderView->numberOfSubViews(); ++i)
-                impl->axesActor(i)->SetTickLocation(static_cast<int>(mode));
-            renderView->render();
-        });
-        prop_tickLocation->setOption("title", "Tick Location");
-        prop_tickLocation->setStrings({
-                { CubeAxesTickLocation::both, "inside/outside" },
-                { CubeAxesTickLocation::inside, "inside" },
-                { CubeAxesTickLocation::outside, "outside" } }
-        );
     }
 
     return root;

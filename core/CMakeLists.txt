@@ -142,8 +142,18 @@ set ( SOURCES
     reflectionzeug_extension/QStringProperty.cpp
 
     ThirdParty/alphanum.hpp
-    ThirdParty/vtkPVScalarBarActor.h
-    ThirdParty/vtkPVScalarBarActor.cxx
+    ThirdParty/ParaView/vtkGridAxes2DActor.h
+    ThirdParty/ParaView/vtkGridAxes2DActor.cxx
+    ThirdParty/ParaView/vtkGridAxes3DActor.h
+    ThirdParty/ParaView/vtkGridAxes3DActor.cxx
+    ThirdParty/ParaView/vtkGridAxesHelper.h
+    ThirdParty/ParaView/vtkGridAxesHelper.cxx
+    ThirdParty/ParaView/vtkGridAxesPlane2DActor.h
+    ThirdParty/ParaView/vtkGridAxesPlane2DActor.cxx
+    ThirdParty/ParaView/vtkPVGridAxes3DActor.h
+    ThirdParty/ParaView/vtkPVGridAxes3DActor.cxx
+    ThirdParty/ParaView/vtkPVScalarBarActor.h
+    ThirdParty/ParaView/vtkPVScalarBarActor.cxx
 
     utility/DataExtent.h
     utility/DataExtent.hpp

@@ -12,7 +12,6 @@
 
 #include <vtkCamera.h>
 #include <vtkCommand.h>
-#include <vtkCubeAxesActor.h>
 #include <vtkLineRepresentation.h>
 #include <vtkLineWidget2.h>
 #include <vtkPointHandleRepresentation3D.h>
@@ -128,10 +127,6 @@ void RenderViewStrategyImage2D::activate()
     m_context.renderView().toolBar()->addActions(m_actions);
     m_context.renderView().setToolBarVisible(true);
 
-    m_context.axesActor()->GetLabelTextProperty(0)->SetOrientation(0);
-    m_context.axesActor()->GetLabelTextProperty(1)->SetOrientation(90);
-    m_context.axesActor()->SetUse2DMode(true);
-
     updateAutomaticPlots();
 
     connect(&m_context.renderView(), &AbstractRenderView::visualizationsChanged,
@@ -149,8 +144,6 @@ void RenderViewStrategyImage2D::deactivate()
         action->setParent(nullptr);
     }
     m_context.renderView().setToolBarVisible(false);
-
-    m_context.axesActor()->SetUse2DMode(false);
 }
 
 bool RenderViewStrategyImage2D::contains3dData() const
@@ -276,7 +269,7 @@ void RenderViewStrategyImage2D::startProfilePlot()
         m_lineWidget->On();
 
         double bounds[6];
-        m_context.dataBounds(bounds);
+        m_context.dataBounds(bounds, 0);
 
         bounds[4] += g_lineZOffset;
         bounds[5] += g_lineZOffset;

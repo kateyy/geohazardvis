@@ -11,13 +11,13 @@
 
 
 class vtkAlgorithm;
-class vtkCubeAxesActor;
 class vtkImageChangeInformation;
 class vtkImageShiftScale;
 class vtkRenderer;
 class vtkTransformFilter;
 class vtkWarpScalar;
 
+class vtkGridAxes3DActor;
 
 class ImageDataObject;
 class PolyDataObject;
@@ -51,7 +51,7 @@ private:
 private:
     Ui_DEMWidget * m_ui;
     vtkSmartPointer<vtkRenderer> m_renderer;
-    vtkSmartPointer<vtkCubeAxesActor> m_axesActor;
+    vtkSmartPointer<vtkGridAxes3DActor> m_axesActor;
 
     QList<PolyDataObject *> m_surfaceMeshes;
     QList<ImageDataObject *> m_dems;

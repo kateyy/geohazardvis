@@ -5,7 +5,6 @@
 
 #include <vtkActor.h>
 #include <vtkCamera.h>
-#include <vtkCubeAxesActor.h>
 #include <vtkPropCollection.h>
 #include <vtkProperty.h>
 #include <vtkRenderer.h>
@@ -28,11 +27,13 @@
 #include <vtkWarpScalar.h>
 
 #include <core/DataSetHandler.h>
-#include <core/utility/vtkcamerahelper.h>
 #include <core/data_objects/ImageDataObject.h>
 #include <core/data_objects/PolyDataObject.h>
 #include <core/rendered_data/RenderedData.h>
+#include <core/utility/vtkcamerahelper.h>
+#include <core/ThirdParty/ParaView/vtkGridAxes3DActor.h>
 #include <gui/rendering_interaction/InteractorStyle3D.h>
+#include <gui/data_view/RendererImplementationBase3D.h>
 
 
 DEMWidget::DEMWidget(QWidget * parent, Qt::WindowFlags f)
@@ -170,38 +171,7 @@ void DEMWidget::showEvent(QShowEvent * /*event*/)
     interactorStyle->SetCurrentRenderer(m_renderer);
 
 
-    m_axesActor = vtkSmartPointer<vtkCubeAxesActor>::New();
-    m_axesActor->SetCamera(m_renderer->GetActiveCamera());
-    m_axesActor->SetFlyModeToOuterEdges();
-    m_axesActor->SetGridLineLocation(VTK_GRID_LINES_FURTHEST);
-    //m_axesActor->SetUseTextActor3D(true);
-    m_axesActor->SetTickLocationToBoth();
-    // fix strange rotation of z-labels
-    m_axesActor->GetLabelTextProperty(2)->SetOrientation(90);
-
-    double axesColor[3] = { 0, 0, 0 };
-    double gridColor[3] = { 0.7, 0.7, 0.7 };
-
-    m_axesActor->GetXAxesLinesProperty()->SetColor(axesColor);
-    m_axesActor->GetYAxesLinesProperty()->SetColor(axesColor);
-    m_axesActor->GetZAxesLinesProperty()->SetColor(axesColor);
-    m_axesActor->GetXAxesGridlinesProperty()->SetColor(gridColor);
-    m_axesActor->GetYAxesGridlinesProperty()->SetColor(gridColor);
-    m_axesActor->GetZAxesGridlinesProperty()->SetColor(gridColor);
-
-    for (int i = 0; i < 3; ++i)
-    {
-        m_axesActor->GetTitleTextProperty(i)->SetColor(axesColor);
-        m_axesActor->GetLabelTextProperty(i)->SetColor(axesColor);
-    }
-
-    m_axesActor->XAxisMinorTickVisibilityOff();
-    m_axesActor->YAxisMinorTickVisibilityOff();
-    m_axesActor->ZAxisMinorTickVisibilityOff();
-
-    m_axesActor->DrawXGridlinesOn();
-    m_axesActor->DrawYGridlinesOn();
-    m_axesActor->DrawZGridlinesOn();
+    m_axesActor = RendererImplementationBase3D::createAxes();
 
     updatePreview();
 }
@@ -379,7 +349,7 @@ void DEMWidget::updateView()
     {
         double bounds[6];
         m_dataPreview->bounds(bounds);
-        m_axesActor->SetBounds(bounds);
+        m_axesActor->SetGridBounds(bounds);
     }
 
     m_ui->qvtkMain->GetRenderWindow()->Render();

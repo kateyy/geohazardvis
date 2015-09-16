@@ -1,6 +1,6 @@
 #pragma once
 
-#include <core/ThirdParty/vtkPVScalarBarActor.h>
+#include <core/ThirdParty/ParaView/vtkPVScalarBarActor.h>
 
 
 class CORE_API OrientedScalarBarActor : public vtkPVScalarBarActor

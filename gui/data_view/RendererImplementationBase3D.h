@@ -12,10 +12,11 @@ class vtkCamera;
 class vtkRenderer;
 class vtkLightKit;
 class vtkPropCollection;
-class vtkCubeAxesActor;
 class vtkScalarBarActor;
 class vtkScalarBarWidget;
 class vtkTextWidget;
+
+class vtkGridAxes3DActor;
 
 class IPickingInteractorStyle;
 class PickingInteractorStyleSwitch;
@@ -60,7 +61,7 @@ public:
     void lookAtData(DataObject * dataObject, vtkIdType itemId, unsigned int subViewIndex) override;
     void resetCamera(bool toInitialPosition, unsigned int subViewIndex) override;
 
-    void dataBounds(double bounds[6], unsigned int subViewIndex = 0) const;
+    void dataBounds(double bounds[6], unsigned int subViewIndex) const;
 
     void setAxesVisibility(bool visible) override;
 
@@ -71,7 +72,7 @@ public:
     PickingInteractorStyleSwitch * interactorStyleSwitch();
 
     vtkRenderWindow * renderWindow();
-    vtkRenderer * renderer(unsigned int subViewIndex = 0);
+    vtkRenderer * renderer(unsigned int subViewIndex);
     vtkCamera * camera(unsigned int subViewIndex);
 
     vtkLightKit * lightKit();
@@ -80,9 +81,11 @@ public:
     ColorMapping * colorMapping(unsigned int subViewIndex);
     vtkScalarBarWidget * colorLegendWidget(unsigned int subViewIndex);
 
-    vtkCubeAxesActor * axesActor(unsigned int subViewIndex = 0);
+    vtkGridAxes3DActor * axesActor(unsigned int subViewIndex);
 
     void setStrategy(RenderViewStrategy * strategy);
+
+    static vtkSmartPointer<vtkGridAxes3DActor> createAxes();
 
 protected:
     // per viewport objects
@@ -99,7 +102,7 @@ protected:
         vtkSmartPointer<vtkScalarBarWidget> scalarBarWidget;
         vtkScalarBarActor * colorMappingLegend;
 
-        vtkSmartPointer<vtkCubeAxesActor> axesActor;
+        vtkSmartPointer<vtkGridAxes3DActor> axesActor;
         vtkSmartPointer<vtkTextWidget> titleWidget;
     };
 
@@ -125,7 +128,6 @@ private:
     void updateBounds();
     void addToBounds(RenderedData * renderedData, unsigned int subViewIndex);
     void removeFromBounds(RenderedData * renderedData, unsigned int subViewIndex);
-    vtkSmartPointer<vtkCubeAxesActor> createAxes(vtkCamera * camera);
     void setupColorMapping(unsigned int subViewIndex, ViewportSetup & viewportSetup);
 
 private slots:
