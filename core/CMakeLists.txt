@@ -45,8 +45,6 @@ set ( SOURCES
     filters/CentroidAsScalarsFilter.cpp
     filters/ArrayRenameFilter.h
     filters/ArrayRenameFilter.cpp
-    filters/DataSetCleaner.h
-    filters/DataSetCleaner.cpp
     filters/NoiseImageSource.h
     filters/NoiseImageSource.cpp
     filters/StackedImageDataLIC3D.h
