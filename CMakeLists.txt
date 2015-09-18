@@ -117,6 +117,8 @@ install(FILES ${CMAKE_BINARY_DIR}/revision DESTINATION ${INSTALL_ROOT})
 set(THIRD_PARTY_DIR "${PROJECT_SOURCE_DIR}/ThirdParty")
 include(ExternalProject)
 
+find_package(OpenGL REQUIRED)
+
 set(VTK_COMPONENTS
     vtkGUISupportQt         # QVTKWidget
     vtkRenderingAnnotation  # vtkCubeAxesActor, vtkScalarBarActor

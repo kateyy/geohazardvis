@@ -188,8 +188,9 @@ if(TARGET libzeug)
 endif()
 
 target_link_libraries( ${TARGET}
-    ${LIBZEUG_LIBRARIES}
+    ${OPENGL_LIBRARIES}
     ${VTK_LIBRARIES}
+    ${LIBZEUG_LIBRARIES}
     Qt5::Core
 )
 
