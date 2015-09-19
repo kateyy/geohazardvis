@@ -58,6 +58,8 @@ set ( SOURCES
     rendering_interaction/InteractorStyleImage.cpp
     rendering_interaction/InteractorStyleSwitch.h
     rendering_interaction/InteractorStyleSwitch.cpp
+    rendering_interaction/Highlighter.h
+    rendering_interaction/Highlighter.cpp
     rendering_interaction/IPickingInteractorStyle.h
     rendering_interaction/PickingInteractorStyleSwitch.h
     rendering_interaction/PickingInteractorStyleSwitch.cpp

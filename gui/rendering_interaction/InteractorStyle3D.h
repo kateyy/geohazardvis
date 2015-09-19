@@ -1,7 +1,8 @@
 #pragma once
 
+#include <memory>
+
 #include <QMap>
-#include <QScopedPointer>
 
 #include <vtkInteractorStyleTerrain.h>
 #include <vtkSmartPointer.h>
@@ -15,6 +16,8 @@ class vtkPointPicker;
 class vtkCellPicker;
 class vtkPolyData;
 class vtkProp;
+
+class Highlighter;
 
 
 class GUI_API InteractorStyle3D : public IPickingInteractorStyle, public vtkInteractorStyleTerrain
@@ -42,7 +45,7 @@ public:
 
     void highlightIndex(DataObject * dataObject, vtkIdType index) override;
     void lookAtIndex(DataObject * polyData, vtkIdType index) override;
-    void flashHightlightedCell(int milliseconds = 2000);
+    void flashHightlightedCell(unsigned int milliseconds = 2000u);
 
 protected:
     explicit InteractorStyle3D();
@@ -58,12 +61,8 @@ protected:
 
     vtkSmartPointer<vtkPointPicker> m_pointPicker;
     vtkSmartPointer<vtkCellPicker> m_cellPicker;
-    vtkSmartPointer<vtkActor> m_selectedCellActor;
-    vtkSmartPointer<vtkPolyData> m_selectedCellData;
-    QPair<DataObject *, vtkIdType> m_currentlyHighlighted;
 
-    QTimer * m_highlightFlashTimer;
-    QScopedPointer<QTime> m_highlightFlashTime;
+    std::unique_ptr<Highlighter> m_highlighter;
 
     bool m_mouseMoved;
 };

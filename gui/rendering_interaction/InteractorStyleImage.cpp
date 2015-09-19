@@ -26,28 +26,17 @@
 #include <core/data_objects/DataObject.h>
 #include <core/rendered_data/RenderedData.h>
 
+#include <gui/rendering_interaction/Highlighter.h>
+
 
 vtkStandardNewMacro(InteractorStyleImage);
 
 InteractorStyleImage::InteractorStyleImage()
     : Superclass()
     , m_pointPicker(vtkSmartPointer<vtkPointPicker>::New())
-    , m_highlightingActor(vtkSmartPointer<vtkActor>::New())
-    , m_currentlyHighlighted(nullptr, -1)
+    , m_highlighter(std::make_unique<Highlighter>())
     , m_mouseMoved(false)
 {
-    auto highlightingDisc = vtkSmartPointer<vtkDiskSource>::New();
-    highlightingDisc->SetRadialResolution(128);
-    highlightingDisc->SetCircumferentialResolution(128);
-    highlightingDisc->SetInnerRadius(1);
-    highlightingDisc->SetOuterRadius(2);
-
-    auto highlightingMapper = vtkSmartPointer<vtkPolyDataMapper>::New();
-    highlightingMapper->SetInputConnection(highlightingDisc->GetOutputPort());
-    m_highlightingActor->SetMapper(highlightingMapper);
-
-    m_highlightingActor->GetProperty()->SetColor(1, 0, 0);
-    m_highlightingActor->PickableOff();
 }
 
 void InteractorStyleImage::OnMouseMove()
@@ -64,6 +53,8 @@ void InteractorStyleImage::OnMouseMove()
 
     m_mouseMoved = true;
 }
+
+InteractorStyleImage::~InteractorStyleImage() = default;
 
 void InteractorStyleImage::OnLeftButtonDown()
 {
@@ -130,8 +121,7 @@ void InteractorStyleImage::OnChar()
 
 void InteractorStyleImage::setRenderedData(const QList<RenderedData *> & renderedData)
 {
-    if (auto renderer = GetCurrentRenderer())
-        renderer->RemoveViewProp(m_highlightingActor);
+    m_highlighter->clear();
     m_propToRenderedData.clear();
 
     for (RenderedData * r : renderedData)
@@ -169,45 +159,20 @@ void InteractorStyleImage::highlightPickedPoint()
 
 DataObject * InteractorStyleImage::highlightedDataObject() const
 {
-    return m_currentlyHighlighted.first;
+    return m_highlighter->targetObject();
 }
 
 vtkIdType InteractorStyleImage::highlightedIndex() const
 {
-    return m_currentlyHighlighted.second;
+    return m_highlighter->lastTargetIndex();
 }
 
 void InteractorStyleImage::highlightIndex(DataObject * dataObject, vtkIdType index)
 {
-    if (index == -1)
-    {
-        if (m_currentlyHighlighted.second < 0)
-            return;
+    assert(index < 0 || dataObject);
 
-        GetCurrentRenderer()->RemoveViewProp(m_highlightingActor);
-        GetCurrentRenderer()->GetRenderWindow()->Render();
-        m_currentlyHighlighted = { nullptr, -1 };
-        return;
-    }
-
-    assert(dataObject);
-
-    if (m_currentlyHighlighted == QPair<DataObject *, vtkIdType>(dataObject, index))
-        return;
-
-    vtkImageData * image = vtkImageData::SafeDownCast(dataObject->dataSet());
-    if (!image)
-        return;
-
-    double point[3];
-    image->GetPoint(index, point);
-    point[2] += 0.1;    // show in front of the image
-    m_highlightingActor->SetPosition(point);
-
-    GetCurrentRenderer()->AddViewProp(m_highlightingActor);
-    GetCurrentRenderer()->GetRenderWindow()->Render();
-
-    m_currentlyHighlighted = { dataObject, index };
+    m_highlighter->setRenderer(GetCurrentRenderer());
+    m_highlighter->setTarget(dataObject, index);
 }
 
 void InteractorStyleImage::lookAtIndex(DataObject * /*polyData*/, vtkIdType /*index*/)

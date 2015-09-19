@@ -1,5 +1,7 @@
 #pragma once
 
+#include <memory>
+
 #include <QMap>
 
 #include <vtkInteractorStyleImage.h>
@@ -11,6 +13,8 @@
 class vtkPointPicker;
 class vtkProp;
 class vtkActor;
+
+class Highlighter;
 
 
 class GUI_API InteractorStyleImage : public IPickingInteractorStyle, public vtkInteractorStyleImage
@@ -39,6 +43,7 @@ public:
 
 protected:
     explicit InteractorStyleImage();
+    ~InteractorStyleImage() override;
 
     void highlightPickedPoint();
 
@@ -48,8 +53,8 @@ protected:
     QMap<vtkProp *, RenderedData *> m_propToRenderedData;
 
     vtkSmartPointer<vtkPointPicker> m_pointPicker;
-    vtkSmartPointer<vtkActor> m_highlightingActor;
-    QPair<DataObject *, vtkIdType> m_currentlyHighlighted;
+
+    std::unique_ptr<Highlighter> m_highlighter;
 
     bool m_mouseMoved;
 };

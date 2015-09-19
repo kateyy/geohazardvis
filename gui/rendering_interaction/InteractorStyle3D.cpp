@@ -36,6 +36,41 @@
 #include <core/data_objects/PolyDataObject.h>
 #include <core/rendered_data/RenderedData.h>
 
+#include <gui/rendering_interaction/Highlighter.h>
+
+
+namespace
+{
+
+/** @return -1 if value < 0, 1 else */
+template <typename T> char sgn(const T & value)
+{
+    return static_cast<char>((T(0) <= value) - (value < T(0)));
+}
+
+bool circleLineIntersection(double radius, double P0[2], double P1[2], double intersection1[2], double intersection2[2])
+{
+    double dx = P1[0] - P0[0];
+    double dy = P1[1] - P0[1];
+    double dr2 = dx * dx + dy * dy;
+
+    double D = P0[0] * P1[1] + P1[0] + P0[1];
+
+    double incidence = radius * radius *  dr2 - D * D;
+    if (incidence < 0)
+        return false;
+
+    double sqrtIncidence = std::sqrt(incidence);
+
+    intersection1[0] = (D * dy + sgn(dy) * dx * sqrtIncidence) / dr2;
+    intersection1[1] = (-D * dx + std::fabs(dy) * sqrtIncidence) / dr2;
+
+    intersection2[0] = (D * dy - sgn(dy) * dx * sqrtIncidence) / dr2;
+    intersection2[1] = (-D * dx - std::fabs(dy) * sqrtIncidence) / dr2;
+
+    return true;
+}
+}
 
 vtkStandardNewMacro(InteractorStyle3D);
 
@@ -43,20 +78,9 @@ InteractorStyle3D::InteractorStyle3D()
     : Superclass()
     , m_pointPicker(vtkSmartPointer<vtkPointPicker>::New())
     , m_cellPicker(vtkSmartPointer<vtkCellPicker>::New())
-    , m_selectedCellActor(vtkSmartPointer<vtkActor>::New())
-    , m_selectedCellData(vtkSmartPointer<vtkPolyData>::New())
-    , m_currentlyHighlighted(nullptr, -1)
-    , m_highlightFlashTimer(nullptr)
-    , m_highlightFlashTime(new QTime())
+    , m_highlighter(std::make_unique<Highlighter>())
     , m_mouseMoved(false)
 {
-    auto selectionMapper = vtkSmartPointer<vtkPolyDataMapper>::New();
-    selectionMapper->SetInputData(m_selectedCellData);
-    m_selectedCellActor->SetMapper(selectionMapper);
-    m_selectedCellActor->GetProperty()->EdgeVisibilityOn();
-    m_selectedCellActor->GetProperty()->SetEdgeColor(1, 0, 0);
-    m_selectedCellActor->GetProperty()->SetLineWidth(3);
-    m_selectedCellActor->PickableOff();
 }
 
 InteractorStyle3D::~InteractorStyle3D() = default;
@@ -64,8 +88,8 @@ InteractorStyle3D::~InteractorStyle3D() = default;
 void InteractorStyle3D::setRenderedData(const QList<RenderedData *> & renderedData)
 {
     m_actorToRenderedData.clear();
-    if (auto renderer = GetCurrentRenderer())
-        renderer->RemoveViewProp(m_selectedCellActor);
+    m_highlighter->clear();
+
     for (RenderedData * r : renderedData)
     {
         vtkCollectionSimpleIterator it;
@@ -249,114 +273,20 @@ void InteractorStyle3D::highlightPickedIndex()
 
 DataObject * InteractorStyle3D::highlightedDataObject() const
 {
-    return m_currentlyHighlighted.first;
+    return m_highlighter->targetObject();
 }
 
 vtkIdType InteractorStyle3D::highlightedIndex() const
 {
-    return m_currentlyHighlighted.second;
+    return m_highlighter->lastTargetIndex();
 }
 
 void InteractorStyle3D::highlightIndex(DataObject * dataObject, vtkIdType index)
 {
-    if (index == -1)
-    {
-        if (m_currentlyHighlighted.second < 0)
-            return;
+    assert(index < 0 || dataObject);
 
-        GetCurrentRenderer()->RemoveViewProp(m_selectedCellActor);
-        GetCurrentRenderer()->GetRenderWindow()->Render();
-        m_currentlyHighlighted = { nullptr, -1 };
-        return;
-    }
-
-    assert(dataObject);
-
-    // already highlighting this cell, so just flash again
-    if (m_currentlyHighlighted == QPair<DataObject *, vtkIdType>(dataObject, index))
-    {
-        flashHightlightedCell();
-        return;
-    }
-
-    // extract picked triangle and create highlighting geometry
-    // create two shifted polygons to work around occlusion
-
-    vtkCell * selection = dataObject->dataSet()->GetCell(index);
-
-    // this is probably a glyph or the like; we don't have an implementation for that in the moment
-    if (selection->GetCellType() == VTK_VOXEL)
-        return;
-
-    vtkIdType numberOfPoints = selection->GetNumberOfPoints();
-
-    double cellNormal[3];
-    vtkPolygon::ComputeNormal(selection->GetPoints(), cellNormal);
-    vtkMath::MultiplyScalar(cellNormal, 0.001);
-
-    auto points = vtkSmartPointer<vtkPoints>::New();
-    points->SetNumberOfPoints(numberOfPoints * 2);
-    std::vector<vtkIdType> front, back;
-    auto polys = vtkSmartPointer<vtkCellArray>::New();
-    for (vtkIdType i = 0; i < numberOfPoints; ++i)
-    {
-        double original[3], shifted[3];
-        selection->GetPoints()->GetPoint(i, original);
-
-        vtkMath::Add(original, cellNormal, shifted);
-        points->InsertPoint(i, shifted);
-        front.push_back(i);
-
-        vtkMath::Subtract(original, cellNormal, shifted);
-        points->InsertPoint(i + numberOfPoints, shifted);
-        back.push_back(i + numberOfPoints);
-    }
-
-    polys->InsertNextCell(numberOfPoints, front.data());
-    polys->InsertNextCell(numberOfPoints, back.data());
-
-    m_selectedCellData->SetPoints(points);
-    m_selectedCellData->SetPolys(polys);
-
-    GetCurrentRenderer()->AddViewProp(m_selectedCellActor);
-    GetCurrentRenderer()->GetRenderWindow()->Render();
-
-    m_currentlyHighlighted = { dataObject, index };
-
-    flashHightlightedCell();
-}
-
-namespace
-{
-
-/** @return -1 if value < 0, 1 else */
-template <typename T> char sgn(const T & value)
-{
-    return static_cast<char>((T(0) <= value) - (value < T(0)));
-}
-
-bool circleLineIntersection(double radius, double P0[2], double P1[2], double intersection1[2], double intersection2[2])
-{
-    double dx = P1[0] - P0[0];
-    double dy = P1[1] - P0[1];
-    double dr2 = dx * dx + dy * dy;
-
-    double D = P0[0] * P1[1] + P1[0] + P0[1];
-
-    double incidence = radius * radius *  dr2 - D * D;
-    if (incidence < 0)
-        return false;
-
-    double sqrtIncidence = std::sqrt(incidence);
-
-    intersection1[0] = (D * dy + sgn(dy) * dx * sqrtIncidence) / dr2;
-    intersection1[1] = (-D * dx + std::fabs(dy) * sqrtIncidence) / dr2;
-
-    intersection2[0] = (D * dy - sgn(dy) * dx * sqrtIncidence) / dr2;
-    intersection2[1] = (-D * dx - std::fabs(dy) * sqrtIncidence) / dr2;
-
-    return true;
-}
+    m_highlighter->setRenderer(GetCurrentRenderer());
+    m_highlighter->setTarget(dataObject, index);
 }
 
 void InteractorStyle3D::lookAtIndex(DataObject * dataObject, vtkIdType index)
@@ -529,35 +459,10 @@ void InteractorStyle3D::lookAtIndex(DataObject * dataObject, vtkIdType index)
     }
 }
 
-void InteractorStyle3D::flashHightlightedCell(int milliseconds)
+void InteractorStyle3D::flashHightlightedCell(unsigned int milliseconds)
 {
-    if (!m_highlightFlashTimer)
-    {
-        m_highlightFlashTimer = new QTimer(this);
-        m_highlightFlashTimer->setSingleShot(false);
-        m_highlightFlashTimer->setInterval(1);
-
-        m_highlightFlashTimer = new QTimer(this);
-        connect(m_highlightFlashTimer, &QTimer::timeout,
-            [this] () {
-            int ms = (1000 + m_highlightFlashTime->msec() - QTime::currentTime().msec()) % 1000;
-            if (*m_highlightFlashTime < QTime::currentTime())
-            {
-                m_highlightFlashTimer->stop();
-                ms = 0;
-            }
-            double bg = 0.5 + 0.5 * std::cos(ms * 0.001 * 2.0 * vtkMath::Pi());
-            m_selectedCellActor->GetProperty()->SetColor(1, bg, bg);
-            GetCurrentRenderer()->GetRenderWindow()->Render();
-        });
-    }
-    else if (m_highlightFlashTimer->isActive())
-    {
-        return;
-    }
-
-    *m_highlightFlashTime = QTime::currentTime().addMSecs(milliseconds);
-    m_highlightFlashTimer->start();
+    m_highlighter->setFlashTimeMilliseconds(milliseconds);
+    m_highlighter->flashTargets();
 }
 
 void InteractorStyle3D::sendPointInfo() const
