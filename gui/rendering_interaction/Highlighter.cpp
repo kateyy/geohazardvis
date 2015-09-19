@@ -1,4 +1,4 @@
-#include <gui/rendering_interaction/PickerHighlighter.h>
+#include <gui/rendering_interaction/Highlighter.h>
 
 #include <cassert>
 

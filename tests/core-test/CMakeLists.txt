@@ -17,6 +17,7 @@ set(libs
 set(sources
     main.cpp
     DataSetHandler_test.cpp
+    RenderedData_test.cpp
 )
 
 

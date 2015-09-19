@@ -87,8 +87,10 @@ GlyphMappingData::GlyphMappingData(RenderedData & renderedData)
     m_mapper->SetInputConnection(m_arrowGlyph->GetOutputPort());
     m_mapper->ScalarVisibilityOff();
 
-    m_mapper->GetInformation()->Set(DataObject::NameKey(), renderedData.dataObject().name().toUtf8().data());
-    DataObject::setDataObject(*m_mapper->GetInformation(), &renderedData.dataObject());
+    auto & mapperInfo = *m_mapper->GetInformation();
+    mapperInfo.Set(DataObject::NameKey(), renderedData.dataObject().name().toUtf8().data());
+    DataObject::storePointer(mapperInfo, &renderedData.dataObject());
+    AbstractVisualizedData::storePointer(mapperInfo, &renderedData);
 
     m_actor->SetVisibility(m_isVisible);
     m_actor->PickableOff();

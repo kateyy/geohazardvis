@@ -5,10 +5,15 @@
 #include <vtkAlgorithm.h>
 #include <vtkAlgorithmOutput.h>
 #include <vtkDataSet.h>
+#include <vtkInformation.h>
+#include <vtkInformationIntegerPointerKey.h>
 #include <vtkLookupTable.h>
 
 #include <core/data_objects/DataObject.h>
 #include <core/utility/macros.h>
+
+
+vtkInformationKeyMacro(AbstractVisualizedData, VisualizedDataKey, IntegerPointer);
 
 
 AbstractVisualizedData::AbstractVisualizedData(ContentType contentType, DataObject & dataObject, QObject * parent)
@@ -87,6 +92,24 @@ vtkDataSet * AbstractVisualizedData::colorMappingInputData(int connection)
     auto alg = colorMappingInput(connection)->GetProducer();
     alg->Update();
     return vtkDataSet::SafeDownCast(alg->GetOutputDataObject(0));
+}
+
+AbstractVisualizedData * AbstractVisualizedData::readPointer(vtkInformation & information)
+{
+    static_assert(sizeof(int*) == sizeof(DataObject*), "");
+
+    if (information.Has(AbstractVisualizedData::VisualizedDataKey()))
+    {
+        assert(information.Length(AbstractVisualizedData::VisualizedDataKey()) == 1);
+        return reinterpret_cast<AbstractVisualizedData *>(information.Get(AbstractVisualizedData::VisualizedDataKey()));
+    }
+
+    else return nullptr;
+}
+
+void AbstractVisualizedData::storePointer(vtkInformation & information, AbstractVisualizedData * visualization)
+{
+    information.Set(AbstractVisualizedData::VisualizedDataKey(), reinterpret_cast<int *>(visualization), 1);
 }
 
 void AbstractVisualizedData::visibilityChangedEvent(bool /*visible*/)

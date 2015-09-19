@@ -9,6 +9,8 @@
 
 class vtkAlgorithmOutput;
 class vtkDataSet;
+class vtkInformation;
+class vtkInformationIntegerPointerKey;
 class vtkScalarsToColors;
 namespace reflectionzeug
 {
@@ -47,6 +49,9 @@ public:
     virtual vtkAlgorithmOutput * colorMappingInput(int connection = 0);
     vtkDataSet * colorMappingInputData(int connection = 0);
 
+    static AbstractVisualizedData * readPointer(vtkInformation & information);
+    static void storePointer(vtkInformation & information, AbstractVisualizedData * visualization);
+
 signals:
     void visibilityChanged(bool visible);
     void geometryChanged();
@@ -59,6 +64,9 @@ protected:
 protected:
     ColorMappingData * m_colorMappingData;
     vtkSmartPointer<vtkScalarsToColors> m_gradient;
+
+private:
+    static vtkInformationIntegerPointerKey * VisualizedDataKey();
 
 private:
     const ContentType m_contentType;

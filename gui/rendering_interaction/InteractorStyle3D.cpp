@@ -479,7 +479,7 @@ void InteractorStyle3D::sendPointInfo() const
     auto mapper = cellMapper ? cellMapper : pointMapper;
     assert(mapper);
 
-    auto dataObject = DataObject::getDataObject(*mapper->GetInformation());
+    auto dataObject = DataObject::readPointer(*mapper->GetInformation());
     auto polyData = dynamic_cast<PolyDataObject *>(dataObject);
 
     // don't list unreferenced points for triangular data

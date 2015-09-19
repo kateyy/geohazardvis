@@ -145,7 +145,7 @@ void DataObject::executeDeferredEvents()
     process_executeDeferredEvents();
 }
 
-DataObject * DataObject::getDataObject(vtkInformation & information)
+DataObject * DataObject::readPointer(vtkInformation & information)
 {
     static_assert(sizeof(int*) == sizeof(DataObject*), "");
 
@@ -158,7 +158,7 @@ DataObject * DataObject::getDataObject(vtkInformation & information)
     else return nullptr;
 }
 
-void DataObject::setDataObject(vtkInformation & information, DataObject * dataObject)
+void DataObject::storePointer(vtkInformation & information, DataObject * dataObject)
 {
     information.Set(DataObjectPrivate::DataObjectKey(), reinterpret_cast<int *>(dataObject), 1);
 }
