@@ -180,8 +180,6 @@ void RendererImplementationBase3D::onRenderViewVisualizationChanged()
     for (unsigned int i = 0; i < m_renderView.numberOfSubViews(); ++i)
     {
         colorMapping(i)->setVisualizedData(m_renderView.visualizations(i));
-        if (interactorStyle())
-            interactorStyle()->setRenderedData(renderedData());
     }
 }
 

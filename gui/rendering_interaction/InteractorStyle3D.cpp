@@ -1,5 +1,6 @@
 #include "InteractorStyle3D.h"
 
+#include <cassert>
 #include <cmath>
 
 #include <QTextStream>
@@ -31,12 +32,14 @@
 #include <vtkRenderWindowInteractor.h>
 #include <vtkRenderer.h>
 #include <vtkScalarsToColors.h>
+#include <vtkVector.h>
 
 #include <core/utility/vtkcamerahelper.h>
 #include <core/data_objects/PolyDataObject.h>
 #include <core/rendered_data/RenderedData.h>
 
 #include <gui/rendering_interaction/Highlighter.h>
+#include <gui/rendering_interaction/Picker.h>
 
 
 namespace
@@ -76,8 +79,7 @@ vtkStandardNewMacro(InteractorStyle3D);
 
 InteractorStyle3D::InteractorStyle3D()
     : Superclass()
-    , m_pointPicker(vtkSmartPointer<vtkPointPicker>::New())
-    , m_cellPicker(vtkSmartPointer<vtkCellPicker>::New())
+    , m_picker(std::make_unique<Picker>())
     , m_highlighter(std::make_unique<Highlighter>())
     , m_mouseMoved(false)
 {
@@ -85,34 +87,19 @@ InteractorStyle3D::InteractorStyle3D()
 
 InteractorStyle3D::~InteractorStyle3D() = default;
 
-void InteractorStyle3D::setRenderedData(const QList<RenderedData *> & renderedData)
-{
-    m_actorToRenderedData.clear();
-    m_highlighter->clear();
-
-    for (RenderedData * r : renderedData)
-    {
-        vtkCollectionSimpleIterator it;
-        r->viewProps()->InitTraversal(it);
-        while (vtkProp * prop = r->viewProps()->GetNextProp(it))
-        {
-            if (prop->GetPickable())
-                m_actorToRenderedData.insert(prop, r);
-        }
-    }
-}
-
 void InteractorStyle3D::OnMouseMove()
 {
     Superclass::OnMouseMove();
 
-    int* clickPos = GetInteractor()->GetEventPosition();
+    vtkVector2i clickPos;
+    GetInteractor()->GetEventPosition(clickPos.GetData());
     FindPokedRenderer(clickPos[0], clickPos[1]);
+    auto renderer = GetCurrentRenderer();
+    assert(renderer);
 
-    m_pointPicker->Pick(clickPos[0], clickPos[1], 0, GetCurrentRenderer());
-    m_cellPicker->Pick(clickPos[0], clickPos[1], 0, GetCurrentRenderer());
+    m_picker->pick(clickPos, *renderer);
 
-    sendPointInfo();
+    emit pointInfoSent(m_picker->pickedObjectInfo());
 
     m_mouseMoved = true;
 }
@@ -246,28 +233,12 @@ void InteractorStyle3D::highlightPickedIndex()
 {
     // assume cells and points picked (in OnMouseMove)
 
-    vtkIdType cellId = m_cellPicker->GetCellId();
-    vtkIdType pointId = m_pointPicker->GetPointId();
+    highlightIndex(m_picker->pickedDataObject(), m_picker->pickedIndex());
 
-    if (cellId == -1 && pointId == -1)
+    if (auto vis = m_picker->pickedVisualizedData())
     {
-        highlightIndex(nullptr , - 1);
-        return;
-    }
-
-    vtkActor * pickedActor = cellId != -1
-        ? m_cellPicker->GetActor()
-        : m_pointPicker->GetActor();
-
-    RenderedData * renderedData = m_actorToRenderedData.value(pickedActor);
-    if (renderedData)
-    {
-        vtkIdType index = cellId >= 0 ? cellId : pointId;
-        highlightIndex(&renderedData->dataObject(), index);
-
-        emit dataPicked(renderedData);
-
-        emit indexPicked(&renderedData->dataObject(), index);
+        emit dataPicked(vis);
+        emit indexPicked(&vis->dataObject(), m_picker->pickedIndex());
     }
 }
 
@@ -286,7 +257,10 @@ void InteractorStyle3D::highlightIndex(DataObject * dataObject, vtkIdType index)
     assert(index < 0 || dataObject);
 
     m_highlighter->setRenderer(GetCurrentRenderer());
-    m_highlighter->setTarget(dataObject, index);
+    m_highlighter->setTarget(
+        dataObject,
+        index,
+        m_picker->pickedIndexType());
 }
 
 void InteractorStyle3D::lookAtIndex(DataObject * dataObject, vtkIdType index)
@@ -463,94 +437,4 @@ void InteractorStyle3D::flashHightlightedCell(unsigned int milliseconds)
 {
     m_highlighter->setFlashTimeMilliseconds(milliseconds);
     m_highlighter->flashTargets();
-}
-
-void InteractorStyle3D::sendPointInfo() const
-{
-    vtkAbstractMapper3D * cellMapper = m_cellPicker->GetMapper();
-    vtkAbstractMapper3D * pointMapper = m_pointPicker->GetMapper();
-
-    if (!cellMapper && !pointMapper)    // no object at cursor position
-    {
-        emit pointInfoSent({});
-        return;
-    }
-
-    auto mapper = cellMapper ? cellMapper : pointMapper;
-    assert(mapper);
-
-    auto dataObject = DataObject::readPointer(*mapper->GetInformation());
-    auto polyData = dynamic_cast<PolyDataObject *>(dataObject);
-
-    // don't list unreferenced points for triangular data
-    if (polyData && !cellMapper)
-    {
-        emit pointInfoSent({});
-        return;
-    }
-
-
-    QString content;
-    QTextStream stream;
-    stream.setString(&content);
-
-    stream.setRealNumberNotation(QTextStream::RealNumberNotation::ScientificNotation);
-    stream.setRealNumberPrecision(17);
-
-    vtkInformation * inputInfo = cellMapper
-        ? cellMapper->GetInformation()
-        : pointMapper->GetInformation();
-
-    QString inputName;
-    if (inputInfo->Has(DataObject::NameKey()))
-        inputName = DataObject::NameKey()->Get(inputInfo);
-
-    stream
-        << "Data Set: " << inputName << endl;
-
-    // for poly data: centroid and scalar information if available
-    if (polyData)
-    {
-        vtkIdType cellId = m_cellPicker->GetCellId();
-        double centroid[3];
-        polyData->cellCenters()->GetPoint(cellId, centroid);
-        stream
-            << "Triangle Index: " << cellId << endl
-            << "X = " << centroid[0] << endl
-            << "Y = " << centroid[1] << endl
-            << "Z = " << centroid[2];
-
-        vtkMapper * concreteMapper = vtkMapper::SafeDownCast(cellMapper);
-        assert(concreteMapper);
-        auto arrayName = concreteMapper->GetArrayName();
-        vtkDataArray * scalars = arrayName ? polyData->processedDataSet()->GetCellData()->GetArray(arrayName) : nullptr;
-        if (scalars)
-        {
-            auto component = concreteMapper->GetLookupTable()->GetVectorComponent();
-            assert(component >= 0);
-            double value =
-                scalars->GetTuple(cellId)[component];
-
-            stream  << endl << endl << "Attribute: " << QString::fromUtf8(arrayName) << " (" << + component << ")" << endl;
-            stream << "Value: " << value;
-        }
-    }
-    // for 3D vectors
-    else
-    {
-        double* pos = m_pointPicker->GetPickPosition();
-        stream
-            << "point index: " << m_pointPicker->GetPointId() << endl
-            << "x: " << pos[0] << endl
-            << "y: " << pos[1] << endl
-            << "z: " << pos[2];
-    }
-
-    QStringList info;
-    QString line;
-
-    while (stream.readLineInto(&line))
-        info.push_back(line);
-
-    emit pointInfoSent(info);
 }

@@ -23,7 +23,7 @@
 Highlighter::Highlighter()
     : m_dataObject(nullptr)
     , m_indices(vtkSmartPointer<vtkIdTypeArray>::New())
-    , m_indexType(IndexType::autoSelect)
+    , m_indexType(IndexType::points)
     , m_flashAfterSetTarget(true)
     , m_flashTimeMilliseconds(2000)
 {
@@ -78,7 +78,7 @@ vtkIdType Highlighter::lastTargetIndex() const
     return m_indices->GetValue(m_indices->GetSize() - 1);
 }
 
-Highlighter::IndexType Highlighter::targetIndexType() const
+IndexType Highlighter::targetIndexType() const
 {
     return m_indexType;
 }
@@ -175,16 +175,6 @@ void Highlighter::updateHighlight()
         break;
     case IndexType::cells:
         highlightCells();
-        break;
-    case IndexType::autoSelect:
-        if (vtkPolyData::SafeDownCast(m_dataObject->dataSet()))
-        {
-            highlightCells();
-        }
-        else
-        {
-            highlightPoints();
-        }
         break;
     }
 

@@ -1,13 +1,9 @@
 #include "PickingInteractorStyleSwitch.h"
 
-#include <cassert>
-
-#include <QStringList>
-
 #include <vtkObjectFactory.h>
 
 #include <core/data_objects/DataObject.h>
-#include <core/rendered_data/RenderedData.h>
+#include <core/AbstractVisualizedData.h>
 
 
 vtkStandardNewMacro(PickingInteractorStyleSwitch);
@@ -20,14 +16,6 @@ PickingInteractorStyleSwitch::PickingInteractorStyleSwitch()
 }
 
 PickingInteractorStyleSwitch::~PickingInteractorStyleSwitch() = default;
-
-void PickingInteractorStyleSwitch::setRenderedData(const QList<RenderedData *> & renderedData)
-{
-    m_renderedData = renderedData;
-
-    if (m_currentPickingStyle)
-        m_currentPickingStyle->setRenderedData(m_renderedData);
-}
 
 DataObject * PickingInteractorStyleSwitch::highlightedDataObject() const
 {
@@ -63,8 +51,6 @@ void PickingInteractorStyleSwitch::styleAddedEvent(vtkInteractorStyle * style)
 
     if (!m_currentPickingStyle)
         return;
-
-    pickingStyle->setRenderedData(m_renderedData);
 
     connect(pickingStyle, &IPickingInteractorStyle::pointInfoSent, this, &IPickingInteractorStyle::pointInfoSent);
     connect(pickingStyle, &IPickingInteractorStyle::dataPicked, this, &IPickingInteractorStyle::dataPicked);

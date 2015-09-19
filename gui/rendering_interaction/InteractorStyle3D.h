@@ -2,22 +2,15 @@
 
 #include <memory>
 
-#include <QMap>
-
 #include <vtkInteractorStyleTerrain.h>
-#include <vtkSmartPointer.h>
 
 #include <gui/rendering_interaction/IPickingInteractorStyle.h>
 
 
-class QTime;
-class QTimer;
-class vtkPointPicker;
-class vtkCellPicker;
-class vtkPolyData;
 class vtkProp;
 
 class Highlighter;
+class Picker;
 
 
 class GUI_API InteractorStyle3D : public IPickingInteractorStyle, public vtkInteractorStyleTerrain
@@ -25,8 +18,6 @@ class GUI_API InteractorStyle3D : public IPickingInteractorStyle, public vtkInte
 public:
     static InteractorStyle3D * New();
     vtkTypeMacro(InteractorStyle3D, vtkInteractorStyleTerrain);
-
-    void setRenderedData(const QList<RenderedData *> & renderedData) override;
 
     void OnMouseMove() override;
     void OnLeftButtonDown() override;
@@ -54,14 +45,9 @@ protected:
     void MouseWheelDolly(bool forward);
 
     void highlightPickedIndex();
-    void sendPointInfo() const;
 
 protected:
-    QMap<vtkProp *, RenderedData *> m_actorToRenderedData;
-
-    vtkSmartPointer<vtkPointPicker> m_pointPicker;
-    vtkSmartPointer<vtkCellPicker> m_cellPicker;
-
+    std::unique_ptr<Picker> m_picker;
     std::unique_ptr<Highlighter> m_highlighter;
 
     bool m_mouseMoved;

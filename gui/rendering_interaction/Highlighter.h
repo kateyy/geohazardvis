@@ -7,6 +7,8 @@
 #include <vtkSmartPointer.h>
 #include <vtkWeakPointer.h>
 
+#include <core/types.h>
+
 #include <gui/gui_api.h>
 
 
@@ -27,14 +29,6 @@ class GUI_API Highlighter : public QObject
     Q_OBJECT
 
 public:
-    /** Specify whether indices are related to points or to cells in the data set */
-    enum class IndexType
-    {
-        points,
-        cells,
-        autoSelect  // decide based on the data set type
-    };
-
     Highlighter();
     virtual ~Highlighter();
 
@@ -43,10 +37,10 @@ public:
     vtkRenderer * renderer() const;
 
     /** Set data object and one primitive on it to be highlighted. Discards previous indices. */
-    void setTarget(DataObject * dataObject, vtkIdType index, IndexType indexType = IndexType::autoSelect);
+    void setTarget(DataObject * dataObject, vtkIdType index, IndexType indexType);
     /** Set data object and a list of primitives to be highlighted. Discards previous indices.
       * @param indices Cannot be const, due to the non-const vtkIdTypeArray getters. */
-    void setTarget(DataObject * dataObject, vtkIdTypeArray & indices, IndexType indexType = IndexType::autoSelect);
+    void setTarget(DataObject * dataObject, vtkIdTypeArray & indices, IndexType indexType);
     DataObject * targetObject() const;
     vtkIdTypeArray * targetIndices();
     vtkIdType lastTargetIndex() const;

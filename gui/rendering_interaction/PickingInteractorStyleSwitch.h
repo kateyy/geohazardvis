@@ -12,8 +12,6 @@ public:
     static PickingInteractorStyleSwitch * New();
     vtkTypeMacro(PickingInteractorStyleSwitch, InteractorStyleSwitch);
 
-    void setRenderedData(const QList<RenderedData *> & renderedData) override;
-
     DataObject * highlightedDataObject() const override;
     vtkIdType highlightedIndex() const override;
 
@@ -28,6 +26,5 @@ protected:
     void currentStyleChangedEvent() override;
 
 private:
-    QList<RenderedData *> m_renderedData;
     IPickingInteractorStyle * m_currentPickingStyle;
 };

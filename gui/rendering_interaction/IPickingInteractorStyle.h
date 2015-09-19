@@ -10,21 +10,18 @@
 template<typename T> class QList;
 
 class DataObject;
-class RenderedData;
+class AbstractVisualizedData;
 
 
 class GUI_API IPickingInteractorStyle : public QObject
 {
     Q_OBJECT
 
-public:
-    virtual void setRenderedData(const QList<RenderedData *> & renderedData) = 0;
-
 signals:
     void pointInfoSent(const QStringList &info) const;
     /** rendered data at the mouse position, after releasing (and not moving) the left mouse button
         This is only emitted if a actor was picked at the mouse position. */
-    void dataPicked(RenderedData * renderedData);
+    void dataPicked(AbstractVisualizedData * visualizedData);
     void indexPicked(DataObject * dataObject, vtkIdType index) const;
 
 public:

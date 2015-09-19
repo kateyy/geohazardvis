@@ -58,14 +58,6 @@ void RendererImplementation3D::onDataVisibilityChanged(AbstractVisualizedData * 
         setStrategy(nullptr);
 }
 
-void RendererImplementation3D::onRenderViewVisualizationChanged()
-{
-    RendererImplementationBase3D::onRenderViewVisualizationChanged();
-
-    if (interactorStyle())
-        interactorStyle()->setRenderedData(renderedData());
-}
-
 ColorMapping * RendererImplementation3D::colorMappingForSubView(unsigned int /*subViewIndex*/)
 {
     if (!m_colorMapping)

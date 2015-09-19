@@ -26,7 +26,6 @@ signals:
 protected:
     void onRemoveContent(AbstractVisualizedData * content, unsigned int subViewIndex) override;
     void onDataVisibilityChanged(AbstractVisualizedData * content, unsigned int subViewIndex) override;
-    void onRenderViewVisualizationChanged();
 
     ColorMapping * colorMappingForSubView(unsigned int subViewIndex) override;
 

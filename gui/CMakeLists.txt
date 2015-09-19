@@ -61,6 +61,8 @@ set ( SOURCES
     rendering_interaction/Highlighter.h
     rendering_interaction/Highlighter.cpp
     rendering_interaction/IPickingInteractorStyle.h
+    rendering_interaction/Picker.h
+    rendering_interaction/Picker.cpp
     rendering_interaction/PickingInteractorStyleSwitch.h
     rendering_interaction/PickingInteractorStyleSwitch.cpp
 

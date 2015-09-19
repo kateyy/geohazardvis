@@ -2,19 +2,13 @@
 
 #include <memory>
 
-#include <QMap>
-
 #include <vtkInteractorStyleImage.h>
-#include <vtkSmartPointer.h>
 
 #include <gui/rendering_interaction/IPickingInteractorStyle.h>
 
 
-class vtkPointPicker;
-class vtkProp;
-class vtkActor;
-
 class Highlighter;
+class Picker;
 
 
 class GUI_API InteractorStyleImage : public IPickingInteractorStyle, public vtkInteractorStyleImage
@@ -33,8 +27,6 @@ public:
 
     void OnChar() override;
 
-    void setRenderedData(const QList<RenderedData *> & renderedData) override;
-
     DataObject * highlightedDataObject() const override;
     vtkIdType highlightedIndex() const override;
 
@@ -47,13 +39,8 @@ protected:
 
     void highlightPickedPoint();
 
-    void sendPointInfo() const;
-
 protected:
-    QMap<vtkProp *, RenderedData *> m_propToRenderedData;
-
-    vtkSmartPointer<vtkPointPicker> m_pointPicker;
-
+    std::unique_ptr<Picker> m_picker;
     std::unique_ptr<Highlighter> m_highlighter;
 
     bool m_mouseMoved;
