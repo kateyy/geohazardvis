@@ -348,7 +348,7 @@ AbstractVisualizedData * RenderView::selectedDataVisualization() const
 
 void RenderView::lookAtData(DataObject * dataObject, vtkIdType itemId, int DEBUG_ONLY(subViewIndex))
 {
-    assert(subViewIndex == 0);
+    assert(subViewIndex == 0 || subViewIndex == -1);
     implementation().lookAtData(dataObject, itemId, 0);
 }
 
