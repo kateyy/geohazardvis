@@ -9,6 +9,7 @@
 
 class vtkProp;
 
+class CameraDolly;
 class Highlighter;
 class Picker;
 
@@ -49,6 +50,7 @@ protected:
 protected:
     std::unique_ptr<Picker> m_picker;
     std::unique_ptr<Highlighter> m_highlighter;
+    std::unique_ptr<CameraDolly> m_cameraDolly;
 
     bool m_mouseMoved;
 };

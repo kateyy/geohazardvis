@@ -60,6 +60,11 @@ public:
     void setFlashTimeMilliseconds(unsigned int milliseconds);
     unsigned int flashTimeMilliseconds() const;
 
+    /** Move the camera so that the last set target becomes visible in centered in the view */
+    void lookAtTarget();
+    /** Move the camera to a specific target */
+    void lookAtTarget(DataObject * dataObject, vtkIdType index, IndexType indexType);
+
 signals:
     void geometryChanged();
 

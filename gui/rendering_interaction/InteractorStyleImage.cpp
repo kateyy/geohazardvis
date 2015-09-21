@@ -27,6 +27,7 @@
 #include <core/data_objects/DataObject.h>
 #include <core/rendered_data/RenderedData.h>
 
+#include <gui/rendering_interaction/CameraDolly.h>
 #include <gui/rendering_interaction/Highlighter.h>
 #include <gui/rendering_interaction/Picker.h>
 
@@ -35,7 +36,9 @@ vtkStandardNewMacro(InteractorStyleImage);
 
 InteractorStyleImage::InteractorStyleImage()
     : Superclass()
+    , m_picker(std::make_unique<Picker>())
     , m_highlighter(std::make_unique<Highlighter>())
+    , m_camaraDolly(std::make_unique<CameraDolly>())
     , m_mouseMoved(false)
 {
 }
@@ -154,6 +157,11 @@ void InteractorStyleImage::highlightIndex(DataObject * dataObject, vtkIdType ind
         m_picker->pickedIndexType());
 }
 
-void InteractorStyleImage::lookAtIndex(DataObject * /*polyData*/, vtkIdType /*index*/)
+void InteractorStyleImage::lookAtIndex(DataObject * dataObject, vtkIdType index)
 {
+    if (!dataObject)
+        return;
+
+    m_camaraDolly->setRenderer(GetCurrentRenderer());
+    m_camaraDolly->moveTo(*dataObject, index, IndexType::points);
 }

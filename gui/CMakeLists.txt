@@ -52,6 +52,8 @@ set ( SOURCES
     propertyguizeug_extension/ColorEditorRGB.h
     propertyguizeug_extension/ColorEditorRGB.cpp
 
+    rendering_interaction/CameraDolly.h
+    rendering_interaction/CameraDolly.cpp
     rendering_interaction/InteractorStyle3D.h
     rendering_interaction/InteractorStyle3D.cpp
     rendering_interaction/InteractorStyleImage.h
