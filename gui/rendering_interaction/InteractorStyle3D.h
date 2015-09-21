@@ -7,8 +7,6 @@
 #include <gui/rendering_interaction/IPickingInteractorStyle.h>
 
 
-class vtkProp;
-
 class CameraDolly;
 class Highlighter;
 class Picker;

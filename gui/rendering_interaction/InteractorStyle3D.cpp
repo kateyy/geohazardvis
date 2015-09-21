@@ -3,40 +3,15 @@
 #include <cassert>
 #include <cmath>
 
-#include <QTextStream>
-#include <QStringList>
-#include <QTime>
-#include <QThread>
-#include <QTimer>
-
-#include <vtkActor.h>
 #include <vtkCallbackCommand.h>
 #include <vtkCamera.h>
-#include <vtkCellArray.h>
-#include <vtkCellData.h>
-#include <vtkCellPicker.h>
-#include <vtkIdTypeArray.h>
-#include <vtkInformation.h>
-#include <vtkInformationStringKey.h>
-#include <vtkMath.h>
-#include <vtkMath.h>
 #include <vtkObjectFactory.h>
-#include <vtkPointPicker.h>
-#include <vtkPolyData.h>
-#include <vtkPolyDataMapper.h>
-#include <vtkPolygon.h>
-#include <vtkPolygon.h>
-#include <vtkPropCollection.h>
-#include <vtkProperty.h>
-#include <vtkRenderWindow.h>
-#include <vtkRenderWindowInteractor.h>
 #include <vtkRenderer.h>
-#include <vtkScalarsToColors.h>
+#include <vtkRenderWindowInteractor.h>
 #include <vtkVector.h>
 
-#include <core/utility/vtkcamerahelper.h>
+#include <core/AbstractVisualizedData.h>
 #include <core/data_objects/PolyDataObject.h>
-#include <core/rendered_data/RenderedData.h>
 
 #include <gui/rendering_interaction/CameraDolly.h>
 #include <gui/rendering_interaction/Highlighter.h>

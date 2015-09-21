@@ -1,31 +1,15 @@
 #include "InteractorStyleImage.h"
 
+#include <cassert>
 #include <cmath>
 
-#include <QTextStream>
-#include <QStringList>
-
-#include <vtkObjectFactory.h>
-#include <vtkInformation.h>
-#include <vtkInformationStringKey.h>
 #include <vtkCallbackCommand.h>
-
+#include <vtkObjectFactory.h>
 #include <vtkRenderWindowInteractor.h>
-#include <vtkRenderer.h>
-#include <vtkRenderWindow.h>
-#include <vtkPointPicker.h>
-
-#include <vtkPointData.h>
-#include <vtkImageData.h>
-
-#include <vtkPolyDataMapper.h>
-#include <vtkDiskSource.h>
-#include <vtkActor.h>
-#include <vtkProperty.h>
 #include <vtkVector.h>
 
+#include <core/AbstractVisualizedData.h>
 #include <core/data_objects/DataObject.h>
-#include <core/rendered_data/RenderedData.h>
 
 #include <gui/rendering_interaction/CameraDolly.h>
 #include <gui/rendering_interaction/Highlighter.h>
