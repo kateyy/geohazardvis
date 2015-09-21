@@ -35,6 +35,11 @@ if(DOXYGEN_FOUND)
     add_custom_target(docs-doxygen DEPENDS ${doxyfile_hhp})
     set_target_properties(docs-doxygen PROPERTIES EXCLUDE_FROM_DEFAULT_BUILD 1)
     # add_dependencies(docs docs-doxygen)
+    
+    add_custom_target(docs-doxygen-show DEPENDS docs-doxygen
+        COMMAND             "${CMAKE_CURRENT_BINARY_DIR}/html/index.html"
+    )
+    set_target_properties(docs-doxygen-show PROPERTIES EXCLUDE_FROM_DEFAULT_BUILD 1)
 
 else()
 
