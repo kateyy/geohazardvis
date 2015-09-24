@@ -11,10 +11,24 @@ vtkStandardNewMacro(InteractorStyleImage);
 
 InteractorStyleImage::InteractorStyleImage()
     : Superclass()
+    , m_mouseMoved(false)
+    , m_mouseButtonDown(false)
 {
 }
 
 InteractorStyleImage::~InteractorStyleImage() = default;
+
+void InteractorStyleImage::OnMouseMove()
+{
+    if (m_mouseButtonDown && !m_mouseMoved)
+    {
+        GrabFocus(EventCallbackCommand);
+
+        m_mouseMoved = true;
+    }
+    
+    Superclass::OnMouseMove();
+}
 
 void InteractorStyleImage::OnLeftButtonDown()
 {
@@ -25,9 +39,18 @@ void InteractorStyleImage::OnLeftButtonDown()
     if (!GetCurrentRenderer())
         return;
 
-    GrabFocus(EventCallbackCommand);
+    m_mouseMoved = false;
+    m_mouseButtonDown = true;
 
     StartPan();
+}
+
+void InteractorStyleImage::OnLeftButtonUp()
+{
+    m_mouseMoved = false;
+    m_mouseButtonDown = false;
+
+    Superclass::OnLeftButtonUp();
 }
 
 void InteractorStyleImage::OnMiddleButtonDown()

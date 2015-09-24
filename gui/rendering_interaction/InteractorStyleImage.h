@@ -13,7 +13,9 @@ public:
     static InteractorStyleImage * New();
     vtkTypeMacro(InteractorStyleImage, vtkInteractorStyleImage);
 
+    void OnMouseMove() override;
     void OnLeftButtonDown() override;
+    void OnLeftButtonUp() override;
     void OnMiddleButtonDown() override;
     void OnMiddleButtonUp() override;
     void OnRightButtonDown() override;
@@ -27,4 +29,8 @@ public:
 protected:
     explicit InteractorStyleImage();
     ~InteractorStyleImage() override;
+
+private:
+    bool m_mouseMoved;
+    bool m_mouseButtonDown;
 };

@@ -18,6 +18,7 @@ vtkStandardNewMacro(InteractorStyle3D);
 InteractorStyle3D::InteractorStyle3D()
     : Superclass()
     , m_cameraDolly(std::make_unique<CameraDolly>())
+    , m_mouseMoved(false)
 {
 }
 
