@@ -4,14 +4,19 @@
 
 #include <QDebug>
 
+#include <vtkActor.h>
 #include <vtkCellData.h>
 #include <vtkCellPicker.h>
+#include <vtkImageSlice.h>
+#include <vtkImageMapper3D.h>
+#include <vtkImageProperty.h>
 #include <vtkInformation.h>
 #include <vtkInformationStringKey.h>
 #include <vtkMapper.h>
 #include <vtkPointData.h>
 #include <vtkPointPicker.h>
 #include <vtkPolyData.h>
+#include <vtkPropPicker.h>
 #include <vtkScalarsToColors.h>
 #include <vtkVector.h>
 
@@ -22,8 +27,9 @@
 
 
 Picker::Picker()
-    : m_pointPicker(vtkSmartPointer<vtkPointPicker>::New())
+    : m_propPicker(vtkSmartPointer<vtkPropPicker>::New())
     , m_cellPicker(vtkSmartPointer<vtkCellPicker>::New())
+    , m_pointPicker(vtkSmartPointer<vtkPointPicker>::New())
     , m_pickedIndex(-1)
     , m_pickedIndexType(IndexType::points)
     , m_pickedDataObject(nullptr)
@@ -40,15 +46,43 @@ void Picker::pick(const vtkVector2i & clickPosXY, vtkRenderer & renderer)
     m_pickedVisualizedData = nullptr;
 
     // pick points first; if this picker does not hit, we will also not hit cells
-    m_pointPicker->Pick(clickPosXY[0], clickPosXY[1], 0, &renderer);
+    m_propPicker->Pick(clickPosXY[0], clickPosXY[1], 0, &renderer);
 
-    auto pointMapper = m_pointPicker->GetMapper();
-    if (!pointMapper)
+    auto prop3D = m_propPicker->GetProp3D();
+    if (!prop3D)
     {
         return;
     }
 
-    m_pickedVisualizedData = AbstractVisualizedData::readPointer(*pointMapper->GetInformation());
+    vtkAbstractMapper * abstractMapper = nullptr;
+    vtkActor * actor = nullptr;
+    vtkImageSlice * imageSlice = nullptr;
+
+    actor = m_propPicker->GetActor();
+
+    if (actor)
+    {
+        abstractMapper = actor->GetMapper();
+    }
+    else
+    {
+        imageSlice = vtkImageSlice::SafeDownCast(prop3D);
+        assert(imageSlice);
+        if (imageSlice)
+        {
+            abstractMapper = imageSlice->GetMapper();
+        }
+    }
+
+    if (!abstractMapper)
+    {
+        qDebug() << "Unknown object picked at: " + QString::number(clickPosXY[0]) + " " + QString::number(clickPosXY[1]);
+        return;
+    }
+
+    auto mapperInfo = abstractMapper->GetInformation();
+
+    m_pickedVisualizedData = AbstractVisualizedData::readPointer(*mapperInfo);
     m_pickedDataObject = &m_pickedVisualizedData->dataObject();
 
     if (!m_pickedVisualizedData)
@@ -62,13 +96,11 @@ void Picker::pick(const vtkVector2i & clickPosXY, vtkRenderer & renderer)
     stream.setString(&content);
 
     stream.setRealNumberNotation(QTextStream::RealNumberNotation::ScientificNotation);
-    stream.setRealNumberPrecision(17);
-
-    auto * inputInfo = pointMapper->GetInformation();
+    stream.setRealNumberPrecision(5);
 
     QString inputName;
-    if (inputInfo->Has(DataObject::NameKey()))
-        inputName = DataObject::NameKey()->Get(inputInfo);
+    if (mapperInfo->Has(DataObject::NameKey()))
+        inputName = DataObject::NameKey()->Get(mapperInfo);
     else
         inputName = "(unnamed)";
 
@@ -80,23 +112,18 @@ void Picker::pick(const vtkVector2i & clickPosXY, vtkRenderer & renderer)
     // object type specific picking
     // ----------------------------
 
-    m_cellPicker->Pick(clickPosXY[0], clickPosXY[1], 0, &renderer);
-    auto cellMapper = m_cellPicker->GetMapper();
-
-    if (cellMapper)
+    if (auto poly = dynamic_cast<PolyDataObject *>(m_pickedDataObject))
     {
-        auto poly = dynamic_cast<PolyDataObject *>(m_pickedDataObject);
-        if (poly)
-        {
-            appendPolyDataInfo(stream, *poly);
-        }
+        m_cellPicker->Pick(clickPosXY[0], clickPosXY[1], 0, &renderer);
+        appendPolyDataInfo(stream, *poly);
     }
     else
     {
-        auto image = dynamic_cast<ImageDataObject *>(m_pickedDataObject);
-        if (image)
+        m_pointPicker->Pick(clickPosXY[0], clickPosXY[1], 0, &renderer);
+
+        if (imageSlice)
         {
-            appendImageDataInfo(stream);
+            appendImageDataInfo(stream, *imageSlice);
         }
         else
         {
@@ -104,7 +131,7 @@ void Picker::pick(const vtkVector2i & clickPosXY, vtkRenderer & renderer)
         }
     }
 
-    m_pickedObjectInfo = content;
+    m_pickedObjectInfo = stream.readAll();
 }
 
 const QString & Picker::pickedObjectInfo() const
@@ -169,7 +196,7 @@ void Picker::appendPolyDataInfo(QTextStream & stream, PolyDataObject & polyData)
     }
 }
 
-void Picker::appendImageDataInfo(QTextStream & stream)
+void Picker::appendImageDataInfo(QTextStream & stream, vtkImageSlice & slice)
 {
     auto pointMaper = m_pointPicker->GetMapper();
     m_pickedIndex = m_pointPicker->GetPointId();
@@ -186,19 +213,29 @@ void Picker::appendImageDataInfo(QTextStream & stream)
         << "X = : " << pos[0] << endl
         << "Y = : " << pos[1] << endl;
 
-    auto concreteMapper = vtkMapper::SafeDownCast(pointMaper);
-    assert(concreteMapper);
-    auto arrayName = concreteMapper->GetArrayName();
-    auto  scalars = arrayName ? dataSet->GetPointData()->GetArray(arrayName) : nullptr;
+    auto scalars = dataSet->GetPointData()->GetScalars();
+
     if (scalars)
     {
-        auto component = concreteMapper->GetLookupTable()->GetVectorComponent();
-        assert(component >= 0);
-        double value =
-            scalars->GetTuple(m_pickedIndex)[component];
-
-        stream << endl << endl << "Attribute: " << QString::fromUtf8(arrayName) << " (" << +component << ")" << endl;
-        stream << "Value: " << value;
+        const auto tuple = scalars->GetTuple(m_pickedIndex);
+        if (auto lut = slice.GetProperty()->GetLookupTable())
+        {
+            auto component = lut->GetVectorComponent();
+            double value = tuple[component];
+            stream << endl << "Attribute component: " << component << endl;
+            stream << "Value: " << value;
+        }
+        else if (scalars->GetNumberOfComponents() >= 3)
+        {
+            stream << endl << "Color" << endl;
+            stream << "R: " << tuple[0] << endl;
+            stream << "G: " << tuple[1] << endl;
+            stream << "B: " << tuple[2] << endl;
+            if (scalars->GetNumberOfComponents() >= 4)
+            {
+                stream << "A: " << tuple[1];
+            }
+        }
     }
 }
 

@@ -8,9 +8,10 @@
 
 
 class QTextStream;
-class vtkAbstractMapper3D;
 class vtkCellPicker;
+class vtkImageSlice;
 class vtkPointPicker;
+class vtkPropPicker;
 class vtkRenderer;
 class vtkVector2i;
 
@@ -38,12 +39,13 @@ public:
 
 private:
     void appendPolyDataInfo(QTextStream & stream, PolyDataObject & polyData);
-    void appendImageDataInfo(QTextStream & stream);
+    void appendImageDataInfo(QTextStream & stream, vtkImageSlice & slice);
     void appendGlyphInfo(QTextStream & stream);
     
 private:
-    vtkSmartPointer<vtkPointPicker> m_pointPicker;
+    vtkSmartPointer<vtkPropPicker> m_propPicker;
     vtkSmartPointer<vtkCellPicker> m_cellPicker;
+    vtkSmartPointer<vtkPointPicker> m_pointPicker;
 
     QString m_pickedObjectInfo;
     vtkIdType m_pickedIndex;
