@@ -62,11 +62,13 @@ set ( SOURCES
     rendering_interaction/InteractorStyleSwitch.cpp
     rendering_interaction/Highlighter.h
     rendering_interaction/Highlighter.cpp
-    rendering_interaction/IPickingInteractorStyle.h
+    rendering_interaction/ICameraInteractionStyle.h
     rendering_interaction/Picker.h
     rendering_interaction/Picker.cpp
-    rendering_interaction/PickingInteractorStyleSwitch.h
-    rendering_interaction/PickingInteractorStyleSwitch.cpp
+    rendering_interaction/PickerHighlighterInteractorObserver.h
+    rendering_interaction/PickerHighlighterInteractorObserver.cpp
+    rendering_interaction/CameraInteractorStyleSwitch.h
+    rendering_interaction/CameraInteractorStyleSwitch.cpp
 
     widgets/CanvasExporterWidget.h
     widgets/CanvasExporterWidget.cpp

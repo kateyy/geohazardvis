@@ -18,6 +18,7 @@
 #include <vtkRenderWindow.h>
 
 #include <core/AbstractVisualizedData.h>
+#include <core/types.h>
 #include <core/data_objects/DataObject.h>
 #include <core/utility/mathhelper.h>
 #include <core/utility/vtkcamerahelper.h>

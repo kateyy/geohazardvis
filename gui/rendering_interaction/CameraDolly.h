@@ -2,7 +2,6 @@
 
 #include <vtkSmartPointer.h>
 
-#include <core/types.h>
 #include <gui/gui_api.h>
 
 
@@ -11,8 +10,9 @@ class vtkImageData;
 class vtkPolyData;
 class vtkRenderer;
 
-class DataObject;
 class AbstractVisualizedData;
+class DataObject;
+enum class IndexType;
 
 
 class GUI_API CameraDolly

@@ -38,8 +38,8 @@ void SelectionHandler::addTableView(TableView * tableView)
     updateSyncToggleMenu();
     
     connect(tableView, &TableView::itemDoubleClicked, 
-        [this](DataObject * dataObject, vtkIdType itemId) {
-        renderViewsLookAt(dataObject, itemId);
+        [this] (DataObject * dataObject, vtkIdType index, IndexType indexType) {
+        renderViewsLookAt(dataObject, index, indexType);
     });
 }
 
@@ -58,7 +58,7 @@ QAction * SelectionHandler::addAbstractDataView(AbstractDataView * dataView)
     syncToggleAction->setChecked(true);
 
     connect(dataView, &AbstractDataView::windowTitleChanged, syncToggleAction, &QAction::setText);
-    connect(dataView, &AbstractDataView::objectPicked, this, &SelectionHandler::hightlightSelection);
+    connect(dataView, &AbstractDataView::objectPicked, this, &SelectionHandler::updateSelection);
 
     return syncToggleAction;
 }
@@ -90,7 +90,7 @@ void SelectionHandler::setSyncToggleMenu(QMenu * syncToggleMenu)
     m_syncToggleMenu = syncToggleMenu;
 }
 
-void SelectionHandler::hightlightSelection(DataObject * dataObject, vtkIdType highlightedItemId)
+void SelectionHandler::updateSelection(DataObject * dataObject, vtkIdType index, IndexType indexType)
 {
     QAction * action = nullptr;
     if (TableView * table = dynamic_cast<TableView *>(sender()))
@@ -109,22 +109,25 @@ void SelectionHandler::hightlightSelection(DataObject * dataObject, vtkIdType hi
     for (auto it = m_renderViews.begin(); it != m_renderViews.end(); ++it)
     {
         if (it.value()->isChecked() && it.key()->dataObjects().contains(dataObject))
-            it.key()->setHighlightedId(dataObject, highlightedItemId);
+            it.key()->setSelection(dataObject, index, indexType);
     }
     for (auto it = m_tableViews.begin(); it != m_tableViews.end(); ++it)
     {
         if (it.value()->isChecked() && it.key()->dataObject() == dataObject)
-            it.key()->setHighlightedId(dataObject, highlightedItemId);
+            it.key()->setSelection(dataObject, index, indexType);
     }
 }
 
-void SelectionHandler::renderViewsLookAt(DataObject * dataObject, vtkIdType itemId)
+void SelectionHandler::renderViewsLookAt(DataObject * dataObject, vtkIdType index, IndexType indexType)
 {
+    if (!dataObject)
+        return;
+
     for (auto it = m_renderViews.begin(); it != m_renderViews.end(); ++it)
     {
         if (it.value()->isChecked())
             if (it.key()->dataObjects().contains(dataObject))
-                it.key()->lookAtData(dataObject, itemId);
+                it.key()->lookAtData(*dataObject, index, indexType);
     }
 }
 

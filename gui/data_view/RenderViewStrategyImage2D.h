@@ -36,7 +36,7 @@ public:
 
     bool contains3dData() const override;
 
-    void resetCamera(vtkCamera & camera) override;
+    void resetCamera() override;
 
     QList<DataObject *> filterCompatibleObjects(const QList<DataObject *> & dataObjects, QList<DataObject *> & incompatibleObjects) const override;
     bool canApplyTo(const QList<RenderedData *> & renderedData) override;

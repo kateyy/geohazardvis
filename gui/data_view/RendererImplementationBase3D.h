@@ -1,6 +1,6 @@
 #pragma once
 
-#include <QVector>
+#include <vector>
 
 #include <vtkSmartPointer.h>
 #include <vtkBoundingBox.h>
@@ -18,12 +18,11 @@ class vtkTextWidget;
 
 class vtkGridAxes3DActor;
 
-class IPickingInteractorStyle;
-class PickingInteractorStyleSwitch;
-class RenderViewStrategy;
-class RenderViewStrategySwitch;
-class RenderedData;
+class CameraInteractorStyleSwitch;
 class ColorMapping;
+class PickerHighlighterInteractorObserver;
+class RenderViewStrategy;
+class RenderedData;
 
 
 /** Base class for vtkRenderer based render views. 
@@ -55,10 +54,13 @@ public:
 
     vtkRenderWindowInteractor * interactor() override;
 
-    void setSelectedData(DataObject * dataObject, vtkIdType itemId = -1) override;
-    DataObject * selectedData() const override;
+    void setSelectedData(AbstractVisualizedData * vis, vtkIdType index, IndexType indexType) override;
+    void setSelectedData(AbstractVisualizedData * vis, vtkIdTypeArray & indices, IndexType indexType) override;
+    void clearSelection() override;
+    AbstractVisualizedData * selectedData() const override;
     vtkIdType selectedIndex() const override;
-    void lookAtData(DataObject * dataObject, vtkIdType itemId, unsigned int subViewIndex) override;
+    IndexType selectedIndexType() const override;
+    void lookAtData(AbstractVisualizedData & vis, vtkIdType index, IndexType indexType, unsigned int subViewIndex) override;
     void resetCamera(bool toInitialPosition, unsigned int subViewIndex) override;
 
     void dataBounds(double bounds[6], unsigned int subViewIndex) const;
@@ -67,9 +69,7 @@ public:
 
     QList<RenderedData *> renderedData();
 
-    IPickingInteractorStyle * interactorStyle();
-    const IPickingInteractorStyle * interactorStyle() const;
-    PickingInteractorStyleSwitch * interactorStyleSwitch();
+    CameraInteractorStyleSwitch * interactorStyleSwitch();
 
     vtkRenderWindow * renderWindow();
     vtkRenderer * renderer(unsigned int subViewIndex);
@@ -148,8 +148,9 @@ private:
 
     vtkSmartPointer<vtkLightKit> m_lightKit;
 
-    vtkSmartPointer<PickingInteractorStyleSwitch> m_interactorStyle;
+    vtkSmartPointer<CameraInteractorStyleSwitch> m_interactorStyle;
+    vtkSmartPointer<PickerHighlighterInteractorObserver> m_pickerHighlighter;
 
     // -- contents and annotation --
-    QVector<ViewportSetup> m_viewportSetups;
+    std::vector<ViewportSetup> m_viewportSetups;
 };

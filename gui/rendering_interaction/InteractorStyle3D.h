@@ -4,15 +4,13 @@
 
 #include <vtkInteractorStyleTerrain.h>
 
-#include <gui/rendering_interaction/IPickingInteractorStyle.h>
+#include <gui/rendering_interaction/ICameraInteractionStyle.h>
 
 
 class CameraDolly;
-class Highlighter;
-class Picker;
 
 
-class GUI_API InteractorStyle3D : public IPickingInteractorStyle, public vtkInteractorStyleTerrain
+class GUI_API InteractorStyle3D : public vtkInteractorStyleTerrain, virtual public ICameraInteractionStyle
 {
 public:
     static InteractorStyle3D * New();
@@ -30,12 +28,8 @@ public:
 
     void OnChar() override;
 
-    DataObject * highlightedDataObject() const override;
-    vtkIdType highlightedIndex() const override;
-
-    void highlightIndex(DataObject * dataObject, vtkIdType index) override;
-    void lookAtIndex(DataObject * polyData, vtkIdType index) override;
-    void flashHightlightedCell(unsigned int milliseconds = 2000u);
+    void resetCamera() override;
+    void moveCameraTo(AbstractVisualizedData & visualization, vtkIdType index, IndexType indexType, bool overTime = true) override;
 
 protected:
     explicit InteractorStyle3D();
@@ -43,11 +37,7 @@ protected:
 
     void MouseWheelDolly(bool forward);
 
-    void highlightPickedIndex();
-
-protected:
-    std::unique_ptr<Picker> m_picker;
-    std::unique_ptr<Highlighter> m_highlighter;
+private:
     std::unique_ptr<CameraDolly> m_cameraDolly;
 
     bool m_mouseMoved;

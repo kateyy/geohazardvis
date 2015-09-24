@@ -7,21 +7,22 @@
 #include <vtkSmartPointer.h>
 #include <vtkWeakPointer.h>
 
-#include <core/types.h>
-
 #include <gui/gui_api.h>
 
 
 class QTime;
 class QTimer;
 class vtkActor;
+class vtkDataObject;
 class vtkDiskSource;
 class vtkIdTypeArray;
 class vtkPolyData;
 class vtkPolyDataMapper;
 class vtkRenderer;
 
+class AbstractVisualizedData;
 class DataObject;
+enum class IndexType;
 
 
 class GUI_API Highlighter : public QObject
@@ -41,7 +42,10 @@ public:
     /** Set data object and a list of primitives to be highlighted. Discards previous indices.
       * @param indices Cannot be const, due to the non-const vtkIdTypeArray getters. */
     void setTarget(DataObject * dataObject, vtkIdTypeArray & indices, IndexType indexType);
+    void setTarget(AbstractVisualizedData * vis, vtkIdType visOutputPort, vtkIdType index, IndexType indexType);
+    void setTarget(AbstractVisualizedData * vis, vtkIdType visOutputPort, vtkIdTypeArray & indices, IndexType indexType);
     DataObject * targetObject() const;
+    AbstractVisualizedData * targetVisualization() const;
     vtkIdTypeArray * targetIndices();
     vtkIdType lastTargetIndex() const;
     IndexType targetIndexType() const;
@@ -60,23 +64,22 @@ public:
     void setFlashTimeMilliseconds(unsigned int milliseconds);
     unsigned int flashTimeMilliseconds() const;
 
-    /** Move the camera so that the last set target becomes visible in centered in the view */
-    void lookAtTarget();
-    /** Move the camera to a specific target */
-    void lookAtTarget(DataObject * dataObject, vtkIdType index, IndexType indexType);
-
 signals:
     void geometryChanged();
 
 private:
     void updateHighlight();
 
-    void highlightPoints();
-    void highlightCells();
+    void highlightPoints(vtkDataObject & targetData);
+    void highlightCells(vtkDataObject & targetData);
+
+    vtkDataObject * getTargetOutput();
 
 private:
     vtkWeakPointer<vtkRenderer> m_renderer;
     DataObject * m_dataObject;
+    AbstractVisualizedData * m_visualizedData;
+    vtkIdType m_visOutputPort;
     vtkSmartPointer<vtkIdTypeArray> m_indices;
     IndexType m_indexType;
 

@@ -8,24 +8,16 @@
 #include <vtkObjectFactory.h>
 #include <vtkRenderer.h>
 #include <vtkRenderWindowInteractor.h>
-#include <vtkVector.h>
 
-#include <core/AbstractVisualizedData.h>
-#include <core/data_objects/PolyDataObject.h>
-
+#include <core/utility/vtkcamerahelper.h>
 #include <gui/rendering_interaction/CameraDolly.h>
-#include <gui/rendering_interaction/Highlighter.h>
-#include <gui/rendering_interaction/Picker.h>
 
 
 vtkStandardNewMacro(InteractorStyle3D);
 
 InteractorStyle3D::InteractorStyle3D()
     : Superclass()
-    , m_picker(std::make_unique<Picker>())
-    , m_highlighter(std::make_unique<Highlighter>())
     , m_cameraDolly(std::make_unique<CameraDolly>())
-    , m_mouseMoved(false)
 {
 }
 
@@ -33,36 +25,41 @@ InteractorStyle3D::~InteractorStyle3D() = default;
 
 void InteractorStyle3D::OnMouseMove()
 {
+    switch (this->State)
+    {
+    case VTKIS_ROTATE:
+        if (!m_mouseMoved)
+        {
+            this->GrabFocus(this->EventCallbackCommand);
+            m_mouseMoved = true;
+        }
+    }
+
     Superclass::OnMouseMove();
-
-    vtkVector2i clickPos;
-    GetInteractor()->GetEventPosition(clickPos.GetData());
-    FindPokedRenderer(clickPos[0], clickPos[1]);
-    auto renderer = GetCurrentRenderer();
-    assert(renderer);
-
-    m_picker->pick(clickPos, *renderer);
-
-    emit pointInfoSent(m_picker->pickedObjectInfo());
-
-    m_mouseMoved = true;
 }
 
 void InteractorStyle3D::OnLeftButtonDown()
 {
-    Superclass::OnLeftButtonDown();
+    // Fix the superclass's method: only grab (exclusive) focus once the user moved the cursor
+    // Otherwise, we would block left button down/release events from other observers
+
+    this->FindPokedRenderer(this->Interactor->GetEventPosition()[0],
+                            this->Interactor->GetEventPosition()[1]);
+    if (this->CurrentRenderer == NULL)
+    {
+        return;
+    }
+
+    this->StartRotate();
 
     m_mouseMoved = false;
 }
 
 void InteractorStyle3D::OnLeftButtonUp()
 {
-    Superclass::OnLeftButtonUp();
-
-    if (!m_mouseMoved)
-        highlightPickedIndex();
-
     m_mouseMoved = false;
+
+    Superclass::OnLeftButtonUp();
 }
 
 void InteractorStyle3D::OnMiddleButtonDown()
@@ -135,6 +132,26 @@ void InteractorStyle3D::OnChar()
         Superclass::OnChar();
 }
 
+void InteractorStyle3D::resetCamera()
+{
+    auto renderer = GetCurrentRenderer();
+    if (!renderer)
+    {
+        return;
+    }
+
+    auto & camera = *renderer->GetActiveCamera();
+    camera.SetViewUp(0, 0, 1);
+    TerrainCamera::setAzimuth(camera, 0);
+    TerrainCamera::setVerticalElevation(camera, 45);
+}
+
+void InteractorStyle3D::moveCameraTo(AbstractVisualizedData & visualization, vtkIdType index, IndexType indexType, bool overTime)
+{
+    m_cameraDolly->setRenderer(GetCurrentRenderer());
+    m_cameraDolly->moveTo(visualization, index, indexType, overTime);
+}
+
 void InteractorStyle3D::MouseWheelDolly(bool forward)
 {
     if (!CurrentRenderer)
@@ -148,7 +165,7 @@ void InteractorStyle3D::MouseWheelDolly(bool forward)
         factor *= -1;
     factor = std::pow(1.1, factor);
 
-    vtkCamera * camera = CurrentRenderer->GetActiveCamera();
+    auto camera = CurrentRenderer->GetActiveCamera();
     if (camera->GetParallelProjection())
     {
         camera->SetParallelScale(camera->GetParallelScale() / factor);
@@ -171,53 +188,4 @@ void InteractorStyle3D::MouseWheelDolly(bool forward)
     ReleaseFocus();
 
     Interactor->Render();
-}
-
-void InteractorStyle3D::highlightPickedIndex()
-{
-    // assume cells and points picked (in OnMouseMove)
-
-    highlightIndex(m_picker->pickedDataObject(), m_picker->pickedIndex());
-
-    if (auto vis = m_picker->pickedVisualizedData())
-    {
-        emit dataPicked(vis);
-        emit indexPicked(&vis->dataObject(), m_picker->pickedIndex());
-    }
-}
-
-DataObject * InteractorStyle3D::highlightedDataObject() const
-{
-    return m_highlighter->targetObject();
-}
-
-vtkIdType InteractorStyle3D::highlightedIndex() const
-{
-    return m_highlighter->lastTargetIndex();
-}
-
-void InteractorStyle3D::highlightIndex(DataObject * dataObject, vtkIdType index)
-{
-    assert(index < 0 || dataObject);
-
-    m_highlighter->setRenderer(GetCurrentRenderer());
-    m_highlighter->setTarget(
-        dataObject,
-        index,
-        m_picker->pickedIndexType());
-}
-
-void InteractorStyle3D::lookAtIndex(DataObject * dataObject, vtkIdType index)
-{
-    if (!dataObject)
-        return;
-
-    m_cameraDolly->setRenderer(GetCurrentRenderer());
-    m_cameraDolly->moveTo(*dataObject, index, IndexType::cells);
-}
-
-void InteractorStyle3D::flashHightlightedCell(unsigned int milliseconds)
-{
-    m_highlighter->setFlashTimeMilliseconds(milliseconds);
-    m_highlighter->flashTargets();
 }

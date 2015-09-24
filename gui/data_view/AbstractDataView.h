@@ -2,14 +2,17 @@
 
 #include <QWidget>
 
-#include <vtkType.h>
+#include <vtkSmartPointer.h>
 
 #include <gui/gui_api.h>
 
 
 class QDockWidget;
 class QToolBar;
+class vtkIdTypeArray;
+
 class DataObject;
+enum class IndexType;
 
 
 class GUI_API AbstractDataView : public QWidget
@@ -41,9 +44,19 @@ public:
     /** A title specifying contents of a sub-view */
     virtual QString subViewFriendlyName(unsigned int subViewIndex) const;
 
-    vtkIdType highlightedItemId() const;
-    DataObject * highlightedObject();
-    const DataObject * highlightedObject() const;
+    /** highlight requested index */
+    void setSelection(DataObject * dataObject, vtkIdType selectionIndex, IndexType indexType);
+    void setSelection(DataObject * dataObject, vtkIdTypeArray & selectionIndices, IndexType indexType);
+    void clearSelection();
+    /** Selected element in the currently selected data object. For multi-selections, this returns the last index in the list.
+      * (The most recently added index) */
+    vtkIdType lastSelectedIndex() const;
+    /** List of selected cells or points that are selected in the current data object.
+      * @warning This cannot be const, due to the non-const vtkAbstractArray interface. Do not modify the contents of the returned array! */
+    vtkIdTypeArray * selectedIndices();
+    IndexType selectedIndexType() const;
+    DataObject * selectedDataObject();
+    const DataObject * selectedDataObject() const;
 
 signals:
     /** signaled when the widget receive the keyboard focus (focusInEvent) */
@@ -51,14 +64,11 @@ signals:
     void closed();
 
     /** user selected some content */
-    void objectPicked(DataObject * dataObject, vtkIdType selectionId);
+    void objectPicked(DataObject * dataObject, vtkIdType selectionIndex, IndexType indexType);
 
 public:
     /** highlight this view as currently selected of its type */
     void setCurrent(bool isCurrent);
-
-    /** highlight requested id */
-    void setHighlightedId(DataObject * dataObject, vtkIdType itemId);
 
 protected:
     virtual QWidget * contentWidget() = 0;
@@ -69,7 +79,9 @@ protected:
 
     bool eventFilter(QObject * obj, QEvent * ev) override;
 
-    virtual void highlightedIdChangedEvent(DataObject * dataObject, vtkIdType itemId) = 0;
+    /** Handle selection changes in concrete sub-classes 
+      * @warning selection array cannot be const, due to the non-const vtkAbstractArray interface. Do not modify its contents! */
+    virtual void selectionChangedEvent(DataObject * dataObject, vtkIdTypeArray * selection, IndexType indexType) = 0;
 
 private:
     const int m_index;
@@ -78,6 +90,7 @@ private:
     QDockWidget * m_dockWidgetParent;
     QToolBar * m_toolBar;
 
-    DataObject * m_highlightedObject;
-    vtkIdType m_hightlightedItemId;
+    DataObject * m_selectedDataObject;
+    vtkSmartPointer<vtkIdTypeArray> m_selectedIndices;
+    IndexType m_selectionIndexType;
 };

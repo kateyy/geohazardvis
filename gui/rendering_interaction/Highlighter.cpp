@@ -6,6 +6,8 @@
 #include <QTimer>
 
 #include <vtkActor.h>
+#include <vtkAlgorithm.h>
+#include <vtkAlgorithmOutput.h>
 #include <vtkCellArray.h>
 #include <vtkDataSet.h>
 #include <vtkDiskSource.h>
@@ -17,11 +19,15 @@
 #include <vtkPolygon.h>
 #include <vtkRenderer.h>
 
+#include <core/AbstractVisualizedData.h>
+#include <core/types.h>
 #include <core/data_objects/DataObject.h>
 
 
 Highlighter::Highlighter()
     : m_dataObject(nullptr)
+    , m_visualizedData(nullptr)
+    , m_visOutputPort(-1)
     , m_indices(vtkSmartPointer<vtkIdTypeArray>::New())
     , m_indexType(IndexType::points)
     , m_flashAfterSetTarget(true)
@@ -46,6 +52,8 @@ vtkRenderer * Highlighter::renderer() const
 void Highlighter::setTarget(DataObject * dataObject, vtkIdType index, IndexType indexType)
 {
     m_dataObject = dataObject;
+    m_visualizedData = nullptr;
+    m_visOutputPort = -1;
     m_indices->SetNumberOfValues(1);
     m_indices->SetValue(0, index);
     m_indexType = indexType;
@@ -55,14 +63,44 @@ void Highlighter::setTarget(DataObject * dataObject, vtkIdType index, IndexType 
 void Highlighter::setTarget(DataObject * dataObject, vtkIdTypeArray & indices, IndexType indexType)
 {
     m_dataObject = dataObject;
+    m_visualizedData = nullptr;
+    m_visOutputPort = -1;
     m_indices->DeepCopy(&indices);
     m_indexType = indexType;
+    updateHighlight();
+}
+
+void Highlighter::setTarget(AbstractVisualizedData * vis, vtkIdType visOutputPort, vtkIdType index, IndexType indexType)
+{
+    m_dataObject = vis ? &vis->dataObject() : static_cast<DataObject *>(nullptr);
+    m_visualizedData = vis;
+    m_visOutputPort = visOutputPort;
+    m_indices->SetNumberOfValues(1);
+    m_indices->SetValue(0, index);
+    m_indexType = indexType;
+
+    updateHighlight();
+}
+
+void Highlighter::setTarget(AbstractVisualizedData * vis, vtkIdType visOutputPort, vtkIdTypeArray & indices, IndexType indexType)
+{
+    m_dataObject = vis ? &vis->dataObject() : static_cast<DataObject *>(nullptr);
+    m_visualizedData = vis;
+    m_visOutputPort = visOutputPort;
+    m_indices->DeepCopy(&indices);
+    m_indexType = indexType;
+
     updateHighlight();
 }
 
 DataObject * Highlighter::targetObject() const
 {
     return m_dataObject;
+}
+
+AbstractVisualizedData * Highlighter::targetVisualization() const
+{
+    return nullptr;
 }
 
 vtkIdTypeArray * Highlighter::targetIndices()
@@ -149,7 +187,14 @@ void Highlighter::updateHighlight()
         clear();
         return;
     }
-    if (!m_dataObject || m_indices->GetSize() == 0)
+    if (m_indices->GetSize() == 0)
+    {
+        clearIndices();
+        return;
+    }
+
+    auto targetOutput = getTargetOutput();
+    if (!targetOutput)
     {
         clearIndices();
         return;
@@ -171,10 +216,10 @@ void Highlighter::updateHighlight()
     switch (m_indexType)
     {
     case IndexType::points:
-        highlightPoints();
+        highlightPoints(*targetOutput);
         break;
     case IndexType::cells:
-        highlightCells();
+        highlightCells(*targetOutput);
         break;
     }
 
@@ -184,11 +229,16 @@ void Highlighter::updateHighlight()
     }
 }
 
-void Highlighter::highlightPoints()
+void Highlighter::highlightPoints(vtkDataObject & targetData)
 {
     assert(m_renderer && m_dataObject && m_indices->GetSize() > 0);
 
-    auto dataSet = m_dataObject->dataSet();
+    auto dataSet = vtkDataSet::SafeDownCast(&targetData);
+    if (!dataSet)
+    {
+        return;
+    }
+    
 
     // TODO multi selections
     vtkIdType index = m_indices->GetValue(0);
@@ -216,9 +266,15 @@ void Highlighter::highlightPoints()
     emit geometryChanged();
 }
 
-void Highlighter::highlightCells()
+void Highlighter::highlightCells(vtkDataObject & targetData)
 {
     assert(m_renderer && m_dataObject && m_indices->GetSize() > 0);
+
+    auto dataSet = vtkDataSet::SafeDownCast(&targetData);
+    if (!dataSet)
+    {
+        return;
+    }
 
     // TODO implement highlighting of multiple targets, get inspired by ParaView
     vtkIdType index = m_indices->GetValue(0);
@@ -232,7 +288,7 @@ void Highlighter::highlightCells()
     // extract picked triangle and create highlighting geometry
     // create two shifted polygons to work around occlusion
 
-    vtkCell * selection = m_dataObject->dataSet()->GetCell(index);
+    vtkCell * selection = dataSet->GetCell(index);
 
     // this is probably a glyph or the like; we don't have an implementation for that in the moment
     if (selection->GetCellType() == VTK_VOXEL)
@@ -276,6 +332,23 @@ void Highlighter::highlightCells()
     m_renderer->AddViewProp(m_highlightActor);
 
     emit geometryChanged();
+}
+
+vtkDataObject * Highlighter::getTargetOutput()
+{
+    if (m_visualizedData)
+    {
+        auto port = m_visualizedData->colorMappingInput(m_visOutputPort);
+        port->GetProducer()->Update();
+        return port->GetProducer()->GetOutputDataObject(0);
+    }
+
+    if (!m_visualizedData && m_dataObject)
+    {
+        return m_dataObject->dataSet();
+    }
+
+    return nullptr;
 }
 
 void Highlighter::setFlashAfterTarget(bool doFlash)

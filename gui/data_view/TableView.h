@@ -36,11 +36,11 @@ public:
     DataObject * dataObject();
 
 signals:
-    void itemDoubleClicked(DataObject * dataObject, vtkIdType itemId);
+    void itemDoubleClicked(DataObject * dataObject, vtkIdType index, IndexType indexType);
 
 protected:
     QWidget * contentWidget() override;
-    void highlightedIdChangedEvent(DataObject * dataObject, vtkIdType itemId) override;
+    void selectionChangedEvent(DataObject * dataObject, vtkIdTypeArray * selection, IndexType indexType) override;
 
     bool eventFilter(QObject * obj, QEvent * ev) override;
 

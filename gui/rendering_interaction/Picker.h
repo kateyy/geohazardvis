@@ -1,10 +1,8 @@
 #pragma once
 
-#include <QStringList>
+#include <QString>
 
 #include <vtkSmartPointer.h>
-
-#include <core/types.h>
 
 #include <gui/gui_api.h>
 
@@ -18,6 +16,7 @@ class vtkVector2i;
 
 class AbstractVisualizedData;
 class DataObject;
+enum class IndexType;
 class PolyDataObject;
 
 
@@ -29,7 +28,7 @@ public:
 
     void pick(const vtkVector2i & clickPosXY, vtkRenderer & renderer);
 
-    QStringList pickedObjectInfo();
+    const QString & pickedObjectInfo() const;
 
     vtkIdType pickedIndex() const;
     IndexType pickedIndexType() const;
@@ -46,7 +45,7 @@ private:
     vtkSmartPointer<vtkPointPicker> m_pointPicker;
     vtkSmartPointer<vtkCellPicker> m_cellPicker;
 
-    QStringList m_pickedObjectInfo;
+    QString m_pickedObjectInfo;
     vtkIdType m_pickedIndex;
     IndexType m_pickedIndexType;
     DataObject * m_pickedDataObject;

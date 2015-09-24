@@ -93,6 +93,44 @@ vtkRenderWindowInteractor * RendererImplementationPlot::interactor()
     return m_contextView->GetInteractor();
 }
 
+void RendererImplementationPlot::setSelectedData(AbstractVisualizedData * /*vis*/, vtkIdType /*index*/, IndexType /*indexType*/)
+{
+}
+
+void RendererImplementationPlot::setSelectedData(AbstractVisualizedData * /*vis*/, vtkIdTypeArray & /*indices*/, IndexType /*indexType*/)
+{
+}
+
+void RendererImplementationPlot::clearSelection()
+{
+}
+
+AbstractVisualizedData * RendererImplementationPlot::selectedData() const
+{
+    return nullptr;
+}
+
+vtkIdType RendererImplementationPlot::selectedIndex() const
+{
+    return vtkIdType();
+}
+
+IndexType RendererImplementationPlot::selectedIndexType() const
+{
+    return IndexType();
+}
+
+void RendererImplementationPlot::lookAtData(AbstractVisualizedData & /*vis*/, vtkIdType /*index*/, IndexType /*indexType*/, unsigned int /*subViewIndex*/)
+{
+}
+
+void RendererImplementationPlot::resetCamera(bool /*toInitialPosition*/, unsigned int /*subViewIndex*/)
+{
+    m_contextView->ResetCamera();
+
+    render();
+}
+
 void RendererImplementationPlot::onAddContent(AbstractVisualizedData * content, unsigned int /*subViewIndex*/)
 {
     assert(dynamic_cast<Context2DData *>(content));
@@ -139,31 +177,6 @@ void RendererImplementationPlot::onRemoveContent(AbstractVisualizedData * conten
     }
 
     m_contextView->ResetCamera();
-}
-
-void RendererImplementationPlot::setSelectedData(DataObject * /*dataObject*/, vtkIdType /*itemId*/)
-{
-}
-
-DataObject * RendererImplementationPlot::selectedData() const
-{
-    return nullptr;
-}
-
-vtkIdType RendererImplementationPlot::selectedIndex() const
-{
-    return -1;
-}
-
-void RendererImplementationPlot::lookAtData(DataObject * /*dataObject*/, vtkIdType /*itemId*/, unsigned int /*subViewIndex*/)
-{
-}
-
-void RendererImplementationPlot::resetCamera(bool /*toInitialPosition*/, unsigned int /*subViewIndex*/)
-{
-    m_contextView->ResetCamera();
-
-    render();
 }
 
 void RendererImplementationPlot::setAxesVisibility(bool /*visible*/)

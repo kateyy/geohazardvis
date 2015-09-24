@@ -23,11 +23,16 @@ public:
 
     void render() override;
     vtkRenderWindowInteractor * interactor() override;
-    void setSelectedData(DataObject *, vtkIdType = -1) override;
-    DataObject * selectedData() const override;
+
+    void setSelectedData(AbstractVisualizedData * vis, vtkIdType index, IndexType indexType) override;
+    void setSelectedData(AbstractVisualizedData * vis, vtkIdTypeArray & indices, IndexType indexType) override;
+    void clearSelection() override;
+    AbstractVisualizedData * selectedData() const override;
     vtkIdType selectedIndex() const override;
-    void lookAtData(DataObject *, vtkIdType, unsigned int) override;
-    void resetCamera(bool, unsigned int) override;
+    IndexType selectedIndexType() const override;
+    void lookAtData(AbstractVisualizedData & vis, vtkIdType index, IndexType indexType, unsigned int subViewIndex) override;
+    void resetCamera(bool toInitialPosition, unsigned int subViewIndex) override;
+
     void setAxesVisibility(bool) override;
     bool canApplyTo(const QList<DataObject *> &) override;
 

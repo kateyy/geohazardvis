@@ -5,35 +5,36 @@
 #include <QMouseEvent>
 
 #include <QVTKWidget.h>
-#include <vtkRenderer.h>
-#include <vtkRenderWindow.h>
-
+#include <vtkBoundingBox.h>
 #include <vtkCamera.h>
+#include <vtkIdTypeArray.h>
 #include <vtkLightKit.h>
 #include <vtkProperty.h>
-#include <vtkTextProperty.h>
-
-#include <vtkBoundingBox.h>
 #include <vtkProperty2D.h>
+#include <vtkRenderWindow.h>
+#include <vtkRenderer.h>
 #include <vtkScalarBarActor.h>
-#include <vtkScalarBarWidget.h>
 #include <vtkScalarBarRepresentation.h>
+#include <vtkScalarBarWidget.h>
 #include <vtkTextActor.h>
+#include <vtkTextProperty.h>
 #include <vtkTextRepresentation.h>
 #include <vtkTextWidget.h>
 
 #include <core/types.h>
+#include <core/color_mapping/ColorMapping.h>
 #include <core/data_objects/DataObject.h>
 #include <core/rendered_data/RenderedData.h>
-#include <core/color_mapping/ColorMapping.h>
 #include <core/ThirdParty/ParaView/vtkGridAxes3DActor.h>
 #include <gui/data_view/AbstractRenderView.h>
 #include <gui/data_view/RenderViewStrategy.h>
+#include <gui/data_view/RenderViewStrategyNull.h>
 #include <gui/data_view/RenderViewStrategySwitch.h>
-#include <gui/rendering_interaction/PickingInteractorStyleSwitch.h>
+#include <gui/rendering_interaction/CameraInteractorStyleSwitch.h>
+#include <gui/rendering_interaction/Highlighter.h>
 #include <gui/rendering_interaction/InteractorStyle3D.h>
 #include <gui/rendering_interaction/InteractorStyleImage.h>
-#include <gui/data_view/RenderViewStrategyNull.h>
+#include <gui/rendering_interaction/PickerHighlighterInteractorObserver.h>
 
 
 RendererImplementationBase3D::RendererImplementationBase3D(AbstractRenderView & renderView)
@@ -183,34 +184,72 @@ void RendererImplementationBase3D::onRenderViewVisualizationChanged()
     }
 }
 
-void RendererImplementationBase3D::setSelectedData(DataObject * dataObject, vtkIdType itemId)
+void RendererImplementationBase3D::setSelectedData(AbstractVisualizedData * vis, vtkIdType index, IndexType indexType)
 {
-    interactorStyle()->highlightIndex(dataObject, itemId);
+    auto indices = vtkSmartPointer<vtkIdTypeArray>::New();
+    indices->SetNumberOfValues(1);
+    indices->SetValue(0, index);
+
+    setSelectedData(vis, *indices, indexType);
 }
 
-DataObject * RendererImplementationBase3D::selectedData() const
+void RendererImplementationBase3D::setSelectedData(AbstractVisualizedData * vis, vtkIdTypeArray & indices, IndexType indexType)
 {
-    return m_interactorStyle->highlightedDataObject();
+    auto & highlighter = m_pickerHighlighter->highlighter();
+    if (!vis)
+    {
+        highlighter.clearIndices();
+    }
+
+    auto subViewIndex = m_renderView.subViewContaining(*vis);
+    assert(subViewIndex >= 0);
+
+    highlighter.setRenderer(viewportSetup(subViewIndex).renderer);
+    // TODO well, how to find the correct output port here to select a data point on a slice plane for the 3D grids?
+    vtkIdType visOutputPort = 0;
+    highlighter.setTarget(vis, visOutputPort, indices, indexType);
+}
+
+void RendererImplementationBase3D::clearSelection()
+{
+    m_pickerHighlighter->highlighter().clearIndices();
+}
+
+AbstractVisualizedData * RendererImplementationBase3D::selectedData() const
+{
+    return m_pickerHighlighter->highlighter().targetVisualization();
 }
 
 vtkIdType RendererImplementationBase3D::selectedIndex() const
 {
-    return m_interactorStyle->highlightedIndex();
+    return m_pickerHighlighter->highlighter().lastTargetIndex();
 }
 
-void RendererImplementationBase3D::lookAtData(DataObject * dataObject, vtkIdType itemId, unsigned int subViewIndex)
+IndexType RendererImplementationBase3D::selectedIndexType() const
+{
+    return m_pickerHighlighter->highlighter().targetIndexType();
+}
+
+void RendererImplementationBase3D::lookAtData(AbstractVisualizedData & vis, vtkIdType index, IndexType indexType, unsigned int subViewIndex)
 {
     m_interactorStyle->SetCurrentRenderer(m_viewportSetups[subViewIndex].renderer);
 
-    m_interactorStyle->lookAtIndex(dataObject, itemId);
+    m_interactorStyle->moveCameraTo(vis, index, indexType);
 }
 
 void RendererImplementationBase3D::resetCamera(bool toInitialPosition, unsigned int subViewIndex)
 {
-    if (toInitialPosition)
-        strategy().resetCamera(*camera(subViewIndex));
+    if (subViewIndex >= m_viewportSetups.size())
+        return;
 
     auto & viewport = m_viewportSetups[subViewIndex];
+
+    if (toInitialPosition)
+    {
+        interactorStyleSwitch()->SetCurrentRenderer(viewport.renderer);
+        strategy().resetCamera();
+    }
+
     if (viewport.dataBounds.IsValid())
         viewport.renderer->ResetCamera();
 
@@ -242,17 +281,7 @@ QList<RenderedData *> RendererImplementationBase3D::renderedData()
     return renderedList;
 }
 
-IPickingInteractorStyle * RendererImplementationBase3D::interactorStyle()
-{
-    return m_interactorStyle;
-}
-
-const IPickingInteractorStyle * RendererImplementationBase3D::interactorStyle() const
-{
-    return m_interactorStyle;
-}
-
-PickingInteractorStyleSwitch * RendererImplementationBase3D::interactorStyleSwitch()
+CameraInteractorStyleSwitch * RendererImplementationBase3D::interactorStyleSwitch()
 {
     return m_interactorStyle;
 }
@@ -378,18 +407,24 @@ void RendererImplementationBase3D::initialize()
 
     // -- interaction --
 
-    m_interactorStyle = vtkSmartPointer<PickingInteractorStyleSwitch>::New();
+    m_interactorStyle = vtkSmartPointer<CameraInteractorStyleSwitch>::New();
     m_interactorStyle->SetCurrentRenderer(m_viewportSetups.front().renderer);
 
     m_interactorStyle->addStyle("InteractorStyle3D", vtkSmartPointer<InteractorStyle3D>::New());
     m_interactorStyle->addStyle("InteractorStyleImage", vtkSmartPointer<InteractorStyleImage>::New());
 
-    connect(m_interactorStyle.Get(), &PickingInteractorStyleSwitch::pointInfoSent,
-        &m_renderView, &AbstractRenderView::ShowInfo);
-    connect(m_interactorStyle.Get(), &PickingInteractorStyleSwitch::dataPicked,
-        this, &RendererImplementation::dataSelectionChanged);
-    connect(m_interactorStyle.Get(), &PickingInteractorStyleSwitch::indexPicked,
-        &m_renderView, &AbstractDataView::objectPicked);
+
+    m_pickerHighlighter = vtkSmartPointer<PickerHighlighterInteractorObserver>::New();
+
+    connect(m_pickerHighlighter.Get(), &PickerHighlighterInteractorObserver::pickedInfoChanged,
+        &m_renderView, &AbstractRenderView::showInfoText);
+    connect(m_pickerHighlighter.Get(), &PickerHighlighterInteractorObserver::dataPicked,
+            [this] (AbstractVisualizedData * vis, vtkIdType index, IndexType indexType) {
+        emit dataSelectionChanged(vis);
+
+        if (vis)
+            m_renderView.objectPicked(&vis->dataObject(), index, indexType);
+    });
 
     m_isInitialized = true;
 }
@@ -402,6 +437,9 @@ void RendererImplementationBase3D::assignInteractor()
         viewportSetup.titleWidget->SetInteractor(m_renderWindow->GetInteractor());
         viewportSetup.titleWidget->On();
     }
+
+    m_pickerHighlighter->SetInteractor(m_renderWindow->GetInteractor());
+    m_pickerHighlighter->On();
 }
 
 void RendererImplementationBase3D::updateAxes()
@@ -542,7 +580,7 @@ RenderViewStrategy & RendererImplementationBase3D::strategy() const
 
 RendererImplementationBase3D::ViewportSetup & RendererImplementationBase3D::viewportSetup(unsigned int subViewIndex)
 {
-    assert(subViewIndex < unsigned(m_viewportSetups.size()));
+    assert(subViewIndex < m_viewportSetups.size());
     return m_viewportSetups[subViewIndex];
 }
 

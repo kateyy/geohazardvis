@@ -16,6 +16,7 @@
 #include <vtkVector.h>
 
 #include <core/AbstractVisualizedData.h>
+#include <core/types.h>
 #include <core/data_objects/ImageDataObject.h>
 #include <core/data_objects/PolyDataObject.h>
 
@@ -103,18 +104,10 @@ void Picker::pick(const vtkVector2i & clickPosXY, vtkRenderer & renderer)
         }
     }
 
-
-    QStringList info;
-    QString line;
-
-    while (stream.readLineInto(&line))
-        info.push_back(line);
-
-    m_pickedObjectInfo = info;
-
+    m_pickedObjectInfo = content;
 }
 
-QStringList Picker::pickedObjectInfo()
+const QString & Picker::pickedObjectInfo() const
 {
     return m_pickedObjectInfo;
 }

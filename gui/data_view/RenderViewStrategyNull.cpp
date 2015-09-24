@@ -16,7 +16,7 @@ bool RenderViewStrategyNull::contains3dData() const
     return true;
 }
 
-void RenderViewStrategyNull::resetCamera(vtkCamera & /*camera*/)
+void RenderViewStrategyNull::resetCamera()
 {
 }
 

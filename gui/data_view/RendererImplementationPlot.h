@@ -33,10 +33,13 @@ public:
 
     vtkRenderWindowInteractor * interactor() override;
 
-    void setSelectedData(DataObject * dataObject, vtkIdType itemId = -1) override;
-    virtual DataObject * selectedData() const override;
+    void setSelectedData(AbstractVisualizedData * vis, vtkIdType index, IndexType indexType) override;
+    void setSelectedData(AbstractVisualizedData * vis, vtkIdTypeArray & indices, IndexType indexType) override;
+    void clearSelection() override;
+    AbstractVisualizedData * selectedData() const override;
     vtkIdType selectedIndex() const override;
-    void lookAtData(DataObject * dataObject, vtkIdType itemId, unsigned int subViewIndex) override;
+    IndexType selectedIndexType() const override;
+    void lookAtData(AbstractVisualizedData & vis, vtkIdType index, IndexType indexType, unsigned int subViewIndex) override;
     void resetCamera(bool toInitialPosition, unsigned int subViewIndex) override;
 
     void setAxesVisibility(bool visible) override;

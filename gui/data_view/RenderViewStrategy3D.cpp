@@ -7,7 +7,7 @@
 #include <core/rendered_data/RenderedVectorGrid3D.h>
 #include <gui/data_view/AbstractRenderView.h>
 #include <gui/data_view/RendererImplementationBase3D.h>
-#include <gui/rendering_interaction/PickingInteractorStyleSwitch.h>
+#include <gui/rendering_interaction/CameraInteractorStyleSwitch.h>
 
 
 const bool RenderViewStrategy3D::s_isRegistered = RenderViewStrategy::registerStrategy<RenderViewStrategy3D>();
@@ -34,11 +34,9 @@ bool RenderViewStrategy3D::contains3dData() const
     return true;
 }
 
-void RenderViewStrategy3D::resetCamera(vtkCamera & camera)
+void RenderViewStrategy3D::resetCamera()
 {
-    camera.SetViewUp(0, 0, 1);
-    TerrainCamera::setAzimuth(camera, 0);
-    TerrainCamera::setVerticalElevation(camera, 45);
+    m_context.interactorStyleSwitch()->resetCamera();
 }
 
 QList<DataObject *> RenderViewStrategy3D::filterCompatibleObjects(const QList<DataObject *> & dataObjects, QList<DataObject *> & incompatibleObjects) const

@@ -5,6 +5,8 @@
 #include <QLayout>
 #include <QToolBar>
 
+#include <vtkIdTypeArray.h>
+
 
 AbstractDataView::AbstractDataView(
     int index, QWidget * parent, Qt::WindowFlags flags)
@@ -13,8 +15,8 @@ AbstractDataView::AbstractDataView(
     , m_initialized(false)
     , m_dockWidgetParent(nullptr)
     , m_toolBar(nullptr)
-    , m_highlightedObject(nullptr)
-    , m_hightlightedItemId(-1)
+    , m_selectedDataObject(nullptr)
+    , m_selectedIndices(vtkSmartPointer<vtkIdTypeArray>::New())
 {
 }
 
@@ -96,19 +98,84 @@ QString AbstractDataView::subViewFriendlyName(unsigned int /*subViewIndex*/) con
     return "";
 }
 
-vtkIdType AbstractDataView::highlightedItemId() const
+void AbstractDataView::setSelection(DataObject * dataObject, vtkIdType selectionIndex, IndexType indexType)
 {
-    return m_hightlightedItemId;
+    bool oldSingleSelection = m_selectedIndices->GetSize() == 1;
+    auto singleSelection = oldSingleSelection ? m_selectedIndices->GetValue(0) : vtkIdType(-1);
+
+    if (m_selectedDataObject == dataObject && singleSelection == selectionIndex && m_selectionIndexType == indexType)
+        return;
+
+    m_selectedDataObject = dataObject;
+    m_selectedIndices->SetNumberOfValues(1);
+    m_selectedIndices->SetValue(0, selectionIndex);
+    m_selectionIndexType = indexType;
+
+    selectionChangedEvent(dataObject, m_selectedIndices, m_selectionIndexType);
 }
 
-DataObject * AbstractDataView::highlightedObject()
+void AbstractDataView::setSelection(DataObject * dataObject, vtkIdTypeArray & selectionIndices, IndexType indexType)
 {
-    return m_highlightedObject;
+    bool changed = 
+        m_selectedDataObject != dataObject
+        || m_selectionIndexType != indexType
+        || m_selectedIndices->GetSize() != selectionIndices.GetSize();
+
+    assert(selectionIndices.GetNumberOfComponents() == 1);
+    const auto numIndices = selectionIndices.GetNumberOfTuples();
+    m_selectedIndices->SetNumberOfValues(numIndices);
+
+    for (vtkIdType i = 0; i < numIndices; ++i)
+    {
+        auto newValue = selectionIndices.GetValue(i);
+        auto storedValuePtr = m_selectedIndices->GetPointer(i);
+        changed = changed || (*storedValuePtr != newValue);
+        *storedValuePtr = newValue;
+    }
+
+    if (!changed)
+        return;
+
+    m_selectedDataObject = dataObject;
+    m_selectionIndexType = indexType;
+
+    selectionChangedEvent(dataObject, m_selectedIndices, m_selectionIndexType);
 }
 
-const DataObject * AbstractDataView::highlightedObject() const
+void AbstractDataView::clearSelection()
 {
-    return m_highlightedObject;
+    auto empty = vtkSmartPointer<vtkIdTypeArray>::New();
+    setSelection(nullptr, *empty, m_selectionIndexType);
+}
+
+vtkIdType AbstractDataView::lastSelectedIndex() const
+{
+    auto numSelections = m_selectedIndices->GetSize();
+
+    if (numSelections == 0)
+        return -1;
+
+    return m_selectedIndices->GetValue(numSelections - 1);
+}
+
+vtkIdTypeArray * AbstractDataView::selectedIndices()
+{
+    return m_selectedIndices;
+}
+
+IndexType AbstractDataView::selectedIndexType() const
+{
+    return m_selectionIndexType;
+}
+
+DataObject * AbstractDataView::selectedDataObject()
+{
+    return m_selectedDataObject;
+}
+
+const DataObject * AbstractDataView::selectedDataObject() const
+{
+    return m_selectedDataObject;
 }
 
 void AbstractDataView::showEvent(QShowEvent * /*event*/)
@@ -132,17 +199,6 @@ void AbstractDataView::setCurrent(bool isCurrent)
     auto f = mainWidget->font();
     f.setBold(isCurrent);
     mainWidget->setFont(f);
-}
-
-void AbstractDataView::setHighlightedId(DataObject * dataObject, vtkIdType itemId)
-{
-    if (m_highlightedObject == dataObject && m_hightlightedItemId == itemId)
-        return;
-
-    m_highlightedObject = dataObject;
-    m_hightlightedItemId = itemId;
-
-    highlightedIdChangedEvent(dataObject, itemId);
 }
 
 bool AbstractDataView::eventFilter(QObject * /*obj*/, QEvent * ev)

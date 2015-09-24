@@ -5,6 +5,9 @@
 #include <gui/data_view/RendererImplementationBase3D.h>
 
 
+class RenderViewStrategySwitch;
+
+
 class RendererImplementation3D : public RendererImplementationBase3D
 {
     Q_OBJECT

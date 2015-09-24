@@ -3,10 +3,8 @@
 #include <cassert>
 
 #include <core/color_mapping/ColorMapping.h>
-#include <gui/data_view/AbstractRenderView.h>
 #include <gui/data_view/RenderViewStrategy.h>
 #include <gui/data_view/RenderViewStrategySwitch.h>
-#include <gui/rendering_interaction/IPickingInteractorStyle.h>
 
 
 bool RendererImplementation3D::s_isRegistered = RendererImplementation::registerImplementation<RendererImplementation3D>();

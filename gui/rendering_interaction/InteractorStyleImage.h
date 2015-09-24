@@ -4,23 +4,16 @@
 
 #include <vtkInteractorStyleImage.h>
 
-#include <gui/rendering_interaction/IPickingInteractorStyle.h>
+#include <gui/rendering_interaction/ICameraInteractionStyle.h>
 
 
-class CameraDolly;
-class Highlighter;
-class Picker;
-
-
-class GUI_API InteractorStyleImage : public IPickingInteractorStyle, public vtkInteractorStyleImage
+class GUI_API InteractorStyleImage : public vtkInteractorStyleImage, virtual public ICameraInteractionStyle
 {
 public:
     static InteractorStyleImage * New();
     vtkTypeMacro(InteractorStyleImage, vtkInteractorStyleImage);
 
-    void OnMouseMove() override;
     void OnLeftButtonDown() override;
-    void OnLeftButtonUp() override;
     void OnMiddleButtonDown() override;
     void OnMiddleButtonUp() override;
     void OnRightButtonDown() override;
@@ -28,22 +21,10 @@ public:
 
     void OnChar() override;
 
-    DataObject * highlightedDataObject() const override;
-    vtkIdType highlightedIndex() const override;
-
-    void highlightIndex(DataObject * dataObject, vtkIdType index) override;
-    void lookAtIndex(DataObject * dataObject, vtkIdType index) override;
+    void resetCamera() override;
+    void moveCameraTo(AbstractVisualizedData & visualization, vtkIdType index, IndexType indexType, bool overTime = true) override;
 
 protected:
     explicit InteractorStyleImage();
     ~InteractorStyleImage() override;
-
-    void highlightPickedPoint();
-
-protected:
-    std::unique_ptr<Picker> m_picker;
-    std::unique_ptr<Highlighter> m_highlighter;
-    std::unique_ptr<CameraDolly> m_camaraDolly;
-
-    bool m_mouseMoved;
 };

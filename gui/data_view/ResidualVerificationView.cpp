@@ -206,38 +206,62 @@ ContentType ResidualVerificationView::contentType() const
 
 DataObject * ResidualVerificationView::selectedData() const
 {
-    return m_implementation->selectedData();
-}
-
-AbstractVisualizedData * ResidualVerificationView::selectedDataVisualization() const
-{
-    auto data = selectedData();
-    if (!data)
-        return nullptr;
-
-    for (auto && vis : m_visualizations)
+    if (auto vis = selectedDataVisualization())
     {
-        if (vis && &vis->dataObject() == data)
-            return vis.get();
+        return &vis->dataObject();
     }
 
     return nullptr;
 }
 
-void ResidualVerificationView::lookAtData(DataObject * dataObject, vtkIdType itemId, int subViewIndex)
+AbstractVisualizedData * ResidualVerificationView::selectedDataVisualization() const
 {
-    if (subViewIndex == -1)
-    {
-        for (unsigned int i = 0; i < numberOfSubViews(); ++i)
-        {
-            if (dataAt(i) != dataObject)
-                continue;
+    return m_implementation->selectedData();
+}
 
-            m_implementation->lookAtData(dataObject, itemId, i);
-        }
+void ResidualVerificationView::lookAtData(DataObject & dataObject, vtkIdType index, IndexType indexType, int subViewIndex)
+{
+    if (subViewIndex >= 0 && subViewIndex < static_cast<int>(numberOfSubViews()))
+    {
+        unsigned int specificSubViewIdx = static_cast<unsigned int>(subViewIndex);
+
+        lookAtData(*m_visualizations[specificSubViewIdx].get(), index, indexType, subViewIndex);
+
+        return;
     }
 
-    m_implementation->lookAtData(dataObject, itemId, static_cast<unsigned int>(subViewIndex));
+    for (unsigned int i = 0; i < numberOfSubViews(); ++i)
+    {
+        auto & vis = *m_visualizations[i].get();
+        if (&vis.dataObject() != &dataObject)
+            continue;
+
+        lookAtData(vis, index, indexType, static_cast<int>(i));
+    }
+}
+
+void ResidualVerificationView::lookAtData(AbstractVisualizedData & vis, vtkIdType index, IndexType indexType, int subViewIndex)
+{
+    unsigned int specificSubViewIdx = 0;
+
+    if (subViewIndex >= 0 && subViewIndex < static_cast<int>(numberOfSubViews()))
+    {
+        specificSubViewIdx = static_cast<unsigned int>(subViewIndex);
+        if (m_visualizations[specificSubViewIdx].get() != &vis)
+            return;
+
+        m_implementation->lookAtData(vis, index, indexType, specificSubViewIdx);
+        return;
+    }
+
+    for (unsigned int i = 0; i < numberOfSubViews(); ++i)
+    {
+        if (m_visualizations[i].get() != &vis)
+            continue;
+
+        m_implementation->lookAtData(vis, index, indexType, i);
+        return;
+    }
 }
 
 AbstractVisualizedData * ResidualVerificationView::visualizationFor(DataObject * dataObject, int subViewIndex) const
@@ -259,6 +283,17 @@ AbstractVisualizedData * ResidualVerificationView::visualizationFor(DataObject *
         return nullptr;
 
     return m_visualizations[subViewIndex].get();
+}
+
+int ResidualVerificationView::subViewContaining(const AbstractVisualizedData & visualizedData) const
+{
+    for (unsigned int i = 0u; i < numberOfSubViews(); ++i)
+    {
+        if (m_visualizations[i].get() == &visualizedData)
+            return static_cast<int>(i);
+    }
+    
+    return -1;
 }
 
 void ResidualVerificationView::setObservationData(DataObject * observation)
@@ -373,11 +408,6 @@ void ResidualVerificationView::showEvent(QShowEvent * event)
 QWidget * ResidualVerificationView::contentWidget()
 {
     return m_qvtkMain;
-}
-
-void ResidualVerificationView::highlightedIdChangedEvent(DataObject * dataObject, vtkIdType itemId)
-{
-    m_implementation->setSelectedData(dataObject, itemId);
 }
 
 void ResidualVerificationView::showDataObjectsImpl(const QList<DataObject *> & dataObjects,
@@ -750,8 +780,6 @@ void ResidualVerificationView::updateGuiSelection()
             break;
         }
     }
-
-    m_implementation->setSelectedData(selection);
 
     emit selectedDataChanged(this, selection);
 }

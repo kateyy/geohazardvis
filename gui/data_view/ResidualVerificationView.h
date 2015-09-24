@@ -62,9 +62,11 @@ public:
 
     DataObject * selectedData() const override;
     AbstractVisualizedData * selectedDataVisualization() const override;
-    void lookAtData(DataObject * dataObject, vtkIdType itemId, int subViewIndex = -1) override;
+    void lookAtData(DataObject & dataObject, vtkIdType index, IndexType indexType, int subViewIndex = -1) override;
+    void lookAtData(AbstractVisualizedData & vis, vtkIdType index, IndexType indexType, int subViewIndex = -1) override;
 
     AbstractVisualizedData * visualizationFor(DataObject * dataObject, int subViewIndex = -1) const override;
+    int subViewContaining(const AbstractVisualizedData & visualizedData) const override;
 
     unsigned int numberOfSubViews() const override;
 
@@ -77,8 +79,6 @@ protected:
     void showEvent(QShowEvent * event) override;
 
     QWidget * contentWidget() override;
-
-    void highlightedIdChangedEvent(DataObject * dataObject, vtkIdType itemId) override;
 
     void showDataObjectsImpl(const QList<DataObject *> & dataObjects,
         QList<DataObject *> & incompatibleObjects,
