@@ -235,8 +235,7 @@ void RenderView::hideDataObjectsImpl(const QList<DataObject *> & dataObjects, un
 
             changed = true;
         }
-        assert(findUnique(m_contents, (AbstractVisualizedData*)nullptr) == m_contents.end());
-        assert(findUnique(m_contents, (AbstractVisualizedData*)nullptr) == m_contents.end());
+        assert(!containsUnique(m_contents, (AbstractVisualizedData*)nullptr));
     }
 
     if (!changed)

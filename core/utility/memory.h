@@ -11,7 +11,10 @@ template<typename T>
 typename std::vector<std::unique_ptr<T>>::iterator findUnique(std::vector<std::unique_ptr<T>> & vector, const T * value);
 
 template<typename T>
-bool containsUnique(std::vector<std::unique_ptr<T>> & vector, const T * value);
+typename std::vector<std::unique_ptr<T>>::const_iterator findUnique(const std::vector<std::unique_ptr<T>> & vector, const T * value);
+
+template<typename T>
+bool containsUnique(const std::vector<std::unique_ptr<T>> & vector, const T * value);
 
 
 #include <core/utility/memory.hpp>
