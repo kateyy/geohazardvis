@@ -94,18 +94,20 @@ void PickerHighlighterInteractorObserver::EventCallback(vtkObject * /*subject*/,
         break;
     case vtkCommand::MouseMoveEvent:
         m_mouseMoved = true;
+        pick();
         break;
     case vtkCommand::LeftButtonReleaseEvent:
         if (!m_mouseMoved)
         {
-            pickHighlight();
+            pick();
+            highlight();
         }
 
         break;
     }
 }
 
-void PickerHighlighterInteractorObserver::pickHighlight()
+void PickerHighlighterInteractorObserver::pick()
 {
     if (!this->Interactor)
         return;
@@ -120,6 +122,19 @@ void PickerHighlighterInteractorObserver::pickHighlight()
 
     m_picker->pick(clickPos, *renderer);
 
+    emit pickedInfoChanged(m_picker->pickedObjectInfo());
+}
+
+void PickerHighlighterInteractorObserver::highlight()
+{
+    vtkVector2i clickPos;
+    this->Interactor->GetEventPosition(clickPos.GetData());
+    auto renderer = this->Interactor->FindPokedRenderer(clickPos[0], clickPos[1]);
+    assert(renderer);
+
+    if (!renderer)
+        return;
+
     m_highlighter->setRenderer(renderer);
     m_highlighter->setTarget(
         m_picker->pickedVisualizedData(),
@@ -128,5 +143,4 @@ void PickerHighlighterInteractorObserver::pickHighlight()
         m_picker->pickedIndexType());
 
     emit dataPicked(m_picker->pickedVisualizedData(), m_picker->pickedIndex(), m_picker->pickedIndexType());
-    emit pickedInfoChanged(m_picker->pickedObjectInfo());
 }

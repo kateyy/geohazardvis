@@ -42,7 +42,8 @@ protected:
 
     void EventCallback(vtkObject * subject, unsigned long eventId, void * userData);
 
-    void pickHighlight();
+    void pick();
+    void highlight();
 
 private:
     unsigned long m_callbackTag;
