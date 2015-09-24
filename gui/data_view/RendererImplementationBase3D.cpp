@@ -416,15 +416,17 @@ void RendererImplementationBase3D::initialize()
 
     m_pickerHighlighter = vtkSmartPointer<PickerHighlighterInteractorObserver>::New();
 
-    connect(m_pickerHighlighter.Get(), &PickerHighlighterInteractorObserver::pickedInfoChanged,
+    connect(m_pickerHighlighter, &PickerHighlighterInteractorObserver::pickedInfoChanged,
         &m_renderView, &AbstractRenderView::showInfoText);
-    connect(m_pickerHighlighter.Get(), &PickerHighlighterInteractorObserver::dataPicked,
+    connect(m_pickerHighlighter, &PickerHighlighterInteractorObserver::dataPicked,
             [this] (AbstractVisualizedData * vis, vtkIdType index, IndexType indexType) {
         emit dataSelectionChanged(vis);
 
         if (vis)
             m_renderView.objectPicked(&vis->dataObject(), index, indexType);
     });
+    connect(m_pickerHighlighter, &PickerHighlighterInteractorObserver::geometryChanged,
+        this, &RendererImplementation::render);
 
     m_isInitialized = true;
 }

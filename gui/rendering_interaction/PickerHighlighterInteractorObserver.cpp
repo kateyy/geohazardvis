@@ -22,6 +22,8 @@ PickerHighlighterInteractorObserver::PickerHighlighterInteractorObserver()
     , m_picker(std::make_unique<Picker>())
     , m_highlighter(std::make_unique<Highlighter>())
 {
+    connect(m_highlighter.get(), &Highlighter::geometryChanged,
+            this, &PickerHighlighterInteractorObserver::geometryChanged);
 }
 
 PickerHighlighterInteractorObserver::~PickerHighlighterInteractorObserver() = default;

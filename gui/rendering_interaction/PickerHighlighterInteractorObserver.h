@@ -34,6 +34,7 @@ public:
 signals:
     void pickedInfoChanged(const QString & infoText);
     void dataPicked(AbstractVisualizedData * visualizedData, vtkIdType index, IndexType indexType);
+    void geometryChanged();
 
 protected:
     PickerHighlighterInteractorObserver();
