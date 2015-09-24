@@ -96,8 +96,6 @@ void PickerHighlighterInteractorObserver::EventCallback(vtkObject * /*subject*/,
         m_mouseMoved = true;
         break;
     case vtkCommand::LeftButtonReleaseEvent:
-    case vtkCommand::AnyEvent:
-
         if (!m_mouseMoved)
         {
             pickHighlight();
