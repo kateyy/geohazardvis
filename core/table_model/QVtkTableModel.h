@@ -8,6 +8,7 @@
 
 
 class DataObject;
+enum class IndexType;
 
 
 class CORE_API QVtkTableModel : public QAbstractTableModel
@@ -21,12 +22,13 @@ public:
     DataObject * dataObject();
 
     vtkIdType hightlightItemId() const;
+    /** @return General association of listed positions and attributes (points vs. cells) */
+    virtual IndexType indexType() const = 0;
+    void setHighlightItemId(vtkIdType id);
 
     /** @return cell/point/etc id for a table cell. This is the row by default. */
     virtual vtkIdType itemIdAt(const QModelIndex & index) const;
 
-public:
-    void setHighlightItemId(vtkIdType id);
 
 protected:
     virtual void resetDisplayData() = 0;

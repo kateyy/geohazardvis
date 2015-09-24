@@ -100,6 +100,11 @@ Qt::ItemFlags QVtkTableModelRawVector::flags(const QModelIndex &index) const
     return QAbstractItemModel::flags(index);
 }
 
+IndexType QVtkTableModelRawVector::indexType() const
+{
+    return IndexType();
+}
+
 void QVtkTableModelRawVector::resetDisplayData()
 {
     if (RawVectorData * dataVector = dynamic_cast<RawVectorData *>(dataObject()))

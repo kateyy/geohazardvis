@@ -6,6 +6,7 @@
 #include <vtkPointData.h>
 #include <vtkDataArray.h>
 
+#include <core/types.h>
 #include <core/data_objects/DataObject.h>
 
 
@@ -104,6 +105,11 @@ Qt::ItemFlags QVtkTableModelImage::flags(const QModelIndex &index) const
         return Qt::ItemIsEditable | QAbstractItemModel::flags(index);
 
     return QAbstractItemModel::flags(index);
+}
+
+IndexType QVtkTableModelImage::indexType() const
+{
+    return IndexType::points;
 }
 
 void QVtkTableModelImage::resetDisplayData()

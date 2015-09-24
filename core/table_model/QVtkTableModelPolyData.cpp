@@ -7,6 +7,7 @@
 #include <vtkCell.h>
 #include <vtkCellTypes.h>
 
+#include <core/types.h>
 #include <core/data_objects/PolyDataObject.h>
 
 
@@ -128,6 +129,11 @@ Qt::ItemFlags QVtkTableModelPolyData::flags(const QModelIndex &index) const
         return Qt::ItemIsEditable | QAbstractItemModel::flags(index);
 
     return QAbstractItemModel::flags(index);
+}
+
+IndexType QVtkTableModelPolyData::indexType() const
+{
+    return IndexType::cells;
 }
 
 void QVtkTableModelPolyData::resetDisplayData()

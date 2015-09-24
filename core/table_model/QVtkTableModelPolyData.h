@@ -18,6 +18,8 @@ public:
     bool setData(const QModelIndex & index, const QVariant & value, int role) override;
     Qt::ItemFlags flags(const QModelIndex &index) const override;
 
+    IndexType indexType() const override;
+
 protected:
     void resetDisplayData() override;
 
