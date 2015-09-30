@@ -199,16 +199,12 @@ void Picker::appendPolyDataInfo(QTextStream & stream, PolyDataObject & polyData)
 
 void Picker::appendImageDataInfo(QTextStream & stream, vtkImageSlice & slice)
 {
-    auto pointMaper = m_pointPicker->GetMapper();
     m_pickedIndex = m_pointPicker->GetPointId();
     m_pickedIndexType = IndexType::points;
-
-    assert(pointMaper);
 
     double * pos = m_pointPicker->GetPickPosition();
 
     auto dataSet = m_pointPicker->GetDataSet();
-    assert(pointMaper->GetInputDataObject(0, 0) == dataSet);
 
     stream
         << "X = : " << pos[0] << endl

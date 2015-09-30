@@ -16,6 +16,7 @@
 #include <reflectionzeug/PropertyGroup.h>
 
 #include <core/types.h>
+#include <core/utility/macros.h>
 #include <core/utility/vtkcamerahelper.h>
 #include <core/reflectionzeug_extension/QStringProperty.h>
 #include <core/ThirdParty/ParaView/vtkGridAxes3DActor.h>
@@ -35,13 +36,12 @@ enum class ProjectionType
 };
 }
 
-void RendererConfigWidget::readCameraStats(vtkObject * caller, unsigned long, void *)
+void RendererConfigWidget::readCameraStats(vtkObject * DEBUG_ONLY(caller), unsigned long, void *)
 {
-    assert(vtkCamera::SafeDownCast(caller));
-    vtkCamera * camera = static_cast<vtkCamera *>(caller);
     assert(m_currentRenderView && dynamic_cast<RendererImplementationBase3D *>(&m_currentRenderView->implementation()));
     // assuming synchronized cameras for now
-    assert(static_cast<RendererImplementationBase3D *>(&m_currentRenderView->implementation())->camera(0) == camera);
+    assert(vtkCamera::SafeDownCast(caller));
+    assert(static_cast<RendererImplementationBase3D *>(&m_currentRenderView->implementation())->camera(0) == caller);
 
     std::function<void(AbstractProperty &)> updateFunc = [&updateFunc] (AbstractProperty & property)
     {
