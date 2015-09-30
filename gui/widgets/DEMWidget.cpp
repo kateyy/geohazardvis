@@ -32,7 +32,7 @@
 #include <core/rendered_data/RenderedData.h>
 #include <core/utility/vtkcamerahelper.h>
 #include <core/ThirdParty/ParaView/vtkGridAxes3DActor.h>
-#include <gui/rendering_interaction/InteractorStyle3D.h>
+#include <gui/rendering_interaction/InteractorStyleTerrain.h>
 #include <gui/data_view/RendererImplementationBase3D.h>
 
 
@@ -166,7 +166,7 @@ void DEMWidget::showEvent(QShowEvent * /*event*/)
     TerrainCamera::setAzimuth(camera, 0);
     TerrainCamera::setVerticalElevation(camera, 45);
 
-    vtkSmartPointer<InteractorStyle3D> interactorStyle = vtkSmartPointer<InteractorStyle3D>::New();
+    vtkSmartPointer<InteractorStyleTerrain> interactorStyle = vtkSmartPointer<InteractorStyleTerrain>::New();
     m_ui->qvtkMain->GetInteractor()->SetInteractorStyle(interactorStyle);
     interactorStyle->SetCurrentRenderer(m_renderer);
 

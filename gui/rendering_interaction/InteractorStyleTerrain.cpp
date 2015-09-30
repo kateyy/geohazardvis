@@ -1,4 +1,4 @@
-#include "InteractorStyle3D.h"
+#include "InteractorStyleTerrain.h"
 
 #include <cassert>
 #include <cmath>
@@ -13,18 +13,18 @@
 #include <gui/rendering_interaction/CameraDolly.h>
 
 
-vtkStandardNewMacro(InteractorStyle3D);
+vtkStandardNewMacro(InteractorStyleTerrain);
 
-InteractorStyle3D::InteractorStyle3D()
+InteractorStyleTerrain::InteractorStyleTerrain()
     : Superclass()
     , m_cameraDolly(std::make_unique<CameraDolly>())
     , m_mouseMoved(false)
 {
 }
 
-InteractorStyle3D::~InteractorStyle3D() = default;
+InteractorStyleTerrain::~InteractorStyleTerrain() = default;
 
-void InteractorStyle3D::OnMouseMove()
+void InteractorStyleTerrain::OnMouseMove()
 {
     switch (this->State)
     {
@@ -39,7 +39,7 @@ void InteractorStyle3D::OnMouseMove()
     Superclass::OnMouseMove();
 }
 
-void InteractorStyle3D::OnLeftButtonDown()
+void InteractorStyleTerrain::OnLeftButtonDown()
 {
     // Fix the superclass's method: only grab (exclusive) focus once the user moved the cursor
     // Otherwise, we would block left button down/release events from other observers
@@ -56,14 +56,14 @@ void InteractorStyle3D::OnLeftButtonDown()
     m_mouseMoved = false;
 }
 
-void InteractorStyle3D::OnLeftButtonUp()
+void InteractorStyleTerrain::OnLeftButtonUp()
 {
     m_mouseMoved = false;
 
     Superclass::OnLeftButtonUp();
 }
 
-void InteractorStyle3D::OnMiddleButtonDown()
+void InteractorStyleTerrain::OnMiddleButtonDown()
 {
     FindPokedRenderer(GetInteractor()->GetEventPosition()[0], GetInteractor()->GetEventPosition()[1]);
 
@@ -73,7 +73,7 @@ void InteractorStyle3D::OnMiddleButtonDown()
     StartDolly();
 }
 
-void InteractorStyle3D::OnMiddleButtonUp()
+void InteractorStyleTerrain::OnMiddleButtonUp()
 {
     switch (State)
     {
@@ -87,7 +87,7 @@ void InteractorStyle3D::OnMiddleButtonUp()
     }
 }
 
-void InteractorStyle3D::OnRightButtonDown()
+void InteractorStyleTerrain::OnRightButtonDown()
 {
     FindPokedRenderer(GetInteractor()->GetEventPosition()[0], GetInteractor()->GetEventPosition()[1]);
 
@@ -97,7 +97,7 @@ void InteractorStyle3D::OnRightButtonDown()
     StartPan();
 }
 
-void InteractorStyle3D::OnRightButtonUp()
+void InteractorStyleTerrain::OnRightButtonUp()
 {
     switch (State)
     {
@@ -111,21 +111,21 @@ void InteractorStyle3D::OnRightButtonUp()
     }
 }
 
-void InteractorStyle3D::OnMouseWheelForward()
+void InteractorStyleTerrain::OnMouseWheelForward()
 {
     FindPokedRenderer(GetInteractor()->GetEventPosition()[0], GetInteractor()->GetEventPosition()[1]);
 
     MouseWheelDolly(true);
 }
 
-void InteractorStyle3D::OnMouseWheelBackward()
+void InteractorStyleTerrain::OnMouseWheelBackward()
 {
     FindPokedRenderer(GetInteractor()->GetEventPosition()[0], GetInteractor()->GetEventPosition()[1]);
 
     MouseWheelDolly(false);
 }
 
-void InteractorStyle3D::OnChar()
+void InteractorStyleTerrain::OnChar()
 {
     // disable most magic keys
 
@@ -133,7 +133,7 @@ void InteractorStyle3D::OnChar()
         Superclass::OnChar();
 }
 
-void InteractorStyle3D::resetCamera()
+void InteractorStyleTerrain::resetCamera()
 {
     auto renderer = GetCurrentRenderer();
     if (!renderer)
@@ -147,13 +147,13 @@ void InteractorStyle3D::resetCamera()
     TerrainCamera::setVerticalElevation(camera, 45);
 }
 
-void InteractorStyle3D::moveCameraTo(AbstractVisualizedData & visualization, vtkIdType index, IndexType indexType, bool overTime)
+void InteractorStyleTerrain::moveCameraTo(AbstractVisualizedData & visualization, vtkIdType index, IndexType indexType, bool overTime)
 {
     m_cameraDolly->setRenderer(GetCurrentRenderer());
     m_cameraDolly->moveTo(visualization, index, indexType, overTime);
 }
 
-void InteractorStyle3D::MouseWheelDolly(bool forward)
+void InteractorStyleTerrain::MouseWheelDolly(bool forward)
 {
     if (!CurrentRenderer)
         return;

@@ -26,7 +26,7 @@ QString RenderViewStrategy3D::name() const
 
 void RenderViewStrategy3D::activate()
 {
-    m_context.interactorStyleSwitch()->setCurrentStyle("InteractorStyle3D");
+    m_context.interactorStyleSwitch()->setCurrentStyle("InteractorStyleTerrain");
 }
 
 bool RenderViewStrategy3D::contains3dData() const

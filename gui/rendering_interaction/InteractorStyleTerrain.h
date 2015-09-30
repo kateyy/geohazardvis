@@ -10,11 +10,11 @@
 class CameraDolly;
 
 
-class GUI_API InteractorStyle3D : public vtkInteractorStyleTerrain, virtual public ICameraInteractionStyle
+class GUI_API InteractorStyleTerrain : public vtkInteractorStyleTerrain, virtual public ICameraInteractionStyle
 {
 public:
-    static InteractorStyle3D * New();
-    vtkTypeMacro(InteractorStyle3D, vtkInteractorStyleTerrain);
+    static InteractorStyleTerrain * New();
+    vtkTypeMacro(InteractorStyleTerrain, vtkInteractorStyleTerrain);
 
     void OnMouseMove() override;
     void OnLeftButtonDown() override;
@@ -32,8 +32,8 @@ public:
     void moveCameraTo(AbstractVisualizedData & visualization, vtkIdType index, IndexType indexType, bool overTime = true) override;
 
 protected:
-    explicit InteractorStyle3D();
-    ~InteractorStyle3D();
+    explicit InteractorStyleTerrain();
+    ~InteractorStyleTerrain();
 
     void MouseWheelDolly(bool forward);
 

@@ -18,11 +18,11 @@ class AbstractRenderView;
 class DataObject;
 
 
-class GUI_API RenderViewStrategyImage2D : public RenderViewStrategy
+class GUI_API RenderViewStrategy2D : public RenderViewStrategy
 {
 public:
-    RenderViewStrategyImage2D(RendererImplementationBase3D & context);
-    ~RenderViewStrategyImage2D() override;
+    RenderViewStrategy2D(RendererImplementationBase3D & context);
+    ~RenderViewStrategy2D() override;
 
     /** Explicitly define a list of images to create a profile plot for. 
         The same plot line will be applied to all images.

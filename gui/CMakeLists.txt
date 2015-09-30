@@ -38,10 +38,10 @@ set ( SOURCES
     data_view/RenderViewStrategy.cpp
     data_view/RenderViewStrategyNull.h
     data_view/RenderViewStrategyNull.cpp
+    data_view/RenderViewStrategy2D.h
+    data_view/RenderViewStrategy2D.cpp
     data_view/RenderViewStrategy3D.h
     data_view/RenderViewStrategy3D.cpp
-    data_view/RenderViewStrategyImage2D.h
-    data_view/RenderViewStrategyImage2D.cpp
     data_view/ResidualVerificationView.h
     data_view/ResidualVerificationView.cpp
     data_view/TableView.h
@@ -54,12 +54,12 @@ set ( SOURCES
 
     rendering_interaction/CameraDolly.h
     rendering_interaction/CameraDolly.cpp
-    rendering_interaction/InteractorStyle3D.h
-    rendering_interaction/InteractorStyle3D.cpp
     rendering_interaction/InteractorStyleImage.h
     rendering_interaction/InteractorStyleImage.cpp
     rendering_interaction/InteractorStyleSwitch.h
     rendering_interaction/InteractorStyleSwitch.cpp
+    rendering_interaction/InteractorStyleTerrain.h
+    rendering_interaction/InteractorStyleTerrain.cpp
     rendering_interaction/Highlighter.h
     rendering_interaction/Highlighter.cpp
     rendering_interaction/ICameraInteractionStyle.h

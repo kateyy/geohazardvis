@@ -21,7 +21,7 @@ class ColorMapping;
 class ImageDataObject;
 class PolyDataObject;
 class RendererImplementationResidual;
-class RenderViewStrategyImage2D;
+class RenderViewStrategy2D;
 class vtkCameraSynchronization;
 
 
@@ -149,7 +149,7 @@ private:
     std::unique_ptr<DataObject> m_residual;
 
     std::unique_ptr<RendererImplementationResidual> m_implementation;
-    std::unique_ptr<RenderViewStrategyImage2D> m_strategy;
+    std::unique_ptr<RenderViewStrategy2D> m_strategy;
     std::unique_ptr<vtkCameraSynchronization> m_cameraSync;
 
     std::array<std::unique_ptr<AbstractVisualizedData>, numberOfViews> m_visualizations;

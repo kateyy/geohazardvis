@@ -32,8 +32,8 @@
 #include <gui/data_view/RenderViewStrategySwitch.h>
 #include <gui/rendering_interaction/CameraInteractorStyleSwitch.h>
 #include <gui/rendering_interaction/Highlighter.h>
-#include <gui/rendering_interaction/InteractorStyle3D.h>
 #include <gui/rendering_interaction/InteractorStyleImage.h>
+#include <gui/rendering_interaction/InteractorStyleTerrain.h>
 #include <gui/rendering_interaction/PickerHighlighterInteractorObserver.h>
 
 
@@ -410,7 +410,7 @@ void RendererImplementationBase3D::initialize()
     m_interactorStyle = vtkSmartPointer<CameraInteractorStyleSwitch>::New();
     m_interactorStyle->SetCurrentRenderer(m_viewportSetups.front().renderer);
 
-    m_interactorStyle->addStyle("InteractorStyle3D", vtkSmartPointer<InteractorStyle3D>::New());
+    m_interactorStyle->addStyle("InteractorStyleTerrain", vtkSmartPointer<InteractorStyleTerrain>::New());
     m_interactorStyle->addStyle("InteractorStyleImage", vtkSmartPointer<InteractorStyleImage>::New());
 
 

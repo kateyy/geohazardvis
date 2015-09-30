@@ -8,7 +8,7 @@
 
 #include <gui/data_view/RenderView.h>
 #include <gui/data_view/RendererImplementationBase3D.h>
-#include <gui/data_view/RenderViewStrategyImage2D.h>
+#include <gui/data_view/RenderViewStrategy2D.h>
 
 #include "app_helper.h"
 #include "RenderView_test_tools.h"

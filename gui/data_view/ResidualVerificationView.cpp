@@ -35,7 +35,7 @@
 
 #include <gui/SelectionHandler.h>
 #include <gui/data_view/RendererImplementationResidual.h>
-#include <gui/data_view/RenderViewStrategyImage2D.h>
+#include <gui/data_view/RenderViewStrategy2D.h>
 #include <gui/data_view/RenderViewStrategy3D.h>
 
 
@@ -500,7 +500,7 @@ void ResidualVerificationView::initialize()
     m_implementation = std::make_unique<RendererImplementationResidual>(*this);
     m_implementation->activate(m_qvtkMain);
 
-    m_strategy = std::make_unique<RenderViewStrategyImage2D>(*m_implementation);
+    m_strategy = std::make_unique<RenderViewStrategy2D>(*m_implementation);
 
     m_implementation->setStrategy(m_strategy.get());
 

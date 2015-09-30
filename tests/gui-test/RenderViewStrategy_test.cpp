@@ -11,7 +11,7 @@
 #include <gui/data_view/RenderView.h>
 #include <gui/data_view/ResidualVerificationView.h>
 #include <gui/data_view/RendererImplementationResidual.h>
-#include <gui/data_view/RenderViewStrategyImage2D.h>
+#include <gui/data_view/RenderViewStrategy2D.h>
 
 #include "app_helper.h"
 
@@ -19,7 +19,7 @@
 class RenderViewStrategy_testHelper
 {
 public:
-    static RenderViewStrategyImage2D * getStrategy(ResidualVerificationView & view)
+    static RenderViewStrategy2D * getStrategy(ResidualVerificationView & view)
     {
         return view.m_strategy.get();
     }

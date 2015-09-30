@@ -1,4 +1,4 @@
-#include "RenderViewStrategyImage2D.h"
+#include "RenderViewStrategy2D.h"
 
 #include <cassert>
 #include <memory>
@@ -31,7 +31,7 @@
 #include <gui/rendering_interaction/CameraInteractorStyleSwitch.h>
 
 
-const bool RenderViewStrategyImage2D::s_isRegistered = RenderViewStrategy::registerStrategy<RenderViewStrategyImage2D>();
+const bool RenderViewStrategy2D::s_isRegistered = RenderViewStrategy::registerStrategy<RenderViewStrategy2D>();
 
 namespace
 {
@@ -40,7 +40,7 @@ namespace
 }
 
 
-RenderViewStrategyImage2D::RenderViewStrategyImage2D(RendererImplementationBase3D & context)
+RenderViewStrategy2D::RenderViewStrategy2D(RendererImplementationBase3D & context)
     : RenderViewStrategy(context)
     , m_isInitialized(false)
     , m_profilePlotAction(nullptr)
@@ -50,7 +50,7 @@ RenderViewStrategyImage2D::RenderViewStrategyImage2D(RendererImplementationBase3
 {
 }
 
-RenderViewStrategyImage2D::~RenderViewStrategyImage2D()
+RenderViewStrategy2D::~RenderViewStrategy2D()
 {
     if (m_previewRenderer && !m_previewProfiles.empty())
     {
@@ -63,7 +63,7 @@ RenderViewStrategyImage2D::~RenderViewStrategyImage2D()
     }
 }
 
-void RenderViewStrategyImage2D::setInputData(const QList<DataObject *> & inputData)
+void RenderViewStrategy2D::setInputData(const QList<DataObject *> & inputData)
 {
     if (m_inputData.toSet() == inputData.toSet())
         return;
@@ -93,18 +93,18 @@ void RenderViewStrategyImage2D::setInputData(const QList<DataObject *> & inputDa
     }
 }
 
-void RenderViewStrategyImage2D::initialize()
+void RenderViewStrategy2D::initialize()
 {
     if (m_isInitialized)
         return;
 
     m_profilePlotAction = new QAction(QIcon(":/icons/graph_line"), "create &profile plot", nullptr);
-    connect(m_profilePlotAction, &QAction::triggered, this, &RenderViewStrategyImage2D::startProfilePlot);
+    connect(m_profilePlotAction, &QAction::triggered, this, &RenderViewStrategy2D::startProfilePlot);
     m_profilePlotAcceptAction = new QAction(QIcon(":/icons/yes"), "", nullptr);
-    connect(m_profilePlotAcceptAction, &QAction::triggered, this, &RenderViewStrategyImage2D::acceptProfilePlot);
+    connect(m_profilePlotAcceptAction, &QAction::triggered, this, &RenderViewStrategy2D::acceptProfilePlot);
     m_profilePlotAcceptAction->setVisible(false);
     m_profilePlotAbortAction = new QAction(QIcon(":/icons/no"), "", nullptr);
-    connect(m_profilePlotAbortAction, &QAction::triggered, this, &RenderViewStrategyImage2D::abortProfilePlot);
+    connect(m_profilePlotAbortAction, &QAction::triggered, this, &RenderViewStrategy2D::abortProfilePlot);
     m_profilePlotAbortAction->setVisible(false);
 
     m_actions << m_profilePlotAction << m_profilePlotAcceptAction << m_profilePlotAbortAction;
@@ -112,12 +112,12 @@ void RenderViewStrategyImage2D::initialize()
     m_isInitialized = true;
 }
 
-QString RenderViewStrategyImage2D::name() const
+QString RenderViewStrategy2D::name() const
 {
     return "2D image";
 }
 
-void RenderViewStrategyImage2D::activate()
+void RenderViewStrategy2D::activate()
 {
     initialize();
 
@@ -129,13 +129,13 @@ void RenderViewStrategyImage2D::activate()
     updateAutomaticPlots();
 
     connect(&m_context.renderView(), &AbstractRenderView::visualizationsChanged,
-        this, &RenderViewStrategyImage2D::updateAutomaticPlots);
+        this, &RenderViewStrategy2D::updateAutomaticPlots);
 }
 
-void RenderViewStrategyImage2D::deactivate()
+void RenderViewStrategy2D::deactivate()
 {
     disconnect(&m_context.renderView(), &AbstractRenderView::visualizationsChanged,
-        this, &RenderViewStrategyImage2D::updateAutomaticPlots);
+        this, &RenderViewStrategy2D::updateAutomaticPlots);
 
     for (auto action : m_actions)
     {
@@ -145,17 +145,17 @@ void RenderViewStrategyImage2D::deactivate()
     m_context.renderView().setToolBarVisible(false);
 }
 
-bool RenderViewStrategyImage2D::contains3dData() const
+bool RenderViewStrategy2D::contains3dData() const
 {
     return false;
 }
 
-void RenderViewStrategyImage2D::resetCamera()
+void RenderViewStrategy2D::resetCamera()
 {
     m_context.interactorStyleSwitch()->resetCamera();
 }
 
-QList<DataObject *> RenderViewStrategyImage2D::filterCompatibleObjects(const QList<DataObject *> & dataObjects, QList<DataObject *> & incompatibleObjects) const
+QList<DataObject *> RenderViewStrategy2D::filterCompatibleObjects(const QList<DataObject *> & dataObjects, QList<DataObject *> & incompatibleObjects) const
 {
     QList<DataObject *> compatible;
 
@@ -178,7 +178,7 @@ QList<DataObject *> RenderViewStrategyImage2D::filterCompatibleObjects(const QLi
     return compatible;
 }
 
-bool RenderViewStrategyImage2D::canApplyTo(const QList<RenderedData *> & renderedData)
+bool RenderViewStrategy2D::canApplyTo(const QList<RenderedData *> & renderedData)
 {
     // TODO limit the automatic strategy switch to 2D image data, until there is a gui switch for 2D/3D interaction.
     for (RenderedData * rendered : renderedData)
@@ -189,7 +189,7 @@ bool RenderViewStrategyImage2D::canApplyTo(const QList<RenderedData *> & rendere
     return true;
 }
 
-void RenderViewStrategyImage2D::startProfilePlot()
+void RenderViewStrategy2D::startProfilePlot()
 {
     assert(m_previewProfiles.empty());
 
@@ -303,7 +303,7 @@ void RenderViewStrategyImage2D::startProfilePlot()
     if (creatingNewRenderer)
     {
         m_previewRendererConnections <<
-            connect(m_previewRenderer, &AbstractDataView::closed, this, &RenderViewStrategyImage2D::abortProfilePlot);
+            connect(m_previewRenderer, &AbstractDataView::closed, this, &RenderViewStrategy2D::abortProfilePlot);
 
 
         for (auto it = m_observerTags.begin(); it != m_observerTags.end(); ++it)
@@ -314,7 +314,7 @@ void RenderViewStrategyImage2D::startProfilePlot()
 
         auto addLineObservation = [this] (vtkObject * subject)
         {
-            auto tag = subject->AddObserver(vtkCommand::ModifiedEvent, this, &RenderViewStrategyImage2D::lineMoved);
+            auto tag = subject->AddObserver(vtkCommand::ModifiedEvent, this, &RenderViewStrategy2D::lineMoved);
             m_observerTags.insert(subject, tag);
         };
 
@@ -327,7 +327,7 @@ void RenderViewStrategyImage2D::startProfilePlot()
     m_profilePlotAbortAction->setVisible(true);
 }
 
-void RenderViewStrategyImage2D::acceptProfilePlot()
+void RenderViewStrategy2D::acceptProfilePlot()
 {
     m_profilePlotAcceptAction->setVisible(false);
     m_profilePlotAbortAction->setVisible(false);
@@ -347,7 +347,7 @@ void RenderViewStrategyImage2D::acceptProfilePlot()
     m_profilePlotAction->setEnabled(true);
 }
 
-void RenderViewStrategyImage2D::abortProfilePlot()
+void RenderViewStrategy2D::abortProfilePlot()
 {
     for (auto & c : m_previewRendererConnections)
         disconnect(c);
@@ -372,7 +372,7 @@ void RenderViewStrategyImage2D::abortProfilePlot()
     m_profilePlotAction->setEnabled(true);
 }
 
-void RenderViewStrategyImage2D::clearProfilePlots()
+void RenderViewStrategy2D::clearProfilePlots()
 {
     QList<DataObject *> toDelete;
     for (auto & plot : m_previewProfiles)
@@ -385,7 +385,7 @@ void RenderViewStrategyImage2D::clearProfilePlots()
     m_activeInputData.clear();
 }
 
-void RenderViewStrategyImage2D::lineMoved()
+void RenderViewStrategy2D::lineMoved()
 {
     assert(m_previewProfiles.size() > 0 && m_lineWidget);
 
@@ -399,7 +399,7 @@ void RenderViewStrategyImage2D::lineMoved()
         static_cast<ImageProfileData *>(profile.get())->setPoints(point1, point2);
 }
 
-void RenderViewStrategyImage2D::updateAutomaticPlots()
+void RenderViewStrategy2D::updateAutomaticPlots()
 {
     // don't check here, if the user of this class explicitly set the inputs
     if (!m_inputData.isEmpty())
