@@ -20,6 +20,14 @@ if(DOXYGEN_FOUND)
     # Configure doxyfile (if it is a real doxyfile already, it should simply copy the file)
     set(DOXYGEN_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
     configure_file(${doxyfile_in} ${doxyfile})
+    
+    set(DOXYGEN_INCLUDE_DIRS
+        ${INCLUDE_DIRECTORIES}
+        ${CMAKE_CURRENT_BINARY_DIR}
+        ${VTK_INCLUDE_DIRS}
+        ${LIBZEUG_INCLUDES}
+        ${GTEST_INCLUDE_DIR}
+    )
 
     # Invoke doxygen
     add_custom_command(
