@@ -73,6 +73,8 @@ private:
     void highlightPoints(vtkDataObject & targetData);
     void highlightCells(vtkDataObject & targetData);
 
+    void checkDataVisibility();
+
     vtkDataObject * getTargetOutput();
 
 private:

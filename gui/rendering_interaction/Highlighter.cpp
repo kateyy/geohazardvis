@@ -72,6 +72,11 @@ void Highlighter::setTarget(DataObject * dataObject, vtkIdTypeArray & indices, I
 
 void Highlighter::setTarget(AbstractVisualizedData * vis, vtkIdType visOutputPort, vtkIdType index, IndexType indexType)
 {
+    if (m_visualizedData)
+    {
+        disconnect(m_visualizedData, &AbstractVisualizedData::visibilityChanged, this, &Highlighter::checkDataVisibility);
+    }
+
     m_dataObject = vis ? &vis->dataObject() : static_cast<DataObject *>(nullptr);
     m_visualizedData = vis;
     m_visOutputPort = visOutputPort;
@@ -79,16 +84,31 @@ void Highlighter::setTarget(AbstractVisualizedData * vis, vtkIdType visOutputPor
     m_indices->SetValue(0, index);
     m_indexType = indexType;
 
+    if (vis)
+    {
+        connect(vis, &AbstractVisualizedData::visibilityChanged, this, &Highlighter::checkDataVisibility);
+    }
+
     updateHighlight();
 }
 
 void Highlighter::setTarget(AbstractVisualizedData * vis, vtkIdType visOutputPort, vtkIdTypeArray & indices, IndexType indexType)
 {
+    if (m_visualizedData)
+    {
+        disconnect(m_visualizedData, &AbstractVisualizedData::visibilityChanged, this, &Highlighter::checkDataVisibility);
+    }
+
     m_dataObject = vis ? &vis->dataObject() : static_cast<DataObject *>(nullptr);
     m_visualizedData = vis;
     m_visOutputPort = visOutputPort;
     m_indices->DeepCopy(&indices);
     m_indexType = indexType;
+
+    if (vis)
+    {
+        connect(vis, &AbstractVisualizedData::visibilityChanged, this, &Highlighter::checkDataVisibility);
+    }
 
     updateHighlight();
 }
@@ -332,6 +352,14 @@ void Highlighter::highlightCells(vtkDataObject & targetData)
     m_renderer->AddViewProp(m_highlightActor);
 
     emit geometryChanged();
+}
+
+void Highlighter::checkDataVisibility()
+{
+    assert(sender() == m_visualizedData);
+    assert(!m_visualizedData->isVisible());
+
+    clear();
 }
 
 vtkDataObject * Highlighter::getTargetOutput()
