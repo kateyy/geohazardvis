@@ -41,6 +41,7 @@ Picker::~Picker() = default;
 
 void Picker::pick(const vtkVector2i & clickPosXY, vtkRenderer & renderer)
 {
+    m_pickedObjectInfo.clear();
     m_pickedIndex = -1;
     m_pickedDataObject = nullptr;
     m_pickedVisualizedData = nullptr;

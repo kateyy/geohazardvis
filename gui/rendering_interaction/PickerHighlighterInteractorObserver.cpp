@@ -38,6 +38,12 @@ void PickerHighlighterInteractorObserver::SetEnabled(int enabling)
         return;
     }
 
+    if (enabling == 0)
+    {
+        // make sure not to have an invalid info text somewhere, if we don't update anymore
+        emit pickedInfoChanged("");
+    }
+
     this->Enabled = enabling;
 }
 

@@ -441,7 +441,6 @@ void RendererImplementationBase3D::assignInteractor()
     }
 
     m_pickerHighlighter->SetInteractor(m_renderWindow->GetInteractor());
-    m_pickerHighlighter->On();
 }
 
 void RendererImplementationBase3D::updateAxes()
@@ -629,6 +628,13 @@ void RendererImplementationBase3D::dataVisibilityChanged(RenderedData * rendered
         removeFromBounds(rendered, subViewIndex);
         disconnect(&rendered->dataObject(), &DataObject::boundsChanged, this, &RendererImplementationBase3D::updateBounds);
     }
+
+    // the render view's dataObjects() doesn't yet contain the rendered->dataObject(), if it is currently added
+    bool isEmpty =
+        renderView().dataObjects().isEmpty()
+        && !rendered->isVisible();
+
+    m_pickerHighlighter->SetEnabled(!isEmpty);
 
     onDataVisibilityChanged(rendered, subViewIndex);
 }
