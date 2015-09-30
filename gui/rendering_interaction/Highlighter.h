@@ -13,7 +13,6 @@
 class QTime;
 class QTimer;
 class vtkActor;
-class vtkDataObject;
 class vtkDiskSource;
 class vtkIdTypeArray;
 class vtkPolyData;
@@ -21,7 +20,6 @@ class vtkPolyDataMapper;
 class vtkRenderer;
 
 class AbstractVisualizedData;
-class DataObject;
 enum class IndexType;
 
 
@@ -37,14 +35,11 @@ public:
     void setRenderer(vtkRenderer * renderer);
     vtkRenderer * renderer() const;
 
-    /** Set data object and one primitive on it to be highlighted. Discards previous indices. */
-    void setTarget(DataObject * dataObject, vtkIdType index, IndexType indexType);
-    /** Set data object and a list of primitives to be highlighted. Discards previous indices.
-      * @param indices Cannot be const, due to the non-const vtkIdTypeArray getters. */
-    void setTarget(DataObject * dataObject, vtkIdTypeArray & indices, IndexType indexType);
+    /** Set visualization and one primitive on it to be highlighted. Discards previous indices. */
     void setTarget(AbstractVisualizedData * vis, vtkIdType visOutputPort, vtkIdType index, IndexType indexType);
+    /** Set visualization and a list of primitives to be highlighted. Discards previous indices.
+      * @param indices Cannot be const, due to the non-const vtkIdTypeArray getters. */
     void setTarget(AbstractVisualizedData * vis, vtkIdType visOutputPort, vtkIdTypeArray & indices, IndexType indexType);
-    DataObject * targetObject() const;
     AbstractVisualizedData * targetVisualization() const;
     vtkIdTypeArray * targetIndices();
     vtkIdType lastTargetIndex() const;
@@ -69,17 +64,15 @@ signals:
 
 private:
     void updateHighlight();
+    void setTargetInternal(AbstractVisualizedData * vis, vtkIdType visOutputPort, IndexType indexType);
 
-    void highlightPoints(vtkDataObject & targetData);
-    void highlightCells(vtkDataObject & targetData);
+    void highlightPoints();
+    void highlightCells();
 
     void checkDataVisibility();
 
-    vtkDataObject * getTargetOutput();
-
 private:
     vtkWeakPointer<vtkRenderer> m_renderer;
-    DataObject * m_dataObject;
     AbstractVisualizedData * m_visualizedData;
     vtkIdType m_visOutputPort;
     vtkSmartPointer<vtkIdTypeArray> m_indices;
