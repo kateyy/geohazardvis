@@ -52,15 +52,23 @@ set ( SOURCES
     propertyguizeug_extension/ColorEditorRGB.h
     propertyguizeug_extension/ColorEditorRGB.cpp
 
+    rendering_interaction/CameraDolly.h
+    rendering_interaction/CameraDolly.cpp
     rendering_interaction/InteractorStyle3D.h
     rendering_interaction/InteractorStyle3D.cpp
     rendering_interaction/InteractorStyleImage.h
     rendering_interaction/InteractorStyleImage.cpp
     rendering_interaction/InteractorStyleSwitch.h
     rendering_interaction/InteractorStyleSwitch.cpp
-    rendering_interaction/IPickingInteractorStyle.h
-    rendering_interaction/PickingInteractorStyleSwitch.h
-    rendering_interaction/PickingInteractorStyleSwitch.cpp
+    rendering_interaction/Highlighter.h
+    rendering_interaction/Highlighter.cpp
+    rendering_interaction/ICameraInteractionStyle.h
+    rendering_interaction/Picker.h
+    rendering_interaction/Picker.cpp
+    rendering_interaction/PickerHighlighterInteractorObserver.h
+    rendering_interaction/PickerHighlighterInteractorObserver.cpp
+    rendering_interaction/CameraInteractorStyleSwitch.h
+    rendering_interaction/CameraInteractorStyleSwitch.cpp
 
     widgets/CanvasExporterWidget.h
     widgets/CanvasExporterWidget.cpp

@@ -1,19 +1,13 @@
 #pragma once
 
-#include <QMap>
+#include <memory>
 
 #include <vtkInteractorStyleImage.h>
-#include <vtkSmartPointer.h>
 
-#include <gui/rendering_interaction/IPickingInteractorStyle.h>
-
-
-class vtkPointPicker;
-class vtkProp;
-class vtkActor;
+#include <gui/rendering_interaction/ICameraInteractionStyle.h>
 
 
-class GUI_API InteractorStyleImage : public IPickingInteractorStyle, public vtkInteractorStyleImage
+class GUI_API InteractorStyleImage : public vtkInteractorStyleImage, virtual public ICameraInteractionStyle
 {
 public:
     static InteractorStyleImage * New();
@@ -29,27 +23,14 @@ public:
 
     void OnChar() override;
 
-    void setRenderedData(const QList<RenderedData *> & renderedData) override;
-
-    DataObject * highlightedDataObject() const override;
-    vtkIdType highlightedIndex() const override;
-
-    void highlightIndex(DataObject * dataObject, vtkIdType index) override;
-    void lookAtIndex(DataObject * dataObject, vtkIdType index) override;
+    void resetCamera() override;
+    void moveCameraTo(AbstractVisualizedData & visualization, vtkIdType index, IndexType indexType, bool overTime = true) override;
 
 protected:
     explicit InteractorStyleImage();
+    ~InteractorStyleImage() override;
 
-    void highlightPickedPoint();
-
-    void sendPointInfo() const;
-
-protected:
-    QMap<vtkProp *, RenderedData *> m_propToRenderedData;
-
-    vtkSmartPointer<vtkPointPicker> m_pointPicker;
-    vtkSmartPointer<vtkActor> m_highlightingActor;
-    QPair<DataObject *, vtkIdType> m_currentlyHighlighted;
-
+private:
     bool m_mouseMoved;
+    bool m_mouseButtonDown;
 };

@@ -3,10 +3,8 @@
 #include <cassert>
 
 #include <core/color_mapping/ColorMapping.h>
-#include <gui/data_view/AbstractRenderView.h>
 #include <gui/data_view/RenderViewStrategy.h>
 #include <gui/data_view/RenderViewStrategySwitch.h>
-#include <gui/rendering_interaction/IPickingInteractorStyle.h>
 
 
 bool RendererImplementation3D::s_isRegistered = RendererImplementation::registerImplementation<RendererImplementation3D>();
@@ -56,14 +54,6 @@ void RendererImplementation3D::onDataVisibilityChanged(AbstractVisualizedData * 
     // reset strategy if we are empty
     if (!viewportSetup(subViewIndex).dataBounds.IsValid())
         setStrategy(nullptr);
-}
-
-void RendererImplementation3D::onRenderViewVisualizationChanged()
-{
-    RendererImplementationBase3D::onRenderViewVisualizationChanged();
-
-    if (interactorStyle())
-        interactorStyle()->setRenderedData(renderedData());
 }
 
 ColorMapping * RendererImplementation3D::colorMappingForSubView(unsigned int /*subViewIndex*/)

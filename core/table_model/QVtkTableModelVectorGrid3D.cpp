@@ -7,6 +7,7 @@
 #include <vtkDataArray.h>
 #include <vtkCell.h>
 
+#include <core/types.h>
 #include <core/data_objects/DataObject.h>
 
 
@@ -115,6 +116,11 @@ Qt::ItemFlags QVtkTableModelVectorGrid3D::flags(const QModelIndex &index) const
         return Qt::ItemIsEditable | QAbstractItemModel::flags(index);
 
     return QAbstractItemModel::flags(index);
+}
+
+IndexType QVtkTableModelVectorGrid3D::indexType() const
+{
+    return IndexType::points;
 }
 
 void QVtkTableModelVectorGrid3D::resetDisplayData()

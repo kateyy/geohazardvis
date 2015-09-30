@@ -55,11 +55,19 @@ vtkRenderWindowInteractor * RendererImplementationNull::interactor()
     return nullptr;
 }
 
-void RendererImplementationNull::setSelectedData(DataObject *, vtkIdType /*= -1*/)
+void RendererImplementationNull::setSelectedData(AbstractVisualizedData *, vtkIdType, IndexType)
 {
 }
 
-DataObject * RendererImplementationNull::selectedData() const
+void RendererImplementationNull::setSelectedData(AbstractVisualizedData *, vtkIdTypeArray &, IndexType)
+{
+}
+
+void RendererImplementationNull::clearSelection()
+{
+}
+
+AbstractVisualizedData * RendererImplementationNull::selectedData() const
 {
     return nullptr;
 }
@@ -69,7 +77,12 @@ vtkIdType RendererImplementationNull::selectedIndex() const
     return -1;
 }
 
-void RendererImplementationNull::lookAtData(DataObject *, vtkIdType, unsigned int)
+IndexType RendererImplementationNull::selectedIndexType() const
+{
+    return IndexType();
+}
+
+void RendererImplementationNull::lookAtData(AbstractVisualizedData &, vtkIdType, IndexType, unsigned int)
 {
 }
 

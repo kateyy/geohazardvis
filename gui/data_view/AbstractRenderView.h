@@ -1,5 +1,7 @@
 #pragma once
 
+#include <core/types.h>
+
 #include <gui/data_view/AbstractDataView.h>
 
 
@@ -7,6 +9,7 @@ class vtkRenderWindow;
 
 class AbstractVisualizedData;
 enum class ContentType;
+enum class IndexType;
 class RendererImplementation;
 
 
@@ -41,14 +44,17 @@ public:
     /** DataObjects visible in the specified subViewIndex, or in any of the sub views (-1) */
     QList<DataObject *> dataObjects(int subViewIndex = -1) const;
     QList<AbstractVisualizedData *> visualizations(int subViewIndex = -1) const;
-    /** @return visualization of dataObject in the specified sub-view. Returns nullptr, if the view currently doesn't visualize the data object*/
+    /** @return visualization of dataObject in the specified sub-view. Returns nullptr, if the view currently doesn't visualize this data object*/
     virtual AbstractVisualizedData * visualizationFor(DataObject * dataObject, int subViewIndex = -1) const = 0;
+    /** @return the sub view index that contains the specified visualization, or -1 if this is not part of this view */
+    virtual int subViewContaining(const AbstractVisualizedData & visualizedData) const = 0;
 
     /** The data object whose visualization is selected by the user. This visualization can be configured in the UI */
     virtual DataObject * selectedData() const = 0;
     /** The data visualization that is currently selected by the user. It can be configured in the UI. */
     virtual AbstractVisualizedData * selectedDataVisualization() const = 0;
-    virtual void lookAtData(DataObject * dataObject, vtkIdType itemId, int subViewIndex = -1) = 0;
+    virtual void lookAtData(DataObject & dataObject, vtkIdType index, IndexType indexType, int subViewIndex = -1) = 0;
+    virtual void lookAtData(AbstractVisualizedData & visualization, vtkIdType index, IndexType indexType, int subViewIndex = -1) = 0;
 
     virtual unsigned int numberOfSubViews() const;
     unsigned int activeSubViewIndex() const;
@@ -65,7 +71,8 @@ public:
 
     void render();
 
-    void ShowInfo(const QStringList &info);
+    void showInfoText(const QString & text);
+    QString infoText() const;
 
 signals:
     /** emitted after changing the list of visible objects */
@@ -79,6 +86,8 @@ signals:
 protected:
     bool eventFilter(QObject * watched, QEvent * event) override;
     void showEvent(QShowEvent * event) override;
+
+    void selectionChangedEvent(DataObject * dataObject, vtkIdTypeArray * selection, IndexType indexType) override;
 
     virtual void showDataObjectsImpl(const QList<DataObject *> & dataObjects,
         QList<DataObject *> & incompatibleObjects,

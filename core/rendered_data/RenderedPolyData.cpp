@@ -53,9 +53,10 @@ RenderedPolyData::RenderedPolyData(PolyDataObject & dataObject)
 {
     assert(vtkPolyData::SafeDownCast(dataObject.dataSet()));
 
-    vtkInformation * mapperInfo = m_mapper->GetInformation();
-    mapperInfo->Set(DataObject::NameKey(), dataObject.name().toUtf8().data());
-    DataObject::setDataObject(*mapperInfo, &dataObject);
+    auto & mapperInfo = *m_mapper->GetInformation();
+    mapperInfo.Set(DataObject::NameKey(), dataObject.name().toUtf8().data());
+    DataObject::storePointer(mapperInfo, &dataObject);
+    AbstractVisualizedData::storePointer(mapperInfo, this);
 
     m_normals->ComputePointNormalsOn();
     m_normals->ComputeCellNormalsOff();

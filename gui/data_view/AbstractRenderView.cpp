@@ -128,9 +128,14 @@ void AbstractRenderView::render()
     implementation().render();
 }
 
-void AbstractRenderView::ShowInfo(const QStringList & info)
+void AbstractRenderView::showInfoText(const QString & info)
 {
-    setToolTip(info.join('\n'));
+    setToolTip(info);
+}
+
+QString AbstractRenderView::infoText() const
+{
+    return toolTip();
 }
 
 bool AbstractRenderView::eventFilter(QObject * watched, QEvent * event)
@@ -152,6 +157,20 @@ void AbstractRenderView::showEvent(QShowEvent * /*event*/)
     // allow to receive mouse events
     contentWidget()->installEventFilter(this);
     m_isInitialized = true;
+}
+
+void AbstractRenderView::selectionChangedEvent(DataObject * dataObject, vtkIdTypeArray * selection, IndexType indexType)
+{
+    assert((dataObject != nullptr) == (selection != nullptr));
+
+    AbstractVisualizedData * vis = nullptr;
+    if (!dataObject || !(vis = visualizationFor(dataObject)))
+    {
+        implementation().clearSelection();
+        return;
+    }
+
+    implementation().setSelectedData(vis, *selection, indexType);
 }
 
 void AbstractRenderView::activeSubViewChangedEvent(unsigned int /*subViewIndex*/)

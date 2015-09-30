@@ -4,6 +4,7 @@
 
 #include <vtkDataSet.h>
 
+#include <core/types.h>
 #include <core/data_objects/ImageProfileData.h>
 
 
@@ -58,6 +59,11 @@ QVariant QVtkTableModelProfileData::headerData(int section, Qt::Orientation orie
     }
 
     return QVariant();
+}
+
+IndexType QVtkTableModelProfileData::indexType() const
+{
+    return IndexType::points;
 }
 
 void QVtkTableModelProfileData::resetDisplayData()

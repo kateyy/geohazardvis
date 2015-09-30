@@ -161,6 +161,9 @@ set ( SOURCES
     utility/qthelper.h
     utility/qthelper.cpp
     utility/macros.h
+    utility/mathhelper.h
+    utility/mathhelper.hpp
+    utility/mathhelper.cpp
     utility/memory.h
     utility/memory.hpp
     utility/ScalarBarActor.h

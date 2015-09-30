@@ -1,29 +1,20 @@
 #pragma once
 
-#include <QMap>
-#include <QScopedPointer>
+#include <memory>
 
 #include <vtkInteractorStyleTerrain.h>
-#include <vtkSmartPointer.h>
 
-#include <gui/rendering_interaction/IPickingInteractorStyle.h>
-
-
-class QTime;
-class QTimer;
-class vtkPointPicker;
-class vtkCellPicker;
-class vtkPolyData;
-class vtkProp;
+#include <gui/rendering_interaction/ICameraInteractionStyle.h>
 
 
-class GUI_API InteractorStyle3D : public IPickingInteractorStyle, public vtkInteractorStyleTerrain
+class CameraDolly;
+
+
+class GUI_API InteractorStyle3D : public vtkInteractorStyleTerrain, virtual public ICameraInteractionStyle
 {
 public:
     static InteractorStyle3D * New();
     vtkTypeMacro(InteractorStyle3D, vtkInteractorStyleTerrain);
-
-    void setRenderedData(const QList<RenderedData *> & renderedData) override;
 
     void OnMouseMove() override;
     void OnLeftButtonDown() override;
@@ -37,12 +28,8 @@ public:
 
     void OnChar() override;
 
-    DataObject * highlightedDataObject() const override;
-    vtkIdType highlightedIndex() const override;
-
-    void highlightIndex(DataObject * dataObject, vtkIdType index) override;
-    void lookAtIndex(DataObject * polyData, vtkIdType index) override;
-    void flashHightlightedCell(int milliseconds = 2000);
+    void resetCamera() override;
+    void moveCameraTo(AbstractVisualizedData & visualization, vtkIdType index, IndexType indexType, bool overTime = true) override;
 
 protected:
     explicit InteractorStyle3D();
@@ -50,20 +37,8 @@ protected:
 
     void MouseWheelDolly(bool forward);
 
-    void highlightPickedIndex();
-    void sendPointInfo() const;
-
-protected:
-    QMap<vtkProp *, RenderedData *> m_actorToRenderedData;
-
-    vtkSmartPointer<vtkPointPicker> m_pointPicker;
-    vtkSmartPointer<vtkCellPicker> m_cellPicker;
-    vtkSmartPointer<vtkActor> m_selectedCellActor;
-    vtkSmartPointer<vtkPolyData> m_selectedCellData;
-    QPair<DataObject *, vtkIdType> m_currentlyHighlighted;
-
-    QTimer * m_highlightFlashTimer;
-    QScopedPointer<QTime> m_highlightFlashTime;
+private:
+    std::unique_ptr<CameraDolly> m_cameraDolly;
 
     bool m_mouseMoved;
 };

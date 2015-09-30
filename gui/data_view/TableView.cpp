@@ -7,6 +7,8 @@
 #include <QMenu>
 #include <QAction>
 
+#include <vtkIdTypeArray.h>
+
 #include <core/table_model/QVtkTableModel.h>
 #include <core/data_objects/DataObject.h>
 
@@ -106,10 +108,10 @@ void TableView::setModel(QVtkTableModel * model)
         if (selected.indexes().isEmpty())
             return;
 
-        vtkIdType id = model->itemIdAt(selected.indexes().first());
-        model->setHighlightItemId(id);
+        vtkIdType index = model->itemIdAt(selected.indexes().first());
+        model->setHighlightItemId(index);
 
-        emit objectPicked(m_dataObject, id);
+        emit objectPicked(m_dataObject, index, model->indexType());
     });
 }
 
@@ -118,12 +120,27 @@ QWidget * TableView::contentWidget()
     return m_ui->tableView;
 }
 
-void TableView::highlightedIdChangedEvent(DataObject * /*dataObject*/, vtkIdType itemId)
+void TableView::selectionChangedEvent(DataObject * dataObject, vtkIdTypeArray * indices, IndexType indexType)
 {
-    QModelIndex selection(model()->index(static_cast<int>(itemId), 0));
+    assert((dataObject != nullptr) == (indices != nullptr));
+
+    if (dataObject && dataObject != m_dataObject)
+        return;
+
+    if (!dataObject || (indices->GetSize() == 0) || (indexType != model()->indexType()))
+    {
+        model()->setHighlightItemId(-1);
+        return;
+    }
+
+    // TODO implement multiple selections
+
+    auto index = indices->GetValue(0);
+
+    QModelIndex selection(model()->index(static_cast<int>(index), 0));
     m_ui->tableView->scrollTo(selection);
 
-    model()->setHighlightItemId(itemId);
+    model()->setHighlightItemId(index);
 }
 
 bool TableView::eventFilter(QObject * obj, QEvent * ev)
@@ -136,7 +153,7 @@ bool TableView::eventFilter(QObject * obj, QEvent * ev)
         if (index.column() == 0)
         {
             vtkIdType id = static_cast<vtkIdType>(index.row());
-            emit itemDoubleClicked(m_dataObject, id);
+            emit itemDoubleClicked(m_dataObject, id, model()->indexType());
             return true;
         }
     }

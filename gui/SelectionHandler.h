@@ -6,15 +6,15 @@
 #include <vtkType.h>
 
 
+class QAction;
 class QItemSelection;
 class QMenu;
-class QAction;
 
 class AbstractDataView;
 class AbstractRenderView;
-class TableView;
 class DataObject;
-class IPickingInteractorStyle;
+enum class IndexType;
+class TableView;
 
 
 class SelectionHandler : public QObject
@@ -32,9 +32,8 @@ public:
     void setSyncToggleMenu(QMenu * syncToggleMenu);
 
 private:
-    void hightlightSelection(DataObject * dataObject, vtkIdType highlightedItemId);
-
-    void renderViewsLookAt(DataObject * dataObject, vtkIdType itemId);
+    void updateSelection(DataObject * dataObject, vtkIdType index, IndexType indexType);
+    void renderViewsLookAt(DataObject * dataObject, vtkIdType index, IndexType indexType);
 
 private:
     SelectionHandler();

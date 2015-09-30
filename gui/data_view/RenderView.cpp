@@ -82,11 +82,6 @@ QWidget * RenderView::contentWidget()
     return m_ui->qvtkMain;
 }
 
-void RenderView::highlightedIdChangedEvent(DataObject * dataObject, vtkIdType itemId)
-{
-    implementation().setSelectedData(dataObject, itemId);
-}
-
 void RenderView::axesEnabledChangedEvent(bool enabled)
 {
     implementation().setAxesVisibility(enabled && !m_contents.empty());
@@ -235,8 +230,7 @@ void RenderView::hideDataObjectsImpl(const QList<DataObject *> & dataObjects, un
 
             changed = true;
         }
-        assert(findUnique(m_contents, (AbstractVisualizedData*)nullptr) == m_contents.end());
-        assert(findUnique(m_contents, (AbstractVisualizedData*)nullptr) == m_contents.end());
+        assert(!containsUnique(m_contents, (AbstractVisualizedData*)nullptr));
     }
 
     if (!changed)
@@ -333,23 +327,35 @@ QList<AbstractVisualizedData *> RenderView::visualizationsImpl(int /*subViewInde
 
 DataObject * RenderView::selectedData() const
 {
-    auto selected = implementation().selectedData();
+    if (auto vis = selectedDataVisualization())
+    {
+        return &vis->dataObject();
+    }
 
-    if (!selected && !m_contents.empty())
-        selected = &m_contents.front()->dataObject();
-
-    return selected;
+    return nullptr;
 }
 
 AbstractVisualizedData * RenderView::selectedDataVisualization() const
 {
-    return m_dataObjectToVisualization.value(selectedData());
+    return implementation().selectedData();
 }
 
-void RenderView::lookAtData(DataObject * dataObject, vtkIdType itemId, int DEBUG_ONLY(subViewIndex))
+void RenderView::lookAtData(DataObject & dataObject, vtkIdType index, IndexType indexType, int subViewIndex)
 {
-    assert(subViewIndex == 0);
-    implementation().lookAtData(dataObject, itemId, 0);
+    auto vis = m_dataObjectToVisualization.value(&dataObject, nullptr);
+
+    if (!vis)
+        return;
+
+    lookAtData(*vis, index, indexType, subViewIndex);
+}
+
+void RenderView::lookAtData(AbstractVisualizedData & vis, vtkIdType index, IndexType indexType, int DEBUG_ONLY(subViewIndex))
+{
+    assert(subViewIndex == 0 || subViewIndex == -1);
+    assert(containsUnique(m_contents, &vis));
+
+    implementation().lookAtData(vis, index, indexType, 0u);
 }
 
 AbstractVisualizedData * RenderView::visualizationFor(DataObject * dataObject, int subViewIndex) const
@@ -358,6 +364,16 @@ AbstractVisualizedData * RenderView::visualizationFor(DataObject * dataObject, i
         return nullptr;
 
     return m_dataObjectToVisualization.value(dataObject, nullptr);
+}
+
+int RenderView::subViewContaining(const AbstractVisualizedData & visualizedData) const
+{
+    // single view implementation: if we currently show it, it's in the view 0
+
+    if (containsUnique(m_contents, &visualizedData))
+        return 0;
+
+    return -1;
 }
 
 RendererImplementation & RenderView::implementation() const

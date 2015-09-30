@@ -21,7 +21,6 @@
 #include <vtkTextProperty.h>
 
 #include <core/DataSetHandler.h>
-#include <core/utility/vtkcamerahelper.h>
 #include <core/color_mapping/ColorMapping.h>
 #include <core/data_objects/ImageDataObject.h>
 #include <core/data_objects/ImageProfileData.h>
@@ -29,7 +28,7 @@
 #include <gui/DataMapping.h>
 #include <gui/data_view/AbstractRenderView.h>
 #include <gui/data_view/RendererImplementationBase3D.h>
-#include <gui/rendering_interaction/PickingInteractorStyleSwitch.h>
+#include <gui/rendering_interaction/CameraInteractorStyleSwitch.h>
 
 
 const bool RenderViewStrategyImage2D::s_isRegistered = RenderViewStrategy::registerStrategy<RenderViewStrategyImage2D>();
@@ -151,11 +150,9 @@ bool RenderViewStrategyImage2D::contains3dData() const
     return false;
 }
 
-void RenderViewStrategyImage2D::resetCamera(vtkCamera & camera)
+void RenderViewStrategyImage2D::resetCamera()
 {
-    camera.SetViewUp(0, 1, 0);
-    camera.SetFocalPoint(0, 0, 0);
-    camera.SetPosition(0, 0, 1);
+    m_context.interactorStyleSwitch()->resetCamera();
 }
 
 QList<DataObject *> RenderViewStrategyImage2D::filterCompatibleObjects(const QList<DataObject *> & dataObjects, QList<DataObject *> & incompatibleObjects) const

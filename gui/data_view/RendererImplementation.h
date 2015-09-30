@@ -10,13 +10,15 @@
 
 
 template<typename T> class QList;
+class QVTKWidget;
+class vtkIdTypeArray;
 class vtkRenderWindow;
 class vtkRenderWindowInteractor;
-class QVTKWidget;
 
 class AbstractRenderView;
 class AbstractVisualizedData;
 enum class ContentType;
+enum class IndexType;
 class DataObject;
 
 
@@ -55,10 +57,14 @@ public:
     void removeContent(AbstractVisualizedData * content, unsigned int subViewIndex);
 
     /** mark dataObject (and, if set, it's point/cell) as current selection */
-    virtual void setSelectedData(DataObject * dataObject, vtkIdType itemId = -1) = 0;
-    virtual DataObject * selectedData() const = 0;
+    virtual void setSelectedData(AbstractVisualizedData * vis, vtkIdType index, IndexType indexType) = 0;
+    virtual void setSelectedData(AbstractVisualizedData * vis, vtkIdTypeArray & indices, IndexType indexType) = 0;
+    virtual void clearSelection() = 0;
+    virtual AbstractVisualizedData * selectedData() const = 0;
     virtual vtkIdType selectedIndex() const = 0;
-    virtual void lookAtData(DataObject * dataObject, vtkIdType itemId, unsigned int subViewIndex) = 0;
+    virtual IndexType selectedIndexType() const = 0;
+    /** Move camera so that the specified part of the visualization becomes visible. */
+    virtual void lookAtData(AbstractVisualizedData & vis, vtkIdType itemId, IndexType indexType, unsigned int subViewIndex) = 0;
 
     /** Resets the camera so that all view content are visible.
         Moves back to the initial position if requested. */
