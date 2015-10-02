@@ -104,6 +104,8 @@ void RenderView::updateImplementation(const QList<DataObject *> & contents)
 
     connect(&implementation(), &RendererImplementation::dataSelectionChanged,
         this, &RenderView::updateGuiForSelectedData);
+
+    emit implementationChanged();
 }
 
 AbstractVisualizedData * RenderView::addDataObject(DataObject * dataObject)

@@ -78,6 +78,10 @@ signals:
     /** emitted after changing the list of visible objects */
     void visualizationsChanged();
 
+    /** Emitted after switching to a now implementation. 
+    * Do not access pointers to the previous implementation when receiving this signal! */
+    void implementationChanged();
+
     void selectedDataChanged(AbstractRenderView * renderView, DataObject * dataObject);
     void activeSubViewChanged(unsigned int activeSubViewIndex);
 

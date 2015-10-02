@@ -36,6 +36,7 @@ private:
     void readCameraStats(vtkObject * caller, unsigned long, void *);
 
     void updateTitle();
+    void updateForNewImplementation();
 
     reflectionzeug::PropertyGroup * createPropertyGroup(AbstractRenderView * renderView);
     reflectionzeug::PropertyGroup * createPropertyGroupRenderer(

@@ -82,23 +82,14 @@ void RendererConfigWidget::setCurrentRenderView(AbstractRenderView * renderView)
     auto lastRenderView = m_currentRenderView;
     m_currentRenderView = renderView;
 
+
+    // clear connections with the old view
+
     if (lastRenderView)
     {
         disconnect(lastRenderView, &AbstractRenderView::windowTitleChanged, this, &RendererConfigWidget::updateTitle);
+        disconnect(lastRenderView, &AbstractRenderView::implementationChanged, this, &RendererConfigWidget::updateForNewImplementation);
     }
-
-    if (!m_currentRenderView)
-    {
-        return;
-    }
-
-    connect(m_currentRenderView, &AbstractRenderView::windowTitleChanged, this, &RendererConfigWidget::updateTitle);
-    
-    m_propertyRoot = createPropertyGroup(m_currentRenderView);
-    m_ui->propertyBrowser->setRoot(m_propertyRoot);
-    m_ui->propertyBrowser->resizeColumnToContents(0);
-
-    updateTitle();
 
     RendererImplementationBase3D * impl3D = nullptr;
     if (lastRenderView && (impl3D = dynamic_cast<RendererImplementationBase3D *>(&lastRenderView->implementation())))
@@ -107,12 +98,30 @@ void RendererConfigWidget::setCurrentRenderView(AbstractRenderView * renderView)
         auto tag = m_cameraObserverTags.take(camera);
         camera->RemoveObserver(tag);
     }
+
+
+    // setup for the new view
+
+    if (!m_currentRenderView)
+    {
+        return;
+    }
+
+    connect(m_currentRenderView, &AbstractRenderView::windowTitleChanged, this, &RendererConfigWidget::updateTitle);
+    connect(m_currentRenderView, &AbstractRenderView::implementationChanged, this, &RendererConfigWidget::updateForNewImplementation);
+    
+    m_propertyRoot = createPropertyGroup(m_currentRenderView);
+    m_ui->propertyBrowser->setRoot(m_propertyRoot);
+    m_ui->propertyBrowser->resizeColumnToContents(0);
+
     if (m_currentRenderView && (impl3D = dynamic_cast<RendererImplementationBase3D *>(&m_currentRenderView->implementation())))
     {
         auto camera = impl3D->camera(0);  // assuming synchronized cameras
         auto tag = camera->AddObserver(vtkCommand::ModifiedEvent, this, &RendererConfigWidget::readCameraStats);
         m_cameraObserverTags.insert(camera, tag);
     }
+
+    updateTitle();
 }
 
 void RendererConfigWidget::updateTitle()
@@ -124,8 +133,12 @@ void RendererConfigWidget::updateTitle()
         title = "(No Render View selected)";
 
     title = "<b>" + title + "</b>";
-
     m_ui->relatedRenderView->setText(title);
+}
+
+void RendererConfigWidget::updateForNewImplementation()
+{
+    setCurrentRenderView(m_currentRenderView);
 }
 
 PropertyGroup * RendererConfigWidget::createPropertyGroup(AbstractRenderView * renderView)
