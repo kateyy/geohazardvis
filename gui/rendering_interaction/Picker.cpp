@@ -16,14 +16,15 @@
 #include <vtkPointData.h>
 #include <vtkPointPicker.h>
 #include <vtkPolyData.h>
+#include <vtkPropCollection.h>
 #include <vtkPropPicker.h>
 #include <vtkScalarsToColors.h>
 #include <vtkVector.h>
 
-#include <core/AbstractVisualizedData.h>
 #include <core/types.h>
 #include <core/data_objects/ImageDataObject.h>
 #include <core/data_objects/PolyDataObject.h>
+#include <core/rendered_data/RenderedData.h>
 
 
 Picker::Picker()
@@ -35,6 +36,7 @@ Picker::Picker()
     , m_pickedDataObject(nullptr)
     , m_pickedVisualizedData(nullptr)
 {
+    m_cellPicker->PickFromListOn();
 }
 
 Picker::~Picker() = default;
@@ -115,6 +117,18 @@ void Picker::pick(const vtkVector2i & clickPosXY, vtkRenderer & renderer)
 
     if (auto poly = dynamic_cast<PolyDataObject *>(m_pickedDataObject))
     {
+        assert(dynamic_cast<RenderedData *>(m_pickedVisualizedData));
+        auto renderedData = static_cast<RenderedData *>(m_pickedVisualizedData);
+
+        // let the cell picker only see the current object, to work around different precisions of vtkPropPicker and vtkCellPicker
+        m_cellPicker->GetPickList()->RemoveAllItems();
+        auto && viewProps = renderedData->viewProps();
+
+        for (viewProps->InitTraversal(); auto prop = viewProps->GetNextProp();)
+        {
+            m_cellPicker->GetPickList()->AddItem(prop);
+        }
+
         m_cellPicker->Pick(clickPosXY[0], clickPosXY[1], 0, &renderer);
         appendPolyDataInfo(stream, *poly);
     }
