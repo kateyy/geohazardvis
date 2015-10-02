@@ -53,6 +53,8 @@ void Highlighter::setTarget(AbstractVisualizedData * vis, vtkIdType visOutputPor
     m_indices->SetValue(0, index);
 
     setTargetInternal(vis, visOutputPort, indexType);
+
+    updateHighlight();
 }
 
 void Highlighter::setTarget(AbstractVisualizedData * vis, vtkIdType visOutputPort, vtkIdTypeArray & indices, IndexType indexType)
@@ -60,6 +62,8 @@ void Highlighter::setTarget(AbstractVisualizedData * vis, vtkIdType visOutputPor
     m_indices->DeepCopy(&indices);
 
     setTargetInternal(vis, visOutputPort, indexType);
+
+    updateHighlight();
 }
 
 void Highlighter::setTargetInternal(AbstractVisualizedData * vis, vtkIdType visOutputPort, IndexType indexType)
@@ -77,8 +81,6 @@ void Highlighter::setTargetInternal(AbstractVisualizedData * vis, vtkIdType visO
     {
         connect(vis, &AbstractVisualizedData::visibilityChanged, this, &Highlighter::checkDataVisibility);
     }
-
-    updateHighlight();
 }
 
 AbstractVisualizedData * Highlighter::targetVisualization() const
@@ -108,8 +110,8 @@ void Highlighter::clear()
 {
     clearIndices();
 
-    m_visualizedData = nullptr;
-    m_visOutputPort = -1;
+    setTargetInternal(nullptr, -1, m_indexType);
+
     m_renderer = nullptr;
 }
 
