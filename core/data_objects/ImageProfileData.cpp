@@ -227,9 +227,11 @@ void ImageProfileData::setPoints(const vtkVector2d & point1, const vtkVector2d &
             numElements = m_sourceData.dataSet()->GetNumberOfPoints();
         }
 
+        numElements = std::sqrt(numElements);
+
         // assuming that the points/cells are somehow uniformly distributed (and sized)
-        numProbePoints = static_cast<int>(double(numElements) * vectorLength / diagonalLength);
-        numProbePoints = static_cast<int>(std::max(10, numProbePoints));
+        numProbePoints = static_cast<int>(std::ceil(double(numElements) * vectorLength / diagonalLength));
+        numProbePoints = static_cast<int>(std::max(1, numProbePoints));
     }
 
     m_probeLine->SetResolution(numProbePoints);
