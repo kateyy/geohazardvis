@@ -151,11 +151,6 @@ const ColorMappingData * ColorMapping::currentScalars() const
     return it->second.get();
 }
 
-void ColorMapping::scalarsSetDataComponent(int component)
-{
-    currentScalars()->setDataComponent(component);
-}
-
 vtkLookupTable * ColorMapping::gradient()
 {
     return m_gradient;

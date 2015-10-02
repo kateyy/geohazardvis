@@ -180,7 +180,7 @@ void ColorMappingChooser::guiComponentChanged(int guiComponent)
 
     auto component = guiComponent - 1;
 
-    m_mapping->scalarsSetDataComponent(component);
+    m_mapping->currentScalars()->setDataComponent(component);
 
     updateGuiValueRanges();
 

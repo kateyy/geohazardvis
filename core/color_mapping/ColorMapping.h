@@ -47,8 +47,6 @@ public:
     ColorMappingData * currentScalars();
     const ColorMappingData * currentScalars() const;
 
-    void scalarsSetDataComponent(int component);
-
     /** @return gradient lookup table
       * This is empty or a copy of the table passed by setGradient. */
     vtkLookupTable * gradient();
