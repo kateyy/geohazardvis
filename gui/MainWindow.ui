@@ -29,7 +29,7 @@
      <x>0</x>
      <y>0</y>
      <width>686</width>
-     <height>21</height>
+     <height>26</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -49,7 +49,7 @@
    </widget>
    <widget class="QMenu" name="menuViews">
     <property name="title">
-     <string>&amp;Views</string>
+     <string>&amp;View</string>
     </property>
     <widget class="QMenu" name="menuSynchronize_Selections">
      <property name="enabled">
@@ -76,7 +76,7 @@
    </widget>
    <widget class="QMenu" name="menu_Data_Sets">
     <property name="title">
-     <string>&amp;Data Sets</string>
+     <string>&amp;Data Set</string>
     </property>
     <addaction name="actionApply_Digital_Elevation_Model"/>
    </widget>
