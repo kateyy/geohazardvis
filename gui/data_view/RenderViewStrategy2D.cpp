@@ -22,6 +22,7 @@
 
 #include <core/DataSetHandler.h>
 #include <core/color_mapping/ColorMapping.h>
+#include <core/color_mapping/ColorMappingData.h>
 #include <core/data_objects/ImageDataObject.h>
 #include <core/data_objects/ImageProfileData.h>
 #include <core/rendered_data/RenderedData.h>
@@ -219,7 +220,9 @@ void RenderViewStrategy2D::startProfilePlot()
     QSet<QPair<DataObject *, QString>> createdPlots;
     for (unsigned int i = 0; i < m_context.renderView().numberOfSubViews(); ++i)
     {
-        auto & scalars = m_context.colorMapping(i)->currentScalarsName();
+        const auto & colorMapping = m_context.colorMapping(i);
+        auto & scalars = colorMapping->currentScalarsName();
+        auto component = colorMapping->currentScalars()->dataComponent();
 
         for (auto data : m_activeInputData)
         {
@@ -232,11 +235,18 @@ void RenderViewStrategy2D::startProfilePlot()
                 continue;
 
             createdPlots << currentPlotCombination;
+            // TODO this should be propagated by the color mapping
+            // this here is a dangerous assumption
+            IndexType location = data->dataTypeName() == "polygonal mesh"
+                ? IndexType::cells
+                : IndexType::points;
 
             auto profile = std::make_unique<ImageProfileData>(
                 data->name() + " plot",
                 *data,
-                scalars);
+                scalars,
+                location,
+                component);
 
             if (!profile->isValid())
                 continue;
@@ -389,14 +399,16 @@ void RenderViewStrategy2D::lineMoved()
 {
     assert(m_previewProfiles.size() > 0 && m_lineWidget);
 
-    double point1[3], point2[3];
-    m_lineWidget->GetLineRepresentation()->GetPoint1WorldPosition(point1);
-    m_lineWidget->GetLineRepresentation()->GetPoint2WorldPosition(point2);
-    point1[2] -= g_lineZOffset;
-    point2[2] -= g_lineZOffset;
+    double point1_[3], point2_[3];
+    m_lineWidget->GetLineRepresentation()->GetPoint1WorldPosition(point1_);
+    m_lineWidget->GetLineRepresentation()->GetPoint2WorldPosition(point2_);
 
     for (auto && profile : m_previewProfiles)
-        static_cast<ImageProfileData *>(profile.get())->setPoints(point1, point2);
+    {
+        static_cast<ImageProfileData *>(profile.get())->setPoints(
+        { point1_[0], point1_[1] },
+        { point2_[0], point2_[1] });
+    }
 }
 
 void RenderViewStrategy2D::updateAutomaticPlots()

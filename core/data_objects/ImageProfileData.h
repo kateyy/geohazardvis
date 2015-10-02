@@ -1,7 +1,9 @@
 #pragma once
 
 #include <vtkSmartPointer.h>
+#include <vtkVector.h>
 
+#include <core/types.h>
 #include <core/data_objects/DataObject.h>
 
 
@@ -10,11 +12,27 @@ class vtkProbeFilter;
 class vtkTransformFilter;
 class vtkWarpScalar;
 
+enum class IndexType;
 
+
+/**
+* Probes the source data along a line defined by two points on the XY-plane and creates a plot for the interpolated data.
+*/
 class CORE_API ImageProfileData : public DataObject
 {
 public:
-    ImageProfileData(const QString & name, DataObject & sourceData, const QString & scalarsName);
+    /** Create profile with given specifications
+      * @param name Object name, see DataObject API
+      * @param sourceData source data object that will be probed
+      * @param scalarsName Scalars to probe in the source data object 
+      * @param scalarsLocation Specifies whether to probe point or cell scalars 
+      * @param vectorComponent For multi component scalars/vectors, specify which component will be extracted */
+    ImageProfileData(
+        const QString & name, 
+        DataObject & sourceData, 
+        const QString & scalarsName,
+        IndexType scalarsLocation,
+        vtkIdType vectorComponent);
 
     /** @return whether valid scalar data was found in the constructor. Otherwise, just delete your instance.. */
     bool isValid() const;
@@ -31,14 +49,20 @@ public:
     vtkAlgorithmOutput * probedLineOuputPort();
 
     const QString & abscissa() const;
+
+    const DataObject & sourceData() const;
     const QString & scalarsName() const;
+    IndexType scalarsLocation() const;
+    unsigned int vectorComponent() const;
 
     const double * scalarRange();
     int numberOfScalars();
 
-    const double * point1() const;
-    const double * point2() const;
-    void setPoints(double point1[3], double point2[3]);
+    /** @return X,Y-coordinates for the first point */
+    const vtkVector2d & point1() const;
+    /** @return X,Y-coordinates for the second point */
+    const vtkVector2d & point2() const;
+    void setPoints(const vtkVector2d & point1, const vtkVector2d & point2);
 
 protected:
     std::unique_ptr<QVtkTableModel> createTableModel() override;
@@ -48,7 +72,11 @@ private:
     DataObject & m_sourceData;
     QString m_abscissa;
     QString m_scalarsName;
-    int m_scalarsLocation;
+    IndexType m_scalarsLocation;
+    vtkIdType m_vectorComponent;
+
+    vtkVector2d m_point1;
+    vtkVector2d m_point2;
 
     vtkSmartPointer<vtkLineSource> m_probeLine;
     vtkSmartPointer<vtkProbeFilter> m_probe;

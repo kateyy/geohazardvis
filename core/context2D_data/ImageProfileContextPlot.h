@@ -21,9 +21,12 @@ class ImageProfileData;
 class CORE_API ImageProfileContextPlot : public Context2DData
 {
 public:
-    ImageProfileContextPlot(ImageProfileData & dataObject, const QString & scalarsName);
+    ImageProfileContextPlot(ImageProfileData & dataObject);
 
     reflectionzeug::PropertyGroup * createConfigGroup() override;
+
+    ImageProfileData & profileData();
+    const ImageProfileData & profileData() const;
 
     const QString & title() const;
     void setTitle(const QString & title);
@@ -36,8 +39,6 @@ private:
 
 private:
     vtkSmartPointer<vtkPlot> m_plotLine;
-
-    const QString m_scalarsName;
 
     QString m_title;
 };

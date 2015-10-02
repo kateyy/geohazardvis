@@ -21,42 +21,44 @@
 #include <core/table_model/QVtkTableModelProfileData.h>
 
 
-ImageProfileData::ImageProfileData(const QString & name, DataObject & sourceData, const QString & scalarsName)
+namespace
+{
+vtkVector2d operator-(const vtkVector2d & lhs, const vtkVector2d & rhs)
+{
+    return vtkVector2d(lhs[0] - rhs[0], lhs[1] - rhs[1]);
+}
+}
+
+
+ImageProfileData::ImageProfileData(
+    const QString & name,
+    DataObject & sourceData,
+    const QString & scalarsName,
+    IndexType scalarsLocation,
+    vtkIdType vectorComponent)
     : DataObject(name, vtkSmartPointer<vtkImageData>::New())
+    , m_isValid(false)
     , m_sourceData(sourceData)
     , m_abscissa("position")
+    , m_scalarsName(scalarsName)
+    , m_scalarsLocation(scalarsLocation)
+    , m_vectorComponent(vectorComponent)
     , m_probeLine(vtkSmartPointer<vtkLineSource>::New())
     , m_transform(vtkSmartPointer<vtkTransformFilter>::New())
     , m_graphLine(vtkSmartPointer<vtkWarpScalar>::New())
 {
     auto inputData = sourceData.processedDataSet();
 
-    vtkDataArray * scalars = inputData->GetPointData()->GetArray(scalarsName.toUtf8().data());
-    m_scalarsLocation = vtkAssignAttribute::POINT_DATA;
+    auto attributeData = (scalarsLocation == IndexType::points)
+        ? static_cast<vtkDataSetAttributes *>(inputData->GetPointData())
+        : static_cast<vtkDataSetAttributes *>(inputData->GetCellData());
 
-    if (!scalars)
+    auto scalars = attributeData->GetArray(scalarsName.toUtf8().data());
+
+    if (scalars == nullptr || scalars->GetNumberOfComponents() < vectorComponent)
     {
-        scalars = inputData->GetCellData()->GetArray(scalarsName.toUtf8().data());
-        if (scalars)
-            m_scalarsLocation = vtkAssignAttribute::CELL_DATA;
-    }
-
-    // fallback: use data set scalars
-    if (!scalars)
-        scalars = inputData->GetPointData()->GetScalars();
-    if (!scalars)
-    {
-        scalars = inputData->GetCellData()->GetArray(scalarsName.toUtf8().data());
-
-        if (scalars)
-            m_scalarsLocation = vtkAssignAttribute::CELL_DATA;
-    }
-
-    m_isValid = scalars != nullptr;
-    if (!m_isValid)
         return;
-
-    m_scalarsName = QString::fromUtf8(scalars->GetName());
+    }
 
     m_probe = vtkSmartPointer<vtkProbeFilter>::New();
     m_probe->SetInputConnection(m_probeLine->GetOutputPort());
@@ -81,12 +83,15 @@ ImageProfileData::ImageProfileData(const QString & name, DataObject & sourceData
     m_transform->SetInputConnection(m_probe->GetOutputPort());
 
     auto assign = vtkSmartPointer<vtkAssignAttribute>::New();
-    assign->Assign(m_scalarsName.toUtf8().data(), vtkDataSetAttributes::SCALARS, m_scalarsLocation);
+    auto assignLocation = m_scalarsLocation == IndexType::points ? vtkAssignAttribute::POINT_DATA : vtkAssignAttribute::CELL_DATA;
+    assign->Assign(m_scalarsName.toUtf8().data(), vtkDataSetAttributes::SCALARS, assignLocation);
     assign->SetInputConnection(m_transform->GetOutputPort());
 
     m_graphLine->UseNormalOn();
     m_graphLine->SetNormal(0, 1, 0);
     m_graphLine->SetInputConnection(assign->GetOutputPort());
+
+    m_isValid = true;
 }
 
 bool ImageProfileData::isValid() const
@@ -101,7 +106,7 @@ bool ImageProfileData::is3D() const
 
 std::unique_ptr<Context2DData> ImageProfileData::createContextData()
 {
-    return std::make_unique<ImageProfileContextPlot>(*this, m_scalarsName);
+    return std::make_unique<ImageProfileContextPlot>(*this);
 }
 
 const QString & ImageProfileData::dataTypeName() const
@@ -142,9 +147,24 @@ const QString & ImageProfileData::abscissa() const
     return m_abscissa;
 }
 
+const DataObject & ImageProfileData::sourceData() const
+{
+    return m_sourceData;
+}
+
 const QString & ImageProfileData::scalarsName() const
 {
     return m_scalarsName;
+}
+
+IndexType ImageProfileData::scalarsLocation() const
+{
+    return m_scalarsLocation;
+}
+
+unsigned int ImageProfileData::vectorComponent() const
+{
+    return m_vectorComponent;
 }
 
 const double * ImageProfileData::scalarRange()
@@ -158,23 +178,25 @@ int ImageProfileData::numberOfScalars()
     return static_cast<int>(processedDataSet()->GetNumberOfPoints());
 }
 
-const double * ImageProfileData::point1() const
+const vtkVector2d & ImageProfileData::point1() const
 {
-    return m_probeLine->GetPoint1();
+    return m_point1;
 }
 
-const double * ImageProfileData::point2() const
+const vtkVector2d & ImageProfileData::point2() const
 {
-    return m_probeLine->GetPoint2();
+    return m_point2;
 }
 
-void ImageProfileData::setPoints(double point1[3], double point2[3])
+void ImageProfileData::setPoints(const vtkVector2d & point1, const vtkVector2d & point2)
 {
-    m_probeLine->SetPoint1(point1);
-    m_probeLine->SetPoint2(point2);
+    m_point1 = point1;
+    m_point2 = point2;
 
-    double probeVector[3];
-    vtkMath::Subtract(point2, point1, probeVector);
+    m_probeLine->SetPoint1(point1[0], point1[1], 0.0);
+    m_probeLine->SetPoint2(point2[0], point2[1], 0.0);
+    
+    auto probeVector = point2 - point1;
 
     int numProbePoints = 0;
     double pointSpacing[3];
@@ -187,7 +209,7 @@ void ImageProfileData::setPoints(double point1[3], double point2[3])
     }
     else
     {
-        auto vectorLength = vtkMath::Norm(probeVector);
+        auto vectorLength = probeVector.Norm();
         double bounds[6];
         m_sourceData.dataSet()->GetBounds(bounds);
 
@@ -196,7 +218,7 @@ void ImageProfileData::setPoints(double point1[3], double point2[3])
 
         vtkIdType numElements = 0;
 
-        if (m_scalarsLocation == vtkAssignAttribute::CELL_DATA)
+        if (m_scalarsLocation == IndexType::cells)
         {
             numElements = m_sourceData.dataSet()->GetNumberOfCells();
         }

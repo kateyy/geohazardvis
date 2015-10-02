@@ -20,11 +20,10 @@
 using namespace reflectionzeug;
 
 
-ImageProfileContextPlot::ImageProfileContextPlot(ImageProfileData & dataObject, const QString & scalarsName)
+ImageProfileContextPlot::ImageProfileContextPlot(ImageProfileData & dataObject)
     : Context2DData(dataObject)
     , m_plotLine(vtkSmartPointer<vtkPlotLine>::New())
-    , m_scalarsName(scalarsName)
-    , m_title(m_scalarsName)
+    , m_title(dataObject.scalarsName())
 {
     connect(&dataObject, &DataObject::dataChanged, this, &ImageProfileContextPlot::updatePlot);
 }
@@ -76,6 +75,16 @@ PropertyGroup * ImageProfileContextPlot::createConfigGroup()
     return root;
 }
 
+ImageProfileData & ImageProfileContextPlot::profileData()
+{
+    return static_cast<ImageProfileData &>(dataObject());
+}
+
+const ImageProfileData & ImageProfileContextPlot::profileData() const
+{
+    return static_cast<const ImageProfileData &>(dataObject());
+}
+
 const QString & ImageProfileContextPlot::title() const
 {
     return m_title;
@@ -104,24 +113,39 @@ vtkSmartPointer<vtkPlotCollection> ImageProfileContextPlot::fetchPlots()
 
 void ImageProfileContextPlot::updatePlot()
 {
-    auto & profileData = static_cast<ImageProfileData &>(dataObject());
+    vtkDataSet * probe = profileData().probedLine();
 
-    vtkDataSet * probe = profileData.probedLine();
+    vtkDataSet * profilePoints = profileData().processedDataSet();
 
-    vtkDataSet * profilePoints = profileData.processedDataSet();
+    vtkDataArray * sourceValues = probe->GetPointData()->GetArray(profileData().scalarsName().toUtf8().data());
+    assert(sourceValues && sourceValues->GetNumberOfTuples() == profilePoints->GetNumberOfPoints());
 
-    vtkDataArray * probedValues = probe->GetPointData()->GetArray(m_scalarsName.toUtf8().data());
-    assert(probedValues && probedValues->GetNumberOfTuples() == profilePoints->GetNumberOfPoints());
 
-    // TODO is renaming the input array really a good idea?
-    probedValues->SetName(m_title.toUtf8().data());
+    auto plotValues = vtkSmartPointer<vtkDataArray>::Take(sourceValues->NewInstance());
+    if (sourceValues->GetNumberOfComponents() == 1)
+    {
+        plotValues->DeepCopy(sourceValues);
+    }
+    else
+    {
+        auto component = static_cast<vtkIdType>(profileData().vectorComponent());
+        assert(sourceValues->GetNumberOfComponents() > component);
+
+        plotValues->SetNumberOfTuples(sourceValues->GetNumberOfTuples());
+        for (vtkIdType i = 0; i < sourceValues->GetNumberOfTuples(); ++i)
+        {
+            plotValues->SetTuple1(i, sourceValues->GetTuple(i)[component]);
+        }
+    }
+
+    plotValues->SetName(m_title.toUtf8().data());
 
     auto table = vtkSmartPointer<vtkTable>::New();
     auto xAxis = vtkSmartPointer<vtkFloatArray>::New();
     xAxis->SetNumberOfValues(profilePoints->GetNumberOfPoints());
-    xAxis->SetName(profileData.abscissa().toUtf8().data());
+    xAxis->SetName(profileData().abscissa().toUtf8().data());
     table->AddColumn(xAxis);
-    table->AddColumn(probedValues);
+    table->AddColumn(plotValues);
 
     for (int i = 0; i < profilePoints->GetNumberOfPoints(); ++i)
     {
