@@ -16,15 +16,6 @@
 #include "app_helper.h"
 
 
-class RenderViewStrategy_testHelper
-{
-public:
-    static RenderViewStrategy2D * getStrategy(ResidualVerificationView & view)
-    {
-        return view.m_strategy.get();
-    }
-};
-
 class RenderViewStrategy_test : public testing::Test
 {
 public:
@@ -56,12 +47,12 @@ TEST_F(RenderViewStrategy_test, CreateCorrectNumberOfPlots)
     renderView->setObservationData(imageData.get());
     renderView->setModelData(imageData.get());
 
-    auto strategy = RenderViewStrategy_testHelper::getStrategy(*renderView);
+    auto & strategy = dynamic_cast<RendererImplementationResidual &>(renderView->implementation()).strategy2D();
 
     // here is the code that is actually been tested here
-    strategy->startProfilePlot();
+    strategy.startProfilePlot();
 
-    strategy->acceptProfilePlot();
+    strategy.acceptProfilePlot();
 
     // one object in two sub-views -> only one plot required
     ASSERT_EQ(DataSetHandler::instance().dataSets().size(), 1);

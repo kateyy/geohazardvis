@@ -1,5 +1,6 @@
 #pragma once
 
+#include <map>
 #include <memory>
 
 #include <gui/data_view/RendererImplementationBase3D.h>
@@ -32,8 +33,17 @@ protected:
 
     ColorMapping * colorMappingForSubView(unsigned int subViewIndex) override;
 
+    void updateForCurrentInteractionStrategy(const QString & strategyName) override;
+    RenderViewStrategy * strategyIfEnabled() const override;
+
+
 private:
-    std::unique_ptr<RenderViewStrategySwitch> m_strategySwitch;
+    void updateStrategies(const QList<DataObject *> & newDataObjects = {});
+    QString mostSuitableStrategy(const QList<DataObject *> & newDataObjects) const;
+
+private:
+    std::map<QString, std::unique_ptr<RenderViewStrategy>> m_strategies;
+    RenderViewStrategy * m_currentStrategy;
     std::unique_ptr<ColorMapping> m_colorMapping;
 
     static bool s_isRegistered;

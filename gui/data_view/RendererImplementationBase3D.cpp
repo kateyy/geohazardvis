@@ -29,7 +29,6 @@
 #include <gui/data_view/AbstractRenderView.h>
 #include <gui/data_view/RenderViewStrategy.h>
 #include <gui/data_view/RenderViewStrategyNull.h>
-#include <gui/data_view/RenderViewStrategySwitch.h>
 #include <gui/rendering_interaction/CameraInteractorStyleSwitch.h>
 #include <gui/rendering_interaction/Highlighter.h>
 #include <gui/rendering_interaction/InteractorStyleImage.h>
@@ -39,7 +38,6 @@
 
 RendererImplementationBase3D::RendererImplementationBase3D(AbstractRenderView & renderView)
     : RendererImplementation(renderView)
-    , m_strategy(nullptr)
     , m_isInitialized(false)
     , m_emptyStrategy(std::make_unique<RenderViewStrategyNull>(*this))
 {
@@ -72,8 +70,7 @@ QList<DataObject *> RendererImplementationBase3D::filterCompatibleObjects(
     const QList<DataObject *> & dataObjects,
     QList<DataObject *> & incompatibleObjects)
 {
-    assert(m_strategy);
-    return m_strategy->filterCompatibleObjects(dataObjects, incompatibleObjects);
+    return strategy().filterCompatibleObjects(dataObjects, incompatibleObjects);
 }
 
 void RendererImplementationBase3D::activate(QVTKWidget & qvtkWidget)
@@ -336,17 +333,6 @@ vtkGridAxes3DActor * RendererImplementationBase3D::axesActor(unsigned int subVie
     return m_viewportSetups[subViewIndex].axesActor;
 }
 
-void RendererImplementationBase3D::setStrategy(RenderViewStrategy * strategy)
-{
-    if (m_strategy)
-        m_strategy->deactivate();
-
-    m_strategy = strategy;
-
-    if (m_strategy)
-        m_strategy->activate();
-}
-
 std::unique_ptr<AbstractVisualizedData> RendererImplementationBase3D::requestVisualization(DataObject & dataObject) const
 {
     return dataObject.createRendered();
@@ -578,8 +564,10 @@ void RendererImplementationBase3D::setupColorMapping(unsigned int subViewIndex, 
 RenderViewStrategy & RendererImplementationBase3D::strategy() const
 {
     assert(m_emptyStrategy);
-    if (m_strategy)
-        return *m_strategy;
+    if (auto s = strategyIfEnabled())
+    {
+        return *s;
+    }
 
     return *m_emptyStrategy;
 }

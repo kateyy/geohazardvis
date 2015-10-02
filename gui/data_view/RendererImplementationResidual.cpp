@@ -1,11 +1,13 @@
 #include "RendererImplementationResidual.h"
 
 #include <algorithm>
+#include <cassert>
 
 #include <vtkRenderer.h>
 
 #include <core/color_mapping/ColorMapping.h>
 #include <gui/data_view/AbstractRenderView.h>
+#include <gui/data_view/RenderViewStrategy2D.h>
 
 
 RendererImplementationResidual::RendererImplementationResidual(AbstractRenderView & renderView)
@@ -28,6 +30,11 @@ void RendererImplementationResidual::activate(QVTKWidget & qvtkWidget)
     if (m_isInitialized)
         return;
 
+    m_strategy = std::make_unique<RenderViewStrategy2D>(*this);
+    m_strategy->activate();
+
+    setSupportedInteractionStrategies({ m_strategy->name() }, m_strategy->name());
+
     auto numberOfSubViews = m_renderView.numberOfSubViews();
 
     for (unsigned i = 0; i < numberOfSubViews; ++i)
@@ -39,6 +46,13 @@ void RendererImplementationResidual::activate(QVTKWidget & qvtkWidget)
     }
 
     m_isInitialized = true;
+}
+
+RenderViewStrategy2D & RendererImplementationResidual::strategy2D()
+{
+    assert(m_strategy);
+
+    return *m_strategy;
 }
 
 ColorMapping * RendererImplementationResidual::colorMappingForSubView(unsigned int subViewIndex)
@@ -58,4 +72,9 @@ unsigned int RendererImplementationResidual::subViewIndexAtPos(const QPoint pixe
 
     return static_cast<unsigned int>(
         std::max(0.0f, std::min(uncheckedIndex, float(m_renderView.numberOfSubViews() - 1u))));
+}
+
+RenderViewStrategy * RendererImplementationResidual::strategyIfEnabled() const
+{
+    return m_strategy.get();
 }

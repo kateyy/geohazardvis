@@ -112,8 +112,6 @@ AbstractVisualizedData * RenderView::addDataObject(DataObject * dataObject)
     if (m_deletedData.remove(dataObject))
         return nullptr;
 
-    assert(dataObject->is3D() == (contentType() == ContentType::Rendered3D));
-
     auto newContent = implementation().requestVisualization(*dataObject);
 
     if (!newContent)

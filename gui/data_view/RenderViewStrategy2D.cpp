@@ -23,7 +23,6 @@
 #include <core/DataSetHandler.h>
 #include <core/color_mapping/ColorMapping.h>
 #include <core/color_mapping/ColorMappingData.h>
-#include <core/data_objects/ImageDataObject.h>
 #include <core/data_objects/ImageProfileData.h>
 #include <core/rendered_data/RenderedData.h>
 #include <gui/DataMapping.h>
@@ -162,32 +161,14 @@ QList<DataObject *> RenderViewStrategy2D::filterCompatibleObjects(const QList<Da
 
     for (DataObject * dataObject : dataObjects)
     {
-        // TODO limit the automatic strategy switch to 2D image data, until there is a gui switch for 2D/3D interaction.
-
-        if (dynamic_cast<ImageDataObject *>(dataObject))
-            compatible << dataObject;
-        else
-            incompatibleObjects << dataObject;
-
-        /*std::unique_ptr<RenderedData> rendered{ dataObject->createRendered() };
+        auto rendered = dataObject->createRendered();
         if (rendered)
             compatible << dataObject;
         else
-            incompatibleObjects << dataObject;*/
+            incompatibleObjects << dataObject;
     }
 
     return compatible;
-}
-
-bool RenderViewStrategy2D::canApplyTo(const QList<RenderedData *> & renderedData)
-{
-    // TODO limit the automatic strategy switch to 2D image data, until there is a gui switch for 2D/3D interaction.
-    for (RenderedData * rendered : renderedData)
-        if (!dynamic_cast<ImageDataObject *>(&rendered->dataObject()))
-            return false;
-
-    // just exclude context data (the profile plots etc), but they don't apply heres
-    return true;
 }
 
 void RenderViewStrategy2D::startProfilePlot()

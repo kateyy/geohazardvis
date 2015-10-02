@@ -36,7 +36,6 @@
 #include <gui/SelectionHandler.h>
 #include <gui/data_view/RendererImplementationResidual.h>
 #include <gui/data_view/RenderViewStrategy2D.h>
-#include <gui/data_view/RenderViewStrategy3D.h>
 
 
 namespace
@@ -74,7 +73,6 @@ ResidualVerificationView::ResidualVerificationView(int index, QWidget * parent, 
     , m_observationData(nullptr)
     , m_modelData(nullptr)
     , m_implementation(nullptr)
-    , m_strategy(nullptr)
     , m_updateWatcher(std::make_unique<QFutureWatcher<void>>())
 {
     connect(m_updateWatcher.get(), &QFutureWatcher<void>::finished, this, &ResidualVerificationView::handleUpdateFinished);
@@ -467,10 +465,6 @@ void ResidualVerificationView::initialize()
     m_implementation = std::make_unique<RendererImplementationResidual>(*this);
     m_implementation->activate(qvtkWidget());
 
-    m_strategy = std::make_unique<RenderViewStrategy2D>(*m_implementation);
-
-    m_implementation->setStrategy(m_strategy.get());
-
     m_cameraSync = std::make_unique<vtkCameraSynchronization>();
     for (unsigned int i = 0; i < numberOfSubViews(); ++i)
         m_cameraSync->add(m_implementation->renderer(i));
@@ -729,7 +723,7 @@ void ResidualVerificationView::updateGuiAfterDataChange()
         validInputData << m_observationData;
     if (m_modelData)
         validInputData << m_modelData;
-    m_strategy->setInputData(validInputData);
+    m_implementation->strategy2D().setInputData(validInputData);
 
     if (!validInputData.isEmpty())
         implementation().resetCamera(true, 0);

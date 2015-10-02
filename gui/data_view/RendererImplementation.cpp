@@ -25,6 +25,30 @@ AbstractRenderView & RendererImplementation::renderView() const
     return m_renderView;
 }
 
+const QStringList & RendererImplementation::supportedInteractionStrategies() const
+{
+    return m_supportedInteractionStrategies;
+}
+
+void RendererImplementation::setInteractionStrategy(const QString & strategyName)
+{
+    if (m_currentInteractionStrategy == strategyName)
+    {
+        return;
+    }
+
+    m_currentInteractionStrategy = strategyName;
+
+    updateForCurrentInteractionStrategy(strategyName);
+
+    emit interactionStrategyChanged(strategyName);
+}
+
+const QString & RendererImplementation::currentInteractionStrategy() const
+{
+    return m_currentInteractionStrategy;
+}
+
 void RendererImplementation::activate(QVTKWidget & /*qvtkWidget*/)
 {
     connect(&m_renderView, &AbstractRenderView::visualizationsChanged, this, &RendererImplementation::onRenderViewVisualizationChanged);
@@ -75,6 +99,24 @@ QList<RendererImplementation::ImplementationConstructor> & RendererImplementatio
 }
 
 void RendererImplementation::onRenderViewVisualizationChanged()
+{
+}
+
+void RendererImplementation::setSupportedInteractionStrategies(const QStringList & strategyNames, const QString & currentStrategy)
+{
+    m_supportedInteractionStrategies = strategyNames;
+    m_currentInteractionStrategy = currentStrategy;
+
+    // explicitly call the updates for the current strategy here
+    // ensure, to first call internal updates, and after that the update signals
+
+    updateForCurrentInteractionStrategy(currentStrategy);
+
+    emit supportedInteractionStrategiesChanged(m_supportedInteractionStrategies);
+    emit interactionStrategyChanged(m_currentInteractionStrategy);
+}
+
+void RendererImplementation::updateForCurrentInteractionStrategy(const QString & /*strategyName*/)
 {
 }
 

@@ -2,9 +2,11 @@
 
 #include <cassert>
 
+#include <core/AbstractVisualizedData.h>
 #include <core/color_mapping/ColorMapping.h>
+#include <core/data_objects/ImageDataObject.h>
+#include <gui/data_view/AbstractRenderView.h>
 #include <gui/data_view/RenderViewStrategy.h>
-#include <gui/data_view/RenderViewStrategySwitch.h>
 
 
 bool RendererImplementation3D::s_isRegistered = RendererImplementation::registerImplementation<RendererImplementation3D>();
@@ -12,10 +14,17 @@ bool RendererImplementation3D::s_isRegistered = RendererImplementation::register
 
 RendererImplementation3D::RendererImplementation3D(AbstractRenderView & renderView)
     : RendererImplementationBase3D(renderView)
+    , m_currentStrategy(nullptr)
 {
 }
 
-RendererImplementation3D::~RendererImplementation3D() = default;
+RendererImplementation3D::~RendererImplementation3D()
+{
+    if (m_currentStrategy)
+    {
+        m_currentStrategy->deactivate();
+    }
+}
 
 QString RendererImplementation3D::name() const
 {
@@ -26,8 +35,7 @@ QList<DataObject *> RendererImplementation3D::filterCompatibleObjects(
     const QList<DataObject *> & dataObjects,
     QList<DataObject *> & incompatibleObjects)
 {
-    if (!m_strategy)
-        emit resetStrategy(dataObjects);
+    updateStrategies(dataObjects);
 
     return strategy().filterCompatibleObjects(dataObjects, incompatibleObjects);
 }
@@ -35,25 +43,18 @@ QList<DataObject *> RendererImplementation3D::filterCompatibleObjects(
 void RendererImplementation3D::activate(QVTKWidget & qvtkWidget)
 {
     RendererImplementationBase3D::activate(qvtkWidget);
-
-    if (!m_strategySwitch)
-        m_strategySwitch = std::make_unique<RenderViewStrategySwitch>(*this);
 }
 
 void RendererImplementation3D::onRemoveContent(AbstractVisualizedData * content, unsigned int subViewIndex)
 {
     RendererImplementationBase3D::onRemoveContent(content, subViewIndex);
 
-    // reset strategy if we are empty
-    if (!viewportSetup(subViewIndex).dataBounds.IsValid())
-        setStrategy(nullptr);
+    updateStrategies();
 }
 
-void RendererImplementation3D::onDataVisibilityChanged(AbstractVisualizedData * /*content*/, unsigned int subViewIndex)
+void RendererImplementation3D::onDataVisibilityChanged(AbstractVisualizedData * content, unsigned int subViewIndex)
 {
-    // reset strategy if we are empty
-    if (!viewportSetup(subViewIndex).dataBounds.IsValid())
-        setStrategy(nullptr);
+    RendererImplementationBase3D::onDataVisibilityChanged(content, subViewIndex);
 }
 
 ColorMapping * RendererImplementation3D::colorMappingForSubView(unsigned int /*subViewIndex*/)
@@ -63,4 +64,86 @@ ColorMapping * RendererImplementation3D::colorMappingForSubView(unsigned int /*s
         m_colorMapping = std::make_unique<ColorMapping>();
     }
     return m_colorMapping.get();
+}
+
+void RendererImplementation3D::updateForCurrentInteractionStrategy(const QString & strategyName)
+{
+    auto it = m_strategies.find(strategyName);
+    RenderViewStrategy * newStrategy = it == m_strategies.end()
+        ? nullptr
+        : it->second.get();
+
+    if (newStrategy == m_currentStrategy)
+    {
+        return;
+    }
+
+    if (m_currentStrategy)
+    {
+        m_currentStrategy->deactivate();
+    }
+
+    m_currentStrategy = newStrategy;
+
+    if (m_currentStrategy)
+    {
+        m_currentStrategy->activate();
+    }
+}
+
+RenderViewStrategy * RendererImplementation3D::strategyIfEnabled() const
+{
+    return m_currentStrategy;
+}
+
+void RendererImplementation3D::updateStrategies(const QList<DataObject *> & newDataObjects)
+{
+    if (m_strategies.empty())
+    {
+        QStringList names;
+
+        for (const RenderViewStrategy::StategyConstructor & constructor : RenderViewStrategy::constructors())
+        {
+            auto instance = constructor(*this);
+
+            auto && name = instance->name();
+            assert(m_strategies.find(name) == m_strategies.end());
+            m_strategies.emplace(name, std::move(instance));
+            names << name;
+        }
+    }
+
+    bool wasEmpty = m_renderView.visualizations().isEmpty();
+
+    if (wasEmpty)
+    {
+        // reset the strategy if we were empty
+        setInteractionStrategy(mostSuitableStrategy(newDataObjects));
+    }
+}
+
+QString RendererImplementation3D::mostSuitableStrategy(const QList<DataObject *> & newDataObjects) const
+{
+    auto && dataObjects = m_renderView.dataObjects() + newDataObjects;
+
+    // use 2D interaction by default, if there is a 2D image in our view
+    // viewing 2D images in a 3D terrain view is probably not what we want in most cases
+
+    bool contains2D = false;
+
+    for (auto && data : dataObjects)
+    {
+        if (!dynamic_cast<ImageDataObject *>(data))
+            continue;
+
+        contains2D = true;
+        break;
+    }
+
+    if (contains2D)
+    {
+        return "2D image";
+    }
+
+    return "3D terrain";
 }

@@ -83,8 +83,6 @@ public:
 
     vtkGridAxes3DActor * axesActor(unsigned int subViewIndex);
 
-    void setStrategy(RenderViewStrategy * strategy);
-
     static vtkSmartPointer<vtkGridAxes3DActor> createAxes();
 
 protected:
@@ -112,7 +110,10 @@ protected:
     virtual void onDataVisibilityChanged(AbstractVisualizedData * content, unsigned int subViewIndex);
     void onRenderViewVisualizationChanged() override;
 
+    /** @return current strategy or, if not applicable, a null implementation */
     RenderViewStrategy & strategy() const;
+    /** @return current strategy or, if not applicable, nullptr */
+    virtual RenderViewStrategy * strategyIfEnabled() const = 0;
     ViewportSetup & viewportSetup(unsigned int subViewIndex = 0);
 
     /** Provide a ColorMapping instance to be used with the specified sub-view.
@@ -130,14 +131,11 @@ private:
     void removeFromBounds(RenderedData * renderedData, unsigned int subViewIndex);
     void setupColorMapping(unsigned int subViewIndex, ViewportSetup & viewportSetup);
 
-private slots:
+private:
     /** scan rendered data for changed attribute props (e.g., vectors) */
     void fetchViewProps(RenderedData * renderedData, unsigned int subViewIndex);
 
     void dataVisibilityChanged(RenderedData * renderedData, unsigned int subViewIndex);
-
-protected:
-    RenderViewStrategy * m_strategy;
 
 private:
     bool m_isInitialized;

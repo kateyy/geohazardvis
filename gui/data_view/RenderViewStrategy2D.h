@@ -39,7 +39,6 @@ public:
     void resetCamera() override;
 
     QList<DataObject *> filterCompatibleObjects(const QList<DataObject *> & dataObjects, QList<DataObject *> & incompatibleObjects) const override;
-    bool canApplyTo(const QList<RenderedData *> & renderedData) override;
 
     /** Start or refresh the current profile plot, open a new preview renderer if required. */
     void startProfilePlot();

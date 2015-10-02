@@ -36,8 +36,6 @@ public:
         @param incompatibleObjects Fills this list with discarded objects.
         @return compatible objects that we will render. */
     virtual QList<DataObject *> filterCompatibleObjects(const QList<DataObject *> & dataObjects, QList<DataObject *> & incompatibleObjects) const = 0;
-    
-    virtual bool canApplyTo(const QList<RenderedData *> & renderedData) = 0;
 
     using StategyConstructor = std::function<std::unique_ptr<RenderViewStrategy> (RendererImplementationBase3D & context)>;
     static const std::vector<StategyConstructor> & constructors();

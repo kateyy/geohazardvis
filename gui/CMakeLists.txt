@@ -16,8 +16,6 @@ set ( SOURCES
     data_view/AbstractDataView.cpp
     data_view/AbstractRenderView.h
     data_view/AbstractRenderView.cpp
-    data_view/RenderViewStrategySwitch.h
-    data_view/RenderViewStrategySwitch.cpp
     data_view/RenderView.h
     data_view/RenderView.cpp
     data_view/RendererImplementation.h

@@ -26,8 +26,3 @@ QList<DataObject *> RenderViewStrategyNull::filterCompatibleObjects(const QList<
 
     return{};
 }
-
-bool RenderViewStrategyNull::canApplyTo(const QList<RenderedData *> & /*renderedData*/)
-{
-    return false;
-}

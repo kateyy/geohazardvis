@@ -43,6 +43,10 @@ public:
         @return compatible objects that we will render. */
     virtual QList<DataObject *> filterCompatibleObjects(const QList<DataObject *> & dataObjects, QList<DataObject *> & incompatibleObjects) = 0;
 
+    const QStringList & supportedInteractionStrategies() const;
+    void setInteractionStrategy(const QString & strategyName);
+    const QString & currentInteractionStrategy() const;
+
     virtual void activate(QVTKWidget & qvtkWidget);
     virtual void deactivate(QVTKWidget & qvtkWidget);
 
@@ -81,6 +85,12 @@ public:
     using ImplementationConstructor = std::function<std::unique_ptr<RendererImplementation>(AbstractRenderView & view)>;
     static const QList<ImplementationConstructor> & constructors();
 
+signals:
+    void dataSelectionChanged(AbstractVisualizedData * selectedData);
+
+    void interactionStrategyChanged(const QString & strategyName);
+    void supportedInteractionStrategiesChanged(const QStringList & stategyNames);
+
 protected:
 
     /** Override to add visual contents to the view.
@@ -90,13 +100,18 @@ protected:
     virtual void onRemoveContent(AbstractVisualizedData * content, unsigned int subViewIndex) = 0;
     virtual void onRenderViewVisualizationChanged();
 
+    /** Call in sub-classes, to update the list of supported interaction strategies
+    * @param strategyName Names of supported strategies. These names must be unique. 
+    * @param currentStrategy Set the strategy that will be used now. Must be contained in strategyNames. */
+    void setSupportedInteractionStrategies(const QStringList & strategyNames, const QString & currentStrategy);
+    /** Subclasses should implement this, if they support multiple interaction styles.
+    * Implement the actual switch to the new strategy here. */
+    virtual void updateForCurrentInteractionStrategy(const QString & strategyName);
+
     void addConnectionForContent(AbstractVisualizedData * content,
         const QMetaObject::Connection & connection);
 
     template <typename ImplType> static bool registerImplementation();
-
-signals:
-    void dataSelectionChanged(AbstractVisualizedData * selectedData);
 
 protected:
     AbstractRenderView & m_renderView;
@@ -105,6 +120,9 @@ private:
     static QList<ImplementationConstructor> & s_constructors();
 
     QMap<AbstractVisualizedData *, QList<QMetaObject::Connection>> m_visConnections;
+
+    QStringList m_supportedInteractionStrategies;
+    QString m_currentInteractionStrategy;
 };
 
 template <typename ImplType>

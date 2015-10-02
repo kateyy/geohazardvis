@@ -143,7 +143,6 @@ private:
     std::unique_ptr<DataObject> m_residual;
 
     std::unique_ptr<RendererImplementationResidual> m_implementation;
-    std::unique_ptr<RenderViewStrategy2D> m_strategy;
     std::unique_ptr<vtkCameraSynchronization> m_cameraSync;
 
     std::array<std::unique_ptr<AbstractVisualizedData>, numberOfViews> m_visualizations;
@@ -152,6 +151,4 @@ private:
 
     std::unique_ptr<QFutureWatcher<void>> m_updateWatcher;
     std::unique_ptr<DataObject> m_newResidual;
-
-    friend class RenderViewStrategy_testHelper;
 };

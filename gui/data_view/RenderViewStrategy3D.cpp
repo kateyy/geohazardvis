@@ -54,15 +54,6 @@ QList<DataObject *> RenderViewStrategy3D::filterCompatibleObjects(const QList<Da
     return compatible;
 }
 
-bool RenderViewStrategy3D::canApplyTo(const QList<RenderedData *> & renderedData)
-{
-    for (RenderedData * rendered : renderedData)
-        if (!rendered->dataObject().is3D())
-            return false;
-
-    return true;
-}
-
 void RenderViewStrategy3D::updateImageWidgets()
 {
     for (RenderedData * r : m_context.renderedData())
