@@ -53,8 +53,7 @@ RendererConfigWidget::RendererConfigWidget(QWidget * parent)
     m_ui->propertyBrowser->addPainterPlugin<ColorEditorRGB>();
     m_ui->propertyBrowser->setAlwaysExpandGroups(true);
 
-    connect(m_ui->relatedRenderer, static_cast<void(QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
-        this, static_cast<void(RendererConfigWidget::*)(int)>(&RendererConfigWidget::setCurrentRenderView));
+    updateTitle();
 }
 
 RendererConfigWidget::~RendererConfigWidget()
@@ -64,8 +63,6 @@ RendererConfigWidget::~RendererConfigWidget()
 
 void RendererConfigWidget::clear()
 {
-    m_ui->relatedRenderer->clear();
-
     m_currentRenderView = nullptr;
     for (auto it = m_cameraObserverTags.begin(); it != m_cameraObserverTags.end(); ++it)
     {
@@ -73,61 +70,44 @@ void RendererConfigWidget::clear()
     }
     m_cameraObserverTags.clear();
 
-    setCurrentRenderView(-1);
-}
-
-void RendererConfigWidget::setRenderViews(const QList<AbstractRenderView *> & renderViews)
-{
-    clear();
-
-    for (AbstractRenderView * renderView : renderViews)
-    {
-        m_ui->relatedRenderer->addItem(
-            renderView->friendlyName(),
-            reinterpret_cast<qulonglong>(renderView));
-
-        connect(renderView, &AbstractRenderView::windowTitleChanged, this, &RendererConfigWidget::updateRenderViewTitle);
-    }
-
-    if (renderViews.isEmpty())
-        return;
+    setCurrentRenderView(nullptr);
 }
 
 void RendererConfigWidget::setCurrentRenderView(AbstractRenderView * renderView)
-{
-    if (renderView)
-        m_ui->relatedRenderer->setCurrentText(renderView->friendlyName());
-}
-
-void RendererConfigWidget::setCurrentRenderView(int index)
 {
     m_ui->propertyBrowser->setRoot(nullptr);
     delete m_propertyRoot;
     m_propertyRoot = nullptr;
 
-    if (index < 0)
-        return;
-
     auto lastRenderView = m_currentRenderView;
-    m_currentRenderView = reinterpret_cast<AbstractRenderView *>(
-        m_ui->relatedRenderer->itemData(index, Qt::UserRole).toULongLong());
-    assert(m_currentRenderView);
+    m_currentRenderView = renderView;
 
+    if (lastRenderView)
+    {
+        disconnect(lastRenderView, &AbstractRenderView::windowTitleChanged, this, &RendererConfigWidget::updateTitle);
+    }
+
+    if (!m_currentRenderView)
+    {
+        return;
+    }
+
+    connect(m_currentRenderView, &AbstractRenderView::windowTitleChanged, this, &RendererConfigWidget::updateTitle);
+    
     m_propertyRoot = createPropertyGroup(m_currentRenderView);
     m_ui->propertyBrowser->setRoot(m_propertyRoot);
-    m_ui->propertyBrowser->setColumnWidth(0, 135);
+    m_ui->propertyBrowser->resizeColumnToContents(0);
 
+    updateTitle();
 
-    auto lastSingleView = dynamic_cast<AbstractRenderView *>(lastRenderView);
-    auto currentSingleView = dynamic_cast<AbstractRenderView *>(m_currentRenderView);
-    RendererImplementationBase3D * impl3D;
-    if (lastSingleView && (impl3D = dynamic_cast<RendererImplementationBase3D *>(&lastSingleView->implementation())))
+    RendererImplementationBase3D * impl3D = nullptr;
+    if (lastRenderView && (impl3D = dynamic_cast<RendererImplementationBase3D *>(&lastRenderView->implementation())))
     {
         auto camera = impl3D->camera(0);  // assuming synchronized cameras
         auto tag = m_cameraObserverTags.take(camera);
         camera->RemoveObserver(tag);
     }
-    if (currentSingleView && (impl3D = dynamic_cast<RendererImplementationBase3D *>(&currentSingleView->implementation())))
+    if (m_currentRenderView && (impl3D = dynamic_cast<RendererImplementationBase3D *>(&m_currentRenderView->implementation())))
     {
         auto camera = impl3D->camera(0);  // assuming synchronized cameras
         auto tag = camera->AddObserver(vtkCommand::ModifiedEvent, this, &RendererConfigWidget::readCameraStats);
@@ -135,21 +115,17 @@ void RendererConfigWidget::setCurrentRenderView(int index)
     }
 }
 
-void RendererConfigWidget::updateRenderViewTitle(const QString & newTitle)
+void RendererConfigWidget::updateTitle()
 {
-    auto renderView = dynamic_cast<AbstractRenderView *>(sender());
-    assert(renderView);
-    qulonglong ptr = reinterpret_cast<qulonglong>(renderView);
+    QString title;
+    if (m_currentRenderView)
+        title = m_currentRenderView->friendlyName();
+    else
+        title = "(No Render View selected)";
 
-    for (int i = 0; i < m_ui->relatedRenderer->count(); ++i)
-    {
-        if (m_ui->relatedRenderer->itemData(i, Qt::UserRole).toULongLong() == ptr)
-        {
-            m_ui->relatedRenderer->setItemText(i, newTitle);
-            setCurrentRenderView(i);
-            return;
-        }
-    }
+    title = "<b>" + title + "</b>";
+
+    m_ui->relatedRenderView->setText(title);
 }
 
 PropertyGroup * RendererConfigWidget::createPropertyGroup(AbstractRenderView * renderView)

@@ -30,14 +30,12 @@ public:
     void clear();
 
 public:
-    void setRenderViews(const QList<AbstractRenderView *> & renderViews);
     void setCurrentRenderView(AbstractRenderView * renderView);
 
 private:
     void readCameraStats(vtkObject * caller, unsigned long, void *);
 
-    void setCurrentRenderView(int index);
-    void updateRenderViewTitle(const QString & newTitle);
+    void updateTitle();
 
     reflectionzeug::PropertyGroup * createPropertyGroup(AbstractRenderView * renderView);
     reflectionzeug::PropertyGroup * createPropertyGroupRenderer(

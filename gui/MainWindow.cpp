@@ -91,7 +91,6 @@ MainWindow::MainWindow()
     connect(m_dataMapping.get(), &DataMapping::focusedRenderViewChanged, m_vectorMappingChooser, &GlyphMappingChooser::setCurrentRenderView);
     connect(m_dataMapping.get(), &DataMapping::focusedRenderViewChanged, m_renderConfigWidget, &RenderConfigWidget::setCurrentRenderView);
 
-    connect(m_dataMapping.get(), &DataMapping::renderViewsChanged, m_rendererConfigWidget, &RendererConfigWidget::setRenderViews);
     connect(m_dataMapping.get(), &DataMapping::focusedRenderViewChanged,
         m_rendererConfigWidget, static_cast<void(RendererConfigWidget::*)(AbstractRenderView*)>(&RendererConfigWidget::setCurrentRenderView));
 

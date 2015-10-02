@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>221</width>
-    <height>170</height>
+    <width>327</width>
+    <height>384</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -16,7 +16,11 @@
   <widget class="QWidget" name="content">
    <layout class="QVBoxLayout" name="mainLayout">
     <item>
-     <widget class="QComboBox" name="relatedRenderer"/>
+     <widget class="QLabel" name="relatedRenderView">
+      <property name="text">
+       <string>&lt;b&gt;(No Render View selected)&lt;/b&gt;</string>
+      </property>
+     </widget>
     </item>
     <item>
      <widget class="propertyguizeug::PropertyBrowser" name="propertyBrowser"/>

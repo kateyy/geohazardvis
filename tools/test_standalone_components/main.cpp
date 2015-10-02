@@ -42,7 +42,6 @@ int main(int argc, char **argv)
     renderConfig.show();
 
     RendererConfigWidget rendererConfig;
-    rendererConfig.setRenderViews({ &renderView });
     rendererConfig.setCurrentRenderView(&renderView);
     rendererConfig.show();
 
