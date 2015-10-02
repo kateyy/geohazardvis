@@ -234,7 +234,6 @@ void RenderViewStrategy2D::startProfilePlot()
             if (createdPlots.contains(currentPlotCombination))
                 continue;
 
-            createdPlots << currentPlotCombination;
             // TODO this should be propagated by the color mapping
             // this here is a dangerous assumption
             IndexType location = data->dataTypeName() == "polygonal mesh"
@@ -250,6 +249,8 @@ void RenderViewStrategy2D::startProfilePlot()
 
             if (!profile->isValid())
                 continue;
+
+            createdPlots << currentPlotCombination;
 
             m_previewProfiles.push_back(std::move(profile));
         }
