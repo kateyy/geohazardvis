@@ -26,6 +26,8 @@ AbstractVisualizedData::AbstractVisualizedData(ContentType contentType, DataObje
     connect(&dataObject, &DataObject::dataChanged, this, &AbstractVisualizedData::geometryChanged);
 }
 
+AbstractVisualizedData::~AbstractVisualizedData() = default;
+
 ContentType AbstractVisualizedData::contentType() const
 {
     return m_contentType;

@@ -151,6 +151,11 @@ void RendererImplementationBase3D::onAddContent(AbstractVisualizedData * content
 
 void RendererImplementationBase3D::onRemoveContent(AbstractVisualizedData * content, unsigned int subViewIndex)
 {
+    if (m_pickerHighlighter->highlighter().targetVisualization() == content)
+    {
+        m_pickerHighlighter->highlighter().clear();
+    }
+
     assert(dynamic_cast<RenderedData *>(content));
     RenderedData * renderedData = static_cast<RenderedData *>(content);
 
