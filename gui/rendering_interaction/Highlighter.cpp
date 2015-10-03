@@ -85,7 +85,7 @@ void Highlighter::setTargetInternal(AbstractVisualizedData * vis, vtkIdType visO
 
 AbstractVisualizedData * Highlighter::targetVisualization() const
 {
-    return nullptr;
+    return m_visualizedData;
 }
 
 vtkIdTypeArray * Highlighter::targetIndices()
