@@ -37,6 +37,11 @@ Highlighter::~Highlighter() = default;
 
 void Highlighter::setRenderer(vtkRenderer * renderer)
 {
+    if (renderer == m_renderer)
+    {
+        return;
+    }
+
     clear();
 
     m_renderer = renderer;
