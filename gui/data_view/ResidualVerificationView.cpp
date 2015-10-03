@@ -65,7 +65,6 @@ vtkSmartPointer<vtkDataArray> projectToLineOfSight(vtkDataArray & vectors, vtkVe
 
 ResidualVerificationView::ResidualVerificationView(int index, QWidget * parent, Qt::WindowFlags flags)
     : AbstractRenderView(index, parent, flags)
-    , m_qvtkMain(nullptr)
     , m_observationCombo(nullptr)
     , m_modelCombo(nullptr)
     , m_inSARLineOfSight(0, 0, 1)
@@ -80,16 +79,6 @@ ResidualVerificationView::ResidualVerificationView(int index, QWidget * parent, 
 {
     connect(m_updateWatcher.get(), &QFutureWatcher<void>::finished, this, &ResidualVerificationView::handleUpdateFinished);
     m_attributeNamesLocations[residualIndex].first = "Residual"; // TODO add GUI option?
-
-    auto layout = new QBoxLayout(QBoxLayout::Direction::TopToBottom);
-    layout->setMargin(0);
-    layout->setSpacing(0);
-
-    m_qvtkMain = new QVTKWidget(this);
-    m_qvtkMain->setMinimumSize(300, 300);
-    layout->addWidget(m_qvtkMain);
-
-    setLayout(layout);
 
     auto interpolationSwitch = new QCheckBox("Interpolate Model to Observation");
     interpolationSwitch->setChecked(m_interpolationMode == InterpolationMode::observationToModel);
@@ -375,18 +364,6 @@ unsigned int ResidualVerificationView::numberOfSubViews() const
     return numberOfViews;
 }
 
-vtkRenderWindow * ResidualVerificationView::renderWindow()
-{
-    assert(m_qvtkMain);
-    return m_qvtkMain->GetRenderWindow();
-}
-
-const vtkRenderWindow * ResidualVerificationView::renderWindow() const
-{
-    assert(m_qvtkMain);
-    return m_qvtkMain->GetRenderWindow();
-}
-
 RendererImplementation & ResidualVerificationView::implementation() const
 {
     assert(m_implementation);
@@ -395,14 +372,9 @@ RendererImplementation & ResidualVerificationView::implementation() const
 
 void ResidualVerificationView::showEvent(QShowEvent * event)
 {
-    AbstractDataView::showEvent(event);
+    AbstractRenderView::showEvent(event);
 
     initialize();
-}
-
-QWidget * ResidualVerificationView::contentWidget()
-{
-    return m_qvtkMain;
 }
 
 void ResidualVerificationView::showDataObjectsImpl(const QList<DataObject *> & dataObjects,
@@ -493,7 +465,7 @@ void ResidualVerificationView::initialize()
         return;
 
     m_implementation = std::make_unique<RendererImplementationResidual>(*this);
-    m_implementation->activate(m_qvtkMain);
+    m_implementation->activate(qvtkWidget());
 
     m_strategy = std::make_unique<RenderViewStrategy2D>(*m_implementation);
 

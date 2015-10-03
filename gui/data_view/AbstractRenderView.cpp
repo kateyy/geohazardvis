@@ -3,17 +3,32 @@
 #include <cassert>
 
 #include <QDebug>
+#include <QLayout>
 #include <QMouseEvent>
+
+#include <QVTKWidget.h>
 
 #include <gui/data_view/RendererImplementation.h>
 
 
 AbstractRenderView::AbstractRenderView(int index, QWidget * parent, Qt::WindowFlags flags)
     : AbstractDataView(index, parent, flags)
-    , m_isInitialized(false)
+    , m_qvtkWidget(nullptr)
     , m_axesEnabled(true)
     , m_activeSubViewIndex(0u)
 {
+    auto layout = new QBoxLayout(QBoxLayout::Direction::TopToBottom);
+    layout->setMargin(0);
+    layout->setSpacing(0);
+
+    m_qvtkWidget = new QVTKWidget();
+    m_qvtkWidget->setMinimumSize(300, 300);
+
+    layout->addWidget(m_qvtkWidget);
+
+    setLayout(layout);
+
+    m_qvtkWidget->installEventFilter(this);
 }
 
 bool AbstractRenderView::isTable() const
@@ -108,6 +123,17 @@ void AbstractRenderView::setActiveSubView(unsigned int subViewIndex)
     emit activeSubViewChanged(m_activeSubViewIndex);
 }
 
+vtkRenderWindow * AbstractRenderView::renderWindow()
+{
+    return qvtkWidget().GetRenderWindow();
+}
+
+const vtkRenderWindow * AbstractRenderView::renderWindow() const
+{
+    assert(m_qvtkWidget);
+    return m_qvtkWidget->GetRenderWindow();
+}
+
 void AbstractRenderView::setEnableAxes(bool enabled)
 {
     if (m_axesEnabled == enabled)
@@ -138,6 +164,18 @@ QString AbstractRenderView::infoText() const
     return toolTip();
 }
 
+QWidget * AbstractRenderView::contentWidget()
+{
+    assert(m_qvtkWidget);
+    return m_qvtkWidget;
+}
+
+QVTKWidget & AbstractRenderView::qvtkWidget()
+{
+    assert(m_qvtkWidget);
+    return *m_qvtkWidget;
+}
+
 bool AbstractRenderView::eventFilter(QObject * watched, QEvent * event)
 {
     if (event->type() != QEvent::MouseButtonPress || watched != contentWidget())
@@ -147,16 +185,6 @@ bool AbstractRenderView::eventFilter(QObject * watched, QEvent * event)
     setActiveSubView(implementation().subViewIndexAtPos(mouseEvent->pos()));
 
     return AbstractDataView::eventFilter(watched, event);
-}
-
-void AbstractRenderView::showEvent(QShowEvent * /*event*/)
-{
-    if (m_isInitialized)
-        return;
-
-    // allow to receive mouse events
-    contentWidget()->installEventFilter(this);
-    m_isInitialized = true;
 }
 
 void AbstractRenderView::selectionChangedEvent(DataObject * dataObject, vtkIdTypeArray * selection, IndexType indexType)

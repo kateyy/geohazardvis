@@ -70,15 +70,10 @@ public:
 
     unsigned int numberOfSubViews() const override;
 
-    vtkRenderWindow * renderWindow() override;
-    const vtkRenderWindow * renderWindow() const override;
-
     RendererImplementation & implementation() const override;
 
 protected:
     void showEvent(QShowEvent * event) override;
-
-    QWidget * contentWidget() override;
 
     void showDataObjectsImpl(const QList<DataObject *> & dataObjects,
         QList<DataObject *> & incompatibleObjects,
@@ -133,7 +128,6 @@ private:
     static std::pair<QString, bool> findDataSetAttributeName(vtkDataSet & dataSet, unsigned int inputType);
 
 private:
-    QVTKWidget * m_qvtkMain;
     QComboBox * m_observationCombo;
     QComboBox * m_modelCombo;
 

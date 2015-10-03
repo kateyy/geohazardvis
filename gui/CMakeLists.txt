@@ -96,7 +96,6 @@ set ( SOURCES
 set ( UIs
     MainWindow.ui
 
-    data_view/RenderView.ui
     data_view/TableView.ui
 
     widgets/CanvasExporterWidget.ui

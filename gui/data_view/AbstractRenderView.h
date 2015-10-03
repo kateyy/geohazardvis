@@ -6,6 +6,7 @@
 
 
 class vtkRenderWindow;
+class QVTKWidget;
 
 class AbstractVisualizedData;
 enum class ContentType;
@@ -60,8 +61,8 @@ public:
     unsigned int activeSubViewIndex() const;
     void setActiveSubView(unsigned int subViewIndex);
 
-    virtual vtkRenderWindow * renderWindow() = 0;
-    virtual const vtkRenderWindow * renderWindow() const = 0;
+    vtkRenderWindow * renderWindow();
+    const vtkRenderWindow * renderWindow() const;
 
     virtual RendererImplementation & implementation() const = 0;
 
@@ -88,8 +89,10 @@ signals:
     void beforeDeleteVisualization(AbstractVisualizedData * content);
 
 protected:
+    QWidget * contentWidget() override;
+    QVTKWidget & qvtkWidget();
+
     bool eventFilter(QObject * watched, QEvent * event) override;
-    void showEvent(QShowEvent * event) override;
 
     void selectionChangedEvent(DataObject * dataObject, vtkIdTypeArray * selection, IndexType indexType) override;
 
@@ -105,7 +108,7 @@ protected:
     virtual void axesEnabledChangedEvent(bool enabled) = 0;
 
 private:
-    bool m_isInitialized;
+    QVTKWidget * m_qvtkWidget;
 
     bool m_axesEnabled;
 

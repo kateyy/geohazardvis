@@ -41,8 +41,8 @@ public:
         @return compatible objects that we will render. */
     virtual QList<DataObject *> filterCompatibleObjects(const QList<DataObject *> & dataObjects, QList<DataObject *> & incompatibleObjects) = 0;
 
-    virtual void activate(QVTKWidget * qvtkWidget);
-    virtual void deactivate(QVTKWidget * qvtkWidget);
+    virtual void activate(QVTKWidget & qvtkWidget);
+    virtual void deactivate(QVTKWidget & qvtkWidget);
 
     virtual void render() = 0;
 

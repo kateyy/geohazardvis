@@ -22,12 +22,9 @@ RenderView::RenderView(
     int index,
     QWidget * parent, Qt::WindowFlags flags)
     : AbstractRenderView(index, parent, flags)
-    , m_ui(std::make_unique<Ui_RenderView>())
     , m_implementationSwitch(std::make_unique<RendererImplementationSwitch>(*this))
     , m_closingRequested(false)
 {
-    m_ui->setupUi(this);
-
     updateTitle();
 
     SelectionHandler::instance().addRenderView(this);
@@ -77,11 +74,6 @@ void RenderView::closeEvent(QCloseEvent * event)
     AbstractRenderView::closeEvent(event);
 }
 
-QWidget * RenderView::contentWidget()
-{
-    return m_ui->qvtkMain;
-}
-
 void RenderView::axesEnabledChangedEvent(bool enabled)
 {
     implementation().setAxesVisibility(enabled && !m_contents.empty());
@@ -89,7 +81,7 @@ void RenderView::axesEnabledChangedEvent(bool enabled)
 
 void RenderView::updateImplementation(const QList<DataObject *> & contents)
 {
-    implementation().deactivate(m_ui->qvtkMain);
+    implementation().deactivate(qvtkWidget());
 
     disconnect(&implementation(), &RendererImplementation::dataSelectionChanged,
         this, &RenderView::updateGuiForSelectedData);
@@ -100,7 +92,7 @@ void RenderView::updateImplementation(const QList<DataObject *> & contents)
 
     m_implementationSwitch->findSuitableImplementation(contents);
 
-    implementation().activate(m_ui->qvtkMain);
+    implementation().activate(qvtkWidget());
 
     connect(&implementation(), &RendererImplementation::dataSelectionChanged,
         this, &RenderView::updateGuiForSelectedData);
@@ -381,16 +373,6 @@ int RenderView::subViewContaining(const AbstractVisualizedData & visualizedData)
 RendererImplementation & RenderView::implementation() const
 {
     return m_implementationSwitch->currentImplementation();
-}
-
-vtkRenderWindow * RenderView::renderWindow()
-{
-    return m_ui->qvtkMain->GetRenderWindow();
-}
-
-const vtkRenderWindow * RenderView::renderWindow() const
-{
-    return m_ui->qvtkMain->GetRenderWindow();
 }
 
 void RenderView::updateGuiForSelectedData(AbstractVisualizedData * renderedData)

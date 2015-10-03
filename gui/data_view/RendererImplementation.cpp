@@ -25,12 +25,12 @@ AbstractRenderView & RendererImplementation::renderView() const
     return m_renderView;
 }
 
-void RendererImplementation::activate(QVTKWidget * /*qvtkWidget*/)
+void RendererImplementation::activate(QVTKWidget & /*qvtkWidget*/)
 {
     connect(&m_renderView, &AbstractRenderView::visualizationsChanged, this, &RendererImplementation::onRenderViewVisualizationChanged);
 }
 
-void RendererImplementation::deactivate(QVTKWidget * /*qvtkWidget*/)
+void RendererImplementation::deactivate(QVTKWidget & /*qvtkWidget*/)
 {
     disconnect(&m_renderView, &AbstractRenderView::visualizationsChanged, this, &RendererImplementation::onRenderViewVisualizationChanged);
 

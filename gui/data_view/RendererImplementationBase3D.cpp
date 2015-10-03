@@ -76,28 +76,28 @@ QList<DataObject *> RendererImplementationBase3D::filterCompatibleObjects(
     return m_strategy->filterCompatibleObjects(dataObjects, incompatibleObjects);
 }
 
-void RendererImplementationBase3D::activate(QVTKWidget * qvtkWidget)
+void RendererImplementationBase3D::activate(QVTKWidget & qvtkWidget)
 {
     RendererImplementation::activate(qvtkWidget);
 
     initialize();
 
     // make sure to reuse the existing render window interactor
-    m_renderWindow->SetInteractor(qvtkWidget->GetInteractor());
+    m_renderWindow->SetInteractor(qvtkWidget.GetInteractor());
     // pass my render window to the qvtkWidget
-    qvtkWidget->SetRenderWindow(m_renderWindow);
+    qvtkWidget.SetRenderWindow(m_renderWindow);
 
     m_renderWindow->GetInteractor()->SetInteractorStyle(m_interactorStyle);
 
     assignInteractor();
 }
 
-void RendererImplementationBase3D::deactivate(QVTKWidget * qvtkWidget)
+void RendererImplementationBase3D::deactivate(QVTKWidget & qvtkWidget)
 {
     RendererImplementation::deactivate(qvtkWidget);
 
     // this is our render window, so remove it from the widget
-    qvtkWidget->SetRenderWindow(nullptr);
+    qvtkWidget.SetRenderWindow(nullptr);
     // remove out interactor style from the widget's interactor
     m_renderWindow->GetInteractor()->SetInteractorStyle(nullptr);
     // the interactor belongs to the widget, we should reference it anymore

@@ -13,7 +13,7 @@ public:
 
     QString name() const override;
 
-    void activate(QVTKWidget * qvtkWidget) override;
+    void activate(QVTKWidget & qvtkWidget) override;
 
 protected:
     ColorMapping * colorMappingForSubView(unsigned int subViewIndex) override;

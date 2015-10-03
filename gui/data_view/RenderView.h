@@ -10,7 +10,6 @@
 #include <gui/data_view/AbstractRenderView.h>
 
 
-class Ui_RenderView;
 class RendererImplementationSwitch;
 
 
@@ -32,16 +31,11 @@ public:
     AbstractVisualizedData * visualizationFor(DataObject * dataObject, int subViewIndex = -1) const override;
     int subViewContaining(const AbstractVisualizedData & visualizedData) const override;
 
-    vtkRenderWindow * renderWindow() override;
-    const vtkRenderWindow * renderWindow() const override;
-
     // remove from public interface as soon as possible
     RendererImplementation & implementation() const override;
 
 protected:
     void closeEvent(QCloseEvent * event) override;
-
-    QWidget * contentWidget() override;
 
     void showDataObjectsImpl(const QList<DataObject *> & dataObjects,
         QList<DataObject *> & incompatibleObjects,
@@ -73,7 +67,6 @@ private:
     void updateGuiForRemovedData();
 
 private:
-    std::unique_ptr<Ui_RenderView> m_ui;
     std::unique_ptr<RendererImplementationSwitch> m_implementationSwitch;
     bool m_closingRequested;
 

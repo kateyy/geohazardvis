@@ -63,19 +63,19 @@ QList<DataObject *> RendererImplementationPlot::filterCompatibleObjects(const QL
     return compatible;
 }
 
-void RendererImplementationPlot::activate(QVTKWidget * qvtkWidget)
+void RendererImplementationPlot::activate(QVTKWidget & qvtkWidget)
 {
     initialize();
 
     // see also: vtkRenderViewBase documentation
-    m_contextView->SetInteractor(qvtkWidget->GetInteractor());
-    qvtkWidget->SetRenderWindow(m_contextView->GetRenderWindow());
+    m_contextView->SetInteractor(qvtkWidget.GetInteractor());
+    qvtkWidget.SetRenderWindow(m_contextView->GetRenderWindow());
 }
 
-void RendererImplementationPlot::deactivate(QVTKWidget * qvtkWidget)
+void RendererImplementationPlot::deactivate(QVTKWidget & qvtkWidget)
 {
     // the render window belongs to the context view
-    qvtkWidget->SetRenderWindow(nullptr);
+    qvtkWidget.SetRenderWindow(nullptr);
     // the interactor is provided by the qvtkWidget
     m_contextView->SetInteractor(nullptr);
 }

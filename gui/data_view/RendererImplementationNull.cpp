@@ -29,7 +29,7 @@ QList<DataObject *> RendererImplementationNull::filterCompatibleObjects(const QL
     return{};
 }
 
-void RendererImplementationNull::activate(QVTKWidget * qvtkWidget)
+void RendererImplementationNull::activate(QVTKWidget & qvtkWidget)
 {
     if (!m_renderer)
     {
@@ -37,13 +37,13 @@ void RendererImplementationNull::activate(QVTKWidget * qvtkWidget)
         m_renderer->SetBackground(1, 1, 1);
     }
 
-    qvtkWidget->GetRenderWindow()->AddRenderer(m_renderer);
+    qvtkWidget.GetRenderWindow()->AddRenderer(m_renderer);
 }
 
-void RendererImplementationNull::deactivate(QVTKWidget * qvtkWidget)
+void RendererImplementationNull::deactivate(QVTKWidget & qvtkWidget)
 {
     if (m_renderer)
-        qvtkWidget->GetRenderWindow()->RemoveRenderer(m_renderer);
+        qvtkWidget.GetRenderWindow()->RemoveRenderer(m_renderer);
 }
 
 void RendererImplementationNull::render()

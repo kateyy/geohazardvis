@@ -47,8 +47,8 @@ public:
 
     std::unique_ptr<AbstractVisualizedData> requestVisualization(DataObject & dataObject) const override;
 
-    void activate(QVTKWidget * qvtkWidget) override;
-    void deactivate(QVTKWidget * qvtkWidget) override;
+    void activate(QVTKWidget & qvtkWidget) override;
+    void deactivate(QVTKWidget & qvtkWidget) override;
 
     void render() override;
 

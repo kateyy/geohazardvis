@@ -21,7 +21,7 @@ QString RendererImplementationResidual::name() const
     return "Residual Verification View";
 }
 
-void RendererImplementationResidual::activate(QVTKWidget * qvtkWidget)
+void RendererImplementationResidual::activate(QVTKWidget & qvtkWidget)
 {
     RendererImplementationBase3D::activate(qvtkWidget);
 
