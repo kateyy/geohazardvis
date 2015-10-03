@@ -8,7 +8,7 @@
 class RenderViewStrategySwitch;
 
 
-class RendererImplementation3D : public RendererImplementationBase3D
+class GUI_API RendererImplementation3D : public RendererImplementationBase3D
 {
     Q_OBJECT
 

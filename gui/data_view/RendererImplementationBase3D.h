@@ -33,7 +33,7 @@ RendererImplementationSwitch. Instead, setup instances of this class manually or
 
 This class requires a valid ColorMapping and vtkRenderWindow to be passed to the constructor.
 */
-class RendererImplementationBase3D : public RendererImplementation
+class GUI_API RendererImplementationBase3D : public RendererImplementation
 {
 public:
     RendererImplementationBase3D(AbstractRenderView & renderView);

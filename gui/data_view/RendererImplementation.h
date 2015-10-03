@@ -8,6 +8,8 @@
 
 #include <vtkType.h>
 
+#include <gui/gui_api.h>
+
 
 template<typename T> class QList;
 class QVTKWidget;
@@ -22,7 +24,7 @@ enum class IndexType;
 class DataObject;
 
 
-class RendererImplementation : public QObject
+class GUI_API RendererImplementation : public QObject
 {
     Q_OBJECT
 

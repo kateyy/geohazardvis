@@ -8,7 +8,7 @@
 class vtkRenderer;
 
 
-class RendererImplementationNull : public RendererImplementation
+class GUI_API RendererImplementationNull : public RendererImplementation
 {
 public:
     RendererImplementationNull(AbstractRenderView & renderView);

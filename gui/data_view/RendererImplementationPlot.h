@@ -14,7 +14,7 @@ class vtkPlotCollection;
 class Context2DData;
 
 
-class RendererImplementationPlot : public RendererImplementation
+class GUI_API RendererImplementationPlot : public RendererImplementation
 {
 public:
     RendererImplementationPlot(AbstractRenderView & renderView);

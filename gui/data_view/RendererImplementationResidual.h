@@ -5,7 +5,7 @@
 #include <gui/data_view/RendererImplementationBase3D.h>
 
 
-class RendererImplementationResidual : public RendererImplementationBase3D
+class GUI_API RendererImplementationResidual : public RendererImplementationBase3D
 {
 public:
     RendererImplementationResidual(AbstractRenderView & renderView);
