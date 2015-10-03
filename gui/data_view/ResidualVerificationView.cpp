@@ -165,13 +165,8 @@ ResidualVerificationView::~ResidualVerificationView()
         if (!vis)
             continue;
 
-        beforeDeleteVisualization(vis.get());
+        emit beforeDeleteVisualization(vis.get());
         vis.reset();
-    }
-
-    if (m_implementation)
-    {
-        m_implementation->deactivate(m_qvtkMain);
     }
 }
 
