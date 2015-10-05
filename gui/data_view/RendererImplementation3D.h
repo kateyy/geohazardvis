@@ -11,8 +11,6 @@ class RenderViewStrategySwitch;
 
 class GUI_API RendererImplementation3D : public RendererImplementationBase3D
 {
-    Q_OBJECT
-
 public:
     RendererImplementation3D(AbstractRenderView & renderView);
     ~RendererImplementation3D() override;
@@ -23,9 +21,6 @@ public:
         QList<DataObject *> & incompatibleObjects) override;
 
     void activate(QVTKWidget & qvtkWidget) override;
-
-signals:
-    void resetStrategy(const QList<DataObject *> & dataObjects);
 
 protected:
     void onRemoveContent(AbstractVisualizedData * content, unsigned int subViewIndex) override;

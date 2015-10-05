@@ -98,9 +98,10 @@ RenderViewStrategy * RendererImplementation3D::strategyIfEnabled() const
 
 void RendererImplementation3D::updateStrategies(const QList<DataObject *> & newDataObjects)
 {
+    QStringList newNames;
+
     if (m_strategies.empty())
     {
-        QStringList names;
 
         for (const RenderViewStrategy::StategyConstructor & constructor : RenderViewStrategy::constructors())
         {
@@ -109,7 +110,7 @@ void RendererImplementation3D::updateStrategies(const QList<DataObject *> & newD
             auto && name = instance->name();
             assert(m_strategies.find(name) == m_strategies.end());
             m_strategies.emplace(name, std::move(instance));
-            names << name;
+            newNames << name;
         }
     }
 
@@ -118,7 +119,17 @@ void RendererImplementation3D::updateStrategies(const QList<DataObject *> & newD
     if (wasEmpty)
     {
         // reset the strategy if we were empty
-        setInteractionStrategy(mostSuitableStrategy(newDataObjects));
+
+        auto && current = mostSuitableStrategy(newDataObjects);
+
+        if (newNames.isEmpty())
+        {
+            setInteractionStrategy(current);
+        }
+        else
+        {
+            setSupportedInteractionStrategies(newNames, current);
+        }
     }
 }
 

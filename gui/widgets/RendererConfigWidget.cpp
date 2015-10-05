@@ -49,6 +49,9 @@ RendererConfigWidget::RendererConfigWidget(QWidget * parent)
 {
     m_ui->setupUi(this);
 
+    connect(m_ui->interactionModeCombo, static_cast<void(QComboBox::*)(const QString &)>(&QComboBox::currentIndexChanged),
+        this, &RendererConfigWidget::setInteractionStyle);
+
     m_ui->propertyBrowser->addEditorPlugin<ColorEditorRGB>();
     m_ui->propertyBrowser->addPainterPlugin<ColorEditorRGB>();
     m_ui->propertyBrowser->setAlwaysExpandGroups(true);
@@ -99,6 +102,7 @@ void RendererConfigWidget::setCurrentRenderView(AbstractRenderView * renderView)
         camera->RemoveObserver(tag);
     }
 
+    updateInteractionModeCombo();
 
     // setup for the new view
 
@@ -109,6 +113,12 @@ void RendererConfigWidget::setCurrentRenderView(AbstractRenderView * renderView)
 
     connect(m_currentRenderView, &AbstractRenderView::windowTitleChanged, this, &RendererConfigWidget::updateTitle);
     connect(m_currentRenderView, &AbstractRenderView::implementationChanged, this, &RendererConfigWidget::updateForNewImplementation);
+
+    // we won't disconnect the following connection, as an old impl may be deleted already when we receive implementationChanged()
+    connect(&m_currentRenderView->implementation(), &RendererImplementation::supportedInteractionStrategiesChanged,
+        this, &RendererConfigWidget::updateInteractionModeCombo);
+    connect(&m_currentRenderView->implementation(), &RendererImplementation::interactionStrategyChanged,
+        this, &RendererConfigWidget::updateInteractionModeCombo);
     
     m_propertyRoot = createPropertyGroup(m_currentRenderView);
     m_ui->propertyBrowser->setRoot(m_propertyRoot);
@@ -139,6 +149,34 @@ void RendererConfigWidget::updateTitle()
 void RendererConfigWidget::updateForNewImplementation()
 {
     setCurrentRenderView(m_currentRenderView);
+}
+
+void RendererConfigWidget::updateInteractionModeCombo()
+{
+    auto * const combo = m_ui->interactionModeCombo;
+    combo->blockSignals(true);
+
+    combo->clear();
+
+    if (!m_currentRenderView)
+    {
+        combo->blockSignals(false);
+        return;
+    }
+
+    const auto & impl = m_currentRenderView->implementation();
+
+    combo->addItems(impl.supportedInteractionStrategies());
+    combo->setCurrentText(impl.currentInteractionStrategy());
+
+    combo->blockSignals(false);
+}
+
+void RendererConfigWidget::setInteractionStyle(const QString & styleName)
+{
+    assert(m_currentRenderView);
+
+    m_currentRenderView->implementation().setInteractionStrategy(styleName);
 }
 
 PropertyGroup * RendererConfigWidget::createPropertyGroup(AbstractRenderView * renderView)

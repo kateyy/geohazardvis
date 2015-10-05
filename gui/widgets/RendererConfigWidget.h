@@ -37,6 +37,9 @@ private:
 
     void updateTitle();
     void updateForNewImplementation();
+    void updateInteractionModeCombo();
+
+    void setInteractionStyle(const QString & styleName);
 
     reflectionzeug::PropertyGroup * createPropertyGroup(AbstractRenderView * renderView);
     reflectionzeug::PropertyGroup * createPropertyGroupRenderer(
