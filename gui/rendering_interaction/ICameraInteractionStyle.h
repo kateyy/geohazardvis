@@ -5,6 +5,8 @@
 #include <gui/gui_api.h>
 
 
+class vtkCamera;
+
 class AbstractVisualizedData;
 enum class IndexType;
 
@@ -14,8 +16,11 @@ enum class IndexType;
 class GUI_API ICameraInteractionStyle
 {
 public:
-    virtual void resetCamera() = 0;
-    virtual void moveCameraTo(AbstractVisualizedData & visualization, vtkIdType index, IndexType indexType, bool overTime = true) = 0;
+    virtual void resetCamera(vtkCamera & camera) = 0;
+    virtual void moveCameraTo(
+        AbstractVisualizedData & visualization, 
+        vtkIdType index, IndexType indexType, 
+        bool overTime = true) = 0;
 
     virtual ~ICameraInteractionStyle() = default;
 };

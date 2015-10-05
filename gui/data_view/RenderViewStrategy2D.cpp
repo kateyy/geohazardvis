@@ -150,9 +150,9 @@ bool RenderViewStrategy2D::contains3dData() const
     return false;
 }
 
-void RenderViewStrategy2D::resetCamera()
+void RenderViewStrategy2D::resetCamera(vtkCamera & camera)
 {
-    m_context.interactorStyleSwitch()->resetCamera();
+    m_context.interactorStyleSwitch()->resetCamera(camera);
 }
 
 QList<DataObject *> RenderViewStrategy2D::filterCompatibleObjects(const QList<DataObject *> & dataObjects, QList<DataObject *> & incompatibleObjects) const

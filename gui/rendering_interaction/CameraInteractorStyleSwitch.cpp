@@ -14,12 +14,12 @@ CameraInteractorStyleSwitch::CameraInteractorStyleSwitch()
 
 CameraInteractorStyleSwitch::~CameraInteractorStyleSwitch() = default;
 
-void CameraInteractorStyleSwitch::resetCamera()
+void CameraInteractorStyleSwitch::resetCamera(vtkCamera & camera)
 {
     if (!m_currentCameraStyle)
         return;
 
-    m_currentCameraStyle->resetCamera();
+    m_currentCameraStyle->resetCamera(camera);
 }
 
 void CameraInteractorStyleSwitch::moveCameraTo(AbstractVisualizedData & visualization, vtkIdType index, IndexType indexType, bool overTime)

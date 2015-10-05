@@ -10,6 +10,6 @@ public:
 
     QString name() const override;
     bool contains3dData() const override;
-    void resetCamera() override;
+    void resetCamera(vtkCamera & camera) override;
     QList<DataObject *> filterCompatibleObjects(const QList<DataObject *> & dataObjects, QList<DataObject *> & incompatibleObjects) const override;
 };

@@ -133,15 +133,8 @@ void InteractorStyleTerrain::OnChar()
         Superclass::OnChar();
 }
 
-void InteractorStyleTerrain::resetCamera()
+void InteractorStyleTerrain::resetCamera(vtkCamera & camera)
 {
-    auto renderer = GetCurrentRenderer();
-    if (!renderer)
-    {
-        return;
-    }
-
-    auto & camera = *renderer->GetActiveCamera();
     camera.SetViewUp(0, 0, 1);
     TerrainCamera::setAzimuth(camera, 0);
     TerrainCamera::setVerticalElevation(camera, 45);
