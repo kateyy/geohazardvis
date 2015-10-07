@@ -151,6 +151,12 @@ void DataSetHandler::deleteData(const QList<DataObject *> & dataObjects)
         QMutexLocker lock(d_ptr->mutex.get());
         for (DataObject * dataObject : dataObjects)
         {
+            // deleteData might be called multiple times for fast interactions, to check if we already processed this request
+            if (!d_ptr->allDataSets.contains(dataObject))
+            {
+                continue;
+            }
+
             if (auto rawData = dynamic_cast<RawVectorData *>(dataObject))
             {
                 auto it = findUnique(d_ptr->rawVectors, dataObject);
