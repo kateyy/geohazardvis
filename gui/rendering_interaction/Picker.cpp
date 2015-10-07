@@ -216,9 +216,14 @@ void Picker::appendImageDataInfo(QTextStream & stream, vtkImageSlice & slice)
     m_pickedIndex = m_pointPicker->GetPointId();
     m_pickedIndexType = IndexType::points;
 
-    double * pos = m_pointPicker->GetPickPosition();
-
     auto dataSet = m_pointPicker->GetDataSet();
+
+    if (!dataSet)
+    {
+        return;
+    }
+
+    double * pos = m_pointPicker->GetPickPosition();
 
     stream
         << "X = : " << pos[0] << endl
