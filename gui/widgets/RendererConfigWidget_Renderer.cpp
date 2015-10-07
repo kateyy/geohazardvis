@@ -106,7 +106,7 @@ reflectionzeug::PropertyGroup * RendererConfigWidget::createPropertyGroupRendere
 
     auto firstRenderer = impl->renderer(0);
 
-    auto backgroundColor = root->addProperty<Color>("backgroundColor",
+    root->addProperty<Color>("backgroundColor",
         [firstRenderer] () {
         double * color = firstRenderer->GetBackground();
         return Color(static_cast<int>(color[0] * 255), static_cast<int>(color[1] * 255), static_cast<int>(color[2] * 255));
@@ -115,8 +115,8 @@ reflectionzeug::PropertyGroup * RendererConfigWidget::createPropertyGroupRendere
         for (unsigned i = 0; i < renderView->numberOfSubViews(); ++i)
             impl->renderer(i)->SetBackground(color.red() / 255.0, color.green() / 255.0, color.blue() / 255.0);
         renderView->render();
-    });
-    backgroundColor->setOption("title", "Background Color");
+    })
+        ->setOption("title", "Background Color");
 
     bool is3DView = renderView->implementation().currentInteractionStrategy() == "3D terrain";
 
@@ -129,7 +129,7 @@ reflectionzeug::PropertyGroup * RendererConfigWidget::createPropertyGroupRendere
         {
             std::string degreesSuffix = (QString(' ') + QChar(0xB0)).toStdString();
 
-            auto prop_azimuth = cameraGroup->addProperty<double>("Azimuth",
+            cameraGroup->addProperty<double>("Azimuth",
                 [&camera]() {
                 return TerrainCamera::getAzimuth(camera);
             },
@@ -137,11 +137,13 @@ reflectionzeug::PropertyGroup * RendererConfigWidget::createPropertyGroupRendere
                 TerrainCamera::setAzimuth(camera, azimuth);
                 impl->renderer(0)->ResetCameraClippingRange();
                 impl->render();
+            })
+                ->setOptions({
+                    { "minimum", std::numeric_limits<double>::lowest() },
+                    { "suffix", degreesSuffix }
             });
-            prop_azimuth->setOption("minimum", std::numeric_limits<double>::lowest());
-            prop_azimuth->setOption("suffix", degreesSuffix);
 
-            auto prop_elevation = cameraGroup->addProperty<double>("Elevation",
+            cameraGroup->addProperty<double>("Elevation",
                 [&camera]() {
                 return TerrainCamera::getVerticalElevation(camera);
             },
@@ -149,10 +151,12 @@ reflectionzeug::PropertyGroup * RendererConfigWidget::createPropertyGroupRendere
                 TerrainCamera::setVerticalElevation(camera, elevation);
                 impl->renderer(0)->ResetCameraClippingRange();
                 impl->render();
+            })
+                ->setOptions({
+                    { "minimum", -87 },
+                    { "maximum", 87 },
+                    { "suffix", degreesSuffix }
             });
-            prop_elevation->setOption("minimum", -87);
-            prop_elevation->setOption("maximum", 87);
-            prop_elevation->setOption("suffix", degreesSuffix);
         }
 
         auto prop_focalPoint = cameraGroup->addProperty<std::array<double, 3>>("focalPoint",
@@ -179,7 +183,7 @@ reflectionzeug::PropertyGroup * RendererConfigWidget::createPropertyGroupRendere
 
         if (is3DView)
         {
-            auto prop_distance = cameraGroup->addProperty<double>("Distance",
+            cameraGroup->addProperty<double>("Distance",
                 [&camera] () { return camera.GetDistance(); },
                 [&camera, impl] (double d) {
 
@@ -194,28 +198,10 @@ reflectionzeug::PropertyGroup * RendererConfigWidget::createPropertyGroupRendere
 
                 impl->renderer(0)->ResetCameraClippingRange();
                 impl->render();
-            });
-            prop_distance->setOptions({
-                { "minimum", 0.001f }
-            });
-        }
-
-        auto prop_distance = cameraGroup->addProperty<double>("parallelScale",
-            [&camera] () { return camera.GetParallelScale(); },
-            [&camera, impl] (double s) {
-
-            camera.SetParallelScale(s);
-
-            impl->render();
-        });
-        prop_distance->setOptions({
-            { "title", "Parallel Scale" },
-            { "minimum", 0.001f }
-        });
-
-        if (is3DView)
-            {
-            auto prop_projectionType = cameraGroup->addProperty<ProjectionType>("Projection",
+            })
+                ->setOption("minimum", 0.001f);
+            
+            cameraGroup->addProperty<ProjectionType>("Projection",
                 [&camera] () {
                 return camera.GetParallelProjection() != 0 ? ProjectionType::parallel : ProjectionType::perspective;
             },
@@ -223,27 +209,42 @@ reflectionzeug::PropertyGroup * RendererConfigWidget::createPropertyGroupRendere
                 camera.SetParallelProjection(type == ProjectionType::parallel);
                 impl->renderer(0)->ResetCameraClippingRange();
                 impl->render();
-            });
-            prop_projectionType->setStrings({
+            })
+                ->setStrings({
                     { ProjectionType::parallel, "parallel" },
                     { ProjectionType::perspective, "perspective" }
             });
         }
+
+        cameraGroup->addProperty<double>("parallelScale",
+            [&camera] () { return camera.GetParallelScale(); },
+            [&camera, impl] (double s) {
+
+            camera.SetParallelScale(s);
+
+            impl->render();
+        })
+            ->setOptions({
+                { "title", "Parallel Scale" },
+                { "minimum", 0.001f }
+        });
     }
 
     if (is3DView)
     {
         PropertyGroup * lightingGroup = root->addGroup("Lighting");
 
-        auto prop_intensity = lightingGroup->addProperty<double>("Intensity",
+        lightingGroup->addProperty<double>("Intensity",
             [renderView, impl]() { return impl->lightKit()->GetKeyLightIntensity(); },
             [renderView, impl] (double value) {
             impl->lightKit()->SetKeyLightIntensity(value);
             renderView->render();
+        })
+            ->setOptions({
+                { "minimum", 0 },
+                { "maximum", 3 },
+                { "step", 0.05 },
         });
-        prop_intensity->setOption("minimum", 0);
-        prop_intensity->setOption("maximum", 3);
-        prop_intensity->setOption("step", 0.05);
     }
 
     auto axisTitlesGroup = root->addGroup("AxisTitles");
