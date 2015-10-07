@@ -62,6 +62,8 @@ void RenderViewStrategy::restoreCamera()
     {
         resetCamera(camera);
     }
+
+    m_context.resetClippingRanges();
 }
 
 void RenderViewStrategy::backupCamera()

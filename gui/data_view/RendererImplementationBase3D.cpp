@@ -305,6 +305,14 @@ vtkCamera * RendererImplementationBase3D::camera(unsigned int subViewIndex)
     return renderer(subViewIndex)->GetActiveCamera();
 }
 
+void RendererImplementationBase3D::resetClippingRanges()
+{
+    for (auto && viewportSetup : m_viewportSetups)
+    {
+        viewportSetup.renderer->ResetCameraClippingRange();
+    }
+}
+
 vtkLightKit * RendererImplementationBase3D::lightKit()
 {
     return m_lightKit;

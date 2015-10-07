@@ -75,6 +75,9 @@ public:
     vtkRenderer * renderer(unsigned int subViewIndex);
     vtkCamera * camera(unsigned int subViewIndex);
 
+    /** Resets the clipping ranges of all sub-views with their specific cameras */
+    void resetClippingRanges();
+
     vtkLightKit * lightKit();
 
     vtkTextWidget * titleWidget(unsigned int subViewIndex);
