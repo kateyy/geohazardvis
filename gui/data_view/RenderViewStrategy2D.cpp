@@ -126,6 +126,11 @@ void RenderViewStrategy2D::onActivateEvent()
 
     updateAutomaticPlots();
 
+    if (m_lineWidget)
+    {
+        m_lineWidget->On();
+    }
+
     connect(&m_context.renderView(), &AbstractRenderView::visualizationsChanged,
         this, &RenderViewStrategy2D::updateAutomaticPlots);
 }
@@ -141,6 +146,12 @@ void RenderViewStrategy2D::onDeactivateEvent()
         action->setParent(nullptr);
     }
     m_context.renderView().setToolBarVisible(false);
+
+    if (m_lineWidget)
+    {
+        // if currently plotting: disable interactivity with the line widget
+        m_lineWidget->Off();
+    }
 }
 
 bool RenderViewStrategy2D::contains3dData() const
@@ -250,6 +261,7 @@ void RenderViewStrategy2D::startProfilePlot()
         m_lineWidget = vtkSmartPointer<vtkLineWidget2>::New();
         auto repr = vtkSmartPointer<vtkLineRepresentation>::New();
         repr->SetLineColor(1, 0, 0);
+
         m_lineWidget->SetRepresentation(repr);
         m_lineWidget->SetInteractor(m_context.interactor());
         m_lineWidget->SetCurrentRenderer(m_context.renderer(0u));   // put the widget in the first renderer, for now
@@ -257,11 +269,9 @@ void RenderViewStrategy2D::startProfilePlot()
 
         double bounds[6];
         m_context.dataBounds(bounds, 0);
+        bounds[4] = bounds[5] += g_lineZOffset;
 
-        bounds[4] += g_lineZOffset;
-        bounds[5] += g_lineZOffset;
-
-        m_lineWidget->GetRepresentation()->PlaceWidget(bounds);
+        repr->PlaceWidget(bounds);
 
         m_context.render();
     }
@@ -353,7 +363,7 @@ void RenderViewStrategy2D::abortProfilePlot()
     m_lineWidget = nullptr;
     m_context.render();
 
-    // this becomes nullptr in case the user closed the viewer while we were starting a plot
+    // this becomes nullptr in case the user closes the viewer while we were starting a plot
     if (oldPreviewRenderer)
         oldPreviewRenderer->close();
 
