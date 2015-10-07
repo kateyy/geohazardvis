@@ -76,6 +76,7 @@ void vtkCameraSynchronization::cameraChanged(vtkObject * source, unsigned long /
             continue;
 
         camera->SetParallelProjection(sourceCamera->GetParallelProjection());
+        camera->SetParallelScale(sourceCamera->GetParallelScale());
         camera->SetViewUp(sourceCamera->GetViewUp());
         camera->SetPosition(sourceCamera->GetPosition());
         camera->SetFocalPoint(sourceCamera->GetFocalPoint());

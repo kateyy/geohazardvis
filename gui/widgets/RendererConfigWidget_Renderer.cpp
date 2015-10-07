@@ -179,8 +179,8 @@ reflectionzeug::PropertyGroup * RendererConfigWidget::createPropertyGroupRendere
 
         if (is3DView)
         {
-            auto prop_distance = cameraGroup->addProperty<double>("distance",
-                [&camera] (){ return camera.GetDistance(); },
+            auto prop_distance = cameraGroup->addProperty<double>("Distance",
+                [&camera] () { return camera.GetDistance(); },
                 [&camera, impl] (double d) {
 
                 /** work around bug (?) in vtkCamera (not considering the distance for clipping plane calculation)
@@ -196,11 +196,25 @@ reflectionzeug::PropertyGroup * RendererConfigWidget::createPropertyGroupRendere
                 impl->render();
             });
             prop_distance->setOptions({
-                { "title", "Distance" },
                 { "minimum", 0.001f }
             });
+        }
 
+        auto prop_distance = cameraGroup->addProperty<double>("parallelScale",
+            [&camera] () { return camera.GetParallelScale(); },
+            [&camera, impl] (double s) {
 
+            camera.SetParallelScale(s);
+
+            impl->render();
+        });
+        prop_distance->setOptions({
+            { "title", "Parallel Scale" },
+            { "minimum", 0.001f }
+        });
+
+        if (is3DView)
+            {
             auto prop_projectionType = cameraGroup->addProperty<ProjectionType>("Projection",
                 [&camera] () {
                 return camera.GetParallelProjection() != 0 ? ProjectionType::parallel : ProjectionType::perspective;
