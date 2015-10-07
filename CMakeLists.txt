@@ -253,9 +253,9 @@ set(IDE_FOLDER "")
 add_subdirectory("core")
 add_subdirectory("gui")
 add_subdirectory("app")
-add_subdirectory("docs")
 
-set(IDE_FOLDER "Deployment")
+set(IDE_FOLDER "Deployment, Documentation")
+add_subdirectory("docs")
 add_subdirectory("packages")
 
 set(IDE_FOLDER "Tests")

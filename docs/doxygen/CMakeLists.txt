@@ -41,13 +41,22 @@ if(DOXYGEN_FOUND)
 
     # Declare target
     add_custom_target(docs-doxygen DEPENDS ${doxyfile_hhp})
-    set_target_properties(docs-doxygen PROPERTIES EXCLUDE_FROM_DEFAULT_BUILD 1)
+    set_target_properties(docs-doxygen
+        PROPERTIES 
+        EXCLUDE_FROM_DEFAULT_BUILD      1
+        FOLDER                          "${IDE_FOLDER}"
+    )
     # add_dependencies(docs docs-doxygen)
     
     add_custom_target(docs-doxygen-show DEPENDS docs-doxygen
         COMMAND             "${CMAKE_CURRENT_BINARY_DIR}/html/index.html"
+        FOLDER              "${IDE_FOLDER}"
     )
-    set_target_properties(docs-doxygen-show PROPERTIES EXCLUDE_FROM_DEFAULT_BUILD 1)
+    set_target_properties(docs-doxygen-show
+        PROPERTIES
+        EXCLUDE_FROM_DEFAULT_BUILD      1
+        FOLDER                          "${IDE_FOLDER}"
+    )
 
 else()
 
