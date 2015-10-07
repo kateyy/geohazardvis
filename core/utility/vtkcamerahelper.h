@@ -16,4 +16,9 @@ namespace TerrainCamera
 
     double CORE_API getVerticalElevation(vtkCamera & camera);
     void CORE_API setVerticalElevation(vtkCamera & camera, double elevation);
+
+    /** Set the distance from camera position to focal point by moving the camera position.
+      * @note vtkCamera::setDistance moves the camera focal point instead. So use the vtkCamera's function
+      * or this one here, based on your purpose. */
+    void CORE_API setDistanceFromFocalPoint(vtkCamera & camera, double distance);
 }

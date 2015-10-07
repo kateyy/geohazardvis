@@ -85,4 +85,15 @@ void setVerticalElevation(vtkCamera & camera, double elevation)
     setAzimuth(camera, azimuth);
 }
 
+void setDistanceFromFocalPoint(vtkCamera & camera, double distance)
+{
+    double viewVec[3], focalPoint[3], position[3];
+    camera.GetDirectionOfProjection(viewVec);
+    camera.GetFocalPoint(focalPoint);
+
+    vtkMath::MultiplyScalar(viewVec, distance);
+    vtkMath::Subtract(focalPoint, viewVec, position);
+    camera.SetPosition(position);
+}
+
 }

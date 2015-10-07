@@ -177,27 +177,30 @@ reflectionzeug::PropertyGroup * RendererConfigWidget::createPropertyGroupRendere
             ++title[0];
         }
 
-        auto prop_distance = cameraGroup->addProperty<double>("distance",
-            [&camera] (){ return camera.GetDistance(); },
-            [&camera, impl] (double d) {
-            double viewVec[3], focalPoint[3], position[3];
-            camera.GetDirectionOfProjection(viewVec);
-            camera.GetFocalPoint(focalPoint);
-            
-            vtkMath::MultiplyScalar(viewVec, d);
-            vtkMath::Subtract(focalPoint, viewVec, position);
-            camera.SetPosition(position);
-
-            impl->renderer(0)->ResetCameraClippingRange();
-            impl->render();
-        });
-        prop_distance->setOptions({
-            { "title", "Distance" },
-            { "minimum", 0.001f }
-        });
-
         if (is3DView)
         {
+            auto prop_distance = cameraGroup->addProperty<double>("distance",
+                [&camera] (){ return camera.GetDistance(); },
+                [&camera, impl] (double d) {
+
+                /** work around bug (?) in vtkCamera (not considering the distance for clipping plane calculation)
+                  * @see RendererImplementationBase3D::resetClippingRanges */
+                if (camera.GetParallelProjection() != 0)
+                {
+                    return;
+                }
+
+                TerrainCamera::setDistanceFromFocalPoint(camera, d);
+
+                impl->renderer(0)->ResetCameraClippingRange();
+                impl->render();
+            });
+            prop_distance->setOptions({
+                { "title", "Distance" },
+                { "minimum", 0.001f }
+            });
+
+
             auto prop_projectionType = cameraGroup->addProperty<ProjectionType>("Projection",
                 [&camera] () {
                 return camera.GetParallelProjection() != 0 ? ProjectionType::parallel : ProjectionType::perspective;
