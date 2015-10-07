@@ -133,7 +133,7 @@ void InteractorStyleTerrain::OnChar()
         Superclass::OnChar();
 }
 
-void InteractorStyleTerrain::resetCamera(vtkCamera & camera)
+void InteractorStyleTerrain::resetCameraToDefault(vtkCamera & camera)
 {
     camera.ParallelProjectionOff();
     camera.SetViewUp(0, 0, 1);

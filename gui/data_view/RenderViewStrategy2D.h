@@ -33,8 +33,6 @@ public:
 
     bool contains3dData() const override;
 
-    void resetCamera(vtkCamera & camera) override;
-
     QList<DataObject *> filterCompatibleObjects(const QList<DataObject *> & dataObjects, QList<DataObject *> & incompatibleObjects) const override;
 
     /** Start or refresh the current profile plot, open a new preview renderer if required. */

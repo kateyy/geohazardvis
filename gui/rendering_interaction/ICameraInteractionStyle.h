@@ -16,7 +16,7 @@ enum class IndexType;
 class GUI_API ICameraInteractionStyle
 {
 public:
-    virtual void resetCamera(vtkCamera & camera) = 0;
+    virtual void resetCameraToDefault(vtkCamera & camera) = 0;
     virtual void moveCameraTo(
         AbstractVisualizedData & visualization, 
         vtkIdType index, IndexType indexType, 

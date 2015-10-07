@@ -60,7 +60,7 @@ void RenderViewStrategy::restoreCamera()
     }
     else
     {
-        resetCamera(camera);
+        m_context.interactorStyleSwitch()->resetCameraToDefault(camera);
     }
 
     m_context.resetClippingRanges();

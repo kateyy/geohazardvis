@@ -250,7 +250,7 @@ void RendererImplementationBase3D::resetCamera(bool toInitialPosition, unsigned 
 
     if (toInitialPosition)
     {
-        strategy().resetCamera(*viewport.renderer->GetActiveCamera());
+        interactorStyleSwitch()->resetCameraToDefault(*viewport.renderer->GetActiveCamera());
     }
 
     if (viewport.dataBounds.IsValid())

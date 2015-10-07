@@ -33,9 +33,6 @@ public:
 
     virtual bool contains3dData() const = 0;
 
-    /** Reset the camera of the current renderer to the default position.
-      * (The current renderer is defined in the render view's vtkRenderWindowInteractor) */
-    virtual void resetCamera(vtkCamera & camera) = 0;
     /** @param dataObjects Check if we can render these objects with the current view content.
         @param incompatibleObjects Fills this list with discarded objects.
         @return compatible objects that we will render. */

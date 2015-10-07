@@ -23,7 +23,7 @@ public:
 
     void OnChar() override;
 
-    void resetCamera(vtkCamera & camera) override;
+    void resetCameraToDefault(vtkCamera & camera) override;
     void moveCameraTo(AbstractVisualizedData & visualization, vtkIdType index, IndexType indexType, bool overTime = true) override;
 
 protected:

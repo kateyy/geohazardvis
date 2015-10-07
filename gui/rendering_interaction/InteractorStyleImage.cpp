@@ -94,7 +94,7 @@ void InteractorStyleImage::OnChar()
     // disable magic keys for now
 }
 
-void InteractorStyleImage::resetCamera(vtkCamera & camera)
+void InteractorStyleImage::resetCameraToDefault(vtkCamera & camera)
 {
     camera.SetViewUp(0, 1, 0);
     camera.SetFocalPoint(0, 0, 0);
