@@ -9,10 +9,10 @@ class vtkAlgorithm;
 class vtkAlgorithmOutput;
 class vtkExtractVOI;
 class vtkImageData;
-class vtkImagePlaneWidget;
 class vtkLookupTable;
 class vtkRenderWindowInteractor;
 
+class ImagePlaneWidget;
 class VectorGrid3DDataObject;
 
 
@@ -65,7 +65,7 @@ private:
 
     // for color mapping / LIC2D planes
 
-    std::array<vtkSmartPointer<vtkImagePlaneWidget>, 3> m_planeWidgets;
+    std::array<vtkSmartPointer<ImagePlaneWidget>, 3> m_planeWidgets;
     std::array<vtkSmartPointer<vtkAlgorithm>, 3> m_colorMappingInputs;
     vtkSmartPointer<vtkLookupTable> m_blackWhiteLUT;
 

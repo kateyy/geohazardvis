@@ -11,8 +11,9 @@
 #include <vtkExtractVOI.h>
 #include <vtkCellPicker.h>
 #include <vtkImageMapToColors.h>
-#include <vtkImagePlaneWidget.h>
 #include <vtkImageReslice.h>
+#include <vtkInformation.h>
+#include <vtkPolyDataMapper.h>
 #include <vtkProperty.h>
 #include <vtkTexture.h>
 
@@ -21,6 +22,7 @@
 #include <core/color_mapping/ColorMappingData.h>
 #include <core/data_objects/VectorGrid3DDataObject.h>
 #include <core/filters/ArrayRenameFilter.h>
+#include <core/filters/ImagePlaneWidget.h>
 
 
 using namespace reflectionzeug;
@@ -70,7 +72,7 @@ RenderedVectorGrid3D::RenderedVectorGrid3D(VectorGrid3DDataObject & dataObject)
     {
         /** Reslice widgets  */
 
-        m_planeWidgets[i] = vtkSmartPointer<vtkImagePlaneWidget>::New();
+        m_planeWidgets[i] = vtkSmartPointer<ImagePlaneWidget>::New();
         // TODO VTK Bug? A pipeline connection does not work for some reason
         //m_planeWidgets[i]->SetInputConnection(dataObject->processedOutputPort());
         m_planeWidgets[i]->SetInputData(dataObject.dataSet());
@@ -86,6 +88,12 @@ RenderedVectorGrid3D::RenderedVectorGrid3D(VectorGrid3DDataObject & dataObject)
 
         m_planeWidgets[i]->SetLeftButtonAction(vtkImagePlaneWidget::VTK_SLICE_MOTION_ACTION);
         m_planeWidgets[i]->SetRightButtonAction(vtkImagePlaneWidget::VTK_CURSOR_ACTION);
+
+        auto & mapperInfo = *m_planeWidgets[i]->GetTexturePlaneMapper()->GetInformation();
+
+        DataObject::storePointer(mapperInfo, &dataObject);
+        mapperInfo.Set(DataObject::NameKey(), dataObject.name().toUtf8().data());
+        AbstractVisualizedData::storePointer(mapperInfo, this);
 
         auto property = vtkSmartPointer<vtkProperty>::New();
         property->LightingOn();
@@ -105,7 +113,7 @@ RenderedVectorGrid3D::RenderedVectorGrid3D(VectorGrid3DDataObject & dataObject)
 
 void RenderedVectorGrid3D::setRenderWindowInteractor(vtkRenderWindowInteractor * interactor)
 {
-    for (vtkImagePlaneWidget * widget : m_planeWidgets)
+    for (auto widget : m_planeWidgets)
         widget->SetInteractor(interactor);
 
     updateVisibilities();
