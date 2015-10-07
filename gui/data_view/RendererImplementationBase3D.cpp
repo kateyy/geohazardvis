@@ -1,6 +1,7 @@
 #include "RendererImplementationBase3D.h"
 
 #include <cassert>
+#include <cmath>
 
 #include <QMouseEvent>
 
@@ -26,6 +27,7 @@
 #include <core/data_objects/DataObject.h>
 #include <core/rendered_data/RenderedData.h>
 #include <core/ThirdParty/ParaView/vtkGridAxes3DActor.h>
+#include <core/utility/vtkcamerahelper.h>
 #include <gui/data_view/AbstractRenderView.h>
 #include <gui/data_view/RenderViewStrategy.h>
 #include <gui/data_view/RenderViewStrategyNull.h>
@@ -156,8 +158,8 @@ void RendererImplementationBase3D::onRemoveContent(AbstractVisualizedData * cont
     assert(dynamic_cast<RenderedData *>(content));
     RenderedData * renderedData = static_cast<RenderedData *>(content);
 
-    auto && renderer = this->renderer(subViewIndex);
-    auto && dataProps = m_viewportSetups[subViewIndex].dataProps;
+    auto & renderer = *this->renderer(subViewIndex);
+    auto & dataProps = m_viewportSetups[subViewIndex].dataProps;
 
     vtkSmartPointer<vtkPropCollection> props = dataProps.take(renderedData);
     assert(props);
@@ -165,11 +167,11 @@ void RendererImplementationBase3D::onRemoveContent(AbstractVisualizedData * cont
     vtkCollectionSimpleIterator it;
     props->InitTraversal(it);
     while (vtkProp * prop = props->GetNextProp(it))
-        renderer->RemoveViewProp(prop);
+        renderer.RemoveViewProp(prop);
 
     removeFromBounds(renderedData, subViewIndex);
 
-    renderer->ResetCamera();
+    renderer.ResetCamera();
 }
 
 void RendererImplementationBase3D::onDataVisibilityChanged(AbstractVisualizedData * /*content*/, unsigned int /*subViewIndex*/)
@@ -252,7 +254,9 @@ void RendererImplementationBase3D::resetCamera(bool toInitialPosition, unsigned 
     }
 
     if (viewport.dataBounds.IsValid())
+    {
         viewport.renderer->ResetCamera();
+    }
 
     render();
 }
@@ -310,6 +314,32 @@ void RendererImplementationBase3D::resetClippingRanges()
     for (auto && viewportSetup : m_viewportSetups)
     {
         viewportSetup.renderer->ResetCameraClippingRange();
+    }
+
+    auto & firstRenderer = *m_viewportSetups[0].renderer;
+    auto & firstCamera = *firstRenderer.GetActiveCamera();
+
+    /** work around strangely behaving clipping with parallel projection (probably bug in vtkCamera)
+      * @see http://www.paraview.org/Bug/view.php?id=7823 */
+    if (firstCamera.GetParallelProjection())
+    {
+        vtkBoundingBox wholeBounds;
+        for (auto & viewportSetup : m_viewportSetups)
+        {
+            double bounds[6];
+            viewportSetup.renderer->ComputeVisiblePropBounds(bounds);
+            wholeBounds.AddBounds(bounds);
+        }
+
+        double maxDistance = 0;
+        for (int i = 0; i < 6; ++i)
+        {
+            maxDistance = std::max(maxDistance, std::abs(wholeBounds.GetBound(i)));
+        }
+
+        TerrainCamera::setDistanceFromFocalPoint(firstCamera, maxDistance);
+
+        firstRenderer.ResetCameraClippingRange();
     }
 }
 
@@ -460,9 +490,9 @@ void RendererImplementationBase3D::updateAxes()
         double bounds[6];
         viewportSetup.dataBounds.GetBounds(bounds);
         viewportSetup.axesActor->SetGridBounds(bounds);
-
-        viewportSetup.renderer->ResetCameraClippingRange();
     }
+
+    resetClippingRanges();
 }
 
 void RendererImplementationBase3D::updateBounds()
