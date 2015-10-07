@@ -517,6 +517,13 @@ void ResidualVerificationView::updateResidualAsync()
 
     assert(!m_newResidual);
 
+    // while updating the residual, we might add transformed vector data to the model data set
+    // make sure that this modification on the DataObject internals does not conflict with GUI events
+    if (m_modelData)
+    {
+        m_modelData->deferEvents();
+    }
+
     auto future = QtConcurrent::run(this, &ResidualVerificationView::updateResidual);
     m_updateWatcher->setFuture(future);
 }
@@ -546,6 +553,11 @@ void ResidualVerificationView::handleUpdateFinished()
     }
 
     updateGuiAfterDataChange();
+
+    if (m_modelData)
+    {
+        m_modelData->executeDeferredEvents();
+    }
 
     toolBar()->setEnabled(true);
     m_progressBar->hide();
