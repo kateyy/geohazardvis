@@ -118,14 +118,14 @@ reflectionzeug::PropertyGroup * RendererConfigWidget::createPropertyGroupRendere
     });
     backgroundColor->setOption("title", "Background Color");
 
-    bool contains3dData = renderView->contentType() == ContentType::Rendered3D;
+    bool is3DView = renderView->implementation().currentInteractionStrategy() == "3D terrain";
 
     auto cameraGroup = root->addGroup("Camera");
     {
-        // assmuming synchronized cameras for now
+        // assuming synchronized cameras for now
         vtkCamera & camera = *impl->camera(0);
 
-        if (contains3dData)
+        if (is3DView)
         {
             std::string degreesSuffix = (QString(' ') + QChar(0xB0)).toStdString();
 
@@ -196,7 +196,7 @@ reflectionzeug::PropertyGroup * RendererConfigWidget::createPropertyGroupRendere
             { "minimum", 0.001f }
         });
 
-        if (contains3dData)
+        if (is3DView)
         {
             auto prop_projectionType = cameraGroup->addProperty<ProjectionType>("Projection",
                 [&camera] () {
@@ -214,7 +214,7 @@ reflectionzeug::PropertyGroup * RendererConfigWidget::createPropertyGroupRendere
         }
     }
 
-    if (contains3dData)
+    if (is3DView)
     {
         PropertyGroup * lightingGroup = root->addGroup("Lighting");
 

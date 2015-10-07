@@ -24,9 +24,9 @@ QString RenderViewStrategy3D::name() const
     return "3D terrain";
 }
 
-void RenderViewStrategy3D::activate()
+QString RenderViewStrategy3D::defaultInteractorStyle() const
 {
-    m_context.interactorStyleSwitch()->setCurrentStyle("InteractorStyleTerrain");
+    return "InteractorStyleTerrain";
 }
 
 bool RenderViewStrategy3D::contains3dData() const

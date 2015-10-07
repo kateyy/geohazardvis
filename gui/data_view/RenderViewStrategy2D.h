@@ -31,9 +31,6 @@ public:
 
     QString name() const override;
 
-    void activate() override;
-    void deactivate() override;
-
     bool contains3dData() const override;
 
     void resetCamera(vtkCamera & camera) override;
@@ -44,6 +41,12 @@ public:
     void startProfilePlot();
     void acceptProfilePlot();
     void abortProfilePlot();
+
+protected:
+    QString defaultInteractorStyle() const override;
+
+    void onActivateEvent() override;
+    void onDeactivateEvent() override;
 
 private:
     void initialize();

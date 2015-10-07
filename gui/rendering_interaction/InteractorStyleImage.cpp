@@ -99,6 +99,7 @@ void InteractorStyleImage::resetCamera(vtkCamera & camera)
     camera.SetViewUp(0, 1, 0);
     camera.SetFocalPoint(0, 0, 0);
     camera.SetPosition(0, 0, 1);
+    camera.ParallelProjectionOn();
 }
 
 void InteractorStyleImage::moveCameraTo(AbstractVisualizedData & /*visualization*/, vtkIdType /*index*/, IndexType /*indexType*/, bool /*overTime*/)

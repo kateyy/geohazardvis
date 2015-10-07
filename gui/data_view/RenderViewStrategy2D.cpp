@@ -117,11 +117,9 @@ QString RenderViewStrategy2D::name() const
     return "2D image";
 }
 
-void RenderViewStrategy2D::activate()
+void RenderViewStrategy2D::onActivateEvent()
 {
     initialize();
-
-    m_context.interactorStyleSwitch()->setCurrentStyle("InteractorStyleImage");
 
     m_context.renderView().toolBar()->addActions(m_actions);
     m_context.renderView().setToolBarVisible(true);
@@ -132,7 +130,7 @@ void RenderViewStrategy2D::activate()
         this, &RenderViewStrategy2D::updateAutomaticPlots);
 }
 
-void RenderViewStrategy2D::deactivate()
+void RenderViewStrategy2D::onDeactivateEvent()
 {
     disconnect(&m_context.renderView(), &AbstractRenderView::visualizationsChanged,
         this, &RenderViewStrategy2D::updateAutomaticPlots);
@@ -362,6 +360,11 @@ void RenderViewStrategy2D::abortProfilePlot()
     m_previewProfiles.clear();
 
     m_profilePlotAction->setEnabled(true);
+}
+
+QString RenderViewStrategy2D::defaultInteractorStyle() const
+{
+    return "InteractorStyleImage";
 }
 
 void RenderViewStrategy2D::clearProfilePlots()

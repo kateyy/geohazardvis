@@ -10,13 +10,14 @@ public:
 
     QString name() const override;
 
-    void activate() override;
-
     bool contains3dData() const override;
 
     void resetCamera(vtkCamera & camera) override;
 
     QList<DataObject *> filterCompatibleObjects(const QList<DataObject *> & dataObjects, QList<DataObject *> & incompatibleObjects) const override;
+
+protected:
+    QString defaultInteractorStyle() const override;
 
 private:
     void updateImageWidgets();

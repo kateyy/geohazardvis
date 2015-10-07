@@ -135,6 +135,7 @@ void InteractorStyleTerrain::OnChar()
 
 void InteractorStyleTerrain::resetCamera(vtkCamera & camera)
 {
+    camera.ParallelProjectionOff();
     camera.SetViewUp(0, 0, 1);
     TerrainCamera::setAzimuth(camera, 0);
     TerrainCamera::setVerticalElevation(camera, 45);
