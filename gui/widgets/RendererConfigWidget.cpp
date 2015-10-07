@@ -78,8 +78,6 @@ void RendererConfigWidget::setCurrentRenderView(AbstractRenderView * renderView)
         camera->RemoveObserver(tag);
     }
 
-    updateInteractionModeCombo();
-
     // setup for the new view
 
     if (!m_currentRenderView)
@@ -95,10 +93,8 @@ void RendererConfigWidget::setCurrentRenderView(AbstractRenderView * renderView)
         this, &RendererConfigWidget::updateInteractionModeCombo);
     connect(&m_currentRenderView->implementation(), &RendererImplementation::interactionStrategyChanged,
         this, &RendererConfigWidget::updateInteractionModeCombo);
-    
-    m_propertyRoot = createPropertyGroup(m_currentRenderView);
-    m_ui->propertyBrowser->setRoot(m_propertyRoot);
-    m_ui->propertyBrowser->resizeColumnToContents(0);
+
+    updateInteractionModeCombo();
 
     if (m_currentRenderView && (impl3D = dynamic_cast<RendererImplementationBase3D *>(&m_currentRenderView->implementation())))
     {
@@ -132,6 +128,8 @@ void RendererConfigWidget::updateInteractionModeCombo()
     auto * const combo = m_ui->interactionModeCombo;
     combo->blockSignals(true);
 
+    updatePropertyGroup();
+
     combo->clear();
 
     if (!m_currentRenderView)
@@ -146,6 +144,13 @@ void RendererConfigWidget::updateInteractionModeCombo()
     combo->setCurrentText(impl.currentInteractionStrategy());
 
     combo->blockSignals(false);
+}
+
+void RendererConfigWidget::updatePropertyGroup()
+{
+    m_propertyRoot = createPropertyGroup(m_currentRenderView);
+    m_ui->propertyBrowser->setRoot(m_propertyRoot);
+    m_ui->propertyBrowser->resizeColumnToContents(0);
 }
 
 void RendererConfigWidget::setInteractionStyle(const QString & styleName)

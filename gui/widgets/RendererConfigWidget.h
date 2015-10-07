@@ -38,6 +38,9 @@ private:
     void updateTitle();
     void updateForNewImplementation();
     void updateInteractionModeCombo();
+    /** Adjust visible properties for the current configuration.
+      * This currently requires to recreate all properties. */
+    void updatePropertyGroup();
 
     void setInteractionStyle(const QString & styleName);
 
