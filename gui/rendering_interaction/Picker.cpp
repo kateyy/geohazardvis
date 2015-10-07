@@ -86,13 +86,13 @@ void Picker::pick(const vtkVector2i & clickPosXY, vtkRenderer & renderer)
     auto mapperInfo = abstractMapper->GetInformation();
 
     m_pickedVisualizedData = AbstractVisualizedData::readPointer(*mapperInfo);
-    m_pickedDataObject = &m_pickedVisualizedData->dataObject();
-
     if (!m_pickedVisualizedData)
     {
         qDebug() << "no visualization referenced in mapper";
         return;
     }
+
+    m_pickedDataObject = &m_pickedVisualizedData->dataObject();
 
     QString content;
     QTextStream stream;
