@@ -3,6 +3,7 @@
 
 #include <algorithm>
 #include <cassert>
+#include <cmath>
 #include <limits>
 
 
@@ -82,4 +83,46 @@ template<typename T, size_t Dimensions>
 T * DataExtent<T, Dimensions>::Data()
 {
     return m_extent;
+}
+
+template<typename T, size_t Dimensions>
+template<typename newT, size_t newDimensions>
+DataExtent<newT, newDimensions> DataExtent<T, Dimensions>::ConvertTo()
+{
+    DataExtent<newT, newDimensions> result;
+
+    size_t initValues = 2u * std::min(Dimensions, newDimensions);
+
+    for (size_t i = 0; i < initValues; ++i)
+    {
+        result[i] = m_extent[i];
+    }
+
+    return result;
+}
+
+template<typename T, size_t Dimensions>
+vtkVector<T, Dimensions> DataExtent<T, Dimensions>::Center() const
+{
+    vtkVector<T, Dimensions> result;
+
+    for (size_t i = 0; i < Dimensions; ++i)
+    {
+        result[i] = static_cast<T>(0.5 * m_extent[2 * i] + 0.5 * m_extent[2 * i + 1]);
+    }
+
+    return result;
+}
+
+template<typename T, size_t Dimensions>
+vtkVector<T, Dimensions> DataExtent<T, Dimensions>::Size() const
+{
+    vtkVector<T, Dimensions> result;
+
+    for (size_t i = 0; i < Dimensions; ++i)
+    {
+        result[i] = m_extent[2 * i + 1] - m_extent[2 * i];
+    }
+
+    return result;
 }

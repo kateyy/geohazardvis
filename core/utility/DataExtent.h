@@ -1,6 +1,6 @@
 #pragma once
 
-#include <cstddef>
+#include <vtkVector.h>
 
 
 template<typename T, size_t Dimensions = 3>
@@ -21,6 +21,12 @@ public:
     bool operator==(const T other[Dimensions * 2]) const;
 
     bool operator==(const DataExtent & other) const;
+
+    vtkVector<T, Dimensions> Center() const;
+    vtkVector<T, Dimensions> Size() const;
+
+    template<typename newT, size_t newDimensions>
+    DataExtent<newT, newDimensions> ConvertTo();
 
     const T * Data() const;
 
