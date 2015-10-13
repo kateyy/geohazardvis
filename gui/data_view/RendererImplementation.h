@@ -5,6 +5,7 @@
 
 #include <QObject>
 #include <QMap>
+#include <QStringList>
 
 #include <vtkType.h>
 

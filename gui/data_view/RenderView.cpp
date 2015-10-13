@@ -2,6 +2,7 @@
 
 #include <cassert>
 
+#include <QApplication>
 #include <QMessageBox>
 
 #include <vtkRenderWindow.h>
