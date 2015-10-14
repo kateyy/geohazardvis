@@ -32,7 +32,6 @@ if(OPTION_BUILD_TESTS)
 
         ExternalProject_Add(gtest
             PREFIX ${GTEST_DIR}
-            EXCLUDE_FROM_ALL 1
             GIT_REPOSITORY "https://github.com/google/googletest"
             GIT_TAG "release-1.7.0"
             CMAKE_CACHE_ARGS
