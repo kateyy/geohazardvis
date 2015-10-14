@@ -111,8 +111,6 @@ void CameraDolly::moveToPoly(vtkPolyData & polyData, vtkIdType index, IndexType 
         auto cellPointIds = vtkSmartPointer<vtkIdTypeArray>::New();
         cellPointIds->SetArray(cell->GetPointIds()->GetPointer(0), cell->GetNumberOfPoints(), true);
         vtkPolygon::ComputeCentroid(cellPointIds, polyData.GetPoints(), selectionPoint);
-        double selectionCenterXY[2] = { selectionPoint[0], selectionPoint[1] };
-
         vtkPolygon::ComputeNormal(cell->GetPoints(), selectionNormal);
     }
     else

@@ -52,7 +52,7 @@ vtkRenderer * Highlighter::renderer() const
     return m_renderer;
 }
 
-void Highlighter::setTarget(AbstractVisualizedData * vis, vtkIdType visOutputPort, vtkIdType index, IndexType indexType)
+void Highlighter::setTarget(AbstractVisualizedData * vis, int visOutputPort, vtkIdType index, IndexType indexType)
 {
     m_indices->SetNumberOfValues(1);
     m_indices->SetValue(0, index);
@@ -62,7 +62,7 @@ void Highlighter::setTarget(AbstractVisualizedData * vis, vtkIdType visOutputPor
     updateHighlight();
 }
 
-void Highlighter::setTarget(AbstractVisualizedData * vis, vtkIdType visOutputPort, vtkIdTypeArray & indices, IndexType indexType)
+void Highlighter::setTarget(AbstractVisualizedData * vis, int visOutputPort, vtkIdTypeArray & indices, IndexType indexType)
 {
     m_indices->DeepCopy(&indices);
 
@@ -71,7 +71,7 @@ void Highlighter::setTarget(AbstractVisualizedData * vis, vtkIdType visOutputPor
     updateHighlight();
 }
 
-void Highlighter::setTargetInternal(AbstractVisualizedData * vis, vtkIdType visOutputPort, IndexType indexType)
+void Highlighter::setTargetInternal(AbstractVisualizedData * vis, int visOutputPort, IndexType indexType)
 {
     if (m_visualizedData)
     {

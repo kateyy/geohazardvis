@@ -162,7 +162,7 @@ IndexType ImageProfileData::scalarsLocation() const
     return m_scalarsLocation;
 }
 
-unsigned int ImageProfileData::vectorComponent() const
+vtkIdType ImageProfileData::vectorComponent() const
 {
     return m_vectorComponent;
 }
@@ -227,7 +227,7 @@ void ImageProfileData::setPoints(const vtkVector2d & point1, const vtkVector2d &
             numElements = m_sourceData.dataSet()->GetNumberOfPoints();
         }
 
-        numElements = std::sqrt(numElements);
+        numElements = static_cast<vtkIdType>(std::sqrt(numElements));
 
         // assuming that the points/cells are somehow uniformly distributed (and sized)
         numProbePoints = static_cast<int>(std::ceil(double(numElements) * vectorLength / diagonalLength));

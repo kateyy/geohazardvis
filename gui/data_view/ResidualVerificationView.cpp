@@ -914,7 +914,7 @@ std::pair<QString, bool> ResidualVerificationView::findDataSetAttributeName(vtkD
         }
         else
         {
-            for (vtkIdType i = 0; i < dataSet.GetPointData()->GetNumberOfArrays(); ++i)
+            for (int i = 0; i < dataSet.GetPointData()->GetNumberOfArrays(); ++i)
             {
                 auto array = dataSet.GetPointData()->GetArray(i);
                 if (array->GetNumberOfComponents() != 3)
@@ -932,7 +932,7 @@ std::pair<QString, bool> ResidualVerificationView::findDataSetAttributeName(vtkD
         }
         else
         {
-            for (vtkIdType i = 0; i < dataSet.GetCellData()->GetNumberOfArrays(); ++i)
+            for (int i = 0; i < dataSet.GetCellData()->GetNumberOfArrays(); ++i)
             {
                 auto array = dataSet.GetCellData()->GetArray(i);
                 if (array->GetNumberOfComponents() != 3)

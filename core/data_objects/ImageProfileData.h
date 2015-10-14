@@ -53,7 +53,7 @@ public:
     const DataObject & sourceData() const;
     const QString & scalarsName() const;
     IndexType scalarsLocation() const;
-    unsigned int vectorComponent() const;
+    vtkIdType vectorComponent() const;
 
     const double * scalarRange();
     int numberOfScalars();

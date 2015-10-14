@@ -210,7 +210,7 @@ void RendererImplementationBase3D::setSelectedData(AbstractVisualizedData * vis,
 
     highlighter.setRenderer(viewportSetup(subViewIndex).renderer);
     // TODO well, how to find the correct output port here to select a data point on a slice plane for the 3D grids?
-    vtkIdType visOutputPort = 0;
+    int visOutputPort = 0;
     highlighter.setTarget(vis, visOutputPort, indices, indexType);
 }
 
@@ -499,13 +499,13 @@ void RendererImplementationBase3D::updateBounds()
 {
     // TODO update only for relevant views
 
-    for (int viewportIndex = 0; viewportIndex < m_viewportSetups.size(); ++viewportIndex)
+    for (size_t viewportIndex = 0; viewportIndex < m_viewportSetups.size(); ++viewportIndex)
     {
         auto & dataBounds = m_viewportSetups[viewportIndex].dataBounds;
 
         dataBounds.Reset();
 
-        for (AbstractVisualizedData * it : m_renderView.visualizations(viewportIndex))
+        for (AbstractVisualizedData * it : m_renderView.visualizations(int(viewportIndex)))
             dataBounds.AddBounds(it->dataObject().bounds());
 
     }

@@ -157,8 +157,9 @@ namespace doj
 
           // if the difference is not equal to zero, we have a comparison result
           const long diff=l_int-r_int;
+          assert(static_cast<long>(static_cast<int>(diff)) == diff);
           if(diff != 0)
-        return diff;
+        return static_cast<int>(diff);
 
           // otherwise we process the next substring in STRING mode
           mode=STRING;

@@ -36,10 +36,10 @@ public:
     vtkRenderer * renderer() const;
 
     /** Set visualization and one primitive on it to be highlighted. Discards previous indices. */
-    void setTarget(AbstractVisualizedData * vis, vtkIdType visOutputPort, vtkIdType index, IndexType indexType);
+    void setTarget(AbstractVisualizedData * vis, int visOutputPort, vtkIdType index, IndexType indexType);
     /** Set visualization and a list of primitives to be highlighted. Discards previous indices.
       * @param indices Cannot be const, due to the non-const vtkIdTypeArray getters. */
-    void setTarget(AbstractVisualizedData * vis, vtkIdType visOutputPort, vtkIdTypeArray & indices, IndexType indexType);
+    void setTarget(AbstractVisualizedData * vis, int visOutputPort, vtkIdTypeArray & indices, IndexType indexType);
     AbstractVisualizedData * targetVisualization() const;
     vtkIdTypeArray * targetIndices();
     vtkIdType lastTargetIndex() const;
@@ -64,7 +64,7 @@ signals:
 
 private:
     void updateHighlight();
-    void setTargetInternal(AbstractVisualizedData * vis, vtkIdType visOutputPort, IndexType indexType);
+    void setTargetInternal(AbstractVisualizedData * vis, int visOutputPort, IndexType indexType);
 
     void highlightPoints();
     void highlightCells();
@@ -74,7 +74,7 @@ private:
 private:
     vtkWeakPointer<vtkRenderer> m_renderer;
     AbstractVisualizedData * m_visualizedData;
-    vtkIdType m_visOutputPort;
+    int m_visOutputPort;
     vtkSmartPointer<vtkIdTypeArray> m_indices;
     IndexType m_indexType;
 
