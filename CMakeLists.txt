@@ -199,11 +199,14 @@ else()
             -DQt5OpenGL_DIR:path=${Qt5OpenGL_DIR}
             -DQt5Widgets_DIR:path=${Qt5Widgets_DIR}
             -DCMAKE_INSTALL_PREFIX:path=${libzeug_DIR}
-        )
+            -DCMAKE_BUILD_TYPE:string=${CMAKE_BUILD_TYPE}
+    )
 
-        set(LIBZEUG_INCLUDES
-            "${libzeug_DIR}/include"
-        )
+    set(LIBZEUG_INCLUDES
+        "${libzeug_DIR}/include"
+    )
+
+    if(WIN32)
         set(LIBZEUG_LIBRARIES
             "${libzeug_DIR}/lib/signalzeug$<$<CONFIG:Debug>:d>.lib"
             "${libzeug_DIR}/lib/loggingzeug$<$<CONFIG:Debug>:d>.lib"
@@ -211,6 +214,15 @@ else()
             "${libzeug_DIR}/lib/propertyguizeug$<$<CONFIG:Debug>:d>.lib"
             "${libzeug_DIR}/lib/threadingzeug$<$<CONFIG:Debug>:d>.lib"
         )
+    else()
+        set(LIBZEUG_LIBRARIES
+            "${libzeug_DIR}/lib/libsignalzeug$<$<CONFIG:Debug>:d>.so"
+            "${libzeug_DIR}/lib/libloggingzeug$<$<CONFIG:Debug>:d>.so"
+            "${libzeug_DIR}/lib/libreflectionzeug$<$<CONFIG:Debug>:d>.so"
+            "${libzeug_DIR}/lib/libpropertyguizeug$<$<CONFIG:Debug>:d>.so"
+            "${libzeug_DIR}/lib/libthreadingzeug$<$<CONFIG:Debug>:d>.so"
+        )
+    endif()
 endif()
 
 set(CMAKE_AUTOMOC ON)

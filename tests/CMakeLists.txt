@@ -40,7 +40,12 @@ if(OPTION_BUILD_TESTS)
             INSTALL_COMMAND ""  # skip install for gtest: target does not exist
         )
 
-        set(GTEST_LIBRARIES "${GTEST_DIR}/src/gtest-build/$<CONFIG>/gtest.lib")
+        if(WIN32)
+            set(GTEST_LIBRARIES "${GTEST_DIR}/src/gtest-build/$<CONFIG>/gtest.lib")
+        else()
+            set(GTEST_LIBRARIES "${GTEST_DIR}/src/gtest-build/libgtest.a")
+        endif()
+
         set(GTEST_INCLUDE_DIR "${GTEST_DIR}/src/gtest/include")
     endif()
 
