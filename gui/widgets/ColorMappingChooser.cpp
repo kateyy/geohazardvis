@@ -463,7 +463,9 @@ void ColorMappingChooser::guiSelectNanColor()
     auto nanColorV = gradient->GetNanColorAsUnsignedChars();
     QColor nanColor(static_cast<int>(nanColorV[0]), static_cast<int>(nanColorV[1]), static_cast<int>(nanColorV[2]), static_cast<int>(nanColorV[3]));
 
-    nanColor = QColorDialog::getColor(nanColor, nullptr, "Select a color for NaN-values", QColorDialog::ShowAlphaChannel);
+    // transparent NaN-color currently not correctly supported in VTK (whole object will be considered transparent)
+    nanColor = QColorDialog::getColor(nanColor, nullptr, "Select a color for NaN-values"
+        /*, QColorDialog::ShowAlphaChannel*/);
 
     if (!nanColor.isValid())
         return;
@@ -636,7 +638,9 @@ vtkSmartPointer<vtkLookupTable> ColorMappingChooser::buildLookupTable(const QIma
         lut->SetTableValue(i, qRed(color) / 255.0, qGreen(color) / 255.0, qBlue(color) / 255.0, (alphaMask | qAlpha(color)) / 255.0);
     }
 
-    lut->SetNanColor(1, 1, 1, 0);   // transparent!
+    // transparent NaN-color currently not correctly supported
+    //lut->SetNanColor(1, 1, 1, 0);   // transparent!
+    lut->SetNanColor(1, 1, 1, 1);
 
     return lut;
 }
