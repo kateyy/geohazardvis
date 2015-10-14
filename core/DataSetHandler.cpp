@@ -151,14 +151,28 @@ void DataSetHandler::deleteData(const QList<DataObject *> & dataObjects)
         QMutexLocker lock(d_ptr->mutex.get());
         for (DataObject * dataObject : dataObjects)
         {
-            // deleteData might be called multiple times for fast interactions, to check if we already processed this request
+            // deleteData might be called multiple times for fast interactions, 
+            // so check if we already processed this request.
+            // Note: we cannot use dynamic_cast here to determine object types, as the object
+            // might already be deleted.
+
+            bool isRawVector = false;
+
             if (!d_ptr->allDataSets.contains(dataObject))
             {
-                continue;
+                if (d_ptr->allRawVectors.contains(static_cast<RawVectorData *>(dataObject)))
+                {
+                    isRawVector = true;
+                }
+                else
+                {
+                    continue;
+                }
             }
 
-            if (auto rawData = dynamic_cast<RawVectorData *>(dataObject))
+            if (isRawVector)
             {
+                auto rawData = static_cast<RawVectorData *>(dataObject);
                 auto it = findUnique(d_ptr->rawVectors, dataObject);
                 // we can only delete data that we own
                 if (it == d_ptr->rawVectors.end())
