@@ -320,6 +320,12 @@ ResidualVerificationView::InterpolationMode ResidualVerificationView::interpolat
     return m_interpolationMode;
 }
 
+void ResidualVerificationView::waitForResidualUpdate()
+{
+    m_updateWatcher->waitForFinished();
+    QCoreApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
+}
+
 void ResidualVerificationView::setDataHelper(unsigned int subViewIndex, DataObject * data, bool skipGuiUpdate, std::vector<std::unique_ptr<AbstractVisualizedData>> * toDelete)
 {
     assert(skipGuiUpdate == (toDelete != nullptr));
@@ -511,6 +517,11 @@ void ResidualVerificationView::updateResidualAsync()
 {
     m_updateWatcher->waitForFinished();
 
+    if (!m_observationData || !m_modelData)
+    {
+        return;
+    }
+
     m_progressBar->show();
     toolBar()->setEnabled(false);
     QCoreApplication::processEvents();
@@ -566,11 +577,6 @@ void ResidualVerificationView::handleUpdateFinished()
 void ResidualVerificationView::updateResidual()
 {
     assert(!m_newResidual);
-
-    if (!m_observationData || !m_modelData)
-    {
-        return;
-    }
 
     const auto & observationAttributeName = m_attributeNamesLocations[observationIndex].first;
     bool useObservationCellData = m_attributeNamesLocations[observationIndex].second;

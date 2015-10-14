@@ -46,6 +46,7 @@ TEST_F(RenderViewStrategy_test, CreateCorrectNumberOfPlots)
 
     renderView->setObservationData(imageData.get());
     renderView->setModelData(imageData.get());
+    renderView->waitForResidualUpdate();
 
     auto & strategy = dynamic_cast<RendererImplementationResidual &>(renderView->implementation()).strategy2D();
 

@@ -2,7 +2,6 @@
 
 #include <array>
 #include <memory>
-#include <mutex>
 #include <vector>
 
 #include <vtkVector.h>
@@ -50,6 +49,9 @@ public:
 
     void setInterpolationMode(InterpolationMode mode);
     InterpolationMode interpolationMode() const;
+
+    /** Blocks until current residual computation finished. */
+    void waitForResidualUpdate();
 
 public:
     ResidualVerificationView(int index, QWidget * parent = nullptr, Qt::WindowFlags flags = 0);
