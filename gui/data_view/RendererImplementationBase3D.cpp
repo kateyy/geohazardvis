@@ -441,6 +441,10 @@ void RendererImplementationBase3D::initialize()
     m_interactorStyle->addStyle("InteractorStyleTerrain", vtkSmartPointer<InteractorStyleTerrain>::New());
     m_interactorStyle->addStyle("InteractorStyleImage", vtkSmartPointer<InteractorStyleImage>::New());
 
+    // correctly show axes and labels based on the interaction style and resulting camera setup
+    m_interactorStyle->AddObserver(InteractorStyleSwitch::StyleChangedEvent,
+        this, &RendererImplementationBase3D::updateAxes);
+
 
     m_pickerHighlighter = vtkSmartPointer<PickerHighlighterInteractorObserver>::New();
 
@@ -489,6 +493,14 @@ void RendererImplementationBase3D::updateAxes()
 
         double bounds[6];
         viewportSetup.dataBounds.GetBounds(bounds);
+
+        // for polygonal data (deltaZ > 0) and parallel projection in image interaction:
+        // correctly show /required/ axes and labels (XY-plane only)
+        if (m_interactorStyle->currentStyleName() == "InteractorStyleImage")
+        {
+            bounds[4] = bounds[5];
+        }
+
         viewportSetup.axesActor->SetGridBounds(bounds);
     }
 
@@ -507,7 +519,6 @@ void RendererImplementationBase3D::updateBounds()
 
         for (AbstractVisualizedData * it : m_renderView.visualizations(int(viewportIndex)))
             dataBounds.AddBounds(it->dataObject().bounds());
-
     }
 
     updateAxes();

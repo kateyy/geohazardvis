@@ -9,14 +9,13 @@
 
 
 class vtkCamera;
-class vtkRenderer;
+class vtkGridAxes3DActor;
 class vtkLightKit;
 class vtkPropCollection;
+class vtkRenderer;
 class vtkScalarBarActor;
 class vtkScalarBarWidget;
 class vtkTextWidget;
-
-class vtkGridAxes3DActor;
 
 class CameraInteractorStyleSwitch;
 class ColorMapping;
@@ -134,7 +133,6 @@ private:
     void removeFromBounds(RenderedData * renderedData, unsigned int subViewIndex);
     void setupColorMapping(unsigned int subViewIndex, ViewportSetup & viewportSetup);
 
-private:
     /** scan rendered data for changed attribute props (e.g., vectors) */
     void fetchViewProps(RenderedData * renderedData, unsigned int subViewIndex);
 
@@ -145,6 +143,7 @@ private:
     std::unique_ptr<RenderViewStrategy> m_emptyStrategy;
 
     // -- setup --
+
     vtkSmartPointer<vtkRenderWindow> m_renderWindow;
 
     vtkSmartPointer<vtkLightKit> m_lightKit;
@@ -153,5 +152,6 @@ private:
     vtkSmartPointer<PickerHighlighterInteractorObserver> m_pickerHighlighter;
 
     // -- contents and annotation --
+
     std::vector<ViewportSetup> m_viewportSetups;
 };

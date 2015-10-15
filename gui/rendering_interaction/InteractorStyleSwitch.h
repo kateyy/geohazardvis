@@ -1,8 +1,9 @@
 #pragma once
 
-#include <unordered_map>
 #include <string>
+#include <unordered_map>
 
+#include <vtkCommand.h>
 #include <vtkInteractorStyle.h>
 #include <vtkSmartPointer.h>
 
@@ -14,6 +15,11 @@ class GUI_API InteractorStyleSwitch : public vtkInteractorStyle
 public:
     static InteractorStyleSwitch * New();
     vtkTypeMacro(InteractorStyleSwitch, vtkInteractorStyle);
+
+    enum
+    {
+        StyleChangedEvent = vtkCommand::UserEvent + 1
+    };
 
     void addStyle(const std::string & name, vtkInteractorStyle * interactorStyle);
     void setCurrentStyle(const std::string & name);
