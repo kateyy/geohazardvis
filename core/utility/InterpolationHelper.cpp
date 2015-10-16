@@ -26,22 +26,18 @@ vtkSmartPointer<vtkDataArray> InterpolationHelper::interpolateImageOnImage(vtkIm
         && vtkVector3d(baseImage.GetOrigin()) == vtkVector3d(sourceImage.GetOrigin())
         && vtkVector3d(baseImage.GetSpacing()) == vtkVector3d(sourceImage.GetSpacing());
 
-    if (structuralMatch)
+    if (!structuralMatch)
     {
-        if (sourceAttributeName.isEmpty())
-        {
-            return sourceImage.GetPointData()->GetScalars();
-        }
-        else
-        {
-            return sourceImage.GetPointData()->GetArray(sourceAttributeName.toUtf8().data());
-        }
+        return nullptr;
+    }
+
+    if (sourceAttributeName.isEmpty())
+    {
+        return sourceImage.GetPointData()->GetScalars();
     }
     else
     {
-        // TODO 
-        // this requires a bit more work for images, the probe filter expects matching bounds/extents(?)
-        return nullptr;
+        return sourceImage.GetPointData()->GetArray(sourceAttributeName.toUtf8().data());
     }
 }
 
@@ -54,13 +50,16 @@ vtkSmartPointer<vtkDataArray> InterpolationHelper::interpolate(vtkDataSet & base
 
     if (baseImage && sourceImage)
     {
-        return interpolateImageOnImage(*baseImage, *sourceImage, sourceAttributeName);
+        // just pass the data for structurally matching images
+        auto result = interpolateImageOnImage(*baseImage, *sourceImage, sourceAttributeName);
+        if (result)
+        {
+            return result;
+        }
     }
 
     auto basePoly = vtkPolyData::SafeDownCast(&baseDataSet);
     auto sourcePoly = vtkPolyData::SafeDownCast(&sourceDataSet);
-
-    // interpolation: image <-> polygonal data
 
     auto baseDataProducer = vtkSmartPointer<vtkTrivialProducer>::New();
     baseDataProducer->SetOutput(&baseDataSet);
