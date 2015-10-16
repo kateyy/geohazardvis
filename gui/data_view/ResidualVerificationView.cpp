@@ -348,7 +348,9 @@ void ResidualVerificationView::setDataHelper(unsigned int subViewIndex, DataObje
     }
 
     if (subViewIndex != residualIndex)
+    {
         updateResidualAsync();
+    }
 
     // update GUI before actually deleting old visualization data
 
@@ -357,7 +359,7 @@ void ResidualVerificationView::setDataHelper(unsigned int subViewIndex, DataObje
         for (auto & it : toDeleteInternal)
             toDelete->push_back(std::move(it));
     }
-    else
+    else if (subViewIndex != residualIndex) // update GUI after residual update
     {
         updateGuiAfterDataChange();
     }
@@ -519,6 +521,8 @@ void ResidualVerificationView::updateResidualAsync()
 
     if (!m_observationData || !m_modelData)
     {
+        // delete obsoleted residual data, update the UI
+        handleUpdateFinished();
         return;
     }
 
