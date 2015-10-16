@@ -84,8 +84,8 @@ ResidualVerificationView::ResidualVerificationView(int index, QWidget * parent, 
     connect(interpolationSwitch, &QAbstractButton::toggled, [this](bool checked)
     {
         setInterpolationMode(checked
-            ? InterpolationMode::observationToModel
-            : InterpolationMode::modelToObservation);
+            ? InterpolationMode::modelToObservation
+            : InterpolationMode::observationToModel);
     });
     toolBar()->addWidget(interpolationSwitch);
 
