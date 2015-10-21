@@ -53,6 +53,11 @@ void CanvasExporter::setOutputFileName(const QString & fileName)
     m_fileName = fileName;
 }
 
+bool CanvasExporter::openGLContextSupported()
+{
+    return (m_renderWindow != nullptr);
+}
+
 void CanvasExporter::setOutputFormat(const QString & format)
 {
     m_format = format;

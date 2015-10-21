@@ -8,6 +8,8 @@
 #include <QDir>
 #include <QFileDialog>
 
+#include <QMessageBox>
+
 #include <core/canvas_export/CanvasExporter.h>
 #include <core/canvas_export/CanvasExporterRegistry.h>
 #include <gui/data_view/AbstractRenderView.h>
@@ -113,6 +115,14 @@ CanvasExporter * CanvasExporterWidget::currentExporterConfigured()
     if (exporter)
     {
         exporter->setRenderWindow(m_renderView->renderWindow());
+
+        if (!exporter->openGLContextSupported())
+        {
+            QMessageBox::warning(this, "Unsupported OpenGL Driver", 
+                QString("Unfortunately, the currently selected image export format is not supported with your graphics driver.") +
+                "\nExport format: " + m_ui->fileFormatComboBox->currentText());
+            return nullptr;
+        }
     }
 
     return exporter;

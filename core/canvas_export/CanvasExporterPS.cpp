@@ -2,19 +2,25 @@
 
 #if VTK_has_GLExport2PS
 
+#include <cassert>
+
 #include <QFileInfo>
 #include <QStringList>
 
-using namespace reflectionzeug;
-
+#include <reflectionzeug/PropertyGroup.h>
 
 #include <vtkGL2PSExporter.h>
 
-#include <reflectionzeug/PropertyGroup.h>
+#include "config.h"
+#if WIN32 && VTK_RENDERING_BACKEND == 1
+#include <vtkOpenGLRenderWindow.h>
+#include <vtkOpenGLExtensionManager.h>
+#endif
 
 #include <core/canvas_export/CanvasExporterRegistry.h>
 
 
+using namespace reflectionzeug;
 
 namespace
 {
@@ -70,6 +76,22 @@ bool CanvasExporterPS::write()
     m_exporter->Write();
 
     return true;
+}
+
+bool CanvasExporterPS::openGLContextSupported()
+{
+#if WIN32 && VTK_RENDERING_BACKEND == 1
+    auto openGLContext = vtkOpenGLRenderWindow::SafeDownCast(renderWindow());
+    assert(openGLContext);
+    auto extensionManager = openGLContext->GetExtensionManager();
+
+    if (extensionManager->DriverIsIntel())
+    {
+        return false;
+    }
+#endif
+
+    return CanvasExporter::openGLContextSupported();
 }
 
 PropertyGroup * CanvasExporterPS::createPropertyGroup()

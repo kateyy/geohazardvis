@@ -36,6 +36,10 @@ public:
 
     virtual bool write() = 0;
 
+    /** @return whether the current OpenGL context / driver supports all required functions
+      * Set a valid render window before calling this function! */
+    virtual bool openGLContextSupported();
+
     template<typename T> 
     static std::unique_ptr<CanvasExporter> newInstance();
 

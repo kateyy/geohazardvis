@@ -18,6 +18,8 @@ public:
 
     bool write() override;
 
+    bool openGLContextSupported() override;
+
 protected:
     reflectionzeug::PropertyGroup * createPropertyGroup() override;
 
