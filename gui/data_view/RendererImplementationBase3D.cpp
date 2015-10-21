@@ -158,6 +158,12 @@ void RendererImplementationBase3D::onRemoveContent(AbstractVisualizedData * cont
     assert(dynamic_cast<RenderedData *>(content));
     RenderedData * renderedData = static_cast<RenderedData *>(content);
 
+    // consistently update axes and camera setup (see dataVisibilityChanged)
+    if (content->isVisible())
+    {
+        content->setVisible(false);
+    }
+
     auto & renderer = *this->renderer(subViewIndex);
     auto & dataProps = m_viewportSetups[subViewIndex].dataProps;
 
@@ -168,10 +174,6 @@ void RendererImplementationBase3D::onRemoveContent(AbstractVisualizedData * cont
     props->InitTraversal(it);
     while (vtkProp * prop = props->GetNextProp(it))
         renderer.RemoveViewProp(prop);
-
-    removeFromBounds(renderedData, subViewIndex);
-
-    renderer.ResetCamera();
 }
 
 void RendererImplementationBase3D::onDataVisibilityChanged(AbstractVisualizedData * /*content*/, unsigned int /*subViewIndex*/)
@@ -678,4 +680,6 @@ void RendererImplementationBase3D::dataVisibilityChanged(RenderedData * rendered
     m_pickerHighlighter->SetEnabled(!isEmpty);
 
     onDataVisibilityChanged(rendered, subViewIndex);
+
+    renderer(subViewIndex)->ResetCamera();
 }

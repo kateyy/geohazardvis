@@ -52,11 +52,6 @@ void RendererImplementation3D::onRemoveContent(AbstractVisualizedData * content,
     updateStrategies();
 }
 
-void RendererImplementation3D::onDataVisibilityChanged(AbstractVisualizedData * content, unsigned int subViewIndex)
-{
-    RendererImplementationBase3D::onDataVisibilityChanged(content, subViewIndex);
-}
-
 ColorMapping * RendererImplementation3D::colorMappingForSubView(unsigned int /*subViewIndex*/)
 {
     if (!m_colorMapping)
