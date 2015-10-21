@@ -21,7 +21,7 @@ endif()
 
 set(DEFAULT_COMPILE_FLAGS
     /nologo /Zc:wchar_t /Zc:forScope /GR /Zi /fp:precise /MP /W4 
-    /we4390 /we4150 /we4239 /we4456 /we4457 /we4700 /we4701 /we4703 /we4717
+    /we4150 /we4239 /we4390 /we4456 /we4457 /we4700 /we4701 /we4703 /we4715 /we4717
     /wd4127 /wd4351 /wd4458 /wd4505 /wd4718
     # nologo       -> no logo
     # Zc:wchar_t   -> treat wchar_t as built-in type: yes
@@ -55,6 +55,7 @@ set(DEFAULT_COMPILE_FLAGS
     #   4700       -> uninitialized local variable 'name' used
     #   4701       -> Potentially uninitialized local variable 'name' used
     #   4703       -> Potentially uninitialized local pointer variable 'name' used
+    #   4715       -> 'function' : not all control paths return a value
     #   4717       -> 'function' : recursive on all control paths, function will cause runtime stack overflow
     #   4718       -> 'function call' : recursive call has no side effects, deleting (QMapNode/qmap.h)
     # W4           -> warning level 4
