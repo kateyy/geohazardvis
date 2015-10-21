@@ -52,6 +52,9 @@ private:
     void updateWindowTitle();
     void handleAsyncLoadFinished();
 
+    void reloadSettings();
+    void storeSettings();
+
 private:
     QPalette m_defaultPalette;
 

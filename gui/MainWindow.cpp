@@ -118,9 +118,7 @@ MainWindow::MainWindow()
 
     connect(m_ui->actionDark_Style, &QAction::triggered, this, &MainWindow::setDarkFusionStyle);
 
-    QSettings settings(s_settingsFileName, QSettings::IniFormat);
-    restoreGeometry(settings.value("geometry").toByteArray());
-    restoreState(settings.value("windowState").toByteArray());
+    reloadSettings();
 }
 
 MainWindow::~MainWindow()
@@ -165,9 +163,7 @@ QStringList MainWindow::dialog_inputFileName()
 
 void MainWindow::closeEvent(QCloseEvent * event)
 {
-    QSettings settings(s_settingsFileName, QSettings::IniFormat);
-    settings.setValue("geometry", saveGeometry());
-    settings.setValue("windowState", saveState());
+    storeSettings();
 
     QMainWindow::closeEvent(event);
 }
@@ -381,4 +377,20 @@ void MainWindow::handleAsyncLoadFinished()
     }
 
     updateWindowTitle();
+}
+
+void MainWindow::reloadSettings()
+{
+    QSettings settings(s_settingsFileName, QSettings::IniFormat);
+    m_lastOpenFolder = settings.value("lastOpenFolder").toString();
+    restoreGeometry(settings.value("geometry").toByteArray());
+    restoreState(settings.value("windowState").toByteArray());
+}
+
+void MainWindow::storeSettings()
+{
+    QSettings settings(s_settingsFileName, QSettings::IniFormat);
+    settings.setValue("lastOpenFolder", m_lastOpenFolder);
+    settings.setValue("geometry", saveGeometry());
+    settings.setValue("windowState", saveState());
 }
