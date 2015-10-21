@@ -9,8 +9,11 @@
 
 class vtkChartXY;
 class vtkContextView;
+class vtkObject;
+class vtkPlot;
 class vtkPlotCollection;
 
+class ChartXY;
 class Context2DData;
 
 
@@ -57,23 +60,26 @@ protected:
     void onAddContent(AbstractVisualizedData * content, unsigned int subViewIndex) override;
     void onRemoveContent(AbstractVisualizedData * content, unsigned int subViewIndex) override;
 
+    Context2DData * contextDataContaining(const vtkPlot & plot) const;
+
 private:
     void initialize();
 
     void updateBounds();
 
-private:
     /** scan data for changed context items */
     void fetchContextItems(Context2DData * data);
 
     void dataVisibilityChanged(Context2DData * data);
+
+    void handlePlotSelectionEvent(vtkObject * subject, unsigned long eventId, void * callData);
 
 private:
     bool m_isInitialized;
 
     // -- setup --
     vtkSmartPointer<vtkContextView> m_contextView;
-    vtkSmartPointer<vtkChartXY> m_chart;
+    vtkSmartPointer<ChartXY> m_chart;
 
     // -- contents and annotation --
 

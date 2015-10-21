@@ -16,6 +16,8 @@ set ( SOURCES
     data_view/AbstractDataView.cpp
     data_view/AbstractRenderView.h
     data_view/AbstractRenderView.cpp
+    data_view/ChartXY.h
+    data_view/ChartXY.cpp
     data_view/RenderView.h
     data_view/RenderView.cpp
     data_view/RendererImplementation.h

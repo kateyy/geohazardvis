@@ -6,6 +6,7 @@
 #include <vtkChartXY.h>
 #include <vtkContextScene.h>
 #include <vtkContextView.h>
+#include <vtkIdTypeArray.h>
 #include <vtkPlot.h>
 #include <vtkRenderWindow.h>
 
@@ -13,7 +14,9 @@
 #include <core/data_objects/DataObject.h>
 #include <core/context2D_data/Context2DData.h>
 #include <core/context2D_data/vtkPlotCollection.h>
+#include <core/utility/macros.h>
 #include <gui/data_view/AbstractRenderView.h>
+#include <gui/data_view/ChartXY.h>
 
 
 bool RendererImplementationPlot::s_isRegistered = RendererImplementation::registerImplementation<RendererImplementationPlot>();
@@ -93,31 +96,82 @@ vtkRenderWindowInteractor * RendererImplementationPlot::interactor()
     return m_contextView->GetInteractor();
 }
 
-void RendererImplementationPlot::setSelectedData(AbstractVisualizedData * /*vis*/, vtkIdType /*index*/, IndexType /*indexType*/)
+void RendererImplementationPlot::setSelectedData(AbstractVisualizedData * vis, vtkIdType index, IndexType indexType)
 {
+    auto indices = vtkSmartPointer<vtkIdTypeArray>::New();
+    indices->SetNumberOfValues(1);
+    indices->SetValue(1, index);
+
+    setSelectedData(vis, index, indexType);
 }
 
-void RendererImplementationPlot::setSelectedData(AbstractVisualizedData * /*vis*/, vtkIdTypeArray & /*indices*/, IndexType /*indexType*/)
+void RendererImplementationPlot::setSelectedData(AbstractVisualizedData * vis, vtkIdTypeArray & indices, IndexType indexType)
 {
+    Context2DData * contextData = nullptr;
+    if (indexType != IndexType::points
+        || (nullptr == (contextData = dynamic_cast<Context2DData *>(vis))))
+    {
+        clearSelection();
+        return;
+    }
+
+    const auto & plots = m_plots.value(contextData, nullptr);
+    if (!plots)
+    {
+        clearSelection();
+        return;
+    }
+
+    assert(plots->GetNumberOfItems() == 1);
+
+    plots->InitTraversal();
+    auto plot = plots->GetNextPlot();
+
+    plot->SetSelection(&indices);
 }
 
 void RendererImplementationPlot::clearSelection()
 {
+    for (vtkIdType i = 0; i < m_chart->GetNumberOfPlots(); ++i)
+    {
+        m_chart->GetPlot(i)->SetSelection(nullptr);
+    }
 }
 
 AbstractVisualizedData * RendererImplementationPlot::selectedData() const
 {
-    return nullptr;
+    auto selectedPlot = m_chart->selectedPlot();
+
+    if (!selectedPlot)
+    {
+        return nullptr;
+    }
+
+    return contextDataContaining(*selectedPlot);
 }
 
 vtkIdType RendererImplementationPlot::selectedIndex() const
 {
-    return vtkIdType();
+    auto selectedPlot = m_chart->selectedPlot();
+
+    if (!selectedPlot)
+    {
+        return -1;
+    }
+
+    auto selection = m_chart->selectedPlot()->GetSelection();
+
+    if (!selection || selection->GetSize() == 0)
+    {
+        return -1;
+    }
+
+    return selection->GetValue(0);
 }
 
 IndexType RendererImplementationPlot::selectedIndexType() const
 {
-    return IndexType();
+    return IndexType::points;
 }
 
 void RendererImplementationPlot::lookAtData(AbstractVisualizedData & /*vis*/, vtkIdType /*index*/, IndexType /*indexType*/, unsigned int /*subViewIndex*/)
@@ -179,6 +233,24 @@ void RendererImplementationPlot::onRemoveContent(AbstractVisualizedData * conten
     m_contextView->ResetCamera();
 }
 
+Context2DData * RendererImplementationPlot::contextDataContaining(const vtkPlot & plot) const
+{
+    for (auto it = m_plots.begin(); it != m_plots.end(); ++it)
+    {
+        auto && plotList = it.value();
+
+        for (plotList->InitTraversal(); auto p = plotList->GetNextPlot(); )
+        {
+            if (p == &plot)
+            {
+                return it.key();
+            }
+        }
+    }
+
+    return nullptr;
+}
+
 void RendererImplementationPlot::setAxesVisibility(bool /*visible*/)
 {
 }
@@ -214,9 +286,11 @@ void RendererImplementationPlot::initialize()
         return;
 
     m_contextView = vtkSmartPointer<vtkContextView>::New();
-    m_chart = vtkSmartPointer<vtkChartXY>::New();
+    m_chart = vtkSmartPointer<ChartXY>::New();
     m_chart->SetShowLegend(true);
     m_contextView->GetScene()->AddItem(m_chart);
+
+    m_chart->AddObserver(ChartXY::PlotSelectedEvent, this, &RendererImplementationPlot::handlePlotSelectionEvent);
 
     m_isInitialized = true;
 }
@@ -259,4 +333,25 @@ void RendererImplementationPlot::dataVisibilityChanged(Context2DData * data)
         connect(&data->dataObject(), &DataObject::boundsChanged, this, &RendererImplementationPlot::updateBounds);
     else
         disconnect(&data->dataObject(), &DataObject::boundsChanged, this, &RendererImplementationPlot::updateBounds);
+}
+
+void RendererImplementationPlot::handlePlotSelectionEvent(vtkObject * DEBUG_ONLY(subject), unsigned long /*eventId*/, void * callData)
+{
+    assert(subject == m_chart.Get());
+
+    auto plot = reinterpret_cast<vtkPlot *>(callData);
+
+    if (!plot)
+    {
+        emit dataSelectionChanged(nullptr);
+        return;
+    }
+
+    auto vis = contextDataContaining(*plot);
+
+    emit dataSelectionChanged(vis);
+
+    m_renderView.objectPicked(&vis->dataObject(), 
+        selectedIndex(), 
+        selectedIndexType());
 }
