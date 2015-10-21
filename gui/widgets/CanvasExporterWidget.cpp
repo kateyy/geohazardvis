@@ -17,6 +17,7 @@
 CanvasExporterWidget::CanvasExporterWidget(QWidget * parent, Qt::WindowFlags f)
     : QDialog(parent, f)
     , m_ui(std::make_unique<Ui_CanvasExporterWidget>())
+    , m_renderView(nullptr)
 {
     m_ui->setupUi(this);
     m_ui->exporterSettingsBrowser->addEditorPlugin<ColorEditorRGB>();
