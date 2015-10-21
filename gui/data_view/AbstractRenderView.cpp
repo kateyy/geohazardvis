@@ -156,7 +156,7 @@ void AbstractRenderView::render()
 
 void AbstractRenderView::showInfoText(const QString & info)
 {
-    setToolTip(info);
+    qvtkWidget().setToolTip(info);
 }
 
 QString AbstractRenderView::infoText() const
