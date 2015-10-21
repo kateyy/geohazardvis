@@ -1,5 +1,4 @@
 #include "RendererConfigWidget.h"
-#include "ui_RendererConfigWidget.h"
 
 #include <cassert>
 #include <limits>
@@ -25,7 +24,6 @@
 
 
 using namespace reflectionzeug;
-using namespace propertyguizeug;
 
 namespace
 {

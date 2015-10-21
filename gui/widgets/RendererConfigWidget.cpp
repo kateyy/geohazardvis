@@ -143,6 +143,8 @@ void RendererConfigWidget::updateInteractionModeCombo()
     combo->addItems(impl.supportedInteractionStrategies());
     combo->setCurrentText(impl.currentInteractionStrategy());
 
+    m_ui->interactionModeWidget->setVisible(combo->count() > 0);
+
     combo->blockSignals(false);
 }
 
