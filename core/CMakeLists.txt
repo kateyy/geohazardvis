@@ -155,6 +155,8 @@ set ( SOURCES
     ThirdParty/ParaView/vtkPVScalarBarActor.h
     ThirdParty/ParaView/vtkPVScalarBarActor.cxx
 
+    utility/conversions.h
+    utility/conversions.hpp
     utility/DataExtent.h
     utility/DataExtent.hpp
     utility/DataExtent.cpp
