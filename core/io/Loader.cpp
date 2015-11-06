@@ -116,6 +116,20 @@ const QMap<QString, QStringList> & Loader::fileFormatExtensions()
 
 std::unique_ptr<DataObject> Loader::readFile(const QString & filename)
 {
+    {
+        QFile f(filename);
+        if (!f.exists())
+        {
+            qDebug() << "Loader: trying to open non-existing file: " << filename;
+            return nullptr;
+        }
+        if (!f.open(QIODevice::ReadOnly))
+        {
+            qDebug() << "Loader: cannot open file for read-only access: " << filename;
+            return nullptr;
+        }
+    }
+
     QFileInfo fileInfo{ filename };
     QString baseName = fileInfo.baseName();
     QString ext = fileInfo.suffix().toLower();
