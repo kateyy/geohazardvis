@@ -130,6 +130,8 @@ void ColorMapping::setCurrentScalarsByName(const QString & scalarsName)
     m_colorMappingLegend->SetTitle(scalarsName.toUtf8().data());
 
     updateLegendVisibility();
+
+    emit currentScalarsChanged();
 }
 
 ColorMappingData * ColorMapping::currentScalars()

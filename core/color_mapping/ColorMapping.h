@@ -64,6 +64,7 @@ public:
 
 signals:
     void scalarsChanged();
+    void currentScalarsChanged();
     void colorLegendVisibilityChanged(bool visible);
 
 private:

@@ -115,34 +115,7 @@ void ColorMappingChooser::setCurrentRenderView(AbstractRenderView * renderView)
 {
     m_renderView = renderView;
 
-    if (m_mapping == nullptr)
-    {
-        assert(m_colorLegendObserverIds.isEmpty());
-    }
-    for (auto it = m_colorLegendObserverIds.begin(); it != m_colorLegendObserverIds.end(); ++it)
-    {
-        if (it.key())
-            it.key()->RemoveObserver(it.value());
-    }
-    m_colorLegendObserverIds.clear();
-
     rebuildGui();
-
-    m_ui->legendPositionComboBox->setCurrentText("user-defined position");
-
-    if (m_mapping)
-    {
-        auto addObserver = [this] (vtkObject * subject, void(ColorMappingChooser::* callback)()) {
-            m_colorLegendObserverIds.insert(subject,
-                subject->AddObserver(vtkCommand::ModifiedEvent, this, callback));
-        };
-
-        addObserver(m_mapping->colorMappingLegend()->GetPositionCoordinate(), &ColorMappingChooser::colorLegendPositionChanged);
-        addObserver(m_mapping->colorMappingLegend()->GetPosition2Coordinate(), &ColorMappingChooser::colorLegendPositionChanged);
-        addObserver(m_mapping->colorMappingLegend()->GetTitleTextProperty(), &ColorMappingChooser::updateLegendTitleFont);
-        addObserver(m_mapping->colorMappingLegend()->GetLabelTextProperty(), &ColorMappingChooser::updateLegendLabelFont);
-        addObserver(m_mapping->colorMappingLegend(), &ColorMappingChooser::updateLegendConfig);
-    }
 }
 
 void ColorMappingChooser::guiScalarsSelectionChanged(const QString & scalarsName)
@@ -401,6 +374,23 @@ int ColorMappingChooser::defaultGradientIndex() const
 
 void ColorMappingChooser::checkRenderViewColorMapping()
 {
+    if (m_mapping == nullptr)
+    {
+        assert(m_colorLegendObserverIds.isEmpty());
+    }
+    for (auto it = m_colorLegendObserverIds.begin(); it != m_colorLegendObserverIds.end(); ++it)
+    {
+        if (it.key())
+            it.key()->RemoveObserver(it.value());
+    }
+    m_colorLegendObserverIds.clear();
+
+    if (m_mapping)
+    {
+        disconnect(m_mapping, &ColorMapping::currentScalarsChanged, this, &ColorMappingChooser::mappingScalarsChanged);
+    }
+
+
     m_renderViewImpl = nullptr;
     m_mapping = nullptr;
     m_legend = nullptr;
@@ -434,6 +424,25 @@ void ColorMappingChooser::checkRenderViewColorMapping()
         if (mapping->originalGradient())
             continue;
         mapping->setGradient(defaultGradient());
+    }
+
+    m_ui->legendPositionComboBox->setCurrentText("user-defined position");
+
+    if (m_mapping)
+    {
+        auto addObserver = [this] (vtkObject * subject, void(ColorMappingChooser::* callback)()) {
+            m_colorLegendObserverIds.insert(subject,
+                subject->AddObserver(vtkCommand::ModifiedEvent, this, callback));
+        };
+
+        addObserver(m_mapping->colorMappingLegend()->GetPositionCoordinate(), &ColorMappingChooser::colorLegendPositionChanged);
+        addObserver(m_mapping->colorMappingLegend()->GetPosition2Coordinate(), &ColorMappingChooser::colorLegendPositionChanged);
+        addObserver(m_mapping->colorMappingLegend()->GetTitleTextProperty(), &ColorMappingChooser::updateLegendTitleFont);
+        addObserver(m_mapping->colorMappingLegend()->GetLabelTextProperty(), &ColorMappingChooser::updateLegendLabelFont);
+        addObserver(m_mapping->colorMappingLegend(), &ColorMappingChooser::updateLegendConfig);
+
+        // in case the active mapping is changed via the C++ interface
+        connect(m_mapping, &ColorMapping::currentScalarsChanged, this, &ColorMappingChooser::mappingScalarsChanged);
     }
 }
 
@@ -539,6 +548,21 @@ void ColorMappingChooser::rebuildGui()
     updateGuiValueRanges();
 
     emit renderSetupChanged();
+}
+
+void ColorMappingChooser::mappingScalarsChanged()
+{
+    assert(dynamic_cast<ColorMapping *>(sender()));
+    auto sendingMapping = static_cast<ColorMapping *>(sender());
+
+    auto && scalars = sendingMapping->currentScalarsName();
+
+    if (m_ui->scalarsComboBox->currentText() == scalars)
+    {
+        return;
+    }
+
+    m_ui->scalarsComboBox->setCurrentText(scalars);
 }
 
 void ColorMappingChooser::updateGuiValueRanges()

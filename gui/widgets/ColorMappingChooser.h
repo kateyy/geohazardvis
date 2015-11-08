@@ -50,6 +50,9 @@ private:
 
     void rebuildGui();
 
+    /** Update the GUI-selected scalars when the mapping is modified directly via its interface */
+    void mappingScalarsChanged();
+
 private:
     void colorLegendPositionChanged();
     void updateLegendTitleFont();
