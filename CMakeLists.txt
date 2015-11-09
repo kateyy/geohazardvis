@@ -178,6 +178,13 @@ include_directories(SYSTEM ${VTK_INCLUDE_DIRS})
 set_property(DIRECTORY APPEND PROPERTY COMPILE_DEFINITIONS ${VTK_DEFINITIONS})
 
 
+set(FindQt5_Components Core Gui Widgets)
+if(NOT ${Qt5Core_VERSION} VERSION_LESS 5.5)
+    list(APPEND FindQt5_Components Concurrent)
+endif()
+
+
+
 option(OPTION_USE_SYSTEM_LIBZEUG "Search for installed Libzeug Libraries instead of compiling them" OFF)
 if(OPTION_USE_SYSTEM_LIBZEUG)
     find_package(libzeug REQUIRED)
@@ -186,7 +193,7 @@ else()
     set(LIBZEUG_PREFIX "${THIRD_PARTY_DIR}/libzeug")
     set(libzeug_DIR "${LIBZEUG_PREFIX}/install")
 
-    find_package(Qt5 COMPONENTS OpenGL)
+    list(APPEND FindQt5_Components OpenGL)
 
     ExternalProject_Add(libzeug
         PREFIX ${LIBZEUG_PREFIX}
@@ -224,6 +231,10 @@ else()
         )
     endif()
 endif()
+
+
+find_package(Qt5 COMPONENTS ${FindQt5_Components})
+
 
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)

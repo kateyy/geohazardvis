@@ -13,6 +13,7 @@ if(WIN32 AND ${CMAKE_VERSION} VERSION_GREATER 3.0)
             $<$<CONFIG:Debug>:--debug>$<$<CONFIG:RelWithDebInfo>:--release-with-debug-info>$<$<OR:$<CONFIG:Release>,$<CONFIG:MinSizeRelease>>:--release>
             --no-translations
             --no-compiler-runtime
+            --no-system-d3d-compiler
         VERBATIM
     )
     set_target_properties(PrepareQtDeploy 

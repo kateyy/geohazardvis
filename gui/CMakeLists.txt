@@ -129,6 +129,7 @@ endif()
 
 target_link_libraries( ${TARGET}
     Qt5::Widgets
+    Qt5::Concurrent
 
     core
 )
