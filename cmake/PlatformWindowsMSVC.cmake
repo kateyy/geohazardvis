@@ -22,7 +22,7 @@ endif()
 set(DEFAULT_COMPILE_FLAGS
     /nologo /Zc:wchar_t /Zc:forScope /GR /Zi /fp:precise /MP /W4 
     /we4150 /we4239 /we4390 /we4456 /we4457 /we4700 /we4701 /we4703 /we4715 /we4717
-    /wd4127 /wd4351 /wd4458 /wd4505 /wd4718
+    /wd4127 /wd4351 /wd4505 /wd4718
     # nologo       -> no logo
     # Zc:wchar_t   -> treat wchar_t as built-in type: yes
     # Zc:forScope  -> force conformance in for loop scope: Yes

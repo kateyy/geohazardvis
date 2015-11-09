@@ -23,13 +23,13 @@ public:
 
     void setDataMapping(DataMapping * dataMapping);
 
-    void setSelectedData(DataObject * data);
+    void setSelectedData(DataObject * dataObject);
     QList<DataObject *> selectedDataObjects() const;
     QList<DataObject *> selectedDataSets() const;
     QList<DataObject *> selectedAttributeVectors() const;
 
 signals:
-    void selectedDataChanged(DataObject * data);
+    void selectedDataChanged(DataObject * dataObject);
 
 protected:
     bool eventFilter(QObject * obj, QEvent * ev) override;

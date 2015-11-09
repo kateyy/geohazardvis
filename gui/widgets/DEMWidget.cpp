@@ -280,14 +280,14 @@ void DEMWidget::updateAvailableDataSets()
     m_ui->surfaceMeshCombo->clear();
     m_ui->demCombo->clear();
 
-    for (DataObject * data : DataSetHandler::instance().dataSets())
+    for (auto dataObject : DataSetHandler::instance().dataSets())
     {
-        if (auto p = dynamic_cast<PolyDataObject *>(data))
+        if (auto p = dynamic_cast<PolyDataObject *>(dataObject))
         {
             if (p->is2p5D())
                 m_surfaceMeshes << p;
         }
-        else if (auto i = dynamic_cast<ImageDataObject *>(data))
+        else if (auto i = dynamic_cast<ImageDataObject *>(dataObject))
             m_dems << i;
     }
 

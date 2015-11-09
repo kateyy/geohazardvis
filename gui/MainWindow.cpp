@@ -256,19 +256,19 @@ void MainWindow::dialog_exportDataSet()
 
     QString oldName = windowTitle();
 
-    for (DataObject * data : toExport)
+    for (auto dataObject : toExport)
     {
-        bool isSupported = Exporter::isExportSupported(data);
+        bool isSupported = Exporter::isExportSupported(dataObject);
         if (!isSupported)
         {
             QMessageBox::warning(this, "Unsuppored Operation",
-                "Exporting is currently not supported for the selected data type (" + data->dataTypeName() + ")\n"
-                + "Data set: """ + data->name() + """");
+                "Exporting is currently not supported for the selected data type (" + dataObject->dataTypeName() + ")\n"
+                + "Data set: """ + dataObject->name() + """");
             continue;
         }
 
-        QString fileName = QFileDialog::getSaveFileName(this, "", m_lastExportFolder + "/" + data->name(),
-            Exporter::formatFilter(data));
+        QString fileName = QFileDialog::getSaveFileName(this, "", m_lastExportFolder + "/" + dataObject->name(),
+            Exporter::formatFilter(dataObject));
 
         if (fileName.isEmpty())
             continue;
@@ -276,7 +276,7 @@ void MainWindow::dialog_exportDataSet()
         setWindowTitle("Exporting " + QFileInfo(fileName).baseName() + " ...");
         QApplication::processEvents();
 
-        Exporter::exportData(data, fileName);
+        Exporter::exportData(dataObject, fileName);
 
         m_lastExportFolder = QFileInfo(fileName).absolutePath();
     }

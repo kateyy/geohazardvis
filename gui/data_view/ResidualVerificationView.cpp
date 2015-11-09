@@ -326,20 +326,20 @@ void ResidualVerificationView::waitForResidualUpdate()
     QCoreApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
 }
 
-void ResidualVerificationView::setDataHelper(unsigned int subViewIndex, DataObject * data, bool skipGuiUpdate, std::vector<std::unique_ptr<AbstractVisualizedData>> * toDelete)
+void ResidualVerificationView::setDataHelper(unsigned int subViewIndex, DataObject * dataObject, bool skipGuiUpdate, std::vector<std::unique_ptr<AbstractVisualizedData>> * toDelete)
 {
     assert(skipGuiUpdate == (toDelete != nullptr));
 
-    if (dataAt(subViewIndex) == data)
+    if (dataAt(subViewIndex) == dataObject)
         return;
 
     std::vector<std::unique_ptr<AbstractVisualizedData>> toDeleteInternal;
-    setDataInternal(subViewIndex, data, toDeleteInternal);
+    setDataInternal(subViewIndex, dataObject, toDeleteInternal);
 
-    if (data)
+    if (dataObject)
     {
-        assert(data->dataSet());
-        auto & dataSet = *data->dataSet();
+        assert(dataObject->dataSet());
+        auto & dataSet = *dataObject->dataSet();
         m_attributeNamesLocations[subViewIndex] = findDataSetAttributeName(dataSet, subViewIndex);
     }
     else
@@ -393,9 +393,9 @@ void ResidualVerificationView::showDataObjectsImpl(const QList<DataObject *> & d
     for (int i = 1; i < dataObjects.size(); ++i)
         incompatibleObjects << dataObjects[i];
 
-    DataObject * data = dataObjects.isEmpty() ? nullptr : dataObjects.first();
+    auto dataObject = dataObjects.isEmpty() ? nullptr : dataObjects.first();
 
-    setDataHelper(subViewIndex, data);
+    setDataHelper(subViewIndex, dataObject);
 }
 
 void ResidualVerificationView::hideDataObjectsImpl(const QList<DataObject *> & dataObjects, unsigned int subViewIndex)
@@ -414,15 +414,15 @@ QList<DataObject *> ResidualVerificationView::dataObjectsImpl(int subViewIndex) 
         QList<DataObject *> objects;
         for (unsigned i = 0; i < numberOfSubViews(); ++i)
         {
-            if (auto data = dataAt(i))
-                objects << data;
+            if (auto dataObject = dataAt(i))
+                objects << dataObject;
         }
 
         return objects;
     }
 
-    if (auto data = dataAt(unsigned(subViewIndex)))
-        return{ data };
+    if (auto dataObject = dataAt(unsigned(subViewIndex)))
+        return{ dataObject };
 
     return{};
 }
@@ -785,25 +785,25 @@ void ResidualVerificationView::updateComboBoxes()
     QList<ImageDataObject *> images;
     QList<PolyDataObject *> polyData2p5D;
 
-    for (DataObject * data : DataSetHandler::instance().dataSets())
+    for (auto dataObject : DataSetHandler::instance().dataSets())
     {
-        qulonglong ptrData = reinterpret_cast<size_t>(data);
+        qulonglong ptrData = reinterpret_cast<size_t>(dataObject);
 
         // ImageDataObjects can directly be used as observation/model
-        if (dynamic_cast<ImageDataObject *>(data))
+        if (dynamic_cast<ImageDataObject *>(dataObject))
         {
-            m_observationCombo->addItem(data->name(), ptrData);
-            m_modelCombo->addItem(data->name(), ptrData);
+            m_observationCombo->addItem(dataObject->name(), ptrData);
+            m_modelCombo->addItem(dataObject->name(), ptrData);
             continue;
         }
 
         // allow to transform 2.5D polygonal data into model surface grid
-        if (auto poly = dynamic_cast<PolyDataObject *>(data))
+        if (auto poly = dynamic_cast<PolyDataObject *>(dataObject))
         {
             if (!poly->is2p5D())
                 continue;
 
-            m_modelCombo->addItem(data->name(), ptrData);
+            m_modelCombo->addItem(dataObject->name(), ptrData);
         }
     }
 
@@ -833,16 +833,16 @@ void ResidualVerificationView::updateComboBoxes()
 
 void ResidualVerificationView::updateObservationFromUi(int index)
 {
-    auto data = reinterpret_cast<DataObject *>(m_observationCombo->itemData(index, Qt::UserRole).toULongLong());
+    auto dataObject = reinterpret_cast<DataObject *>(m_observationCombo->itemData(index, Qt::UserRole).toULongLong());
 
-    setObservationData(data);
+    setObservationData(dataObject);
 }
 
 void ResidualVerificationView::updateModelFromUi(int index)
 {
-    auto data = reinterpret_cast<DataObject *>(m_modelCombo->itemData(index, Qt::UserRole).toULongLong());
+    auto dataObject = reinterpret_cast<DataObject *>(m_modelCombo->itemData(index, Qt::UserRole).toULongLong());
 
-    setModelData(data);
+    setModelData(dataObject);
 }
 
 DataObject * ResidualVerificationView::dataAt(unsigned int i) const
@@ -860,19 +860,19 @@ DataObject * ResidualVerificationView::dataAt(unsigned int i) const
     return nullptr;
 }
 
-bool ResidualVerificationView::setDataAt(unsigned int i, DataObject * data)
+bool ResidualVerificationView::setDataAt(unsigned int i, DataObject * dataObject)
 {
     switch (i)
     {
     case observationIndex:
-        if (m_observationData == data)
+        if (m_observationData == dataObject)
             return false;
-        m_observationData = data;
+        m_observationData = dataObject;
         break;
     case modelIndex:
-        if (m_modelData == data)
+        if (m_modelData == dataObject)
             return false;
-        m_modelData = data;
+        m_modelData = dataObject;
         break;
     default:
         assert(false);

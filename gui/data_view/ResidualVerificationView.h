@@ -104,7 +104,7 @@ private:
 
     // common implementation for the public interface functions
     // @delayGuiUpdate set to true and delete the objects appended to toDelete yourself, if you intend to call this function multiple times
-    void setDataHelper(unsigned int subViewIndex, DataObject * data, bool delayGuiUpdate = false, std::vector<std::unique_ptr<AbstractVisualizedData>> * toDelete = nullptr);
+    void setDataHelper(unsigned int subViewIndex, DataObject * dataObject, bool delayGuiUpdate = false, std::vector<std::unique_ptr<AbstractVisualizedData>> * toDelete = nullptr);
     /** Low level function, that won't trigger GUI updates.
         @param toDelete Delete these objects after removing them from dependent components (GUI etc) */
     void setDataInternal(unsigned int subViewIndex, DataObject * dataObject, std::vector<std::unique_ptr<AbstractVisualizedData>> & toDelete);
@@ -125,7 +125,7 @@ private:
     void updateModelFromUi(int index);
 
     DataObject * dataAt(unsigned int i) const;
-    bool setDataAt(unsigned int i, DataObject * data);
+    bool setDataAt(unsigned int i, DataObject * dataObject);
 
     static std::pair<QString, bool> findDataSetAttributeName(vtkDataSet & dataSet, unsigned int inputType);
 

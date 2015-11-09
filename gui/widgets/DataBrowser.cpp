@@ -52,16 +52,16 @@ void DataBrowser::setDataMapping(DataMapping * dataMapping)
     connect(m_dataMapping, &DataMapping::focusedRenderViewChanged, this, &DataBrowser::updateModel);
 }
 
-void DataBrowser::setSelectedData(DataObject * data)
+void DataBrowser::setSelectedData(DataObject * dataObject)
 {
-    int row = m_tableModel->rowForDataObject(data);
+    int row = m_tableModel->rowForDataObject(dataObject);
 
     auto currentSelection = m_ui->dataTableView->selectionModel()->selectedRows();
     if (currentSelection.size() == 1 && currentSelection.first().row() == row)
         return;
 
     m_ui->dataTableView->clearSelection();
-    m_ui->dataTableView->selectRow(m_tableModel->rowForDataObject(data));
+    m_ui->dataTableView->selectRow(m_tableModel->rowForDataObject(dataObject));
 }
 
 bool DataBrowser::eventFilter(QObject * /*obj*/, QEvent * ev)
@@ -199,10 +199,10 @@ void DataBrowser::removeFile()
 {
     QList<DataObject *> selection = selectedDataObjects();
     QList<DataObject *> deletable;
-    for (auto & data : selection)
+    for (auto dataObject : selection)
     {
-        if (DataSetHandler::instance().ownsData(data))
-            deletable << data;
+        if (DataSetHandler::instance().ownsData(dataObject))
+            deletable << dataObject;
     }
 
     m_dataMapping->removeDataObjects(deletable);
