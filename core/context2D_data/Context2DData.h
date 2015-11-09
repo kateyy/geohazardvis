@@ -13,7 +13,7 @@ class CORE_API Context2DData : public AbstractVisualizedData
     Q_OBJECT
 
 public:
-    Context2DData(DataObject & dataObject);
+    explicit Context2DData(DataObject & dataObject);
 
     vtkSmartPointer<vtkPlotCollection> plots();
 

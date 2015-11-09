@@ -82,8 +82,6 @@ vtkSmartPointer<vtkAlgorithm> ImageDataLIC2DMapping::createFilter(AbstractVisual
 
     auto & lics = m_lic2D[visualizedData];
 
-    static const std::string scaledVectorsName{ "scaledVectors" };
-
     if (lics.size() <= connection)
         lics.resize(connection + 1);
 

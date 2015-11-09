@@ -87,7 +87,7 @@ T * DataExtent<T, Dimensions>::Data()
 
 template<typename T, size_t Dimensions>
 template<typename newT, size_t newDimensions>
-DataExtent<newT, newDimensions> DataExtent<T, Dimensions>::ConvertTo()
+DataExtent<newT, newDimensions> DataExtent<T, Dimensions>::ConvertTo() const
 {
     DataExtent<newT, newDimensions> result;
 

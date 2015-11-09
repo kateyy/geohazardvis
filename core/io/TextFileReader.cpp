@@ -292,11 +292,11 @@ bool TextFileReader::readHeader_DEM(std::ifstream & inputStream, std::vector<Dat
             cellSize = stod(value);
             continue;
         }
-        if (parameter == "NODATA_value")
-        {
-            nanValue = stod(value);
-            continue;
-        }
+        //if (parameter == "NODATA_value")
+        //{
+        //    nanValue = stod(value);
+        //    continue;
+        //}
     }
 
     if (!atEnd)

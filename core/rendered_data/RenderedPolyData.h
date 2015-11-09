@@ -17,7 +17,7 @@ class PolyDataObject;
 class CORE_API RenderedPolyData : public RenderedData3D
 {
 public:
-    RenderedPolyData(PolyDataObject & dataObject);
+    explicit RenderedPolyData(PolyDataObject & dataObject);
 
     PolyDataObject & polyDataObject();
     const PolyDataObject & polyDataObject() const;

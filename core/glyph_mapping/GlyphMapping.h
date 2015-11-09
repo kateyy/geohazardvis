@@ -24,7 +24,7 @@ class CORE_API GlyphMapping : public QObject
     Q_OBJECT
 
 public:
-    GlyphMapping(RenderedData & renderedData);
+    explicit GlyphMapping(RenderedData & renderedData);
     ~GlyphMapping() override;
 
     /** names of vectors that can be used with my data */

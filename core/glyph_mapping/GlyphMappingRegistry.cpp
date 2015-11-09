@@ -17,7 +17,7 @@ GlyphMappingRegistry & GlyphMappingRegistry::instance()
     return registry;
 }
 
-std::map<QString, std::unique_ptr<GlyphMappingData>> GlyphMappingRegistry::createMappingsValidFor(RenderedData & renderedData)
+std::map<QString, std::unique_ptr<GlyphMappingData>> GlyphMappingRegistry::createMappingsValidFor(RenderedData & renderedData) const
 {
     std::map<QString, std::unique_ptr<GlyphMappingData>> validVectors;
 
@@ -35,7 +35,7 @@ std::map<QString, std::unique_ptr<GlyphMappingData>> GlyphMappingRegistry::creat
     return validVectors;
 }
 
-const QMap<QString, GlyphMappingRegistry::MappingCreator> & GlyphMappingRegistry::mappingCreators()
+const QMap<QString, GlyphMappingRegistry::MappingCreator> & GlyphMappingRegistry::mappingCreators() const
 {
     return m_mappingCreators;
 }

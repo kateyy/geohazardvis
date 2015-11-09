@@ -14,7 +14,7 @@ enum class IndexType;
 class CORE_API QVtkTableModel : public QAbstractTableModel
 {
 public:
-    QVtkTableModel(QObject * parent = nullptr);
+    explicit QVtkTableModel(QObject * parent = nullptr);
 
     QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override;
 
