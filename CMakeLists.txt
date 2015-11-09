@@ -246,6 +246,7 @@ include_directories(SYSTEM # disable warnings produced by Qt headers (GCC)
 
 
 if(WIN32 AND CPACK_INSTALL_3RDPARTY_DLLS)
+    set(CMAKE_INSTALL_OPENMP_LIBRARIES ON)
     set(CMAKE_INSTALL_SYSTEM_RUNTIME_DESTINATION ${INSTALL_BIN})
     include(InstallRequiredSystemLibraries)
 
