@@ -199,9 +199,9 @@ void ImageProfileData::setPoints(const vtkVector2d & point1, const vtkVector2d &
     auto probeVector = point2 - point1;
 
     int numProbePoints = 0;
-    double pointSpacing[3];
     if (auto image = vtkImageData::SafeDownCast(m_sourceData.dataSet()))
     {
+        double pointSpacing[3];
         image->GetSpacing(pointSpacing);
         double xLength = probeVector[0] / pointSpacing[0];
         double yLength = probeVector[1] / pointSpacing[1];

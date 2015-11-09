@@ -11,7 +11,7 @@ class QStringProperty : public reflectionzeug::ValueProperty<QString, reflection
 {
 public:
     template <typename... Arguments>
-    QStringProperty(Arguments&&... args);
+    explicit QStringProperty(Arguments&&... args);
 
     CORE_API std::string toString() const;
 

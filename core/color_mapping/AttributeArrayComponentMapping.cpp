@@ -37,7 +37,7 @@ std::vector<std::unique_ptr<ColorMappingData>> AttributeArrayComponentMapping::n
 {
     struct ArrayInfo
     {
-        ArrayInfo(int comp = 0)
+        explicit ArrayInfo(int comp = 0)
             : numComponents(comp)
         {
         }

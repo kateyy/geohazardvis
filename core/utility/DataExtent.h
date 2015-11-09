@@ -8,7 +8,7 @@ class DataExtent
 {
 public:
     DataExtent();
-    DataExtent(T extent[Dimensions * 2]);
+    explicit DataExtent(T extent[Dimensions * 2]);
 
     void Add(const T other[Dimensions * 2]);
 
@@ -26,7 +26,7 @@ public:
     vtkVector<T, Dimensions> Size() const;
 
     template<typename newT, size_t newDimensions>
-    DataExtent<newT, newDimensions> ConvertTo();
+    DataExtent<newT, newDimensions> ConvertTo() const;
 
     const T * Data() const;
 

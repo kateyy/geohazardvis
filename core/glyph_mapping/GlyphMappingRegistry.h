@@ -23,13 +23,13 @@ public:
     bool registerImplementation(const QString & name, const MappingCreator & creator);
 
     /** retrieve a list of vectors that are applicable for the rendered data object */
-    std::map<QString, std::unique_ptr<GlyphMappingData>> createMappingsValidFor(RenderedData & renderedData);
+    std::map<QString, std::unique_ptr<GlyphMappingData>> createMappingsValidFor(RenderedData & renderedData) const;
 
 private:
     GlyphMappingRegistry();
     ~GlyphMappingRegistry();
 
-    const QMap<QString, MappingCreator> & mappingCreators();
+    const QMap<QString, MappingCreator> & mappingCreators() const;
 
     QMap<QString, MappingCreator> m_mappingCreators;
 };

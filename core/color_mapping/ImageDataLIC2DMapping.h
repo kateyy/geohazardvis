@@ -13,7 +13,7 @@ class NoiseImageSource;
 class CORE_API ImageDataLIC2DMapping : public ColorMappingData
 {
 public:
-    ImageDataLIC2DMapping(const QList<AbstractVisualizedData *> & visualizedData);
+    explicit ImageDataLIC2DMapping(const QList<AbstractVisualizedData *> & visualizedData);
     ~ImageDataLIC2DMapping() override;
 
     QString name() const override;

@@ -13,7 +13,7 @@ class GlyphColorMappingGlyphListener : public QObject
     Q_OBJECT
 
 public:
-    GlyphColorMappingGlyphListener(QObject * parent = nullptr);
+    explicit GlyphColorMappingGlyphListener(QObject * parent = nullptr);
 
     void setData(const QList<AbstractVisualizedData *> & visualizedData);
 

@@ -100,11 +100,10 @@ PropertyGroup * CanvasExporterPS::createPropertyGroup()
 
     group->addProperty<std::string>("Title",
         [this] () -> std::string {
-        std::string title;
-        if (m_exporter->GetTitle())
-            return m_exporter->GetTitle();
-        else
-            return ""; },
+        if (auto title = m_exporter->GetTitle())
+            return title;
+        return "";
+    },
         [this] (const std::string & title) {
         m_exporter->SetTitle(title.c_str()); }
     );

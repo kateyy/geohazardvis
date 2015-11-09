@@ -17,7 +17,7 @@ ColorMappingRegistry & ColorMappingRegistry::instance()
     return registry;
 }
 
-std::map<QString, std::unique_ptr<ColorMappingData>> ColorMappingRegistry::createMappingsValidFor(const QList<AbstractVisualizedData*> & visualizedData)
+std::map<QString, std::unique_ptr<ColorMappingData>> ColorMappingRegistry::createMappingsValidFor(const QList<AbstractVisualizedData*> & visualizedData) const
 {
     std::map<QString, std::unique_ptr<ColorMappingData>> validScalars;
 
@@ -35,7 +35,7 @@ std::map<QString, std::unique_ptr<ColorMappingData>> ColorMappingRegistry::creat
     return validScalars;
 }
 
-const QMap<QString, ColorMappingRegistry::MappingCreator> & ColorMappingRegistry::mappingCreators()
+const QMap<QString, ColorMappingRegistry::MappingCreator> & ColorMappingRegistry::mappingCreators() const
 {
     return m_mappingCreators;
 }

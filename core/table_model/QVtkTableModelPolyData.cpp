@@ -13,6 +13,7 @@
 
 QVtkTableModelPolyData::QVtkTableModelPolyData(QObject * parent)
 : QVtkTableModel(parent)
+, m_polyData(nullptr)
 {
 }
 

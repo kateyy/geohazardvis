@@ -24,7 +24,7 @@ class RendererImplementationPlot;
 class GUI_API RendererConfigWidget : public QDockWidget
 {
 public:
-    RendererConfigWidget(QWidget * parent = nullptr);
+    explicit RendererConfigWidget(QWidget * parent = nullptr);
     ~RendererConfigWidget() override;
 
     void clear();

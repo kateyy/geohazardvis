@@ -25,13 +25,13 @@ public:
     bool registerImplementation(const QString & name, const MappingCreator & creator);
 
     /** retrieve a list of scalars extractions that are applicable for the specified data object list */
-    std::map<QString, std::unique_ptr<ColorMappingData>> createMappingsValidFor(const QList<AbstractVisualizedData*> & visualizedData);
+    std::map<QString, std::unique_ptr<ColorMappingData>> createMappingsValidFor(const QList<AbstractVisualizedData*> & visualizedData) const;
 
 private:
     ColorMappingRegistry();
     ~ColorMappingRegistry();
 
-    const QMap<QString, MappingCreator> & mappingCreators();
+    const QMap<QString, MappingCreator> & mappingCreators() const;
 
     QMap<QString, MappingCreator> m_mappingCreators;
 };

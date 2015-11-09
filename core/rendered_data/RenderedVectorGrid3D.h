@@ -21,7 +21,7 @@ class CORE_API RenderedVectorGrid3D : public RenderedData3D
     Q_OBJECT
 
 public:
-    RenderedVectorGrid3D(VectorGrid3DDataObject & dataObject);
+    explicit RenderedVectorGrid3D(VectorGrid3DDataObject & dataObject);
 
     /** the interactor needs to be set in order to use the image plane widgets */
     void setRenderWindowInteractor(vtkRenderWindowInteractor * interactor);

@@ -137,7 +137,7 @@ void ColorMapping::setCurrentScalarsByName(const QString & scalarsName)
 ColorMappingData * ColorMapping::currentScalars()
 {
     return const_cast<ColorMappingData *>(    // don't implement the same function twice
-        ((const ColorMapping *)(this))->currentScalars());
+        (static_cast<const ColorMapping *>(this))->currentScalars());
 }
 
 const ColorMappingData * ColorMapping::currentScalars() const

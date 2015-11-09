@@ -19,7 +19,7 @@ class DataObject;
 class GUI_API RenderConfigWidget : public QDockWidget
 {
 public:
-    RenderConfigWidget(QWidget * parent = nullptr);
+    explicit RenderConfigWidget(QWidget * parent = nullptr);
     ~RenderConfigWidget() override;
 
 public:

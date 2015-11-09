@@ -11,7 +11,7 @@ class vtkRenderer;
 class GUI_API RendererImplementationNull : public RendererImplementation
 {
 public:
-    RendererImplementationNull(AbstractRenderView & renderView);
+    explicit RendererImplementationNull(AbstractRenderView & renderView);
 
     QString name() const override;
     ContentType contentType() const override;

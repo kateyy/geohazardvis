@@ -12,7 +12,7 @@ class DataObject;
 class DataBrowserTableModel : public QAbstractTableModel
 {
 public:
-    DataBrowserTableModel(QObject * parent = nullptr);
+    explicit DataBrowserTableModel(QObject * parent = nullptr);
 
     void updateDataList(const QList<DataObject *> & visibleObjects);
 

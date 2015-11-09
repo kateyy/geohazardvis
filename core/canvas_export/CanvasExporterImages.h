@@ -13,7 +13,7 @@ class CanvasExporterImages : public CanvasExporter
 {
 public:
     /** @param writer Subclasses must provide a vtkImageWriter subclass */
-    CanvasExporterImages(vtkImageWriter * writer);
+    explicit CanvasExporterImages(vtkImageWriter * writer);
 
     bool write() override;
 
@@ -22,7 +22,7 @@ protected:
     reflectionzeug::PropertyGroup * createPropertyGroup() override;
 
     /** complete file name with correct file extension */
-    QString verifiedFileName();
+    QString verifiedFileName() const;
 
 protected:
     vtkSmartPointer<vtkWindowToImageFilter> m_toImageFilter;

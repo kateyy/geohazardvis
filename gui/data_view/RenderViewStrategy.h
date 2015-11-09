@@ -21,7 +21,7 @@ class RenderedData;
 class GUI_API RenderViewStrategy : public QObject
 {
 public:
-    RenderViewStrategy(RendererImplementationBase3D & context);
+    explicit RenderViewStrategy(RendererImplementationBase3D & context);
     virtual ~RenderViewStrategy();
 
     virtual QString name() const = 0;

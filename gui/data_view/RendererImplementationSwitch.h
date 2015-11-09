@@ -13,7 +13,7 @@ class RendererImplementation;
 class RendererImplementationSwitch
 {
 public:
-    RendererImplementationSwitch(AbstractRenderView & renderView);
+    explicit RendererImplementationSwitch(AbstractRenderView & renderView);
     ~RendererImplementationSwitch();
 
     void findSuitableImplementation(const QList<DataObject *> & dataObjects);

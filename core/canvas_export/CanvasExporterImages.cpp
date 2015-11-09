@@ -83,7 +83,7 @@ PropertyGroup * CanvasExporterImages::createPropertyGroup()
     return group;
 }
 
-QString CanvasExporterImages::verifiedFileName()
+QString CanvasExporterImages::verifiedFileName() const
 {
     QString ext = outputFormat().toLower();
     QFileInfo info(outputFileName());

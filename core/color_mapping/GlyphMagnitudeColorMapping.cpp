@@ -135,7 +135,7 @@ QMap<int, QPair<double, double>> GlyphMagnitudeColorMapping::updateBounds()
             vtkDataArray * normData =
                 norm->GetOutput()->GetPointData()->GetScalars();
             if (!normData)
-                norm->GetOutput()->GetCellData()->GetScalars();
+                normData = norm->GetOutput()->GetCellData()->GetScalars();
             assert(normData);
 
             double range[2];

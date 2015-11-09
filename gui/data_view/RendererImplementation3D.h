@@ -12,7 +12,7 @@ class RenderViewStrategySwitch;
 class GUI_API RendererImplementation3D : public RendererImplementationBase3D
 {
 public:
-    RendererImplementation3D(AbstractRenderView & renderView);
+    explicit RendererImplementation3D(AbstractRenderView & renderView);
     ~RendererImplementation3D() override;
 
     QString name() const override;

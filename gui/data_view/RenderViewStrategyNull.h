@@ -6,7 +6,7 @@
 class GUI_API RenderViewStrategyNull : public RenderViewStrategy
 {
 public:
-    RenderViewStrategyNull(RendererImplementationBase3D & context);
+    explicit RenderViewStrategyNull(RendererImplementationBase3D & context);
 
     QString name() const override;
     bool contains3dData() const override;
