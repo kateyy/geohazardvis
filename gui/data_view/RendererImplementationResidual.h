@@ -11,7 +11,7 @@ class RenderViewStrategy2D;
 class GUI_API RendererImplementationResidual : public RendererImplementationBase3D
 {
 public:
-    RendererImplementationResidual(AbstractRenderView & renderView);
+    explicit RendererImplementationResidual(AbstractRenderView & renderView);
     ~RendererImplementationResidual() override;
 
     QString name() const override;

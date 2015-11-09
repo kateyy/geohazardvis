@@ -30,7 +30,7 @@ class GUI_API RendererImplementation : public QObject
     Q_OBJECT
 
 public:
-    RendererImplementation(AbstractRenderView & renderView);
+    explicit RendererImplementation(AbstractRenderView & renderView);
     ~RendererImplementation() override;
 
     AbstractRenderView & renderView() const;

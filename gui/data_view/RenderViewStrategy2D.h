@@ -21,7 +21,7 @@ class DataObject;
 class GUI_API RenderViewStrategy2D : public RenderViewStrategy
 {
 public:
-    RenderViewStrategy2D(RendererImplementationBase3D & context);
+    explicit RenderViewStrategy2D(RendererImplementationBase3D & context);
     ~RenderViewStrategy2D() override;
 
     /** Explicitly define a list of images to create a profile plot for. 

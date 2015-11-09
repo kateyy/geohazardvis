@@ -20,7 +20,7 @@ class GUI_API DataMapping : public QObject
     Q_OBJECT
 
 public:
-    DataMapping(MainWindow & mainWindow);
+    explicit DataMapping(MainWindow & mainWindow);
     ~DataMapping() override;
     static DataMapping & instance();
 

@@ -20,7 +20,7 @@ class Context2DData;
 class GUI_API RendererImplementationPlot : public RendererImplementation
 {
 public:
-    RendererImplementationPlot(AbstractRenderView & renderView);
+    explicit RendererImplementationPlot(AbstractRenderView & renderView);
 
     QString name() const override;
 

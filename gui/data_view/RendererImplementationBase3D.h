@@ -35,7 +35,7 @@ This class requires a valid ColorMapping and vtkRenderWindow to be passed to the
 class GUI_API RendererImplementationBase3D : public RendererImplementation
 {
 public:
-    RendererImplementationBase3D(AbstractRenderView & renderView);
+    explicit RendererImplementationBase3D(AbstractRenderView & renderView);
     ~RendererImplementationBase3D() override;
 
     ContentType contentType() const override;

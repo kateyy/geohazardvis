@@ -26,7 +26,7 @@ class GUI_API ColorMappingChooser : public QDockWidget
     Q_OBJECT
 
 public:
-    ColorMappingChooser(QWidget * parent = nullptr);
+    explicit ColorMappingChooser(QWidget * parent = nullptr);
     ~ColorMappingChooser() override;
 
     vtkLookupTable * selectedGradient() const;
