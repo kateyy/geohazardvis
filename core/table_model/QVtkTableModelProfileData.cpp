@@ -10,6 +10,7 @@
 
 QVtkTableModelProfileData::QVtkTableModelProfileData(QObject * parent)
     : QVtkTableModel(parent)
+    , m_data(nullptr)
 {
 }
 
