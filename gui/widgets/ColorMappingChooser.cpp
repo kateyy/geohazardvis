@@ -385,27 +385,29 @@ void ColorMappingChooser::checkRenderViewColorMapping()
     }
     m_colorLegendObserverIds.clear();
 
-    if (m_mapping)
-    {
-        disconnect(m_mapping, &ColorMapping::currentScalarsChanged, this, &ColorMappingChooser::mappingScalarsChanged);
-    }
-
 
     m_renderViewImpl = nullptr;
     m_mapping = nullptr;
     m_legend = nullptr;
 
     if (!m_renderView)
+    {
         return;
+    }
 
     // color mapping is currently only implemented for 3D/render views (not for context/2D/plot views)
     m_renderViewImpl = dynamic_cast<RendererImplementationBase3D *>(&m_renderView->implementation());
     if (!m_renderViewImpl)
+    {
         return;
+    }
 
     m_mapping = m_renderViewImpl->colorMapping(m_renderView->activeSubViewIndex());
+
     if (m_mapping)
+    {
         m_legend = dynamic_cast<OrientedScalarBarActor *>(m_mapping->colorMappingLegend());
+    }
 
     // setup gradients for newly created mappings
     if (m_mapping && !m_mapping->originalGradient())
@@ -423,7 +425,7 @@ void ColorMappingChooser::checkRenderViewColorMapping()
             continue;
         if (mapping->originalGradient())
             continue;
-        mapping->setGradient(defaultGradient());
+        mapping->setGradient(selectedGradient());
     }
 
     m_ui->legendPositionComboBox->setCurrentText("user-defined position");
@@ -442,7 +444,7 @@ void ColorMappingChooser::checkRenderViewColorMapping()
         addObserver(m_mapping->colorMappingLegend(), &ColorMappingChooser::updateLegendConfig);
 
         // in case the active mapping is changed via the C++ interface
-        connect(m_mapping, &ColorMapping::currentScalarsChanged, this, &ColorMappingChooser::mappingScalarsChanged);
+        m_qtConnect << connect(m_mapping, &ColorMapping::currentScalarsChanged, this, &ColorMappingChooser::mappingScalarsChanged);
     }
 }
 
@@ -488,6 +490,12 @@ void ColorMappingChooser::guiSelectNanColor()
 
 void ColorMappingChooser::rebuildGui()
 {
+    for (auto & connection : m_qtConnect)
+    {
+        disconnect(connection);
+    }
+    m_qtConnect.clear();
+
     checkRenderViewColorMapping();
 
     updateTitle(m_renderView);
@@ -496,10 +504,6 @@ void ColorMappingChooser::rebuildGui()
     auto newLegend = m_legend;
     m_mapping = nullptr;    // disable GUI to mapping events
     m_legend = nullptr;
-
-    for (auto & connection : m_qtConnect)
-        disconnect(connection);
-    m_qtConnect.clear();
 
     m_ui->scalarsComboBox->clear();
     m_ui->gradientGroupBox->setEnabled(false);
