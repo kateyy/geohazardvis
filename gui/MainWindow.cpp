@@ -29,6 +29,7 @@
 #include <gui/SelectionHandler.h>
 #include <gui/data_view/AbstractRenderView.h>
 #include <gui/data_view/ResidualVerificationView.h>
+#include <gui/widgets/AsciiImporterWidget.h>
 #include <gui/widgets/CanvasExporterWidget.h>
 #include <gui/widgets/ColorMappingChooser.h>
 #include <gui/widgets/DEMWidget.h>
@@ -61,6 +62,13 @@ MainWindow::MainWindow()
     m_ui->setupUi(this);
 
     connect(m_ui->actionOpen, &QAction::triggered, [this] () { openFilesAsync(dialog_inputFileName()); });
+    connect(m_ui->actionImport_ASCII_Triangle_Mesh, &QAction::triggered, [this] () {
+        AsciiImporterWidget importer(this);
+        if (importer.exec() == QDialog::Accepted)
+        {
+            DataSetHandler::instance().takeData(importer.releaseLoadedData());
+        }
+    });
     connect(m_ui->actionExportDataset, &QAction::triggered, this, &MainWindow::dialog_exportDataSet);
     connect(m_ui->actionAbout_Qt, &QAction::triggered, [this] () { QMessageBox::aboutQt(this); });
     connect(m_ui->actionApply_Digital_Elevation_Model, &QAction::triggered, this, &MainWindow::showDEMWidget);

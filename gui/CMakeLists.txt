@@ -70,6 +70,8 @@ set ( SOURCES
     rendering_interaction/CameraInteractorStyleSwitch.h
     rendering_interaction/CameraInteractorStyleSwitch.cpp
 
+    widgets/AsciiImporterWidget.h
+    widgets/AsciiImporterWidget.cpp
     widgets/CanvasExporterWidget.h
     widgets/CanvasExporterWidget.cpp
     widgets/ColorMappingChooser.h
@@ -99,6 +101,7 @@ set ( UIs
 
     data_view/TableView.ui
 
+    widgets/AsciiImporterWidget.ui
     widgets/CanvasExporterWidget.ui
     widgets/ColorMappingChooser.ui
     widgets/DataBrowser.ui

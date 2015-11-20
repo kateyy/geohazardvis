@@ -37,6 +37,7 @@
      <string>&amp;File</string>
     </property>
     <addaction name="actionOpen"/>
+    <addaction name="actionImport_ASCII_Triangle_Mesh"/>
     <addaction name="actionExportDataset"/>
     <addaction name="separator"/>
     <addaction name="actionExit"/>
@@ -172,6 +173,11 @@
   <action name="actionOpen_Export_Folder">
    <property name="text">
     <string>Open Export &amp;Folder</string>
+   </property>
+  </action>
+  <action name="actionImport_ASCII_Triangle_Mesh">
+   <property name="text">
+    <string>Import &amp;ASCII Triangle Mesh...</string>
    </property>
   </action>
  </widget>
