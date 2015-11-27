@@ -54,6 +54,12 @@ vtkRenderer * Highlighter::renderer() const
 
 void Highlighter::setTarget(AbstractVisualizedData * vis, int visOutputPort, vtkIdType index, IndexType indexType)
 {
+    if (index < 0)
+    {
+        clearIndices();
+        return;
+    }
+
     m_indices->SetNumberOfValues(1);
     m_indices->SetValue(0, index);
 
