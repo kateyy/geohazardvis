@@ -81,7 +81,7 @@ void ColorMappingData::initialize()
 {
     for (AbstractVisualizedData * vis : m_visualizedData)
     {
-        connect(&vis->dataObject(), &DataObject::valueRangeChanged, this, &ColorMappingData::updateBounds);
+        connect(&vis->dataObject(), &DataObject::valueRangeChanged, this, &ColorMappingData::forceUpdateBoundsLocked);
     }
 }
 
@@ -194,6 +194,13 @@ void ColorMappingData::minMaxChangedEvent()
     emit minMaxChanged();
 }
 
+void ColorMappingData::forceUpdateBoundsLocked() const
+{
+    const_cast<ColorMappingData *>(this)->m_boundsValid = false;
+
+    updateBoundsLocked();
+}
+
 void ColorMappingData::updateBoundsLocked() const
 {
     m_boundsUpdateMutex.lock();
@@ -217,20 +224,16 @@ void ColorMappingData::updateBoundsLocked() const
 
         assert(minMax.first <= minMax.second);
 
-        lockedThis.m_dataMinValue[component] = minMax.first;
-        lockedThis.m_dataMaxValue[component] = minMax.second;
+        if (lockedThis.m_dataMinValue[component] == minMax.first
+            && lockedThis.m_dataMaxValue[component] == minMax.second)
+        {
+            continue;
+        }
 
-        // reset user selected ranges only if really needed
-        if (m_minValue[component] < m_dataMinValue[component] || m_minValue[component] > m_dataMaxValue[component])
-        {
-            lockedThis.m_minValue[component] = m_dataMinValue[component];
-            minMaxChanged = true;
-        }
-        if (m_maxValue[component] < m_dataMinValue[component] || m_maxValue[component] > m_dataMaxValue[component])
-        {
-            lockedThis.m_maxValue[component] = m_dataMaxValue[component];
-            minMaxChanged = true;
-        }
+        minMaxChanged = true;
+
+        lockedThis.m_minValue[component] = lockedThis.m_dataMinValue[component] = minMax.first;
+        lockedThis.m_maxValue[component] = lockedThis.m_dataMaxValue[component] = minMax.second;
     }
 
     lockedThis.m_boundsValid = true;
@@ -238,7 +241,8 @@ void ColorMappingData::updateBoundsLocked() const
     m_boundsUpdateMutex.unlock();
 
     if (minMaxChanged)
+    {
+        emit lockedThis.dataMinMaxChanged();
         lockedThis.minMaxChangedEvent();
-
-    emit lockedThis.dataMinMaxChanged();
+    }
 }

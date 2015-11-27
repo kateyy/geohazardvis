@@ -85,5 +85,7 @@ private:
     bool m_movingColorLegend;
     /** Mapping from subject (color legend coordinate, text property, etc) to observer id */
     QMap<vtkWeakPointer<vtkObject>, unsigned long> m_colorLegendObserverIds;
+    // connections for various parameters and signals related to the color mapping
     QList<QMetaObject::Connection> m_qtConnect;
+    QMetaObject::Connection m_dataMinMaxChangedConnection;
 };

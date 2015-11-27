@@ -102,6 +102,7 @@ protected:
     vtkSmartPointer<vtkLookupTable> m_lut;
 
 private:
+    void forceUpdateBoundsLocked() const;
     void updateBoundsLocked() const;
 
 private:

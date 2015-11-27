@@ -123,7 +123,12 @@ void ColorMappingChooser::guiScalarsSelectionChanged(const QString & scalarsName
     if (!m_mapping)
         return;
 
+    disconnect(m_dataMinMaxChangedConnection);
+
     m_mapping->setCurrentScalarsByName(scalarsName);
+
+    m_dataMinMaxChangedConnection = connect(m_mapping->currentScalars(), &ColorMappingData::dataMinMaxChanged, this, &ColorMappingChooser::rebuildGui);
+
     updateGuiValueRanges();
 
     bool gradients = m_mapping->currentScalarsUseMappingLegend();
@@ -543,6 +548,9 @@ void ColorMappingChooser::rebuildGui()
         });
         m_qtConnect << connect(this, &ColorMappingChooser::renderSetupChanged,
             m_renderView, &AbstractRenderView::render);
+
+        disconnect(m_dataMinMaxChangedConnection);
+        m_dataMinMaxChangedConnection = connect(newMapping->currentScalars(), &ColorMappingData::dataMinMaxChanged, this, &ColorMappingChooser::rebuildGui);
     }
 
     // the mapping can now receive signals from the UI
@@ -571,7 +579,7 @@ void ColorMappingChooser::mappingScalarsChanged()
 
 void ColorMappingChooser::updateGuiValueRanges()
 {
-    int numComponents = 0, currentComponent = 1;
+    int numComponents = 0, currentComponent = 0;
     double min = 0, max = 0;
     double currentMin = 0, currentMax = 0;
 
@@ -620,14 +628,14 @@ void ColorMappingChooser::updateGuiValueRanges()
     m_ui->componentSpinBox->setValue(currentComponent + 1);
     m_ui->minValueSpinBox->setMinimum(min);
     m_ui->minValueSpinBox->setMaximum(max);
-    m_ui->minValueSpinBox->setValue(currentMin);
     m_ui->minValueSpinBox->setSingleStep(step);
     m_ui->minValueSpinBox->setDecimals(decimals);
+    m_ui->minValueSpinBox->setValue(currentMin);
     m_ui->maxValueSpinBox->setMinimum(min);
     m_ui->maxValueSpinBox->setMaximum(max);
-    m_ui->maxValueSpinBox->setValue(currentMax);
     m_ui->maxValueSpinBox->setSingleStep(step);
     m_ui->maxValueSpinBox->setDecimals(decimals);
+    m_ui->maxValueSpinBox->setValue(currentMax);
 
     m_ui->componentLabel->setText("component (" + QString::number(numComponents) + ")");
     QString resetLink = enableRangeGui ? "resetToData" : "";

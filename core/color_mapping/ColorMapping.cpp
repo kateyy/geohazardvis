@@ -60,8 +60,6 @@ void ColorMapping::setVisualizedData(const QList<AbstractVisualizedData *> & vis
     {
         auto & scalars = pair.second;
         scalars->setLookupTable(m_gradient);
-        connect(scalars.get(), &ColorMappingData::dataMinMaxChanged,
-            this, &ColorMapping::scalarsChanged);
     }
 
     // disable color mapping if we couldn't find appropriate data
