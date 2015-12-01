@@ -29,15 +29,18 @@
 // These changes make it easier to control in ParaView.
 //
 
-#ifndef __vtkPVScalarBarActor_h
-#define __vtkPVScalarBarActor_h
+#pragma once
 
 #include "vtkScalarBarActor.h"
 
+#include "vtkNew.h" // For ivars
 #include "vtkSmartPointer.h" // For ivars
 #include <vector> // For ivars
 
 #include <core/core_api.h>
+
+class vtkAxis;
+class vtkContextScene;
 
 class CORE_API vtkPVScalarBarActor : public vtkScalarBarActor
 {
@@ -116,6 +119,10 @@ public:
   virtual void ReleaseGraphicsResources(vtkWindow*);
 
   // Description:
+  // Overridden to sync internal variables with renderer state.
+  int RenderOpaqueGeometry(vtkViewport* viewport);
+
+  // Description:
   // Draw the scalar bar and annotation text to the screen.
   virtual int RenderOverlay(vtkViewport* viewport);
 
@@ -157,17 +164,6 @@ protected:
     double value, int minDigits,
     int targetWidth, int targetHeight, vtkViewport* viewport);
 
-//BTX
-  // Description:
-  // Given a data range, finds locations for tick marks that will have
-  // "friendly" labels (that is, can be represented with less units of
-  // precision).
-  virtual std::vector<double> LinearTickMarks(
-    const double range[2], int maxTicks, int& minDigits, bool intOnly=false);
-  virtual std::vector<double> LogTickMarks(
-    const double range[2], int maxTicks, int& minDigits);
-//ETX
-
   double AspectRatio;
   int AutomaticLabelFormat;
   int DrawTickMarks;
@@ -186,6 +182,11 @@ protected:
   vtkActor2D* TickMarksActor;
 
   // Description:
+  // These are used to calculate the tick spacing.
+  vtkNew<vtkAxis> TickLayoutHelper;
+  vtkNew<vtkContextScene> TickLayoutHelperScene;
+
+  // Description:
   // Space, in pixels, between the labels and the bar itself.  Currently set in
   // PositionTitle.
   int LabelSpace;
@@ -202,5 +203,3 @@ private:
   vtkPVScalarBarActor(const vtkPVScalarBarActor &);     // Not implemented.
   void operator=(const vtkPVScalarBarActor &);          // Not implemented.
 };
-
-#endif //__vtkPVScalarBarActor_h

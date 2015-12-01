@@ -576,7 +576,10 @@ vtkSmartPointer<vtkGridAxes3DActor> RendererImplementationBase3D::createAxes()
     gridAxes->SetProperty(gridAxesProp);
 
     for (int i = 0; i < 3; ++i)
+    {
         gridAxes->GetLabelTextProperty(i)->SetColor(labelColor);
+        gridAxes->GetTitleTextProperty(i)->SetColor(labelColor);
+    }
     
     // Will be shown when needed
     gridAxes->VisibilityOff();
