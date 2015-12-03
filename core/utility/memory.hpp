@@ -24,7 +24,7 @@ typename std::vector<std::unique_ptr<T>>::iterator findUnique(std::vector<std::u
 template<typename T>
 typename std::vector<std::unique_ptr<T>>::const_iterator findUnique(const std::vector<std::unique_ptr<T>> & vector, const T * value)
 {
-    return findUnique(vector.begin(), vector.end(), value);
+    return findUnique(vector.cbegin(), vector.cend(), value);
 }
 
 template<typename T>
