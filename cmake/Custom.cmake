@@ -4,7 +4,7 @@ function(configure_cxx_target TARGET)
     target_compile_definitions(${TARGET} PRIVATE ${DEFAULT_COMPILE_DEFS})
 
     target_compile_options(${TARGET} PRIVATE ${DEFAULT_COMPILE_FLAGS})
-    
+
     set_target_properties( ${TARGET}
         PROPERTIES
         LINKER_LANGUAGE CXX
@@ -18,6 +18,27 @@ function(configure_cxx_target TARGET)
     )
 endfunction()
 
+function(configure_cxx_plugin TARGET)
+
+    configure_cxx_target(${TARGET})
+
+    if(MSVC) # for multi-configuration generators
+        set_target_properties(${TARGET}
+            PROPERTIES
+            RUNTIME_OUTPUT_DIRECTORY_DEBUG "${CMAKE_BINARY_DIR}/Debug/plugins"
+            RUNTIME_OUTPUT_DIRECTORY_RELEASE "${CMAKE_BINARY_DIR}/Release/plugins"
+            RUNTIME_OUTPUT_DIRECTORY_RELWITHDEBINFO "${CMAKE_BINARY_DIR}/RelWithDebInfo/plugins"
+            RUNTIME_OUTPUT_DIRECTORY_MINSIZEREL "${CMAKE_BINARY_DIR}/MinSizeRel/plugins"
+        )
+    else()
+        set_target_properties(${TARGET}
+            PROPERTIES
+            RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/plugins"
+        )
+    endif()
+
+endfunction()
+
 # Define function "source_group_by_path with three mandatory arguments (PARENT_PATH, REGEX, GROUP, ...)
 # to group source files in folders (e.g. for MSVC solutions).
 #
@@ -26,16 +47,16 @@ endfunction()
 function (source_group_by_path PARENT_PATH REGEX GROUP)
 
     foreach (FILENAME ${ARGN})
-        
+
         string(REGEX MATCH ${REGEX} regex_match ${FILENAME})
-        
+
         if (regex_match)
             get_filename_component(FILEPATH "${FILENAME}" REALPATH)
             file(RELATIVE_PATH FILEPATH ${PARENT_PATH} ${FILEPATH})
             get_filename_component(FILEPATH "${FILEPATH}" DIRECTORY)
 
             string(REPLACE "/" "\\" FILEPATH "${FILEPATH}")
-            
+
             source_group("${GROUP}\\${FILEPATH}" REGULAR_EXPRESSION "${REGEX}" FILES ${FILENAME})
         endif()
 
@@ -51,7 +72,7 @@ function (source_group_by_path_and_type PARENT_PATH)
     else()
         source_group_by_path(${PARENT_PATH} ".*[.](cpp|cxx|c|h|hpp)" "Source Files" ${ARGN})
     endif()
-    
+
     source_group_by_path(${PARENT_PATH} ".*[.](qrc|ui)$" "Ressources" ${ARGN})
 
 endfunction(source_group_by_path_and_type)
@@ -62,11 +83,11 @@ include (GenerateExportHeader)
 function(generate_library_export_header LIBNAME)
 
     string(TOUPPER ${LIBNAME}_API LIBRARY_EXPORT_MACRO)
-    
+
     generate_export_header( ${LIBNAME}
         BASE_NAME ${LIBNAME}
         EXPORT_MACRO_NAME ${LIBRARY_EXPORT_MACRO}
         EXPORT_FILE_NAME ${LIBNAME}_api.h
         STATIC_DEFINE OPTION_BUILD_STATIC)
-        
+
 endfunction()

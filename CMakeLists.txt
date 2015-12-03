@@ -33,7 +33,6 @@ option(OPTION_IDE_SPLIT_HEADERS_SOURCES "List header and source files in differe
 # Include custom cmake functions
 include(cmake/Custom.cmake)
 include(cmake/GitRevision.cmake)
-include(cmake/ProjectConfigSetup.cmake)
 
 include(CMakeDependentOption)
 
@@ -80,6 +79,9 @@ if(WIN32)
     set(INSTALL_SHORTCUTS ".")                  # Not available under Windows
     set(INSTALL_ICONS ".")                      # Not available under Windows
     set(INSTALL_INIT ".")                       # Not available under Windows
+    set(INSTALL_PLUGINS_BIN "${INSTALL_BIN}/plugins")
+    set(INSTALL_PLUGINS_SHARED "${INSTALL_SHARED}/plugins")
+    set(INSTALL_PLUGINS_LIB "${INSTALL_LIB}/plugins")
 
 else()
     set(INSTALL_ROOT "share/${project}")        # /usr/[local]/share/<project>
@@ -92,6 +94,9 @@ else()
     set(INSTALL_SHORTCUTS "share/applications") # /usr/[local]/share/applications
     set(INSTALL_ICONS "share/pixmaps")          # /usr/[local]/share/pixmaps
     set(INSTALL_INIT "/etc/init")               # /etc/init (upstart init scripts)
+    set(INSTALL_PLUGINS_BIN "${INSTALL_BIN}/plugins")
+    set(INSTALL_PLUGINS_SHARED "${INSTALL_SHARED}/plugins")
+    set(INSTALL_PLUGINS_LIB "${INSTALL_LIB}/plugins")
 endif()
 
 if(WIN32)
@@ -276,14 +281,22 @@ configure_file(cmake/config.h.in ${CMAKE_CURRENT_BINARY_DIR}/config.h)
 set(IDE_FOLDER "")
 add_subdirectory("core")
 add_subdirectory("gui")
+
+# Plugins that require additional third party libraries may add their required runtime paths 
+# using the addPluginRuntimPathEntries function.
+# Executable targets depend on that, to find required DLLs at runtime
+include(cmake/ProjectConfigSetup.cmake)
+set(IDE_FOLDER "Plugins")
+add_subdirectory("plugins")
+
+set(IDE_FOLDER "")
 add_subdirectory("app")
+set(IDE_FOLDER "Tests")
+add_subdirectory("tests")
 
 set(IDE_FOLDER "Deployment, Documentation")
 add_subdirectory("docs")
 add_subdirectory("packages")
-
-set(IDE_FOLDER "Tests")
-add_subdirectory("tests")
 
 if (OPTION_BUILD_TOOLS)
     set(IDE_FOLDER "Tools")

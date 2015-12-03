@@ -14,13 +14,14 @@ class QMutex;
 class QStringList;
 class AbstractRenderView;
 class CanvasExporterWidget;
+class ColorMappingChooser;
 class DataBrowser;
 class DataMapping;
+class GlyphMappingChooser;
+class GuiPluginManager;
 class RenderConfigWidget;
 class RendererConfigWidget;
-class ColorMappingChooser;
 class Ui_MainWindow;
-class GlyphMappingChooser;
 
 
 class GUI_API MainWindow : public QMainWindow
@@ -76,4 +77,6 @@ private:
 
     std::unique_ptr<QMutex> m_loadWatchersMutex;
     std::map<std::unique_ptr<QFutureWatcher<void>>, QStringList> m_loadWatchers;
+
+    std::unique_ptr<GuiPluginManager> m_pluginManager;
 };

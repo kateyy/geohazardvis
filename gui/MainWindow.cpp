@@ -29,6 +29,8 @@
 #include <gui/SelectionHandler.h>
 #include <gui/data_view/AbstractRenderView.h>
 #include <gui/data_view/ResidualVerificationView.h>
+#include <gui/plugin/GuiPluginInterface.h>
+#include <gui/plugin/GuiPluginManager.h>
 #include <gui/widgets/AsciiImporterWidget.h>
 #include <gui/widgets/CanvasExporterWidget.h>
 #include <gui/widgets/ColorMappingChooser.h>
@@ -127,6 +129,12 @@ MainWindow::MainWindow()
     connect(m_ui->actionDark_Style, &QAction::triggered, this, &MainWindow::setDarkFusionStyle);
 
     reloadSettings();
+
+    // load plugins
+
+    m_pluginManager = std::make_unique<GuiPluginManager>();
+    m_pluginManager->searchPaths() = QStringList(QCoreApplication::applicationDirPath() + "/plugins/");
+    m_pluginManager->scan(GuiPluginInterface(*this, s_settingsFileName));
 }
 
 MainWindow::~MainWindow()
@@ -144,6 +152,8 @@ MainWindow::~MainWindow()
         watcher->waitForFinished();
         QApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
     }
+
+    m_pluginManager.reset();
 
     for (auto & connection : m_renderViewConnects)
         disconnect(connection);

@@ -47,6 +47,16 @@ set ( SOURCES
     data_view/TableView.h
     data_view/TableView.cpp
 
+    plugin/gui_plugin_api.h
+    plugin/GuiPlugin.h
+    plugin/GuiPlugin.cpp
+    plugin/GuiPluginInterface.h
+    plugin/GuiPluginInterface.cpp
+    plugin/GuiPluginLibrary.h
+    plugin/GuiPluginLibrary.cpp
+    plugin/GuiPluginManager.h
+    plugin/GuiPluginManager.cpp
+
     propertyguizeug_extension/ColorButtonWithBorder.h
     propertyguizeug_extension/ColorButtonWithBorder.cpp
     propertyguizeug_extension/ColorEditorRGB.h

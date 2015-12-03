@@ -10,16 +10,31 @@ if(NOT OPTION_MSVC_AUTOMATIC_PROJECT_CONFIG)
 
     function(setupProjectUserConfig TARGET)
     endfunction()
+    
+    function(addPluginRuntimePathEntries PATH_ENTRIES)
+    endfunction()
 
     return()
 
 endif()
 
+# this is reset on each CMake configuration invocation
+# Thus, include this file only once before adding the plugin subfolders.
+# All executables that depend on plugin/thirdparty runtime paths should be added after the plugins.
+set(PLUGIN_RUNTIME_PATHS "" CACHE INTERNAL "" FORCE)
+
+function(addPluginRuntimePathEntries PATH_ENTRIES)
+    if(PLUGIN_RUNTIME_PATHS)
+        set(PLUGIN_RUNTIME_PATHS "${PLUGIN_RUNTIME_PATHS};${PATH_ENTRIES}" CACHE INTERNAL "" FORCE)
+    else()
+        set(PLUGIN_RUNTIME_PATHS "${PATH_ENTRIES}" CACHE INTERNAL "" FORCE)
+    endif()
+endfunction()
+
 
 # find path where the qmake executable resides, to be able to add it to the debug PATH
 find_program(Qt5QMake_PATH qmake
     DOC "Path to the qmake executable of the currently used Qt5 installation.")
-
 
 function(setupProjectUserConfig TARGET)
 
@@ -51,26 +66,32 @@ function(setupProjectUserConfig TARGET)
     foreach(CONFIG_TYPE ${CMAKE_CONFIGURATION_TYPES})
         string(TOUPPER ${CONFIG_TYPE} UPPER_CONFIG_TYPE)
 
-        set(PROJECT_PATHS)
+        set(PROJECT_RUNTIME_PATHS)
 
         # VTK
-        list(APPEND PROJECT_PATHS "${VTK_DIR}\\bin\\${CONFIG_TYPE}")
+        list(APPEND PROJECT_RUNTIME_PATHS "${VTK_DIR}\\bin\\${CONFIG_TYPE}")
 
         # libzeug
-        list(APPEND PROJECT_PATHS "${libzeug_DIR}\\bin")
+        list(APPEND PROJECT_RUNTIME_PATHS "${libzeug_DIR}\\bin")
 
         # Qt
         get_filename_component(Qt5QMake_DIR ${Qt5QMake_PATH} DIRECTORY)
-        list(APPEND PROJECT_PATHS "${Qt5QMake_DIR}")
+        list(APPEND PROJECT_RUNTIME_PATHS "${Qt5QMake_DIR}")
+        
+        # plugins that require additional third party libraries may add their paths to PLUGIN_RUNTIME_PATHS
+        if(PLUGIN_RUNTIME_PATHS)
+            list(APPEND PROJECT_RUNTIME_PATHS ${PLUGIN_RUNTIME_PATHS})
+        endif()
 
+        # set(PROJECT_RUNTIME_PATH "")
+        # foreach(PATH_ENTRY ${PROJECT_RUNTIME_PATHS})
+            # set(PROJECT_RUNTIME_PATH "${PROJECT_RUNTIME_PATHS}${PATH_ENTRY};")
+        # endforeach()
 
-        set(PROJECT_PATH "")
-        foreach(PATH_ENTRY ${PROJECT_PATHS})
-            set(PROJECT_PATH "${PROJECT_PATH}${PATH_ENTRY};")
-        endforeach()
-
+        # set(MSVC_LOCAL_DEBUGGER_ENVIRONMENT_${UPPER_CONFIG_TYPE}
+           # "PATH=${PROJECT_RUNTIME_PATH}%PATH%"
         set(MSVC_LOCAL_DEBUGGER_ENVIRONMENT_${UPPER_CONFIG_TYPE}
-           "PATH=${PROJECT_PATH}%PATH%"
+           "PATH=${PROJECT_RUNTIME_PATHS};%PATH%"
        )
     endforeach()
 
