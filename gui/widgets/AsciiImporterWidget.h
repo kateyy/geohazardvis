@@ -13,10 +13,10 @@ class PolyDataObject;
 class Ui_AsciiImporterWidget;
 
 
-class AsciiImporterWidget : public QDialog
+class GUI_API AsciiImporterWidget : public QDialog
 {
 public:
-    explicit GUI_API AsciiImporterWidget(QWidget * parent = nullptr, Qt::WindowFlags f = 0);
+    explicit AsciiImporterWidget(QWidget * parent = nullptr, Qt::WindowFlags f = 0);
     ~AsciiImporterWidget() override;
 
     /** Release ownership and return the loaded poly data object.
