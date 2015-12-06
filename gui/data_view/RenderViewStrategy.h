@@ -15,6 +15,7 @@ class vtkCamera;
 
 class RendererImplementationBase3D;
 class DataObject;
+class DataMapping;
 class RenderedData;
 
 
@@ -23,6 +24,8 @@ class GUI_API RenderViewStrategy : public QObject
 public:
     explicit RenderViewStrategy(RendererImplementationBase3D & context);
     virtual ~RenderViewStrategy();
+
+    DataMapping & dataMapping() const;
 
     virtual QString name() const = 0;
 

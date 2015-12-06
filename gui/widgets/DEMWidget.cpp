@@ -36,9 +36,10 @@
 #include <gui/data_view/RendererImplementationBase3D.h>
 
 
-DEMWidget::DEMWidget(QWidget * parent, Qt::WindowFlags f)
+DEMWidget::DEMWidget(DataSetHandler & dataSetHandler, QWidget * parent, Qt::WindowFlags f)
     : QWidget(parent, f)
-    , m_ui{ new Ui_DEMWidget }
+    , m_dataSetHandler(dataSetHandler)
+    , m_ui{ std::make_unique<Ui_DEMWidget>() }
     , m_currentDEM{ nullptr }
     , m_dataPreview{ nullptr }
     , m_renderedPreview{ nullptr }
@@ -74,7 +75,7 @@ DEMWidget::DEMWidget(QWidget * parent, Qt::WindowFlags f)
     });
 
 
-    connect(&DataSetHandler::instance(), &DataSetHandler::dataObjectsChanged, this, &DEMWidget::updateAvailableDataSets);
+    connect(&m_dataSetHandler, &DataSetHandler::dataObjectsChanged, this, &DEMWidget::updateAvailableDataSets);
 }
 
 DEMWidget::~DEMWidget()
@@ -132,14 +133,14 @@ bool DEMWidget::save()
     }
 
     auto newData = std::make_unique<PolyDataObject>(m_ui->newSurfaceModelName->text(), *surface);
-    DataSetHandler::instance().takeData(std::move(newData));
+    m_dataSetHandler.takeData(std::move(newData));
 
     return true;
 }
 
 void DEMWidget::saveAndClose()
 {
-    disconnect(&DataSetHandler::instance(), &DataSetHandler::dataObjectsChanged,
+    disconnect(&m_dataSetHandler, &DataSetHandler::dataObjectsChanged,
         this, &DEMWidget::updateAvailableDataSets);
 
     if (save())
@@ -147,7 +148,7 @@ void DEMWidget::saveAndClose()
 
     updateAvailableDataSets();
 
-    connect(&DataSetHandler::instance(), &DataSetHandler::dataObjectsChanged,
+    connect(&m_dataSetHandler, &DataSetHandler::dataObjectsChanged,
         this, &DEMWidget::updateAvailableDataSets);
 }
 
@@ -280,7 +281,7 @@ void DEMWidget::updateAvailableDataSets()
     m_ui->surfaceMeshCombo->clear();
     m_ui->demCombo->clear();
 
-    for (auto dataObject : DataSetHandler::instance().dataSets())
+    for (auto dataObject : m_dataSetHandler.dataSets())
     {
         if (auto p = dynamic_cast<PolyDataObject *>(dataObject))
         {

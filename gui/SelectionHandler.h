@@ -20,7 +20,8 @@ class TableView;
 class SelectionHandler : public QObject
 {
 public:
-    static SelectionHandler & instance();
+    SelectionHandler();
+    ~SelectionHandler() override;
 
     /** consider this table view when updating selections */
     void addTableView(TableView * tableView);
@@ -36,9 +37,6 @@ private:
     void renderViewsLookAt(DataObject * dataObject, vtkIdType index, IndexType indexType);
 
 private:
-    SelectionHandler();
-    ~SelectionHandler() override;
-
     void updateSyncToggleMenu();
 
     QAction * addAbstractDataView(AbstractDataView * dataView);

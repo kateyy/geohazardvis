@@ -280,7 +280,7 @@ void RenderViewStrategy2D::startProfilePlot()
 
     if (creatingNewRenderer)
     {
-        m_previewRenderer = DataMapping::instance().openInRenderView(profiles);
+        m_previewRenderer = dataMapping().openInRenderView(profiles);
     }
     else
     {
@@ -327,7 +327,7 @@ void RenderViewStrategy2D::acceptProfilePlot()
     m_profilePlotAcceptAction->setVisible(false);
     m_profilePlotAbortAction->setVisible(false);
 
-    DataSetHandler::instance().takeData(std::move(m_previewProfiles));
+    dataMapping().dataSetHandler().takeData(std::move(m_previewProfiles));
     m_previewProfiles.clear();
     for (auto & c : m_previewRendererConnections)
         disconnect(c);

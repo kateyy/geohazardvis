@@ -16,7 +16,7 @@ class RendererImplementationSwitch;
 class GUI_API RenderView : public AbstractRenderView
 {
 public:
-    RenderView(int index, QWidget * parent = nullptr, Qt::WindowFlags flags = 0);
+    RenderView(DataMapping & dataMapping, int index, QWidget * parent = nullptr, Qt::WindowFlags flags = 0);
     ~RenderView() override;
 
     QString friendlyName() const override;

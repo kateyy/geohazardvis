@@ -33,7 +33,6 @@
 #include <core/utility/InterpolationHelper.h>
 #include <core/utility/vtkCameraSynchronization.h>
 
-#include <gui/SelectionHandler.h>
 #include <gui/data_view/RendererImplementationResidual.h>
 #include <gui/data_view/RenderViewStrategy2D.h>
 
@@ -62,8 +61,8 @@ vtkSmartPointer<vtkDataArray> projectToLineOfSight(vtkDataArray & vectors, vtkVe
 }
 
 
-ResidualVerificationView::ResidualVerificationView(int index, QWidget * parent, Qt::WindowFlags flags)
-    : AbstractRenderView(index, parent, flags)
+ResidualVerificationView::ResidualVerificationView(DataMapping & dataMapping, int index, QWidget * parent, Qt::WindowFlags flags)
+    : AbstractRenderView(dataMapping, index, parent, flags)
     , m_observationCombo(nullptr)
     , m_modelCombo(nullptr)
     , m_inSARLineOfSight(0, 0, 1)
@@ -131,9 +130,7 @@ ResidualVerificationView::ResidualVerificationView(int index, QWidget * parent, 
 
     updateTitle();
 
-    SelectionHandler::instance().addRenderView(this);
-
-    connect(&DataSetHandler::instance(), &DataSetHandler::dataObjectsChanged, this, &ResidualVerificationView::updateComboBoxes);
+    connect(&dataSetHandler(), &DataSetHandler::dataObjectsChanged, this, &ResidualVerificationView::updateComboBoxes);
 
     connect(m_observationCombo, static_cast<void(QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
         this, &ResidualVerificationView::updateObservationFromUi);
@@ -145,8 +142,6 @@ ResidualVerificationView::ResidualVerificationView(int index, QWidget * parent, 
 
 ResidualVerificationView::~ResidualVerificationView()
 {
-    SelectionHandler::instance().removeRenderView(this);
-
     for (auto & vis : m_visualizations)
     {
         if (!vis)
@@ -785,7 +780,7 @@ void ResidualVerificationView::updateComboBoxes()
     QList<ImageDataObject *> images;
     QList<PolyDataObject *> polyData2p5D;
 
-    for (auto dataObject : DataSetHandler::instance().dataSets())
+    for (auto dataObject : dataSetHandler().dataSets())
     {
         qulonglong ptrData = reinterpret_cast<size_t>(dataObject);
 

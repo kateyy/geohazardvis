@@ -47,8 +47,9 @@ namespace
 
 MainWindow::MainWindow()
     : QMainWindow()
-    , m_ui(std::make_unique<Ui_MainWindow>())
-    , m_dataMapping(std::make_unique<DataMapping>(*this))
+    , m_ui()
+    , m_dataSetHandler(std::make_unique<DataSetHandler>())
+    , m_dataMapping()
     , m_scalarMappingChooser(new ColorMappingChooser())
     , m_vectorMappingChooser(new GlyphMappingChooser())
     , m_renderConfigWidget(new RenderConfigWidget())
@@ -58,17 +59,20 @@ MainWindow::MainWindow()
 {
     m_defaultPalette = qApp->palette();
 
+    m_ui = std::make_unique<Ui_MainWindow>();
+    m_ui->setupUi(this);
+
+    m_dataMapping = std::make_unique<DataMapping>(*this, *m_dataSetHandler);
+
     TextureManager::initialize();
     Loader::initialize();
-
-    m_ui->setupUi(this);
 
     connect(m_ui->actionOpen, &QAction::triggered, [this] () { openFilesAsync(dialog_inputFileName()); });
     connect(m_ui->actionImport_ASCII_Triangle_Mesh, &QAction::triggered, [this] () {
         AsciiImporterWidget importer(this);
         if (importer.exec() == QDialog::Accepted)
         {
-            DataSetHandler::instance().takeData(importer.releaseLoadedData());
+            m_dataSetHandler->takeData(importer.releaseLoadedData());
         }
     });
     connect(m_ui->actionExportDataset, &QAction::triggered, this, &MainWindow::dialog_exportDataSet);
@@ -82,7 +86,7 @@ MainWindow::MainWindow()
     m_dataBrowser = m_ui->centralwidget;
     m_dataBrowser->setDataMapping(m_dataMapping.get());
 
-    SelectionHandler::instance().setSyncToggleMenu(m_ui->menuSynchronize_Selections);
+    m_dataMapping->selectionHandler().setSyncToggleMenu(m_ui->menuSynchronize_Selections);
 
     setCorner(Qt::Corner::TopLeftCorner, Qt::DockWidgetArea::LeftDockWidgetArea);
     setCorner(Qt::Corner::BottomLeftCorner, Qt::DockWidgetArea::LeftDockWidgetArea);
@@ -122,8 +126,8 @@ MainWindow::MainWindow()
 
     connect(m_ui->actionResidual_Verification_View, &QAction::triggered,
         [this] (bool) {
-        auto view = DataMapping::instance().createRenderView<ResidualVerificationView>();
-        DataMapping::instance().setFocusedView(view);
+        auto view = m_dataMapping->createRenderView<ResidualVerificationView>();
+        m_dataMapping->setFocusedView(view);
     });
 
     connect(m_ui->actionDark_Style, &QAction::triggered, this, &MainWindow::setDarkFusionStyle);
@@ -134,7 +138,7 @@ MainWindow::MainWindow()
 
     m_pluginManager = std::make_unique<GuiPluginManager>();
     m_pluginManager->searchPaths() = QStringList(QCoreApplication::applicationDirPath() + "/plugins/");
-    m_pluginManager->scan(GuiPluginInterface(*this, s_settingsFileName));
+    m_pluginManager->scan(GuiPluginInterface(*this, s_settingsFileName, *m_dataMapping));
 }
 
 MainWindow::~MainWindow()
@@ -243,7 +247,7 @@ void MainWindow::openFiles(const QStringList & fileNames)
         newData.push_back(std::move(dataObject));
     }
 
-    DataSetHandler::instance().takeData(std::move(newData));
+    m_dataSetHandler->takeData(std::move(newData));
 }
 
 void MainWindow::openFilesAsync(const QStringList & fileNames)
@@ -304,7 +308,7 @@ void MainWindow::dialog_exportDataSet()
 
 void MainWindow::showDEMWidget()
 {
-    DEMWidget * demWidget = new DEMWidget();
+    DEMWidget * demWidget = new DEMWidget(*m_dataSetHandler);
     demWidget->setAttribute(Qt::WA_DeleteOnClose);
     demWidget->setWindowModality(Qt::NonModal);
     demWidget->show();

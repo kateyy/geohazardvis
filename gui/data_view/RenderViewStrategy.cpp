@@ -14,6 +14,11 @@ RenderViewStrategy::RenderViewStrategy(RendererImplementationBase3D & context)
 
 RenderViewStrategy::~RenderViewStrategy() = default;
 
+DataMapping & RenderViewStrategy::dataMapping() const
+{
+    return m_context.dataMapping();
+}
+
 void RenderViewStrategy::activate()
 {
     if (!defaultInteractorStyle().isEmpty())

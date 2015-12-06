@@ -18,7 +18,7 @@ class DataBrowser : public QWidget
     Q_OBJECT
 
 public:
-    explicit DataBrowser(QWidget* parent = 0, Qt::WindowFlags f = 0);
+    explicit DataBrowser(QWidget * parent = nullptr, Qt::WindowFlags f = 0);
     ~DataBrowser() override;
 
     void setDataMapping(DataMapping * dataMapping);

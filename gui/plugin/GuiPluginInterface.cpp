@@ -10,9 +10,10 @@
 #include <gui/MainWindow.h>
 
 
-GuiPluginInterface::GuiPluginInterface(MainWindow & mainWindow, const QString & settingsFilePath)
+GuiPluginInterface::GuiPluginInterface(MainWindow & mainWindow, const QString & settingsFilePath, DataMapping & dataMapping)
     : m_mainWindow(&mainWindow)
     , m_settingsFilePath(settingsFilePath)
+    , m_dataMapping(&dataMapping)
 {
 }
 
@@ -87,6 +88,16 @@ void GuiPluginInterface::readWriteSettings(const QString & group, const std::fun
     settings.beginGroup(group);
 
     func(settings);
+}
+
+DataSetHandler & GuiPluginInterface::dataSetHandler() const
+{
+    return m_dataMapping->dataSetHandler();
+}
+
+DataMapping & GuiPluginInterface::dataMapping() const
+{
+    return *m_dataMapping;
 }
 
 void GuiPluginInterface::removeWidget(QDockWidget * widget, QAction * action)

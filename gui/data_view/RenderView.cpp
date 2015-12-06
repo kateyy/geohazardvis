@@ -15,27 +15,23 @@
 
 #include <gui/data_view/RendererImplementation.h>
 #include <gui/data_view/RendererImplementationSwitch.h>
-#include <gui/SelectionHandler.h>
 
 
 RenderView::RenderView(
+    DataMapping & dataMapping,
     int index,
     QWidget * parent, Qt::WindowFlags flags)
-    : AbstractRenderView(index, parent, flags)
+    : AbstractRenderView(dataMapping, index, parent, flags)
     , m_implementationSwitch(std::make_unique<RendererImplementationSwitch>(*this))
     , m_closingRequested(false)
 {
     updateTitle();
-
-    SelectionHandler::instance().addRenderView(this);
 
     updateImplementation({});
 }
 
 RenderView::~RenderView()
 {
-    SelectionHandler::instance().removeRenderView(this); 
-
     for (auto & rendered : m_contents)
         emit beforeDeleteVisualization(rendered.get());
 

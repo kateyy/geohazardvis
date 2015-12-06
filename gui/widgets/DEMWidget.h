@@ -19,6 +19,7 @@ class vtkWarpScalar;
 
 class vtkGridAxes3DActor;
 
+class DataSetHandler;
 class ImageDataObject;
 class PolyDataObject;
 class RenderedData;
@@ -28,7 +29,7 @@ class Ui_DEMWidget;
 class GUI_API DEMWidget : public QWidget
 {
 public:
-    DEMWidget(QWidget * parent = nullptr, Qt::WindowFlags f = 0);
+    DEMWidget(DataSetHandler & dataSetHandler, QWidget * parent = nullptr, Qt::WindowFlags f = 0);
     ~DEMWidget() override;
 
 public:
@@ -49,7 +50,9 @@ private:
     void updateView();
 
 private:
-    Ui_DEMWidget * m_ui;
+    DataSetHandler & m_dataSetHandler;
+
+    std::unique_ptr<Ui_DEMWidget> m_ui;
     vtkSmartPointer<vtkRenderer> m_renderer;
     vtkSmartPointer<vtkGridAxes3DActor> m_axesActor;
 

@@ -7,12 +7,15 @@
 class QIcon;
 
 class DataObject;
+class DataSetHandler;
 
 
 class DataBrowserTableModel : public QAbstractTableModel
 {
 public:
     explicit DataBrowserTableModel(QObject * parent = nullptr);
+
+    void setDataSetHandler(const DataSetHandler * dataSetHandler);
 
     void updateDataList(const QList<DataObject *> & visibleObjects);
 
@@ -40,6 +43,7 @@ private:
     QVariant data_attributeVector(int row, int column, int role) const;
 
 private:
+    const DataSetHandler * m_dataSetHandler;
     QMap<const DataObject *, bool> m_visibilities;
     QMap<QString, QIcon> m_icons;
     int m_numDataObjects;

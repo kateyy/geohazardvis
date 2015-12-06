@@ -12,11 +12,9 @@
 #include <core/table_model/QVtkTableModel.h>
 #include <core/data_objects/DataObject.h>
 
-#include <gui/SelectionHandler.h>
 
-
-TableView::TableView(int index, QWidget * parent, Qt::WindowFlags flags)
-    : AbstractDataView(index, parent, flags)
+TableView::TableView(DataMapping & dataMapping, int index, QWidget * parent, Qt::WindowFlags flags)
+    : AbstractDataView(dataMapping, index, parent, flags)
     , m_ui(new Ui_TableView())
     , m_dataObject(nullptr)
     , m_selectColumnsMenu(nullptr)
@@ -32,14 +30,9 @@ TableView::TableView(int index, QWidget * parent, Qt::WindowFlags flags)
     connect(m_ui->tableView->horizontalHeader(), &QHeaderView::customContextMenuRequested, [this] (const QPoint & position) {
         m_selectColumnsMenu->popup(m_ui->tableView->horizontalHeader()->mapToGlobal(position));
     });
-
-    SelectionHandler::instance().addTableView(this);
 }
 
-TableView::~TableView()
-{
-    SelectionHandler::instance().removeTableView(this);
-}
+TableView::~TableView() = default;
 
 bool TableView::isTable() const
 {

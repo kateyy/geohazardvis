@@ -21,7 +21,8 @@ class CORE_API DataSetHandler : public QObject
     Q_OBJECT
 
 public:
-    static DataSetHandler & instance();
+    DataSetHandler();
+    ~DataSetHandler() override;
 
     /** Add data objects to the global data management.
         The DataSetHandler will take ownership of this data, so it can also delete it at any time. */
@@ -34,11 +35,11 @@ public:
     void addExternalData(const QList<DataObject *> & dataObjects);
     void removeExternalData(const QList<DataObject *> & dataObjects);
 
-    const QList<DataObject *> & dataSets();
-    const QList<RawVectorData *> & rawVectors();
+    const QList<DataObject *> & dataSets() const;
+    const QList<RawVectorData *> & rawVectors() const;
 
-    const QMap<DataObject *, bool> & dataSetOwnerships();
-    const QMap<RawVectorData *, bool> & rawVectorOwnerships();
+    const QMap<DataObject *, bool> & dataSetOwnerships() const;
+    const QMap<RawVectorData *, bool> & rawVectorOwnerships() const;
     bool ownsData(DataObject * data);
 
 signals:
@@ -50,8 +51,6 @@ public:
     void operator=(const DataSetHandler&) = delete;
 
 private:
-    DataSetHandler();
-    ~DataSetHandler();
     friend class DataSetHandler_test;
 
     std::unique_ptr<DataSetHandlerPrivate> d_ptr;

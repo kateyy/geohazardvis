@@ -8,29 +8,23 @@
 #include <core/data_objects/DataObject.h>
 
 #include <gui/MainWindow.h>
+#include <gui/SelectionHandler.h>
 #include <gui/data_view/TableView.h>
 #include <gui/data_view/RenderView.h>
 
 
-namespace
-{
-    DataMapping * s_instance = nullptr;
-}
-
-DataMapping::DataMapping(MainWindow & mainWindow)
+DataMapping::DataMapping(MainWindow & mainWindow, DataSetHandler & dataSetHandler)
     : m_mainWindow(mainWindow)
+    , m_dataSetHandler(dataSetHandler)
+    , m_selectionHandler(std::make_unique<SelectionHandler>())
     , m_nextTableIndex(0)
     , m_nextRenderViewIndex(0)
     , m_focusedRenderView(nullptr)
 {
-    assert(!s_instance);
-    s_instance = this;
 }
 
 DataMapping::~DataMapping()
 {
-    assert(s_instance);
-
     // prevent GUI/focus updates
     auto renderView = m_renderViews;
     auto tableViews = m_tableViews;
@@ -39,14 +33,17 @@ DataMapping::~DataMapping()
 
     qDeleteAll(renderView);
     qDeleteAll(tableViews);
-
-    s_instance = nullptr;
 }
 
-DataMapping & DataMapping::instance()
+DataSetHandler & DataMapping::dataSetHandler() const
 {
-    assert(s_instance);
-    return *s_instance;
+    return m_dataSetHandler;
+}
+
+SelectionHandler & DataMapping::selectionHandler()
+{
+    assert(m_selectionHandler);
+    return *m_selectionHandler;
 }
 
 void DataMapping::removeDataObjects(const QList<DataObject *> & dataObjects)
@@ -84,7 +81,7 @@ void DataMapping::openInTable(DataObject * dataObject)
 
     if (!table)
     {
-        table = new TableView(m_nextTableIndex++);
+        table = new TableView(*this, m_nextTableIndex++);
         connect(table, &TableView::closed, this, &DataMapping::tableClosed);
         m_mainWindow.addDockWidget(Qt::DockWidgetArea::RightDockWidgetArea, table->dockWidgetParent());
 
@@ -107,6 +104,8 @@ void DataMapping::openInTable(DataObject * dataObject)
         connect(table, &TableView::focused, this, &DataMapping::setFocusedView);
 
         m_tableViews.insert(table->index(), table);
+
+        m_selectionHandler->addTableView(table);
     }
 
     if (m_tableViews.size() > 1)
@@ -212,6 +211,7 @@ void DataMapping::tableClosed()
     TableView * table = dynamic_cast<TableView*>(sender());
     assert(table);
 
+    m_selectionHandler->removeTableView(table);
     m_tableViews.remove(table->index());
     table->deleteLater();
 }
@@ -220,6 +220,8 @@ void DataMapping::renderViewClosed()
 {
     assert(dynamic_cast<AbstractRenderView *>(sender()));
     auto renderView = static_cast<AbstractRenderView *>(sender());
+
+    m_selectionHandler->removeRenderView(renderView);
 
     m_renderViews.remove(renderView->index());
 
@@ -240,6 +242,8 @@ void DataMapping::addRenderView(AbstractRenderView * renderView)
 
     connect(renderView, &AbstractDataView::focused, this, &DataMapping::setFocusedView);
     connect(renderView, &AbstractDataView::closed, this, &DataMapping::renderViewClosed);
+
+    m_selectionHandler->addRenderView(renderView);
 
     m_mainWindow.addRenderView(renderView);
 

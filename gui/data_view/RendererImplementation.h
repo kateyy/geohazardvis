@@ -23,6 +23,7 @@ class AbstractVisualizedData;
 enum class ContentType;
 enum class IndexType;
 class DataObject;
+class DataMapping;
 
 
 class GUI_API RendererImplementation : public QObject
@@ -34,6 +35,7 @@ public:
     ~RendererImplementation() override;
 
     AbstractRenderView & renderView() const;
+    DataMapping & dataMapping() const;
 
     virtual QString name() const = 0;
 

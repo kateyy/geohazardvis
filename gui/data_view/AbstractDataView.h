@@ -11,7 +11,9 @@ class QDockWidget;
 class QToolBar;
 class vtkIdTypeArray;
 
+class DataMapping;
 class DataObject;
+class DataSetHandler;
 enum class IndexType;
 
 
@@ -20,9 +22,11 @@ class GUI_API AbstractDataView : public QWidget
     Q_OBJECT
 
 public:
-    AbstractDataView(int index, QWidget * parent = nullptr, Qt::WindowFlags flags = 0);
+    AbstractDataView(DataMapping & dataMapping, int index, QWidget * parent = nullptr, Qt::WindowFlags flags = 0);
     ~AbstractDataView() override;
 
+    DataMapping & dataMapping() const;
+    DataSetHandler & dataSetHandler() const;
     int index() const;
 
     void updateTitle(QString message = {});
@@ -84,6 +88,7 @@ protected:
     virtual void selectionChangedEvent(DataObject * dataObject, vtkIdTypeArray * selection, IndexType indexType) = 0;
 
 private:
+    DataMapping & m_dataMapping;
     const int m_index;
     bool m_initialized;
 

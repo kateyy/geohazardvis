@@ -54,7 +54,7 @@ public:
     void waitForResidualUpdate();
 
 public:
-    ResidualVerificationView(int index, QWidget * parent = nullptr, Qt::WindowFlags flags = 0);
+    ResidualVerificationView(DataMapping & dataMapping, int index, QWidget * parent = nullptr, Qt::WindowFlags flags = 0);
     ~ResidualVerificationView() override;
 
     QString friendlyName() const override;

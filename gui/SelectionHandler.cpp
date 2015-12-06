@@ -12,12 +12,6 @@
 #include <gui/data_view/TableView.h>
 
 
-SelectionHandler & SelectionHandler::instance()
-{
-    static SelectionHandler selectionHandler;
-    return selectionHandler;
-}
-
 SelectionHandler::SelectionHandler()
     : m_syncToggleMenu(nullptr)
 {

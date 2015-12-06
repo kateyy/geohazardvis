@@ -11,8 +11,8 @@
 #include <gui/data_view/RendererImplementation.h>
 
 
-AbstractRenderView::AbstractRenderView(int index, QWidget * parent, Qt::WindowFlags flags)
-    : AbstractDataView(index, parent, flags)
+AbstractRenderView::AbstractRenderView(DataMapping & dataMapping, int index, QWidget * parent, Qt::WindowFlags flags)
+    : AbstractDataView(dataMapping, index, parent, flags)
     , m_qvtkWidget(nullptr)
     , m_axesEnabled(true)
     , m_activeSubViewIndex(0u)

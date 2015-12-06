@@ -25,6 +25,11 @@ AbstractRenderView & RendererImplementation::renderView() const
     return m_renderView;
 }
 
+DataMapping & RendererImplementation::dataMapping() const
+{
+    return m_renderView.dataMapping();
+}
+
 const QStringList & RendererImplementation::supportedInteractionStrategies() const
 {
     return m_supportedInteractionStrategies;

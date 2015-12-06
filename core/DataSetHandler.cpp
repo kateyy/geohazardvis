@@ -46,13 +46,6 @@ DataSetHandler::DataSetHandler()
 
 DataSetHandler::~DataSetHandler() = default;
 
-DataSetHandler & DataSetHandler::instance()
-{
-    static DataSetHandler instance;
-
-    return instance;
-}
-
 void DataSetHandler::takeData(std::unique_ptr<DataObject> dataObject)
 {
     // passing by value requires callers to use "unique_ptr<..> obj; takeData(move(obj));"
@@ -321,28 +314,28 @@ void DataSetHandler::removeExternalData(const QList<DataObject*>& dataObjects)
         emit rawVectorsChanged();
 }
 
-const QList<DataObject *> & DataSetHandler::dataSets()
+const QList<DataObject *> & DataSetHandler::dataSets() const
 {
     QMutexLocker lock(d_ptr->mutex.get());
 
     return d_ptr->allDataSets;
 }
 
-const QList<RawVectorData *> & DataSetHandler::rawVectors()
+const QList<RawVectorData *> & DataSetHandler::rawVectors() const
 {
     QMutexLocker lock(d_ptr->mutex.get());
 
     return d_ptr->allRawVectors;
 }
 
-const QMap<DataObject*, bool>& DataSetHandler::dataSetOwnerships()
+const QMap<DataObject*, bool>& DataSetHandler::dataSetOwnerships() const
 {
     QMutexLocker lock(d_ptr->mutex.get());
 
     return d_ptr->dataSetOwnerships;
 }
 
-const QMap<RawVectorData*, bool>& DataSetHandler::rawVectorOwnerships()
+const QMap<RawVectorData*, bool>& DataSetHandler::rawVectorOwnerships() const
 {
     QMutexLocker lock(d_ptr->mutex.get());
 

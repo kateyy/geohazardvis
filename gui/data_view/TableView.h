@@ -21,7 +21,7 @@ class GUI_API TableView : public AbstractDataView
     Q_OBJECT
 
 public:
-    TableView(int index, QWidget * parent = nullptr, Qt::WindowFlags flags = 0);
+    TableView(DataMapping & dataMapping, int index, QWidget * parent = nullptr, Qt::WindowFlags flags = 0);
     ~TableView() override;
 
     bool isTable() const override;

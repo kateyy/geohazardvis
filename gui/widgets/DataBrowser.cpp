@@ -29,9 +29,6 @@ DataBrowser::DataBrowser(QWidget* parent, Qt::WindowFlags f)
 
     m_ui->dataTableView->viewport()->installEventFilter(this);
 
-    connect(&DataSetHandler::instance(), &DataSetHandler::dataObjectsChanged, this, &DataBrowser::updateModelForFocusedView);
-    connect(&DataSetHandler::instance(), &DataSetHandler::rawVectorsChanged, this, &DataBrowser::updateModelForFocusedView);
-
     connect(m_ui->dataTableView->selectionModel(), &QItemSelectionModel::selectionChanged,
         [this] (const QItemSelection &selected, const QItemSelection &) {
         if (selected.indexes().isEmpty())
@@ -46,10 +43,24 @@ DataBrowser::~DataBrowser() = default;
 void DataBrowser::setDataMapping(DataMapping * dataMapping)
 {
     if (m_dataMapping)
+    {
         disconnect(m_dataMapping, &DataMapping::focusedRenderViewChanged, this, &DataBrowser::updateModel);
+        disconnect(&m_dataMapping->dataSetHandler(), &DataSetHandler::dataObjectsChanged, this, &DataBrowser::updateModelForFocusedView);
+        disconnect(&m_dataMapping->dataSetHandler(), &DataSetHandler::rawVectorsChanged, this, &DataBrowser::updateModelForFocusedView);
+    }
 
     m_dataMapping = dataMapping;
-    connect(m_dataMapping, &DataMapping::focusedRenderViewChanged, this, &DataBrowser::updateModel);
+    if (m_dataMapping)
+    {
+        m_tableModel->setDataSetHandler(&m_dataMapping->dataSetHandler());
+        connect(m_dataMapping, &DataMapping::focusedRenderViewChanged, this, &DataBrowser::updateModel);
+        connect(&m_dataMapping->dataSetHandler(), &DataSetHandler::dataObjectsChanged, this, &DataBrowser::updateModelForFocusedView);
+        connect(&m_dataMapping->dataSetHandler(), &DataSetHandler::rawVectorsChanged, this, &DataBrowser::updateModelForFocusedView);
+    }
+    else
+    {
+        m_tableModel->setDataSetHandler(nullptr);
+    }
 }
 
 void DataBrowser::setSelectedData(DataObject * dataObject)
@@ -176,13 +187,13 @@ void DataBrowser::menuAssignDataToIndexes(const QPoint & position, DataObject * 
 
     assignMenu->addSeparator();
     
-    if (DataSetHandler::instance().dataSets().isEmpty())
+    if (m_dataMapping->dataSetHandler().dataSets().isEmpty())
     {
         QAction * loadFirst = assignMenu->addAction("(Load data sets first)");
         loadFirst->setEnabled(false);
     }
     else
-        for (DataObject * indexes : DataSetHandler::instance().dataSets())
+        for (auto && indexes : m_dataMapping->dataSetHandler().dataSets())
         {
         QAction * assignAction = assignMenu->addAction(indexes->name());
         connect(assignAction, &QAction::triggered,
@@ -201,12 +212,12 @@ void DataBrowser::removeFile()
     QList<DataObject *> deletable;
     for (auto dataObject : selection)
     {
-        if (DataSetHandler::instance().ownsData(dataObject))
+        if (m_dataMapping->dataSetHandler().ownsData(dataObject))
             deletable << dataObject;
     }
 
     m_dataMapping->removeDataObjects(deletable);
-    DataSetHandler::instance().deleteData(deletable);
+    m_dataMapping->dataSetHandler().deleteData(deletable);
 
     updateModelForFocusedView();
 }

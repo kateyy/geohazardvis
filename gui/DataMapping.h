@@ -1,5 +1,7 @@
 #pragma once
 
+#include <memory>
+
 #include <QObject>
 #include <QMap>
 
@@ -11,7 +13,9 @@ template<typename T> class QList;
 class AbstractDataView;
 class AbstractRenderView;
 class DataObject;
+class DataSetHandler;
 class MainWindow;
+class SelectionHandler;
 class TableView;
 
 
@@ -20,9 +24,11 @@ class GUI_API DataMapping : public QObject
     Q_OBJECT
 
 public:
-    explicit DataMapping(MainWindow & mainWindow);
+    explicit DataMapping(MainWindow & mainWindow, DataSetHandler & dataSetHandler);
     ~DataMapping() override;
-    static DataMapping & instance();
+
+    DataSetHandler & dataSetHandler() const;
+    SelectionHandler & selectionHandler();
 
     void removeDataObjects(const QList<DataObject *> & dataObjects);
 
@@ -59,6 +65,9 @@ private:
 
 private:
     MainWindow & m_mainWindow;
+    DataSetHandler & m_dataSetHandler;
+
+    std::unique_ptr<SelectionHandler> m_selectionHandler;
 
     int m_nextTableIndex;
     int m_nextRenderViewIndex;
@@ -72,7 +81,7 @@ private:
 template<typename T>
 T * DataMapping::createRenderView()
 {
-    auto view = new T(m_nextRenderViewIndex++);
+    auto view = new T(*this, m_nextRenderViewIndex++);
 
     addRenderView(view);
 

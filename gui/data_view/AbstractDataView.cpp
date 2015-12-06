@@ -7,10 +7,13 @@
 
 #include <vtkIdTypeArray.h>
 
+#include <gui/DataMapping.h>
+
 
 AbstractDataView::AbstractDataView(
-    int index, QWidget * parent, Qt::WindowFlags flags)
+    DataMapping & dataMapping, int index, QWidget * parent, Qt::WindowFlags flags)
     : QWidget(parent, flags)
+    , m_dataMapping(dataMapping)
     , m_index(index)
     , m_initialized(false)
     , m_dockWidgetParent(nullptr)
@@ -21,6 +24,16 @@ AbstractDataView::AbstractDataView(
 }
 
 AbstractDataView::~AbstractDataView() = default;
+
+DataMapping & AbstractDataView::dataMapping() const
+{
+    return m_dataMapping;
+}
+
+DataSetHandler & AbstractDataView::dataSetHandler() const
+{
+    return m_dataMapping.dataSetHandler();
+}
 
 int AbstractDataView::index() const
 {

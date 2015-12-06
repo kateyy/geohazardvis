@@ -19,7 +19,7 @@ class GUI_API AbstractRenderView : public AbstractDataView
     Q_OBJECT
 
 public:
-    AbstractRenderView(int index, QWidget * parent = nullptr, Qt::WindowFlags flags = 0);
+    AbstractRenderView(DataMapping & dataMapping, int index, QWidget * parent = nullptr, Qt::WindowFlags flags = 0);
 
     bool isTable() const override;
     bool isRenderer() const override;

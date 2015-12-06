@@ -25,6 +25,7 @@ const int s_btnClms = 3;
 
 DataBrowserTableModel::DataBrowserTableModel(QObject * parent)
     : QAbstractTableModel(parent)
+    , m_dataSetHandler(nullptr)
     , m_numDataObjects(0)
     , m_numAttributeVectors(0)
 {
@@ -46,6 +47,11 @@ DataBrowserTableModel::DataBrowserTableModel(QObject * parent)
         }
         m_icons.insert("notRendered", QIcon(QPixmap().fromImage(image)));
     }
+}
+
+void DataBrowserTableModel::setDataSetHandler(const DataSetHandler * dataSetHandler)
+{
+    m_dataSetHandler = dataSetHandler;
 }
 
 int DataBrowserTableModel::rowCount(const QModelIndex &/*parent = QModelIndex()*/) const
@@ -92,13 +98,15 @@ QVariant DataBrowserTableModel::headerData(int section, Qt::Orientation orientat
 
 DataObject * DataBrowserTableModel::dataObjectAt(int row) const
 {
+    assert(m_dataSetHandler);
+
     if (row < m_numDataObjects)
-        return DataSetHandler::instance().dataSets()[row];
+        return m_dataSetHandler->dataSets()[row];
 
     row -= m_numDataObjects;
     assert(row < m_numAttributeVectors);
 
-    return DataSetHandler::instance().rawVectors()[row];
+    return m_dataSetHandler->rawVectors()[row];
 }
 
 DataObject * DataBrowserTableModel::dataObjectAt(const QModelIndex & index) const
@@ -108,10 +116,12 @@ DataObject * DataBrowserTableModel::dataObjectAt(const QModelIndex & index) cons
 
 int DataBrowserTableModel::rowForDataObject(DataObject * dataObject) const
 {
-    if (RawVectorData * raw = dynamic_cast<RawVectorData *>(dataObject))
-        return m_numDataObjects + DataSetHandler::instance().rawVectors().indexOf(raw);
+    assert(m_dataSetHandler);
 
-    return DataSetHandler::instance().dataSets().indexOf(dataObject);
+    if (RawVectorData * raw = dynamic_cast<RawVectorData *>(dataObject))
+        return m_numDataObjects + m_dataSetHandler->rawVectors().indexOf(raw);
+
+    return m_dataSetHandler->dataSets().indexOf(dataObject);
 }
 
 QList<DataObject *> DataBrowserTableModel::dataObjects(QModelIndexList indexes)
@@ -171,10 +181,12 @@ QString DataBrowserTableModel::componentName(int component, int numComponents)
 
 void DataBrowserTableModel::updateDataList(const QList<DataObject *> & visibleObjects)
 {
+    assert(m_dataSetHandler);
+
     beginResetModel();
 
-    const QList<DataObject *> & dataSets = DataSetHandler::instance().dataSets();
-    const QList<RawVectorData *> & rawVectors = DataSetHandler::instance().rawVectors();
+    const QList<DataObject *> & dataSets = m_dataSetHandler->dataSets();
+    const QList<RawVectorData *> & rawVectors = m_dataSetHandler->rawVectors();
     m_numDataObjects = dataSets.size();
     m_numAttributeVectors = rawVectors.size();
 
@@ -189,7 +201,9 @@ void DataBrowserTableModel::updateDataList(const QList<DataObject *> & visibleOb
 
 QVariant DataBrowserTableModel::data_dataObject(int row, int column, int role) const
 {
-    const QList<DataObject *> & dataSets = DataSetHandler::instance().dataSets();
+    assert(m_dataSetHandler);
+
+    const QList<DataObject *> & dataSets = m_dataSetHandler->dataSets();
     assert(row < dataSets.size());
 
     DataObject * dataObject = dataSets.at(row);
@@ -205,7 +219,7 @@ QVariant DataBrowserTableModel::data_dataObject(int row, int column, int role) c
                 ? m_icons["rendered"]
                 : m_icons["notRendered"];
         case 2:
-            return DataSetHandler::instance().dataSetOwnerships().value(dataObject, false)
+            return m_dataSetHandler->dataSetOwnerships().value(dataObject, false)
                 ? QVariant(m_icons["delete_red"])
                 : QVariant();
         }
@@ -280,7 +294,9 @@ QVariant DataBrowserTableModel::data_dataObject(int row, int column, int role) c
 
 QVariant DataBrowserTableModel::data_attributeVector(int row, int column, int role) const
 {
-    const QList<RawVectorData *> & rawVectors = DataSetHandler::instance().rawVectors();
+    assert(m_dataSetHandler);
+
+    const QList<RawVectorData *> & rawVectors = m_dataSetHandler->rawVectors();
     assert(row < rawVectors.size());
 
     RawVectorData * attributeVector = rawVectors.at(row);
@@ -292,7 +308,7 @@ QVariant DataBrowserTableModel::data_attributeVector(int row, int column, int ro
         case 0: return m_icons["table"];
         case 1: return m_icons["assign_to_geometry"];
         case 2:
-            return DataSetHandler::instance().rawVectorOwnerships().value(attributeVector, false)
+            return m_dataSetHandler->rawVectorOwnerships().value(attributeVector, false)
                 ? QVariant(m_icons["delete_red"])
                 : QVariant();
         default: return QVariant();

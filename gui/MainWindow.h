@@ -17,6 +17,7 @@ class CanvasExporterWidget;
 class ColorMappingChooser;
 class DataBrowser;
 class DataMapping;
+class DataSetHandler;
 class GlyphMappingChooser;
 class GuiPluginManager;
 class RenderConfigWidget;
@@ -60,9 +61,8 @@ private:
     QPalette m_defaultPalette;
 
     std::unique_ptr<Ui_MainWindow> m_ui;
+    std::unique_ptr<DataSetHandler> m_dataSetHandler;
     std::unique_ptr<DataMapping> m_dataMapping;
-    QAction * m_addToRendererAction;
-    QAction * m_removeLoadedFileAction;
     DataBrowser * m_dataBrowser;
     ColorMappingChooser * m_scalarMappingChooser;
     GlyphMappingChooser * m_vectorMappingChooser;
