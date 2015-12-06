@@ -7,6 +7,7 @@
 #include <QMenuBar>
 #include <QSettings>
 
+#include <gui/DataMapping.h>
 #include <gui/MainWindow.h>
 
 
@@ -103,6 +104,12 @@ DataMapping & GuiPluginInterface::dataMapping() const
 void GuiPluginInterface::removeWidget(QDockWidget * widget, QAction * action)
 {
     m_mainWindow->menuBar()->removeAction(action);
+
+    // removeDockWidget creates a placeholder item, which is identified by the widget's object name
+    // The object name (QString) might be set by the ui-file in the plugin's resources. After unloading
+    // the plugin, this QString object is not available anymore, which leads to invalid memory access.
+    // [Anyway, why is this not handled correctly by Qt?]
+    widget->setObjectName(QString());
     m_mainWindow->removeDockWidget(widget);
 }
 
