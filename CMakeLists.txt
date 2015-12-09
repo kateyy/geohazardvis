@@ -282,7 +282,7 @@ set(IDE_FOLDER "")
 add_subdirectory("core")
 add_subdirectory("gui")
 
-# Plugins that require additional third party libraries may add their required runtime paths 
+# Plugins that require additional third party libraries may add their required runtime paths
 # using the addPluginRuntimPathEntries function.
 # Executable targets depend on that, to find required DLLs at runtime
 include(cmake/ProjectConfigSetup.cmake)

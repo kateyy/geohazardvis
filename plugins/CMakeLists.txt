@@ -20,10 +20,10 @@ endforeach()
 set(GEOHAZARDVIS_INCLUDE_DIR ${CMAKE_SOURCE_DIR})
 
 foreach(pluginname ${plugins})
-    
+
     CMAKE_DEPENDENT_OPTION(OPTION_BUILD_PLUGIN_${pluginname} "Build plugin: ${pluginname}" ON
         "OPTION_BUILD_PLUGINS" OFF)
-    
+
     if(OPTION_BUILD_PLUGIN_${pluginname})
         add_subdirectory(${pluginname})
     endif()

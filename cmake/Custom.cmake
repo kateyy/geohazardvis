@@ -18,6 +18,9 @@ function(configure_cxx_target TARGET)
     )
 endfunction()
 
+set(PLUGIN_TARGETS_DOC_STRING "Ensure that the main executable is always run with up to date plugin libraries.")
+set(PLUGIN_TARGETS "" CACHE INTERNAL ${PLUGIN_TARGETS_DOC_STRING})
+
 function(configure_cxx_plugin TARGET)
 
     configure_cxx_target(${TARGET})
@@ -36,6 +39,8 @@ function(configure_cxx_plugin TARGET)
             RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/plugins"
         )
     endif()
+
+    set(PLUGIN_TARGETS "${PLUGIN_TARGETS};${TARGET}" CACHE INTERNAL ${PLUGIN_TARGETS_DOC_STRING})
 
 endfunction()
 
