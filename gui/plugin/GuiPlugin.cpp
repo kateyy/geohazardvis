@@ -32,3 +32,8 @@ const QString & GuiPlugin::version() const
 {
     return m_version;
 }
+
+void GuiPlugin::updateActionCheckStates()
+{
+    m_pluginInterface.updateActionCheckStates();
+}

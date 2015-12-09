@@ -140,6 +140,14 @@ QList<GuiPluginLibrary *> GuiPluginManager::pluginLibraries() const
         return libs;
 }
 
+void GuiPluginManager::updateActionCheckStates()
+{
+    for (auto & plugin : m_plugins)
+    {
+        plugin->updateActionCheckStates();
+    }
+}
+
 bool GuiPluginManager::loadLibrary(const QString & filePath, GuiPluginInterface && pluginInterface)
 {
     // Check if library is already loaded and reload is not requested

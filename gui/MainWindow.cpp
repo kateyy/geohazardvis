@@ -132,13 +132,17 @@ MainWindow::MainWindow()
 
     connect(m_ui->actionDark_Style, &QAction::triggered, this, &MainWindow::setDarkFusionStyle);
 
-    reloadSettings();
+    restoreSettings();
 
-    // load plugins
+    // load plug-ins
 
     m_pluginManager = std::make_unique<GuiPluginManager>();
     m_pluginManager->searchPaths() = QStringList(QCoreApplication::applicationDirPath() + "/plugins/");
     m_pluginManager->scan(GuiPluginInterface(*this, s_settingsFileName, *m_dataMapping));
+
+    restoreUiState();
+
+    m_pluginManager->updateActionCheckStates();
 }
 
 MainWindow::~MainWindow()
@@ -156,6 +160,9 @@ MainWindow::~MainWindow()
         watcher->waitForFinished();
         QApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
     }
+
+    storeUiState();
+    storeSettings();
 
     m_pluginManager.reset();
 
@@ -181,13 +188,6 @@ QStringList MainWindow::dialog_inputFileName()
     m_lastOpenFolder = QFileInfo(fileNames.first()).absolutePath();
 
     return fileNames;
-}
-
-void MainWindow::closeEvent(QCloseEvent * event)
-{
-    storeSettings();
-
-    QMainWindow::closeEvent(event);
 }
 
 void MainWindow::dragEnterEvent(QDragEnterEvent * event)
@@ -401,18 +401,28 @@ void MainWindow::handleAsyncLoadFinished()
     updateWindowTitle();
 }
 
-void MainWindow::reloadSettings()
+void MainWindow::restoreSettings()
 {
     QSettings settings(s_settingsFileName, QSettings::IniFormat);
     m_lastOpenFolder = settings.value("lastOpenFolder").toString();
-    restoreGeometry(settings.value("geometry").toByteArray());
-    restoreState(settings.value("windowState").toByteArray());
 }
 
 void MainWindow::storeSettings()
 {
     QSettings settings(s_settingsFileName, QSettings::IniFormat);
     settings.setValue("lastOpenFolder", m_lastOpenFolder);
+}
+
+void MainWindow::restoreUiState()
+{
+    QSettings settings(s_settingsFileName, QSettings::IniFormat);
+    restoreGeometry(settings.value("geometry").toByteArray());
+    restoreState(settings.value("windowState").toByteArray());
+}
+
+void MainWindow::storeUiState()
+{
+    QSettings settings(s_settingsFileName, QSettings::IniFormat);
     settings.setValue("geometry", saveGeometry());
     settings.setValue("windowState", saveState());
 }

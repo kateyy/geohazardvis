@@ -43,7 +43,6 @@ public:
     void setDarkFusionStyle(bool enabled);
 
 protected:
-    void closeEvent(QCloseEvent * event) override;
     void dragEnterEvent(QDragEnterEvent * event) override;
     void dropEvent(QDropEvent * event) override;
 
@@ -54,8 +53,10 @@ private:
     void updateWindowTitle();
     void handleAsyncLoadFinished();
 
-    void reloadSettings();
+    void restoreSettings();
     void storeSettings();
+    void restoreUiState();
+    void storeUiState();
 
 private:
     QPalette m_defaultPalette;

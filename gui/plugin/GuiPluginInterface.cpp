@@ -38,7 +38,8 @@ void GuiPluginInterface::addWidget(QDockWidget * widget, const QString & mainMen
     widget->hide();
 
     auto widgetShowAction = std::make_unique<QAction>(mainMenuEntry, m_mainWindow);
-    QObject::connect(widgetShowAction.get(), &QAction::triggered, widget, &QDockWidget::show);
+    widgetShowAction->setCheckable(true);
+    QObject::connect(widgetShowAction.get(), &QAction::triggered, widget, &QDockWidget::setVisible);
 
     // Insert the action to the end of the menu bar, before the "Help" menu
     m_mainWindow->menuBar()->insertAction(*(m_mainWindow->menuBar()->actions().end() - 1), widgetShowAction.get());
@@ -99,6 +100,16 @@ DataSetHandler & GuiPluginInterface::dataSetHandler() const
 DataMapping & GuiPluginInterface::dataMapping() const
 {
     return *m_dataMapping;
+}
+
+void GuiPluginInterface::updateActionCheckStates()
+{
+    for (auto && it : m_widgets)
+    {
+        it.second->blockSignals(true);
+        it.second->setChecked(it.first->isVisible());
+        it.second->blockSignals(false);
+    }
 }
 
 void GuiPluginInterface::removeWidget(QDockWidget * widget, QAction * action)

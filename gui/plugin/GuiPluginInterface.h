@@ -39,6 +39,9 @@ public:
     DataSetHandler & dataSetHandler() const;
     DataMapping & dataMapping() const;
 
+    /** Ensure that the check states of (menu-)actions correspond to the current visibilities of widgets */
+    void updateActionCheckStates();
+
     GuiPluginInterface(const GuiPluginInterface & other);
     friend void swap(GuiPluginInterface & lhs, GuiPluginInterface & rhs);
     GuiPluginInterface & operator=(GuiPluginInterface other);
