@@ -7,6 +7,7 @@
 #include <core/data_objects/ImageDataObject.h>
 #include <core/DataSetHandler.h>
 
+#include <gui/DataMapping.h>
 #include <gui/MainWindow.h>
 #include <gui/data_view/RenderView.h>
 #include <gui/data_view/ResidualVerificationView.h>
@@ -42,7 +43,9 @@ TEST_F(RenderViewStrategy_test, CreateCorrectNumberOfPlots)
     image->AllocateScalars(VTK_FLOAT, 1);
     auto imageData = std::make_unique<ImageDataObject>("image", *image);
 
-    auto renderView = std::make_unique<ResidualVerificationView>(0);
+    DataSetHandler dataSetHandler;
+    DataMapping dataMapping(dataSetHandler);
+    auto renderView = std::make_unique<ResidualVerificationView>(dataMapping, 0);
 
     renderView->setObservationData(imageData.get());
     renderView->setModelData(imageData.get());
@@ -56,5 +59,5 @@ TEST_F(RenderViewStrategy_test, CreateCorrectNumberOfPlots)
     strategy.acceptProfilePlot();
 
     // one object in two sub-views -> only one plot required
-    ASSERT_EQ(DataSetHandler::instance().dataSets().size(), 1);
+    ASSERT_EQ(dataSetHandler.dataSets().size(), 1);
 }

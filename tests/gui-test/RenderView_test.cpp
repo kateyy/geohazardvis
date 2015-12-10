@@ -4,8 +4,10 @@
 
 #include <vtkPolyData.h>
 
+#include <core/DataSetHandler.h>
 #include <core/data_objects/PolyDataObject.h>
 
+#include <gui/DataMapping.h>
 #include <gui/data_view/RenderView.h>
 #include <gui/data_view/RendererImplementationBase3D.h>
 #include <gui/data_view/RenderViewStrategy2D.h>
@@ -36,7 +38,9 @@ TEST_F(RenderView_test, AbortLoadingDeletedData)
     auto poly = vtkSmartPointer<vtkPolyData>::New();
     auto polyData = std::make_unique<PolyDataObject>("PolyData", *poly);
 
-    auto renderView = std::make_unique<RenderView>(0);
+    DataSetHandler dataSetHandler;
+    DataMapping dataMapping(dataSetHandler);
+    auto renderView = std::make_unique<RenderView>(dataMapping, 0);
 
     signalHelper.emitQueuedDelete(polyData.get(), renderView.get());
 
@@ -52,7 +56,9 @@ TEST_F(RenderView_test, DontMissNewDataAtSameLocation)
     auto poly = vtkSmartPointer<vtkPolyData>::New();
     auto polyData = std::make_unique<PolyDataObject>("PolyData", *poly);
 
-    auto renderView = std::make_unique<RenderView>(0);
+    DataSetHandler dataSetHandler;
+    DataMapping dataMapping(dataSetHandler);
+    auto renderView = std::make_unique<RenderView>(dataMapping, 0);
 
     QList<DataObject *> incompatible;
     renderView->showDataObjects({ polyData.get() }, incompatible);
