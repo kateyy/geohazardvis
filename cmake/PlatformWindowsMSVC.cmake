@@ -20,12 +20,16 @@ endif()
 
 
 set(DEFAULT_COMPILE_FLAGS
-    /nologo /Zc:wchar_t /Zc:forScope /GR /Zi /fp:precise /MP /W4 
+    /nologo
+    /Zc:wchar_t /Zc:forScope /Zc:rvalueCast /Zc:inline
+    /GR /Zi /fp:precise /MP /W4
     /we4150 /we4239 /we4390 /we4456 /we4457 /we4700 /we4701 /we4703 /we4715 /we4717
     /wd4127 /wd4351 /wd4505 /wd4718
     # nologo       -> no logo
     # Zc:wchar_t   -> treat wchar_t as built-in type: yes
     # Zc:forScope  -> force conformance in for loop scope: Yes
+    # Zc:rvalueCast -> treat rvalue references according to section 5.4 of the C++11 standard
+    # Zc:inline    -> enforce section 3.2 and section 7.1.2. of the C++11 standard: definitions of called inline functions must be visible
     # GF           -> string pooling (default: debug:off, release:on)
     # GR           -> runtime type information
     # GS           -> buffer security check
@@ -40,7 +44,7 @@ set(DEFAULT_COMPILE_FLAGS
     # we           -> treat warning as error
     #   4100       -> 'identifier' : unreferenced formal parameter
     #   4127       -> conditional expression is constant (caused by Qt)
-    #   4189       -> 'identifier' : local variable is initialized but not referenced  
+    #   4189       -> 'identifier' : local variable is initialized but not referenced
     #   4239       -> nonstandard extension used : 'token' : conversion from 'type' to 'type'
     #   4250       -> 'class1' : inherits 'class2::member' via dominance
     #   4251       -> 'identifier' : class 'type' needs to have dll-interface to be used by clients of class 'type2'
@@ -60,18 +64,18 @@ set(DEFAULT_COMPILE_FLAGS
     #   4718       -> 'function call' : recursive call has no side effects, deleting (QMapNode/qmap.h)
     # W4           -> warning level 4
     # WX           -> treat warnings as errors
- 
-    # For debug: 
+
+    # For debug:
     # MDd          -> Runtime Library: Multithreaded Debug DLL
     # Od           -> Optimization: none
     # RTC1         -> Runtime error checks
-    
+
     # Zo           -> generates richer debugging information for optimized code (non- /Od builds) (VS2013 Update 3)
- 
-    # For release: 
+
+    # For release:
     # W3           -> warn level 3
     # MD           -> runtime library: multithreaded dll
-    # Ox           -> optimization: full optimization 
+    # Ox           -> optimization: full optimization
     # Ob2          -> inline function expansion: any suitable
     # Oi           -> enable intrinsic functions: yes
     # Oy           -> omit frame pointers: yes
