@@ -29,6 +29,7 @@
 #include <gui/SelectionHandler.h>
 #include <gui/data_view/AbstractRenderView.h>
 #include <gui/data_view/ResidualVerificationView.h>
+#include <gui/data_view/TableView.h>
 #include <gui/plugin/GuiPluginInterface.h>
 #include <gui/plugin/GuiPluginManager.h>
 #include <gui/widgets/AsciiImporterWidget.h>
@@ -62,7 +63,9 @@ MainWindow::MainWindow()
     m_ui = std::make_unique<Ui_MainWindow>();
     m_ui->setupUi(this);
 
-    m_dataMapping = std::make_unique<DataMapping>(*this, *m_dataSetHandler);
+    m_dataMapping = std::make_unique<DataMapping>(*m_dataSetHandler);
+    connect(m_dataMapping.get(), &DataMapping::renderViewCreated, this, &MainWindow::addRenderView);
+    connect(m_dataMapping.get(), &DataMapping::tableViewCreated, this, &MainWindow::addTableView);
 
     TextureManager::initialize();
     Loader::initialize();
@@ -220,6 +223,19 @@ void MainWindow::addRenderView(AbstractRenderView * renderView)
     });
 }
 
+void MainWindow::addTableView(TableView * tableView, QDockWidget * dockTabifyPartner)
+{
+    addDockWidget(Qt::DockWidgetArea::RightDockWidgetArea, tableView->dockWidgetParent());
+
+    if (dockTabifyPartner)
+    {
+        tabifyDockWidget(dockTabifyPartner, tableView->dockWidgetParent());
+    }
+
+    QCoreApplication::processEvents(); // setup GUI before searching for the tabbed widget...
+    tabbedDockWidgetToFront(tableView->dockWidgetParent());
+}
+
 void MainWindow::openFiles(const QStringList & fileNames)
 {
     QString oldName = windowTitle();
@@ -283,7 +299,7 @@ void MainWindow::dialog_exportDataSet()
         bool isSupported = Exporter::isExportSupported(dataObject);
         if (!isSupported)
         {
-            QMessageBox::warning(this, "Unsuppored Operation",
+            QMessageBox::warning(this, "Unsupported Operation",
                 "Exporting is currently not supported for the selected data type (" + dataObject->dataTypeName() + ")\n"
                 + "Data set: """ + dataObject->name() + """");
             continue;

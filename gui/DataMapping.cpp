@@ -7,15 +7,13 @@
 
 #include <core/data_objects/DataObject.h>
 
-#include <gui/MainWindow.h>
 #include <gui/SelectionHandler.h>
 #include <gui/data_view/TableView.h>
 #include <gui/data_view/RenderView.h>
 
 
-DataMapping::DataMapping(MainWindow & mainWindow, DataSetHandler & dataSetHandler)
-    : m_mainWindow(mainWindow)
-    , m_dataSetHandler(dataSetHandler)
+DataMapping::DataMapping(DataSetHandler & dataSetHandler)
+    : m_dataSetHandler(dataSetHandler)
     , m_selectionHandler(std::make_unique<SelectionHandler>())
     , m_nextTableIndex(0)
     , m_nextRenderViewIndex(0)
@@ -83,7 +81,6 @@ void DataMapping::openInTable(DataObject * dataObject)
     {
         table = new TableView(*this, m_nextTableIndex++);
         connect(table, &TableView::closed, this, &DataMapping::tableClosed);
-        m_mainWindow.addDockWidget(Qt::DockWidgetArea::RightDockWidgetArea, table->dockWidgetParent());
 
         // find the first existing docked table, and tabify with it
         QDockWidget * tabMaster = nullptr;
@@ -93,25 +90,17 @@ void DataMapping::openInTable(DataObject * dataObject)
             {
                 tabMaster = other->dockWidgetParent();
                 assert(tabMaster);
+                break;
             }
         }
 
-        if (tabMaster)
-        {
-            m_mainWindow.tabifyDockWidget(tabMaster, table->dockWidgetParent());
-        }
+        emit tableViewCreated(table, tabMaster);
 
         connect(table, &TableView::focused, this, &DataMapping::setFocusedView);
 
         m_tableViews.insert(table->index(), table);
 
         m_selectionHandler->addTableView(table);
-    }
-
-    if (m_tableViews.size() > 1)
-    {
-        QCoreApplication::processEvents(); // setup GUI before searching for the tabbed widget...
-        m_mainWindow.tabbedDockWidgetToFront(table->dockWidgetParent());
     }
     
     QCoreApplication::processEvents();
@@ -245,7 +234,7 @@ void DataMapping::addRenderView(AbstractRenderView * renderView)
 
     m_selectionHandler->addRenderView(renderView);
 
-    m_mainWindow.addRenderView(renderView);
+    emit renderViewCreated(renderView);
 
     emit renderViewsChanged(m_renderViews.values());
 }
@@ -259,5 +248,5 @@ bool DataMapping::askForNewRenderView(const QString & rendererName, const QList<
     msg += "\n\n";
     msg += "Should we try to open these in a new view?";
 
-    return QMessageBox(QMessageBox::Question, m_mainWindow.windowTitle(), msg, QMessageBox::Yes | QMessageBox::No, &m_mainWindow).exec() == QMessageBox::Yes;
+    return QMessageBox(QMessageBox::Question, "", msg, QMessageBox::Yes | QMessageBox::No).exec() == QMessageBox::Yes;
 }

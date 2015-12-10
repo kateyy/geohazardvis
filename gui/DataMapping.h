@@ -8,13 +8,13 @@
 #include <gui/gui_api.h>
 
 
+class QDockWidget;
 template<typename T> class QList;
 
 class AbstractDataView;
 class AbstractRenderView;
 class DataObject;
 class DataSetHandler;
-class MainWindow;
 class SelectionHandler;
 class TableView;
 
@@ -24,7 +24,7 @@ class GUI_API DataMapping : public QObject
     Q_OBJECT
 
 public:
-    explicit DataMapping(MainWindow & mainWindow, DataSetHandler & dataSetHandler);
+    explicit DataMapping(DataSetHandler & dataSetHandler);
     ~DataMapping() override;
 
     DataSetHandler & dataSetHandler() const;
@@ -50,6 +50,8 @@ public:
     void setFocusedView(AbstractDataView * renderView);
 
 signals:
+    void renderViewCreated(AbstractRenderView * renderView);
+    void tableViewCreated(TableView * tableView, QDockWidget * dockTabifyPartner);
     void renderViewsChanged(const QList<AbstractRenderView *> & widgets);
     void focusedRenderViewChanged(AbstractRenderView * renderView);
 
@@ -64,7 +66,6 @@ private:
     bool askForNewRenderView(const QString & rendererName, const QList<DataObject *> & relevantObjects);
 
 private:
-    MainWindow & m_mainWindow;
     DataSetHandler & m_dataSetHandler;
 
     std::unique_ptr<SelectionHandler> m_selectionHandler;

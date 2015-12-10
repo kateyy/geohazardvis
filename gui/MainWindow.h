@@ -22,6 +22,7 @@ class GlyphMappingChooser;
 class GuiPluginManager;
 class RenderConfigWidget;
 class RendererConfigWidget;
+class TableView;
 class Ui_MainWindow;
 
 
@@ -37,7 +38,6 @@ public:
     void openFiles(const QStringList & fileNames);
     void openFilesAsync(const QStringList & fileNames);
     
-    void addRenderView(AbstractRenderView * renderView);
     void tabbedDockWidgetToFront(QDockWidget * widget);
 
     void setDarkFusionStyle(bool enabled);
@@ -47,6 +47,9 @@ protected:
     void dropEvent(QDropEvent * event) override;
 
 private:
+    void addRenderView(AbstractRenderView * renderView);
+    void addTableView(TableView * tableView, QDockWidget * dockTabifyPartner = nullptr);
+
     void showDEMWidget();
     void dialog_exportDataSet();
     QStringList dialog_inputFileName();
