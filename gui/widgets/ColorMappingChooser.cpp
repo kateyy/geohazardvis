@@ -550,7 +550,10 @@ void ColorMappingChooser::rebuildGui()
             m_renderView, &AbstractRenderView::render);
 
         disconnect(m_dataMinMaxChangedConnection);
-        m_dataMinMaxChangedConnection = connect(newMapping->currentScalars(), &ColorMappingData::dataMinMaxChanged, this, &ColorMappingChooser::rebuildGui);
+        if (auto currentScalars = newMapping->currentScalars())
+        {
+            m_dataMinMaxChangedConnection = connect(currentScalars, &ColorMappingData::dataMinMaxChanged, this, &ColorMappingChooser::rebuildGui);
+        }
     }
 
     // the mapping can now receive signals from the UI

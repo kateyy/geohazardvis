@@ -41,6 +41,9 @@ public:
 
     virtual void activate();
     virtual void deactivate();
+    /** @return true only if this object is active. Initially, an object is inactive.
+    * Only active objects shall change the state of depending object (e.g, the lookup table) */
+    bool isActive() const;
 
     virtual QString name() const = 0;
     virtual QString scalarsName() const;
@@ -108,6 +111,7 @@ private:
 private:
     const int m_numDataComponents;
     int m_dataComponent;
+    bool m_isActive;
 
     /** per data component: value range and user selected subrange */
     std::vector<double> m_dataMinValue;

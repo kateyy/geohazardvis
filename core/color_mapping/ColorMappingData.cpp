@@ -18,6 +18,7 @@ ColorMappingData::ColorMappingData(const QList<AbstractVisualizedData *> & visua
     , m_visualizedData(visualizedData)
     , m_numDataComponents(numDataComponents)
     , m_dataComponent(0)
+    , m_isActive(false)
     , m_dataMinValue(numDataComponents, std::numeric_limits<double>::max())
     , m_dataMaxValue(numDataComponents, std::numeric_limits<double>::lowest())
     , m_minValue(numDataComponents, std::numeric_limits<double>::max())
@@ -37,12 +38,21 @@ void ColorMappingData::activate()
         m_lut->SetVectorModeToComponent();
         m_lut->SetVectorComponent(dataComponent());
     }
+
+    m_isActive = true;
 }
 
 void ColorMappingData::deactivate()
 {
+    m_isActive = false;
+
     for (AbstractVisualizedData * vis : m_visualizedData)
         vis->setScalarsForColorMapping(nullptr);
+}
+
+bool ColorMappingData::isActive() const
+{
+    return m_isActive;
 }
 
 QString ColorMappingData::scalarsName() const
@@ -68,12 +78,12 @@ void ColorMappingData::setDataComponent(int component)
 
     m_dataComponent = component;
 
-    if (m_lut)
+    if (isActive() && m_lut)
         m_lut->SetVectorComponent(component);
 
     dataComponentChangedEvent();
 
-    if (m_lut)
+    if (isActive() && m_lut)
         m_lut->SetTableRange(minValue(), maxValue());
 }
 
@@ -188,7 +198,7 @@ void ColorMappingData::dataComponentChangedEvent()
 
 void ColorMappingData::minMaxChangedEvent()
 {
-    if (m_lut)
+    if (isActive() && m_lut)
         m_lut->SetTableRange(minValue(), maxValue());
 
     emit minMaxChanged();
