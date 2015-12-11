@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <type_traits>
 
 #include <QDialog>
 
@@ -29,6 +30,11 @@ public:
     const QString & openFileDirectory() const;
     void setOpenFileDirectory(const QString & directory);
 
+    /** Specify the data type for loaded coordinate values. This is VTK_FLOAT by default */
+    void setImportDataType(int vtk_dataType);
+    template<typename T> void setImportDataType();
+    int importDataType() const;
+
 private:
     void openPointCoords();
     void openTriangleIndices();
@@ -46,7 +52,19 @@ private:
     std::unique_ptr<Ui_AsciiImporterWidget> m_ui;
     QString m_lastOpenFolder;
 
+    int m_importDataType;
     io::InputVector m_coordinateData;
     io::InputVector m_indexData;
     std::unique_ptr<PolyDataObject> m_polyData;
 };
+
+
+template<typename T>
+void AsciiImporterWidget::setImportDataType()
+{
+    if (std::is_same<T, float>())
+        return setImportDataType(VTK_FLOAT);
+
+    if (std::is_same<T, double>())
+        return setImportDataType(VTK_DOUBLE);
+}

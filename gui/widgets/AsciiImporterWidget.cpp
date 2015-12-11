@@ -18,6 +18,7 @@
 AsciiImporterWidget::AsciiImporterWidget(QWidget * parent, Qt::WindowFlags f)
     : QDialog(parent, f)
     , m_ui(std::make_unique<Ui_AsciiImporterWidget>())
+    , m_importDataType(VTK_FLOAT)
 {
     m_ui->setupUi(this);
     connect(m_ui->coordsFileOpen, &QAbstractButton::clicked, this, &AsciiImporterWidget::openPointCoords);
@@ -49,6 +50,16 @@ const QString & AsciiImporterWidget::openFileDirectory() const
 void AsciiImporterWidget::setOpenFileDirectory(const QString & directory)
 {
     m_lastOpenFolder = directory;
+}
+
+void AsciiImporterWidget::setImportDataType(int vtk_dataType)
+{
+    m_importDataType = vtk_dataType;
+}
+
+int AsciiImporterWidget::importDataType() const
+{
+    return m_importDataType;
 }
 
 void AsciiImporterWidget::openPointCoords()
@@ -142,7 +153,8 @@ bool AsciiImporterWidget::importToPolyData()
 
     auto polyData = MatricesToVtk::parseIndexedTriangles(
         m_coordinateData, 0, 1,
-        m_indexData, 0);
+        m_indexData, 0,
+        m_importDataType);
     assert(polyData);
 
     auto baseName = QFileInfo(m_ui->indicesFileEdit->text()).baseName();
