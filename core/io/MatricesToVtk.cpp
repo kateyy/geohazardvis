@@ -40,13 +40,7 @@ T positive_modulo(T i, T n)
 
 vtkSmartPointer<vtkDataArray> createDataArray(int vtk_dataType)
 {
-    switch (vtk_dataType)
-    {
-    case VTK_FLOAT: return vtkSmartPointer<vtkFloatArray>::New();
-    case VTK_DOUBLE: return vtkSmartPointer<vtkDoubleArray>::New();
-    }
-    assert(false);
-    return nullptr;
+    return vtkSmartPointer<vtkDataArray>::Take(vtkDataArray::CreateDataArray(vtk_dataType));
 }
 
 }
