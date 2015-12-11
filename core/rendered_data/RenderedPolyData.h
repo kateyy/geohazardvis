@@ -27,10 +27,11 @@ public:
     const QString & texture() const;
     void setTexture(const QString & fileName);
 
+    vtkActor * mainActor();
+
 protected:
     vtkProperty * createDefaultRenderProperty() const override;
     vtkSmartPointer<vtkProp3DCollection> fetchViewProps3D() override;
-    vtkActor * mainActor();
 
     void scalarsForColorMappingChangedEvent() override;
     void colorMappingGradientChangedEvent() override;
