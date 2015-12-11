@@ -28,7 +28,7 @@ class CORE_API DataObject : public QObject
     Q_OBJECT
 
 public:
-    DataObject(const QString & name, vtkDataSet * dataSet);
+    explicit DataObject(const QString & name, vtkDataSet * dataSet);
     ~DataObject() override;
 
     /** @return true if this is a 3D geometry (and false if it's image/2D data) */
@@ -63,7 +63,8 @@ public:
       * This is required, when changing significant parts of the underlaying data set. 
       * E.g.: actor bounds updates might cause crash faults, if points or indices of a vtkPointSet are invalid. 
       * This method stacks, i.e., multiple subsequent calls of deferEvents require the same number of executeDeferredEvents calls
-      * to actually execute the deferred events. */
+      * to actually execute the deferred events. 
+      * @see ScopedEventDefferral */
     void deferEvents();
     void executeDeferredEvents();
 
@@ -118,16 +119,22 @@ private:
     std::unique_ptr<DataObjectPrivate> d_ptr;
 };
 
-template<typename U, typename T>
-void DataObject::connectObserver(const QString & eventName, vtkObject & subject, unsigned long event, U & observer, void(T::* slot)(void))
-{
-    addObserver(eventName, subject,
-        subject.AddObserver(event, &observer, slot));
-}
 
-template<typename U, typename T>
-void DataObject::connectObserver(const QString & eventName, vtkObject & subject, unsigned long event, U & observer, void(T::* slot)(vtkObject*, unsigned long, void*))
+/** Blocks the data object's events on constructions and requests execution on destruction.
+This is most useful for an exception safe event lock on per-scope basis.
+*/
+class ScopedEventDefferral final
 {
-    addObserver(eventName, subject,
-        subject.AddObserver(event, &observer, slot));
-}
+public:
+    explicit ScopedEventDefferral(DataObject & objectToLock);
+    ~ScopedEventDefferral();
+
+    ScopedEventDefferral(const ScopedEventDefferral & other) = delete;
+    ScopedEventDefferral & operator=(const ScopedEventDefferral & other) = delete;
+
+private:
+    DataObject & m_dataObject;
+};
+
+
+#include "DataObject.hpp"

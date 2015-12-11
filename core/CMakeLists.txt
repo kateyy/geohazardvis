@@ -27,6 +27,7 @@ set ( SOURCES
     canvas_export/CanvasExporterTIFF.cpp
 
     data_objects/DataObject.h
+    data_objects/DataObject.hpp
     data_objects/DataObject.cpp
     data_objects/DataObject_private.h
     data_objects/DataObject_private.cpp
@@ -36,10 +37,10 @@ set ( SOURCES
     data_objects/ImageProfileData.cpp
     data_objects/PolyDataObject.h
     data_objects/PolyDataObject.cpp
-    data_objects/VectorGrid3DDataObject.h
-    data_objects/VectorGrid3DDataObject.cpp
     data_objects/RawVectorData.h
     data_objects/RawVectorData.cpp
+    data_objects/VectorGrid3DDataObject.h
+    data_objects/VectorGrid3DDataObject.cpp
 
     filters/CentroidAsScalarsFilter.h
     filters/CentroidAsScalarsFilter.cpp
