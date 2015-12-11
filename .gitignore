@@ -1,5 +1,6 @@
 build*/*
 screenshots*/*
+simulation*/*
 testing*/*
 .kdev4/*
 *.kdev4
