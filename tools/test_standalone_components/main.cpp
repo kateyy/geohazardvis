@@ -11,11 +11,13 @@
 #include <vtkRenderWindow.h>
 #include <vtkRenderWindowInteractor.h>
 
+#include <core/DataSetHandler.h>
 #include <core/io/Loader.h>
 #include <core/io/Exporter.h>
 #include <core/data_objects/DataObject.h>
 #include <core/rendered_data/RenderedData.h>
 
+#include <gui/DataMapping.h>
 #include <gui/data_view/RenderView.h>
 #include <gui/widgets/RenderConfigWidget.h>
 #include <gui/widgets/RendererConfigWidget.h>
@@ -33,7 +35,10 @@ int main(int argc, char **argv)
     QMainWindow window;
     window.show();
 
-    RenderView renderView(-1);
+    DataSetHandler dataSetHandler;
+    DataMapping dataMapping(dataSetHandler);
+
+    RenderView renderView(dataMapping, -1);
     window.addDockWidget(Qt::TopDockWidgetArea, renderView.dockWidgetParent());
     app.setActiveWindow(&renderView);
 
