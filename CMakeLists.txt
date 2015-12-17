@@ -134,7 +134,15 @@ set(VTK_COMPONENTS
     vtkChartsCore
 )
 
-find_package(VTK 6.3 REQUIRED ${VTK_COMPONENTS})
+find_package(VTK REQUIRED ${VTK_COMPONENTS})
+
+set(VTK_VERSION "${VTK_MAJOR_VERSION}.${VTK_MINOR_VERSION}.${VTK_BUILD_VERSION}")
+set(VTK_REQUIRED_VERSION 6.3)
+
+if(${VTK_VERSION} VERSION_LESS ${VTK_REQUIRED_VERSION})
+    message(FATAL_ERROR "VTK version ${VTK_VERSION} was found but version 6.3 or newer is required.")
+endif()
+
 # replaced by explicit calls below (http://www.kitware.com/source/home/post/116)
 #include(${VTK_USE_FILE})
 
