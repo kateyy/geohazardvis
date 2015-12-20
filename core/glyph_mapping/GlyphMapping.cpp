@@ -13,9 +13,7 @@ GlyphMapping::GlyphMapping(RenderedData & renderedData)
 {
     m_vectors = GlyphMappingRegistry::instance().createMappingsValidFor(m_renderedData);
 
-    // after adding an attribute array, updateAvailableVectors() will again trigger the Modified event on point/cell/field data
-    // in that case, the next event should only be processed after updateAvailableVectors() finished
-    connect(&renderedData.dataObject(), &DataObject::attributeArraysChanged, this, &GlyphMapping::updateAvailableVectors, Qt::QueuedConnection);
+    connect(&renderedData.dataObject(), &DataObject::attributeArraysChanged, this, &GlyphMapping::updateAvailableVectors);
 }
 
 GlyphMapping::~GlyphMapping() = default;

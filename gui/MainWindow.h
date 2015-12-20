@@ -36,7 +36,6 @@ public:
 
 public:
     void openFiles(const QStringList & fileNames);
-    void openFilesAsync(const QStringList & fileNames);
     
     void tabbedDockWidgetToFront(QDockWidget * widget);
 
@@ -47,6 +46,8 @@ protected:
     void dropEvent(QDropEvent * event) override;
 
 private:
+    QStringList openFilesSync(const QStringList & fileNames);
+
     void addRenderView(AbstractRenderView * renderView);
     void addTableView(TableView * tableView, QDockWidget * dockTabifyPartner = nullptr);
 
@@ -80,7 +81,7 @@ private:
     QString m_lastExportFolder;
 
     std::unique_ptr<QMutex> m_loadWatchersMutex;
-    std::map<std::unique_ptr<QFutureWatcher<void>>, QStringList> m_loadWatchers;
+    std::map<std::unique_ptr<QFutureWatcher<QStringList>>, QStringList> m_loadWatchers;
 
     std::unique_ptr<GuiPluginManager> m_pluginManager;
 };

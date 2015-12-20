@@ -21,5 +21,5 @@ void Application::startup()
     fileNames.removeFirst();
 
     if (!fileNames.isEmpty())
-        m_mainWindow->openFilesAsync(fileNames);
+        m_mainWindow->openFiles(fileNames);
 }

@@ -70,7 +70,7 @@ MainWindow::MainWindow()
     TextureManager::initialize();
     Loader::initialize();
 
-    connect(m_ui->actionOpen, &QAction::triggered, [this] () { openFilesAsync(dialog_inputFileName()); });
+    connect(m_ui->actionOpen, &QAction::triggered, [this] () { openFiles(dialog_inputFileName()); });
     connect(m_ui->actionImport_ASCII_Triangle_Mesh, &QAction::triggered, [this] () {
         AsciiImporterWidget importer(this);
         if (importer.exec() == QDialog::Accepted)
@@ -152,7 +152,7 @@ MainWindow::~MainWindow()
 {
     while (true)
     {
-        QFutureWatcher<void> * watcher;
+        decltype(m_loadWatchers)::key_type::pointer watcher;
         {
             QMutexLocker lock(m_loadWatchersMutex.get());
             if (m_loadWatchers.empty())
@@ -209,7 +209,7 @@ void MainWindow::dropEvent(QDropEvent * event)
     for (const QUrl & url : event->mimeData()->urls())
         fileNames << url.toLocalFile();
 
-    openFilesAsync(fileNames);
+    openFiles(fileNames);
 }
 
 void MainWindow::addRenderView(AbstractRenderView * renderView)
@@ -236,9 +236,10 @@ void MainWindow::addTableView(TableView * tableView, QDockWidget * dockTabifyPar
     tabbedDockWidgetToFront(tableView->dockWidgetParent());
 }
 
-void MainWindow::openFiles(const QStringList & fileNames)
+QStringList MainWindow::openFilesSync(const QStringList & fileNames)
 {
     QString oldName = windowTitle();
+    QStringList unsupportedFiles;
 
     std::vector<std::unique_ptr<DataObject>> newData;
 
@@ -255,8 +256,8 @@ void MainWindow::openFiles(const QStringList & fileNames)
         auto dataObject = Loader::readFile(fileName);
         if (!dataObject)
         {
-            QMessageBox::critical(this, "File error", "Could not open the selected input file (unsupported format).");
-            setWindowTitle(oldName);
+            unsupportedFiles << fileName;
+
             continue;
         }
 
@@ -264,20 +265,22 @@ void MainWindow::openFiles(const QStringList & fileNames)
     }
 
     m_dataSetHandler->takeData(std::move(newData));
+
+    return unsupportedFiles;
 }
 
-void MainWindow::openFilesAsync(const QStringList & fileNames)
+void MainWindow::openFiles(const QStringList & fileNames)
 {
-    auto watcher = std::make_unique<QFutureWatcher<void>>();
+    auto watcher = std::make_unique<QFutureWatcher<QStringList>>();
     auto watcherPtr = watcher.get();
-    connect(watcherPtr, &QFutureWatcher<void>::finished, this, &MainWindow::handleAsyncLoadFinished);
+    connect(watcherPtr, &QFutureWatcher<QStringList>::finished, this, &MainWindow::handleAsyncLoadFinished);
 
     m_loadWatchersMutex->lock();
     m_loadWatchers.emplace(std::move(watcher), fileNames);
     m_loadWatchersMutex->unlock();
 
     watcherPtr->setFuture(
-        QtConcurrent::run(this, &MainWindow::openFiles, fileNames));
+        QtConcurrent::run(this, &MainWindow::openFilesSync, fileNames));
 
     updateWindowTitle();
     QApplication::processEvents();
@@ -401,8 +404,9 @@ void MainWindow::handleAsyncLoadFinished()
 {
     {
         QMutexLocker lock(m_loadWatchersMutex.get());
-        assert(dynamic_cast<QFutureWatcher<void> *>(sender()));
-        auto watcher = static_cast<QFutureWatcher<void> *>(sender());
+        using WatcherPtr = decltype(m_loadWatchers)::key_type::pointer;
+        assert(dynamic_cast<WatcherPtr>(sender()));
+        auto watcher = static_cast<WatcherPtr>(sender());
 
         decltype(m_loadWatchers)::iterator toDeleteIt;
         for (toDeleteIt = m_loadWatchers.begin(); toDeleteIt != m_loadWatchers.end(); ++toDeleteIt)
@@ -411,6 +415,18 @@ void MainWindow::handleAsyncLoadFinished()
                 break;
         }
         assert(toDeleteIt != m_loadWatchers.end());
+
+        auto unsupportedFiles = toDeleteIt->first->future().result();
+        if (!unsupportedFiles.isEmpty())
+        {
+            QString msg = "Could not open the following files (unsupported format):";
+            for (auto file : unsupportedFiles)
+            {
+                msg += "\n" + file;
+            }
+            QMessageBox::critical(this, "File error", "Could not open the following files (unsupported format):");
+        }
+
         m_loadWatchers.erase(toDeleteIt);
     }
 
