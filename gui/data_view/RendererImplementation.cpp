@@ -56,13 +56,10 @@ const QString & RendererImplementation::currentInteractionStrategy() const
 
 void RendererImplementation::activate(QVTKWidget & /*qvtkWidget*/)
 {
-    connect(&m_renderView, &AbstractRenderView::visualizationsChanged, this, &RendererImplementation::onRenderViewVisualizationChanged);
 }
 
 void RendererImplementation::deactivate(QVTKWidget & /*qvtkWidget*/)
 {
-    disconnect(&m_renderView, &AbstractRenderView::visualizationsChanged, this, &RendererImplementation::onRenderViewVisualizationChanged);
-
     for (const auto & list : m_visConnections)
     {
         for (auto && c : list)
@@ -91,6 +88,11 @@ void RendererImplementation::removeContent(AbstractVisualizedData * content, uns
     onRemoveContent(content, subViewIndex);
 }
 
+void RendererImplementation::renderViewContentsChanged()
+{
+    onRenderViewContentsChanged();
+}
+
 const QList<RendererImplementation::ImplementationConstructor> & RendererImplementation::constructors()
 {
     return s_constructors();
@@ -103,7 +105,7 @@ QList<RendererImplementation::ImplementationConstructor> & RendererImplementatio
     return list;
 }
 
-void RendererImplementation::onRenderViewVisualizationChanged()
+void RendererImplementation::onRenderViewContentsChanged()
 {
 }
 

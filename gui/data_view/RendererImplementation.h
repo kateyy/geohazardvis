@@ -64,6 +64,8 @@ public:
     void addContent(AbstractVisualizedData * content, unsigned int subViewIndex);
     /** remove all references to the object and its contents */
     void removeContent(AbstractVisualizedData * content, unsigned int subViewIndex);
+    /** This is called once after a set of data objects was removed or added to the render view */
+    void renderViewContentsChanged();
 
     /** mark dataObject (and, if set, it's point/cell) as current selection */
     virtual void setSelectedData(AbstractVisualizedData * vis, vtkIdType index, IndexType indexType) = 0;
@@ -101,7 +103,7 @@ protected:
         connection related to this content */
     virtual void onAddContent(AbstractVisualizedData * content, unsigned int subViewIndex) = 0;
     virtual void onRemoveContent(AbstractVisualizedData * content, unsigned int subViewIndex) = 0;
-    virtual void onRenderViewVisualizationChanged();
+    virtual void onRenderViewContentsChanged();
 
     /** Call in sub-classes, to update the list of supported interaction strategies
     * @param strategyName Names of supported strategies. These names must be unique. 

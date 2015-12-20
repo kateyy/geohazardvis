@@ -719,6 +719,7 @@ void ResidualVerificationView::updateResidual()
 
 void ResidualVerificationView::updateGuiAfterDataChange()
 {
+    implementation().renderViewContentsChanged();
     emit visualizationsChanged();
 
     for (unsigned int i = 0; i < numberOfSubViews(); ++i)

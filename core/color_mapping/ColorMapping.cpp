@@ -26,7 +26,7 @@ ColorMapping::ColorMapping()
     clear();
 
     connect(m_glyphListener.get(), &GlyphColorMappingGlyphListener::glyphMappingChanged,
-        this, &ColorMapping::updateAvailableScalars, Qt::QueuedConnection);
+        this, &ColorMapping::updateAvailableScalars);
 }
 
 ColorMapping::~ColorMapping() = default;
@@ -52,7 +52,7 @@ void ColorMapping::setVisualizedData(const QList<AbstractVisualizedData *> & vis
         // pass our (persistent) gradient object
         vis->setColorMappingGradient(m_gradient);
 
-        connect(&vis->dataObject(), &DataObject::attributeArraysChanged, this, &ColorMapping::updateAvailableScalars, Qt::QueuedConnection);
+        connect(&vis->dataObject(), &DataObject::attributeArraysChanged, this, &ColorMapping::updateAvailableScalars);
     }
 
     m_data = ColorMappingRegistry::instance().createMappingsValidFor(visualizedData);

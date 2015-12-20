@@ -158,10 +158,11 @@ void RendererImplementationBase3D::onRemoveContent(AbstractVisualizedData * cont
     assert(dynamic_cast<RenderedData *>(content));
     RenderedData * renderedData = static_cast<RenderedData *>(content);
 
-    // consistently update axes and camera setup (see dataVisibilityChanged)
+    // update camera and axes. signal/slots are already disconnected for this object, so explicitly trigger the updates
     if (content->isVisible())
     {
         content->setVisible(false);
+        dataVisibilityChanged(renderedData, subViewIndex);
     }
 
     auto & renderer = *this->renderer(subViewIndex);
@@ -180,9 +181,9 @@ void RendererImplementationBase3D::onDataVisibilityChanged(AbstractVisualizedDat
 {
 }
 
-void RendererImplementationBase3D::onRenderViewVisualizationChanged()
+void RendererImplementationBase3D::onRenderViewContentsChanged()
 {
-    RendererImplementation::onRenderViewVisualizationChanged();
+    RendererImplementation::onRenderViewContentsChanged();
 
     for (unsigned int i = 0; i < m_renderView.numberOfSubViews(); ++i)
     {

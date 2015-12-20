@@ -182,6 +182,8 @@ void RenderView::showDataObjectsImpl(const QList<DataObject *> & uncheckedDataOb
 
     if (aNewObject)
     {
+        implementation().renderViewContentsChanged();
+
         updateGuiForSelectedData(aNewObject);
 
         emit visualizationsChanged();
@@ -226,6 +228,8 @@ void RenderView::hideDataObjectsImpl(const QList<DataObject *> & dataObjects, un
 
     updateGuiForRemovedData();
 
+    implementation().renderViewContentsChanged();
+
     emit visualizationsChanged();
 
     render();
@@ -258,6 +262,8 @@ void RenderView::removeDataObject(DataObject * dataObject)
     auto toDelete = removeFromInternalLists({ dataObject });
 
     updateGuiForRemovedData();
+
+    implementation().renderViewContentsChanged();
 
     emit visualizationsChanged();
 
