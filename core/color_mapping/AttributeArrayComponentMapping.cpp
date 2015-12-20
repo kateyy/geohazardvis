@@ -45,7 +45,10 @@ std::vector<std::unique_ptr<ColorMappingData>> AttributeArrayComponentMapping::n
         QMap<AbstractVisualizedData *, int> attributeLocations;
     };
 
-    auto checkAttributeArrays = [] (AbstractVisualizedData * vis, vtkDataSetAttributes * attributes, int attributeLocation, QMap<QString, ArrayInfo> & arrayInfos) -> void
+    auto checkAttributeArrays = [] (
+        AbstractVisualizedData * vis, vtkDataSetAttributes * attributes, 
+        int attributeLocation, vtkIdType expectedTupleCount,
+        QMap<QString, ArrayInfo> & arrayInfos) -> void
     {
         for (auto i = 0; i < attributes->GetNumberOfArrays(); ++i)
         {
@@ -60,6 +63,18 @@ std::vector<std::unique_ptr<ColorMappingData>> AttributeArrayComponentMapping::n
                 continue;
 
             QString name = QString::fromUtf8(dataArray->GetName());
+
+            const vtkIdType tupleCount = dataArray->GetNumberOfTuples();
+            if (expectedTupleCount < tupleCount)
+            {
+                qDebug() << "Not enough tuples in array" << name << ":" << tupleCount << ", expected" << expectedTupleCount << ", location" << attributeLocation << "(skipping)";
+                continue;
+            }
+            else if (expectedTupleCount > tupleCount)
+            {
+                qDebug() << "Too many tuples in array" << name << ":" << tupleCount << ", expected" << expectedTupleCount << ", location" << attributeLocation << "(ignoring superfluous data)";
+            }
+
             ArrayInfo & arrayInfo = arrayInfos[name];
 
             int lastNumComp = arrayInfo.numComponents;
@@ -97,8 +112,8 @@ std::vector<std::unique_ptr<ColorMappingData>> AttributeArrayComponentMapping::n
             vtkDataSet * dataSet = vis->colorMappingInputData(i);
 
             // in case of conflicts, prefer point over cell arrays (as they probably have a higher precision)
-            checkAttributeArrays(vis, dataSet->GetPointData(), vtkAssignAttribute::POINT_DATA, arrayInfos);
-            checkAttributeArrays(vis, dataSet->GetCellData(), vtkAssignAttribute::CELL_DATA, arrayInfos);
+            checkAttributeArrays(vis, dataSet->GetPointData(), vtkAssignAttribute::POINT_DATA, dataSet->GetNumberOfPoints(), arrayInfos);
+            checkAttributeArrays(vis, dataSet->GetCellData(), vtkAssignAttribute::CELL_DATA, dataSet->GetNumberOfCells(), arrayInfos);
         }
     }
 
