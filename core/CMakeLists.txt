@@ -55,17 +55,20 @@ set ( SOURCES
     filters/TransformTextureCoords.h
     filters/TransformTextureCoords.cxx
 
+    io/BinaryFile.h
+    io/BinaryFile.hpp
+    io/BinaryFile.cpp
     io/Exporter.h
     io/Exporter.cpp
     io/FileParser.h
     io/FileParser.cpp
     io/Loader.h
     io/Loader.cpp
+    io/MatricesToVtk.h
+    io/MatricesToVtk.cpp
     io/TextFileReader.h
     io/TextFileReader.cpp
     io/types.h
-    io/MatricesToVtk.h
-    io/MatricesToVtk.cpp
 
     rendered_data/RenderedData.h
     rendered_data/RenderedData.cpp
