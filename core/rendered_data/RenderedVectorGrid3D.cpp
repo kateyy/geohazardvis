@@ -58,6 +58,7 @@ RenderedVectorGrid3D::RenderedVectorGrid3D(VectorGrid3DDataObject & dataObject)
     int extent[6];
     image->GetExtent(extent);
 
+    m_extractVOI->SetVOI(extent);
     m_extractVOI->SetInputData(dataObject.dataSet());
 
     // decrease sample rate to prevent crashing/blocking rendering
