@@ -28,10 +28,12 @@ if(OPTION_BUILD_TESTS)
         find_package(GTEST)
     else()
         set(GTEST_FOUND 1)
-        set(GTEST_DIR "${THIRD_PARTY_DIR}/gtest")
+        set(GTEST_SOURCE_DIR "${THIRD_PARTY_SOURCE_DIR}/gtest")
+        set(GTEST_DIR "${THIRD_PARTY_BUILD_DIR}/gtest")
 
         ExternalProject_Add(gtest
             PREFIX ${GTEST_DIR}
+            SOURCE_DIR "${THIRD_PARTY_SOURCE_DIR}/gtest"
             GIT_REPOSITORY "https://github.com/google/googletest"
             GIT_TAG "release-1.7.0"
             CMAKE_CACHE_ARGS
@@ -45,7 +47,7 @@ if(OPTION_BUILD_TESTS)
             set(GTEST_LIBRARIES "${GTEST_DIR}/src/gtest-build/libgtest.a")
         endif()
 
-        set(GTEST_INCLUDE_DIR "${GTEST_DIR}/src/gtest/include")
+        set(GTEST_INCLUDE_DIR "${GTEST_SOURCE_DIR}/include")
     endif()
 
     if(NOT GTEST_FOUND)

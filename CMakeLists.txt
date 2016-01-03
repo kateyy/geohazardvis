@@ -119,7 +119,8 @@ install(FILES ${CMAKE_BINARY_DIR}/revision DESTINATION ${INSTALL_ROOT})
 
 # Find / add third-party components
 
-set(THIRD_PARTY_DIR "${PROJECT_SOURCE_DIR}/ThirdParty")
+set(THIRD_PARTY_SOURCE_DIR "${PROJECT_SOURCE_DIR}/ThirdParty")
+set(THIRD_PARTY_BUILD_DIR "${PROJECT_BINARY_DIR}/ThirdParty")
 include(ExternalProject)
 
 find_package(OpenGL REQUIRED)
@@ -203,13 +204,14 @@ if(OPTION_USE_SYSTEM_LIBZEUG)
     find_package(libzeug REQUIRED)
 else()
     set(LIBZEUG_FOUND 1)
-    set(LIBZEUG_PREFIX "${THIRD_PARTY_DIR}/libzeug")
+    set(LIBZEUG_PREFIX "${THIRD_PARTY_BUILD_DIR}/libzeug")
     set(libzeug_DIR "${LIBZEUG_PREFIX}/install")
 
     list(APPEND FindQt5_Components OpenGL)
 
     ExternalProject_Add(libzeug
         PREFIX ${LIBZEUG_PREFIX}
+        SOURCE_DIR "${THIRD_PARTY_SOURCE_DIR}/libzeug"
         GIT_REPOSITORY "https://github.com/kateyy/libzeug.git"
         GIT_TAG "geohazardvis_2015_09"
         CMAKE_CACHE_ARGS
