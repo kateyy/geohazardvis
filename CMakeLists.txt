@@ -214,6 +214,10 @@ else()
         SOURCE_DIR "${THIRD_PARTY_SOURCE_DIR}/libzeug"
         GIT_REPOSITORY "https://github.com/kateyy/libzeug.git"
         GIT_TAG "geohazardvis_2015_09"
+        BUILD_COMMAND ${CMAKE_COMMAND}
+            -DBUILD_CONFIG:STRING=${CMAKE_CFG_INTDIR}
+            -P ${PROJECT_SOURCE_DIR}/cmake/libzeugExternalProjectBuild.cmake
+        INSTALL_COMMAND ""
         CMAKE_CACHE_ARGS
             -DOPTION_BUILD_TESTS:bool=OFF
             -DQt5Core_DIR:path=${Qt5Core_DIR}
