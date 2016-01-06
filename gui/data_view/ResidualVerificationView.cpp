@@ -562,12 +562,12 @@ void ResidualVerificationView::handleUpdateFinished()
         assert(oldVisList.empty());
     }
 
-    updateGuiAfterDataChange();
-
     if (m_modelData)
     {
         m_modelData->executeDeferredEvents();
     }
+
+    updateGuiAfterDataChange();
 
     toolBar()->setEnabled(true);
     m_progressBar->hide();
@@ -721,6 +721,8 @@ void ResidualVerificationView::updateGuiAfterDataChange()
 {
     implementation().renderViewContentsChanged();
     emit visualizationsChanged();
+
+    QCoreApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
 
     for (unsigned int i = 0; i < numberOfSubViews(); ++i)
     {
