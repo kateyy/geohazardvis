@@ -56,6 +56,7 @@ MainWindow::MainWindow()
     , m_renderConfigWidget(new RenderConfigWidget())
     , m_rendererConfigWidget(new RendererConfigWidget())
     , m_canvasExporter(new CanvasExporterWidget(this))
+    , m_recentFileListMaxEntries(0)
     , m_loadWatchersMutex(std::make_unique<QMutex>())
 {
     m_defaultPalette = qApp->palette();
@@ -79,6 +80,10 @@ MainWindow::MainWindow()
         }
     });
     connect(m_ui->actionExportDataset, &QAction::triggered, this, &MainWindow::dialog_exportDataSet);
+    connect(m_ui->actionClear_Recent_Files, &QAction::triggered, [this] () {
+        m_recentFileList.clear();
+        prependRecentFiles({});
+    });
     connect(m_ui->actionAbout_Qt, &QAction::triggered, [this] () { QMessageBox::aboutQt(this); });
     connect(m_ui->actionApply_Digital_Elevation_Model, &QAction::triggered, this, &MainWindow::showDEMWidget);
     connect(m_ui->actionNew_Render_View, &QAction::triggered, 
@@ -272,6 +277,62 @@ MainWindow::FileLoadResults MainWindow::openFilesSync(const QStringList & fileNa
     return results;
 }
 
+void MainWindow::prependRecentFiles(const QStringList & filePaths, const QStringList & invalid)
+{
+    auto & menu = *m_ui->menuRecent_Files;
+    menu.removeAction(m_ui->actionClear_Recent_Files);
+    menu.clear();
+
+    auto oldEntries = m_recentFileList;
+    m_recentFileList = filePaths.mid(0, m_recentFileListMaxEntries);
+
+    for (auto && oldEntry : oldEntries)
+    {
+        if (m_recentFileList.size() == m_recentFileListMaxEntries)
+        {
+            break;
+        }
+
+        if (m_recentFileList.contains(oldEntry) || invalid.contains(oldEntry))
+            continue;
+
+        m_recentFileList << oldEntry;
+    }
+
+    
+    auto openRecentFile = [this] (int i) {
+        auto && fileName = m_recentFileList[i];
+        openFiles({ fileName });
+    };
+
+    int i = 0;
+
+    for (auto && newEntry : m_recentFileList)
+    {
+        QString num;
+        if (i < 9)
+        {
+            num = "&" + QString::number(i + 1);
+        }
+        else if (i == 9)
+        {
+            num = "1&0";
+        }
+        else
+        {
+            num = QString::number(i + 1);
+        }
+
+        auto action = menu.addAction(num + ": " + newEntry);
+        connect(action, &QAction::triggered, std::bind(openRecentFile, i));
+        ++i;
+    }
+
+    menu.addSeparator();
+    menu.addAction(m_ui->actionClear_Recent_Files);
+    m_ui->actionClear_Recent_Files->setEnabled(m_recentFileList.size() > 0);
+}
+
 void MainWindow::openFiles(const QStringList & fileNames)
 {
     auto watcher = std::make_unique<QFutureWatcher<FileLoadResults>>();
@@ -421,6 +482,8 @@ void MainWindow::handleAsyncLoadFinished()
 
         auto results = toDeleteIt->first->future().result();
 
+        prependRecentFiles(results.success, results.notFound + results.notSupported);
+
         if (results.notFound.size() + results.notSupported.size())
         {
             QString msg = "Could not open the following files:";
@@ -453,12 +516,18 @@ void MainWindow::restoreSettings()
 {
     QSettings settings(s_settingsFileName, QSettings::IniFormat);
     m_lastOpenFolder = settings.value("lastOpenFolder").toString();
+    m_lastExportFolder = settings.value("lastExportFolder").toString();
+    m_recentFileListMaxEntries = std::max(0, settings.value("recentFileListMaxEntries", 15).toInt());
+    prependRecentFiles(settings.value("recentFileList").toStringList());
 }
 
 void MainWindow::storeSettings()
 {
     QSettings settings(s_settingsFileName, QSettings::IniFormat);
     settings.setValue("lastOpenFolder", m_lastOpenFolder);
+    settings.setValue("lastExportFolder", m_lastExportFolder);
+    settings.setValue("recentFileListMaxEntries", m_recentFileListMaxEntries);
+    settings.setValue("recentFileList", m_recentFileList);
 }
 
 void MainWindow::restoreUiState()

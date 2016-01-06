@@ -54,6 +54,7 @@ private:
     };
 
     FileLoadResults openFilesSync(const QStringList & fileNames);
+    void prependRecentFiles(const QStringList & filePaths, const QStringList & invalid = QStringList());
 
     void addRenderView(AbstractRenderView * renderView);
     void addTableView(TableView * tableView, QDockWidget * dockTabifyPartner = nullptr);
@@ -86,6 +87,8 @@ private:
 
     QString m_lastOpenFolder;
     QString m_lastExportFolder;
+    int m_recentFileListMaxEntries;
+    QStringList m_recentFileList;
 
     std::unique_ptr<QMutex> m_loadWatchersMutex;
     std::map<std::unique_ptr<QFutureWatcher<FileLoadResults>>, QStringList> m_loadWatchers;

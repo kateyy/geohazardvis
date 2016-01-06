@@ -36,9 +36,17 @@
     <property name="title">
      <string>&amp;File</string>
     </property>
+    <widget class="QMenu" name="menuRecent_Files">
+     <property name="title">
+      <string>Recent &amp;Files</string>
+     </property>
+     <addaction name="separator"/>
+     <addaction name="actionClear_Recent_Files"/>
+    </widget>
     <addaction name="actionOpen"/>
     <addaction name="actionImport_ASCII_Triangle_Mesh"/>
     <addaction name="actionExportDataset"/>
+    <addaction name="menuRecent_Files"/>
     <addaction name="separator"/>
     <addaction name="actionExit"/>
    </widget>
@@ -178,6 +186,14 @@
   <action name="actionImport_ASCII_Triangle_Mesh">
    <property name="text">
     <string>Import &amp;ASCII Triangle Mesh...</string>
+   </property>
+  </action>
+  <action name="actionClear_Recent_Files">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>&amp;Clear Recent Files</string>
    </property>
   </action>
  </widget>
