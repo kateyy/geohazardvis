@@ -381,7 +381,13 @@ void MainWindow::dialog_exportDataSet()
         setWindowTitle("Exporting " + QFileInfo(fileName).baseName() + " ...");
         QApplication::processEvents();
 
-        Exporter::exportData(dataObject, fileName);
+        bool result = Exporter::exportData(dataObject, fileName);
+
+        if (!result)
+        {
+            QMessageBox::warning(this, "Export failed",
+                "Could not export the specified data set (" + dataObject->name() + ")");
+        }
 
         m_lastExportFolder = QFileInfo(fileName).absolutePath();
     }
