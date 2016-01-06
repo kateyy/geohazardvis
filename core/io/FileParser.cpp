@@ -33,6 +33,13 @@ bool populateIOVectors(const string & inputFileName,
         return false;
     }
 
+    const auto columnSize = parsedData.size() / nbColumns;
+
+    if (columnSize * nbColumns != parsedData.size())
+    {
+        return false;
+    }
+
     ioVectors.resize(nbColumns);
 
     populateVectorsFromData(parsedData, ioVectors);
