@@ -236,44 +236,47 @@ void MainWindow::addTableView(TableView * tableView, QDockWidget * dockTabifyPar
     tabbedDockWidgetToFront(tableView->dockWidgetParent());
 }
 
-QStringList MainWindow::openFilesSync(const QStringList & fileNames)
+MainWindow::FileLoadResults MainWindow::openFilesSync(const QStringList & fileNames)
 {
     QString oldName = windowTitle();
-    QStringList unsupportedFiles;
+
+    FileLoadResults results;
 
     std::vector<std::unique_ptr<DataObject>> newData;
 
-    for (QString fileName : fileNames)
+    for (auto && fileName : fileNames)
     {
         qDebug() << " <" << fileName;
 
         if (!QFileInfo(fileName).exists())
         {
             qDebug() << "\t\t File does not exist!";
+            results.notFound << fileName;
             continue;
         }
 
         auto dataObject = Loader::readFile(fileName);
         if (!dataObject)
         {
-            unsupportedFiles << fileName;
+            results.notSupported << fileName;
 
             continue;
         }
 
         newData.push_back(std::move(dataObject));
+        results.success << fileName;
     }
 
     m_dataSetHandler->takeData(std::move(newData));
 
-    return unsupportedFiles;
+    return results;
 }
 
 void MainWindow::openFiles(const QStringList & fileNames)
 {
-    auto watcher = std::make_unique<QFutureWatcher<QStringList>>();
+    auto watcher = std::make_unique<QFutureWatcher<FileLoadResults>>();
     auto watcherPtr = watcher.get();
-    connect(watcherPtr, &QFutureWatcher<QStringList>::finished, this, &MainWindow::handleAsyncLoadFinished);
+    connect(watcherPtr, &QFutureWatcher<FileLoadResults>::finished, this, &MainWindow::handleAsyncLoadFinished);
 
     m_loadWatchersMutex->lock();
     m_loadWatchers.emplace(std::move(watcher), fileNames);
@@ -416,15 +419,28 @@ void MainWindow::handleAsyncLoadFinished()
         }
         assert(toDeleteIt != m_loadWatchers.end());
 
-        auto unsupportedFiles = toDeleteIt->first->future().result();
-        if (!unsupportedFiles.isEmpty())
+        auto results = toDeleteIt->first->future().result();
+
+        if (results.notFound.size() + results.notSupported.size())
         {
-            QString msg = "Could not open the following files (unsupported format):";
-            for (auto file : unsupportedFiles)
+            QString msg = "Could not open the following files:";
+            if (results.notSupported.size())
             {
-                msg += "\n" + file;
+                msg += "\nUnsupported format:";
+                for (auto && file : results.notSupported)
+                {
+                    msg += "\n - " + file;
+                }
             }
-            QMessageBox::critical(this, "File error", "Could not open the following files (unsupported format):");
+            if (results.notFound.size())
+            {
+                msg += "\nFile not found:";
+                for (auto && file : results.notFound)
+                {
+                    msg += "\n - " + file;
+                }
+            }
+            QMessageBox::critical(this, "File error", msg);
         }
 
         m_loadWatchers.erase(toDeleteIt);

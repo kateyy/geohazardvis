@@ -46,7 +46,14 @@ protected:
     void dropEvent(QDropEvent * event) override;
 
 private:
-    QStringList openFilesSync(const QStringList & fileNames);
+    struct FileLoadResults
+    {
+        QStringList success;
+        QStringList notFound;
+        QStringList notSupported;
+    };
+
+    FileLoadResults openFilesSync(const QStringList & fileNames);
 
     void addRenderView(AbstractRenderView * renderView);
     void addTableView(TableView * tableView, QDockWidget * dockTabifyPartner = nullptr);
@@ -81,7 +88,7 @@ private:
     QString m_lastExportFolder;
 
     std::unique_ptr<QMutex> m_loadWatchersMutex;
-    std::map<std::unique_ptr<QFutureWatcher<QStringList>>, QStringList> m_loadWatchers;
+    std::map<std::unique_ptr<QFutureWatcher<FileLoadResults>>, QStringList> m_loadWatchers;
 
     std::unique_ptr<GuiPluginManager> m_pluginManager;
 };
