@@ -33,7 +33,7 @@
       <property name="alignment">
        <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
       </property>
-      <layout class="QGridLayout" name="gridLayout">
+      <layout class="QFormLayout" name="formLayout">
        <item row="1" column="0">
         <widget class="QLabel" name="componentLabel">
          <property name="text">
@@ -110,16 +110,13 @@
       <property name="title">
        <string>Color Legend</string>
       </property>
-      <layout class="QGridLayout" name="gridLayout_2">
-       <item row="4" column="0" colspan="2">
-        <widget class="QCheckBox" name="legendBackgroundCheckBox">
+      <layout class="QFormLayout" name="formLayout_2">
+       <item row="0" column="0">
+        <widget class="QCheckBox" name="colorLegendCheckBox">
          <property name="text">
-          <string>Opaque Background</string>
+          <string>Visible</string>
          </property>
         </widget>
-       </item>
-       <item row="2" column="1">
-        <widget class="QSpinBox" name="legendTitleFontSize"/>
        </item>
        <item row="0" column="1">
         <widget class="QComboBox" name="legendPositionComboBox">
@@ -128,20 +125,6 @@
            <horstretch>0</horstretch>
            <verstretch>0</verstretch>
           </sizepolicy>
-         </property>
-        </widget>
-       </item>
-       <item row="2" column="0">
-        <widget class="QLabel" name="label_2">
-         <property name="text">
-          <string>Title Font Size</string>
-         </property>
-        </widget>
-       </item>
-       <item row="3" column="0">
-        <widget class="QLabel" name="label">
-         <property name="text">
-          <string>Label Font Size</string>
          </property>
         </widget>
        </item>
@@ -158,13 +141,30 @@
          </property>
         </widget>
        </item>
+       <item row="2" column="0">
+        <widget class="QLabel" name="label_2">
+         <property name="text">
+          <string>Title Font Size</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="1">
+        <widget class="QSpinBox" name="legendTitleFontSize"/>
+       </item>
+       <item row="3" column="0">
+        <widget class="QLabel" name="label">
+         <property name="text">
+          <string>Label Font Size</string>
+         </property>
+        </widget>
+       </item>
        <item row="3" column="1">
         <widget class="QSpinBox" name="legendLabelFontSize"/>
        </item>
-       <item row="0" column="0">
-        <widget class="QCheckBox" name="colorLegendCheckBox">
+       <item row="4" column="0" colspan="2">
+        <widget class="QCheckBox" name="legendBackgroundCheckBox">
          <property name="text">
-          <string>Visible</string>
+          <string>Opaque Background</string>
          </property>
         </widget>
        </item>
