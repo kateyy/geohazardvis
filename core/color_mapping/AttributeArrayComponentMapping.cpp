@@ -65,12 +65,12 @@ std::vector<std::unique_ptr<ColorMappingData>> AttributeArrayComponentMapping::n
             QString name = QString::fromUtf8(dataArray->GetName());
 
             const vtkIdType tupleCount = dataArray->GetNumberOfTuples();
-            if (expectedTupleCount < tupleCount)
+            if (expectedTupleCount > tupleCount)
             {
                 qDebug() << "Not enough tuples in array" << name << ":" << tupleCount << ", expected" << expectedTupleCount << ", location" << attributeLocation << "(skipping)";
                 continue;
             }
-            else if (expectedTupleCount > tupleCount)
+            else if (expectedTupleCount < tupleCount)
             {
                 qDebug() << "Too many tuples in array" << name << ":" << tupleCount << ", expected" << expectedTupleCount << ", location" << attributeLocation << "(ignoring superfluous data)";
             }
