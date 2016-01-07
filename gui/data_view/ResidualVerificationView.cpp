@@ -42,6 +42,8 @@ namespace
 
 vtkSmartPointer<vtkDataArray> projectToLineOfSight(vtkDataArray & vectors, vtkVector3d lineOfSight)
 {
+    assert(vectors.GetNumberOfComponents() == 3);
+
     auto output = vtkSmartPointer<vtkDataArray>::Take(vectors.NewInstance());
     output->SetNumberOfComponents(1);
     output->SetNumberOfTuples(vectors.GetNumberOfTuples());
@@ -595,71 +597,90 @@ void ResidualVerificationView::updateResidual()
     assert(m_modelData->dataSet());
     auto & modelDataSet = *m_modelData->dataSet();
 
-    vtkSmartPointer<vtkDataArray> observationData;
-    vtkSmartPointer<vtkDataArray> modelData;
+    const vtkSmartPointer<vtkDataArray> observationData = useObservationCellData
+        ? observationDataSet.GetCellData()->GetArray(observationAttributeName.toUtf8().data())
+        : observationDataSet.GetPointData()->GetArray(observationAttributeName.toUtf8().data());
+
+    const vtkSmartPointer<vtkDataArray> modelData = useModelCellData
+        ? modelDataSet.GetCellData()->GetArray(modelAttributeName.toUtf8().data())
+        : modelDataSet.GetPointData()->GetArray(modelAttributeName.toUtf8().data());
+
+
+    if (!observationData)
+    {
+        qDebug() << "Could not find valid observation data for residual computation (" << observationAttributeName + ")";
+        return;
+    }
+
+    if (!modelData)
+    {
+        qDebug() << "Could not find valid model data for residual computation (" << modelAttributeName + ")";
+        return;
+    }
+
+
+    // project displacement vectors to the line of sight vector, if required
+    // This also adds the projection result as scalars to the respective data set, so that it can be used 
+    // in the visualization.
+    auto getProjectedDisp = [this] (vtkDataArray & displacement, unsigned int dataIndex, vtkDataSet & dataSet) 
+        -> vtkSmartPointer<vtkDataArray> {
+
+        if (displacement.GetNumberOfComponents() == 1)
+        {
+            m_projectedAttributeNames[dataIndex] = "";
+            return &displacement;   // is already projected
+        }
+
+        if (displacement.GetNumberOfComponents() != 3)
+        {   // can't handle that
+            return nullptr;
+        }
+
+        auto projected = projectToLineOfSight(displacement, m_inSARLineOfSight);
+
+        auto projectedName = m_attributeNamesLocations[dataIndex].first + " (projected)";
+        m_projectedAttributeNames[dataIndex] = projectedName;
+        projected->SetName(projectedName.toUtf8().data());
+
+        if (m_attributeNamesLocations[dataIndex].second)    // use cell data?
+            dataSet.GetCellData()->AddArray(projected);
+        else
+            dataSet.GetPointData()->AddArray(projected);
+
+        return projected;
+    };
+
+
+    auto observationLosDisp = getProjectedDisp(*observationData, observationIndex, observationDataSet);
+    auto modelLosDisp = getProjectedDisp(*modelData, modelIndex, modelDataSet);
+    assert(observationLosDisp && modelLosDisp);
+
+
+    // now interpolate one of the data arrays to the other's structure
 
     if (m_interpolationMode == InterpolationMode::modelToObservation)
     {
-        observationData = observationDataSet.GetPointData()->GetArray(observationAttributeName.toUtf8().data());
-
-        modelData = InterpolationHelper::interpolate(observationDataSet, modelDataSet, modelAttributeName, useModelCellData);
+        auto attributeName = QString::fromUtf8(modelLosDisp->GetName());
+        modelLosDisp = InterpolationHelper::interpolate(observationDataSet, modelDataSet, attributeName, useModelCellData);
     }
     else
     {
-        observationData = InterpolationHelper::interpolate(modelDataSet, observationDataSet, observationAttributeName, useObservationCellData);
-
-        modelData = useModelCellData
-            ? modelDataSet.GetCellData()->GetArray(modelAttributeName.toUtf8().data())
-            : modelDataSet.GetPointData()->GetArray(modelAttributeName.toUtf8().data());
+        auto attributeName = QString::fromUtf8(observationLosDisp->GetName());
+        observationLosDisp = InterpolationHelper::interpolate(modelDataSet, observationDataSet, attributeName, useObservationCellData);
     }
 
-    if (!observationData || !modelData)
+    if (!observationLosDisp || !modelLosDisp)
     {
         qDebug() << "Observation/Model interpolation failed";
 
         return;
     }
 
-    // project vectors if needed and assign arrays accordingly
-    if (observationData->GetNumberOfComponents() == 3)
-    {
-        observationData = projectToLineOfSight(*observationData, m_inSARLineOfSight);
 
-        m_projectedAttributeNames[observationIndex] = observationAttributeName + " (projected)";
-        auto projectedName = m_projectedAttributeNames[observationIndex].toUtf8();
-        observationData->SetName(projectedName.data());
-
-        if (useObservationCellData)
-            observationDataSet.GetCellData()->AddArray(observationData);
-        else
-            observationDataSet.GetPointData()->AddArray(observationData);
-    }
-    else
-    {
-        m_projectedAttributeNames[observationIndex] = "";
-    }
-
-    if (modelData->GetNumberOfComponents() == 3)
-    {
-        modelData = projectToLineOfSight(*modelData, m_inSARLineOfSight);
-
-        m_projectedAttributeNames[modelIndex] = modelAttributeName + " (projected)";
-        auto projectedName = m_projectedAttributeNames[modelIndex].toUtf8();
-        modelData->SetName(projectedName.data());
-
-        if (useModelCellData)
-            modelDataSet.GetCellData()->AddArray(modelData);
-        else
-            modelDataSet.GetPointData()->AddArray(modelData);
-    }
-    else
-    {
-        m_projectedAttributeNames[modelIndex] = "";
-    }
-
-    assert(modelData->GetNumberOfComponents() == 1);
-    assert(observationData->GetNumberOfComponents() == 1);
-    assert(modelData->GetNumberOfTuples() == observationData->GetNumberOfTuples());
+    // expect line of sight displacements, matching to one of the structures here
+    assert(modelLosDisp->GetNumberOfComponents() == 1);
+    assert(observationLosDisp->GetNumberOfComponents() == 1);
+    assert(modelLosDisp->GetNumberOfTuples() == observationLosDisp->GetNumberOfTuples());
 
 
     // compute the residual data
@@ -668,15 +689,18 @@ void ResidualVerificationView::updateResidual()
         ? observationDataSet
         : modelDataSet;
 
-    auto residualData = vtkSmartPointer<vtkDataArray>::Take(modelData->NewInstance());
+    auto residualData = vtkSmartPointer<vtkDataArray>::Take(modelLosDisp->NewInstance());
     residualData->SetName(m_attributeNamesLocations[residualIndex].first.toUtf8().data());
-    residualData->SetNumberOfTuples(modelData->GetNumberOfTuples());
+    residualData->SetNumberOfTuples(modelLosDisp->GetNumberOfTuples());
     residualData->SetNumberOfComponents(1);
+
+    const double observationUnitFactor = std::pow(10, m_observationUnitDecimalExponent);
+    const double modelUnitFactor = std::pow(10, m_modelUnitDecimalExponent);
 
     for (vtkIdType i = 0; i < residualData->GetNumberOfTuples(); ++i)
     {
-        auto o_value = observationData->GetTuple(i)[0] * m_observationUnitFactor;
-        auto m_value = modelData->GetTuple(i)[0] * m_modelUnitFactor;
+        double o_value = observationLosDisp->GetTuple(i)[0] * observationUnitFactor;
+        double m_value = modelLosDisp->GetTuple(i)[0] * modelUnitFactor;
 
         double r_value = o_value - m_value;
         residualData->SetTuple(i, &r_value);
