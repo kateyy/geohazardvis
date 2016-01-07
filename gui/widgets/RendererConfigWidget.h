@@ -1,8 +1,9 @@
 #pragma once
 
+#include <memory>
+
 #include <QDockWidget>
 #include <QMap>
-#include <QScopedPointer>
 
 #include <vtkSmartPointer.h>
 
@@ -17,8 +18,10 @@ namespace reflectionzeug
 }
 class Ui_RendererConfigWidget;
 class AbstractRenderView;
+class CollapsibleGroupBox;
 class RendererImplementationBase3D;
 class RendererImplementationPlot;
+class ResidualViewConfigWidget;
 
 
 class GUI_API RendererConfigWidget : public QDockWidget
@@ -51,7 +54,9 @@ private:
         AbstractRenderView * renderView, RendererImplementationPlot * impl);
 
 private:
-    QScopedPointer<Ui_RendererConfigWidget> m_ui;
+    std::unique_ptr<Ui_RendererConfigWidget> m_ui;
+    ResidualViewConfigWidget * m_residualUi;
+    CollapsibleGroupBox * m_residualGroupBox;
 
     reflectionzeug::PropertyGroup * m_propertyRoot;
     AbstractRenderView * m_currentRenderView;

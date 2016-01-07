@@ -104,6 +104,8 @@ set ( SOURCES
     widgets/RendererConfigWidget.cpp
     widgets/RendererConfigWidget_Plot.cpp
     widgets/RendererConfigWidget_Renderer.cpp
+    widgets/ResidualViewConfigWidget.h
+    widgets/ResidualViewConfigWidget.cpp
 )
 
 set ( UIs
@@ -119,6 +121,7 @@ set ( UIs
     widgets/GlyphMappingChooser.ui
     widgets/RenderConfigWidget.ui
     widgets/RendererConfigWidget.ui
+    widgets/ResidualViewConfigWidget.ui
 )
 
 set ( QRCs

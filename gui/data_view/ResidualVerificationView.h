@@ -9,18 +9,12 @@
 #include <gui/data_view/AbstractRenderView.h>
 
 
-class QComboBox;
 template<typename T> class QFutureWatcher;
 class QProgressBar;
 
 class vtkDataSet;
-class QVTKWidget;
 
-class ColorMapping;
-class ImageDataObject;
-class PolyDataObject;
 class RendererImplementationResidual;
-class RenderViewStrategy2D;
 class vtkCameraSynchronization;
 
 
@@ -37,6 +31,11 @@ public:
     void setObservationData(DataObject * observation);
     void setModelData(DataObject * model);
     void setResidualData(DataObject * residual);
+
+    int observationUnitDecimalExponent() const;
+    void setObservationUnitDecimalExponent(int exponent);
+    int modelUnitDecimalExponent() const;
+    void setModelUnitDecimalExponent(int exponent);
 
     void setInSARLineOfSight(const vtkVector3d & los);
     const vtkVector3d & inSARLineOfSight() const;
@@ -59,6 +58,8 @@ public:
 
     QString friendlyName() const override;
     QString subViewFriendlyName(unsigned int subViewIndex) const override;
+
+    void update();
 
     ContentType contentType() const override;
 
@@ -88,7 +89,9 @@ protected:
     void axesEnabledChangedEvent(bool enabled) override;
 
 signals:
+    void interpolationModeChanged(InterpolationMode mode);
     void lineOfSightChanged(const vtkVector3d & los);
+    void unitDecimalExponentsChanged(int observationExponent, int modelExponent);
 
 private:
     enum : unsigned int
@@ -120,9 +123,6 @@ private:
     void updateGuiAfterDataChange();
 
     void updateGuiSelection();
-    void updateComboBoxes();
-    void updateObservationFromUi(int index);
-    void updateModelFromUi(int index);
 
     DataObject * dataAt(unsigned int i) const;
     bool setDataAt(unsigned int i, DataObject * dataObject);
@@ -130,15 +130,12 @@ private:
     static std::pair<QString, bool> findDataSetAttributeName(vtkDataSet & dataSet, unsigned int inputType);
 
 private:
-    QComboBox * m_observationCombo;
-    QComboBox * m_modelCombo;
-
     QProgressBar * m_progressBar;
 
     vtkVector3d m_inSARLineOfSight;
     InterpolationMode m_interpolationMode;
-    double m_observationUnitFactor;
-    double m_modelUnitFactor;
+    int m_observationUnitDecimalExponent;
+    int m_modelUnitDecimalExponent;
 
     DataObject * m_observationData;
     DataObject * m_modelData;

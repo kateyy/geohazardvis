@@ -5,11 +5,6 @@
 #include <random>
 
 #include <QBoxLayout>
-#include <QCheckBox>
-#include <QComboBox>
-#include <QDebug>
-#include <QDoubleSpinBox>
-#include <QPushButton>
 #include <QProgressBar>
 #include <QToolBar>
 #include <QtConcurrent/QtConcurrent>
@@ -65,12 +60,10 @@ vtkSmartPointer<vtkDataArray> projectToLineOfSight(vtkDataArray & vectors, vtkVe
 
 ResidualVerificationView::ResidualVerificationView(DataMapping & dataMapping, int index, QWidget * parent, Qt::WindowFlags flags)
     : AbstractRenderView(dataMapping, index, parent, flags)
-    , m_observationCombo(nullptr)
-    , m_modelCombo(nullptr)
     , m_inSARLineOfSight(0, 0, 1)
     , m_interpolationMode(InterpolationMode::observationToModel)
-    , m_observationUnitFactor(1.0)
-    , m_modelUnitFactor(1.0)
+    , m_observationUnitDecimalExponent(0)
+    , m_modelUnitDecimalExponent(0)
     , m_observationData(nullptr)
     , m_modelData(nullptr)
     , m_implementation(nullptr)
@@ -78,42 +71,6 @@ ResidualVerificationView::ResidualVerificationView(DataMapping & dataMapping, in
 {
     connect(m_updateWatcher.get(), &QFutureWatcher<void>::finished, this, &ResidualVerificationView::handleUpdateFinished);
     m_attributeNamesLocations[residualIndex].first = "Residual"; // TODO add GUI option?
-
-    auto interpolationSwitch = new QCheckBox("Interpolate Model to Observation");
-    interpolationSwitch->setChecked(m_interpolationMode == InterpolationMode::observationToModel);
-    // TODO correctly link in both ways
-    connect(interpolationSwitch, &QAbstractButton::toggled, [this](bool checked)
-    {
-        setInterpolationMode(checked
-            ? InterpolationMode::modelToObservation
-            : InterpolationMode::observationToModel);
-    });
-    toolBar()->addWidget(interpolationSwitch);
-
-    m_observationCombo = new QComboBox();
-    m_modelCombo = new QComboBox();
-    toolBar()->addWidget(m_observationCombo);
-    toolBar()->addWidget(m_modelCombo);
-
-    for (int i = 0; i < 3; ++i)
-    {
-        auto losEdit = new QDoubleSpinBox();
-        losEdit->setRange(0, 1);
-        losEdit->setSingleStep(0.01);
-        losEdit->setValue(m_inSARLineOfSight[i]);
-        connect(losEdit, static_cast<void(QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), [this, i, losEdit] (double val) {
-            m_inSARLineOfSight[i] = val;
-            updateResidualAsync();
-        });
-        connect(this, &ResidualVerificationView::lineOfSightChanged, [losEdit, i] (const vtkVector3d & los) {
-            losEdit->setValue(los[i]);
-        });
-        toolBar()->addWidget(losEdit);
-    }
-
-    auto updateButton = new QPushButton("Update");
-    connect(updateButton, &QAbstractButton::clicked, this, &ResidualVerificationView::updateResidualAsync);
-    toolBar()->addWidget(updateButton);
 
     m_progressBar = new QProgressBar();
     m_progressBar->setRange(0, 0);
@@ -128,18 +85,9 @@ ResidualVerificationView::ResidualVerificationView(DataMapping & dataMapping, in
     m_progressBar->hide();
     toolBar()->addWidget(progressBarContainer);
 
-    initialize();   // lazy initialize in not really needed for now
+    initialize();   // lazy initialize is not really needed for now
 
     updateTitle();
-
-    connect(&dataSetHandler(), &DataSetHandler::dataObjectsChanged, this, &ResidualVerificationView::updateComboBoxes);
-
-    connect(m_observationCombo, static_cast<void(QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
-        this, &ResidualVerificationView::updateObservationFromUi);
-    connect(m_modelCombo, static_cast<void(QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
-        this, &ResidualVerificationView::updateModelFromUi);
-
-    updateComboBoxes();
 }
 
 ResidualVerificationView::~ResidualVerificationView()
@@ -176,6 +124,11 @@ QString ResidualVerificationView::subViewFriendlyName(unsigned int subViewIndex)
     }
 
     return name;
+}
+
+void ResidualVerificationView::update()
+{
+    updateResidualAsync();
 }
 
 ContentType ResidualVerificationView::contentType() const
@@ -290,6 +243,36 @@ void ResidualVerificationView::setResidualData(DataObject * residual)
     setDataHelper(residualIndex, residual);
 }
 
+int ResidualVerificationView::observationUnitDecimalExponent() const
+{
+    return m_observationUnitDecimalExponent;
+}
+
+void ResidualVerificationView::setObservationUnitDecimalExponent(int exponent)
+{
+    if (m_observationUnitDecimalExponent == exponent)
+        return;
+
+    m_observationUnitDecimalExponent = exponent;
+
+    emit unitDecimalExponentsChanged(m_observationUnitDecimalExponent, m_modelUnitDecimalExponent);
+}
+
+int ResidualVerificationView::modelUnitDecimalExponent() const
+{
+    return m_modelUnitDecimalExponent;
+}
+
+void ResidualVerificationView::setModelUnitDecimalExponent(int exponent)
+{
+    if (m_modelUnitDecimalExponent == exponent)
+        return;
+
+    m_modelUnitDecimalExponent = exponent;
+
+    emit unitDecimalExponentsChanged(m_observationUnitDecimalExponent, m_modelUnitDecimalExponent);
+}
+
 void ResidualVerificationView::setInSARLineOfSight(const vtkVector3d & los)
 {
     m_inSARLineOfSight = los;
@@ -310,6 +293,8 @@ void ResidualVerificationView::setInterpolationMode(InterpolationMode mode)
     m_interpolationMode = mode;
 
     updateResidualAsync();
+
+    emit interpolationModeChanged(mode);
 }
 
 ResidualVerificationView::InterpolationMode ResidualVerificationView::interpolationMode() const
@@ -792,81 +777,6 @@ void ResidualVerificationView::updateGuiSelection()
     emit selectedDataChanged(this, selection);
 }
 
-void ResidualVerificationView::updateComboBoxes()
-{
-    m_observationCombo->blockSignals(true);
-    m_modelCombo->blockSignals(true);
-
-
-    QString oldObservationName = m_observationCombo->currentText();
-    QString oldModelName = m_modelCombo->currentText();
-
-    m_observationCombo->clear();
-    m_modelCombo->clear();
-
-    QList<ImageDataObject *> images;
-    QList<PolyDataObject *> polyData2p5D;
-
-    for (auto dataObject : dataSetHandler().dataSets())
-    {
-        qulonglong ptrData = reinterpret_cast<size_t>(dataObject);
-
-        // ImageDataObjects can directly be used as observation/model
-        if (dynamic_cast<ImageDataObject *>(dataObject))
-        {
-            m_observationCombo->addItem(dataObject->name(), ptrData);
-            m_modelCombo->addItem(dataObject->name(), ptrData);
-            continue;
-        }
-
-        // allow to transform 2.5D polygonal data into model surface grid
-        if (auto poly = dynamic_cast<PolyDataObject *>(dataObject))
-        {
-            if (!poly->is2p5D())
-                continue;
-
-            m_modelCombo->addItem(dataObject->name(), ptrData);
-        }
-    }
-
-    m_observationCombo->setCurrentIndex(-1);
-    for (int i = 0; i < m_observationCombo->count(); ++i)
-    {
-        if (m_observationCombo->itemText(i) != oldObservationName)
-            continue;
-
-        m_observationCombo->setCurrentIndex(i);
-        break;
-    }
-
-    m_modelCombo->setCurrentIndex(-1);
-    for (int i = 0; i < m_modelCombo->count(); ++i)
-    {
-        if (m_modelCombo->itemText(i) != oldModelName)
-            continue;
-
-        m_modelCombo->setCurrentIndex(i);
-        break;
-    }
-
-    m_observationCombo->blockSignals(false);
-    m_modelCombo->blockSignals(false);
-}
-
-void ResidualVerificationView::updateObservationFromUi(int index)
-{
-    auto dataObject = reinterpret_cast<DataObject *>(m_observationCombo->itemData(index, Qt::UserRole).toULongLong());
-
-    setObservationData(dataObject);
-}
-
-void ResidualVerificationView::updateModelFromUi(int index)
-{
-    auto dataObject = reinterpret_cast<DataObject *>(m_modelCombo->itemData(index, Qt::UserRole).toULongLong());
-
-    setModelData(dataObject);
-}
-
 DataObject * ResidualVerificationView::dataAt(unsigned int i) const
 {
     switch (i)
@@ -993,7 +903,7 @@ std::pair<QString, bool> ResidualVerificationView::findDataSetAttributeName(vtkD
             if (!scalars)
                 scalars = dataSet.GetCellData()->GetArray("displacement vectors");
             if (!scalars)
-                scalars = dataSet.GetCellData()->GetArray("U+");
+                scalars = dataSet.GetCellData()->GetArray("U-");
             if (scalars)
             {
                 auto name = scalars->GetName();

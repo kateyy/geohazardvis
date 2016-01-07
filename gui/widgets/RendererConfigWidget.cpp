@@ -3,15 +3,19 @@
 
 #include <cassert>
 
+#include <QGridLayout>
+
 #include <vtkCamera.h>
 #include <vtkCommand.h>
 
 #include <reflectionzeug/PropertyGroup.h>
 
-#include <gui/data_view/AbstractRenderView.h>
 #include <gui/data_view/RendererImplementationBase3D.h>
 #include <gui/data_view/RendererImplementationPlot.h>
+#include <gui/data_view/ResidualVerificationView.h>
 #include <gui/propertyguizeug_extension/ColorEditorRGB.h>
+#include <gui/widgets/ResidualViewConfigWidget.h>
+#include <gui/widgets/CollapsibleGroupBox.h>
 
 
 using namespace reflectionzeug;
@@ -20,6 +24,8 @@ using namespace reflectionzeug;
 RendererConfigWidget::RendererConfigWidget(QWidget * parent)
     : QDockWidget(parent)
     , m_ui(new Ui_RendererConfigWidget())
+    , m_residualUi(nullptr)
+    , m_residualGroupBox(nullptr)
     , m_propertyRoot(nullptr)
     , m_currentRenderView(nullptr)
 {
@@ -60,6 +66,25 @@ void RendererConfigWidget::setCurrentRenderView(AbstractRenderView * renderView)
 
     auto lastRenderView = m_currentRenderView;
     m_currentRenderView = renderView;
+
+
+    auto residualView = dynamic_cast<ResidualVerificationView *>(renderView);
+    if (residualView && !m_residualUi)
+    {
+        m_residualUi = new ResidualViewConfigWidget();
+        m_residualGroupBox = new CollapsibleGroupBox("Residual View");
+        auto layout = new QGridLayout();
+        layout->setContentsMargins(0, 0, 0, 0);
+        layout->addWidget(m_residualUi);
+        m_residualGroupBox->setLayout(layout);
+        m_ui->formLayout_2->addRow(m_residualGroupBox);
+    }
+
+    if (m_residualUi)
+    {
+        m_residualUi->setCurrentView(residualView);
+        m_residualUi->setVisible(residualView != nullptr);
+    }
 
 
     // clear connections with the old view
