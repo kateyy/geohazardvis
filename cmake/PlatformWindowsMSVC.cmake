@@ -104,7 +104,7 @@ endif()
 # 1800: Visual Studio 12 2013
 # 1900: Visual Studio 14 2015
 
-if(MSVC_VERSION VERSION_LESS 1800)
+if(MSVC_VERSION VERSION_LESS 1900)
 
     list(APPEND DEFAULT_COMPILE_FLAGS
         $<$<CONFIG:Debug>: /Zi>     # this set in RelWithDebInfo builds for all MSVC versions
