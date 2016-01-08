@@ -246,6 +246,21 @@ void ResidualVerificationView::setResidualData(DataObject * residual)
     setDataHelper(residualIndex, residual);
 }
 
+DataObject * ResidualVerificationView::observationData()
+{
+    return m_observationData;
+}
+
+DataObject * ResidualVerificationView::modelData()
+{
+    return m_modelData;
+}
+
+DataObject * ResidualVerificationView::residualData()
+{
+    return m_residual.get();
+}
+
 int ResidualVerificationView::observationUnitDecimalExponent() const
 {
     return m_observationUnitDecimalExponent;

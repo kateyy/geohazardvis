@@ -111,10 +111,6 @@ void ResidualViewConfigWidget::updateComboBoxes()
     m_ui->observationCombo->blockSignals(true);
     m_ui->modelCombo->blockSignals(true);
 
-
-    QString oldObservationName = m_ui->observationCombo->currentText();
-    QString oldModelName = m_ui->modelCombo->currentText();
-
     m_ui->observationCombo->clear();
     m_ui->modelCombo->clear();
 
@@ -124,9 +120,17 @@ void ResidualViewConfigWidget::updateComboBoxes()
         return;
     }
 
+    m_ui->observationCombo->addItem("", 0u);
+    m_ui->modelCombo->addItem("", 0u);
+
     for (auto dataObject : m_currentView->dataSetHandler().dataSets())
     {
-        qulonglong ptrData = reinterpret_cast<size_t>(dataObject);
+        if (dataObject == m_currentView->residualData())
+        {
+            continue;
+        }
+
+        size_t ptrData = reinterpret_cast<size_t>(dataObject);
 
         if (dynamic_cast<ImageDataObject *>(dataObject))
         {
@@ -145,25 +149,10 @@ void ResidualViewConfigWidget::updateComboBoxes()
         }
     }
 
-    m_ui->observationCombo->setCurrentIndex(-1);
-    for (int i = 0; i < m_ui->observationCombo->count(); ++i)
-    {
-        if (m_ui->observationCombo->itemText(i) != oldObservationName)
-            continue;
-
-        m_ui->observationCombo->setCurrentIndex(i);
-        break;
-    }
-
-    m_ui->modelCombo->setCurrentIndex(-1);
-    for (int i = 0; i < m_ui->modelCombo->count(); ++i)
-    {
-        if (m_ui->modelCombo->itemText(i) != oldModelName)
-            continue;
-
-        m_ui->modelCombo->setCurrentIndex(i);
-        break;
-    }
+    QString observationName = m_currentView->observationData() ? m_currentView->observationData()->name() : "";
+    QString modelName = m_currentView->modelData() ? m_currentView->modelData()->name() : "";
+    m_ui->observationCombo->setCurrentText(observationName);
+    m_ui->modelCombo->setCurrentText(modelName);
 
     m_ui->observationCombo->blockSignals(false);
     m_ui->modelCombo->blockSignals(false);

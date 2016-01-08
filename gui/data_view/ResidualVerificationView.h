@@ -33,6 +33,10 @@ public:
     void setModelData(DataObject * model);
     void setResidualData(DataObject * residual);
 
+    DataObject * observationData();
+    DataObject * modelData();
+    DataObject * residualData();
+
     int observationUnitDecimalExponent() const;
     void setObservationUnitDecimalExponent(int exponent);
     int modelUnitDecimalExponent() const;
