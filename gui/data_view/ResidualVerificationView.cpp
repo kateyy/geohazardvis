@@ -1,5 +1,6 @@
 #include <gui/data_view/ResidualVerificationView.h>
 
+#include <algorithm>
 #include <cassert>
 #include <functional>
 #include <random>
@@ -15,6 +16,8 @@
 #include <vtkMath.h>
 #include <vtkPointData.h>
 #include <vtkPolyData.h>
+#include <vtkRenderWindowInteractor.h>
+#include <vtkInteractorStyle.h>
 
 #include <threadingzeug/parallelfor.h>
 
@@ -768,6 +771,21 @@ void ResidualVerificationView::updateGuiSelection()
 
     auto selectedVis = implementation().selectedData();
     auto selection = selectedVis ? &selectedVis->dataObject() : (DataObject*)(nullptr);
+
+    // it's more convenient to chose on of the contents as "current", even if none is directly selected
+    if (!selection)
+    {
+        selection = dataAt(activeSubViewIndex());
+    }
+    if (!selection)
+    {
+        auto vis = std::find_if(m_visualizations.begin(), m_visualizations.end(),
+            [] (const decltype(m_visualizations)::value_type & vis) { return vis != nullptr; });
+        if (vis != m_visualizations.end())
+        {
+            selection = &(*vis)->dataObject();
+        }
+    }
 
     emit selectedDataChanged(this, selection);
 }
