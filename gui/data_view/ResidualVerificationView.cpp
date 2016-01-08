@@ -31,6 +31,7 @@
 #include <core/utility/InterpolationHelper.h>
 #include <core/utility/vtkCameraSynchronization.h>
 
+#include <gui/DataMapping.h>
 #include <gui/data_view/RendererImplementationResidual.h>
 #include <gui/data_view/RenderViewStrategy2D.h>
 
@@ -69,6 +70,7 @@ ResidualVerificationView::ResidualVerificationView(DataMapping & dataMapping, in
     , m_modelUnitDecimalExponent(0)
     , m_observationData(nullptr)
     , m_modelData(nullptr)
+    , m_modelEventsDeferred(false)
     , m_implementation(nullptr)
     , m_updateWatcher(std::make_unique<QFutureWatcher<void>>())
 {
@@ -502,6 +504,8 @@ void ResidualVerificationView::setDataInternal(unsigned int subViewIndex, DataOb
 
 void ResidualVerificationView::updateResidualAsync()
 {
+    std::lock_guard<std::recursive_mutex> updateLock(m_updateMutex);
+
     m_updateWatcher->waitForFinished();
 
     if (!m_observationData || !m_modelData)
@@ -521,7 +525,9 @@ void ResidualVerificationView::updateResidualAsync()
     // make sure that this modification on the DataObject internals does not conflict with GUI events
     if (m_modelData)
     {
+        assert(!m_modelEventsDeferred);
         m_modelData->deferEvents();
+        m_modelEventsDeferred = true;
     }
 
     auto future = QtConcurrent::run(this, &ResidualVerificationView::updateResidual);
@@ -530,31 +536,81 @@ void ResidualVerificationView::updateResidualAsync()
 
 void ResidualVerificationView::handleUpdateFinished()
 {
-    auto oldResidual = std::move(m_residual);
+    std::lock_guard<std::recursive_mutex> lock(m_updateMutex);
+
+    std::unique_ptr<DataObject> oldResidualToDelete;
     std::vector<std::unique_ptr<AbstractVisualizedData>> oldVisList;
-
-    // TODO replace the double set
-    setDataInternal(residualIndex, nullptr, oldVisList);
-    assert(oldVisList.size() <= 1);
-
-    std::unique_ptr<AbstractVisualizedData> oldVis;
-    if (!oldVisList.empty())
-    {
-        oldVis = std::move(oldVisList.front());
-        oldVisList.pop_back();
-        assert(oldVisList.empty());
-    }
 
     if (m_newResidual)
     {
-        m_residual = std::move(m_newResidual);
+        auto computedResidual = m_newResidual;
+        m_newResidual = nullptr;
+
+        vtkImageData * computedResidualImage = vtkImageData::SafeDownCast(computedResidual);
+        vtkPolyData * computedResidualPoly = computedResidualImage ?
+            static_cast<vtkPolyData *>(nullptr)
+            : vtkPolyData::SafeDownCast(computedResidual);
+        assert((computedResidualImage == nullptr) != (computedResidualPoly == nullptr));
+
+
+        const bool reuseResidualObject = m_residual && m_residual->dataSet()->IsA(computedResidual->GetClassName());
+
+        vtkSmartPointer<vtkDataSet> targetDataSet;
+        if (reuseResidualObject)
+        {
+            targetDataSet = m_residual->dataSet();
+        }
+        else // create new Residual data object
+        {
+            targetDataSet.TakeReference(computedResidual->NewInstance());
+        }
+
+        if (!reuseResidualObject)
+        {
+            oldResidualToDelete = std::move(m_residual);
+
+            if (computedResidualImage)
+            {
+                m_residual = std::make_unique<ImageDataObject>("Residual", static_cast<vtkImageData &>(*targetDataSet));
+            }
+            else
+            {
+                m_residual = std::make_unique<PolyDataObject>("Residual", static_cast<vtkPolyData &>(*targetDataSet));
+            }
+        }
+
+
+        ScopedEventDeferral residualDeferal(*m_residual);
+
+        targetDataSet->CopyStructure(computedResidual);
+        targetDataSet->CopyAttributes(computedResidual);
+
+        if (!reuseResidualObject)
+        {
+            dataSetHandler().addExternalData({ m_residual.get() });
+        }
+
         setDataInternal(residualIndex, m_residual.get(), oldVisList);
-        assert(oldVisList.empty());
+    }
+    else if (m_residual)
+    {
+        // just remove the old residual
+
+        oldResidualToDelete = std::move(m_residual);
+        setDataInternal(residualIndex, nullptr, oldVisList);
     }
 
-    if (m_modelData)
+    if (m_modelEventsDeferred)
     {
+        assert(m_modelData);
+        m_modelEventsDeferred = false;
         m_modelData->executeDeferredEvents();
+    }
+
+    if (oldResidualToDelete)
+    {
+        dataMapping().removeDataObjects({ oldResidualToDelete.get() });
+        dataSetHandler().removeExternalData({ oldResidualToDelete.get() });
     }
 
     updateGuiAfterDataChange();
@@ -695,29 +751,22 @@ void ResidualVerificationView::updateResidual()
     }
 
 
-    std::unique_ptr<DataObject> residualReplacement;
+    assert(!m_newResidual);
+    m_newResidual = vtkSmartPointer<vtkDataSet>::Take(referenceDataSet.NewInstance());
+    m_newResidual->CopyStructure(&referenceDataSet);
 
-    auto residual = vtkSmartPointer<vtkDataSet>::Take(referenceDataSet.NewInstance());
-    residual->CopyStructure(&referenceDataSet);
-
-    // TODO do not recreate data DataObject if not needed
-    if (auto residualImage = vtkImageData::SafeDownCast(residual))
+    if (auto residualImage = vtkImageData::SafeDownCast(m_newResidual))
     {
-        assert(residualData->GetNumberOfTuples() == residual->GetNumberOfPoints());
+        assert(residualData->GetNumberOfTuples() == residualImage->GetNumberOfPoints());
 
-        residual->GetPointData()->SetScalars(residualData);
-
-        residualReplacement = std::make_unique<ImageDataObject>("Residual", *residualImage);
+        residualImage->GetPointData()->SetScalars(residualData);
     }
-    else if (auto residualPoly = vtkPolyData::SafeDownCast(residual))
+    else if (auto residualPoly = vtkPolyData::SafeDownCast(m_newResidual))
     {
-        assert(vtkPolyData::SafeDownCast(residual));
         // assuming that we store attributes in polygonal data always per cell
-        assert(residual->GetNumberOfCells() == residualData->GetNumberOfTuples());
+        assert(residualPoly->GetNumberOfCells() == residualData->GetNumberOfTuples());
 
-        residual->GetCellData()->SetScalars(residualData);
-
-        residualReplacement = std::make_unique<PolyDataObject>("Residual", *residualPoly);
+        residualPoly->GetCellData()->SetScalars(residualData);
     }
     else
     {
@@ -725,8 +774,6 @@ void ResidualVerificationView::updateResidual()
 
         return;
     }
-
-    m_newResidual = std::move(residualReplacement);
 }
 
 void ResidualVerificationView::updateGuiAfterDataChange()

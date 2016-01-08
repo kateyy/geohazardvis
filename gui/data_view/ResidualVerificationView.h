@@ -2,6 +2,7 @@
 
 #include <array>
 #include <memory>
+#include <mutex>
 #include <vector>
 
 #include <vtkVector.h>
@@ -139,6 +140,7 @@ private:
 
     DataObject * m_observationData;
     DataObject * m_modelData;
+    bool m_modelEventsDeferred;
     std::unique_ptr<DataObject> m_residual;
 
     std::unique_ptr<RendererImplementationResidual> m_implementation;
@@ -149,5 +151,6 @@ private:
     std::array<QString, numberOfViews> m_projectedAttributeNames;
 
     std::unique_ptr<QFutureWatcher<void>> m_updateWatcher;
-    std::unique_ptr<DataObject> m_newResidual;
+    std::recursive_mutex m_updateMutex;
+    vtkSmartPointer<vtkDataSet> m_newResidual;
 };
