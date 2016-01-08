@@ -3,12 +3,13 @@
 
 #include <QMessageBox>
 
+#include <QVTKInteractor.h>
 #include <vtkActor.h>
 #include <vtkCamera.h>
+#include <vtkGenericOpenGLRenderWindow.h>
 #include <vtkPropCollection.h>
 #include <vtkProperty.h>
 #include <vtkRenderer.h>
-#include <vtkRenderWindow.h>
 #include <vtkRenderWindowInteractor.h>
 #include <vtkTextProperty.h>
 

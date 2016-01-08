@@ -5,15 +5,14 @@
 
 #include <QMouseEvent>
 
-#include <QVTKWidget.h>
 #include <vtkBoundingBox.h>
 #include <vtkCamera.h>
 #include <vtkIdTypeArray.h>
 #include <vtkLightKit.h>
 #include <vtkProperty.h>
 #include <vtkProperty2D.h>
-#include <vtkRenderWindow.h>
 #include <vtkRenderer.h>
+#include <vtkRendererCollection.h>
 #include <vtkScalarBarActor.h>
 #include <vtkScalarBarRepresentation.h>
 #include <vtkScalarBarWidget.h>
@@ -22,6 +21,7 @@
 #include <vtkTextRepresentation.h>
 #include <vtkTextWidget.h>
 
+#include <core/t_QVTKWidget.h>
 #include <core/types.h>
 #include <core/color_mapping/ColorMapping.h>
 #include <core/data_objects/DataObject.h>
@@ -75,7 +75,7 @@ QList<DataObject *> RendererImplementationBase3D::filterCompatibleObjects(
     return strategy().filterCompatibleObjects(dataObjects, incompatibleObjects);
 }
 
-void RendererImplementationBase3D::activate(QVTKWidget & qvtkWidget)
+void RendererImplementationBase3D::activate(t_QVTKWidget & qvtkWidget)
 {
     RendererImplementation::activate(qvtkWidget);
 
@@ -91,7 +91,7 @@ void RendererImplementationBase3D::activate(QVTKWidget & qvtkWidget)
     assignInteractor();
 }
 
-void RendererImplementationBase3D::deactivate(QVTKWidget & qvtkWidget)
+void RendererImplementationBase3D::deactivate(t_QVTKWidget & qvtkWidget)
 {
     RendererImplementation::deactivate(qvtkWidget);
 
@@ -391,7 +391,7 @@ void RendererImplementationBase3D::initialize()
 
     // -- render (window) --
 
-    m_renderWindow = vtkSmartPointer<vtkRenderWindow>::New();
+    m_renderWindow = vtkSmartPointer<vtkGenericOpenGLRenderWindow>::New();
 
     m_viewportSetups.resize(renderView().numberOfSubViews());
 

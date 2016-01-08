@@ -10,7 +10,6 @@
 #include <QToolBar>
 #include <QtConcurrent/QtConcurrent>
 
-#include <QVTKWidget.h>
 #include <vtkCellData.h>
 #include <vtkImageData.h>
 #include <vtkMath.h>

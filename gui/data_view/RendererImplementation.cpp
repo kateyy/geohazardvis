@@ -55,11 +55,11 @@ const QString & RendererImplementation::currentInteractionStrategy() const
     return m_currentInteractionStrategy;
 }
 
-void RendererImplementation::activate(QVTKWidget & /*qvtkWidget*/)
+void RendererImplementation::activate(t_QVTKWidget & /*qvtkWidget*/)
 {
 }
 
-void RendererImplementation::deactivate(QVTKWidget & /*qvtkWidget*/)
+void RendererImplementation::deactivate(t_QVTKWidget & /*qvtkWidget*/)
 {
     for (const auto & list : m_visConnections)
     {

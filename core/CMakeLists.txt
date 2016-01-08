@@ -9,6 +9,8 @@ set ( SOURCES
     AbstractVisualizedData.cpp
     DataSetHandler.h
     DataSetHandler.cpp
+    t_QVTKWidget.h
+    t_QVTKWidgetFwd.h
     types.h
     TextureManager.h
     TextureManager.cpp

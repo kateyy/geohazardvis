@@ -2,14 +2,14 @@
 
 #include <cassert>
 
-#include <QVTKWidget.h>
 #include <vtkChartXY.h>
 #include <vtkContextScene.h>
 #include <vtkContextView.h>
 #include <vtkIdTypeArray.h>
 #include <vtkPlot.h>
-#include <vtkRenderWindow.h>
+#include <vtkRendererCollection.h>
 
+#include <core/t_QVTKWidget.h>
 #include <core/types.h>
 #include <core/data_objects/DataObject.h>
 #include <core/context2D_data/Context2DData.h>
@@ -66,16 +66,16 @@ QList<DataObject *> RendererImplementationPlot::filterCompatibleObjects(const QL
     return compatible;
 }
 
-void RendererImplementationPlot::activate(QVTKWidget & qvtkWidget)
+void RendererImplementationPlot::activate(t_QVTKWidget & qvtkWidget)
 {
     initialize();
 
     // see also: vtkRenderViewBase documentation
     m_contextView->SetInteractor(qvtkWidget.GetInteractor());
-    qvtkWidget.SetRenderWindow(m_contextView->GetRenderWindow());
+    qvtkWidget.SetRenderWindow(m_renderWindow);
 }
 
-void RendererImplementationPlot::deactivate(QVTKWidget & qvtkWidget)
+void RendererImplementationPlot::deactivate(t_QVTKWidget & qvtkWidget)
 {
     // the render window belongs to the context view
     qvtkWidget.SetRenderWindow(nullptr);
@@ -286,6 +286,8 @@ void RendererImplementationPlot::initialize()
         return;
 
     m_contextView = vtkSmartPointer<vtkContextView>::New();
+    m_renderWindow = vtkSmartPointer<vtkGenericOpenGLRenderWindow>::New();
+    m_contextView->SetRenderWindow(m_renderWindow);
     m_chart = vtkSmartPointer<ChartXY>::New();
     m_chart->SetShowLegend(true);
     m_contextView->GetScene()->AddItem(m_chart);

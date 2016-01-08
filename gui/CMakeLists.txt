@@ -147,6 +147,7 @@ endif()
 target_link_libraries( ${TARGET}
     Qt5::Widgets
     Qt5::Concurrent
+    Qt5::OpenGL
 
     core
 )

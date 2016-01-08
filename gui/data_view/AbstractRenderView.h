@@ -1,12 +1,12 @@
 #pragma once
 
 #include <core/types.h>
+#include <core/t_QVTKWidgetFwd.h>
 
 #include <gui/data_view/AbstractDataView.h>
 
 
 class vtkRenderWindow;
-class QVTKWidget;
 
 class AbstractVisualizedData;
 enum class ContentType;
@@ -90,7 +90,7 @@ signals:
 
 protected:
     QWidget * contentWidget() override;
-    QVTKWidget & qvtkWidget();
+    t_QVTKWidget & qvtkWidget();
 
     bool eventFilter(QObject * watched, QEvent * event) override;
 
@@ -108,7 +108,7 @@ protected:
     virtual void axesEnabledChangedEvent(bool enabled) = 0;
 
 private:
-    QVTKWidget * m_qvtkWidget;
+    t_QVTKWidget * m_qvtkWidget;
 
     bool m_axesEnabled;
 

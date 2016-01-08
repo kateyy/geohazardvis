@@ -6,8 +6,9 @@
 #include <QLayout>
 #include <QMouseEvent>
 
-#include <QVTKWidget.h>
+#include <vtkGenericOpenGLRenderWindow.h>
 
+#include <core/t_QVTKWidget.h>
 #include <gui/data_view/RendererImplementation.h>
 
 
@@ -21,7 +22,7 @@ AbstractRenderView::AbstractRenderView(DataMapping & dataMapping, int index, QWi
     layout->setMargin(0);
     layout->setSpacing(0);
 
-    m_qvtkWidget = new QVTKWidget();
+    m_qvtkWidget = new t_QVTKWidget();
     m_qvtkWidget->setMinimumSize(300, 300);
 
     layout->addWidget(m_qvtkWidget);
@@ -170,7 +171,7 @@ QWidget * AbstractRenderView::contentWidget()
     return m_qvtkWidget;
 }
 
-QVTKWidget & AbstractRenderView::qvtkWidget()
+t_QVTKWidget & AbstractRenderView::qvtkWidget()
 {
     assert(m_qvtkWidget);
     return *m_qvtkWidget;

@@ -18,8 +18,8 @@ public:
 
     QList<DataObject *> filterCompatibleObjects(const QList<DataObject *> & dataObjects, QList<DataObject *> & incompatibleObjects);
 
-    void activate(QVTKWidget & qvtkWidget) override;
-    void deactivate(QVTKWidget & qvtkWidget) override;
+    void activate(t_QVTKWidget & qvtkWidget) override;
+    void deactivate(t_QVTKWidget & qvtkWidget) override;
 
     void render() override;
     vtkRenderWindowInteractor * interactor() override;

@@ -9,10 +9,12 @@
 
 
 class vtkCamera;
+class vtkGenericOpenGLRenderWindow;
 class vtkGridAxes3DActor;
 class vtkLightKit;
 class vtkPropCollection;
 class vtkRenderer;
+class vtkRenderWindow;
 class vtkScalarBarActor;
 class vtkScalarBarWidget;
 class vtkTextWidget;
@@ -46,8 +48,8 @@ public:
 
     std::unique_ptr<AbstractVisualizedData> requestVisualization(DataObject & dataObject) const override;
 
-    void activate(QVTKWidget & qvtkWidget) override;
-    void deactivate(QVTKWidget & qvtkWidget) override;
+    void activate(t_QVTKWidget & qvtkWidget) override;
+    void deactivate(t_QVTKWidget & qvtkWidget) override;
 
     void render() override;
 
@@ -144,7 +146,7 @@ private:
 
     // -- setup --
 
-    vtkSmartPointer<vtkRenderWindow> m_renderWindow;
+    vtkSmartPointer<vtkGenericOpenGLRenderWindow> m_renderWindow;
 
     vtkSmartPointer<vtkLightKit> m_lightKit;
 

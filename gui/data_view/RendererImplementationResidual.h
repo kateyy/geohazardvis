@@ -16,7 +16,7 @@ public:
 
     QString name() const override;
 
-    void activate(QVTKWidget & qvtkWidget) override;
+    void activate(t_QVTKWidget & qvtkWidget) override;
 
     RenderViewStrategy2D & strategy2D();
 

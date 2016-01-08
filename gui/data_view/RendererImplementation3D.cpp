@@ -40,7 +40,7 @@ QList<DataObject *> RendererImplementation3D::filterCompatibleObjects(
     return strategy().filterCompatibleObjects(dataObjects, incompatibleObjects);
 }
 
-void RendererImplementation3D::activate(QVTKWidget & qvtkWidget)
+void RendererImplementation3D::activate(t_QVTKWidget & qvtkWidget)
 {
     RendererImplementationBase3D::activate(qvtkWidget);
 }

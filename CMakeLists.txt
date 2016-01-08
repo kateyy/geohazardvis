@@ -126,7 +126,7 @@ include(ExternalProject)
 find_package(OpenGL REQUIRED)
 
 set(VTK_COMPONENTS
-    vtkGUISupportQt         # QVTKWidget
+    vtkGUISupportQtOpenGL   # QVTKWidget2
     vtkRenderingAnnotation  # vtkCubeAxesActor, vtkScalarBarActor
     vtkFiltersTexture
     vtkInteractionWidgets
@@ -192,7 +192,7 @@ include_directories(SYSTEM ${VTK_INCLUDE_DIRS})
 set_property(DIRECTORY APPEND PROPERTY COMPILE_DEFINITIONS ${VTK_DEFINITIONS})
 
 
-set(FindQt5_Components Core Gui Widgets)
+set(FindQt5_Components Core Gui Widgets OpenGL)
 if(NOT ${Qt5Core_VERSION} VERSION_LESS 5.5)
     list(APPEND FindQt5_Components Concurrent)
 endif()
@@ -206,8 +206,6 @@ else()
     set(LIBZEUG_FOUND 1)
     set(LIBZEUG_PREFIX "${THIRD_PARTY_BUILD_DIR}/libzeug")
     set(libzeug_DIR "${LIBZEUG_PREFIX}/install")
-
-    list(APPEND FindQt5_Components OpenGL)
 
     ExternalProject_Add(libzeug
         PREFIX ${LIBZEUG_PREFIX}

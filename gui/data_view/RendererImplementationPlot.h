@@ -9,6 +9,7 @@
 
 class vtkChartXY;
 class vtkContextView;
+class vtkGenericOpenGLRenderWindow;
 class vtkObject;
 class vtkPlot;
 class vtkPlotCollection;
@@ -29,8 +30,8 @@ public:
     bool canApplyTo(const QList<DataObject *> & dataObjects) override;
     QList<DataObject *> filterCompatibleObjects(const QList<DataObject *> & dataObjects, QList<DataObject *> & incompatibleObjects) override;
 
-    void activate(QVTKWidget & qvtkWidget) override;
-    void deactivate(QVTKWidget & qvtkWidget) override;
+    void activate(t_QVTKWidget & qvtkWidget) override;
+    void deactivate(t_QVTKWidget & qvtkWidget) override;
 
     void render() override;
 
@@ -79,6 +80,7 @@ private:
 
     // -- setup --
     vtkSmartPointer<vtkContextView> m_contextView;
+    vtkSmartPointer<vtkGenericOpenGLRenderWindow> m_renderWindow;
     vtkSmartPointer<ChartXY> m_chart;
 
     // -- contents and annotation --

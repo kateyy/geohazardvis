@@ -9,13 +9,12 @@
 
 #include <vtkType.h>
 
+#include <core/t_QVTKWidgetFwd.h>
 #include <gui/gui_api.h>
 
 
 template<typename T> class QList;
-class QVTKWidget;
 class vtkIdTypeArray;
-class vtkRenderWindow;
 class vtkRenderWindowInteractor;
 
 class AbstractRenderView;
@@ -50,8 +49,8 @@ public:
     void setInteractionStrategy(const QString & strategyName);
     const QString & currentInteractionStrategy() const;
 
-    virtual void activate(QVTKWidget & qvtkWidget);
-    virtual void deactivate(QVTKWidget & qvtkWidget);
+    virtual void activate(t_QVTKWidget & qvtkWidget);
+    virtual void deactivate(t_QVTKWidget & qvtkWidget);
 
     virtual void render() = 0;
 

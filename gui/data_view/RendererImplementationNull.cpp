@@ -1,10 +1,9 @@
 #include "RendererImplementationNull.h"
 
 #include <vtkRenderer.h>
-#include <vtkRenderWindow.h>
-#include <QVTKWidget.h>
 
 #include <core/AbstractVisualizedData.h>
+#include <core/t_QVTKWidget.h>
 #include <core/types.h>
 
 
@@ -29,7 +28,7 @@ QList<DataObject *> RendererImplementationNull::filterCompatibleObjects(const QL
     return{};
 }
 
-void RendererImplementationNull::activate(QVTKWidget & qvtkWidget)
+void RendererImplementationNull::activate(t_QVTKWidget & qvtkWidget)
 {
     if (!m_renderer)
     {
@@ -40,7 +39,7 @@ void RendererImplementationNull::activate(QVTKWidget & qvtkWidget)
     qvtkWidget.GetRenderWindow()->AddRenderer(m_renderer);
 }
 
-void RendererImplementationNull::deactivate(QVTKWidget & qvtkWidget)
+void RendererImplementationNull::deactivate(t_QVTKWidget & qvtkWidget)
 {
     if (m_renderer)
         qvtkWidget.GetRenderWindow()->RemoveRenderer(m_renderer);
