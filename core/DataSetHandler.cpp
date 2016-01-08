@@ -1,10 +1,10 @@
 #include "DataSetHandler.h"
 
 #include <cassert>
+#include <mutex>
 
 #include <QList>
 #include <QMap>
-#include <QMutex>
 
 #include <core/data_objects/RawVectorData.h>
 #include <core/utility/memory.h>
@@ -18,11 +18,10 @@ class DataSetHandlerPrivate
 {
 public:
     DataSetHandlerPrivate()
-        : mutex(std::make_unique<QMutex>())
     {
     }
     
-    std::unique_ptr<QMutex> mutex;
+    std::mutex mutex;
 
     vector<unique_ptr<DataObject>> dataSets;
     vector<unique_ptr<DataObject>> rawVectors;
@@ -62,7 +61,7 @@ void DataSetHandler::takeData(std::vector<std::unique_ptr<DataObject>> dataObjec
     bool dataChanged = false, rawDataChanged = false;
 
     {
-        QMutexLocker lock(d_ptr->mutex.get());
+        std::lock_guard<std::mutex>(d_ptr->mutex);
         for (auto && dataObject : dataObjects)
         {
             assert(dataObject);
@@ -141,7 +140,7 @@ void DataSetHandler::deleteData(const QList<DataObject *> & dataObjects)
     bool dataChanged = false, rawDataChanged = false;
 
     {
-        QMutexLocker lock(d_ptr->mutex.get());
+        std::lock_guard<std::mutex>(d_ptr->mutex);
         for (DataObject * dataObject : dataObjects)
         {
             // deleteData might be called multiple times for fast interactions, 
@@ -202,7 +201,7 @@ void DataSetHandler::addExternalData(const QList<DataObject*>& dataObjects)
     bool dataChanged = false, rawDataChanged = false;
 
     {
-        QMutexLocker lock(d_ptr->mutex.get());
+        std::lock_guard<std::mutex>(d_ptr->mutex);
         for (auto & dataObject : dataObjects)
         {
             assert(dataObject);
@@ -280,7 +279,7 @@ void DataSetHandler::removeExternalData(const QList<DataObject*>& dataObjects)
     bool dataChanged = false, rawDataChanged = false;
 
     {
-        QMutexLocker lock(d_ptr->mutex.get());
+        std::lock_guard<std::mutex>(d_ptr->mutex);
         for (DataObject * dataObject : dataObjects)
         {
             if (auto rawData = dynamic_cast<RawVectorData *>(dataObject))
@@ -316,28 +315,28 @@ void DataSetHandler::removeExternalData(const QList<DataObject*>& dataObjects)
 
 const QList<DataObject *> & DataSetHandler::dataSets() const
 {
-    QMutexLocker lock(d_ptr->mutex.get());
+    std::lock_guard<std::mutex>(d_ptr->mutex);
 
     return d_ptr->allDataSets;
 }
 
 const QList<RawVectorData *> & DataSetHandler::rawVectors() const
 {
-    QMutexLocker lock(d_ptr->mutex.get());
+    std::lock_guard<std::mutex>(d_ptr->mutex);
 
     return d_ptr->allRawVectors;
 }
 
 const QMap<DataObject*, bool>& DataSetHandler::dataSetOwnerships() const
 {
-    QMutexLocker lock(d_ptr->mutex.get());
+    std::lock_guard<std::mutex>(d_ptr->mutex);
 
     return d_ptr->dataSetOwnerships;
 }
 
 const QMap<RawVectorData*, bool>& DataSetHandler::rawVectorOwnerships() const
 {
-    QMutexLocker lock(d_ptr->mutex.get());
+    std::lock_guard<std::mutex>(d_ptr->mutex);
 
     return d_ptr->rawVectorOwnerships;
 }
