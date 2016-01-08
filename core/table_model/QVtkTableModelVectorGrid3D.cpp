@@ -125,5 +125,5 @@ IndexType QVtkTableModelVectorGrid3D::indexType() const
 
 void QVtkTableModelVectorGrid3D::resetDisplayData()
 {
-    m_gridData = dataObject()->dataSet();
+    m_gridData = dataObject() ? dataObject()->dataSet() : nullptr;
 }

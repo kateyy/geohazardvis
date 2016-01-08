@@ -46,7 +46,7 @@ QVariant QVtkTableModelRawVector::data(const QModelIndex &index, int role) const
 
 QVariant QVtkTableModelRawVector::headerData(int section, Qt::Orientation orientation, int role) const
 {
-    if (role != Qt::DisplayRole || orientation != Qt::Horizontal)
+    if (role != Qt::DisplayRole || orientation != Qt::Horizontal || !m_data)
         return QVtkTableModel::headerData(section, orientation, role);
 
     if (section == 0)

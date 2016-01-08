@@ -29,13 +29,20 @@ QVtkTableModelImage::QVtkTableModelImage(QObject * parent)
 int QVtkTableModelImage::rowCount(const QModelIndex &/*parent*/) const
 {
     if (!m_vtkImageData)
+    {
         return 0;
+    }
 
     return static_cast<int>(m_vtkImageData->GetNumberOfPoints());
 }
 
 int QVtkTableModelImage::columnCount(const QModelIndex &/*parent*/) const
 {
+    if (!m_vtkImageData)
+    {
+        return 0;
+    }
+
     return 2 + m_vtkImageData->GetNumberOfScalarComponents();
 }
 
@@ -61,7 +68,7 @@ QVariant QVtkTableModelImage::data(const QModelIndex &index, int role) const
 
 QVariant QVtkTableModelImage::headerData(int section, Qt::Orientation orientation, int role) const
 {
-    if (role != Qt::DisplayRole || orientation != Qt::Horizontal)
+    if (role != Qt::DisplayRole || orientation != Qt::Horizontal || !m_vtkImageData)
         return QVtkTableModel::headerData(section, orientation, role);
 
     switch (section)
@@ -114,11 +121,12 @@ IndexType QVtkTableModelImage::indexType() const
 
 void QVtkTableModelImage::resetDisplayData()
 {
-    m_vtkImageData = vtkImageData::SafeDownCast(dataObject()->dataSet());
+    m_vtkImageData = dataObject() ? vtkImageData::SafeDownCast(dataObject()->dataSet()) : nullptr;
 }
 
 void QVtkTableModelImage::tableToImageCoord(int tableRow, int & imageRow, int & imageColumn) const
 {
+    assert(m_vtkImageData);
     imageRow = positive_modulo(tableRow, m_vtkImageData->GetDimensions()[0]);
     imageColumn = tableRow / m_vtkImageData->GetDimensions()[0];
 }

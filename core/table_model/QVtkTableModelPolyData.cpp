@@ -152,4 +152,8 @@ void QVtkTableModelPolyData::resetDisplayData()
         else
             m_cellTypeName = "cell";
     }
+    else
+    {
+        m_cellTypeName.clear();
+    }
 }
