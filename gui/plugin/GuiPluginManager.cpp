@@ -39,7 +39,7 @@ const int RTLD_LAZY(0); // ignore for win32 - see dlopen
 class PluginLibraryImpl : public GuiPluginLibrary
 {
 public:
-    PluginLibraryImpl(const QString & filePath)
+    explicit PluginLibraryImpl(const QString & filePath)
         : GuiPluginLibrary(filePath)
         , m_handle(0)
     {

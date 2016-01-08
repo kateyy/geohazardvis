@@ -177,11 +177,9 @@ void ResidualVerificationView::lookAtData(DataObject & dataObject, vtkIdType ind
 
 void ResidualVerificationView::lookAtData(AbstractVisualizedData & vis, vtkIdType index, IndexType indexType, int subViewIndex)
 {
-    unsigned int specificSubViewIdx = 0;
-
     if (subViewIndex >= 0 && subViewIndex < static_cast<int>(numberOfSubViews()))
     {
-        specificSubViewIdx = static_cast<unsigned int>(subViewIndex);
+        unsigned int specificSubViewIdx = static_cast<unsigned int>(subViewIndex);
         if (m_visualizations[specificSubViewIdx].get() != &vis)
             return;
 
@@ -770,7 +768,7 @@ void ResidualVerificationView::updateGuiSelection()
     updateTitle();
 
     auto selectedVis = implementation().selectedData();
-    auto selection = selectedVis ? &selectedVis->dataObject() : (DataObject*)(nullptr);
+    auto selection = selectedVis ? &selectedVis->dataObject() : static_cast<DataObject *>(nullptr);
 
     // it's more convenient to chose on of the contents as "current", even if none is directly selected
     if (!selection)

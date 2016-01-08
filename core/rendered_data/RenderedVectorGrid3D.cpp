@@ -51,9 +51,8 @@ RenderedVectorGrid3D::RenderedVectorGrid3D(VectorGrid3DDataObject & dataObject)
     , m_extractVOI(vtkSmartPointer<vtkExtractVOI>::New())
     , m_slicesEnabled()
 {
-    assert(vtkImageData::SafeDownCast(dataObject.processedDataSet()));
-
     vtkImageData * image = static_cast<vtkImageData *>(dataObject.processedDataSet());
+    assert(image);
 
     int extent[6];
     image->GetExtent(extent);
@@ -388,14 +387,14 @@ void RenderedVectorGrid3D::sampleRate(int sampleRate[3])
 
 int RenderedVectorGrid3D::slicePosition(int axis)
 {
-    assert(0 < axis || axis < 3);
+    assert(0 <= axis && axis < 3);
 
     return m_planeWidgets[axis]->GetSliceIndex();
 }
 
 void RenderedVectorGrid3D::setSlicePosition(int axis, int slicePosition)
 {
-    assert(0 < axis || axis < 3);
+    assert(0 <= axis && axis < 3);
 
     m_storedSliceIndexes[axis] = slicePosition;
     m_planeWidgets[axis]->SetSliceIndex(slicePosition);

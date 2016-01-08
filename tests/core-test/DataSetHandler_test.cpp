@@ -11,7 +11,7 @@
 class TestDataObject : public DataObject
 {
 public:
-    TestDataObject(bool * destructorCalledFlag = nullptr)
+    explicit TestDataObject(bool * destructorCalledFlag = nullptr)
         : DataObject("test data", vtkSmartPointer<vtkPolyData>::New())
         , m_desturctorCalledFlag(destructorCalledFlag)
     {
