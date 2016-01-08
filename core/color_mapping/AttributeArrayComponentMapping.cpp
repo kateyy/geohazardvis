@@ -85,7 +85,8 @@ std::vector<std::unique_ptr<ColorMappingData>> AttributeArrayComponentMapping::n
                 qDebug() << "Array named" << name << "found with different number of components (" << lastNumComp << "," << dataArray->GetNumberOfComponents() << ")";
                 continue;
             }
-            if (arrayInfo.attributeLocations.contains(vis))
+            int lastLocation = arrayInfo.attributeLocations.value(vis, -1);
+            if (lastLocation != -1 && lastLocation != attributeLocation)
             {
                 qDebug() << "Array named" << name << "found in different attribute locations in the same data set";
                 continue;
