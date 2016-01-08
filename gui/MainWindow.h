@@ -77,7 +77,7 @@ private:
     std::unique_ptr<DataSetHandler> m_dataSetHandler;
     std::unique_ptr<DataMapping> m_dataMapping;
     DataBrowser * m_dataBrowser;
-    ColorMappingChooser * m_scalarMappingChooser;
+    ColorMappingChooser * m_colorMappingChooser;
     GlyphMappingChooser * m_vectorMappingChooser;
     RenderConfigWidget * m_renderConfigWidget;
     RendererConfigWidget * m_rendererConfigWidget;

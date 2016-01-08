@@ -51,7 +51,7 @@ MainWindow::MainWindow()
     , m_ui()
     , m_dataSetHandler(std::make_unique<DataSetHandler>())
     , m_dataMapping()
-    , m_scalarMappingChooser(new ColorMappingChooser())
+    , m_colorMappingChooser(new ColorMappingChooser())
     , m_vectorMappingChooser(new GlyphMappingChooser())
     , m_renderConfigWidget(new RenderConfigWidget())
     , m_rendererConfigWidget(new RendererConfigWidget())
@@ -101,7 +101,7 @@ MainWindow::MainWindow()
     setCorner(Qt::Corner::TopRightCorner, Qt::DockWidgetArea::RightDockWidgetArea);
     setCorner(Qt::Corner::BottomRightCorner, Qt::DockWidgetArea::RightDockWidgetArea);
 
-    addDockWidget(Qt::DockWidgetArea::LeftDockWidgetArea, m_scalarMappingChooser);
+    addDockWidget(Qt::DockWidgetArea::LeftDockWidgetArea, m_colorMappingChooser);
     addDockWidget(Qt::DockWidgetArea::LeftDockWidgetArea, m_renderConfigWidget);
     addDockWidget(Qt::DockWidgetArea::LeftDockWidgetArea, m_vectorMappingChooser);
     addDockWidget(Qt::DockWidgetArea::LeftDockWidgetArea, m_rendererConfigWidget);
@@ -109,12 +109,10 @@ MainWindow::MainWindow()
     tabifyDockWidget(m_renderConfigWidget, m_rendererConfigWidget);
     tabbedDockWidgetToFront(m_renderConfigWidget);
 
-    connect(m_dataMapping.get(), &DataMapping::focusedRenderViewChanged, m_scalarMappingChooser, &ColorMappingChooser::setCurrentRenderView);
+    connect(m_dataMapping.get(), &DataMapping::focusedRenderViewChanged, m_colorMappingChooser, &ColorMappingChooser::setCurrentRenderView);
     connect(m_dataMapping.get(), &DataMapping::focusedRenderViewChanged, m_vectorMappingChooser, &GlyphMappingChooser::setCurrentRenderView);
     connect(m_dataMapping.get(), &DataMapping::focusedRenderViewChanged, m_renderConfigWidget, &RenderConfigWidget::setCurrentRenderView);
-
-    connect(m_dataMapping.get(), &DataMapping::focusedRenderViewChanged,
-        m_rendererConfigWidget, static_cast<void(RendererConfigWidget::*)(AbstractRenderView*)>(&RendererConfigWidget::setCurrentRenderView));
+    connect(m_dataMapping.get(), &DataMapping::focusedRenderViewChanged, m_rendererConfigWidget, &RendererConfigWidget::setCurrentRenderView);
 
     connect(m_dataBrowser, &DataBrowser::selectedDataChanged,
         [this] (DataObject * selected) {
