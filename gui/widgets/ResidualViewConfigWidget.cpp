@@ -124,14 +124,10 @@ void ResidualViewConfigWidget::updateComboBoxes()
         return;
     }
 
-    QList<ImageDataObject *> images;
-    QList<PolyDataObject *> polyData2p5D;
-
     for (auto dataObject : m_currentView->dataSetHandler().dataSets())
     {
         qulonglong ptrData = reinterpret_cast<size_t>(dataObject);
 
-        // ImageDataObjects can directly be used as observation/model
         if (dynamic_cast<ImageDataObject *>(dataObject))
         {
             m_ui->observationCombo->addItem(dataObject->name(), ptrData);
@@ -139,12 +135,12 @@ void ResidualViewConfigWidget::updateComboBoxes()
             continue;
         }
 
-        // allow to transform 2.5D polygonal data into model surface grid
         if (auto poly = dynamic_cast<PolyDataObject *>(dataObject))
         {
             if (!poly->is2p5D())
                 continue;
 
+            m_ui->observationCombo->addItem(dataObject->name(), ptrData);
             m_ui->modelCombo->addItem(dataObject->name(), ptrData);
         }
     }
