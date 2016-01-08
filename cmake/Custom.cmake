@@ -10,8 +10,8 @@ function(configure_cxx_target TARGET)
         LINKER_LANGUAGE CXX
         LINK_FLAGS_DEBUG                    "${DEFAULT_LINKER_FLAGS_DEBUG}"
         LINK_FLAGS_RELEASE                  "${DEFAULT_LINKER_FLAGS_RELEASE}"
-        LINK_FLAGS_RELWITHDEBINFO           "${DEFAULT_LINKER_FLAGS_RELEASE}"
-        LINK_FLAGS_MINSIZEREL               "${DEFAULT_LINKER_FLAGS_RELEASE}"
+        LINK_FLAGS_RELWITHDEBINFO           "${DEFAULT_LINKER_FLAGS_RELWITHDEBINFO}"
+        LINK_FLAGS_MINSIZEREL               "${DEFAULT_LINKER_FLAGS_MINSIZEREL}"
         DEBUG_POSTFIX                       "d${DEBUG_POSTFIX}"
         RELWITHDEBINFO_POSTFIX              "rd${DEBUG_POSTFIX}"
         FOLDER                              "${IDE_FOLDER}"

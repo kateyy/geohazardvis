@@ -50,6 +50,8 @@ private:
     reflectionzeug::PropertyGroup * createPropertyGroup(AbstractRenderView * renderView);
     reflectionzeug::PropertyGroup * createPropertyGroupRenderer(
         AbstractRenderView * renderView, RendererImplementationBase3D * impl);
+    void createPropertyGroupRenderer2(reflectionzeug::PropertyGroup * root,   // work around C1128 in Visual Studio 2015
+        AbstractRenderView * renderView, RendererImplementationBase3D * impl);
     reflectionzeug::PropertyGroup * createPropertyGroupPlot(
         AbstractRenderView * renderView, RendererImplementationPlot * impl);
 

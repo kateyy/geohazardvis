@@ -104,6 +104,7 @@ set ( SOURCES
     widgets/RendererConfigWidget.cpp
     widgets/RendererConfigWidget_Plot.cpp
     widgets/RendererConfigWidget_Renderer.cpp
+    widgets/RendererConfigWidget_Renderer2.cpp
     widgets/ResidualViewConfigWidget.h
     widgets/ResidualViewConfigWidget.cpp
 )

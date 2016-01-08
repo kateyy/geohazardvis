@@ -22,9 +22,15 @@ endif()
 set(DEFAULT_COMPILE_FLAGS
     /nologo
     /Zc:wchar_t /Zc:forScope /Zc:rvalueCast /Zc:inline
-    /GR /Zi /fp:precise /MP /W4
+    /GR /fp:precise /MP /W4
     /we4150 /we4239 /we4390 /we4456 /we4457 /we4700 /we4701 /we4703 /we4715 /we4717
     /wd4127 /wd4351 /wd4505 /wd4718
+
+    $<$<CONFIG:Debug>:          /MDd /RTC1 /Od /GF- >
+    $<$<CONFIG:Release>:        /MD /Ot /Ob2 /Ox /GS- /GF >
+    $<$<CONFIG:RelWithDebInfo>: /MD /Ot /Ob2 /Ox /GS- /GF /Zo /Zi>
+    $<$<CONFIG:MinSizeRel>:     /MD /Os /Ob1 /O1 /GS- /GF >
+
     # nologo       -> no logo
     # Zc:wchar_t   -> treat wchar_t as built-in type: yes
     # Zc:forScope  -> force conformance in for loop scope: Yes
@@ -34,6 +40,8 @@ set(DEFAULT_COMPILE_FLAGS
     # GR           -> runtime type information
     # GS           -> buffer security check
     # Zi           -> debug information format: program database
+    # ZI           -> debug information format: program database supporting edit and continue (Visual Studio 2015)
+    # Zo           -> generates richer debugging information for optimized code (non- /Od builds) (VS2013 Update 3)
     # Gm           -> enable minimal rebuild
     # fp:precise   -> floating point model: precise
     # fp:fast      -> floating point model: fast
@@ -70,8 +78,6 @@ set(DEFAULT_COMPILE_FLAGS
     # Od           -> Optimization: none
     # RTC1         -> Runtime error checks
 
-    # Zo           -> generates richer debugging information for optimized code (non- /Od builds) (VS2013 Update 3)
-
     # For release:
     # W3           -> warn level 3
     # MD           -> runtime library: multithreaded dll
@@ -83,31 +89,39 @@ set(DEFAULT_COMPILE_FLAGS
     # arch:SSE2    -> enable enhanced instruction set: streaming simd extensions 2
 )
 
-# version specific flags
-# 1800: Visual Studio 12 2013
-# 1900: Visual Studio 14 2015
-
-if(MSVC_VERSION VERSION_GREATER 1800)
-    list(APPEND DEFAULT_COMPILE_FLAGS
-        /bigobj
-        /guard:cf
-    )
-endif()
-
-list(APPEND DEFAULT_COMPILE_FLAGS
-    $<$<CONFIG:Debug>:          /MDd /RTC1 /Od /GF- >
-    $<$<CONFIG:Release>:        /MD /Ot /Ob2 /Ox /GS- /GF >
-    $<$<CONFIG:RelWithDebInfo>: /MD /Ot /Ob2 /Ox /GS- /GF /Zo>
-    $<$<CONFIG:MinSizeRel>:     /MD /Os /Ob1 /O1 /GS- /GF >
-)
-
-if (OPTION_DEBUG_ADDITIONAL_RUNTME_CHECKS)
+if(OPTION_DEBUG_ADDITIONAL_RUNTME_CHECKS)
     list(APPEND DEFAULT_COMPILE_FLAGS
         $<$<CONFIG:Debug>:      /RTCc /GS /sdl >
     )
 endif()
 
-set(WIN32_LINKER_FLAGS
+
+if (OPTION_RELEASE_LTCG)
+    list(APPEND DEFAULT_COMPILE_FLAGS $<$<NOT:$<CONFIG:Debug>>: /GL> )
+endif()
+
+# version specific compile flags
+# 1800: Visual Studio 12 2013
+# 1900: Visual Studio 14 2015
+
+if(MSVC_VERSION VERSION_LESS 1800)
+
+    list(APPEND DEFAULT_COMPILE_FLAGS
+        $<$<CONFIG:Debug>: /Zi>     # this set in RelWithDebInfo builds for all MSVC versions
+    )
+    
+else()  # Visual Studio 14 2015 as minimum
+
+    list(APPEND DEFAULT_COMPILE_FLAGS
+        # allow native edit and continue: http://blogs.msdn.com/b/vcblog/archive/2015/07/22/c-edit-and-continue-in-visual-studio-2015.aspx
+        $<$<CONFIG:Debug>: /ZI>
+        $<$<NOT:$<CONFIG:Debug>>: /guard:cf>
+    )
+    
+endif()
+
+
+set(DEFAULT_LINKER_FLAGS
     "/NOLOGO /NXCOMPAT"
     # NOLOGO                                            -> suppress logo
     # INCREMENTAL:NO                                    -> enable incremental linking: no
@@ -118,27 +132,32 @@ set(WIN32_LINKER_FLAGS
 )
 
 set(DEFAULT_LINKER_FLAGS_DEBUG
-    "${WIN32_LINKER_FLAGS} /DEBUG"
+    "${DEFAULT_LINKER_FLAGS} /INCREMENTAL /DEBUG"
     # DEBUG        -> create debug info
 )
 
 set(DEFAULT_LINKER_FLAGS_RELEASE
-    "${WIN32_LINKER_FLAGS} /OPT:REF /OPT:ICF /DELAY:UNLOAD /INCREMENTAL:NO"
+    "${DEFAULT_LINKER_FLAGS} /OPT:REF /OPT:ICF /DELAY:UNLOAD /INCREMENTAL:NO"
     # OPT:REF      -> references: eliminate unreferenced data
     # OPT:ICF      -> enable comdat folding: remove redundant comdats
     # LTCG         -> link time code generation: use link time code generation
     # DELAY:UNLOAD -> delay loaded dll: support unload
 )
 
-set(DEFAULT_LINKER_FLAGS_RELWITHDEBINFO
-    "${WIN32_LINKER_FLAGS} /OPT:REF /OPT:ICF /DELAY:UNLOAD /INCREMENTAL:NO /DEBUG"
-)
+set(DEFAULT_LINKER_FLAGS_RELWITHDEBINFO "${DEFAULT_LINKER_FLAGS_RELEASE} /DEBUG")
 
-if (OPTION_RELEASE_LTCG)
-    list(APPEND DEFAULT_COMPILE_FLAGS $<$<NOT:$<CONFIG:Debug>>: /GL> )
+set(DEFAULT_LINKER_FLAGS_MINSIZEREL ${DEFAULT_LINKER_FLAGS_RELEASE})
+
+
+if(OPTION_RELEASE_LTCG)
     set(DEFAULT_LINKER_FLAGS_RELEASE "${DEFAULT_LINKER_FLAGS_RELEASE} /LTCG")
     set(DEFAULT_LINKER_FLAGS_RELWITHDEBINFO "${DEFAULT_LINKER_FLAGS_RELWITHDEBINFO} /LTCG")
+    set(DEFAULT_LINKER_FLAGS_MINSIZEREL "${DEFAULT_LINKER_FLAGS_MINSIZEREL} /LTCG")
 endif()
 
-# Add platform specific libraries for linking
-set(EXTRA_LIBS "")
+# version specific linker flags
+if(MSVC_VERSION VERSION_GREATER 1800)
+    set(DEFAULT_LINKER_FLAGS_RELEASE "${DEFAULT_LINKER_FLAGS_RELEASE} /GUARD:CF")
+    set(DEFAULT_LINKER_FLAGS_RELWITHDEBINFO "${DEFAULT_LINKER_FLAGS_RELWITHDEBINFO} /GUARD:CF")
+    set(DEFAULT_LINKER_FLAGS_MINSIZEREL "${DEFAULT_LINKER_FLAGS_MINSIZEREL} /GUARD:CF")
+endif()
