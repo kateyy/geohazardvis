@@ -17,7 +17,11 @@ VectorGrid3DDataObject::VectorGrid3DDataObject(const QString & name, vtkImageDat
         data = dataSet.GetPointData()->GetVectors();
         dataSet.GetPointData()->SetScalars(data);
     }
+
+    dataSet.GetExtent(m_extent.data());
 }
+
+VectorGrid3DDataObject::~VectorGrid3DDataObject() = default;
 
 bool VectorGrid3DDataObject::is3D() const
 {
@@ -43,6 +47,16 @@ const QString & VectorGrid3DDataObject::dataTypeName_s()
 {
     static const QString name{ "3D vector grid" };
     return name;
+}
+
+vtkImageData * VectorGrid3DDataObject::imageData()
+{
+    return static_cast<vtkImageData *>(dataSet());
+}
+
+const vtkImageData * VectorGrid3DDataObject::imageData() const
+{
+    return static_cast<const vtkImageData *>(dataSet());
 }
 
 const int * VectorGrid3DDataObject::dimensions()
@@ -71,4 +85,24 @@ std::unique_ptr<QVtkTableModel> VectorGrid3DDataObject::createTableModel()
     model->setDataObject(this);
 
     return model;
+}
+
+bool VectorGrid3DDataObject::checkIfStructureChanged()
+{
+    if (DataObject::checkIfStructureChanged())
+    {
+        return true;
+    }
+
+    decltype(m_extent) newExtent;
+    imageData()->GetExtent(newExtent.data());
+
+    bool changed = newExtent != m_extent;
+
+    if (changed)
+    {
+        m_extent = newExtent;
+    }
+
+    return changed;
 }

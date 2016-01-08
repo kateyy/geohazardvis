@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include <functional>
 #include <memory>
 
@@ -40,7 +41,9 @@ public:
     vtkSmartPointer<vtkDataSet> m_dataSet;
     std::unique_ptr<QVtkTableModel> m_tableModel;
 
-    double m_bounds[6];
+    std::array<double, 6> m_bounds;
+    vtkIdType m_numberOfPoints;
+    vtkIdType m_numberOfCells;
 
     QMap<QString, QMap<vtkWeakPointer<vtkObject>, unsigned long>> m_namedObserverIds;
 

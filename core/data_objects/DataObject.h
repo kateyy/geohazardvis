@@ -53,6 +53,9 @@ public:
     const double * bounds();
     void bounds(double b[6]);
 
+    vtkIdType numberOfPoints() const;
+    vtkIdType numberOfCells() const;
+
     QVtkTableModel * tableModel();
 
     /** assign some kind of data array to my indexes.
@@ -84,6 +87,8 @@ signals:
     void boundsChanged();
     void valueRangeChanged();
     void attributeArraysChanged();
+    /** Emitted after changed of the geometrical structure, e.g., number of cells, points etc. */
+    void structureChanged();
 
 protected:
     virtual std::unique_ptr<QVtkTableModel> createTableModel() = 0;
@@ -104,10 +109,12 @@ protected:
     /** when data set values changed, check whether this also affects the bounds*/
     virtual bool checkIfBoundsChanged();
     virtual bool checkIfValueRangeChanged();
+    virtual bool checkIfStructureChanged();
 
     virtual void dataChangedEvent();
     virtual void boundsChangedEvent();
     virtual void valueRangeChangedEvent();
+    virtual void structureChangedEvent();
 
     bool deferringEvents() const;
     virtual void process_executeDeferredEvents();

@@ -13,13 +13,18 @@
 
 ImageDataObject::ImageDataObject(const QString & name, vtkImageData & dataSet)
     : DataObject(name, &dataSet)
+    , m_extent()
 {
     vtkDataArray * data = dataSet.GetPointData()->GetScalars();
     if (data)
     {
         connectObserver("dataChanged", *data, vtkCommand::ModifiedEvent, *this, &ImageDataObject::_dataChanged);
     }
+
+    dataSet.GetExtent(m_extent.data());
 }
+
+ImageDataObject::~ImageDataObject() = default;
 
 bool ImageDataObject::is3D() const
 {
@@ -46,7 +51,6 @@ const QString & ImageDataObject::dataTypeName_s()
     static const QString name{ "regular 2D grid" };
     return name;
 }
-
 
 vtkImageData * ImageDataObject::imageData()
 {
@@ -79,4 +83,24 @@ std::unique_ptr<QVtkTableModel> ImageDataObject::createTableModel()
     model->setDataObject(this);
 
     return model;
+}
+
+bool ImageDataObject::checkIfStructureChanged()
+{
+    if (DataObject::checkIfStructureChanged())
+    {
+        return true;
+    }
+
+    decltype(m_extent) newExtent;
+    imageData()->GetExtent(newExtent.data());
+
+    bool changed = newExtent != m_extent;
+
+    if (changed)
+    {
+        m_extent = newExtent;
+    }
+
+    return changed;
 }

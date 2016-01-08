@@ -33,8 +33,6 @@ DataObject::DataObject(const QString & name, vtkDataSet * dataSet)
 
     if (dataSet)
     {
-        dataSet->GetBounds(d_ptr->m_bounds);
-
         connectObserver("dataChanged", *dataSet, vtkCommand::ModifiedEvent, *this, &DataObject::_dataChanged);
 
         connectObserver("attributeArraysChanged", *dataSet->GetPointData(), vtkCommand::ModifiedEvent, *this, &DataObject::_attributeArraysChanged);
@@ -166,20 +164,18 @@ void DataObject::storePointer(vtkInformation & information, DataObject * dataObj
 
 bool DataObject::checkIfBoundsChanged()
 {
-    double newBounds[6];
-
     if (!dataSet())
-        return true;
+        return false;
 
-    dataSet()->GetBounds(newBounds);
+    decltype(d_ptr->m_bounds) newBounds;
+    dataSet()->GetBounds(newBounds.data());
 
-    bool changed = false;
-    for (int i = 0; i < 6; ++i)
-        changed = changed || (d_ptr->m_bounds[i] != newBounds[i]);
+    bool changed = newBounds != d_ptr->m_bounds;
 
     if (changed)
-        for (int i = 0; i < 6; ++i)
-            d_ptr->m_bounds[i] = newBounds[i];
+    {
+        d_ptr->m_bounds = newBounds;
+    }
 
     return changed;
 }
@@ -188,6 +184,26 @@ bool DataObject::checkIfValueRangeChanged()
 {
     // this depends on the actual kind of values
     return true;
+}
+
+bool DataObject::checkIfStructureChanged()
+{
+    if (!dataSet())
+    {
+        return false;
+    }
+
+    const vtkIdType newNumPoints = dataSet()->GetNumberOfPoints();
+    const vtkIdType newNumCells = dataSet()->GetNumberOfCells();
+
+    bool changed =
+        (newNumPoints != d_ptr->m_numberOfPoints)
+        || (newNumCells != d_ptr->m_numberOfCells);
+
+    d_ptr->m_numberOfPoints = newNumPoints;
+    d_ptr->m_numberOfCells = newNumCells;
+
+    return changed;
 }
 
 void DataObject::dataChangedEvent()
@@ -199,6 +215,10 @@ void DataObject::boundsChangedEvent()
 }
 
 void DataObject::valueRangeChangedEvent()
+{
+}
+
+void DataObject::structureChangedEvent()
 {
 }
 
@@ -239,6 +259,13 @@ void DataObject::_dataChanged()
         valueRangeChangedEvent();
 
         emit valueRangeChanged();
+    }
+
+    if (checkIfStructureChanged())
+    {
+        structureChangedEvent();
+
+        emit structureChanged();
     }
 }
 

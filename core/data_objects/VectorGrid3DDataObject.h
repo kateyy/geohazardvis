@@ -1,5 +1,7 @@
 #pragma once
 
+#include <array>
+
 #include <core/data_objects/DataObject.h>
 
 
@@ -11,6 +13,7 @@ class CORE_API VectorGrid3DDataObject : public DataObject
 {
 public:
     VectorGrid3DDataObject(const QString & name, vtkImageData & dataSet);
+    ~VectorGrid3DDataObject() override;
 
     bool is3D() const override;
 
@@ -20,6 +23,9 @@ public:
 
     const QString & dataTypeName() const override;
     static const QString & dataTypeName_s();
+
+    vtkImageData * imageData();
+    const vtkImageData * imageData() const;
 
     /** number of values on each axis (x, y, z) */
     const int * dimensions();
@@ -32,4 +38,9 @@ public:
 
 protected:
     std::unique_ptr<QVtkTableModel> createTableModel() override;
+
+    bool checkIfStructureChanged() override;
+
+private:
+    std::array<int, 6> m_extent;
 };
