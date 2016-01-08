@@ -40,13 +40,16 @@ std::vector<std::unique_ptr<GlyphMappingData>> PolyDataAttributeGlyphMapping::ne
 
     // find 3D-vector data, skip the "centroid"
 
-    vtkCellData * cellData = polyData->GetCellData();
+    auto cellData = polyData->GetCellData();
     QList<vtkDataArray *> vectorArrays;
-    for (int i = 0; vtkDataArray * a = cellData->GetArray(i); ++i)
+    for (int i = 0; i < cellData->GetNumberOfArrays(); ++i)
     {
-        assert(a);
-        QString name(a->GetName());
-        if (name == "centroid")
+        auto a = cellData->GetArray(i);
+
+        if (!a || a->GetNumberOfComponents() != 3)
+            continue;
+
+        if (QString(a->GetName()) == "centroid")
             continue;
 
         if (a->GetInformation()->Has(DataObject::ArrayIsAuxiliaryKey())
@@ -57,7 +60,7 @@ std::vector<std::unique_ptr<GlyphMappingData>> PolyDataAttributeGlyphMapping::ne
     }
 
     std::vector<std::unique_ptr<GlyphMappingData>> instances;
-    for (vtkDataArray * vectorsArray : vectorArrays)
+    for (auto vectorsArray : vectorArrays)
     {
         auto mapping = std::make_unique<PolyDataAttributeGlyphMapping>(renderedData, vectorsArray);
         if (mapping->isValid())
