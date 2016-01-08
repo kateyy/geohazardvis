@@ -18,6 +18,7 @@
 
 #include <core/context2D_data/Context2DData.h>
 #include <core/rendered_data/RenderedData.h>
+#include <core/table_model/QVtkTableModel.h>
 #include <core/utility/vtkstringhelper.h>
 
 

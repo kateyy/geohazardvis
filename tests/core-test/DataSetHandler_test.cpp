@@ -6,6 +6,7 @@
 #include <core/DataSetHandler.h>
 #include <core/data_objects/DataObject.h>
 #include <core/data_objects/RawVectorData.h>
+#include <core/table_model/QVtkTableModel.h>
 
 
 class TestDataObject : public DataObject

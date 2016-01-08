@@ -7,7 +7,6 @@
 #include <vtkObject.h>
 
 #include <core/core_api.h>
-#include <core/table_model/QVtkTableModel.h>
 
 
 class vtkInformation;
@@ -16,10 +15,11 @@ class vtkInformationIntegerKey;
 class vtkDataArray;
 class vtkDataSet;
 class vtkAlgorithmOutput;
-class RenderedData;
-class Context2DData;
 
+class Context2DData;
 class DataObjectPrivate;
+class QVtkTableModel;
+class RenderedData;
 
 
 /** Base class representing loaded data. */
