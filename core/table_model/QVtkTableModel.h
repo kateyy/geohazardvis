@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QAbstractTableModel>
+#include <QList>
 
 #include <vtkType.h>
 
@@ -34,6 +35,11 @@ protected:
     virtual void resetDisplayData() = 0;
 
 private:
+    void rebuild();
+
+private:
     DataObject * m_dataObject;
     vtkIdType m_hightlightId;
+
+    QList<QMetaObject::Connection> m_dataObjectConnections;
 };

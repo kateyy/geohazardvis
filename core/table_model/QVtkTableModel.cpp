@@ -1,5 +1,9 @@
 #include "QVtkTableModel.h"
 
+#include <cassert>
+
+#include <core/data_objects/DataObject.h>
+
 
 QVtkTableModel::QVtkTableModel(QObject * parent)
     : QAbstractTableModel(parent)
@@ -22,17 +26,34 @@ QVariant QVtkTableModel::headerData(int section, Qt::Orientation orientation, in
 
 void QVtkTableModel::setDataObject(DataObject * dataObject)
 {
+    assert(dataObject);
+
     if (m_dataObject == dataObject)
         return;
 
+    m_dataObject = dataObject;
+
+    rebuild();
+}
+
+void QVtkTableModel::rebuild()
+{
+    for (auto & c : m_dataObjectConnections)
+    {
+        disconnect(c);
+    }
+    m_dataObjectConnections.clear();
+
     beginResetModel();
 
-    m_dataObject = dataObject;
     m_hightlightId = -1;
 
     resetDisplayData();
 
     endResetModel();
+
+
+    m_dataObjectConnections << connect(m_dataObject, &DataObject::structureChanged, this, &QVtkTableModel::rebuild);
 }
 
 DataObject * QVtkTableModel::dataObject()
