@@ -64,7 +64,7 @@ public:
       * E.g.: actor bounds updates might cause crash faults, if points or indices of a vtkPointSet are invalid. 
       * This method stacks, i.e., multiple subsequent calls of deferEvents require the same number of executeDeferredEvents calls
       * to actually execute the deferred events. 
-      * @see ScopedEventDefferral */
+      * @see ScopedEventDeferral */
     void deferEvents();
     void executeDeferredEvents();
 
@@ -123,14 +123,14 @@ private:
 /** Blocks the data object's events on constructions and requests execution on destruction.
 This is most useful for an exception safe event lock on per-scope basis.
 */
-class ScopedEventDefferral final
+class ScopedEventDeferral final
 {
 public:
-    explicit ScopedEventDefferral(DataObject & objectToLock);
-    ~ScopedEventDefferral();
+    explicit ScopedEventDeferral(DataObject & objectToLock);
+    ~ScopedEventDeferral();
 
-    ScopedEventDefferral(const ScopedEventDefferral & other) = delete;
-    ScopedEventDefferral & operator=(const ScopedEventDefferral & other) = delete;
+    ScopedEventDeferral(const ScopedEventDeferral & other) = delete;
+    ScopedEventDeferral & operator=(const ScopedEventDeferral & other) = delete;
 
 private:
     DataObject & m_dataObject;

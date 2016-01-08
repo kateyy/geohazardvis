@@ -18,13 +18,13 @@ void DataObject::connectObserver(const QString & eventName, vtkObject & subject,
 }
 
 
-inline ScopedEventDefferral::ScopedEventDefferral(DataObject & objectToLock)
+inline ScopedEventDeferral::ScopedEventDeferral(DataObject & objectToLock)
     : m_dataObject(objectToLock)
 {
     m_dataObject.deferEvents();
 }
 
-inline ScopedEventDefferral::~ScopedEventDefferral()
+inline ScopedEventDeferral::~ScopedEventDeferral()
 {
     m_dataObject.executeDeferredEvents();
 }
