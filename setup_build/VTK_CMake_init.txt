@@ -5,7 +5,7 @@
 #   cmake -C "path_to_this_file/VTK_CMake_init.txt" -G "cmake_generator" path_to_VTK_sources
 #
 # This generates a minimal VTK-CMake build as needed for this project.
-# "cmake_generator" should be "Visual Studio 12" or better "Visual Studio 12 Win64" on Windows.
+# On Windows, "cmake_generator" should be "Visual Studio 12 2013 Win64" or "Visual Studio 14 2015 Win64".
 
 set(BUILD_DOCUMENTATION OFF CACHE BOOL "Build the VTK documentation")
 set(BUILD_EXAMPLES OFF CACHE BOOL "Build VTK examples.")
@@ -18,11 +18,9 @@ set(Module_vtkInteractionWidgets ON CACHE BOOL "Request building vtkInteractionW
 set(Module_vtkIOExport ON CACHE BOOL "Request building vtkIOExport")
 set(Module_vtkIOXML ON CACHE BOOL "Request building vtkIOXML")
 set(Module_vtkRenderingAnnotation ON CACHE BOOL "Request building vtkRenderingAnnotation")
-# set(Module_vtkRenderingImage ON CACHE BOOL "Request building vtkRenderingImage")
 set(Module_vtkRenderingLIC ON CACHE BOOL "Request building vtkRenderingLIC")
-# set(Module_vtkRenderingLOD ON CACHE BOOL "Request building vtkRenderingLOD")
-# set(Module_vtkRenderingVolumeOpenGL ON CACHE BOOL "Request building vtkRenderingVolumeOpenGL")
 set(Module_vtkViewsContext2D ON CACHE BOOL "Request building vtkViewsContext2D")
+set(VTK_BUILD_QT_DESIGNER_PLUGIN OFF CACHE BOOL "Build the VTK Qt plugin for the Qt Designer.")
 set(VTK_Group_Imaging OFF CACHE BOOL "Request building Imaging modules")
 set(VTK_Group_MPI OFF CACHE BOOL "Request building MPI modules")
 set(VTK_Group_Qt OFF CACHE BOOL "Request building Qt modules")
