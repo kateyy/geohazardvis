@@ -81,7 +81,7 @@ void RenderConfigWidget::setCurrentRenderView(AbstractRenderView * renderView)
     m_propertyRoot = m_content->createConfigGroup();
 
     m_ui->propertyBrowser->setRoot(m_propertyRoot);
-    m_ui->propertyBrowser->setColumnWidth(0, 135);
+    m_ui->propertyBrowser->resizeColumnToContents(0);
 
     update();
 }
