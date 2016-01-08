@@ -148,7 +148,7 @@ DataObject * ResidualVerificationView::selectedData() const
 
 AbstractVisualizedData * ResidualVerificationView::selectedDataVisualization() const
 {
-    return m_implementation->selectedData();
+    return implementation().selectedData();
 }
 
 void ResidualVerificationView::lookAtData(DataObject & dataObject, vtkIdType index, IndexType indexType, int subViewIndex)
@@ -182,7 +182,7 @@ void ResidualVerificationView::lookAtData(AbstractVisualizedData & vis, vtkIdTyp
         if (m_visualizations[specificSubViewIdx].get() != &vis)
             return;
 
-        m_implementation->lookAtData(vis, index, indexType, specificSubViewIdx);
+        implementation().lookAtData(vis, index, indexType, specificSubViewIdx);
         return;
     }
 
@@ -191,7 +191,7 @@ void ResidualVerificationView::lookAtData(AbstractVisualizedData & vis, vtkIdTyp
         if (m_visualizations[i].get() != &vis)
             continue;
 
-        m_implementation->lookAtData(vis, index, indexType, i);
+        implementation().lookAtData(vis, index, indexType, i);
         return;
     }
 }
@@ -444,7 +444,7 @@ QList<AbstractVisualizedData *> ResidualVerificationView::visualizationsImpl(int
 
 void ResidualVerificationView::axesEnabledChangedEvent(bool enabled)
 {
-    m_implementation->setAxesVisibility(enabled);
+    implementation().setAxesVisibility(enabled);
 }
 
 void ResidualVerificationView::initialize()
@@ -458,6 +458,8 @@ void ResidualVerificationView::initialize()
     m_cameraSync = std::make_unique<vtkCameraSynchronization>();
     for (unsigned int i = 0; i < numberOfSubViews(); ++i)
         m_cameraSync->add(m_implementation->renderer(i));
+
+    connect(m_implementation.get(), &RendererImplementation::dataSelectionChanged, this, &ResidualVerificationView::updateGuiSelection);
 }
 
 void ResidualVerificationView::setDataInternal(unsigned int subViewIndex, DataObject * dataObject, std::vector<std::unique_ptr<AbstractVisualizedData>> & toDelete)
@@ -478,7 +480,7 @@ void ResidualVerificationView::setDataInternal(unsigned int subViewIndex, DataOb
 
     if (oldVis)
     {
-        m_implementation->removeContent(oldVis.get(), subViewIndex);
+        implementation().removeContent(oldVis.get(), subViewIndex);
 
         beforeDeleteVisualization(oldVis.get());
         toDelete.push_back(std::move(oldVis));
@@ -486,14 +488,14 @@ void ResidualVerificationView::setDataInternal(unsigned int subViewIndex, DataOb
 
     if (dataObject)
     {
-        auto newVis = m_implementation->requestVisualization(*dataObject);
+        auto newVis = implementation().requestVisualization(*dataObject);
         if (!newVis)
         {
             return;
         }
         auto newVisPtr = newVis.get();
         m_visualizations[subViewIndex] = std::move(newVis);
-        m_implementation->addContent(newVisPtr, subViewIndex);
+        implementation().addContent(newVisPtr, subViewIndex);
     }
 }
 
@@ -764,15 +766,8 @@ void ResidualVerificationView::updateGuiSelection()
 {
     updateTitle();
 
-    DataObject * selection = nullptr;
-    for (auto & vis : m_visualizations)
-    {
-        if (vis)
-        {
-            selection = &vis->dataObject();
-            break;
-        }
-    }
+    auto selectedVis = implementation().selectedData();
+    auto selection = selectedVis ? &selectedVis->dataObject() : (DataObject*)(nullptr);
 
     emit selectedDataChanged(this, selection);
 }

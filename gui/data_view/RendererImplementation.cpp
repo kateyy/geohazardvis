@@ -2,7 +2,8 @@
 
 #include <cassert>
 
-#include <data_view/AbstractRenderView.h>
+#include <core/AbstractVisualizedData.h>
+#include <gui/data_view/AbstractRenderView.h>
 
 
 RendererImplementation::RendererImplementation(AbstractRenderView & renderView)
@@ -76,6 +77,8 @@ unsigned int RendererImplementation::subViewIndexAtPos(const QPoint /*pixelCoord
 
 void RendererImplementation::addContent(AbstractVisualizedData * content, unsigned int subViewIndex)
 {
+    connect(content, &AbstractVisualizedData::geometryChanged, this, &RendererImplementation::render);
+
     onAddContent(content, subViewIndex);
 }
 
@@ -86,6 +89,8 @@ void RendererImplementation::removeContent(AbstractVisualizedData * content, uns
         disconnect(connection);
 
     onRemoveContent(content, subViewIndex);
+
+    disconnect(content, &AbstractVisualizedData::geometryChanged, this, &RendererImplementation::render);
 }
 
 void RendererImplementation::renderViewContentsChanged()

@@ -118,8 +118,6 @@ AbstractVisualizedData * RenderView::addDataObject(DataObject * dataObject)
     auto * newContentPtr = newContent.get();
     m_contents.push_back(std::move(newContent));
 
-    connect(newContentPtr, &AbstractVisualizedData::geometryChanged, this, &RenderView::render);
-
     m_dataObjectToVisualization.insert(dataObject, newContentPtr);
 
     return newContentPtr;
