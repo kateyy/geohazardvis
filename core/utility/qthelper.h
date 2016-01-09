@@ -2,6 +2,10 @@
 
 #include <core/core_api.h>
 
+#include <QString>
+
+#include <vtkVector.h>
+
 
 class QColor;
 class QDebug;
@@ -13,3 +17,10 @@ class QEvent;
 QDebug CORE_API operator<<(QDebug str, const QEvent * ev);
 
 QColor CORE_API vtkColorToQColor(double colorF[3]);
+
+template<typename T, int Size>
+QString vtkVectorToQString(const vtkVector<T, Size> & vector,
+    const QString & separator = " ", const QString & prefix = "", const QString & suffix = "");
+
+
+#include "qthelper.hpp"

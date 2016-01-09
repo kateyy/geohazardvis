@@ -6,6 +6,7 @@
 #include <vtkSmartPointer.h>
 
 
+class QString;
 class vtkDataObject;
 
 
