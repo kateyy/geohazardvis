@@ -559,11 +559,8 @@ void ResidualVerificationView::handleUpdateFinished()
         auto computedResidual = m_newResidual;
         m_newResidual = nullptr;
 
-        vtkImageData * computedResidualImage = vtkImageData::SafeDownCast(computedResidual);
-        vtkPolyData * computedResidualPoly = computedResidualImage ?
-            static_cast<vtkPolyData *>(nullptr)
-            : vtkPolyData::SafeDownCast(computedResidual);
-        assert((computedResidualImage == nullptr) != (computedResidualPoly == nullptr));
+        const bool residualIsImage = nullptr != vtkImageData::SafeDownCast(computedResidual);
+        assert(residualIsImage || vtkPolyData::SafeDownCast(computedResidual));
 
 
         const bool reuseResidualObject = m_residual && m_residual->dataSet()->IsA(computedResidual->GetClassName());
@@ -582,7 +579,7 @@ void ResidualVerificationView::handleUpdateFinished()
         {
             oldResidualToDelete = std::move(m_residual);
 
-            if (computedResidualImage)
+            if (residualIsImage)
             {
                 m_residual = std::make_unique<ImageDataObject>("Residual", static_cast<vtkImageData &>(*targetDataSet));
             }
