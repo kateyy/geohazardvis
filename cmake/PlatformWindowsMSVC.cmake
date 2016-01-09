@@ -26,28 +26,49 @@ set(DEFAULT_COMPILE_FLAGS
     /we4150 /we4239 /we4390 /we4456 /we4457 /we4700 /we4701 /we4703 /we4715 /we4717
     /wd4127 /wd4351 /wd4505 /wd4718
 
-    $<$<CONFIG:Debug>:          /MDd /RTC1 /Od /GF- >
-    $<$<CONFIG:Release>:        /MD /Ot /Ob2 /Ox /GS- /GF >
-    $<$<CONFIG:RelWithDebInfo>: /MD /Ot /Ob2 /Ox /GS- /GF /Zo /Zi>
-    $<$<CONFIG:MinSizeRel>:     /MD /Os /Ob1 /O1 /GS- /GF >
+    $<$<CONFIG:Debug>:          /MDd /Od /RTC1 >
+    $<$<CONFIG:Release>:        /MD  /O2 >
+    $<$<CONFIG:RelWithDebInfo>: /MD  /O2 /Zo /Zi>
+    $<$<CONFIG:MinSizeRel>:     /MD  /O1 >
 
-    # nologo       -> no logo
+    # nologo       -> Suppresses the display of the copyright banner when the compiler starts up and display of informational messages during compiling.
+
+    # MD           -> runtime library: multithreaded dll
+    # MDd          -> Runtime Library: Multithreaded Debug DLL
+
+    # Od           -> Optimization: none
+    # O1           -> Minimize Size, equivalent to /Og /Os /Oy /Ob2 /Gs /GF /Gy
+    # O2           -> Maximize Speed, equivalent to /Og /Oi /Ot /Oy /Ob2 /Gs /GF /Gy
+    # Ob2          -> inline function expansion: any suitable
+    # Ox           -> optimization: full optimization, equivalent to /Ob2 /Og /Ot /Oy
+    # Oi           -> enable intrinsic functions: yes
+    # Oy           -> omit frame pointers: yes
+    # Ot           -> favor fast code
+
+    # RTC1         -> Runtime error checks
+
+    # MP           -> build with multiple processes
+
+    # GF           -> string pooling (set by /O1, /O2 and /ZI)
+    # GL           -> whole program optimization: enable link-time code generation
+    # GR           -> runtime type information
+    # GS           -> buffer security check
+    # Gm           -> enable minimal rebuild
+
+    # arch:SSE2    -> enable enhanced instruction set: streaming simd extensions 2
+    # fp:precise   -> floating point model: precise
+    # fp:fast      -> floating point model: fast
+    # bigobj       -> Increase Number of Sections in .Obj file (required for libzeug and MSVC 14)
+
     # Zc:wchar_t   -> treat wchar_t as built-in type: yes
     # Zc:forScope  -> force conformance in for loop scope: Yes
     # Zc:rvalueCast -> treat rvalue references according to section 5.4 of the C++11 standard
     # Zc:inline    -> enforce section 3.2 and section 7.1.2. of the C++11 standard: definitions of called inline functions must be visible
-    # GF           -> string pooling (default: debug:off, release:on)
-    # GR           -> runtime type information
-    # GS           -> buffer security check
+
     # Zi           -> debug information format: program database
     # ZI           -> debug information format: program database supporting edit and continue (Visual Studio 2015)
     # Zo           -> generates richer debugging information for optimized code (non- /Od builds) (VS2013 Update 3)
-    # Gm           -> enable minimal rebuild
-    # fp:precise   -> floating point model: precise
-    # fp:fast      -> floating point model: fast
-    # Ot           -> favor fast code
-    # bigobj       -> Increase Number of Sections in .Obj file (required for libzeug and MSVC 14)
-    # MP           -> build with multiple processes
+
     # wd           -> disable warning
     # we           -> treat warning as error
     #   4100       -> 'identifier' : unreferenced formal parameter
@@ -72,21 +93,6 @@ set(DEFAULT_COMPILE_FLAGS
     #   4718       -> 'function call' : recursive call has no side effects, deleting (QMapNode/qmap.h)
     # W4           -> warning level 4
     # WX           -> treat warnings as errors
-
-    # For debug:
-    # MDd          -> Runtime Library: Multithreaded Debug DLL
-    # Od           -> Optimization: none
-    # RTC1         -> Runtime error checks
-
-    # For release:
-    # W3           -> warn level 3
-    # MD           -> runtime library: multithreaded dll
-    # Ox           -> optimization: full optimization
-    # Ob2          -> inline function expansion: any suitable
-    # Oi           -> enable intrinsic functions: yes
-    # Oy           -> omit frame pointers: yes
-    # GL           -> whole program optimization: enable link-time code generation
-    # arch:SSE2    -> enable enhanced instruction set: streaming simd extensions 2
 )
 
 if(OPTION_DEBUG_ADDITIONAL_RUNTME_CHECKS)
@@ -109,7 +115,7 @@ if(MSVC_VERSION VERSION_LESS 1900)
     list(APPEND DEFAULT_COMPILE_FLAGS
         $<$<CONFIG:Debug>: /Zi>     # this set in RelWithDebInfo builds for all MSVC versions
     )
-    
+
 else()  # Visual Studio 14 2015 as minimum
 
     list(APPEND DEFAULT_COMPILE_FLAGS
@@ -117,7 +123,7 @@ else()  # Visual Studio 14 2015 as minimum
         $<$<CONFIG:Debug>: /ZI>
         $<$<NOT:$<CONFIG:Debug>>: /guard:cf>
     )
-    
+
 endif()
 
 
@@ -137,7 +143,7 @@ set(DEFAULT_LINKER_FLAGS_DEBUG
 )
 
 set(DEFAULT_LINKER_FLAGS_RELEASE
-    "${DEFAULT_LINKER_FLAGS} /OPT:REF /OPT:ICF /DELAY:UNLOAD /INCREMENTAL:NO"
+    "${DEFAULT_LINKER_FLAGS} /OPT:REF /OPT:ICF /INCREMENTAL:NO"
     # OPT:REF      -> references: eliminate unreferenced data
     # OPT:ICF      -> enable comdat folding: remove redundant comdats
     # LTCG         -> link time code generation: use link time code generation
