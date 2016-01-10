@@ -31,7 +31,7 @@ public:
 
 private:
     /** remove data from the UI if we currently hold it */
-    void checkDeletedContent(AbstractVisualizedData * content);
+    void checkDeletedContent(const QList<AbstractVisualizedData *> & content);
 
     void updateTitle();
 

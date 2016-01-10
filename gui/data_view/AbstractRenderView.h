@@ -86,7 +86,7 @@ signals:
     void selectedDataChanged(AbstractRenderView * renderView, DataObject * dataObject);
     void activeSubViewChanged(unsigned int activeSubViewIndex);
 
-    void beforeDeleteVisualization(AbstractVisualizedData * content);
+    void beforeDeleteVisualizations(const QList<AbstractVisualizedData *> & visualizations);
 
 protected:
     QWidget * contentWidget() override;

@@ -43,7 +43,7 @@ private:
     void updateVectorsList();
 
     /** remove data from the UI if we currently hold it */
-    void checkRemovedData(AbstractVisualizedData * content);
+    void checkRemovedData(const QList<AbstractVisualizedData *> & content);
 
     void updateTitle();
 

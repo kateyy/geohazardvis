@@ -32,14 +32,15 @@ RenderView::RenderView(
 
 RenderView::~RenderView()
 {
+    QList<AbstractVisualizedData *> toDelete;
+
     for (auto & rendered : m_contents)
-        emit beforeDeleteVisualization(rendered.get());
+        toDelete << rendered.get();
 
     for (auto & rendered : m_contentCache)
-        emit beforeDeleteVisualization(rendered.get());
+        toDelete << rendered.get();
 
-    m_contents.clear();
-    m_contentCache.clear();
+    emit beforeDeleteVisualizations(toDelete);
 }
 
 QString RenderView::friendlyName() const
@@ -205,7 +206,7 @@ void RenderView::hideDataObjectsImpl(const QList<DataObject *> & dataObjects, un
             continue;
 
         // cached data is only accessible internally in the view, so let others know that it's gone for the moment
-        emit beforeDeleteVisualization(rendered);
+        emit beforeDeleteVisualizations({ rendered });
 
         // move data to cache if it isn't already invisible
         auto contentsIt = findUnique(m_contents, rendered);
@@ -255,7 +256,7 @@ void RenderView::removeDataObject(DataObject * dataObject)
 
     implementation().removeContent(renderedData, 0);
 
-    emit beforeDeleteVisualization(renderedData);
+    emit beforeDeleteVisualizations({ renderedData });
 
     auto toDelete = removeFromInternalLists({ dataObject });
 

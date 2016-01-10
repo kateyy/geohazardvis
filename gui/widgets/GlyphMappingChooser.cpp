@@ -1,6 +1,8 @@
 #include "GlyphMappingChooser.h"
 #include "ui_GlyphMappingChooser.h"
 
+#include <algorithm>
+
 #include <reflectionzeug/PropertyGroup.h>
 #include <reflectionzeug/StringProperty.h>
 
@@ -55,7 +57,7 @@ void GlyphMappingChooser::setCurrentRenderView(AbstractRenderView * renderView)
     if (m_renderView)
     {
         disconnect(this, &GlyphMappingChooser::renderSetupChanged, m_renderView, &AbstractRenderView::render);
-        disconnect(m_renderView, &AbstractRenderView::beforeDeleteVisualization, 
+        disconnect(m_renderView, &AbstractRenderView::beforeDeleteVisualizations, 
             this, &GlyphMappingChooser::checkRemovedData);
     }
     if (m_mapping)
@@ -66,7 +68,7 @@ void GlyphMappingChooser::setCurrentRenderView(AbstractRenderView * renderView)
 
     if (renderView)
     {
-        connect(renderView, &AbstractRenderView::beforeDeleteVisualization,
+        connect(renderView, &AbstractRenderView::beforeDeleteVisualizations,
             this, &GlyphMappingChooser::checkRemovedData);
         connect(m_renderView, &AbstractRenderView::selectedDataChanged,
             this, static_cast<void (GlyphMappingChooser::*)(AbstractRenderView *, DataObject *)>(&GlyphMappingChooser::setSelectedData));
@@ -81,7 +83,7 @@ void GlyphMappingChooser::setCurrentRenderView(AbstractRenderView * renderView)
     if (m_renderView)
     {
         connect(this, &GlyphMappingChooser::renderSetupChanged, m_renderView, &AbstractRenderView::render);
-        connect(m_renderView, &AbstractRenderView::beforeDeleteVisualization, 
+        connect(m_renderView, &AbstractRenderView::beforeDeleteVisualizations, 
             this, &GlyphMappingChooser::checkRemovedData);
     }
 }
@@ -155,10 +157,16 @@ void GlyphMappingChooser::updateVectorsList()
     }
 }
 
-void GlyphMappingChooser::checkRemovedData(AbstractVisualizedData * content)
+void GlyphMappingChooser::checkRemovedData(const QList<AbstractVisualizedData *> & content)
 {
-    if (m_mapping && &m_mapping->renderedData() == content)
+    if (!m_mapping)
+        return;
+
+    auto it = std::find(content.begin(), content.end(), &m_mapping->renderedData());
+    if (it != content.end())
+    {
         setSelectedData(nullptr);
+    }
 }
 
 void GlyphMappingChooser::updateGuiForSelection(const QItemSelection & selection)

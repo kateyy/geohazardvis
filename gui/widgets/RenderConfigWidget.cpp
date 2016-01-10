@@ -46,9 +46,9 @@ void RenderConfigWidget::clear()
     update();
 }
 
-void RenderConfigWidget::checkDeletedContent(AbstractVisualizedData * content)
+void RenderConfigWidget::checkDeletedContent(const QList<AbstractVisualizedData *> & content)
 {
-    if (m_content == content)
+    if (content.contains(m_content))
         clear();
 }
 
@@ -58,7 +58,7 @@ void RenderConfigWidget::setCurrentRenderView(AbstractRenderView * renderView)
 
     if (m_renderView)
     {
-        disconnect(m_renderView, &AbstractRenderView::beforeDeleteVisualization,
+        disconnect(m_renderView, &AbstractRenderView::beforeDeleteVisualizations,
             this, &RenderConfigWidget::checkDeletedContent);
         disconnect(m_renderView, &AbstractRenderView::selectedDataChanged,
             this, static_cast<void (RenderConfigWidget::*)(AbstractRenderView *, DataObject *)>(&RenderConfigWidget::setSelectedData));
@@ -68,7 +68,7 @@ void RenderConfigWidget::setCurrentRenderView(AbstractRenderView * renderView)
     m_content = renderView ? renderView->selectedDataVisualization() : nullptr;
     if (renderView)
     {
-        connect(renderView, &AbstractRenderView::beforeDeleteVisualization,
+        connect(renderView, &AbstractRenderView::beforeDeleteVisualizations,
             this, &RenderConfigWidget::checkDeletedContent);
         connect(m_renderView, &AbstractRenderView::selectedDataChanged,
             this, static_cast<void (RenderConfigWidget::*)(AbstractRenderView *, DataObject *)>(&RenderConfigWidget::setSelectedData));
@@ -101,7 +101,7 @@ void RenderConfigWidget::setSelectedData(DataObject * dataObject)
     updateTitle();
     m_propertyRoot = m_content->createConfigGroup();
     m_ui->propertyBrowser->setRoot(m_propertyRoot);
-    m_ui->propertyBrowser->setColumnWidth(0, 135);
+    m_ui->propertyBrowser->resizeColumnToContents(0);
 
     update();
 }
