@@ -97,8 +97,8 @@ ResidualVerificationView::ResidualVerificationView(DataMapping & dataMapping, in
 ResidualVerificationView::~ResidualVerificationView()
 {
     {
-        std::lock_guard<std::mutex> lock(m_updateMutex);
         m_destructorCalled = true;
+        waitForResidualUpdate();
     }
 
     QList<AbstractVisualizedData *> toDelete;
@@ -330,7 +330,8 @@ ResidualVerificationView::InterpolationMode ResidualVerificationView::interpolat
 
 void ResidualVerificationView::waitForResidualUpdate()
 {
-    std::lock_guard<std::mutex> lock(m_updateMutex);
+    m_updateWatcher->waitForFinished();
+    QCoreApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
 }
 
 void ResidualVerificationView::setDataHelper(unsigned int subViewIndex, DataObject * dataObject, bool skipResidualUpdate)
@@ -545,6 +546,8 @@ void ResidualVerificationView::setDataInternal(unsigned int subViewIndex, DataOb
 
 void ResidualVerificationView::updateResidualAsync()
 {
+    waitForResidualUpdate();    // prevent locking the mutex multiple times in the main thread 
+
     std::unique_lock<std::mutex> updateLock(m_updateMutex);
 
     if (m_destructorCalled)
