@@ -31,7 +31,6 @@ public:
     addDataObject(newImage) for the respective sub-views. */
     void setObservationData(DataObject * observation);
     void setModelData(DataObject * model);
-    void setResidualData(DataObject * residual);
 
     DataObject * observationData();
     DataObject * modelData();
@@ -110,12 +109,12 @@ private:
 private:
     void initialize();
 
-    // common implementation for the public interface functions
-    // @delayGuiUpdate set to true and delete the objects appended to toDelete yourself, if you intend to call this function multiple times
-    void setDataHelper(unsigned int subViewIndex, DataObject * dataObject, bool delayGuiUpdate = false, std::vector<std::unique_ptr<AbstractVisualizedData>> * toDelete = nullptr);
+    // common implementation for the public interface functions */
+    void setDataHelper(unsigned int subViewIndex, DataObject * dataObject, bool skipResidualUpdate = false);
     /** Low level function, that won't trigger GUI updates.
-        @param toDelete Delete these objects after removing them from dependent components (GUI etc) */
-    void setDataInternal(unsigned int subViewIndex, DataObject * dataObject, std::vector<std::unique_ptr<AbstractVisualizedData>> & toDelete);
+        dataObject and ownedDataObject: set only one of them, depending on whether this view owns the specific data object
+        Set none of them to clear the sub view. */
+    void setDataInternal(unsigned int subViewIndex, DataObject * dataObject, std::unique_ptr<DataObject> ownedObject);
 
     void updateResidualAsync();
     void handleUpdateFinished();
@@ -155,6 +154,12 @@ private:
     std::array<QString, numberOfViews> m_projectedAttributeNames;
 
     std::unique_ptr<QFutureWatcher<void>> m_updateWatcher;
-    std::recursive_mutex m_updateMutex;
+    std::mutex m_updateMutex;
+    /** Lock the mutex in updateResidualAsync, move the lock here and unlock it only in 
+      * handleUpdateFinished. This way, only a single update invocation is possible at a time. */
+    std::unique_lock<std::mutex> m_updateMutexLock;
     vtkSmartPointer<vtkDataSet> m_newResidual;
+    std::unique_ptr<DataObject> m_oldResidualToDeleteAfterUpdate;
+    std::vector<std::unique_ptr<AbstractVisualizedData>> m_visToDeleteAfterUpdate;
+    bool m_destructorCalled;
 };

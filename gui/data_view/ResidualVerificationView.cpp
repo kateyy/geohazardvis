@@ -71,6 +71,7 @@ ResidualVerificationView::ResidualVerificationView(DataMapping & dataMapping, in
     , m_modelEventsDeferred(false)
     , m_implementation(nullptr)
     , m_updateWatcher(std::make_unique<QFutureWatcher<void>>())
+    , m_destructorCalled(false)
 {
     connect(m_updateWatcher.get(), &QFutureWatcher<void>::finished, this, &ResidualVerificationView::handleUpdateFinished);
     m_attributeNamesLocations[residualIndex].first = "Residual"; // TODO add GUI option?
@@ -95,13 +96,27 @@ ResidualVerificationView::ResidualVerificationView(DataMapping & dataMapping, in
 
 ResidualVerificationView::~ResidualVerificationView()
 {
+    {
+        std::lock_guard<std::mutex> lock(m_updateMutex);
+        m_destructorCalled = true;
+    }
+
+    QList<AbstractVisualizedData *> toDelete;
+
     for (auto & vis : m_visualizations)
     {
         if (!vis)
             continue;
 
-        emit beforeDeleteVisualization(vis.get());
-        vis.reset();
+        toDelete << vis.get();
+    }
+
+    emit beforeDeleteVisualizations(toDelete);
+
+    if (m_residual)
+    {
+        dataMapping().removeDataObjects({ m_residual.get() });
+        dataSetHandler().removeEventFilter({ m_residual.get() });
     }
 }
 
@@ -239,11 +254,6 @@ void ResidualVerificationView::setModelData(DataObject * model)
     setDataHelper(modelIndex, model);
 }
 
-void ResidualVerificationView::setResidualData(DataObject * residual)
-{
-    setDataHelper(residualIndex, residual);
-}
-
 DataObject * ResidualVerificationView::observationData()
 {
     return m_observationData;
@@ -320,19 +330,17 @@ ResidualVerificationView::InterpolationMode ResidualVerificationView::interpolat
 
 void ResidualVerificationView::waitForResidualUpdate()
 {
-    m_updateWatcher->waitForFinished();
-    QCoreApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
+    std::lock_guard<std::mutex> lock(m_updateMutex);
 }
 
-void ResidualVerificationView::setDataHelper(unsigned int subViewIndex, DataObject * dataObject, bool skipGuiUpdate, std::vector<std::unique_ptr<AbstractVisualizedData>> * toDelete)
+void ResidualVerificationView::setDataHelper(unsigned int subViewIndex, DataObject * dataObject, bool skipResidualUpdate)
 {
-    assert(skipGuiUpdate == (toDelete != nullptr));
+    assert(subViewIndex != residualIndex);
 
     if (dataAt(subViewIndex) == dataObject)
         return;
 
-    std::vector<std::unique_ptr<AbstractVisualizedData>> toDeleteInternal;
-    setDataInternal(subViewIndex, dataObject, toDeleteInternal);
+    setDataInternal(subViewIndex, dataObject, nullptr);
 
     if (dataObject)
     {
@@ -345,21 +353,9 @@ void ResidualVerificationView::setDataHelper(unsigned int subViewIndex, DataObje
         m_attributeNamesLocations[subViewIndex] = {};
     }
 
-    if (subViewIndex != residualIndex)
+    if (!skipResidualUpdate)
     {
         updateResidualAsync();
-    }
-
-    // update GUI before actually deleting old visualization data
-
-    if (skipGuiUpdate)
-    {
-        for (auto & it : toDeleteInternal)
-            toDelete->push_back(std::move(it));
-    }
-    else if (subViewIndex != residualIndex) // update GUI after residual update
-    {
-        updateGuiAfterDataChange();
     }
 }
 
@@ -385,6 +381,13 @@ void ResidualVerificationView::showDataObjectsImpl(const QList<DataObject *> & d
     QList<DataObject *> & incompatibleObjects,
     unsigned int subViewIndex)
 {
+    if (subViewIndex == residualIndex)
+    {
+        qDebug() << "Manually settings a residual is not supported in the ResidualVerificationView.";
+        incompatibleObjects = dataObjects;
+        return;
+    }
+
     if (dataObjects.size() > 1)
         qDebug() << "Multiple objects per sub-view not supported in the ResidualVerificationView.";
 
@@ -427,17 +430,27 @@ QList<DataObject *> ResidualVerificationView::dataObjectsImpl(int subViewIndex) 
 
 void ResidualVerificationView::prepareDeleteDataImpl(const QList<DataObject *> & dataObjects)
 {
-    std::vector<std::unique_ptr<AbstractVisualizedData>> toDelete;
+    bool changed = false;
 
     if (dataObjects.contains(m_observationData))
-        setDataHelper(observationIndex, nullptr, true, &toDelete);
+    {
+        setDataHelper(observationIndex, nullptr, true);
+        changed = true;
+    }
     if (dataObjects.contains(m_modelData))
-        setDataHelper(modelIndex, nullptr, true, &toDelete);
-    assert(!dataObjects.contains(m_residual.get()));
+    {
+        setDataHelper(modelIndex, nullptr, true);
+        changed = true;
+    }
+
+    if (!changed)
+    {
+        return;
+    }
 
     updateResidualAsync();
-
-    updateGuiAfterDataChange();
+    // make sure that all references to the deleted data are already cleared
+    waitForResidualUpdate();
 }
 
 QList<AbstractVisualizedData *> ResidualVerificationView::visualizationsImpl(int subViewIndex) const
@@ -478,33 +491,48 @@ void ResidualVerificationView::initialize()
     connect(m_implementation.get(), &RendererImplementation::dataSelectionChanged, this, &ResidualVerificationView::updateGuiSelection);
 }
 
-void ResidualVerificationView::setDataInternal(unsigned int subViewIndex, DataObject * dataObject, std::vector<std::unique_ptr<AbstractVisualizedData>> & toDelete)
+void ResidualVerificationView::setDataInternal(unsigned int subViewIndex, DataObject * dataObject, std::unique_ptr<DataObject> ownedObject)
 {
     initialize();
+    
+    assert(!dataObject || !ownedObject); // only one of them should be used in the interface
+    auto newData = dataObject ? dataObject : ownedObject.get();
 
     if (subViewIndex != residualIndex)
     {
         setDataAt(subViewIndex, dataObject);
     }
-    else
+    else // owned residual data object. Update DataSetHandler and GUI accordingly
     {
-        // std::move for the residual cannot be done here
-        assert(dataAt(subViewIndex) == dataObject);
+        m_oldResidualToDeleteAfterUpdate = std::move(m_residual);
+        if (m_oldResidualToDeleteAfterUpdate)
+        {
+            dataMapping().removeDataObjects({ m_oldResidualToDeleteAfterUpdate.get() });
+            dataSetHandler().removeExternalData({ m_oldResidualToDeleteAfterUpdate.get() });
+        }
+
+        m_residual = std::move(ownedObject);
+
+        if (m_residual)
+        {
+            dataSetHandler().addExternalData({ m_residual.get() });
+        }
     }
 
     auto & oldVis = m_visualizations[subViewIndex];
 
     if (oldVis)
     {
+        assert((subViewIndex != residualIndex) || m_oldResidualToDeleteAfterUpdate);
+
         implementation().removeContent(oldVis.get(), subViewIndex);
 
-        beforeDeleteVisualization(oldVis.get());
-        toDelete.push_back(std::move(oldVis));
+        m_visToDeleteAfterUpdate.push_back(std::move(oldVis));
     }
 
-    if (dataObject)
+    if (newData)
     {
-        auto newVis = implementation().requestVisualization(*dataObject);
+        auto newVis = implementation().requestVisualization(*newData);
         if (!newVis)
         {
             return;
@@ -517,12 +545,17 @@ void ResidualVerificationView::setDataInternal(unsigned int subViewIndex, DataOb
 
 void ResidualVerificationView::updateResidualAsync()
 {
-    std::lock_guard<std::recursive_mutex> updateLock(m_updateMutex);
+    std::unique_lock<std::mutex> updateLock(m_updateMutex);
 
-    m_updateWatcher->waitForFinished();
+    if (m_destructorCalled)
+    {
+        return;
+    }
 
     if (!m_observationData || !m_modelData)
     {
+        // handle the lock over, keep it locked until all update steps are done
+        m_updateMutexLock = std::move(updateLock);
         // delete obsoleted residual data, update the UI
         handleUpdateFinished();
         return;
@@ -530,7 +563,7 @@ void ResidualVerificationView::updateResidualAsync()
 
     m_progressBar->show();
     toolBar()->setEnabled(false);
-    QCoreApplication::processEvents();
+    QCoreApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
 
     assert(!m_newResidual);
 
@@ -543,16 +576,14 @@ void ResidualVerificationView::updateResidualAsync()
         m_modelEventsDeferred = true;
     }
 
+    m_updateMutexLock = std::move(updateLock);
     auto future = QtConcurrent::run(this, &ResidualVerificationView::updateResidual);
     m_updateWatcher->setFuture(future);
 }
 
 void ResidualVerificationView::handleUpdateFinished()
 {
-    std::lock_guard<std::recursive_mutex> lock(m_updateMutex);
-
-    std::unique_ptr<DataObject> oldResidualToDelete;
-    std::vector<std::unique_ptr<AbstractVisualizedData>> oldVisList;
+    std::unique_lock<std::mutex> lock = std::move(m_updateMutexLock);
 
     if (m_newResidual)
     {
@@ -575,39 +606,44 @@ void ResidualVerificationView::handleUpdateFinished()
             targetDataSet.TakeReference(computedResidual->NewInstance());
         }
 
-        if (!reuseResidualObject)
-        {
-            oldResidualToDelete = std::move(m_residual);
+        // When creating a new residual data object, member structures need to be updated.
+        std::unique_ptr<DataObject> newlyCreatedResidual;
+        // In every case, the new geometry + data needs to be copied into the current residual data object
+        DataObject * upToDateResidual = nullptr;
 
+        if (reuseResidualObject)
+        {
+            upToDateResidual = m_residual.get();
+        }
+        else
+        {
             if (residualIsImage)
             {
-                m_residual = std::make_unique<ImageDataObject>("Residual", static_cast<vtkImageData &>(*targetDataSet));
+                newlyCreatedResidual = std::make_unique<ImageDataObject>("Residual", static_cast<vtkImageData &>(*targetDataSet));
             }
             else
             {
-                m_residual = std::make_unique<PolyDataObject>("Residual", static_cast<vtkPolyData &>(*targetDataSet));
+                newlyCreatedResidual = std::make_unique<PolyDataObject>("Residual", static_cast<vtkPolyData &>(*targetDataSet));
             }
+            upToDateResidual = newlyCreatedResidual.get();
         }
 
 
-        ScopedEventDeferral residualDeferal(*m_residual);
+        ScopedEventDeferral residualDeferal(*upToDateResidual);
 
         targetDataSet->CopyStructure(computedResidual);
         targetDataSet->CopyAttributes(computedResidual);
 
-        if (!reuseResidualObject)
+        if (newlyCreatedResidual)
         {
-            dataSetHandler().addExternalData({ m_residual.get() });
+            setDataInternal(residualIndex, nullptr, std::move(newlyCreatedResidual));
         }
-
-        setDataInternal(residualIndex, m_residual.get(), oldVisList);
     }
     else if (m_residual)
     {
         // just remove the old residual
 
-        oldResidualToDelete = std::move(m_residual);
-        setDataInternal(residualIndex, nullptr, oldVisList);
+        setDataInternal(residualIndex, nullptr, nullptr);
     }
 
     if (m_modelEventsDeferred)
@@ -615,12 +651,6 @@ void ResidualVerificationView::handleUpdateFinished()
         assert(m_modelData);
         m_modelEventsDeferred = false;
         m_modelData->executeDeferredEvents();
-    }
-
-    if (oldResidualToDelete)
-    {
-        dataMapping().removeDataObjects({ oldResidualToDelete.get() });
-        dataSetHandler().removeExternalData({ oldResidualToDelete.get() });
     }
 
     updateGuiAfterDataChange();
@@ -632,6 +662,8 @@ void ResidualVerificationView::handleUpdateFinished()
 void ResidualVerificationView::updateResidual()
 {
     assert(!m_newResidual);
+
+    assert(!m_updateMutex.try_lock());
 
     const auto & observationAttributeName = m_attributeNamesLocations[observationIndex].first;
     bool useObservationCellData = m_attributeNamesLocations[observationIndex].second;
@@ -788,10 +820,23 @@ void ResidualVerificationView::updateResidual()
 
 void ResidualVerificationView::updateGuiAfterDataChange()
 {
+    if (m_visToDeleteAfterUpdate.size())
+    {
+        QList<AbstractVisualizedData *> toDelete;
+        for (const auto & vis : m_visToDeleteAfterUpdate)
+        {
+            toDelete << vis.get();
+        }
+        emit beforeDeleteVisualizations(toDelete);
+    }
+
     implementation().renderViewContentsChanged();
     emit visualizationsChanged();
 
     QCoreApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
+
+    m_visToDeleteAfterUpdate.clear();
+    m_oldResidualToDeleteAfterUpdate.reset();
 
     for (unsigned int i = 0; i < numberOfSubViews(); ++i)
     {
