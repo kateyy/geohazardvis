@@ -65,14 +65,14 @@ private:
     void updateWindowTitle();
     void handleAsyncLoadFinished();
 
+    void restoreStyle();
+    void storeStyle();
     void restoreSettings();
     void storeSettings();
     void restoreUiState();
     void storeUiState();
 
 private:
-    QPalette m_defaultPalette;
-
     std::unique_ptr<Ui_MainWindow> m_ui;
     std::unique_ptr<DataSetHandler> m_dataSetHandler;
     std::unique_ptr<DataMapping> m_dataMapping;

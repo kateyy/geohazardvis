@@ -59,10 +59,13 @@ MainWindow::MainWindow()
     , m_recentFileListMaxEntries(0)
     , m_loadWatchersMutex(std::make_unique<QMutex>())
 {
-    m_defaultPalette = qApp->palette();
-
     m_ui = std::make_unique<Ui_MainWindow>();
     m_ui->setupUi(this);
+    m_ui->actionOpen->setIcon(qApp->style()->standardIcon(QStyle::SP_DialogOpenButton));
+    m_ui->actionExportDataset->setIcon(qApp->style()->standardIcon(QStyle::SP_DialogSaveButton));
+    m_ui->actionExit->setIcon(qApp->style()->standardIcon(QStyle::SP_DialogCloseButton));
+
+    restoreStyle();
 
     m_dataMapping = std::make_unique<DataMapping>(*m_dataSetHandler);
     connect(m_dataMapping.get(), &DataMapping::renderViewCreated, this, &MainWindow::addRenderView);
@@ -88,7 +91,7 @@ MainWindow::MainWindow()
     connect(m_ui->actionApply_Digital_Elevation_Model, &QAction::triggered, this, &MainWindow::showDEMWidget);
     connect(m_ui->actionNew_Render_View, &QAction::triggered, 
         [this] () { m_dataMapping->openInRenderView({}); });
-    connect(m_ui->actionExit, &QAction::triggered, [this] () { qApp->quit(); });
+    connect(m_ui->actionExit, &QAction::triggered, qApp, &QApplication::quit);
 
 
     m_dataBrowser = m_ui->centralwidget;
@@ -169,6 +172,7 @@ MainWindow::~MainWindow()
 
     storeUiState();
     storeSettings();
+    storeStyle();
 
     m_pluginManager.reset();
 
@@ -440,8 +444,10 @@ void MainWindow::setDarkFusionStyle(bool enabled)
         qApp->setStyle(QStyleFactory::create("gtk"));
 #endif
         qApp->setStyleSheet("");
-        qApp->setPalette(m_defaultPalette);
+        qApp->setPalette(qApp->style()->standardPalette());
     }
+
+    m_ui->actionDark_Style->setChecked(enabled);
 }
 
 void MainWindow::updateWindowTitle()
@@ -514,6 +520,18 @@ void MainWindow::handleAsyncLoadFinished()
     }
 
     updateWindowTitle();
+}
+
+void MainWindow::restoreStyle()
+{
+    QSettings settings(s_settingsFileName, QSettings::IniFormat);
+    setDarkFusionStyle(settings.value("darkFusionStyle").toBool());
+}
+
+void MainWindow::storeStyle()
+{
+    QSettings settings(s_settingsFileName, QSettings::IniFormat);
+    settings.setValue("darkFusionStyle", darkFusionStyleEnabled());
 }
 
 void MainWindow::restoreSettings()
