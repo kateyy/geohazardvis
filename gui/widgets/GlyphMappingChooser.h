@@ -45,11 +45,7 @@ private:
     /** remove data from the UI if we currently hold it */
     void checkRemovedData(AbstractVisualizedData * content);
 
-private:
     void updateTitle();
-
-    /** remove data from the UI if we currently hold it */
-    void checkDeletedContent(AbstractVisualizedData * content);
 
 private:
     QScopedPointer<Ui_GlyphMappingChooser> m_ui;

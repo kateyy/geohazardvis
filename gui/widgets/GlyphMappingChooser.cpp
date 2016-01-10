@@ -67,7 +67,7 @@ void GlyphMappingChooser::setCurrentRenderView(AbstractRenderView * renderView)
     if (renderView)
     {
         connect(renderView, &AbstractRenderView::beforeDeleteVisualization,
-            this, &GlyphMappingChooser::checkDeletedContent);
+            this, &GlyphMappingChooser::checkRemovedData);
         connect(m_renderView, &AbstractRenderView::selectedDataChanged,
             this, static_cast<void (GlyphMappingChooser::*)(AbstractRenderView *, DataObject *)>(&GlyphMappingChooser::setSelectedData));
     }
@@ -189,17 +189,4 @@ void GlyphMappingChooser::updateTitle()
         title = QString::number(m_renderView->index()) + ": " + m_mapping->renderedData().dataObject().name();
 
     m_ui->relatedDataObject->setText(title);
-}
-
-void GlyphMappingChooser::checkDeletedContent(AbstractVisualizedData * content)
-{
-    if (!content || !m_mapping)
-        return;
-
-    auto rendered = dynamic_cast<RenderedData3D *>(content);
-    if (!rendered)
-        return;
-
-    if (&rendered->glyphMapping() == m_mapping)
-        setSelectedData(nullptr);
 }
