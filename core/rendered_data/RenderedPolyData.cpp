@@ -86,7 +86,7 @@ reflectionzeug::PropertyGroup * RenderedPolyData::createConfigGroup()
 {
     PropertyGroup * renderSettings = new PropertyGroup();
 
-    renderSettings->addProperty<Color>("color",
+    renderSettings->addProperty<Color>("Color",
         [this] () {
         double * color = renderProperty()->GetColor();
         return Color(static_cast<int>(color[0] * 255), static_cast<int>(color[1] * 255), static_cast<int>(color[2] * 255));
@@ -96,40 +96,47 @@ reflectionzeug::PropertyGroup * RenderedPolyData::createConfigGroup()
         emit geometryChanged();
     });
 
-    renderSettings->addProperty<FilePath>("DemTexture",
-        [this] () { return texture().toStdString(); },
-        [this] (const FilePath & filePath) {
-        QString file = QString::fromStdString(filePath.toString());
-        setTexture(file);
+    renderSettings->addProperty<Representation>("Representation",
+        [this] () {
+        return static_cast<Representation>(renderProperty()->GetRepresentation());
+    },
+        [this] (const Representation & rep) {
+        renderProperty()->SetRepresentation(static_cast<int>(rep));
         emit geometryChanged();
-    })->setOption("title", "DEM overlay texture");
+    })
+        ->setStrings({
+            { Representation::points, "points" },
+            { Representation::wireframe, "wireframe" },
+            { Representation::surface, "surface" }
+    });
 
-
-    auto * edgesVisible = renderSettings->addProperty<bool>("edgesVisible",
+    renderSettings->addProperty<bool>("edgesVisible",
         [this]() {
         return (renderProperty()->GetEdgeVisibility() == 0) ? false : true;
     },
         [this](bool vis) {
         renderProperty()->SetEdgeVisibility(vis);
         emit geometryChanged();
-    });
-    edgesVisible->setOption("title", "Edges");
+    })
+        ->setOption("title", "Edges");
 
-    auto * lineWidth = renderSettings->addProperty<unsigned>("lineWidth",
+    renderSettings->addProperty<unsigned>("edgeWidth",
         [this] () {
         return static_cast<unsigned>(renderProperty()->GetLineWidth());
     },
         [this] (unsigned width) {
         renderProperty()->SetLineWidth(static_cast<float>(width));
         emit geometryChanged();
+    })
+        ->setOptions({
+            { "title", "Edge Width" },
+            { "minimum", 1 },
+            { "maximum", std::numeric_limits<unsigned>::max() },
+            { "step", 1 },
+            { "suffix", " pixel" }
     });
-    lineWidth->setOption("title", "Edge Width");
-    lineWidth->setOption("minimum", 1);
-    lineWidth->setOption("maximum", std::numeric_limits<unsigned>::max());
-    lineWidth->setOption("step", 1);
-    lineWidth->setOption("suffix", " pixel");
 
-    auto * edgeColor = renderSettings->addProperty<Color>("edgeColor",
+    renderSettings->addProperty<Color>("edgeColor",
         [this]() {
         double * color = renderProperty()->GetEdgeColor();
         return Color(static_cast<int>(color[0] * 255), static_cast<int>(color[1] * 255), static_cast<int>(color[2] * 255));
@@ -137,31 +144,32 @@ reflectionzeug::PropertyGroup * RenderedPolyData::createConfigGroup()
         [this](const Color & color) {
         renderProperty()->SetEdgeColor(color.red() / 255.0, color.green() / 255.0, color.blue() / 255.0);
         emit geometryChanged();
-    });
-    edgeColor->setOption("title", "Edge Color");
+    })
+        ->setOption("title", "Edge Color");
 
-
-    auto * representation = renderSettings->addProperty<Representation>("Representation",
-        [this]() {
-        return static_cast<Representation>(renderProperty()->GetRepresentation());
+    renderSettings->addProperty<unsigned>("pointSize",
+        [this] () {
+        return static_cast<unsigned>(renderProperty()->GetPointSize());
     },
-        [this](const Representation & rep) {
-        renderProperty()->SetRepresentation(static_cast<int>(rep));
+        [this] (unsigned pointSize) {
+        renderProperty()->SetPointSize(static_cast<float>(pointSize));
         emit geometryChanged();
-    });
-    representation->setStrings({
-            { Representation::points, "points" },
-            { Representation::wireframe, "wireframe" },
-            { Representation::surface, "surface" }
+    })
+        ->setOptions({
+            { "title", "Point Size" },
+            { "minimum", 1 },
+            { "maximum", 20 },
+            { "step", 1 },
+            { "suffix", " pixel" }
     });
 
-    auto * lightingEnabled = renderSettings->addProperty<bool>("lightingEnabled",
+    renderSettings->addProperty<bool>("lightingEnabled",
         std::bind(&vtkProperty::GetLighting, renderProperty()),
         [this](bool enabled) {
         renderProperty()->SetLighting(enabled);
         emit geometryChanged();
-    });
-    lightingEnabled->setOption("title", "Lighting");
+    })
+        ->setOption("title", "Lighting");
 
     auto * interpolation = renderSettings->addProperty<Interpolation>("ShadingModel",
         [this]() {
@@ -178,40 +186,37 @@ reflectionzeug::PropertyGroup * RenderedPolyData::createConfigGroup()
             { Interpolation::phong, "phong" }
     });
 
-    auto transparency = renderSettings->addProperty<double>("Transparency",
+    renderSettings->addProperty<double>("Transparency",
         [this]() {
         return (1.0 - renderProperty()->GetOpacity()) * 100;
     },
         [this](double transparency) {
         renderProperty()->SetOpacity(1.0 - transparency * 0.01);
         emit geometryChanged();
+    })
+        ->setOptions({
+            { "minimum", 0 },
+            { "maximum", 100 },
+            { "step", 1 },
+            { "suffix", " %" }
     });
-    transparency->setOption("minimum", 0);
-    transparency->setOption("maximum", 100);
-    transparency->setOption("step", 1);
-    transparency->setOption("suffix", " %");
 
-    auto backfaceCulling = renderSettings->addProperty<bool>("BackfaceCulling",
+    renderSettings->addProperty<bool>("BackfaceCulling",
         [this] () { return renderProperty()->GetBackfaceCulling() != 0; },
         [this] (bool backfaceCulling) {
         renderProperty()->SetBackfaceCulling(backfaceCulling);
         emit geometryChanged();
-    });
-    backfaceCulling->setOption("title", "Back-face culling");
+    })
+        ->setOption("title", "Back-face culling");
 
-    auto pointSize = renderSettings->addProperty<unsigned>("pointSize",
-        [this]() {
-        return static_cast<unsigned>(renderProperty()->GetPointSize());
-    },
-        [this](unsigned pointSize) {
-        renderProperty()->SetPointSize(static_cast<float>(pointSize));
+    renderSettings->addProperty<FilePath>("OverlayTexture",
+        [this] () { return texture().toStdString(); },
+        [this] (const FilePath & filePath) {
+        QString file = QString::fromStdString(filePath.toString());
+        setTexture(file);
         emit geometryChanged();
-    });
-    pointSize->setOption("title", "Point Size");
-    pointSize->setOption("minimum", 1);
-    pointSize->setOption("maximum", 20);
-    pointSize->setOption("step", 1);
-    pointSize->setOption("suffix", " pixel");
+    })
+        ->setOption("title", "Overlay Texture");
 
     return renderSettings;
 }
