@@ -41,18 +41,26 @@ void ResidualViewConfigWidget::setCurrentView(ResidualVerificationView * view)
         return;
     }
 
+    auto boolToIMode = [] (bool checked)
+    {
+        return checked
+            ? ResidualVerificationView::InterpolationMode::modelToObservation
+            : ResidualVerificationView::InterpolationMode::observationToModel;
+    };
+    auto iModeToBool = [boolToIMode] (ResidualVerificationView::InterpolationMode mode)
+    {
+        return boolToIMode(true) == mode;
+    };
 
     connect(&view->dataSetHandler(), &DataSetHandler::dataObjectsChanged, this, &ResidualViewConfigWidget::updateComboBoxes);
 
-    m_ui->interpolationModeCheckBox->setChecked(m_currentView->interpolationMode() == ResidualVerificationView::InterpolationMode::modelToObservation);
-    m_viewConnects << connect(m_ui->interpolationModeCheckBox, &QCheckBox::toggled, [view] (bool checked) {
-        view->setInterpolationMode(checked
-            ? ResidualVerificationView::InterpolationMode::modelToObservation
-            : ResidualVerificationView::InterpolationMode::observationToModel);
+    m_ui->interpolationModeCheckBox->setChecked(iModeToBool(view->interpolationMode()));
+    m_viewConnects << connect(m_ui->interpolationModeCheckBox, &QCheckBox::toggled, [view, boolToIMode] (bool checked) {
+        view->setInterpolationMode(boolToIMode(checked));
     });
-    m_viewConnects << connect(view, &ResidualVerificationView::interpolationModeChanged, [this] (ResidualVerificationView::InterpolationMode mode) {
+    m_viewConnects << connect(view, &ResidualVerificationView::interpolationModeChanged, [this, iModeToBool] (ResidualVerificationView::InterpolationMode mode) {
         m_ui->interpolationModeCheckBox->blockSignals(true);
-        m_ui->interpolationModeCheckBox->setChecked(mode == ResidualVerificationView::InterpolationMode::modelToObservation);
+        m_ui->interpolationModeCheckBox->setChecked(iModeToBool(mode));
         m_ui->interpolationModeCheckBox->blockSignals(false);
     });
     
