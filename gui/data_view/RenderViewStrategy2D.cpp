@@ -205,9 +205,17 @@ void RenderViewStrategy2D::startProfilePlot()
     QSet<QPair<DataObject *, QString>> createdPlots;
     for (unsigned int i = 0; i < m_context.renderView().numberOfSubViews(); ++i)
     {
-        const auto & colorMapping = m_context.colorMapping(i);
-        auto & scalars = colorMapping->currentScalarsName();
-        auto component = colorMapping->currentScalars()->dataComponent();
+        const auto * colorMapping = m_context.colorMapping(i);
+        if (!colorMapping)
+            continue;
+
+        const auto * currentScalars = colorMapping->currentScalars();
+        if (!currentScalars)
+            continue;
+
+        const auto && scalarsName = currentScalars->name();
+
+        auto component = currentScalars->dataComponent();
 
         for (auto data : m_activeInputData)
         {
@@ -215,7 +223,7 @@ void RenderViewStrategy2D::startProfilePlot()
                 continue;
 
             // don't plot the same data multiple times
-            QPair<DataObject *, QString> currentPlotCombination = { data, scalars };
+            QPair<DataObject *, QString> currentPlotCombination = { data, scalarsName };
             if (createdPlots.contains(currentPlotCombination))
                 continue;
 
@@ -228,7 +236,7 @@ void RenderViewStrategy2D::startProfilePlot()
             auto profile = std::make_unique<ImageProfileData>(
                 data->name() + " plot",
                 *data,
-                scalars,
+                scalarsName,
                 location,
                 component);
 
