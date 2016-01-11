@@ -58,6 +58,6 @@ TEST_F(RenderViewStrategy_test, CreateCorrectNumberOfPlots)
 
     strategy.acceptProfilePlot();
 
-    // one object in two sub-views -> only one plot required
-    ASSERT_EQ(dataSetHandler.dataSets().size(), 1);
+    // one object in two sub-views -> only one plot required; plus the residual; the source image is not added to the handler
+    ASSERT_EQ(dataSetHandler.dataSets().size(), 2);
 }
