@@ -70,7 +70,7 @@ endif()
 set(project ${META_PROJECT_NAME})
 if(WIN32)
     set(INSTALL_ROOT ".")                       # C:\Programme\<project>
-    set(INSTALL_DATA ".")                     # C:\Programme\<project>
+    set(INSTALL_DATA "data")                     # C:\Programme\<project>
     set(INSTALL_BIN ".")                      # C:\Programme\<project>
     set(INSTALL_SHARED ".")                     # C:\Programme\<project>
     set(INSTALL_LIB "lib")                      # C:\Programme\<project>\lib
@@ -107,9 +107,6 @@ endif()
 #install(FILES geohazardvis-config.cmake DESTINATION ${INSTALL_ROOT})
 #install(FILES AUTHORS DESTINATION               ${INSTALL_ROOT})
 install(FILES LICENSE DESTINATION               ${INSTALL_ROOT})
-
-# Install the data directory including the data files it contains.
-install(DIRECTORY ${CMAKE_SOURCE_DIR}/data DESTINATION ${INSTALL_DATA})
 
 # Add a revision file containing the git-head tag for cpack and install. The function
 # "create_revision_file (...)" is defined in cmake/GitRevision.cmake
@@ -293,6 +290,7 @@ configure_file(cmake/config.h.in ${CMAKE_CURRENT_BINARY_DIR}/config.h)
 set(IDE_FOLDER "")
 add_subdirectory("core")
 add_subdirectory("gui")
+add_subdirectory("data")
 
 # Plugins that require additional third party libraries may add their required runtime paths
 # using the addPluginRuntimPathEntries function.
