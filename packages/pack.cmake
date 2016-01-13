@@ -38,7 +38,7 @@ if(EXISTS "${CMAKE_ROOT}/Modules/CPack.cmake")
 
     # Package information
 
-    string(TOLOWER ${META_PROJECT_NAME} package_name)          # Package name
+    set(package_name            "${META_PROJECT_NAME}")        # Package name
     set(package_description     "${META_PROJECT_DESCRIPTION}") # Package description
     set(package_vendor          "${META_AUTHOR_ORGANIZATION}") # Package vendor
     set(package_maintainer      "${META_AUTHOR_MAINTAINER}")   # Package maintainer
