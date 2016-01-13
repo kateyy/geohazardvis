@@ -554,6 +554,12 @@ void MainWindow::storeSettings()
 
 void MainWindow::restoreUiState()
 {
+    if (!QFile::exists(s_settingsFileName))
+    {
+        this->setWindowState(Qt::WindowState::WindowMaximized);
+        return;
+    }
+
     QSettings settings(s_settingsFileName, QSettings::IniFormat);
     restoreGeometry(settings.value("geometry").toByteArray());
     restoreState(settings.value("windowState").toByteArray());
