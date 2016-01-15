@@ -1,16 +1,40 @@
 #include "VectorGrid3DDataObject.h"
 
+#include <limits>
+
+#include <QDebug>
+
 #include <vtkImageData.h>
 #include <vtkPointData.h>
 #include <vtkDataArray.h>
 
 #include <core/rendered_data/RenderedVectorGrid3D.h>
 #include <core/table_model/QVtkTableModelVectorGrid3D.h>
+#include <core/utility/conversions.h>
 
 
 VectorGrid3DDataObject::VectorGrid3DDataObject(const QString & name, vtkImageData & dataSet)
     : DataObject(name, &dataSet)
 {
+    vtkVector3d spacing;
+    bool spacingChanged = false;
+    dataSet.GetSpacing(spacing.GetData());
+    for (int i = 0; i < 3; ++i)
+    {
+        if (spacing[i] < std::numeric_limits<double>::epsilon())
+        {
+            spacing[i] = 1;
+            spacingChanged = true;
+        }
+    }
+
+    if (spacingChanged)
+    {
+        qDebug() << "Fixing invalid image spacing in " << name << "(" +
+            vector3ToString(vtkVector3d(dataSet.GetSpacing())) + " to " + vector3ToString(spacing) + ")";
+        dataSet.SetSpacing(spacing.GetData());
+    }
+
     vtkDataArray * data = dataSet.GetPointData()->GetScalars();
     if (!data)
     {

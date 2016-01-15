@@ -1,7 +1,6 @@
 #include "Loader.h"
 
 #include <algorithm>
-#include <limits>
 
 #include <QFileInfo>
 #include <QDebug>
@@ -163,22 +162,6 @@ std::unique_ptr<DataObject> Loader::readFile(const QString & filename)
                 qDebug() << "Invalid VTK image file: " << filename;
                 return nullptr;
             }
-
-            double spacing[3];
-            image->GetSpacing(spacing);
-
-            for (int i = 0; i < 3; ++i)
-            {
-                if (spacing[i] > std::numeric_limits<double>::epsilon())
-                {
-                    continue;
-                }
-
-                qDebug() << "Warning: invalid image spacing near 0, resetting to 1. In" << filename;
-                spacing[i] = 1;
-            }
-
-            image->SetSpacing(spacing);
         }
         else if (ext == "dem")
         {

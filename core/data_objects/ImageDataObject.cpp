@@ -1,6 +1,9 @@
 #include "ImageDataObject.h"
 
 #include <cassert>
+#include <limits>
+
+#include <QDebug>
 
 #include <vtkCommand.h>
 #include <vtkImageData.h>
@@ -9,12 +12,32 @@
 
 #include <core/rendered_data/RenderedImageData.h>
 #include <core/table_model/QVtkTableModelImage.h>
+#include <core/utility/conversions.h>
 
 
 ImageDataObject::ImageDataObject(const QString & name, vtkImageData & dataSet)
     : DataObject(name, &dataSet)
     , m_extent()
 {
+    vtkVector3d spacing;
+    bool spacingChanged = false;
+    dataSet.GetSpacing(spacing.GetData());
+    for (int i = 0; i < 3; ++i)
+    {
+        if (spacing[i] < std::numeric_limits<double>::epsilon())
+        {
+            spacing[i] = 1;
+            spacingChanged = true;
+        }
+    }
+
+    if (spacingChanged)
+    {
+        qDebug() << "Fixing invalid image spacing in " << name << "(" + 
+            vector3ToString(vtkVector3d(dataSet.GetSpacing())) + " to " + vector3ToString(spacing) + ")";
+        dataSet.SetSpacing(spacing.GetData());
+    }
+
     vtkDataArray * data = dataSet.GetPointData()->GetScalars();
     if (data)
     {
