@@ -141,6 +141,12 @@ MainWindow::MainWindow()
 
     connect(m_ui->actionDark_Style, &QAction::triggered, this, &MainWindow::setDarkFusionStyle);
 
+    m_ui->menuViews->insertAction(m_ui->actionDark_Style, m_colorMappingChooser->toggleViewAction());
+    m_ui->menuViews->insertAction(m_ui->actionDark_Style, m_vectorMappingChooser->toggleViewAction());
+    m_ui->menuViews->insertAction(m_ui->actionDark_Style, m_renderConfigWidget->toggleViewAction());
+    m_ui->menuViews->insertAction(m_ui->actionDark_Style, m_rendererConfigWidget->toggleViewAction());
+    m_ui->menuViews->insertSeparator(m_ui->actionDark_Style);
+
     restoreSettings();
 
     // load plug-ins
