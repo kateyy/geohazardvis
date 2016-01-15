@@ -2,9 +2,12 @@
 
 #include <algorithm>
 #include <cassert>
+#include <cctype>
 #include <fstream>
+#include <functional>
 #include <list>
 #include <limits>
+#include <locale>
 #include <map>
 #include <sstream>
 
@@ -34,6 +37,20 @@ const map<string, ModelType> modelNamesType = {
 bool ignoreLine(const std::string & line)
 {
     return line.empty() || line[0] == '#';
+}
+
+std::string toLower(const std::string & s)
+{
+    std::string result(s.size(), 0);
+    std::transform(s.begin(), s.end(), result.begin(), ::tolower);
+    return result;
+}
+
+// https://stackoverflow.com/questions/216823/whats-the-best-way-to-trim-stdstring
+std::string rtrim(const std::string & s)
+{
+    return std::string(s.begin(),
+        std::find_if(s.rbegin(), s.rend(), std::not1(std::ptr_fun<int, int>(std::isspace))).base());
 }
 
 }
@@ -94,7 +111,8 @@ std::shared_ptr<InputFileInfo> TextFileReader::readHeader(ifstream & inputStream
 
     while (!inputStream.eof())
     {
-        getline(inputStream, line);
+        std::getline(inputStream, line);
+        line = rtrim(line);
 
         if (ignoreLine(line))
             continue;
@@ -118,8 +136,8 @@ std::shared_ptr<InputFileInfo> TextFileReader::readHeader(ifstream & inputStream
             assert(!input);
             stringstream linestream(line.substr(8, string::npos));
             string type, name;
-            getline(linestream, type, ' ');
-            getline(linestream, name);
+            std::getline(linestream, type, ' ');
+            std::getline(linestream, name);
 
             auto it = modelNamesType.find(type);
             if (it == modelNamesType.end())
@@ -171,13 +189,14 @@ bool TextFileReader::readHeader_triangles(ifstream & inputStream, vector<DataSet
 
     while (!inputStream.eof())
     {
-        getline(inputStream, line);
+        std::getline(inputStream, line);
+        line = rtrim(line);
 
         if (ignoreLine(line))
             continue;
 
         // this is the end if the header section, required for valid input files
-        if (line == "$end")
+        if (rtrim(line) == "$end")
             return true;
 
         // expecting only some types of datasets from now on
@@ -189,8 +208,8 @@ bool TextFileReader::readHeader_triangles(ifstream & inputStream, vector<DataSet
 
         stringstream linestream(line.substr(2, string::npos));
         string datasetType, parameter;
-        getline(linestream, datasetType, ' ');
-        getline(linestream, parameter);
+        std::getline(linestream, datasetType, ' ');
+        std::getline(linestream, parameter);
 
         string attributeName;
 
@@ -235,15 +254,15 @@ bool TextFileReader::readHeader_DEM(std::ifstream & inputStream, std::vector<Dat
 {
     string line;
     int columns = -1, rows = -1;
-    double xCorner, yCorner, nanValue, cellSize;
-    xCorner = yCorner = nanValue = nan("");
-    cellSize = -1;
+    double xMin, xMax, yMin, yMax, nanValue, cellSize;
+    xMin = xMax = yMin = yMax = cellSize = nanValue = nan("");
 
     bool atEnd = false;
 
     while (!inputStream.eof())
     {
-        getline(inputStream, line);
+        std::getline(inputStream, line);
+        line = rtrim(line);
 
         if (ignoreLine(line))
             continue;
@@ -262,8 +281,9 @@ bool TextFileReader::readHeader_DEM(std::ifstream & inputStream, std::vector<Dat
 
         stringstream linestream(line.substr(2, string::npos));
         string parameter, value;
-        getline(linestream, parameter, ' ');
-        getline(linestream, value);
+        std::getline(linestream, parameter, ' ');
+        std::getline(linestream, value);
+        parameter = toLower(parameter);
         value = value.substr(value.find_first_not_of(' '), string::npos);
         replace(value.begin(), value.end(), ',', '.');
 
@@ -277,14 +297,24 @@ bool TextFileReader::readHeader_DEM(std::ifstream & inputStream, std::vector<Dat
             rows = stoi(value);
             continue;
         }
-        if (parameter == "xllcorner")
+        if (parameter == "xllcorner" || parameter == "xmin")
         {
-            xCorner = stod(value);
+            xMin = stod(value);
             continue;
         }
-        if (parameter == "yllcorner")
+        if (parameter == "yllcorner" || parameter == "ymin")
         {
-            yCorner = stod(value);
+            yMin = stod(value);
+            continue;
+        }
+        if (parameter == "xmax")
+        {
+            xMax = stod(value);
+            continue;
+        }
+        if (parameter == "ymax")
+        {
+            yMax = stod(value);
             continue;
         }
         if (parameter == "cellsize")
@@ -302,13 +332,32 @@ bool TextFileReader::readHeader_DEM(std::ifstream & inputStream, std::vector<Dat
     if (!atEnd)
         return false;
 
-    if (columns <= 0 || rows <= 0 || std::isnan(xCorner) || std::isnan(yCorner) || cellSize <= 0)
+    if (columns <= 0 || rows <= 0 || isnan(xMin) || isnan(xMax) || cellSize <= 0)
         return false;
 
     auto image = vtkSmartPointer<vtkImageData>::New();
     image->SetExtent(0, columns - 1, 0, rows - 1, 0, 0);
-    image->SetOrigin(xCorner, yCorner, 0);
-    image->SetSpacing(cellSize, cellSize, 0);
+
+    // either define xmax and ymax or cellSize
+    if (isnan(cellSize))
+    {
+        if (isnan(xMax) || isnan(yMax))
+            return false;
+
+        image->SetOrigin(xMin, yMin, 0);
+        image->SetSpacing(
+            columns > 1 ? (xMax - xMin) / (columns - 1) : 1,
+            rows > 1 ? (yMax - yMin) / (rows - 1) : 1,
+            1);
+    }
+    else
+    {
+        if (!isnan(xMax) || !isnan(yMax))
+            return false;
+
+        image->SetOrigin(xMin, yMin, 0);
+        image->SetSpacing(cellSize, cellSize, 1);
+    }
 
     DataSetDef def;
     def.type = DataSetType::grid2D;
@@ -332,7 +381,8 @@ bool TextFileReader::readHeader_grid2D(ifstream & inputStream, vector<DataSetDef
 
     while (!inputStream.eof())
     {
-        getline(inputStream, line);
+        std::getline(inputStream, line);
+        rtrim(line);
 
         if (ignoreLine(line))
             continue;
@@ -345,9 +395,10 @@ bool TextFileReader::readHeader_grid2D(ifstream & inputStream, vector<DataSetDef
 
         stringstream linestream(line);
         string indicator, paramName, paramValue;
-        getline(linestream, indicator, ' ');
-        getline(linestream, paramName, ' ');
-        getline(linestream, paramValue);
+        std::getline(linestream, indicator, ' ');
+        std::getline(linestream, paramName, ' ');
+        std::getline(linestream, paramValue);
+        paramName = toLower(paramName);
 
         if (indicator == "$")
         {
@@ -441,7 +492,8 @@ bool TextFileReader::readHeader_vectorGrid3D(std::ifstream & inputStream, std::v
 
     while (!inputStream.eof())
     {
-        getline(inputStream, line);
+        std::getline(inputStream, line);
+        line = rtrim(line);
 
         if (ignoreLine(line))
             continue;
@@ -457,9 +509,9 @@ bool TextFileReader::readHeader_vectorGrid3D(std::ifstream & inputStream, std::v
 
         stringstream linestream(line.substr(2, string::npos));
         string datasetType, parameter, parameter2;
-        getline(linestream, datasetType, ' ');
-        getline(linestream, parameter, ' ');
-        getline(linestream, parameter2);
+        std::getline(linestream, datasetType, ' ');
+        std::getline(linestream, parameter, ' ');
+        std::getline(linestream, parameter2);
 
         currentDataType = checkDataSetType(datasetType);
 

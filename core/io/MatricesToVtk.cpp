@@ -101,7 +101,7 @@ std::unique_ptr<DataObject> MatricesToVtk::loadDEM(const QString & name, const s
 
     assert(dims[0] > 0 && dims[1] > 0 && dims[2] == 1);
 
-    if (static_cast<int>(data.size()) != dims[1] || static_cast<int>(data.at(0).size()) != dims[0])
+    if (static_cast<int>(data.size()) != dims[0] || static_cast<int>(data.at(0).size()) != dims[1])
         return nullptr;
 
     image->AllocateScalars(VTK_FLOAT, 1);
@@ -112,7 +112,7 @@ std::unique_ptr<DataObject> MatricesToVtk::loadDEM(const QString & name, const s
         for (int y = 0; y < dims[1]; ++y)
         {
             float * scalars = reinterpret_cast<float *>(image->GetScalarPointer(x, y, 0));
-            *scalars = static_cast<float>(data.at(y).at(x));
+            *scalars = static_cast<float>(data.at(x).at(y));
         }
     }
 
