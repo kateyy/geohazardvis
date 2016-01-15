@@ -215,7 +215,7 @@ void Picker::appendPolyDataInfo(QTextStream & stream, PolyDataObject & polyData)
         double value =
             scalars->GetTuple(m_pickedIndex)[component];
 
-        stream << endl << endl << "Attribute: " << QString::fromUtf8(arrayName) << " (" << +component << ")" << endl;
+        stream << endl << endl << "Attribute: " << QString::fromUtf8(arrayName) << " (" << + component + 1 << ")" << endl;
         stream << "Value: " << value;
     }
 }
@@ -247,7 +247,7 @@ void Picker::appendImageDataInfo(QTextStream & stream, vtkImageSlice & slice)
         {
             auto component = lut->GetVectorComponent();
             double value = tuple[component];
-            stream << endl << "Attribute component: " << component << endl;
+            stream << endl << "Attribute component: " << component + 1 << endl;
             stream << "Value: " << value;
         }
         else if (scalars->GetNumberOfComponents() >= 3)
