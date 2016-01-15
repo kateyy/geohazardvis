@@ -6,7 +6,7 @@
 BinaryFile::BinaryFile(const QString & fileName, OpenMode mode)
     : m_file(std::make_unique<QFile>(fileName))
 {
-    QIODevice::OpenMode qmode = 0;
+    QIODevice::OpenMode qmode = QIODevice::Unbuffered;
     if (mode & OpenMode::Read)
         qmode |= QIODevice::ReadOnly;
     if (mode & OpenMode::Write)
