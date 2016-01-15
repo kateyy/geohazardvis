@@ -23,8 +23,6 @@ public:
     const QString & vendor() const;
     const QString & version() const;
 
-    void updateActionCheckStates();
-
 protected:
     QString m_name;
     QString m_description;

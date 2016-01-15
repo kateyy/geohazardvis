@@ -20,16 +20,16 @@ GuiPluginInterface::GuiPluginInterface(MainWindow & mainWindow, const QString & 
 
 GuiPluginInterface::~GuiPluginInterface()
 {
-    for (auto it = m_widgets.begin(); it != m_widgets.end(); ++it)
+    for (auto * widget : m_widgets)
     {
-        removeWidget(it->first, it->second.get());
+        removeWidget(widget);
     }
 }
 
-void GuiPluginInterface::addWidget(QDockWidget * widget, const QString & mainMenuEntry)
+void GuiPluginInterface::addWidget(QDockWidget * widget)
 {
-    assert(m_widgets.find(widget) == m_widgets.end());
-    if (m_widgets.find(widget) != m_widgets.end())
+    assert(std::find(m_widgets.begin(), m_widgets.end(), widget) == m_widgets.end());
+    if (std::find(m_widgets.begin(), m_widgets.end(), widget) != m_widgets.end())
     {
         return;
     }
@@ -37,19 +37,16 @@ void GuiPluginInterface::addWidget(QDockWidget * widget, const QString & mainMen
     m_mainWindow->addDockWidget(Qt::RightDockWidgetArea, widget);
     widget->hide();
 
-    auto widgetShowAction = std::make_unique<QAction>(mainMenuEntry, m_mainWindow);
-    widgetShowAction->setCheckable(true);
-    QObject::connect(widgetShowAction.get(), &QAction::triggered, widget, &QDockWidget::setVisible);
-
     // Insert the action to the end of the menu bar, before the "Help" menu
-    m_mainWindow->menuBar()->insertAction(*(m_mainWindow->menuBar()->actions().end() - 1), widgetShowAction.get());
+    m_mainWindow->menuBar()->insertAction(*(m_mainWindow->menuBar()->actions().end() - 1), widget->toggleViewAction());
 
-    m_widgets.emplace(widget, std::move(widgetShowAction));
+    m_widgets.push_back(widget);
 }
 
 void GuiPluginInterface::removeWidget(QDockWidget * widget)
 {
-    auto it = m_widgets.find(widget);
+    assert(widget);
+    auto it = std::find(m_widgets.begin(), m_widgets.end(), widget);
 
     if (it == m_widgets.end())
     {
@@ -57,7 +54,14 @@ void GuiPluginInterface::removeWidget(QDockWidget * widget)
         return;
     }
 
-    removeWidget(widget, it->second.get());
+    m_mainWindow->menuBar()->removeAction(widget->toggleViewAction());
+
+    // removeDockWidget creates a placeholder item, which is identified by the widget's object name
+    // The object name (QString) might be set by the ui-file in the plugin's resources. After unloading
+    // the plugin, this QString object is not available anymore, which leads to invalid memory access.
+    // [Anyway, why is this not handled correctly by Qt?]
+    widget->setObjectName(QString());
+    m_mainWindow->removeDockWidget(widget);
 
     m_widgets.erase(it);
 }
@@ -100,28 +104,6 @@ DataSetHandler & GuiPluginInterface::dataSetHandler() const
 DataMapping & GuiPluginInterface::dataMapping() const
 {
     return *m_dataMapping;
-}
-
-void GuiPluginInterface::updateActionCheckStates()
-{
-    for (auto && it : m_widgets)
-    {
-        it.second->blockSignals(true);
-        it.second->setChecked(it.first->isVisible());
-        it.second->blockSignals(false);
-    }
-}
-
-void GuiPluginInterface::removeWidget(QDockWidget * widget, QAction * action)
-{
-    m_mainWindow->menuBar()->removeAction(action);
-
-    // removeDockWidget creates a placeholder item, which is identified by the widget's object name
-    // The object name (QString) might be set by the ui-file in the plugin's resources. After unloading
-    // the plugin, this QString object is not available anymore, which leads to invalid memory access.
-    // [Anyway, why is this not handled correctly by Qt?]
-    widget->setObjectName(QString());
-    m_mainWindow->removeDockWidget(widget);
 }
 
 GuiPluginInterface::GuiPluginInterface(const GuiPluginInterface & other)

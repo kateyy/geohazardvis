@@ -1,16 +1,13 @@
 #pragma once
 
 #include <functional>
-#include <map>
-#include <memory>
 
-#include <QAction>
+#include <QList>
 #include <QString>
 
 #include <gui/gui_api.h>
 
 
-class QAction;
 class QDockWidget;
 class QSettings;
 class DataSetHandler;
@@ -28,7 +25,7 @@ public:
     virtual ~GuiPluginInterface();
 
     /** Adds a dock widget to the applications main window and a associated main menu entry to show the widget. */
-    void addWidget(QDockWidget * widget, const QString & mainMenuEntry);
+    void addWidget(QDockWidget * widget);
     void removeWidget(QDockWidget * widget);
 
     void readSettings(const std::function<void(const QSettings & settings)> & func);
@@ -39,9 +36,6 @@ public:
     DataSetHandler & dataSetHandler() const;
     DataMapping & dataMapping() const;
 
-    /** Ensure that the check states of (menu-)actions correspond to the current visibilities of widgets */
-    void updateActionCheckStates();
-
     GuiPluginInterface(const GuiPluginInterface & other);
     friend void swap(GuiPluginInterface & lhs, GuiPluginInterface & rhs);
     GuiPluginInterface & operator=(GuiPluginInterface other);
@@ -50,11 +44,9 @@ public:
 private:
     GuiPluginInterface();
 
-    void removeWidget(QDockWidget * widget, QAction * action);
-
 private:
     MainWindow * m_mainWindow;
     QString m_settingsFilePath;
     DataMapping * m_dataMapping;
-    std::map<QDockWidget *, std::unique_ptr<QAction>> m_widgets;
+    QList<QDockWidget *> m_widgets;
 };

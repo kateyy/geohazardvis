@@ -155,19 +155,9 @@
     <string>Apply Digital E&amp;levation Model</string>
    </property>
   </action>
-  <action name="actionResidual_Test">
-   <property name="text">
-    <string>Residual Test</string>
-   </property>
-  </action>
   <action name="actionResidual_Verification_View">
    <property name="text">
     <string>New Residual Verification View</string>
-   </property>
-  </action>
-  <action name="actionShow_Leak_Debugger">
-   <property name="text">
-    <string>Show &amp;Leak Debugger</string>
    </property>
   </action>
   <action name="actionDark_Style">

@@ -32,9 +32,6 @@ public:
     const QList<GuiPlugin *> & plugins() const;
     QList<GuiPluginLibrary *> pluginLibraries() const;
 
-    /** Ensure that the check states of (menu-)actions correspond to the current visibilities of widgets */
-    void updateActionCheckStates();
-
 private:
     bool loadLibrary(const QString & filePath, GuiPluginInterface && pluginInterface);
     void unloadLibrary(std::unique_ptr<GuiPluginLibrary> library);

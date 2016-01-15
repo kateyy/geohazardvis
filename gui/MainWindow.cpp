@@ -156,8 +156,6 @@ MainWindow::MainWindow()
     m_pluginManager->scan(GuiPluginInterface(*this, s_settingsFileName, *m_dataMapping));
 
     restoreUiState();
-
-    m_pluginManager->updateActionCheckStates();
 }
 
 MainWindow::~MainWindow()
