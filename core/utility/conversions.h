@@ -27,5 +27,9 @@ vtkVector3<FPType> stringToVector3(const QString & s);
 template<typename FPType>
 QString vector3ToString(const vtkVector3<FPType> & v);
 
+template<typename T, int Size>
+QString vectorToString(const vtkVector<T, Size> & vector,
+    const QString & separator = " ", const QString & prefix = "", const QString & suffix = "");
+
 
 #include "conversions.hpp"

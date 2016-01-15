@@ -169,7 +169,6 @@ set ( SOURCES
     utility/InterpolationHelper.h
     utility/InterpolationHelper.cpp
     utility/qthelper.h
-    utility/qthelper.hpp
     utility/qthelper.cpp
     utility/macros.h
     utility/mathhelper.h
