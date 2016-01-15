@@ -14,6 +14,7 @@
 QVtkTableModelVectorGrid3D::QVtkTableModelVectorGrid3D(QObject * parent)
     : QVtkTableModel(parent)
     , m_gridData(nullptr)
+    , m_scalars(nullptr)
 {
 }
 
@@ -27,7 +28,17 @@ int QVtkTableModelVectorGrid3D::rowCount(const QModelIndex &/*parent*/) const
 
 int QVtkTableModelVectorGrid3D::columnCount(const QModelIndex &/*parent*/) const
 {
-    return 7;
+    if (!m_gridData)
+    {
+        return 0;
+    }
+
+
+    int columnCount = 1 + 3
+        + (m_scalars ? m_scalars->GetNumberOfComponents() : 0);
+
+    return columnCount;
+    
 }
 
 QVariant QVtkTableModelVectorGrid3D::data(const QModelIndex &index, int role) const
@@ -35,29 +46,22 @@ QVariant QVtkTableModelVectorGrid3D::data(const QModelIndex &index, int role) co
     if (role != Qt::DisplayRole || !m_gridData)
         return QVariant();
 
-    vtkIdType pointId = index.row();
+    const vtkIdType pointId = index.row();
 
-    const double * point = m_gridData->GetPoint(pointId);
-
-    switch (index.column())
+    if (index.column() == 0)
     {
-    case 0:
         return pointId;
-    case 1:
-    case 2:
-    case 3:
-        return point[index.column() - 1];
-    case 4:
-    case 5:
-    case 6:
-    {
-        vtkDataArray * vectors = m_gridData->GetPointData()->GetScalars();
-        assert(vectors && vectors->GetNumberOfComponents() == 3);
-        return vectors->GetTuple(pointId)[index.column() - 4];
-    }
     }
 
-    return QVariant();
+    if (index.column() < 3)
+    {
+        const double * point = m_gridData->GetPoint(pointId);
+        return point[index.column() - 1];
+    }
+
+    const int component = index.column() - 4;
+    assert(m_scalars && (m_scalars->GetNumberOfComponents() > component));
+    return m_scalars->GetTuple(pointId)[component];
 }
 
 QVariant QVtkTableModelVectorGrid3D::headerData(int section, Qt::Orientation orientation, int role) const
@@ -71,9 +75,18 @@ QVariant QVtkTableModelVectorGrid3D::headerData(int section, Qt::Orientation ori
     case 1: return "point x";
     case 2: return "point y";
     case 3: return "point z";
-    case 4: return "vector x";
-    case 5: return "vector y";
-    case 6: return "vector z";
+    default:
+        assert(m_scalars);
+        const int component = section - 4;
+        if (m_scalars->GetNumberOfComponents() == 1)
+        {
+            return "data";
+        }
+        if (m_scalars->GetNumberOfComponents() == 3)
+        {
+            return "vector " + ('x' + component);
+        }
+        return "data " + QString::number(component + 1);
     }
 
     return QVariant();
@@ -89,22 +102,19 @@ bool QVtkTableModelVectorGrid3D::setData(const QModelIndex & index, const QVaria
     if (!validValue)
         return false;
 
-    vtkIdType vectorId = index.row();
+    const vtkIdType tupleId = index.row();
 
-    vtkDataArray * data = m_gridData->GetPointData()->GetScalars();
-    assert(data);
-
-    int numComponents = data->GetNumberOfComponents();
+    int numComponents = m_scalars->GetNumberOfComponents();
     int componentId = index.column() - 4;
     assert(componentId >= 0 && componentId < numComponents);
 
 
     std::vector<double> tuple(numComponents);
 
-    data->GetTuple(vectorId, tuple.data());
+    m_scalars->GetTuple(tupleId, tuple.data());
     tuple[componentId] = newValue;
-    data->SetTuple(vectorId, tuple.data());
-    data->Modified();
+    m_scalars->SetTuple(tupleId, tuple.data());
+    m_scalars->Modified();
     m_gridData->Modified();
 
     return false;
@@ -126,4 +136,9 @@ IndexType QVtkTableModelVectorGrid3D::indexType() const
 void QVtkTableModelVectorGrid3D::resetDisplayData()
 {
     m_gridData = dataObject() ? dataObject()->dataSet() : nullptr;
+
+    if (m_gridData)
+    {
+        m_scalars = m_gridData->GetPointData()->GetScalars();
+    }
 }

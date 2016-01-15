@@ -5,6 +5,7 @@
 #include <core/table_model/QVtkTableModel.h>
 
 
+class vtkDataArray;
 class vtkDataSet;
 
 
@@ -27,4 +28,5 @@ protected:
 
 private:
     vtkSmartPointer<vtkDataSet> m_gridData;
+    vtkSmartPointer<vtkDataArray> m_scalars;
 };
