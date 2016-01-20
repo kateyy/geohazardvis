@@ -3,6 +3,7 @@
 
 #include <cassert>
 
+#include <QDateTime>
 #include <QDebug>
 #include <QDesktopServices>
 #include <QDockWidget>
@@ -20,6 +21,7 @@
 
 #include <core/DataSetHandler.h>
 #include <core/TextureManager.h>
+#include <core/VersionInfo.h>
 #include <core/data_objects/DataObject.h>
 #include <core/io/Exporter.h>
 #include <core/io/Loader.h>
@@ -86,6 +88,12 @@ MainWindow::MainWindow()
     connect(m_ui->actionClear_Recent_Files, &QAction::triggered, [this] () {
         m_recentFileList.clear();
         prependRecentFiles({});
+    });
+    connect(m_ui->actionAbout, &QAction::triggered, [this] () {
+        QMessageBox::about(this, s_defaultAppTitle, 
+            QString("Source GIT commit revision:\n\t%1\nCommit date:\n\t%2")
+            .arg(VersionInfo::gitRevision())
+            .arg(VersionInfo::gitCommitDate().toString()));
     });
     connect(m_ui->actionAbout_Qt, &QAction::triggered, [this] () { QMessageBox::aboutQt(this); });
     connect(m_ui->actionApply_Digital_Elevation_Model, &QAction::triggered, this, &MainWindow::showDEMWidget);

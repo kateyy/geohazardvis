@@ -1,40 +1,49 @@
 cmake_minimum_required(VERSION 2.8.12 FATAL_ERROR)
 
-set(META_PROJECT_NAME "GeohazardVis")
-set(META_PROJECT_DESCRIPTION "")
-set(META_VERSION_MAJOR "0")
-set(META_VERSION_MINOR "0")
-set(META_VERSION_PATCH "0")
-set(META_VERSION "${META_VERSION_MAJOR}.${META_VERSION_MINOR}.${META_VERSION_PATCH}")
-set(META_AUTHOR_ORGANIZATION "")
-set(META_AUTHOR_DOMAIN "https://github.com/kateyy/geohazardvis")
-set(META_AUTHOR_MAINTAINER "karsten.tausche@student.hpi.de")
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
+include(CMakeDependentOption)
+include(cmake/Custom.cmake)
+include(cmake/GetGitRevisionDescription.cmake)
+include(cmake/GitDate.cmake)
+
+# Get git revision
+get_git_head_revision(GIT_REFSPEC GIT_SHA1)
+string(SUBSTRING "${GIT_SHA1}" 0 12 GIT_REV)
+get_git_commit_date(${GIT_SHA1} GIT_DATE)
+set(GIT_REVISION_FILE ${CMAKE_BINARY_DIR}/revision)
+set(VERSION_INFO_FILE ${CMAKE_CURRENT_BINARY_DIR}/vcs_commit_info.h)
+configure_file(cmake/vcs_commit_info.h.in ${VERSION_INFO_FILE})
 
 
-project (${META_PROJECT_NAME} C CXX)
+set(META_PROJECT_NAME           "GeohazardVis")
+set(META_PROJECT_DESCRIPTION    "")
+set(META_AUTHOR_ORGANIZATION    "")
+set(META_AUTHOR_DOMAIN          "https://github.com/kateyy/geohazardvis")
+set(META_AUTHOR_MAINTAINER      "karsten.tausche@student.hpi.de")
+set(META_VERSION_MAJOR          "0")
+set(META_VERSION_MINOR          "0")
+set(META_VERSION_PATCH          "0")
+set(META_VERSION_REVISION       "${GIT_REV}")
+set(META_VERSION                "${META_VERSION_MAJOR}.${META_VERSION_MINOR}.${META_VERSION_PATCH}")
+set(META_NAME_VERSION           "${META_PROJECT_NAME} v${META_VERSION} (${META_VERSION_REVISION})")
 
 
 option(OPTION_BUILD_TESTS "Build tests (if gtest is found)." ON)
 option(OPTION_BUILD_TOOLS "" ON)
-
-
-list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
-
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+option(OPTION_IDE_SPLIT_HEADERS_SOURCES "List header and source files in different IDE folders." ON)
 
 
 # Generate folders for IDE targets (e.g., VisualStudio solutions)
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
-option(OPTION_IDE_SPLIT_HEADERS_SOURCES "List header and source files in different IDE folders." ON)
 
-# Include custom cmake functions
-include(cmake/Custom.cmake)
-include(cmake/GitRevision.cmake)
+project(${META_PROJECT_NAME} C CXX)
 
-include(CMakeDependentOption)
+
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+
 
 # PLATFORM AND ARCHITECTURE
 
@@ -107,11 +116,6 @@ endif()
 #install(FILES geohazardvis-config.cmake DESTINATION ${INSTALL_ROOT})
 #install(FILES AUTHORS DESTINATION               ${INSTALL_ROOT})
 install(FILES LICENSE DESTINATION               ${INSTALL_ROOT})
-
-# Add a revision file containing the git-head tag for cpack and install. The function
-# "create_revision_file (...)" is defined in cmake/GitRevision.cmake
-create_revision_file(${CMAKE_BINARY_DIR}/revision ${INSTALL_ROOT})
-install(FILES ${CMAKE_BINARY_DIR}/revision DESTINATION ${INSTALL_ROOT})
 
 
 # Find / add third-party components
@@ -285,7 +289,8 @@ include_directories(
     ${CMAKE_CURRENT_BINARY_DIR}
 )
 
-configure_file(cmake/config.h.in ${CMAKE_CURRENT_BINARY_DIR}/config.h)
+set(CONFIG_FILE ${CMAKE_CURRENT_BINARY_DIR}/config.h)
+configure_file(cmake/config.h.in ${CONFIG_FILE})
 
 set(IDE_FOLDER "")
 add_subdirectory("core")

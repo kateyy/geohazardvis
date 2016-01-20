@@ -14,6 +14,8 @@ set ( SOURCES
     types.h
     TextureManager.h
     TextureManager.cpp
+    VersionInfo.h
+    VersionInfo.cpp
 
     canvas_export/CanvasExporter.h
     canvas_export/CanvasExporter.cpp
