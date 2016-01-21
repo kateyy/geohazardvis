@@ -64,6 +64,8 @@ set(DEFAULT_COMPILE_FLAGS
     # Zc:forScope  -> force conformance in for loop scope: Yes
     # Zc:rvalueCast -> treat rvalue references according to section 5.4 of the C++11 standard
     # Zc:inline    -> enforce section 3.2 and section 7.1.2. of the C++11 standard: definitions of called inline functions must be visible
+    # Zc:throwingNew -> assume operator new throws on failure (Visual Studio 2015)
+    # Zc:referenceBinding -> a temporary will not bind to an non-const lvalue reference (Visual Studio 2015)
 
     # Zi           -> debug information format: program database
     # ZI           -> debug information format: program database supporting edit and continue (Visual Studio 2015)
@@ -119,6 +121,7 @@ if(MSVC_VERSION VERSION_LESS 1900)
 else()  # Visual Studio 14 2015 as minimum
 
     list(APPEND DEFAULT_COMPILE_FLAGS
+        /Zc:throwingNew /Zc:referenceBinding
         # allow native edit and continue: http://blogs.msdn.com/b/vcblog/archive/2015/07/22/c-edit-and-continue-in-visual-studio-2015.aspx
         $<$<CONFIG:Debug>: /ZI>
         $<$<NOT:$<CONFIG:Debug>>: /guard:cf>
