@@ -88,8 +88,6 @@ QVariant QVtkTableModelVectorGrid3D::headerData(int section, Qt::Orientation ori
         }
         return "data " + QString::number(component + 1);
     }
-
-    return QVariant();
 }
 
 bool QVtkTableModelVectorGrid3D::setData(const QModelIndex & index, const QVariant & value, int role)
