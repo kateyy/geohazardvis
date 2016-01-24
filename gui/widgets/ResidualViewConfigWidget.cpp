@@ -1,6 +1,8 @@
 #include "ResidualViewConfigWidget.h"
 #include "ui_ResidualViewConfigWidget.h"
 
+#include <type_traits>
+
 #include <core/data_objects/ImageDataObject.h>
 #include <core/data_objects/PolyDataObject.h>
 
@@ -131,14 +133,15 @@ void ResidualViewConfigWidget::updateComboBoxes()
     m_ui->observationCombo->addItem("", 0u);
     m_ui->modelCombo->addItem("", 0u);
 
-    for (auto dataObject : m_currentView->dataSetHandler().dataSets())
+    for (auto * dataObject : m_currentView->dataSetHandler().dataSets())
     {
         if (dataObject == m_currentView->residualData())
         {
             continue;
         }
 
-        size_t ptrData = reinterpret_cast<size_t>(dataObject);
+        static_assert(sizeof(qulonglong) >= sizeof(size_t), "");
+        qulonglong ptrData = static_cast<qulonglong>(reinterpret_cast<size_t>((dataObject)));
 
         if (dynamic_cast<ImageDataObject *>(dataObject))
         {

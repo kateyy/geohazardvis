@@ -27,7 +27,7 @@ PluginTemplate::PluginTemplate(const QString & name, const QString & description
 
     m_lineEdit = new QLineEdit(text, widget);
 
-    m_pluginInterface.addWidget(m_dockWidget.get(), "Plugin Template");
+    m_pluginInterface.addWidget(m_dockWidget.get());
 }
 
 PluginTemplate::~PluginTemplate()

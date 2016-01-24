@@ -1,5 +1,5 @@
 #include <gui/widgets/AsciiImporterWidget.h>
-#include "ui_ASCIIImporterWidget.h"
+#include "ui_AsciiImporterWidget.h"
 
 #include <cassert>
 

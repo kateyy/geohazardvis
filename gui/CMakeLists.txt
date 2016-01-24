@@ -144,13 +144,20 @@ else()
     add_library(${TARGET} SHARED ${SOURCES} ${UI_Srcs} ${QRC_Srcs})
 endif()
 
-target_link_libraries( ${TARGET}
+set(_libraries_to_be_linked
     Qt5::Widgets
-    Qt5::Concurrent
     Qt5::OpenGL
 
     core
 )
+
+if (NOT ${Qt5Core_VERSION} VERSION_LESS 5.5)
+    list(APPEND _libraries_to_be_linked
+        Qt5::Concurrent
+    )
+endif()
+
+target_link_libraries(${TARGET} ${_libraries_to_be_linked})
 
 include_directories(
     ${CMAKE_CURRENT_BINARY_DIR}

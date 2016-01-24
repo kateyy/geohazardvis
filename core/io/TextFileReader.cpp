@@ -16,8 +16,13 @@
 #include <core/io/FileParser.h>
 
 
-using namespace std;
 using namespace io;
+using std::ifstream;
+using std::map;
+using std::shared_ptr;
+using std::stringstream;
+using std::string;
+using std::vector;
 
 namespace
 {
@@ -34,28 +39,28 @@ const map<string, ModelType> modelNamesType = {
         { "vectorGrid3D", ModelType::vectorGrid3D } };
 
 
-bool ignoreLine(const std::string & line)
+bool ignoreLine(const string & line)
 {
     return line.empty() || line[0] == '#';
 }
 
-std::string toLower(const std::string & s)
+string toLower(const string & s)
 {
-    std::string result(s.size(), 0);
+    string result(s.size(), 0);
     std::transform(s.begin(), s.end(), result.begin(), ::tolower);
     return result;
 }
 
 // https://stackoverflow.com/questions/216823/whats-the-best-way-to-trim-stdstring
-std::string rtrim(const std::string & s)
+string rtrim(const string & s)
 {
-    return std::string(s.begin(),
+    return string(s.begin(),
         std::find_if(s.rbegin(), s.rend(), std::not1(std::ptr_fun<int, int>(std::isspace))).base());
 }
 
 }
 
-InputFileInfo::InputFileInfo(const std::string & name, ModelType type)
+InputFileInfo::InputFileInfo(const string & name, ModelType type)
     : name(name)
     , type(type)
 {
@@ -98,7 +103,7 @@ shared_ptr<InputFileInfo> TextFileReader::read(const string & filename, vector<R
     return input;
 }
 
-std::shared_ptr<InputFileInfo> TextFileReader::readHeader(ifstream & inputStream, vector<DataSetDef> & inputDefs)
+shared_ptr<InputFileInfo> TextFileReader::readHeader(ifstream & inputStream, vector<DataSetDef> & inputDefs)
 {
     assert(inputStream.good());
 
@@ -124,7 +129,7 @@ std::shared_ptr<InputFileInfo> TextFileReader::readHeader(ifstream & inputStream
 
         if (!started) {
             //cerr << "invalid input file (does not begin with the $begin tag)." << endl;
-            return make_shared<InputFileInfo>("", ModelType::raw);
+            return std::make_shared<InputFileInfo>("", ModelType::raw);
         }
 
         // define the current 3d/2d model
@@ -145,7 +150,7 @@ std::shared_ptr<InputFileInfo> TextFileReader::readHeader(ifstream & inputStream
                 cerr << "Invalid model type \"" << type << "\"" << endl;
                 return nullptr;
             }
-            input = make_shared<InputFileInfo>(name, it->second);
+            input = std::make_shared<InputFileInfo>(name, it->second);
 
             switch (input->type)
             {
@@ -250,7 +255,7 @@ bool TextFileReader::readHeader_triangles(ifstream & inputStream, vector<DataSet
     return false;
 }
 
-bool TextFileReader::readHeader_DEM(std::ifstream & inputStream, std::vector<DataSetDef>& inputDefs)
+bool TextFileReader::readHeader_DEM(ifstream & inputStream, vector<DataSetDef>& inputDefs)
 {
     string line;
     int columns = -1, rows = -1;
@@ -485,7 +490,7 @@ bool TextFileReader::readHeader_grid2D(ifstream & inputStream, vector<DataSetDef
     return true;
 }
 
-bool TextFileReader::readHeader_vectorGrid3D(std::ifstream & inputStream, std::vector<DataSetDef>& inputDefs)
+bool TextFileReader::readHeader_vectorGrid3D(ifstream & inputStream, vector<DataSetDef>& inputDefs)
 {
     string line;
     DataSetType currentDataType(DataSetType::unknown);
@@ -529,7 +534,7 @@ bool TextFileReader::readHeader_vectorGrid3D(std::ifstream & inputStream, std::v
     return false;
 }
 
-DataSetType TextFileReader::checkDataSetType(const std::string & nameString)
+DataSetType TextFileReader::checkDataSetType(const string & nameString)
 {
     auto it = datasetNamesTypes.find(nameString);
     if (it == datasetNamesTypes.end())
