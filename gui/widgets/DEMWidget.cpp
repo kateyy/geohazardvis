@@ -93,11 +93,12 @@ bool DEMWidget::save()
     }
 
     auto surface = vtkSmartPointer<vtkPolyData>::New();
-    surface->DeepCopy(m_dataPreview->polyDataSet());
-
-    // remove arrays that were created while appying the DEM
-    surface->GetPointData()->RemoveArray("vtkValidPointMask");
-    surface->GetPointData()->RemoveArray(m_demScalarsName.toUtf8().data());
+    auto points = vtkSmartPointer<vtkPoints>::New();
+    points->DeepCopy(m_dataPreview->polyDataSet()->GetPoints());
+    auto polys = vtkSmartPointer<vtkCellArray>::New();
+    polys->DeepCopy(m_dataPreview->polyDataSet()->GetPolys());
+    surface->SetPoints(points);
+    surface->SetPolys(polys);
 
     // store size and position of the DEM in the surface's field data
 
@@ -268,8 +269,6 @@ void DEMWidget::setupDEMStages()
     auto probe = vtkSmartPointer<vtkProbeFilter>::New();
     probe->SetInputConnection(m_meshTransform->GetOutputPort());
     probe->SetSourceConnection(scaleToKm->GetOutputPort());
-    probe->PassCellArraysOn();
-    probe->PassPointArraysOn();
 
     m_demWarpElevation = vtkSmartPointer<vtkWarpScalar>::New();
     m_demWarpElevation->SetInputConnection(probe->GetOutputPort());
