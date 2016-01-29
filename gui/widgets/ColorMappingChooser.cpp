@@ -174,9 +174,8 @@ void ColorMappingChooser::guiMinValueChanged(double value)
     double correctValue = std::min(scalars->maxValue(), value);
     if (value != correctValue)
     {
-        m_ui->minValueSpinBox->blockSignals(true);
+        QSignalBlocker signalBlocker(m_ui->minValueSpinBox);
         m_ui->minValueSpinBox->setValue(correctValue);
-        m_ui->minValueSpinBox->blockSignals(false);
     }
 
     scalars->setMinValue(correctValue);
@@ -193,9 +192,8 @@ void ColorMappingChooser::guiMaxValueChanged(double value)
     double correctValue = std::max(scalars->minValue(), value);
     if (value != correctValue)
     {
-        m_ui->maxValueSpinBox->blockSignals(true);
+        QSignalBlocker signalBlocker(m_ui->maxValueSpinBox);
         m_ui->maxValueSpinBox->setValue(correctValue);
-        m_ui->maxValueSpinBox->blockSignals(false);
     }
 
     scalars->setMaxValue(correctValue);
@@ -300,10 +298,10 @@ void ColorMappingChooser::loadGradientImages()
 {
     const QSize gradientImageSize{ 200, 20 };
 
-    QComboBox * gradientComboBox = m_ui->gradientComboBox;
+    auto & gradientComboBox = *m_ui->gradientComboBox;
 
     // load the files and add them to the combobox
-    gradientComboBox->blockSignals(true);
+    QSignalBlocker signalBlocker(gradientComboBox);
 
     // navigate to the gradient directory
     QDir dir;
@@ -325,8 +323,8 @@ void ColorMappingChooser::loadGradientImages()
             QPixmap pixmap = QPixmap(filePath).scaled(gradientImageSize);
             m_gradients << buildLookupTable(pixmap.toImage());
 
-            gradientComboBox->addItem(pixmap, "");
-            gradientComboBox->setItemData(gradientComboBox->count() - 1, baseName);
+            gradientComboBox.addItem(pixmap, "");
+            gradientComboBox.setItemData(gradientComboBox.count() - 1, baseName);
         }
     }
 
@@ -348,13 +346,15 @@ void ColorMappingChooser::loadGradientImages()
         }
 
         m_gradients << gradient;
-        gradientComboBox->addItem(QPixmap::fromImage(image), "");
+        gradientComboBox.addItem(QPixmap::fromImage(image), "");
     }
 
-    gradientComboBox->setIconSize(gradientImageSize);
-    gradientComboBox->blockSignals(false);
+    gradientComboBox.setIconSize(gradientImageSize);
+
+    signalBlocker.unblock();
+
     // set the "default" gradient
-    gradientComboBox->setCurrentIndex(defaultGradientIndex());
+    gradientComboBox.setCurrentIndex(defaultGradientIndex());
 }
 
 int ColorMappingChooser::gradientIndex(vtkLookupTable * gradient) const

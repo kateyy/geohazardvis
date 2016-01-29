@@ -61,9 +61,8 @@ void ResidualViewConfigWidget::setCurrentView(ResidualVerificationView * view)
         view->setInterpolationMode(boolToIMode(checked));
     });
     m_viewConnects << connect(view, &ResidualVerificationView::interpolationModeChanged, [this, iModeToBool] (ResidualVerificationView::InterpolationMode mode) {
-        m_ui->interpolationModeCheckBox->blockSignals(true);
+        QSignalBlocker signalBlocker(m_ui->interpolationModeCheckBox);
         m_ui->interpolationModeCheckBox->setChecked(iModeToBool(mode));
-        m_ui->interpolationModeCheckBox->blockSignals(false);
     });
     
     auto && los = view->inSARLineOfSight();
@@ -101,14 +100,11 @@ void ResidualViewConfigWidget::setCurrentView(ResidualVerificationView * view)
         view, &ResidualVerificationView::setModelUnitDecimalExponent);
 
     m_viewConnects << connect(view, &ResidualVerificationView::unitDecimalExponentsChanged, [this] (int o, int m) {
-        m_ui->observationScale->blockSignals(true);
-        m_ui->modelScale->blockSignals(true);
+        QSignalBlocker observationSignalBlocker(m_ui->observationScale);
+        QSignalBlocker modelSignalBlocker(m_ui->modelScale);
 
         m_ui->observationScale->setValue(o);
         m_ui->modelScale->setValue(m);
-
-        m_ui->observationScale->blockSignals(false);
-        m_ui->modelScale->blockSignals(false);
     });
 
     m_viewConnects << connect(m_ui->updateButton, &QAbstractButton::pressed, view, &ResidualVerificationView::update);
@@ -118,8 +114,8 @@ void ResidualViewConfigWidget::setCurrentView(ResidualVerificationView * view)
 
 void ResidualViewConfigWidget::updateComboBoxes()
 {
-    m_ui->observationCombo->blockSignals(true);
-    m_ui->modelCombo->blockSignals(true);
+    QSignalBlocker observationSignalBlocker(m_ui->observationCombo);
+    QSignalBlocker modelSignalBlocker(m_ui->modelCombo);
 
     m_ui->observationCombo->clear();
     m_ui->modelCombo->clear();
@@ -164,9 +160,6 @@ void ResidualViewConfigWidget::updateComboBoxes()
     QString modelName = m_currentView->modelData() ? m_currentView->modelData()->name() : "";
     m_ui->observationCombo->setCurrentText(observationName);
     m_ui->modelCombo->setCurrentText(modelName);
-
-    m_ui->observationCombo->blockSignals(false);
-    m_ui->modelCombo->blockSignals(false);
 }
 
 void ResidualViewConfigWidget::updateObservationFromUi(int index)

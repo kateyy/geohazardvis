@@ -150,27 +150,24 @@ void RendererConfigWidget::updateForNewImplementation()
 
 void RendererConfigWidget::updateInteractionModeCombo()
 {
-    auto * const combo = m_ui->interactionModeCombo;
-    combo->blockSignals(true);
+    auto & combo = *m_ui->interactionModeCombo;
+    QSignalBlocker signalBlocker(combo);
 
     updatePropertyGroup();
 
-    combo->clear();
+    combo.clear();
 
     if (!m_currentRenderView)
     {
-        combo->blockSignals(false);
         return;
     }
 
     const auto & impl = m_currentRenderView->implementation();
 
-    combo->addItems(impl.supportedInteractionStrategies());
-    combo->setCurrentText(impl.currentInteractionStrategy());
+    combo.addItems(impl.supportedInteractionStrategies());
+    combo.setCurrentText(impl.currentInteractionStrategy());
 
-    m_ui->interactionModeWidget->setVisible(combo->count() > 0);
-
-    combo->blockSignals(false);
+    m_ui->interactionModeWidget->setVisible(combo.count() > 0);
 }
 
 void RendererConfigWidget::updatePropertyGroup()
