@@ -186,6 +186,8 @@ set ( SOURCES
     utility/vtkCameraSynchronization.cpp
     utility/vtkstringhelper.h
     utility/vtkstringhelper.cpp
+    utility/vtkvectorhelper.h
+    utility/vtkvectorhelper.hpp
 )
 
 source_group_by_path_and_type(${CMAKE_CURRENT_SOURCE_DIR} ${SOURCES})
