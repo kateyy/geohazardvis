@@ -91,7 +91,7 @@ MainWindow::MainWindow()
     });
     connect(m_ui->actionAbout, &QAction::triggered, [this] () {
         QMessageBox::about(this, s_defaultAppTitle, 
-            QString("Source GIT commit revision:\n\t%1\nCommit date:\n\t%2")
+            QString("Source GIT commit revision:\n\t%1\nRevision date:\n\t%2")
             .arg(VersionInfo::gitRevision())
             .arg(VersionInfo::gitCommitDate().toString()));
     });
