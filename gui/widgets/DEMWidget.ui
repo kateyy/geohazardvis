@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>328</width>
-    <height>434</height>
+    <width>674</width>
+    <height>568</height>
    </rect>
   </property>
   <property name="focusPolicy">
@@ -17,22 +17,7 @@
    <string>Apply Digital Elevation Model</string>
   </property>
   <layout class="QGridLayout" name="gridLayout">
-   <property name="leftMargin">
-    <number>0</number>
-   </property>
-   <property name="topMargin">
-    <number>0</number>
-   </property>
-   <property name="rightMargin">
-    <number>0</number>
-   </property>
-   <property name="bottomMargin">
-    <number>0</number>
-   </property>
-   <property name="spacing">
-    <number>3</number>
-   </property>
-   <item row="1" column="0">
+   <item row="2" column="0">
     <widget class="QGroupBox" name="groupBox">
      <property name="sizePolicy">
       <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
@@ -66,6 +51,13 @@
      </layout>
     </widget>
    </item>
+   <item row="4" column="0">
+    <widget class="QDialogButtonBox" name="buttonBox">
+     <property name="standardButtons">
+      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Save</set>
+     </property>
+    </widget>
+   </item>
    <item row="0" column="0">
     <widget class="QWidget" name="configGroup" native="true">
      <property name="sizePolicy">
@@ -75,38 +67,54 @@
       </sizepolicy>
      </property>
      <layout class="QFormLayout" name="formLayout">
-      <property name="fieldGrowthPolicy">
-       <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
-      </property>
       <item row="0" column="0">
        <widget class="QLabel" name="label">
         <property name="text">
-         <string>Surface Mesh</string>
+         <string>&amp;Topography Template</string>
+        </property>
+        <property name="buddy">
+         <cstring>topoTemplateCombo</cstring>
         </property>
        </widget>
       </item>
       <item row="0" column="1">
-       <widget class="QComboBox" name="surfaceMeshCombo"/>
+       <widget class="QComboBox" name="topoTemplateCombo"/>
       </item>
       <item row="1" column="0">
        <widget class="QLabel" name="label_2">
         <property name="text">
-         <string>DEM</string>
+         <string>&amp;DEM</string>
+        </property>
+        <property name="buddy">
+         <cstring>demCombo</cstring>
         </property>
        </widget>
       </item>
       <item row="1" column="1">
        <widget class="QComboBox" name="demCombo"/>
       </item>
-      <item row="4" column="0">
-       <widget class="QLabel" name="label_4">
+      <item row="2" column="0">
+       <widget class="QLabel" name="label_7">
         <property name="text">
-         <string>Surface Scale</string>
+         <string>DEM &amp;Unit Scale</string>
+        </property>
+        <property name="buddy">
+         <cstring>demUnitScaleSpinBox</cstring>
         </property>
        </widget>
       </item>
-      <item row="4" column="1">
-       <widget class="QWidget" name="widget_2" native="true">
+      <item row="3" column="0">
+       <widget class="QLabel" name="label_4">
+        <property name="text">
+         <string>Topography &amp;Radius Scale</string>
+        </property>
+        <property name="buddy">
+         <cstring>topographyRadiusSpinBox</cstring>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="1">
+       <widget class="QWidget" name="widget_3" native="true">
         <layout class="QGridLayout" name="gridLayout_3">
          <property name="leftMargin">
           <number>0</number>
@@ -120,129 +128,147 @@
          <property name="bottomMargin">
           <number>0</number>
          </property>
-         <property name="horizontalSpacing">
-          <number>6</number>
-         </property>
-         <property name="verticalSpacing">
-          <number>0</number>
-         </property>
-         <item row="0" column="1">
-          <widget class="QDoubleSpinBox" name="surfaceScaleX">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="value">
-            <double>1.000000000000000</double>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="3">
-          <widget class="QDoubleSpinBox" name="surfaceScaleY">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="value">
-            <double>1.000000000000000</double>
-           </property>
-          </widget>
-         </item>
          <item row="0" column="0">
-          <widget class="QLabel" name="label_5">
-           <property name="text">
-            <string>X</string>
+          <widget class="QDoubleSpinBox" name="topographyRadiusSpinBox">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="decimals">
+            <number>4</number>
+           </property>
+           <property name="minimum">
+            <double>0.000100000000000</double>
+           </property>
+           <property name="maximum">
+            <double>100000.000000000000000</double>
+           </property>
+           <property name="value">
+            <double>1.000000000000000</double>
            </property>
           </widget>
          </item>
-         <item row="0" column="2">
-          <widget class="QLabel" name="label_6">
+         <item row="0" column="1">
+          <widget class="QPushButton" name="radiusMatchingButton">
            <property name="text">
-            <string>Y</string>
+            <string>&amp;Matching</string>
            </property>
           </widget>
          </item>
         </layout>
        </widget>
       </item>
-      <item row="2" column="0">
-       <widget class="QLabel" name="label_7">
+      <item row="4" column="0">
+       <widget class="QLabel" name="label_5">
         <property name="text">
-         <string>DEM Latitude</string>
+         <string>Topograpy Center Position</string>
         </property>
+       </widget>
+      </item>
+      <item row="4" column="1">
+       <widget class="QWidget" name="widget_2" native="true">
+        <layout class="QHBoxLayout" name="horizontalLayout">
+         <property name="leftMargin">
+          <number>0</number>
+         </property>
+         <property name="topMargin">
+          <number>0</number>
+         </property>
+         <property name="rightMargin">
+          <number>0</number>
+         </property>
+         <property name="bottomMargin">
+          <number>0</number>
+         </property>
+         <item>
+          <widget class="QLabel" name="label_9">
+           <property name="text">
+            <string>&amp;X</string>
+           </property>
+           <property name="buddy">
+            <cstring>topographyCenterXSpinBox</cstring>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QDoubleSpinBox" name="topographyCenterXSpinBox">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="decimals">
+            <number>4</number>
+           </property>
+           <property name="minimum">
+            <double>-100000.000000000000000</double>
+           </property>
+           <property name="maximum">
+            <double>100000.000000000000000</double>
+           </property>
+           <property name="value">
+            <double>1.000000000000000</double>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="label_6">
+           <property name="text">
+            <string>&amp;Y</string>
+           </property>
+           <property name="buddy">
+            <cstring>topographyCenterYSpinBox</cstring>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QDoubleSpinBox" name="topographyCenterYSpinBox">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="decimals">
+            <number>4</number>
+           </property>
+           <property name="minimum">
+            <double>-100000.000000000000000</double>
+           </property>
+           <property name="maximum">
+            <double>100000.000000000000000</double>
+           </property>
+           <property name="value">
+            <double>1.000000000000000</double>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="templateCenterButton">
+           <property name="text">
+            <string>Center</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
        </widget>
       </item>
       <item row="2" column="1">
-       <widget class="QDoubleSpinBox" name="demLatitude">
-        <property name="suffix">
-         <string>°</string>
-        </property>
-        <property name="decimals">
-         <number>6</number>
+       <widget class="QSpinBox" name="demUnitScaleSpinBox">
+        <property name="prefix">
+         <string>· 10^</string>
         </property>
         <property name="minimum">
-         <double>-90.000000000000000</double>
+         <number>-100</number>
         </property>
         <property name="maximum">
-         <double>90.000000000000000</double>
-        </property>
-        <property name="singleStep">
-         <double>0.010000000000000</double>
+         <number>100</number>
         </property>
         <property name="value">
-         <double>-25.167916666667</double>
-        </property>
-       </widget>
-      </item>
-      <item row="3" column="1">
-       <widget class="QDoubleSpinBox" name="demLongitude">
-        <property name="suffix">
-         <string>°</string>
-        </property>
-        <property name="decimals">
-         <number>6</number>
-        </property>
-        <property name="minimum">
-         <double>-90.000000000000000</double>
-        </property>
-        <property name="maximum">
-         <double>90.000000000000000</double>
-        </property>
-        <property name="singleStep">
-         <double>0.010000000000000</double>
-        </property>
-        <property name="value">
-         <double>-68.5062500000003</double>
-        </property>
-       </widget>
-      </item>
-      <item row="3" column="0">
-       <widget class="QLabel" name="label_8">
-        <property name="text">
-         <string>DEM Longitude</string>
-        </property>
-       </widget>
-      </item>
-     </layout>
-    </widget>
-   </item>
-   <item row="2" column="0">
-    <widget class="QWidget" name="widget" native="true">
-     <layout class="QFormLayout" name="formLayout_2">
-      <property name="fieldGrowthPolicy">
-       <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
-      </property>
-      <item row="0" column="1">
-       <widget class="QLineEdit" name="newSurfaceModelName"/>
-      </item>
-      <item row="0" column="0">
-       <widget class="QLabel" name="label_3">
-        <property name="text">
-         <string>New Surface Model Name</string>
+         <number>0</number>
         </property>
        </widget>
       </item>
@@ -250,10 +276,25 @@
     </widget>
    </item>
    <item row="3" column="0">
-    <widget class="QDialogButtonBox" name="buttonBox">
-     <property name="standardButtons">
-      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Save</set>
-     </property>
+    <widget class="QWidget" name="widget" native="true">
+     <layout class="QFormLayout" name="formLayout_2">
+      <property name="fieldGrowthPolicy">
+       <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
+      </property>
+      <item row="0" column="1">
+       <widget class="QLineEdit" name="newTopoModelName"/>
+      </item>
+      <item row="0" column="0">
+       <widget class="QLabel" name="label_3">
+        <property name="text">
+         <string>New Topography &amp;Name</string>
+        </property>
+        <property name="buddy">
+         <cstring>newTopoModelName</cstring>
+        </property>
+       </widget>
+      </item>
+     </layout>
     </widget>
    </item>
   </layout>
@@ -265,6 +306,18 @@
    <header>core/t_QVTKWidget.h</header>
   </customwidget>
  </customwidgets>
+ <tabstops>
+  <tabstop>topoTemplateCombo</tabstop>
+  <tabstop>demCombo</tabstop>
+  <tabstop>demUnitScaleSpinBox</tabstop>
+  <tabstop>topographyRadiusSpinBox</tabstop>
+  <tabstop>radiusMatchingButton</tabstop>
+  <tabstop>topographyCenterXSpinBox</tabstop>
+  <tabstop>topographyCenterYSpinBox</tabstop>
+  <tabstop>templateCenterButton</tabstop>
+  <tabstop>qvtkMain</tabstop>
+  <tabstop>newTopoModelName</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>

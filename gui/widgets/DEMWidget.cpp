@@ -1,30 +1,21 @@
 #include <gui/widgets/DEMWidget.h>
 #include "ui_DEMWidget.h"
 
+#include <QDebug>
 #include <QMessageBox>
 
-#include <QVTKInteractor.h>
 #include <vtkActor.h>
 #include <vtkCamera.h>
-#include <vtkGenericOpenGLRenderWindow.h>
-#include <vtkPropCollection.h>
-#include <vtkProperty.h>
-#include <vtkRenderer.h>
-#include <vtkRenderWindowInteractor.h>
-#include <vtkTextProperty.h>
-
 #include <vtkCellData.h>
-#include <vtkCharArray.h>
-#include <vtkDoubleArray.h>
-#include <vtkImageChangeInformation.h>
 #include <vtkImageData.h>
 #include <vtkImageShiftScale.h>
-#include <vtkMath.h>
-#include <vtkPolyData.h>
 #include <vtkPointData.h>
+#include <vtkPolyData.h>
 #include <vtkProbeFilter.h>
+#include <vtkProperty.h>
+#include <vtkRenderer.h>
 #include <vtkTransform.h>
-#include <vtkTransformFilter.h>
+#include <vtkTransformPolyDataFilter.h>
 #include <vtkWarpScalar.h>
 
 #include <core/DataSetHandler.h>
@@ -32,6 +23,7 @@
 #include <core/data_objects/PolyDataObject.h>
 #include <core/rendered_data/RenderedData.h>
 #include <core/utility/vtkcamerahelper.h>
+#include <core/utility/vtkvectorhelper.h>
 #include <core/ThirdParty/ParaView/vtkGridAxes3DActor.h>
 #include <gui/rendering_interaction/InteractorStyleTerrain.h>
 #include <gui/data_view/RendererImplementationBase3D.h>
@@ -41,39 +33,70 @@ DEMWidget::DEMWidget(DataSetHandler & dataSetHandler, QWidget * parent, Qt::Wind
     : QWidget(parent, f)
     , m_dataSetHandler(dataSetHandler)
     , m_ui{ std::make_unique<Ui_DEMWidget>() }
-    , m_currentDEM{ nullptr }
     , m_dataPreview{ nullptr }
-    , m_renderedPreview{ nullptr }
+    , m_demUnitDecimalExponent{ 0.0 }
+    , m_topoRadiusScale{ 1.0 }
+    , m_topoShift{ 0.0 }
 {
     m_ui->setupUi(this);
 
     updateAvailableDataSets();
 
-    setupDEMStages();
+    setupPipeline();
 
-    connect(m_ui->surfaceMeshCombo, static_cast<void(QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &DEMWidget::updatePreview);
-    connect(m_ui->demCombo, static_cast<void(QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &DEMWidget::updatePreview);
+    connect(m_ui->topoTemplateCombo, &QComboBox::currentTextChanged, this, &DEMWidget::rebuildPreview);
+    connect(m_ui->demCombo, &QComboBox::currentTextChanged, this, &DEMWidget::rebuildPreview);
+
+    auto applyDEMUnitScale = [this] () {
+        const double newValue = m_ui->demUnitScaleSpinBox->value();
+        if (newValue == m_demUnitDecimalExponent)
+            return;
+
+        m_demUnitDecimalExponent = newValue;
+        m_demUnitScale->SetScale(std::pow(10, m_demUnitDecimalExponent));
+    };
+
+    applyDEMUnitScale();
+
+    connect(m_ui->demUnitScaleSpinBox, &QSpinBox::editingFinished, [this, applyDEMUnitScale] () {
+        applyDEMUnitScale();
+        m_pipelineEnd->Update();
+        // setting a wrong DEM unit can really break the view settings, so reset the camera here
+        m_renderer->ResetCamera();
+        updateView();
+    });
+
+    connect(m_ui->radiusMatchingButton, &QAbstractButton::clicked, [this] () {
+        matchTopoMeshRadius();
+        updateView();
+    });
+    connect(m_ui->templateCenterButton, &QAbstractButton::clicked, [this] () {
+        centerTopoMesh();
+        updateView();
+    });
+
+    auto updateForChangedTransform = [this] () -> void {
+        double newTopoScale{ m_ui->topographyRadiusSpinBox->value() };
+        vtkVector3d newTopoShift{ m_ui->topographyCenterXSpinBox->value(), m_ui->topographyCenterYSpinBox->value(), 0.0 };
+
+        if ((newTopoScale == m_topoRadiusScale) && (newTopoShift == m_topoShift))
+        {
+            return;
+        }
+
+        m_topoRadiusScale = newTopoScale;
+        m_topoShift = newTopoShift;
+
+        updateMeshTransform();
+        updateView();
+    };
+
+    connect(m_ui->topographyRadiusSpinBox, &QDoubleSpinBox::editingFinished, updateForChangedTransform);
+    connect(m_ui->topographyCenterXSpinBox, &QDoubleSpinBox::editingFinished, updateForChangedTransform);
+    connect(m_ui->topographyCenterYSpinBox, &QDoubleSpinBox::editingFinished, updateForChangedTransform);
 
     connect(m_ui->buttonBox, &QDialogButtonBox::accepted, this, &DEMWidget::saveAndClose);
     connect(m_ui->buttonBox, &QDialogButtonBox::rejected, this, &QWidget::close);
-
-    connect(m_ui->surfaceScaleX, static_cast<void(QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), [this] (double) {
-        updateMeshScale();
-        updateView();
-    });
-    connect(m_ui->surfaceScaleY, static_cast<void(QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), [this] (double) {
-        updateMeshScale();
-        updateView();
-    });
-
-    connect(m_ui->demLatitude, static_cast<void(QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), [this] (double) {
-        updateDEMGeoPosition();
-        updateView();
-    });
-    connect(m_ui->demLongitude, static_cast<void(QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), [this] (double) {
-        updateDEMGeoPosition();
-        updateView();
-    });
 
 
     connect(&m_dataSetHandler, &DataSetHandler::dataObjectsChanged, this, &DEMWidget::updateAvailableDataSets);
@@ -100,41 +123,7 @@ bool DEMWidget::save()
     surface->SetPoints(points);
     surface->SetPolys(polys);
 
-    // store size and position of the DEM in the surface's field data
-
-    auto addArray = [surface] (const char * name, const std::vector<double> & values) {
-        auto a = vtkSmartPointer<vtkDoubleArray>::New();
-        a->SetName(name);
-        a->SetNumberOfValues(vtkIdType(values.size()));
-        for (unsigned i = 0; i < values.size(); ++i)
-            a->SetValue(i, values[i]);
-        surface->GetFieldData()->AddArray(a);
-    };
-
-    if (m_currentDEM)
-    {
-        m_demTransformOutput->Update();
-        vtkDataSet * transformedDEM = vtkDataSet::SafeDownCast(m_demTransformOutput->GetOutputDataObject(0));
-        assert(transformedDEM);
-        std::vector<double> demBounds(6u);
-        transformedDEM->GetBounds(demBounds.data());
-
-        assert(surface->GetFieldData()->GetNumberOfArrays() == 0);
-
-        auto demNameArray = vtkSmartPointer<vtkCharArray>::New();
-        demNameArray->SetName("DEM_Name");
-        QByteArray demName = m_currentDEM->name().toUtf8();
-        demNameArray->SetNumberOfValues(demName.size());
-        for (int i = 0; i < demName.size(); ++i)
-            demNameArray->SetValue(i, demName[i]);
-        surface->GetFieldData()->AddArray(demNameArray);
-
-        addArray("DEM_F0", { m_ui->demLatitude->value() });
-        addArray("DEM_La0", { m_ui->demLongitude->value() });
-        addArray("DEM_Bounds", demBounds);
-    }
-
-    auto newData = std::make_unique<PolyDataObject>(m_ui->newSurfaceModelName->text(), *surface);
+    auto newData = std::make_unique<PolyDataObject>(m_ui->newTopoModelName->text(), *surface);
     m_dataSetHandler.takeData(std::move(newData));
 
     return true;
@@ -169,35 +158,46 @@ void DEMWidget::showEvent(QShowEvent * /*event*/)
     TerrainCamera::setAzimuth(camera, 0);
     TerrainCamera::setVerticalElevation(camera, 45);
 
-    vtkSmartPointer<InteractorStyleTerrain> interactorStyle = vtkSmartPointer<InteractorStyleTerrain>::New();
+    auto interactorStyle = vtkSmartPointer<InteractorStyleTerrain>::New();
     m_ui->qvtkMain->GetInteractor()->SetInteractorStyle(interactorStyle);
     interactorStyle->SetCurrentRenderer(m_renderer);
 
 
     m_axesActor = RendererImplementationBase3D::createAxes();
 
-    updatePreview();
+    rebuildPreview();
 }
 
-void DEMWidget::updatePreview()
+void DEMWidget::rebuildPreview()
 {
     m_renderer->RemoveAllViewProps();
     m_renderedPreview.reset();
     m_dataPreview.reset();
 
-    int surfaceIdx = m_ui->surfaceMeshCombo->currentIndex();
+    int surfaceIdx = m_ui->topoTemplateCombo->currentIndex();
     if (surfaceIdx == -1)
         return;
 
     int demIndex = m_ui->demCombo->currentIndex();
-    m_currentDEM = m_dems.value(demIndex, nullptr);
-    PolyDataObject * surface = m_surfaceMeshes[surfaceIdx];
+    auto currentDEM = m_dems.value(demIndex, nullptr);
+    auto & currentTopo = *m_topographyMeshes[surfaceIdx];
 
-    if (m_currentDEM)
+    bool needToResetCamera = true;
+
+    if (currentDEM)
     {
-        m_demTranslate->SetInputDataObject(m_currentDEM->dataSet());
-        m_demScalarsName = QString::fromUtf8(
-            m_currentDEM->dataSet()->GetPointData()->GetScalars()->GetName());
+        m_demPipelineStart->SetInputDataObject(currentDEM->dataSet());
+        assert(currentDEM->dataSet()->GetPointData()->GetScalars());
+
+        const auto newDEMBounds = DataBounds(currentDEM->bounds());
+        if (newDEMBounds == m_previousDEMBounds)
+        {
+            needToResetCamera = false;
+        }
+        else
+        {
+            m_previousDEMBounds = newDEMBounds;
+        }
     }
     else
     {
@@ -205,20 +205,32 @@ void DEMWidget::updatePreview()
         nullDEM->SetExtent(0, 0, 0, 0, 0, 0);
         nullDEM->AllocateScalars(VTK_FLOAT, 1);
         reinterpret_cast<float *>(nullDEM->GetScalarPointer())[0] = 0.f;
-        m_demScalarsName = "DEMdata";
-        nullDEM->GetPointData()->GetScalars()->SetName(
-            m_demScalarsName.toUtf8().data());
-        m_demTranslate->SetInputData(nullDEM);
+        nullDEM->GetPointData()->GetScalars()->SetName("DEMdata");
+        m_demPipelineStart->SetInputDataObject(nullDEM);
+
+        m_previousDEMBounds = DataBounds();
     }
     
+    m_meshPipelineStart->SetInputDataObject(currentTopo.dataSet());
 
 
-    m_meshTransform->SetInputData(surface->dataSet());
+    // setup default parameters
+    if (currentDEM)
+    {
+        matchTopoMeshRadius();
+        centerTopoMesh();
+    }
+
     
-    m_demWarpElevation->Update();
+    m_pipelineEnd->Update();
 
-    vtkPolyData * newDataSet = vtkPolyData::SafeDownCast(m_demWarpElevation->GetOutput());
-    assert(newDataSet);
+    vtkPolyData * newDataSet = vtkPolyData::SafeDownCast(m_pipelineEnd->GetOutputDataObject(0));
+
+    if (!newDataSet)
+    {
+        qDebug() << "DEMWidget: mesh transformation did not succeed";
+        return;
+    }
 
     m_dataPreview = std::make_unique<PolyDataObject>("", *newDataSet);
     m_renderedPreview = m_dataPreview->createRendered();
@@ -227,7 +239,7 @@ void DEMWidget::updatePreview()
     props->InitTraversal();
     while (auto p = props->GetNextProp())
     {
-        vtkActor * actor; vtkProperty * property;
+        vtkActor * actor = nullptr; vtkProperty * property = nullptr;
         if ((actor = vtkActor::SafeDownCast(p)) && (property = actor->GetProperty()))
         {
             property->LightingOn();
@@ -238,47 +250,42 @@ void DEMWidget::updatePreview()
     }
     m_renderer->AddViewProp(m_axesActor);
 
+    if (needToResetCamera)
+    {
+        m_renderer->ResetCamera();
+    }
+
     updateView();
 
-    m_renderer->ResetCamera();
-
-    m_ui->newSurfaceModelName->setText(surface->name() + (m_currentDEM ? " (" + m_currentDEM->name() + ")" : ""));
+    m_ui->newTopoModelName->setText(currentTopo.name() + (currentDEM ? " (" + currentDEM->name() + ")" : ""));
 }
 
-void DEMWidget::setupDEMStages()
+void DEMWidget::setupPipeline()
 {
-    m_demTranslate = vtkSmartPointer<vtkImageChangeInformation>::New();
+    m_meshTransform = vtkSmartPointer<vtkTransform>::New();
+    auto meshTransformFilter = vtkSmartPointer<vtkTransformPolyDataFilter>::New();
+    meshTransformFilter->SetTransform(m_meshTransform);
+    m_meshPipelineStart = meshTransformFilter;
 
-    m_demScale = vtkSmartPointer<vtkImageChangeInformation>::New();
-    m_demScale->SetInputConnection(m_demTranslate->GetOutputPort());
+    updateMeshTransform();
 
-    auto scaleToKm = vtkSmartPointer<vtkImageShiftScale>::New();
-    scaleToKm->SetInputConnection(m_demScale->GetOutputPort());
-    scaleToKm->SetScale(0.001);
-    m_demTransformOutput = scaleToKm;
-
-    updateDEMGeoPosition();
-
-    auto meshTransform = vtkSmartPointer<vtkTransform>::New();
-
-    m_meshTransform = vtkSmartPointer<vtkTransformFilter>::New();
-    m_meshTransform->SetTransform(meshTransform);
-
-    updateMeshScale();
+    m_demUnitScale = vtkSmartPointer<vtkImageShiftScale>::New();
+    m_demPipelineStart = m_demUnitScale;
 
     auto probe = vtkSmartPointer<vtkProbeFilter>::New();
-    probe->SetInputConnection(m_meshTransform->GetOutputPort());
-    probe->SetSourceConnection(scaleToKm->GetOutputPort());
+    probe->SetInputConnection(meshTransformFilter->GetOutputPort());
+    probe->SetSourceConnection(m_demUnitScale->GetOutputPort());
 
-    m_demWarpElevation = vtkSmartPointer<vtkWarpScalar>::New();
-    m_demWarpElevation->SetInputConnection(probe->GetOutputPort());
+    auto warpElevation = vtkSmartPointer<vtkWarpScalar>::New();
+    warpElevation->SetInputConnection(probe->GetOutputPort());
+    m_pipelineEnd = warpElevation;
 }
 
 void DEMWidget::updateAvailableDataSets()
 {
-    m_surfaceMeshes.clear();
+    m_topographyMeshes.clear();
     m_dems.clear();
-    m_ui->surfaceMeshCombo->clear();
+    m_ui->topoTemplateCombo->clear();
     m_ui->demCombo->clear();
 
     for (auto dataObject : m_dataSetHandler.dataSets())
@@ -286,65 +293,38 @@ void DEMWidget::updateAvailableDataSets()
         if (auto p = dynamic_cast<PolyDataObject *>(dataObject))
         {
             if (p->is2p5D())
-                m_surfaceMeshes << p;
+                m_topographyMeshes << p;
         }
         else if (auto i = dynamic_cast<ImageDataObject *>(dataObject))
+        {
+            if (i->dataSet()->GetPointData()->GetScalars() == nullptr)
+            {
+                qDebug() << "DEMWidget: no scalars found in image" << i->name();
+                continue;
+            }
             m_dems << i;
+        }
     }
 
-    for (auto p : m_surfaceMeshes)
-        m_ui->surfaceMeshCombo->addItem(p->name());
+    for (auto p : m_topographyMeshes)
+        m_ui->topoTemplateCombo->addItem(p->name());
 
     for (auto d : m_dems)
         m_ui->demCombo->addItem(d->name());
 }
 
-void DEMWidget::updateDEMGeoPosition()
+void DEMWidget::updateMeshTransform()
 {
-    const double earthR = 6378.138;
+    m_meshTransform->Identity();
+    m_meshTransform->PostMultiply();
 
-    // approximations for regions not larger than a few hundreds of kilometers:
-    /*auto transformApprox = [earthR] (double Fi, double La, double Fi0, double La0, double & X, double & Y)
-    {
-    Y = earthR * (Fi - Fi0) * vtkMath::Pi() / 180;
-    X = earthR * (La - La0) * std::cos(Fi0 / 180 * vtkMath::Pi()) * vtkMath::Pi() / 180;
-    };*/
-
-    double Fi0 = m_ui->demLatitude->value();
-    double La0 = m_ui->demLongitude->value();
-
-    double toLocalTranslation[3] = {
-        -La0,
-        -Fi0,
-        0.0
-    };
-    double toLocalScale[3] = {
-        earthR * std::cos(Fi0 / 180.0 * vtkMath::Pi()) * vtkMath::Pi() / 180.0,
-        earthR * vtkMath::Pi() / 180.0,
-        0  // flattening, elevation is stored in scalars
-    };
-
-    m_demTranslate->SetOriginTranslation(toLocalTranslation);
-
-    m_demScale->SetSpacingScale(toLocalScale);
-    m_demScale->SetOriginScale(toLocalScale);
-
-}
-
-void DEMWidget::updateMeshScale()
-{
-    auto tr = vtkTransform::SafeDownCast(m_meshTransform->GetTransform());
-    tr->Identity();
-    tr->Scale(
-        m_ui->surfaceScaleX->value(),
-        m_ui->surfaceScaleY->value(),
-        0); // flatten
-
+    m_meshTransform->Scale(m_topoRadiusScale, m_topoRadiusScale, 0.0);
+    m_meshTransform->Translate(m_topoShift.GetData()); // assuming the template is already centered around (0,0,z)
 }
 
 void DEMWidget::updateView()
 {
-    m_demWarpElevation->Update();
+    m_pipelineEnd->Update();
 
     if (m_dataPreview && m_axesActor)
     {
@@ -354,4 +334,63 @@ void DEMWidget::updateView()
     }
 
     m_ui->qvtkMain->GetRenderWindow()->Render();
+}
+
+void DEMWidget::matchTopoMeshRadius()
+{
+    auto currentDEM = m_dems.value(m_ui->demCombo->currentIndex(), nullptr);
+    auto currentTopo = m_topographyMeshes.value(m_ui->topoTemplateCombo->currentIndex(), nullptr);
+
+    if (!currentDEM || !currentTopo)
+    {
+        return;
+    }
+
+    const auto demSize = DataBounds(currentDEM->bounds()).size();
+    const auto topoSize = DataBounds(currentTopo->bounds()).size();
+
+    const auto topoScalePerAxis = demSize / topoSize;
+
+    // scale the topography so that it fits into the DEM
+    const double newScale = std::min(topoScalePerAxis[0], topoScalePerAxis[1]);
+    if (newScale == m_topoRadiusScale)
+    {
+        return;
+    }
+    m_topoRadiusScale = newScale;
+
+    QSignalBlocker signalBlocker(m_ui->topographyRadiusSpinBox);
+
+    m_ui->topographyRadiusSpinBox->setMaximum(m_topoRadiusScale);   // don't allow the mesh to be stretched beyond the DEM
+    m_ui->topographyRadiusSpinBox->setValue(m_topoRadiusScale);
+
+    updateMeshTransform();
+}
+
+void DEMWidget::centerTopoMesh()
+{
+    auto currentDEM = m_dems.value(m_ui->demCombo->currentIndex(), nullptr);
+
+    if (!currentDEM)
+    {
+        return;
+    }
+
+    const auto signalBlockers = {
+        QSignalBlocker(m_ui->topographyCenterXSpinBox),
+        QSignalBlocker(m_ui->topographyCenterYSpinBox) };
+
+    const auto demCenter = DataBounds(currentDEM->bounds()).center();
+    const auto newShift = vtkVector3d{ demCenter[0], demCenter[1], 0.0 };
+    if (newShift == m_topoShift)
+    {
+        return;
+    }
+
+    m_topoShift = newShift;
+
+    m_ui->topographyCenterXSpinBox->setValue(m_topoShift[0]);
+    m_ui->topographyCenterYSpinBox->setValue(m_topoShift[1]);
+
+    updateMeshTransform();
 }

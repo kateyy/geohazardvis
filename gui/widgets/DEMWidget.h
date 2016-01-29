@@ -7,14 +7,14 @@
 
 #include <vtkSmartPointer.h>
 
+#include <core/utility/DataExtent.h>
 #include <gui/gui_api.h>
 
 
 class vtkAlgorithm;
-class vtkImageChangeInformation;
 class vtkImageShiftScale;
 class vtkRenderer;
-class vtkTransformFilter;
+class vtkTransform;
 class vtkWarpScalar;
 
 class vtkGridAxes3DActor;
@@ -29,7 +29,7 @@ class Ui_DEMWidget;
 class GUI_API DEMWidget : public QWidget
 {
 public:
-    DEMWidget(DataSetHandler & dataSetHandler, QWidget * parent = nullptr, Qt::WindowFlags f = 0);
+    explicit DEMWidget(DataSetHandler & dataSetHandler, QWidget * parent = nullptr, Qt::WindowFlags f = 0);
     ~DEMWidget() override;
 
 public:
@@ -40,14 +40,16 @@ protected:
     void showEvent(QShowEvent * event) override;
 
 private:
-    void updatePreview();
-    void setupDEMStages();
+    void rebuildPreview();
+    void setupPipeline();
 
     void updateAvailableDataSets();
 
-    void updateDEMGeoPosition();
-    void updateMeshScale();
+    void updateMeshTransform();
     void updateView();
+
+    void matchTopoMeshRadius();
+    void centerTopoMesh();
 
 private:
     DataSetHandler & m_dataSetHandler;
@@ -56,17 +58,21 @@ private:
     vtkSmartPointer<vtkRenderer> m_renderer;
     vtkSmartPointer<vtkGridAxes3DActor> m_axesActor;
 
-    QList<PolyDataObject *> m_surfaceMeshes;
+    QList<PolyDataObject *> m_topographyMeshes;
     QList<ImageDataObject *> m_dems;
 
-    vtkSmartPointer<vtkImageChangeInformation> m_demTranslate;
-    vtkSmartPointer<vtkImageChangeInformation> m_demScale;
-    vtkSmartPointer<vtkAlgorithm> m_demTransformOutput;
-    vtkSmartPointer<vtkTransformFilter> m_meshTransform;
-    vtkSmartPointer<vtkWarpScalar> m_demWarpElevation;
+    DataBounds m_previousDEMBounds;
 
-    ImageDataObject * m_currentDEM;
-    QString m_demScalarsName;
+    vtkSmartPointer<vtkAlgorithm> m_demPipelineStart;
+    vtkSmartPointer<vtkImageShiftScale> m_demUnitScale;
+    vtkSmartPointer<vtkAlgorithm> m_meshPipelineStart;
+    vtkSmartPointer<vtkTransform> m_meshTransform;
+    vtkSmartPointer<vtkAlgorithm> m_pipelineEnd;
+
+    double m_demUnitDecimalExponent;
+    double m_topoRadiusScale;
+    vtkVector3d m_topoShift;
+
     std::unique_ptr<PolyDataObject> m_dataPreview;
     std::unique_ptr<RenderedData> m_renderedPreview;
 };
