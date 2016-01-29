@@ -186,18 +186,25 @@ else()
 endif()
 
 # find additional VTK components
-find_package(VTK REQUIRED ${VTK_COMPONENTS})
+find_package(VTK COMPONENTS ${VTK_COMPONENTS})
 
 
 include_directories(SYSTEM ${VTK_INCLUDE_DIRS})
 set_property(DIRECTORY APPEND PROPERTY COMPILE_DEFINITIONS ${VTK_DEFINITIONS})
 
 
-set(FindQt5_Components Core Gui Widgets OpenGL)
+find_package(Qt5 5.3 COMPONENTS Core Gui Widgets OpenGL)
 if(NOT ${Qt5Core_VERSION} VERSION_LESS 5.5)
-    list(APPEND FindQt5_Components Concurrent)
+    find_package(Qt5 COMPONENTS Concurrent)
 endif()
 
+set(CMAKE_AUTOMOC ON)
+set(CMAKE_INCLUDE_CURRENT_DIR ON)
+
+include_directories(SYSTEM # disable warnings produced by Qt headers (GCC)
+    ${Qt5Core_INCLUDE_DIRS}
+    ${Qt5Gui_INCLUDE_DIRS}
+)
 
 
 option(OPTION_USE_SYSTEM_LIBZEUG "Search for installed Libzeug Libraries instead of compiling them" OFF)
@@ -249,18 +256,6 @@ else()
         )
     endif()
 endif()
-
-
-find_package(Qt5 COMPONENTS ${FindQt5_Components})
-
-
-set(CMAKE_AUTOMOC ON)
-set(CMAKE_INCLUDE_CURRENT_DIR ON)
-
-include_directories(SYSTEM # disable warnings produced by Qt headers (GCC)
-    ${Qt5Core_INCLUDE_DIRS}
-    ${Qt5Gui_INCLUDE_DIRS}
-)
 
 
 if(WIN32 AND CPACK_INSTALL_3RDPARTY_DLLS)
