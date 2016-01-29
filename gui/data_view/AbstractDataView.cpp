@@ -1,5 +1,7 @@
 #include "AbstractDataView.h"
 
+#include <cassert>
+
 #include <QDockWidget>
 #include <QEvent>
 #include <QLayout>
@@ -7,6 +9,7 @@
 
 #include <vtkIdTypeArray.h>
 
+#include <core/utility/macros.h>
 #include <gui/DataMapping.h>
 
 
@@ -214,15 +217,22 @@ void AbstractDataView::setCurrent(bool isCurrent)
     mainWidget->setFont(f);
 }
 
-bool AbstractDataView::eventFilter(QObject * /*obj*/, QEvent * ev)
+bool AbstractDataView::eventFilter(QObject * DEBUG_ONLY(obj), QEvent * ev)
 {
     if (ev->type() == QEvent::FocusIn)
         emit focused(this);
 
     if (ev->type() == QEvent::Close)
     {
-        m_dockWidgetParent = nullptr;
+        assert(obj == m_dockWidgetParent);
+
+        // In case the dock widget is closed, detach the view from the dock widget as the view will be delete in its user's code.
+        // To correctly emit closed() only once, trigger closeEvent() before detaching the view from its dock widget.
         close();
+
+        m_dockWidgetParent->setWidget(nullptr);
+        this->setParent(nullptr);
+        m_dockWidgetParent = nullptr;
     }
 
     return false;
@@ -233,6 +243,7 @@ void AbstractDataView::closeEvent(QCloseEvent * event)
     if (isVisible())
         emit closed();
 
+    // if the view is closed directly, make sure to also close and delete the dock widget
     if (m_dockWidgetParent)
         m_dockWidgetParent->close();
 
