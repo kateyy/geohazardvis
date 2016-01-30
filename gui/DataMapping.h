@@ -46,6 +46,9 @@ public:
 
     AbstractRenderView * focusedRenderView();
 
+    QList<AbstractRenderView *> renderViews() const;
+    QList<TableView *> tableViews() const;
+
 public:
     void setFocusedView(AbstractDataView * renderView);
 

@@ -50,6 +50,9 @@ void AbstractDataView::updateTitle(QString message)
     else
         title = QString::number(index()) + ": " + message;
 
+    if (title == windowTitle())
+        return;
+
     setWindowTitle(title);
     if (hasDockWidgetParent())
         dockWidgetParent()->setWindowTitle(title);

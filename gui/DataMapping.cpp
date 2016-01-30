@@ -13,11 +13,11 @@
 
 
 DataMapping::DataMapping(DataSetHandler & dataSetHandler)
-    : m_dataSetHandler(dataSetHandler)
-    , m_selectionHandler(std::make_unique<SelectionHandler>())
-    , m_nextTableIndex(0)
-    , m_nextRenderViewIndex(0)
-    , m_focusedRenderView(nullptr)
+    : m_dataSetHandler{ dataSetHandler }
+    , m_selectionHandler{ std::make_unique<SelectionHandler>() }
+    , m_nextTableIndex{ 0 }
+    , m_nextRenderViewIndex{ 0 }
+    , m_focusedRenderView{ nullptr }
 {
 }
 
@@ -150,6 +150,16 @@ bool DataMapping::addToRenderView(const QList<DataObject *> & dataObjects, Abstr
 AbstractRenderView * DataMapping::focusedRenderView()
 {
     return m_focusedRenderView;
+}
+
+QList<AbstractRenderView *> DataMapping::renderViews() const
+{
+    return m_renderViews.values();
+}
+
+QList<TableView *> DataMapping::tableViews() const
+{
+    return m_tableViews.values();
 }
 
 void DataMapping::setFocusedView(AbstractDataView * view)

@@ -676,10 +676,13 @@ void RendererImplementationBase3D::dataVisibilityChanged(RenderedData * rendered
         disconnect(&rendered->dataObject(), &DataObject::boundsChanged, this, &RendererImplementationBase3D::updateBounds);
     }
 
-    // the render view's dataObjects() doesn't yet contain the rendered->dataObject(), if it is currently added
+    // The render view's dataObjects() doesn't yet contain the rendered->dataObject(), if it is currently added.
+    // If it's currently removed, it's not yet removed from the list
+    const auto && currentObjects = renderView().dataObjects();
     bool isEmpty =
-        renderView().dataObjects().isEmpty()
-        && !rendered->isVisible();
+        !rendered->isVisible()
+        && (currentObjects.isEmpty() || (currentObjects.size() == 1
+            && (currentObjects[0] == &rendered->dataObject())));
 
     m_pickerHighlighter->SetEnabled(!isEmpty);
 
