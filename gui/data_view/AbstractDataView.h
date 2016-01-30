@@ -1,13 +1,10 @@
 #pragma once
 
-#include <QWidget>
-
 #include <vtkSmartPointer.h>
 
-#include <gui/gui_api.h>
+#include <gui/widgets/DockableWidget.h>
 
 
-class QDockWidget;
 class QToolBar;
 class vtkIdTypeArray;
 
@@ -17,7 +14,7 @@ class DataSetHandler;
 enum class IndexType;
 
 
-class GUI_API AbstractDataView : public QWidget
+class GUI_API AbstractDataView : public DockableWidget
 {
     Q_OBJECT
 
@@ -30,11 +27,6 @@ public:
     int index() const;
 
     void updateTitle(QString message = {});
-
-    /** @return a QDockWidget, that contains the widget, to be embedded in QMainWindows
-    Creates the QDockWidget instance if required. */
-    QDockWidget * dockWidgetParent();
-    bool hasDockWidgetParent() const;
 
     QToolBar * toolBar();
     bool toolBarIsVisible() const;
@@ -64,8 +56,7 @@ public:
 
 signals:
     /** signaled when the widget receive the keyboard focus (focusInEvent) */
-    void focused(AbstractDataView * tableView);
-    void closed();
+    void focused(AbstractDataView * dataView);
 
     /** user selected some content */
     void objectPicked(DataObject * dataObject, vtkIdType selectionIndex, IndexType indexType);
@@ -79,7 +70,6 @@ protected:
 
     void showEvent(QShowEvent * event) override;
     void focusInEvent(QFocusEvent * event) override;
-    void closeEvent(QCloseEvent * event) override;
 
     bool eventFilter(QObject * obj, QEvent * ev) override;
 
@@ -92,7 +82,6 @@ private:
     const int m_index;
     bool m_initialized;
 
-    QDockWidget * m_dockWidgetParent;
     QToolBar * m_toolBar;
 
     DataObject * m_selectedDataObject;

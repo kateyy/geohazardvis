@@ -94,6 +94,8 @@ set ( SOURCES
     widgets/DataBrowserTableModel.cpp
     widgets/DEMWidget.h
     widgets/DEMWidget.cpp
+    widgets/DockableWidget.h
+    widgets/DockableWidget.cpp
     widgets/GlyphMappingChooser.h
     widgets/GlyphMappingChooser.cpp
     widgets/GlyphMappingChooserListModel.h

@@ -9,20 +9,18 @@
 
 #include <vtkIdTypeArray.h>
 
-#include <core/utility/macros.h>
 #include <gui/DataMapping.h>
 
 
 AbstractDataView::AbstractDataView(
     DataMapping & dataMapping, int index, QWidget * parent, Qt::WindowFlags flags)
-    : QWidget(parent, flags)
-    , m_dataMapping(dataMapping)
-    , m_index(index)
-    , m_initialized(false)
-    , m_dockWidgetParent(nullptr)
-    , m_toolBar(nullptr)
-    , m_selectedDataObject(nullptr)
-    , m_selectedIndices(vtkSmartPointer<vtkIdTypeArray>::New())
+    : DockableWidget(parent, flags)
+    , m_dataMapping{ dataMapping }
+    , m_index{ index }
+    , m_initialized{ false }
+    , m_toolBar{ nullptr }
+    , m_selectedDataObject{ nullptr }
+    , m_selectedIndices{ vtkSmartPointer<vtkIdTypeArray>::New() }
 {
 }
 
@@ -53,28 +51,8 @@ void AbstractDataView::updateTitle(QString message)
         title = QString::number(index()) + ": " + message;
 
     setWindowTitle(title);
-    if (m_dockWidgetParent)
-        m_dockWidgetParent->setWindowTitle(title);
-}
-
-QDockWidget * AbstractDataView::dockWidgetParent()
-{
-    if (m_dockWidgetParent)
-        return m_dockWidgetParent;
-
-    m_dockWidgetParent = new QDockWidget();
-    m_dockWidgetParent->setWidget(this);
-    m_dockWidgetParent->installEventFilter(this);
-    m_dockWidgetParent->setFocusPolicy(Qt::StrongFocus);
-    m_dockWidgetParent->setWindowTitle(windowTitle());
-    m_dockWidgetParent->setAttribute(Qt::WA_DeleteOnClose);
-
-    return m_dockWidgetParent;
-}
-
-bool AbstractDataView::hasDockWidgetParent() const
-{
-    return m_dockWidgetParent != nullptr;
+    if (hasDockWidgetParent())
+        dockWidgetParent()->setWindowTitle(title);
 }
 
 QToolBar * AbstractDataView::toolBar()
@@ -211,41 +189,18 @@ void AbstractDataView::focusInEvent(QFocusEvent * /*event*/)
 
 void AbstractDataView::setCurrent(bool isCurrent)
 {
-    auto mainWidget = m_dockWidgetParent ? (QWidget *) m_dockWidgetParent : this;
+    auto mainWidget = hasDockWidgetParent() ? static_cast<QWidget *>(dockWidgetParent()) : this;
     auto f = mainWidget->font();
     f.setBold(isCurrent);
     mainWidget->setFont(f);
 }
 
-bool AbstractDataView::eventFilter(QObject * DEBUG_ONLY(obj), QEvent * ev)
+bool AbstractDataView::eventFilter(QObject * obj, QEvent * ev)
 {
+    DockableWidget::eventFilter(obj, ev);
+
     if (ev->type() == QEvent::FocusIn)
         emit focused(this);
 
-    if (ev->type() == QEvent::Close)
-    {
-        assert(obj == m_dockWidgetParent);
-
-        // In case the dock widget is closed, detach the view from the dock widget as the view will be delete in its user's code.
-        // To correctly emit closed() only once, trigger closeEvent() before detaching the view from its dock widget.
-        close();
-
-        m_dockWidgetParent->setWidget(nullptr);
-        this->setParent(nullptr);
-        m_dockWidgetParent = nullptr;
-    }
-
     return false;
-}
-
-void AbstractDataView::closeEvent(QCloseEvent * event)
-{
-    if (isVisible())
-        emit closed();
-
-    // if the view is closed directly, make sure to also close and delete the dock widget
-    if (m_dockWidgetParent)
-        m_dockWidgetParent->close();
-
-    QWidget::closeEvent(event);
 }
