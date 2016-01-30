@@ -71,11 +71,13 @@ public:
     void deferEvents();
     void executeDeferredEvents();
 
-    static vtkInformationStringKey * NameKey();
     static vtkInformationIntegerKey * ArrayIsAuxiliaryKey();
 
     static DataObject * readPointer(vtkInformation & information);
     static void storePointer(vtkInformation & information, DataObject * dataObject);
+
+    static QString readName(vtkInformation & information);
+    static void storeName(vtkInformation & information, const DataObject & object);
 
     DataObject(const DataObject &) = delete;
     DataObject(DataObject &&) = delete;

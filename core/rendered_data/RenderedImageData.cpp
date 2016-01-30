@@ -39,10 +39,7 @@ RenderedImageData::RenderedImageData(ImageDataObject & dataObject)
 {
     m_mapper->SetInputConnection(dataObject.processedOutputPort());
 
-    auto & mapperInfo = *m_mapper->GetInformation();
-    mapperInfo.Set(DataObject::NameKey(), dataObject.name().toUtf8().data());
-    DataObject::storePointer(mapperInfo, &dataObject);
-    AbstractVisualizedData::storePointer(mapperInfo, this);
+    setupInformation(*m_mapper->GetInformation(), *this);
 }
 
 std::unique_ptr<PropertyGroup> RenderedImageData::createConfigGroup()

@@ -89,11 +89,7 @@ RenderedVectorGrid3D::RenderedVectorGrid3D(VectorGrid3DDataObject & dataObject)
         m_planeWidgets[i]->SetLeftButtonAction(vtkImagePlaneWidget::VTK_SLICE_MOTION_ACTION);
         m_planeWidgets[i]->SetRightButtonAction(vtkImagePlaneWidget::VTK_CURSOR_ACTION);
 
-        auto & mapperInfo = *m_planeWidgets[i]->GetTexturePlaneMapper()->GetInformation();
-
-        DataObject::storePointer(mapperInfo, &dataObject);
-        mapperInfo.Set(DataObject::NameKey(), dataObject.name().toUtf8().data());
-        AbstractVisualizedData::storePointer(mapperInfo, this);
+        setupInformation(*m_planeWidgets[i]->GetTexturePlaneMapper()->GetInformation(), *this);
 
         auto property = vtkSmartPointer<vtkProperty>::New();
         property->LightingOn();

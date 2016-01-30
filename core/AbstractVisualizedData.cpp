@@ -96,6 +96,14 @@ vtkDataSet * AbstractVisualizedData::colorMappingInputData(int connection)
     return vtkDataSet::SafeDownCast(alg->GetOutputDataObject(0));
 }
 
+void AbstractVisualizedData::setupInformation(vtkInformation & information, AbstractVisualizedData & visualization)
+{
+    auto & dataObject = visualization.dataObject();
+    DataObject::storePointer(information, &dataObject);
+    DataObject::storeName(information, dataObject);
+    AbstractVisualizedData::storePointer(information, &visualization);
+}
+
 AbstractVisualizedData * AbstractVisualizedData::readPointer(vtkInformation & information)
 {
     static_assert(sizeof(int*) == sizeof(DataObject*), "");

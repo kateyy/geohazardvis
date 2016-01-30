@@ -2,10 +2,12 @@
 
 #include <vtkDataSet.h>
 #include <vtkInformationIntegerPointerKey.h>
+#include <vtkInformationStringKey.h>
 #include <vtkTrivialProducer.h>
 
 
 vtkInformationKeyMacro(DataObjectPrivate, DataObjectKey, IntegerPointer);
+vtkInformationKeyMacro(DataObjectPrivate, NameKey, String);
 
 
 DataObjectPrivate::DataObjectPrivate(DataObject & dataObject, const QString & name, vtkDataSet * dataSet)

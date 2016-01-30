@@ -11,7 +11,6 @@
 #include <vtkDataSet.h>
 #include <vtkFieldData.h>
 #include <vtkInformation.h>
-#include <vtkInformationStringKey.h>
 #include <vtkInformationIntegerKey.h>
 #include <vtkPointData.h>
 #include <vtkSmartPointer.h>
@@ -22,7 +21,6 @@
 #include <core/utility/vtkstringhelper.h>
 
 
-vtkInformationKeyMacro(DataObject, NameKey, String);
 vtkInformationKeyMacro(DataObject, ArrayIsAuxiliaryKey, Integer);
 
 
@@ -160,6 +158,21 @@ DataObject * DataObject::readPointer(vtkInformation & information)
 void DataObject::storePointer(vtkInformation & information, DataObject * dataObject)
 {
     information.Set(DataObjectPrivate::DataObjectKey(), reinterpret_cast<int *>(dataObject), 1);
+}
+
+QString DataObject::readName(vtkInformation & information)
+{
+    if (!information.Has(DataObjectPrivate::NameKey()))
+    {
+        return{};
+    }
+
+    return QString::fromUtf8(information.Get(DataObjectPrivate::NameKey()));
+}
+
+void DataObject::storeName(vtkInformation & information, const DataObject & dataObject)
+{
+    information.Set(DataObjectPrivate::NameKey(), dataObject.name().toUtf8().data());
 }
 
 bool DataObject::checkIfBoundsChanged()

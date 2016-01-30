@@ -84,9 +84,9 @@ void Picker::pick(const vtkVector2i & clickPosXY, vtkRenderer & renderer)
         return;
     }
 
-    auto mapperInfo = abstractMapper->GetInformation();
+    auto & mapperInfo = *abstractMapper->GetInformation();
 
-    m_pickedVisualizedData = AbstractVisualizedData::readPointer(*mapperInfo);
+    m_pickedVisualizedData = AbstractVisualizedData::readPointer(mapperInfo);
     if (!m_pickedVisualizedData)
     {
         qDebug() << "no visualization referenced in mapper";
@@ -102,14 +102,13 @@ void Picker::pick(const vtkVector2i & clickPosXY, vtkRenderer & renderer)
     stream.setRealNumberNotation(QTextStream::RealNumberNotation::ScientificNotation);
     stream.setRealNumberPrecision(5);
 
-    QString inputName;
-    if (mapperInfo->Has(DataObject::NameKey()))
-        inputName = DataObject::NameKey()->Get(mapperInfo);
-    else
+    auto inputName = DataObject::readName(mapperInfo);
+    if (inputName.isEmpty())
+    {
         inputName = "(unnamed)";
+    }
 
-    stream
-        << "Data Set: " << inputName << endl;
+    stream << "Data Set: " << inputName << endl;
 
 
     // ----------------------------

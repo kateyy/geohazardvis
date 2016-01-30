@@ -16,6 +16,7 @@
 class vtkAlgorithm;
 class vtkDataSet;
 class vtkInformationIntegerPointerKey;
+class vtkInformationStringKey;
 class vtkObject;
 
 class DataObject;
@@ -29,6 +30,7 @@ public:
     virtual ~DataObjectPrivate();
 
     static vtkInformationIntegerPointerKey * DataObjectKey();
+    static vtkInformationStringKey * NameKey();
 
     vtkAlgorithm * trivialProducer();
 
