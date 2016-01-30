@@ -411,10 +411,12 @@ void MainWindow::dialog_exportDataSet()
 
 void MainWindow::showDEMWidget()
 {
-    DEMWidget * demWidget = new DEMWidget(*m_dataSetHandler);
+    auto demWidget = new DEMWidget(*m_dataSetHandler);
     demWidget->setAttribute(Qt::WA_DeleteOnClose);
-    demWidget->setWindowModality(Qt::NonModal);
-    demWidget->show();
+    auto dockWidget = demWidget->dockWidgetParent();
+    dockWidget->setParent(this);
+    dockWidget->setFloating(true);
+    dockWidget->show();
 }
 
 void MainWindow::tabbedDockWidgetToFront(QDockWidget * widget)

@@ -30,7 +30,7 @@
 
 
 DEMWidget::DEMWidget(DataSetHandler & dataSetHandler, QWidget * parent, Qt::WindowFlags f)
-    : QWidget(parent, f)
+    : DockableWidget(parent, f)
     , m_dataSetHandler(dataSetHandler)
     , m_ui{ std::make_unique<Ui_DEMWidget>() }
     , m_dataPreview{ nullptr }
@@ -104,7 +104,10 @@ DEMWidget::DEMWidget(DataSetHandler & dataSetHandler, QWidget * parent, Qt::Wind
 
 DEMWidget::~DEMWidget()
 {
-    m_renderer->RemoveAllViewProps();
+    if (m_renderer)
+    {
+        m_renderer->RemoveAllViewProps();
+    }
 }
 
 bool DEMWidget::save()

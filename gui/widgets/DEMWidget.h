@@ -3,12 +3,11 @@
 #include <memory>
 
 #include <QList>
-#include <QWidget>
 
 #include <vtkSmartPointer.h>
 
 #include <core/utility/DataExtent.h>
-#include <gui/gui_api.h>
+#include <gui/widgets/DockableWidget.h>
 
 
 class vtkAlgorithm;
@@ -26,7 +25,7 @@ class RenderedData;
 class Ui_DEMWidget;
 
 
-class GUI_API DEMWidget : public QWidget
+class GUI_API DEMWidget : public DockableWidget
 {
 public:
     explicit DEMWidget(DataSetHandler & dataSetHandler, QWidget * parent = nullptr, Qt::WindowFlags f = 0);
