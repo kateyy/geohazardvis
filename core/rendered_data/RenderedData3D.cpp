@@ -65,6 +65,8 @@ vtkSmartPointer<vtkProp3DCollection> RenderedData3D::fetchViewProps3D()
 
 void RenderedData3D::visibilityChangedEvent(bool visible)
 {
+    RenderedData::visibilityChangedEvent(visible);
+
     if (!m_glyphMapping)
         return;
 

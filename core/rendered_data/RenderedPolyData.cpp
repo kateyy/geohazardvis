@@ -40,9 +40,9 @@ namespace
     {
         flat = VTK_FLAT, gouraud = VTK_GOURAUD, phong = VTK_PHONG
     };
-    enum class Representation
+    enum class SurfaceRepresentation
     {
-        points = VTK_POINTS, wireframe = VTK_WIREFRAME, surface = VTK_SURFACE
+        points = VTK_POINTS, wireframe = VTK_WIREFRAME, faces = VTK_SURFACE
     };
 }
 
@@ -81,7 +81,7 @@ const PolyDataObject & RenderedPolyData::polyDataObject() const
 
 std::unique_ptr<PropertyGroup> RenderedPolyData::createConfigGroup()
 {
-    auto renderSettings = std::make_unique<PropertyGroup>();
+    auto renderSettings = RenderedData3D::createConfigGroup();
 
     renderSettings->addProperty<Color>("Color",
         [this] () {
@@ -93,19 +93,20 @@ std::unique_ptr<PropertyGroup> RenderedPolyData::createConfigGroup()
         emit geometryChanged();
     });
 
-    renderSettings->addProperty<Representation>("Representation",
+    auto surfaceRepr = renderSettings->addProperty<SurfaceRepresentation>("SurfaceRepresentation",
         [this] () {
-        return static_cast<Representation>(renderProperty()->GetRepresentation());
+        return static_cast<SurfaceRepresentation>(renderProperty()->GetRepresentation());
     },
-        [this] (const Representation & rep) {
+        [this] (SurfaceRepresentation rep) {
         renderProperty()->SetRepresentation(static_cast<int>(rep));
         emit geometryChanged();
-    })
-        ->setStrings({
-            { Representation::points, "points" },
-            { Representation::wireframe, "wireframe" },
-            { Representation::surface, "surface" }
     });
+    surfaceRepr->setStrings({
+        { SurfaceRepresentation::points, "Points" },
+        { SurfaceRepresentation::wireframe, "Wireframe" },
+        { SurfaceRepresentation::faces, "Faces" }
+    });
+    surfaceRepr->setOption("title", "Surface Representation");
 
     renderSettings->addProperty<bool>("edgesVisible",
         [this]() {

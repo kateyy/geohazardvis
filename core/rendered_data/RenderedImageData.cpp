@@ -44,7 +44,7 @@ RenderedImageData::RenderedImageData(ImageDataObject & dataObject)
 
 std::unique_ptr<PropertyGroup> RenderedImageData::createConfigGroup()
 {
-    auto renderSettings = std::make_unique<PropertyGroup>();
+    auto renderSettings = RenderedData::createConfigGroup();
 
     auto prop_interpolation = renderSettings->addProperty<Interpolation>("Interpolation",
         [this] () {
@@ -155,5 +155,7 @@ void RenderedImageData::colorMappingGradientChangedEvent()
 
 void RenderedImageData::visibilityChangedEvent(bool visible)
 {
+    RenderedData::visibilityChangedEvent(visible);
+
     slice()->SetVisibility(visible);
 }
