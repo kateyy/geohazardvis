@@ -24,6 +24,7 @@ PluginTemplate::PluginTemplate(const QString & name, const QString & description
 
     auto widget = new QWidget();
     m_dockWidget->setWidget(widget);
+    m_dockWidget->setWindowTitle(name);
 
     m_lineEdit = new QLineEdit(text, widget);
 
