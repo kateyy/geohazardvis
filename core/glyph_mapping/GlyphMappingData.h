@@ -80,7 +80,7 @@ public:
     vtkActor * actor();
     vtkProp * viewProp();
 
-    virtual reflectionzeug::PropertyGroup * createPropertyGroup();
+    virtual std::unique_ptr<reflectionzeug::PropertyGroup> createPropertyGroup();
 
     virtual vtkAlgorithmOutput * vectorDataOutputPort() = 0;
 

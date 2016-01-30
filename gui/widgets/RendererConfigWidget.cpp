@@ -61,8 +61,7 @@ void RendererConfigWidget::clear()
 void RendererConfigWidget::setCurrentRenderView(AbstractRenderView * renderView)
 {
     m_ui->propertyBrowser->setRoot(nullptr);
-    delete m_propertyRoot;
-    m_propertyRoot = nullptr;
+    m_propertyRoot.reset();
 
     auto lastRenderView = m_currentRenderView;
     m_currentRenderView = renderView;
@@ -173,7 +172,7 @@ void RendererConfigWidget::updateInteractionModeCombo()
 void RendererConfigWidget::updatePropertyGroup()
 {
     m_propertyRoot = createPropertyGroup(m_currentRenderView);
-    m_ui->propertyBrowser->setRoot(m_propertyRoot);
+    m_ui->propertyBrowser->setRoot(m_propertyRoot.get());
     m_ui->propertyBrowser->resizeColumnToContents(0);
 }
 
@@ -184,7 +183,7 @@ void RendererConfigWidget::setInteractionStyle(const QString & styleName)
     m_currentRenderView->implementation().setInteractionStrategy(styleName);
 }
 
-PropertyGroup * RendererConfigWidget::createPropertyGroup(AbstractRenderView * renderView)
+std::unique_ptr<PropertyGroup> RendererConfigWidget::createPropertyGroup(AbstractRenderView * renderView)
 {
     switch (renderView->contentType())
     {
@@ -202,6 +201,6 @@ PropertyGroup * RendererConfigWidget::createPropertyGroup(AbstractRenderView * r
         return createPropertyGroupPlot(renderView, implPlot);
     }
     default:
-        return new PropertyGroup();
+        return std::make_unique<PropertyGroup>();
     }
 }

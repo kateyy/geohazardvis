@@ -52,9 +52,9 @@ void RendererConfigWidget::readCameraStats(vtkObject * DEBUG_ONLY(caller), unsig
         cameraGroup->forEach(updateFunc);
 }
 
-reflectionzeug::PropertyGroup * RendererConfigWidget::createPropertyGroupRenderer(AbstractRenderView * renderView, RendererImplementationBase3D * impl)
+std::unique_ptr<PropertyGroup> RendererConfigWidget::createPropertyGroupRenderer(AbstractRenderView * renderView, RendererImplementationBase3D * impl)
 {
-    PropertyGroup * root = new PropertyGroup();
+    auto root = std::make_unique<PropertyGroup>();
 
     if (renderView->numberOfSubViews() == 1)
     {
@@ -223,7 +223,7 @@ reflectionzeug::PropertyGroup * RendererConfigWidget::createPropertyGroupRendere
         });
     }
 
-    createPropertyGroupRenderer2(root, renderView, impl);
+    createPropertyGroupRenderer2(*root, renderView, impl);
 
     return root;
 }

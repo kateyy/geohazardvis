@@ -33,16 +33,16 @@ enum class Notation
 }
 
 
-reflectionzeug::PropertyGroup * RendererConfigWidget::createPropertyGroupPlot(
+std::unique_ptr<PropertyGroup> RendererConfigWidget::createPropertyGroupPlot(
     AbstractRenderView * /*renderView*/, RendererImplementationPlot * impl)
 {
-    PropertyGroup * root = new PropertyGroup();
+    auto root = std::make_unique<PropertyGroup>();
 
     root->addProperty<bool>("AxesAutoUpdate", impl, &RendererImplementationPlot::axesAutoUpdate, &RendererImplementationPlot::setAxesAutoUpdate)
         ->setOption("title", "Automatic Axes Update");
 
 
-    auto addAxisProperties = [impl, root] (int axis, const std::string & groupName, const std::string groupTitle)
+    auto addAxisProperties = [impl, &root] (int axis, const std::string & groupName, const std::string groupTitle)
     {
         auto group = root->addGroup(groupName);
         group->setOption("title", groupTitle);

@@ -44,7 +44,7 @@ public:
     static std::unique_ptr<CanvasExporter> newInstance();
 
 protected:
-    virtual reflectionzeug::PropertyGroup * createPropertyGroup() = 0;
+    virtual std::unique_ptr<reflectionzeug::PropertyGroup> createPropertyGroup() = 0;
 
     friend class CanvasExporterRegistry;
     virtual QStringList fileFormats() const = 0;
@@ -56,7 +56,7 @@ private:
     QString m_format;
     QString m_fileName;
 
-    reflectionzeug::PropertyGroup * m_propertyGroup;
+    std::unique_ptr<reflectionzeug::PropertyGroup> m_propertyGroup;
 };
 
 template<typename T>

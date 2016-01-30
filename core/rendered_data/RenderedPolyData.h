@@ -22,7 +22,7 @@ public:
     PolyDataObject & polyDataObject();
     const PolyDataObject & polyDataObject() const;
 
-    reflectionzeug::PropertyGroup * createConfigGroup() override;
+    std::unique_ptr<reflectionzeug::PropertyGroup> createConfigGroup() override;
 
     const QString & texture() const;
     void setTexture(const QString & fileName);

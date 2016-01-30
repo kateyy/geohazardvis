@@ -1,5 +1,7 @@
 #pragma once
 
+#include <memory>
+
 #include <QDockWidget>
 #include <QScopedPointer>
 
@@ -38,7 +40,7 @@ private:
 private:
     QScopedPointer<Ui_RenderConfigWidget> m_ui;
 
-    reflectionzeug::PropertyGroup * m_propertyRoot;
+    std::unique_ptr<reflectionzeug::PropertyGroup> m_propertyRoot;
 
     AbstractRenderView * m_renderView;
     AbstractVisualizedData * m_content;

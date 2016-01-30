@@ -1,5 +1,7 @@
 #include <gtest/gtest.h>
 
+#include <memory>
+
 #include <vtkPolyData.h>
 #include <vtkFloatArray.h>
 
@@ -59,14 +61,14 @@ class DataSetHandler_test: public testing::Test
 public:
     void SetUp() override
     {
-        handler = new DataSetHandler();
+        handler = std::make_unique<DataSetHandler>();
     }
     void TearDown() override
     {
-        delete handler;
+        handler.reset();
     }
 
-    DataSetHandler * handler;
+    std::unique_ptr<DataSetHandler> handler;
 };
 
 TEST_F(DataSetHandler_test, AddExternalDataSet)

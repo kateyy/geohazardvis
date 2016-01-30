@@ -15,7 +15,7 @@ class CORE_API RenderedImageData : public RenderedData
 public:
     explicit RenderedImageData(ImageDataObject & dataObject);
 
-    reflectionzeug::PropertyGroup * createConfigGroup() override;
+    std::unique_ptr<reflectionzeug::PropertyGroup> createConfigGroup() override;
 
 protected:
     vtkSmartPointer<vtkPropCollection> fetchViewProps() override;

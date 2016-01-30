@@ -14,13 +14,13 @@
 
 using namespace reflectionzeug;
 
-void RendererConfigWidget::createPropertyGroupRenderer2(PropertyGroup * root, AbstractRenderView * renderView, RendererImplementationBase3D * impl)
+void RendererConfigWidget::createPropertyGroupRenderer2(PropertyGroup & root, AbstractRenderView * renderView, RendererImplementationBase3D * impl)
 {
     bool is3DView = renderView->implementation().currentInteractionStrategy() == "3D terrain";
 
     if (is3DView)
     {
-        PropertyGroup * lightingGroup = root->addGroup("Lighting");
+        PropertyGroup * lightingGroup = root.addGroup("Lighting");
 
         lightingGroup->addProperty<double>("Intensity",
             [renderView, impl]() { return impl->lightKit()->GetKeyLightIntensity(); },
@@ -35,7 +35,7 @@ void RendererConfigWidget::createPropertyGroupRenderer2(PropertyGroup * root, Ab
         });
     }
 
-    auto axisTitlesGroup = root->addGroup("AxisTitles");
+    auto axisTitlesGroup = root.addGroup("AxisTitles");
     axisTitlesGroup->setOption("title", "Axis Titles");
     {
         for (char axis = 0; axis < 3; ++axis)
@@ -52,7 +52,7 @@ void RendererConfigWidget::createPropertyGroupRenderer2(PropertyGroup * root, Ab
         }
     }
 
-    auto axesGroup = root->addGroup("Axes");
+    auto axesGroup = root.addGroup("Axes");
     {
         axesGroup->addProperty<bool>("Visible",
             std::bind(&AbstractRenderView::axesEnabled, renderView),

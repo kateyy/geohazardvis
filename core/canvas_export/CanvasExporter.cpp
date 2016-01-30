@@ -6,14 +6,10 @@
 
 
 CanvasExporter::CanvasExporter()
-    : m_propertyGroup(nullptr)
 {
 }
 
-CanvasExporter::~CanvasExporter()
-{
-    delete m_propertyGroup;
-}
+CanvasExporter::~CanvasExporter() = default;
 
 QString CanvasExporter::fileExtension() const
 {
@@ -30,7 +26,7 @@ reflectionzeug::PropertyGroup * CanvasExporter::propertyGroup()
     if (!m_propertyGroup)
         m_propertyGroup = createPropertyGroup();
 
-    return m_propertyGroup;
+    return m_propertyGroup.get();
 }
 
 void CanvasExporter::setRenderWindow(vtkRenderWindow * renderWindow)

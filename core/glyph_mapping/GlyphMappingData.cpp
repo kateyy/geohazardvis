@@ -25,6 +25,8 @@
 #include <core/rendered_data/RenderedData.h>
 
 
+using namespace reflectionzeug;
+
 namespace
 {
 
@@ -196,9 +198,9 @@ void GlyphMappingData::setLineWidth(unsigned lineWidth)
     m_actor->GetProperty()->SetLineWidth(static_cast<float>(lineWidth));
 }
 
-reflectionzeug::PropertyGroup * GlyphMappingData::createPropertyGroup()
+std::unique_ptr<PropertyGroup> GlyphMappingData::createPropertyGroup()
 {
-    reflectionzeug::PropertyGroup * group = new reflectionzeug::PropertyGroup();
+    auto group = std::make_unique<PropertyGroup>();
 
     auto prop_representation = group->addProperty<Representation>("style",
         [this] () {return representation(); },
@@ -212,13 +214,13 @@ reflectionzeug::PropertyGroup * GlyphMappingData::createPropertyGroup()
             { Representation::CylindricArrow, "arrow (cylindric)" }
     });
 
-    auto * edgeColor = group->addProperty<reflectionzeug::Color>("color",
+    auto * edgeColor = group->addProperty<Color>("color",
         [this] () {
         double values[3];
         color(values);
-        return reflectionzeug::Color(static_cast<int>(values[0] * 255), static_cast<int>(values[1] * 255), static_cast<int>(values[2] * 255));
+        return Color(static_cast<int>(values[0] * 255), static_cast<int>(values[1] * 255), static_cast<int>(values[2] * 255));
     },
-        [this] (const reflectionzeug::Color & color) {
+        [this] (const Color & color) {
         setColor(color.red() / 255.0, color.green() / 255.0, color.blue() / 255.0);
         emit geometryChanged();
     });

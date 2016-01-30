@@ -82,9 +82,9 @@ const PolyDataObject & RenderedPolyData::polyDataObject() const
     return static_cast<const PolyDataObject &>(dataObject());
 }
 
-reflectionzeug::PropertyGroup * RenderedPolyData::createConfigGroup()
+std::unique_ptr<PropertyGroup> RenderedPolyData::createConfigGroup()
 {
-    PropertyGroup * renderSettings = new PropertyGroup();
+    auto renderSettings = std::make_unique<PropertyGroup>();
 
     renderSettings->addProperty<Color>("Color",
         [this] () {

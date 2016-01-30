@@ -47,12 +47,12 @@ private:
 
     void setInteractionStyle(const QString & styleName);
 
-    reflectionzeug::PropertyGroup * createPropertyGroup(AbstractRenderView * renderView);
-    reflectionzeug::PropertyGroup * createPropertyGroupRenderer(
+    std::unique_ptr<reflectionzeug::PropertyGroup> createPropertyGroup(AbstractRenderView * renderView);
+    std::unique_ptr<reflectionzeug::PropertyGroup> createPropertyGroupRenderer(
         AbstractRenderView * renderView, RendererImplementationBase3D * impl);
-    void createPropertyGroupRenderer2(reflectionzeug::PropertyGroup * root,   // work around C1128 in Visual Studio 2015
+    void createPropertyGroupRenderer2(reflectionzeug::PropertyGroup & root,   // work around C1128 in Visual Studio 2015
         AbstractRenderView * renderView, RendererImplementationBase3D * impl);
-    reflectionzeug::PropertyGroup * createPropertyGroupPlot(
+    std::unique_ptr<reflectionzeug::PropertyGroup> createPropertyGroupPlot(
         AbstractRenderView * renderView, RendererImplementationPlot * impl);
 
 private:
@@ -60,7 +60,7 @@ private:
     ResidualViewConfigWidget * m_residualUi;
     CollapsibleGroupBox * m_residualGroupBox;
 
-    reflectionzeug::PropertyGroup * m_propertyRoot;
+    std::unique_ptr<reflectionzeug::PropertyGroup> m_propertyRoot;
     AbstractRenderView * m_currentRenderView;
     QMap<vtkSmartPointer<vtkCamera>, unsigned long> m_cameraObserverTags;
 };

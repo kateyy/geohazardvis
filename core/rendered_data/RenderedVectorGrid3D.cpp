@@ -129,9 +129,9 @@ const VectorGrid3DDataObject & RenderedVectorGrid3D::vectorGrid3DDataObject() co
     return static_cast<const VectorGrid3DDataObject &>(dataObject());
 }
 
-PropertyGroup * RenderedVectorGrid3D::createConfigGroup()
+std::unique_ptr<PropertyGroup> RenderedVectorGrid3D::createConfigGroup()
 {
-    PropertyGroup * renderSettings = new PropertyGroup();
+    auto renderSettings = std::make_unique<PropertyGroup>();
 
     auto group_glyphs = renderSettings->addGroup("Glyphs");
     {

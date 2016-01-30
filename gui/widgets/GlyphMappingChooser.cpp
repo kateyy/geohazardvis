@@ -139,16 +139,15 @@ void GlyphMappingChooser::updateVectorsList()
     updateGuiForSelection({});
 
     m_ui->propertyBrowser->setRoot(nullptr);
-    qDeleteAll(m_propertyGroups);
     m_propertyGroups.clear();
 
     m_listModel->setMapping(m_mapping);
 
     if (m_mapping)
     {
-        for (GlyphMappingData * vectors : m_mapping->vectors())
+        for (auto vectors : m_mapping->vectors())
         {
-            m_propertyGroups << vectors->createPropertyGroup();
+            m_propertyGroups.push_back(vectors->createPropertyGroup());
             connect(vectors, &GlyphMappingData::geometryChanged, this, &GlyphMappingChooser::renderSetupChanged);
         }
 
@@ -183,7 +182,7 @@ void GlyphMappingChooser::updateGuiForSelection(const QItemSelection & selection
         int index = selection.indexes().first().row();
         QString vectorsName = m_mapping->vectorNames()[index];
 
-        m_ui->propertyBrowser->setRoot(m_propertyGroups[index]);
+        m_ui->propertyBrowser->setRoot(m_propertyGroups[index].get());
         m_ui->propertyBrowserContainer->setTitle(vectorsName);
     }
 }

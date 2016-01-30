@@ -7,6 +7,6 @@ public:
     CanvasExporterTIFF();
 
 protected:
-    reflectionzeug::PropertyGroup * createPropertyGroup() override;
+    std::unique_ptr<reflectionzeug::PropertyGroup> createPropertyGroup() override;
     QStringList fileFormats() const override;
 };

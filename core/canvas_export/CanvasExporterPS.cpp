@@ -94,9 +94,9 @@ bool CanvasExporterPS::openGLContextSupported()
     return CanvasExporter::openGLContextSupported();
 }
 
-PropertyGroup * CanvasExporterPS::createPropertyGroup()
+std::unique_ptr<PropertyGroup> CanvasExporterPS::createPropertyGroup()
 {
-    PropertyGroup * group = new PropertyGroup();
+    auto group = std::make_unique<PropertyGroup>();
 
     group->addProperty<std::string>("Title",
         [this] () -> std::string {

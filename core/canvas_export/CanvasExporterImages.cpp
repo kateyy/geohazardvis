@@ -59,9 +59,9 @@ bool CanvasExporterImages::write()
     return true;
 }
 
-PropertyGroup * CanvasExporterImages::createPropertyGroup()
+std::unique_ptr<PropertyGroup> CanvasExporterImages::createPropertyGroup()
 {
-    auto group = new PropertyGroup();
+    auto group = std::make_unique<PropertyGroup>();
 
     auto prop_bufferType = group->addProperty<BufferType>("BufferType",
         [this] () { return static_cast<BufferType>(m_toImageFilter->GetInputBufferType()); },

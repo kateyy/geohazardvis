@@ -29,7 +29,7 @@ public:
     VectorGrid3DDataObject & vectorGrid3DDataObject();
     const VectorGrid3DDataObject & vectorGrid3DDataObject() const;
 
-    reflectionzeug::PropertyGroup * createConfigGroup() override;
+    std::unique_ptr<reflectionzeug::PropertyGroup> createConfigGroup() override;
 
     void setSampleRate(int x, int y, int z);
     void sampleRate(int sampleRate[3]);

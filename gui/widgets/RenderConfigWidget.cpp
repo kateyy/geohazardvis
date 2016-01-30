@@ -40,8 +40,7 @@ void RenderConfigWidget::clear()
     updateTitle();
 
     m_ui->propertyBrowser->setRoot(nullptr);
-    delete m_propertyRoot;
-    m_propertyRoot = nullptr;
+    m_propertyRoot.reset();
 
     update();
 }
@@ -80,7 +79,7 @@ void RenderConfigWidget::setCurrentRenderView(AbstractRenderView * renderView)
 
     m_propertyRoot = m_content->createConfigGroup();
 
-    m_ui->propertyBrowser->setRoot(m_propertyRoot);
+    m_ui->propertyBrowser->setRoot(m_propertyRoot.get());
     m_ui->propertyBrowser->resizeColumnToContents(0);
 
     update();
@@ -100,7 +99,7 @@ void RenderConfigWidget::setSelectedData(DataObject * dataObject)
     m_content = content;
     updateTitle();
     m_propertyRoot = m_content->createConfigGroup();
-    m_ui->propertyBrowser->setRoot(m_propertyRoot);
+    m_ui->propertyBrowser->setRoot(m_propertyRoot.get());
     m_ui->propertyBrowser->resizeColumnToContents(0);
 
     update();

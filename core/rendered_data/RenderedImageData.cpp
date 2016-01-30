@@ -45,9 +45,9 @@ RenderedImageData::RenderedImageData(ImageDataObject & dataObject)
     AbstractVisualizedData::storePointer(mapperInfo, this);
 }
 
-reflectionzeug::PropertyGroup * RenderedImageData::createConfigGroup()
+std::unique_ptr<PropertyGroup> RenderedImageData::createConfigGroup()
 {
-    PropertyGroup * renderSettings = new PropertyGroup();
+    auto renderSettings = std::make_unique<PropertyGroup>();
 
     auto prop_interpolation = renderSettings->addProperty<Interpolation>("Interpolation",
         [this] () {

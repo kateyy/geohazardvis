@@ -19,7 +19,7 @@ public:
 
 protected:
     /** provides buffer type and magnification property */
-    reflectionzeug::PropertyGroup * createPropertyGroup() override;
+    std::unique_ptr<reflectionzeug::PropertyGroup> createPropertyGroup() override;
 
     /** complete file name with correct file extension */
     QString verifiedFileName() const;

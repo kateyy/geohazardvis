@@ -28,9 +28,9 @@ ImageProfileContextPlot::ImageProfileContextPlot(ImageProfileData & dataObject)
     connect(&dataObject, &DataObject::dataChanged, this, &ImageProfileContextPlot::updatePlot);
 }
 
-PropertyGroup * ImageProfileContextPlot::createConfigGroup()
+std::unique_ptr<PropertyGroup> ImageProfileContextPlot::createConfigGroup()
 {
-    PropertyGroup * root = new PropertyGroup();
+    auto root = std::make_unique<PropertyGroup>();
 
     root->addProperty<std::string>("Title",
         [this] () { return title().toStdString(); },

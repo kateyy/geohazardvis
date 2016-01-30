@@ -1,7 +1,9 @@
 #pragma once
 
+#include <memory>
+#include <vector>
+
 #include <QDockWidget>
-#include <QScopedPointer>
 
 #include <gui/gui_api.h>
 
@@ -48,11 +50,11 @@ private:
     void updateTitle();
 
 private:
-    QScopedPointer<Ui_GlyphMappingChooser> m_ui;
+    std::unique_ptr<Ui_GlyphMappingChooser> m_ui;
 
     AbstractRenderView * m_renderView;
     GlyphMapping * m_mapping;
     GlyphMappingChooserListModel * m_listModel;
-    QList<reflectionzeug::PropertyGroup *> m_propertyGroups;
+    std::vector<std::unique_ptr<reflectionzeug::PropertyGroup>> m_propertyGroups;
     QMetaObject::Connection m_startingIndexConnection;
 };

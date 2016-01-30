@@ -23,7 +23,7 @@ class CORE_API ImageProfileContextPlot : public Context2DData
 public:
     explicit ImageProfileContextPlot(ImageProfileData & dataObject);
 
-    reflectionzeug::PropertyGroup * createConfigGroup() override;
+    std::unique_ptr<reflectionzeug::PropertyGroup> createConfigGroup() override;
 
     ImageProfileData & profileData();
     const ImageProfileData & profileData() const;

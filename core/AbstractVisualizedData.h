@@ -1,5 +1,7 @@
 #pragma once
 
+#include <memory>
+
 #include <QObject>
 
 #include <vtkSmartPointer.h>
@@ -38,7 +40,7 @@ public:
     bool isVisible() const;
     void setVisible(bool visible);
 
-    virtual reflectionzeug::PropertyGroup * createConfigGroup() = 0;
+    virtual std::unique_ptr<reflectionzeug::PropertyGroup> createConfigGroup() = 0;
 
     /** set scalars that will configure color mapping for this data */
     void setScalarsForColorMapping(ColorMappingData * scalars);
