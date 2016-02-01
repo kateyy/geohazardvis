@@ -8,7 +8,8 @@ list(APPEND DEFAULT_COMPILE_DEFS
 #    _CRT_SECURE_NO_DEPRECATE   # Disable CRT deprecation warnings
 )
 
-option(OPTION_RELEASE_LTCG "Enable whole program optimization / link time code generation in release builds" OFF)
+option(OPTION_RELEASE_LTCG "Enable whole program optimization / link time code generation in Release and MinSizeRel builds" OFF)
+option(OPTION_RELWITHDEBINFO_LTCG "Enable whole program optimization / link time code generation in RelWithDebInfo builds" OFF)
 option(OPTION_DEBUG_ADDITIONAL_RUNTME_CHECKS "Include all available runtime checks in debug builds." OFF)
 
 option(OPTION_WIN32_GUI_APP "Build an executable with a WinMain entry point on windows. This disables the console window" ON)
@@ -46,6 +47,7 @@ set(DEFAULT_COMPILE_FLAGS
     # Ot           -> favor fast code
 
     # RTC1         -> Runtime error checks
+    # guard:cf     -> Enable compiler generation of Control Flow Guard security checks (Visual Studio 2015, incompatible with /ZI)
 
     # MP           -> build with multiple processes
 
@@ -58,7 +60,7 @@ set(DEFAULT_COMPILE_FLAGS
     # arch:SSE2    -> enable enhanced instruction set: streaming simd extensions 2
     # fp:precise   -> floating point model: precise
     # fp:fast      -> floating point model: fast
-    # bigobj       -> Increase Number of Sections in .Obj file (required for libzeug and MSVC 14)
+    # bigobj       -> Increase Number of Sections in .Obj file
 
     # Zc:wchar_t   -> treat wchar_t as built-in type: yes
     # Zc:forScope  -> force conformance in for loop scope: Yes
@@ -105,7 +107,11 @@ endif()
 
 
 if (OPTION_RELEASE_LTCG)
-    list(APPEND DEFAULT_COMPILE_FLAGS $<$<NOT:$<CONFIG:Debug>>: /GL> )
+    list(APPEND DEFAULT_COMPILE_FLAGS $<$<OR:$<CONFIG:Release>,$<CONFIG:MinSizeRel>>: /GL > )
+endif()
+
+if (OPTION_RELWITHDEBINFO_LTCG)
+    list(APPEND DEFAULT_COMPILE_FLAGS $<$<CONFIG:RelWithDebInfo>: /GL > )
 endif()
 
 # version specific compile flags
@@ -115,7 +121,7 @@ endif()
 if(MSVC_VERSION VERSION_LESS 1900)
 
     list(APPEND DEFAULT_COMPILE_FLAGS
-        $<$<CONFIG:Debug>: /Zi>     # this set in RelWithDebInfo builds for all MSVC versions
+        $<$<CONFIG:Debug>: /Zi>     # this is set in RelWithDebInfo builds for all MSVC versions
     )
 
 else()  # Visual Studio 14 2015 as minimum
@@ -160,8 +166,11 @@ set(DEFAULT_LINKER_FLAGS_MINSIZEREL ${DEFAULT_LINKER_FLAGS_RELEASE})
 
 if(OPTION_RELEASE_LTCG)
     set(DEFAULT_LINKER_FLAGS_RELEASE "${DEFAULT_LINKER_FLAGS_RELEASE} /LTCG")
-    set(DEFAULT_LINKER_FLAGS_RELWITHDEBINFO "${DEFAULT_LINKER_FLAGS_RELWITHDEBINFO} /LTCG")
     set(DEFAULT_LINKER_FLAGS_MINSIZEREL "${DEFAULT_LINKER_FLAGS_MINSIZEREL} /LTCG")
+endif()
+
+if(OPTION_RELWITHDEBINFO_LTCG)
+    set(DEFAULT_LINKER_FLAGS_RELWITHDEBINFO "${DEFAULT_LINKER_FLAGS_RELWITHDEBINFO} /LTCG")
 endif()
 
 # version specific linker flags
