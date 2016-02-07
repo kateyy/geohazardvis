@@ -141,7 +141,7 @@ find_package(VTK COMPONENTS ${VTK_COMPONENTS})
 set(VTK_VERSION "${VTK_MAJOR_VERSION}.${VTK_MINOR_VERSION}.${VTK_BUILD_VERSION}")
 set(VTK_REQUIRED_VERSION 6.3)
 
-if(${VTK_VERSION} VERSION_LESS ${VTK_REQUIRED_VERSION})
+if(VTK_VERSION VERSION_LESS VTK_REQUIRED_VERSION)
     message(FATAL_ERROR "VTK version ${VTK_VERSION} was found but version 6.3 or newer is required.")
 endif()
 
@@ -177,13 +177,22 @@ else()
 endif()
 
 
-if(TARGET vtkIOExport AND TARGET vtkRenderingGL2PS)
+
+if(VTK_VERSION VERSION_LESS 7.1)
+    set(_vtkIOExport_module_name "vtkIOExport")
+else()
+    # OpenGL context based PostScript export is now optional
+    set(_vtkIOExport_module_name "vtkIOExport${VTK_RENDERING_BACKEND}")
+endif()
+
+if(TARGET ${_vtkIOExport_module_name} AND TARGET vtkRenderingGL2PS)
     set(VTK_has_GLExport2PS 1)
-    list(APPEND VTK_COMPONENTS vtkIOExport vtkRenderingGL2PS)
+    list(APPEND VTK_COMPONENTS ${_vtkIOExport_module_name} vtkRenderingGL2PS)
 else()
     set(VTK_has_GLExport2PS 0)
     message("VTK was not build with vtkIOExport and vtkRenderingGL2PS, PostScript/EPS export will not be available.")
 endif()
+
 
 # find additional VTK components
 find_package(VTK COMPONENTS ${VTK_COMPONENTS})
