@@ -36,12 +36,12 @@ namespace
 
 ColorMappingChooser::ColorMappingChooser(QWidget * parent)
     : QDockWidget(parent)
-    , m_ui(new Ui_ColorMappingChooser())
-    , m_renderView(nullptr)
-    , m_renderViewImpl(nullptr)
-    , m_mapping(nullptr)
-    , m_legend(nullptr)
-    , m_movingColorLegend(false)
+    , m_ui{ std::make_unique<Ui_ColorMappingChooser>() }
+    , m_renderView{ nullptr }
+    , m_renderViewImpl{ nullptr }
+    , m_mapping{ nullptr }
+    , m_legend{ nullptr }
+    , m_movingColorLegend{ false }
 {
     m_ui->setupUi(this);
 
@@ -306,25 +306,28 @@ void ColorMappingChooser::loadGradientImages()
     // navigate to the gradient directory
     QDir dir;
     if (!dir.cd("data/gradients"))
+    {
         qDebug() << "gradient directory does not exist; only a fallback gradient will be available";
+    }
     else
     {
-        // only retrieve png and jpeg files
-        dir.setFilter(QDir::Files | QDir::Hidden | QDir::NoSymLinks);
-        QStringList filters;
-        filters << "*.png" << "*.jpg" << "*.jpeg";
-        dir.setNameFilters(filters);
-        QFileInfoList list = dir.entryInfoList();
+        dir.setFilter(QDir::Files | QDir::Readable | QDir::Hidden);
 
-        for (const QFileInfo & fileInfo : list)
+        for (const auto & fileInfo : dir.entryInfoList())
         {
-            QString baseName = fileInfo.baseName();
-            QString filePath = fileInfo.absoluteFilePath();
-            QPixmap pixmap = QPixmap(filePath).scaled(gradientImageSize);
+            QPixmap pixmap;
+            if (!pixmap.load(fileInfo.absoluteFilePath()))
+            {
+                qDebug() << "Unsupported file in gradient directory:" << fileInfo.fileName();
+                continue;
+            }
+
+            pixmap = pixmap.scaled(gradientImageSize);
+
             m_gradients << buildLookupTable(pixmap.toImage());
 
             gradientComboBox.addItem(pixmap, "");
-            gradientComboBox.setItemData(gradientComboBox.count() - 1, baseName);
+            gradientComboBox.setItemData(gradientComboBox.count() - 1, fileInfo.baseName());
         }
     }
 
