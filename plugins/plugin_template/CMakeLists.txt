@@ -28,8 +28,8 @@ target_link_libraries(${target}
 configure_cxx_plugin(${target})
 
 
-install(TARGETS ${target}
-    RUNTIME DESTINATION ${INSTALL_PLUGINS_BIN}
-    LIBRARY DESTINATION ${INSTALL_PLUGINS_SHARED}
+# install(TARGETS ${target}
+    # RUNTIME DESTINATION ${INSTALL_PLUGINS_BIN}
+    # LIBRARY DESTINATION ${INSTALL_PLUGINS_SHARED}
     # ARCHIVE DESTINATION ${INSTALL_PLUGINS_LIB}
-)
+# )
