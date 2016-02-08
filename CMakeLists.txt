@@ -190,7 +190,7 @@ if(TARGET ${_vtkIOExport_module_name} AND TARGET vtkRenderingGL2PS)
     list(APPEND VTK_COMPONENTS ${_vtkIOExport_module_name} vtkRenderingGL2PS)
 else()
     set(VTK_has_GLExport2PS 0)
-    message("VTK was not build with vtkIOExport and vtkRenderingGL2PS, PostScript/EPS export will not be available.")
+    message("VTK was not build with ${_vtkIOExport_module_name} and vtkRenderingGL2PS, PostScript/EPS export will not be available.")
 endif()
 
 
@@ -272,9 +272,11 @@ if(WIN32 AND CPACK_INSTALL_3RDPARTY_DLLS)
     set(CMAKE_INSTALL_SYSTEM_RUNTIME_DESTINATION ${INSTALL_BIN})
     include(InstallRequiredSystemLibraries)
 
-    foreach(LIB ${VTK_LIBRARIES})
-        list(APPEND DEPLOY_FILES "${VTK_DIR}/bin/$<CONFIG>/${LIB}-${VTK_MAJOR_VERSION}.${VTK_MINOR_VERSION}.dll")
-    endforeach()
+    if(VTK_BUILD_SHARED_LIBS)
+        foreach(LIB ${VTK_LIBRARIES})
+            list(APPEND DEPLOY_FILES "${VTK_DIR}/bin/$<CONFIG>/${LIB}-${VTK_MAJOR_VERSION}.${VTK_MINOR_VERSION}.dll")
+        endforeach()
+    endif()
 
     list(APPEND DEPLOY_FILES
         "${libzeug_DIR}/bin/signalzeug$<$<CONFIG:Debug>:d>.dll"
