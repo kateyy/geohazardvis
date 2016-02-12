@@ -108,7 +108,7 @@ void DataMapping::openInTable(DataObject * dataObject)
     table->showDataObject(dataObject);
 }
 
-AbstractRenderView * DataMapping::openInRenderView(QList<DataObject *> dataObjects)
+AbstractRenderView * DataMapping::openInRenderView(const QList<DataObject *> & dataObjects)
 {
     auto renderView = createRenderView<RenderView>();
 
