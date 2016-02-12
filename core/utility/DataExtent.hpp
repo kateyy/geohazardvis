@@ -84,6 +84,18 @@ bool DataExtent<T, Dimensions>::operator==(const DataExtent & other) const
 }
 
 template<typename T, size_t Dimensions>
+bool DataExtent<T, Dimensions>::operator!=(const T other[ValueCount]) const
+{
+    return !(*this == other);
+}
+
+template<typename T, size_t Dimensions>
+bool DataExtent<T, Dimensions>::operator!=(const DataExtent & other) const
+{
+    return !(*this == other);
+}
+
+template<typename T, size_t Dimensions>
 const T * DataExtent<T, Dimensions>::data() const
 {
     return m_extent.data();

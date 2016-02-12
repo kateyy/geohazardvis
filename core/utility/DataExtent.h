@@ -26,6 +26,9 @@ public:
     bool operator==(const T other[ValueCount]) const;
     bool operator==(const DataExtent & other) const;
 
+    bool operator!=(const T other[ValueCount]) const;
+    bool operator!=(const DataExtent & other) const;
+
     vtkVector<T, Dimensions> center() const;
     vtkVector<T, Dimensions> size() const;
 
