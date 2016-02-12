@@ -138,11 +138,14 @@ public:
     explicit ScopedEventDeferral(DataObject & objectToLock);
     ~ScopedEventDeferral();
 
+    ScopedEventDeferral(ScopedEventDeferral && other);
+    ScopedEventDeferral & operator=(ScopedEventDeferral && other);
+
     ScopedEventDeferral(const ScopedEventDeferral & other) = delete;
     ScopedEventDeferral & operator=(const ScopedEventDeferral & other) = delete;
 
 private:
-    DataObject & m_dataObject;
+    DataObject * m_dataObject;
 };
 
 

@@ -19,12 +19,26 @@ void DataObject::connectObserver(const QString & eventName, vtkObject & subject,
 
 
 inline ScopedEventDeferral::ScopedEventDeferral(DataObject & objectToLock)
-    : m_dataObject(objectToLock)
+    : m_dataObject{ &objectToLock }
 {
-    m_dataObject.deferEvents();
+    m_dataObject->deferEvents();
 }
 
 inline ScopedEventDeferral::~ScopedEventDeferral()
 {
-    m_dataObject.executeDeferredEvents();
+    if (m_dataObject)
+    {
+        m_dataObject->executeDeferredEvents();
+    }
+}
+
+inline ScopedEventDeferral::ScopedEventDeferral(ScopedEventDeferral && other)
+    : m_dataObject{ nullptr }
+{
+    std::swap(m_dataObject, other.m_dataObject);
+}
+
+inline ScopedEventDeferral & ScopedEventDeferral::operator=(ScopedEventDeferral && other)
+{
+    std::swap(m_dataObject, other.m_dataObject);
 }

@@ -11,17 +11,17 @@
 #include <core/table_model/QVtkTableModel.h>
 
 
-class TestDataObject : public DataObject
+class DataSetHandler_test_DataObject : public DataObject
 {
 public:
-    explicit TestDataObject(bool * destructorCalledFlag = nullptr)
+    explicit DataSetHandler_test_DataObject(bool * destructorCalledFlag = nullptr)
         : DataObject("test data", vtkSmartPointer<vtkPolyData>::New())
         , m_desturctorCalledFlag(destructorCalledFlag)
     {
         if (destructorCalledFlag)
             *destructorCalledFlag = false;
     }
-    ~TestDataObject()
+    ~DataSetHandler_test_DataObject()
     {
         if (m_desturctorCalledFlag)
             *m_desturctorCalledFlag = true;
@@ -35,6 +35,9 @@ private:
     const QString m_dataTypeName = "nothing specific";
     bool * m_desturctorCalledFlag = nullptr;
 };
+
+using TestDataObject = DataSetHandler_test_DataObject;
+
 
 class TestRawVector : public RawVectorData
 {
