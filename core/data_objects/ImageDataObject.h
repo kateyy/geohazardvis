@@ -11,7 +11,7 @@ class vtkImageData;
 class CORE_API ImageDataObject : public DataObject
 {
 public:
-    ImageDataObject(const QString & name, vtkImageData & dataSet);
+    explicit ImageDataObject(const QString & name, vtkImageData & dataSet);
     ~ImageDataObject() override;
 
     bool is3D() const override;
@@ -25,6 +25,10 @@ public:
 
     vtkImageData * imageData();
     const vtkImageData * imageData() const;
+
+    /** @return scalars assigned to the image point data. All ImageDataObjects are assumed to have valid scalar data
+        with a name set. */
+    vtkDataArray & scalars();
 
     /** number of values on each axis (x, y, z) */
     const int * dimensions();

@@ -38,11 +38,12 @@ ImageDataObject::ImageDataObject(const QString & name, vtkImageData & dataSet)
         dataSet.SetSpacing(spacing.GetData());
     }
 
-    vtkDataArray * data = dataSet.GetPointData()->GetScalars();
-    if (data)
+    if (!dataSet.GetPointData()->GetScalars())
     {
-        connectObserver("dataChanged", *data, vtkCommand::ModifiedEvent, *this, &ImageDataObject::_dataChanged);
+        dataSet.AllocateScalars(VTK_FLOAT, 1);
     }
+
+    connectObserver("dataChanged", scalars(), vtkCommand::ModifiedEvent, *this, &ImageDataObject::_dataChanged);
 
     dataSet.GetExtent(m_extent.data());
 }
@@ -77,12 +78,21 @@ const QString & ImageDataObject::dataTypeName_s()
 
 vtkImageData * ImageDataObject::imageData()
 {
+    assert(dynamic_cast<vtkImageData *>(dataSet()));
     return static_cast<vtkImageData *>(dataSet());
 }
 
 const vtkImageData * ImageDataObject::imageData() const
 {
+    assert(dynamic_cast<const vtkImageData *>(dataSet()));
     return static_cast<const vtkImageData *>(dataSet());
+}
+
+vtkDataArray & ImageDataObject::scalars()
+{
+    auto s = dataSet()->GetPointData()->GetScalars();
+    assert(s && s->GetName());
+    return *s;
 }
 
 const int * ImageDataObject::dimensions()
