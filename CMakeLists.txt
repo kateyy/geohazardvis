@@ -222,7 +222,10 @@ include_directories(SYSTEM # disable warnings produced by Qt headers (GCC)
 )
 
 
-option(OPTION_USE_SYSTEM_LIBZEUG "Search for installed Libzeug Libraries instead of compiling them" OFF)
+option(OPTION_USE_SYSTEM_LIBZEUG "Search for installed libzeug libraries instead of compiling them" OFF)
+CMAKE_DEPENDENT_CACHEVARIABLE(OPTION_LIBZEUG_GIT_REPOSITORY "https://github.com/kateyy/libzeug.git" STRING
+    "URL/path of the libzeug git repository" "NOT OPTION_USE_SYSTEM_LIBZEUG" OFF)
+
 if(OPTION_USE_SYSTEM_LIBZEUG)
     find_package(libzeug REQUIRED)
 else()
@@ -233,7 +236,7 @@ else()
     ExternalProject_Add(libzeug
         PREFIX ${LIBZEUG_PREFIX}
         SOURCE_DIR "${THIRD_PARTY_SOURCE_DIR}/libzeug"
-        GIT_REPOSITORY "https://github.com/kateyy/libzeug.git"
+        GIT_REPOSITORY ${OPTION_LIBZEUG_GIT_REPOSITORY}
         GIT_TAG "geohazardvis_2015_09"
         BUILD_COMMAND ${CMAKE_COMMAND}
             -DBUILD_CONFIG:STRING=${CMAKE_CFG_INTDIR}
