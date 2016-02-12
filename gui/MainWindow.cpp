@@ -411,7 +411,7 @@ void MainWindow::dialog_exportDataSet()
 
 void MainWindow::showDEMWidget()
 {
-    auto demWidget = new DEMWidget(*m_dataSetHandler);
+    auto demWidget = new DEMWidget(*m_dataMapping);
     demWidget->setAttribute(Qt::WA_DeleteOnClose);
     auto dockWidget = demWidget->dockWidgetParent();
     dockWidget->setParent(this);

@@ -3,6 +3,7 @@
 #include <memory>
 
 #include <QList>
+#include <QPointer>
 
 #include <vtkSmartPointer.h>
 
@@ -12,35 +13,37 @@
 
 class vtkAlgorithm;
 class vtkImageShiftScale;
-class vtkRenderer;
 class vtkTransform;
-class vtkWarpScalar;
 
-class vtkGridAxes3DActor;
-
-class DataSetHandler;
+class AbstractRenderView;
+class DataMapping;
 class ImageDataObject;
 class PolyDataObject;
-class RenderedData;
 class Ui_DEMWidget;
 
 
 class GUI_API DEMWidget : public DockableWidget
 {
 public:
-    explicit DEMWidget(DataSetHandler & dataSetHandler, QWidget * parent = nullptr, Qt::WindowFlags f = 0);
+    /** @param previewRenderer specify a render view that will be used to preview the new topography. If nullptr, a new view will be opened. */
+    explicit DEMWidget(DataMapping & dataMapping, AbstractRenderView * previewRenderer = nullptr, QWidget * parent = nullptr, Qt::WindowFlags f = {});
     ~DEMWidget() override;
 
 public:
+    void showPreview();
     bool save();
     void saveAndClose();
 
-protected:
-    void showEvent(QShowEvent * event) override;
+    void resetOutputNameForCurrentInputs();
 
 private:
-    void rebuildPreview();
     void setupPipeline();
+
+    void rebuildTopoPreviewData();
+    void configureVisualizations();
+
+    ImageDataObject * currentDEM();
+    PolyDataObject * currentTopoTemplate();
 
     void updateAvailableDataSets();
 
@@ -51,11 +54,9 @@ private:
     void centerTopoMesh();
 
 private:
-    DataSetHandler & m_dataSetHandler;
+    DataMapping & m_dataMapping;
 
     std::unique_ptr<Ui_DEMWidget> m_ui;
-    vtkSmartPointer<vtkRenderer> m_renderer;
-    vtkSmartPointer<vtkGridAxes3DActor> m_axesActor;
 
     QList<PolyDataObject *> m_topographyMeshes;
     QList<ImageDataObject *> m_dems;
@@ -72,6 +73,11 @@ private:
     double m_topoRadiusScale;
     vtkVector3d m_topoShift;
 
+    QPointer<AbstractRenderView> m_previewRenderer;
+
     std::unique_ptr<PolyDataObject> m_dataPreview;
-    std::unique_ptr<RenderedData> m_renderedPreview;
+    bool m_topoRebuildRequired;
+
+    ImageDataObject * m_lastDemSelection;
+    PolyDataObject * m_lastTopoTemplateSelection;
 };
