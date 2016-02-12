@@ -169,7 +169,7 @@ endif()
 
 # configuration dependent VTK components
 
-if (${VTK_RENDERING_BACKEND_VERSION} EQUAL 2)
+if(VTK_RENDERING_BACKEND_VERSION EQUAL 2)
     list(APPEND VTK_COMPONENTS vtkRenderingLICOpenGL2)
     list(APPEND VTK_COMPONENTS vtkRenderingContextOpenGL2)
 else()
@@ -180,17 +180,23 @@ endif()
 
 if(VTK_VERSION VERSION_LESS 7.1)
     set(_vtkIOExport_module_name "vtkIOExport")
+    set(_vtkRenderingGL2PS_module_name "vtkRenderingGL2PS")
 else()
     # OpenGL context based PostScript export is now optional
     set(_vtkIOExport_module_name "vtkIOExport${VTK_RENDERING_BACKEND}")
+    if(VTK_RENDERING_BACKEND_VERSION EQUAL 1)
+        set(_vtkRenderingGL2PS_module_name "vtkRenderingGL2PS")
+    else()
+        set(_vtkRenderingGL2PS_module_name "vtkRenderingGL2PSOpenGL2")
+    endif()
 endif()
 
-if(TARGET ${_vtkIOExport_module_name} AND TARGET vtkRenderingGL2PS)
+if(TARGET ${_vtkIOExport_module_name} AND TARGET ${_vtkRenderingGL2PS_module_name})
     set(VTK_has_GLExport2PS 1)
-    list(APPEND VTK_COMPONENTS ${_vtkIOExport_module_name} vtkRenderingGL2PS)
+    list(APPEND VTK_COMPONENTS ${_vtkIOExport_module_name} ${_vtkRenderingGL2PS_module_name})
 else()
     set(VTK_has_GLExport2PS 0)
-    message("VTK was not build with ${_vtkIOExport_module_name} and vtkRenderingGL2PS, PostScript/EPS export will not be available.")
+    message("VTK was not build with ${_vtkIOExport_module_name} and ${_vtkRenderingGL2PS_module_name}, PostScript/EPS export will not be available.")
 endif()
 
 
