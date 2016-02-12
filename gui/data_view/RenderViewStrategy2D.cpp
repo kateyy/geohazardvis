@@ -352,6 +352,11 @@ void RenderViewStrategy2D::acceptProfilePlot()
 
 void RenderViewStrategy2D::abortProfilePlot()
 {
+    if (m_previewRendererConnections.isEmpty() && !m_previewRenderer && m_previewProfiles.empty())
+    {
+        return;
+    }
+
     for (auto & c : m_previewRendererConnections)
         disconnect(c);
     m_previewRendererConnections.clear();
