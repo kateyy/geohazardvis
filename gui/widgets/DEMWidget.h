@@ -34,7 +34,7 @@ public:
     bool save();
     void saveAndClose();
 
-    void resetOutputNameForCurrentInputs();
+    void resetParametersForCurrentInputs();
 
 private:
     void setupPipeline();
@@ -44,6 +44,9 @@ private:
 
     ImageDataObject * currentDEM();
     PolyDataObject * currentTopoTemplate();
+    /** Lazy computation of the template radius. Assume a template centered at (0, 0, z), 
+    * search for the point with the highest distance to the center. */
+    double currentTopoTemplateRadius();
 
     void updateAvailableDataSets();
 
@@ -52,6 +55,8 @@ private:
 
     void matchTopoMeshRadius();
     void centerTopoMesh();
+    void updateTopoUIRanges();
+    void updateForChangedTransformParameters();
 
 private:
     DataMapping & m_dataMapping;
@@ -70,8 +75,8 @@ private:
     vtkSmartPointer<vtkAlgorithm> m_pipelineEnd;
 
     double m_demUnitDecimalExponent;
-    double m_topoRadiusScale;
-    vtkVector3d m_topoShift;
+    double m_topoRadius;
+    vtkVector2d m_topoShiftXY;
 
     QPointer<AbstractRenderView> m_previewRenderer;
 
@@ -80,4 +85,5 @@ private:
 
     ImageDataObject * m_lastDemSelection;
     PolyDataObject * m_lastTopoTemplateSelection;
+    double m_lastTopoTemplateRadius;
 };

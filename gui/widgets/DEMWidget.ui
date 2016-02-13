@@ -75,7 +75,7 @@
    <item row="4" column="0">
     <widget class="QLabel" name="label_4">
      <property name="text">
-      <string>Topography &amp;Radius Scale</string>
+      <string>Topography &amp;Radius</string>
      </property>
      <property name="buddy">
       <cstring>topographyRadiusSpinBox</cstring>
@@ -179,7 +179,7 @@
          <double>100000.000000000000000</double>
         </property>
         <property name="value">
-         <double>1.000000000000000</double>
+         <double>0.000000000000000</double>
         </property>
        </widget>
       </item>
@@ -211,7 +211,7 @@
          <double>100000.000000000000000</double>
         </property>
         <property name="value">
-         <double>1.000000000000000</double>
+         <double>0.000000000000000</double>
         </property>
        </widget>
       </item>

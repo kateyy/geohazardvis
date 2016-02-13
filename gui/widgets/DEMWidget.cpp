@@ -33,20 +33,21 @@ DEMWidget::DEMWidget(DataMapping & dataMapping, AbstractRenderView * previewRend
     , m_ui{ std::make_unique<Ui_DEMWidget>() }
     , m_dataPreview{ nullptr }
     , m_demUnitDecimalExponent{ 0.0 }
-    , m_topoRadiusScale{ 1.0 }
-    , m_topoShift{ 0.0 }
+    , m_topoRadius{ 1.0 }
+    , m_topoShiftXY{ 0.0 }
     , m_previewRenderer{ previewRenderer }
     , m_topoRebuildRequired{ true }
     , m_lastDemSelection{ nullptr }
     , m_lastTopoTemplateSelection{ nullptr }
+    , m_lastTopoTemplateRadius{ std::nan(nullptr) }
 {
     m_ui->setupUi(this);
 
     updateAvailableDataSets();
 
-    resetOutputNameForCurrentInputs();
-
     setupPipeline();
+
+    resetParametersForCurrentInputs();
 
     connect(m_ui->topoTemplateCombo, &QComboBox::currentTextChanged, this, &DEMWidget::rebuildTopoPreviewData);
     connect(m_ui->demCombo, &QComboBox::currentTextChanged, this, &DEMWidget::rebuildTopoPreviewData);
@@ -92,25 +93,9 @@ DEMWidget::DEMWidget(DataMapping & dataMapping, AbstractRenderView * previewRend
         updateView();
     });
 
-    auto updateForChangedTransform = [this] () -> void {
-        double newTopoScale{ m_ui->topographyRadiusSpinBox->value() };
-        vtkVector3d newTopoShift{ m_ui->topographyCenterXSpinBox->value(), m_ui->topographyCenterYSpinBox->value(), 0.0 };
-
-        if ((newTopoScale == m_topoRadiusScale) && (newTopoShift == m_topoShift))
-        {
-            return;
-        }
-
-        m_topoRadiusScale = newTopoScale;
-        m_topoShift = newTopoShift;
-
-        updateMeshTransform();
-        updateView();
-    };
-
-    connect(m_ui->topographyRadiusSpinBox, &QDoubleSpinBox::editingFinished, updateForChangedTransform);
-    connect(m_ui->topographyCenterXSpinBox, &QDoubleSpinBox::editingFinished, updateForChangedTransform);
-    connect(m_ui->topographyCenterYSpinBox, &QDoubleSpinBox::editingFinished, updateForChangedTransform);
+    connect(m_ui->topographyRadiusSpinBox, &QDoubleSpinBox::editingFinished, this, &DEMWidget::updateTopoUIRanges);
+    connect(m_ui->topographyCenterXSpinBox, &QDoubleSpinBox::editingFinished, this, &DEMWidget::updateTopoUIRanges);
+    connect(m_ui->topographyCenterYSpinBox, &QDoubleSpinBox::editingFinished, this, &DEMWidget::updateTopoUIRanges);
 
     connect(m_ui->showPreviewButton, &QAbstractButton::clicked, this, &DEMWidget::showPreview);
     connect(m_ui->saveButton, &QAbstractButton::clicked, this, &DEMWidget::saveAndClose);
@@ -235,14 +220,29 @@ void DEMWidget::saveAndClose()
         this, &DEMWidget::updateAvailableDataSets);
 }
 
-void DEMWidget::resetOutputNameForCurrentInputs()
+void DEMWidget::resetParametersForCurrentInputs()
 {
     auto topo = currentTopoTemplate();
     auto dem = currentDEM();
-    if (topo && dem)
+    if (!topo || !dem)
     {
-        m_ui->newTopoModelName->setText(topo->name() + (dem ? " (" + dem->name() + ")" : ""));
+        return;
     }
+
+    m_ui->newTopoModelName->setText(topo->name() + (dem ? " (" + dem->name() + ")" : ""));
+
+
+    const auto signalBlockers = {
+        QSignalBlocker(m_ui->topographyRadiusSpinBox),
+        QSignalBlocker(m_ui->topographyCenterXSpinBox),
+        QSignalBlocker(m_ui->topographyCenterYSpinBox)
+    };
+
+    m_topoRadius = std::nan(nullptr);
+    m_topoShiftXY = vtkVector2d{ std::nan(nullptr) };
+
+    centerTopoMesh();
+    matchTopoMeshRadius();
 }
 
 void DEMWidget::setupPipeline()
@@ -260,8 +260,6 @@ void DEMWidget::setupPipeline()
     auto meshTransformFilter = vtkSmartPointer<vtkTransformPolyDataFilter>::New();
     meshTransformFilter->SetTransform(m_meshTransform);
     meshTransformFilter->SetInputConnection(cleanupMeshAttributes->GetOutputPort());
-
-    updateMeshTransform();
 
     m_demUnitScale = vtkSmartPointer<vtkImageShiftScale>::New();
     m_demPipelineStart = m_demUnitScale;
@@ -291,10 +289,10 @@ void DEMWidget::rebuildTopoPreviewData()
         return;
     }
 
+    resetParametersForCurrentInputs();
+
     auto & dem = *demPtr;
     auto & topo = *topoPtr;
-
-    resetOutputNameForCurrentInputs();
 
     m_topoRebuildRequired = false;
 
@@ -316,13 +314,13 @@ void DEMWidget::rebuildTopoPreviewData()
     m_meshPipelineStart->SetInputDataObject(topo.dataSet());
 
     // setup default parameters
-    matchTopoMeshRadius();
     centerTopoMesh();
+    matchTopoMeshRadius();
 
     
     m_pipelineEnd->Update();
 
-    vtkPolyData * newDataSet = vtkPolyData::SafeDownCast(m_pipelineEnd->GetOutputDataObject(0));
+    auto newDataSet = vtkPolyData::SafeDownCast(m_pipelineEnd->GetOutputDataObject(0));
 
     if (!newDataSet)
     {
@@ -337,7 +335,7 @@ void DEMWidget::rebuildTopoPreviewData()
         return;
     }
 
-    QList<DataObject *>incompatible;
+    QList<DataObject *> incompatible;
     m_previewRenderer->showDataObjects({ m_dataPreview.get() }, incompatible);
     assert(incompatible.isEmpty());
 
@@ -414,10 +412,42 @@ PolyDataObject * DEMWidget::currentTopoTemplate()
     if (current != m_lastTopoTemplateSelection)
     {
         m_lastTopoTemplateSelection = current;
+        m_lastTopoTemplateRadius = std::nan(nullptr);
         m_topoRebuildRequired = true;
     }
 
     return m_lastTopoTemplateSelection;
+}
+
+double DEMWidget::currentTopoTemplateRadius()
+{
+    auto topo = currentTopoTemplate();
+    if (!topo)
+    {
+        return std::nan(nullptr);
+    }
+
+    if (!std::isnan(m_lastTopoTemplateRadius))
+    {
+        return m_lastTopoTemplateRadius;
+    }
+
+    auto points = topo->polyDataSet()->GetPoints();
+    const vtkIdType numPoints = points->GetNumberOfPoints();
+
+    vtkVector3d point;
+    double maxDistance = 0.0;
+
+    // assume a template centered around (0, 0, z)
+    for (vtkIdType i = 0; i < numPoints; ++i)
+    {
+        topo->polyDataSet()->GetPoints()->GetPoint(i, point.GetData());
+        maxDistance = std::max(maxDistance, convert<2>(point).Norm());
+    }
+
+    m_lastTopoTemplateRadius = maxDistance;
+
+    return m_lastTopoTemplateRadius;
 }
 
 void DEMWidget::updateAvailableDataSets()
@@ -479,11 +509,20 @@ void DEMWidget::updateAvailableDataSets()
 
 void DEMWidget::updateMeshTransform()
 {
+    const auto radius = currentTopoTemplateRadius();
+
+    if (std::isnan(radius))
+    {
+        return;
+    }
+
     m_meshTransform->Identity();
     m_meshTransform->PostMultiply();
 
-    m_meshTransform->Scale(m_topoRadiusScale, m_topoRadiusScale, 0.0);
-    m_meshTransform->Translate(m_topoShift.GetData()); // assuming the template is already centered around (0,0,z)
+    const auto radiusScale = m_topoRadius / radius;
+
+    m_meshTransform->Scale(radiusScale, radiusScale, 0.0);
+    m_meshTransform->Translate(convert<3>(m_topoShiftXY, 0.0).GetData()); // assuming the template is already centered around (0,0,z)
 }
 
 void DEMWidget::updateView()
@@ -515,66 +554,142 @@ void DEMWidget::updateView()
 
 void DEMWidget::matchTopoMeshRadius()
 {
-    auto dem = currentDEM();
-    auto topo = currentTopoTemplate();
+    updateTopoUIRanges();
 
-    if (!dem || !topo)
+    const auto currentValue = m_ui->topographyRadiusSpinBox->value();
+    const auto maxRadius = m_ui->topographyRadiusSpinBox->maximum();
+
+    if (currentValue == maxRadius)
     {
         return;
     }
 
-    const auto demSize = DataBounds(dem->bounds()).size();
-    const auto topoSize = DataBounds(topo->bounds()).size();
-
-    const auto topoScalePerAxis = demSize / topoSize;
-
-    // scale the topography so that it fits into the DEM
-    const double newScale = std::min(topoScalePerAxis[0], topoScalePerAxis[1]);
-    if (newScale == m_topoRadiusScale)
-    {
-        return;
-    }
-    m_topoRadiusScale = newScale;
+    m_topoRadius = maxRadius;
 
     QSignalBlocker signalBlocker(m_ui->topographyRadiusSpinBox);
 
-    m_ui->topographyRadiusSpinBox->setMaximum(m_topoRadiusScale);   // don't allow the mesh to be stretched beyond the DEM
-    m_ui->topographyRadiusSpinBox->setValue(m_topoRadiusScale);
-    m_ui->topographyRadiusSpinBox->setSingleStep(m_topoRadiusScale * 0.01);
+    m_ui->topographyRadiusSpinBox->setValue(m_topoRadius);
+
+    updateTopoUIRanges();
 
     updateMeshTransform();
 }
 
 void DEMWidget::centerTopoMesh()
 {
-    auto currentDEM = m_dems.value(m_ui->demCombo->currentIndex(), nullptr);
-
-    if (!currentDEM)
-    {
-        return;
-    }
+    updateTopoUIRanges();
 
     const auto signalBlockers = {
         QSignalBlocker(m_ui->topographyCenterXSpinBox),
         QSignalBlocker(m_ui->topographyCenterYSpinBox) };
 
-    const auto demBounds = DataBounds(currentDEM->bounds());
-    const auto demCenter = demBounds.center();
-    const auto newShift = vtkVector3d{ demCenter[0], demCenter[1], 0.0 };
-    if (newShift == m_topoShift)
+    const vtkVector2d mins {
+        m_ui->topographyCenterXSpinBox->minimum(),
+        m_ui->topographyCenterYSpinBox->minimum() };
+    const vtkVector2d maxs {
+        m_ui->topographyCenterXSpinBox->maximum(),
+        m_ui->topographyCenterYSpinBox->maximum() };
+
+    const vtkVector2d currentShift {
+        m_ui->topographyCenterXSpinBox->value(),
+        m_ui->topographyCenterYSpinBox->value() };
+
+    const auto center = maxs * 0.5 + mins * 0.5;
+
+    if (center == currentShift)
     {
         return;
     }
 
-    m_topoShift = newShift;
+    m_topoShiftXY = center;
 
-    const auto demSize = demBounds.size();
-    const auto step = std::min(demSize[0], demSize[1]) * 0.01;
+    m_ui->topographyCenterXSpinBox->setValue(center[0]);
+    m_ui->topographyCenterYSpinBox->setValue(center[1]);
 
-    m_ui->topographyCenterXSpinBox->setValue(m_topoShift[0]);
-    m_ui->topographyCenterYSpinBox->setValue(m_topoShift[1]);
-    m_ui->topographyCenterXSpinBox->setSingleStep(step);
-    m_ui->topographyCenterYSpinBox->setSingleStep(step);
+    updateTopoUIRanges();
 
     updateMeshTransform();
+}
+
+void DEMWidget::updateTopoUIRanges()
+{
+    auto demPtr = currentDEM();
+    if (!demPtr)
+    {
+        return;
+    }
+
+    auto & dem = *demPtr;
+
+    const double newTopoRadius = m_ui->topographyRadiusSpinBox->value();
+
+    {
+        const vtkVector2d newTopoShift{ m_ui->topographyCenterXSpinBox->value(), m_ui->topographyCenterYSpinBox->value() };
+        if (newTopoRadius == m_topoRadius && newTopoShift == m_topoShiftXY)
+        {
+            return;
+        }
+    }
+
+    const auto signalBlockers = {
+        QSignalBlocker(m_ui->topographyRadiusSpinBox),
+        QSignalBlocker(m_ui->topographyCenterXSpinBox),
+        QSignalBlocker(m_ui->topographyCenterYSpinBox)
+    };
+
+
+    const auto demBounds = DataBounds(dem.bounds()).convertTo<2>();
+    const auto lowerLeft = demBounds.minRange();
+    const auto upperRight = demBounds.maxRange();
+
+    if (newTopoRadius != m_topoRadius)
+    {
+        // clamp valid center to the DEM bounds reduced by newTopoRadius
+        const auto demCenter = demBounds.center();
+        const auto mins = min(lowerLeft + newTopoRadius, demCenter);
+        const auto maxs = max(upperRight - newTopoRadius, demCenter);
+
+        const auto steps = (maxs - mins) * 0.01;
+
+        m_ui->topographyCenterXSpinBox->setRange(mins[0], maxs[0]);
+        m_ui->topographyCenterXSpinBox->setSingleStep(steps[0]);
+        m_ui->topographyCenterYSpinBox->setRange(mins[1], maxs[1]);
+        m_ui->topographyCenterYSpinBox->setSingleStep(steps[1]);
+    }
+
+    // might have change now
+    const vtkVector2d newTopoShift2{ m_ui->topographyCenterXSpinBox->value(), m_ui->topographyCenterYSpinBox->value() };
+
+    if (newTopoShift2 != m_topoShiftXY)
+    {
+        // clamp from topography center to the nearest DEM border
+        const auto maxRadius = std::min(
+            minComponent(abs(newTopoShift2 - lowerLeft)),
+            minComponent(abs(newTopoShift2 - upperRight)));
+
+        const auto minValue = minComponent(vtkVector2d(dem.imageData()->GetSpacing()));
+
+        m_ui->topographyRadiusSpinBox->setRange(minValue, maxRadius);
+        m_ui->topographyRadiusSpinBox->setSingleStep((maxRadius - minValue) * 0.01);
+    }
+
+    // modifying valid value range might change the actual values
+    updateForChangedTransformParameters();
+}
+
+void DEMWidget::updateForChangedTransformParameters()
+{
+    const double newTopoRadius{ m_ui->topographyRadiusSpinBox->value() };
+    const vtkVector2d newTopoShift{ m_ui->topographyCenterXSpinBox->value(), m_ui->topographyCenterYSpinBox->value() };
+
+    if (newTopoRadius == m_topoRadius && newTopoShift == m_topoShiftXY)
+    {
+        return;
+    }
+
+    m_topoRadius = newTopoRadius;
+    m_topoShiftXY = newTopoShift;
+
+    updateMeshTransform();
+    updateView();
 }
