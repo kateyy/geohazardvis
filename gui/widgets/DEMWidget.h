@@ -51,6 +51,7 @@ private:
     void updateAvailableDataSets();
 
     void updateMeshTransform();
+    void updatePipeline();
     void updateView();
 
     void matchTopoMeshRadius();

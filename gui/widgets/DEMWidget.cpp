@@ -14,6 +14,7 @@
 #include <vtkProperty.h>
 #include <vtkTransform.h>
 #include <vtkTransformPolyDataFilter.h>
+#include <vtkVersionMacros.h>
 #include <vtkWarpScalar.h>
 
 #include <core/DataSetHandler.h>
@@ -71,11 +72,8 @@ DEMWidget::DEMWidget(DataMapping & dataMapping, AbstractRenderView * previewRend
             return;
         }
 
-        {
-            // block rendering while updating the data set
-            ScopedEventDeferral eventDeferral(*m_dataPreview);
-            m_pipelineEnd->Update();
-        }
+        updatePipeline();
+
         // Setting a wrong DEM unit can really break the view settings, so reset the camera here.
         // This requires the updated pipeline
         if (m_previewRenderer)  // always check for concurrent input events
@@ -155,7 +153,7 @@ void DEMWidget::showPreview()
         return;
     }
     // this is required when the user changed parameters before showing the preview
-    m_pipelineEnd->Update();
+    updatePipeline();
 
 
     const auto previewData = QList<DataObject *>{ dem, topo };
@@ -179,6 +177,8 @@ void DEMWidget::showPreview()
     m_previewRenderer->implementation().resetCamera(true, 0);
 
     configureVisualizations();
+
+    m_previewRenderer->render();
 }
 
 bool DEMWidget::save()
@@ -271,7 +271,14 @@ void DEMWidget::setupPipeline()
     auto warpElevation = vtkSmartPointer<vtkWarpScalar>::New();
     warpElevation->SetInputConnection(probe->GetOutputPort());
 
-    m_pipelineEnd = warpElevation;
+    auto cleanupOutputMeshAttributes = vtkSmartPointer<vtkPassArrays>::New();
+    cleanupOutputMeshAttributes->UseFieldTypesOn();
+    cleanupOutputMeshAttributes->AddFieldType(vtkDataObject::AttributeTypes::CELL);
+    cleanupOutputMeshAttributes->AddFieldType(vtkDataObject::AttributeTypes::POINT);
+    cleanupOutputMeshAttributes->AddFieldType(vtkDataObject::AttributeTypes::FIELD);
+    cleanupOutputMeshAttributes->SetInputConnection(warpElevation->GetOutputPort());
+
+    m_pipelineEnd = cleanupOutputMeshAttributes;
 }
 
 void DEMWidget::rebuildTopoPreviewData()
@@ -317,8 +324,7 @@ void DEMWidget::rebuildTopoPreviewData()
     centerTopoMesh();
     matchTopoMeshRadius();
 
-    
-    m_pipelineEnd->Update();
+    updatePipeline();
 
     auto newDataSet = vtkPolyData::SafeDownCast(m_pipelineEnd->GetOutputDataObject(0));
 
@@ -385,10 +391,18 @@ void DEMWidget::configureVisualizations()
         assert(topoVis);
         auto topoRendered = dynamic_cast<RenderedPolyData *>(topoVis);
         assert(topoRendered);
-        topoRendered->mainActor()->GetProperty()->EdgeVisibilityOff();
-        topoRendered->mainActor()->GetProperty()->LightingOn();
-        topoRendered->mainActor()->GetProperty()->SetColor(1, 1, 1);
-        topoRendered->mainActor()->GetProperty()->SetOpacity(0.7);
+        
+        auto prop = topoRendered->createDefaultRenderProperty();
+        prop->EdgeVisibilityOff();
+        prop->LightingOn();
+        prop->SetColor(1, 1, 1);
+        prop->SetOpacity(0.7);
+
+        topoRendered->renderProperty()->DeepCopy(prop);
+
+#if VTK_MAJOR_VERSION < 7 || VTK_MINOR_VERSION < 1
+        topoRendered->renderProperty()->LightingOn();   // bug: flag not copied in VTK < 7.1
+#endif
     }
 }
 
@@ -525,6 +539,19 @@ void DEMWidget::updateMeshTransform()
     m_meshTransform->Translate(convert<3>(m_topoShiftXY, 0.0).GetData()); // assuming the template is already centered around (0,0,z)
 }
 
+void DEMWidget::updatePipeline()
+{
+    if (!m_dataPreview)
+    {
+        return;
+    }
+
+    // defer UI updates / render events until the whole pipeline is updated
+    ScopedEventDeferral deferral(*m_dataPreview);
+
+    m_pipelineEnd->Update();
+}
+
 void DEMWidget::updateView()
 {
     if (!m_previewRenderer)
@@ -532,19 +559,7 @@ void DEMWidget::updateView()
         return;
     }
 
-    {
-        std::vector<ScopedEventDeferral> deferrals;
-        if (auto dem = currentDEM())
-        {
-            deferrals.emplace_back(*dem);
-        }
-        if (auto topo = m_dataPreview.get())
-        {
-            deferrals.emplace_back(*topo);
-        }
-
-        m_pipelineEnd->Update();
-    }
+    updatePipeline();
 
     if (m_previewRenderer)
     {
