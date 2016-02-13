@@ -38,12 +38,14 @@ GlyphMapping & RenderedData3D::glyphMapping()
 vtkProperty * RenderedData3D::renderProperty()
 {
     if (!m_renderProperty)
-        m_renderProperty.TakeReference(createDefaultRenderProperty());
+    {
+        m_renderProperty = createDefaultRenderProperty();
+    }
 
     return m_renderProperty;
 }
 
-vtkProperty * RenderedData3D::createDefaultRenderProperty() const
+vtkSmartPointer<vtkProperty> RenderedData3D::createDefaultRenderProperty() const
 {
     return vtkProperty::New();
 }

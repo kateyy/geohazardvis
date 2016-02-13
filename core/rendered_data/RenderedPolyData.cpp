@@ -240,9 +240,9 @@ void RenderedPolyData::setTexture(const QString & fileName)
     mainActor()->SetTexture(tex);
 }
 
-vtkProperty * RenderedPolyData::createDefaultRenderProperty() const
+vtkSmartPointer<vtkProperty> RenderedPolyData::createDefaultRenderProperty() const
 {
-    vtkProperty * prop = vtkProperty::New();
+    auto prop = vtkSmartPointer<vtkProperty>::New();
     prop->SetColor(0, 0.6, 0);
     prop->SetOpacity(1.0);
     prop->SetInterpolationToFlat();

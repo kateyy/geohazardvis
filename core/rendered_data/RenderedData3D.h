@@ -25,11 +25,11 @@ public:
 
     GlyphMapping & glyphMapping();
 
+    vtkProperty * renderProperty();
+    virtual vtkSmartPointer<vtkProperty> createDefaultRenderProperty() const;
+
 protected:
     virtual vtkSmartPointer<vtkProp3DCollection> fetchViewProps3D();
-
-    vtkProperty * renderProperty();
-    virtual vtkProperty * createDefaultRenderProperty() const;
 
     void visibilityChangedEvent(bool visible) override;
     virtual void vectorsForSurfaceMappingChangedEvent();
