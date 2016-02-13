@@ -32,8 +32,14 @@ public:
     vtkVector<T, Dimensions> center() const;
     vtkVector<T, Dimensions> size() const;
 
-    template<typename newT, size_t newDimensions>
+    vtkVector<T, Dimensions> minRange() const;
+    vtkVector<T, Dimensions> maxRange() const;
+
+    template<typename newT, size_t newDimensions = Dimensions>
     DataExtent<newT, newDimensions> convertTo() const;
+
+    template<size_t newDimensions>
+    DataExtent<T, newDimensions> convertTo() const;
 
     const T * data() const;
     // unsafe workaround for non-const VTK interfaces (e.g., vtkImageData)

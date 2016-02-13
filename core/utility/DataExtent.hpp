@@ -124,6 +124,13 @@ DataExtent<newT, newDimensions> DataExtent<T, Dimensions>::convertTo() const
 }
 
 template<typename T, size_t Dimensions>
+template<size_t newDimensions>
+DataExtent<T, newDimensions> DataExtent<T, Dimensions>::convertTo() const
+{
+    return convertTo<T, newDimensions>();
+}
+
+template<typename T, size_t Dimensions>
 vtkVector<T, Dimensions> DataExtent<T, Dimensions>::center() const
 {
     vtkVector<T, Dimensions> result;
@@ -149,6 +156,32 @@ vtkVector<T, Dimensions> DataExtent<T, Dimensions>::size() const
     }
 
     return result;
+}
+
+template<typename T, size_t Dimensions>
+vtkVector<T, Dimensions> DataExtent<T, Dimensions>::minRange() const
+{
+    vtkVector<T, Dimensions> m;
+
+    for (int i = 0; i < int(Dimensions); ++i)
+    {
+        m[i] = m_extent[2 * i];
+    }
+
+    return m;
+}
+
+template<typename T, size_t Dimensions>
+vtkVector<T, Dimensions> DataExtent<T, Dimensions>::maxRange() const
+{
+    vtkVector<T, Dimensions> m;
+
+    for (int i = 0; i < int(Dimensions); ++i)
+    {
+        m[i] = m_extent[2 * i + 1];
+    }
+
+    return m;
 }
 
 template<typename T, size_t Dimensions>
