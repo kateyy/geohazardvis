@@ -23,10 +23,10 @@ public:
     /** VTK 3D view props visualizing the data object and possibly additional attributes */
     vtkSmartPointer<vtkProp3DCollection> viewProps3D();
 
-    GlyphMapping & glyphMapping();
-
     vtkProperty * renderProperty();
     virtual vtkSmartPointer<vtkProperty> createDefaultRenderProperty() const;
+
+    GlyphMapping & glyphMapping();
 
 protected:
     virtual vtkSmartPointer<vtkProp3DCollection> fetchViewProps3D();

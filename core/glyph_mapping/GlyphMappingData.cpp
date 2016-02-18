@@ -308,6 +308,11 @@ vtkProp * GlyphMappingData::viewProp()
     return actor();
 }
 
+vtkProp3D * GlyphMappingData::viewProp3D()
+{
+    return actor();
+}
+
 void GlyphMappingData::initialize()
 {
     m_arrowGlyph->SetInputConnection(vectorDataOutputPort());

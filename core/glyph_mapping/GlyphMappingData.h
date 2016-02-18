@@ -15,6 +15,7 @@ class QString;
 class vtkActor;
 class vtkAlgorithmOutput;
 class vtkProp;
+class vtkProp3D;
 class vtkAlgorithm;
 class vtkMapper;
 class vtkGlyph3D;
@@ -79,6 +80,7 @@ public:
 
     vtkActor * actor();
     vtkProp * viewProp();
+    vtkProp3D * viewProp3D();
 
     virtual std::unique_ptr<reflectionzeug::PropertyGroup> createPropertyGroup();
 
