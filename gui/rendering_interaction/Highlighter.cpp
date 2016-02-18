@@ -70,7 +70,22 @@ void Highlighter::setTarget(AbstractVisualizedData * vis, int visOutputPort, vtk
 
 void Highlighter::setTarget(AbstractVisualizedData * vis, int visOutputPort, vtkIdTypeArray & indices, IndexType indexType)
 {
-    m_indices->DeepCopy(&indices);
+    std::vector<vtkIdType> validIndices;
+    validIndices.reserve(indices.GetSize());
+    for (vtkIdType i = 0; i < indices.GetSize(); ++i)
+    {
+        const auto && val = indices.GetValue(i);
+        if (val >= 0)
+        {
+            validIndices.push_back(val);
+        }
+    }
+
+    m_indices->Resize(validIndices.size());
+    for (vtkIdType i = 0; i < validIndices.size(); ++i)
+    {
+        m_indices->SetValue(i, validIndices[i]);
+    }
 
     setTargetInternal(vis, visOutputPort, indexType);
 
