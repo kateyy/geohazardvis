@@ -2,7 +2,7 @@
 
 #include <core/core_api.h>
 
-#include <QString>
+#include <QMetaObject>
 
 
 class QColor;
@@ -16,5 +16,5 @@ QDebug CORE_API operator<<(QDebug str, const QEvent * ev);
 
 QColor CORE_API vtkColorToQColor(double colorF[3]);
 
-
-#include "qthelper.hpp"
+/** Disconnect all connections and clear the list */
+void CORE_API disconnectAll(QList<QMetaObject::Connection> & connections);

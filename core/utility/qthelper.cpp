@@ -3,7 +3,9 @@
 #include <QColor>
 #include <QDebug>
 #include <QEvent>
+#include <QList>
 #include <QMetaEnum>
+#include <QObject>
 
 
 QDebug operator<<(QDebug str, const QEvent * ev)
@@ -29,4 +31,14 @@ QColor vtkColorToQColor(double colorF[4])
                   int(colorF[1] * 0xFF),
                   int(colorF[2] * 0xFF),
                   int(colorF[3] * 0xFF));
+}
+
+void disconnectAll(QList<QMetaObject::Connection> & connections)
+{
+    for (auto && c : connections)
+    {
+        QObject::disconnect(c);
+    }
+
+    connections.clear();
 }
