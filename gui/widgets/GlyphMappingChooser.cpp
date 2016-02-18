@@ -1,5 +1,6 @@
 #include "GlyphMappingChooser.h"
 #include "ui_GlyphMappingChooser.h"
+#include "GlyphMappingChooserListModel.h"
 
 #include <algorithm>
 
@@ -11,18 +12,19 @@
 #include <core/rendered_data/RenderedData3D.h>
 #include <core/glyph_mapping/GlyphMapping.h>
 #include <core/glyph_mapping/GlyphMappingData.h>
+#include <core/utility/macros.h>
+#include <core/utility/qthelper.h>
+
 #include <gui/data_view/AbstractRenderView.h>
 #include <gui/propertyguizeug_extension/ColorEditorRGB.h>
-
-#include "GlyphMappingChooserListModel.h"
 
 
 GlyphMappingChooser::GlyphMappingChooser(QWidget * parent, Qt::WindowFlags flags)
     : QDockWidget(parent, flags)
-    , m_ui(new Ui_GlyphMappingChooser())
-    , m_renderView(nullptr)
-    , m_mapping(nullptr)
-    , m_listModel(new GlyphMappingChooserListModel())
+    , m_ui{ new Ui_GlyphMappingChooser() }
+    , m_renderView{ nullptr }
+    , m_mapping{ nullptr }
+    , m_listModel{ new GlyphMappingChooserListModel() }
 {
     m_ui->setupUi(this);
     m_ui->propertyBrowser->addEditorPlugin<ColorEditorRGB>();
@@ -30,6 +32,8 @@ GlyphMappingChooser::GlyphMappingChooser(QWidget * parent, Qt::WindowFlags flags
 
     m_listModel->setParent(m_ui->vectorsListView);
     m_ui->vectorsListView->setModel(m_listModel);
+
+    updateTitle();
 
     connect(m_listModel, &GlyphMappingChooserListModel::glyphVisibilityChanged, this, &GlyphMappingChooser::renderSetupChanged);
     connect(m_listModel, &QAbstractItemModel::dataChanged,
@@ -41,81 +45,66 @@ GlyphMappingChooser::GlyphMappingChooser(QWidget * parent, Qt::WindowFlags flags
 
 GlyphMappingChooser::~GlyphMappingChooser()
 {
-    m_renderView = nullptr;
-    m_mapping = nullptr;
-
-    updateVectorsList();
+    setCurrentRenderView(nullptr);
 }
 
 void GlyphMappingChooser::setCurrentRenderView(AbstractRenderView * renderView)
 {
-    GlyphMapping * newMapping = nullptr;
-    if (renderView && renderView->selectedDataVisualization())
-        if (RenderedData3D * new3D = dynamic_cast<RenderedData3D *>(renderView->selectedDataVisualization()))
-            newMapping = &new3D->glyphMapping();
-
-    if (m_renderView)
+    if (m_renderView == renderView)
     {
-        disconnect(this, &GlyphMappingChooser::renderSetupChanged, m_renderView, &AbstractRenderView::render);
-        disconnect(m_renderView, &AbstractRenderView::beforeDeleteVisualizations, 
-            this, &GlyphMappingChooser::checkRemovedData);
+        return;
     }
-    if (m_mapping)
-        disconnect(m_mapping, &GlyphMapping::vectorsChanged, this, &GlyphMappingChooser::updateVectorsList);
+
+    disconnectAll(m_viewConnections);
 
     m_renderView = renderView;
-    m_mapping = newMapping;
 
-    if (renderView)
-    {
-        connect(renderView, &AbstractRenderView::beforeDeleteVisualizations,
-            this, &GlyphMappingChooser::checkRemovedData);
-        connect(m_renderView, &AbstractRenderView::selectedDataChanged,
-            this, static_cast<void (GlyphMappingChooser::*)(AbstractRenderView *, DataObject *)>(&GlyphMappingChooser::setSelectedData));
-    }
+    setSelectedData(m_renderView ? m_renderView->selectedData() : nullptr);
 
-    updateTitle();
-
-    updateVectorsList();
-
-    if (m_mapping)
-        connect(m_mapping, &GlyphMapping::vectorsChanged, this, &GlyphMappingChooser::updateVectorsList);
     if (m_renderView)
     {
-        connect(this, &GlyphMappingChooser::renderSetupChanged, m_renderView, &AbstractRenderView::render);
-        connect(m_renderView, &AbstractRenderView::beforeDeleteVisualizations, 
+        m_viewConnections << connect(renderView, &AbstractRenderView::beforeDeleteVisualizations,
             this, &GlyphMappingChooser::checkRemovedData);
+        m_viewConnections << connect(m_renderView, &AbstractRenderView::selectedDataChanged,
+            [this] (AbstractRenderView * DEBUG_ONLY(view), DataObject * dataObject) {
+            assert(view == m_renderView);
+            setSelectedData(dataObject);
+        });
+        m_viewConnections << connect(this, &GlyphMappingChooser::renderSetupChanged, m_renderView, &AbstractRenderView::render);
     }
 }
 
 void GlyphMappingChooser::setSelectedData(DataObject * dataObject)
 {
-    if (!m_renderView)
-        return;
+    AbstractVisualizedData * currentVisualization = nullptr;
 
-    RenderedData3D * renderedData = nullptr;
-    for (AbstractVisualizedData * it : m_renderView->visualizations())
+    if (m_renderView)
     {
-        RenderedData3D * r = dynamic_cast<RenderedData3D *>(it); // glyph mapping is only implemented for 3D data
-
-        if (r && &r->dataObject() == dataObject)
-        {
-            renderedData = r;
-            break;
+        currentVisualization = m_renderView->visualizationFor(dataObject, m_renderView->activeSubViewIndex());
+        if (!currentVisualization)
+        {   // fall back to an object in any of the sub views
+            currentVisualization = m_renderView->visualizationFor(dataObject);
         }
     }
 
-    // here the user selected an object in the Browser, that is not rendered in the current view
-    if (dataObject && !renderedData)
-        return;
+    auto renderedData = dynamic_cast<RenderedData3D *>(currentVisualization);
 
-    GlyphMapping * newMapping = renderedData ? &renderedData->glyphMapping() : nullptr;
+    // An object was selected that is not contained in the current view or doesn't implement glyph mapping,
+    // so stick to the current selection.
+    if (dataObject && !renderedData)
+    {
+        return;
+    }
+
+    auto newMapping = renderedData ? &renderedData->glyphMapping() : nullptr;
 
     if (newMapping == m_mapping)
+    {
         return;
+    }
 
-    if (m_mapping)
-        disconnect(m_mapping, &GlyphMapping::vectorsChanged, this, &GlyphMappingChooser::updateVectorsList);
+    disconnect(m_vectorListConnection);
+    m_vectorListConnection = {};
 
     m_mapping = newMapping;
 
@@ -123,19 +112,15 @@ void GlyphMappingChooser::setSelectedData(DataObject * dataObject)
     updateVectorsList();
 
     if (m_mapping)
-        connect(m_mapping, &GlyphMapping::vectorsChanged, this, &GlyphMappingChooser::updateVectorsList);
-}
-
-void GlyphMappingChooser::setSelectedData(AbstractRenderView * renderView, DataObject * dataObject)
-{
-    if (renderView != m_renderView)
-        return;
-
-    setSelectedData(dataObject);
+    {
+        m_vectorListConnection = connect(m_mapping, &GlyphMapping::vectorsChanged, this, &GlyphMappingChooser::updateVectorsList);
+    }
 }
 
 void GlyphMappingChooser::updateVectorsList()
 {
+    disconnectAll(m_vectorsRenderConnections);
+
     updateGuiForSelection({});
 
     m_ui->propertyBrowser->setRoot(nullptr);
@@ -148,7 +133,7 @@ void GlyphMappingChooser::updateVectorsList()
         for (auto vectors : m_mapping->vectors())
         {
             m_propertyGroups.push_back(vectors->createPropertyGroup());
-            connect(vectors, &GlyphMappingData::geometryChanged, this, &GlyphMappingChooser::renderSetupChanged);
+            m_vectorsRenderConnections << connect(vectors, &GlyphMappingData::geometryChanged, this, &GlyphMappingChooser::renderSetupChanged);
         }
 
         QModelIndex index(m_listModel->index(0, 0));
@@ -159,7 +144,9 @@ void GlyphMappingChooser::updateVectorsList()
 void GlyphMappingChooser::checkRemovedData(const QList<AbstractVisualizedData *> & content)
 {
     if (!m_mapping)
+    {
         return;
+    }
 
     auto it = std::find(content.begin(), content.end(), &m_mapping->renderedData());
     if (it != content.end())
@@ -170,8 +157,6 @@ void GlyphMappingChooser::checkRemovedData(const QList<AbstractVisualizedData *>
 
 void GlyphMappingChooser::updateGuiForSelection(const QItemSelection & selection)
 {
-    disconnect(m_startingIndexConnection);
-
     if (selection.indexes().isEmpty())
     {
         m_ui->propertyBrowser->setRoot(nullptr);
@@ -179,8 +164,8 @@ void GlyphMappingChooser::updateGuiForSelection(const QItemSelection & selection
     }
     else
     {
-        int index = selection.indexes().first().row();
-        QString vectorsName = m_mapping->vectorNames()[index];
+        const int index = selection.indexes().first().row();
+        const auto vectorsName = m_mapping->vectorNames()[index];
 
         m_ui->propertyBrowser->setRoot(m_propertyGroups[index].get());
         m_ui->propertyBrowserContainer->setTitle(vectorsName);

@@ -4,6 +4,7 @@
 #include <vector>
 
 #include <QDockWidget>
+#include <QList>
 
 #include <gui/gui_api.h>
 
@@ -28,17 +29,15 @@ class GUI_API GlyphMappingChooser : public QDockWidget
     Q_OBJECT
 
 public:
-    GlyphMappingChooser(QWidget * parent = 0, Qt::WindowFlags flags = 0);
+    GlyphMappingChooser(QWidget * parent = nullptr, Qt::WindowFlags flags = {});
     ~GlyphMappingChooser() override;
+
+    void setCurrentRenderView(AbstractRenderView * renderView);
+    /** switch to specified dataObject, in case it is visible in my current render view */
+    void setSelectedData(DataObject * dataObject);
 
 signals:
     void renderSetupChanged();
-
-public:
-    void setCurrentRenderView(AbstractRenderView * renderView = nullptr);
-    /** switch to specified dataObject, in case it is visible in my current render view */
-    void setSelectedData(DataObject * dataObject);
-    void setSelectedData(AbstractRenderView * renderView, DataObject * dataObject);
 
 private:
     void updateGuiForSelection(const QItemSelection & selection);
@@ -53,8 +52,10 @@ private:
     std::unique_ptr<Ui_GlyphMappingChooser> m_ui;
 
     AbstractRenderView * m_renderView;
+    QList<QMetaObject::Connection> m_viewConnections;
     GlyphMapping * m_mapping;
+    QMetaObject::Connection m_vectorListConnection;
+    QList<QMetaObject::Connection> m_vectorsRenderConnections;
     GlyphMappingChooserListModel * m_listModel;
     std::vector<std::unique_ptr<reflectionzeug::PropertyGroup>> m_propertyGroups;
-    QMetaObject::Connection m_startingIndexConnection;
 };
