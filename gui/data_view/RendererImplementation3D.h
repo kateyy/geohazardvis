@@ -25,8 +25,6 @@ public:
 protected:
     void onRemoveContent(AbstractVisualizedData * content, unsigned int subViewIndex) override;
 
-    ColorMapping * colorMappingForSubView(unsigned int subViewIndex) override;
-
     void updateForCurrentInteractionStrategy(const QString & strategyName) override;
     RenderViewStrategy * strategyIfEnabled() const override;
 
@@ -38,7 +36,6 @@ private:
 private:
     std::map<QString, std::unique_ptr<RenderViewStrategy>> m_strategies;
     RenderViewStrategy * m_currentStrategy;
-    std::unique_ptr<ColorMapping> m_colorMapping;
 
     static bool s_isRegistered;
 };

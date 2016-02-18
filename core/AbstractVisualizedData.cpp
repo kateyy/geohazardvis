@@ -9,6 +9,7 @@
 #include <vtkInformationIntegerPointerKey.h>
 #include <vtkLookupTable.h>
 
+#include <core/color_mapping/ColorMapping.h>
 #include <core/data_objects/DataObject.h>
 #include <core/utility/macros.h>
 
@@ -26,7 +27,13 @@ AbstractVisualizedData::AbstractVisualizedData(ContentType contentType, DataObje
     connect(&dataObject, &DataObject::dataChanged, this, &AbstractVisualizedData::geometryChanged);
 }
 
-AbstractVisualizedData::~AbstractVisualizedData() = default;
+AbstractVisualizedData::~AbstractVisualizedData()
+{
+    if (m_colorMapping)
+    {
+        m_colorMapping->unregisterVisualizedData(this);
+    }
+}
 
 ContentType AbstractVisualizedData::contentType() const
 {
@@ -55,6 +62,17 @@ void AbstractVisualizedData::setVisible(bool visible)
     visibilityChangedEvent(visible);
 
     emit visibilityChanged(visible);
+}
+
+ColorMapping & AbstractVisualizedData::colorMapping()
+{
+    if (!m_colorMapping)
+    {
+        m_colorMapping = std::make_unique<ColorMapping>();
+        m_colorMapping->registerVisualizedData(this);
+    }
+
+    return *m_colorMapping;
 }
 
 void AbstractVisualizedData::setScalarsForColorMapping(ColorMappingData * scalars)

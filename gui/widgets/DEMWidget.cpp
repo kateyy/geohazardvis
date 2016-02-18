@@ -373,10 +373,7 @@ void DEMWidget::configureVisualizations()
         demRendered->setRepresentation(RenderedData::Representation::both);
         
         auto scalarsName = QString::fromUtf8(dem->scalars().GetName());
-
-        assert(dynamic_cast<RendererImplementationBase3D *>(&m_previewRenderer->implementation()));
-        auto & impl = static_cast<RendererImplementationBase3D &>(m_previewRenderer->implementation());
-        impl.colorMapping(0)->setCurrentScalarsByName(scalarsName);
+        demVis->colorMapping().setCurrentScalarsByName(scalarsName);
     }
 
     if (!m_previewRenderer)
@@ -399,6 +396,7 @@ void DEMWidget::configureVisualizations()
         prop->SetOpacity(0.7);
 
         topoRendered->renderProperty()->DeepCopy(prop);
+        topoRendered->setRepresentation(RenderedData::Representation::both);
 
 #if VTK_MAJOR_VERSION < 7 || VTK_MINOR_VERSION < 1
         topoRendered->renderProperty()->LightingOn();   // bug: flag not copied in VTK < 7.1

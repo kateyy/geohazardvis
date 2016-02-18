@@ -15,11 +15,12 @@
 class vtkLookupTable;
 class vtkObject;
 
-class Ui_ColorMappingChooser;
 class AbstractRenderView;
+class AbstractVisualizedData;
 class ColorMapping;
-class RendererImplementationBase3D;
+class DataObject;
 class OrientedScalarBarActor;
+class Ui_ColorMappingChooser;
 
 
 class GUI_API ColorMappingChooser : public QDockWidget
@@ -27,20 +28,22 @@ class GUI_API ColorMappingChooser : public QDockWidget
     Q_OBJECT
 
 public:
-    explicit ColorMappingChooser(QWidget * parent = nullptr);
+    explicit ColorMappingChooser(QWidget * parent = nullptr, Qt::WindowFlags flags = {});
     ~ColorMappingChooser() override;
 
     vtkLookupTable * selectedGradient() const;
     vtkLookupTable * defaultGradient() const;
 
-    void setCurrentRenderView(AbstractRenderView * renderView = nullptr);
+    void setCurrentRenderView(AbstractRenderView * renderView);
+    /** switch to specified dataObject, in case it is visible in my current render view */
+    void setSelectedData(DataObject * dataObject);
 
 signals:
     void renderSetupChanged();
 
 private:
-    void guiScalarsSelectionChanged(const QString & scalarsName);
-    void guiGradientSelectionChanged(int selection);
+    void guiScalarsSelectionChanged();
+    void guiGradientSelectionChanged();
     void guiComponentChanged(int guiComponent);
     void guiMinValueChanged(double value);
     void guiMaxValueChanged(double value);
@@ -50,26 +53,30 @@ private:
     void guiLegendPositionChanged(const QString & position);
 
     void rebuildGui();
+    void setupGuiConnections();
+    void discardGuiConnections();
+    void setupValueRangeConnections();
+    void discardValueRangeConnections();
 
     /** Update the GUI-selected scalars when the mapping is modified directly via its interface */
     void mappingScalarsChanged();
 
-private:
     void colorLegendPositionChanged();
     void updateLegendTitleFont();
     void updateLegendLabelFont();
     void updateLegendConfig();
 
-private:
     void loadGradientImages();
     int gradientIndex(vtkLookupTable * gradient) const;
     int defaultGradientIndex() const;
 
-    /** A RenderView's implementation and color mapping can change whenever its content changes. */
-    void checkRenderViewColorMapping();
+    /** remove data from the UI if we currently hold it */
+    void checkRemovedData(const QList<AbstractVisualizedData *> & content);
 
-    void updateTitle(const AbstractRenderView * renderView = nullptr);
+    void updateTitle();
     void updateGuiValueRanges();
+
+    OrientedScalarBarActor & legend();
 
     static vtkSmartPointer<vtkLookupTable> buildLookupTable(const QImage & image);
 
@@ -79,14 +86,15 @@ private:
     QList<vtkSmartPointer<vtkLookupTable>> m_gradients;
 
     AbstractRenderView * m_renderView;
-    RendererImplementationBase3D * m_renderViewImpl;
+    QList<QMetaObject::Connection> m_viewConnections;
     ColorMapping * m_mapping;
-    OrientedScalarBarActor * m_legend;
+
+    QList<QMetaObject::Connection> m_mappingConnections;
     /** check if we are moving the actor or if the user interacts */
     bool m_movingColorLegend;
     /** Mapping from subject (color legend coordinate, text property, etc) to observer id */
     QMap<vtkWeakPointer<vtkObject>, unsigned long> m_colorLegendObserverIds;
     // connections for various parameters and signals related to the color mapping
-    QList<QMetaObject::Connection> m_qtConnect;
+    QList<QMetaObject::Connection> m_guiConnections;
     QMetaObject::Connection m_dataMinMaxChangedConnection;
 };

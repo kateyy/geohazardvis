@@ -13,7 +13,6 @@
 #include <gui/gui_api.h>
 
 
-template<typename T> class QList;
 class vtkIdTypeArray;
 class vtkRenderWindowInteractor;
 

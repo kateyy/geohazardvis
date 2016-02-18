@@ -3,7 +3,6 @@
 #include <cassert>
 
 #include <core/AbstractVisualizedData.h>
-#include <core/color_mapping/ColorMapping.h>
 #include <core/data_objects/ImageDataObject.h>
 #include <gui/data_view/AbstractRenderView.h>
 #include <gui/data_view/RenderViewStrategy.h>
@@ -50,15 +49,6 @@ void RendererImplementation3D::onRemoveContent(AbstractVisualizedData * content,
     RendererImplementationBase3D::onRemoveContent(content, subViewIndex);
 
     updateStrategies();
-}
-
-ColorMapping * RendererImplementation3D::colorMappingForSubView(unsigned int /*subViewIndex*/)
-{
-    if (!m_colorMapping)
-    {
-        m_colorMapping = std::make_unique<ColorMapping>();
-    }
-    return m_colorMapping.get();
 }
 
 void RendererImplementation3D::updateForCurrentInteractionStrategy(const QString & strategyName)

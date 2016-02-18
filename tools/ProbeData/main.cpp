@@ -375,19 +375,17 @@ int main()
 
     auto rendered = residualObject->createRendered();
 
-    auto colorMapping = std::make_unique<ColorMapping>();
+    auto & colorMapping = rendered->colorMapping();
 
     auto lut = vtkSmartPointer<vtkLookupTable>::New();
     lut->Build();
-    colorMapping->setGradient(lut);
+    colorMapping.setGradient(lut);
 
-    colorMapping->setVisualizedData({ rendered.get() });
-
-    for (auto & name : colorMapping->scalarsNames())
+    for (auto & name : colorMapping.scalarsNames())
     {
         if (name != "user-defined color")
         {
-            colorMapping->setCurrentScalarsByName(name);
+            colorMapping.setCurrentScalarsByName(name);
             break;
         }
     }

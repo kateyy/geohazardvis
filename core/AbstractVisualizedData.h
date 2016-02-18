@@ -19,6 +19,7 @@ namespace reflectionzeug
     class PropertyGroup;
 }
 
+class ColorMapping;
 enum class ContentType;
 class DataObject;
 class ColorMappingData;
@@ -42,7 +43,11 @@ public:
 
     virtual std::unique_ptr<reflectionzeug::PropertyGroup> createConfigGroup() = 0;
 
-    /** set scalars that will configure color mapping for this data */
+    /** Color mapping used for this visualization. If it doesn't current has a color mapping, a new
+      * one will be created. */
+    ColorMapping & colorMapping();
+
+    /** This is used by the ColorMapping to set the current scalars. Don't call this from anywhere else. */
     void setScalarsForColorMapping(ColorMappingData * scalars);
     /** Set gradient that will be applied to colored geometries.
     * ColorMappingData are responsible for gradient configuration. */
@@ -79,4 +84,7 @@ private:
     DataObject & m_dataObject;
 
     bool m_isVisible;
+
+    /** Color mappings can be shared between multiple visualizations. */
+    std::unique_ptr<ColorMapping> m_colorMapping;
 };

@@ -6,25 +6,18 @@
 
 #include <core/AbstractVisualizedData.h>
 #include <core/data_objects/DataObject.h>
+#include <core/color_mapping/ColorBarRepresentation.h>
 #include <core/color_mapping/ColorMappingData.h>
 #include <core/color_mapping/ColorMappingRegistry.h>
 #include <core/color_mapping/GlyphColorMappingGlyphListener.h>
-#include <core/utility/ScalarBarActor.h>
 
 
 ColorMapping::ColorMapping()
     : QObject()
-    , m_glyphListener(std::make_unique<GlyphColorMappingGlyphListener>())
-    , m_gradient(vtkSmartPointer<vtkLookupTable>::New())
-    , m_originalGradient(nullptr)
-    , m_colorMappingLegend(vtkSmartPointer<OrientedScalarBarActor>::New())
-    , m_colorMappingLegendVisible(true)
+    , m_glyphListener{ std::make_unique<GlyphColorMappingGlyphListener>() }
+    , m_gradient{ vtkSmartPointer<vtkLookupTable>::New() }
+    , m_originalGradient{ nullptr }
 {
-    m_colorMappingLegend->SetLookupTable(m_gradient);
-    m_colorMappingLegend->SetVisibility(false);
-
-    clear();
-
     connect(m_glyphListener.get(), &GlyphColorMappingGlyphListener::glyphMappingChanged,
         this, &ColorMapping::updateAvailableScalars);
 }
@@ -65,7 +58,7 @@ void ColorMapping::setVisualizedData(const QList<AbstractVisualizedData *> & vis
     // disable color mapping if we couldn't find appropriate data
     if (m_data.empty())
     {
-        updateLegendVisibility();
+        setCurrentScalarsByName("");
         return;
     }
 
@@ -86,18 +79,45 @@ void ColorMapping::setVisualizedData(const QList<AbstractVisualizedData *> & vis
     m_glyphListener->setData(visualizedData);
 }
 
-void ColorMapping::clear()
+void ColorMapping::registerVisualizedData(AbstractVisualizedData * visualizedData)
 {
-    m_currentScalarsName = QString();
+    if (m_visualizedData.contains(visualizedData))
+    {
+        return;
+    }
 
-    m_visualizedData.clear();
+    auto newList = m_visualizedData;
+    newList << visualizedData;
 
-    m_data.clear();
+    setVisualizedData(newList);
+
+    assert(m_visualizedData.contains(visualizedData));
 }
 
-QList<QString> ColorMapping::scalarsNames() const
+void ColorMapping::unregisterVisualizedData(AbstractVisualizedData * visualizedData)
 {
-    QList<QString> names;
+    if (!m_visualizedData.contains(visualizedData))
+    {
+        return;
+    }
+
+    auto newList = m_visualizedData;
+    newList.removeOne(visualizedData);
+    assert(!newList.contains(visualizedData));
+
+    setVisualizedData(newList);
+
+    assert(!m_visualizedData.contains(visualizedData));
+}
+
+const QList<AbstractVisualizedData *> & ColorMapping::visualizedData() const
+{
+    return m_visualizedData;
+}
+
+QStringList ColorMapping::scalarsNames() const
+{
+    QStringList names;
     for (auto & s : m_data)
         names << s.first;
 
@@ -111,6 +131,11 @@ const QString & ColorMapping::currentScalarsName() const
 
 void ColorMapping::setCurrentScalarsByName(const QString & scalarsName)
 {
+    if (m_currentScalarsName == scalarsName)
+    {
+        return;
+    }
+
     ColorMappingData * oldScalars = currentScalars();
     if (oldScalars)
         oldScalars->deactivate();
@@ -124,10 +149,6 @@ void ColorMapping::setCurrentScalarsByName(const QString & scalarsName)
     ColorMappingData * scalars = currentScalars();
     if (scalars)
         scalars->activate();
-
-    m_colorMappingLegend->SetTitle(scalarsName.toUtf8().data());
-
-    updateLegendVisibility();
 
     emit currentScalarsChanged();
 }
@@ -156,6 +177,11 @@ vtkLookupTable * ColorMapping::gradient()
     return m_gradient;
 }
 
+vtkScalarsToColors * ColorMapping::scalarsToColors()
+{
+    return gradient();
+}
+
 vtkLookupTable * ColorMapping::originalGradient()
 {
     return m_originalGradient;
@@ -182,30 +208,23 @@ void ColorMapping::setGradient(vtkLookupTable * gradient)
     }
 }
 
-vtkScalarBarActor * ColorMapping::colorMappingLegend()
-{
-    return m_colorMappingLegend;
-}
-
 bool ColorMapping::currentScalarsUseMappingLegend() const
 {
-    const ColorMappingData * scalars = currentScalars();
+    const auto scalars = currentScalars();
     if (!scalars)
         return false;
 
     return scalars->dataMinValue() != scalars->dataMaxValue();
 }
 
-bool ColorMapping::colorMappingLegendVisible() const
+ColorBarRepresentation & ColorMapping::colorBarRepresentation()
 {
-    return m_colorMappingLegendVisible;
-}
+    if (!m_colorBarRepresenation)
+    {
+        m_colorBarRepresenation = std::make_unique<ColorBarRepresentation>(*this);
+    }
 
-void ColorMapping::setColorMappingLegendVisible(bool visible)
-{
-    m_colorMappingLegendVisible = visible;
-
-    updateLegendVisibility();
+    return *m_colorBarRepresenation;
 }
 
 void ColorMapping::updateAvailableScalars()
@@ -214,17 +233,4 @@ void ColorMapping::updateAvailableScalars()
     setVisualizedData(m_visualizedData);
 
     emit scalarsChanged();
-}
-
-void ColorMapping::updateLegendVisibility()
-{
-    bool actualVisibilty = currentScalarsUseMappingLegend() && m_colorMappingLegendVisible;
-
-    bool oldValue = m_colorMappingLegend->GetVisibility() > 0;
-
-    if (oldValue != actualVisibilty)
-    {
-        m_colorMappingLegend->SetVisibility(actualVisibilty);
-        emit colorLegendVisibilityChanged(actualVisibilty);
-    }
 }

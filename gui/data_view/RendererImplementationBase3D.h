@@ -20,7 +20,6 @@ class vtkScalarBarWidget;
 class vtkTextWidget;
 
 class CameraInteractorStyleSwitch;
-class ColorMapping;
 class PickerHighlighterInteractorObserver;
 class RenderViewStrategy;
 class RenderedData;
@@ -30,9 +29,7 @@ class RenderedData;
 
 This class is NOT registered as a concrete RendererImplementation that can be used with the 
 RendererImplementationSwitch. Instead, setup instances of this class manually or register subclasses of it 
-(e.g., RendererImplementation3D). 
-
-This class requires a valid ColorMapping and vtkRenderWindow to be passed to the constructor.
+(e.g., RendererImplementation3D).
 */
 class GUI_API RendererImplementationBase3D : public RendererImplementation
 {
@@ -82,8 +79,6 @@ public:
     vtkLightKit * lightKit();
 
     vtkTextWidget * titleWidget(unsigned int subViewIndex);
-    ColorMapping * colorMapping(unsigned int subViewIndex);
-    vtkScalarBarWidget * colorLegendWidget(unsigned int subViewIndex);
 
     vtkGridAxes3DActor * axesActor(unsigned int subViewIndex);
 
@@ -98,11 +93,6 @@ protected:
         // view props fetched per rendered data
         QMap<RenderedData *, vtkSmartPointer<vtkPropCollection>> dataProps;
         vtkBoundingBox dataBounds;
-
-        // Color mapping that is used for this sub-view. It may be shared with another view
-        ColorMapping * colorMapping;
-        vtkSmartPointer<vtkScalarBarWidget> scalarBarWidget;
-        vtkScalarBarActor * colorMappingLegend;
 
         vtkSmartPointer<vtkGridAxes3DActor> axesActor;
         vtkSmartPointer<vtkTextWidget> titleWidget;
@@ -120,10 +110,6 @@ protected:
     virtual RenderViewStrategy * strategyIfEnabled() const = 0;
     ViewportSetup & viewportSetup(unsigned int subViewIndex = 0);
 
-    /** Provide a ColorMapping instance to be used with the specified sub-view.
-      * The ownership of the ColorMapping will remain in sub-classes that implement this function. */
-    virtual ColorMapping * colorMappingForSubView(unsigned int subViewIndex) = 0;
-
 private:
     void initialize();
     /** update components that depend on the render window interactor */
@@ -133,7 +119,6 @@ private:
     void updateBounds();
     void addToBounds(RenderedData * renderedData, unsigned int subViewIndex);
     void removeFromBounds(RenderedData * renderedData, unsigned int subViewIndex);
-    void setupColorMapping(unsigned int subViewIndex, ViewportSetup & viewportSetup);
 
     /** scan rendered data for changed attribute props (e.g., vectors) */
     void fetchViewProps(RenderedData * renderedData, unsigned int subViewIndex);

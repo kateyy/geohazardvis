@@ -107,6 +107,8 @@ set ( SOURCES
     table_model/QVtkTableModelVectorGrid3D.h
     table_model/QVtkTableModelVectorGrid3D.cpp
 
+    color_mapping/ColorBarRepresentation.h
+    color_mapping/ColorBarRepresentation.cpp
     color_mapping/ColorMapping.h
     color_mapping/ColorMapping.cpp
     color_mapping/ColorMappingData.h

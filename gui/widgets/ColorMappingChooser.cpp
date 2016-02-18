@@ -17,15 +17,17 @@
 #include <vtkScalarBarWidget.h>
 #include <vtkTextProperty.h>
 
+#include <core/AbstractVisualizedData.h>
 #include <core/data_objects/DataObject.h>
+#include <core/color_mapping/ColorBarRepresentation.h>
 #include <core/color_mapping/ColorMappingData.h>
 #include <core/color_mapping/ColorMapping.h>
 #include <core/ThirdParty/alphanum.hpp>
 #include <core/utility/qthelper.h>
 #include <core/utility/ScalarBarActor.h>
+#include <core/utility/macros.h>
 
 #include <gui/data_view/AbstractRenderView.h>
-#include <gui/data_view/RendererImplementationBase3D.h>
 
 
 namespace
@@ -34,117 +36,169 @@ namespace
 }
 
 
-ColorMappingChooser::ColorMappingChooser(QWidget * parent)
-    : QDockWidget(parent)
+ColorMappingChooser::ColorMappingChooser(QWidget * parent, Qt::WindowFlags flags)
+    : QDockWidget(parent, flags)
     , m_ui{ std::make_unique<Ui_ColorMappingChooser>() }
     , m_renderView{ nullptr }
-    , m_renderViewImpl{ nullptr }
     , m_mapping{ nullptr }
-    , m_legend{ nullptr }
     , m_movingColorLegend{ false }
 {
     m_ui->setupUi(this);
-
-    updateTitle();
 
     loadGradientImages();
 
     m_ui->legendPositionComboBox->addItems({
         "left", "right", "top", "bottom", "user-defined position"
     });
-    m_ui->legendPositionComboBox->setCurrentText("right");
-
-    setCurrentRenderView();
-
-    connect(m_ui->scalarsComboBox, &QComboBox::currentTextChanged, this, &ColorMappingChooser::guiScalarsSelectionChanged);
-    connect(m_ui->componentSpinBox, static_cast<void(QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &ColorMappingChooser::guiComponentChanged);
-    connect(m_ui->minValueSpinBox, static_cast<void(QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), this, &ColorMappingChooser::guiMinValueChanged);
-    connect(m_ui->maxValueSpinBox, static_cast<void(QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), this, &ColorMappingChooser::guiMaxValueChanged);
-    connect(m_ui->minLabel, &QLabel::linkActivated, this, &ColorMappingChooser::guiResetMinToData);
-    connect(m_ui->maxLabel, &QLabel::linkActivated, this, &ColorMappingChooser::guiResetMaxToData);
-    connect(m_ui->gradientComboBox, static_cast<void(QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &ColorMappingChooser::guiGradientSelectionChanged);
-    connect(m_ui->nanColorButton, &QAbstractButton::pressed, this, &ColorMappingChooser::guiSelectNanColor);
-    connect(m_ui->legendPositionComboBox, &QComboBox::currentTextChanged, this, &ColorMappingChooser::guiLegendPositionChanged);
-
-    connect(m_ui->legendTitleFontSize, static_cast<void(QSpinBox::*)(int)>(&QSpinBox::valueChanged), [this] (int fontSize) {
-        if (!m_legend)
-            return;
-        auto property = m_legend->GetTitleTextProperty();
-        auto currentSize = property->GetFontSize();
-        if (currentSize == fontSize)
-            return;
-        property->SetFontSize(fontSize);
-        emit renderSetupChanged();
-    });
-
-    connect(m_ui->legendLabelFontSize, static_cast<void(QSpinBox::*)(int)>(&QSpinBox::valueChanged), [this] (int fontSize) {
-        if (!m_legend)
-            return;
-        auto property = m_legend->GetLabelTextProperty();
-        auto currentSize = property->GetFontSize();
-        if (currentSize == fontSize)
-            return;
-        property->SetFontSize(fontSize);
-        emit renderSetupChanged();
-    });
-
-    connect(m_ui->legendAlignTitleCheckBox, &QAbstractButton::toggled, [this] (bool checked) {
-        if (!m_legend)
-            return;
-        bool currentlyAligned = m_legend->GetTitleAlignedWithColorBar();
-        if (currentlyAligned == checked)
-            return;
-        m_legend->SetTitleAlignedWithColorBar(checked);
-        emit renderSetupChanged();
-    });
-
-    connect(m_ui->legendBackgroundCheckBox, &QAbstractButton::toggled, [this] (bool checked) {
-        if (!m_legend)
-            return;
-        bool currentlyOn = m_legend->GetDrawBackground();
-        if (currentlyOn == checked)
-            return;
-        m_legend->SetDrawBackground(checked);
-        emit renderSetupChanged();
-    });
-}
-
-ColorMappingChooser::~ColorMappingChooser() = default;
-
-void ColorMappingChooser::setCurrentRenderView(AbstractRenderView * renderView)
-{
-    m_renderView = renderView;
+    m_ui->legendPositionComboBox->setCurrentIndex(3);
 
     rebuildGui();
 }
 
-void ColorMappingChooser::guiScalarsSelectionChanged(const QString & scalarsName)
+ColorMappingChooser::~ColorMappingChooser()
 {
-    if (!m_mapping)
-        return;
+    setCurrentRenderView(nullptr);
+}
 
-    disconnect(m_dataMinMaxChangedConnection);
+vtkLookupTable * ColorMappingChooser::selectedGradient() const
+{
+    return m_gradients.value(m_ui->gradientComboBox->currentIndex());
+}
+
+vtkLookupTable * ColorMappingChooser::defaultGradient() const
+{
+    return m_gradients.value(defaultGradientIndex());
+}
+
+void ColorMappingChooser::setCurrentRenderView(AbstractRenderView * renderView)
+{
+    if (m_renderView == renderView)
+    {
+        return;
+    }
+
+    disconnectAll(m_viewConnections);
+    disconnectAll(m_mappingConnections);
+    discardGuiConnections();
+
+    m_renderView = renderView;
+
+    setSelectedData(m_renderView ? m_renderView->selectedData() : nullptr);
+
+    if (m_renderView)
+    {
+        m_viewConnections << connect(renderView, &AbstractRenderView::beforeDeleteVisualizations,
+            this, &ColorMappingChooser::checkRemovedData);
+        m_viewConnections << connect(m_renderView, &AbstractRenderView::selectedDataChanged,
+            [this] (AbstractRenderView * DEBUG_ONLY(view), DataObject * dataObject) {
+            assert(view == m_renderView);
+            setSelectedData(dataObject);
+        });
+        m_viewConnections << connect(this, &ColorMappingChooser::renderSetupChanged, m_renderView, &AbstractRenderView::render);
+    }
+}
+
+void ColorMappingChooser::setSelectedData(DataObject * dataObject)
+{
+    assert(m_mapping || 
+        (m_colorLegendObserverIds.isEmpty() && m_guiConnections.isEmpty() && !m_dataMinMaxChangedConnection));
+
+    AbstractVisualizedData * currentVisualization = nullptr;
+
+    if (m_renderView)
+    {
+        currentVisualization = m_renderView->visualizationFor(dataObject, m_renderView->activeSubViewIndex());
+        if (!currentVisualization)
+        {   // fall back to an object in any of the sub views
+            currentVisualization = m_renderView->visualizationFor(dataObject);
+        }
+    }
+
+    // An object was selected that is not contained in the current view or doesn't implement glyph mapping,
+    // so stick to the current selection.
+    if (dataObject && !currentVisualization)
+    {
+        return;
+    }
+
+    auto newMapping = currentVisualization ? &currentVisualization->colorMapping() : nullptr;
+
+    if (newMapping == m_mapping)
+    {
+        return;
+    }
+
+    disconnectAll(m_mappingConnections);
+    discardGuiConnections();
+
+    for (auto it = m_colorLegendObserverIds.begin(); it != m_colorLegendObserverIds.end(); ++it)
+    {
+        if (it.key())
+            it.key()->RemoveObserver(it.value());
+    }
+    m_colorLegendObserverIds.clear();
+
+    m_ui->legendPositionComboBox->setCurrentText("user-defined position");
+
+    m_mapping = newMapping;
+
+    if (m_mapping)
+    {
+        // setup gradient for newly created mapping
+        if (!m_mapping->originalGradient())
+        {
+            m_ui->gradientComboBox->setCurrentIndex(defaultGradientIndex());
+            m_mapping->setGradient(selectedGradient());
+        }
+
+        auto addObserver = [this] (vtkObject * subject, void(ColorMappingChooser::* callback)()) {
+            m_colorLegendObserverIds.insert(subject,
+                subject->AddObserver(vtkCommand::ModifiedEvent, this, callback));
+        };
+
+        addObserver(legend().GetPositionCoordinate(), &ColorMappingChooser::colorLegendPositionChanged);
+        addObserver(legend().GetPosition2Coordinate(), &ColorMappingChooser::colorLegendPositionChanged);
+        addObserver(legend().GetTitleTextProperty(), &ColorMappingChooser::updateLegendTitleFont);
+        addObserver(legend().GetLabelTextProperty(), &ColorMappingChooser::updateLegendLabelFont);
+        addObserver(&legend(), &ColorMappingChooser::updateLegendConfig);
+
+        m_mappingConnections << connect(m_mapping, &ColorMapping::scalarsChanged, this, &ColorMappingChooser::rebuildGui);
+        // in case the active mapping is changed via the C++ interface
+        m_mappingConnections << connect(m_mapping, &ColorMapping::currentScalarsChanged, this, &ColorMappingChooser::mappingScalarsChanged);
+    }
+
+    rebuildGui();
+}
+
+void ColorMappingChooser::guiScalarsSelectionChanged()
+{
+    assert(m_mapping);
+
+    const auto && scalarsName = m_ui->scalarsComboBox->currentText();
+
+    discardValueRangeConnections();
 
     m_mapping->setCurrentScalarsByName(scalarsName);
 
-    m_dataMinMaxChangedConnection = connect(m_mapping->currentScalars(), &ColorMappingData::dataMinMaxChanged, this, &ColorMappingChooser::rebuildGui);
+    setupValueRangeConnections();
 
     updateGuiValueRanges();
 
     bool gradients = m_mapping->currentScalarsUseMappingLegend();
     m_ui->gradientGroupBox->setEnabled(gradients);
     m_ui->legendGroupBox->setEnabled(gradients);
-    m_ui->colorLegendCheckBox->setChecked(m_mapping->colorMappingLegendVisible());
+    m_ui->colorLegendCheckBox->setChecked(m_mapping->colorBarRepresentation().isVisible());
     if (gradients)
+    {
         m_mapping->setGradient(selectedGradient());
+    }
 
     emit renderSetupChanged();
 }
 
-void ColorMappingChooser::guiGradientSelectionChanged(int /*selection*/)
+void ColorMappingChooser::guiGradientSelectionChanged()
 {
-    if (!m_mapping)
-        return;
+    assert(m_mapping);
 
     m_mapping->setGradient(selectedGradient());
 
@@ -153,8 +207,7 @@ void ColorMappingChooser::guiGradientSelectionChanged(int /*selection*/)
 
 void ColorMappingChooser::guiComponentChanged(int guiComponent)
 {
-    if (!m_mapping)
-        return;
+    assert(m_mapping);
 
     auto component = guiComponent - 1;
 
@@ -167,8 +220,7 @@ void ColorMappingChooser::guiComponentChanged(int guiComponent)
 
 void ColorMappingChooser::guiMinValueChanged(double value)
 {
-    if (!m_mapping)
-        return;
+    assert(m_mapping);
 
     auto scalars = m_mapping->currentScalars();
     double correctValue = std::min(scalars->maxValue(), value);
@@ -185,8 +237,7 @@ void ColorMappingChooser::guiMinValueChanged(double value)
 
 void ColorMappingChooser::guiMaxValueChanged(double value)
 {
-    if (!m_mapping)
-        return;
+    assert(m_mapping);
 
     auto scalars = m_mapping->currentScalars();
     double correctValue = std::max(scalars->minValue(), value);
@@ -203,66 +254,52 @@ void ColorMappingChooser::guiMaxValueChanged(double value)
 
 void ColorMappingChooser::guiResetMinToData()
 {
-    if (!m_mapping)
-        return;
+    assert(m_mapping);
 
     m_ui->minValueSpinBox->setValue(m_mapping->currentScalars()->dataMinValue());
 }
 
 void ColorMappingChooser::guiResetMaxToData()
 {
-    if (!m_mapping)
-        return;
+    assert(m_mapping);
 
     m_ui->maxValueSpinBox->setValue(m_mapping->currentScalars()->dataMaxValue());
 }
 
-vtkLookupTable * ColorMappingChooser::selectedGradient() const
-{
-    return m_gradients.value(m_ui->gradientComboBox->currentIndex());
-}
-
-vtkLookupTable * ColorMappingChooser::defaultGradient() const
-{
-    return m_gradients.value(defaultGradientIndex());
-}
-
 void ColorMappingChooser::guiLegendPositionChanged(const QString & position)
 {
-    if (!m_mapping || !m_renderView)
-        return;
+    assert(m_mapping);
 
-    unsigned int activeViewIndex = m_renderView->activeSubViewIndex();
-    vtkScalarBarRepresentation * representation = m_renderViewImpl->colorLegendWidget(activeViewIndex)->GetScalarBarRepresentation();
+    auto & scalarBarRepr = m_mapping->colorBarRepresentation().scalarBarRepresentation();;
 
     m_movingColorLegend = true;
 
     if (position == "left")
     {
-        representation->SetOrientation(1);
-        representation->SetPosition(0.01, 0.1);
-        representation->SetPosition2(0.17, 0.8);
+        scalarBarRepr.SetOrientation(1);
+        scalarBarRepr.SetPosition(0.01, 0.1);
+        scalarBarRepr.SetPosition2(0.17, 0.8);
     }
     else if (position == "right")
     {
-        representation->SetOrientation(1);
-        representation->SetPosition(0.82, 0.1);
-        representation->SetPosition2(0.17, 0.8);
+        scalarBarRepr.SetOrientation(1);
+        scalarBarRepr.SetPosition(0.82, 0.1);
+        scalarBarRepr.SetPosition2(0.17, 0.8);
     }
     else if (position == "top")
     {
-        representation->SetOrientation(0);
-        representation->SetPosition(0.01, 0.82);
-        representation->SetPosition2(0.98, 0.17);
+        scalarBarRepr.SetOrientation(0);
+        scalarBarRepr.SetPosition(0.01, 0.82);
+        scalarBarRepr.SetPosition2(0.98, 0.17);
     }
     else if (position == "bottom")
     {
-        representation->SetOrientation(0);
-        representation->SetPosition(0.01, 0.01);
-        representation->SetPosition2(0.98, 0.17);
+        scalarBarRepr.SetOrientation(0);
+        scalarBarRepr.SetPosition(0.01, 0.01);
+        scalarBarRepr.SetPosition2(0.98, 0.17);
     }
 
-    m_renderView->render();
+    emit renderSetupChanged();
 
     m_movingColorLegend = false;
 }
@@ -270,28 +307,27 @@ void ColorMappingChooser::guiLegendPositionChanged(const QString & position)
 void ColorMappingChooser::colorLegendPositionChanged()
 {
     if (!m_movingColorLegend)
+    {
         m_ui->legendPositionComboBox->setCurrentText("user-defined position");
+    }
 }
 
 void ColorMappingChooser::updateLegendTitleFont()
 {
-    assert(m_legend);
     m_ui->legendTitleFontSize->setValue(
-        m_legend->GetTitleTextProperty()->GetFontSize());
+        legend().GetTitleTextProperty()->GetFontSize());
 }
 
 void ColorMappingChooser::updateLegendLabelFont()
 {
-    assert(m_legend);
     m_ui->legendLabelFontSize->setValue(
-        m_legend->GetLabelTextProperty()->GetFontSize());
+        legend().GetLabelTextProperty()->GetFontSize());
 }
 
 void ColorMappingChooser::updateLegendConfig()
 {
-    assert(m_legend);
-    m_ui->legendAlignTitleCheckBox->setChecked(m_legend->GetTitleAlignedWithColorBar());
-    m_ui->legendBackgroundCheckBox->setChecked(m_legend->GetDrawBackground() != 0);
+    m_ui->legendAlignTitleCheckBox->setChecked(legend().GetTitleAlignedWithColorBar());
+    m_ui->legendBackgroundCheckBox->setChecked(legend().GetDrawBackground() != 0);
 }
 
 void ColorMappingChooser::loadGradientImages()
@@ -305,9 +341,11 @@ void ColorMappingChooser::loadGradientImages()
 
     // navigate to the gradient directory
     QDir dir;
-    if (!dir.cd("data/gradients"))
+    const QString gradientDir("data/gradients");
+    bool dirNotFound = false;
+    if (!dir.cd(gradientDir))
     {
-        qDebug() << "gradient directory does not exist; only a fallback gradient will be available";
+        dirNotFound = true;
     }
     else
     {
@@ -331,9 +369,19 @@ void ColorMappingChooser::loadGradientImages()
         }
     }
 
-    // fallback, in case we didn't find any gradient images
+    // fall back, in case we didn't find any gradient images
     if (m_gradients.isEmpty())
     {
+        const auto fallbackMsg = "; only a fall-back gradient will be available\n\t(searching in " + QDir().absoluteFilePath(gradientDir) + ")";
+        if (dirNotFound)
+        {
+            qDebug() << "gradient directory does not exist" + fallbackMsg;
+        }
+        else
+        {
+            qDebug() << "gradient directory is empty" + fallbackMsg;
+        }
+
         auto gradient = vtkSmartPointer<vtkLookupTable>::New();
         gradient->SetNumberOfTableValues(gradientImageSize.width());
         gradient->Build();
@@ -380,95 +428,32 @@ int ColorMappingChooser::defaultGradientIndex() const
     return std::max(defautltIndex, 0);
 }
 
-void ColorMappingChooser::checkRenderViewColorMapping()
+void ColorMappingChooser::checkRemovedData(const QList<AbstractVisualizedData *> & content)
 {
-    if (m_mapping == nullptr)
-    {
-        assert(m_colorLegendObserverIds.isEmpty());
-    }
-    for (auto it = m_colorLegendObserverIds.begin(); it != m_colorLegendObserverIds.end(); ++it)
-    {
-        if (it.key())
-            it.key()->RemoveObserver(it.value());
-    }
-    m_colorLegendObserverIds.clear();
-
-
-    m_renderViewImpl = nullptr;
-    m_mapping = nullptr;
-    m_legend = nullptr;
-
-    if (!m_renderView)
+    if (!m_mapping)
     {
         return;
     }
 
-    // color mapping is currently only implemented for 3D/render views (not for context/2D/plot views)
-    m_renderViewImpl = dynamic_cast<RendererImplementationBase3D *>(&m_renderView->implementation());
-    if (!m_renderViewImpl)
+    if (!(content.toSet() | m_mapping->visualizedData().toSet()).isEmpty())
     {
-        return;
-    }
-
-    m_mapping = m_renderViewImpl->colorMapping(m_renderView->activeSubViewIndex());
-
-    if (m_mapping)
-    {
-        m_legend = dynamic_cast<OrientedScalarBarActor *>(m_mapping->colorMappingLegend());
-    }
-
-    // setup gradients for newly created mappings
-    if (m_mapping && !m_mapping->originalGradient())
-    {
-        m_ui->gradientComboBox->setCurrentIndex(defaultGradientIndex());
-        m_mapping->setGradient(selectedGradient());
-    }
-    // ensure to have a valid gradient in all other sub-views, for complete and consistent multi-view setup
-    for (unsigned int i = 0; i < m_renderView->numberOfSubViews(); ++i)
-    {
-        if (i == m_renderView->activeSubViewIndex())
-            continue;
-        auto mapping = m_renderViewImpl->colorMapping(i);
-        if (!mapping)
-            continue;
-        if (mapping->originalGradient())
-            continue;
-        mapping->setGradient(selectedGradient());
-    }
-
-    m_ui->legendPositionComboBox->setCurrentText("user-defined position");
-
-    if (m_mapping)
-    {
-        auto addObserver = [this] (vtkObject * subject, void(ColorMappingChooser::* callback)()) {
-            m_colorLegendObserverIds.insert(subject,
-                subject->AddObserver(vtkCommand::ModifiedEvent, this, callback));
-        };
-
-        addObserver(m_mapping->colorMappingLegend()->GetPositionCoordinate(), &ColorMappingChooser::colorLegendPositionChanged);
-        addObserver(m_mapping->colorMappingLegend()->GetPosition2Coordinate(), &ColorMappingChooser::colorLegendPositionChanged);
-        addObserver(m_mapping->colorMappingLegend()->GetTitleTextProperty(), &ColorMappingChooser::updateLegendTitleFont);
-        addObserver(m_mapping->colorMappingLegend()->GetLabelTextProperty(), &ColorMappingChooser::updateLegendLabelFont);
-        addObserver(m_mapping->colorMappingLegend(), &ColorMappingChooser::updateLegendConfig);
-
-        // in case the active mapping is changed via the C++ interface
-        m_qtConnect << connect(m_mapping, &ColorMapping::currentScalarsChanged, this, &ColorMappingChooser::mappingScalarsChanged);
+        setSelectedData(nullptr);
     }
 }
 
-void ColorMappingChooser::updateTitle(const AbstractRenderView * renderView)
+void ColorMappingChooser::updateTitle()
 {
     QString title;
-    if (renderView)
-        title = renderView->friendlyName();
+    if (m_renderView)
+        title = m_renderView->friendlyName();
     else
         title = "(No Render View selected)";
 
     title = "<b>" + title + "</b>";
 
-    if (renderView && renderView->numberOfSubViews() > 1)
+    if (m_renderView && m_renderView->numberOfSubViews() > 1)
     {
-        title += " <i>" + renderView->subViewFriendlyName(renderView->activeSubViewIndex()) + "</i>";
+        title += " <i>" + m_renderView->subViewFriendlyName(m_renderView->activeSubViewIndex()) + "</i>";
     }
 
     m_ui->relatedRenderView->setText(title);
@@ -498,20 +483,9 @@ void ColorMappingChooser::guiSelectNanColor()
 
 void ColorMappingChooser::rebuildGui()
 {
-    for (auto & connection : m_qtConnect)
-    {
-        disconnect(connection);
-    }
-    m_qtConnect.clear();
+    discardGuiConnections();
 
-    checkRenderViewColorMapping();
-
-    updateTitle(m_renderView);
-
-    auto newMapping = m_mapping;
-    auto newLegend = m_legend;
-    m_mapping = nullptr;    // disable GUI to mapping events
-    m_legend = nullptr;
+    updateTitle();
 
     m_ui->scalarsComboBox->clear();
     m_ui->gradientGroupBox->setEnabled(false);
@@ -519,61 +493,130 @@ void ColorMappingChooser::rebuildGui()
     m_ui->nanColorButton->setStyleSheet("");
     m_ui->colorLegendCheckBox->setChecked(false);
 
-    if (m_renderView)
+    auto scalarsNames = m_mapping ? m_mapping->scalarsNames() : QStringList{};
+
+    if (!scalarsNames.isEmpty())
     {
-        m_qtConnect << connect(m_renderView, &AbstractRenderView::visualizationsChanged, this, &ColorMappingChooser::rebuildGui);
-        m_qtConnect << connect(m_renderView, &AbstractRenderView::activeSubViewChanged, this, &ColorMappingChooser::rebuildGui);
-    }
+        std::sort(scalarsNames.begin(), scalarsNames.end(), doj::alphanum_less<QString>());
+        m_ui->scalarsComboBox->addItems(scalarsNames);
 
-    // clear GUI when not rendering
-    if (newMapping)
-    {
-        auto items = newMapping->scalarsNames();
-        std::sort(items.begin(), items.end(), doj::alphanum_less<QString>());
-        m_ui->scalarsComboBox->addItems(items);
+        m_ui->scalarsComboBox->setCurrentText(m_mapping->currentScalarsName());
+        m_ui->gradientComboBox->setCurrentIndex(gradientIndex(m_mapping->originalGradient()));
+        m_ui->gradientGroupBox->setEnabled(m_mapping->currentScalarsUseMappingLegend());
+        m_ui->legendGroupBox->setEnabled(m_mapping->currentScalarsUseMappingLegend());
+        m_ui->colorLegendCheckBox->setChecked(m_mapping->colorBarRepresentation().isVisible());
 
-        m_ui->scalarsComboBox->setCurrentText(newMapping->currentScalarsName());
-        m_ui->gradientComboBox->setCurrentIndex(gradientIndex(newMapping->originalGradient()));
-        m_ui->gradientGroupBox->setEnabled(newMapping->currentScalarsUseMappingLegend());
-        m_ui->legendGroupBox->setEnabled(newMapping->currentScalarsUseMappingLegend());
-        m_ui->colorLegendCheckBox->setChecked(newMapping->colorMappingLegendVisible());
-
-        const unsigned char * nanColorV = newMapping->gradient()->GetNanColorAsUnsignedChars();
+        const unsigned char * nanColorV = m_mapping->gradient()->GetNanColorAsUnsignedChars();
 
         QColor nanColor(static_cast<int>(nanColorV[0]), static_cast<int>(nanColorV[1]), static_cast<int>(nanColorV[2]), static_cast<int>(nanColorV[3]));
         m_ui->nanColorButton->setStyleSheet(QString("background-color: %1").arg(nanColor.name()));
-
-        m_qtConnect << connect(newMapping, &ColorMapping::scalarsChanged, this, &ColorMappingChooser::rebuildGui);
-        m_qtConnect << connect(m_ui->colorLegendCheckBox, &QAbstractButton::toggled,
-            [this, newMapping] (bool checked) {
-            newMapping->setColorMappingLegendVisible(checked);
-            m_renderView->render();
-        });
-        m_qtConnect << connect(this, &ColorMappingChooser::renderSetupChanged,
-            m_renderView, &AbstractRenderView::render);
-
-        disconnect(m_dataMinMaxChangedConnection);
-        if (auto currentScalars = newMapping->currentScalars())
-        {
-            m_dataMinMaxChangedConnection = connect(currentScalars, &ColorMappingData::dataMinMaxChanged, this, &ColorMappingChooser::rebuildGui);
-        }
     }
 
-    // the mapping can now receive signals from the UI
-    m_mapping = newMapping;
-    m_legend = newLegend;
-
+    // this includes (and must include) setting up GUI connections
     updateGuiValueRanges();
 
     emit renderSetupChanged();
 }
 
+void ColorMappingChooser::setupGuiConnections()
+{
+    assert(m_mapping);
+
+    m_guiConnections << connect(m_ui->scalarsComboBox, &QComboBox::currentTextChanged, this, &ColorMappingChooser::guiScalarsSelectionChanged);
+
+    auto currentScalars = m_mapping->currentScalars();
+
+    // all further connections are only relevant if there is currently something to configure
+    // don't depend on ColorMapping to always have current scalars
+    if (!currentScalars)
+    {
+        return;
+    }
+
+    const auto && dSpinBoxValueChanged = static_cast<void(QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged);
+    const auto && spinBoxValueChanged = static_cast<void(QSpinBox::*)(int)>(&QSpinBox::valueChanged);
+
+    m_guiConnections << connect(m_ui->componentSpinBox, spinBoxValueChanged, this, &ColorMappingChooser::guiComponentChanged);
+    m_guiConnections << connect(m_ui->minValueSpinBox, dSpinBoxValueChanged, this, &ColorMappingChooser::guiMinValueChanged);
+    m_guiConnections << connect(m_ui->maxValueSpinBox, dSpinBoxValueChanged, this, &ColorMappingChooser::guiMaxValueChanged);
+    m_guiConnections << connect(m_ui->minLabel, &QLabel::linkActivated, this, &ColorMappingChooser::guiResetMinToData);
+    m_guiConnections << connect(m_ui->maxLabel, &QLabel::linkActivated, this, &ColorMappingChooser::guiResetMaxToData);
+    m_guiConnections << connect(m_ui->gradientComboBox, &QComboBox::currentTextChanged, this, &ColorMappingChooser::guiGradientSelectionChanged);
+    m_guiConnections << connect(m_ui->nanColorButton, &QAbstractButton::pressed, this, &ColorMappingChooser::guiSelectNanColor);
+    m_guiConnections << connect(m_ui->legendPositionComboBox, &QComboBox::currentTextChanged, this, &ColorMappingChooser::guiLegendPositionChanged);
+
+    m_guiConnections << connect(m_ui->legendTitleFontSize, spinBoxValueChanged, [this] (int fontSize) {
+        auto property = legend().GetTitleTextProperty();
+        auto currentSize = property->GetFontSize();
+        if (currentSize == fontSize)
+            return;
+        property->SetFontSize(fontSize);
+        emit renderSetupChanged();
+    });
+
+    m_guiConnections << connect(m_ui->legendLabelFontSize, spinBoxValueChanged, [this] (int fontSize) {
+        auto property = legend().GetLabelTextProperty();
+        auto currentSize = property->GetFontSize();
+        if (currentSize == fontSize)
+            return;
+        property->SetFontSize(fontSize);
+        emit renderSetupChanged();
+    });
+
+    m_guiConnections << connect(m_ui->legendAlignTitleCheckBox, &QAbstractButton::toggled, [this] (bool checked) {
+        bool currentlyAligned = legend().GetTitleAlignedWithColorBar();
+        if (currentlyAligned == checked)
+            return;
+        legend().SetTitleAlignedWithColorBar(checked);
+        emit renderSetupChanged();
+    });
+
+    m_guiConnections << connect(m_ui->legendBackgroundCheckBox, &QAbstractButton::toggled, [this] (bool checked) {
+        bool currentlyOn = legend().GetDrawBackground();
+        if (currentlyOn == checked)
+            return;
+        legend().SetDrawBackground(checked);
+        emit renderSetupChanged();
+    });
+
+    m_guiConnections << connect(m_ui->colorLegendCheckBox, &QAbstractButton::toggled,
+        [this] (bool checked) {
+        m_mapping->colorBarRepresentation().setVisible(checked);
+        emit renderSetupChanged();
+    });
+
+    setupValueRangeConnections();
+}
+
+void ColorMappingChooser::discardGuiConnections()
+{
+    disconnectAll(m_guiConnections);
+    discardValueRangeConnections();
+}
+
+void ColorMappingChooser::setupValueRangeConnections()
+{
+    auto currentScalars = m_mapping->currentScalars();
+    assert(currentScalars);
+
+    // depending on the effect of this change, the effect may be the same as setting different scalars
+    // e.g., changes between range (n, n) and (n, m)
+    m_dataMinMaxChangedConnection = connect(currentScalars, &ColorMappingData::dataMinMaxChanged,
+        this, &ColorMappingChooser::guiScalarsSelectionChanged);    
+}
+
+void ColorMappingChooser::discardValueRangeConnections()
+{
+    disconnect(m_dataMinMaxChangedConnection);
+    m_dataMinMaxChangedConnection = {};
+}
+
 void ColorMappingChooser::mappingScalarsChanged()
 {
-    assert(dynamic_cast<ColorMapping *>(sender()));
-    auto sendingMapping = static_cast<ColorMapping *>(sender());
+    assert(m_mapping);
+    assert(m_mapping == sender());
 
-    auto && scalars = sendingMapping->currentScalarsName();
+    auto && scalars = m_mapping->currentScalarsName();
 
     if (m_ui->scalarsComboBox->currentText() == scalars)
     {
@@ -585,6 +628,8 @@ void ColorMappingChooser::mappingScalarsChanged()
 
 void ColorMappingChooser::updateGuiValueRanges()
 {
+    discardGuiConnections();
+
     int numComponents = 0, currentComponent = 0;
     double min = 0, max = 0;
     double currentMin = 0, currentMax = 0;
@@ -593,9 +638,7 @@ void ColorMappingChooser::updateGuiValueRanges()
 
     if (m_mapping)
     {
-        ColorMappingData * scalars = m_mapping->currentScalars();
-
-        if (scalars)
+        if (auto scalars = m_mapping->currentScalars())
         {
             numComponents = scalars->numDataComponents();
             currentComponent = scalars->dataComponent();
@@ -608,12 +651,6 @@ void ColorMappingChooser::updateGuiValueRanges()
         // assume that the mapping does not use scalar values/ranges, if it has useless min/max values
         enableRangeGui = min != max;
     }
-
-    // disable mapping updates
-    auto currentMapping = m_mapping;
-    auto currentLegend = m_legend;
-    m_mapping = nullptr;
-    m_legend = nullptr;
 
     // around 100 steps to scroll through the full range, but step only on one digit
     double delta = max - min;
@@ -653,18 +690,22 @@ void ColorMappingChooser::updateGuiValueRanges()
     m_ui->maxValueSpinBox->setEnabled(enableRangeGui);
 
 
-    if (currentMapping)
+    if (m_mapping)
     {
-        auto legend = dynamic_cast<OrientedScalarBarActor *>(currentMapping->colorMappingLegend());
-        assert(legend);
-        m_ui->legendAlignTitleCheckBox->setChecked(legend->GetTitleAlignedWithColorBar());
-        m_ui->legendTitleFontSize->setValue(legend->GetTitleTextProperty()->GetFontSize());
-        m_ui->legendLabelFontSize->setValue(legend->GetLabelTextProperty()->GetFontSize());
-        m_ui->legendBackgroundCheckBox->setChecked(legend->GetDrawBackground() != 0);
-    }
+        m_ui->legendAlignTitleCheckBox->setChecked(legend().GetTitleAlignedWithColorBar());
+        m_ui->legendTitleFontSize->setValue(legend().GetTitleTextProperty()->GetFontSize());
+        m_ui->legendLabelFontSize->setValue(legend().GetLabelTextProperty()->GetFontSize());
+        m_ui->legendBackgroundCheckBox->setChecked(legend().GetDrawBackground() != 0);
 
-    m_mapping = currentMapping;
-    m_legend = currentLegend;
+        // setup GUI connections only if there is something to configure
+        setupGuiConnections();
+    }
+}
+
+OrientedScalarBarActor & ColorMappingChooser::legend()
+{
+    assert(m_mapping);
+    return m_mapping->colorBarRepresentation().actor();
 }
 
 vtkSmartPointer<vtkLookupTable> ColorMappingChooser::buildLookupTable(const QImage & image)

@@ -1,7 +1,5 @@
 #pragma once
 
-#include <array>
-
 #include <gui/data_view/RendererImplementationBase3D.h>
 
 
@@ -21,8 +19,6 @@ public:
     RenderViewStrategy2D & strategy2D();
 
 protected:
-    ColorMapping * colorMappingForSubView(unsigned int subViewIndex) override;
-
     unsigned int subViewIndexAtPos(const QPoint pixelCoordinate) const override;
 
     RenderViewStrategy * strategyIfEnabled() const override;
@@ -31,5 +27,4 @@ private:
     bool m_isInitialized;
 
     std::unique_ptr<RenderViewStrategy2D> m_strategy;
-    std::array<std::unique_ptr<ColorMapping>, 3> m_colorMappings;
 };

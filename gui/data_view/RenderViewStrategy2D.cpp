@@ -201,52 +201,58 @@ void RenderViewStrategy2D::startProfilePlot()
     m_profilePlotAction->setEnabled(false);
 
 
-    // for each sub-view, check which combinations of active scalars and input images we have to plot
-    QSet<QPair<DataObject *, QString>> createdPlots;
-    for (unsigned int i = 0; i < m_context.renderView().numberOfSubViews(); ++i)
-    {
-        const auto * colorMapping = m_context.colorMapping(i);
-        if (!colorMapping)
-            continue;
+    // Check for each visible object if we can plot its current scalars.
+    // This is selected by the color mapping currently.
+    QSet<QPair<DataObject *, QString>> processedPlots;
 
-        const auto * currentScalars = colorMapping->currentScalars();
-        if (!currentScalars)
+    for (auto visualization : m_context.renderView().visualizations())
+    {
+        // check if this data object is requested
+        auto * dataObject = &visualization->dataObject();
+        if (!m_activeInputData.contains(dataObject))
+        {
             continue;
+        }
+
+        auto & colorMapping = visualization->colorMapping();
+        auto currentScalars = colorMapping.currentScalars();
+
+        if (!currentScalars)    // nothing to plot
+        {
+            continue;
+        }
 
         const auto && scalarsName = currentScalars->name();
 
-        auto component = currentScalars->dataComponent();
-
-        for (auto data : m_activeInputData)
+        const auto currentPlotCombination = QPair<DataObject *, QString>{ dataObject, scalarsName };
+        // don't plot the same data twice
+        if (processedPlots.contains(currentPlotCombination))
         {
-            if (!m_context.renderView().contains(data, i))
-                continue;
-
-            // don't plot the same data multiple times
-            QPair<DataObject *, QString> currentPlotCombination = { data, scalarsName };
-            if (createdPlots.contains(currentPlotCombination))
-                continue;
-
-            // TODO this should be propagated by the color mapping
-            // this here is a dangerous assumption
-            IndexType location = data->dataTypeName() == "polygonal mesh"
-                ? IndexType::cells
-                : IndexType::points;
-
-            auto profile = std::make_unique<ImageProfileData>(
-                data->name() + " plot",
-                *data,
-                scalarsName,
-                location,
-                component);
-
-            if (!profile->isValid())
-                continue;
-
-            createdPlots << currentPlotCombination;
-
-            m_previewProfiles.push_back(std::move(profile));
+            continue;
         }
+
+        const auto component = currentScalars->dataComponent();
+
+
+        // TODO this should be propagated by the color mapping
+        // this here is a dangerous assumption
+        const auto location = dataObject->dataTypeName() == "polygonal mesh"
+            ? IndexType::cells
+            : IndexType::points;
+
+        auto profile = std::make_unique<ImageProfileData>(
+            dataObject->name() + " plot",
+            *dataObject,
+            scalarsName,
+            location,
+            component);
+
+        processedPlots << currentPlotCombination;
+
+        if (!profile->isValid())
+            continue;
+
+        m_previewProfiles.push_back(std::move(profile));
     }
 
     if (m_previewProfiles.empty())

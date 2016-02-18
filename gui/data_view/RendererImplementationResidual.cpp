@@ -5,14 +5,13 @@
 
 #include <vtkRenderer.h>
 
-#include <core/color_mapping/ColorMapping.h>
 #include <gui/data_view/AbstractRenderView.h>
 #include <gui/data_view/RenderViewStrategy2D.h>
 
 
 RendererImplementationResidual::RendererImplementationResidual(AbstractRenderView & renderView)
     : RendererImplementationBase3D(renderView)
-    , m_isInitialized(false)
+    , m_isInitialized{ false }
 {
 }
 
@@ -53,17 +52,6 @@ RenderViewStrategy2D & RendererImplementationResidual::strategy2D()
     assert(m_strategy);
 
     return *m_strategy;
-}
-
-ColorMapping * RendererImplementationResidual::colorMappingForSubView(unsigned int subViewIndex)
-{
-    auto && colorMapping = m_colorMappings[subViewIndex];
-    if (!colorMapping)
-    {
-        colorMapping = std::make_unique<ColorMapping>();
-    }
-
-    return colorMapping.get();
 }
 
 unsigned int RendererImplementationResidual::subViewIndexAtPos(const QPoint pixelCoordinate) const

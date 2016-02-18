@@ -14,9 +14,10 @@
 
 
 class vtkLookupTable;
-class vtkScalarBarActor;
+class vtkScalarsToColors;
 
 class AbstractVisualizedData;
+class ColorBarRepresentation;
 class ColorMappingData;
 class GlyphColorMappingGlyphListener;
 
@@ -33,14 +34,10 @@ public:
     ColorMapping();
     ~ColorMapping() override;
 
-    /** setup a list of color mappings which are applicable to the list of rendered data
-      * reuse lastly used scalars if possible */
-    void setVisualizedData(const QList<AbstractVisualizedData *> & visualizedData);
-
-    void clear();
+    const QList<AbstractVisualizedData *> & visualizedData() const;
 
     /** list of scalar names that can be used with my rendered data */
-    QList<QString> scalarsNames() const;
+    QStringList scalarsNames() const;
 
     const QString & currentScalarsName() const;
     void setCurrentScalarsByName(const QString & scalarsName);
@@ -50,30 +47,36 @@ public:
     /** @return gradient lookup table
       * This is empty or a copy of the table passed by setGradient. */
     vtkLookupTable * gradient();
+    /** Convenience method, returns the same as gradient() */
+    vtkScalarsToColors * scalarsToColors();
     /** @return pointer to the gradient that was passed via setGradient
       * Used to compare the local gradient copy with the original object. */
     vtkLookupTable * originalGradient();
     void setGradient(vtkLookupTable * gradient);
 
-    vtkScalarBarActor * colorMappingLegend();
     bool currentScalarsUseMappingLegend() const;
-    /** get/set visibility of the color mapping legend.
-        It is always hidden if the current scalars don't use the color mapping. */
-    bool colorMappingLegendVisible() const;
-    void setColorMappingLegendVisible(bool visible);
+    ColorBarRepresentation & colorBarRepresentation();
+
+    /** (un-)register a visualization with this color mapping.
+      * Must ONLY be called by the visualization itself. */
+    void registerVisualizedData(AbstractVisualizedData * visualizedData);
+    void unregisterVisualizedData(AbstractVisualizedData * visualizedData);
 
 signals:
     void scalarsChanged();
     void currentScalarsChanged();
-    void colorLegendVisibilityChanged(bool visible);
 
 private:
+    /** setup a list of color mappings which are applicable to the list of rendered data
+      * reuse lastly used scalars if possible */
+    void setVisualizedData(const QList<AbstractVisualizedData *> & visualizedData);
+
     /** reread the data set list provided by the DataSetHandler for new/deleted data */
     void updateAvailableScalars();
-    void updateLegendVisibility();
 
 private:
     std::unique_ptr<GlyphColorMappingGlyphListener> m_glyphListener;
+    std::unique_ptr<ColorBarRepresentation> m_colorBarRepresenation;
 
     QList<AbstractVisualizedData *> m_visualizedData;
 
@@ -82,7 +85,4 @@ private:
     QString m_currentScalarsName;
     vtkSmartPointer<vtkLookupTable> m_gradient;
     vtkLookupTable * m_originalGradient;
-
-    vtkSmartPointer<vtkScalarBarActor> m_colorMappingLegend;
-    bool m_colorMappingLegendVisible;
 };

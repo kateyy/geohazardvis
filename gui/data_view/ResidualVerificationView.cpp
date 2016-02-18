@@ -538,6 +538,7 @@ void ResidualVerificationView::setDataInternal(unsigned int subViewIndex, DataOb
         {
             return;
         }
+
         auto newVisPtr = newVis.get();
         m_visualizations[subViewIndex] = std::move(newVis);
         implementation().addContent(newVisPtr, subViewIndex);
@@ -843,14 +844,14 @@ void ResidualVerificationView::updateGuiAfterDataChange()
 
     for (unsigned int i = 0; i < numberOfSubViews(); ++i)
     {
-        if (!dataAt(i))
+        if (!dataAt(i) || !m_visualizations[i])
             continue;
 
         auto attributeName = m_projectedAttributeNames[i];
         if (attributeName.isEmpty())
             attributeName = m_attributeNamesLocations[i].first;
 
-        m_implementation->colorMapping(i)->setCurrentScalarsByName(attributeName);
+        m_visualizations[i]->colorMapping().setCurrentScalarsByName(attributeName);
     }
 
     updateGuiSelection();

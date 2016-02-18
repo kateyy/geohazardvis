@@ -23,6 +23,7 @@
 
 #include <core/t_QVTKWidget.h>
 #include <core/types.h>
+#include <core/color_mapping/ColorBarRepresentation.h>
 #include <core/color_mapping/ColorMapping.h>
 #include <core/data_objects/DataObject.h>
 #include <core/rendered_data/RenderedData.h>
@@ -121,6 +122,10 @@ void RendererImplementationBase3D::onAddContent(AbstractVisualizedData * content
     assert(dynamic_cast<RenderedData *>(content));
     RenderedData * renderedData = static_cast<RenderedData *>(content);
 
+    renderedData->colorMapping().colorBarRepresentation().setContext(
+        m_renderWindow->GetInteractor(),
+        renderer(subViewIndex));
+
     auto props = vtkSmartPointer<vtkPropCollection>::New();
 
     auto && renderer = this->renderer(subViewIndex);
@@ -184,11 +189,6 @@ void RendererImplementationBase3D::onDataVisibilityChanged(AbstractVisualizedDat
 void RendererImplementationBase3D::onRenderViewContentsChanged()
 {
     RendererImplementation::onRenderViewContentsChanged();
-
-    for (unsigned int i = 0; i < m_renderView.numberOfSubViews(); ++i)
-    {
-        colorMapping(i)->setVisualizedData(m_renderView.visualizations(i));
-    }
 }
 
 void RendererImplementationBase3D::setSelectedData(AbstractVisualizedData * vis, vtkIdType index, IndexType indexType)
@@ -356,18 +356,6 @@ vtkTextWidget * RendererImplementationBase3D::titleWidget(unsigned int subViewIn
     return m_viewportSetups[subViewIndex].titleWidget;
 }
 
-ColorMapping * RendererImplementationBase3D::colorMapping(unsigned int subViewIndex)
-{
-    assert(m_viewportSetups[subViewIndex].colorMapping);
-    return m_viewportSetups[subViewIndex].colorMapping;
-}
-
-vtkScalarBarWidget * RendererImplementationBase3D::colorLegendWidget(unsigned int subViewIndex)
-{
-    assert(m_viewportSetups[subViewIndex].scalarBarWidget);
-    return m_viewportSetups[subViewIndex].scalarBarWidget;
-}
-
 vtkGridAxes3DActor * RendererImplementationBase3D::axesActor(unsigned int subViewIndex)
 {
     return m_viewportSetups[subViewIndex].axesActor;
@@ -427,12 +415,9 @@ void RendererImplementationBase3D::initialize()
         titleWidget->SetRepresentation(titleRepr);
         titleWidget->SetTextActor(titleActor);
         titleWidget->SelectableOff();
-
-        setupColorMapping(subViewIndex, viewport);
         
         viewport.axesActor = createAxes();
         renderer->AddViewProp(viewport.axesActor);
-        renderer->AddViewProp(viewport.colorMappingLegend);
     }
 
 
@@ -470,7 +455,6 @@ void RendererImplementationBase3D::assignInteractor()
 {
     for (auto & viewportSetup : m_viewportSetups)
     {
-        viewportSetup.scalarBarWidget->SetInteractor(m_renderWindow->GetInteractor());
         viewportSetup.titleWidget->SetInteractor(m_renderWindow->GetInteractor());
         viewportSetup.titleWidget->On();
     }
@@ -586,33 +570,6 @@ vtkSmartPointer<vtkGridAxes3DActor> RendererImplementationBase3D::createAxes()
     gridAxes->VisibilityOff();
 
     return gridAxes;
-}
-
-void RendererImplementationBase3D::setupColorMapping(unsigned int subViewIndex, ViewportSetup & viewportSetup)
-{
-    viewportSetup.colorMapping = colorMappingForSubView(subViewIndex);
-
-    viewportSetup.colorMappingLegend = viewportSetup.colorMapping->colorMappingLegend();
-
-    auto repr = vtkSmartPointer<vtkScalarBarRepresentation>::New();
-    repr->SetScalarBarActor(viewportSetup.colorMappingLegend);
-
-    viewportSetup.scalarBarWidget = vtkSmartPointer<vtkScalarBarWidget>::New();
-    viewportSetup.scalarBarWidget->SetScalarBarActor(viewportSetup.colorMappingLegend);
-    viewportSetup.scalarBarWidget->SetRepresentation(repr);
-    viewportSetup.scalarBarWidget->EnabledOff();
-
-    connect(viewportSetup.colorMapping, &ColorMapping::colorLegendVisibilityChanged,
-        [&viewportSetup] (bool visible) 
-    {
-        if (visible)
-        {
-            // vtkAbstractWidget clears the current renderer when disabling and uses FindPokedRenderer while enabling
-            // so ensure to always use the correct (not necessarily lastly clicked) renderer
-            viewportSetup.scalarBarWidget->SetCurrentRenderer(viewportSetup.renderer);
-        }
-        viewportSetup.scalarBarWidget->SetEnabled(visible);
-    });
 }
 
 RenderViewStrategy & RendererImplementationBase3D::strategy() const
