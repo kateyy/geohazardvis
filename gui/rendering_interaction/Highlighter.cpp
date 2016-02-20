@@ -82,7 +82,7 @@ void Highlighter::setTarget(AbstractVisualizedData * vis, int visOutputPort, vtk
     }
 
     m_indices->Resize(validIndices.size());
-    for (vtkIdType i = 0; i < validIndices.size(); ++i)
+    for (vtkIdType i = 0; i < vtkIdType(validIndices.size()); ++i)
     {
         m_indices->SetValue(i, validIndices[i]);
     }
