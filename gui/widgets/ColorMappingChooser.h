@@ -50,6 +50,7 @@ private:
     void guiResetMaxToData();
     void guiSelectNanColor();
     void guiLegendPositionChanged(const QString & position);
+    void guiLegendTitleChanged();
 
     void rebuildGui();
     void setupGuiConnections();

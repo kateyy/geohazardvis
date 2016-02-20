@@ -167,14 +167,21 @@ void ColorMappingChooser::guiScalarsSelectionChanged()
 
     updateGuiValueRanges();
 
-    bool gradients = m_mapping->currentScalarsUseMappingLegend();
+    const bool gradients = m_mapping->currentScalarsUseMappingLegend();
     m_ui->gradientGroupBox->setEnabled(gradients);
     m_ui->legendGroupBox->setEnabled(gradients);
-    m_ui->colorLegendCheckBox->setChecked(m_mapping->colorBarRepresentation().isVisible());
+    m_ui->legendGroupBox->setChecked(m_mapping->colorBarRepresentation().isVisible());
+    m_ui->legendTitleEdit->setPlaceholderText(scalarsName);
 
     QSignalBlocker signalBlocker(m_ui->gradientComboBox);
     m_ui->gradientComboBox->setCurrentIndex(
         m_ui->gradientComboBox->findData(m_mapping->gradientName()));
+
+    if (!m_ui->legendTitleEdit->text().isEmpty())
+    {   // override default title setup if user set a title
+        m_mapping->colorBarRepresentation().actor().SetTitle(
+            m_ui->legendTitleEdit->text().toUtf8().data());
+    }
 
     emit renderSetupChanged();
 }
@@ -287,6 +294,18 @@ void ColorMappingChooser::guiLegendPositionChanged(const QString & position)
     m_movingColorLegend = false;
 }
 
+void ColorMappingChooser::guiLegendTitleChanged()
+{
+    assert(m_mapping);
+
+    const auto uiTitle = m_ui->legendTitleEdit->text();
+    auto newTitle = uiTitle.isEmpty() ? m_ui->legendTitleEdit->placeholderText() : uiTitle;
+
+    m_mapping->colorBarRepresentation().actor().SetTitle(newTitle.toUtf8().data());
+
+    emit renderSetupChanged();
+}
+
 void ColorMappingChooser::colorLegendPositionChanged()
 {
     if (!m_movingColorLegend)
@@ -393,9 +412,11 @@ void ColorMappingChooser::rebuildGui()
 
     m_ui->scalarsComboBox->clear();
     m_ui->gradientGroupBox->setEnabled(false);
-    m_ui->legendGroupBox->setEnabled(false);
     m_ui->nanColorButton->setStyleSheet("");
-    m_ui->colorLegendCheckBox->setChecked(false);
+    m_ui->legendGroupBox->setEnabled(false);
+    m_ui->legendGroupBox->setChecked(false);
+    m_ui->legendTitleEdit->setText("");
+    m_ui->legendTitleEdit->setPlaceholderText("");
 
     auto scalarsNames = m_mapping ? m_mapping->scalarsNames() : QStringList{};
 
@@ -408,7 +429,14 @@ void ColorMappingChooser::rebuildGui()
         m_ui->gradientComboBox->setCurrentIndex(m_ui->gradientComboBox->findData(m_mapping->gradientName()));
         m_ui->gradientGroupBox->setEnabled(m_mapping->currentScalarsUseMappingLegend());
         m_ui->legendGroupBox->setEnabled(m_mapping->currentScalarsUseMappingLegend());
-        m_ui->colorLegendCheckBox->setChecked(m_mapping->colorBarRepresentation().isVisible());
+        m_ui->legendGroupBox->setChecked(m_mapping->colorBarRepresentation().isVisible());
+
+        const auto currentTitle = QString::fromUtf8(m_mapping->colorBarRepresentation().actor().GetTitle());
+        if (currentTitle != m_mapping->currentScalarsName())
+        {
+            m_ui->legendTitleEdit->setText(currentTitle);
+        }
+        m_ui->legendTitleEdit->setPlaceholderText(currentTitle);
 
         const unsigned char * nanColorV = m_mapping->gradient()->GetNanColorAsUnsignedChars();
 
@@ -483,11 +511,13 @@ void ColorMappingChooser::setupGuiConnections()
         emit renderSetupChanged();
     });
 
-    m_guiConnections << connect(m_ui->colorLegendCheckBox, &QAbstractButton::toggled,
+    m_guiConnections << connect(m_ui->legendGroupBox, &QGroupBox::toggled,
         [this] (bool checked) {
         m_mapping->colorBarRepresentation().setVisible(checked);
         emit renderSetupChanged();
     });
+
+    m_guiConnections << connect(m_ui->legendTitleEdit, &QLineEdit::editingFinished, this, &ColorMappingChooser::guiLegendTitleChanged);
 
     setupValueRangeConnections();
 }

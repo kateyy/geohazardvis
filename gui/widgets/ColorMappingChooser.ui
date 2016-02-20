@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>327</width>
-    <height>476</height>
+    <height>512</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -28,7 +28,7 @@
     <item>
      <widget class="QGroupBox" name="scalarsGroupBox">
       <property name="title">
-       <string>Scalars</string>
+       <string>&amp;Scalars</string>
       </property>
       <property name="alignment">
        <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
@@ -37,7 +37,10 @@
        <item row="1" column="0">
         <widget class="QLabel" name="componentLabel">
          <property name="text">
-          <string>Component</string>
+          <string>&amp;Component</string>
+         </property>
+         <property name="buddy">
+          <cstring>componentSpinBox</cstring>
          </property>
         </widget>
        </item>
@@ -47,7 +50,10 @@
        <item row="2" column="0">
         <widget class="QLabel" name="maxLabel">
          <property name="text">
-          <string>Max</string>
+          <string>&amp;Max</string>
+         </property>
+         <property name="buddy">
+          <cstring>maxValueSpinBox</cstring>
          </property>
         </widget>
        </item>
@@ -61,7 +67,10 @@
        <item row="3" column="0">
         <widget class="QLabel" name="minLabel">
          <property name="text">
-          <string>Min</string>
+          <string>M&amp;in</string>
+         </property>
+         <property name="buddy">
+          <cstring>minValueSpinBox</cstring>
          </property>
         </widget>
        </item>
@@ -80,7 +89,7 @@
        <bool>true</bool>
       </property>
       <property name="title">
-       <string>Gradient</string>
+       <string>&amp;Gradient</string>
       </property>
       <layout class="QGridLayout" name="gridLayout_3">
        <item row="0" column="0">
@@ -89,7 +98,7 @@
        <item row="0" column="1">
         <widget class="QPushButton" name="nanColorButton">
          <property name="text">
-          <string>NaN-Color</string>
+          <string>&amp;NaN-Color</string>
          </property>
         </widget>
        </item>
@@ -108,16 +117,15 @@
        </sizepolicy>
       </property>
       <property name="title">
-       <string>Color Legend</string>
+       <string>Color &amp;Legend</string>
+      </property>
+      <property name="checkable">
+       <bool>true</bool>
+      </property>
+      <property name="checked">
+       <bool>true</bool>
       </property>
       <layout class="QFormLayout" name="formLayout_2">
-       <item row="0" column="0">
-        <widget class="QCheckBox" name="colorLegendCheckBox">
-         <property name="text">
-          <string>Visible</string>
-         </property>
-        </widget>
-       </item>
        <item row="0" column="1">
         <widget class="QComboBox" name="legendPositionComboBox">
          <property name="sizePolicy">
@@ -128,7 +136,7 @@
          </property>
         </widget>
        </item>
-       <item row="1" column="0" colspan="2">
+       <item row="3" column="0" colspan="2">
         <widget class="QCheckBox" name="legendAlignTitleCheckBox">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
@@ -137,34 +145,67 @@
           </sizepolicy>
          </property>
          <property name="text">
-          <string>Align title with color bar</string>
+          <string>&amp;Align title with color bar</string>
          </property>
         </widget>
        </item>
-       <item row="2" column="0">
+       <item row="4" column="0">
         <widget class="QLabel" name="label_2">
          <property name="text">
-          <string>Title Font Size</string>
+          <string>Title &amp;Font Size</string>
+         </property>
+         <property name="buddy">
+          <cstring>legendTitleFontSize</cstring>
          </property>
         </widget>
        </item>
-       <item row="2" column="1">
+       <item row="4" column="1">
         <widget class="QSpinBox" name="legendTitleFontSize"/>
        </item>
-       <item row="3" column="0">
+       <item row="5" column="0">
         <widget class="QLabel" name="label">
          <property name="text">
-          <string>Label Font Size</string>
+          <string>&amp;Label Font Size</string>
+         </property>
+         <property name="buddy">
+          <cstring>legendLabelFontSize</cstring>
          </property>
         </widget>
        </item>
-       <item row="3" column="1">
+       <item row="5" column="1">
         <widget class="QSpinBox" name="legendLabelFontSize"/>
        </item>
-       <item row="4" column="0" colspan="2">
+       <item row="6" column="0" colspan="2">
         <widget class="QCheckBox" name="legendBackgroundCheckBox">
          <property name="text">
-          <string>Opaque Background</string>
+          <string>&amp;Opaque Background</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="0">
+        <widget class="QLabel" name="label_3">
+         <property name="text">
+          <string>&amp;Position</string>
+         </property>
+         <property name="buddy">
+          <cstring>legendPositionComboBox</cstring>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="0">
+        <widget class="QLabel" name="label_4">
+         <property name="text">
+          <string>&amp;Title</string>
+         </property>
+         <property name="buddy">
+          <cstring>legendTitleEdit</cstring>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="1">
+        <widget class="QLineEdit" name="legendTitleEdit">
+         <property name="clearButtonEnabled">
+          <bool>true</bool>
          </property>
         </widget>
        </item>
