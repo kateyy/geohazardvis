@@ -22,18 +22,13 @@
 #include <core/color_mapping/ColorBarRepresentation.h>
 #include <core/color_mapping/ColorMappingData.h>
 #include <core/color_mapping/ColorMapping.h>
+#include <core/color_mapping/GradientResourceManager.h>
 #include <core/ThirdParty/alphanum.hpp>
 #include <core/utility/qthelper.h>
 #include <core/utility/ScalarBarActor.h>
 #include <core/utility/macros.h>
 
 #include <gui/data_view/AbstractRenderView.h>
-
-
-namespace
-{
-    const char * Default_gradient_name = "_0012_Blue-Red_copy";
-}
 
 
 ColorMappingChooser::ColorMappingChooser(QWidget * parent, Qt::WindowFlags flags)
@@ -60,14 +55,9 @@ ColorMappingChooser::~ColorMappingChooser()
     setCurrentRenderView(nullptr);
 }
 
-vtkLookupTable * ColorMappingChooser::selectedGradient() const
+QString ColorMappingChooser::selectedGradientName() const
 {
-    return m_gradients.value(m_ui->gradientComboBox->currentIndex());
-}
-
-vtkLookupTable * ColorMappingChooser::defaultGradient() const
-{
-    return m_gradients.value(defaultGradientIndex());
+    return m_ui->gradientComboBox->currentData().toString();
 }
 
 void ColorMappingChooser::setCurrentRenderView(AbstractRenderView * renderView)
@@ -144,13 +134,6 @@ void ColorMappingChooser::setSelectedData(DataObject * dataObject)
 
     if (m_mapping)
     {
-        // setup gradient for newly created mapping
-        if (!m_mapping->originalGradient())
-        {
-            m_ui->gradientComboBox->setCurrentIndex(defaultGradientIndex());
-            m_mapping->setGradient(selectedGradient());
-        }
-
         auto addObserver = [this] (vtkObject * subject, void(ColorMappingChooser::* callback)()) {
             m_colorLegendObserverIds.insert(subject,
                 subject->AddObserver(vtkCommand::ModifiedEvent, this, callback));
@@ -188,10 +171,10 @@ void ColorMappingChooser::guiScalarsSelectionChanged()
     m_ui->gradientGroupBox->setEnabled(gradients);
     m_ui->legendGroupBox->setEnabled(gradients);
     m_ui->colorLegendCheckBox->setChecked(m_mapping->colorBarRepresentation().isVisible());
-    if (gradients)
-    {
-        m_mapping->setGradient(selectedGradient());
-    }
+
+    QSignalBlocker signalBlocker(m_ui->gradientComboBox);
+    m_ui->gradientComboBox->setCurrentIndex(
+        m_ui->gradientComboBox->findData(m_mapping->gradientName()));
 
     emit renderSetupChanged();
 }
@@ -200,7 +183,7 @@ void ColorMappingChooser::guiGradientSelectionChanged()
 {
     assert(m_mapping);
 
-    m_mapping->setGradient(selectedGradient());
+    m_mapping->setGradient(selectedGradientName());
 
     emit renderSetupChanged();
 }
@@ -332,100 +315,20 @@ void ColorMappingChooser::updateLegendConfig()
 
 void ColorMappingChooser::loadGradientImages()
 {
-    const QSize gradientImageSize{ 200, 20 };
+    const auto & gradients = GradientResourceManager::instance().gradients();
 
     auto & gradientComboBox = *m_ui->gradientComboBox;
 
     // load the files and add them to the combobox
     QSignalBlocker signalBlocker(gradientComboBox);
 
-    // navigate to the gradient directory
-    QDir dir;
-    const QString gradientDir("data/gradients");
-    bool dirNotFound = false;
-    if (!dir.cd(gradientDir))
+    for (auto && gradient : gradients)
     {
-        dirNotFound = true;
-    }
-    else
-    {
-        dir.setFilter(QDir::Files | QDir::Readable | QDir::Hidden);
-
-        for (const auto & fileInfo : dir.entryInfoList())
-        {
-            QPixmap pixmap;
-            if (!pixmap.load(fileInfo.absoluteFilePath()))
-            {
-                qDebug() << "Unsupported file in gradient directory:" << fileInfo.fileName();
-                continue;
-            }
-
-            pixmap = pixmap.scaled(gradientImageSize);
-
-            m_gradients << buildLookupTable(pixmap.toImage());
-
-            gradientComboBox.addItem(pixmap, "");
-            gradientComboBox.setItemData(gradientComboBox.count() - 1, fileInfo.baseName());
-        }
+        gradientComboBox.addItem(gradient.second.pixmap, "");
+        gradientComboBox.setItemData(gradientComboBox.count() - 1, gradient.first);
     }
 
-    // fall back, in case we didn't find any gradient images
-    if (m_gradients.isEmpty())
-    {
-        const auto fallbackMsg = "; only a fall-back gradient will be available\n\t(searching in " + QDir().absoluteFilePath(gradientDir) + ")";
-        if (dirNotFound)
-        {
-            qDebug() << "gradient directory does not exist" + fallbackMsg;
-        }
-        else
-        {
-            qDebug() << "gradient directory is empty" + fallbackMsg;
-        }
-
-        auto gradient = vtkSmartPointer<vtkLookupTable>::New();
-        gradient->SetNumberOfTableValues(gradientImageSize.width());
-        gradient->Build();
-
-        QImage image(gradientImageSize, QImage::Format_RGBA8888);
-        for (int i = 0; i < gradientImageSize.width(); ++i)
-        {
-            double colorF[4];
-            gradient->GetTableValue(i, colorF);
-            auto colorUI = vtkColorToQColor(colorF).rgba();
-            for (int l = 0; l < gradientImageSize.height(); ++l)
-                image.setPixel(i, l, colorUI);
-        }
-
-        m_gradients << gradient;
-        gradientComboBox.addItem(QPixmap::fromImage(image), "");
-    }
-
-    gradientComboBox.setIconSize(gradientImageSize);
-
-    signalBlocker.unblock();
-
-    // set the "default" gradient
-    gradientComboBox.setCurrentIndex(defaultGradientIndex());
-}
-
-int ColorMappingChooser::gradientIndex(vtkLookupTable * gradient) const
-{
-    int index = 0;
-    for (const vtkSmartPointer<vtkLookupTable> & ptr : m_gradients)
-    {
-        if (ptr.Get() == gradient)
-            return index;
-        ++index;
-    }
-    assert(false);
-    return -1;
-}
-
-int ColorMappingChooser::defaultGradientIndex() const
-{
-    assert(m_ui->gradientComboBox->count() > 0);
-    int defautltIndex = m_ui->gradientComboBox->findData(Default_gradient_name);
-    return std::max(defautltIndex, 0);
+    gradientComboBox.setIconSize(gradients.begin()->second.pixmap.size());
 }
 
 void ColorMappingChooser::checkRemovedData(const QList<AbstractVisualizedData *> & content)
@@ -444,16 +347,17 @@ void ColorMappingChooser::checkRemovedData(const QList<AbstractVisualizedData *>
 void ColorMappingChooser::updateTitle()
 {
     QString title;
-    if (m_renderView)
-        title = m_renderView->friendlyName();
+    if (!m_mapping)
+        title = "<b>(No object selected)</b>";
     else
-        title = "(No Render View selected)";
-
-    title = "<b>" + title + "</b>";
-
-    if (m_renderView && m_renderView->numberOfSubViews() > 1)
     {
-        title += " <i>" + m_renderView->subViewFriendlyName(m_renderView->activeSubViewIndex()) + "</i>";
+        title = "<b>" + QString::number(m_renderView->index()) + ": ";
+        for (auto && vis : m_mapping->visualizedData())
+        {
+            title += vis->dataObject().name() + ", ";
+        }
+        title.chop(2);
+        title += "</b>";
     }
 
     m_ui->relatedRenderView->setText(title);
@@ -501,7 +405,7 @@ void ColorMappingChooser::rebuildGui()
         m_ui->scalarsComboBox->addItems(scalarsNames);
 
         m_ui->scalarsComboBox->setCurrentText(m_mapping->currentScalarsName());
-        m_ui->gradientComboBox->setCurrentIndex(gradientIndex(m_mapping->originalGradient()));
+        m_ui->gradientComboBox->setCurrentIndex(m_ui->gradientComboBox->findData(m_mapping->gradientName()));
         m_ui->gradientGroupBox->setEnabled(m_mapping->currentScalarsUseMappingLegend());
         m_ui->legendGroupBox->setEnabled(m_mapping->currentScalarsUseMappingLegend());
         m_ui->colorLegendCheckBox->setChecked(m_mapping->colorBarRepresentation().isVisible());
@@ -706,24 +610,4 @@ OrientedScalarBarActor & ColorMappingChooser::legend()
 {
     assert(m_mapping);
     return m_mapping->colorBarRepresentation().actor();
-}
-
-vtkSmartPointer<vtkLookupTable> ColorMappingChooser::buildLookupTable(const QImage & image)
-{
-    // use alpha = 1.0, if the image doesn't have a alpha channel
-    int alphaMask = image.hasAlphaChannel() ? 0x00 : 0xFF;
-
-    auto lut = vtkSmartPointer<vtkLookupTable>::New();
-    lut->SetNumberOfTableValues(image.width());
-    for (int i = 0; i < image.width(); ++i)
-    {
-        QRgb color = image.pixel(i, 0);
-        lut->SetTableValue(i, qRed(color) / 255.0, qGreen(color) / 255.0, qBlue(color) / 255.0, (alphaMask | qAlpha(color)) / 255.0);
-    }
-
-    // transparent NaN-color currently not correctly supported
-    //lut->SetNanColor(1, 1, 1, 0);   // transparent!
-    lut->SetNanColor(1, 1, 1, 1);
-
-    return lut;
 }

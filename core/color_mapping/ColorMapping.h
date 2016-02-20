@@ -44,15 +44,12 @@ public:
     ColorMappingData * currentScalars();
     const ColorMappingData * currentScalars() const;
 
-    /** @return gradient lookup table
-      * This is empty or a copy of the table passed by setGradient. */
+    /** @return gradient lookup table */
     vtkLookupTable * gradient();
     /** Convenience method, returns the same as gradient() */
     vtkScalarsToColors * scalarsToColors();
-    /** @return pointer to the gradient that was passed via setGradient
-      * Used to compare the local gradient copy with the original object. */
-    vtkLookupTable * originalGradient();
-    void setGradient(vtkLookupTable * gradient);
+    const QString & gradientName() const;
+    void setGradient(const QString & gradientName);
 
     bool currentScalarsUseMappingLegend() const;
     ColorBarRepresentation & colorBarRepresentation();
@@ -65,6 +62,7 @@ public:
 signals:
     void scalarsChanged();
     void currentScalarsChanged();
+    void visualizedDataChanged();
 
 private:
     /** setup a list of color mappings which are applicable to the list of rendered data
@@ -84,5 +82,5 @@ private:
 
     QString m_currentScalarsName;
     vtkSmartPointer<vtkLookupTable> m_gradient;
-    vtkLookupTable * m_originalGradient;
+    QString m_gradientName;
 };

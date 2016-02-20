@@ -1,5 +1,6 @@
 #include "ColorBarRepresentation.h"
 
+#include <algorithm>
 #include <cassert>
 
 #include <vtkRenderer.h>
@@ -7,7 +8,9 @@
 #include <vtkScalarBarRepresentation.h>
 #include <vtkScalarBarWidget.h>
 
+#include <core/AbstractVisualizedData.h>
 #include <core/color_mapping/ColorMapping.h>
+#include <core/utility/qthelper.h>
 #include <core/utility/ScalarBarActor.h>
 
 
@@ -16,6 +19,24 @@ ColorBarRepresentation::ColorBarRepresentation(ColorMapping & colorMapping)
     , m_isVisible{ false }
 {
     connect(&colorMapping, &ColorMapping::currentScalarsChanged, this, &ColorBarRepresentation::updateForChangedScalars);
+
+    auto connectVisibilities = [this] ()
+    {
+        disconnectAll(m_visualizationsVisibilitesConnections);
+
+        for (auto && vis : m_colorMapping.visualizedData())
+        {
+            m_visualizationsVisibilitesConnections <<
+                connect(vis, &AbstractVisualizedData::visibilityChanged,
+                    this, &ColorBarRepresentation::updateVisibility);
+        }
+    };
+
+    connectVisibilities();
+}
+
+ColorBarRepresentation::~ColorBarRepresentation()
+{
 }
 
 OrientedScalarBarActor & ColorBarRepresentation::actor()
@@ -93,6 +114,7 @@ void ColorBarRepresentation::initialize()
     m_widget = vtkSmartPointer<vtkScalarBarWidget>::New();
     m_widget->SetScalarBarActor(m_actor);
     m_widget->SetRepresentation(m_scalarBarRepresentation);
+    m_widget->SetInteractor(m_interactor);
     m_widget->EnabledOff();
 }
 
@@ -108,7 +130,11 @@ void ColorBarRepresentation::updateForChangedScalars()
 
 void ColorBarRepresentation::updateVisibility()
 {
-    bool actualVisibilty = m_colorMapping.currentScalarsUseMappingLegend() && m_isVisible;
+    auto && viss = m_colorMapping.visualizedData();
+
+    const bool actualVisibilty = m_colorMapping.currentScalarsUseMappingLegend() && m_isVisible
+        && std::any_of(viss.begin(), viss.end(), [] (AbstractVisualizedData * vis) -> bool {
+        return vis->isVisible(); });
 
     if (!actualVisibilty && !m_actor)
     {

@@ -10,13 +10,13 @@
 #include <core/color_mapping/ColorMappingData.h>
 #include <core/color_mapping/ColorMappingRegistry.h>
 #include <core/color_mapping/GlyphColorMappingGlyphListener.h>
+#include <core/color_mapping/GradientResourceManager.h>
 
 
 ColorMapping::ColorMapping()
     : QObject()
     , m_glyphListener{ std::make_unique<GlyphColorMappingGlyphListener>() }
     , m_gradient{ vtkSmartPointer<vtkLookupTable>::New() }
-    , m_originalGradient{ nullptr }
 {
     connect(m_glyphListener.get(), &GlyphColorMappingGlyphListener::glyphMappingChanged,
         this, &ColorMapping::updateAvailableScalars);
@@ -43,7 +43,7 @@ void ColorMapping::setVisualizedData(const QList<AbstractVisualizedData *> & vis
     for (AbstractVisualizedData * vis : m_visualizedData)
     {
         // pass our (persistent) gradient object
-        vis->setColorMappingGradient(m_gradient);
+        vis->setColorMappingGradient(gradient());
 
         connect(&vis->dataObject(), &DataObject::attributeArraysChanged, this, &ColorMapping::updateAvailableScalars);
     }
@@ -52,7 +52,7 @@ void ColorMapping::setVisualizedData(const QList<AbstractVisualizedData *> & vis
     for (auto & pair : m_data)
     {
         auto & scalars = pair.second;
-        scalars->setLookupTable(m_gradient);
+        scalars->setLookupTable(gradient());
     }
 
     // disable color mapping if we couldn't find appropriate data
@@ -92,6 +92,8 @@ void ColorMapping::registerVisualizedData(AbstractVisualizedData * visualizedDat
     setVisualizedData(newList);
 
     assert(m_visualizedData.contains(visualizedData));
+
+    emit visualizedDataChanged();
 }
 
 void ColorMapping::unregisterVisualizedData(AbstractVisualizedData * visualizedData)
@@ -108,6 +110,8 @@ void ColorMapping::unregisterVisualizedData(AbstractVisualizedData * visualizedD
     setVisualizedData(newList);
 
     assert(!m_visualizedData.contains(visualizedData));
+
+    emit visualizedDataChanged();
 }
 
 const QList<AbstractVisualizedData *> & ColorMapping::visualizedData() const
@@ -174,6 +178,11 @@ const ColorMappingData * ColorMapping::currentScalars() const
 
 vtkLookupTable * ColorMapping::gradient()
 {
+    if (m_gradientName.isEmpty())
+    {
+        setGradient(GradientResourceManager::instance().defaultGradientName());
+    }
+
     return m_gradient;
 }
 
@@ -182,30 +191,29 @@ vtkScalarsToColors * ColorMapping::scalarsToColors()
     return gradient();
 }
 
-vtkLookupTable * ColorMapping::originalGradient()
+const QString & ColorMapping::gradientName() const
 {
-    return m_originalGradient;
+    return m_gradientName;
 }
 
-void ColorMapping::setGradient(vtkLookupTable * gradient)
+void ColorMapping::setGradient(const QString & gradientName)
 {
-    assert(gradient);
-
-    m_originalGradient = gradient;
-
-    if (gradient)
+    if (m_gradientName == gradientName)
     {
-        m_gradient->SetTable(gradient->GetTable());
-        m_gradient->SetNanColor(gradient->GetNanColor());
-        m_gradient->SetUseAboveRangeColor(gradient->GetUseAboveRangeColor());
-        m_gradient->SetUseBelowRangeColor(gradient->GetUseBelowRangeColor());
+        return;
     }
-    else
-    {
-        // no gradients loaded, use VTK's default rainbow instead
-        m_gradient->SetTable(nullptr);
-        m_gradient->Build();
-    }
+
+    m_gradientName = gradientName;
+
+    auto & gradients = GradientResourceManager::instance().gradients();
+    assert(gradients.find(gradientName) != gradients.end());
+
+    auto && originalLut = gradients.at(gradientName).lookupTable;
+
+    m_gradient->SetTable(originalLut->GetTable());
+    m_gradient->SetNanColor(originalLut->GetNanColor());
+    m_gradient->SetUseAboveRangeColor(originalLut->GetUseAboveRangeColor());
+    m_gradient->SetUseBelowRangeColor(originalLut->GetUseBelowRangeColor());
 }
 
 bool ColorMapping::currentScalarsUseMappingLegend() const

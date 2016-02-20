@@ -120,7 +120,7 @@ vtkRenderWindowInteractor * RendererImplementationBase3D::interactor()
 void RendererImplementationBase3D::onAddContent(AbstractVisualizedData * content, unsigned int subViewIndex)
 {
     assert(dynamic_cast<RenderedData *>(content));
-    RenderedData * renderedData = static_cast<RenderedData *>(content);
+    auto renderedData = static_cast<RenderedData *>(content);
 
     renderedData->colorMapping().colorBarRepresentation().setContext(
         m_renderWindow->GetInteractor(),

@@ -28,6 +28,7 @@ class CORE_API ColorBarRepresentation : public QObject
 
 public:
     explicit ColorBarRepresentation(ColorMapping & colorMapping);
+    ~ColorBarRepresentation() override;
 
     OrientedScalarBarActor & actor();
     /** Convenience function retuning actor() as a base class reference */
@@ -55,6 +56,7 @@ private:
 
 private:
     ColorMapping & m_colorMapping;
+    QList<QMetaObject::Connection> m_visualizationsVisibilitesConnections;
 
     vtkSmartPointer<OrientedScalarBarActor> m_actor;
     vtkSmartPointer<vtkScalarBarRepresentation> m_scalarBarRepresentation;

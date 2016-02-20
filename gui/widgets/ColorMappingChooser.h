@@ -31,8 +31,7 @@ public:
     explicit ColorMappingChooser(QWidget * parent = nullptr, Qt::WindowFlags flags = {});
     ~ColorMappingChooser() override;
 
-    vtkLookupTable * selectedGradient() const;
-    vtkLookupTable * defaultGradient() const;
+    QString selectedGradientName() const;
 
     void setCurrentRenderView(AbstractRenderView * renderView);
     /** switch to specified dataObject, in case it is visible in my current render view */
@@ -67,8 +66,6 @@ private:
     void updateLegendConfig();
 
     void loadGradientImages();
-    int gradientIndex(vtkLookupTable * gradient) const;
-    int defaultGradientIndex() const;
 
     /** remove data from the UI if we currently hold it */
     void checkRemovedData(const QList<AbstractVisualizedData *> & content);
@@ -78,12 +75,8 @@ private:
 
     OrientedScalarBarActor & legend();
 
-    static vtkSmartPointer<vtkLookupTable> buildLookupTable(const QImage & image);
-
 private:
     std::unique_ptr<Ui_ColorMappingChooser> m_ui;
-
-    QList<vtkSmartPointer<vtkLookupTable>> m_gradients;
 
     AbstractRenderView * m_renderView;
     QList<QMetaObject::Connection> m_viewConnections;

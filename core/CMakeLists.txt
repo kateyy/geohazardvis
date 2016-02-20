@@ -128,6 +128,8 @@ set ( SOURCES
     color_mapping/GlyphColorMappingGlyphListener.cpp
     color_mapping/GlyphMagnitudeColorMapping.h
     color_mapping/GlyphMagnitudeColorMapping.cpp
+    color_mapping/GradientResourceManager.h
+    color_mapping/GradientResourceManager.cpp
     color_mapping/ImageDataLIC2DMapping.h
     color_mapping/ImageDataLIC2DMapping.cpp
     color_mapping/VectorMagnitudeColorMapping.h

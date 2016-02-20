@@ -24,7 +24,6 @@
 #include <vtkBoundingBox.h>
 #include <vtkVector.h>
 #include <vtkMath.h>
-#include <vtkLookupTable.h>
 #include <vtkPassThrough.h>
 #include <vtkTrivialProducer.h>
 #include <vtkPointDataToCellData.h>
@@ -376,10 +375,6 @@ int main()
     auto rendered = residualObject->createRendered();
 
     auto & colorMapping = rendered->colorMapping();
-
-    auto lut = vtkSmartPointer<vtkLookupTable>::New();
-    lut->Build();
-    colorMapping.setGradient(lut);
 
     for (auto & name : colorMapping.scalarsNames())
     {

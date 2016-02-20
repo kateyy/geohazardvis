@@ -128,6 +128,7 @@ MainWindow::MainWindow()
     connect(m_dataBrowser, &DataBrowser::selectedDataChanged,
         [this] (DataObject * selected) {
         m_renderConfigWidget->setSelectedData(selected);
+        m_colorMappingChooser->setSelectedData(selected);
         m_vectorMappingChooser->setSelectedData(selected);
     });
 
