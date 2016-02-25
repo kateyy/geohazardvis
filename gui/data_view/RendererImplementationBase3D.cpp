@@ -192,11 +192,6 @@ void RendererImplementationBase3D::onDataVisibilityChanged(AbstractVisualizedDat
 {
 }
 
-void RendererImplementationBase3D::onRenderViewContentsChanged()
-{
-    RendererImplementation::onRenderViewContentsChanged();
-}
-
 void RendererImplementationBase3D::setSelectedData(AbstractVisualizedData * vis, vtkIdType index, IndexType indexType)
 {
     auto indices = vtkSmartPointer<vtkIdTypeArray>::New();

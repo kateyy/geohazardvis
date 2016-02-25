@@ -103,7 +103,6 @@ protected:
     void onAddContent(AbstractVisualizedData * content, unsigned int subViewIndex) override;
     void onRemoveContent(AbstractVisualizedData * content, unsigned int subViewIndex) override;
     virtual void onDataVisibilityChanged(AbstractVisualizedData * content, unsigned int subViewIndex);
-    void onRenderViewContentsChanged() override;
 
     /** @return current strategy or, if not applicable, a null implementation */
     RenderViewStrategy & strategy() const;
