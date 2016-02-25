@@ -79,6 +79,8 @@ set ( SOURCES
     rendering_interaction/PickerHighlighterInteractorObserver.cpp
     rendering_interaction/CameraInteractorStyleSwitch.h
     rendering_interaction/CameraInteractorStyleSwitch.cpp
+    rendering_interaction/RenderWindowCursorCallback.h
+    rendering_interaction/RenderWindowCursorCallback.cpp
 
     widgets/AsciiImporterWidget.h
     widgets/AsciiImporterWidget.cpp

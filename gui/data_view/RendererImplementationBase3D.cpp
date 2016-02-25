@@ -4,6 +4,7 @@
 #include <cmath>
 
 #include <QMouseEvent>
+#include <QDebug>
 
 #include <vtkBoundingBox.h>
 #include <vtkCamera.h>
@@ -37,6 +38,7 @@
 #include <gui/rendering_interaction/InteractorStyleImage.h>
 #include <gui/rendering_interaction/InteractorStyleTerrain.h>
 #include <gui/rendering_interaction/PickerHighlighterInteractorObserver.h>
+#include <gui/rendering_interaction/RenderWindowCursorCallback.h>
 
 
 RendererImplementationBase3D::RendererImplementationBase3D(AbstractRenderView & renderView)
@@ -90,11 +92,15 @@ void RendererImplementationBase3D::activate(t_QVTKWidget & qvtkWidget)
     m_renderWindow->GetInteractor()->SetInteractorStyle(m_interactorStyle);
 
     assignInteractor();
+
+    m_cursorCallback->setQWidget(&qvtkWidget);
 }
 
 void RendererImplementationBase3D::deactivate(t_QVTKWidget & qvtkWidget)
 {
     RendererImplementation::deactivate(qvtkWidget);
+
+    m_cursorCallback->setQWidget(nullptr);
 
     // this is our render window, so remove it from the widget
     qvtkWidget.SetRenderWindow(nullptr);
@@ -420,7 +426,6 @@ void RendererImplementationBase3D::initialize()
         renderer->AddViewProp(viewport.axesActor);
     }
 
-
     // -- interaction --
 
     m_interactorStyle = vtkSmartPointer<CameraInteractorStyleSwitch>::New();
@@ -447,6 +452,9 @@ void RendererImplementationBase3D::initialize()
     });
     connect(m_pickerHighlighter, &PickerHighlighterInteractorObserver::geometryChanged,
         this, &RendererImplementation::render);
+
+    m_cursorCallback = std::make_unique<RenderWindowCursorCallback>();
+    m_cursorCallback->setRenderWindow(m_renderWindow);
 
     m_isInitialized = true;
 }

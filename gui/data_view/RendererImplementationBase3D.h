@@ -23,6 +23,7 @@ class CameraInteractorStyleSwitch;
 class PickerHighlighterInteractorObserver;
 class RenderViewStrategy;
 class RenderedData;
+class RenderWindowCursorCallback;
 
 
 /** Base class for vtkRenderer based render views. 
@@ -132,6 +133,7 @@ private:
     // -- setup --
 
     vtkSmartPointer<vtkGenericOpenGLRenderWindow> m_renderWindow;
+    std::unique_ptr<RenderWindowCursorCallback> m_cursorCallback;
 
     vtkSmartPointer<vtkLightKit> m_lightKit;
 
