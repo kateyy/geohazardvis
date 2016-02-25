@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>327</width>
-    <height>512</height>
+    <width>355</width>
+    <height>716</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -18,7 +18,7 @@
     <item>
      <widget class="QLabel" name="relatedRenderView">
       <property name="text">
-       <string>&lt;b&gt;(No Render View selected)&lt;/b&gt;</string>
+       <string>--title--</string>
       </property>
       <property name="alignment">
        <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
@@ -125,88 +125,190 @@
       <property name="checked">
        <bool>true</bool>
       </property>
-      <layout class="QFormLayout" name="formLayout_2">
-       <item row="0" column="1">
-        <widget class="QComboBox" name="legendPositionComboBox">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-        </widget>
-       </item>
-       <item row="3" column="0" colspan="2">
-        <widget class="QCheckBox" name="legendAlignTitleCheckBox">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="text">
-          <string>&amp;Align title with color bar</string>
-         </property>
-        </widget>
-       </item>
-       <item row="4" column="0">
-        <widget class="QLabel" name="label_2">
-         <property name="text">
-          <string>Title &amp;Font Size</string>
-         </property>
-         <property name="buddy">
-          <cstring>legendTitleFontSize</cstring>
-         </property>
-        </widget>
-       </item>
-       <item row="4" column="1">
-        <widget class="QSpinBox" name="legendTitleFontSize"/>
-       </item>
-       <item row="5" column="0">
-        <widget class="QLabel" name="label">
-         <property name="text">
-          <string>&amp;Label Font Size</string>
-         </property>
-         <property name="buddy">
-          <cstring>legendLabelFontSize</cstring>
-         </property>
-        </widget>
-       </item>
-       <item row="5" column="1">
-        <widget class="QSpinBox" name="legendLabelFontSize"/>
-       </item>
-       <item row="6" column="0" colspan="2">
-        <widget class="QCheckBox" name="legendBackgroundCheckBox">
-         <property name="text">
-          <string>&amp;Opaque Background</string>
-         </property>
-        </widget>
-       </item>
+      <layout class="QGridLayout" name="gridLayout">
+       <property name="leftMargin">
+        <number>0</number>
+       </property>
+       <property name="topMargin">
+        <number>0</number>
+       </property>
+       <property name="rightMargin">
+        <number>0</number>
+       </property>
+       <property name="bottomMargin">
+        <number>0</number>
+       </property>
        <item row="0" column="0">
-        <widget class="QLabel" name="label_3">
-         <property name="text">
-          <string>&amp;Position</string>
+        <widget class="QScrollArea" name="scrollArea">
+         <property name="frameShape">
+          <enum>QFrame::NoFrame</enum>
          </property>
-         <property name="buddy">
-          <cstring>legendPositionComboBox</cstring>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="0">
-        <widget class="QLabel" name="label_4">
-         <property name="text">
-          <string>&amp;Title</string>
-         </property>
-         <property name="buddy">
-          <cstring>legendTitleEdit</cstring>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="1">
-        <widget class="QLineEdit" name="legendTitleEdit">
-         <property name="clearButtonEnabled">
+         <property name="widgetResizable">
           <bool>true</bool>
          </property>
+         <widget class="QWidget" name="scrollAreaWidgetContents">
+          <property name="geometry">
+           <rect>
+            <x>0</x>
+            <y>0</y>
+            <width>331</width>
+            <height>396</height>
+           </rect>
+          </property>
+          <layout class="QFormLayout" name="formLayout_3">
+           <item row="0" column="0">
+            <widget class="QLabel" name="label_3">
+             <property name="text">
+              <string>&amp;Position</string>
+             </property>
+             <property name="buddy">
+              <cstring>legendPositionComboBox</cstring>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="1">
+            <widget class="QComboBox" name="legendPositionComboBox">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="0">
+            <widget class="QLabel" name="label_4">
+             <property name="text">
+              <string>&amp;Title</string>
+             </property>
+             <property name="buddy">
+              <cstring>legendTitleEdit</cstring>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="1">
+            <widget class="QLineEdit" name="legendTitleEdit">
+             <property name="clearButtonEnabled">
+              <bool>true</bool>
+             </property>
+            </widget>
+           </item>
+           <item row="3" column="0">
+            <widget class="QCheckBox" name="legendBackgroundCheckBox">
+             <property name="text">
+              <string>&amp;Opaque Background</string>
+             </property>
+            </widget>
+           </item>
+           <item row="5" column="0">
+            <widget class="QLabel" name="label_2">
+             <property name="text">
+              <string>Title &amp;Font Size</string>
+             </property>
+             <property name="buddy">
+              <cstring>legendTitleFontSize</cstring>
+             </property>
+            </widget>
+           </item>
+           <item row="5" column="1">
+            <widget class="QSpinBox" name="legendTitleFontSize"/>
+           </item>
+           <item row="6" column="0">
+            <widget class="QLabel" name="label">
+             <property name="text">
+              <string>&amp;Label Font Size</string>
+             </property>
+             <property name="buddy">
+              <cstring>legendLabelFontSize</cstring>
+             </property>
+            </widget>
+           </item>
+           <item row="6" column="1">
+            <widget class="QSpinBox" name="legendLabelFontSize"/>
+           </item>
+           <item row="7" column="0">
+            <widget class="QCheckBox" name="legendTickLabelsCheckBox">
+             <property name="text">
+              <string>Ti&amp;ck Labels</string>
+             </property>
+            </widget>
+           </item>
+           <item row="8" column="0">
+            <widget class="QCheckBox" name="legendTickMarksCheckBox">
+             <property name="text">
+              <string>T&amp;ick Marks</string>
+             </property>
+            </widget>
+           </item>
+           <item row="8" column="1">
+            <widget class="QCheckBox" name="legendSubTickMarksCheckBox">
+             <property name="enabled">
+              <bool>false</bool>
+             </property>
+             <property name="text">
+              <string>&amp;Sub-Tick Marks</string>
+             </property>
+            </widget>
+           </item>
+           <item row="9" column="0">
+            <widget class="QLabel" name="label_5">
+             <property name="text">
+              <string>N&amp;umber of Labels</string>
+             </property>
+             <property name="buddy">
+              <cstring>legendNumLabelsSpinBox</cstring>
+             </property>
+            </widget>
+           </item>
+           <item row="9" column="1">
+            <widget class="QSpinBox" name="legendNumLabelsSpinBox">
+             <property name="maximum">
+              <number>64</number>
+             </property>
+            </widget>
+           </item>
+           <item row="10" column="0">
+            <widget class="QCheckBox" name="legendRangeLabelsCheckBox">
+             <property name="text">
+              <string>&amp;Range Lables</string>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="0">
+            <widget class="QCheckBox" name="legendAlignTitleCheckBox">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="text">
+              <string>&amp;Align title with color bar</string>
+             </property>
+            </widget>
+           </item>
+           <item row="4" column="0">
+            <widget class="QLabel" name="label_6">
+             <property name="text">
+              <string>Asp&amp;ect Ratio</string>
+             </property>
+             <property name="buddy">
+              <cstring>legendAspectRatio</cstring>
+             </property>
+            </widget>
+           </item>
+           <item row="4" column="1">
+            <widget class="QDoubleSpinBox" name="legendAspectRatio">
+             <property name="minimum">
+              <double>5.000000000000000</double>
+             </property>
+             <property name="maximum">
+              <double>100.000000000000000</double>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
         </widget>
        </item>
       </layout>
@@ -215,6 +317,45 @@
    </layout>
   </widget>
  </widget>
+ <tabstops>
+  <tabstop>scalarsComboBox</tabstop>
+  <tabstop>componentSpinBox</tabstop>
+  <tabstop>maxValueSpinBox</tabstop>
+  <tabstop>minValueSpinBox</tabstop>
+  <tabstop>gradientComboBox</tabstop>
+  <tabstop>nanColorButton</tabstop>
+  <tabstop>legendGroupBox</tabstop>
+  <tabstop>scrollArea</tabstop>
+  <tabstop>legendPositionComboBox</tabstop>
+  <tabstop>legendTitleEdit</tabstop>
+  <tabstop>legendAlignTitleCheckBox</tabstop>
+  <tabstop>legendBackgroundCheckBox</tabstop>
+  <tabstop>legendAspectRatio</tabstop>
+  <tabstop>legendTitleFontSize</tabstop>
+  <tabstop>legendLabelFontSize</tabstop>
+  <tabstop>legendTickLabelsCheckBox</tabstop>
+  <tabstop>legendTickMarksCheckBox</tabstop>
+  <tabstop>legendSubTickMarksCheckBox</tabstop>
+  <tabstop>legendNumLabelsSpinBox</tabstop>
+  <tabstop>legendRangeLabelsCheckBox</tabstop>
+ </tabstops>
  <resources/>
- <connections/>
+ <connections>
+  <connection>
+   <sender>legendTickMarksCheckBox</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>legendSubTickMarksCheckBox</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>87</x>
+     <y>555</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>225</x>
+     <y>555</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
 </ui>

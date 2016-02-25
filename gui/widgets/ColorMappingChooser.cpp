@@ -328,8 +328,14 @@ void ColorMappingChooser::updateLegendLabelFont()
 
 void ColorMappingChooser::updateLegendConfig()
 {
+    m_ui->legendAspectRatio->setValue(legend().GetAspectRatio());
     m_ui->legendAlignTitleCheckBox->setChecked(legend().GetTitleAlignedWithColorBar());
     m_ui->legendBackgroundCheckBox->setChecked(legend().GetDrawBackground() != 0);
+    m_ui->legendTickMarksCheckBox->setChecked(legend().GetDrawTickMarks() != 0);
+    m_ui->legendTickLabelsCheckBox->setChecked(legend().GetDrawTickLabels() != 0);
+    m_ui->legendSubTickMarksCheckBox->setChecked(legend().GetDrawSubTickMarks() != 0);
+    m_ui->legendNumLabelsSpinBox->setValue(legend().GetNumberOfLabels());
+    m_ui->legendRangeLabelsCheckBox->setChecked(legend().GetAddRangeLabels() != 0);
 }
 
 void ColorMappingChooser::loadGradientImages()
@@ -430,6 +436,9 @@ void ColorMappingChooser::rebuildGui()
         m_ui->gradientGroupBox->setEnabled(m_mapping->currentScalarsUseMappingLegend());
         m_ui->legendGroupBox->setEnabled(m_mapping->currentScalarsUseMappingLegend());
         m_ui->legendGroupBox->setChecked(m_mapping->colorBarRepresentation().isVisible());
+        updateLegendTitleFont();
+        updateLegendLabelFont();
+        updateLegendConfig();
 
         const auto currentTitle = QString::fromUtf8(m_mapping->colorBarRepresentation().actor().GetTitle());
         if (currentTitle != m_mapping->currentScalarsName())
@@ -495,6 +504,11 @@ void ColorMappingChooser::setupGuiConnections()
         emit renderSetupChanged();
     });
 
+    m_guiConnections << connect(m_ui->legendAspectRatio, &QAbstractSpinBox::editingFinished, [this] () {
+        legend().SetAspectRatio(m_ui->legendAspectRatio->value());
+        emit renderSetupChanged();
+    });
+
     m_guiConnections << connect(m_ui->legendAlignTitleCheckBox, &QAbstractButton::toggled, [this] (bool checked) {
         bool currentlyAligned = legend().GetTitleAlignedWithColorBar();
         if (currentlyAligned == checked)
@@ -511,9 +525,33 @@ void ColorMappingChooser::setupGuiConnections()
         emit renderSetupChanged();
     });
 
-    m_guiConnections << connect(m_ui->legendGroupBox, &QGroupBox::toggled,
-        [this] (bool checked) {
+    m_guiConnections << connect(m_ui->legendNumLabelsSpinBox, &QSpinBox::editingFinished, [this] () {
+        legend().SetNumberOfLabels(m_ui->legendNumLabelsSpinBox->value());
+        emit renderSetupChanged();
+    });
+
+    m_guiConnections << connect(m_ui->legendGroupBox, &QGroupBox::toggled, [this] (bool checked) {
         m_mapping->colorBarRepresentation().setVisible(checked);
+        emit renderSetupChanged();
+    });
+
+    m_guiConnections << connect(m_ui->legendTickMarksCheckBox, &QCheckBox::toggled, [this] (bool checked) {
+        legend().SetDrawTickMarks(checked);
+        emit renderSetupChanged();
+    });
+
+    m_guiConnections << connect(m_ui->legendTickLabelsCheckBox, &QCheckBox::toggled, [this] (bool checked) {
+        legend().SetDrawTickLabels(checked);
+        emit renderSetupChanged();
+    });
+
+    m_guiConnections << connect(m_ui->legendSubTickMarksCheckBox, &QCheckBox::toggled, [this] (bool checked) {
+        legend().SetDrawSubTickMarks(checked);
+        emit renderSetupChanged();
+    });
+
+    m_guiConnections << connect(m_ui->legendRangeLabelsCheckBox, &QCheckBox::toggled, [this] (bool checked) {
+        legend().SetAddRangeLabels(checked);
         emit renderSetupChanged();
     });
 
