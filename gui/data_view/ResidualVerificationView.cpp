@@ -22,6 +22,7 @@
 #include <core/AbstractVisualizedData.h>
 #include <core/DataSetHandler.h>
 #include <core/types.h>
+#include <core/color_mapping/ColorBarRepresentation.h>
 #include <core/color_mapping/ColorMapping.h>
 #include <core/data_objects/ImageDataObject.h>
 #include <core/data_objects/PolyDataObject.h>
@@ -852,6 +853,7 @@ void ResidualVerificationView::updateGuiAfterDataChange()
             attributeName = m_attributeNamesLocations[i].first;
 
         m_visualizations[i]->colorMapping().setCurrentScalarsByName(attributeName);
+        m_visualizations[i]->colorMapping().colorBarRepresentation().setVisible(true);
     }
 
     updateGuiSelection();

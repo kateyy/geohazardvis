@@ -133,6 +133,8 @@ void ColorBarRepresentation::updateForChangedScalars()
 
 void ColorBarRepresentation::updateVisibility()
 {
+    initialize();
+
     auto && viss = m_colorMapping.visualizedData();
 
     const bool actualVisibilty = m_colorMapping.currentScalarsUseMappingLegend() && m_isVisible
