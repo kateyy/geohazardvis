@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cassert>
 
+#include <vtkProperty2D.h>
 #include <vtkRenderer.h>
 #include <vtkRenderWindowInteractor.h>
 #include <vtkScalarBarRepresentation.h>
@@ -110,6 +111,8 @@ void ColorBarRepresentation::initialize()
 
     m_scalarBarRepresentation = vtkSmartPointer<vtkScalarBarRepresentation>::New();
     m_scalarBarRepresentation->SetScalarBarActor(m_actor);
+    m_scalarBarRepresentation->SetShowBorderToActive();
+    m_scalarBarRepresentation->GetBorderProperty()->SetColor(0, 0, 0);
 
     m_widget = vtkSmartPointer<vtkScalarBarWidget>::New();
     m_widget->SetScalarBarActor(m_actor);
