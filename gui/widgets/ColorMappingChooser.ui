@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>355</width>
-    <height>716</height>
+    <height>648</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -32,6 +32,9 @@
       </property>
       <property name="alignment">
        <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+      </property>
+      <property name="checkable">
+       <bool>true</bool>
       </property>
       <layout class="QFormLayout" name="formLayout">
        <item row="1" column="0">
@@ -152,7 +155,7 @@
             <x>0</x>
             <y>0</y>
             <width>331</width>
-            <height>396</height>
+            <height>328</height>
            </rect>
           </property>
           <layout class="QFormLayout" name="formLayout_3">
@@ -318,6 +321,7 @@
   </widget>
  </widget>
  <tabstops>
+  <tabstop>scalarsGroupBox</tabstop>
   <tabstop>scalarsComboBox</tabstop>
   <tabstop>componentSpinBox</tabstop>
   <tabstop>maxValueSpinBox</tabstop>
@@ -354,6 +358,38 @@
     <hint type="destinationlabel">
      <x>225</x>
      <y>555</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>scalarsGroupBox</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>gradientGroupBox</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>56</x>
+     <y>65</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>36</x>
+     <y>217</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>scalarsGroupBox</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>legendGroupBox</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>98</x>
+     <y>69</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>110</x>
+     <y>305</y>
     </hint>
    </hints>
   </connection>

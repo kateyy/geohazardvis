@@ -201,7 +201,7 @@ void ColorMappingChooser::guiComponentChanged(int guiComponent)
 
     auto component = guiComponent - 1;
 
-    m_mapping->currentScalars()->setDataComponent(component);
+    m_mapping->currentScalars().setDataComponent(component);
 
     updateGuiValueRanges();
 
@@ -212,15 +212,15 @@ void ColorMappingChooser::guiMinValueChanged(double value)
 {
     assert(m_mapping);
 
-    auto scalars = m_mapping->currentScalars();
-    double correctValue = std::min(scalars->maxValue(), value);
+    auto & scalars = m_mapping->currentScalars();
+    double correctValue = std::min(scalars.maxValue(), value);
     if (value != correctValue)
     {
         QSignalBlocker signalBlocker(m_ui->minValueSpinBox);
         m_ui->minValueSpinBox->setValue(correctValue);
     }
 
-    scalars->setMinValue(correctValue);
+    scalars.setMinValue(correctValue);
 
     emit renderSetupChanged();
 }
@@ -229,15 +229,15 @@ void ColorMappingChooser::guiMaxValueChanged(double value)
 {
     assert(m_mapping);
 
-    auto scalars = m_mapping->currentScalars();
-    double correctValue = std::max(scalars->minValue(), value);
+    auto & scalars = m_mapping->currentScalars();
+    double correctValue = std::max(scalars.minValue(), value);
     if (value != correctValue)
     {
         QSignalBlocker signalBlocker(m_ui->maxValueSpinBox);
         m_ui->maxValueSpinBox->setValue(correctValue);
     }
 
-    scalars->setMaxValue(correctValue);
+    scalars.setMaxValue(correctValue);
 
     emit renderSetupChanged();
 }
@@ -246,14 +246,14 @@ void ColorMappingChooser::guiResetMinToData()
 {
     assert(m_mapping);
 
-    m_ui->minValueSpinBox->setValue(m_mapping->currentScalars()->dataMinValue());
+    m_ui->minValueSpinBox->setValue(m_mapping->currentScalars().dataMinValue());
 }
 
 void ColorMappingChooser::guiResetMaxToData()
 {
     assert(m_mapping);
 
-    m_ui->maxValueSpinBox->setValue(m_mapping->currentScalars()->dataMaxValue());
+    m_ui->maxValueSpinBox->setValue(m_mapping->currentScalars().dataMaxValue());
 }
 
 void ColorMappingChooser::guiLegendPositionChanged(const QString & position)
@@ -416,6 +416,8 @@ void ColorMappingChooser::rebuildGui()
 
     updateTitle();
 
+    m_ui->scalarsGroupBox->setEnabled(false);
+    m_ui->scalarsGroupBox->setChecked(false);
     m_ui->scalarsComboBox->clear();
     m_ui->gradientGroupBox->setEnabled(false);
     m_ui->nanColorButton->setStyleSheet("");
@@ -428,6 +430,9 @@ void ColorMappingChooser::rebuildGui()
 
     if (!scalarsNames.isEmpty())
     {
+        m_ui->scalarsGroupBox->setEnabled(true);
+        m_ui->scalarsGroupBox->setChecked(m_mapping->isEnabled());
+
         std::sort(scalarsNames.begin(), scalarsNames.end(), doj::alphanum_less<QString>());
         m_ui->scalarsComboBox->addItems(scalarsNames);
 
@@ -465,11 +470,9 @@ void ColorMappingChooser::setupGuiConnections()
 
     m_guiConnections << connect(m_ui->scalarsComboBox, &QComboBox::currentTextChanged, this, &ColorMappingChooser::guiScalarsSelectionChanged);
 
-    auto currentScalars = m_mapping->currentScalars();
-
     // all further connections are only relevant if there is currently something to configure
     // don't depend on ColorMapping to always have current scalars
-    if (!currentScalars)
+    if (!m_mapping->scalarsAvailable())
     {
         return;
     }
@@ -477,6 +480,10 @@ void ColorMappingChooser::setupGuiConnections()
     const auto && dSpinBoxValueChanged = static_cast<void(QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged);
     const auto && spinBoxValueChanged = static_cast<void(QSpinBox::*)(int)>(&QSpinBox::valueChanged);
 
+    m_guiConnections << connect(m_ui->scalarsGroupBox, &QGroupBox::toggled, [this] (bool checked) {
+        m_mapping->setEnabled(checked);
+        emit renderSetupChanged();
+    });
     m_guiConnections << connect(m_ui->componentSpinBox, spinBoxValueChanged, this, &ColorMappingChooser::guiComponentChanged);
     m_guiConnections << connect(m_ui->minValueSpinBox, dSpinBoxValueChanged, this, &ColorMappingChooser::guiMinValueChanged);
     m_guiConnections << connect(m_ui->maxValueSpinBox, dSpinBoxValueChanged, this, &ColorMappingChooser::guiMaxValueChanged);
@@ -568,12 +575,11 @@ void ColorMappingChooser::discardGuiConnections()
 
 void ColorMappingChooser::setupValueRangeConnections()
 {
-    auto currentScalars = m_mapping->currentScalars();
-    assert(currentScalars);
+    auto & currentScalars = m_mapping->currentScalars();
 
     // depending on the effect of this change, the effect may be the same as setting different scalars
     // e.g., changes between range (n, n) and (n, m)
-    m_dataMinMaxChangedConnection = connect(currentScalars, &ColorMappingData::dataMinMaxChanged,
+    m_dataMinMaxChangedConnection = connect(&currentScalars, &ColorMappingData::dataMinMaxChanged,
         this, &ColorMappingChooser::guiScalarsSelectionChanged);    
 }
 
@@ -608,17 +614,15 @@ void ColorMappingChooser::updateGuiValueRanges()
 
     bool enableRangeGui = false;
 
-    if (m_mapping)
+    if (m_mapping && m_mapping->scalarsAvailable())
     {
-        if (auto scalars = m_mapping->currentScalars())
-        {
-            numComponents = scalars->numDataComponents();
-            currentComponent = scalars->dataComponent();
-            min = scalars->dataMinValue();
-            max = scalars->dataMaxValue();
-            currentMin = scalars->minValue();
-            currentMax = scalars->maxValue();
-        }
+        auto & scalars = m_mapping->currentScalars();
+        numComponents = scalars.numDataComponents();
+        currentComponent = scalars.dataComponent();
+        min = scalars.dataMinValue();
+        max = scalars.dataMaxValue();
+        currentMin = scalars.minValue();
+        currentMax = scalars.maxValue();
 
         // assume that the mapping does not use scalar values/ranges, if it has useless min/max values
         enableRangeGui = min != max;

@@ -215,14 +215,14 @@ void RenderViewStrategy2D::startProfilePlot()
         }
 
         auto & colorMapping = visualization->colorMapping();
-        auto currentScalars = colorMapping.currentScalars();
-
-        if (!currentScalars)    // nothing to plot
+        if (!colorMapping.isEnabled() || !colorMapping.scalarsAvailable())    // nothing to plot
         {
             continue;
         }
 
-        const auto && scalarsName = currentScalars->name();
+        auto & currentScalars = colorMapping.currentScalars();
+
+        const auto && scalarsName = currentScalars.name();
 
         const auto currentPlotCombination = QPair<DataObject *, QString>{ dataObject, scalarsName };
         // don't plot the same data twice
@@ -231,7 +231,7 @@ void RenderViewStrategy2D::startProfilePlot()
             continue;
         }
 
-        const auto component = currentScalars->dataComponent();
+        const auto component = currentScalars.dataComponent();
 
 
         // TODO this should be propagated by the color mapping

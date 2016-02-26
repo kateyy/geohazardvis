@@ -2,6 +2,7 @@
 
 #include <map>
 #include <memory>
+#include <mutex>
 
 #include <QList>
 #include <QMap>
@@ -34,6 +35,13 @@ public:
     ColorMapping();
     ~ColorMapping() override;
 
+    void setEnabled(bool enabled);
+    bool isEnabled() const;
+
+    /** @return true only if scalar mappings are available for the current data sets.
+    * Otherwise, setEnabled() will have no effect and the null mapping will be used. */
+    bool scalarsAvailable() const;
+
     const QList<AbstractVisualizedData *> & visualizedData() const;
 
     /** list of scalar names that can be used with my rendered data */
@@ -41,8 +49,8 @@ public:
 
     const QString & currentScalarsName() const;
     void setCurrentScalarsByName(const QString & scalarsName);
-    ColorMappingData * currentScalars();
-    const ColorMappingData * currentScalars() const;
+    const ColorMappingData & currentScalars() const;
+    ColorMappingData & currentScalars();
 
     /** @return gradient lookup table */
     vtkLookupTable * gradient();
@@ -72,13 +80,22 @@ private:
     /** reread the data set list provided by the DataSetHandler for new/deleted data */
     void updateAvailableScalars();
 
+    void updateCurrentMappingState(const QString & scalarsName, bool enabled);
+
+    ColorMappingData & nullColorMapping() const;
+    void releaseMappingData();
+
 private:
+    bool m_isEnabled;
+
     std::unique_ptr<GlyphColorMappingGlyphListener> m_glyphListener;
     std::unique_ptr<ColorBarRepresentation> m_colorBarRepresenation;
 
     QList<AbstractVisualizedData *> m_visualizedData;
 
     std::map<QString, std::unique_ptr<ColorMappingData>> m_data;
+    mutable std::unique_ptr<ColorMappingData> m_nullColorMapping;
+    mutable std::mutex m_nullMappingMutex;
 
     QString m_currentScalarsName;
     vtkSmartPointer<vtkLookupTable> m_gradient;

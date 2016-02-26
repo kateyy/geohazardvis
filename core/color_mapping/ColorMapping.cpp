@@ -2,19 +2,22 @@
 
 #include <cassert>
 
+#include <QDebug>
+
 #include <vtkLookupTable.h>
 
 #include <core/AbstractVisualizedData.h>
 #include <core/data_objects/DataObject.h>
 #include <core/color_mapping/ColorBarRepresentation.h>
-#include <core/color_mapping/ColorMappingData.h>
 #include <core/color_mapping/ColorMappingRegistry.h>
+#include <core/color_mapping/DefaultColorMapping.h>
 #include <core/color_mapping/GlyphColorMappingGlyphListener.h>
 #include <core/color_mapping/GradientResourceManager.h>
 
 
 ColorMapping::ColorMapping()
     : QObject()
+    , m_isEnabled{ false }
     , m_glyphListener{ std::make_unique<GlyphColorMappingGlyphListener>() }
     , m_gradient{ vtkSmartPointer<vtkLookupTable>::New() }
 {
@@ -24,10 +27,25 @@ ColorMapping::ColorMapping()
 
 ColorMapping::~ColorMapping() = default;
 
+void ColorMapping::setEnabled(bool enabled)
+{
+    if (m_isEnabled == enabled)
+    {
+        return;
+    }
+
+    updateCurrentMappingState(m_currentScalarsName, enabled);
+}
+
+bool ColorMapping::isEnabled() const
+{
+    return m_isEnabled;
+}
+
 void ColorMapping::setVisualizedData(const QList<AbstractVisualizedData *> & visualizedData)
 {
     // clean up old scalars
-    for (AbstractVisualizedData * vis : m_visualizedData)
+    for (auto vis : m_visualizedData)
     {
         vis->setScalarsForColorMapping(nullptr);
         disconnect(&vis->dataObject(), &DataObject::attributeArraysChanged, this, &ColorMapping::updateAvailableScalars);
@@ -35,12 +53,12 @@ void ColorMapping::setVisualizedData(const QList<AbstractVisualizedData *> & vis
 
     auto lastScalars = currentScalarsName();
     m_currentScalarsName.clear();
-    m_data.clear();
+    releaseMappingData();
 
 
     m_visualizedData = visualizedData;
 
-    for (AbstractVisualizedData * vis : m_visualizedData)
+    for (auto vis : m_visualizedData)
     {
         // pass our (persistent) gradient object
         vis->setColorMappingGradient(gradient());
@@ -55,23 +73,15 @@ void ColorMapping::setVisualizedData(const QList<AbstractVisualizedData *> & vis
         scalars->setLookupTable(gradient());
     }
 
-    // disable color mapping if we couldn't find appropriate data
-    if (m_data.empty())
-    {
-        setCurrentScalarsByName("");
-        return;
-    }
-
-    QString newScalarsName;
+    QString newScalarsName = ""; // disable color mapping if we couldn't find appropriate data
     // reuse last configuration if possible
     if (m_data.find(lastScalars) != m_data.end())
-        newScalarsName = lastScalars;
-    else
     {
-        if (m_data.find("user-defined color") != m_data.end())
-            newScalarsName = "user-defined color";
-        else
-            newScalarsName = m_data.begin()->first; // ordered by QString::operator<
+        newScalarsName = lastScalars;
+    }
+    else if (!m_data.empty())
+    {
+        newScalarsName = m_data.begin()->first;
     }
 
     setCurrentScalarsByName(newScalarsName);
@@ -114,6 +124,11 @@ void ColorMapping::unregisterVisualizedData(AbstractVisualizedData * visualizedD
     emit visualizedDataChanged();
 }
 
+bool ColorMapping::scalarsAvailable() const
+{
+    return !m_data.empty();
+}
+
 const QList<AbstractVisualizedData *> & ColorMapping::visualizedData() const
 {
     return m_visualizedData;
@@ -140,40 +155,69 @@ void ColorMapping::setCurrentScalarsByName(const QString & scalarsName)
         return;
     }
 
-    ColorMappingData * oldScalars = currentScalars();
-    if (oldScalars)
-        oldScalars->deactivate();
+    updateCurrentMappingState(scalarsName, m_isEnabled);
+}
+
+void ColorMapping::updateCurrentMappingState(const QString & scalarsName, bool enabled)
+{
+    auto & oldScalars = currentScalars();
+    oldScalars.deactivate();
 
     // cleanup old mappings
-    for (AbstractVisualizedData * vis : m_visualizedData)
+    for (auto vis : m_visualizedData)
+    {
         vis->setScalarsForColorMapping(nullptr);
+    }
 
     m_currentScalarsName = scalarsName;
+    m_isEnabled = enabled;
 
-    ColorMappingData * scalars = currentScalars();
-    if (scalars)
-        scalars->activate();
+    auto & scalars = currentScalars();
+    scalars.activate();
 
     emit currentScalarsChanged();
 }
 
-ColorMappingData * ColorMapping::currentScalars()
+ColorMappingData & ColorMapping::nullColorMapping() const
 {
-    return const_cast<ColorMappingData *>(    // don't implement the same function twice
+    std::lock_guard<std::mutex> lock(m_nullMappingMutex);
+
+    if (!m_nullColorMapping)
+    {
+        m_nullColorMapping = std::make_unique<DefaultColorMapping>(m_visualizedData);
+    }
+
+    return *m_nullColorMapping;
+}
+
+void ColorMapping::releaseMappingData()
+{
+    m_data.clear();
+    m_nullColorMapping.reset();
+}
+
+ColorMappingData & ColorMapping::currentScalars()
+{
+    return const_cast<ColorMappingData &>(    // don't implement the same function twice
         (static_cast<const ColorMapping *>(this))->currentScalars());
 }
 
-const ColorMappingData * ColorMapping::currentScalars() const
+const ColorMappingData & ColorMapping::currentScalars() const
 {
-    if (currentScalarsName().isEmpty())
-        return nullptr;
+    if (!m_isEnabled || currentScalarsName().isEmpty())
+    {
+        return nullColorMapping();
+    }
 
     auto it = m_data.find(currentScalarsName());
     assert(it != m_data.end());
     if (it == m_data.end())
-        return nullptr;
+    {
+        qDebug() << "Invalid scalars requested: " << currentScalarsName();
+        return nullColorMapping();
+    }
 
-    return it->second.get();
+    return *it->second.get();
 }
 
 vtkLookupTable * ColorMapping::gradient()
@@ -218,11 +262,9 @@ void ColorMapping::setGradient(const QString & gradientName)
 
 bool ColorMapping::currentScalarsUseMappingLegend() const
 {
-    const auto scalars = currentScalars();
-    if (!scalars)
-        return false;
+    auto & scalars = currentScalars();
 
-    return scalars->dataMinValue() != scalars->dataMaxValue();
+    return scalars.dataMinValue() != scalars.dataMaxValue();
 }
 
 ColorBarRepresentation & ColorMapping::colorBarRepresentation()
