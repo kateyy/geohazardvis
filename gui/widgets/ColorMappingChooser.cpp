@@ -98,9 +98,19 @@ void ColorMappingChooser::setSelectedData(DataObject * dataObject)
     if (m_renderView)
     {
         currentVisualization = m_renderView->visualizationFor(dataObject, m_renderView->activeSubViewIndex());
-        if (!currentVisualization)
+        if (!currentVisualization && dataObject)
         {   // fall back to an object in any of the sub views
             currentVisualization = m_renderView->visualizationFor(dataObject);
+        }
+        if (!currentVisualization)
+        {   // fall back to an object in the current sub view
+            auto && currentSubViewVis = m_renderView->visualizations(m_renderView->activeSubViewIndex());
+            currentVisualization = currentSubViewVis.isEmpty() ? nullptr : currentSubViewVis.first();
+        }
+        if (!currentVisualization)
+        {   // fall back to any object in the view
+            auto && currentViewVis = m_renderView->visualizations();
+            currentVisualization = currentViewVis.isEmpty() ? nullptr : currentViewVis.first();
         }
     }
 
