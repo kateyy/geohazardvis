@@ -114,6 +114,7 @@ void GradientResourceManager::loadGradients()
         }
 
         m_gradients.emplace(QString(), GradientData{ gradient, QPixmap::fromImage(image) });
+        m_defaultGradientName = QString();
     }
 }
 
