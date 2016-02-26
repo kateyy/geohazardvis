@@ -853,6 +853,7 @@ void ResidualVerificationView::updateGuiAfterDataChange()
             attributeName = m_attributeNamesLocations[i].first;
 
         m_visualizations[i]->colorMapping().setCurrentScalarsByName(attributeName);
+        m_visualizations[i]->colorMapping().setEnabled(true);
         m_visualizations[i]->colorMapping().colorBarRepresentation().setVisible(true);
     }
 

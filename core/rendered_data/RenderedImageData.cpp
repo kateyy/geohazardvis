@@ -17,6 +17,7 @@
 #include <reflectionzeug/PropertyGroup.h>
 
 #include <core/types.h>
+#include <core/color_mapping/ColorMapping.h>
 #include <core/color_mapping/ColorMappingData.h>
 #include <core/data_objects/ImageDataObject.h>
 
@@ -40,6 +41,8 @@ RenderedImageData::RenderedImageData(ImageDataObject & dataObject)
     m_mapper->SetInputConnection(dataObject.processedOutputPort());
 
     setupInformation(*m_mapper->GetInformation(), *this);
+
+    colorMapping().setEnabled(true);
 }
 
 std::unique_ptr<PropertyGroup> RenderedImageData::createConfigGroup()
