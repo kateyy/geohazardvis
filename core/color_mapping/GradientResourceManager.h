@@ -34,6 +34,8 @@ public:
     void setDefaultGradientName(const QString & name);
     const GradientData & defaultGradient() const;
 
+    void operator=(const GradientResourceManager &) = delete;
+
 private:
     GradientResourceManager();
     ~GradientResourceManager();
