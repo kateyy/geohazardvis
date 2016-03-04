@@ -52,6 +52,8 @@ set ( SOURCES
     filters/ArrayRenameFilter.cpp
     filters/ImagePlaneWidget.h
     filters/ImagePlaneWidget.cpp
+    filters/LinearSelectorXY.h
+    filters/LinearSelectorXY.cpp
     filters/NoiseImageSource.h
     filters/NoiseImageSource.cpp
     filters/StackedImageDataLIC3D.h
