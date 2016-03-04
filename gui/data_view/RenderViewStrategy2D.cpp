@@ -367,22 +367,17 @@ void RenderViewStrategy2D::abortProfilePlot()
         disconnect(c);
     m_previewRendererConnections.clear();
 
-    auto oldPreviewRenderer = m_previewRenderer;
+    clearProfilePlots();
+
+    m_previewRenderer->close();
+
     m_previewRenderer = nullptr;
-    m_activeInputData.clear();
 
     m_profilePlotAcceptAction->setVisible(false);
     m_profilePlotAbortAction->setVisible(false);
 
     m_lineWidget = nullptr;
     m_context.render();
-
-    // this becomes nullptr in case the user closes the viewer while we were starting a plot
-    if (oldPreviewRenderer)
-        oldPreviewRenderer->close();
-
-    m_previewProfiles.clear();
-
     m_profilePlotAction->setEnabled(true);
 }
 
