@@ -157,6 +157,51 @@ vtkVector<T, Size> operator/(vtkVector<T, Size> lhs, const T & scalar)
 }
 
 
+template<typename T, int Size>
+vtkVector<T, Size> operator+(const T & scalar, vtkVector<T, Size> rhs)
+{
+    for (int i = 0; i < Size; ++i)
+    {
+        rhs[i] += scalar;
+    }
+
+    return rhs;
+}
+
+template<typename T, int Size>
+vtkVector<T, Size> operator-(const T & scalar, vtkVector<T, Size> rhs)
+{
+    for (int i = 0; i < Size; ++i)
+    {
+        rhs[i] = scalar - rhs[i];
+    }
+
+    return rhs;
+}
+
+template<typename T, int Size>
+vtkVector<T, Size> operator*(const T & scalar, vtkVector<T, Size> rhs)
+{
+    for (int i = 0; i < Size; ++i)
+    {
+        rhs[i] *= scalar;
+    }
+
+    return rhs;
+}
+
+template<typename T, int Size>
+vtkVector<T, Size> operator/(const T & scalar, vtkVector<T, Size> rhs)
+{
+    for (int i = 0; i < Size; ++i)
+    {
+        rhs[i] = scalar / rhs[i];
+    }
+
+    return rhs;
+}
+
+
 template<int SizeOut, int SizeIn, typename T>
 typename std::enable_if<(SizeOut < SizeIn), vtkVector<T, SizeOut>>::type
 convert(const vtkVector<T, SizeIn> & other)
