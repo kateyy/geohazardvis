@@ -238,8 +238,10 @@ void MainWindow::addRenderView(AbstractRenderView * renderView)
 
     m_renderViewConnects << connect(renderView, &AbstractRenderView::selectedDataChanged,
         [this] (AbstractRenderView * renderView, DataObject * selectedData) {
-        m_dataMapping->setFocusedView(renderView);
-        m_dataBrowser->setSelectedData(selectedData);
+        if (renderView == m_dataMapping->focusedRenderView())
+        {
+            m_dataBrowser->setSelectedData(selectedData);
+        }
     });
 }
 
