@@ -116,6 +116,12 @@ void ImageProfileContextPlot::updatePlot()
     auto profilePoints = profileData().processedDataSet();
     const vtkIdType numPoints = profilePoints->GetNumberOfPoints();
 
+    if (numPoints < 2)  // produces a warning
+    {
+        setPlotIsValid(false);
+        return;
+    }
+
     auto sourceYValues = profilePoints->GetPointData()->GetArray(profileData().scalarsName().toUtf8().data());
     assert(sourceYValues && sourceYValues->GetNumberOfTuples() == numPoints);
 
@@ -153,4 +159,11 @@ void ImageProfileContextPlot::updatePlot()
     }
 
     m_plotLine->SetInputData(table, 0, 1);
+
+    setPlotIsValid(true);
+}
+
+void ImageProfileContextPlot::setPlotIsValid(bool isValid)
+{
+    m_plotLine->SetVisible(isValid);
 }

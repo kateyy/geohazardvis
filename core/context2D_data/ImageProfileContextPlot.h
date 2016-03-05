@@ -36,6 +36,7 @@ protected:
 
 private:
     void updatePlot();
+    void setPlotIsValid(bool isValid);
 
 private:
     vtkSmartPointer<vtkPlot> m_plotLine;
