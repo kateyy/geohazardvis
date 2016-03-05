@@ -1,6 +1,8 @@
 #include "LinearSelectorXY.h"
 
 #include <cmath>
+#include <functional>
+#include <memory>
 #include <vector>
 
 #include <vtkCellData.h>
@@ -19,7 +21,7 @@
 #include <vtkSelection.h>
 #include <vtkSelectionNode.h>
 #include <vtkSmartPointer.h>
-#include <vtkUnstructuredGrid.h>
+#include <vtkSortDataArray.h>
 
 #include <core/utility/vtkvectorhelper.h>
 
@@ -29,6 +31,7 @@ vtkStandardNewMacro(LinearSelectorXY);
 
 LinearSelectorXY::LinearSelectorXY()
     : Superclass()
+    , Sorting{ SortMode::SortPoints }
     , ComputeDistanceToLine{ true }
     , OutputPositionOnLine{ true }
 {
@@ -78,7 +81,7 @@ int LinearSelectorXY::RequestData(vtkInformation * vtkNotUsed(request),
     vtkInformation * outSelectionInfo = outputVector->GetInformationObject(0);
     vtkInformation * outPointExtractionInfo = outputVector->GetInformationObject(1);
 
-    auto cellInput = vtkPolyData::SafeDownCast(inCellsInfo->Get(vtkDataObject::DATA_OBJECT()));
+    auto cellInput = vtkPointSet::SafeDownCast(inCellsInfo->Get(vtkDataObject::DATA_OBJECT()));
     auto centersInput = vtkPointSet::SafeDownCast(inCentersInfo->Get(vtkDataObject::DATA_OBJECT()));
     auto selectionOutput = vtkSelection::SafeDownCast(outSelectionInfo->Get(vtkDataObject::DATA_OBJECT()));
     auto extractedOutput = vtkPolyData::SafeDownCast(outPointExtractionInfo->Get(vtkDataObject::DATA_OBJECT()));
@@ -86,21 +89,21 @@ int LinearSelectorXY::RequestData(vtkInformation * vtkNotUsed(request),
     auto inputCellData = cellInput->GetCellData();
     auto extractionPointData = extractedOutput->GetPointData();
 
-    const vtkIdType numPoints = cellInput->GetNumberOfPoints();
-    const vtkIdType numCells = cellInput->GetNumberOfCells();
+    const vtkIdType numInputPoints = cellInput->GetNumberOfPoints();
+    const vtkIdType numInputCells = cellInput->GetNumberOfCells();
 
-    if (numPoints == 0)
+    if (numInputPoints == 0)
     {
         vtkWarningMacro(<< "LinearSelectorXY: No points in input.");
         return 1;
     }
-    if (numCells == 0)
+    if (numInputCells == 0)
     {
         vtkWarningMacro(<< "LinearSelectorXY: No cells in input.");
         return 1;
     }
 
-    if (numCells != centersInput->GetNumberOfPoints())
+    if (numInputCells != centersInput->GetNumberOfPoints())
     {
         vtkErrorMacro(<< "LinearSelectorXY: Number of input cell centers does not match number of input cells.");
         return 0;
@@ -124,8 +127,8 @@ int LinearSelectorXY::RequestData(vtkInformation * vtkNotUsed(request),
 
 
     // compute relative position in half spaces for all points
-    std::vector<double> signedPointDistances(static_cast<size_t>(numPoints));
-    for (vtkIdType i = 0; i < numPoints; ++i)
+    std::vector<double> signedPointDistances(static_cast<size_t>(numInputPoints));
+    for (vtkIdType i = 0; i < numInputPoints; ++i)
     {
         double point[3];
         cellInput->GetPoint(i, point);
@@ -137,13 +140,9 @@ int LinearSelectorXY::RequestData(vtkInformation * vtkNotUsed(request),
     auto selectedCells = vtkSmartPointer<vtkIdTypeArray>::New();
     selectedCells->SetName("OriginalCellIds");
 
-    vtkSmartPointer<vtkDoubleArray> positionsOnLine;
-    if (OutputPositionOnLine)
-    {
-        positionsOnLine = vtkSmartPointer<vtkDoubleArray>::New();
-        positionsOnLine->SetName("positionOnLine");
-    }
-
+    auto positionsOnLine = vtkSmartPointer<vtkDoubleArray>::New();
+    positionsOnLine->SetName("positionOnLine");
+    
     vtkSmartPointer<vtkDoubleArray> distanceToLine;
     if (ComputeDistanceToLine)
     {
@@ -156,7 +155,7 @@ int LinearSelectorXY::RequestData(vtkInformation * vtkNotUsed(request),
     std::vector<vtkIdType> extractedPointIds;
 
     auto pointIdList = vtkSmartPointer<vtkIdList>::New();
-    for (vtkIdType cellId = 0; cellId < numCells; ++cellId)
+    for (vtkIdType cellId = 0; cellId < numInputCells; ++cellId)
     {
         // check if the line intersects the cell: there must be points on both sides of the line
 
@@ -193,41 +192,89 @@ int LinearSelectorXY::RequestData(vtkInformation * vtkNotUsed(request),
 
         selectedCells->InsertNextValue(cellId);
 
-        extractedPoints->InsertNextPoint(centroid);
+        extractedPointIds.push_back(
+            extractedPoints->InsertNextPoint(centroid));
 
-        if (OutputPositionOnLine)
-        {
-            extractedPointIds.push_back(
-                positionsOnLine->InsertNextValue(t));
-        }
-
+        positionsOnLine->InsertNextValue(t);
+        
         if (ComputeDistanceToLine)
         {
             distanceToLine->InsertNextValue(std::abs(signedDistanceToLine(centroid2d)));
         }
     }
 
+    const vtkIdType outputNumPoints = selectedCells->GetNumberOfTuples();
 
-    // create selection information
+    // Port 0: create selection information
     auto selectionNode = vtkSmartPointer<vtkSelectionNode>::New();
     selectionNode->SetFieldType(vtkSelectionNode::CELL);
     selectionNode->SetContentType(vtkSelectionNode::INDICES);
     selectionNode->SetSelectionList(selectedCells);
-
     selectionOutput->AddNode(selectionNode);
 
 
-    // create extracted point output
+    // Port 1: create extracted point output
 
+    // Sort output point w.r.t to the orientation of the line segment.
+
+    std::unique_ptr<vtkIdType> sortIndices;
+
+    if (this->Sorting == SortMode::SortIndices)
+    {
+        vtkSortDataArray::GenerateSortIndices(
+            positionsOnLine->GetDataType(),
+            positionsOnLine->GetVoidPointer(0),
+            outputNumPoints,
+            positionsOnLine->GetNumberOfComponents(),
+            0,
+            extractedPointIds.data());
+    }
+    else if (this->Sorting == SortMode::SortPoints)
+    {
+        sortIndices.reset(vtkSortDataArray::InitializeSortIndices(outputNumPoints));
+        vtkSortDataArray::GenerateSortIndices(
+            positionsOnLine->GetDataType(),
+            positionsOnLine->GetVoidPointer(0),
+            outputNumPoints,
+            positionsOnLine->GetNumberOfComponents(),
+            0,
+            sortIndices.get());
+
+        vtkSortDataArray::ShuffleArray(
+            sortIndices.get(),
+            extractedPoints->GetDataType(),
+            outputNumPoints,
+            extractedPoints->GetData()->GetNumberOfComponents(),
+            extractedPoints->GetData(),
+            extractedPoints->GetData()->GetVoidPointer(0),
+            0);
+    }
 
     // pass input cell data to output points (centroids)
-    extractionPointData->CopyAllocate(inputCellData, selectedCells->GetNumberOfTuples());
-    for (vtkIdType newPointId = 0; newPointId < selectedCells->GetNumberOfTuples(); ++newPointId)
+    extractionPointData->CopyAllocate(inputCellData, outputNumPoints);
+
+    std::function<vtkIdType(vtkIdType)> idGetter;
+    if (this->Sorting == SortMode::SortPoints)
     {
+        // need to reorder all attributes
+        idGetter = [&sortIndices] (vtkIdType i) -> vtkIdType { 
+            return sortIndices.get()[i]; 
+        };
+    }
+    else
+    {
+        // keep the ordering
+        idGetter = std::identity<vtkIdType>();
+    }
+
+    for (vtkIdType outputPointId = 0; outputPointId < outputNumPoints; ++outputPointId)
+    {
+        const vtkIdType beforeReorderPointId = idGetter(outputPointId);
+        const vtkIdType inputCellId = selectedCells->GetValue(beforeReorderPointId);
+
         extractionPointData->CopyData(
-            inputCellData, 
-            selectedCells->GetValue(newPointId),
-            newPointId);
+            inputCellData, inputCellId,
+            outputPointId);
     }
 
     auto verts = vtkSmartPointer<vtkCellArray>::New();
@@ -243,6 +290,17 @@ int LinearSelectorXY::RequestData(vtkInformation * vtkNotUsed(request),
 
     if (ComputeDistanceToLine)
     {
+        if (this->Sorting == SortMode::SortPoints)
+        {
+            vtkSortDataArray::ShuffleArray(
+                sortIndices.get(),
+                distanceToLine->GetDataType(),
+                outputNumPoints,
+                distanceToLine->GetNumberOfComponents(),
+                distanceToLine,
+                distanceToLine->GetVoidPointer(0),
+                0);
+        }
         extractionPointData->AddArray(distanceToLine);
     }
 
