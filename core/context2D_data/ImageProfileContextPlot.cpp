@@ -22,8 +22,8 @@ using namespace reflectionzeug;
 
 ImageProfileContextPlot::ImageProfileContextPlot(ImageProfileData & dataObject)
     : Context2DData(dataObject)
-    , m_plotLine(vtkSmartPointer<vtkPlotLine>::New())
-    , m_title(dataObject.scalarsName())
+    , m_plotLine{ vtkSmartPointer<vtkPlotLine>::New() }
+    , m_title{ dataObject.scalarsName() }
 {
     connect(&dataObject, &DataObject::dataChanged, this, &ImageProfileContextPlot::updatePlot);
 }
@@ -113,39 +113,37 @@ vtkSmartPointer<vtkPlotCollection> ImageProfileContextPlot::fetchPlots()
 
 void ImageProfileContextPlot::updatePlot()
 {
-    vtkDataSet * probe = profileData().probedLine();
+    auto profilePoints = profileData().processedDataSet();
+    const vtkIdType numPoints = profilePoints->GetNumberOfPoints();
 
-    vtkDataSet * profilePoints = profileData().processedDataSet();
+    auto sourceYValues = profilePoints->GetPointData()->GetArray(profileData().scalarsName().toUtf8().data());
+    assert(sourceYValues && sourceYValues->GetNumberOfTuples() == numPoints);
 
-    vtkDataArray * sourceValues = probe->GetPointData()->GetArray(profileData().scalarsName().toUtf8().data());
-    assert(sourceValues && sourceValues->GetNumberOfTuples() == profilePoints->GetNumberOfPoints());
-
-
-    auto plotValues = vtkSmartPointer<vtkDataArray>::Take(sourceValues->NewInstance());
-    if (sourceValues->GetNumberOfComponents() == 1)
+    auto plotYValues = vtkSmartPointer<vtkDataArray>::Take(sourceYValues->NewInstance());
+    if (sourceYValues->GetNumberOfComponents() == 1)
     {
-        plotValues->DeepCopy(sourceValues);
+        plotYValues->DeepCopy(sourceYValues);
     }
     else
     {
-        auto component = static_cast<vtkIdType>(profileData().vectorComponent());
-        assert(sourceValues->GetNumberOfComponents() > component);
+        const auto component = static_cast<vtkIdType>(profileData().vectorComponent());
+        assert(sourceYValues->GetNumberOfComponents() > component);
 
-        plotValues->SetNumberOfTuples(sourceValues->GetNumberOfTuples());
-        for (vtkIdType i = 0; i < sourceValues->GetNumberOfTuples(); ++i)
+        plotYValues->SetNumberOfTuples(numPoints);
+        for (vtkIdType i = 0; i < numPoints; ++i)
         {
-            plotValues->SetTuple1(i, sourceValues->GetTuple(i)[component]);
+            plotYValues->SetTuple1(i, sourceYValues->GetTuple(i)[component]);
         }
     }
 
-    plotValues->SetName(m_title.toUtf8().data());
+    plotYValues->SetName(m_title.toUtf8().data());
 
     auto table = vtkSmartPointer<vtkTable>::New();
     auto xAxis = vtkSmartPointer<vtkFloatArray>::New();
-    xAxis->SetNumberOfValues(profilePoints->GetNumberOfPoints());
+    xAxis->SetNumberOfValues(numPoints);
     xAxis->SetName(profileData().abscissa().toUtf8().data());
     table->AddColumn(xAxis);
-    table->AddColumn(plotValues);
+    table->AddColumn(plotYValues);
 
     for (int i = 0; i < profilePoints->GetNumberOfPoints(); ++i)
     {

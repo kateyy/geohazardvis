@@ -9,10 +9,11 @@
 
 class vtkLineSource;
 class vtkProbeFilter;
-class vtkTransformFilter;
+class vtkTransformPolyDataFilter;
 class vtkWarpScalar;
 
 enum class IndexType;
+class LinearSelectorXY;
 
 
 /**
@@ -45,8 +46,6 @@ public:
 
     vtkDataSet * processedDataSet() override;
     vtkAlgorithmOutput * processedOutputPort() override;
-    vtkDataSet * probedLine();
-    vtkAlgorithmOutput * probedLineOuputPort();
 
     const QString & abscissa() const;
 
@@ -78,8 +77,14 @@ private:
     vtkVector2d m_point1;
     vtkVector2d m_point2;
 
+    // extraction from vtkImageData
+    const bool m_inputIsImage;
     vtkSmartPointer<vtkLineSource> m_probeLine;
-    vtkSmartPointer<vtkProbeFilter> m_probe;
-    vtkSmartPointer<vtkTransformFilter> m_transform;
+    vtkSmartPointer<vtkProbeFilter> m_imageProbe;
+
+    // extraction from vtkPolyData
+    vtkSmartPointer<LinearSelectorXY> m_polyDataPointsSelector;
+
+    vtkSmartPointer<vtkTransformPolyDataFilter> m_outputTransformation;
     vtkSmartPointer<vtkWarpScalar> m_graphLine;
 };

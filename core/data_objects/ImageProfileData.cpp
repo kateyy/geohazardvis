@@ -4,7 +4,6 @@
 #include <cmath>
 
 #include <vtkAssignAttribute.h>
-#include <vtkBoundingBox.h>
 #include <vtkCellData.h>
 #include <vtkImageData.h>
 #include <vtkLineSource.h>
@@ -12,22 +11,15 @@
 #include <vtkPointData.h>
 #include <vtkProbeFilter.h>
 #include <vtkTransform.h>
-#include <vtkTransformFilter.h>
+#include <vtkTransformPolyDataFilter.h>
 #include <vtkWarpScalar.h>
 
 #include <core/data_objects/ImageDataObject.h>
+#include <core/data_objects/PolyDataObject.h>
 #include <core/context2D_data/ImageProfileContextPlot.h>
-
+#include <core/filters/LinearSelectorXY.h>
 #include <core/table_model/QVtkTableModelProfileData.h>
-
-
-namespace
-{
-vtkVector2d operator-(const vtkVector2d & lhs, const vtkVector2d & rhs)
-{
-    return vtkVector2d(lhs[0] - rhs[0], lhs[1] - rhs[1]);
-}
-}
+#include <core/utility/vtkvectorhelper.h>
 
 
 ImageProfileData::ImageProfileData(
@@ -37,15 +29,15 @@ ImageProfileData::ImageProfileData(
     IndexType scalarsLocation,
     vtkIdType vectorComponent)
     : DataObject(name, vtkSmartPointer<vtkImageData>::New())
-    , m_isValid(false)
-    , m_sourceData(sourceData)
-    , m_abscissa("position")
-    , m_scalarsName(scalarsName)
-    , m_scalarsLocation(scalarsLocation)
-    , m_vectorComponent(vectorComponent)
-    , m_probeLine(vtkSmartPointer<vtkLineSource>::New())
-    , m_transform(vtkSmartPointer<vtkTransformFilter>::New())
-    , m_graphLine(vtkSmartPointer<vtkWarpScalar>::New())
+    , m_isValid{ false }
+    , m_sourceData{ sourceData }
+    , m_abscissa{ "position" }
+    , m_scalarsName{ scalarsName }
+    , m_scalarsLocation{ scalarsLocation }
+    , m_vectorComponent{ vectorComponent }
+    , m_inputIsImage{ dynamic_cast<ImageDataObject *>(&sourceData) != nullptr }
+    , m_outputTransformation{ vtkSmartPointer<vtkTransformPolyDataFilter>::New() }
+    , m_graphLine{ vtkSmartPointer<vtkWarpScalar>::New() }
 {
     auto inputData = sourceData.processedDataSet();
 
@@ -60,32 +52,30 @@ ImageProfileData::ImageProfileData(
         return;
     }
 
-    m_probe = vtkSmartPointer<vtkProbeFilter>::New();
-    m_probe->SetInputConnection(m_probeLine->GetOutputPort());
 
-
-    // for polygonal source data, flatten first
-    if (vtkPolyData::SafeDownCast(m_sourceData.dataSet()))
+    if (m_inputIsImage)
     {
-        auto flattenerTransform = vtkSmartPointer<vtkTransform>::New();
-        flattenerTransform->Scale(1, 1, 0);
-        auto flattener = vtkSmartPointer<vtkTransformFilter>::New();
-        flattener->SetTransform(flattenerTransform);
-        flattener->SetInputConnection(m_sourceData.processedOutputPort());
+        m_probeLine = vtkSmartPointer<vtkLineSource>::New();
+        m_imageProbe = vtkSmartPointer<vtkProbeFilter>::New();
+        m_imageProbe->SetInputConnection(m_probeLine->GetOutputPort());
+        m_imageProbe->SetSourceConnection(sourceData.processedOutputPort());
 
-        m_probe->SetSourceConnection(flattener->GetOutputPort());
+        m_outputTransformation->SetInputConnection(m_imageProbe->GetOutputPort());
     }
     else
     {
-        m_probe->SetSourceConnection(m_sourceData.processedOutputPort());
+        auto & poly = dynamic_cast<PolyDataObject &>(sourceData);
+        m_polyDataPointsSelector = vtkSmartPointer<LinearSelectorXY>::New();
+        m_polyDataPointsSelector->SetInputConnection(sourceData.processedOutputPort());
+        m_polyDataPointsSelector->SetCellCentersConnection(poly.cellCentersOutputPort());
+
+        m_outputTransformation->SetInputConnection(m_polyDataPointsSelector->GetOutputPort(1));
     }
 
-    m_transform->SetInputConnection(m_probe->GetOutputPort());
-
     auto assign = vtkSmartPointer<vtkAssignAttribute>::New();
-    auto assignLocation = m_scalarsLocation == IndexType::points ? vtkAssignAttribute::POINT_DATA : vtkAssignAttribute::CELL_DATA;
-    assign->Assign(m_scalarsName.toUtf8().data(), vtkDataSetAttributes::SCALARS, assignLocation);
-    assign->SetInputConnection(m_transform->GetOutputPort());
+    // output geometry is always points
+    assign->Assign(m_scalarsName.toUtf8().data(), vtkDataSetAttributes::SCALARS, vtkAssignAttribute::POINT_DATA);
+    assign->SetInputConnection(m_outputTransformation->GetOutputPort());
 
     m_graphLine->UseNormalOn();
     m_graphLine->SetNormal(0, 1, 0);
@@ -123,23 +113,13 @@ const QString & ImageProfileData::dataTypeName_s()
 vtkDataSet * ImageProfileData::processedDataSet()
 {
     m_graphLine->Update();
+
     return m_graphLine->GetOutput();
 }
 
 vtkAlgorithmOutput * ImageProfileData::processedOutputPort()
 {
     return m_graphLine->GetOutputPort();
-}
-
-vtkDataSet * ImageProfileData::probedLine()
-{
-    m_probe->Update();
-    return m_probe->GetOutput();
-}
-
-vtkAlgorithmOutput * ImageProfileData::probedLineOuputPort()
-{
-    return m_probe->GetOutputPort();
 }
 
 const QString & ImageProfileData::abscissa() const
@@ -192,60 +172,39 @@ void ImageProfileData::setPoints(const vtkVector2d & point1, const vtkVector2d &
 {
     m_point1 = point1;
     m_point2 = point2;
+    const auto probeVector = point2 - point1;
 
-    m_probeLine->SetPoint1(point1[0], point1[1], 0.0);
-    m_probeLine->SetPoint2(point2[0], point2[1], 0.0);
-    
-    auto probeVector = point2 - point1;
-
-    int numProbePoints = 0;
     if (auto image = vtkImageData::SafeDownCast(m_sourceData.dataSet()))
     {
+        m_probeLine->SetPoint1(point1[0], point1[1], 0.0);
+        m_probeLine->SetPoint2(point2[0], point2[1], 0.0);
+
+
         double pointSpacing[3];
         image->GetSpacing(pointSpacing);
         double xLength = probeVector[0] / pointSpacing[0];
         double yLength = probeVector[1] / pointSpacing[1];
-        numProbePoints = static_cast<int>(std::sqrt(xLength * xLength + yLength * yLength));
+        int numProbePoints = static_cast<int>(std::sqrt(xLength * xLength + yLength * yLength));
+
+        m_probeLine->SetResolution(numProbePoints);
     }
     else
     {
-        auto vectorLength = probeVector.Norm();
-        double bounds[6];
-        m_sourceData.dataSet()->GetBounds(bounds);
-
-        vtkBoundingBox bbox(bounds);
-        auto diagonalLength = bbox.GetDiagonalLength();
-
-        vtkIdType numElements = 0;
-
-        if (m_scalarsLocation == IndexType::cells)
-        {
-            numElements = m_sourceData.dataSet()->GetNumberOfCells();
-        }
-        else
-        {
-            numElements = m_sourceData.dataSet()->GetNumberOfPoints();
-        }
-
-        numElements = static_cast<vtkIdType>(std::sqrt(numElements));
-
-        // assuming that the points/cells are somehow uniformly distributed (and sized)
-        numProbePoints = static_cast<int>(std::ceil(double(numElements) * vectorLength / diagonalLength));
-        numProbePoints = static_cast<int>(std::max(1, numProbePoints));
+        m_polyDataPointsSelector->SetStartPoint(m_point1);
+        m_polyDataPointsSelector->SetEndPoint(m_point2);
     }
 
-    m_probeLine->SetResolution(numProbePoints);
 
     auto m = vtkSmartPointer<vtkTransform>::New();
-    // move to origin
-    double xTranslate = -point1[0];
-    double yTranslate = -point1[1];
-    // align to x axis
-    double angle = vtkMath::DegreesFromRadians(std::atan2(probeVector[1], probeVector[0]));
+    m->PostMultiply();
 
-    m->RotateZ(-angle);
-    m->Translate(xTranslate, yTranslate, 0);
-    m_transform->SetTransform(m);
+    // move to origin
+    m->Translate(-point1[0], -point1[1], 0);
+    // align to x axis
+    m->RotateZ(
+        -vtkMath::DegreesFromRadians(std::atan2(probeVector[1], probeVector[0])));
+
+    m_outputTransformation->SetTransform(m);
 
     emit dataChanged();
     emit boundsChanged();
