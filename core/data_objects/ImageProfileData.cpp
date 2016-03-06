@@ -41,6 +41,11 @@ ImageProfileData::ImageProfileData(
     , m_outputTransformation{ vtkSmartPointer<vtkTransformPolyDataFilter>::New() }
     , m_graphLine{ vtkSmartPointer<vtkWarpScalar>::New() }
 {
+    if (!m_inputIsImage && !dynamic_cast<PolyDataObject *>(&sourceData))
+    {
+        return;
+    }
+
     auto inputData = sourceData.processedDataSet();
 
     auto attributeData = (scalarsLocation == IndexType::points)
