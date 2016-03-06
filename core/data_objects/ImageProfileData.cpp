@@ -8,8 +8,10 @@
 #include <vtkImageData.h>
 #include <vtkLineSource.h>
 #include <vtkMath.h>
+#include <vtkPassArrays.h>
 #include <vtkPointData.h>
 #include <vtkProbeFilter.h>
+#include <vtkRearrangeFields.h>
 #include <vtkTransform.h>
 #include <vtkTransformPolyDataFilter.h>
 #include <vtkWarpScalar.h>
@@ -45,20 +47,38 @@ ImageProfileData::ImageProfileData(
         ? static_cast<vtkDataSetAttributes *>(inputData->GetPointData())
         : static_cast<vtkDataSetAttributes *>(inputData->GetCellData());
 
-    auto scalars = attributeData->GetArray(scalarsName.toUtf8().data());
+    const auto c_scalarsName = scalarsName.toUtf8();
+    auto scalars = attributeData->GetArray(c_scalarsName.data());
 
     if (scalars == nullptr || scalars->GetNumberOfComponents() < vectorComponent)
     {
         return;
     }
 
+    // remove all other fields
+    auto filterFields = vtkSmartPointer<vtkPassArrays>::New();
+    filterFields->AddArray(
+        scalarsLocation == IndexType::points ? vtkDataObject::POINT : vtkDataObject::CELL,
+        c_scalarsName.data());
+    filterFields->UseFieldTypesOn();
+    filterFields->AddFieldType(vtkDataObject::POINT);
+    filterFields->AddFieldType(vtkDataObject::CELL);
+    filterFields->AddFieldType(vtkDataObject::FIELD);
+    filterFields->SetInputConnection(sourceData.processedOutputPort());
+
+    // Do not discard or distort normal and vector arrays.
+    // vtkRearrangeFields will remove the previous attribute assignment, if such exists
+    auto unassignField = vtkSmartPointer<vtkRearrangeFields>::New();
+    const auto location = scalarsLocation == IndexType::points ? vtkRearrangeFields::POINT_DATA : vtkRearrangeFields::CELL_DATA;
+    unassignField->AddOperation(vtkRearrangeFields::MOVE, c_scalarsName.data(), location, location);
+    unassignField->SetInputConnection(filterFields->GetOutputPort());
 
     if (m_inputIsImage)
     {
         m_probeLine = vtkSmartPointer<vtkLineSource>::New();
         m_imageProbe = vtkSmartPointer<vtkProbeFilter>::New();
         m_imageProbe->SetInputConnection(m_probeLine->GetOutputPort());
-        m_imageProbe->SetSourceConnection(sourceData.processedOutputPort());
+        m_imageProbe->SetSourceConnection(unassignField->GetOutputPort());
 
         m_outputTransformation->SetInputConnection(m_imageProbe->GetOutputPort());
     }
@@ -66,7 +86,7 @@ ImageProfileData::ImageProfileData(
     {
         auto & poly = dynamic_cast<PolyDataObject &>(sourceData);
         m_polyDataPointsSelector = vtkSmartPointer<LinearSelectorXY>::New();
-        m_polyDataPointsSelector->SetInputConnection(sourceData.processedOutputPort());
+        m_polyDataPointsSelector->SetInputConnection(unassignField->GetOutputPort());
         m_polyDataPointsSelector->SetCellCentersConnection(poly.cellCentersOutputPort());
 
         m_outputTransformation->SetInputConnection(m_polyDataPointsSelector->GetOutputPort(1));
@@ -74,7 +94,7 @@ ImageProfileData::ImageProfileData(
 
     auto assign = vtkSmartPointer<vtkAssignAttribute>::New();
     // output geometry is always points
-    assign->Assign(m_scalarsName.toUtf8().data(), vtkDataSetAttributes::SCALARS, vtkAssignAttribute::POINT_DATA);
+    assign->Assign(c_scalarsName.data(), vtkDataSetAttributes::SCALARS, vtkAssignAttribute::POINT_DATA);
     assign->SetInputConnection(m_outputTransformation->GetOutputPort());
 
     m_graphLine->UseNormalOn();

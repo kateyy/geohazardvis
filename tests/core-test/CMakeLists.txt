@@ -20,6 +20,7 @@ set(sources
     DataObject_test.cpp
     DataSetHandler_test.cpp
     RenderedData_test.cpp
+    VTKAlgorithmImplementations_test.cpp
 )
 
 
