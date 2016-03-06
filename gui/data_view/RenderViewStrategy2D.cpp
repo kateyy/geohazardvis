@@ -196,7 +196,9 @@ void RenderViewStrategy2D::startProfilePlot()
 
     // if there are no inputs, just ignore the request
     if (m_activeInputData.isEmpty())
+    {
         return;
+    }
 
     m_profilePlotAction->setEnabled(false);
 
@@ -262,7 +264,7 @@ void RenderViewStrategy2D::startProfilePlot()
     }
 
 
-    bool creatingNewRenderer = m_previewRenderer == nullptr;
+    const bool creatingNewRenderer = m_previewRenderer == nullptr;
 
     if (creatingNewRenderer) // if starting a new plot: create the line widget
     {
@@ -358,26 +360,23 @@ void RenderViewStrategy2D::acceptProfilePlot()
 
 void RenderViewStrategy2D::abortProfilePlot()
 {
-    if (m_previewRendererConnections.isEmpty() && !m_previewRenderer && m_previewProfiles.empty())
-    {
-        return;
-    }
-
-    for (auto & c : m_previewRendererConnections)
-        disconnect(c);
-    m_previewRendererConnections.clear();
-
     clearProfilePlots();
 
-    m_previewRenderer->close();
+    if (m_previewRenderer)
+    {
+        disconnectAll(m_previewRendererConnections);
 
-    m_previewRenderer = nullptr;
+        m_previewRenderer->close();
+        m_previewRenderer = nullptr;
+
+        m_lineWidget = nullptr;
+
+        // refresh for the removed line widget
+        m_context.render();
+    }
 
     m_profilePlotAcceptAction->setVisible(false);
     m_profilePlotAbortAction->setVisible(false);
-
-    m_lineWidget = nullptr;
-    m_context.render();
     m_profilePlotAction->setEnabled(true);
 }
 
@@ -388,15 +387,21 @@ QString RenderViewStrategy2D::defaultInteractorStyle() const
 
 void RenderViewStrategy2D::clearProfilePlots()
 {
+    auto oldProfiles = std::move(m_previewProfiles);
+    auto oldInputs = std::move(m_activeInputData);
+
+    if (!m_previewRenderer)
+    {
+        // preview renderer was not yet setup, so just cleanup preview data
+        return;
+    }
+
     QList<DataObject *> toDelete;
-    for (auto & plot : m_previewProfiles)
+    for (auto & plot : oldProfiles)
     {
         toDelete << plot.get();
     }
     m_previewRenderer->prepareDeleteData(toDelete);
-
-    m_previewProfiles.clear();
-    m_activeInputData.clear();
 }
 
 void RenderViewStrategy2D::lineMoved()
