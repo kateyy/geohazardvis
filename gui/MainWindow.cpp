@@ -26,6 +26,7 @@
 #include <core/io/Exporter.h>
 #include <core/io/Loader.h>
 #include <core/rendered_data/RenderedData.h>
+#include <core/utility/qthelper.h>
 
 #include <gui/DataMapping.h>
 #include <gui/SelectionHandler.h>
@@ -189,8 +190,7 @@ MainWindow::~MainWindow()
 
     m_pluginManager.reset();
 
-    for (auto & connection : m_renderViewConnects)
-        disconnect(connection);
+    disconnectAll(m_renderViewConnects);
 
     m_dataMapping.reset();
     // wait to close all views

@@ -18,3 +18,4 @@ QColor CORE_API vtkColorToQColor(double colorF[3]);
 
 /** Disconnect all connections and clear the list */
 void CORE_API disconnectAll(QList<QMetaObject::Connection> & connections);
+void CORE_API disconnectAll(QList<QMetaObject::Connection> && connections);

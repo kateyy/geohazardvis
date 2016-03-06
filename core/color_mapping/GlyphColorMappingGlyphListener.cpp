@@ -5,6 +5,7 @@
 #include <core/rendered_data/RenderedData3D.h>
 #include <core/glyph_mapping/GlyphMapping.h>
 #include <core/glyph_mapping/GlyphMappingData.h>
+#include <core/utility/qthelper.h>
 
 
 GlyphColorMappingGlyphListener::GlyphColorMappingGlyphListener(QObject * parent)
@@ -16,9 +17,7 @@ void GlyphColorMappingGlyphListener::setData(const QList<AbstractVisualizedData 
 {
     m_data.clear();
     
-    for (auto c : m_connects)
-        disconnect(c);
-    m_connects.clear();
+    disconnectAll(m_connects);
 
     for (auto vis : visualizedData)
     {

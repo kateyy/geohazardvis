@@ -3,8 +3,8 @@
 #include <map>
 #include <memory>
 
+#include <QList>
 #include <QMainWindow>
-#include <QVector>
 
 #include <gui/gui_api.h>
 
@@ -83,7 +83,7 @@ private:
     RendererConfigWidget * m_rendererConfigWidget;
     CanvasExporterWidget * m_canvasExporter;
 
-    QVector<QMetaObject::Connection> m_renderViewConnects;
+    QList<QMetaObject::Connection> m_renderViewConnects;
 
     QString m_lastOpenFolder;
     QString m_lastExportFolder;

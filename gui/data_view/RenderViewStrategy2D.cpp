@@ -25,6 +25,7 @@
 #include <core/color_mapping/ColorMappingData.h>
 #include <core/data_objects/ImageProfileData.h>
 #include <core/rendered_data/RenderedData.h>
+#include <core/utility/qthelper.h>
 #include <gui/DataMapping.h>
 #include <gui/data_view/AbstractRenderView.h>
 #include <gui/data_view/RendererImplementationBase3D.h>
@@ -345,9 +346,7 @@ void RenderViewStrategy2D::acceptProfilePlot()
 
     dataMapping().dataSetHandler().takeData(std::move(m_previewProfiles));
     m_previewProfiles.clear();
-    for (auto & c : m_previewRendererConnections)
-        disconnect(c);
-    m_previewRendererConnections.clear();
+    disconnectAll(m_previewRendererConnections);
 
     m_previewRenderer = nullptr;
     m_activeInputData.clear();

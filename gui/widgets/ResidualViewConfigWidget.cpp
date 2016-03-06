@@ -7,6 +7,7 @@
 #include <core/data_objects/PolyDataObject.h>
 
 #include <core/DataSetHandler.h>
+#include <core/utility/qthelper.h>
 #include <gui/data_view/ResidualVerificationView.h>
 
 
@@ -28,12 +29,7 @@ void ResidualViewConfigWidget::setCurrentView(ResidualVerificationView * view)
 {
     m_currentView = view;
 
-    for (auto && c : m_viewConnects)
-    {
-        disconnect(c);
-    }
-
-    m_viewConnects.clear();
+    disconnectAll(m_viewConnects);
 
     setEnabled(m_currentView != nullptr);
     if (!m_currentView)

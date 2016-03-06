@@ -35,6 +35,11 @@ QColor vtkColorToQColor(double colorF[4])
 
 void disconnectAll(QList<QMetaObject::Connection> & connections)
 {
+    disconnectAll(std::move(connections));
+}
+
+void disconnectAll(QList<QMetaObject::Connection> && connections)
+{
     for (auto && c : connections)
     {
         QObject::disconnect(c);

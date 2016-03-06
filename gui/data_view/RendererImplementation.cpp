@@ -3,6 +3,7 @@
 #include <cassert>
 
 #include <core/AbstractVisualizedData.h>
+#include <core/utility/qthelper.h>
 #include <gui/data_view/AbstractRenderView.h>
 
 
@@ -14,10 +15,9 @@ RendererImplementation::RendererImplementation(AbstractRenderView & renderView)
 
 RendererImplementation::~RendererImplementation()
 {
-    for (const auto & list : m_visConnections)
+    for (auto && list : m_visConnections)
     {
-        for (auto && c : list)
-            disconnect(c);
+        disconnectAll(list);
     }
 }
 
@@ -61,10 +61,9 @@ void RendererImplementation::activate(t_QVTKWidget & /*qvtkWidget*/)
 
 void RendererImplementation::deactivate(t_QVTKWidget & /*qvtkWidget*/)
 {
-    for (const auto & list : m_visConnections)
+    for (auto && list : m_visConnections)
     {
-        for (auto && c : list)
-            disconnect(c);
+        disconnectAll(list);
     }
 }
 
@@ -84,9 +83,7 @@ void RendererImplementation::addContent(AbstractVisualizedData * content, unsign
 
 void RendererImplementation::removeContent(AbstractVisualizedData * content, unsigned int subViewIndex)
 {
-    auto connectionList = m_visConnections.take(content);
-    for (auto && connection : connectionList)
-        disconnect(connection);
+    disconnectAll(m_visConnections.take(content));
 
     onRemoveContent(content, subViewIndex);
 

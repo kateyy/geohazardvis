@@ -3,6 +3,7 @@
 #include <cassert>
 
 #include <core/data_objects/DataObject.h>
+#include <core/utility/qthelper.h>
 
 
 QVtkTableModel::QVtkTableModel(QObject * parent)
@@ -38,11 +39,7 @@ void QVtkTableModel::setDataObject(DataObject * dataObject)
 
 void QVtkTableModel::rebuild()
 {
-    for (auto & c : m_dataObjectConnections)
-    {
-        disconnect(c);
-    }
-    m_dataObjectConnections.clear();
+    disconnectAll(m_dataObjectConnections);
 
     beginResetModel();
 
