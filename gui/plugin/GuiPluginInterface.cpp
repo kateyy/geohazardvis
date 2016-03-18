@@ -11,6 +11,16 @@
 #include <gui/MainWindow.h>
 
 
+namespace
+{
+const QString & pluginsSettingsGroup()
+{
+    static const QString groupName = "plugins";
+    return groupName;
+}
+}
+
+
 GuiPluginInterface::GuiPluginInterface(MainWindow & mainWindow, DataMapping & dataMapping)
     : m_mainWindow(&mainWindow)
     , m_dataMapping(&dataMapping)
@@ -68,6 +78,7 @@ void GuiPluginInterface::removeWidget(QDockWidget * widget)
 void GuiPluginInterface::readSettings(const std::function<void(const QSettings & settings)> & func)
 {
     ApplicationSettings settings;
+    settings.beginGroup(pluginsSettingsGroup());
 
     func(settings);
 }
@@ -75,6 +86,7 @@ void GuiPluginInterface::readSettings(const std::function<void(const QSettings &
 void GuiPluginInterface::readSettings(const QString & group, const std::function<void(const QSettings & settings)> & func)
 {
     ApplicationSettings settings;
+    settings.beginGroup(pluginsSettingsGroup());
     settings.beginGroup(group);
 
     func(settings);
@@ -83,6 +95,7 @@ void GuiPluginInterface::readSettings(const QString & group, const std::function
 void GuiPluginInterface::readWriteSettings(const std::function<void(QSettings & settings)> & func)
 {
     ApplicationSettings settings;
+    settings.beginGroup(pluginsSettingsGroup());
 
     func(settings);
 }
@@ -90,6 +103,7 @@ void GuiPluginInterface::readWriteSettings(const std::function<void(QSettings & 
 void GuiPluginInterface::readWriteSettings(const QString & group, const std::function<void(QSettings & settings)> & func)
 {
     ApplicationSettings settings;
+    settings.beginGroup(pluginsSettingsGroup());
     settings.beginGroup(group);
 
     func(settings);
