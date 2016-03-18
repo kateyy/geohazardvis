@@ -132,7 +132,7 @@ void Picker::pick(const vtkVector2i & clickPosXY, vtkRenderer & renderer)
         m_cellPicker->Pick(clickPosXY[0], clickPosXY[1], 0, &renderer);
         appendPolyDataInfo(stream, *poly);
     }
-    else
+    else // point based data sets: images, volumes, volume slices, glyphs
     {
         m_pointPicker->GetPickList()->RemoveAllItems();
         auto && viewProps = renderedData->viewProps();
@@ -150,7 +150,7 @@ void Picker::pick(const vtkVector2i & clickPosXY, vtkRenderer & renderer)
         }
         else
         {
-            appendGlyphInfo(stream);
+            appendGenericPointInfo(stream);
         }
     }
 
@@ -263,14 +263,14 @@ void Picker::appendImageDataInfo(QTextStream & stream, vtkImageSlice & slice)
     }
 }
 
-void Picker::appendGlyphInfo(QTextStream & stream)
+void Picker::appendGenericPointInfo(QTextStream & stream)
 {
-    m_pickedIndex = m_pointPicker->GetPointId();
-    m_pickedIndexType = IndexType::points;
+    const double * pos = m_pointPicker->GetPickPosition();
 
-    double* pos = m_pointPicker->GetPickPosition();
+    // TODO check how to match (resampled) glyph/volume slice indices with input data indices
+    m_pickedIndex = -1;
+
     stream
-        << "Point Index: " << m_pickedIndex << endl
         << "X = " << pos[0] << endl
         << "Y = " << pos[1] << endl
         << "Z = " << pos[2];

@@ -40,7 +40,7 @@ public:
 private:
     void appendPolyDataInfo(QTextStream & stream, PolyDataObject & polyData);
     void appendImageDataInfo(QTextStream & stream, vtkImageSlice & slice);
-    void appendGlyphInfo(QTextStream & stream);
+    void appendGenericPointInfo(QTextStream & stream);
     
 private:
     vtkSmartPointer<vtkPropPicker> m_propPicker;
