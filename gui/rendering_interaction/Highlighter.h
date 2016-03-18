@@ -12,15 +12,13 @@
 
 class QTime;
 class QTimer;
-class vtkActor;
-class vtkDiskSource;
 class vtkIdTypeArray;
-class vtkPolyData;
-class vtkPolyDataMapper;
 class vtkRenderer;
 
 class AbstractVisualizedData;
 enum class IndexType;
+
+class HighlighterImplementationSwitch;
 
 
 class GUI_API Highlighter : public QObject
@@ -81,10 +79,7 @@ private:
     bool m_flashAfterSetTarget;
     unsigned int m_flashTimeMilliseconds;
 
-    vtkSmartPointer<vtkDiskSource> m_pointHighlightDisk;
-    vtkSmartPointer<vtkPolyData> m_cellHighlightPolys;
-    vtkSmartPointer<vtkPolyDataMapper> m_highlightMapper;
-    vtkSmartPointer<vtkActor> m_highlightActor;
+    std::unique_ptr<HighlighterImplementationSwitch> m_impl;
 
     std::unique_ptr<QTimer> m_highlightFlashTimer;
     std::unique_ptr<QTime> m_highlightFlashTime;
