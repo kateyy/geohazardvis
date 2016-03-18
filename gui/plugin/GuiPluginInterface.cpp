@@ -5,15 +5,14 @@
 #include <QAction>
 #include <QDockWidget>
 #include <QMenuBar>
-#include <QSettings>
 
+#include <core/ApplicationSettings.h>
 #include <gui/DataMapping.h>
 #include <gui/MainWindow.h>
 
 
-GuiPluginInterface::GuiPluginInterface(MainWindow & mainWindow, const QString & settingsFilePath, DataMapping & dataMapping)
+GuiPluginInterface::GuiPluginInterface(MainWindow & mainWindow, DataMapping & dataMapping)
     : m_mainWindow(&mainWindow)
-    , m_settingsFilePath(settingsFilePath)
     , m_dataMapping(&dataMapping)
 {
 }
@@ -68,14 +67,14 @@ void GuiPluginInterface::removeWidget(QDockWidget * widget)
 
 void GuiPluginInterface::readSettings(const std::function<void(const QSettings & settings)> & func)
 {
-    QSettings settings(m_settingsFilePath, QSettings::IniFormat);
+    ApplicationSettings settings;
 
     func(settings);
 }
 
 void GuiPluginInterface::readSettings(const QString & group, const std::function<void(const QSettings & settings)> & func)
 {
-    QSettings settings(m_settingsFilePath, QSettings::IniFormat);
+    ApplicationSettings settings;
     settings.beginGroup(group);
 
     func(settings);
@@ -83,14 +82,14 @@ void GuiPluginInterface::readSettings(const QString & group, const std::function
 
 void GuiPluginInterface::readWriteSettings(const std::function<void(QSettings & settings)> & func)
 {
-    QSettings settings(m_settingsFilePath, QSettings::IniFormat);
+    ApplicationSettings settings;
 
     func(settings);
 }
 
 void GuiPluginInterface::readWriteSettings(const QString & group, const std::function<void(QSettings & settings)> & func)
 {
-    QSettings settings(m_settingsFilePath, QSettings::IniFormat);
+    ApplicationSettings settings;
     settings.beginGroup(group);
 
     func(settings);
@@ -108,7 +107,6 @@ DataMapping & GuiPluginInterface::dataMapping() const
 
 GuiPluginInterface::GuiPluginInterface(const GuiPluginInterface & other)
     : m_mainWindow(other.m_mainWindow)
-    , m_settingsFilePath(other.m_settingsFilePath)
     , m_dataMapping(other.m_dataMapping)
 {
     assert(m_widgets.empty() && other.m_widgets.empty());
@@ -121,7 +119,6 @@ void swap(GuiPluginInterface & lhs, GuiPluginInterface & rhs)
     using std::swap;
 
     swap(lhs.m_mainWindow, rhs.m_mainWindow);
-    swap(lhs.m_settingsFilePath, rhs.m_settingsFilePath);
     swap(lhs.m_dataMapping, rhs.m_dataMapping);
     assert(lhs.m_widgets.empty() && rhs.m_widgets.empty());
 }

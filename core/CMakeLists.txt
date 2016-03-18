@@ -7,6 +7,8 @@ set ( SOURCES
 
     AbstractVisualizedData.h
     AbstractVisualizedData.cpp
+    ApplicationSettings.h
+    ApplicationSettings.cpp
     DataSetHandler.h
     DataSetHandler.cpp
     t_QVTKWidget.h

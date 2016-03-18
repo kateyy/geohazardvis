@@ -4,6 +4,8 @@
 #include <Windows.h>
 #endif
 
+#include "config.h"
+
 
 void initializeLibraryPath();
 
@@ -11,6 +13,8 @@ void initializeLibraryPath();
 int main(int argc, char** argv)
 {
     initializeLibraryPath();
+
+    QCoreApplication::setApplicationName(metaProjectName());
 
     Application app(argc, argv);
 

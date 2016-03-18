@@ -3,13 +3,13 @@
 #include <functional>
 
 #include <QList>
-#include <QString>
 
 #include <gui/gui_api.h>
 
 
 class QDockWidget;
 class QSettings;
+class QString;
 class DataSetHandler;
 class DataMapping;
 class MainWindow;
@@ -19,14 +19,17 @@ class GUI_API GuiPluginInterface
 {
 public:
     explicit GuiPluginInterface(
-        MainWindow & mainWindow, 
-        const QString & settingsFilePath,
+        MainWindow & mainWindow,
         DataMapping & dataMapping);
     virtual ~GuiPluginInterface();
 
     /** Adds a dock widget to the applications main window and a associated main menu entry to show the widget. */
     void addWidget(QDockWidget * widget);
     void removeWidget(QDockWidget * widget);
+
+    /** Read/Write access to plugin settings stored with user defined application settings.
+      * Such settings should always be accessed via these function, to ensure some consistency.
+    */
 
     void readSettings(const std::function<void(const QSettings & settings)> & func);
     void readSettings(const QString & group, const std::function<void(const QSettings & settings)> & func);
@@ -46,7 +49,6 @@ private:
 
 private:
     MainWindow * m_mainWindow;
-    QString m_settingsFilePath;
     DataMapping * m_dataMapping;
     QList<QDockWidget *> m_widgets;
 };

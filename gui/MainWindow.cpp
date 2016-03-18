@@ -14,11 +14,11 @@
 #include <QGridLayout>
 #include <QMessageBox>
 #include <QMimeData>
-#include <QSettings>
 #include <QtConcurrent/QtConcurrentRun>
 
 #include <widgetzeug/dark_fusion_style.hpp>
 
+#include <core/ApplicationSettings.h>
 #include <core/DataSetHandler.h>
 #include <core/TextureManager.h>
 #include <core/VersionInfo.h>
@@ -43,11 +43,8 @@
 #include <gui/widgets/RenderConfigWidget.h>
 #include <gui/widgets/RendererConfigWidget.h>
 
-namespace
-{
-    const char s_defaultAppTitle[] = "GeohazardVis";
-    const char s_settingsFileName[] = "GeohazardVis_settings.ini";
-}
+#include "config.h"
+
 
 MainWindow::MainWindow()
     : QMainWindow()
@@ -91,7 +88,7 @@ MainWindow::MainWindow()
         prependRecentFiles({});
     });
     connect(m_ui->actionAbout, &QAction::triggered, [this] () {
-        QMessageBox::about(this, s_defaultAppTitle, 
+        QMessageBox::about(this, metaProjectName(), 
             QString("Source GIT commit revision:\n\t%1\nRevision date:\n\t%2")
             .arg(VersionInfo::gitRevision())
             .arg(VersionInfo::gitCommitDate().toString()));
@@ -163,7 +160,7 @@ MainWindow::MainWindow()
 
     m_pluginManager = std::make_unique<GuiPluginManager>();
     m_pluginManager->searchPaths() = QStringList(QCoreApplication::applicationDirPath() + "/plugins/");
-    m_pluginManager->scan(GuiPluginInterface(*this, s_settingsFileName, *m_dataMapping));
+    m_pluginManager->scan(GuiPluginInterface(*this, *m_dataMapping));
 
     restoreUiState();
 }
@@ -471,7 +468,7 @@ void MainWindow::updateWindowTitle()
 {
     QMutexLocker lock(m_loadWatchersMutex.get());
 
-    QString title = s_defaultAppTitle;
+    QString title = metaProjectName();
 
     if (!m_loadWatchers.empty())
     {
@@ -541,19 +538,17 @@ void MainWindow::handleAsyncLoadFinished()
 
 void MainWindow::restoreStyle()
 {
-    QSettings settings(s_settingsFileName, QSettings::IniFormat);
-    setDarkFusionStyle(settings.value("darkFusionStyle").toBool());
+    setDarkFusionStyle(ApplicationSettings().value("darkFusionStyle").toBool());
 }
 
 void MainWindow::storeStyle()
 {
-    QSettings settings(s_settingsFileName, QSettings::IniFormat);
-    settings.setValue("darkFusionStyle", darkFusionStyleEnabled());
+    ApplicationSettings().setValue("darkFusionStyle", darkFusionStyleEnabled());
 }
 
 void MainWindow::restoreSettings()
 {
-    QSettings settings(s_settingsFileName, QSettings::IniFormat);
+    ApplicationSettings settings;
     m_lastOpenFolder = settings.value("lastOpenFolder").toString();
     m_lastExportFolder = settings.value("lastExportFolder").toString();
     m_recentFileListMaxEntries = std::max(0, settings.value("recentFileListMaxEntries", 15).toInt());
@@ -562,7 +557,7 @@ void MainWindow::restoreSettings()
 
 void MainWindow::storeSettings()
 {
-    QSettings settings(s_settingsFileName, QSettings::IniFormat);
+    ApplicationSettings settings;
     settings.setValue("lastOpenFolder", m_lastOpenFolder);
     settings.setValue("lastExportFolder", m_lastExportFolder);
     settings.setValue("recentFileListMaxEntries", m_recentFileListMaxEntries);
@@ -571,20 +566,20 @@ void MainWindow::storeSettings()
 
 void MainWindow::restoreUiState()
 {
-    if (!QFile::exists(s_settingsFileName))
+    if (!ApplicationSettings::settingsExist())
     {
         this->setWindowState(Qt::WindowState::WindowMaximized);
         return;
     }
 
-    QSettings settings(s_settingsFileName, QSettings::IniFormat);
+    ApplicationSettings settings;
     restoreGeometry(settings.value("geometry").toByteArray());
     restoreState(settings.value("windowState").toByteArray());
 }
 
 void MainWindow::storeUiState()
 {
-    QSettings settings(s_settingsFileName, QSettings::IniFormat);
+    ApplicationSettings settings;
     settings.setValue("geometry", saveGeometry());
     settings.setValue("windowState", saveState());
 }

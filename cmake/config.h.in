@@ -1,4 +1,12 @@
 #pragma once
 
+#include <QString>
+
+inline const QString & metaProjectName()
+{
+    static const QString name = "@META_PROJECT_NAME@";
+    return name;
+}
+
 #define VTK_RENDERING_BACKEND @VTK_RENDERING_BACKEND_VERSION@
 #define VTK_has_GLExport2PS @VTK_has_GLExport2PS@
