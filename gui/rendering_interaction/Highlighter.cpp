@@ -36,7 +36,7 @@ namespace
 class HighlighterImpl
 {
 public:
-    HighlighterImpl(Highlighter & highlighter)
+    explicit HighlighterImpl(Highlighter & highlighter)
         : m_highlighter(highlighter)
     {
     }
@@ -59,6 +59,8 @@ public:
         return *m_highlighter.renderer();
     }
 
+    void operator=(const HighlighterImpl &) = delete;
+
 protected:
     Highlighter & m_highlighter;
 
@@ -69,7 +71,10 @@ protected:
 class HighlighterPoint2DImpl : public HighlighterImpl
 {
 public:
-    using HighlighterImpl::HighlighterImpl;
+    HighlighterPoint2DImpl(Highlighter & highlighter)
+        : HighlighterImpl(highlighter)
+    {
+    }
 
     void setPosition(const double position[3])
     {
@@ -162,7 +167,10 @@ private:
 class HighlighterCellImpl : public HighlighterImpl
 {
 public:
-    using HighlighterImpl::HighlighterImpl;
+    HighlighterCellImpl(Highlighter & highlighter)
+        : HighlighterImpl(highlighter)
+    {
+    }
 
     void setCell(vtkCell & selection)
     {
