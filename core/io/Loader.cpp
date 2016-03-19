@@ -1,6 +1,7 @@
 #include "Loader.h"
 
 #include <algorithm>
+#include <cassert>
 
 #include <QFileInfo>
 #include <QDebug>
@@ -27,16 +28,15 @@
 #include <core/io/MatricesToVtk.h>
 
 
-using namespace std;
 using namespace io;
 
 namespace
 {
-const QMap<QString, QStringList> & vtkImageFormats()
+const std::map<QString, QStringList> & vtkImageFormats()
 {
-    static QMap<QString, QStringList> m;
-    if (m.isEmpty())
-    {
+    static const auto m = [] () {
+        std::map<QString, QStringList> m;
+
         auto readers = vtkSmartPointer<vtkImageReader2Collection>::New();
         vtkImageReader2Factory::GetRegisteredReaders(readers);
         for (readers->InitTraversal(); auto reader = readers->GetNextItem();)
@@ -44,72 +44,98 @@ const QMap<QString, QStringList> & vtkImageFormats()
             QString desc = QString::fromUtf8(reader->GetDescriptiveName());
             QStringList exts = QString::fromUtf8(reader->GetFileExtensions()).split(" ", QString::SkipEmptyParts);
             std::for_each(exts.begin(), exts.end(), [] (QString & ext) { ext.remove('.'); });
-            m.insert(desc, exts);
+            m.emplace(desc, exts);
         }
-    }
+
+        return m;
+    }();
+
     return m;
 }
 
 const QSet<QString> & vtkImageFileExts()
 {
-    static QSet<QString> exts;
-    if (exts.isEmpty())
-        for (const QStringList & f_exts : vtkImageFormats().values())
-            exts += f_exts.toSet();
+    static const auto exts = [] () {
+        QSet<QString> exts;
+        for (const auto & f_exts : vtkImageFormats())
+            exts += f_exts.second.toSet();
+        return exts;
+    }();
 
     return exts;
 }
 }
 
-
-void Loader::initialize()
+const QString & Loader::fileFormatFilters(Category category)
 {
-    fileFormatExtensions();
-    fileFormatExtensions();
-}
+    static const auto m = [] () {
+        std::map<Category, QString> m;
 
-const QString & Loader::fileFormatFilters()
-{
-    static QString f;
-    if (f.isEmpty())
-    {
-        f = "All Supported Files (";
-        QSet<QString> allExts;
-        for (auto && it : fileFormatExtensions())
-            for (auto && ext : it)
-                allExts << ext;
-
-        for (auto && ext : allExts)
-            f += "*." + ext + " ";
-
-        f += ")";
-
-        for (auto && it = fileFormatExtensions().begin(); it != fileFormatExtensions().end(); ++it)
+        const auto & maps = fileFormatExtensionMaps();
+        for (auto categoryMap = maps.begin(); categoryMap != maps.end(); ++categoryMap)
         {
-            f += ";;" + it.key() + " (";
-            for (auto && ext : it.value())
-                f += "*." + ext + " ";
-            f += ")";
-        }
-    }
+            QString filters;
+            if (categoryMap->second.size() > 1)
+            {
+                filters = "All Supported Files (";
+                QSet<QString> allExts;
+                for (const auto & it : categoryMap->second)
+                    for (const auto & ext : it.second)
+                        allExts << ext;
 
-    return f;
+                for (const auto & ext : allExts)
+                    filters += "*." + ext + " ";
+
+                filters += ")";
+            }
+
+            for (auto it = categoryMap->second.begin(); it != categoryMap->second.end(); ++it)
+            {
+                filters += ";;" + it->first + " (";
+                for (const auto & ext : it->second)
+                    filters += "*." + ext + " ";
+                filters += ")";
+            }
+
+            m.emplace(categoryMap->first, filters);
+        }
+
+        return m;
+    }();
+
+    return m.at(category);
 }
 
-const QMap<QString, QStringList> & Loader::fileFormatExtensions()
+const std::map<QString, QStringList> & Loader::fileFormatExtensions(Category category)
 {
-    static QMap<QString, QStringList> m;
-    if (m.isEmpty())
-    {
-        m = {
-            { "Text files", { "txt" } },
-            { "VTK XML Image Files", { "vti" } },
-            { "VTK XML PolyData Files", { "vtp" } },
-            { "Digital Elevation Model", { "dem" } }
+    return fileFormatExtensionMaps().at(category);
+}
+
+const std::map<Loader::Category, std::map<QString, QStringList>> & Loader::fileFormatExtensionMaps()
+{
+    static const auto m = [] () {
+        std::map<Category, std::map<QString, QStringList>> m = {
+            { Category::ASCII, { { "Text files", { "txt" } } } },
+            { Category::PolyData, { { "VTK XML PolyData Files", { "vtp" } } } },
+            { Category::Image2D, {
+                { "VTK XML Image Files", { "vti" } },
+                { "Digital Elevation Model", { "dem" } }
+            } },
+            { Category::Volume, { { "VTK XML Image Files", { "vti" } } } }
         };
-        for (auto it = vtkImageFormats().begin(); it != vtkImageFormats().end(); ++it)
-            m.insert(it.key(), it.value());
-    }
+
+        auto && _vtkImageFormats = vtkImageFormats();
+        m[Category::Image2D].insert(_vtkImageFormats.begin(), _vtkImageFormats.end());
+
+        auto & _all = m[Category::all];
+        for (const auto & perCategory : m)
+        {
+            _all.insert(perCategory.second.begin(), perCategory.second.end());
+        }
+
+        return m;
+    }();
+
     return m;
 }
 

@@ -72,7 +72,6 @@ MainWindow::MainWindow()
     connect(m_dataMapping.get(), &DataMapping::tableViewCreated, this, &MainWindow::addTableView);
 
     TextureManager::initialize();
-    Loader::initialize();
 
     connect(m_ui->actionOpen, &QAction::triggered, [this] () { openFiles(dialog_inputFileName()); });
     connect(m_ui->actionImport_ASCII_Triangle_Mesh, &QAction::triggered, [this] () {

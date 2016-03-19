@@ -1,11 +1,11 @@
 #pragma once
 
+#include <map>
 #include <memory>
 
 #include <core/core_api.h>
 
 
-template<typename K, typename V> class QMap;
 class QString;
 class QStringList;
 
@@ -15,15 +15,24 @@ class DataObject;
 class CORE_API Loader
 {
 public:
-    /** Setup some static data. An explicit initialization is required in a multi-threaded application
-        when using the VTK leak debuggers. */
-    static void initialize();
+    enum Category
+    {
+        all,
+        ASCII,
+        PolyData,
+        Image2D, 
+        Volume,
+    };
 
-    static const QString & fileFormatFilters();
-    static const QMap<QString, QStringList> & fileFormatExtensions();
+    /** Provide a list of file extension filters as expected by QFileDialog for all supported file types of the 
+      * specified category. If multiple file types are supported, an entry "All Supported Files" is added. */
+    static const QString & fileFormatFilters(Category category = Category::all);
+    static const std::map<QString, QStringList> & fileFormatExtensions(Category category = Category::all);
 
     static std::unique_ptr<DataObject> readFile(const QString & filename);
 
 private:
     static std::unique_ptr<DataObject> loadTextFile(const QString & fileName);
+
+    static const std::map<Category, std::map<QString, QStringList>> &fileFormatExtensionMaps();
 };
