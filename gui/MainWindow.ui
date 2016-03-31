@@ -44,7 +44,7 @@
      <addaction name="actionClear_Recent_Files"/>
     </widget>
     <addaction name="actionOpen"/>
-    <addaction name="actionImport_ASCII_Triangle_Mesh"/>
+    <addaction name="actionImport_CSV_Triangle_Mesh"/>
     <addaction name="actionExportDataset"/>
     <addaction name="menuRecent_Files"/>
     <addaction name="separator"/>
@@ -174,9 +174,9 @@
     <string>Open Export &amp;Folder</string>
    </property>
   </action>
-  <action name="actionImport_ASCII_Triangle_Mesh">
+  <action name="actionImport_CSV_Triangle_Mesh">
    <property name="text">
-    <string>Import &amp;ASCII Triangle Mesh...</string>
+    <string>Import &amp;CSV Triangle Mesh...</string>
    </property>
   </action>
   <action name="actionClear_Recent_Files">

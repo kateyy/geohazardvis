@@ -82,8 +82,6 @@ set ( SOURCES
     rendering_interaction/RenderWindowCursorCallback.h
     rendering_interaction/RenderWindowCursorCallback.cpp
 
-    widgets/AsciiImporterWidget.h
-    widgets/AsciiImporterWidget.cpp
     widgets/CanvasExporterWidget.h
     widgets/CanvasExporterWidget.cpp
     widgets/ColorMappingChooser.h
@@ -94,6 +92,8 @@ set ( SOURCES
     widgets/DataBrowser.cpp
     widgets/DataBrowserTableModel.h
     widgets/DataBrowserTableModel.cpp
+    widgets/DataImporterWidget.h
+    widgets/DataImporterWidget.cpp
     widgets/DEMWidget.h
     widgets/DEMWidget.cpp
     widgets/DockableWidget.h
@@ -118,10 +118,10 @@ set ( UIs
 
     data_view/TableView.ui
 
-    widgets/AsciiImporterWidget.ui
     widgets/CanvasExporterWidget.ui
     widgets/ColorMappingChooser.ui
     widgets/DataBrowser.ui
+    widgets/DataImporterWidget.ui
     widgets/DEMWidget.ui
     widgets/GlyphMappingChooser.ui
     widgets/RenderConfigWidget.ui

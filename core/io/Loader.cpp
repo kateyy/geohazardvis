@@ -115,7 +115,7 @@ const std::map<Loader::Category, std::map<QString, QStringList>> & Loader::fileF
 {
     static const auto m = [] () {
         std::map<Category, std::map<QString, QStringList>> m = {
-            { Category::ASCII, { { "Text files", { "txt" } } } },
+            { Category::CSV, { { "CSV Files", { "txt", "csv" } } } },
             { Category::PolyData, { { "VTK XML PolyData Files", { "vtp" } } } },
             { Category::Image2D, {
                 { "VTK XML Image Files", { "vti" } },

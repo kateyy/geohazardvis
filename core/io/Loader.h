@@ -18,7 +18,7 @@ public:
     enum Category
     {
         all,
-        ASCII,
+        CSV,
         PolyData,
         Image2D, 
         Volume,

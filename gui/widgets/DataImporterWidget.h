@@ -1,29 +1,30 @@
 #pragma once
 
 #include <memory>
-#include <type_traits>
 
 #include <QDialog>
 
-#include <gui/gui_api.h>
 #include <core/io/types.h>
+#include <gui/gui_api.h>
 
 
 class DataObject;
 class PolyDataObject;
-class Ui_AsciiImporterWidget;
+class Ui_DataImporterWidget;
 
 
-class GUI_API AsciiImporterWidget : public QDialog
+class GUI_API DataImporterWidget : public QDialog
 {
 public:
-    explicit AsciiImporterWidget(QWidget * parent = nullptr, Qt::WindowFlags f = 0);
-    ~AsciiImporterWidget() override;
+    /** @param showNonCsvTypesTabs Set whether to show an additional tab for importing additional data types (single polygonal files).
+        This option allows to use the widget as generalized importer widget for arbitrary file types. */
+    explicit DataImporterWidget(QWidget * parent = nullptr, bool showNonCsvTypesTabs = false, Qt::WindowFlags f = {});
+    ~DataImporterWidget() override;
 
     /** Release ownership and return the loaded poly data object.
     * @return A valid object, only if the dialog was executed and its result is QDialog::Accepted */
     std::unique_ptr<PolyDataObject> releaseLoadedPolyData();
-    /** Convenience method to access the loaded poly data as its base class pointer. 
+    /** Convenience method to access the loaded poly data as its base class pointer.
     * @see releaseLoadedPolyData */
     std::unique_ptr<DataObject> releaseLoadedData();
 
@@ -35,21 +36,23 @@ public:
     template<typename T> void setImportDataType();
     int importDataType() const;
 
+protected:
+    void closeEvent(QCloseEvent * event) override;
+
 private:
     void openPointCoords();
     void openTriangleIndices();
+    void openPolyDataFile();
     void updateSummary();
     bool importToPolyData();
 
     void clearData();
 
-    QString getOpenFileDialog(const QString & title);
-
-protected:
-    void closeEvent(QCloseEvent * event) override;
+    QString getOpenFileDialog(const QString & title, bool requestPolyData);
 
 private:
-    std::unique_ptr<Ui_AsciiImporterWidget> m_ui;
+    std::unique_ptr<Ui_DataImporterWidget> m_ui;
+
     QString m_lastOpenFolder;
 
     int m_importDataType;
@@ -58,13 +61,12 @@ private:
     std::unique_ptr<PolyDataObject> m_polyData;
 };
 
-
-template<typename T>
-void AsciiImporterWidget::setImportDataType()
+template<> inline void DataImporterWidget::setImportDataType<float>()
 {
-    if (std::is_same<T, float>())
-        return setImportDataType(VTK_FLOAT);
+    setImportDataType(VTK_FLOAT);
+}
 
-    if (std::is_same<T, double>())
-        return setImportDataType(VTK_DOUBLE);
+template<> inline void DataImporterWidget::setImportDataType<double>()
+{
+    setImportDataType(VTK_DOUBLE);
 }
