@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cassert>
+#include <set>
 
 #include <QFileInfo>
 #include <QDebug>
@@ -34,7 +35,7 @@ namespace
 {
 const std::map<QString, QStringList> & vtkImageFormats()
 {
-    static const auto m = [] () {
+    static const auto _vtkImageFormats = [] () {
         std::map<QString, QStringList> m;
 
         auto readers = vtkSmartPointer<vtkImageReader2Collection>::New();
@@ -50,25 +51,25 @@ const std::map<QString, QStringList> & vtkImageFormats()
         return m;
     }();
 
-    return m;
+    return _vtkImageFormats;
 }
 
 const QSet<QString> & vtkImageFileExts()
 {
-    static const auto exts = [] () {
+    static const auto _vtkImageFileExts = [] () {
         QSet<QString> exts;
         for (const auto & f_exts : vtkImageFormats())
             exts += f_exts.second.toSet();
         return exts;
     }();
 
-    return exts;
+    return _vtkImageFileExts;
 }
 }
 
 const QString & Loader::fileFormatFilters(Category category)
 {
-    static const auto m = [] () {
+    static const auto _fileFormatFilters = [] () {
         std::map<Category, QString> m;
 
         const auto & maps = fileFormatExtensionMaps();
@@ -78,24 +79,29 @@ const QString & Loader::fileFormatFilters(Category category)
             if (categoryMap->second.size() > 1)
             {
                 filters = "All Supported Files (";
-                QSet<QString> allExts;
+                // remove duplicates, sort alphabetically
+                std::set<QString> allExts;
                 for (const auto & it : categoryMap->second)
                     for (const auto & ext : it.second)
-                        allExts << ext;
+                        allExts.insert(ext);
 
                 for (const auto & ext : allExts)
                     filters += "*." + ext + " ";
 
-                filters += ")";
+                filters.truncate(filters.length() - 1);
+                filters += ");;";
             }
 
             for (auto it = categoryMap->second.begin(); it != categoryMap->second.end(); ++it)
             {
-                filters += ";;" + it->first + " (";
+                filters += it->first + " (";
                 for (const auto & ext : it->second)
                     filters += "*." + ext + " ";
-                filters += ")";
+                filters.truncate(filters.length() - 1);
+                filters += ");;";
             }
+
+            filters.truncate(filters.length() - 2);
 
             m.emplace(categoryMap->first, filters);
         }
@@ -103,7 +109,7 @@ const QString & Loader::fileFormatFilters(Category category)
         return m;
     }();
 
-    return m.at(category);
+    return _fileFormatFilters.at(category);
 }
 
 const std::map<QString, QStringList> & Loader::fileFormatExtensions(Category category)
@@ -113,7 +119,7 @@ const std::map<QString, QStringList> & Loader::fileFormatExtensions(Category cat
 
 const std::map<Loader::Category, std::map<QString, QStringList>> & Loader::fileFormatExtensionMaps()
 {
-    static const auto m = [] () {
+    static const auto _fileFormatExtensionMaps = [] () {
         std::map<Category, std::map<QString, QStringList>> m = {
             { Category::CSV, { { "CSV Files", { "txt", "csv" } } } },
             { Category::PolyData, { { "VTK XML PolyData Files", { "vtp" } } } },
@@ -136,7 +142,7 @@ const std::map<Loader::Category, std::map<QString, QStringList>> & Loader::fileF
         return m;
     }();
 
-    return m;
+    return _fileFormatExtensionMaps;
 }
 
 std::unique_ptr<DataObject> Loader::readFile(const QString & filename)

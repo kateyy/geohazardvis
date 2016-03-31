@@ -17,7 +17,7 @@ const QString & settingsFileName()
 
 
 ApplicationSettings::ApplicationSettings(QObject * parent)
-    : QSettings(settingsFileName(), QSettings::IniFormat)
+    : QSettings(settingsFileName(), QSettings::IniFormat, parent)
 {
 }
 
