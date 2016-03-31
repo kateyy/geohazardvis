@@ -17,8 +17,8 @@
 
 AsciiImporterWidget::AsciiImporterWidget(QWidget * parent, Qt::WindowFlags f)
     : QDialog(parent, f)
-    , m_ui(std::make_unique<Ui_AsciiImporterWidget>())
-    , m_importDataType(VTK_FLOAT)
+    , m_ui{ std::make_unique<Ui_AsciiImporterWidget>() }
+    , m_importDataType{ VTK_FLOAT }
 {
     m_ui->setupUi(this);
     connect(m_ui->coordsFileOpen, &QAbstractButton::clicked, this, &AsciiImporterWidget::openPointCoords);
@@ -195,5 +195,5 @@ void AsciiImporterWidget::closeEvent(QCloseEvent * event)
 {
     clearData();
 
-    QWidget::closeEvent(event);
+    QDialog::closeEvent(event);
 }
