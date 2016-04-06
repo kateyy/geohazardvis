@@ -22,6 +22,7 @@
 #include <core/data_objects/ImageDataObject.h>
 #include <core/data_objects/PolyDataObject.h>
 #include <core/rendered_data/RenderedPolyData.h>
+#include <core/utility/DataSetFilter.h>
 #include <core/utility/vtkvectorhelper.h>
 #include <gui/DataMapping.h>
 #include <gui/data_view/AbstractRenderView.h>
@@ -32,26 +33,96 @@ DEMWidget::DEMWidget(DataMapping & dataMapping, AbstractRenderView * previewRend
     : DockableWidget(parent, f)
     , m_dataMapping{ dataMapping }
     , m_ui{ std::make_unique<Ui_DEMWidget>() }
+    , m_topographyMeshes{ std::make_unique<DataSetFilter>(dataMapping.dataSetHandler()) }
+    , m_dems{ std::make_unique<DataSetFilter>(dataMapping.dataSetHandler()) }
     , m_dataPreview{ nullptr }
     , m_demUnitDecimalExponent{ 0.0 }
     , m_topoRadius{ 1.0 }
     , m_topoShiftXY{ 0.0 }
     , m_previewRenderer{ previewRenderer }
     , m_topoRebuildRequired{ true }
-    , m_lastDemSelection{ nullptr }
-    , m_lastTopoTemplateSelection{ nullptr }
+    , m_lastPreviewedDEM{ nullptr }
+    , m_demSelection{ nullptr }
+    , m_topoTemplateSelection{ nullptr }
     , m_lastTopoTemplateRadius{ std::nan(nullptr) }
 {
     m_ui->setupUi(this);
 
-    updateAvailableDataSets();
-
     setupPipeline();
+
+    connect(m_topographyMeshes.get(), &DataSetFilter::listChanged, [this] (const QList<DataObject *> & filteredList)
+    {
+        auto & comboBox = *m_ui->topoTemplateCombo;
+
+        QSignalBlocker signalBlocker(comboBox);
+
+        comboBox.clear();
+        comboBox.addItem("");
+        for (auto p : filteredList)
+            comboBox.addItem(p->name());
+
+        int restoredSelectionIndex = filteredList.indexOf(m_topoTemplateSelection) + 1;
+        if (restoredSelectionIndex > 0)
+        {
+            comboBox.setCurrentIndex(restoredSelectionIndex);
+            return;
+        }
+
+        comboBox.setCurrentIndex(0);
+        updatePreview();
+    });
+
+    connect(m_dems.get(), &DataSetFilter::listChanged, [this] (const QList<DataObject *> & filteredList)
+    {
+        auto & comboBox = *m_ui->demCombo;
+
+        QSignalBlocker signalBlocker(comboBox);
+
+        comboBox.clear();
+        comboBox.addItem("");
+        for (auto d : filteredList)
+            comboBox.addItem(d->name());
+
+        int restoredSelectionIndex = filteredList.indexOf(m_demSelection) + 1;
+        if (restoredSelectionIndex > 0)
+        {
+            comboBox.setCurrentIndex(restoredSelectionIndex);
+            return;
+        }
+
+        comboBox.setCurrentIndex(0);
+        updatePreview();
+    });
+
+    m_topographyMeshes->setFilterFunction([] (DataObject * dataSet, const DataSetHandler &) -> bool
+    {
+        if (auto poly = dynamic_cast<PolyDataObject *>(dataSet))
+        {
+            return poly->is2p5D();
+        }
+
+        return false;
+    });
+
+    m_dems->setFilterFunction([] (DataObject * dataSet, const DataSetHandler &) -> bool
+    {
+        if (auto image = dynamic_cast<ImageDataObject *>(dataSet))
+        {
+            if (image->dataSet()->GetPointData()->GetScalars())
+            {
+                return true;
+            }
+            qDebug() << "DEMWidget: no scalars found in image" << image->name();
+        }
+
+        return false;
+    });
 
     resetParametersForCurrentInputs();
 
-    connect(m_ui->topoTemplateCombo, &QComboBox::currentTextChanged, this, &DEMWidget::rebuildTopoPreviewData);
-    connect(m_ui->demCombo, &QComboBox::currentTextChanged, this, &DEMWidget::rebuildTopoPreviewData);
+    const auto indexChangedSignal = static_cast<void(QComboBox::*)(int)>(&QComboBox::currentIndexChanged);
+    connect(m_ui->topoTemplateCombo, indexChangedSignal, this, &DEMWidget::updatePreview);
+    connect(m_ui->demCombo, indexChangedSignal, this, &DEMWidget::updatePreview);
 
     auto applyDEMUnitScale = [this] () -> bool {
         const double newValue = m_ui->demUnitScaleSpinBox->value();
@@ -98,8 +169,6 @@ DEMWidget::DEMWidget(DataMapping & dataMapping, AbstractRenderView * previewRend
     connect(m_ui->showPreviewButton, &QAbstractButton::clicked, this, &DEMWidget::showPreview);
     connect(m_ui->saveButton, &QAbstractButton::clicked, this, &DEMWidget::saveAndClose);
     connect(m_ui->cancelButton, &QAbstractButton::clicked, this, &DEMWidget::close);
-
-    connect(&dataMapping.dataSetHandler(), &DataSetHandler::dataObjectsChanged, this, &DEMWidget::updateAvailableDataSets);
 }
 
 DEMWidget::~DEMWidget()
@@ -126,6 +195,7 @@ DEMWidget::~DEMWidget()
     {
         // it only shows our data, so close it
         m_previewRenderer->close();
+        QCoreApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
     }
     else
     {
@@ -143,46 +213,22 @@ DEMWidget::~DEMWidget()
 
 void DEMWidget::showPreview()
 {
-    rebuildTopoPreviewData();
+    forceUpdatePreview();
 
-    auto dem = currentDEM();
-    auto topo = m_dataPreview.get();
-
-    if (!dem || !topo)
+    if (m_dataPreview && m_previewRenderer)
     {
-        return;
+        resetParametersForCurrentInputs();
+        configureVisualizations();
+        m_previewRenderer->implementation().resetCamera(true, 0);
+
+        updateView();
     }
-    // this is required when the user changed parameters before showing the preview
-    updatePipeline();
-
-
-    const auto previewData = QList<DataObject *>{ dem, topo };
-
-    if (!m_previewRenderer)
-    {
-        m_previewRenderer = m_dataMapping.openInRenderView(previewData);
-    }
-    else
-    {
-        QList<DataObject *> incompatible;
-        m_previewRenderer->showDataObjects(previewData, incompatible);
-        assert(incompatible.isEmpty());
-    }
-
-    if (!m_previewRenderer)
-    {
-        return;
-    }
-
-    m_previewRenderer->implementation().resetCamera(true, 0);
-
-    configureVisualizations();
-
-    m_previewRenderer->render();
 }
 
 bool DEMWidget::save()
 {
+    updateData();
+
     if (!m_dataPreview)
     {
         QMessageBox::information(this, "", "Select a surface mesh and a DEM to apply before!");
@@ -197,7 +243,12 @@ bool DEMWidget::save()
     surface->SetPoints(points);
     surface->SetPolys(polys);
 
-    auto newData = std::make_unique<PolyDataObject>(m_ui->newTopoModelName->text(), *surface);
+    auto newDataName = m_ui->newTopoModelName->text();
+    if (newDataName.isEmpty())
+    {
+        newDataName = m_ui->newTopoModelName->placeholderText();
+    }
+    auto newData = std::make_unique<PolyDataObject>(newDataName, *surface);
     m_dataMapping.dataSetHandler().takeData(std::move(newData));
 
     return true;
@@ -205,8 +256,8 @@ bool DEMWidget::save()
 
 void DEMWidget::saveAndClose()
 {
-    disconnect(&m_dataMapping.dataSetHandler(), &DataSetHandler::dataObjectsChanged,
-        this, &DEMWidget::updateAvailableDataSets);
+    auto topoLock = m_topographyMeshes->scopedLock();
+    auto demLock = m_dems->scopedLock();
 
     if (save())
     {
@@ -214,10 +265,8 @@ void DEMWidget::saveAndClose()
         return;
     }
 
-    updateAvailableDataSets();
-
-    connect(&m_dataMapping.dataSetHandler(), &DataSetHandler::dataObjectsChanged,
-        this, &DEMWidget::updateAvailableDataSets);
+    topoLock.release();
+    demLock.release();
 }
 
 void DEMWidget::resetParametersForCurrentInputs()
@@ -229,17 +278,11 @@ void DEMWidget::resetParametersForCurrentInputs()
         return;
     }
 
-    m_ui->newTopoModelName->setText(topo->name() + (dem ? " (" + dem->name() + ")" : ""));
-
-
     const auto signalBlockers = {
         QSignalBlocker(m_ui->topographyRadiusSpinBox),
         QSignalBlocker(m_ui->topographyCenterXSpinBox),
         QSignalBlocker(m_ui->topographyCenterYSpinBox)
     };
-
-    m_topoRadius = std::nan(nullptr);
-    m_topoShiftXY = vtkVector2d{ std::nan(nullptr) };
 
     centerTopoMesh();
     matchTopoMeshRadius();
@@ -279,85 +322,6 @@ void DEMWidget::setupPipeline()
     cleanupOutputMeshAttributes->SetInputConnection(warpElevation->GetOutputPort());
 
     m_pipelineEnd = cleanupOutputMeshAttributes;
-}
-
-void DEMWidget::rebuildTopoPreviewData()
-{
-    auto topoPtr = currentTopoTemplate();
-    auto demPtr = currentDEM();
-
-    if (!m_topoRebuildRequired)
-    {
-        return;
-    }
-
-    if (!demPtr || !topoPtr)
-    {
-        return;
-    }
-
-    resetParametersForCurrentInputs();
-
-    auto & dem = *demPtr;
-    auto & topo = *topoPtr;
-
-    m_topoRebuildRequired = false;
-
-    if (m_dataPreview && m_previewRenderer)
-    {
-        m_previewRenderer->prepareDeleteData({ m_dataPreview.get() });
-        QCoreApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
-    }
-
-    bool needToResetCamera = true;
-
-    m_demPipelineStart->SetInputDataObject(dem.dataSet());
-    assert(&dem.scalars());
-
-    const auto newDEMBounds = DataBounds(dem.bounds());
-    needToResetCamera = newDEMBounds != m_previousDEMBounds;
-    m_previousDEMBounds = newDEMBounds;
-    
-    m_meshPipelineStart->SetInputDataObject(topo.dataSet());
-
-    // setup default parameters
-    centerTopoMesh();
-    matchTopoMeshRadius();
-
-    updatePipeline();
-
-    auto newDataSet = vtkPolyData::SafeDownCast(m_pipelineEnd->GetOutputDataObject(0));
-
-    if (!newDataSet)
-    {
-        qDebug() << "DEMWidget: mesh transformation did not succeed";
-        return;
-    }
-
-    m_dataPreview = std::make_unique<PolyDataObject>("Topography Preview", *newDataSet);
-
-    if (!m_previewRenderer)
-    {
-        return;
-    }
-
-    QList<DataObject *> incompatible;
-    m_previewRenderer->showDataObjects({ m_dataPreview.get() }, incompatible);
-    assert(incompatible.isEmpty());
-
-    if (!m_previewRenderer) // showDataObjects() might process render view close events
-    {
-        return;
-    }
-
-    if (needToResetCamera)
-    {
-        m_previewRenderer->implementation().resetCamera(true, 0);
-    }
-
-    configureVisualizations();
-
-    m_previewRenderer->render();
 }
 
 void DEMWidget::configureVisualizations()
@@ -404,31 +368,52 @@ void DEMWidget::configureVisualizations()
     }
 }
 
+void DEMWidget::releasePreviewData()
+{
+    if (!m_dataPreview)
+    {
+        return;
+    }
+
+    if (m_previewRenderer)
+    {
+        m_previewRenderer->prepareDeleteData({ m_dataPreview.get() });
+        QCoreApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
+    }
+
+    m_dataPreview.reset();
+}
+
 ImageDataObject * DEMWidget::currentDEM()
 {
-    auto current = m_dems.value(m_ui->demCombo->currentIndex(), nullptr);
+    const int listIndex = m_ui->demCombo->currentIndex() - 1;
+    auto current = m_dems->filteredDataSetList().value(listIndex, nullptr);
+    assert(!current || dynamic_cast<ImageDataObject *>(current));
 
-    if (current != m_lastDemSelection)
+    if (current != m_demSelection)
     {
-        m_lastDemSelection = current;
+        m_lastPreviewedDEM = m_demSelection;
+        m_demSelection = static_cast<ImageDataObject *>(current);
         m_topoRebuildRequired = true;
     }
 
-    return m_lastDemSelection;
+    return m_demSelection;
 }
 
 PolyDataObject * DEMWidget::currentTopoTemplate()
 {
-    auto current = m_topographyMeshes.value(m_ui->topoTemplateCombo->currentIndex(), nullptr);
+    const int listIndex = m_ui->topoTemplateCombo->currentIndex() - 1;
+    auto current = m_topographyMeshes->filteredDataSetList().value(listIndex, nullptr);
+    assert(!current || dynamic_cast<PolyDataObject *>(current));
     
-    if (current != m_lastTopoTemplateSelection)
+    if (current != m_topoTemplateSelection)
     {
-        m_lastTopoTemplateSelection = current;
+        m_topoTemplateSelection = static_cast<PolyDataObject *>(current);
         m_lastTopoTemplateRadius = std::nan(nullptr);
         m_topoRebuildRequired = true;
     }
 
-    return m_lastTopoTemplateSelection;
+    return m_topoTemplateSelection;
 }
 
 double DEMWidget::currentTopoTemplateRadius()
@@ -462,61 +447,113 @@ double DEMWidget::currentTopoTemplateRadius()
     return m_lastTopoTemplateRadius;
 }
 
-void DEMWidget::updateAvailableDataSets()
+bool DEMWidget::updateData()
 {
-    auto signalBlockers = {
-        QSignalBlocker(m_ui->topoTemplateCombo),
-        QSignalBlocker(m_ui->demCombo)
-    };
-    m_topographyMeshes.clear();
-    m_dems.clear();
-    m_ui->topoTemplateCombo->clear();
-    m_ui->demCombo->clear();
+    auto topoPtr = currentTopoTemplate();
+    auto demPtr = currentDEM();
 
-    for (auto dataObject : m_dataMapping.dataSetHandler().dataSets())
+    if (!m_topoRebuildRequired)
     {
-        if (auto p = dynamic_cast<PolyDataObject *>(dataObject))
-        {
-            if (p->is2p5D())
-                m_topographyMeshes << p;
-        }
-        else if (auto i = dynamic_cast<ImageDataObject *>(dataObject))
-        {
-            if (i->dataSet()->GetPointData()->GetScalars() == nullptr)
-            {
-                qDebug() << "DEMWidget: no scalars found in image" << i->name();
-                continue;
-            }
-            m_dems << i;
-        }
+        return false;
+    }
+    
+    releasePreviewData();
+
+    if (!demPtr || !topoPtr)
+    {
+        return false;
     }
 
-    for (auto p : m_topographyMeshes)
-        m_ui->topoTemplateCombo->addItem(p->name());
+    auto & dem = *demPtr;
+    auto & topo = *topoPtr;
 
-    for (auto d : m_dems)
-        m_ui->demCombo->addItem(d->name());
+    m_topoRebuildRequired = false;
 
-    int lastDEMIndex = m_dems.indexOf(m_lastDemSelection);
-    if (lastDEMIndex >= 0)
+    m_demPipelineStart->SetInputDataObject(dem.dataSet());
+    assert(&dem.scalars());
+
+    m_meshPipelineStart->SetInputDataObject(topo.dataSet());
+
+    resetParametersForCurrentInputs();
+    m_pipelineEnd->Update();
+
+    auto newDataSet = vtkPolyData::SafeDownCast(m_pipelineEnd->GetOutputDataObject(0));
+
+    if (!newDataSet)
     {
-        m_ui->demCombo->setCurrentIndex(lastDEMIndex);
+        qDebug() << "DEMWidget: mesh transformation did not succeed";
+        return false;
+    }
+
+    m_dataPreview = std::make_unique<PolyDataObject>("Topography Preview", *newDataSet);
+
+    return true;
+}
+
+void DEMWidget::updatePreview()
+{
+    auto topo = currentTopoTemplate();
+    auto dem = currentDEM();
+    QString defaultTitle;
+    if (topo && !dem)
+    {
+        defaultTitle = topo->name();
+    }
+    else if (dem)
+    {
+        defaultTitle = dem->name() + (topo ? " (" + topo->name() + ")" : "");
+    }
+    m_ui->newTopoModelName->setPlaceholderText(defaultTitle);
+
+    if (m_previewRenderer)
+    {
+        forceUpdatePreview();
+    }
+}
+
+void DEMWidget::forceUpdatePreview()
+{
+    const bool dataWasRebuilt = updateData();
+
+    auto dem = currentDEM();
+    auto topo = m_dataPreview.get();
+
+    if (!dem || !topo)
+    {
+        return;
+    }
+
+    const auto previewData = QList<DataObject *>{ dem, topo };
+
+    if (!m_previewRenderer)
+    {
+        m_previewRenderer = m_dataMapping.openInRenderView(previewData);
     }
     else
     {
-        m_previousDEMBounds = {};
+        if (m_lastPreviewedDEM)
+        {
+            m_previewRenderer->hideDataObjects({ m_lastPreviewedDEM });
+        }
+
+        QList<DataObject *> incompatible;
+        m_previewRenderer->showDataObjects(previewData, incompatible);
+        assert(incompatible.isEmpty());
     }
 
-    int lastTopoIndex = m_topographyMeshes.indexOf(m_lastTopoTemplateSelection);
-    if (lastTopoIndex >= 0)
+    if (!m_previewRenderer) // showDataObjects() might process render view close events
     {
-        m_ui->topoTemplateCombo->setCurrentIndex(lastTopoIndex);
+        return;
     }
 
-    if (m_previewRenderer && (lastDEMIndex == -1 || lastTopoIndex == -1))
+    if (dataWasRebuilt)
     {
-        rebuildTopoPreviewData();
+        m_previewRenderer->implementation().resetCamera(true, 0);
+
+        configureVisualizations();
     }
+
+    m_previewRenderer->render();
 }
 
 void DEMWidget::updateMeshTransform()
@@ -634,15 +671,7 @@ void DEMWidget::updateTopoUIRanges()
 
     auto & dem = *demPtr;
 
-    const double newTopoRadius = m_ui->topographyRadiusSpinBox->value();
-
-    {
-        const vtkVector2d newTopoShift{ m_ui->topographyCenterXSpinBox->value(), m_ui->topographyCenterYSpinBox->value() };
-        if (newTopoRadius == m_topoRadius && newTopoShift == m_topoShiftXY)
-        {
-            return;
-        }
-    }
+    const double currentTopoRadius = m_ui->topographyRadiusSpinBox->value();
 
     const auto signalBlockers = {
         QSignalBlocker(m_ui->topographyRadiusSpinBox),
@@ -650,41 +679,33 @@ void DEMWidget::updateTopoUIRanges()
         QSignalBlocker(m_ui->topographyCenterYSpinBox)
     };
 
-
     const auto demBounds = DataBounds(dem.bounds()).convertTo<2>();
     const auto lowerLeft = demBounds.minRange();
     const auto upperRight = demBounds.maxRange();
 
-    if (newTopoRadius != m_topoRadius)
-    {
-        // clamp valid center to the DEM bounds reduced by newTopoRadius
-        const auto demCenter = demBounds.center();
-        const auto mins = min(lowerLeft + newTopoRadius, demCenter);
-        const auto maxs = max(upperRight - newTopoRadius, demCenter);
+    // clamp valid center to the DEM bounds reduced by currentTopoRadius
+    const auto demCenter = demBounds.center();
+    const auto centerMins = min(lowerLeft + currentTopoRadius, demCenter);
+    const auto centerMaxs = max(upperRight - currentTopoRadius, demCenter);
+    const auto steps = (centerMaxs - centerMins) * 0.01;
 
-        const auto steps = (maxs - mins) * 0.01;
-
-        m_ui->topographyCenterXSpinBox->setRange(mins[0], maxs[0]);
-        m_ui->topographyCenterXSpinBox->setSingleStep(steps[0]);
-        m_ui->topographyCenterYSpinBox->setRange(mins[1], maxs[1]);
-        m_ui->topographyCenterYSpinBox->setSingleStep(steps[1]);
-    }
+    m_ui->topographyCenterXSpinBox->setRange(centerMins[0], centerMaxs[0]);
+    m_ui->topographyCenterXSpinBox->setSingleStep(steps[0]);
+    m_ui->topographyCenterYSpinBox->setRange(centerMins[1], centerMaxs[1]);
+    m_ui->topographyCenterYSpinBox->setSingleStep(steps[1]);
 
     // might have change now
     const vtkVector2d newTopoShift2{ m_ui->topographyCenterXSpinBox->value(), m_ui->topographyCenterYSpinBox->value() };
 
-    if (newTopoShift2 != m_topoShiftXY)
-    {
-        // clamp from topography center to the nearest DEM border
-        const auto maxRadius = std::min(
-            minComponent(abs(newTopoShift2 - lowerLeft)),
-            minComponent(abs(newTopoShift2 - upperRight)));
+    // clamp from topography center to the nearest DEM border
+    const auto maxValidRadius = std::min(
+        minComponent(abs(newTopoShift2 - lowerLeft)),
+        minComponent(abs(newTopoShift2 - upperRight)));
 
-        const auto minValue = minComponent(vtkVector2d(dem.imageData()->GetSpacing()));
+    const auto minValidRadius = minComponent(vtkVector2d(dem.imageData()->GetSpacing()));
 
-        m_ui->topographyRadiusSpinBox->setRange(minValue, maxRadius);
-        m_ui->topographyRadiusSpinBox->setSingleStep((maxRadius - minValue) * 0.01);
-    }
+    m_ui->topographyRadiusSpinBox->setRange(minValidRadius, maxValidRadius);
+    m_ui->topographyRadiusSpinBox->setSingleStep((maxValidRadius - minValidRadius) * 0.01);
 
     // modifying valid value range might change the actual values
     updateForChangedTransformParameters();

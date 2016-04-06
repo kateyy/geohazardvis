@@ -17,6 +17,8 @@ class vtkTransform;
 
 class AbstractRenderView;
 class DataMapping;
+class DataObject;
+class DataSetFilter;
 class ImageDataObject;
 class PolyDataObject;
 class Ui_DEMWidget;
@@ -30,6 +32,7 @@ public:
     ~DEMWidget() override;
 
 public:
+    /** Show a preview for the currently configured topography and setup default visualization parameters */
     void showPreview();
     bool save();
     void saveAndClose();
@@ -39,16 +42,22 @@ public:
 private:
     void setupPipeline();
 
-    void rebuildTopoPreviewData();
-    void configureVisualizations();
-
     ImageDataObject * currentDEM();
     PolyDataObject * currentTopoTemplate();
     /** Lazy computation of the template radius. Assume a template centered at (0, 0, z), 
     * search for the point with the highest distance to the center. */
     double currentTopoTemplateRadius();
 
-    void updateAvailableDataSets();
+    /** Update the output topography according to input parameters and data.
+      * @return true if the function built a new preview data set */
+    bool updateData();
+    /** If currently a render view is opened call forceUpdatePreview */
+    void updatePreview();
+    /** Calls updateData, opens a new render view if required, and updates available visualizations */
+    void forceUpdatePreview();
+    void configureVisualizations();
+
+    void releasePreviewData();
 
     void updateMeshTransform();
     void updatePipeline();
@@ -64,10 +73,8 @@ private:
 
     std::unique_ptr<Ui_DEMWidget> m_ui;
 
-    QList<PolyDataObject *> m_topographyMeshes;
-    QList<ImageDataObject *> m_dems;
-
-    DataBounds m_previousDEMBounds;
+    std::unique_ptr<DataSetFilter> m_topographyMeshes;
+    std::unique_ptr<DataSetFilter> m_dems;
 
     vtkSmartPointer<vtkAlgorithm> m_demPipelineStart;
     vtkSmartPointer<vtkImageShiftScale> m_demUnitScale;
@@ -84,7 +91,8 @@ private:
     std::unique_ptr<PolyDataObject> m_dataPreview;
     bool m_topoRebuildRequired;
 
-    ImageDataObject * m_lastDemSelection;
-    PolyDataObject * m_lastTopoTemplateSelection;
+    DataObject * m_lastPreviewedDEM;
+    ImageDataObject * m_demSelection;
+    PolyDataObject * m_topoTemplateSelection;
     double m_lastTopoTemplateRadius;
 };
