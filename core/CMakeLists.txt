@@ -176,6 +176,8 @@ set ( SOURCES
     utility/DataExtent.h
     utility/DataExtent.hpp
     utility/DataExtent.cpp
+    utility/DataSetFilter.h
+    utility/DataSetFilter.cpp
     utility/InterpolationHelper.h
     utility/InterpolationHelper.cpp
     utility/qthelper.h
