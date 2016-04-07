@@ -14,6 +14,13 @@ int main(int argc, char** argv)
 {
     initializeLibraryPath();
 
+#if QT_VERSION >= QT_VERSION_CHECK(5, 1, 0)
+    QCoreApplication::setAttribute(Qt::AA_UseHighDpiPixmaps);
+#endif
+#if QT_VERSION >= QT_VERSION_CHECK(5, 6, 0)
+    QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
+#endif
+
     QCoreApplication::setApplicationName(metaProjectName());
 
     Application app(argc, argv);
