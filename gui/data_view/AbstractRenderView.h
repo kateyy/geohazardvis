@@ -92,6 +92,7 @@ protected:
     QWidget * contentWidget() override;
     t_QVTKWidget & qvtkWidget();
 
+    void showEvent(QShowEvent * event) override;
     bool eventFilter(QObject * watched, QEvent * event) override;
 
     void selectionChangedEvent(DataObject * dataObject, vtkIdTypeArray * selection, IndexType indexType) override;
@@ -109,6 +110,7 @@ protected:
 
 private:
     t_QVTKWidget * m_qvtkWidget;
+    bool m_onShowInitialized;
 
     bool m_axesEnabled;
 

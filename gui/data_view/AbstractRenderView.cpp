@@ -5,6 +5,8 @@
 #include <QDebug>
 #include <QLayout>
 #include <QMouseEvent>
+#include <QScreen>
+#include <QWindow>
 
 #include <vtkGenericOpenGLRenderWindow.h>
 
@@ -14,9 +16,10 @@
 
 AbstractRenderView::AbstractRenderView(DataMapping & dataMapping, int index, QWidget * parent, Qt::WindowFlags flags)
     : AbstractDataView(dataMapping, index, parent, flags)
-    , m_qvtkWidget(nullptr)
-    , m_axesEnabled(true)
-    , m_activeSubViewIndex(0u)
+    , m_qvtkWidget{ nullptr }
+    , m_onShowInitialized{ false }
+    , m_axesEnabled{ true }
+    , m_activeSubViewIndex{ 0u }
 {
     auto layout = new QBoxLayout(QBoxLayout::Direction::TopToBottom);
     layout->setMargin(0);
@@ -175,6 +178,39 @@ t_QVTKWidget & AbstractRenderView::qvtkWidget()
 {
     assert(m_qvtkWidget);
     return *m_qvtkWidget;
+}
+
+void AbstractRenderView::showEvent(QShowEvent * /*event*/)
+{
+    if (m_onShowInitialized)
+    {
+        return;
+    }
+
+    m_onShowInitialized = true;
+
+    auto updateRenWinDpi = [this] () -> void
+    {
+        auto renWin = renderWindow();
+        auto nativeParent = nativeParentWidget();
+        if (!renWin || !nativeParent)
+        {
+            return;
+        }
+
+        const auto dpi = static_cast<int>(nativeParent->windowHandle()->screen()->logicalDotsPerInch());
+        if (dpi != renWin->GetDPI())
+        {
+            renWin->SetDPI(dpi);
+        }
+    };
+
+    if (auto nativeParent = nativeParentWidget())
+    {
+        connect(nativeParent->windowHandle(), &QWindow::screenChanged, updateRenWinDpi);
+    }
+
+    updateRenWinDpi();
 }
 
 bool AbstractRenderView::eventFilter(QObject * watched, QEvent * event)
