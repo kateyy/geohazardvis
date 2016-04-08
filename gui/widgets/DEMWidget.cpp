@@ -29,7 +29,9 @@
 #include <gui/data_view/RendererImplementationBase3D.h>
 
 
-DEMWidget::DEMWidget(DataMapping & dataMapping, AbstractRenderView * previewRenderer, QWidget * parent, Qt::WindowFlags f)
+DEMWidget::DEMWidget(DataMapping & dataMapping, AbstractRenderView * previewRenderer, QWidget * parent, Qt::WindowFlags f,
+    t_filterFunction topoDataSetFilter,
+    t_filterFunction demDataSetFilter)
     : DockableWidget(parent, f)
     , m_dataMapping{ dataMapping }
     , m_ui{ std::make_unique<Ui_DEMWidget>() }
@@ -50,10 +52,9 @@ DEMWidget::DEMWidget(DataMapping & dataMapping, AbstractRenderView * previewRend
 
     setupPipeline();
 
-    connect(m_topographyMeshes.get(), &DataSetFilter::listChanged, [this] (const QList<DataObject *> & filteredList)
+    const auto updateComboBox = [this] (QComboBox * _comboBox, const QList<DataObject *> & filteredList)
     {
-        auto & comboBox = *m_ui->topoTemplateCombo;
-
+        auto & comboBox = *_comboBox;
         QSignalBlocker signalBlocker(comboBox);
 
         comboBox.clear();
@@ -70,53 +71,15 @@ DEMWidget::DEMWidget(DataMapping & dataMapping, AbstractRenderView * previewRend
 
         comboBox.setCurrentIndex(0);
         updatePreview();
-    });
+    };
 
-    connect(m_dems.get(), &DataSetFilter::listChanged, [this] (const QList<DataObject *> & filteredList)
-    {
-        auto & comboBox = *m_ui->demCombo;
+    connect(m_topographyMeshes.get(), &DataSetFilter::listChanged,
+        std::bind(updateComboBox, m_ui->topoTemplateCombo, std::placeholders::_1));
+    connect(m_dems.get(), &DataSetFilter::listChanged,
+        std::bind(updateComboBox, m_ui->demCombo, std::placeholders::_1));
 
-        QSignalBlocker signalBlocker(comboBox);
-
-        comboBox.clear();
-        comboBox.addItem("");
-        for (auto d : filteredList)
-            comboBox.addItem(d->name());
-
-        int restoredSelectionIndex = filteredList.indexOf(m_demSelection) + 1;
-        if (restoredSelectionIndex > 0)
-        {
-            comboBox.setCurrentIndex(restoredSelectionIndex);
-            return;
-        }
-
-        comboBox.setCurrentIndex(0);
-        updatePreview();
-    });
-
-    m_topographyMeshes->setFilterFunction([] (DataObject * dataSet, const DataSetHandler &) -> bool
-    {
-        if (auto poly = dynamic_cast<PolyDataObject *>(dataSet))
-        {
-            return poly->is2p5D();
-        }
-
-        return false;
-    });
-
-    m_dems->setFilterFunction([] (DataObject * dataSet, const DataSetHandler &) -> bool
-    {
-        if (auto image = dynamic_cast<ImageDataObject *>(dataSet))
-        {
-            if (image->dataSet()->GetPointData()->GetScalars())
-            {
-                return true;
-            }
-            qDebug() << "DEMWidget: no scalars found in image" << image->name();
-        }
-
-        return false;
-    });
+    m_topographyMeshes->setFilterFunction(topoDataSetFilter);
+    m_dems->setFilterFunction(demDataSetFilter);
 
     resetParametersForCurrentInputs();
 
@@ -169,6 +132,54 @@ DEMWidget::DEMWidget(DataMapping & dataMapping, AbstractRenderView * previewRend
     connect(m_ui->showPreviewButton, &QAbstractButton::clicked, this, &DEMWidget::showPreview);
     connect(m_ui->saveButton, &QAbstractButton::clicked, this, &DEMWidget::saveAndClose);
     connect(m_ui->cancelButton, &QAbstractButton::clicked, this, &DEMWidget::close);
+}
+
+DEMWidget::DEMWidget(DataMapping & dataMapping, AbstractRenderView * previewRenderer, QWidget * parent, Qt::WindowFlags f)
+    : DEMWidget(dataMapping, previewRenderer, parent, f,
+    t_filterFunction([] (DataObject * dataSet, const DataSetHandler &) -> bool
+    {
+        if (auto poly = dynamic_cast<PolyDataObject *>(dataSet))
+        {
+            return poly->is2p5D();
+        }
+
+        return false;
+    }),
+    t_filterFunction([] (DataObject * dataSet, const DataSetHandler &) -> bool
+    {
+        if (auto image = dynamic_cast<ImageDataObject *>(dataSet))
+        {
+            if (image->dataSet()->GetPointData()->GetScalars())
+            {
+                return true;
+            }
+            qDebug() << "DEMWidget: no scalars found in image" << image->name();
+        }
+
+        return false;
+    }))
+{
+}
+
+DEMWidget::DEMWidget(PolyDataObject & templateMesh, ImageDataObject & dem,
+    DataMapping & dataMapping, AbstractRenderView * previewRenderer,
+    QWidget * parent, Qt::WindowFlags f)
+    : DEMWidget(dataMapping, previewRenderer, parent, f,
+    t_filterFunction([&templateMesh] (DataObject * dataSet, const DataSetHandler &) -> bool
+    {
+        return dynamic_cast<PolyDataObject *>(dataSet) != nullptr
+            && dataSet->name() == templateMesh.name();
+    }),
+    t_filterFunction([&dem] (DataObject * dataSet, const DataSetHandler &) -> bool
+    {
+        return dynamic_cast<ImageDataObject *>(dataSet) != nullptr
+            && dataSet->name() == dem.name();
+    }))
+{
+    m_ui->topoTemplateCombo->setEnabled(false);
+    m_ui->topoTemplateCombo->setCurrentText(templateMesh.name());
+    m_ui->demCombo->setEnabled(false);
+    m_ui->demCombo->setCurrentText(dem.name());
 }
 
 DEMWidget::~DEMWidget()

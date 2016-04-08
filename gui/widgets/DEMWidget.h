@@ -1,5 +1,6 @@
 #pragma once
 
+#include <functional>
 #include <memory>
 
 #include <QList>
@@ -19,6 +20,7 @@ class AbstractRenderView;
 class DataMapping;
 class DataObject;
 class DataSetFilter;
+class DataSetHandler;
 class ImageDataObject;
 class PolyDataObject;
 class Ui_DEMWidget;
@@ -29,6 +31,10 @@ class GUI_API DEMWidget : public DockableWidget
 public:
     /** @param previewRenderer specify a render view that will be used to preview the new topography. If nullptr, a new view will be opened. */
     explicit DEMWidget(DataMapping & dataMapping, AbstractRenderView * previewRenderer = nullptr, QWidget * parent = nullptr, Qt::WindowFlags f = {});
+    /** Configure a topography with fixed input mesh and DEM. Related GUI elements will be disabled. */
+    explicit DEMWidget(PolyDataObject & templateMesh, ImageDataObject & dem,
+        DataMapping & dataMapping, AbstractRenderView * previewRenderer = nullptr,
+        QWidget * parent = nullptr, Qt::WindowFlags f = {});
     ~DEMWidget() override;
 
 public:
@@ -40,6 +46,12 @@ public:
     void resetParametersForCurrentInputs();
 
 private:
+    using t_filterFunction = std::function<bool(DataObject *, const DataSetHandler &)>;
+    explicit DEMWidget(DataMapping & dataMapping, AbstractRenderView * previewRenderer,
+        QWidget * parent, Qt::WindowFlags f,
+        t_filterFunction topoDataSetFilter,
+        t_filterFunction demDataSetFilter);
+
     void setupPipeline();
 
     ImageDataObject * currentDEM();
