@@ -39,9 +39,6 @@
 #include <core/color_mapping/ColorMapping.h>
 #include <core/utility/DataExtent.h>
 
-#include <threadingzeug/parallelfor.h>
-
-
 
 vtkSmartPointer<vtkDataArray> projectToLineOfSight(vtkDataArray & vectors, vtkVector3d lineOfSight)
 {
@@ -51,12 +48,11 @@ vtkSmartPointer<vtkDataArray> projectToLineOfSight(vtkDataArray & vectors, vtkVe
 
     lineOfSight.Normalize();
 
-    auto projection = [output, &vectors, &lineOfSight](int i) {
+    for (vtkIdType i = 0; i < output->GetNumberOfTuples(); ++i)
+    {
         double scalarProjection = vtkMath::Dot(vectors.GetTuple(i), lineOfSight.GetData());
         output->SetTuple(i, &scalarProjection);
     };
-
-    threadingzeug::sequential_for(0, output->GetNumberOfTuples(), projection);
 
     return output;
 }

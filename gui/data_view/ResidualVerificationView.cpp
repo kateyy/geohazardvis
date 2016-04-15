@@ -17,8 +17,6 @@
 #include <vtkRenderWindowInteractor.h>
 #include <vtkInteractorStyle.h>
 
-#include <threadingzeug/parallelfor.h>
-
 #include <core/AbstractVisualizedData.h>
 #include <core/DataSetHandler.h>
 #include <core/types.h>
@@ -48,12 +46,11 @@ vtkSmartPointer<vtkDataArray> projectToLineOfSight(vtkDataArray & vectors, vtkVe
 
     lineOfSight.Normalize();
 
-    auto projection = [output, &vectors, &lineOfSight](int i) {
+    for (vtkIdType i = 0; i < output->GetNumberOfTuples(); ++i)
+    {
         double scalarProjection = vtkMath::Dot(vectors.GetTuple(i), lineOfSight.GetData());
         output->SetTuple(i, &scalarProjection);
     };
-
-    threadingzeug::sequential_for(0, output->GetNumberOfTuples(), projection);
 
     return output;
 }
