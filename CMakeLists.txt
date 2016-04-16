@@ -307,6 +307,8 @@ include_directories(
 set(CONFIG_FILE ${CMAKE_CURRENT_BINARY_DIR}/config.h)
 configure_file(cmake/config.h.in ${CONFIG_FILE})
 
+set_property(DIRECTORY PROPERTY VS_STARTUP_PROJECT ${META_PROJECT_NAME})
+
 set(IDE_FOLDER "")
 add_subdirectory("core")
 add_subdirectory("gui")
