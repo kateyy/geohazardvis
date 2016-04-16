@@ -63,7 +63,11 @@ set(DEFAULT_COMPILE_DEFS
 
 # Setup platform specifics (compile flags, etc., ...)
 if(MSVC)
-    include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/PlatformWindowsMSVC.cmake)
+    if(${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang")
+        include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/PlatformWindowsMSVCClang.cmake)
+    else()
+        include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/PlatformWindowsMSVC.cmake)
+    endif()
 elseif(UNIX)
     include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/PlatformLinuxGCC.cmake)
 else()
@@ -244,6 +248,7 @@ else()
         INSTALL_COMMAND ""
         CMAKE_CACHE_ARGS
             -DOPTION_BUILD_TESTS:bool=OFF
+            -DOPTION_USE_OPENMP:bool=OFF
             -DQt5Core_DIR:path=${Qt5Core_DIR}
             -DQt5Gui_DIR:path=${Qt5Gui_DIR}
             -DQt5OpenGL_DIR:path=${Qt5OpenGL_DIR}
