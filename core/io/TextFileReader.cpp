@@ -249,7 +249,7 @@ bool TextFileReader::readHeader_triangles(ifstream & inputStream, vector<DataSet
         }
         assert(tupleSize);
         assert(numTuples);
-        inputDefs.push_back({ currentDataType, numTuples, tupleSize, attributeName });
+        inputDefs.push_back({ currentDataType, numTuples, tupleSize, attributeName, nullptr });
     }
 
     return false;
@@ -528,7 +528,7 @@ bool TextFileReader::readHeader_vectorGrid3D(ifstream & inputStream, vector<Data
 
         size_t rows = stoul(parameter);
         size_t columns = parameter2.empty() ? 6u : 3u + stoul(parameter2);
-        inputDefs.push_back({ currentDataType, rows, columns, ""});
+        inputDefs.push_back({ currentDataType, rows, columns, "", nullptr});
     }
 
     return false;

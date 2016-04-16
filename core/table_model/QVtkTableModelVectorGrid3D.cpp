@@ -84,7 +84,7 @@ QVariant QVtkTableModelVectorGrid3D::headerData(int section, Qt::Orientation ori
         }
         if (m_scalars->GetNumberOfComponents() == 3)
         {
-            return "vector " + ('x' + component);
+            return QString("vector ") + QChar('x' + component);
         }
         return "data " + QString::number(component + 1);
     }

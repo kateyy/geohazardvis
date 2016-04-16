@@ -32,8 +32,8 @@ vtkStandardNewMacro(LinearSelectorXY);
 LinearSelectorXY::LinearSelectorXY()
     : Superclass()
     , Sorting{ SortMode::SortPoints }
-    , ComputeDistanceToLine{ true }
     , OutputPositionOnLine{ true }
+    , ComputeDistanceToLine{ true }
 {
     this->SetNumberOfInputPorts(2);
     this->SetNumberOfOutputPorts(2);

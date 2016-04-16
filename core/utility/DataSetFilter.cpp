@@ -74,10 +74,8 @@ void DataSetFilter::lockAndUpdateList()
     updateList(std::unique_lock<std::recursive_mutex>(m_mutex));
 }
 
-void DataSetFilter::updateList(std::unique_lock<std::recursive_mutex> && lock)
+void DataSetFilter::updateList(std::unique_lock<std::recursive_mutex> && /*lock*/)
 {
-    lock;   // keep locked until out of scope
-
     if (m_deferUpdatesRequests > 0)
     {
         return;

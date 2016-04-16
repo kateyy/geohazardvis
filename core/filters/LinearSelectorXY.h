@@ -10,7 +10,7 @@ class vtkPolyData;
 
 
 /**
-From an input set of cells, extract respective centroids that are located within the rangeof a line segment.
+From an input set of cells, extract respective centroids that are located within the range of a line segment.
 
 This filter requires an input line segment specified by StartPoint and EndPoint.
 An input cell is considered in range, if:

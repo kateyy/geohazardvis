@@ -41,4 +41,6 @@ inline ScopedEventDeferral::ScopedEventDeferral(ScopedEventDeferral && other)
 inline ScopedEventDeferral & ScopedEventDeferral::operator=(ScopedEventDeferral && other)
 {
     std::swap(m_dataObject, other.m_dataObject);
+
+    return *this;
 }

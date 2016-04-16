@@ -45,7 +45,7 @@ public:
 
         void release();
 
-        explicit ScopedLock(ScopedLock && other);
+        ScopedLock(ScopedLock && other);
         ScopedLock(const ScopedLock &) = delete;
         void operator=(const ScopedLock &) = delete;
 
