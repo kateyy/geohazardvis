@@ -2,6 +2,7 @@
 
 #include <map>
 #include <memory>
+#include <type_traits>
 
 #include <core/core_api.h>
 
@@ -31,8 +32,15 @@ public:
 
     static std::unique_ptr<DataObject> readFile(const QString & filename);
 
+    template<typename T> 
+    static typename std::enable_if<std::is_base_of<DataObject, T>::value, std::unique_ptr<T>>::type
+    readFile(const QString & fileName);
+
 private:
     static std::unique_ptr<DataObject> loadTextFile(const QString & fileName);
 
     static const std::map<Category, std::map<QString, QStringList>> &fileFormatExtensionMaps();
 };
+
+
+#include "Loader.hpp"

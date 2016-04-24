@@ -71,6 +71,7 @@ set ( SOURCES
     io/FileParser.h
     io/FileParser.cpp
     io/Loader.h
+    io/Loader.hpp
     io/Loader.cpp
     io/MatricesToVtk.h
     io/MatricesToVtk.cpp
