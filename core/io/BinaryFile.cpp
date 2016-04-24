@@ -4,7 +4,7 @@
 
 
 BinaryFile::BinaryFile(const QString & fileName, OpenMode mode)
-    : m_file(std::make_unique<QFile>(fileName))
+    : m_file{ std::make_unique<QFile>(fileName) }
 {
     QIODevice::OpenMode qmode = QIODevice::Unbuffered;
     if (mode & OpenMode::Read)
@@ -17,6 +17,11 @@ BinaryFile::BinaryFile(const QString & fileName, OpenMode mode)
         qmode |= QIODevice::Truncate;
 
     m_file->open(qmode);
+}
+
+BinaryFile::BinaryFile(BinaryFile && other)
+    : m_file{ std::move(other.m_file) }
+{
 }
 
 BinaryFile::~BinaryFile() = default;

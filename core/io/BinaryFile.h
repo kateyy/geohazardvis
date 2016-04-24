@@ -23,6 +23,9 @@ public:
     };
 
     explicit BinaryFile(const QString & fileName, OpenMode mode);
+    BinaryFile(BinaryFile && other);
+    BinaryFile(const BinaryFile &) = delete;
+    void operator=(const BinaryFile &) = delete;
     ~BinaryFile();
 
     bool isReadable() const;
