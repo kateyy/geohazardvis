@@ -28,6 +28,13 @@ AbstractRenderView::AbstractRenderView(DataMapping & dataMapping, int index, QWi
     m_qvtkWidget = new t_QVTKWidget();
     m_qvtkWidget->setMinimumSize(300, 300);
 
+#if defined (Q_VTK_WIDGET2_H)
+    if (auto qvtkWidget2 = dynamic_cast<QVTKWidget2 *>(m_qvtkWidget))
+    {
+        qvtkWidget2->setFormat(QGLFormat(QGL::SampleBuffers));
+    }
+#endif
+
     layout->addWidget(m_qvtkWidget);
 
     setLayout(layout);

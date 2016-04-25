@@ -4,9 +4,12 @@
 
 
 Application::Application(int & argc, char ** argv)
-: QApplication(argc, argv)
-, m_mainWindow(nullptr)
+    : QApplication(argc, argv)
+    , m_mainWindow{ nullptr }
 {
+    auto f = font();
+    f.setStyleStrategy(QFont::PreferAntialias);
+    setFont(f);
 }
 
 Application::~Application() = default;
