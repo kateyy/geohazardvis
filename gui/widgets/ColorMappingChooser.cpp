@@ -155,43 +155,25 @@ void ColorMappingChooser::setSelectedData(DataObject * dataObject)
         addObserver(legend().GetLabelTextProperty(), &ColorMappingChooser::updateLegendLabelFont);
         addObserver(&legend(), &ColorMappingChooser::updateLegendConfig);
 
-        m_mappingConnections << connect(m_mapping, &ColorMapping::scalarsChanged, this, &ColorMappingChooser::rebuildGui);
+        m_mappingConnections << connect(m_mapping, &ColorMapping::scalarsChanged, [this] () {
+            rebuildGui();
+            emit renderSetupChanged();
+        });
         // in case the active mapping is changed via the C++ interface
         m_mappingConnections << connect(m_mapping, &ColorMapping::currentScalarsChanged, this, &ColorMappingChooser::mappingScalarsChanged);
     }
 
     rebuildGui();
+    emit renderSetupChanged();
 }
 
 void ColorMappingChooser::guiScalarsSelectionChanged()
 {
-    assert(m_mapping);
+    // The following call is only required if scalars where changed via the GUI.
+    // If current scalars / current state where changed directly via ColorMapping interface, it should return immediately.
+    m_mapping->setCurrentScalarsByName(m_ui->scalarsComboBox->currentText());
 
-    const auto && scalarsName = m_ui->scalarsComboBox->currentText();
-
-    discardValueRangeConnections();
-
-    m_mapping->setCurrentScalarsByName(scalarsName);
-
-    setupValueRangeConnections();
-
-    updateGuiValueRanges();
-
-    const bool gradients = m_mapping->currentScalarsUseMappingLegend();
-    m_ui->gradientGroupBox->setEnabled(gradients);
-    m_ui->legendGroupBox->setEnabled(gradients);
-    m_ui->legendGroupBox->setChecked(m_mapping->colorBarRepresentation().isVisible());
-    m_ui->legendTitleEdit->setPlaceholderText(scalarsName);
-
-    QSignalBlocker signalBlocker(m_ui->gradientComboBox);
-    m_ui->gradientComboBox->setCurrentIndex(
-        m_ui->gradientComboBox->findData(m_mapping->gradientName()));
-
-    if (!m_ui->legendTitleEdit->text().isEmpty())
-    {   // override default title setup if user set a title
-        m_mapping->colorBarRepresentation().actor().SetTitle(
-            m_ui->legendTitleEdit->text().toUtf8().data());
-    }
+    updateScalarsSelection();
 
     emit renderSetupChanged();
 }
@@ -427,7 +409,6 @@ void ColorMappingChooser::rebuildGui()
     updateTitle();
 
     m_ui->scalarsGroupBox->setEnabled(false);
-    m_ui->scalarsGroupBox->setChecked(false);
     m_ui->scalarsComboBox->clear();
     m_ui->gradientGroupBox->setEnabled(false);
     m_ui->nanColorButton->setStyleSheet("");
@@ -441,37 +422,56 @@ void ColorMappingChooser::rebuildGui()
     if (!scalarsNames.isEmpty())
     {
         m_ui->scalarsGroupBox->setEnabled(true);
-        m_ui->scalarsGroupBox->setChecked(m_mapping->isEnabled());
 
         std::sort(scalarsNames.begin(), scalarsNames.end(), doj::alphanum_less<QString>());
         m_ui->scalarsComboBox->addItems(scalarsNames);
-
         m_ui->scalarsComboBox->setCurrentText(m_mapping->currentScalarsName());
-        m_ui->gradientComboBox->setCurrentIndex(m_ui->gradientComboBox->findData(m_mapping->gradientName()));
-        m_ui->gradientGroupBox->setEnabled(m_mapping->currentScalarsUseMappingLegend());
-        m_ui->legendGroupBox->setEnabled(m_mapping->currentScalarsUseMappingLegend());
-        m_ui->legendGroupBox->setChecked(m_mapping->colorBarRepresentation().isVisible());
+
         updateLegendTitleFont();
         updateLegendLabelFont();
         updateLegendConfig();
 
-        const auto currentTitle = QString::fromUtf8(m_mapping->colorBarRepresentation().actor().GetTitle());
-        if (currentTitle != m_mapping->currentScalarsName())
-        {
-            m_ui->legendTitleEdit->setText(currentTitle);
-        }
-        m_ui->legendTitleEdit->setPlaceholderText(currentTitle);
-
         const unsigned char * nanColorV = m_mapping->gradient()->GetNanColorAsUnsignedChars();
-
         QColor nanColor(static_cast<int>(nanColorV[0]), static_cast<int>(nanColorV[1]), static_cast<int>(nanColorV[2]), static_cast<int>(nanColorV[3]));
         m_ui->nanColorButton->setStyleSheet(QString("background-color: %1").arg(nanColor.name()));
     }
 
     // this includes (and must include) setting up GUI connections
-    updateGuiValueRanges();
+    updateScalarsSelection();
+}
 
-    emit renderSetupChanged();
+void ColorMappingChooser::updateScalarsSelection()
+{
+    discardGuiConnections();
+
+    updateScalarsEnabled();
+
+    if (m_mapping)
+    {
+        const bool usesGradients = m_mapping->currentScalarsUseMappingLegend();
+        m_ui->gradientGroupBox->setEnabled(usesGradients);
+        m_ui->legendGroupBox->setEnabled(usesGradients);
+        m_ui->legendGroupBox->setChecked(m_mapping->colorBarRepresentation().isVisible());
+        m_ui->legendTitleEdit->setPlaceholderText(m_mapping->currentScalarsName());
+
+        QSignalBlocker signalBlocker(m_ui->gradientComboBox);
+        m_ui->gradientComboBox->setCurrentIndex(
+            m_ui->gradientComboBox->findData(m_mapping->gradientName()));
+
+        if (!m_ui->legendTitleEdit->text().isEmpty())
+        {   // override default title setup if user set a title
+            m_mapping->colorBarRepresentation().actor().SetTitle(
+                m_ui->legendTitleEdit->text().toUtf8().data());
+        }
+    }
+
+    // this includes (and must include) setting up GUI connections
+    updateGuiValueRanges();
+}
+
+void ColorMappingChooser::updateScalarsEnabled()
+{
+    m_ui->scalarsGroupBox->setChecked(m_mapping ? m_mapping->isEnabled() : false);
 }
 
 void ColorMappingChooser::setupGuiConnections()
@@ -490,10 +490,7 @@ void ColorMappingChooser::setupGuiConnections()
     const auto && dSpinBoxValueChanged = static_cast<void(QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged);
     const auto && spinBoxValueChanged = static_cast<void(QSpinBox::*)(int)>(&QSpinBox::valueChanged);
 
-    m_guiConnections << connect(m_ui->scalarsGroupBox, &QGroupBox::toggled, [this] (bool checked) {
-        m_mapping->setEnabled(checked);
-        emit renderSetupChanged();
-    });
+    m_guiConnections << connect(m_ui->scalarsGroupBox, &QGroupBox::toggled, m_mapping, &ColorMapping::setEnabled);
     m_guiConnections << connect(m_ui->componentSpinBox, spinBoxValueChanged, this, &ColorMappingChooser::guiComponentChanged);
     m_guiConnections << connect(m_ui->minValueSpinBox, dSpinBoxValueChanged, this, &ColorMappingChooser::guiMinValueChanged);
     m_guiConnections << connect(m_ui->maxValueSpinBox, dSpinBoxValueChanged, this, &ColorMappingChooser::guiMaxValueChanged);
@@ -604,14 +601,12 @@ void ColorMappingChooser::mappingScalarsChanged()
     assert(m_mapping);
     assert(m_mapping == sender());
 
-    auto && scalars = m_mapping->currentScalarsName();
+    // for consistency, follow the same update steps as for changing the UI parameters directly
+    m_ui->scalarsComboBox->setCurrentText(m_mapping->currentScalarsName());
 
-    if (m_ui->scalarsComboBox->currentText() == scalars)
-    {
-        return;
-    }
+    updateScalarsEnabled();
 
-    m_ui->scalarsComboBox->setCurrentText(scalars);
+    emit renderSetupChanged();
 }
 
 void ColorMappingChooser::updateGuiValueRanges()

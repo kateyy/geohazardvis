@@ -73,9 +73,11 @@ void ColorMapping::setVisualizedData(const QList<AbstractVisualizedData *> & vis
         scalars->setLookupTable(gradient());
     }
 
-    QString newScalarsName = ""; // disable color mapping if we couldn't find appropriate data
-    // reuse last configuration if possible
-    if (m_data.find(lastScalars) != m_data.end())
+    // Try to reuse previous configuration.
+    // Re-enable color mapping only if the same scalars are still available to not confuse the user.
+    QString newScalarsName = "";
+    const bool lastScalarsAvailable = m_data.find(lastScalars) != m_data.end();
+    if (lastScalarsAvailable)
     {
         newScalarsName = lastScalars;
     }
@@ -84,7 +86,7 @@ void ColorMapping::setVisualizedData(const QList<AbstractVisualizedData *> & vis
         newScalarsName = m_data.begin()->first;
     }
 
-    setCurrentScalarsByName(newScalarsName);
+    updateCurrentMappingState(newScalarsName, m_isEnabled && lastScalarsAvailable);
 
     m_glyphListener->setData(visualizedData);
 }
@@ -150,12 +152,17 @@ const QString & ColorMapping::currentScalarsName() const
 
 void ColorMapping::setCurrentScalarsByName(const QString & scalarsName)
 {
-    if (m_currentScalarsName == scalarsName)
+    setCurrentScalarsByName(scalarsName, m_isEnabled);
+}
+
+void ColorMapping::setCurrentScalarsByName(const QString & scalarsName, bool enableColorMapping)
+{
+    if (m_currentScalarsName == scalarsName && m_isEnabled == enableColorMapping)
     {
         return;
     }
 
-    updateCurrentMappingState(scalarsName, m_isEnabled);
+    updateCurrentMappingState(scalarsName, enableColorMapping);
 }
 
 void ColorMapping::updateCurrentMappingState(const QString & scalarsName, bool enabled)

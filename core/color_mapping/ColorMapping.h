@@ -49,6 +49,7 @@ public:
 
     const QString & currentScalarsName() const;
     void setCurrentScalarsByName(const QString & scalarsName);
+    void setCurrentScalarsByName(const QString & scalarsName, bool enableColorMapping);
     const ColorMappingData & currentScalars() const;
     ColorMappingData & currentScalars();
 

@@ -53,6 +53,8 @@ private:
     void guiLegendTitleChanged();
 
     void rebuildGui();
+    void updateScalarsSelection();
+    void updateScalarsEnabled();
     void setupGuiConnections();
     void discardGuiConnections();
     void setupValueRangeConnections();
