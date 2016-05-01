@@ -8,7 +8,7 @@ list(APPEND DEFAULT_COMPILE_DEFS
 #    _CRT_SECURE_NO_DEPRECATE   # Disable CRT deprecation warnings
 )
 
-option(OPTION_RELEASE_LTCG "Enable whole program optimization / link time code generation in Release and MinSizeRel builds" OFF)
+option(OPTION_RELEASE_LTCG "Enable whole program optimization / link time code generation in Release builds" OFF)
 option(OPTION_RELWITHDEBINFO_LTCG "Enable whole program optimization / link time code generation in RelWithDebInfo builds" OFF)
 option(OPTION_DEBUG_ADDITIONAL_RUNTME_CHECKS "Include all available runtime checks in debug builds." OFF)
 
@@ -30,7 +30,7 @@ set(DEFAULT_COMPILE_FLAGS
     $<$<CONFIG:Debug>:          /MDd /Od /RTC1 >
     $<$<CONFIG:Release>:        /MD  /O2 >
     $<$<CONFIG:RelWithDebInfo>: /MD  /O2 /Zo /Zi>
-    $<$<CONFIG:MinSizeRel>:     /MD  /O1 >
+    $<$<CONFIG:RelNoOptimization>: /MD /Od /RTC1>
 
     # nologo       -> Suppresses the display of the copyright banner when the compiler starts up and display of informational messages during compiling.
 
@@ -102,12 +102,13 @@ set(DEFAULT_COMPILE_FLAGS
 if(OPTION_DEBUG_ADDITIONAL_RUNTME_CHECKS)
     list(APPEND DEFAULT_COMPILE_FLAGS
         $<$<CONFIG:Debug>:      /RTCc /GS /sdl >
+        $<$<CONFIG:RelNoOptimization>: /RTCc /GS /sdl >
     )
 endif()
 
 
 if (OPTION_RELEASE_LTCG)
-    list(APPEND DEFAULT_COMPILE_FLAGS $<$<OR:$<CONFIG:Release>,$<CONFIG:MinSizeRel>>: /GL > )
+    list(APPEND DEFAULT_COMPILE_FLAGS $<$<CONFIG:Release>: /GL > )
 endif()
 
 if (OPTION_RELWITHDEBINFO_LTCG)
@@ -122,6 +123,7 @@ if(MSVC_VERSION VERSION_LESS 1900)
 
     list(APPEND DEFAULT_COMPILE_FLAGS
         $<$<CONFIG:Debug>: /Zi>     # this is set in RelWithDebInfo builds for all MSVC versions
+        $<$<CONFIG:RelNoOptimization>: /Zi>
     )
 
 else()  # Visual Studio 14 2015 as minimum
@@ -130,7 +132,9 @@ else()  # Visual Studio 14 2015 as minimum
         /Zc:throwingNew /Zc:referenceBinding
         # allow native edit and continue: http://blogs.msdn.com/b/vcblog/archive/2015/07/22/c-edit-and-continue-in-visual-studio-2015.aspx
         $<$<CONFIG:Debug>: /ZI>
-        $<$<NOT:$<CONFIG:Debug>>: /guard:cf>
+        $<$<CONFIG:RelNoOptimization>: /ZI>
+        $<$<CONFIG:Release>: /guard:cf>
+        $<$<CONFIG:RelWithDebInfo>: /guard:cf>
     )
 
 endif()
@@ -160,13 +164,11 @@ set(DEFAULT_LINKER_FLAGS_RELEASE
 )
 
 set(DEFAULT_LINKER_FLAGS_RELWITHDEBINFO "${DEFAULT_LINKER_FLAGS_RELEASE} /DEBUG")
-
-set(DEFAULT_LINKER_FLAGS_MINSIZEREL ${DEFAULT_LINKER_FLAGS_RELEASE})
+set(DEFAULT_LINKER_FLAGS_RELNOOPTIMIZATION "${DEFAULT_LINKER_FLAGS_RELEASE} /DEBUG")
 
 
 if(OPTION_RELEASE_LTCG)
     set(DEFAULT_LINKER_FLAGS_RELEASE "${DEFAULT_LINKER_FLAGS_RELEASE} /LTCG")
-    set(DEFAULT_LINKER_FLAGS_MINSIZEREL "${DEFAULT_LINKER_FLAGS_MINSIZEREL} /LTCG")
 endif()
 
 if(OPTION_RELWITHDEBINFO_LTCG)
@@ -177,5 +179,4 @@ endif()
 if(MSVC_VERSION VERSION_GREATER 1800)
     set(DEFAULT_LINKER_FLAGS_RELEASE "${DEFAULT_LINKER_FLAGS_RELEASE} /GUARD:CF")
     set(DEFAULT_LINKER_FLAGS_RELWITHDEBINFO "${DEFAULT_LINKER_FLAGS_RELWITHDEBINFO} /GUARD:CF")
-    set(DEFAULT_LINKER_FLAGS_MINSIZEREL "${DEFAULT_LINKER_FLAGS_MINSIZEREL} /GUARD:CF")
 endif()

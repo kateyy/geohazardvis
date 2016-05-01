@@ -11,9 +11,10 @@ function(configure_cxx_target TARGET)
         LINK_FLAGS_DEBUG                    "${DEFAULT_LINKER_FLAGS_DEBUG}"
         LINK_FLAGS_RELEASE                  "${DEFAULT_LINKER_FLAGS_RELEASE}"
         LINK_FLAGS_RELWITHDEBINFO           "${DEFAULT_LINKER_FLAGS_RELWITHDEBINFO}"
-        LINK_FLAGS_MINSIZEREL               "${DEFAULT_LINKER_FLAGS_MINSIZEREL}"
-        DEBUG_POSTFIX                       "d${DEBUG_POSTFIX}"
-        RELWITHDEBINFO_POSTFIX              "rd${DEBUG_POSTFIX}"
+        LINK_FLAGS_RELNOOPTIMIZATION        "${DEFAULT_LINKER_FLAGS_RELNOOPTIMIZATION}"
+        DEBUG_POSTFIX                       "_d${DEBUG_POSTFIX}"
+        RELWITHDEBINFO_POSTFIX              "_rd${DEBUG_POSTFIX}"
+        RELNOOPTIMIZATION_POSTFIX           "_rd0${DEBUG_POSTFIX}"
         FOLDER                              "${IDE_FOLDER}"
     )
 endfunction()
@@ -31,7 +32,7 @@ function(configure_cxx_plugin TARGET)
             RUNTIME_OUTPUT_DIRECTORY_DEBUG "${CMAKE_BINARY_DIR}/Debug/plugins"
             RUNTIME_OUTPUT_DIRECTORY_RELEASE "${CMAKE_BINARY_DIR}/Release/plugins"
             RUNTIME_OUTPUT_DIRECTORY_RELWITHDEBINFO "${CMAKE_BINARY_DIR}/RelWithDebInfo/plugins"
-            RUNTIME_OUTPUT_DIRECTORY_MINSIZEREL "${CMAKE_BINARY_DIR}/MinSizeRel/plugins"
+            RUNTIME_OUTPUT_DIRECTORY_RELNOOPTIMIZATION "${CMAKE_BINARY_DIR}/RelNoOptimization/plugins"
         )
     else()
         set_target_properties(${TARGET}

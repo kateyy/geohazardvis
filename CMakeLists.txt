@@ -1,5 +1,12 @@
 cmake_minimum_required(VERSION 2.8.12 FATAL_ERROR)
 
+
+set(CMAKE_CONFIGURATION_TYPES "Release;Debug;RelWithDebInfo;RelNoOptimization")
+set(CMAKE_CXX_FLAGS_RELNOOPTIMIZATION "")
+set(CMAKE_SHARED_LINKER_FLAGS_RELNOOPTIMIZATION "")
+set(CMAKE_EXE_LINKER_FLAGS_RELNOOPTIMIZATION "")
+
+
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 include(CMakeDependentOption)
 include(cmake/Custom.cmake)
@@ -288,7 +295,7 @@ if(WIN32 AND CPACK_INSTALL_3RDPARTY_DLLS)
 
     if(VTK_BUILD_SHARED_LIBS)
         foreach(LIB ${VTK_LIBRARIES})
-            list(APPEND DEPLOY_FILES "${VTK_DIR}/bin/$<CONFIG>/${LIB}-${VTK_MAJOR_VERSION}.${VTK_MINOR_VERSION}.dll")
+            list(APPEND DEPLOY_FILES "${VTK_DIR}/bin/$<$<STREQUAL:$<CONFIG>,RelNoOptimization>:RelWithDebInfo>$<$<NOT:$<STREQUAL:$<CONFIG>,RelNoOptimization>>:$<CONFIG>>/${LIB}-${VTK_MAJOR_VERSION}.${VTK_MINOR_VERSION}.dll")
         endforeach()
     endif()
 

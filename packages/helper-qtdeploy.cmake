@@ -12,10 +12,10 @@ if(WIN32 AND ${CMAKE_VERSION} VERSION_GREATER 3.0)
     add_custom_target(PrepareQtDeploy
         DEPENDS ${META_PROJECT_NAME}
         COMMAND ${CMAKE_COMMAND} -E remove_directory "${QT_DEPLOY_DIR}"
-        COMMAND windeployqt 
-            "${CMAKE_BINARY_DIR}/$<CONFIG>/${META_PROJECT_NAME}$<$<CONFIG:Debug>:d>$<$<CONFIG:RelWithDebInfo>:rd>.exe"
+        COMMAND windeployqt
+            "${CMAKE_BINARY_DIR}/$<CONFIG>/${META_PROJECT_NAME}$<$<CONFIG:Debug>:_d>$<$<CONFIG:RelWithDebInfo>:_rd>$<$<CONFIG:RelNoOptimization>:_rd0>.exe"
             --dir "${QT_DEPLOY_DIR}"
-            $<$<CONFIG:Debug>:--debug>$<$<CONFIG:RelWithDebInfo>:--release-with-debug-info>$<$<OR:$<CONFIG:Release>,$<CONFIG:MinSizeRelease>>:--release>
+            $<$<CONFIG:Debug>:--debug>$<$<CONFIG:RelWithDebInfo>:--release-with-debug-info>$<$<OR:$<CONFIG:Release>,$<CONFIG:RelNoOptimization>>:--release>
             --no-translations
             --no-compiler-runtime
             --no-system-d3d-compiler
@@ -24,7 +24,7 @@ if(WIN32 AND ${CMAKE_VERSION} VERSION_GREATER 3.0)
             "${QT_DEPLOY_DIR}"
         VERBATIM
     )
-    set_target_properties(PrepareQtDeploy 
+    set_target_properties(PrepareQtDeploy
         PROPERTIES
         FOLDER  "${IDE_FOLDER}"
     )

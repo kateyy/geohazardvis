@@ -15,9 +15,9 @@
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
     <LocalDebuggerEnvironment>@MSVC_LOCAL_DEBUGGER_ENVIRONMENT_RELEASE@</LocalDebuggerEnvironment>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='RelNoOptimization|x64'">
     <LocalDebuggerWorkingDirectory>@MSVC_LOCAL_DEBUGGER_WORKING_DIRECTORY@</LocalDebuggerWorkingDirectory>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
-    <LocalDebuggerEnvironment>@MSVC_LOCAL_DEBUGGER_ENVIRONMENT_MINSIZEREL@</LocalDebuggerEnvironment>
+    <LocalDebuggerEnvironment>@MSVC_LOCAL_DEBUGGER_ENVIRONMENT_RELNOOPTIMIZATION@</LocalDebuggerEnvironment>
   </PropertyGroup>
 </Project>

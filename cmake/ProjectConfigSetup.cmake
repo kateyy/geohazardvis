@@ -10,7 +10,7 @@ if(NOT OPTION_MSVC_AUTOMATIC_PROJECT_CONFIG)
 
     function(setupProjectUserConfig TARGET)
     endfunction()
-    
+
     function(addPluginRuntimePathEntries PATH_ENTRIES)
     endfunction()
 
@@ -69,7 +69,12 @@ function(setupProjectUserConfig TARGET)
         set(PROJECT_RUNTIME_PATHS)
 
         # VTK
-        list(APPEND PROJECT_RUNTIME_PATHS "${VTK_DIR}\\bin\\${CONFIG_TYPE}")
+        if(CONFIG_TYPE STREQUAL "RelNoOptimization")
+            set(_vtkConfig "RelWithDebInfo")
+        else()
+            set(_vtkConfig ${CONFIG_TYPE})
+        endif()
+        list(APPEND PROJECT_RUNTIME_PATHS "${VTK_DIR}\\bin\\${_vtkConfig}")
 
         # libzeug
         list(APPEND PROJECT_RUNTIME_PATHS "${libzeug_DIR}\\bin")
@@ -77,19 +82,12 @@ function(setupProjectUserConfig TARGET)
         # Qt
         get_filename_component(Qt5QMake_DIR ${Qt5QMake_PATH} DIRECTORY)
         list(APPEND PROJECT_RUNTIME_PATHS "${Qt5QMake_DIR}")
-        
+
         # plugins that require additional third party libraries may add their paths to PLUGIN_RUNTIME_PATHS
         if(PLUGIN_RUNTIME_PATHS)
             list(APPEND PROJECT_RUNTIME_PATHS ${PLUGIN_RUNTIME_PATHS})
         endif()
 
-        # set(PROJECT_RUNTIME_PATH "")
-        # foreach(PATH_ENTRY ${PROJECT_RUNTIME_PATHS})
-            # set(PROJECT_RUNTIME_PATH "${PROJECT_RUNTIME_PATHS}${PATH_ENTRY};")
-        # endforeach()
-
-        # set(MSVC_LOCAL_DEBUGGER_ENVIRONMENT_${UPPER_CONFIG_TYPE}
-           # "PATH=${PROJECT_RUNTIME_PATH}%PATH%"
         set(MSVC_LOCAL_DEBUGGER_ENVIRONMENT_${UPPER_CONFIG_TYPE}
            "PATH=${PROJECT_RUNTIME_PATHS};%PATH%"
        )

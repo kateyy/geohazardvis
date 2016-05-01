@@ -1,8 +1,8 @@
 #pragma once
 
 
-#if defined(_DEBUG)
-#define DEBUG_ONLY(S) S
-#else
+#if defined(NDEBUG)
 #define DEBUG_ONLY(S)
+#else
+#define DEBUG_ONLY(S) S
 #endif
