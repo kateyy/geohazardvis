@@ -24,6 +24,11 @@ inline ScopedEventDeferral::ScopedEventDeferral(DataObject & objectToLock)
     m_dataObject->deferEvents();
 }
 
+inline ScopedEventDeferral::ScopedEventDeferral()
+    : m_dataObject{ nullptr }
+{
+}
+
 inline ScopedEventDeferral::~ScopedEventDeferral()
 {
     if (m_dataObject)

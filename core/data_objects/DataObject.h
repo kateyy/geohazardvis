@@ -136,6 +136,7 @@ class ScopedEventDeferral final
 {
 public:
     explicit ScopedEventDeferral(DataObject & objectToLock);
+    ScopedEventDeferral();
     ~ScopedEventDeferral();
 
     ScopedEventDeferral(ScopedEventDeferral && other);
