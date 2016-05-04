@@ -225,7 +225,7 @@ void CameraDolly::moveToPoly(vtkPolyData & polyData, vtkIdType index, IndexType 
     {
 
         const double flyTimeSec = 0.5;
-        const double flyDeadlineSec = 1;
+        const int flyDeadlineMSec = 1000;
 
         const int NumberOfFlyFrames = 15;
         double stepFactor = 1.0 / (NumberOfFlyFrames + 1);
@@ -249,7 +249,7 @@ void CameraDolly::moveToPoly(vtkPolyData & polyData, vtkIdType index, IndexType 
         double intermediateElevation = startingElevation;
 
         QTime startingTime = QTime::currentTime();
-        QTime deadline = startingTime.addSecs(flyDeadlineSec);
+        QTime deadline = startingTime.addMSecs(flyDeadlineMSec);
         long sleepMSec = long(flyTimeSec * 1000.0 * stepFactor);
 
         QTime renderTime;

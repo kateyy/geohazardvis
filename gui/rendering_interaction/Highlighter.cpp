@@ -282,7 +282,7 @@ public:
         m_point2DImpl.setPosition(position);
     }
 
-    void setFlashColorFactor(float f)
+    void setFlashColorFactor(double f)
     {
         if (m_currentImpl)
         {
@@ -307,8 +307,8 @@ private:
     }
 
 private:
-    HighlighterCellImpl m_cellImpl;
     HighlighterPoint2DImpl m_point2DImpl;
+    HighlighterCellImpl m_cellImpl;
 
     HighlighterImpl * m_currentImpl;
 };
@@ -321,9 +321,9 @@ Highlighter::Highlighter()
     , m_visOutputPort{ -1 }
     , m_indices{ vtkSmartPointer<vtkIdTypeArray>::New() }
     , m_indexType{ IndexType::points }
-    , m_impl{ std::make_unique<HighlighterImplementationSwitch>(*this) }
     , m_flashAfterSetTarget{ true }
     , m_flashTimeMilliseconds{ 2000 }
+    , m_impl{ std::make_unique<HighlighterImplementationSwitch>(*this) }
 {
 }
 

@@ -45,7 +45,7 @@ void RenderWindowCursorCallback::setRenderWindow(vtkRenderWindow * renderWindow)
     }
 }
 
-inline void RenderWindowCursorCallback::setQWidget(QWidget * widget)
+void RenderWindowCursorCallback::setQWidget(QWidget * widget)
 {
     m_qWidget = widget;
 
@@ -80,7 +80,7 @@ Qt::CursorShape RenderWindowCursorCallback::vtkToQtCursor(int vtkCursorId, bool 
     }
 }
 
-inline bool RenderWindowCursorCallback::eventFilter(QObject * object, QEvent * event)
+bool RenderWindowCursorCallback::eventFilter(QObject * object, QEvent * event)
 {
     if (object != m_qWidget)
     {

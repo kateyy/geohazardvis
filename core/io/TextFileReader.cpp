@@ -18,6 +18,7 @@
 
 using namespace io;
 using std::ifstream;
+using std::isnan;
 using std::map;
 using std::shared_ptr;
 using std::stringstream;

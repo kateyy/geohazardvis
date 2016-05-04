@@ -37,16 +37,16 @@ DEMWidget::DEMWidget(DataMapping & dataMapping, AbstractRenderView * previewRend
     , m_ui{ std::make_unique<Ui_DEMWidget>() }
     , m_topographyMeshes{ std::make_unique<DataSetFilter>(dataMapping.dataSetHandler()) }
     , m_dems{ std::make_unique<DataSetFilter>(dataMapping.dataSetHandler()) }
-    , m_dataPreview{ nullptr }
     , m_demUnitDecimalExponent{ 0.0 }
     , m_topoRadius{ 1.0 }
     , m_topoShiftXY{ 0.0 }
     , m_previewRenderer{ previewRenderer }
+    , m_dataPreview{ nullptr }
     , m_topoRebuildRequired{ true }
     , m_lastPreviewedDEM{ nullptr }
     , m_demSelection{ nullptr }
     , m_topoTemplateSelection{ nullptr }
-    , m_lastTopoTemplateRadius{ std::nan(nullptr) }
+    , m_lastTopoTemplateRadius{ std::nan("") }
 {
     m_ui->setupUi(this);
 
@@ -289,11 +289,9 @@ void DEMWidget::resetParametersForCurrentInputs()
         return;
     }
 
-    const auto signalBlockers = {
-        QSignalBlocker(m_ui->topographyRadiusSpinBox),
-        QSignalBlocker(m_ui->topographyCenterXSpinBox),
-        QSignalBlocker(m_ui->topographyCenterYSpinBox)
-    };
+    QSignalBlocker topoRadiusBlocker(m_ui->topographyRadiusSpinBox);
+    QSignalBlocker topoCenterXBlocker(m_ui->topographyCenterXSpinBox);
+    QSignalBlocker topoCenterYBlocker(m_ui->topographyCenterYSpinBox);
 
     centerTopoMesh();
     matchTopoMeshRadius();
@@ -420,7 +418,7 @@ PolyDataObject * DEMWidget::currentTopoTemplate()
     if (current != m_topoTemplateSelection)
     {
         m_topoTemplateSelection = static_cast<PolyDataObject *>(current);
-        m_lastTopoTemplateRadius = std::nan(nullptr);
+        m_lastTopoTemplateRadius = std::nan("");
         m_topoRebuildRequired = true;
     }
 
@@ -432,7 +430,7 @@ double DEMWidget::currentTopoTemplateRadius()
     auto topo = currentTopoTemplate();
     if (!topo)
     {
-        return std::nan(nullptr);
+        return std::nan("");
     }
 
     if (!std::isnan(m_lastTopoTemplateRadius))
@@ -640,9 +638,8 @@ void DEMWidget::centerTopoMesh()
 {
     updateTopoUIRanges();
 
-    const auto signalBlockers = {
-        QSignalBlocker(m_ui->topographyCenterXSpinBox),
-        QSignalBlocker(m_ui->topographyCenterYSpinBox) };
+    QSignalBlocker topoCenterXBlocker(m_ui->topographyCenterXSpinBox);
+    QSignalBlocker topoCenterYBlocker(m_ui->topographyCenterYSpinBox);
 
     const vtkVector2d mins {
         m_ui->topographyCenterXSpinBox->minimum(),
@@ -684,11 +681,9 @@ void DEMWidget::updateTopoUIRanges()
 
     const double currentTopoRadius = m_ui->topographyRadiusSpinBox->value();
 
-    const auto signalBlockers = {
-        QSignalBlocker(m_ui->topographyRadiusSpinBox),
-        QSignalBlocker(m_ui->topographyCenterXSpinBox),
-        QSignalBlocker(m_ui->topographyCenterYSpinBox)
-    };
+    QSignalBlocker topoRadiusBlocker(m_ui->topographyRadiusSpinBox);
+    QSignalBlocker topoCenterXBlocker(m_ui->topographyCenterXSpinBox);
+    QSignalBlocker topoCenterYBlocker(m_ui->topographyCenterYSpinBox);
 
     const auto demBounds = DataBounds(dem.bounds()).convertTo<2>();
     const auto lowerLeft = demBounds.minRange();

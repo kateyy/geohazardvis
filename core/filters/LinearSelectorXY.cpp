@@ -142,7 +142,7 @@ int LinearSelectorXY::RequestData(vtkInformation * vtkNotUsed(request),
 
     auto positionsOnLine = vtkSmartPointer<vtkDoubleArray>::New();
     positionsOnLine->SetName("positionOnLine");
-    
+
     vtkSmartPointer<vtkDoubleArray> distanceToLine;
     if (ComputeDistanceToLine)
     {
@@ -196,7 +196,7 @@ int LinearSelectorXY::RequestData(vtkInformation * vtkNotUsed(request),
             extractedPoints->InsertNextPoint(centroid));
 
         positionsOnLine->InsertNextValue(t);
-        
+
         if (ComputeDistanceToLine)
         {
             distanceToLine->InsertNextValue(std::abs(signedDistanceToLine(centroid2d)));
@@ -257,14 +257,16 @@ int LinearSelectorXY::RequestData(vtkInformation * vtkNotUsed(request),
     if (this->Sorting == SortMode::SortPoints)
     {
         // need to reorder all attributes
-        idGetter = [&sortIndices] (vtkIdType i) -> vtkIdType { 
+        idGetter = [&sortIndices] (vtkIdType i) -> vtkIdType {
             return sortIndices.get()[i]; 
         };
     }
     else
     {
         // keep the ordering
-        idGetter = std::identity<vtkIdType>();
+        idGetter = [] (vtkIdType i) -> vtkIdType {
+            return i;
+        };
     }
 
     for (vtkIdType outputPointId = 0; outputPointId < outputNumPoints; ++outputPointId)
