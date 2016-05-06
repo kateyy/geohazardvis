@@ -42,33 +42,33 @@ bool writeVTKXML(vtkXMLWriter * writer, const QString & fileName)
 }
 
 
-bool Exporter::exportData(DataObject * data, const QString & fileName)
+bool Exporter::exportData(DataObject & data, const QString & fileName)
 {
-    if (auto image = dynamic_cast<ImageDataObject *>(data))
+    if (auto image = dynamic_cast<ImageDataObject *>(&data))
     {
         if (QFileInfo(fileName).suffix().toLower() == "vti")
             return exportVTKXMLImageData(data, fileName);
 
-        return exportImageFormat(image, fileName);
+        return exportImageFormat(*image, fileName);
     }
 
-    if (auto polyData = dynamic_cast<PolyDataObject *>(data))
-        return exportVTKXMLPolyData(polyData, fileName);
+    if (auto polyData = dynamic_cast<PolyDataObject *>(&data))
+        return exportVTKXMLPolyData(*polyData, fileName);
 
-    if (auto grid = dynamic_cast<VectorGrid3DDataObject *>(data))
-        return exportVTKXMLImageData(grid, fileName);
+    if (auto grid = dynamic_cast<VectorGrid3DDataObject *>(&data))
+        return exportVTKXMLImageData(*grid, fileName);
 
     return false;
 }
 
-bool Exporter::isExportSupported(DataObject * data)
+bool Exporter::isExportSupported(const DataObject & data)
 {
-    return formatFilters().contains(data->dataTypeName());
+    return formatFilters().contains(data.dataTypeName());
 }
 
-QString Exporter::formatFilter(DataObject * data)
+QString Exporter::formatFilter(const DataObject & data)
 {
-    return formatFilters().value(data->dataTypeName());
+    return formatFilters().value(data.dataTypeName());
 }
 
 const QMap<QString, QString> & Exporter::formatFilters()
@@ -82,7 +82,7 @@ const QMap<QString, QString> & Exporter::formatFilters()
     return ff;
 }
 
-bool Exporter::exportImageFormat(ImageDataObject * image, const QString & fileName)
+bool Exporter::exportImageFormat(ImageDataObject & image, const QString & fileName)
 {
     QString ext = QFileInfo(fileName).suffix().toLower();
 
@@ -97,7 +97,7 @@ bool Exporter::exportImageFormat(ImageDataObject * image, const QString & fileNa
 
     assert(writer);
 
-    const auto scalars = image->dataSet()->GetPointData()->GetScalars();
+    const auto scalars = image.dataSet()->GetPointData()->GetScalars();
     if (!scalars)
     {
         return false;
@@ -111,12 +111,12 @@ bool Exporter::exportImageFormat(ImageDataObject * image, const QString & fileNa
 
     if (scalars->GetDataType() == VTK_UNSIGNED_CHAR)
     {
-        writer->SetInputData(image->dataSet());
+        writer->SetInputData(image.dataSet());
     }
     else
     {
         auto toUChar = vtkSmartPointer<vtkImageMapToColors>::New();
-        toUChar->SetInputData(image->dataSet());
+        toUChar->SetInputData(image.dataSet());
 
         auto lut = vtkSmartPointer<vtkLookupTable>::New();
         lut->SetNumberOfTableValues(0xFF);
@@ -150,18 +150,18 @@ bool Exporter::exportImageFormat(ImageDataObject * image, const QString & fileNa
     return true;
 }
 
-bool Exporter::exportVTKXMLPolyData(DataObject * polyData, const QString & fileName)
+bool Exporter::exportVTKXMLPolyData(DataObject & polyData, const QString & fileName)
 {
     auto writer = vtkSmartPointer<vtkXMLPolyDataWriter>::New();
-    writer->SetInputData(polyData->dataSet());
+    writer->SetInputData(polyData.dataSet());
 
     return writeVTKXML(writer, fileName);
 }
 
-bool Exporter::exportVTKXMLImageData(DataObject * image, const QString & fileName)
+bool Exporter::exportVTKXMLImageData(DataObject & image, const QString & fileName)
 {
     auto writer = vtkSmartPointer<vtkXMLImageDataWriter>::New();
-    writer->SetInputData(image->dataSet());
+    writer->SetInputData(image.dataSet());
 
     return writeVTKXML(writer, fileName);
 }

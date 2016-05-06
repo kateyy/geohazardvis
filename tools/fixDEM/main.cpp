@@ -94,7 +94,7 @@ int main()
             qDebug() << "Fixed " << x << " " << y << " to " << v_fixed;
         }
 
-    qDebug() << Exporter::exportData(data.get(), exportFN);
+    qDebug() << Exporter::exportData(*data, exportFN);
 
     return 0;
 }
