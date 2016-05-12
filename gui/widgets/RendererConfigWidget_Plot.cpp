@@ -57,22 +57,22 @@ std::unique_ptr<PropertyGroup> RendererConfigWidget::createPropertyGroupPlot(
         auto prop_fontSize = group->addProperty<int>("LabelFontSize",
             [impl, axis] () { return impl->chart()->GetAxis(axis)->GetTitleProperties()->GetFontSize(); },
             [impl, axis] (int size) {
-            impl->chart()->GetAxis(vtkAxis::BOTTOM)->GetTitleProperties()->SetFontSize(size); 
+            impl->chart()->GetAxis(axis)->GetTitleProperties()->SetFontSize(size);
             impl->render();
         });
         prop_fontSize->setOption("title", "Label Font Size");
-        prop_fontSize->setOption("minimum", impl->chart()->GetAxis(vtkAxis::BOTTOM)->GetTitleProperties()->GetFontSizeMinValue());
-        prop_fontSize->setOption("maximum", impl->chart()->GetAxis(vtkAxis::BOTTOM)->GetTitleProperties()->GetFontSizeMaxValue());
+        prop_fontSize->setOption("minimum", impl->chart()->GetAxis(axis)->GetTitleProperties()->GetFontSizeMinValue());
+        prop_fontSize->setOption("maximum", impl->chart()->GetAxis(axis)->GetTitleProperties()->GetFontSizeMaxValue());
 
         auto prop_tickFontSize = group->addProperty<int>("TickFontSize",
             [impl, axis] () { return impl->chart()->GetAxis(axis)->GetLabelProperties()->GetFontSize(); },
             [impl, axis] (int size) {
-            impl->chart()->GetAxis(vtkAxis::BOTTOM)->GetLabelProperties()->SetFontSize(size);
+            impl->chart()->GetAxis(axis)->GetLabelProperties()->SetFontSize(size);
             impl->render();
         });
         prop_tickFontSize->setOption("title", "Tick Font Size");
-        prop_tickFontSize->setOption("minimum", impl->chart()->GetAxis(vtkAxis::BOTTOM)->GetLabelProperties()->GetFontSizeMinValue());
-        prop_tickFontSize->setOption("maximum", impl->chart()->GetAxis(vtkAxis::BOTTOM)->GetLabelProperties()->GetFontSizeMaxValue());
+        prop_tickFontSize->setOption("minimum", impl->chart()->GetAxis(axis)->GetLabelProperties()->GetFontSizeMinValue());
+        prop_tickFontSize->setOption("maximum", impl->chart()->GetAxis(axis)->GetLabelProperties()->GetFontSizeMaxValue());
 
         auto prop_precision = group->addProperty<int>("Precision",
             [impl, axis] () { return impl->chart()->GetAxis(axis)->GetPrecision(); },
