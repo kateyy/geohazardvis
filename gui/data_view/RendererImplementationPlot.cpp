@@ -2,6 +2,8 @@
 
 #include <cassert>
 
+#include <vtkAxis.h>
+#include <vtkChartLegend.h>
 #include <vtkChartXY.h>
 #include <vtkContextScene.h>
 #include <vtkContextView.h>
@@ -14,6 +16,7 @@
 #include <core/data_objects/DataObject.h>
 #include <core/context2D_data/Context2DData.h>
 #include <core/context2D_data/vtkPlotCollection.h>
+#include <core/utility/font.h>
 #include <core/utility/macros.h>
 #include <gui/data_view/AbstractRenderView.h>
 #include <gui/data_view/ChartXY.h>
@@ -24,8 +27,8 @@ bool RendererImplementationPlot::s_isRegistered = RendererImplementation::regist
 
 RendererImplementationPlot::RendererImplementationPlot(AbstractRenderView & renderView)
     : RendererImplementation(renderView)
-    , m_isInitialized(false)
-    , m_axesAutoUpdate(true)
+    , m_isInitialized{ false }
+    , m_axesAutoUpdate{ true }
 {
     assert(renderView.numberOfSubViews() == 1); // multi view not implemented yet. Is that even possible with the vtkContextView?
 }
@@ -288,8 +291,18 @@ void RendererImplementationPlot::initialize()
     m_contextView = vtkSmartPointer<vtkContextView>::New();
     m_renderWindow = vtkSmartPointer<vtkGenericOpenGLRenderWindow>::New();
     m_contextView->SetRenderWindow(m_renderWindow);
+
     m_chart = vtkSmartPointer<ChartXY>::New();
     m_chart->SetShowLegend(true);
+    FontHelper::configureTextProperty(*m_chart->GetTitleProperties());
+    FontHelper::configureTextProperty(*m_chart->GetLegend()->GetLabelProperties());
+    for (const int axisId : {vtkAxis::LEFT, vtkAxis::BOTTOM, vtkAxis::RIGHT, vtkAxis::TOP})
+    {
+        auto axis = m_chart->GetAxis(axisId);
+        FontHelper::configureTextProperty(*axis->GetTitleProperties());
+        FontHelper::configureTextProperty(*axis->GetLabelProperties());
+    }
+
     m_contextView->GetScene()->AddItem(m_chart);
 
     m_chart->AddObserver(ChartXY::PlotSelectedEvent, this, &RendererImplementationPlot::handlePlotSelectionEvent);

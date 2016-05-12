@@ -29,6 +29,7 @@
 #include <core/data_objects/DataObject.h>
 #include <core/rendered_data/RenderedData.h>
 #include <core/ThirdParty/ParaView/vtkGridAxes3DActor.h>
+#include <core/utility/font.h>
 #include <core/utility/vtkcamerahelper.h>
 #include <gui/data_view/AbstractRenderView.h>
 #include <gui/data_view/RenderViewStrategy.h>
@@ -404,10 +405,10 @@ void RendererImplementationBase3D::initialize()
         titleWidget->SetCurrentRenderer(viewport.renderer);
 
         auto titleRepr = vtkSmartPointer<vtkTextRepresentation>::New();
-        vtkTextActor * titleActor = titleRepr->GetTextActor();
-        titleActor->SetInput(" ");
+        auto titleActor = titleRepr->GetTextActor();
         titleActor->GetTextProperty()->SetColor(0, 0, 0);
         titleActor->GetTextProperty()->SetVerticalJustificationToTop();
+        FontHelper::configureTextProperty(*titleActor->GetTextProperty());
 
         titleRepr->GetPositionCoordinate()->SetValue(0.2, .85);
         titleRepr->GetPosition2Coordinate()->SetValue(0.6, .10);
@@ -565,6 +566,8 @@ vtkSmartPointer<vtkGridAxes3DActor> RendererImplementationBase3D::createAxes()
 
     for (int i = 0; i < 3; ++i)
     {
+        FontHelper::configureTextProperty(*gridAxes->GetLabelTextProperty(i));
+        FontHelper::configureTextProperty(*gridAxes->GetTitleTextProperty(i));
         gridAxes->GetLabelTextProperty(i)->SetColor(labelColor);
         gridAxes->GetTitleTextProperty(i)->SetColor(labelColor);
     }

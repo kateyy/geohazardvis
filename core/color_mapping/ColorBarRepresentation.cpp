@@ -11,6 +11,7 @@
 
 #include <core/AbstractVisualizedData.h>
 #include <core/color_mapping/ColorMapping.h>
+#include <core/utility/font.h>
 #include <core/utility/qthelper.h>
 #include <core/utility/ScalarBarActor.h>
 
@@ -108,6 +109,9 @@ void ColorBarRepresentation::initialize()
     m_actor->VisibilityOff();
     m_actor->SetLookupTable(m_colorMapping.scalarsToColors());
     m_actor->SetTitle(m_colorMapping.currentScalarsName().toUtf8().data());
+    FontHelper::configureTextProperty(*m_actor->GetTitleTextProperty());
+    FontHelper::configureTextProperty(*m_actor->GetLabelTextProperty());
+    FontHelper::configureTextProperty(*m_actor->GetAnnotationTextProperty());
 
     m_scalarBarRepresentation = vtkSmartPointer<vtkScalarBarRepresentation>::New();
     m_scalarBarRepresentation->SetScalarBarActor(m_actor);
