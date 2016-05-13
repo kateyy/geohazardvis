@@ -5,3 +5,5 @@ testing*/*
 .kdev4/*
 *.kdev4
 *settings.ini
+CMakeLists.txt.user
+
