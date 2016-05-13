@@ -67,6 +67,12 @@
 
 #define MY_ABS(x)       ((x) < 0 ? -(x) : (x))
 
+#if defined(__GNUC__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wfloat-conversion"
+#pragma GCC diagnostic ignored "-Wconversion"
+#endif
+
 //=============================================================================
 vtkStandardNewMacro(vtkPVScalarBarActor);
 
@@ -1204,3 +1210,8 @@ void vtkPVScalarBarActor::BuildScalarBarTexture()
 
   this->ScalarBarTexture->SetInputData(colorMapImage.GetPointer());
 }
+
+
+#if defined(__GNUC__)
+#pragma GCC diagnostic pop
+#endif

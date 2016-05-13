@@ -30,6 +30,12 @@
 #include <algorithm>
 #include <vector>
 
+#if defined(__GNUC__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wfloat-conversion"
+#pragma GCC diagnostic ignored "-Wconversion"
+#endif
+
 namespace
 {
   // The point is assumed to be in Viewport coordinate system i.e X,Y pixels in
@@ -681,3 +687,8 @@ void vtkGridAxes2DActor::PrintSelf(ostream& os, vtkIndent indent)
 {
   this->Superclass::PrintSelf(os, indent);
 }
+
+
+#if defined(__GNUC__)
+#pragma GCC diagnostic pop
+#endif
