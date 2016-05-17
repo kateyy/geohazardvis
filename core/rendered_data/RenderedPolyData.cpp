@@ -51,8 +51,6 @@ RenderedPolyData::RenderedPolyData(PolyDataObject & dataObject)
     , m_mapper(vtkSmartPointer<vtkPolyDataMapper>::New())
     , m_normals(vtkSmartPointer<vtkPolyDataNormals>::New())
 {
-    assert(vtkPolyData::SafeDownCast(dataObject.dataSet()));
-
     setupInformation(*m_mapper->GetInformation(), *this);
 
     m_normals->ComputePointNormalsOn();

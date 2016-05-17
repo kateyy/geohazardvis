@@ -11,7 +11,7 @@ QSettings subclass that accesses application settings from a default location.
 class CORE_API ApplicationSettings : public QSettings
 {
 public:
-    ApplicationSettings(QObject * parent = nullptr);
+    explicit ApplicationSettings(QObject * parent = nullptr);
     ~ApplicationSettings() override;
 
     /** @return true, if there are any stored settings for the application.

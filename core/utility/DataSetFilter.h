@@ -40,7 +40,7 @@ public:
     class CORE_API ScopedLock
     {
     public:
-        ScopedLock(DataSetFilter & dataSetFilter);
+        explicit ScopedLock(DataSetFilter & dataSetFilter);
         ~ScopedLock();
 
         void release();

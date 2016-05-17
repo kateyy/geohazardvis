@@ -19,7 +19,7 @@ class vtkRenderWindow;
 class GUI_API RenderWindowCursorCallback : public QObject
 {
 public:
-    RenderWindowCursorCallback(QObject * parent = nullptr);
+    explicit RenderWindowCursorCallback(QObject * parent = nullptr);
     ~RenderWindowCursorCallback() override;
 
     void setRenderWindow(vtkRenderWindow * renderWindow);

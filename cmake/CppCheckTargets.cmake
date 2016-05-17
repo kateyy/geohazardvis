@@ -85,6 +85,7 @@ function(cppcheck_target TARGET)
             --library=qt
             --language=c++
             -j ${PROCESSOR_COUNT}
+            -UQT_NAMESPACE
         )
         if (WIN32)
             list(APPEND _cppcheckParams --library=windows)

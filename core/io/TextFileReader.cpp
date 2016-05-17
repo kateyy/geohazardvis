@@ -260,8 +260,8 @@ bool TextFileReader::readHeader_DEM(ifstream & inputStream, vector<DataSetDef>& 
 {
     string line;
     int columns = -1, rows = -1;
-    double xMin, xMax, yMin, yMax, nanValue, cellSize;
-    xMin = xMax = yMin = yMax = cellSize = nanValue = nan("");
+    double xMin, xMax, yMin, yMax, cellSize;
+    xMin = xMax = yMin = yMax = cellSize = nan("");
 
     bool atEnd = false;
 
@@ -328,11 +328,6 @@ bool TextFileReader::readHeader_DEM(ifstream & inputStream, vector<DataSetDef>& 
             cellSize = stod(value);
             continue;
         }
-        //if (parameter == "NODATA_value")
-        //{
-        //    nanValue = stod(value);
-        //    continue;
-        //}
     }
 
     if (!atEnd)

@@ -71,7 +71,7 @@ protected:
 class HighlighterPoint2DImpl : public HighlighterImpl
 {
 public:
-    HighlighterPoint2DImpl(Highlighter & highlighter)
+    explicit HighlighterPoint2DImpl(Highlighter & highlighter)
         : HighlighterImpl(highlighter)
     {
     }
@@ -167,7 +167,7 @@ private:
 class HighlighterCellImpl : public HighlighterImpl
 {
 public:
-    HighlighterCellImpl(Highlighter & highlighter)
+    explicit HighlighterCellImpl(Highlighter & highlighter)
         : HighlighterImpl(highlighter)
     {
     }
@@ -258,7 +258,7 @@ private:
 class HighlighterImplementationSwitch
 {
 public:
-    HighlighterImplementationSwitch(Highlighter & highlighter)
+    explicit HighlighterImplementationSwitch(Highlighter & highlighter)
         : m_point2DImpl(highlighter)
         , m_cellImpl(highlighter)
         , m_currentImpl{ nullptr }

@@ -20,8 +20,9 @@ RenderedData3D::~RenderedData3D() = default;
 
 vtkSmartPointer<vtkProp3DCollection> RenderedData3D::viewProps3D()
 {
-    assert(vtkProp3DCollection::SafeDownCast(viewProps().Get()));
-    return static_cast<vtkProp3DCollection *>(viewProps().Get());
+    auto result = viewProps();
+    assert(dynamic_cast<vtkProp3DCollection *>(result.Get()));
+    return static_cast<vtkProp3DCollection *>(result.Get());
 }
 
 GlyphMapping & RenderedData3D::glyphMapping()

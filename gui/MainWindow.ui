@@ -197,7 +197,7 @@
   <customwidget>
    <class>DataBrowser</class>
    <extends>QWidget</extends>
-   <header>widgets/DataBrowser.h</header>
+   <header>gui/widgets/DataBrowser.h</header>
   </customwidget>
  </customwidgets>
  <resources>
