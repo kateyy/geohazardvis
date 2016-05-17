@@ -1,4 +1,6 @@
 
+include(CppCheckTargets)
+
 function(configure_cxx_target TARGET)
 
     target_compile_definitions(${TARGET} PRIVATE ${DEFAULT_COMPILE_DEFS})
@@ -17,6 +19,9 @@ function(configure_cxx_target TARGET)
         RELNOOPTIMIZATION_POSTFIX           "_rd0${DEBUG_POSTFIX}"
         FOLDER                              "${IDE_FOLDER}"
     )
+
+    cppcheck_target(${TARGET})
+
 endfunction()
 
 set(PLUGIN_TARGETS_DOC_STRING "Ensure that the main executable is always run with up to date plugin libraries.")
@@ -110,7 +115,7 @@ macro(CMAKE_DEPENDENT_CACHEVARIABLE name default type doc depends force)
       endif()
     endforeach()
     if(${name}_AVAILABLE)
-      set(${name} "${default}" CACHE ${type} "${doc}") # create if does not exist      
+      set(${name} "${default}" CACHE ${type} "${doc}") # create if does not exist
       set(${name} "${${name}}" CACHE ${type} "${doc}" FORCE)   # force to non-internal
     else()
       if(${name} MATCHES "^${name}$")

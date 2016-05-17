@@ -1,25 +1,12 @@
 cmake_minimum_required(VERSION 2.8.12 FATAL_ERROR)
 
-
-set(CMAKE_CONFIGURATION_TYPES "Release;Debug;RelWithDebInfo;RelNoOptimization")
-set(CMAKE_CXX_FLAGS_RELNOOPTIMIZATION "")
-set(CMAKE_SHARED_LINKER_FLAGS_RELNOOPTIMIZATION "")
-set(CMAKE_EXE_LINKER_FLAGS_RELNOOPTIMIZATION "")
-
-
-list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
-include(CMakeDependentOption)
-include(cmake/Custom.cmake)
-include(cmake/GetGitRevisionDescription.cmake)
-include(cmake/GitDate.cmake)
-
-# Get git revision
-get_git_head_revision(GIT_REFSPEC GIT_SHA1)
-string(SUBSTRING "${GIT_SHA1}" 0 12 GIT_REV)
-get_git_commit_date(${GIT_SHA1} GIT_DATE)
-set(GIT_REVISION_FILE ${CMAKE_BINARY_DIR}/revision)
-set(VERSION_INFO_FILE ${CMAKE_CURRENT_BINARY_DIR}/vcs_commit_info.h)
-configure_file(cmake/vcs_commit_info.h.in ${VERSION_INFO_FILE})
+foreach(p
+    CMP0053 # CMake 3.1
+    )
+  if(POLICY ${p})
+    cmake_policy(SET ${p} NEW)
+  endif()
+endforeach()
 
 
 set(META_PROJECT_NAME           "GeohazardVis")
@@ -35,21 +22,43 @@ set(META_VERSION                "${META_VERSION_MAJOR}.${META_VERSION_MINOR}.${M
 set(META_NAME_VERSION           "${META_PROJECT_NAME} v${META_VERSION} (${META_VERSION_REVISION})")
 
 
+option(OPTION_ADD_CPPCHECK_TARGETS "Add a cppcheck target per C++-target." OFF)
 option(OPTION_BUILD_TESTS "Build tests (if gtest is found)." ON)
 option(OPTION_BUILD_TOOLS "" ON)
 option(OPTION_IDE_SPLIT_HEADERS_SOURCES "List header and source files in different IDE folders." ON)
 
 
+set(CMAKE_CONFIGURATION_TYPES "Release;Debug;RelWithDebInfo;RelNoOptimization")
+set(CMAKE_CXX_FLAGS_RELNOOPTIMIZATION "")
+set(CMAKE_SHARED_LINKER_FLAGS_RELNOOPTIMIZATION "")
+set(CMAKE_EXE_LINKER_FLAGS_RELNOOPTIMIZATION "")
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+
+
 # Generate folders for IDE targets (e.g., VisualStudio solutions)
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+set_property(DIRECTORY PROPERTY VS_STARTUP_PROJECT ${META_PROJECT_NAME})
+
 
 
 project(${META_PROJECT_NAME} C CXX)
 
 
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
+include(CMakeDependentOption)
+include(cmake/Custom.cmake)
+include(cmake/GetGitRevisionDescription.cmake)
+include(cmake/GitDate.cmake)
+
+# Get git revision
+get_git_head_revision(GIT_REFSPEC GIT_SHA1)
+string(SUBSTRING "${GIT_SHA1}" 0 12 GIT_REV)
+get_git_commit_date(${GIT_SHA1} GIT_DATE)
+set(GIT_REVISION_FILE ${CMAKE_BINARY_DIR}/revision)
+set(VERSION_INFO_FILE ${CMAKE_CURRENT_BINARY_DIR}/vcs_commit_info.h)
+configure_file(cmake/vcs_commit_info.h.in ${VERSION_INFO_FILE})
 
 
 # PLATFORM AND ARCHITECTURE
@@ -319,7 +328,8 @@ include_directories(
 set(CONFIG_FILE ${CMAKE_CURRENT_BINARY_DIR}/config.h)
 configure_file(cmake/config.h.in ${CONFIG_FILE})
 
-set_property(DIRECTORY PROPERTY VS_STARTUP_PROJECT ${META_PROJECT_NAME})
+generate_cppcheck_suppressions()
+
 
 set(IDE_FOLDER "")
 add_subdirectory("core")
