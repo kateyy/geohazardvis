@@ -23,7 +23,7 @@ protected:
 using TestDataObject = DataObject_test_DataObject;
 
 
-TEST(ScopedEventDeferral_move_test)
+TEST(ScopedEventDeferral_test, move_lock)
 {
     TestDataObject data;
 

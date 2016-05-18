@@ -5,7 +5,7 @@ execute_process(COMMAND ${CMAKE_C_COMPILER} -dumpversion
     OUTPUT_VARIABLE GCC_VERSION)
 
 if(NOT GCC_VERSION VERSION_GREATER 4.9)
-    message(WARNING "Warning: only tested with gcc 4.9, but ${GCC_VERSION} was found.")
+    message(WARNING "GCC version 4.9 is required, but ${GCC_VERSION} was found. Build will probably fail.")
 endif()
 
 

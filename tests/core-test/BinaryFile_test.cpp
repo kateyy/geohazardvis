@@ -76,7 +76,7 @@ TEST_F(RawFile_test, Write)
     std::ifstream refFile(testFileName);
     refFile.read(readData.data(), readData.size());
 
-    ASSERT_EQ(refFile.gcount(), data.size());
+    ASSERT_EQ(refFile.gcount(), static_cast<long>(data.size()));
     ASSERT_EQ(data, readData);
 }
 

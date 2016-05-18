@@ -18,7 +18,6 @@
 
 using namespace io;
 using std::ifstream;
-using std::isnan;
 using std::map;
 using std::shared_ptr;
 using std::stringstream;
@@ -333,16 +332,16 @@ bool TextFileReader::readHeader_DEM(ifstream & inputStream, vector<DataSetDef>& 
     if (!atEnd)
         return false;
 
-    if (columns <= 0 || rows <= 0 || isnan(xMin) || isnan(xMax) || cellSize <= 0)
+    if (columns <= 0 || rows <= 0 || std::isnan(xMin) || std::isnan(xMax) || cellSize <= 0)
         return false;
 
     auto image = vtkSmartPointer<vtkImageData>::New();
     image->SetExtent(0, columns - 1, 0, rows - 1, 0, 0);
 
     // either define xmax and ymax or cellSize
-    if (isnan(cellSize))
+    if (std::isnan(cellSize))
     {
-        if (isnan(xMax) || isnan(yMax))
+        if (std::isnan(xMax) || std::isnan(yMax))
             return false;
 
         image->SetOrigin(xMin, yMin, 0);
@@ -353,7 +352,7 @@ bool TextFileReader::readHeader_DEM(ifstream & inputStream, vector<DataSetDef>& 
     }
     else
     {
-        if (!isnan(xMax) || !isnan(yMax))
+        if (!std::isnan(xMax) || !std::isnan(yMax))
             return false;
 
         image->SetOrigin(xMin, yMin, 0);

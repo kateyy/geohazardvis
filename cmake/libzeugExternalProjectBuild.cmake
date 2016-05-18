@@ -13,4 +13,4 @@ set(PARAMS
 
 execute_process(COMMAND ${CMAKE_COMMAND} ${PARAMS})
 
-execute_process(COMMAND ${CMAKE_COMMAND} ${PARAMS} --target INSTALL)
+execute_process(COMMAND ${CMAKE_COMMAND} ${PARAMS} --target install)
