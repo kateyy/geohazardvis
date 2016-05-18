@@ -33,8 +33,6 @@ set(DEFAULT_COMPILE_FLAGS
       -Wcast-align
       -Wconversion
 
-      -Wno-missing-field-initializers
-
       -Werror=return-type # -> missing returns in functions and methods are handled as errors which stops the compilation
 
 )
