@@ -123,8 +123,10 @@ if(WIN32)
     set(INSTALL_PLUGINS_LIB "${INSTALL_LIB}/plugins")
 
 else()
-    set(INSTALL_ROOT "share/${project}")        # /usr/[local]/share/<project>
-    set(INSTALL_DATA "share/${project}")        # /usr/[local]/share/<project>
+#     set(INSTALL_ROOT "share/${project}")        # /usr/[local]/share/<project>
+#     set(INSTALL_DATA "share/${project}")        # /usr/[local]/share/<project>
+    set(INSTALL_ROOT ".")
+    set(INSTALL_DATA "data")
     set(INSTALL_BIN "bin")                      # /usr/[local]/bin
     set(INSTALL_SHARED "lib")                   # /usr/[local]/lib
     set(INSTALL_LIB "lib")                      # /usr/[local]/lib
@@ -136,16 +138,17 @@ else()
     set(INSTALL_PLUGINS_BIN "${INSTALL_BIN}/plugins")
     set(INSTALL_PLUGINS_SHARED "${INSTALL_SHARED}/plugins")
     set(INSTALL_PLUGINS_LIB "${INSTALL_LIB}/plugins")
+
+    install(PROGRAMS packages/${META_PROJECT_NAME}.sh
+        DESTINATION ${INSTALL_ROOT})
 endif()
 
-if(WIN32)
-    option(CPACK_INSTALL_3RDPARTY_DLLS "Include 3rdparty dlls (VTK, Qt) in packages." ON)
-endif()
+option(OPTION_INSTALL_3RDPARTY_BINARIES "Include 3rdparty libraries (libzeug, VTK, Qt) in installations and packages." ON)
 
 # Install the project meta files
 #install(FILES geohazardvis-config.cmake DESTINATION ${INSTALL_ROOT})
 #install(FILES AUTHORS DESTINATION               ${INSTALL_ROOT})
-install(FILES LICENSE DESTINATION               ${INSTALL_ROOT})
+#install(FILES LICENSE DESTINATION               ${INSTALL_ROOT})
 
 
 # Find / add third-party components
@@ -237,10 +240,15 @@ find_package(VTK COMPONENTS ${VTK_COMPONENTS})
 include_directories(SYSTEM ${VTK_INCLUDE_DIRS})
 set_property(DIRECTORY APPEND PROPERTY COMPILE_DEFINITIONS ${VTK_DEFINITIONS})
 
-
-find_package(Qt5 5.3 COMPONENTS Core Gui Widgets OpenGL)
+set(PROJECT_QT_COMPONENTS Core Gui Widgets OpenGL)
+if (UNIX)
+    # required for platform plugin deployment
+    list(APPEND PROJECT_QT_COMPONENTS DBus Svg)
+endif()
+find_package(Qt5 5.3 COMPONENTS ${PROJECT_QT_COMPONENTS})
 if(NOT ${Qt5Core_VERSION} VERSION_LESS 5.5)
     find_package(Qt5 COMPONENTS Concurrent)
+    list(APPEND PROJECT_QT_COMPONENTS Concurrent)
 endif()
 
 set(CMAKE_AUTOMOC ON)
@@ -293,7 +301,6 @@ else()
             "${libzeug_DIR}/lib/loggingzeug$<$<CONFIG:Debug>:d>.lib"
             "${libzeug_DIR}/lib/reflectionzeug$<$<CONFIG:Debug>:d>.lib"
             "${libzeug_DIR}/lib/propertyguizeug$<$<CONFIG:Debug>:d>.lib"
-            "${libzeug_DIR}/lib/threadingzeug$<$<CONFIG:Debug>:d>.lib"
         )
     else()
         set(LIBZEUG_LIBRARIES
@@ -301,34 +308,66 @@ else()
             "${libzeug_DIR}/lib/libloggingzeug$<$<CONFIG:Debug>:d>.so"
             "${libzeug_DIR}/lib/libreflectionzeug$<$<CONFIG:Debug>:d>.so"
             "${libzeug_DIR}/lib/libpropertyguizeug$<$<CONFIG:Debug>:d>.so"
-            "${libzeug_DIR}/lib/libthreadingzeug$<$<CONFIG:Debug>:d>.so"
         )
     endif()
 endif()
 
 
-if(WIN32 AND CPACK_INSTALL_3RDPARTY_DLLS)
+if(OPTION_INSTALL_3RDPARTY_BINARIES)
     set(CMAKE_INSTALL_OPENMP_LIBRARIES ON)
-    set(CMAKE_INSTALL_SYSTEM_RUNTIME_DESTINATION ${INSTALL_BIN})
+    set(CMAKE_INSTALL_SYSTEM_RUNTIME_DESTINATION ${INSTALL_SHARED})
     include(InstallRequiredSystemLibraries)
 
-    if(VTK_BUILD_SHARED_LIBS)
-        foreach(LIB ${VTK_LIBRARIES})
-            list(APPEND DEPLOY_FILES "${VTK_DIR}/bin/$<$<STREQUAL:$<CONFIG>,RelNoOptimization>:RelWithDebInfo>$<$<NOT:$<STREQUAL:$<CONFIG>,RelNoOptimization>>:$<CONFIG>>/${LIB}-${VTK_MAJOR_VERSION}.${VTK_MINOR_VERSION}.dll")
-        endforeach()
+    if (VTK_BUILD_SHARED_LIBS)
+        set(_vtkDeployFiles)
+        if (WIN32)
+            # Windows: VTK build tree contains separated folders for each configuration
+            foreach(_libName ${VTK_LIBRARIES})
+                list(APPEND _vtkDeployFiles "${VTK_DIR}/bin/$<$<STREQUAL:$<CONFIG>,RelNoOptimization>:RelWithDebInfo>$<$<NOT:$<STREQUAL:$<CONFIG>,RelNoOptimization>>:$<CONFIG>>/${_libName}-${VTK_MAJOR_VERSION}.${VTK_MINOR_VERSION}.dll")
+            endforeach()
+        elseif(UNIX)
+            # Linux: configuration type of installed VTK must be the same as the deployment configuration for this project.
+            # We have to rely on this correct setup here.
+            foreach(_libName ${VTK_LIBRARIES})
+                get_filename_component(_realPath "lib${_libName}-${VTK_MAJOR_VERSION}.${VTK_MINOR_VERSION}.so" REALPATH
+                    BASE_DIR ${VTK_INSTALL_PREFIX}/lib)
+                list(APPEND _vtkDeployFiles ${_realPath})
+            endforeach()
+        endif()
+        install(FILES ${_vtkDeployFiles} DESTINATION ${INSTALL_SHARED})
     endif()
 
-    list(APPEND DEPLOY_FILES
-        "${libzeug_DIR}/bin/signalzeug$<$<CONFIG:Debug>:d>.dll"
-        "${libzeug_DIR}/bin/loggingzeug$<$<CONFIG:Debug>:d>.dll"
-        "${libzeug_DIR}/bin/reflectionzeug$<$<CONFIG:Debug>:d>.dll"
-        "${libzeug_DIR}/bin/propertyguizeug$<$<CONFIG:Debug>:d>.dll"
-        "${libzeug_DIR}/bin/threadingzeug$<$<CONFIG:Debug>:d>.dll"
-    )
-
-    install(FILES ${DEPLOY_FILES} DESTINATION ${INSTALL_BIN})
+    if (WIN32)
+        install(FILES
+            "${libzeug_DIR}/bin/signalzeug$<$<CONFIG:Debug>:d>.dll"
+            "${libzeug_DIR}/bin/loggingzeug$<$<CONFIG:Debug>:d>.dll"
+            "${libzeug_DIR}/bin/reflectionzeug$<$<CONFIG:Debug>:d>.dll"
+            "${libzeug_DIR}/bin/propertyguizeug$<$<CONFIG:Debug>:d>.dll"
+            DESTINATION ${INSTALL_SHARED}
+        )
+    elseif(UNIX)
+        if (NOT OPTION_USE_SYSTEM_LIBZEUG)
+            install(FILES ${LIBZEUG_LIBRARIES} DESTINATION ${INSTALL_SHARED})
+        else()
+            install(FILES
+                ${LIBZEUG_SIGNAL_LIBRARY_DEBUG}
+                ${LIBZEUG_LOGGING_LIBRARY_DEBUG}
+                ${LIBZEUG_REFLECTION_LIBRARY_DEBUG}
+                ${LIBZEUG_PROPERTYGUI_LIBRARY_DEBUG}
+                DESTINATION ${INSTALL_SHARED}
+                CONFIGURATIONS Debug
+            )
+            install(FILES
+                ${LIBZEUG_SIGNAL_LIBRARY_RELEASE}
+                ${LIBZEUG_LOGGING_LIBRARY_RELEASE}
+                ${LIBZEUG_REFLECTION_LIBRARY_RELEASE}
+                ${LIBZEUG_PROPERTYGUI_LIBRARY_RELEASE}
+                DESTINATION ${INSTALL_SHARED}
+                CONFIGURATIONS Release RelWithDebInfo RelNoOptimization
+            )
+        endif()
+    endif()
 endif()
-
 
 include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}
