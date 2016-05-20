@@ -163,11 +163,6 @@ endif()
 
 target_link_libraries(${TARGET} ${_libraries_to_be_linked})
 
-include_directories(
-    ${CMAKE_CURRENT_BINARY_DIR}
-    ${LIBZEUG_INCLUDES}
-)
-
 
 configure_cxx_target( ${TARGET} )
 

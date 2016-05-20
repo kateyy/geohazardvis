@@ -224,8 +224,8 @@ target_link_libraries( ${TARGET}
     Qt5::Core
 )
 
-include_directories(
-    ${LIBZEUG_INCLUDES}
+target_include_directories(${TARGET}
+    SYSTEM PUBLIC ${LIBZEUG_INCLUDES}
 )
 
 
