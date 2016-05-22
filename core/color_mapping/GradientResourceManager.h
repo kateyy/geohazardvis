@@ -20,7 +20,7 @@ public:
 
     void loadGradients();
 
-    const QString & gradientDir() const;
+    const QString & gradientsDir() const;
 
     struct GradientData
     {
@@ -43,7 +43,7 @@ private:
     static vtkSmartPointer<vtkLookupTable> buildLookupTable(const QPixmap & pixmap);
 
 private:
-    const QString m_gradientDir;
+    const QString m_gradientsDir;
 
     std::map<QString, const GradientData> m_gradients;
     QString m_defaultGradientName;

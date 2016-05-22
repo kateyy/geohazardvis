@@ -1,13 +1,39 @@
 #include "GradientResourceManager.h"
 
+#include <QCoreApplication>
 #include <QDebug>
 #include <QDir>
 #include <QPixmap>
 
 #include <vtkLookupTable.h>
 
+#include "config.h"
 #include <core/utility/qthelper.h>
 
+
+namespace
+{
+    QString getGradienstDir()
+    {
+        const auto gradientsDir = QString("gradients");
+
+
+        const char * appBaseDir =
+#if (__linux__)
+            "..";
+#else
+            ".";
+#endif
+        const auto besidesAppDir = QDir(QCoreApplication::applicationDirPath() + "/" + appBaseDir + "/" + projectDataDir() + "/" + gradientsDir).absolutePath();
+        if (QDir(besidesAppDir).exists())
+        {
+            return besidesAppDir;
+        }
+
+        return QDir(projectDataDir() + "/" + gradientsDir).absolutePath();
+
+    }
+}
 
 auto GradientResourceManager::gradients() const -> const std::map<QString, const GradientData> &
 {
@@ -38,7 +64,7 @@ auto GradientResourceManager::defaultGradient() const -> const GradientData &
 }
 
 GradientResourceManager::GradientResourceManager()
-    : m_gradientDir{ "data/gradients" }
+    : m_gradientsDir{ getGradienstDir() }
     , m_defaultGradientName{ "_0012_Blue-Red_copy" }
 {
     loadGradients();
@@ -62,7 +88,7 @@ void GradientResourceManager::loadGradients()
     // navigate to the gradient directory
     QDir dir;
     bool dirNotFound = false;
-    if (!dir.cd(m_gradientDir))
+    if (!dir.cd(m_gradientsDir))
     {
         dirNotFound = true;
     }
@@ -89,7 +115,7 @@ void GradientResourceManager::loadGradients()
     // fall back, in case we didn't find any gradient images
     if (m_gradients.empty())
     {
-        const auto fallbackMsg = "; only a fall-back gradient will be available\n\t(searching in " + QDir().absoluteFilePath(m_gradientDir) + ")";
+        const auto fallbackMsg = "; only a fall-back gradient will be available\n\t(searching in " + m_gradientsDir + ")";
         if (dirNotFound)
         {
             qDebug() << "gradient directory does not exist" + fallbackMsg;
@@ -118,9 +144,9 @@ void GradientResourceManager::loadGradients()
     }
 }
 
-const QString & GradientResourceManager::gradientDir() const
+const QString & GradientResourceManager::gradientsDir() const
 {
-    return m_gradientDir;
+    return m_gradientsDir;
 }
 
 vtkSmartPointer<vtkLookupTable> GradientResourceManager::buildLookupTable(const QPixmap & pixmap)
