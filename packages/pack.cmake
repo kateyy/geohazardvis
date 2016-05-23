@@ -8,7 +8,7 @@ if(EXISTS "${CMAKE_ROOT}/Modules/CPack.cmake")
     if(WIN32)
         set(OPTION_PACK_GENERATOR "ZIP;NSIS" CACHE STRING "Package targets")
     else()
-        set(OPTION_PACK_GENERATOR "ZIP;TGZ;DEB" CACHE STRING "Package targets")
+        set(OPTION_PACK_GENERATOR "ZIP;TGZ" CACHE STRING "Package targets")
     endif()
 
 
@@ -74,10 +74,10 @@ if(EXISTS "${CMAKE_ROOT}/Modules/CPack.cmake")
 
         # SO the following only works for the installer icon, not for the welcome image.
 
-        # NSIS requires "\\" - escaped backslash to work properly. We probably won't rely on this feature, 
+        # NSIS requires "\\" - escaped backslash to work properly. We probably won't rely on this feature,
         # so just replacing / with \\ manually.
 
-        #file(TO_NATIVE_PATH "${CPACK_PACKAGE_ICON}" CPACK_PACKAGE_ICON) 
+        #file(TO_NATIVE_PATH "${CPACK_PACKAGE_ICON}" CPACK_PACKAGE_ICON)
         string(REGEX REPLACE "/" "\\\\\\\\" CPACK_PACKAGE_ICON "${CPACK_PACKAGE_ICON}")
     endif()
 
@@ -129,15 +129,13 @@ if(EXISTS "${CMAKE_ROOT}/Modules/CPack.cmake")
     # Package name
 
     set(CPACK_PACKAGE_FILE_NAME "${package_name}-${CPACK_PACKAGE_VERSION}")
-    
+
     # Install files
 
     set(CPACK_INSTALL_CMAKE_PROJECTS        "${CMAKE_BINARY_DIR};${project_root};ALL;/")
     set(CPACK_PACKAGE_INSTALL_DIRECTORY     "${package_name}")
     set(CPACK_PACKAGE_INSTALL_REGISTRY_KEY  "${package_name}")
-    if(NOT WIN32 AND NOT OPTION_PORTABLE_INSTALL)
-        set(CPACK_INSTALL_PREFIX            "/usr/")
-    endif()
+    set(CPACK_INSTALL_PREFIX            ".")
 
 
     # Set generator
@@ -167,8 +165,8 @@ add_custom_target(
     COMMAND ${CPACK_COMMAND} --config ${CMAKE_BINARY_DIR}/CPackConfig-${project_name}.cmake
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
 )
-set_target_properties(${TARGET_NAME} 
-    PROPERTIES 
+set_target_properties(${TARGET_NAME}
+    PROPERTIES
     EXCLUDE_FROM_DEFAULT_BUILD  ON
     FOLDER                      "${IDE_FOLDER}"
 )
