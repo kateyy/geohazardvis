@@ -27,8 +27,12 @@ option(OPTION_BUILD_TESTS "Build tests (if gtest is found)." ON)
 option(OPTION_BUILD_TOOLS "" ON)
 option(OPTION_IDE_SPLIT_HEADERS_SOURCES "List header and source files in different IDE folders." ON)
 
+# Generate folders for IDE targets (e.g., VisualStudio solutions)
+set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+set_property(DIRECTORY PROPERTY VS_STARTUP_PROJECT ${META_PROJECT_NAME})
 
-set(CMAKE_CONFIGURATION_TYPES "Release;Debug;RelWithDebInfo;RelNoOptimization")
+
+set(ACCEPTED_CONFIGURATION_TYPES "Release;Debug;RelWithDebInfo;RelNoOptimization")
 set(CMAKE_CXX_FLAGS_RELNOOPTIMIZATION "")
 set(CMAKE_SHARED_LINKER_FLAGS_RELNOOPTIMIZATION "")
 set(CMAKE_EXE_LINKER_FLAGS_RELNOOPTIMIZATION "")
@@ -37,21 +41,57 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 
 
-if(NOT CMAKE_BUILD_TYPE)
-    message(STATUS "Setting build type to 'Debug' as none was specified.")
-    set(CMAKE_BUILD_TYPE Debug CACHE STRING "Choose the type of build." FORCE)
-    # Set the possible values of build type for cmake-gui
-    set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS ${CMAKE_CONFIGURATION_TYPES})
+# if generatorIsMultiConfig is not detected, CMAKE_CONFIGURATION_TYPES must not be set!
+if ((NOT DEFINED generatorIsMultiConfig AND DEFINED CMAKE_CONFIGURATION_TYPES)
+        OR (generatorIsMultiConfig AND (NOT "${CMAKE_CONFIGURATION_TYPES}" STREQUAL "${ACCEPTED_CONFIGURATION_TYPES}")))
+    message(WARNING "Manually setting CMAKE_CONFIGURATION_TYPES is not supported in this project.")
+    unset(CMAKE_CONFIGURATION_TYPES CACHE)
+    set(_resetBuildType TRUE)
 endif()
 
 
-# Generate folders for IDE targets (e.g., VisualStudio solutions)
-set_property(GLOBAL PROPERTY USE_FOLDERS ON)
-set_property(DIRECTORY PROPERTY VS_STARTUP_PROJECT ${META_PROJECT_NAME})
-
-
-
 project(${META_PROJECT_NAME} C CXX)
+
+
+# project() sets CMAKE_CONFIGURATION_TYPES only for multi-configuration generators.
+if (NOT DEFINED generatorIsMultiConfig)
+    if (DEFINED CMAKE_CONFIGURATION_TYPES)
+        set(generatorIsMultiConfig YES CACHE INTERNAL "")
+    else()
+        set(generatorIsMultiConfig NO CACHE INTERNAL "")
+    endif()
+    set(_resetBuildType TRUE)
+endif()
+
+# reject invalid build types to prevent unexpected build behavior
+if (NOT generatorIsMultiConfig AND CMAKE_BUILD_TYPE)
+    list(FIND ACCEPTED_CONFIGURATION_TYPES ${CMAKE_BUILD_TYPE} _currentBuildTypeIndex)
+    if (_currentBuildTypeIndex EQUAL -1)
+        message(WARNING "Rejecting invalid CMAKE_BUILD_TYPE: \"${CMAKE_BUILD_TYPE}\"")
+        unset(CMAKE_BUILD_TYPE CACHE)
+        set(_resetBuildType TRUE)
+    endif()
+endif()
+
+# Initialize CMAKE_BUILD_TYPE or CMAKE_CONFIGURATION_TYPES depending on current generator type
+if (_resetBuildType)
+    if (generatorIsMultiConfig)
+        set(CMAKE_CONFIGURATION_TYPES ${ACCEPTED_CONFIGURATION_TYPES} CACHE INTERNAL "")
+    else()
+        if (NOT CMAKE_BUILD_TYPE)
+            message(STATUS "Setting build type to 'Debug' as none was specified.")
+            set(CMAKE_BUILD_TYPE Debug CACHE STRING "Choose the type of build." FORCE)
+        endif()
+        set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS ${ACCEPTED_CONFIGURATION_TYPES})
+    endif()
+endif()
+
+# Cleanup
+if (generatorIsMultiConfig)
+    unset(CMAKE_BUILD_TYPE CACHE)
+else()
+    unset(CMAKE_CONFIGURATION_TYPES CACHE)
+endif()
 
 
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
