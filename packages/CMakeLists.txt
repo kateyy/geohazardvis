@@ -1,4 +1,13 @@
 
+if (UNIX)
+    install(PROGRAMS
+        "GeohazardVis.sh"
+        "GeohazardVis.desktop"
+        DESTINATION ${INSTALL_ROOT}
+    )
+endif()
+
+
 # Create output directory
 file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/packages)
 

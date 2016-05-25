@@ -314,9 +314,7 @@ endif()
 
 
 if(OPTION_INSTALL_3RDPARTY_BINARIES)
-    set(CMAKE_INSTALL_OPENMP_LIBRARIES ON)
-    set(CMAKE_INSTALL_SYSTEM_RUNTIME_DESTINATION ${INSTALL_SHARED})
-    include(InstallRequiredSystemLibraries)
+    include(cmake/DeploySystemLibraries.cmake)
 
     if (VTK_BUILD_SHARED_LIBS)
         set(_vtkDeployFiles)

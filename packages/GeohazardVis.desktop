@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=GeohazardVis
+Comment=
+Exec=bash -c '"$(dirname "$1")"/GeohazardVis.sh' dummy %k
+Icon=
+Terminal=true
+Categories=Application;
