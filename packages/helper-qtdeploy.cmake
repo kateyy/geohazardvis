@@ -22,10 +22,12 @@ if (WIN32)
     get_target_property(QtOpenGL_release_location Qt5::OpenGL IMPORTED_LOCATION_RELEASE)
     get_target_property(QtOpenGL_debug_location   Qt5::OpenGL IMPORTED_LOCATION_DEBUG)
 
+    get_filename_component(_qtBinDir ${Qt5QMake_PATH} DIRECTORY)
+    
     add_custom_target(PrepareQtDeploy
         DEPENDS ${META_PROJECT_NAME}
         COMMAND ${CMAKE_COMMAND} -E remove_directory "${QT_DEPLOY_DIR}"
-        COMMAND windeployqt
+        COMMAND ${_qtBinDir}/windeployqt
             "${CMAKE_BINARY_DIR}/$<CONFIG>/${META_PROJECT_NAME}$<$<CONFIG:Debug>:_d>$<$<CONFIG:RelWithDebInfo>:_rd>$<$<CONFIG:RelNoOptimization>:_rd0>.exe"
             --dir "${QT_DEPLOY_DIR}"
             $<$<CONFIG:Debug>:--debug>$<$<CONFIG:RelWithDebInfo>:--release-with-debug-info>$<$<OR:$<CONFIG:Release>,$<CONFIG:RelNoOptimization>>:--release>

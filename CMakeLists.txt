@@ -299,6 +299,9 @@ if(NOT ${Qt5Core_VERSION} VERSION_LESS 5.5)
     list(APPEND PROJECT_QT_COMPONENTS Concurrent)
 endif()
 
+find_program(Qt5QMake_PATH qmake
+    DOC "Path to the qmake executable of the currently used Qt5 installation.")
+
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 

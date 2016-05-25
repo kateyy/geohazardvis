@@ -32,9 +32,9 @@ function(addPluginRuntimePathEntries PATH_ENTRIES)
 endfunction()
 
 
-# find path where the qmake executable resides, to be able to add it to the debug PATH
-find_program(Qt5QMake_PATH qmake
-    DOC "Path to the qmake executable of the currently used Qt5 installation.")
+if (NOT DEFINED Qt5QMake_PATH)
+    message(FATAL_ERROR "Qt5QMake_PATH must be set before including ProjectConfigSetup.cmake")
+endif()
 
 function(setupProjectUserConfig TARGET)
 
