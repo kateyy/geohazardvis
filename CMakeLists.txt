@@ -297,6 +297,8 @@ else()
             -DQt5Widgets_DIR:path=${Qt5Widgets_DIR}
             -DCMAKE_INSTALL_PREFIX:path=${libzeug_DIR}
             -DCMAKE_BUILD_TYPE:string=${CMAKE_BUILD_TYPE}
+            -DCMAKE_CXX_COMPILER:filepath=${CMAKE_CXX_COMPILER}
+            -DCMAKE_C_COMPILER:filepath=${CMAKE_C_COMPILER}
     )
 
     set(LIBZEUG_INCLUDES

@@ -38,6 +38,8 @@ if(OPTION_BUILD_TESTS)
             GIT_TAG "release-1.7.0"
             CMAKE_CACHE_ARGS
                 -Dgtest_force_shared_crt:bool=ON
+                -DCMAKE_CXX_COMPILER:filepath=${CMAKE_CXX_COMPILER}
+                -DCMAKE_C_COMPILER:filepath=${CMAKE_C_COMPILER}
             INSTALL_COMMAND ""  # skip install for gtest: target does not exist
         )
 
