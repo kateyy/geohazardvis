@@ -393,7 +393,9 @@ void ColorMappingChooser::guiSelectNanColor()
         /*, QColorDialog::ShowAlphaChannel*/);
 
     if (!nanColor.isValid())
+    {
         return;
+    }
 
     double colorV[4] = { nanColor.redF(), nanColor.greenF(), nanColor.blueF(), nanColor.alphaF() };
     gradient->SetNanColor(colorV);
@@ -518,7 +520,7 @@ void ColorMappingChooser::setupGuiConnections()
         emit renderSetupChanged();
     });
 
-    m_guiConnections << connect(m_ui->legendAspectRatio, &QAbstractSpinBox::editingFinished, [this] () {
+    m_guiConnections << connect(m_ui->legendAspectRatio, dSpinBoxValueChanged, [this] () {
         legend().SetAspectRatio(m_ui->legendAspectRatio->value());
         emit renderSetupChanged();
     });
@@ -539,7 +541,7 @@ void ColorMappingChooser::setupGuiConnections()
         emit renderSetupChanged();
     });
 
-    m_guiConnections << connect(m_ui->legendNumLabelsSpinBox, &QSpinBox::editingFinished, [this] () {
+    m_guiConnections << connect(m_ui->legendNumLabelsSpinBox, spinBoxValueChanged, [this] () {
         legend().SetNumberOfLabels(m_ui->legendNumLabelsSpinBox->value());
         emit renderSetupChanged();
     });
