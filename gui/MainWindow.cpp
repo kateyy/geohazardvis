@@ -96,7 +96,18 @@ MainWindow::MainWindow()
     });
     connect(m_ui->actionAbout, &QAction::triggered, [this] () {
         QMessageBox::about(this, metaProjectName(), 
-            QString("Source GIT commit revision:\n\t%1\nRevision date:\n\t%2")
+            QString(
+                "Maintainer contact:\n"
+                "\t%1\n"
+                "Version %2.%3.%4\n"
+                "Source GIT revision:\n"
+                "\t%5\n"
+                "Revision date:\n"
+                "\t%6")
+            .arg(VersionInfo::maintainerEmail())
+            .arg(VersionInfo::versionMajor())
+            .arg(VersionInfo::versionMinor())
+            .arg(VersionInfo::versionPatch())
             .arg(VersionInfo::gitRevision())
             .arg(VersionInfo::gitCommitDate().toString()));
     });

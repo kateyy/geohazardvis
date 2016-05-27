@@ -10,6 +10,10 @@ class QString;
 class CORE_API VersionInfo
 {
 public:
+    static const QString & maintainerEmail();
+    static int versionMajor();
+    static int versionMinor();
+    static int versionPatch();
     static const QString & gitSHA1();
     static const QString & gitRevision();
     static const QString & gitCommitDateString();
