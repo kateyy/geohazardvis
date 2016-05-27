@@ -102,6 +102,8 @@ set ( SOURCES
     widgets/GlyphMappingChooser.cpp
     widgets/GlyphMappingChooserListModel.h
     widgets/GlyphMappingChooserListModel.cpp
+    widgets/GridDataImporterWidget.h
+    widgets/GridDataImporterWidget.cpp
     widgets/RenderConfigWidget.h
     widgets/RenderConfigWidget.cpp
     widgets/RendererConfigWidget.h
@@ -124,6 +126,7 @@ set ( UIs
     widgets/DataImporterWidget.ui
     widgets/DEMWidget.ui
     widgets/GlyphMappingChooser.ui
+    widgets/GridDataImporterWidget.ui
     widgets/RenderConfigWidget.ui
     widgets/RendererConfigWidget.ui
     widgets/ResidualViewConfigWidget.ui

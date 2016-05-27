@@ -45,6 +45,7 @@
     </widget>
     <addaction name="actionOpen"/>
     <addaction name="actionImport_CSV_Triangle_Mesh"/>
+    <addaction name="actionImport_CSV_Grid_Data"/>
     <addaction name="actionExportDataset"/>
     <addaction name="menuRecent_Files"/>
     <addaction name="separator"/>
@@ -190,6 +191,11 @@
   <action name="actionAbout">
    <property name="text">
     <string>&amp;About</string>
+   </property>
+  </action>
+  <action name="actionImport_CSV_Grid_Data">
+   <property name="text">
+    <string>Import CSV Grid Data...</string>
    </property>
   </action>
  </widget>

@@ -36,6 +36,7 @@
 #include <gui/plugin/GuiPluginInterface.h>
 #include <gui/plugin/GuiPluginManager.h>
 #include <gui/widgets/DataImporterWidget.h>
+#include <gui/widgets/GridDataImporterWidget.h>
 #include <gui/widgets/CanvasExporterWidget.h>
 #include <gui/widgets/ColorMappingChooser.h>
 #include <gui/widgets/DEMWidget.h>
@@ -76,6 +77,13 @@ MainWindow::MainWindow()
     connect(m_ui->actionOpen, &QAction::triggered, [this] () { openFiles(dialog_inputFileName()); });
     connect(m_ui->actionImport_CSV_Triangle_Mesh, &QAction::triggered, [this] () {
         DataImporterWidget importer(this);
+        if (importer.exec() == QDialog::Accepted)
+        {
+            m_dataSetHandler->takeData(importer.releaseLoadedData());
+        }
+    });
+    connect(m_ui->actionImport_CSV_Grid_Data, &QAction::triggered, [this] () {
+        GridDataImporterWidget importer(this);
         if (importer.exec() == QDialog::Accepted)
         {
             m_dataSetHandler->takeData(importer.releaseLoadedData());
