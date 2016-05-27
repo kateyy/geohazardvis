@@ -38,7 +38,7 @@ enum class ModelType
 struct ReadDataSet
 {
     DataSetType type;
-    std::vector<std::vector<t_FP>> data;
+    InputVector data;
     std::string attributeName;
     vtkSmartPointer<vtkDataObject> vtkMetaData;
 };

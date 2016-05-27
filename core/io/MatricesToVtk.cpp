@@ -73,7 +73,7 @@ std::unique_ptr<DataObject> MatricesToVtk::loadIndexedTriangles(const QString & 
 
     vtkSmartPointer<vtkPolyData> polyData = parseIndexedTriangles(*vertices, 0, 1, *indices, 0);
 
-    for (auto namedVector : vectorArrays)
+    for (auto && namedVector : vectorArrays)
     {
         const auto vector = *namedVector.second;
 
@@ -87,49 +87,17 @@ std::unique_ptr<DataObject> MatricesToVtk::loadIndexedTriangles(const QString & 
     return std::make_unique<PolyDataObject>(name, *polyData);
 }
 
-std::unique_ptr<DataObject> MatricesToVtk::loadDEM(const QString & name, const std::vector<ReadDataSet> & datasets)
-{
-    assert(datasets.size() == 1);
-    assert(datasets.begin()->type == DataSetType::grid2D);
-    vtkSmartPointer<vtkImageData> image = vtkImageData::SafeDownCast( datasets.begin()->vtkMetaData);
-    assert(image);
-
-    const auto & data = datasets.begin()->data;
-
-    int dims[3];
-    image->GetDimensions(dims);
-
-    assert(dims[0] > 0 && dims[1] > 0 && dims[2] == 1);
-
-    if (static_cast<int>(data.size()) != dims[0] || static_cast<int>(data.at(0).size()) != dims[1])
-        return nullptr;
-
-    image->AllocateScalars(VTK_FLOAT, 1);
-    image->GetPointData()->GetScalars()->SetName(name.toUtf8().data());
-
-    for (int x = 0; x < dims[0]; ++x)
-    {
-        for (int y = 0; y < dims[1]; ++y)
-        {
-            float * scalars = reinterpret_cast<float *>(image->GetScalarPointer(x, y, 0));
-            *scalars = static_cast<float>(data.at(x).at(y));
-        }
-    }
-
-    return std::make_unique<ImageDataObject>(name, *image);
-}
-
 std::unique_ptr<DataObject> MatricesToVtk::loadGrid2D(const QString & name, const std::vector<ReadDataSet> & datasets)
 {
     assert(datasets.size() == 1);
     const auto dataDef = datasets.front();
     assert(dataDef.type == DataSetType::grid2D);
     const InputVector & inputData = dataDef.data;
-    auto image = vtkImageData::SafeDownCast(dataDef.vtkMetaData);
-    assert(image);
+    auto metaDataImage = vtkImageData::SafeDownCast(dataDef.vtkMetaData);
+    assert(metaDataImage);
 
     int dimensions[3];
-    image->GetDimensions(dimensions);
+    metaDataImage->GetDimensions(dimensions);
     if (dimensions[0] != static_cast<int>(inputData.size())
         || dimensions[1] != static_cast<int>(inputData.at(0).size())
         || dimensions[2] != 1)
@@ -138,24 +106,9 @@ std::unique_ptr<DataObject> MatricesToVtk::loadGrid2D(const QString & name, cons
         return nullptr;
     }
 
-    auto pointData = vtkSmartPointer<vtkFloatArray>::New();
-    pointData->SetName(name.toUtf8());
-    pointData->SetNumberOfComponents(1);
-    pointData->SetNumberOfTuples(dimensions[0] * dimensions[1] * dimensions[2]);
-    for (int r = 0; r < dimensions[1]; ++r)
-    {
-        vtkIdType rOffset = r * dimensions[0];
-        for (int c = 0; c < dimensions[0]; ++c)
-        {
-            vtkIdType id = c + rOffset;
-            auto value = static_cast<float>(inputData.at(c).at(r));
-            pointData->SetValue(id, value);
-        }
-    }
+    auto parsedImage = parseGrid2D(inputData);
 
-    image->GetPointData()->SetScalars(pointData);
-
-    return std::make_unique<ImageDataObject>(name, *image);
+    return std::make_unique<ImageDataObject>(name, *parsedImage);
 }
 
 std::unique_ptr<DataObject> MatricesToVtk::loadGrid3D(const QString & name, const std::vector<ReadDataSet> & datasets)
@@ -306,6 +259,33 @@ std::unique_ptr<DataObject> MatricesToVtk::loadGrid3D(const QString & name, cons
     }
 
     return std::make_unique<VectorGrid3DDataObject>(name, *image);
+}
+
+vtkSmartPointer<vtkImageData> MatricesToVtk::parseGrid2D(const io::InputVector & inputData, int vtk_dataType)
+{
+    auto image = vtkSmartPointer<vtkImageData>::New();
+    if (inputData.size() == 0 || inputData.at(0).size() == 0)
+    {
+        return image;
+    }
+
+    const std::array<int, 3> dimensions = {
+        static_cast<int>(inputData.size()),
+        static_cast<int>(inputData.at(0).size()),
+        1
+    };
+
+    image->SetDimensions(dimensions.data());
+    image->AllocateScalars(vtk_dataType, 1);
+    for (int x = 0; x < dimensions[0]; ++x)
+    {
+        for (int y = 0; y < dimensions[1]; ++y)
+        {
+            image->SetScalarComponentFromDouble(x, y, 0, 0, inputData.at(x).at(y));
+        }
+    }
+
+    return image;
 }
 
 vtkSmartPointer<vtkPolyData> MatricesToVtk::parsePoints(

@@ -332,7 +332,7 @@ bool TextFileReader::readHeader_DEM(ifstream & inputStream, vector<DataSetDef>& 
     if (!atEnd)
         return false;
 
-    if (columns <= 0 || rows <= 0 || std::isnan(xMin) || std::isnan(xMax) || cellSize <= 0)
+    if (columns <= 0 || rows <= 0 || std::isnan(xMin) || std::isnan(yMin))
         return false;
 
     auto image = vtkSmartPointer<vtkImageData>::New();
@@ -442,12 +442,12 @@ bool TextFileReader::readHeader_grid2D(ifstream & inputStream, vector<DataSetDef
         double val1 = stod(paramValue.substr(0, seperator));
         double val2 = stod(paramValue.substr(seperator + 1, string::npos));
         
-        if (paramName == "xExtent")
+        if (paramName == "xextent")
         {
             extent[0] = val1;
             extent[1] = val2;
         }
-        else if (paramName == "yExtent")
+        else if (paramName == "yextent")
         {
             extent[2] = val1;
             extent[3] = val2;
