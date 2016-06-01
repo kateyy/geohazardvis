@@ -10,8 +10,6 @@ list(APPEND DEFAULT_COMPILE_DEFS
 )
 
 set(DEFAULT_COMPILE_FLAGS
-      -std=c++1y
-
       -fexceptions
       -pthread      # -> use pthread library
       -pipe         # -> use pipes
@@ -31,6 +29,10 @@ set(DEFAULT_COMPILE_FLAGS
       >
 
 )
+
+if (CMAKE_VERSION VERSION_LESS 3.1)
+    list(APPEND DEFAULT_COMPILE_FLAGS -std=c++1y)
+endif()
 
 set(DEFAULT_LINKER_FLAGS "-pthread -fPIE -pie -fuse-ld=gold")
 

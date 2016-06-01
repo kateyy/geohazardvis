@@ -21,7 +21,6 @@ set(DEFAULT_COMPILE_DEFS_RELEASE
 
 
 set(DEFAULT_COMPILE_FLAGS
-      -std=c++14
     # -pthread      # -> use pthread library
       # -pipe         # -> use pipes
       -Wall
@@ -67,6 +66,10 @@ set(DEFAULT_COMPILE_FLAGS
         /MD
     >
 )
+
+if (CMAKE_VERSION VERSION_LESS 3.1)
+    list(APPEND DEFAULT_COMPILE_FLAGS -std=c++1y)
+endif()
 
 set(DEFAULT_LINKER_FLAGS_DEBUG
     ""

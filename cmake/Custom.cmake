@@ -20,6 +20,14 @@ function(configure_cxx_target TARGET)
         FOLDER                              "${IDE_FOLDER}"
     )
 
+    if (NOT CMAKE_VERSION VERSION_LESS 3.1)
+        set_target_properties( ${TARGET}
+            PROPERTIES
+            CXX_STANDARD 14
+            CXX_STANDARD_REQUIRED ON
+        )
+    endif()
+
     cppcheck_target(${TARGET})
 
 endfunction()

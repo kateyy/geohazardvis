@@ -16,8 +16,6 @@ list(APPEND DEFAULT_COMPILE_DEFS
 )
 
 set(DEFAULT_COMPILE_FLAGS
-      -std=c++1y
-
       -fexceptions
       -pthread      # -> use pthread library
     # -no-rtti      # -> disable c++ rtti
@@ -34,8 +32,11 @@ set(DEFAULT_COMPILE_FLAGS
       -Wconversion
 
       -Werror=return-type # -> missing returns in functions and methods are handled as errors which stops the compilation
-
 )
+
+if (CMAKE_VERSION VERSION_LESS 3.1)
+    list(APPEND DEFAULT_COMPILE_FLAGS -std=c++1y)
+endif()
 
 set(DEFAULT_LINKER_FLAGS "-pthread")
 
