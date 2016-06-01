@@ -291,7 +291,7 @@ set_property(DIRECTORY APPEND PROPERTY COMPILE_DEFINITIONS ${VTK_DEFINITIONS})
 set(PROJECT_QT_COMPONENTS Core Gui Widgets OpenGL)
 if (UNIX)
     # required for platform plugin deployment
-    list(APPEND PROJECT_QT_COMPONENTS DBus Svg)
+    list(APPEND PROJECT_QT_COMPONENTS DBus Svg X11Extras)
 endif()
 find_package(Qt5 5.3 COMPONENTS ${PROJECT_QT_COMPONENTS})
 if(NOT ${Qt5Core_VERSION} VERSION_LESS 5.5)
