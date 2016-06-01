@@ -161,6 +161,7 @@ set ( SOURCES
     reflectionzeug_extension/QStringProperty.cpp
 
     ThirdParty/alphanum.hpp
+    ThirdParty/dark_fusion_style.hpp
     ThirdParty/ParaView/vtkGridAxes2DActor.h
     ThirdParty/ParaView/vtkGridAxes2DActor.cxx
     ThirdParty/ParaView/vtkGridAxes3DActor.h

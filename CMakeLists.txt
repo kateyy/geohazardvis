@@ -338,7 +338,7 @@ else()
         PREFIX ${LIBZEUG_PREFIX}
         SOURCE_DIR "${THIRD_PARTY_SOURCE_DIR}/libzeug"
         GIT_REPOSITORY ${OPTION_LIBZEUG_GIT_REPOSITORY}
-        GIT_TAG "geohazardvis_2015_09"
+        GIT_TAG "geohazardvis_2016_06"
         BUILD_COMMAND ${CMAKE_COMMAND}
             -DBUILD_CONFIG:STRING=${CMAKE_CFG_INTDIR}
             -P ${PROJECT_SOURCE_DIR}/cmake/libzeugExternalProjectBuild.cmake

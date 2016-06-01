@@ -16,8 +16,6 @@
 #include <QMimeData>
 #include <QtConcurrent/QtConcurrentRun>
 
-#include <widgetzeug/dark_fusion_style.hpp>
-
 #include <core/ApplicationSettings.h>
 #include <core/DataSetHandler.h>
 #include <core/RuntimeInfo.h>
@@ -27,6 +25,7 @@
 #include <core/io/Exporter.h>
 #include <core/io/Loader.h>
 #include <core/rendered_data/RenderedData.h>
+#include <core/ThirdParty/dark_fusion_style.hpp>
 #include <core/utility/qthelper.h>
 
 #include <gui/DataMapping.h>
