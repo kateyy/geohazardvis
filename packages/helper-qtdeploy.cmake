@@ -23,17 +23,33 @@ if (WIN32)
     get_target_property(QtOpenGL_debug_location   Qt5::OpenGL IMPORTED_LOCATION_DEBUG)
 
     get_filename_component(_qtBinDir ${Qt5QMake_PATH} DIRECTORY)
-    
+
+    if(${Qt5Core_VERSION} VERSION_LESS 5.6)
+        set(_windeployqtParams
+            $<$<CONFIG:Debug>:--debug>$<$<CONFIG:RelWithDebInfo>:--release-with-debug-info>$<$<OR:$<CONFIG:Release>,$<CONFIG:RelNoOptimization>>:--release>
+            --no-translations
+            --no-compiler-runtime
+            --no-system-d3d-compiler
+        )
+    else()
+        set(_windeployqtParams
+            $<$<CONFIG:Debug>:--debug>$<$<NOT:$<CONFIG:Debug>>:--release>
+            $<$<OR:$<CONFIG:Debug>,$<CONFIG:RelWithDebInfo>,$<CONFIG:RelNoOptimization>>:--pdb>
+            --no-translations
+            --no-compiler-runtime
+            --no-system-d3d-compiler
+            --no-angle
+            --no-opengl-sw
+        )
+    endif()
+
     add_custom_target(PrepareQtDeploy
         DEPENDS ${META_PROJECT_NAME}
         COMMAND ${CMAKE_COMMAND} -E remove_directory "${QT_DEPLOY_DIR}"
         COMMAND ${_qtBinDir}/windeployqt
             "${CMAKE_BINARY_DIR}/$<CONFIG>/${META_PROJECT_NAME}$<$<CONFIG:Debug>:_d>$<$<CONFIG:RelWithDebInfo>:_rd>$<$<CONFIG:RelNoOptimization>:_rd0>.exe"
             --dir "${QT_DEPLOY_DIR}"
-            $<$<CONFIG:Debug>:--debug>$<$<CONFIG:RelWithDebInfo>:--release-with-debug-info>$<$<OR:$<CONFIG:Release>,$<CONFIG:RelNoOptimization>>:--release>
-            --no-translations
-            --no-compiler-runtime
-            --no-system-d3d-compiler
+            ${_windeployqtParams}
         COMMAND ${CMAKE_COMMAND} -E copy
             "$<$<NOT:$<CONFIG:Debug>>:${QtOpenGL_release_location}>$<$<CONFIG:DEBUG>:${QtOpenGL_debug_location}>"
             "${QT_DEPLOY_DIR}"
