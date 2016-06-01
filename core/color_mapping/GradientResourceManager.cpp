@@ -7,33 +7,9 @@
 
 #include <vtkLookupTable.h>
 
-#include "config.h"
+#include <core/RuntimeInfo.h>
 #include <core/utility/qthelper.h>
 
-
-namespace
-{
-    QString getGradienstDir()
-    {
-        const auto gradientsDir = QString("gradients");
-
-
-        const char * appBaseDir =
-#if (__linux__)
-            "..";
-#else
-            ".";
-#endif
-        const auto besidesAppDir = QDir(QCoreApplication::applicationDirPath() + "/" + appBaseDir + "/" + projectDataDir() + "/" + gradientsDir).absolutePath();
-        if (QDir(besidesAppDir).exists())
-        {
-            return besidesAppDir;
-        }
-
-        return QDir(projectDataDir() + "/" + gradientsDir).absolutePath();
-
-    }
-}
 
 auto GradientResourceManager::gradients() const -> const std::map<QString, const GradientData> &
 {
@@ -64,7 +40,7 @@ auto GradientResourceManager::defaultGradient() const -> const GradientData &
 }
 
 GradientResourceManager::GradientResourceManager()
-    : m_gradientsDir{ getGradienstDir() }
+    : m_gradientsDir{ QDir(RuntimeInfo::dataPath()).filePath("gradients") }
     , m_defaultGradientName{ "_0012_Blue-Red_copy" }
 {
     loadGradients();

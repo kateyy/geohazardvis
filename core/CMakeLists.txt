@@ -11,6 +11,8 @@ set ( SOURCES
     ApplicationSettings.cpp
     DataSetHandler.h
     DataSetHandler.cpp
+    RuntimeInfo.h
+    RuntimeInfo.cpp
     t_QVTKWidget.h
     t_QVTKWidgetFwd.h
     types.h

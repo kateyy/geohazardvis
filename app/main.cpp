@@ -123,7 +123,7 @@ int main(int argc, char** argv)
     QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
 #endif
 
-    QCoreApplication::setApplicationName(metaProjectName());
+    QCoreApplication::setApplicationName(config::metaProjectName);
 
     Application app(argc, argv);
 

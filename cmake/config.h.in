@@ -1,18 +1,26 @@
 #pragma once
 
-#include <QString>
-
-inline const QString & metaProjectName()
-{
-    static const QString name = "@META_PROJECT_NAME@";
-    return name;
-}
-
-inline const QString & projectDataDir()
-{
-    static const QString dir = "@INSTALL_DATA@";
-    return dir;
-}
+//
+// definitions required in macros
+//
 
 #define VTK_RENDERING_BACKEND @VTK_RENDERING_BACKEND_VERSION@
 #define VTK_has_GLExport2PS @VTK_has_GLExport2PS@
+#cmakedefine OPTION_LOCAL_INSTALL
+
+
+namespace config
+{
+
+//
+// project setup information required at runtime
+//
+// http://stackoverflow.com/questions/2879548/is-it-appropriate-to-set-a-value-to-a-const-char-in-the-header-file/2879851#2879851
+//
+
+const char * const metaProjectName = "@META_PROJECT_NAME@";
+const char * const installDataRelativePath = "@INSTALL_DATA@";
+const char * const installBinRelativePath = "@INSTALL_BIN@";
+const char * const installPluginsSharedRelativePath = "@INSTALL_PLUGINS_SHARED@";
+
+}

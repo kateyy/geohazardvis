@@ -170,7 +170,9 @@ if(WIN32)
     set(INSTALL_PLUGINS_SHARED "${INSTALL_SHARED}/plugins")
     set(INSTALL_PLUGINS_LIB "${INSTALL_LIB}/plugins")
 
-else()
+elseif(UNIX)
+    set(OPTION_LOCAL_INSTALL ON CACHE INTERNAL "Local installation enforced, packaging is not supported yet on linux systems.")
+
 #     set(INSTALL_ROOT "share/${project}")        # /usr/[local]/share/<project>
 #     set(INSTALL_DATA "share/${project}")        # /usr/[local]/share/<project>
     set(INSTALL_ROOT ".")

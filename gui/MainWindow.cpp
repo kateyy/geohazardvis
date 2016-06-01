@@ -20,6 +20,7 @@
 
 #include <core/ApplicationSettings.h>
 #include <core/DataSetHandler.h>
+#include <core/RuntimeInfo.h>
 #include <core/TextureManager.h>
 #include <core/VersionInfo.h>
 #include <core/data_objects/DataObject.h>
@@ -95,7 +96,7 @@ MainWindow::MainWindow()
         prependRecentFiles({});
     });
     connect(m_ui->actionAbout, &QAction::triggered, [this] () {
-        QMessageBox::about(this, metaProjectName(), 
+        QMessageBox::about(this, config::metaProjectName,
             QString(
                 "Maintainer contact:\n"
                 "\t%1\n"
@@ -113,7 +114,7 @@ MainWindow::MainWindow()
     });
     connect(m_ui->actionAbout_Qt, &QAction::triggered, [this] () { QMessageBox::aboutQt(this); });
     connect(m_ui->actionApply_Digital_Elevation_Model, &QAction::triggered, this, &MainWindow::showDEMWidget);
-    connect(m_ui->actionNew_Render_View, &QAction::triggered, 
+    connect(m_ui->actionNew_Render_View, &QAction::triggered,
         [this] () { m_dataMapping->openInRenderView({}); });
     connect(m_ui->actionExit, &QAction::triggered, qApp, &QApplication::quit);
 
@@ -177,7 +178,7 @@ MainWindow::MainWindow()
     // load plug-ins
 
     m_pluginManager = std::make_unique<GuiPluginManager>();
-    m_pluginManager->searchPaths() = QStringList(QCoreApplication::applicationDirPath() + "/plugins/");
+    m_pluginManager->searchPaths() = QStringList(RuntimeInfo::pluginsPath());
     m_pluginManager->scan(GuiPluginInterface(*this, *m_dataMapping));
 
     restoreUiState();
@@ -331,7 +332,7 @@ void MainWindow::prependRecentFiles(const QStringList & filePaths, const QString
         m_recentFileList << oldEntry;
     }
 
-    
+
     auto openRecentFile = [this] (int i) {
         auto && fileName = m_recentFileList[i];
         openFiles({ fileName });
@@ -487,7 +488,7 @@ void MainWindow::updateWindowTitle()
 {
     QMutexLocker lock(m_loadWatchersMutex.get());
 
-    QString title = metaProjectName();
+    QString title = config::metaProjectName;
 
     if (!m_loadWatchers.empty())
     {
@@ -504,7 +505,7 @@ void MainWindow::updateWindowTitle()
         title.truncate(title.length() - 2);
     }
 
-    setWindowTitle(title);    
+    setWindowTitle(title);
 }
 
 void MainWindow::handleAsyncLoadFinished()
