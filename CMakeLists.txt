@@ -189,7 +189,17 @@ else()
 
     install(PROGRAMS packages/${META_PROJECT_NAME}.sh
         DESTINATION ${INSTALL_ROOT})
+
+    # Prefer using libraries in ./lib/ folder when installed.
+    # (see https://cmake.org/Wiki/CMake_RPATH_handling)
+    set(CMAKE_SKIP_BUILD_RPATH OFF) # use, i.e. don't skip the full RPATH for the build tree
+    set(CMAKE_BUILD_WITH_INSTALL_RPATH OFF) # when building, don't use the install RPATH already (but later on when installing)
+    set(CMAKE_INSTALL_RPATH "$ORIGIN/../${INSTALL_LIB}")
+    set(CMAKE_INSTALL_RPATH_USE_LINK_PATH OFF)
+else()
+    message(FATAL_ERROR "Platform not supported.")
 endif()
+
 
 option(OPTION_INSTALL_3RDPARTY_BINARIES "Include 3rdparty libraries (libzeug, VTK, Qt) in installations and packages." ON)
 
