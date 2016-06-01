@@ -201,7 +201,7 @@ bool TextFileReader::readHeader_triangles(ifstream & inputStream, vector<DataSet
             continue;
 
         // this is the end if the header section, required for valid input files
-        if (rtrim(line) == "$end")
+        if (line == "$end")
             return true;
 
         // expecting only some types of datasets from now on
@@ -382,7 +382,7 @@ bool TextFileReader::readHeader_grid2D(ifstream & inputStream, vector<DataSetDef
     while (!inputStream.eof())
     {
         std::getline(inputStream, line);
-        rtrim(line);
+        line = rtrim(line);
 
         if (ignoreLine(line))
             continue;
@@ -441,7 +441,7 @@ bool TextFileReader::readHeader_grid2D(ifstream & inputStream, vector<DataSetDef
         size_t seperator = paramValue.find_first_of(":");
         double val1 = stod(paramValue.substr(0, seperator));
         double val2 = stod(paramValue.substr(seperator + 1, string::npos));
-        
+
         if (paramName == "xextent")
         {
             extent[0] = val1;
