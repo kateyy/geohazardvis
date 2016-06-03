@@ -59,7 +59,7 @@ function(setupProjectUserConfig TARGET)
         return()
     endif()
 
-    set(MSVC_LOCAL_DEBUGGER_WORKING_DIRECTORY "..\\..")
+    set(MSVC_LOCAL_DEBUGGER_WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
 
     # prepend executable paths for 3rdparty libraries to configuration specific PATHs
 
