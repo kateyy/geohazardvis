@@ -184,6 +184,8 @@ void ColorMappingChooser::guiGradientSelectionChanged()
 
     m_mapping->setGradient(selectedGradientName());
 
+    updateNanColorButtonStyle(m_mapping->gradient()->GetNanColorAsUnsignedChars());
+
     emit renderSetupChanged();
 }
 
@@ -330,6 +332,18 @@ void ColorMappingChooser::updateLegendConfig()
     m_ui->legendRangeLabelsCheckBox->setChecked(legend().GetAddRangeLabels() != 0);
 }
 
+void ColorMappingChooser::updateNanColorButtonStyle(const QColor & color)
+{
+    m_ui->nanColorButton->setStyleSheet(QString("background-color: %1").arg(color.name()));
+}
+
+void ColorMappingChooser::updateNanColorButtonStyle(const unsigned char color[4])
+{
+    updateNanColorButtonStyle(
+        QColor(static_cast<int>(color[0]), static_cast<int>(color[1]), static_cast<int>(color[2]), static_cast<int>(color[3])));
+
+}
+
 void ColorMappingChooser::loadGradientImages()
 {
     const auto & gradients = GradientResourceManager::instance().gradients();
@@ -399,7 +413,7 @@ void ColorMappingChooser::guiSelectNanColor()
 
     double colorV[4] = { nanColor.redF(), nanColor.greenF(), nanColor.blueF(), nanColor.alphaF() };
     gradient->SetNanColor(colorV);
-    m_ui->nanColorButton->setStyleSheet(QString("background-color: %1").arg(nanColor.name()));
+    updateNanColorButtonStyle(nanColor);
 
     emit renderSetupChanged();
 }
@@ -433,9 +447,7 @@ void ColorMappingChooser::rebuildGui()
         updateLegendLabelFont();
         updateLegendConfig();
 
-        const unsigned char * nanColorV = m_mapping->gradient()->GetNanColorAsUnsignedChars();
-        QColor nanColor(static_cast<int>(nanColorV[0]), static_cast<int>(nanColorV[1]), static_cast<int>(nanColorV[2]), static_cast<int>(nanColorV[3]));
-        m_ui->nanColorButton->setStyleSheet(QString("background-color: %1").arg(nanColor.name()));
+        updateNanColorButtonStyle(m_mapping->gradient()->GetNanColorAsUnsignedChars());
     }
 
     // this includes (and must include) setting up GUI connections

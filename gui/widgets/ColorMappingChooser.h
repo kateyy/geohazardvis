@@ -67,6 +67,8 @@ private:
     void updateLegendTitleFont();
     void updateLegendLabelFont();
     void updateLegendConfig();
+    void updateNanColorButtonStyle(const QColor & color);
+    void updateNanColorButtonStyle(const unsigned char color[4]);
 
     void loadGradientImages();
 
