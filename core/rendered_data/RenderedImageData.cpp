@@ -145,21 +145,16 @@ void RenderedImageData::scalarsForColorMappingChangedEvent()
         m_mapper->SetInputConnection(colorMappingInput());
     }
 
-    // hack: how to enforce to use color data directly?
-    if (m_colorMappingData->dataMinValue() == m_colorMappingData->dataMaxValue())
-        property()->SetLookupTable(nullptr);
-    else
-        property()->SetLookupTable(m_gradient);
+    property()->SetOpacity(colorMapping().isEnabled()
+        ? 1.0
+        : 0.0);
 }
 
 void RenderedImageData::colorMappingGradientChangedEvent()
 {
-    RenderedData::scalarsForColorMappingChangedEvent();
+    RenderedData::colorMappingGradientChangedEvent();
 
-    if (m_colorMappingData && (m_colorMappingData->dataMinValue() == m_colorMappingData->dataMaxValue()))
-        property()->SetLookupTable(nullptr);
-    else
-        property()->SetLookupTable(m_gradient);
+    property()->SetLookupTable(m_gradient);
 }
 
 void RenderedImageData::visibilityChangedEvent(bool visible)
