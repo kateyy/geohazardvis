@@ -19,7 +19,6 @@ ColorMapping::ColorMapping()
     : QObject()
     , m_isEnabled{ false }
     , m_glyphListener{ std::make_unique<GlyphColorMappingGlyphListener>() }
-    , m_gradient{ vtkSmartPointer<vtkLookupTable>::New() }
 {
     connect(m_glyphListener.get(), &GlyphColorMappingGlyphListener::glyphMappingChanged,
         this, &ColorMapping::updateAvailableScalars);
@@ -229,6 +228,11 @@ const ColorMappingData & ColorMapping::currentScalars() const
 
 vtkLookupTable * ColorMapping::gradient()
 {
+    if (!m_gradient)
+    {
+        m_gradient = vtkSmartPointer<vtkLookupTable>::New();
+    }
+
     if (m_gradientName.isEmpty())
     {
         setGradient(GradientResourceManager::instance().defaultGradientName());
@@ -261,10 +265,11 @@ void ColorMapping::setGradient(const QString & gradientName)
 
     auto && originalLut = gradients.at(gradientName).lookupTable;
 
-    m_gradient->SetTable(originalLut->GetTable());
-    m_gradient->SetNanColor(originalLut->GetNanColor());
-    m_gradient->SetUseAboveRangeColor(originalLut->GetUseAboveRangeColor());
-    m_gradient->SetUseBelowRangeColor(originalLut->GetUseBelowRangeColor());
+    gradient()->SetTable(originalLut->GetTable());
+    gradient()->SetNanColor(originalLut->GetNanColor());
+    gradient()->SetUseAboveRangeColor(originalLut->GetUseAboveRangeColor());
+    gradient()->SetUseBelowRangeColor(originalLut->GetUseBelowRangeColor());
+    gradient()->BuildSpecialColors();
 }
 
 bool ColorMapping::currentScalarsUseMappingLegend() const

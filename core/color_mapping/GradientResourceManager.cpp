@@ -143,6 +143,7 @@ vtkSmartPointer<vtkLookupTable> GradientResourceManager::buildLookupTable(const 
     // transparent NaN-color currently not correctly supported
     //lut->SetNanColor(1, 1, 1, 0);   // transparent!
     lut->SetNanColor(1, 1, 1, 1);
+    lut->BuildSpecialColors();
 
     return lut;
 }

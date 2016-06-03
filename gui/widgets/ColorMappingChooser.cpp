@@ -413,6 +413,7 @@ void ColorMappingChooser::guiSelectNanColor()
 
     double colorV[4] = { nanColor.redF(), nanColor.greenF(), nanColor.blueF(), nanColor.alphaF() };
     gradient->SetNanColor(colorV);
+    gradient->BuildSpecialColors();
     updateNanColorButtonStyle(nanColor);
 
     emit renderSetupChanged();
