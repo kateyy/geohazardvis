@@ -68,6 +68,8 @@ signals:
     void geometryChanged();
 
 protected:
+    /** Subclasses can override this method to set initial parameters on a newly created color mapping */
+    virtual void setupColorMapping(ColorMapping & colorMapping);
     virtual void visibilityChangedEvent(bool visible);
     virtual void scalarsForColorMappingChangedEvent();
     virtual void colorMappingGradientChangedEvent();

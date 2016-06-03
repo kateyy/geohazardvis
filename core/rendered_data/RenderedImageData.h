@@ -23,6 +23,7 @@ protected:
 
     vtkImageProperty * property();
 
+    void setupColorMapping(ColorMapping & colorMapping) override;
     void scalarsForColorMappingChangedEvent() override;
     void colorMappingGradientChangedEvent() override;
     void visibilityChangedEvent(bool visible) override;

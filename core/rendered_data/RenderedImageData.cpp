@@ -36,13 +36,11 @@ namespace
 
 RenderedImageData::RenderedImageData(ImageDataObject & dataObject)
     : RenderedData(ContentType::Rendered2D, dataObject)
-    , m_mapper(vtkSmartPointer<vtkImageSliceMapper>::New()) // replace with vtkImageResliceMapper?
+    , m_mapper{ vtkSmartPointer<vtkImageSliceMapper>::New() } // replace with vtkImageResliceMapper?
 {
     m_mapper->SetInputConnection(dataObject.processedOutputPort());
 
     setupInformation(*m_mapper->GetInformation(), *this);
-
-    colorMapping().setEnabled(true);
 }
 
 std::unique_ptr<PropertyGroup> RenderedImageData::createConfigGroup()
@@ -109,6 +107,14 @@ vtkImageProperty * RenderedImageData::property()
     }
 
     return m_property;
+}
+
+void RenderedImageData::setupColorMapping(ColorMapping & colorMapping)
+{
+    RenderedData::setupColorMapping(colorMapping);
+
+    // visualizing images without color mapping doesn't make sense in most cases
+    colorMapping.setEnabled(true);
 }
 
 void RenderedImageData::scalarsForColorMappingChangedEvent()

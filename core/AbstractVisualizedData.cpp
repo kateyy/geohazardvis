@@ -19,10 +19,10 @@ vtkInformationKeyMacro(AbstractVisualizedData, VisualizedDataKey, IntegerPointer
 
 AbstractVisualizedData::AbstractVisualizedData(ContentType contentType, DataObject & dataObject, QObject * parent)
     : QObject(parent)
-    , m_colorMappingData(nullptr)
-    , m_contentType(contentType)
-    , m_dataObject(dataObject)
-    , m_isVisible(true)
+    , m_colorMappingData{ nullptr }
+    , m_contentType{ contentType }
+    , m_dataObject{ dataObject }
+    , m_isVisible{ true }
 {
     connect(&dataObject, &DataObject::dataChanged, this, &AbstractVisualizedData::geometryChanged);
 }
@@ -70,6 +70,7 @@ ColorMapping & AbstractVisualizedData::colorMapping()
     {
         m_colorMapping = std::make_unique<ColorMapping>();
         m_colorMapping->registerVisualizedData(this);
+        setupColorMapping(*m_colorMapping);
     }
 
     return *m_colorMapping;
@@ -138,6 +139,10 @@ AbstractVisualizedData * AbstractVisualizedData::readPointer(vtkInformation & in
 void AbstractVisualizedData::storePointer(vtkInformation & information, AbstractVisualizedData * visualization)
 {
     information.Set(AbstractVisualizedData::VisualizedDataKey(), reinterpret_cast<int *>(visualization), 1);
+}
+
+void AbstractVisualizedData::setupColorMapping(ColorMapping & /*colorMapping*/)
+{
 }
 
 void AbstractVisualizedData::visibilityChangedEvent(bool /*visible*/)

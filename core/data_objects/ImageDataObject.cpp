@@ -17,7 +17,7 @@
 
 ImageDataObject::ImageDataObject(const QString & name, vtkImageData & dataSet)
     : DataObject(name, &dataSet)
-    , m_extent()
+    , m_extent{}
 {
     vtkVector3d spacing;
     bool spacingChanged = false;
