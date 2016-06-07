@@ -137,6 +137,8 @@ bool GridDataImporterWidget::importToImageData()
         return false;
     }
 
+    imageData->SetOrigin(m_ui->originXSpinBox->value(), m_ui->originYSpinBox->value(), 0);
+    imageData->SetSpacing(m_ui->spacingXSpinBox->value(), m_ui->spacingYSpinBox->value(), 1);
     imageData->GetPointData()->GetScalars()->SetName(name.toUtf8().data());
     m_imageData = std::make_unique<ImageDataObject>(name, *imageData);
 
