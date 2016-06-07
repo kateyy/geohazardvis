@@ -245,7 +245,6 @@ bool DataImporterWidget::importToPolyData()
     auto name = QInputDialog::getText(this, "Data Object Name", "Data Object Name", QLineEdit::Normal, baseName, &ok);
     if (name.isEmpty())
     {
-        QMessageBox::information(this, "Import Failed", "Please set a name for the new imported data object!");
         return false;
     }
 
