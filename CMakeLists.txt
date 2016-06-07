@@ -382,16 +382,31 @@ if(OPTION_INSTALL_3RDPARTY_BINARIES)
     include(cmake/DeploySystemLibraries.cmake)
 
     if (VTK_BUILD_SHARED_LIBS)
+        if (VTK_ENABLE_KITS)
+            set(_actualVTKLibs)
+            foreach(_libName ${VTK_LIBRARIES})
+                set(_kitName ${${_libName}_KIT})
+                if (_kitName)
+                    list(APPEND _actualVTKLibs ${_kitName})
+                else()
+                    list(APPEND _actualVTKLibs ${_libName})
+                endif()
+            endforeach()
+            list(REMOVE_DUPLICATES _actualVTKLibs)
+        elseif()
+            set(_actualVTKLibs ${VTK_LIBRARIES})
+        endif()
+    
         set(_vtkDeployFiles)
         if (WIN32)
             # Windows: VTK build tree contains separated folders for each configuration
-            foreach(_libName ${VTK_LIBRARIES})
+            foreach(_libName ${_actualVTKLibs})
                 list(APPEND _vtkDeployFiles "${VTK_DIR}/bin/$<$<STREQUAL:$<CONFIG>,RelNoOptimization>:RelWithDebInfo>$<$<NOT:$<STREQUAL:$<CONFIG>,RelNoOptimization>>:$<CONFIG>>/${_libName}-${VTK_MAJOR_VERSION}.${VTK_MINOR_VERSION}.dll")
             endforeach()
         elseif(UNIX)
             # Linux: configuration type of installed VTK must be the same as the deployment configuration for this project.
             # We have to rely on this correct setup here.
-            foreach(_libName ${VTK_LIBRARIES})
+            foreach(_libName ${_actualVTKLibs})
                 get_filename_component(_realPath "lib${_libName}-${VTK_MAJOR_VERSION}.${VTK_MINOR_VERSION}.so" REALPATH
                     BASE_DIR ${VTK_INSTALL_PREFIX}/lib)
                 list(APPEND _vtkDeployFiles ${_realPath})
