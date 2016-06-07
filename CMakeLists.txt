@@ -334,6 +334,24 @@ else()
     set(LIBZEUG_PREFIX "${THIRD_PARTY_BUILD_DIR}/libzeug")
     set(libzeug_DIR "${LIBZEUG_PREFIX}/install")
 
+    set(_cmakeCacheArgs        
+        -DOPTION_BUILD_TESTS:bool=OFF
+        -DOPTION_USE_OPENMP:bool=OFF
+        -DQt5Core_DIR:path=${Qt5Core_DIR}
+        -DQt5Gui_DIR:path=${Qt5Gui_DIR}
+        -DQt5OpenGL_DIR:path=${Qt5OpenGL_DIR}
+        -DQt5Widgets_DIR:path=${Qt5Widgets_DIR}
+        -DCMAKE_INSTALL_PREFIX:path=${libzeug_DIR}
+        -DCMAKE_BUILD_TYPE:string=${CMAKE_BUILD_TYPE}
+        -DCMAKE_CXX_COMPILER:filepath=${CMAKE_CXX_COMPILER}
+        -DCMAKE_C_COMPILER:filepath=${CMAKE_C_COMPILER}
+    )
+    if (MSVC)
+        list(APPEND _cmakeCacheArgs 
+            -DOPTION_RELEASE_LTCG:bool=${OPTION_RELEASE_LTCG}
+        )
+    endif()
+    
     ExternalProject_Add(libzeug
         PREFIX ${LIBZEUG_PREFIX}
         SOURCE_DIR "${THIRD_PARTY_SOURCE_DIR}/libzeug"
@@ -343,17 +361,7 @@ else()
             -DBUILD_CONFIG:STRING=${CMAKE_CFG_INTDIR}
             -P ${PROJECT_SOURCE_DIR}/cmake/libzeugExternalProjectBuild.cmake
         INSTALL_COMMAND ""
-        CMAKE_CACHE_ARGS
-            -DOPTION_BUILD_TESTS:bool=OFF
-            -DOPTION_USE_OPENMP:bool=OFF
-            -DQt5Core_DIR:path=${Qt5Core_DIR}
-            -DQt5Gui_DIR:path=${Qt5Gui_DIR}
-            -DQt5OpenGL_DIR:path=${Qt5OpenGL_DIR}
-            -DQt5Widgets_DIR:path=${Qt5Widgets_DIR}
-            -DCMAKE_INSTALL_PREFIX:path=${libzeug_DIR}
-            -DCMAKE_BUILD_TYPE:string=${CMAKE_BUILD_TYPE}
-            -DCMAKE_CXX_COMPILER:filepath=${CMAKE_CXX_COMPILER}
-            -DCMAKE_C_COMPILER:filepath=${CMAKE_C_COMPILER}
+        CMAKE_CACHE_ARGS ${_cmakeCacheArgs}
     )
 
     set(LIBZEUG_INCLUDES
