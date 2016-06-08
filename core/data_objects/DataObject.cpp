@@ -25,7 +25,7 @@ vtkInformationKeyMacro(DataObject, ArrayIsAuxiliaryKey, Integer);
 
 
 DataObject::DataObject(const QString & name, vtkDataSet * dataSet)
-    : d_ptr(std::make_unique<DataObjectPrivate>(*this, name, dataSet))
+    : d_ptr{ std::make_unique<DataObjectPrivate>(*this, name, dataSet) }
 {
     setObjectName(name);
 
@@ -103,6 +103,16 @@ const double * DataObject::bounds()
 void DataObject::bounds(double b[6])
 {
     return processedDataSet()->GetBounds(b);
+}
+
+vtkIdType DataObject::numberOfPoints() const
+{
+    return d_ptr->m_numberOfPoints;
+}
+
+vtkIdType DataObject::numberOfCells() const
+{
+    return d_ptr->m_numberOfCells;
 }
 
 QVtkTableModel * DataObject::tableModel()

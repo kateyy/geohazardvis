@@ -11,14 +11,14 @@ vtkInformationKeyMacro(DataObjectPrivate, NameKey, String);
 
 
 DataObjectPrivate::DataObjectPrivate(DataObject & dataObject, const QString & name, vtkDataSet * dataSet)
-    : m_name(name)
-    , m_dataSet(dataSet)
-    , m_tableModel()
-    , m_bounds()
-    , m_numberOfPoints(0)
-    , m_numberOfCells(0)
-    , m_deferEventsRequests(0)
-    , q_ptr(dataObject)
+    : m_name{ name }
+    , m_dataSet{ dataSet }
+    , m_tableModel{}
+    , m_bounds{}
+    , m_numberOfPoints{ 0 }
+    , m_numberOfCells{ 0 }
+    , m_deferEventsRequests{ 0 }
+    , q_ptr{ dataObject }
 {
     if (dataSet)
     {
