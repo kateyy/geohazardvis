@@ -14,7 +14,10 @@ public:
 
     const QString & dataTypeName() const override { static QString empty; return empty; }
 
-    using DataObject::deferringEvents;
+    bool isDeferringEvents()
+    {
+        return dPtr().lockEventDeferrals().isDeferringEvents();
+    }
 
 protected:
     std::unique_ptr<QVtkTableModel> createTableModel() override { return nullptr; }
@@ -28,11 +31,11 @@ TEST(ScopedEventDeferral_test, move_lock)
     TestDataObject data;
 
     {
-        ASSERT_FALSE(data.deferringEvents());
+        ASSERT_FALSE(data.isDeferringEvents());
 
         ScopedEventDeferral d0(data);
 
-        ASSERT_TRUE(data.deferringEvents());
+        ASSERT_TRUE(data.isDeferringEvents());
 
         auto moveDeferral = [&data]() -> ScopedEventDeferral
         {
@@ -43,8 +46,8 @@ TEST(ScopedEventDeferral_test, move_lock)
 
         auto d2 = moveDeferral();
 
-        ASSERT_TRUE(data.deferringEvents());
+        ASSERT_TRUE(data.isDeferringEvents());
     }
 
-    ASSERT_FALSE(data.deferringEvents());
+    ASSERT_FALSE(data.isDeferringEvents());
 }

@@ -1,5 +1,7 @@
 #include "DataObject_private.h"
 
+#include <cassert>
+
 #include <vtkDataSet.h>
 #include <vtkInformationIntegerPointerKey.h>
 #include <vtkInformationStringKey.h>
@@ -45,6 +47,11 @@ vtkAlgorithm * DataObjectPrivate::trivialProducer()
     return m_trivialProducer;
 }
 
+void DataObjectPrivate::addObserver(const QString & eventName, vtkObject & subject, unsigned long tag)
+{
+    m_namedObserverIds[eventName].insert(&subject, tag);
+}
+
 void DataObjectPrivate::disconnectEventGroup(const QString & eventName)
 {
     auto && map = m_namedObserverIds[eventName];
@@ -66,18 +73,59 @@ void DataObjectPrivate::disconnectAllEvents()
     }
 }
 
-void DataObjectPrivate::addDeferredEvent(const QString & name, const EventMemberPointer & event)
+auto DataObjectPrivate::lockEventDeferrals() -> EventDeferralLock
 {
-    if (!m_deferredEvents.contains(name))
-        m_deferredEvents.insert(name, event);
+    return EventDeferralLock(*this, m_eventDeferralMutex);
 }
 
-void DataObjectPrivate::executeDeferredEvents()
+DataObjectPrivate::EventDeferralLock::EventDeferralLock(DataObjectPrivate & dop, std::recursive_mutex & mutex)
+    : m_dop{ dop }
+    , m_lock{ std::unique_lock<std::recursive_mutex>(mutex) }
 {
-    for (auto eventIt = m_deferredEvents.begin(); eventIt != m_deferredEvents.end(); ++eventIt)
+}
+
+DataObjectPrivate::EventDeferralLock::EventDeferralLock(EventDeferralLock && other)
+    : m_dop{ other.m_dop }
+    , m_lock{std::move(other.m_lock)}
+{
+}
+
+void DataObjectPrivate::EventDeferralLock::addDeferredEvent(const QString & name, EventMemberPointer event)
+{
+    if (m_dop.m_deferredEvents.contains(name))
     {
-        eventIt.value()();
+        m_dop.m_deferredEvents.insert(name, event);
+    }
+}
+
+void DataObjectPrivate::EventDeferralLock::deferEvents()
+{
+    assert(m_dop.m_deferEventsRequests >= 0);
+    m_dop.m_deferEventsRequests += 1;
+}
+
+bool DataObjectPrivate::EventDeferralLock::isDeferringEvents() const
+{
+    assert(m_dop.m_deferEventsRequests >= 0);
+    return m_dop.m_deferEventsRequests > 0;
+}
+
+void DataObjectPrivate::EventDeferralLock::executeDeferredEvents()
+{
+    assert(m_dop.m_deferEventsRequests > 0);
+    m_dop.m_deferEventsRequests -= 1;
+
+    if (isDeferringEvents())
+    {
+        return;
     }
 
-    m_deferredEvents.clear();
+    // stack is clear, so execute deferred events
+
+    for (auto && eventIt : m_dop.m_deferredEvents)
+    {
+        eventIt();
+    }
+
+    m_dop.m_deferredEvents.clear();
 }

@@ -129,27 +129,12 @@ void DataObject::addDataArray(vtkDataArray & /*dataArray*/)
 
 void DataObject::deferEvents()
 {
-    d_ptr->m_deferEventsRequests += 1;
-}
-
-bool DataObject::deferringEvents() const
-{
-    assert(d_ptr->m_deferEventsRequests >= 0);
-    return d_ptr->m_deferEventsRequests > 0;
+    d_ptr->lockEventDeferrals().deferEvents();
 }
 
 void DataObject::executeDeferredEvents()
 {
-    d_ptr->m_deferEventsRequests -= 1;
-
-    if (deferringEvents())
-        return;
-
-    // stack is clear, so execute deferred events
-    d_ptr->executeDeferredEvents();
-
-    // for sub-classes
-    process_executeDeferredEvents();
+    d_ptr->lockEventDeferrals().executeDeferredEvents();
 }
 
 DataObject * DataObject::readPointer(vtkInformation & information)
@@ -183,6 +168,11 @@ QString DataObject::readName(vtkInformation & information)
 void DataObject::storeName(vtkInformation & information, const DataObject & dataObject)
 {
     information.Set(DataObjectPrivate::NameKey(), dataObject.name().toUtf8().data());
+}
+
+DataObjectPrivate & DataObject::dPtr()
+{
+    return *d_ptr;
 }
 
 bool DataObject::checkIfBoundsChanged()
@@ -245,10 +235,6 @@ void DataObject::structureChangedEvent()
 {
 }
 
-void DataObject::process_executeDeferredEvents()
-{
-}
-
 void DataObject::disconnectEventGroup(const QString & eventName)
 {
     d_ptr->disconnectEventGroup(eventName);
@@ -260,9 +246,11 @@ void DataObject::disconnectAllEvents()
 
 void DataObject::_dataChanged()
 {
-    if (deferringEvents())
+    auto lock = d_ptr->lockEventDeferrals();
+
+    if (lock.isDeferringEvents())
     {
-        d_ptr->addDeferredEvent("dataChanged", std::bind(&DataObject::_dataChanged, this));
+        lock.addDeferredEvent("dataChanged", std::bind(&DataObject::_dataChanged, this));
         return;
     }
 
@@ -294,9 +282,11 @@ void DataObject::_dataChanged()
 
 void DataObject::_attributeArraysChanged()
 {
-    if (deferringEvents())
+    auto lock = d_ptr->lockEventDeferrals();
+
+    if (lock.isDeferringEvents())
     {
-        d_ptr->addDeferredEvent("_attributeArraysChanged", std::bind(&DataObject::_attributeArraysChanged, this));
+        lock.addDeferredEvent("_attributeArraysChanged", std::bind(&DataObject::_attributeArraysChanged, this));
         return;
     }
 
@@ -305,5 +295,5 @@ void DataObject::_attributeArraysChanged()
 
 void DataObject::addObserver(const QString & eventName, vtkObject & subject, unsigned long tag)
 {
-    d_ptr->m_namedObserverIds[eventName].insert(&subject, tag);
+    d_ptr->addObserver(eventName, subject, tag);
 }

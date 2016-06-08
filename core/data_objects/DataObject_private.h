@@ -3,6 +3,7 @@
 #include <array>
 #include <functional>
 #include <memory>
+#include <mutex>
 
 #include <QMap>
 #include <QString>
@@ -22,7 +23,7 @@ class vtkObject;
 class DataObject;
 
 
-class DataObjectPrivate
+class CORE_API DataObjectPrivate
 {
 public:
     DataObjectPrivate(DataObject & dataObject, const QString & name, vtkDataSet * dataSet);
@@ -34,6 +35,7 @@ public:
 
     vtkAlgorithm * trivialProducer();
 
+    void addObserver(const QString & eventName, vtkObject & subject, unsigned long tag);
     void disconnectEventGroup(const QString & eventName);
     void disconnectAllEvents();
 
@@ -47,17 +49,37 @@ public:
     vtkIdType m_numberOfPoints;
     vtkIdType m_numberOfCells;
 
-    QMap<QString, QMap<vtkWeakPointer<vtkObject>, unsigned long>> m_namedObserverIds;
-
-    int m_deferEventsRequests;
     using EventMemberPointer = std::function<void()>;
-    void addDeferredEvent(const QString & name, const EventMemberPointer & event);
-    void executeDeferredEvents();
+
+    class CORE_API EventDeferralLock
+    {
+    public:
+        explicit EventDeferralLock(DataObjectPrivate & dop, std::recursive_mutex & mutex);
+        EventDeferralLock(EventDeferralLock && other);
+
+        void addDeferredEvent(const QString & name, EventMemberPointer event);
+        void deferEvents();
+        bool isDeferringEvents() const;
+        void executeDeferredEvents();
+
+        EventDeferralLock(const EventDeferralLock &) = delete;
+        EventDeferralLock & operator=(const EventDeferralLock &) = delete;
+    private:
+        DataObjectPrivate & m_dop;
+        std::unique_lock<std::recursive_mutex> m_lock;
+    };
+
+    EventDeferralLock lockEventDeferrals();
 
 protected:
     DataObject & q_ptr;
 
 private:
     vtkSmartPointer<vtkAlgorithm> m_trivialProducer;
+    QMap<QString, QMap<vtkWeakPointer<vtkObject>, unsigned long>> m_namedObserverIds;
+
+    friend class EventDeferralLock;
+    std::recursive_mutex m_eventDeferralMutex;
+    int m_deferEventsRequests;
     QMap<QString, EventMemberPointer> m_deferredEvents;
 };

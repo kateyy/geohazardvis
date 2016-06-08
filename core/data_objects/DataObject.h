@@ -93,6 +93,8 @@ signals:
     void structureChanged();
 
 protected:
+    DataObjectPrivate & dPtr();
+
     virtual std::unique_ptr<QVtkTableModel> createTableModel() = 0;
 
     template<typename U, typename T>
@@ -117,9 +119,6 @@ protected:
     virtual void boundsChangedEvent();
     virtual void valueRangeChangedEvent();
     virtual void structureChangedEvent();
-
-    bool deferringEvents() const;
-    virtual void process_executeDeferredEvents();
 
 private:
     void addObserver(const QString & eventName, vtkObject & subject, unsigned long tag);
