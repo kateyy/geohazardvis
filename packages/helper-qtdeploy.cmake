@@ -35,9 +35,9 @@ if (WIN32)
         set(_windeployqtParams
         # If conditions of generator expressions don't match, they are replaced by "",
         # which is then interpreted as an empty parameter.
-        # Work around: don't put whitespace between the expressions in the next line.
-        # This line will correctly resolve to --debug --pdb or --release or --release --pdb
-            $<$<CONFIG:Debug>:--debug>$<$<NOT:$<CONFIG:Debug>>:--release>$<$<OR:$<CONFIG:Debug>,$<CONFIG:RelWithDebInfo>,$<CONFIG:RelNoOptimization>>:--pdb>
+        # Thus, $<$<OR:$<CONFIG:Debug>,$<CONFIG:RelWithDebInfo>,$<CONFIG:RelNoOptimization>>:--pdb>
+        # resolves to "" for Release builds. So just don't use this flag for now.
+            $<$<CONFIG:Debug>:--debug>$<$<NOT:$<CONFIG:Debug>>:--release>
             --no-translations
             --no-compiler-runtime
             --no-system-d3d-compiler
