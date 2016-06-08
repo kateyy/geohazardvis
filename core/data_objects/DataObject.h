@@ -9,6 +9,7 @@
 #include <core/core_api.h>
 
 
+class QStringList;
 class vtkInformation;
 class vtkInformationStringKey;
 class vtkInformationIntegerKey;
@@ -61,6 +62,9 @@ public:
     /** assign some kind of data array to my indexes.
         Let subclasses decide how to proceed with it; ignores this call by default */
     virtual void addDataArray(vtkDataArray & dataArray);
+    /** Remove all attributes for point, cell and field data, except those that are required for the DataObject itself.
+      * Remaining attributes are: field data "Name" */
+    void clearAttributes();
 
     /** Queue signals and events such as dataChanged(), boundsChanged() until executeDeferredEvents is called. 
       * This is required, when changing significant parts of the underlaying data set. 
@@ -110,6 +114,12 @@ protected:
     void _attributeArraysChanged();
 
 protected:
+    /** Implement in subclasses to add attributes that should not be removed in clearAttributes() */
+    virtual void addIntrinsicAttributes(
+        QStringList & fieldAttributes,
+        QStringList & pointAttributes,
+        QStringList & cellAttributes);
+
     /** when data set values changed, check whether this also affects the bounds*/
     virtual bool checkIfBoundsChanged();
     virtual bool checkIfValueRangeChanged();

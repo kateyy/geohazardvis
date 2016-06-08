@@ -145,22 +145,15 @@ void DataImporterWidget::openPolyDataFile()
     m_indexData.clear();
     m_polyData.reset();
 
-    auto dataObject = Loader::readFile(fileName);
-    if (!dataObject)
+    auto loadedData = Loader::readFile<PolyDataObject>(fileName);
+    if (!loadedData)
     {
         QMessageBox::warning(this, "Read Error", "Cannot open the specified polygonal data file.");
     }
     else
     {
-        m_polyData.reset(dynamic_cast<PolyDataObject *>(dataObject.get()));
-        if (m_polyData)
-        {
-            dataObject.release();
-        }
-        else
-        {
-            QMessageBox::warning(this, "Read Error", "Invalid file format.");
-        }
+        loadedData->clearAttributes();
+        m_polyData = std::move(loadedData);
     }
 
     updateSummary();

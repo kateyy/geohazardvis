@@ -1,8 +1,11 @@
 #include "DataObject.h"
 #include "DataObject_private.h"
 
+#include <array>
 #include <cassert>
 #include <type_traits>
+
+#include <QStringList>
 
 #include <vtkAlgorithm.h>
 #include <vtkCellData.h>
@@ -24,6 +27,16 @@
 vtkInformationKeyMacro(DataObject, ArrayIsAuxiliaryKey, Integer);
 
 
+namespace
+{
+    const char * const nameAttributeName()
+    {
+        static const char * const _name = "Name";
+        return _name;
+    }
+}
+
+
 DataObject::DataObject(const QString & name, vtkDataSet * dataSet)
     : d_ptr{ std::make_unique<DataObjectPrivate>(*this, name, dataSet) }
 {
@@ -39,17 +52,17 @@ DataObject::DataObject(const QString & name, vtkDataSet * dataSet)
 
         bool resetName = true;
         vtkFieldData * fieldData = dataSet->GetFieldData();
-        if (vtkDataArray * nameArray = fieldData->GetArray("Name"))
+        if (vtkDataArray * nameArray = fieldData->GetArray(nameAttributeName()))
         {
-            QString storedName = vtkArrayToQString(*nameArray);
+            const QString storedName = vtkArrayToQString(*nameArray);
             resetName = name != storedName;
         }
 
         if (resetName)
         {
-            fieldData->RemoveArray("Name");
+            fieldData->RemoveArray(nameAttributeName());
             vtkSmartPointer<vtkCharArray> newArray = qstringToVtkArray(name);
-            newArray->SetName("Name");
+            newArray->SetName(nameAttributeName());
             fieldData->AddArray(newArray);
         }
     }
@@ -127,6 +140,46 @@ void DataObject::addDataArray(vtkDataArray & /*dataArray*/)
 {
 }
 
+void DataObject::clearAttributes()
+{
+    const std::array<QStringList, 3> intrinsicAttributes = [this] ()
+    {
+        std::array<QStringList, 3> attrNames;   // field, point, cell
+        addIntrinsicAttributes(attrNames[0], attrNames[1], attrNames[2]);
+        
+        attrNames[0].prepend(nameAttributeName());
+        
+        return attrNames;
+    }();
+    
+    if (!dataSet())
+    {
+        return;
+    }
+    
+    auto & ds = *dataSet();
+    
+    const auto cleanupAttributes = [] (vtkFieldData & fd, const QStringList & intrinsicAttributes)
+    {
+        int i = 0;
+        while (i < fd.GetNumberOfArrays())
+        {
+            auto array = fd.GetAbstractArray(i);
+            if (intrinsicAttributes.contains(QString::fromUtf8(array->GetName())))
+            {
+                ++i;
+                continue;
+            }
+            fd.RemoveArray(i);
+        }
+    };
+
+    cleanupAttributes(*ds.GetFieldData(), intrinsicAttributes[0]);
+    cleanupAttributes(*ds.GetPointData(), intrinsicAttributes[1]);
+    cleanupAttributes(*ds.GetCellData(), intrinsicAttributes[2]);
+    
+}
+
 void DataObject::deferEvents()
 {
     d_ptr->lockEventDeferrals().deferEvents();
@@ -173,6 +226,13 @@ void DataObject::storeName(vtkInformation & information, const DataObject & data
 DataObjectPrivate & DataObject::dPtr()
 {
     return *d_ptr;
+}
+
+void DataObject::addIntrinsicAttributes(
+    QStringList & /*fieldAttributes*/,
+    QStringList & /*pointAttributes*/,
+    QStringList & /*cellAttributes*/)
+{
 }
 
 bool DataObject::checkIfBoundsChanged()
