@@ -11,7 +11,4 @@ class CORE_API RuntimeInfo
 public:
     static const QString & dataPath();
     static const QString & pluginsPath();
-
-private:
-    static const QString & basePath();
 };
