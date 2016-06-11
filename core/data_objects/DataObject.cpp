@@ -29,7 +29,7 @@ vtkInformationKeyMacro(DataObject, ArrayIsAuxiliaryKey, Integer);
 
 namespace
 {
-    const char * const nameAttributeName()
+    const char * nameAttributeName()
     {
         static const char * const _name = "Name";
         return _name;
@@ -146,19 +146,19 @@ void DataObject::clearAttributes()
     {
         std::array<QStringList, 3> attrNames;   // field, point, cell
         addIntrinsicAttributes(attrNames[0], attrNames[1], attrNames[2]);
-        
+
         attrNames[0].prepend(nameAttributeName());
-        
+
         return attrNames;
     }();
-    
+
     if (!dataSet())
     {
         return;
     }
-    
+
     auto & ds = *dataSet();
-    
+
     const auto cleanupAttributes = [] (vtkFieldData & fd, const QStringList & intrinsicAttributes)
     {
         int i = 0;
@@ -177,7 +177,7 @@ void DataObject::clearAttributes()
     cleanupAttributes(*ds.GetFieldData(), intrinsicAttributes[0]);
     cleanupAttributes(*ds.GetPointData(), intrinsicAttributes[1]);
     cleanupAttributes(*ds.GetCellData(), intrinsicAttributes[2]);
-    
+
 }
 
 void DataObject::deferEvents()
