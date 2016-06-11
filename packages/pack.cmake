@@ -1,18 +1,11 @@
 
-# CPack configuration
-
 if(EXISTS "${CMAKE_ROOT}/Modules/CPack.cmake")
-
-    # Options
 
     if(WIN32)
         set(OPTION_PACK_GENERATOR "ZIP;NSIS" CACHE STRING "Package targets")
     else()
-        set(OPTION_PACK_GENERATOR "ZIP;TGZ" CACHE STRING "Package targets")
+        set(OPTION_PACK_GENERATOR "TGZ" CACHE STRING "Package targets")
     endif()
-
-
-    # Initialize
 
     # Reset CPack configuration
     if(EXISTS "${CMAKE_ROOT}/Modules/CPack.cmake")
@@ -30,26 +23,17 @@ if(EXISTS "${CMAKE_ROOT}/Modules/CPack.cmake")
     set(CPACK_COMMAND "${CPACK_PATH}/cpack")
 
 
-    # Package project
+    set(project_name ${META_PROJECT_NAME})
+    set(project_root ${META_PROJECT_NAME})
 
-    set(project_name ${META_PROJECT_NAME})   # Name of package project
-    set(project_root ${META_PROJECT_NAME})   # Name of root project that is to be installed
+    set(package_name            ${META_PROJECT_NAME})
+    set(package_description     ${META_PROJECT_DESCRIPTION})
+    set(package_vendor          ${META_AUTHOR_ORGANIZATION})
+    set(package_maintainer      ${META_AUTHOR_MAINTAINER})
 
-
-    # Package information
-
-    set(package_name            "${META_PROJECT_NAME}")        # Package name
-    set(package_description     "${META_PROJECT_DESCRIPTION}") # Package description
-    set(package_vendor          "${META_AUTHOR_ORGANIZATION}") # Package vendor
-    set(package_maintainer      "${META_AUTHOR_MAINTAINER}")   # Package maintainer
-
-
-    # Package specific options
 
     set(CMAKE_MODULE_PATH                   ${CMAKE_SOURCE_DIR}/packages/${project_name})
 
-
-    # Package information
 
     set(CPACK_PACKAGE_NAME                  "${package_name}")
     set(CPACK_PACKAGE_VENDOR                "${package_vendor}")
@@ -65,7 +49,6 @@ if(EXISTS "${CMAKE_ROOT}/Modules/CPack.cmake")
     #set(CPACK_PACKAGE_ICON                  "${CMAKE_SOURCE_DIR}/packages/logo.bmp")
     set(CPACK_PACKAGE_RELOCATABLE           ON)
 
-    # NSIS package information
 
     if(WIN32 AND CPACK_PACKAGE_ICON)
         # NOTE: for using MUI (UN)WELCOME images we suggest to replace nsis defaults,
@@ -89,62 +72,16 @@ if(EXISTS "${CMAKE_ROOT}/Modules/CPack.cmake")
     #set(CPACK_NSIS_MUI_ICON    "${CMAKE_SOURCE_DIR}/packages/logo.ico")
     #set(CPACK_NSIS_MUI_UNIICON "${CMAKE_SOURCE_DIR}/packages/logo.ico")
 
-    # Debian package information
 
-    set(CPACK_DEBIAN_PACKAGE_NAME           "${package_name}")
-    set(CPACK_DEBIAN_PACKAGE_VERSION        "${CPACK_PACKAGE_VERSION}")
-    set(CPACK_DEBIAN_PACKAGE_ARCHITECTURE   "all")
-#   set(CPACK_DEBIAN_PACKAGE_DEPENDS        "libc6 (>= 2.3.1-6), libgcc1 (>= 1:3.4.2-12)")
-    set(CPACK_DEBIAN_PACKAGE_MAINTAINER     "${package_maintainer}")
-    set(CPACK_DEBIAN_PACKAGE_DESCRIPTION    "${CPACK_PACKAGE_DESCRIPTION_SUMMARY}")
-    set(CPACK_DEBIAN_PACKAGE_SECTION        "devel")
-    set(CPACK_DEBIAN_PACKAGE_PRIORITY       "optional")
-#   set(CPACK_DEBIAN_PACKAGE_RECOMMENDS     "")
-#   set(CPACK_DEBIAN_PACKAGE_SUGGESTS       "")
-    set(CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA  "")
-
-
-    # RPM package information
-
-    set(CPACK_RPM_PACKAGE_NAME                           "${package_name}")
-    set(CPACK_RPM_PACKAGE_VERSION                        "${CPACK_PACKAGE_VERSION}")
-    set(CPACK_RPM_PACKAGE_RELEASE                        1)
-    set(CPACK_RPM_PACKAGE_ARCHITECTURE                   "x86_64")
-    set(CPACK_RPM_PACKAGE_REQUIRES                       "")
-    set(CPACK_RPM_PACKAGE_PROVIDES                       "")
-    set(CPACK_RPM_PACKAGE_VENDOR                         "${package_vendor}")
-    # set(CPACK_RPM_PACKAGE_LICENSE                        "MIT")
-    set(CPACK_RPM_PACKAGE_SUMMARY                        "${CPACK_PACKAGE_DESCRIPTION_SUMMARY}")
-    set(CPACK_RPM_PACKAGE_DESCRIPTION                    "")
-    set(CPACK_RPM_PACKAGE_GROUP                          "unknown")
-#   set(CPACK_RPM_SPEC_INSTALL_POST                      "")
-#   set(CPACK_RPM_SPEC_MORE_DEFINE                       "")
-#   set(CPACK_RPM_USER_BINARY_SPECFILE                   "")
-#   set(CPACK_RPM_GENERATE_USER_BINARY_SPECFILE_TEMPLATE "")
-#   set(CPACK_RPM_<POST/PRE>_<UN>INSTALL_SCRIPT_FILE     "")
-#   set(CPACK_RPM_PACKAGE_DEBUG                          1)
-    set(CPACK_RPM_PACKAGE_RELOCATABLE                    OFF)
-
-
-    # Package name
-
-    set(CPACK_PACKAGE_FILE_NAME "${package_name}-${CPACK_PACKAGE_VERSION}")
-
-    # Install files
+    # set(CPACK_PACKAGE_FILE_NAME "${package_name}-${CPACK_PACKAGE_VERSION}")
 
     set(CPACK_INSTALL_CMAKE_PROJECTS        "${CMAKE_BINARY_DIR};${project_root};ALL;/")
     set(CPACK_PACKAGE_INSTALL_DIRECTORY     "${package_name}")
     set(CPACK_PACKAGE_INSTALL_REGISTRY_KEY  "${package_name}")
     set(CPACK_INSTALL_PREFIX            ".")
 
-
-    # Set generator
-
     set(CPACK_OUTPUT_CONFIG_FILE "${CMAKE_BINARY_DIR}/CPackConfig-${project_name}.cmake")
     set(CPACK_GENERATOR ${OPTION_PACK_GENERATOR})
-
-
-    # CPack
 
     if(NOT WIN32)
         # Important: Must be set to install files to absolute path (e.g., /etc)
@@ -163,6 +100,7 @@ set(TARGET_NAME pack-${project_name})
 add_custom_target(
     ${TARGET_NAME}
     COMMAND ${CPACK_COMMAND} --config ${CMAKE_BINARY_DIR}/CPackConfig-${project_name}.cmake
+        -C $<CONFIG>
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
 )
 set_target_properties(${TARGET_NAME}
