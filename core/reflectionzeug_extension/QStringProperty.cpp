@@ -1,5 +1,14 @@
 #include <core/reflectionzeug_extension/QStringProperty.h>
 
+#include <reflectionzeug/PropertyVisitor.h>
+
+
+QStringProperty::~QStringProperty() = default;
+
+void QStringProperty::accept(reflectionzeug::AbstractPropertyVisitor * visitor)
+{
+    reflectionzeug::StringPropertyInterface::accept(visitor);
+}
 
 std::string QStringProperty::toString() const
 {

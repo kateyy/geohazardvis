@@ -17,6 +17,11 @@ list(APPEND DEFAULT_COMPILE_DEFS
 
 set(DEFAULT_COMPILE_FLAGS
       -fexceptions
+
+      # TODO set these flags using CMake properties, once minimum CMake version is 3.0
+      -fvisibility=hidden
+      -fvisibility-inlines-hidden
+
       -pthread      # -> use pthread library
     # -no-rtti      # -> disable c++ rtti
       -pipe         # -> use pipes

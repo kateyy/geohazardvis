@@ -2,20 +2,24 @@
 
 #include <QString>
 
+#include <reflectionzeug/StringPropertyInterface.h>
 #include <reflectionzeug/Property.h>
 
 #include <core/core_api.h>
 
 
-class QStringProperty : public reflectionzeug::ValueProperty<QString, reflectionzeug::StringPropertyInterface>
+class CORE_API QStringProperty : public reflectionzeug::ValueProperty<QString, reflectionzeug::StringPropertyInterface>
 {
 public:
-    template <typename... Arguments>
-    explicit QStringProperty(Arguments&&... args);
+    using Type = QString;
 
-    CORE_API std::string toString() const;
+public:
+    ~QStringProperty() override = 0;
 
-    CORE_API bool fromString(const std::string & string);
+    void accept(reflectionzeug::AbstractPropertyVisitor * visitor) override;
+
+    std::string toString() const override;
+    bool fromString(const std::string & string) override;
 };
 
 
