@@ -417,7 +417,7 @@ void RendererImplementationBase3D::initialize()
         titleWidget->SetRepresentation(titleRepr);
         titleWidget->SetTextActor(titleActor);
         titleWidget->SelectableOff();
-        
+
         viewport.axesActor = createAxes();
         renderer->AddViewProp(viewport.axesActor);
     }
@@ -489,7 +489,8 @@ void RendererImplementationBase3D::updateAxes()
         // correctly show /required/ axes and labels (XY-plane only)
         if (m_interactorStyle->currentStyleName() == "InteractorStyleImage")
         {
-            bounds[4] = bounds[5];
+            const auto zShifted = bounds[5] + 0.00001;   // always show axes in front of the data
+            bounds[4] = bounds[5] = zShifted;
         }
 
         viewportSetup.axesActor->SetGridBounds(bounds);
@@ -571,7 +572,7 @@ vtkSmartPointer<vtkGridAxes3DActor> RendererImplementationBase3D::createAxes()
         gridAxes->GetLabelTextProperty(i)->SetColor(labelColor);
         gridAxes->GetTitleTextProperty(i)->SetColor(labelColor);
     }
-    
+
     // Will be shown when needed
     gridAxes->VisibilityOff();
 

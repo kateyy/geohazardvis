@@ -31,7 +31,9 @@ AbstractRenderView::AbstractRenderView(DataMapping & dataMapping, int index, QWi
 #if defined (Q_VTK_WIDGET2_H)
     if (auto qvtkWidget2 = dynamic_cast<QVTKWidget2 *>(m_qvtkWidget))
     {
-        qvtkWidget2->setFormat(QGLFormat(QGL::SampleBuffers));
+        auto renWin = qvtkWidget2->GetRenderWindow();
+        renWin->SetMultiSamples(1);
+        qvtkWidget2->setFormat(QVTKWidget2::GetDefaultVTKFormat(renWin));
     }
 #endif
 
