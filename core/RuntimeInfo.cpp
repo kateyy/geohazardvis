@@ -75,8 +75,6 @@ private:
             binariesBaseDir = appPath;
         }
 #endif
-        qDebug() << "bin:" << binariesBaseDir;
-        qDebug() << "data:" << dataBaseDir;
     }
 
     ~RuntimeInfo_internal() = default;
@@ -111,7 +109,5 @@ const QString & RuntimeInfo::pluginsPath()
             : QString{}    // linux CMake build puts all compiled targets into the build root folder
         );
 #endif
-
-    qDebug() << path;
     return path;
 }
