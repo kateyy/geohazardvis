@@ -16,7 +16,7 @@ set(META_AUTHOR_DOMAIN          "https://github.com/kateyy/geohazardvis")
 set(META_AUTHOR_MAINTAINER      "karsten.tausche@student.hpi.de")
 set(META_VERSION_MAJOR          "0")
 set(META_VERSION_MINOR          "1")
-set(META_VERSION_PATCH          "1")
+set(META_VERSION_PATCH          "2")
 set(META_VERSION_REVISION       "${GIT_REV}")
 set(META_VERSION                "${META_VERSION_MAJOR}.${META_VERSION_MINOR}.${META_VERSION_PATCH}")
 set(META_NAME_VERSION           "${META_PROJECT_NAME} v${META_VERSION} (${META_VERSION_REVISION})")
@@ -334,7 +334,7 @@ else()
     set(LIBZEUG_PREFIX "${THIRD_PARTY_BUILD_DIR}/libzeug")
     set(libzeug_DIR "${LIBZEUG_PREFIX}/install")
 
-    set(_cmakeCacheArgs        
+    set(_cmakeCacheArgs
         -DOPTION_BUILD_TESTS:bool=OFF
         -DOPTION_USE_OPENMP:bool=OFF
         -DQt5Core_DIR:path=${Qt5Core_DIR}
@@ -347,11 +347,11 @@ else()
         -DCMAKE_C_COMPILER:filepath=${CMAKE_C_COMPILER}
     )
     if (MSVC)
-        list(APPEND _cmakeCacheArgs 
+        list(APPEND _cmakeCacheArgs
             -DOPTION_RELEASE_LTCG:bool=${OPTION_RELEASE_LTCG}
         )
     endif()
-    
+
     ExternalProject_Add(libzeug
         PREFIX ${LIBZEUG_PREFIX}
         SOURCE_DIR "${THIRD_PARTY_SOURCE_DIR}/libzeug"
@@ -404,7 +404,7 @@ if(OPTION_INSTALL_3RDPARTY_BINARIES)
         elseif()
             set(_actualVTKLibs ${VTK_LIBRARIES})
         endif()
-    
+
         set(_vtkDeployFiles)
         if (WIN32)
             # Windows: VTK build tree contains separated folders for each configuration
