@@ -401,7 +401,7 @@ if(OPTION_INSTALL_3RDPARTY_BINARIES)
                 endif()
             endforeach()
             list(REMOVE_DUPLICATES _actualVTKLibs)
-        elseif()
+        else()
             set(_actualVTKLibs ${VTK_LIBRARIES})
         endif()
 
