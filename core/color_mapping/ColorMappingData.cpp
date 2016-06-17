@@ -37,6 +37,7 @@ void ColorMappingData::activate()
         m_lut->SetTableRange(minValue(), maxValue());
         m_lut->SetVectorModeToComponent();
         m_lut->SetVectorComponent(dataComponent());
+        m_lut->Build();
     }
 
     m_isActive = true;
@@ -84,7 +85,10 @@ void ColorMappingData::setDataComponent(int component)
     dataComponentChangedEvent();
 
     if (isActive() && m_lut)
+    {
         m_lut->SetTableRange(minValue(), maxValue());
+        m_lut->Build();
+    }
 }
 
 void ColorMappingData::initialize()
@@ -199,7 +203,10 @@ void ColorMappingData::dataComponentChangedEvent()
 void ColorMappingData::minMaxChangedEvent()
 {
     if (isActive() && m_lut)
+    {
         m_lut->SetTableRange(minValue(), maxValue());
+        m_lut->Build();
+    }
 
     emit minMaxChanged();
 }
