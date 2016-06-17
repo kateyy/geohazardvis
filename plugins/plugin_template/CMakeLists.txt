@@ -15,13 +15,11 @@ source_group_by_path(${CMAKE_CURRENT_SOURCE_DIR} ".*" "" "CMakeLists.txt")
 
 add_library(${target} SHARED ${sources})
 
-include_directories(
-    ${GEOHAZARDVIS_INCLUDE_DIR}
+target_include_directories(${target}
+    PUBLIC ${GEOHAZARDVIS_INCLUDE_DIR}
 )
 
 target_link_libraries(${target}
-    Qt5::Widgets
-
     gui
 )
 

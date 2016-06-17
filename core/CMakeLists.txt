@@ -1,9 +1,9 @@
 
-set( TARGET core )
-message( STATUS ${TARGET} )
+set(target core)
+message(STATUS ${target})
 
-set ( SOURCES
-    ${CMAKE_CURRENT_BINARY_DIR}/${TARGET}_api.h
+set(sources
+    ${CMAKE_CURRENT_BINARY_DIR}/${target}_api.h
 
     AbstractVisualizedData.h
     AbstractVisualizedData.cpp
@@ -206,38 +206,38 @@ set ( SOURCES
     utility/vtkvectorhelper.hpp
 )
 
-source_group_by_path_and_type(${CMAKE_CURRENT_SOURCE_DIR} ${SOURCES})
-source_group_by_path(${CMAKE_CURRENT_BINARY_DIR} ".*" "Generated" ${CMAKE_CURRENT_BINARY_DIR}/${TARGET}_api.h)
+source_group_by_path_and_type(${CMAKE_CURRENT_SOURCE_DIR} ${sources})
+source_group_by_path(${CMAKE_CURRENT_BINARY_DIR} ".*" "Generated" ${CMAKE_CURRENT_BINARY_DIR}/${target}_api.h)
 source_group_by_path(${CMAKE_CURRENT_SOURCE_DIR} ".*" "" "CMakeLists.txt")
 
 if (OPTION_BUILD_STATIC)
-    add_library(${TARGET} ${SOURCES})
+    add_library(${target} ${sources})
 else()
-    add_library(${TARGET} SHARED ${SOURCES})
+    add_library(${target} SHARED ${sources})
 endif()
 
 if(TARGET libzeug)
-    add_dependencies(${TARGET} libzeug)
+    add_dependencies(${target} libzeug)
 endif()
 
-target_link_libraries( ${TARGET}
+target_link_libraries(${target}
     ${OPENGL_LIBRARIES}
     ${VTK_LIBRARIES}
     ${LIBZEUG_LIBRARIES}
     Qt5::Core
 )
 
-target_include_directories(${TARGET}
-    SYSTEM PUBLIC ${LIBZEUG_INCLUDES}
+target_include_directories(${target} SYSTEM
+    PUBLIC ${LIBZEUG_INCLUDES}
 )
 
 
-configure_cxx_target( ${TARGET} )
+configure_cxx_target(${target})
 
-generate_library_export_header(${TARGET})
+generate_library_export_header(${target})
 
 
-install(TARGETS ${TARGET}
+install(TARGETS ${target}
     RUNTIME DESTINATION ${INSTALL_BIN}
     LIBRARY DESTINATION ${INSTALL_SHARED}
     # ARCHIVE DESTINATION ${INSTALL_LIB}

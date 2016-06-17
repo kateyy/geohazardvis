@@ -1,36 +1,31 @@
 
-set( TARGET ProbeData )
-message( STATUS ${TARGET} )
+set(target ProbeData)
+message(STATUS ${target})
 
-set ( SOURCES
+set(sources
     main.cpp
 )
 
-source_group_by_path_and_type(${CMAKE_CURRENT_SOURCE_DIR} ${SOURCES})
-source_group_by_path(${CMAKE_CURRENT_BINARY_DIR} ".*" "Generated" ${CMAKE_CURRENT_BINARY_DIR}/${TARGET}_api.h)
+source_group_by_path_and_type(${CMAKE_CURRENT_SOURCE_DIR} ${sources})
+source_group_by_path(${CMAKE_CURRENT_BINARY_DIR} ".*" "Generated" ${CMAKE_CURRENT_BINARY_DIR}/${target}_api.h)
 source_group_by_path(${CMAKE_CURRENT_SOURCE_DIR} ".*" "" "CMakeLists.txt")
 
-add_executable ( ${TARGET} ${SOURCES} )
+add_executable(${target} ${sources})
 
-set_target_properties( ${TARGET} PROPERTIES
-    FOLDER "${IDE_FOLDER}"
-)
-
-target_link_libraries( ${TARGET}
+target_link_libraries(${target}
     # ${LIBZEUG_REFLECTION_LIBRARY}
     # ${LIBZEUG_SIGNAL_LIBRARY}
     ${LIBZEUG_LIBRARIES}
     ${VTK_LIBRARIES}
     # Qt5::Widgets
-    
+
     core
     # gui
 )
 
-
-include_directories(
-    ${LIBZEUG_INCLUDES}
+target_include_directories(${target} SYSTEM
+    PUBLIC ${LIBZEUG_INCLUDES}
 )
 
-configure_cxx_target( ${TARGET} )
-setupProjectUserConfig(${TARGET})
+configure_cxx_target(${target})
+setupProjectUserConfig(${target})

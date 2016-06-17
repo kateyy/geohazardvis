@@ -6,6 +6,12 @@ function(configure_cxx_target TARGET)
     target_compile_definitions(${TARGET} PRIVATE ${DEFAULT_COMPILE_DEFS})
 
     target_compile_options(${TARGET} PRIVATE ${DEFAULT_COMPILE_FLAGS})
+    
+    if (ARGV1)
+        set(_ideFolder ${ARGV1})
+    else()
+        set(_ideFolder ${IDE_FOLDER})
+    endif()
 
     set_target_properties( ${TARGET}
         PROPERTIES
@@ -17,7 +23,7 @@ function(configure_cxx_target TARGET)
         DEBUG_POSTFIX                       "_d${DEBUG_POSTFIX}"
         RELWITHDEBINFO_POSTFIX              "_rd${DEBUG_POSTFIX}"
         RELNOOPTIMIZATION_POSTFIX           "_rd0${DEBUG_POSTFIX}"
-        FOLDER                              "${IDE_FOLDER}"
+        FOLDER                              "${_ideFolder}"
     )
 
     if (NOT CMAKE_VERSION VERSION_LESS 3.1)

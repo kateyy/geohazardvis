@@ -3,17 +3,6 @@ set(target gui-test)
 message(STATUS "Test ${target}")
 
 
-include_directories(
-    BEFORE
-    ${CMAKE_SOURCE_DIR}
-)
-
-set(libs
-    gui
-    ${GTEST_LIBRARIES}
-)
-
-
 set(sources
     main.cpp
     app_helper.h
@@ -23,12 +12,12 @@ set(sources
     RenderViewStrategy_test.cpp
 )
 
-
-# Build executable
-
 add_executable(${target} ${sources})
 
-target_link_libraries(${target} ${libs})
+target_link_libraries(${target} 
+    gui
+    ${GTEST_LIBRARIES}
+)
 
-configure_cxx_target( ${target} )
+configure_cxx_target(${target})
 setupProjectUserConfig(${target})

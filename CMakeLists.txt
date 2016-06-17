@@ -94,7 +94,7 @@ else()
 endif()
 
 
-list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
+list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 include(CMakeDependentOption)
 include(cmake/Custom.cmake)
 include(cmake/GetGitRevisionDescription.cmake)
@@ -104,8 +104,8 @@ include(cmake/GitDate.cmake)
 get_git_head_revision(GIT_REFSPEC GIT_SHA1)
 string(SUBSTRING "${GIT_SHA1}" 0 12 GIT_REV)
 get_git_commit_date(${GIT_SHA1} GIT_DATE)
-set(GIT_REVISION_FILE ${CMAKE_BINARY_DIR}/revision)
-set(VERSION_INFO_FILE ${CMAKE_CURRENT_BINARY_DIR}/vcs_commit_info.h)
+set(GIT_REVISION_FILE ${PROJECT_BINARY_DIR}/revision)
+set(VERSION_INFO_FILE ${PROJECT_BINARY_DIR}/vcs_commit_info.h)
 configure_file(cmake/vcs_commit_info.h.in ${VERSION_INFO_FILE})
 
 
@@ -134,15 +134,15 @@ endif()
 # Setup platform specifics (compile flags, etc., ...)
 if(MSVC)
     if(COMPILER_IS_CLANG)
-        include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/PlatformWindowsMSVCClang.cmake)
+        include(${PROJECT_SOURCE_DIR}/cmake/PlatformWindowsMSVCClang.cmake)
     else()
-        include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/PlatformWindowsMSVC.cmake)
+        include(${PROJECT_SOURCE_DIR}/cmake/PlatformWindowsMSVC.cmake)
     endif()
 elseif(UNIX)
     if (COMPILER_IS_CLANG)
-        include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/PlatformLinuxClang.cmake)
+        include(${PROJECT_SOURCE_DIR}/cmake/PlatformLinuxClang.cmake)
     else()
-        include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/PlatformLinuxGCC.cmake)
+        include(${PROJECT_SOURCE_DIR}/cmake/PlatformLinuxGCC.cmake)
     endif()
 else()
     message(WARNING "Unsupported platform/compiler combination")
@@ -295,8 +295,6 @@ endif()
 
 # find additional VTK components
 find_package(VTK COMPONENTS ${VTK_COMPONENTS})
-
-
 include_directories(SYSTEM ${VTK_INCLUDE_DIRS})
 set_property(DIRECTORY APPEND PROPERTY COMPILE_DEFINITIONS ${VTK_DEFINITIONS})
 
@@ -315,7 +313,6 @@ find_program(Qt5QMake_PATH qmake
     DOC "Path to the qmake executable of the currently used Qt5 installation.")
 
 set(CMAKE_AUTOMOC ON)
-set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 include_directories(SYSTEM # disable warnings produced by Qt headers (GCC)
     ${Qt5Core_INCLUDE_DIRS}
@@ -456,15 +453,22 @@ if(OPTION_INSTALL_3RDPARTY_BINARIES)
 endif()
 
 include_directories(
-    ${CMAKE_CURRENT_SOURCE_DIR}
-    ${CMAKE_CURRENT_BINARY_DIR}
+    BEFORE
+    ${PROJECT_BINARY_DIR}
+    ${PROJECT_SOURCE_DIR}
 )
 
-set(CONFIG_FILE ${CMAKE_CURRENT_BINARY_DIR}/config.h)
+set(CONFIG_FILE ${PROJECT_BINARY_DIR}/config.h)
 configure_file(cmake/config.h.in ${CONFIG_FILE})
 
 generate_cppcheck_suppressions()
 
+
+set(IDE_PLUGINS_FOLDER "Plugins")
+set(IDE_TESTS_FOLDER "Tests")
+set(IDE_DEPLOYMENT_FOLDER "Deployment, Documentation")
+set(IDE_DOC_FOLDER ${IDE_DEPLOYMENT_FOLDER})
+set(IDE_TOOLS_FOLDER "Tools")
 
 set(IDE_FOLDER "")
 add_subdirectory("core")
@@ -475,19 +479,20 @@ add_subdirectory("data")
 # using the addPluginRuntimPathEntries function.
 # Executable targets depend on that, to find required DLLs at runtime
 include(cmake/ProjectConfigSetup.cmake)
-set(IDE_FOLDER "Plugins")
+set(IDE_FOLDER ${IDE_PLUGINS_FOLDER})
 add_subdirectory("plugins")
 
 set(IDE_FOLDER "")
 add_subdirectory("app")
-set(IDE_FOLDER "Tests")
+set(IDE_FOLDER ${IDE_TESTS_FOLDER})
 add_subdirectory("tests")
 
-set(IDE_FOLDER "Deployment, Documentation")
+set(IDE_FOLDER ${IDE_DOC_FOLDER})
 add_subdirectory("docs")
+set(IDE_FOLDER ${IDE_DEPLOYMENT_FOLDER})
 add_subdirectory("packages")
 
 if (OPTION_BUILD_TOOLS)
-    set(IDE_FOLDER "Tools")
+    set(IDE_FOLDER ${IDE_TOOLS_FOLDER})
     add_subdirectory("tools")
 endif()

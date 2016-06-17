@@ -49,7 +49,7 @@ if(OPTION_BUILD_TESTS)
             set(GTEST_LIBRARIES "${GTEST_DIR}/src/gtest-build/libgtest.a")
         endif()
 
-        set(GTEST_INCLUDE_DIR "${GTEST_SOURCE_DIR}/include")
+        set(GTEST_INCLUDE_DIR "${GTEST_SOURCE_DIR}/include" CACHE INTERNAL "")
     endif()
 
     if(NOT GTEST_FOUND)
@@ -60,7 +60,7 @@ endif()
 if(OPTION_BUILD_TESTS AND GTEST_FOUND)
 
     include_directories(
-        ${GTEST_INCLUDE_DIR}
+        SYSTEM ${GTEST_INCLUDE_DIR}
     )
 
     # Target 'test'

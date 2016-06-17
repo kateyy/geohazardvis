@@ -1,9 +1,9 @@
 
-set( TARGET gui )
-message( STATUS ${TARGET} )
+set(target gui)
+message(STATUS ${target})
 
-set ( SOURCES
-    ${CMAKE_CURRENT_BINARY_DIR}/${TARGET}_api.h
+set(sources
+    ${CMAKE_CURRENT_BINARY_DIR}/${target}_api.h
 
     DataMapping.h
     DataMapping.cpp
@@ -115,7 +115,7 @@ set ( SOURCES
     widgets/ResidualViewConfigWidget.cpp
 )
 
-set ( UIs
+set(UIs
     MainWindow.ui
 
     data_view/TableView.ui
@@ -132,26 +132,26 @@ set ( UIs
     widgets/ResidualViewConfigWidget.ui
 )
 
-set ( QRCs
+set(QRCs
     icons.qrc
 )
 
 qt5_wrap_ui(UI_Srcs ${UIs})
-qt5_add_resources(QRC_Srcs ${QRCs} )
+qt5_add_resources(QRC_Srcs ${QRCs})
 
 
 # Group source files
-source_group_by_path_and_type(${CMAKE_CURRENT_SOURCE_DIR} ${SOURCES} ${UIs} ${QRCs})
-source_group_by_path(${CMAKE_CURRENT_BINARY_DIR} ".*" "Generated" ${CMAKE_CURRENT_BINARY_DIR}/${TARGET}_api.h ${UI_Srcs} ${QRC_Srcs})
+source_group_by_path_and_type(${CMAKE_CURRENT_SOURCE_DIR} ${sources} ${UIs} ${QRCs})
+source_group_by_path(${CMAKE_CURRENT_BINARY_DIR} ".*" "Generated" ${CMAKE_CURRENT_BINARY_DIR}/${target}_api.h ${UI_Srcs} ${QRC_Srcs})
 source_group_by_path(${CMAKE_CURRENT_SOURCE_DIR} ".*" "" "CMakeLists.txt")
 
 if (OPTION_BUILD_STATIC)
-    add_library(${TARGET} ${SOURCES})
+    add_library(${target} ${sources})
 else()
-    add_library(${TARGET} SHARED ${SOURCES} ${UI_Srcs} ${QRC_Srcs})
+    add_library(${target} SHARED ${sources} ${UI_Srcs} ${QRC_Srcs})
 endif()
 
-set(_libraries_to_be_linked
+target_link_libraries(${target}
     Qt5::Widgets
     Qt5::OpenGL
 
@@ -159,20 +159,19 @@ set(_libraries_to_be_linked
 )
 
 if (NOT ${Qt5Core_VERSION} VERSION_LESS 5.5)
-    list(APPEND _libraries_to_be_linked
-        Qt5::Concurrent
-    )
+    target_link_libraries(${target} Qt5::Concurrent)
 endif()
 
-target_link_libraries(${TARGET} ${_libraries_to_be_linked})
+target_include_directories(${target}
+    PRIVATE ${CMAKE_CURRENT_BINARY_DIR}
+)
+
+configure_cxx_target( ${target} )
+
+generate_library_export_header(${target})
 
 
-configure_cxx_target( ${TARGET} )
-
-generate_library_export_header(${TARGET})
-
-
-install(TARGETS ${TARGET}
+install(TARGETS ${target}
     RUNTIME DESTINATION ${INSTALL_BIN}
     LIBRARY DESTINATION ${INSTALL_SHARED}
     # ARCHIVE DESTINATION ${INSTALL_LIB}

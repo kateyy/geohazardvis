@@ -20,7 +20,7 @@ if(DOXYGEN_FOUND)
     # Configure doxyfile (if it is a real doxyfile already, it should simply copy the file)
     set(DOXYGEN_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
     configure_file(${doxyfile_in} ${doxyfile})
-    
+
     set(DOXYGEN_INCLUDE_DIRS
         ${INCLUDE_DIRECTORIES}
         ${CMAKE_CURRENT_BINARY_DIR}
@@ -42,12 +42,12 @@ if(DOXYGEN_FOUND)
     # Declare target
     add_custom_target(docs-doxygen DEPENDS ${doxyfile_hhp})
     set_target_properties(docs-doxygen
-        PROPERTIES 
+        PROPERTIES
         EXCLUDE_FROM_DEFAULT_BUILD      1
         FOLDER                          "${IDE_FOLDER}"
     )
     # add_dependencies(docs docs-doxygen)
-    
+
     add_custom_target(docs-doxygen-show DEPENDS docs-doxygen
         COMMAND             "${CMAKE_CURRENT_BINARY_DIR}/html/index.html"
         FOLDER              "${IDE_FOLDER}"
@@ -59,7 +59,5 @@ if(DOXYGEN_FOUND)
     )
 
 else()
-
     message(STATUS "Disabled generation of doxygen documentation (missing doxygen).")
-
 endif()

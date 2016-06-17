@@ -17,7 +17,7 @@ foreach(subdir ${folderContents})
 endforeach()
 
 
-set(GEOHAZARDVIS_INCLUDE_DIR ${CMAKE_SOURCE_DIR})
+set(GEOHAZARDVIS_INCLUDE_DIR ${PROJECT_SOURCE_DIR})
 
 foreach(pluginname ${plugins})
 
