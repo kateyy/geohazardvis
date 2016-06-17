@@ -1,11 +1,11 @@
 
 include(CppCheckTargets)
 
-function(configure_cxx_target TARGET)
+function(configure_cxx_target target)
 
-    target_compile_definitions(${TARGET} PRIVATE ${DEFAULT_COMPILE_DEFS})
+    target_compile_definitions(${target} PRIVATE ${DEFAULT_COMPILE_DEFS})
 
-    target_compile_options(${TARGET} PRIVATE ${DEFAULT_COMPILE_FLAGS})
+    target_compile_options(${target} PRIVATE ${DEFAULT_COMPILE_FLAGS})
     
     if (ARGV1)
         set(_ideFolder ${ARGV1})
@@ -13,7 +13,7 @@ function(configure_cxx_target TARGET)
         set(_ideFolder ${IDE_FOLDER})
     endif()
 
-    set_target_properties( ${TARGET}
+    set_target_properties(${target}
         PROPERTIES
         LINKER_LANGUAGE CXX
         LINK_FLAGS_DEBUG                    "${DEFAULT_LINKER_FLAGS_DEBUG}"
@@ -27,26 +27,26 @@ function(configure_cxx_target TARGET)
     )
 
     if (NOT CMAKE_VERSION VERSION_LESS 3.1)
-        set_target_properties( ${TARGET}
+        set_target_properties(${target}
             PROPERTIES
             CXX_STANDARD 14
             CXX_STANDARD_REQUIRED ON
         )
     endif()
 
-    cppcheck_target(${TARGET})
+    cppcheck_target(${target})
 
 endfunction()
 
 set(PLUGIN_TARGETS_DOC_STRING "Ensure that the main executable is always run with up to date plugin libraries.")
 set(PLUGIN_TARGETS "" CACHE INTERNAL ${PLUGIN_TARGETS_DOC_STRING})
 
-function(configure_cxx_plugin TARGET)
+function(configure_cxx_plugin target)
 
-    configure_cxx_target(${TARGET})
+    configure_cxx_target(${target})
 
     if(MSVC) # for multi-configuration generators
-        set_target_properties(${TARGET}
+        set_target_properties(${target}
             PROPERTIES
             RUNTIME_OUTPUT_DIRECTORY_DEBUG "${CMAKE_BINARY_DIR}/Debug/plugins"
             RUNTIME_OUTPUT_DIRECTORY_RELEASE "${CMAKE_BINARY_DIR}/Release/plugins"
@@ -54,13 +54,13 @@ function(configure_cxx_plugin TARGET)
             RUNTIME_OUTPUT_DIRECTORY_RELNOOPTIMIZATION "${CMAKE_BINARY_DIR}/RelNoOptimization/plugins"
         )
     else()
-        set_target_properties(${TARGET}
+        set_target_properties(${target}
             PROPERTIES
             RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/plugins"
         )
     endif()
 
-    set(PLUGIN_TARGETS "${PLUGIN_TARGETS};${TARGET}" CACHE INTERNAL ${PLUGIN_TARGETS_DOC_STRING})
+    set(PLUGIN_TARGETS "${PLUGIN_TARGETS};${target}" CACHE INTERNAL ${PLUGIN_TARGETS_DOC_STRING})
 
 endfunction()
 

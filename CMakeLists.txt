@@ -26,6 +26,7 @@ option(OPTION_ADD_CPPCHECK_TARGETS "Add a cppcheck target per C++-target." OFF)
 option(OPTION_BUILD_TESTS "Build tests (if gtest is found)." ON)
 option(OPTION_BUILD_TOOLS "" ON)
 option(OPTION_IDE_SPLIT_HEADERS_SOURCES "List header and source files in different IDE folders." ON)
+option(OPTION_INSTALL_3RDPARTY_BINARIES "Include 3rdparty libraries (libzeug, VTK, Qt) in installations and packages." ON)
 
 # Generate folders for IDE targets (e.g., VisualStudio solutions)
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
@@ -134,15 +135,15 @@ endif()
 # Setup platform specifics (compile flags, etc., ...)
 if(MSVC)
     if(COMPILER_IS_CLANG)
-        include(${PROJECT_SOURCE_DIR}/cmake/PlatformWindowsMSVCClang.cmake)
+        include(cmake/PlatformWindowsMSVCClang.cmake)
     else()
-        include(${PROJECT_SOURCE_DIR}/cmake/PlatformWindowsMSVC.cmake)
+        include(cmake/PlatformWindowsMSVC.cmake)
     endif()
 elseif(UNIX)
     if (COMPILER_IS_CLANG)
-        include(${PROJECT_SOURCE_DIR}/cmake/PlatformLinuxClang.cmake)
+        include(cmake/PlatformLinuxClang.cmake)
     else()
-        include(${PROJECT_SOURCE_DIR}/cmake/PlatformLinuxGCC.cmake)
+        include(cmake/PlatformLinuxGCC.cmake)
     endif()
 else()
     message(WARNING "Unsupported platform/compiler combination")
@@ -154,7 +155,6 @@ endif()
 # Deployment/installation setup
 #
 
-set(project ${META_PROJECT_NAME})
 if(WIN32)
     set(INSTALL_ROOT ".")                       # C:\Programme\<project>
     set(INSTALL_DATA "data")                     # C:\Programme\<project>
@@ -173,15 +173,15 @@ if(WIN32)
 elseif(UNIX)
     set(OPTION_LOCAL_INSTALL ON CACHE INTERNAL "Local installation enforced, packaging is not supported yet on linux systems.")
 
-#     set(INSTALL_ROOT "share/${project}")        # /usr/[local]/share/<project>
-#     set(INSTALL_DATA "share/${project}")        # /usr/[local]/share/<project>
+#     set(INSTALL_ROOT "share/${META_PROJECT_NAME}")        # /usr/[local]/share/<project>
+#     set(INSTALL_DATA "share/${META_PROJECT_NAME}")        # /usr/[local]/share/<project>
     set(INSTALL_ROOT ".")
     set(INSTALL_DATA "data")
     set(INSTALL_BIN "bin")                      # /usr/[local]/bin
     set(INSTALL_SHARED "lib")                   # /usr/[local]/lib
     set(INSTALL_LIB "lib")                      # /usr/[local]/lib
     set(INSTALL_INCLUDE "include")              # /usr/[local]/include
-    set(INSTALL_DOC "share/doc/${project}")     # /usr/[local]/share/doc/<project>
+    set(INSTALL_DOC "share/doc/${META_PROJECT_NAME}")     # /usr/[local]/share/doc/<project>
     set(INSTALL_SHORTCUTS "share/applications") # /usr/[local]/share/applications
     set(INSTALL_ICONS "share/pixmaps")          # /usr/[local]/share/pixmaps
     set(INSTALL_INIT "/etc/init")               # /etc/init (upstart init scripts)
@@ -202,8 +202,6 @@ else()
     message(FATAL_ERROR "Platform not supported.")
 endif()
 
-
-option(OPTION_INSTALL_3RDPARTY_BINARIES "Include 3rdparty libraries (libzeug, VTK, Qt) in installations and packages." ON)
 
 # Install the project meta files
 #install(FILES geohazardvis-config.cmake DESTINATION ${INSTALL_ROOT})
