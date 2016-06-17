@@ -11,6 +11,13 @@
 #include <core/utility/qthelper.h>
 
 
+namespace
+{
+// Transparent NaN-color currently not correctly supported, thus a=1 for now.
+// Note: VTK interfaces don't allow const parameters in many cases
+/*const*/ double l_defaultNanColor[] = { 1, 1, 1, 1 };
+}
+
 auto GradientResourceManager::gradients() const -> const std::map<QString, const GradientData> &
 {
     return m_gradients;
@@ -101,22 +108,8 @@ void GradientResourceManager::loadGradients()
             qDebug() << "gradient directory is empty" + fallbackMsg;
         }
 
-        auto gradient = vtkSmartPointer<vtkLookupTable>::New();
-        gradient->SetNumberOfTableValues(gradientImageSize.width());
-        gradient->Build();
-
-        QImage image(gradientImageSize, QImage::Format_RGBA8888);
-        for (int i = 0; i < gradientImageSize.width(); ++i)
-        {
-            double colorF[4];
-            gradient->GetTableValue(i, colorF);
-            auto colorUI = vtkColorToQColor(colorF).rgba();
-            for (int l = 0; l < gradientImageSize.height(); ++l)
-                image.setPixel(i, l, colorUI);
-        }
-
-        m_gradients.emplace(QString(), GradientData{ gradient, QPixmap::fromImage(image) });
-        m_defaultGradientName = QString();
+        m_defaultGradientName = "fallback gradient";
+        m_gradients.emplace(m_defaultGradientName, buildFallbackGradient(gradientImageSize));
     }
 }
 
@@ -140,10 +133,34 @@ vtkSmartPointer<vtkLookupTable> GradientResourceManager::buildLookupTable(const 
         lut->SetTableValue(i, qRed(color) / 255.0, qGreen(color) / 255.0, qBlue(color) / 255.0, (alphaMask | qAlpha(color)) / 255.0);
     }
 
-    // transparent NaN-color currently not correctly supported
-    //lut->SetNanColor(1, 1, 1, 0);   // transparent!
-    lut->SetNanColor(1, 1, 1, 1);
+    lut->SetNanColor(l_defaultNanColor);
     lut->BuildSpecialColors();
 
     return lut;
+}
+
+auto GradientResourceManager::buildFallbackGradient(const QSize & pixmapSize) -> GradientData
+{
+    auto gradientData = GradientData();
+
+    gradientData.lookupTable = vtkSmartPointer<vtkLookupTable>::New();
+    gradientData.lookupTable->SetNumberOfTableValues(pixmapSize.width());
+    gradientData.lookupTable->Build();
+
+    QImage image(pixmapSize, QImage::Format_RGBA8888);
+    for (int i = 0; i < pixmapSize.width(); ++i)
+    {
+        double colorF[4];
+        gradientData.lookupTable->GetTableValue(i, colorF);
+        auto colorUI = vtkColorToQColor(colorF).rgba();
+        for (int l = 0; l < pixmapSize.height(); ++l)
+            image.setPixel(i, l, colorUI);
+    }
+
+    gradientData.lookupTable->SetNanColor(l_defaultNanColor);
+    gradientData.lookupTable->BuildSpecialColors();
+
+    gradientData.pixmap = QPixmap::fromImage(image);
+
+    return gradientData;
 }

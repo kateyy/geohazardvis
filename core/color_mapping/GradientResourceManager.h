@@ -41,6 +41,7 @@ private:
     ~GradientResourceManager();
 
     static vtkSmartPointer<vtkLookupTable> buildLookupTable(const QPixmap & pixmap);
+    static GradientData buildFallbackGradient(const QSize & pixmapSize);
 
 private:
     const QString m_gradientsDir;
