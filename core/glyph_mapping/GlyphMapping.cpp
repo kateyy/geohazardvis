@@ -9,7 +9,7 @@
 
 
 GlyphMapping::GlyphMapping(RenderedData & renderedData)
-    : m_renderedData(renderedData)
+    : m_renderedData{ renderedData }
 {
     m_vectors = GlyphMappingRegistry::instance().createMappingsValidFor(m_renderedData);
 

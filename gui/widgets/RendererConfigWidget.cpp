@@ -23,11 +23,11 @@ using namespace reflectionzeug;
 
 RendererConfigWidget::RendererConfigWidget(QWidget * parent)
     : QDockWidget(parent)
-    , m_ui(new Ui_RendererConfigWidget())
-    , m_residualUi(nullptr)
-    , m_residualGroupBox(nullptr)
-    , m_propertyRoot(nullptr)
-    , m_currentRenderView(nullptr)
+    , m_ui{ new Ui_RendererConfigWidget() }
+    , m_residualUi{ nullptr }
+    , m_residualGroupBox{ nullptr }
+    , m_propertyRoot{ nullptr }
+    , m_currentRenderView{ nullptr }
 {
     m_ui->setupUi(this);
 

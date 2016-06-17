@@ -9,10 +9,7 @@
 #include <core/canvas_export/CanvasExporterRegistry.h>
 
 
-namespace
-{
-bool isRegistered = CanvasExporterRegistry::registerImplementation(CanvasExporter::newInstance<CanvasExporterPNG>);
-}
+const bool CanvasExporterPNG::s_isRegistered = CanvasExporterRegistry::registerImplementation(CanvasExporter::newInstance<CanvasExporterPNG>);
 
 
 CanvasExporterPNG::CanvasExporterPNG()

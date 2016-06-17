@@ -24,7 +24,9 @@ const QString & CanvasExporter::outputFormat() const
 reflectionzeug::PropertyGroup * CanvasExporter::propertyGroup()
 {
     if (!m_propertyGroup)
+    {
         m_propertyGroup = createPropertyGroup();
+    }
 
     return m_propertyGroup.get();
 }

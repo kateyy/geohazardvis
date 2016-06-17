@@ -27,6 +27,8 @@ protected:
 
 private:
     vtkSmartPointer<vtkGL2PSExporter> m_exporter;
+
+    static const bool s_isRegistered;
 };
 
 #endif

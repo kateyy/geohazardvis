@@ -32,7 +32,7 @@ using namespace reflectionzeug;
 
 std::vector<std::unique_ptr<GlyphMappingData>> PolyDataAttributeGlyphMapping::newInstances(RenderedData & renderedData)
 {
-    vtkPolyData * polyData = vtkPolyData::SafeDownCast(renderedData.dataObject().processedDataSet());
+    auto polyData = vtkPolyData::SafeDownCast(renderedData.dataObject().processedDataSet());
     // only polygonal datasets are supported
     if (!polyData)
         return{};

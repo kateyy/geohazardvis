@@ -11,7 +11,6 @@
 
 namespace
 {
-bool isRegistered = CanvasExporterRegistry::registerImplementation(CanvasExporter::newInstance<CanvasExporterTIFF>);
 
 enum tiffCompression
 {
@@ -22,6 +21,9 @@ enum tiffCompression
     LZW = vtkTIFFWriter::LZW
 };
 }
+
+const bool CanvasExporterTIFF::s_isRegistered = CanvasExporterRegistry::registerImplementation(CanvasExporter::newInstance<CanvasExporterTIFF>);
+
 
 CanvasExporterTIFF::CanvasExporterTIFF()
     : CanvasExporterImages(vtkTIFFWriter::New())

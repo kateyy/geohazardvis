@@ -82,8 +82,8 @@ std::vector<std::unique_ptr<ColorMappingData>> DirectImageColors::newInstances(c
 
 DirectImageColors::DirectImageColors(const QList<AbstractVisualizedData *> & visualizedData, QString dataArrayName, int attributeLocation)
     : ColorMappingData(visualizedData)
-    , m_attributeLocation(attributeLocation)
-    , m_dataArrayName(dataArrayName)
+    , m_attributeLocation{ attributeLocation }
+    , m_dataArrayName{ dataArrayName }
 {
     assert(!visualizedData.isEmpty());
 

@@ -63,7 +63,7 @@ GlyphMagnitudeColorMapping::GlyphMagnitudeColorMapping(
     const QList<GlyphMappingData *> & glyphMappingData,
     const QString & vectorsName)
     : GlyphColorMapping(visualizedData, glyphMappingData, 1)
-    , m_vectorName(vectorsName)
+    , m_vectorName{ vectorsName }
 {
     for (GlyphMappingData * glyphMapping : glyphMappingData)
     {

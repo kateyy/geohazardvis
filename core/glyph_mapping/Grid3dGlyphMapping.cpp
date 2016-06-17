@@ -27,13 +27,13 @@ using namespace reflectionzeug;
 
 std::vector<std::unique_ptr<GlyphMappingData>> Grid3dGlyphMapping::newInstances(RenderedData & renderedData)
 {
-    RenderedVectorGrid3D * renderedGrid = dynamic_cast<RenderedVectorGrid3D *>(&renderedData);
+    auto renderedGrid = dynamic_cast<RenderedVectorGrid3D *>(&renderedData);
     if (!renderedGrid)
         return{};
 
-    vtkPointData * pointData = renderedGrid->resampledDataSet()->GetPointData();
+    auto pointData = renderedGrid->resampledDataSet()->GetPointData();
     QList<vtkDataArray *> vectorArrays;
-    for (int i = 0; vtkDataArray * a = pointData->GetArray(i); ++i)
+    for (int i = 0; auto a = pointData->GetArray(i); ++i)
     {
         assert(a);
 
@@ -48,7 +48,7 @@ std::vector<std::unique_ptr<GlyphMappingData>> Grid3dGlyphMapping::newInstances(
     }
 
     std::vector<std::unique_ptr<GlyphMappingData>> instances;
-    for (vtkDataArray * vectorArray : vectorArrays)
+    for (auto vectorArray : vectorArrays)
     {
         auto mapping = std::make_unique<Grid3dGlyphMapping>(*renderedGrid, vectorArray);
         if (mapping->isValid())
@@ -63,8 +63,8 @@ std::vector<std::unique_ptr<GlyphMappingData>> Grid3dGlyphMapping::newInstances(
 
 Grid3dGlyphMapping::Grid3dGlyphMapping(RenderedVectorGrid3D & renderedGrid, vtkDataArray * dataArray)
     : GlyphMappingData(renderedGrid)
-    , m_renderedGrid(renderedGrid)
-    , m_dataArray(dataArray)
+    , m_renderedGrid{ renderedGrid }
+    , m_dataArray{ dataArray }
 {
     setVisible(true);
 

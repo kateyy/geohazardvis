@@ -94,8 +94,8 @@ VectorMagnitudeColorMapping::VectorMagnitudeColorMapping(
     const QList<AbstractVisualizedData *> & visualizedData,
     const QString & dataArrayName, int attributeLocation)
     : ColorMappingData(visualizedData)
-    , m_attributeLocation(attributeLocation)
-    , m_dataArrayName(dataArrayName)
+    , m_attributeLocation{ attributeLocation }
+    , m_dataArrayName{ dataArrayName }
 {
     QByteArray utf8Name = m_dataArrayName.toUtf8();
 

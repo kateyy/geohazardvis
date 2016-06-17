@@ -26,8 +26,8 @@ enum BufferType
 
 CanvasExporterImages::CanvasExporterImages(vtkImageWriter * writer)
     : CanvasExporter()
-    , m_toImageFilter(vtkSmartPointer<vtkWindowToImageFilter>::New())
-    , m_writer(vtkSmartPointer<vtkImageWriter>::Take(writer))
+    , m_toImageFilter{ vtkSmartPointer<vtkWindowToImageFilter>::New() }
+    , m_writer{ vtkSmartPointer<vtkImageWriter>::Take(writer) }
 {
     m_toImageFilter->SetInput(renderWindow());
     m_toImageFilter->SetInputBufferTypeToRGBA();

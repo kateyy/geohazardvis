@@ -141,7 +141,7 @@ AttributeArrayComponentMapping::AttributeArrayComponentMapping(
     const QList<AbstractVisualizedData *> & visualizedData, const QString & dataArrayName, 
     int numDataComponents, const QMap<AbstractVisualizedData *, int> & attributeLocations)
     : ColorMappingData(visualizedData, numDataComponents)
-    , m_dataArrayName(dataArrayName)
+    , m_dataArrayName{ dataArrayName }
     , m_attributeLocations(attributeLocations)
 {
     assert(!visualizedData.isEmpty());

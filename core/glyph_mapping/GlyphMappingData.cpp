@@ -55,11 +55,11 @@ vtkSmartPointer<vtkAlgorithm> createSimpleArrow()
 }
 
 GlyphMappingData::GlyphMappingData(RenderedData & renderedData)
-    : m_renderedData(renderedData)
-    , m_isVisible(false)
-    , m_actor(vtkSmartPointer<vtkActor>::New())
-    , m_colorMappingData(nullptr)
-    , m_isValid(true)
+    : m_renderedData{ renderedData }
+    , m_isVisible{ false }
+    , m_actor{ vtkSmartPointer<vtkActor>::New() }
+    , m_colorMappingData{ nullptr }
+    , m_isValid{ true }
 {
     auto lineArrow = vtkSmartPointer<vtkLineSource>::New();
     lineArrow->SetPoint1(0.f, 0.f, 0.f);

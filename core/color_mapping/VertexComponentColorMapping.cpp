@@ -50,7 +50,7 @@ std::vector<std::unique_ptr<ColorMappingData>> VertexComponentColorMapping::newI
 
 VertexComponentColorMapping::VertexComponentColorMapping(const QList<AbstractVisualizedData *> & visualizedData, int component)
     : ColorMappingData(visualizedData)
-    , m_component(component)
+    , m_component{ component }
 {
     m_isValid = true;
 }

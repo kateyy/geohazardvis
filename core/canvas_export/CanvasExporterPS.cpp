@@ -20,16 +20,12 @@
 #include <core/canvas_export/CanvasExporterRegistry.h>
 
 
-using namespace reflectionzeug;
+const bool CanvasExporterPS::s_isRegistered = CanvasExporterRegistry::registerImplementation(CanvasExporter::newInstance<CanvasExporterPS>);
 
-namespace
-{
-bool isRegistered = CanvasExporterRegistry::registerImplementation(CanvasExporter::newInstance<CanvasExporterPS>);
-}
 
 CanvasExporterPS::CanvasExporterPS()
     : CanvasExporter()
-    , m_exporter(vtkSmartPointer<vtkGL2PSExporter>::New())
+    , m_exporter{ vtkSmartPointer<vtkGL2PSExporter>::New() }
 {
     m_exporter->CompressOff();
 }
@@ -94,9 +90,9 @@ bool CanvasExporterPS::openGLContextSupported()
     return CanvasExporter::openGLContextSupported();
 }
 
-std::unique_ptr<PropertyGroup> CanvasExporterPS::createPropertyGroup()
+std::unique_ptr<reflectionzeug::PropertyGroup> CanvasExporterPS::createPropertyGroup()
 {
-    auto group = std::make_unique<PropertyGroup>();
+    auto group = std::make_unique<reflectionzeug::PropertyGroup>();
 
     group->addProperty<std::string>("Title",
         [this] () -> std::string {
