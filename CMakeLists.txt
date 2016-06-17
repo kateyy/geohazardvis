@@ -313,6 +313,7 @@ find_program(Qt5QMake_PATH qmake
     DOC "Path to the qmake executable of the currently used Qt5 installation.")
 
 set(CMAKE_AUTOMOC ON)
+set_property(GLOBAL PROPERTY AUTOGEN_TARGETS_FOLDER "Generated")
 
 include_directories(SYSTEM # disable warnings produced by Qt headers (GCC)
     ${Qt5Core_INCLUDE_DIRS}
