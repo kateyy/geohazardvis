@@ -254,31 +254,42 @@ if(OPTION_BUILD_TESTS)
 
     if (OPTION_USE_SYSTEM_GTEST)
         find_package(GTEST)
+        find_package(GMOCK)
     else()
-        set(GTEST_FOUND 1)
-        set(GTEST_SOURCE_DIR "${THIRD_PARTY_SOURCE_DIR}/gtest")
-        set(GTEST_DIR "${THIRD_PARTY_BUILD_DIR}/gtest")
+        set(GTEST_SOURCE_DIR ${THIRD_PARTY_SOURCE_DIR}/gtest)
+        set(GTEST_BUILD_DIR ${THIRD_PARTY_BUILD_DIR}/gtest)
+        set(GTEST_INSTALL_DIR ${GTEST_BUILD_DIR}/install-$<CONFIG>)
+        
+        if(WIN32)
+            set(_gtestLib "${GTEST_INSTALL_DIR}/lib/gtest.lib")
+            set(_gmockLib "${GTEST_INSTALL_DIR}/lib/gmock.lib")
+        else()
+            set(_gtestLib "${GTEST_INSTALL_DIR}/lib/libgtest.a")
+            set(_gmockLib "${GTEST_INSTALL_DIR}/lib/libgmock.a")
+        endif()
+        
+        set(GTEST_FOUND 1 CACHE INTERNAL "")
+        set(GTEST_INCLUDE_DIR ${GTEST_INSTALL_DIR}/include CACHE INTERNAL "")
+        set(GTEST_LIBRARIES ${_gtestLib} CACHE INTERNAL "")
+        
+        set(GMOCK_FOUND 1 CACHE INTERNAL "")
+        set(GMOCK_INCLUDE_DIR ${GTEST_INCLUDE_DIR} CACHE INTERNAL "")
+        set(GMOCK_LIBRARIES ${_gmockLib} CACHE INTERNAL "")
 
         ExternalProject_Add(gtest
-            PREFIX ${GTEST_DIR}
-            SOURCE_DIR "${THIRD_PARTY_SOURCE_DIR}/gtest"
+            PREFIX ${GTEST_BUILD_DIR}
+            SOURCE_DIR ${GTEST_SOURCE_DIR}
             GIT_REPOSITORY "https://github.com/google/googletest"
-            GIT_TAG "release-1.7.0"
+            GIT_TAG "0a439623f75c029912728d80cb7f1b8b48739ca4"
             CMAKE_CACHE_ARGS
                 -Dgtest_force_shared_crt:bool=ON
                 -DCMAKE_CXX_COMPILER:filepath=${CMAKE_CXX_COMPILER}
                 -DCMAKE_C_COMPILER:filepath=${CMAKE_C_COMPILER}
-            INSTALL_COMMAND ""  # skip install for gtest: target does not exist
+                -DBUILD_GMOCK:bool=ON
+                -DBUILD_GTEST:bool=OFF
+                # without setting this explicitly the test/mock subproject don't install correctly
+                -DCMAKE_INSTALL_PREFIX:path=${GTEST_INSTALL_DIR}
         )
-
-        if(WIN32)
-            set(_gtestLib "${GTEST_DIR}/src/gtest-build/$<CONFIG>/gtest.lib")
-        else()
-            set(_gtestLib "${GTEST_DIR}/src/gtest-build/libgtest.a")
-        endif()
-
-        set(GTEST_INCLUDE_DIR "${GTEST_SOURCE_DIR}/include" CACHE INTERNAL "")
-        set(GTEST_LIBRARIES ${_gtestLib} CACHE INTERNAL "")
     endif()
 
     if(NOT GTEST_FOUND)
