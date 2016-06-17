@@ -113,6 +113,12 @@ include_directories(SYSTEM # disable warnings produced by Qt headers (GCC)
 )
 
 
+if (CMAKE_VERSION VERSION_LESS 3.6)
+    set(_git_shallow_flag)
+else()
+    set(_git_shallow_flag GIT_SHALLOW 1)
+endif()
+
 option(OPTION_USE_SYSTEM_LIBZEUG "Search for installed libzeug libraries instead of compiling them" OFF)
 CMAKE_DEPENDENT_CACHEVARIABLE(OPTION_LIBZEUG_GIT_REPOSITORY "https://github.com/kateyy/libzeug.git" STRING
     "URL/path of the libzeug git repository" "NOT OPTION_USE_SYSTEM_LIBZEUG" OFF)
@@ -144,9 +150,10 @@ else()
 
     ExternalProject_Add(libzeug
         PREFIX ${LIBZEUG_PREFIX}
-        SOURCE_DIR "${THIRD_PARTY_SOURCE_DIR}/libzeug"
+        SOURCE_DIR ${THIRD_PARTY_SOURCE_DIR}/libzeug
         GIT_REPOSITORY ${OPTION_LIBZEUG_GIT_REPOSITORY}
         GIT_TAG "geohazardvis_2016_06"
+        ${_git_shallow_flag}
         BUILD_COMMAND ${CMAKE_COMMAND}
             -DBUILD_CONFIG:STRING=${CMAKE_CFG_INTDIR}
             -P ${PROJECT_SOURCE_DIR}/cmake/libzeugExternalProjectBuild.cmake
@@ -154,9 +161,7 @@ else()
         CMAKE_CACHE_ARGS ${_cmakeCacheArgs}
     )
 
-    set(LIBZEUG_INCLUDES
-        "${libzeug_DIR}/include"
-    )
+    set(LIBZEUG_INCLUDES ${libzeug_DIR}/include)
 
     if(WIN32)
         set(LIBZEUG_LIBRARIES
@@ -249,6 +254,8 @@ endif()
 
 CMAKE_DEPENDENT_OPTION(OPTION_USE_SYSTEM_GTEST "Search for installed Google Test Libraries instead of compiling them" OFF
     "OPTION_BUILD_TESTS" OFF)
+CMAKE_DEPENDENT_CACHEVARIABLE(OPTION_GTEST_GIT_REPOSITORY "https://github.com/google/googletest" STRING
+    "URL/path of the gtest git repository" "NOT OPTION_USE_SYSTEM_GTEST" OFF)
 
 if(OPTION_BUILD_TESTS)
 
@@ -279,8 +286,9 @@ if(OPTION_BUILD_TESTS)
         ExternalProject_Add(gtest
             PREFIX ${GTEST_BUILD_DIR}
             SOURCE_DIR ${GTEST_SOURCE_DIR}
-            GIT_REPOSITORY "https://github.com/google/googletest"
+            GIT_REPOSITORY ${OPTION_GTEST_GIT_REPOSITORY}
             GIT_TAG "0a439623f75c029912728d80cb7f1b8b48739ca4"
+            ${_git_shallow_flag}
             CMAKE_CACHE_ARGS
                 -Dgtest_force_shared_crt:bool=ON
                 -DCMAKE_CXX_COMPILER:filepath=${CMAKE_CXX_COMPILER}
