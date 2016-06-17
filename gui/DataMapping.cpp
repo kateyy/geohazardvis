@@ -26,6 +26,10 @@ DataMapping::~DataMapping()
     // prevent GUI/focus updates
     auto renderView = m_renderViews;
     auto tableViews = m_tableViews;
+
+    emit renderViewsChanged({});
+    emit focusedRenderViewChanged(nullptr);
+
     m_renderViews.clear();
     m_tableViews.clear();
 
