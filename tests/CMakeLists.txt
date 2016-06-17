@@ -19,44 +19,6 @@ function(add_test_without_ctest target)
 endfunction()
 
 
-CMAKE_DEPENDENT_OPTION(OPTION_USE_SYSTEM_GTEST "Search for installed Google Test Libraries instead of compiling them" OFF
-    "OPTION_BUILD_TESTS" OFF)
-
-if(OPTION_BUILD_TESTS)
-
-    if (OPTION_USE_SYSTEM_GTEST)
-        find_package(GTEST)
-    else()
-        set(GTEST_FOUND 1)
-        set(GTEST_SOURCE_DIR "${THIRD_PARTY_SOURCE_DIR}/gtest")
-        set(GTEST_DIR "${THIRD_PARTY_BUILD_DIR}/gtest")
-
-        ExternalProject_Add(gtest
-            PREFIX ${GTEST_DIR}
-            SOURCE_DIR "${THIRD_PARTY_SOURCE_DIR}/gtest"
-            GIT_REPOSITORY "https://github.com/google/googletest"
-            GIT_TAG "release-1.7.0"
-            CMAKE_CACHE_ARGS
-                -Dgtest_force_shared_crt:bool=ON
-                -DCMAKE_CXX_COMPILER:filepath=${CMAKE_CXX_COMPILER}
-                -DCMAKE_C_COMPILER:filepath=${CMAKE_C_COMPILER}
-            INSTALL_COMMAND ""  # skip install for gtest: target does not exist
-        )
-
-        if(WIN32)
-            set(GTEST_LIBRARIES "${GTEST_DIR}/src/gtest-build/$<CONFIG>/gtest.lib")
-        else()
-            set(GTEST_LIBRARIES "${GTEST_DIR}/src/gtest-build/libgtest.a")
-        endif()
-
-        set(GTEST_INCLUDE_DIR "${GTEST_SOURCE_DIR}/include" CACHE INTERNAL "")
-    endif()
-
-    if(NOT GTEST_FOUND)
-        message(WARNING "Tests skipped: gtest not found")
-    endif()
-endif()
-
 if(OPTION_BUILD_TESTS AND GTEST_FOUND)
 
     include_directories(

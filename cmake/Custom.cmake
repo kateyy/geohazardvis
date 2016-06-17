@@ -3,10 +3,10 @@ include(CppCheckTargets)
 
 function(configure_cxx_target target)
 
-    target_compile_definitions(${target} PRIVATE ${DEFAULT_COMPILE_DEFS})
+    target_compile_definitions(${target} PRIVATE ${DEFAULT_COMPILE_DEFS} ${VTK_DEFINITIONS})
 
     target_compile_options(${target} PRIVATE ${DEFAULT_COMPILE_FLAGS})
-    
+
     if (ARGV1)
         set(_ideFolder ${ARGV1})
     else()
