@@ -41,28 +41,40 @@ endfunction()
 set(PLUGIN_TARGETS_DOC_STRING "Ensure that the main executable is always run with up to date plugin libraries.")
 set(PLUGIN_TARGETS "" CACHE INTERNAL ${PLUGIN_TARGETS_DOC_STRING})
 
-function(configure_cxx_plugin target)
+function(configure_auxiliary_cxx_plugin_target target)
 
     configure_cxx_target(${target})
 
-    if(MSVC) # for multi-configuration generators
-        set_target_properties(${target}
-            PROPERTIES
-            RUNTIME_OUTPUT_DIRECTORY_DEBUG "${CMAKE_BINARY_DIR}/Debug/plugins"
-            RUNTIME_OUTPUT_DIRECTORY_RELEASE "${CMAKE_BINARY_DIR}/Release/plugins"
-            RUNTIME_OUTPUT_DIRECTORY_RELWITHDEBINFO "${CMAKE_BINARY_DIR}/RelWithDebInfo/plugins"
-            RUNTIME_OUTPUT_DIRECTORY_RELNOOPTIMIZATION "${CMAKE_BINARY_DIR}/RelNoOptimization/plugins"
-        )
+    # TODO replace by generator expressions, once requiring CMake 3.4
+    if(generatorIsMultiConfig)
+        foreach(_config Debug Release RelWithDebInfo RelNoOptimization)
+            string(TOUPPER ${_config} _configUpper)
+            set_target_properties(${target}
+                PROPERTIES
+                RUNTIME_OUTPUT_DIRECTORY_${_configUpper} "${CMAKE_BINARY_DIR}/${_config}/plugins"
+                LIBRARY_OUTPUT_DIRECTORY_${_configUpper} "${CMAKE_BINARY_DIR}/${_config}/plugins"
+                ARCHIVE_OUTPUT_DIRECTORY_${_configUpper} "${CMAKE_BINARY_DIR}/${_config}/plugins"
+            )
+        endforeach()
     else()
         set_target_properties(${target}
             PROPERTIES
             RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/plugins"
+            LIBRARY_OUTPUT_DIRECTORY "${RUNTIME_OUTPUT_DIRECTORY}"
+            ARCHIVE_OUTPUT_DIRECTORY "${RUNTIME_OUTPUT_DIRECTORY}"
         )
     endif()
+
+endfunction()
+
+function(configure_cxx_plugin target)
+
+    configure_auxiliary_cxx_plugin_target(${target})
 
     set(PLUGIN_TARGETS "${PLUGIN_TARGETS};${target}" CACHE INTERNAL ${PLUGIN_TARGETS_DOC_STRING})
 
 endfunction()
+
 
 # Define function "source_group_by_path with three mandatory arguments (PARENT_PATH, REGEX, GROUP, ...)
 # to group source files in folders (e.g. for MSVC solutions).
