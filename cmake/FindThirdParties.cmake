@@ -3,6 +3,8 @@
 #
 # This module finds required third party packages.
 # Include it in the top CMakeLists.txt file of the project to include third party variables in the project scope!
+# 
+# This module depends on ExternalProjectMapBuild.cmake
 #
 #
 # Handled external dependencies:
@@ -172,8 +174,8 @@ else()
         GIT_TAG "geohazardvis_2016_06"
         ${_git_shallow_flag}
         BUILD_COMMAND ${CMAKE_COMMAND}
-            -DBUILD_CONFIG:STRING=${CMAKE_CFG_INTDIR}
-            -P ${PROJECT_SOURCE_DIR}/cmake/libzeugExternalProjectBuild.cmake
+            -DBUILD_CONFIG:STRING=$<CONFIG>
+            -P ${PROJECT_SOURCE_DIR}/cmake/ExternalProjectMapBuild.cmake
         INSTALL_COMMAND ""
         CMAKE_CACHE_ARGS ${_cmakeCacheArgs}
     )
@@ -306,6 +308,10 @@ if(OPTION_BUILD_TESTS)
             GIT_REPOSITORY ${OPTION_GTEST_GIT_REPOSITORY}
             GIT_TAG "0a439623f75c029912728d80cb7f1b8b48739ca4"
             ${_git_shallow_flag}
+            BUILD_COMMAND ${CMAKE_COMMAND}
+                -DBUILD_CONFIG:STRING=$<CONFIG>
+                -P ${PROJECT_SOURCE_DIR}/cmake/ExternalProjectMapBuild.cmake
+            INSTALL_COMMAND ""
             CMAKE_CACHE_ARGS
                 -Dgtest_force_shared_crt:bool=ON
                 -DCMAKE_CXX_COMPILER:filepath=${CMAKE_CXX_COMPILER}
