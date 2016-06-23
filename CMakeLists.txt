@@ -120,10 +120,9 @@ endif()
 
 
 set(DEFAULT_COMPILE_DEFS
-    $<$<CONFIG:Debug>:_DEBUG>            # Debug build
+    # Debug build, assert enabled: Debug, RelNoOptimization
     $<$<CONFIG:Release>:NDEBUG>          # optimized builds
     $<$<CONFIG:RelWithDebInfo>:NDEBUG>
-    $<$<CONFIG:RelNoOptimization>:NDEBUG>
 )
 
 if (${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang")
