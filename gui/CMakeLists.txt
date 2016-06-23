@@ -151,6 +151,14 @@ else()
     add_library(${target} SHARED ${sources} ${UI_Srcs} ${QRC_Srcs})
 endif()
 
+target_include_directories(${target}
+    PRIVATE ${CMAKE_CURRENT_BINARY_DIR}
+)
+
+target_include_directories(${target} SYSTEM
+    PUBLIC ${Qt5Gui_INCLUDE_DIRS} # disable warnings produced by Qt headers (GCC)
+)
+
 target_link_libraries(${target}
     Qt5::Widgets
     Qt5::OpenGL
@@ -162,11 +170,8 @@ if (NOT ${Qt5Core_VERSION} VERSION_LESS 5.5)
     target_link_libraries(${target} Qt5::Concurrent)
 endif()
 
-target_include_directories(${target}
-    PRIVATE ${CMAKE_CURRENT_BINARY_DIR}
-)
 
-configure_cxx_target( ${target} )
+configure_cxx_target(${target})
 
 generate_library_export_header(${target})
 

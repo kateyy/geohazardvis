@@ -1,4 +1,32 @@
 
+# FindThirdParties.cmake
+#
+# This module finds required third party packages.
+# Include it in the top CMakeLists.txt file of the project to include third party variables in the project scope!
+#
+#
+# Handled external dependencies:
+#   * OpenGL    -> OPENGL_INCLUDE_DIR, OPENGL_LIBRARIES
+#   * VTK       -> VTK_DEFINITIONS, VTK_LIBRARIES, VTK_INCLUDE_DIRS, (and some detailed options such as VTK_RENDERING_BACKEND)
+#   * Qt5       -> Qt5::* imported targets, PROJECT_QT_COMPONENTS
+#
+#
+# Packages either handled as ExternalProject (default) or by find_package
+#   OPTION_USE_SYSTEM_*     - ON: find_package(*), OFF: build as external project
+#   OPTION_*_GIT_REPOSITORY - if OPTION_USE_SYSTEM_* is OFF: adjust the source git folder or URL for the package
+#
+#   * libzeug   -> LIBZEUG_INCLUDES, LIBZEUG_LIBRARIES
+#
+#   Only relevant if tests are enabled (OPTION_BUILD_TESTS):
+#   * gtest     -> GTEST_FOUND GTEST_INCLUDE_DIR GTEST_LIBRARIES
+#
+#
+# Third party packaging: OPTION_INSTALL_3RDPARTY_BINARIES
+#   Enable this option (default) to include third party runtime libraries packages and installations.
+#   This requires CMake scripts that are partly quite specific for the each package/OS, so please
+#   double check if the package actually runs on the relevant platform.
+#
+
 
 set(THIRD_PARTY_SOURCE_DIR "${PROJECT_SOURCE_DIR}/ThirdParty")
 set(THIRD_PARTY_BUILD_DIR "${PROJECT_BINARY_DIR}/ThirdParty")
@@ -27,7 +55,7 @@ if(VTK_VERSION VERSION_LESS VTK_REQUIRED_VERSION)
     message(FATAL_ERROR "VTK version ${VTK_VERSION} was found but version 6.3 or newer is required.")
 endif()
 
-# replaced by explicit calls below (http://www.kitware.com/source/home/post/116)
+# replaced by explicit calls on the relevant targets (http://www.kitware.com/source/home/post/116)
 #include(${VTK_USE_FILE})
 
 if(NOT "${VTK_QT_VERSION}" STREQUAL "5")
@@ -58,8 +86,6 @@ else()
     list(APPEND VTK_COMPONENTS vtkRenderingLIC)
 endif()
 
-
-
 if(VTK_VERSION VERSION_LESS 7.1)
     set(_vtkIOExport_module_name "vtkIOExport")
     set(_vtkRenderingGL2PS_module_name "vtkRenderingGL2PS")
@@ -84,10 +110,6 @@ endif()
 
 # find additional VTK components
 find_package(VTK COMPONENTS ${VTK_COMPONENTS})
-include_directories(SYSTEM ${VTK_INCLUDE_DIRS})
-# this is now handled by configure_cxx_target():
-# set_property(DIRECTORY APPEND PROPERTY COMPILE_DEFINITIONS ${VTK_DEFINITIONS})
-
 
 
 set(PROJECT_QT_COMPONENTS Core Gui Widgets OpenGL)
@@ -106,11 +128,6 @@ find_program(Qt5QMake_PATH qmake
 
 set(CMAKE_AUTOMOC ON)
 set_property(GLOBAL PROPERTY AUTOGEN_TARGETS_FOLDER "Generated")
-
-include_directories(SYSTEM # disable warnings produced by Qt headers (GCC)
-    ${Qt5Core_INCLUDE_DIRS}
-    ${Qt5Gui_INCLUDE_DIRS}
-)
 
 
 if (CMAKE_VERSION VERSION_LESS 3.6)
@@ -266,7 +283,7 @@ if(OPTION_BUILD_TESTS)
         set(GTEST_SOURCE_DIR ${THIRD_PARTY_SOURCE_DIR}/gtest)
         set(GTEST_BUILD_DIR ${THIRD_PARTY_BUILD_DIR}/gtest)
         set(GTEST_INSTALL_DIR ${GTEST_BUILD_DIR}/install-$<CONFIG>)
-        
+
         if(WIN32)
             set(_gtestLib "${GTEST_INSTALL_DIR}/lib/gtest.lib")
             set(_gmockLib "${GTEST_INSTALL_DIR}/lib/gmock.lib")
@@ -274,14 +291,14 @@ if(OPTION_BUILD_TESTS)
             set(_gtestLib "${GTEST_INSTALL_DIR}/lib/libgtest.a")
             set(_gmockLib "${GTEST_INSTALL_DIR}/lib/libgmock.a")
         endif()
-        
-        set(GTEST_FOUND 1 CACHE INTERNAL "")
-        set(GTEST_INCLUDE_DIR ${GTEST_INSTALL_DIR}/include CACHE INTERNAL "")
-        set(GTEST_LIBRARIES ${_gtestLib} CACHE INTERNAL "")
-        
-        set(GMOCK_FOUND 1 CACHE INTERNAL "")
-        set(GMOCK_INCLUDE_DIR ${GTEST_INCLUDE_DIR} CACHE INTERNAL "")
-        set(GMOCK_LIBRARIES ${_gmockLib} CACHE INTERNAL "")
+
+        set(GTEST_FOUND 1)
+        set(GTEST_INCLUDE_DIR ${GTEST_INSTALL_DIR}/include)
+        set(GTEST_LIBRARIES ${_gtestLib})
+
+        set(GMOCK_FOUND 1)
+        set(GMOCK_INCLUDE_DIR ${GTEST_INCLUDE_DIR})
+        set(GMOCK_LIBRARIES ${_gmockLib})
 
         ExternalProject_Add(gtest
             PREFIX ${GTEST_BUILD_DIR}

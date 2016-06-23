@@ -220,17 +220,19 @@ if(TARGET libzeug)
     add_dependencies(${target} libzeug)
 endif()
 
+target_include_directories(${target} SYSTEM
+    PUBLIC
+        ${Qt5Core_INCLUDE_DIRS} # disable warnings produced by Qt headers (GCC)
+        ${VTK_INCLUDE_DIRS}
+        ${LIBZEUG_INCLUDES}
+)
+
 target_link_libraries(${target}
     ${OPENGL_LIBRARIES}
     ${VTK_LIBRARIES}
     ${LIBZEUG_LIBRARIES}
     Qt5::Core
 )
-
-target_include_directories(${target} SYSTEM
-    PUBLIC ${LIBZEUG_INCLUDES}
-)
-
 
 configure_cxx_target(${target})
 
