@@ -38,6 +38,8 @@ include(ExternalProject)
 find_package(OpenGL REQUIRED)
 
 
+#========= VTK =========
+
 set(VTK_COMPONENTS
     vtkGUISupportQtOpenGL   # QVTKWidget2
     vtkRenderingAnnotation  # vtkCubeAxesActor, vtkScalarBarActor
@@ -113,7 +115,47 @@ endif()
 # find additional VTK components
 find_package(VTK COMPONENTS ${VTK_COMPONENTS})
 
+# When using VTK kits, the provided library names are just interfaces to underlaying targets
+# Restore actual library target to get properties from them.
+if (VTK_ENABLE_KITS)
+    set(actualVTKLibraries)
+    foreach(libName ${VTK_LIBRARIES})
+        set(kitName ${${libName}_KIT})
+        if (kitName)
+            list(APPEND actualVTKLibraries ${kitName})
+        else()
+            list(APPEND actualVTKLibraries ${libName})
+        endif()
+    endforeach()
+    list(REMOVE_DUPLICATES actualVTKLibraries)
+else()
+    set(actualVTKLibraries ${VTK_LIBRARIES})
+endif()
 
+# RelNoOptimization erroneously links to Debug by default.
+# Fix this by settings RelNoOptimization properties (redirecting to RelWithDebInfo)
+foreach(libName ${actualVTKLibraries})
+    set(requiredOptions
+        INTERFACE_LINK_LIBRARIES
+        IMPORTED_IMPLIB_RELWITHDEBINFO
+        IMPORTED_LOCATION_RELWITHDEBINFO
+        IMPORTED_LINK_DEPENDENT_LIBRARIES_RELWITHDEBINFO
+        IMPORTED_LINK_INTERFACE_LIBRARIES_RELWITHDEBINFO
+    )
+    foreach(key ${requiredOptions})
+        string(REPLACE RELWITHDEBINFO RELNOOPTIMIZATION newKey ${key})
+        get_target_property(value ${libName} ${key})
+        if (value)
+            set_target_properties(${libName}
+                PROPERTIES ${newKey} "${value}")
+        endif()
+    endforeach()
+endforeach()
+
+
+        
+#========= Qt5 =========
+        
 set(PROJECT_QT_COMPONENTS Core Gui Widgets OpenGL)
 if (UNIX)
     # required for platform plugin deployment
@@ -131,6 +173,9 @@ find_program(Qt5QMake_PATH qmake
 set(CMAKE_AUTOMOC ON)
 set_property(GLOBAL PROPERTY AUTOGEN_TARGETS_FOLDER "Generated")
 
+
+
+#========= libzeug =========
 
 if (CMAKE_VERSION VERSION_LESS 3.6)
     set(_git_shallow_flag)
@@ -200,35 +245,22 @@ else()
 endif()
 
 
+#========= Third Party Deployment =========
+
 if(OPTION_INSTALL_3RDPARTY_BINARIES)
     include(cmake/DeploySystemLibraries.cmake)
 
     if (VTK_BUILD_SHARED_LIBS)
-        if (VTK_ENABLE_KITS)
-            set(_actualVTKLibs)
-            foreach(_libName ${VTK_LIBRARIES})
-                set(_kitName ${${_libName}_KIT})
-                if (_kitName)
-                    list(APPEND _actualVTKLibs ${_kitName})
-                else()
-                    list(APPEND _actualVTKLibs ${_libName})
-                endif()
-            endforeach()
-            list(REMOVE_DUPLICATES _actualVTKLibs)
-        else()
-            set(_actualVTKLibs ${VTK_LIBRARIES})
-        endif()
-
         set(_vtkDeployFiles)
         if (WIN32)
             # Windows: VTK build tree contains separated folders for each configuration
-            foreach(_libName ${_actualVTKLibs})
+            foreach(_libName ${actualVTKLibraries})
                 list(APPEND _vtkDeployFiles "${VTK_DIR}/bin/$<$<STREQUAL:$<CONFIG>,RelNoOptimization>:RelWithDebInfo>$<$<NOT:$<STREQUAL:$<CONFIG>,RelNoOptimization>>:$<CONFIG>>/${_libName}-${VTK_MAJOR_VERSION}.${VTK_MINOR_VERSION}.dll")
             endforeach()
         elseif(UNIX)
             # Linux: configuration type of installed VTK must be the same as the deployment configuration for this project.
             # We have to rely on this correct setup here.
-            foreach(_libName ${_actualVTKLibs})
+            foreach(_libName ${actualVTKLibraries})
                 get_filename_component(_realPath "lib${_libName}-${VTK_MAJOR_VERSION}.${VTK_MINOR_VERSION}.so" REALPATH
                     BASE_DIR ${VTK_INSTALL_PREFIX}/lib)
                 list(APPEND _vtkDeployFiles ${_realPath})
@@ -270,6 +302,7 @@ if(OPTION_INSTALL_3RDPARTY_BINARIES)
 endif()
 
 
+#========= GTest =========
 
 CMAKE_DEPENDENT_OPTION(OPTION_USE_SYSTEM_GTEST "Search for installed Google Test Libraries instead of compiling them" OFF
     "OPTION_BUILD_TESTS" OFF)

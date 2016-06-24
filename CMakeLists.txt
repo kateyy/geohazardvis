@@ -34,6 +34,9 @@ set_property(DIRECTORY PROPERTY VS_STARTUP_PROJECT ${META_PROJECT_NAME})
 
 
 set(ACCEPTED_CONFIGURATION_TYPES "Release;Debug;RelWithDebInfo;RelNoOptimization")
+# This doesn't seem to have an effect: RelNoOptimization is still linked to Debug VTK libraries.
+# If there is a property way to set this, remove VTK target property hacks in FindThirdParties.cmake
+set_property(GLOBAL PROPERTY DEBUG_CONFIGURATIONS "Debug")
 set(CMAKE_CXX_FLAGS_RELNOOPTIMIZATION "")
 set(CMAKE_SHARED_LINKER_FLAGS_RELNOOPTIMIZATION "")
 set(CMAKE_EXE_LINKER_FLAGS_RELNOOPTIMIZATION "")
