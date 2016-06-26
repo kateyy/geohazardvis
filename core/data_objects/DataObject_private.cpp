@@ -86,13 +86,13 @@ DataObjectPrivate::EventDeferralLock::EventDeferralLock(DataObjectPrivate & dop,
 
 DataObjectPrivate::EventDeferralLock::EventDeferralLock(EventDeferralLock && other)
     : m_dop{ other.m_dop }
-    , m_lock{std::move(other.m_lock)}
+    , m_lock{ std::move(other.m_lock) }
 {
 }
 
 void DataObjectPrivate::EventDeferralLock::addDeferredEvent(const QString & name, EventMemberPointer event)
 {
-    if (m_dop.m_deferredEvents.contains(name))
+    if (!m_dop.m_deferredEvents.contains(name))
     {
         m_dop.m_deferredEvents.insert(name, event);
     }

@@ -149,6 +149,28 @@ TEST_F(DataObject_test, ClearAttributesKeepsIntrinsicAttributes)
     ASSERT_TRUE(dataSet->GetFieldData()->HasArray(intrFieldAttr->GetName()));
 }
 
+TEST(ScopedEventDeferral_test, ExecutesDeferred)
+{
+    TestDataObject data("noname", vtkSmartPointer<vtkPolyData>::New());
+
+    bool isSignaled = false;
+
+    QObject::connect(&data, &DataObject::attributeArraysChanged, [&isSignaled] () -> void 
+    {
+        isSignaled = true;
+    });
+
+    {
+        ScopedEventDeferral d0(data);
+
+        data.dataSet()->GetPointData()->Modified();
+
+        ASSERT_FALSE(isSignaled);
+    }
+
+    ASSERT_TRUE(isSignaled);
+}
+
 TEST(ScopedEventDeferral_test, move_lock)
 {
     TestDataObject data;
