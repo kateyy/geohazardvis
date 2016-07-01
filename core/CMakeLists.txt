@@ -179,7 +179,6 @@ set(sources
     utility/conversions.hpp
     utility/DataExtent.h
     utility/DataExtent.hpp
-    utility/DataExtent.cpp
     utility/DataSetFilter.h
     utility/DataSetFilter.cpp
     utility/font.h
