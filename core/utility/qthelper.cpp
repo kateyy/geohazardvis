@@ -1,5 +1,8 @@
 #include "qthelper.h"
 
+#include <cassert>
+#include <type_traits>
+
 #include <QColor>
 #include <QDebug>
 #include <QEvent>
@@ -46,4 +49,21 @@ void disconnectAll(QList<QMetaObject::Connection> && connections)
     }
 
     connections.clear();
+}
+
+QVariant dataObjectPtrToVariant(DataObject * dataObject)
+{
+    static_assert(sizeof(qulonglong) >= sizeof(size_t), "Not implemented for current architecture's pointer size.");
+
+    return static_cast<qulonglong>(reinterpret_cast<size_t>(dataObject));
+}
+
+DataObject * variantToDataObjectPtr(const QVariant & variant)
+{
+    static_assert(sizeof(qulonglong) >= sizeof(DataObject *), "Not implemented for current architecture's pointer size.");
+
+    bool okay;
+    auto ptr = reinterpret_cast<DataObject *>(variant.toULongLong(&okay));
+    assert(variant.isNull() || okay);
+    return ptr;
 }

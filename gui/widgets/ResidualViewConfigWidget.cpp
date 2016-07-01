@@ -13,7 +13,7 @@
 
 ResidualViewConfigWidget::ResidualViewConfigWidget(QWidget * parent)
     : QWidget(parent)
-    , m_ui(std::make_unique<Ui_ResidualViewConfigWidget>())
+    , m_ui{ std::make_unique<Ui_ResidualViewConfigWidget>() }
 {
     m_ui->setupUi(this);
 
@@ -132,8 +132,7 @@ void ResidualViewConfigWidget::updateComboBoxes()
             continue;
         }
 
-        static_assert(sizeof(qulonglong) >= sizeof(size_t), "");
-        qulonglong ptrData = static_cast<qulonglong>(reinterpret_cast<size_t>((dataObject)));
+        const auto ptrData = dataObjectPtrToVariant(dataObject);
 
         if (dynamic_cast<ImageDataObject *>(dataObject))
         {
@@ -161,19 +160,21 @@ void ResidualViewConfigWidget::updateComboBoxes()
 void ResidualViewConfigWidget::updateObservationFromUi(int index)
 {
     if (!m_currentView)
+    {
         return;
+    }
 
-    auto dataObject = reinterpret_cast<DataObject *>(m_ui->observationCombo->itemData(index, Qt::UserRole).toULongLong());
-
+    auto dataObject = variantToDataObjectPtr(m_ui->observationCombo->itemData(index));
     m_currentView->setObservationData(dataObject);
 }
 
 void ResidualViewConfigWidget::updateModelFromUi(int index)
 {
     if (!m_currentView)
+    {
         return;
+    }
 
-    auto dataObject = reinterpret_cast<DataObject *>(m_ui->modelCombo->itemData(index, Qt::UserRole).toULongLong());
-
+    auto dataObject = variantToDataObjectPtr(m_ui->modelCombo->itemData(index));
     m_currentView->setModelData(dataObject);
 }
