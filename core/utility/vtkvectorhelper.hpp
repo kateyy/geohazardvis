@@ -201,6 +201,16 @@ vtkVector<T, Size> operator/(const T & scalar, vtkVector<T, Size> rhs)
     return rhs;
 }
 
+template<typename T, int Size>
+vtkVector<T, Size> operator-(vtkVector<T, Size> rhs)
+{
+    for (int i = 0; i < Size; ++i)
+    {
+        rhs[i] = -rhs[i];
+    }
+
+    return rhs;
+}
 
 template<int SizeOut, int SizeIn, typename T>
 typename std::enable_if<(SizeOut < SizeIn), vtkVector<T, SizeOut>>::type

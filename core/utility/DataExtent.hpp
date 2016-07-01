@@ -12,10 +12,10 @@ DataExtent<T, Dimensions>::DataExtent()
 {
     static_assert(size_t(int(Dimensions)) == Dimensions, "Data Extent type is not compatible with VTK's vector type");
 
-    for (size_t i = 0; i < Dimensions; ++i)
+    for (size_t i = 0u; i < Dimensions; ++i)
     {
-        m_extent[2 * i] = std::numeric_limits<T>::max();
-        m_extent[2 * i + 1] = std::numeric_limits<T>::lowest();
+        m_extent[2u * i] = std::numeric_limits<T>::max();
+        m_extent[2u * i + 1u] = std::numeric_limits<T>::lowest();
     }
 }
 
@@ -28,18 +28,26 @@ DataExtent<T, Dimensions>::DataExtent(array_t extent)
 template<typename T, size_t Dimensions>
 DataExtent<T, Dimensions>::DataExtent(const T extent[ValueCount])
 {
-    for (size_t i = 0; i < ValueCount; ++i)
+    for (size_t i = 0u; i < ValueCount; ++i)
     {
         m_extent[i] = extent[i];
     }
 }
 
+/** Incompatible with Visual Studio 2013 Compiler :( */
+//template<typename T, size_t Dimensions>
+//template<size_t ValueCount1, class...T2, typename std::enable_if<sizeof...(T2) == ValueCount1, int>::type>
+//DataExtent<T, Dimensions>::DataExtent(T2... args)
+//    : m_extent{ args... }
+//{
+//}
+
 template<typename T, size_t Dimensions>
 bool DataExtent<T, Dimensions>::isEmpty() const
 {
-    for (size_t i = 0; i < Dimensions; ++i)
+    for (size_t i = 0u; i < Dimensions; ++i)
     {
-        if (m_extent[2 * i] > m_extent[2 * i + 1])
+        if (m_extent[2u * i] > m_extent[2u * i + 1u])
         {
             return true;
         }
@@ -69,7 +77,7 @@ T & DataExtent<T, Dimensions>::operator[] (size_t index)
 template<typename T, size_t Dimensions>
 bool DataExtent<T, Dimensions>::operator==(const T other[ValueCount]) const
 {
-    for (size_t i = 0; i < ValueCount; ++i)
+    for (size_t i = 0u; i < ValueCount; ++i)
     {
         if (m_extent[i] != other[i])
             return false;
@@ -115,7 +123,7 @@ DataExtent<newT, newDimensions> DataExtent<T, Dimensions>::convertTo() const
 
     size_t initValues = 2u * std::min(Dimensions, newDimensions);
 
-    for (size_t i = 0; i < initValues; ++i)
+    for (size_t i = 0u; i < initValues; ++i)
     {
         result[i] = m_extent[i];
     }
@@ -135,7 +143,7 @@ vtkVector<T, Dimensions> DataExtent<T, Dimensions>::center() const
 {
     vtkVector<T, Dimensions> result;
 
-    for (size_t i = 0; i < Dimensions; ++i)
+    for (size_t i = 0u; i < Dimensions; ++i)
     {
         auto int_i = static_cast<int>(i);
         result[int_i] = static_cast<T>(0.5 * m_extent[2 * i] + 0.5 * m_extent[2 * i + 1]);
@@ -149,10 +157,10 @@ vtkVector<T, Dimensions> DataExtent<T, Dimensions>::size() const
 {
     vtkVector<T, Dimensions> result;
 
-    for (size_t i = 0; i < Dimensions; ++i)
+    for (size_t i = 0u; i < Dimensions; ++i)
     {
         auto int_i = static_cast<int>(i);
-        result[int_i] = m_extent[2 * i + 1] - m_extent[2 * i];
+        result[int_i] = m_extent[2u * i + 1u] - m_extent[2u * i];
     }
 
     return result;
@@ -163,9 +171,9 @@ vtkVector<T, Dimensions> DataExtent<T, Dimensions>::minRange() const
 {
     vtkVector<T, Dimensions> m;
 
-    for (int i = 0; i < int(Dimensions); ++i)
+    for (int i = 0u; i < int(Dimensions); ++i)
     {
-        m[i] = m_extent[2 * i];
+        m[i] = m_extent[2u * i];
     }
 
     return m;
@@ -176,39 +184,69 @@ vtkVector<T, Dimensions> DataExtent<T, Dimensions>::maxRange() const
 {
     vtkVector<T, Dimensions> m;
 
-    for (int i = 0; i < int(Dimensions); ++i)
+    for (int i = 0u; i < int(Dimensions); ++i)
     {
-        m[i] = m_extent[2 * i + 1];
+        m[i] = m_extent[2u * i + 1u];
     }
 
     return m;
 }
 
 template<typename T, size_t Dimensions>
-void DataExtent<T, Dimensions>::add(const T other[ValueCount])
+vtkVector2<T> DataExtent<T, Dimensions>::extractDimension(size_t dimension) const
 {
-    for (size_t i = 0; i < Dimensions; ++i)
+    return vtkVector2<T>{m_extent[2u * dimension], m_extent[2u * dimension + 1u]};
+}
+
+template<typename T, size_t Dimensions>
+auto DataExtent<T, Dimensions>::setDimension(size_t dimension, const vtkVector2<T>& range) -> DataExtent &
+{
+    m_extent[2u * dimension] = range[0u];
+    m_extent[2u * dimension + 1u] = range[1u];
+
+    return *this;
+}
+
+template<typename T, size_t Dimensions>
+auto DataExtent<T, Dimensions>::add(const DataExtent & other) -> DataExtent &
+{
+    if (other.isEmpty())
     {
-        if (m_extent[2 * i] < other[2 * i])
-            m_extent[2 * i] = other[2 * i];
-
-        if (m_extent[2 * i + 1] > other[2 * i + 1])
-            m_extent[2 * i + 1] = other[2 * i + 1];
+        return *this;
     }
+
+    if (isEmpty())
+    {
+        *this = other;
+        return *this;
+    }
+
+    for (size_t i = 0u; i < Dimensions; ++i)
+    {
+        if (m_extent[2u * i] > other[2u * i])
+            m_extent[2u * i] = other[2u * i];
+
+        if (m_extent[2u * i + 1u] < other[2u * i + 1u])
+            m_extent[2u * i + 1u] = other[2u * i + 1u];
+    }
+
+    return *this;
 }
 
 template<typename T, size_t Dimensions>
-void DataExtent<T, Dimensions>::add(const DataExtent & other)
+auto DataExtent<T, Dimensions>::sum(DataExtent other) const -> DataExtent
 {
-    Add(other.m_extent);
+    other.add(*this);
+
+    return other;
 }
 
 template<typename T, size_t Dimensions>
-auto DataExtent<T, Dimensions>::intersect(DataExtent lhs, const DataExtent & rhs) -> DataExtent
+auto DataExtent<T, Dimensions>::intersection(DataExtent other) const -> DataExtent
 {
-    lhs.intersect(rhs);
+    other.intersect(*this);
 
-    return lhs;
+    return other;
 }
 
 template<typename T, size_t Dimensions>
@@ -237,4 +275,92 @@ auto DataExtent<T, Dimensions>::intersect(const DataExtent & other) -> DataExten
     }
 
     return *this;
+}
+
+template<typename T, size_t Dimensions>
+template<size_t Dimensions1>
+typename std::enable_if<(Dimensions1 == 1u), bool>::type
+DataExtent<T, Dimensions>::contains(T value) const
+{
+    return m_extent[0u] <= value && value <= m_extent[1];
+}
+
+template<typename T, size_t Dimensions>
+template<size_t Dimensions1>
+typename std::enable_if<(Dimensions1 > 1u), bool>::type
+DataExtent<T, Dimensions>::contains(const vtkVector<T, Dimensions> & point) const
+{
+    for (size_t i = 0u; i < Dimensions; ++i)
+    {
+        if (m_extent[2u * i] > point[static_cast<int>(i)]
+            || m_extent[2u * i + 1u] < point[static_cast<int>(i)])
+        {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+template<typename T, size_t Dimensions>
+template<size_t Dimensions1>
+typename std::enable_if<(Dimensions1 == 1u), T>::type
+DataExtent<T, Dimensions>::clampValue(T value) const
+{
+    return std::max(m_extent[0u], std::min(m_extent[1u], value));
+}
+
+template<typename T, size_t Dimensions>
+template<size_t Dimensions1>
+typename std::enable_if<(Dimensions1 > 1u), vtkVector<T, Dimensions>>::type
+DataExtent<T, Dimensions>::clampPoint(vtkVector<T, Dimensions> point) const
+{
+    for (size_t i = 0u; i < Dimensions; ++i)
+    {
+        const auto int_i = static_cast<int>(i);
+        point[int_i] = std::max(m_extent[2u * i],
+            std::min(m_extent[2u * i + 1u], point[int_i]));
+    }
+
+    return point;
+}
+
+template<typename T, size_t Dimensions>
+template<typename T1>
+typename std::enable_if<std::is_integral<T1>::value, size_t>::type
+DataExtent<T, Dimensions>::numberOfPoints() const
+{
+    if (isEmpty())
+    {
+        return 0u;
+    }
+
+    size_t numPoints = 1u;
+
+    for (size_t i = 0u; i < Dimensions; ++i)
+    {
+        numPoints *= m_extent[2u * i + 1u] - m_extent[2u * i] + 1u;
+    }
+
+    return numPoints;
+}
+
+template<typename T, size_t Dimensions>
+template<typename T1>
+typename std::enable_if<std::is_integral<T1>::value, size_t>::type
+DataExtent<T, Dimensions>::numberOfCells() const
+{
+    if (isEmpty())
+    {
+        return 0u;
+    }
+
+    size_t numCells = 1u;
+
+    for (size_t i = 0u; i < Dimensions; ++i)
+    {
+        numCells *= m_extent[2u * i + 1u] - m_extent[2u * i];
+    }
+
+    return numCells;
 }
