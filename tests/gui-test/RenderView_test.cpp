@@ -1,7 +1,10 @@
 #include <gtest/gtest.h>
 
+#include <array>
+
 #include <QApplication>
 
+#include <vtkPoints.h>
 #include <vtkPolyData.h>
 
 #include <core/DataSetHandler.h>
@@ -27,6 +30,7 @@ public:
     }
     void TearDown() override
     {
+        app.reset();
     }
 
     std::unique_ptr<QApplication> app;
@@ -54,6 +58,17 @@ TEST_F(RenderView_test, AbortLoadingDeletedData)
 TEST_F(RenderView_test, DontMissNewDataAtSameLocation)
 {
     auto poly = vtkSmartPointer<vtkPolyData>::New();
+    auto points = vtkSmartPointer<vtkPoints>::New();
+
+    // texture mapping produces warnings if the data set does not contain at least 3 points
+    points->InsertNextPoint(0, 0, 0);
+    points->InsertNextPoint(0, 1, 0);
+    points->InsertNextPoint(1, 1, 0);
+    poly->SetPoints(points);
+    std::array<vtkIdType, 3> pointIds = { 0, 1, 2 };
+    poly->Allocate(static_cast<vtkIdType>(pointIds.size()));
+    poly->InsertNextCell(VTK_TRIANGLE, static_cast<int>(pointIds.size()), pointIds.data());
+
     auto polyData = std::make_unique<PolyDataObject>("PolyData", *poly);
 
     DataSetHandler dataSetHandler;
