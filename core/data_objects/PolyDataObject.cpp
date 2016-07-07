@@ -1,5 +1,6 @@
 #include "PolyDataObject.h"
 
+#include <array>
 #include <cassert>
 #include <cmath>
 #include <limits>
@@ -19,10 +20,9 @@
 
 PolyDataObject::PolyDataObject(const QString & name, vtkPolyData & dataSet)
     : DataObject(name, &dataSet)
-    , m_cellNormals(vtkSmartPointer<vtkPolyDataNormals>::New())
-    , m_cellCenters()
-    , m_is2p5D()
-    , m_checkedIs2p5D(false)
+    , m_cellNormals{ vtkSmartPointer<vtkPolyDataNormals>::New() }
+    , m_cellCenters{}
+    , m_is2p5D{ Is2p5D::unchecked }
 {
     m_cellNormals->ComputeCellNormalsOn();
     m_cellNormals->ComputePointNormalsOff();
@@ -94,25 +94,28 @@ const QString & PolyDataObject::dataTypeName_s()
 
 bool PolyDataObject::is2p5D()
 {
-    if (m_checkedIs2p5D)
-        return m_is2p5D;
+    if (m_is2p5D != Is2p5D::unchecked)
+    {
+        return m_is2p5D == Is2p5D::yes;
+    }
 
-    m_is2p5D = true;
+    m_is2p5D = Is2p5D::yes;
 
     m_cellNormals->Update();
-    vtkDataArray * normals = m_cellNormals->GetOutput()->GetCellData()->GetNormals();
+    auto normals = m_cellNormals->GetOutput()->GetCellData()->GetNormals();
     
     for (vtkIdType i = 0; i < normals->GetNumberOfTuples(); ++i)
     {
-        if (normals->GetTuple(i)[2] < std::numeric_limits<double>::epsilon())
+        std::array<double, 3> normal;
+        normals->GetTuple(i, normal.data());
+        if (normal[2] < std::numeric_limits<double>::epsilon())
         {
-            m_is2p5D = false;
+            m_is2p5D = Is2p5D::no;
             break;
         }
     }
 
-    m_checkedIs2p5D = true;
-    return m_is2p5D;
+    return m_is2p5D == Is2p5D::yes;
 }
 
 bool PolyDataObject::setCellCenterComponent(vtkIdType cellId, int component, double value)
@@ -125,17 +128,21 @@ bool PolyDataObject::setCellCenterComponent(vtkIdType cellId, int component, dou
     vtkPoints * centers = cellCenters()->GetPoints();
     vtkPoints * vertices = static_cast<vtkPolyData *>(dataSet())->GetPoints();
 
-    double oldValue = centers->GetPoint(cellId)[component];
-    double valueDelta = value - oldValue;
+    const double oldValue = [centers, cellId, component] () -> double {
+        std::array<double, 3> point;
+        centers->GetPoint(cellId, point.data());
+        return point[component];
+    }();
+    const double valueDelta = value - oldValue;
 
     // apply the value delta to all vertices of the triangle
-    double point[3];
     for (int i = 0; i < pointIds->GetNumberOfIds(); ++i)
     {
-        vtkIdType pointId = pointIds->GetId(i);
-        vertices->GetPoint(pointId, point);
+        std::array<double, 3> point;
+        const auto pointId = pointIds->GetId(i);
+        vertices->GetPoint(pointId, point.data());
         point[component] += valueDelta;
-        vertices->SetPoint(pointId, point);
+        vertices->SetPoint(pointId, point.data());
     }
 
     dataSet()->Modified();
@@ -148,19 +155,21 @@ bool PolyDataObject::setCellNormalComponent(vtkIdType cellId, int component, dou
     assert(component >= 0 && component < 3);
     assert(cellId <= dataSet()->GetNumberOfCells());
 
-    vtkDataArray * normals = processedDataSet()->GetCellData()->GetNormals();
+    auto normals = processedDataSet()->GetCellData()->GetNormals();
     assert(normals);
-    double oldNormal[3], newNormal[3];
-    normals->GetTuple(cellId, oldNormal);
-    normals->GetTuple(cellId, newNormal);
+    std::array<double, 3> oldNormal, newNormal;
+    normals->GetTuple(cellId, oldNormal.data());
+    newNormal = oldNormal;
 
     newNormal[component] = value;
-    vtkMath::Normalize(newNormal);
+    vtkMath::Normalize(newNormal.data());
 
-    double angleRad = std::acos(vtkMath::Dot(oldNormal, newNormal));
+    const double angleRad = std::acos(vtkMath::Dot(oldNormal.data(), newNormal.data()));
     // angle is too small, so don't apply the rotation
     if (std::abs(angleRad) < 0.000001)
-         return false;
+    {
+        return false;
+    }
 
     // we have to flip the polygon. Find any suitable axis.
     if (std::abs(angleRad) - vtkMath::Pi() < 0.0001)
@@ -168,15 +177,15 @@ bool PolyDataObject::setCellNormalComponent(vtkIdType cellId, int component, dou
         newNormal[0] += 1.;
     }
 
-    double rotationAxis[3];
-    vtkMath::Cross(oldNormal, newNormal, rotationAxis);
+    std::array<double, 3> rotationAxis;
+    vtkMath::Cross(oldNormal.data(), newNormal.data(), rotationAxis.data());
 
     // use rotation axis, apply it at the polygon center
-    double center[3];
-    cellCenters()->GetPoint(cellId, center);
+    std::array<double, 3> center;
+    cellCenters()->GetPoint(cellId, center.data());
     auto rotation = vtkSmartPointer<vtkTransform>::New();
-    rotation->Translate(center);
-    rotation->RotateWXYZ(vtkMath::DegreesFromRadians(angleRad), rotationAxis);
+    rotation->Translate(center.data());
+    rotation->RotateWXYZ(vtkMath::DegreesFromRadians(angleRad), rotationAxis.data());
     rotation->Translate(-center[0], -center[1], -center[2]);
 
 
@@ -184,13 +193,13 @@ bool PolyDataObject::setCellNormalComponent(vtkIdType cellId, int component, dou
     vtkCell * cell = dataSet()->GetCell(cellId);
     vtkIdList * pointIds = cell->GetPointIds();
     vtkPoints * vertices = static_cast<vtkPolyData *>(dataSet())->GetPoints();
-    double point[3];
+    std::array<double, 3> point;
     for (int i = 0; i < pointIds->GetNumberOfIds(); ++i)
     {
-        vtkIdType pointId = pointIds->GetId(i);
-        vertices->GetPoint(pointId, point);
-        rotation->TransformPoint(point, point);
-        vertices->SetPoint(pointId, point);
+        const vtkIdType pointId = pointIds->GetId(i);
+        vertices->GetPoint(pointId, point.data());
+        rotation->TransformPoint(point.data(), point.data());
+        vertices->SetPoint(pointId, point.data());
     }
 
     dataSet()->Modified();
@@ -209,7 +218,9 @@ std::unique_ptr<QVtkTableModel> PolyDataObject::createTableModel()
 void PolyDataObject::setupCellCenters()
 {
     if (m_cellCenters)
+    {
         return;
+    }
 
     m_cellCenters = vtkSmartPointer<vtkCellCenters>::New();
     m_cellCenters->SetInputConnection(processedOutputPort());

@@ -11,11 +11,11 @@
 
 #include <vtkCellData.h>
 #include <vtkImageData.h>
-#include <vtkMath.h>
 #include <vtkPointData.h>
 #include <vtkPolyData.h>
 #include <vtkRenderWindowInteractor.h>
 #include <vtkInteractorStyle.h>
+#include <vtkVector.h>
 
 #include <core/AbstractVisualizedData.h>
 #include <core/DataSetHandler.h>
@@ -48,8 +48,10 @@ vtkSmartPointer<vtkDataArray> projectToLineOfSight(vtkDataArray & vectors, vtkVe
 
     for (vtkIdType i = 0; i < output->GetNumberOfTuples(); ++i)
     {
-        double scalarProjection = vtkMath::Dot(vectors.GetTuple(i), lineOfSight.GetData());
-        output->SetTuple(i, &scalarProjection);
+        vtkVector3d vector;
+        vectors.GetTuple(i, vector.GetData());
+        const auto projection = vector.Dot(lineOfSight);
+        output->SetTuple(i, &projection);
     };
 
     return output;
@@ -60,16 +62,16 @@ vtkSmartPointer<vtkDataArray> projectToLineOfSight(vtkDataArray & vectors, vtkVe
 
 ResidualVerificationView::ResidualVerificationView(DataMapping & dataMapping, int index, QWidget * parent, Qt::WindowFlags flags)
     : AbstractRenderView(dataMapping, index, parent, flags)
-    , m_inSARLineOfSight(0, 0, 1)
-    , m_interpolationMode(InterpolationMode::observationToModel)
-    , m_observationUnitDecimalExponent(0)
-    , m_modelUnitDecimalExponent(0)
-    , m_observationData(nullptr)
-    , m_modelData(nullptr)
-    , m_modelEventsDeferred(false)
-    , m_implementation(nullptr)
-    , m_updateWatcher(std::make_unique<QFutureWatcher<void>>())
-    , m_destructorCalled(false)
+    , m_inSARLineOfSight{ 0, 0, 1 }
+    , m_interpolationMode{ InterpolationMode::observationToModel }
+    , m_observationUnitDecimalExponent{ 0 }
+    , m_modelUnitDecimalExponent{ 0 }
+    , m_observationData{ nullptr }
+    , m_modelData{ nullptr }
+    , m_modelEventsDeferred{ false }
+    , m_implementation{ nullptr }
+    , m_updateWatcher{ std::make_unique<QFutureWatcher<void>>() }
+    , m_destructorCalled{ false }
 {
     connect(m_updateWatcher.get(), &QFutureWatcher<void>::finished, this, &ResidualVerificationView::handleUpdateFinished);
     m_attributeNamesLocations[residualIndex].first = "Residual"; // TODO add GUI option?
@@ -787,10 +789,13 @@ void ResidualVerificationView::updateResidual()
 
     for (vtkIdType i = 0; i < residualData->GetNumberOfTuples(); ++i)
     {
-        double o_value = observationLosDisp->GetTuple(i)[0] * observationUnitFactor;
-        double m_value = modelLosDisp->GetTuple(i)[0] * modelUnitFactor;
+        double o_value, m_value;
+        observationLosDisp->GetTuple(i, &o_value);
+        o_value *= observationUnitFactor;
+        modelLosDisp->GetTuple(i, &m_value);
+        m_value *= modelUnitFactor;
 
-        double r_value = o_value - m_value;
+        const double r_value = o_value - m_value;
         residualData->SetTuple(i, &r_value);
     }
 

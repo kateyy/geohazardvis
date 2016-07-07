@@ -1,6 +1,7 @@
 #include "ImageProfileContextPlot.h"
 
 #include <cassert>
+#include <vector>
 
 #include <vtkAssignAttribute.h>
 #include <vtkCellData.h>
@@ -134,11 +135,13 @@ void ImageProfileContextPlot::updatePlot()
     {
         const auto component = static_cast<vtkIdType>(profileData().vectorComponent());
         assert(sourceYValues->GetNumberOfComponents() > component);
+        auto tuple = std::vector<double>(sourceYValues->GetNumberOfComponents());
 
         plotYValues->SetNumberOfTuples(numPoints);
         for (vtkIdType i = 0; i < numPoints; ++i)
         {
-            plotYValues->SetTuple1(i, sourceYValues->GetTuple(i)[component]);
+            sourceYValues->GetTuple(i, tuple.data());
+            plotYValues->SetTuple(i, std::next(tuple.data(), component));
         }
     }
 

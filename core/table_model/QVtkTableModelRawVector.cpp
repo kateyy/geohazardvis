@@ -1,5 +1,6 @@
 #include "QVtkTableModelRawVector.h"
 
+#include <array>
 #include <cassert>
 
 #include <vtkFloatArray.h>
@@ -15,7 +16,9 @@ QVtkTableModelRawVector::QVtkTableModelRawVector(QObject * parent)
 int QVtkTableModelRawVector::rowCount(const QModelIndex &/*parent*/) const
 {
     if (!m_data)
+    {
         return 0;
+    }
 
     return static_cast<int>(m_data->GetNumberOfTuples());
 }
@@ -23,7 +26,9 @@ int QVtkTableModelRawVector::rowCount(const QModelIndex &/*parent*/) const
 int QVtkTableModelRawVector::columnCount(const QModelIndex &/*parent*/) const
 {
     if (!m_data)
+    {
         return 0;
+    }
 
     return 1 + m_data->GetNumberOfComponents();
 }
@@ -31,28 +36,38 @@ int QVtkTableModelRawVector::columnCount(const QModelIndex &/*parent*/) const
 QVariant QVtkTableModelRawVector::data(const QModelIndex &index, int role) const
 {
     if (role != Qt::DisplayRole || !m_data)
+    {
         return QVariant();
+    }
 
-    vtkIdType tupleId = index.row();
+    const vtkIdType tupleId = index.row();
 
     if (index.column() == 0)
+    {
         return tupleId;
+    }
 
-    vtkIdType component = index.column() - 1;
+    const vtkIdType component = index.column() - 1;
     assert(component < m_data->GetNumberOfComponents());
 
-    return m_data->GetTuple(tupleId)[component];
+    std::array<double, 3> tuple;
+    m_data->GetTuple(tupleId, tuple.data());
+    return tuple[component];
 }
 
 QVariant QVtkTableModelRawVector::headerData(int section, Qt::Orientation orientation, int role) const
 {
     if (role != Qt::DisplayRole || orientation != Qt::Horizontal || !m_data)
+    {
         return QVtkTableModel::headerData(section, orientation, role);
+    }
 
     if (section == 0)
+    {
         return "ID";
+    }
 
-    vtkIdType components = m_data->GetNumberOfComponents();
+    const vtkIdType components = m_data->GetNumberOfComponents();
 
     switch (components)
     {
@@ -69,14 +84,18 @@ QVariant QVtkTableModelRawVector::headerData(int section, Qt::Orientation orient
 bool QVtkTableModelRawVector::setData(const QModelIndex & index, const QVariant & value, int role)
 {
     if (role != Qt::EditRole || index.column() == 0 || !m_data)
+    {
         return false;
+    }
 
     bool ok;
-    double f_value = value.toDouble(&ok);
+    const double f_value = value.toDouble(&ok);
     if (!ok)
+    {
         return false;
+    }
 
-    vtkIdType tupleId = index.row(), component = index.column() - 1;
+    const vtkIdType tupleId = index.row(), component = index.column() - 1;
     int components = m_data->GetNumberOfComponents();
 
     assert(component < components && tupleId < m_data->GetNumberOfTuples());
@@ -95,7 +114,9 @@ bool QVtkTableModelRawVector::setData(const QModelIndex & index, const QVariant 
 Qt::ItemFlags QVtkTableModelRawVector::flags(const QModelIndex &index) const
 {
     if (index.column() > 0)
+    {
         return Qt::ItemIsEditable | QAbstractItemModel::flags(index);
+    }
 
     return QAbstractItemModel::flags(index);
 }
@@ -107,8 +128,12 @@ IndexType QVtkTableModelRawVector::indexType() const
 
 void QVtkTableModelRawVector::resetDisplayData()
 {
-    if (RawVectorData * dataVector = dynamic_cast<RawVectorData *>(dataObject()))
+    if (auto dataVector = dynamic_cast<RawVectorData *>(dataObject()))
+    {
         m_data = dataVector->dataArray();
+    }
     else
+    {
         m_data = nullptr;
+    }
 }

@@ -8,18 +8,22 @@
 
 QVtkTableModel::QVtkTableModel(QObject * parent)
     : QAbstractTableModel(parent)
-    , m_dataObject(nullptr)
-    , m_hightlightId(-1)
+    , m_dataObject{ nullptr }
+    , m_hightlightId{ -1 }
 {
 }
 
 QVariant QVtkTableModel::headerData(int section, Qt::Orientation orientation, int role) const
 {
     if (role != Qt::DisplayRole || orientation != Qt::Vertical)
+    {
         return QVariant();
+    }
 
     if (section == m_hightlightId)
+    {
         return QChar(0x25CF);
+    }
 
 
     return QVariant();
@@ -30,7 +34,9 @@ void QVtkTableModel::setDataObject(DataObject * dataObject)
     assert(dataObject);
 
     if (m_dataObject == dataObject)
+    {
         return;
+    }
 
     m_dataObject = dataObject;
 
@@ -71,7 +77,9 @@ vtkIdType QVtkTableModel::itemIdAt(const QModelIndex & index) const
 void QVtkTableModel::setHighlightItemId(vtkIdType id)
 {
     if (m_hightlightId == id)
+    {
         return;
+    }
 
     m_hightlightId = id;
 

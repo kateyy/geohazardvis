@@ -1,5 +1,6 @@
 #include "QVtkTableModelPolyData.h"
 
+#include <array>
 #include <cassert>
 
 #include <vtkPolyData.h>
@@ -12,15 +13,17 @@
 
 
 QVtkTableModelPolyData::QVtkTableModelPolyData(QObject * parent)
-: QVtkTableModel(parent)
-, m_polyData(nullptr)
+    : QVtkTableModel(parent)
+    , m_polyData{ nullptr }
 {
 }
 
 int QVtkTableModelPolyData::rowCount(const QModelIndex &/*parent*/) const
 {
     if (!m_polyData)
+    {
         return 0;
+    }
 
     return static_cast<int>(m_polyData->dataSet()->GetNumberOfCells());
 }
@@ -33,7 +36,9 @@ int QVtkTableModelPolyData::columnCount(const QModelIndex &/*parent*/) const
 QVariant QVtkTableModelPolyData::data(const QModelIndex &index, int role) const
 {
     if (role != Qt::DisplayRole || !m_polyData)
+    {
         return QVariant();
+    }
 
     vtkIdType cellId = index.row();
 
@@ -47,7 +52,9 @@ QVariant QVtkTableModelPolyData::data(const QModelIndex &index, int role) const
         assert(cell);
         QString idListString;
         for (auto i = 0; i < cell->GetNumberOfPoints(); ++i)
+        {
             idListString += QString::number(cell->GetPointId(i)) + ":";
+        }
 
         return idListString.left(idListString.length() - 1);
     }
@@ -57,8 +64,9 @@ QVariant QVtkTableModelPolyData::data(const QModelIndex &index, int role) const
     {
         vtkSmartPointer<vtkPolyData> centroids = m_polyData->cellCenters();
         assert(centroids->GetNumberOfPoints() > cellId);
-        const double * centroid = centroids->GetPoint(cellId);
-        int component = index.column() - 2;
+        std::array<double, 3> centroid;
+        centroids->GetPoint(cellId, centroid.data());
+        const int component = index.column() - 2;
         assert(component >= 0 && component < 3);
         return centroid[component];
     }
@@ -68,8 +76,9 @@ QVariant QVtkTableModelPolyData::data(const QModelIndex &index, int role) const
     {
         vtkDataArray * normals = m_polyData->processedDataSet()->GetCellData()->GetNormals();
         assert(normals);
-        const double * normal = normals->GetTuple(cellId);
-        int component = index.column() - 5;
+        std::array<double, 3> normal;
+        normals->GetTuple(cellId, normal.data());
+        const int component = index.column() - 5;
         assert(component >= 0 && component < 3);
         return normal[component];
     }
@@ -81,7 +90,9 @@ QVariant QVtkTableModelPolyData::data(const QModelIndex &index, int role) const
 QVariant QVtkTableModelPolyData::headerData(int section, Qt::Orientation orientation, int role) const
 {
     if (role != Qt::DisplayRole || orientation != Qt::Horizontal)
+    {
         return QVtkTableModel::headerData(section, orientation, role);
+    }
 
     switch (section)
     {
@@ -101,12 +112,16 @@ QVariant QVtkTableModelPolyData::headerData(int section, Qt::Orientation orienta
 bool QVtkTableModelPolyData::setData(const QModelIndex & index, const QVariant & value, int role)
 {
     if (role != Qt::EditRole || index.column() < 2 || !m_polyData)
+    {
         return false;
+    }
 
     bool ok;
-    double newValue = value.toDouble(&ok);
+    const double newValue = value.toDouble(&ok);
     if (!ok)
+    {
         return false;
+    }
 
     vtkIdType cellId = index.row();
 
@@ -127,7 +142,9 @@ bool QVtkTableModelPolyData::setData(const QModelIndex & index, const QVariant &
 Qt::ItemFlags QVtkTableModelPolyData::flags(const QModelIndex &index) const
 {
     if (index.column() > 1)
+    {
         return Qt::ItemIsEditable | QAbstractItemModel::flags(index);
+    }
 
     return QAbstractItemModel::flags(index);
 }
@@ -143,14 +160,18 @@ void QVtkTableModelPolyData::resetDisplayData()
 
     if (m_polyData)
     {
-        vtkDataSet * dataSet = m_polyData->dataSet();
+        auto dataSet = m_polyData->dataSet();
         auto cellTypes = vtkSmartPointer<vtkCellTypes>::New();
         dataSet->GetCellTypes(cellTypes);
 
         if (cellTypes->GetNumberOfTypes() == 1 && dataSet->GetCellType(0) == VTK_TRIANGLE)
+        {
             m_cellTypeName = "triangle";
+        }
         else
+        {
             m_cellTypeName = "cell";
+        }
     }
     else
     {

@@ -60,7 +60,9 @@ vtkSmartPointer<vtkProp3DCollection> RenderedData3D::fetchViewProps3D()
     auto props = vtkSmartPointer<vtkProp3DCollection>::New();
 
     for (auto * v : glyphMapping().vectors())
+    {
         props->AddItem(v->viewProp3D());
+    }
 
     return props;
 }
@@ -70,11 +72,15 @@ void RenderedData3D::visibilityChangedEvent(bool visible)
     RenderedData::visibilityChangedEvent(visible);
 
     if (!m_glyphMapping)
+    {
         return;
+    }
 
     for (GlyphMappingData * vectors : m_glyphMapping->vectors())
+    {
         vectors->viewProp()->SetVisibility(
-        visible && vectors->isVisible());
+            visible && vectors->isVisible());
+    }
 }
 
 void RenderedData3D::vectorsForSurfaceMappingChangedEvent()

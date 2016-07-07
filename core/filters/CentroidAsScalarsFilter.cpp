@@ -1,5 +1,7 @@
 #include "CentroidAsScalarsFilter.h"
 
+#include <array>
+
 #include <vtkObjectFactory.h>
 #include <vtkSmartPointer.h>
 #include <vtkFloatArray.h>
@@ -47,8 +49,9 @@ int CentroidAsScalarsFilter::RequestData(vtkInformation *vtkNotUsed(request),
 
     for (vtkIdType i = 0; i < numCells; ++i)
     {
-        float value = static_cast<float>(centroids->GetPoint(i)[Component]);
-        centroidScalars->SetValue(i, value);
+        std::array<double, 3> point;
+        centroids->GetPoint(i, point.data());
+        centroidScalars->SetValue(i, point[Component]);
     }
 
     char componentName[2] = { static_cast<char>('x' + Component), '\0' };

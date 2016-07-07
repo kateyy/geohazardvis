@@ -51,6 +51,6 @@ private:
     vtkSmartPointer<vtkPolyDataNormals> m_cellNormals;
     vtkSmartPointer<vtkCellCenters> m_cellCenters;
 
-    bool m_is2p5D;
-    bool m_checkedIs2p5D;
+    enum class Is2p5D { yes, no, unchecked };
+    Is2p5D m_is2p5D;
 };

@@ -1,5 +1,7 @@
 #include "RenderedVectorGrid3D.h"
 
+#include <array>
+
 #include <vtkProp3DCollection.h>
 #include <vtkLookupTable.h>
 
@@ -47,22 +49,22 @@ const std::string s_lic2DWithMangnitudes = "LIC2DWithMagnitudes";
 
 RenderedVectorGrid3D::RenderedVectorGrid3D(VectorGrid3DDataObject & dataObject)
     : RenderedData3D(dataObject)
-    , m_isInitialized(false)
-    , m_extractVOI(vtkSmartPointer<vtkExtractVOI>::New())
-    , m_slicesEnabled()
+    , m_isInitialized{ false }
+    , m_extractVOI{ vtkSmartPointer<vtkExtractVOI>::New() }
+    , m_slicesEnabled{}
 {
     vtkImageData * image = static_cast<vtkImageData *>(dataObject.processedDataSet());
     assert(image);
 
-    int extent[6];
-    image->GetExtent(extent);
+    std::array<int, 6> extent;
+    image->GetExtent(extent.data());
 
-    m_extractVOI->SetVOI(extent);
+    m_extractVOI->SetVOI(extent.data());
     m_extractVOI->SetInputData(dataObject.dataSet());
 
     // decrease sample rate to prevent crashing/blocking rendering
-    vtkIdType numPoints = image->GetNumberOfPoints();
-    int sampleRate = std::max(1, (int)std::floor(std::cbrt(float(numPoints) / DefaultMaxNumberOfPoints)));
+    const vtkIdType numPoints = image->GetNumberOfPoints();
+    const int sampleRate = std::max(1, (int)std::floor(std::cbrt(float(numPoints) / DefaultMaxNumberOfPoints)));
     setSampleRate(sampleRate, sampleRate, sampleRate);
 
 
@@ -97,8 +99,8 @@ RenderedVectorGrid3D::RenderedVectorGrid3D(VectorGrid3DDataObject & dataObject)
         m_planeWidgets[i]->SetTexturePlaneProperty(property);
 
 
-        int min = extent[2 * i];
-        int max = extent[2 * i + 1];
+        const int min = extent[2 * i];
+        const int max = extent[2 * i + 1];
         setSlicePosition(i, (max - min) / 2);
 
         m_slicesEnabled[i] = true;
@@ -110,7 +112,9 @@ RenderedVectorGrid3D::RenderedVectorGrid3D(VectorGrid3DDataObject & dataObject)
 void RenderedVectorGrid3D::setRenderWindowInteractor(vtkRenderWindowInteractor * interactor)
 {
     for (auto widget : m_planeWidgets)
+    {
         widget->SetInteractor(interactor);
+    }
 
     updateVisibilities();
 }
@@ -156,7 +160,9 @@ std::unique_ptr<PropertyGroup> RenderedVectorGrid3D::createConfigGroup()
         });
 
         for (int i = 0; i < 3; ++i)
+        {
             prop_visibilities->asCollection()->at(i)->setOption("title", std::string{ char('X' + i) });
+        }
 
 
         int extent[6];
@@ -282,8 +288,10 @@ void RenderedVectorGrid3D::scalarsForColorMappingChangedEvent()
     RenderedData3D::scalarsForColorMappingChangedEvent();
 
     for (int i = 0; i < 3; ++i)
+    {
         if (m_planeWidgets[i]->GetEnabled() != 0)
             m_storedSliceIndexes[i] = m_planeWidgets[i]->GetSliceIndex();
+    }
 
     if (m_colorMappingData && m_colorMappingData->usesFilter())
     {
@@ -303,7 +311,9 @@ void RenderedVectorGrid3D::scalarsForColorMappingChangedEvent()
     }
 
     for (int i = 0; i < 3; ++i)
+    {
         m_planeWidgets[i]->SetSliceIndex(m_storedSliceIndexes[i]);
+    }
 
 
     updateVisibilities();
@@ -344,12 +354,14 @@ void RenderedVectorGrid3D::updatePlaneLUT()
         : vtkLookupTable::SafeDownCast(m_gradient);
 
     for (auto plane : m_planeWidgets)
+    {
         plane->SetLookupTable(lut);
+    }
 }
 
 void RenderedVectorGrid3D::updateVisibilities()
 {
-    bool colorMapping = m_colorMappingData && m_colorMappingData->usesFilter();
+    const bool colorMapping = m_colorMappingData && m_colorMappingData->usesFilter();
     bool changed = false;
 
     for (int i = 0; i < 3; ++i)
@@ -368,7 +380,9 @@ void RenderedVectorGrid3D::updateVisibilities()
     }
 
     if (changed)
+    {
         emit geometryChanged();
+    }
 }
 
 void RenderedVectorGrid3D::setSampleRate(int x, int y, int z)

@@ -1,5 +1,6 @@
 #include "LinearSelectorXY.h"
 
+#include <array>
 #include <cmath>
 #include <functional>
 #include <memory>
@@ -130,8 +131,8 @@ int LinearSelectorXY::RequestData(vtkInformation * vtkNotUsed(request),
     std::vector<double> signedPointDistances(static_cast<size_t>(numInputPoints));
     for (vtkIdType i = 0; i < numInputPoints; ++i)
     {
-        double point[3];
-        cellInput->GetPoint(i, point);
+        std::array<double, 3> point;
+        cellInput->GetPoint(i, point.data());
 
         signedPointDistances[i] = signedDistanceToLine({ point[0], point[1] });
     }
@@ -180,7 +181,8 @@ int LinearSelectorXY::RequestData(vtkInformation * vtkNotUsed(request),
 
         // check if the centroid lies within the line segment
 
-        const double * centroid = centersInput->GetPoint(cellId);
+        std::array<double, 3> centroid;
+        centersInput->GetPoint(cellId, centroid.data());
         vtkVector2d centroid2d = { centroid[0], centroid[1] };
 
         const double t = positionOnLine(centroid2d);
@@ -193,7 +195,7 @@ int LinearSelectorXY::RequestData(vtkInformation * vtkNotUsed(request),
         selectedCells->InsertNextValue(cellId);
 
         extractedPointIds.push_back(
-            extractedPoints->InsertNextPoint(centroid));
+            extractedPoints->InsertNextPoint(centroid.data()));
 
         positionsOnLine->InsertNextValue(t);
 

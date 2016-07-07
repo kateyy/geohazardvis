@@ -1,6 +1,7 @@
 #include "Picker.h"
 
 #include <cassert>
+#include <vector>
 
 #include <QDebug>
 
@@ -209,10 +210,11 @@ void Picker::appendPolyDataInfo(QTextStream & stream, PolyDataObject & polyData)
     auto  scalars = arrayName ? polyData.processedDataSet()->GetCellData()->GetArray(arrayName) : nullptr;
     if (scalars)
     {
-        auto component = concreteMapper->GetLookupTable()->GetVectorComponent();
+        const auto component = concreteMapper->GetLookupTable()->GetVectorComponent();
         assert(component >= 0);
-        double value =
-            scalars->GetTuple(m_pickedIndex)[component];
+        auto tuple = std::vector<double>(scalars->GetNumberOfComponents());
+        scalars->GetTuple(m_pickedIndex, tuple.data());
+        const double value = tuple[component];
 
         stream << endl << endl << "Attribute: " << QString::fromUtf8(arrayName) << " (" << + component + 1 << ")" << endl;
         stream << "Value: " << value;

@@ -35,7 +35,7 @@ VectorGrid3DDataObject::VectorGrid3DDataObject(const QString & name, vtkImageDat
         dataSet.SetSpacing(spacing.GetData());
     }
 
-    vtkDataArray * data = dataSet.GetPointData()->GetScalars();
+    auto data = dataSet.GetPointData()->GetScalars();
     if (!data)
     {
         data = dataSet.GetPointData()->GetVectors();
@@ -121,7 +121,7 @@ bool VectorGrid3DDataObject::checkIfStructureChanged()
     decltype(m_extent) newExtent;
     imageData()->GetExtent(newExtent.data());
 
-    bool changed = newExtent != m_extent;
+    const bool changed = newExtent != m_extent;
 
     if (changed)
     {

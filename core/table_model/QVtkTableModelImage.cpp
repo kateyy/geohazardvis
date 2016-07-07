@@ -49,19 +49,25 @@ int QVtkTableModelImage::columnCount(const QModelIndex &/*parent*/) const
 QVariant QVtkTableModelImage::data(const QModelIndex &index, int role) const
 {
     if (role != Qt::DisplayRole || !m_vtkImageData)
+    {
         return QVariant();
+    }
 
     int imageRow, imageColumn;
     tableToImageCoord(index.row(), imageRow, imageColumn);
 
     // image row/column columns
     if (index.column() == 0)
+    {
         return imageRow;
+    }
     if (index.column() == 1)
+    {
         return imageColumn;
+    }
 
     // scalar data columns
-    int component = index.column() - 2;
+    const int component = index.column() - 2;
     assert(component < m_vtkImageData->GetNumberOfScalarComponents());
     return m_vtkImageData->GetScalarComponentAsDouble(imageRow, imageColumn, 0, component);
 }
@@ -69,7 +75,9 @@ QVariant QVtkTableModelImage::data(const QModelIndex &index, int role) const
 QVariant QVtkTableModelImage::headerData(int section, Qt::Orientation orientation, int role) const
 {
     if (role != Qt::DisplayRole || orientation != Qt::Horizontal || !m_vtkImageData)
+    {
         return QVtkTableModel::headerData(section, orientation, role);
+    }
 
     switch (section)
     {
@@ -86,17 +94,21 @@ QVariant QVtkTableModelImage::headerData(int section, Qt::Orientation orientatio
 bool QVtkTableModelImage::setData(const QModelIndex & index, const QVariant & value, int role)
 {
     if (role != Qt::EditRole || index.column() < c_firstValueColumn || !m_vtkImageData)
+    {
         return false;
+    }
 
     bool ok;
-    double f_value = value.toDouble(&ok);
+    const double f_value = value.toDouble(&ok);
     if (!ok)
+    {
         return false;
+    }
 
     int imageRow, imageColumn;
     tableToImageCoord(index.row(), imageRow, imageColumn);
 
-    int component = index.column() - c_firstValueColumn;
+    const int component = index.column() - c_firstValueColumn;
     assert(component < m_vtkImageData->GetNumberOfScalarComponents());
 
     m_vtkImageData->SetScalarComponentFromDouble(imageRow, imageColumn, 0, component, f_value);
@@ -109,7 +121,9 @@ bool QVtkTableModelImage::setData(const QModelIndex & index, const QVariant & va
 Qt::ItemFlags QVtkTableModelImage::flags(const QModelIndex &index) const
 {
     if (index.column() >= c_firstValueColumn)
+    {
         return Qt::ItemIsEditable | QAbstractItemModel::flags(index);
+    }
 
     return QAbstractItemModel::flags(index);
 }

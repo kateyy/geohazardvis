@@ -225,7 +225,9 @@ const QString & RenderedPolyData::texture() const
 void RenderedPolyData::setTexture(const QString & fileName)
 {
     if (m_textureFileName == fileName)
+    {
         return;
+    }
 
     m_textureFileName = fileName;
 
@@ -264,7 +266,9 @@ vtkSmartPointer<vtkProp3DCollection> RenderedPolyData::fetchViewProps3D()
 vtkActor * RenderedPolyData::mainActor()
 {
     if (m_mainActor)
+    {
         return m_mainActor;
+    }
 
     m_mainActor = vtkSmartPointer<vtkActor>::New();
     m_mainActor->SetMapper(m_mapper);
@@ -295,7 +299,9 @@ void RenderedPolyData::scalarsForColorMappingChangedEvent()
         m_colorMappingOutput = filter->GetOutputPort();
     }
     else
+    {
         m_colorMappingOutput = dataObject().processedOutputPort();
+    }
 
     finalizePipeline();
 }

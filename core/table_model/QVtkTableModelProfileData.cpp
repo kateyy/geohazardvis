@@ -1,5 +1,6 @@
 #include "QVtkTableModelProfileData.h"
 
+#include <array>
 #include <cassert>
 
 #include <vtkDataSet.h>
@@ -10,14 +11,16 @@
 
 QVtkTableModelProfileData::QVtkTableModelProfileData(QObject * parent)
     : QVtkTableModel(parent)
-    , m_data(nullptr)
+    , m_data{ nullptr }
 {
 }
 
 int QVtkTableModelProfileData::rowCount(const QModelIndex &/*parent*/) const
 {
     if (!m_data)
+    {
         return 0;
+    }
 
     return m_data->numberOfScalars();
 }
@@ -30,17 +33,20 @@ int QVtkTableModelProfileData::columnCount(const QModelIndex &/*parent*/) const
 QVariant QVtkTableModelProfileData::data(const QModelIndex &index, int role) const
 {
     if (role != Qt::DisplayRole || !m_data)
+    {
         return QVariant();
+    }
 
-    vtkIdType valueId = index.row();
-
-    int positionOrValue = index.column();
+    const vtkIdType valueId = index.row();
+    const int positionOrValue = index.column();
 
     if (positionOrValue > 1)
+    {
         return QVariant();
+    }
 
-    double point[3];
-    m_data->processedDataSet()->GetPoint(valueId, point);
+    std::array<double, 3> point;
+    m_data->processedDataSet()->GetPoint(valueId, point.data());
     
     return point[positionOrValue];
 }
@@ -48,7 +54,9 @@ QVariant QVtkTableModelProfileData::data(const QModelIndex &index, int role) con
 QVariant QVtkTableModelProfileData::headerData(int section, Qt::Orientation orientation, int role) const
 {
     if (role != Qt::DisplayRole || orientation != Qt::Horizontal)
+    {
         return QVtkTableModel::headerData(section, orientation, role);
+    }
 
     switch (section)
     {

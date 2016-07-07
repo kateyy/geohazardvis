@@ -1,5 +1,6 @@
 #include "QVtkTableModelVectorGrid3D.h"
 
+#include <array>
 #include <cassert>
 
 #include <vtkDataSet.h>
@@ -13,15 +14,17 @@
 
 QVtkTableModelVectorGrid3D::QVtkTableModelVectorGrid3D(QObject * parent)
     : QVtkTableModel(parent)
-    , m_gridData(nullptr)
-    , m_scalars(nullptr)
+    , m_gridData{ nullptr }
+    , m_scalars{ nullptr }
 {
 }
 
 int QVtkTableModelVectorGrid3D::rowCount(const QModelIndex &/*parent*/) const
 {
     if (!m_gridData)
+    {
         return 0;
+    }
 
     return static_cast<int>(m_gridData->GetNumberOfPoints());
 }
@@ -34,7 +37,7 @@ int QVtkTableModelVectorGrid3D::columnCount(const QModelIndex &/*parent*/) const
     }
 
 
-    int columnCount = 1 + 3
+    const int columnCount = 1 + 3
         + (m_scalars ? m_scalars->GetNumberOfComponents() : 0);
 
     return columnCount;
@@ -44,7 +47,9 @@ int QVtkTableModelVectorGrid3D::columnCount(const QModelIndex &/*parent*/) const
 QVariant QVtkTableModelVectorGrid3D::data(const QModelIndex &index, int role) const
 {
     if (role != Qt::DisplayRole || !m_gridData)
+    {
         return QVariant();
+    }
 
     const vtkIdType pointId = index.row();
 
@@ -55,19 +60,24 @@ QVariant QVtkTableModelVectorGrid3D::data(const QModelIndex &index, int role) co
 
     if (index.column() < 3)
     {
-        const double * point = m_gridData->GetPoint(pointId);
+        std::array<double, 3> point;
+        m_gridData->GetPoint(pointId, point.data());
         return point[index.column() - 1];
     }
 
     const int component = index.column() - 4;
     assert(m_scalars && (m_scalars->GetNumberOfComponents() > component));
-    return m_scalars->GetTuple(pointId)[component];
+    std::array<double, 3> tuple;
+    m_scalars->GetTuple(pointId, tuple.data()); 
+    return tuple[component];
 }
 
 QVariant QVtkTableModelVectorGrid3D::headerData(int section, Qt::Orientation orientation, int role) const
 {
     if (role != Qt::DisplayRole || orientation != Qt::Horizontal)
+    {
         return QVtkTableModel::headerData(section, orientation, role);
+    }
 
     switch (section)
     {
@@ -93,12 +103,16 @@ QVariant QVtkTableModelVectorGrid3D::headerData(int section, Qt::Orientation ori
 bool QVtkTableModelVectorGrid3D::setData(const QModelIndex & index, const QVariant & value, int role)
 {
     if (role != Qt::EditRole || index.column() < 4 || !m_gridData)
+    {
         return false;
+    }
 
     bool validValue;
-    double newValue = value.toDouble(&validValue);
+    const double newValue = value.toDouble(&validValue);
     if (!validValue)
+    {
         return false;
+    }
 
     const vtkIdType tupleId = index.row();
 
@@ -121,7 +135,9 @@ bool QVtkTableModelVectorGrid3D::setData(const QModelIndex & index, const QVaria
 Qt::ItemFlags QVtkTableModelVectorGrid3D::flags(const QModelIndex &index) const
 {
     if (index.column() > 3)
+    {
         return Qt::ItemIsEditable | QAbstractItemModel::flags(index);
+    }
 
     return QAbstractItemModel::flags(index);
 }
