@@ -365,13 +365,34 @@ std::unique_ptr<PolyDataObject> DEMWidget::saveRelease()
 
     updatePipeline();
 
-    auto surface = vtkSmartPointer<vtkPolyData>::New();
-    auto points = vtkSmartPointer<vtkPoints>::New();
-    points->DeepCopy(m_dataPreview->polyDataSet()->GetPoints());
-    auto polys = vtkSmartPointer<vtkCellArray>::New();
-    polys->DeepCopy(m_dataPreview->polyDataSet()->GetPolys());
-    surface->SetPoints(points);
-    surface->SetPolys(polys);
+    vtkSmartPointer<vtkPolyData> surface;
+
+    // For preview visualization, a mesh positioned on the DEM is required.
+    // For the final output, the user can request to center the mesh horizontally on the origin
+    // (in the topography model's local coordinate system).
+    // This is done by output 0 of the DEM-to-topography filter
+    if (m_ui->centerOutputTopographyCheckBox->isChecked())
+    {
+        auto meshCleanup = createMeshCleanupFilter();
+        meshCleanup->SetInputConnection(m_demToTopoFilter->GetOutputPort(0));
+        meshCleanup->Update();
+        surface = vtkPolyData::SafeDownCast(meshCleanup->GetOutput());
+    }
+    else
+    {
+        surface = vtkSmartPointer<vtkPolyData>::New();
+        auto points = vtkSmartPointer<vtkPoints>::New();
+        points->DeepCopy(m_dataPreview->polyDataSet()->GetPoints());
+        auto polys = vtkSmartPointer<vtkCellArray>::New();
+        polys->DeepCopy(m_dataPreview->polyDataSet()->GetPolys());
+        surface->SetPoints(points);
+        surface->SetPolys(polys);
+    }
+
+    if (!surface)
+    {
+        return{};
+    }
 
     auto newDataName = m_ui->newTopoModelName->text();
     if (newDataName.isEmpty())
@@ -499,11 +520,7 @@ void DEMWidget::setupPipeline()
 
     m_demPipelineStart = m_demToTopoFilter;
 
-    m_cleanupOutputMeshAttributes = vtkSmartPointer<vtkPassArrays>::New();
-    m_cleanupOutputMeshAttributes->UseFieldTypesOn();
-    m_cleanupOutputMeshAttributes->AddFieldType(vtkDataObject::AttributeTypes::CELL);
-    m_cleanupOutputMeshAttributes->AddFieldType(vtkDataObject::AttributeTypes::POINT);
-    m_cleanupOutputMeshAttributes->AddFieldType(vtkDataObject::AttributeTypes::FIELD);
+    m_cleanupOutputMeshAttributes = createMeshCleanupFilter();
     m_cleanupOutputMeshAttributes->SetInputConnection(m_demToTopoFilter->GetOutputPort(1));
 }
 
@@ -843,4 +860,15 @@ std::vector<QSignalBlocker> DEMWidget::uiSignalBlockers()
     blockers.emplace_back(*m_ui->topographyCenterYSpinBox);
 
     return blockers;
+}
+
+vtkSmartPointer<vtkPassArrays> DEMWidget::createMeshCleanupFilter()
+{
+    auto cleanup = vtkSmartPointer<vtkPassArrays>::New();
+    cleanup->UseFieldTypesOn();
+    cleanup->AddFieldType(vtkDataObject::AttributeTypes::CELL);
+    cleanup->AddFieldType(vtkDataObject::AttributeTypes::POINT);
+    cleanup->AddFieldType(vtkDataObject::AttributeTypes::FIELD);
+
+    return cleanup;
 }

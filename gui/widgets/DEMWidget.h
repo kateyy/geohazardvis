@@ -100,6 +100,8 @@ private:
 
     std::vector<QSignalBlocker> uiSignalBlockers();
 
+    static vtkSmartPointer<vtkPassArrays> createMeshCleanupFilter();
+
 private:
     DataMapping & m_dataMapping;
 
