@@ -16,6 +16,7 @@ class AbstractRenderView;
 class DataObject;
 class DataSetHandler;
 class SelectionHandler;
+class RenderView;
 class TableView;
 
 
@@ -43,6 +44,8 @@ public:
 
     template<typename T>
     T * createRenderView();
+
+    AbstractRenderView * createDefaultRenderViewType();
 
     AbstractRenderView * focusedRenderView();
 

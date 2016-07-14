@@ -52,6 +52,8 @@ set(sources
 
     filters/CentroidAsScalarsFilter.h
     filters/CentroidAsScalarsFilter.cpp
+    filters/DEMToTopographyMesh.h
+    filters/DEMToTopographyMesh.cpp
     filters/ArrayRenameFilter.h
     filters/ArrayRenameFilter.cpp
     filters/ImagePlaneWidget.h

@@ -2,25 +2,25 @@
 
 #include <functional>
 #include <memory>
+#include <vector>
 
-#include <QList>
 #include <QPointer>
 
 #include <vtkSmartPointer.h>
+#include <vtkVector.h>
 
-#include <core/utility/DataExtent.h>
 #include <gui/widgets/DockableWidget.h>
 
 
 class vtkAlgorithm;
-class vtkImageShiftScale;
-class vtkTransform;
+class vtkPassArrays;
 
 class AbstractRenderView;
 class DataMapping;
 class DataObject;
 class DataSetFilter;
 class DataSetHandler;
+class DEMToTopographyMesh;
 class ImageDataObject;
 class PolyDataObject;
 class Ui_DEMWidget;
@@ -37,11 +37,32 @@ public:
         QWidget * parent = nullptr, Qt::WindowFlags f = {});
     ~DEMWidget() override;
 
-public:
+    ImageDataObject * dem();
+    void setDEM(ImageDataObject * dem);
+    PolyDataObject * meshTemplate();
+    void setMeshTemplate(PolyDataObject * meshTemplate);
+
+    double topoRadius() const;
+    void setTopoRadius(double radius);
+    const vtkVector2d & topoShiftXY() const;
+    void setTopoShiftXY(const vtkVector2d & shift);
+    int demUnitScaleExponent() const;
+    void setDEMUnitScaleExponent(int exponent);
+
     /** Show a preview for the currently configured topography and setup default visualization parameters */
     void showPreview();
+    /** Save the topography mesh as currently configured and pass it to the data set handler. */
     bool save();
+    /** Call save(), and if successful close the widget afterwards. */
     void saveAndClose();
+    /** Create the topography mesh for the current configuration (as in save()), and return the data object.
+    * This will not pass the data object to the data set handler.
+    * In case of errors, this will NOT show any message boxes (non-GUI function).
+    * @return an empty pointer, if input data is missing or invalid. */
+    std::unique_ptr<PolyDataObject> saveRelease();
+
+    void matchTopoMeshRadius();
+    void centerTopoMesh();
 
     void resetParametersForCurrentInputs();
 
@@ -54,31 +75,30 @@ private:
 
     void setupPipeline();
 
-    ImageDataObject * currentDEM();
-    PolyDataObject * currentTopoTemplate();
-    /** Lazy computation of the template radius. Assume a template centered at (0, 0, z), 
-    * search for the point with the highest distance to the center. */
-    double currentTopoTemplateRadius();
+    ImageDataObject * currentDEMChecked();
+    PolyDataObject * currentTopoTemplateChecked();
 
-    /** Update the output topography according to input parameters and data.
-      * @return true if the function built a new preview data set */
-    bool updateData();
-    /** If currently a render view is opened call forceUpdatePreview */
+    /** Pass input DEM and mesh template to the pipeline, as far as available */
+    void setPipelineInputs();
+    /** Prepare output data object, if pipeline inputs are set */
+    bool updatePreviewDataObject();
+    /** Trigger pipeline updates while locking the output data object */
+    void updatePipeline();
+    /** Pass DEM and transformed topography mesh to the preview renderer if applicable */
+    void updatePreviewRendererContents();
+    /** Set default visualization parameters on DEM and topography mesh, reset to a default view */
+    void configureDEMVisualization();
+    void configureMeshVisualization();
+
+    /** Update pipeline inputs and UI ranges, labels etc. If a preview renderer is opened, also 
+    * also update preview data and visualizations. */
     void updatePreview();
-    /** Calls updateData, opens a new render view if required, and updates available visualizations */
-    void forceUpdatePreview();
-    void configureVisualizations();
 
     void releasePreviewData();
 
-    void updateMeshTransform();
-    void updatePipeline();
-    void updateView();
+    void applyUIChanges();
 
-    void matchTopoMeshRadius();
-    void centerTopoMesh();
-    void updateTopoUIRanges();
-    void updateForChangedTransformParameters();
+    std::vector<QSignalBlocker> uiSignalBlockers();
 
 private:
     DataMapping & m_dataMapping;
@@ -88,23 +108,24 @@ private:
     std::unique_ptr<DataSetFilter> m_topographyMeshes;
     std::unique_ptr<DataSetFilter> m_dems;
 
-    vtkSmartPointer<vtkAlgorithm> m_demPipelineStart;
-    vtkSmartPointer<vtkImageShiftScale> m_demUnitScale;
-    vtkSmartPointer<vtkAlgorithm> m_meshPipelineStart;
-    vtkSmartPointer<vtkTransform> m_meshTransform;
-    vtkSmartPointer<vtkAlgorithm> m_pipelineEnd;
+    int m_demUnitDecimalExponent;
+    /** Mesh shift and radius are invalid, because the input data sets changed */
+    bool m_meshParametersInvalid;
+    /** Due to changed input data sets, the output/preview data set needs to be rebuilt */
+    bool m_previewRebuildRequired;
 
-    double m_demUnitDecimalExponent;
-    double m_topoRadius;
-    vtkVector2d m_topoShiftXY;
+    vtkSmartPointer<vtkAlgorithm> m_demPipelineStart;
+    vtkSmartPointer<vtkAlgorithm> m_meshPipelineStart;
+    vtkSmartPointer<DEMToTopographyMesh> m_demToTopoFilter;
+    vtkSmartPointer<vtkPassArrays> m_cleanupOutputMeshAttributes;
+
 
     QPointer<AbstractRenderView> m_previewRenderer;
 
     std::unique_ptr<PolyDataObject> m_dataPreview;
-    bool m_topoRebuildRequired;
 
-    DataObject * m_lastPreviewedDEM;
+    ImageDataObject * m_lastPreviewedDEM;
     ImageDataObject * m_demSelection;
+    PolyDataObject * m_lastPreviewedTopo;
     PolyDataObject * m_topoTemplateSelection;
-    double m_lastTopoTemplateRadius;
 };

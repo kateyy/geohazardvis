@@ -1,0 +1,165 @@
+#include <gtest/gtest.h>
+
+#include <vtkDiskSource.h>
+#include <vtkExecutive.h>
+#include <vtkFloatArray.h>
+#include <vtkImageData.h>
+#include <vtkPointData.h>
+#include <vtkPolyData.h>
+
+#include <core/filters/DEMToTopographyMesh.h>
+#include <core/utility/DataExtent.h>
+#include <core/utility/vtkvectorhelper.h>
+
+
+class DEMToTopographyMesh_test : public testing::Test
+{
+public:
+    static vtkSmartPointer<vtkImageData> generateDEM()
+    {
+        auto image = vtkSmartPointer<vtkImageData>::New();
+        image->SetExtent(0, 10, 0, 20, 0, 0);
+
+        auto elevations = vtkSmartPointer<vtkFloatArray>::New();
+        elevations->SetNumberOfValues(image->GetNumberOfPoints());
+        elevations->SetName("elevations");
+        
+        for (int i = 0; i < elevations->GetNumberOfValues(); ++i)
+        {
+            elevations->SetValue(i, i / (elevations->GetNumberOfValues() - 1));
+        }
+        
+        image->GetPointData()->SetScalars(elevations);
+
+        return image;
+    }
+
+    static vtkSmartPointer<vtkPolyData> generateMesh()
+    {
+        auto disk = vtkSmartPointer<vtkDiskSource>::New();
+        disk->SetInnerRadius(0);
+        disk->SetOuterRadius(1);
+        disk->SetCircumferentialResolution(6);
+        disk->SetRadialResolution(3);
+        disk->Update();
+
+        return disk->GetOutput();
+    }
+};
+
+TEST_F(DEMToTopographyMesh_test, basicRun)
+{
+    auto dem = generateDEM();
+    auto mesh = generateMesh();
+
+    auto filter = vtkSmartPointer<DEMToTopographyMesh>::New();
+    filter->SetInputDEM(dem);
+    filter->SetInputMeshTemplate(mesh);
+
+    ASSERT_EQ(1, filter->GetExecutive()->Update());
+}
+
+TEST_F(DEMToTopographyMesh_test, MatchingParameters)
+{
+    auto dem = generateDEM();
+    auto mesh = generateMesh();
+    auto inputMeshBounds = DataBounds(mesh->GetBounds());
+
+    auto filter = vtkSmartPointer<DEMToTopographyMesh>::New();
+    filter->SetInputDEM(dem);
+    filter->SetInputMeshTemplate(mesh);
+    filter->SetParametersToMatching();
+
+    const auto demBounds = DataBounds(dem->GetBounds());
+
+    // x dimension is limiting
+    ASSERT_EQ(0.5 * demBounds.extractDimension(0).Norm(), filter->GetTopographyRadius());
+    ASSERT_EQ(convert<2>(demBounds.center()), filter->GetTopographyShiftXY());
+}
+
+TEST_F(DEMToTopographyMesh_test, ScaledTopoForMatchingParams)
+{
+    auto dem = generateDEM();
+    auto mesh = generateMesh();
+
+    auto filter = vtkSmartPointer<DEMToTopographyMesh>::New();
+    filter->SetInputDEM(dem);
+    filter->SetInputMeshTemplate(mesh);
+    filter->SetParametersToMatching();
+
+    ASSERT_EQ(1, filter->GetExecutive()->Update());
+    auto shiftedTopo = filter->GetOutputTopoMeshOnDEM();
+    ASSERT_TRUE(shiftedTopo);
+
+    const auto demBounds = DataBounds(dem->GetBounds()).convertTo<2>();
+    const auto shiftedTopoBounds = DataBounds(shiftedTopo->GetBounds()).convertTo<2>();
+
+    // x dimension is limiting
+    ASSERT_EQ(demBounds.extractDimension(0), shiftedTopoBounds.extractDimension(0));
+    ASSERT_EQ(demBounds.center(), shiftedTopoBounds.center());
+}
+
+TEST_F(DEMToTopographyMesh_test, PreservesMeshXYRatio)
+{
+    auto dem = generateDEM();
+    auto mesh = generateMesh();
+
+    auto filter = vtkSmartPointer<DEMToTopographyMesh>::New();
+    filter->SetInputDEM(dem);
+    filter->SetInputMeshTemplate(mesh);
+    filter->SetParametersToMatching();
+
+    ASSERT_EQ(1, filter->GetExecutive()->Update());
+    auto outputTopo = filter->GetOutputTopography();
+    ASSERT_TRUE(outputTopo);
+
+    const auto inputBounds = DataBounds(mesh->GetBounds()).convertTo<2>().size();
+    const auto outputBounds = DataBounds(outputTopo->GetBounds()).convertTo<2>().size();
+
+    const auto inputXYRatio = inputBounds[0] / inputBounds[1];
+    const auto outputXYRatio = outputBounds[0] / outputBounds[1];
+
+    ASSERT_FLOAT_EQ(inputXYRatio, outputXYRatio);
+}
+
+TEST_F(DEMToTopographyMesh_test, OutputElevationInInputElevationRange)
+{
+    auto dem = generateDEM();
+    auto mesh = generateMesh();
+
+    auto filter = vtkSmartPointer<DEMToTopographyMesh>::New();
+    filter->SetInputDEM(dem);
+    filter->SetInputMeshTemplate(mesh);
+    filter->SetParametersToMatching();
+
+    ASSERT_EQ(1, filter->GetExecutive()->Update());
+    auto outputTopo = filter->GetOutputTopography();
+    ASSERT_TRUE(outputTopo);
+
+    const auto inputElevation = DataBounds(dem->GetBounds()).extractDimension(2);
+    const auto outputElevation = DataBounds(outputTopo->GetBounds()).extractDimension(2);
+
+    ASSERT_LE(inputElevation[0], outputElevation[0]);
+    ASSERT_GE(inputElevation[1], outputElevation[1]);
+}
+
+TEST_F(DEMToTopographyMesh_test, ResetsToMatching)
+{
+    auto dem = generateDEM();
+    auto mesh = generateMesh();
+
+    auto filter = vtkSmartPointer<DEMToTopographyMesh>::New();
+    filter->SetInputDEM(dem);
+    filter->SetInputMeshTemplate(mesh);
+
+    filter->SetTopographyShiftXY(vtkVector2d{ -1, -1 });
+    filter->SetTopographyRadius(20);
+
+    filter->SetParametersToMatching();
+
+    const auto demBounds = DataBounds(dem->GetBounds());
+
+    // x dimension is limiting
+    ASSERT_EQ(0.5 * demBounds.extractDimension(0).Norm(), filter->GetTopographyRadius());
+    ASSERT_EQ(convert<2>(demBounds.center()), filter->GetTopographyShiftXY());
+}

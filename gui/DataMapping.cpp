@@ -151,6 +151,11 @@ bool DataMapping::addToRenderView(const QList<DataObject *> & dataObjects, Abstr
     return true;
 }
 
+AbstractRenderView * DataMapping::createDefaultRenderViewType()
+{
+    return createRenderView<RenderView>();
+}
+
 AbstractRenderView * DataMapping::focusedRenderView()
 {
     return m_focusedRenderView;

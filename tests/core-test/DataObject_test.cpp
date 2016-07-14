@@ -2,14 +2,16 @@
 
 #include <vtkDataSet.h>
 #include <vtkCellData.h>
+#include <vtkImageData.h>
 #include <vtkFloatArray.h>
 #include <vtkPointData.h>
 #include <vtkPolyData.h>
 #include <vtkSmartPointer.h>
 
-#include <core/data_objects/DataObject.h>
+#include <core/data_objects/ImageDataObject.h>
 #include <core/table_model/QVtkTableModel.h>
 #include <core/data_objects/DataObject_private.h>
+#include <core/utility/DataExtent.h>
 
 
 class DataObject_test_DataObject : public DataObject
@@ -195,4 +197,29 @@ TEST(ScopedEventDeferral_test, move_lock)
     }
 
     ASSERT_FALSE(data.isDeferringEvents());
+}
+
+TEST(ImageDataObject_test, UpdateBoundsForChangedSpacing)
+{
+    auto imgData = vtkSmartPointer<vtkImageData>::New();
+    imgData->SetExtent(0, 10, 0, 20, 0, 0);
+
+    auto img = std::make_unique<ImageDataObject>("noname", *imgData);
+
+    bool boundsChangedEmitted = false;
+
+    QObject::connect(img.get(), &DataObject::boundsChanged, [&boundsChangedEmitted] ()
+    {
+        boundsChangedEmitted = true;
+    });
+
+    const auto initialBounds = DataBounds(img->bounds());
+    ASSERT_EQ(DataBounds({ 0., 10., 0., 20., 0., 0. }), initialBounds);
+
+    imgData->SetSpacing(0.1, 0.1, 0.1);
+
+    ASSERT_TRUE(boundsChangedEmitted);
+
+    const auto newBounds = DataBounds(img->bounds());
+    ASSERT_EQ(DataBounds({ 0., 1., 0., 2., 0., 0. }), newBounds);
 }

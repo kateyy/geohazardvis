@@ -6,6 +6,7 @@ message(STATUS "Test ${target}")
 set(sources
     main.cpp
     app_helper.h
+    DEMWidget_test.cpp
     RenderView_test.cpp
     RenderView_test_tools.h
     RenderView_test_tools.cpp
