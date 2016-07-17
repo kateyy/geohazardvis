@@ -120,6 +120,9 @@ vtkPVScalarBarActor::~vtkPVScalarBarActor()
     delete [] this->ComponentTitle;
     this->ComponentTitle = NULL;
     }
+
+  delete [] this->RangeLabelFormat;
+  this->RangeLabelFormat = NULL;
 }
 
 //-----------------------------------------------------------------------------

@@ -153,7 +153,6 @@ public:
   vtkGetMacro(Backface, bool);
 
 
-//BTX
 protected:
   vtkGridAxesHelper();
   ~vtkGridAxesHelper();
@@ -194,5 +193,5 @@ protected:
 private:
   vtkGridAxesHelper(const vtkGridAxesHelper&); // Not implemented.
   void operator=(const vtkGridAxesHelper&); // Not implemented.
-//ETX
+
 };

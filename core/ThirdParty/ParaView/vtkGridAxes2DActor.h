@@ -200,7 +200,7 @@ public:
   // Overridden to include the mtime for the text properties.
   unsigned long GetMTime();
 
-//BTX
+
 protected:
   vtkGridAxes2DActor();
   ~vtkGridAxes2DActor();
@@ -239,5 +239,4 @@ private:
   friend class vtkLabels;
 
   bool DoRender;
-//ETX
 };
