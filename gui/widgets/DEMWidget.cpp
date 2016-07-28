@@ -832,7 +832,7 @@ void DEMWidget::applyUIChanges()
     {
         m_ui->topographyRadiusSpinBox->setValue(newRadius);
         m_ui->topographyRadiusSpinBox->setRange(newValidRadiusRange[0], newValidRadiusRange[1]);
-        const auto step = newValidRadiusRange.size()[0] * 0.1;
+        const auto step = newValidRadiusRange.componentSize() * 0.1;
         m_ui->topographyRadiusSpinBox->setSingleStep(step);
     }
 
@@ -845,7 +845,7 @@ void DEMWidget::applyUIChanges()
         m_ui->topographyCenterXSpinBox->setRange(shiftXRange[0], shiftXRange[1]);
         m_ui->topographyCenterYSpinBox->setRange(shiftYRange[0], shiftYRange[1]);
 
-        const auto step = newValidShiftRange.size() * 0.1;
+        const auto step = newValidShiftRange.componentSize() * 0.1;
         m_ui->topographyCenterXSpinBox->setSingleStep(step[0]);
         m_ui->topographyCenterYSpinBox->setSingleStep(step[1]);
     }

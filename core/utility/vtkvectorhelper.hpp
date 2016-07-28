@@ -214,14 +214,14 @@ vtkVector<T, Size> operator-(vtkVector<T, Size> rhs)
 
 template<int SizeOut, int SizeIn, typename T>
 typename std::enable_if<(SizeOut < SizeIn), vtkVector<T, SizeOut>>::type
-convert(const vtkVector<T, SizeIn> & other)
+convertTo(const vtkVector<T, SizeIn> & other)
 {
     return vtkVector<T, SizeOut>(other.GetData());
 }
 
 template<int SizeOut, int SizeIn, typename T>
 typename std::enable_if<(SizeOut > SizeIn), vtkVector<T, SizeOut>>::type
-convert(const vtkVector<T, SizeIn> & other, const T initValue)
+convertTo(const vtkVector<T, SizeIn> & other, const T initValue)
 {
     vtkVector<T, SizeOut> result;
 

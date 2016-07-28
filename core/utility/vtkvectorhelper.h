@@ -75,11 +75,11 @@ vtkVector<T, Size> operator-(vtkVector<T, Size> rhs);
 
 template<int SizeOut, int SizeIn, typename T>
 typename std::enable_if<(SizeOut < SizeIn), vtkVector<T, SizeOut>>::type
-convert(const vtkVector<T, SizeIn> & other);
+convertTo(const vtkVector<T, SizeIn> & other);
 
 template<int SizeOut, int SizeIn, typename T>
 typename std::enable_if<(SizeOut > SizeIn), vtkVector<T, SizeOut>>::type
-convert(const vtkVector<T, SizeIn> & other, const T initValue = T());
+convertTo(const vtkVector<T, SizeIn> & other, const T initValue = T());
 
 template<typename T, int Size>
 vtkVector<T, Size> abs(const vtkVector<T, Size> & other);

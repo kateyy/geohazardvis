@@ -5,6 +5,15 @@
 #include <vtkVector.h>
 
 
+template<typename T, size_t Dimensions>
+class DataExtent;
+
+
+using ImageExtent = DataExtent<int, 3u>;
+using DataBounds = DataExtent<double, 3u>;
+template<typename T> using ValueRange = DataExtent<T, 1u>;
+
+
 template<typename T, size_t Dimensions = 3u>
 class DataExtent
 {
@@ -34,14 +43,37 @@ public:
     bool operator!=(const T other[ValueCount]) const;
     bool operator!=(const DataExtent & other) const;
 
-    vtkVector<T, Dimensions> center() const;
-    vtkVector<T, Dimensions> size() const;
+    template<size_t Dimensions1 = Dimensions>
+    typename std::enable_if<(Dimensions1 == 1u), T>::type
+        center() const;
+    template<size_t Dimensions1 = Dimensions>
+    typename std::enable_if<(Dimensions1 > 1u), vtkVector<T, Dimensions>>::type
+        center() const;
 
-    vtkVector<T, Dimensions> minRange() const;
-    vtkVector<T, Dimensions> maxRange() const;
+    template<size_t Dimensions1 = Dimensions>
+    typename std::enable_if<(Dimensions1 == 1u), T>::type
+        componentSize() const;
+    template<size_t Dimensions1 = Dimensions>
+    typename std::enable_if<(Dimensions1 > 1u), vtkVector<T, Dimensions>>::type
+        componentSize() const;
 
-    vtkVector2<T> extractDimension(size_t dimension) const;
-    DataExtent & setDimension(size_t dimension, const vtkVector2<T> & range);
+    template<size_t Dimensions1 = Dimensions>
+    typename std::enable_if<(Dimensions1 == 1u), T>::type
+        min() const;
+    template<size_t Dimensions1 = Dimensions>
+    typename std::enable_if<(Dimensions1 > 1u), vtkVector<T, Dimensions>>::type
+        min() const;
+
+    template<size_t Dimensions1 = Dimensions>
+    typename std::enable_if<(Dimensions1 == 1u), T>::type
+        max() const;
+    template<size_t Dimensions1 = Dimensions>
+    typename std::enable_if<(Dimensions1 > 1u), vtkVector<T, Dimensions>>::type
+        max() const;
+
+    ValueRange<T> extractDimension(size_t dimension) const;
+    DataExtent & setDimension(size_t dimension, const ValueRange<T> & range);
+    DataExtent & setDimension(size_t dimension, T min, T max);
 
     template<typename newT, size_t newDimensions = Dimensions>
     DataExtent<newT, newDimensions> convertTo() const;
@@ -68,6 +100,8 @@ public:
     typename std::enable_if<(Dimensions1 > 1u), bool>::type
         contains(const vtkVector<T, Dimensions> & point) const;
 
+    bool contains(const DataExtent & other) const;
+
     template<size_t Dimensions1 = Dimensions>
     typename std::enable_if<(Dimensions1 == 1u), T>::type
         clampValue(T value) const;
@@ -87,9 +121,6 @@ public:
 private:
     array_t m_extent;
 };
-
-using ImageExtent = DataExtent<int, 3>;
-using DataBounds = DataExtent<double, 3>;
 
 
 #include <core/utility/DataExtent.hpp>

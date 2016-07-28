@@ -261,10 +261,10 @@ int DEMToTopographyMesh::RequestData(
     this->MeshTransform->PostMultiply();
     this->MeshTransform->Scale(radiusScale, radiusScale, 0.0);
     // assuming the template is already centered around (0,0,z):
-    this->MeshTransform->Translate(convert<3>(this->TopographyShiftXY, 0.0).GetData());
+    this->MeshTransform->Translate(convertTo<3>(this->TopographyShiftXY, 0.0).GetData());
 
     this->CenterOutputMeshTransform->Identity();
-    this->CenterOutputMeshTransform->Translate(convert<3>(-this->TopographyShiftXY, 0.0).GetData());
+    this->CenterOutputMeshTransform->Translate(convertTo<3>(-this->TopographyShiftXY, 0.0).GetData());
 
     return this->CenterOutputMeshFilter->GetExecutive()->Update();
 
@@ -283,7 +283,7 @@ double DEMToTopographyMesh::ComputeCenteredMeshRadius(vtkPolyData & mesh)
     for (vtkIdType i = 0; i < numPoints; ++i)
     {
         points.GetPoint(i, point.GetData());
-        maxDistance = std::max(maxDistance, convert<2>(point).Norm());
+        maxDistance = std::max(maxDistance, convertTo<2>(point).Norm());
     }
 
     return maxDistance;

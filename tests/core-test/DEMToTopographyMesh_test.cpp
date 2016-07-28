@@ -73,8 +73,8 @@ TEST_F(DEMToTopographyMesh_test, MatchingParameters)
     const auto demBounds = DataBounds(dem->GetBounds());
 
     // x dimension is limiting
-    ASSERT_EQ(0.5 * demBounds.extractDimension(0).Norm(), filter->GetTopographyRadius());
-    ASSERT_EQ(convert<2>(demBounds.center()), filter->GetTopographyShiftXY());
+    ASSERT_EQ(0.5 * demBounds.extractDimension(0).componentSize(), filter->GetTopographyRadius());
+    ASSERT_EQ(convertTo<2>(demBounds.center()), filter->GetTopographyShiftXY());
 }
 
 TEST_F(DEMToTopographyMesh_test, ScaledTopoForMatchingParams)
@@ -113,8 +113,8 @@ TEST_F(DEMToTopographyMesh_test, PreservesMeshXYRatio)
     auto outputTopo = filter->GetOutputTopography();
     ASSERT_TRUE(outputTopo);
 
-    const auto inputBounds = DataBounds(mesh->GetBounds()).convertTo<2>().size();
-    const auto outputBounds = DataBounds(outputTopo->GetBounds()).convertTo<2>().size();
+    const auto inputBounds = DataBounds(mesh->GetBounds()).convertTo<2>().componentSize();
+    const auto outputBounds = DataBounds(outputTopo->GetBounds()).convertTo<2>().componentSize();
 
     const auto inputXYRatio = inputBounds[0] / inputBounds[1];
     const auto outputXYRatio = outputBounds[0] / outputBounds[1];
@@ -160,6 +160,6 @@ TEST_F(DEMToTopographyMesh_test, ResetsToMatching)
     const auto demBounds = DataBounds(dem->GetBounds());
 
     // x dimension is limiting
-    ASSERT_EQ(0.5 * demBounds.extractDimension(0).Norm(), filter->GetTopographyRadius());
-    ASSERT_EQ(convert<2>(demBounds.center()), filter->GetTopographyShiftXY());
+    ASSERT_EQ(0.5 * demBounds.extractDimension(0).componentSize(), filter->GetTopographyRadius());
+    ASSERT_EQ(convertTo<2>(demBounds.center()), filter->GetTopographyShiftXY());
 }

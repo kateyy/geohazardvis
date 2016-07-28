@@ -139,27 +139,47 @@ DataExtent<T, newDimensions> DataExtent<T, Dimensions>::convertTo() const
 }
 
 template<typename T, size_t Dimensions>
-vtkVector<T, Dimensions> DataExtent<T, Dimensions>::center() const
+template<size_t Dimensions1>
+typename std::enable_if<(Dimensions1 == 1u), T>::type
+DataExtent<T, Dimensions>::center() const
+{
+    return static_cast<T>(0.5 * m_extent[0u] + 0.5 * m_extent[1u]);
+}
+
+template<typename T, size_t Dimensions>
+template<size_t Dimensions1>
+typename std::enable_if<(Dimensions1 > 1u), vtkVector<T, Dimensions>>::type
+DataExtent<T, Dimensions>::center() const
 {
     vtkVector<T, Dimensions> result;
 
     for (size_t i = 0u; i < Dimensions; ++i)
     {
-        auto int_i = static_cast<int>(i);
-        result[int_i] = static_cast<T>(0.5 * m_extent[2 * i] + 0.5 * m_extent[2 * i + 1]);
+        const auto int_i = static_cast<int>(i);
+        result[int_i] = static_cast<T>(0.5 * m_extent[2u * i] + 0.5 * m_extent[2u * i + 1u]);
     }
 
     return result;
 }
 
 template<typename T, size_t Dimensions>
-vtkVector<T, Dimensions> DataExtent<T, Dimensions>::size() const
+template<size_t Dimensions1>
+typename std::enable_if<(Dimensions1 == 1u), T>::type
+DataExtent<T, Dimensions>::componentSize() const
+{
+    return m_extent[1u] - m_extent[0u];
+}
+
+template<typename T, size_t Dimensions>
+template<size_t Dimensions1>
+typename std::enable_if<(Dimensions1 > 1u), vtkVector<T, Dimensions>>::type
+DataExtent<T, Dimensions>::componentSize() const
 {
     vtkVector<T, Dimensions> result;
 
     for (size_t i = 0u; i < Dimensions; ++i)
     {
-        auto int_i = static_cast<int>(i);
+        const auto int_i = static_cast<int>(i);
         result[int_i] = m_extent[2u * i + 1u] - m_extent[2u * i];
     }
 
@@ -167,7 +187,17 @@ vtkVector<T, Dimensions> DataExtent<T, Dimensions>::size() const
 }
 
 template<typename T, size_t Dimensions>
-vtkVector<T, Dimensions> DataExtent<T, Dimensions>::minRange() const
+template<size_t Dimensions1>
+typename std::enable_if<(Dimensions1 == 1u), T>::type
+DataExtent<T, Dimensions>::min() const
+{
+    return m_extent[0u];
+}
+
+template<typename T, size_t Dimensions>
+template<size_t Dimensions1>
+typename std::enable_if<(Dimensions1 > 1u), vtkVector<T, Dimensions>>::type
+DataExtent<T, Dimensions>::min() const
 {
     vtkVector<T, Dimensions> m;
 
@@ -180,7 +210,17 @@ vtkVector<T, Dimensions> DataExtent<T, Dimensions>::minRange() const
 }
 
 template<typename T, size_t Dimensions>
-vtkVector<T, Dimensions> DataExtent<T, Dimensions>::maxRange() const
+template<size_t Dimensions1>
+typename std::enable_if<(Dimensions1 == 1u), T>::type
+DataExtent<T, Dimensions>::max() const
+{
+    return m_extent[1u];
+}
+
+template<typename T, size_t Dimensions>
+template<size_t Dimensions1>
+typename std::enable_if<(Dimensions1 > 1u), vtkVector<T, Dimensions>>::type
+DataExtent<T, Dimensions>::max() const
 {
     vtkVector<T, Dimensions> m;
 
@@ -193,16 +233,22 @@ vtkVector<T, Dimensions> DataExtent<T, Dimensions>::maxRange() const
 }
 
 template<typename T, size_t Dimensions>
-vtkVector2<T> DataExtent<T, Dimensions>::extractDimension(size_t dimension) const
+ValueRange<T> DataExtent<T, Dimensions>::extractDimension(size_t dimension) const
 {
-    return vtkVector2<T>{m_extent[2u * dimension], m_extent[2u * dimension + 1u]};
+    return DataExtent<T, 1u>({ m_extent[2u * dimension], m_extent[2u * dimension + 1u] });
 }
 
 template<typename T, size_t Dimensions>
-auto DataExtent<T, Dimensions>::setDimension(size_t dimension, const vtkVector2<T>& range) -> DataExtent &
+auto DataExtent<T, Dimensions>::setDimension(size_t dimension, const ValueRange<T> & range) -> DataExtent &
 {
-    m_extent[2u * dimension] = range[0u];
-    m_extent[2u * dimension + 1u] = range[1u];
+    return setDimension(range[0u], range[1u]);
+}
+
+template<typename T, size_t Dimensions>
+auto DataExtent<T, Dimensions>::setDimension(size_t dimension, T min, T max) -> DataExtent &
+{
+    m_extent[2u * dimension] = min;
+    m_extent[2u * dimension + 1u] = max;
 
     return *this;
 }
@@ -300,6 +346,14 @@ DataExtent<T, Dimensions>::contains(const vtkVector<T, Dimensions> & point) cons
     }
 
     return true;
+}
+
+template<typename T, size_t Dimensions>
+bool DataExtent<T, Dimensions>::contains(const DataExtent & other) const
+{
+    return
+        contains(other.min())
+        && contains(other.max());
 }
 
 template<typename T, size_t Dimensions>
