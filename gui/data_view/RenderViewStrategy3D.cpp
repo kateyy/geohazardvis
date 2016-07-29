@@ -40,7 +40,7 @@ QList<DataObject *> RenderViewStrategy3D::filterCompatibleObjects(const QList<Da
 
     for (auto dataObject : dataObjects)
     {
-        (dataObject->is3D() ? compatible : incompatibleObjects)
+        (dataObject->createRendered() ? compatible : incompatibleObjects)
             << dataObject;
     }
 
