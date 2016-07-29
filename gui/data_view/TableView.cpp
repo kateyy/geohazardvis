@@ -15,9 +15,9 @@
 
 TableView::TableView(DataMapping & dataMapping, int index, QWidget * parent, Qt::WindowFlags flags)
     : AbstractDataView(dataMapping, index, parent, flags)
-    , m_ui(new Ui_TableView())
-    , m_dataObject(nullptr)
-    , m_selectColumnsMenu(nullptr)
+    , m_ui{ new Ui_TableView() }
+    , m_dataObject{ nullptr }
+    , m_selectColumnsMenu{ nullptr }
 {
     m_ui->setupUi(this);
     m_selectColumnsMenu = new QMenu(m_ui->tableView);
@@ -52,7 +52,9 @@ QString TableView::friendlyName() const
 void TableView::showDataObject(DataObject * dataObject)
 {
     if (m_dataObject == dataObject)
+    {
         return;
+    }
 
     assert(dataObject);
     m_dataObject = dataObject;
@@ -118,7 +120,9 @@ void TableView::selectionChangedEvent(DataObject * dataObject, vtkIdTypeArray * 
     assert((dataObject != nullptr) == (indices != nullptr));
 
     if (dataObject && dataObject != m_dataObject)
+    {
         return;
+    }
 
     if (!dataObject || (indices->GetSize() == 0) || (indexType != model()->indexType()))
     {

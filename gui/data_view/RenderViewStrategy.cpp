@@ -8,7 +8,7 @@
 
 RenderViewStrategy::RenderViewStrategy(RendererImplementationBase3D & context)
     : QObject()
-    , m_context(context)
+    , m_context{ context }
 {
 }
 

@@ -22,8 +22,8 @@ RenderView::RenderView(
     int index,
     QWidget * parent, Qt::WindowFlags flags)
     : AbstractRenderView(dataMapping, index, parent, flags)
-    , m_implementationSwitch(std::make_unique<RendererImplementationSwitch>(*this))
-    , m_closingRequested(false)
+    , m_implementationSwitch{ std::make_unique<RendererImplementationSwitch>(*this) }
+    , m_closingRequested{ false }
 {
     updateTitle();
 
@@ -35,10 +35,14 @@ RenderView::~RenderView()
     QList<AbstractVisualizedData *> toDelete;
 
     for (auto & rendered : m_contents)
+    {
         toDelete << rendered.get();
+    }
 
     for (auto & rendered : m_contentCache)
+    {
         toDelete << rendered.get();
+    }
 
     emit beforeDeleteVisualizations(toDelete);
 }
@@ -47,12 +51,18 @@ QString RenderView::friendlyName() const
 {
     QString name;
     for (auto & renderedData : m_contents)
+    {
         name += ", " + renderedData->dataObject().name();
+    }
 
     if (name.isEmpty())
+    {
         name = "(empty)";
+    }
     else
+    {
         name.remove(0, 2);
+    }
 
     name = QString::number(index()) + ": " + name;
 
@@ -104,19 +114,25 @@ AbstractVisualizedData * RenderView::addDataObject(DataObject * dataObject)
 
     // abort if we received a close event in QApplication::processEvents 
     if (m_closingRequested)
+    {
         return nullptr;
+    }
 
     if (m_deletedData.remove(dataObject))
+    {
         return nullptr;
+    }
 
     auto newContent = implementation().requestVisualization(*dataObject);
 
     if (!newContent)
+    {
         return nullptr;
+    }
 
     implementation().addContent(newContent.get(), 0);
 
-    auto * newContentPtr = newContent.get();
+    auto newContentPtr = newContent.get();
     m_contents.push_back(std::move(newContent));
 
     m_dataObjectToVisualization.insert(dataObject, newContentPtr);
@@ -147,9 +163,9 @@ void RenderView::showDataObjectsImpl(const QList<DataObject *> & uncheckedDataOb
         return;
     }
 
-    for (DataObject * dataObject : dataObjects)
+    for (auto dataObject : dataObjects)
     {
-        AbstractVisualizedData * previouslyRendered = m_dataObjectToVisualization.value(dataObject);
+        auto previouslyRendered = m_dataObjectToVisualization.value(dataObject);
 
         // create new rendered representation
         if (!previouslyRendered)
@@ -157,7 +173,9 @@ void RenderView::showDataObjectsImpl(const QList<DataObject *> & uncheckedDataOb
             aNewObject = addDataObject(dataObject);
 
             if (m_closingRequested) // just abort here, if we processed a close event while addDataObject()
+            {
                 return;
+            }
 
             continue;
         }
@@ -199,11 +217,13 @@ void RenderView::showDataObjectsImpl(const QList<DataObject *> & uncheckedDataOb
 void RenderView::hideDataObjectsImpl(const QList<DataObject *> & dataObjects, unsigned int /*suViewIndex*/)
 {
     bool changed = false;
-    for (DataObject * dataObject : dataObjects)
+    for (auto dataObject : dataObjects)
     {
-        AbstractVisualizedData * rendered = m_dataObjectToVisualization.value(dataObject);
+        auto rendered = m_dataObjectToVisualization.value(dataObject);
         if (!rendered)
+        {
             continue;
+        }
 
         // cached data is only accessible internally in the view, so let others know that it's gone for the moment
         emit beforeDeleteVisualizations({ rendered });
@@ -223,7 +243,9 @@ void RenderView::hideDataObjectsImpl(const QList<DataObject *> & dataObjects, un
     }
 
     if (!changed)
+    {
         return;
+    }
 
     updateGuiForRemovedData();
 
@@ -238,7 +260,9 @@ QList<DataObject *> RenderView::dataObjectsImpl(int /*subViewIndex*/) const
 {
     QList<DataObject *> dataObjects;
     for (auto && vis : m_contents)
+    {
         dataObjects << &vis->dataObject();
+    }
 
     return dataObjects;
 }
@@ -252,7 +276,9 @@ void RenderView::removeDataObject(DataObject * dataObject)
 
     // we didn't render this object
     if (!renderedData)
+    {
         return;
+    }
 
     implementation().removeContent(renderedData, 0);
 
@@ -276,7 +302,9 @@ void RenderView::removeDataObject(DataObject * dataObject)
 void RenderView::prepareDeleteDataImpl(const QList<DataObject *> & dataObjects)
 {
     for (DataObject * dataObject : dataObjects)
+    {
         removeDataObject(dataObject);
+    }
 }
 
 std::vector<std::unique_ptr<AbstractVisualizedData>> RenderView::removeFromInternalLists(QList<DataObject *> dataObjects)
@@ -313,7 +341,9 @@ QList<AbstractVisualizedData *> RenderView::visualizationsImpl(int /*subViewInde
 {
     QList<AbstractVisualizedData *> vis;
     for (auto & content : m_contents)
+    {
         vis << content.get();
+    }
 
     return vis;
 }
@@ -336,9 +366,10 @@ AbstractVisualizedData * RenderView::selectedDataVisualization() const
 void RenderView::lookAtData(DataObject & dataObject, vtkIdType index, IndexType indexType, int subViewIndex)
 {
     auto vis = m_dataObjectToVisualization.value(&dataObject, nullptr);
-
     if (!vis)
+    {
         return;
+    }
 
     lookAtData(*vis, index, indexType, subViewIndex);
 }
@@ -354,7 +385,9 @@ void RenderView::lookAtData(AbstractVisualizedData & vis, vtkIdType index, Index
 AbstractVisualizedData * RenderView::visualizationFor(DataObject * dataObject, int subViewIndex) const
 {
     if (subViewIndex != -1 && subViewIndex != 0)
+    {
         return nullptr;
+    }
 
     return m_dataObjectToVisualization.value(dataObject, nullptr);
 }
@@ -364,7 +397,9 @@ int RenderView::subViewContaining(const AbstractVisualizedData & visualizedData)
     // single view implementation: if we currently show it, it's in the view 0
 
     if (containsUnique(m_contents, &visualizedData))
+    {
         return 0;
+    }
 
     return -1;
 }
@@ -376,7 +411,7 @@ RendererImplementation & RenderView::implementation() const
 
 void RenderView::updateGuiForSelectedData(AbstractVisualizedData * renderedData)
 {
-    DataObject * current = renderedData ? &renderedData->dataObject() : nullptr;
+    auto current = renderedData ? &renderedData->dataObject() : nullptr;
 
     updateTitle();
 
@@ -385,8 +420,8 @@ void RenderView::updateGuiForSelectedData(AbstractVisualizedData * renderedData)
 
 void RenderView::updateGuiForRemovedData()
 {
-    AbstractVisualizedData * nextSelection = m_contents.empty()
-        ? nullptr : m_contents.front().get();
+    auto nextSelection = m_contents.empty()
+        ? (AbstractVisualizedData *)(nullptr) : m_contents.front().get();
     
     updateGuiForSelectedData(nextSelection);
 }

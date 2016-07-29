@@ -191,13 +191,13 @@ void RendererImplementationPlot::resetCamera(bool /*toInitialPosition*/, unsigne
 void RendererImplementationPlot::onAddContent(AbstractVisualizedData * content, unsigned int /*subViewIndex*/)
 {
     assert(dynamic_cast<Context2DData *>(content));
-    Context2DData * contextData = static_cast<Context2DData *>(content);
+    auto contextData = static_cast<Context2DData *>(content);
 
     auto items = vtkSmartPointer<vtkPlotCollection>::New();
 
     vtkCollectionSimpleIterator it;
     contextData->plots()->InitTraversal(it);
-    while (vtkPlot * item = contextData->plots()->GetNextPlot(it))
+    while (auto item = contextData->plots()->GetNextPlot(it))
     {
         items->AddItem(item);
         m_chart->AddPlot(item);
@@ -228,7 +228,7 @@ void RendererImplementationPlot::onRemoveContent(AbstractVisualizedData * conten
 
     vtkCollectionSimpleIterator it;
     items->InitTraversal(it);
-    while (vtkPlot * item = items->GetNextPlot(it))
+    while (auto item = items->GetNextPlot(it))
     {
         m_chart->RemovePlotInstance(item);
     }
@@ -333,7 +333,7 @@ void RendererImplementationPlot::fetchContextItems(Context2DData * data)
     // insert all new props
 
     data->plots()->InitTraversal(it);
-    while (vtkPlot * item = data->plots()->GetNextPlot(it))
+    while (auto item = data->plots()->GetNextPlot(it))
     {
         items->AddItem(item);
         m_chart->AddItem(item);

@@ -7,8 +7,8 @@
 
 RendererImplementationSwitch::RendererImplementationSwitch(AbstractRenderView & renderView)
     : m_view(renderView)
-    , m_currentImpl(nullptr)
-    , m_nullImpl(nullptr)
+    , m_currentImpl{ nullptr }
+    , m_nullImpl{ nullptr }
 {
 }
 
@@ -31,10 +31,14 @@ void RendererImplementationSwitch::findSuitableImplementation(const QList<DataOb
 RendererImplementation & RendererImplementationSwitch::currentImplementation()
 {
     if (m_currentImpl)
+    {
         return *m_currentImpl;
+    }
 
     if (!m_nullImpl)
+    {
         m_nullImpl = std::make_unique<RendererImplementationNull>(m_view);
+    }
 
     return *m_nullImpl;
 }

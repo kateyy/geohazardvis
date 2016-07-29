@@ -44,8 +44,8 @@
 
 RendererImplementationBase3D::RendererImplementationBase3D(AbstractRenderView & renderView)
     : RendererImplementation(renderView)
-    , m_isInitialized(false)
-    , m_emptyStrategy(std::make_unique<RenderViewStrategyNull>(*this))
+    , m_isInitialized{ false }
+    , m_emptyStrategy{ std::make_unique<RenderViewStrategyNull>(*this) }
 {
 }
 
@@ -53,15 +53,14 @@ RendererImplementationBase3D::~RendererImplementationBase3D() = default;
 
 ContentType RendererImplementationBase3D::contentType() const
 {
-    if (strategy().contains3dData())
-        return ContentType::Rendered3D;
-    else
-        return ContentType::Rendered2D;
+    return strategy().contains3dData()
+        ? ContentType::Rendered3D
+        : ContentType::Rendered2D;
 }
 
 bool RendererImplementationBase3D::canApplyTo(const QList<DataObject *> & data)
 {
-    for (DataObject * obj : data)
+    for (auto obj : data)
     {
         if (auto && rendered = obj->createRendered())
         {
@@ -114,7 +113,9 @@ void RendererImplementationBase3D::deactivate(t_QVTKWidget & qvtkWidget)
 void RendererImplementationBase3D::render()
 {
     if (!m_renderView.isVisible())
+    {
         return;
+    }
 
     m_renderWindow->Render();
 }
@@ -140,7 +141,7 @@ void RendererImplementationBase3D::onAddContent(AbstractVisualizedData * content
 
     vtkCollectionSimpleIterator it;
     renderedData->viewProps()->InitTraversal(it);
-    while (vtkProp * prop = renderedData->viewProps()->GetNextProp(it))
+    while (auto prop = renderedData->viewProps()->GetNextProp(it))
     {
         props->AddItem(prop);
         renderer->AddViewProp(prop);
@@ -185,8 +186,10 @@ void RendererImplementationBase3D::onRemoveContent(AbstractVisualizedData * cont
 
     vtkCollectionSimpleIterator it;
     props->InitTraversal(it);
-    while (vtkProp * prop = props->GetNextProp(it))
+    while (auto prop = props->GetNextProp(it))
+    {
         renderer.RemoveViewProp(prop);
+    }
 }
 
 void RendererImplementationBase3D::onDataVisibilityChanged(AbstractVisualizedData * /*content*/, unsigned int /*subViewIndex*/)
@@ -249,7 +252,9 @@ void RendererImplementationBase3D::lookAtData(AbstractVisualizedData & vis, vtkI
 void RendererImplementationBase3D::resetCamera(bool toInitialPosition, unsigned int subViewIndex)
 {
     if (subViewIndex >= m_viewportSetups.size())
+    {
         return;
+    }
 
     auto & viewport = m_viewportSetups[subViewIndex];
 
@@ -274,7 +279,9 @@ void RendererImplementationBase3D::dataBounds(double bounds[6], unsigned int sub
 void RendererImplementationBase3D::setAxesVisibility(bool visible)
 {
     for (auto && viewport : m_viewportSetups)
+    {
         viewport.axesActor->SetVisibility(visible);
+    }
 
     render();
 }
@@ -282,10 +289,12 @@ void RendererImplementationBase3D::setAxesVisibility(bool visible)
 QList<RenderedData *> RendererImplementationBase3D::renderedData()
 {
     QList<RenderedData *> renderedList;
-    for (AbstractVisualizedData * vis : m_renderView.visualizations())
+    for (auto vis : m_renderView.visualizations())
     {
-        if (RenderedData * rendered = dynamic_cast<RenderedData *>(vis))
+        if (auto rendered = dynamic_cast<RenderedData *>(vis))
+        {
             renderedList << rendered;
+        }
     }
 
     return renderedList;
@@ -371,7 +380,9 @@ std::unique_ptr<AbstractVisualizedData> RendererImplementationBase3D::requestVis
 void RendererImplementationBase3D::initialize()
 {
     if (m_isInitialized)
+    {
         return;
+    }
 
     // -- lights --
 
@@ -509,8 +520,10 @@ void RendererImplementationBase3D::updateBounds()
 
         dataBounds.Reset();
 
-        for (AbstractVisualizedData * it : m_renderView.visualizations(int(viewportIndex)))
+        for (auto it : m_renderView.visualizations(int(viewportIndex)))
+        {
             dataBounds.AddBounds(it->dataObject().bounds());
+        }
     }
 
     updateAxes();
@@ -532,10 +545,12 @@ void RendererImplementationBase3D::removeFromBounds(RenderedData * renderedData,
 
     dataBounds.Reset();
 
-    for (AbstractVisualizedData * it : m_renderView.visualizations(subViewIndex))
+    for (auto it : m_renderView.visualizations(subViewIndex))
     {
         if (it == renderedData)
+        {
             continue;
+        }
 
         dataBounds.AddBounds(it->dataObject().bounds());
     }
@@ -609,14 +624,16 @@ void RendererImplementationBase3D::fetchViewProps(RenderedData * renderedData, u
     // remove all old props from the renderer
     vtkCollectionSimpleIterator it;
     props->InitTraversal(it);
-    while (vtkProp * prop = props->GetNextProp(it))
+    while (auto prop = props->GetNextProp(it))
+    {
         renderer->RemoveViewProp(prop);
+    }
     props->RemoveAllItems();
 
     // insert all new props
 
     renderedData->viewProps()->InitTraversal(it);
-    while (vtkProp * prop = renderedData->viewProps()->GetNextProp(it))
+    while (auto prop = renderedData->viewProps()->GetNextProp(it))
     {
         props->AddItem(prop);
         renderer->AddViewProp(prop);
@@ -643,7 +660,7 @@ void RendererImplementationBase3D::dataVisibilityChanged(RenderedData * rendered
     // The render view's dataObjects() doesn't yet contain the rendered->dataObject(), if it is currently added.
     // If it's currently removed, it's not yet removed from the list
     const auto && currentObjects = renderView().dataObjects();
-    bool isEmpty =
+    const bool isEmpty =
         !rendered->isVisible()
         && (currentObjects.isEmpty() || (currentObjects.size() == 1
             && (currentObjects[0] == &rendered->dataObject())));

@@ -42,7 +42,9 @@ void RendererImplementationNull::activate(t_QVTKWidget & qvtkWidget)
 void RendererImplementationNull::deactivate(t_QVTKWidget & qvtkWidget)
 {
     if (m_renderer)
+    {
         qvtkWidget.GetRenderWindow()->RemoveRenderer(m_renderer);
+    }
 }
 
 void RendererImplementationNull::render()

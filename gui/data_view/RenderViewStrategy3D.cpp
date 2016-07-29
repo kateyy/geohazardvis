@@ -38,12 +38,10 @@ QList<DataObject *> RenderViewStrategy3D::filterCompatibleObjects(const QList<Da
 {
     QList<DataObject *> compatible;
 
-    for (DataObject * dataObject : dataObjects)
+    for (auto dataObject : dataObjects)
     {
-        if (dataObject->is3D())
-            compatible << dataObject;
-        else
-            incompatibleObjects << dataObject;
+        (dataObject->is3D() ? compatible : incompatibleObjects)
+            << dataObject;
     }
 
     return compatible;
@@ -51,9 +49,11 @@ QList<DataObject *> RenderViewStrategy3D::filterCompatibleObjects(const QList<Da
 
 void RenderViewStrategy3D::updateImageWidgets()
 {
-    for (RenderedData * r : m_context.renderedData())
+    for (auto r : m_context.renderedData())
     {
-        if (RenderedVectorGrid3D * grid = dynamic_cast<RenderedVectorGrid3D *>(r))
+        if (auto grid = dynamic_cast<RenderedVectorGrid3D *>(r))
+        {
             grid->setRenderWindowInteractor(m_context.interactor());
+        }
     }
 }

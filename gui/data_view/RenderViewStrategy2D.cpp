@@ -43,11 +43,11 @@ namespace
 
 RenderViewStrategy2D::RenderViewStrategy2D(RendererImplementationBase3D & context)
     : RenderViewStrategy(context)
-    , m_isInitialized(false)
-    , m_profilePlotAction(nullptr)
-    , m_profilePlotAcceptAction(nullptr)
-    , m_profilePlotAbortAction(nullptr)
-    , m_previewRenderer(nullptr)
+    , m_isInitialized{ false }
+    , m_profilePlotAction{ nullptr }
+    , m_profilePlotAcceptAction{ nullptr }
+    , m_profilePlotAbortAction{ nullptr }
+    , m_previewRenderer{ nullptr }
 {
 }
 
@@ -57,17 +57,23 @@ RenderViewStrategy2D::~RenderViewStrategy2D()
     {
         QList<DataObject *> objects;
         for (auto && obj : m_previewProfiles)
+        {
             objects << obj.get();
+        }
         m_previewRenderer->prepareDeleteData(objects);
         if (m_previewRenderer->visualizations().isEmpty())
+        {
             m_previewRenderer->close();
+        }
     }
 }
 
 void RenderViewStrategy2D::setInputData(const QList<DataObject *> & inputData)
 {
     if (m_inputData.toSet() == inputData.toSet())
+    {
         return;
+    }
 
     // reuse an existing preview renderer
     if (m_previewRenderer)
@@ -164,13 +170,10 @@ QList<DataObject *> RenderViewStrategy2D::filterCompatibleObjects(const QList<Da
 {
     QList<DataObject *> compatible;
 
-    for (DataObject * dataObject : dataObjects)
+    for (auto dataObject : dataObjects)
     {
-        auto rendered = dataObject->createRendered();
-        if (rendered)
-            compatible << dataObject;
-        else
-            incompatibleObjects << dataObject;
+        (dataObject->createRendered() ? compatible : incompatibleObjects)
+            << dataObject;
     }
 
     return compatible;
@@ -253,7 +256,9 @@ void RenderViewStrategy2D::startProfilePlot()
         processedPlots << currentPlotCombination;
 
         if (!profile->isValid())
+        {
             continue;
+        }
 
         m_previewProfiles.push_back(std::move(profile));
     }
@@ -423,7 +428,9 @@ void RenderViewStrategy2D::updateAutomaticPlots()
 {
     // don't check here, if the user of this class explicitly set the inputs
     if (!m_inputData.isEmpty())
+    {
         return;
+    }
 
     // refresh the automatically fetched plots
     if (m_previewRenderer)

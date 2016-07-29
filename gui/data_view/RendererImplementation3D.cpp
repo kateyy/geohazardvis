@@ -12,8 +12,8 @@ bool RendererImplementation3D::s_isRegistered = RendererImplementation::register
 
 
 RendererImplementation3D::RendererImplementation3D(AbstractRenderView & renderView)
-    : RendererImplementationBase3D(renderView)
-    , m_currentStrategy(nullptr)
+    : RendererImplementationBase3D{ renderView }
+    , m_currentStrategy{ nullptr }
 {
 }
 
@@ -130,7 +130,9 @@ QString RendererImplementation3D::mostSuitableStrategy(const QList<DataObject *>
     for (auto && data : dataObjects)
     {
         if (!dynamic_cast<ImageDataObject *>(data))
+        {
             continue;
+        }
 
         contains2D = true;
         break;

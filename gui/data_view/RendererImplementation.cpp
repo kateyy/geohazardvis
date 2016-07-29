@@ -9,7 +9,7 @@
 
 RendererImplementation::RendererImplementation(AbstractRenderView & renderView)
     : QObject()
-    , m_renderView(renderView)
+    , m_renderView{ renderView }
 {
 }
 
