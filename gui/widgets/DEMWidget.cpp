@@ -14,6 +14,7 @@
 #include <core/data_objects/ImageDataObject.h>
 #include <core/data_objects/PolyDataObject.h>
 #include <core/filters/DEMToTopographyMesh.h>
+#include <core/filters/SimpleDEMGeoCoordToLocalFilter.h>
 #include <core/rendered_data/RenderedPolyData.h>
 #include <core/utility/DataSetFilter.h>
 #include <core/utility/qthelper.h>
@@ -21,6 +22,10 @@
 #include <gui/DataMapping.h>
 #include <gui/data_view/AbstractRenderView.h>
 #include <gui/data_view/RendererImplementationBase3D.h>
+
+
+template<typename T>
+using Unqualified = typename std::remove_cv<typename std::remove_reference<T>::type>::type;
 
 
 DEMWidget::DEMWidget(DataMapping & dataMapping, AbstractRenderView * previewRenderer, QWidget * parent, Qt::WindowFlags f,
@@ -121,6 +126,19 @@ DEMWidget::DEMWidget(DataMapping & dataMapping, AbstractRenderView * previewRend
         }
     });
 
+    connect(m_ui->demToLocalCoordsCheckBox, &QCheckBox::toggled, [this] (bool checked)
+    {
+        m_demToLocalFilter->SetEnabled(checked);
+
+        resetParametersForCurrentInputs();
+
+        if (m_previewRenderer)
+        {
+            updatePipeline();
+            m_previewRenderer->render();
+        }
+    });
+
     connect(m_ui->radiusMatchingButton, &QAbstractButton::clicked, [this] () {
         matchTopoMeshRadius();
 
@@ -210,7 +228,7 @@ DEMWidget::~DEMWidget()
     }
 
     QList<DataObject *> objectsToHide;
-    auto dem = currentDEMChecked();
+    auto dem = m_demPreview.get();
     auto topo = m_dataPreview.get();
     if (dem)
     {
@@ -278,6 +296,16 @@ void DEMWidget::setMeshTemplate(PolyDataObject * meshTemplate)
     }
 }
 
+bool DEMWidget::transformDEMToLocalCoords() const
+{
+    return m_ui->demToLocalCoordsCheckBox->isChecked();
+}
+
+void DEMWidget::setTransformDEMToLocalCoords(bool doTransform)
+{
+    m_ui->demToLocalCoordsCheckBox->setChecked(doTransform);
+}
+
 double DEMWidget::topoRadius() const
 {
     return m_demToTopoFilter->GetTopographyRadius();
@@ -312,6 +340,16 @@ int DEMWidget::demUnitScaleExponent() const
 void DEMWidget::setDEMUnitScaleExponent(int exponent)
 {
     m_ui->demUnitScaleSpinBox->setValue(exponent);
+}
+
+bool DEMWidget::centerTopographyMesh() const
+{
+    return m_ui->centerOutputTopographyCheckBox->isChecked();
+}
+
+void DEMWidget::setCenterTopographyMesh(bool doCenter)
+{
+    m_ui->centerOutputTopographyCheckBox->setChecked(doCenter);
 }
 
 void DEMWidget::showPreview()
@@ -445,15 +483,7 @@ void DEMWidget::matchTopoMeshRadius()
         return;
     }
 
-    bool isValid = false;
-    const auto radiusRange = m_demToTopoFilter->ComputeValidRadiusRange(&isValid);
-    assert(isValid);
-    if (!isValid)
-    {
-        return;
-    }
-
-    const auto maxRadius = radiusRange[1];
+    const auto maxRadius = m_demToTopoFilter->GetValidRadiusRange().max();
     const auto currentRadius = m_ui->topographyRadiusSpinBox->value();
 
     if (currentRadius == maxRadius)
@@ -475,16 +505,8 @@ void DEMWidget::centerTopoMesh()
         return;
     }
 
-    bool isValid = false;
-    const auto shiftRange = m_demToTopoFilter->ComputeValidShiftRange(&isValid);
-    assert(isValid);
-    if (!isValid)
-    {
-        return;
-    }
-
+    const auto shiftToCenter = m_demToTopoFilter->GetValidShiftRange().center();
     const auto currentShift = vtkVector2d{ m_ui->topographyCenterXSpinBox->value(), m_ui->topographyCenterYSpinBox->value() };
-    const auto shiftToCenter = shiftRange.center();
 
     if (currentShift == shiftToCenter)
     {
@@ -501,8 +523,32 @@ void DEMWidget::centerTopoMesh()
 
 void DEMWidget::resetParametersForCurrentInputs()
 {
-    centerTopoMesh();
-    matchTopoMeshRadius();
+    if (!currentDEMChecked())
+    {
+        return;
+    }
+
+    const auto blockers = uiSignalBlockers();
+
+    m_demToTopoFilter->SetParametersToMatching();
+
+    const auto radius = m_demToTopoFilter->GetTopographyRadius();
+    const auto radiusRange = m_demToTopoFilter->GetValidRadiusRange();
+
+    const auto shift = m_demToTopoFilter->GetTopographyShiftXY();
+    const auto shiftRange = m_demToTopoFilter->GetValidShiftRange();
+
+    m_ui->topographyRadiusSpinBox->setRange(radiusRange.min(), radiusRange.max());
+    m_ui->topographyRadiusSpinBox->setValue(radius);
+
+    m_ui->topographyCenterXSpinBox->setRange(shiftRange.min()[0], shiftRange.max()[0]);
+    m_ui->topographyCenterXSpinBox->setValue(shift[0]);
+
+    m_ui->topographyCenterYSpinBox->setRange(shiftRange.min()[1], shiftRange.max()[1]);
+    m_ui->topographyCenterYSpinBox->setValue(shift[1]);
+
+    assert(!checkIfRadiusChanged());
+    assert(!checkIfShiftChanged());
 }
 
 void DEMWidget::setupPipeline()
@@ -516,9 +562,16 @@ void DEMWidget::setupPipeline()
 
     m_meshPipelineStart = cleanupMeshAttributes;
 
-    m_demToTopoFilter->SetInputConnection(1, cleanupMeshAttributes->GetOutputPort());
+    m_demToLocalFilter = vtkSmartPointer<SimpleDEMGeoCoordToLocalFilter>::New();
+    m_demToLocalFilter->SetUseNorthWestAsOrigin(true);
+    m_demToLocalFilter->SetEnabled(m_ui->demToLocalCoordsCheckBox->isChecked());
+    m_demPipelineStart = m_demToLocalFilter;
 
-    m_demPipelineStart = m_demToTopoFilter;
+    m_demToLocalFilter->UpdateDataObject();
+    m_demPreview = std::make_unique<ImageDataObject>("Elevation Model", *m_demToLocalFilter->GetOutput());
+
+    m_demToTopoFilter->SetInputConnection(0, m_demToLocalFilter->GetOutputPort());
+    m_demToTopoFilter->SetInputConnection(1, cleanupMeshAttributes->GetOutputPort());
 
     m_cleanupOutputMeshAttributes = createMeshCleanupFilter();
     m_cleanupOutputMeshAttributes->SetInputConnection(m_demToTopoFilter->GetOutputPort(1));
@@ -526,21 +579,21 @@ void DEMWidget::setupPipeline()
 
 void DEMWidget::configureDEMVisualization()
 {
-    assert(m_previewRenderer);
+    assert(m_previewRenderer && m_demPreview.get());
 
-    auto currentDEM = dem();
-
-    if (!currentDEM)
+    if (!currentDEMChecked())
     {
         return;
     }
 
-    auto demVis = dynamic_cast<RenderedData *>(m_previewRenderer->visualizationFor(currentDEM));
+    auto dem = m_demPreview.get();
+
+    auto demVis = dynamic_cast<RenderedData *>(m_previewRenderer->visualizationFor(dem));
     auto demRendered = dynamic_cast<RenderedData *>(demVis);
     assert(demRendered);
     demRendered->setRepresentation(RenderedData::Representation::both);
         
-    auto scalarsName = QString::fromUtf8(currentDEM->scalars().GetName());
+    auto scalarsName = QString::fromUtf8(dem->scalars().GetName());
     demVis->colorMapping().setCurrentScalarsByName(scalarsName);
 }
 
@@ -705,7 +758,8 @@ void DEMWidget::updatePipeline()
     }
 
     // defer UI updates / render events until the whole pipeline is updated
-    ScopedEventDeferral deferral(*m_dataPreview);
+    const ScopedEventDeferral topoDeferral(*m_dataPreview);
+    const ScopedEventDeferral demDefferal(*m_demPreview);
 
     m_cleanupOutputMeshAttributes->Update();
 }
@@ -718,15 +772,16 @@ void DEMWidget::updatePreviewRendererContents()
     }
 
     QList<DataObject *> objectsToRender;
-    auto currentDEM = dem();
+    auto currentDEM = currentDEMChecked();
     if (currentDEM)
     {
-        objectsToRender << currentDEM;
+        // always render the internal DEM copy, but if a DEM is selected in the UI
+        objectsToRender << m_demPreview.get();
     }
 
     if (m_lastPreviewedDEM && (m_lastPreviewedDEM != currentDEM))
     {
-        m_previewRenderer->hideDataObjects({ m_lastPreviewedDEM });
+        m_previewRenderer->hideDataObjects({ m_demPreview.get() });
 
         if (!m_previewRenderer) // hideDataObjects() might process render view close events
         {
@@ -788,19 +843,19 @@ void DEMWidget::applyUIChanges()
     auto newShift = vtkVector2d{ m_ui->topographyCenterXSpinBox->value(), m_ui->topographyCenterYSpinBox->value() };
     bool shiftChanged = newShift != m_demToTopoFilter->GetTopographyShiftXY();
 
-    decltype(m_demToTopoFilter->ComputeValidShiftRange()) newValidShiftRange;
-    decltype(m_demToTopoFilter->ComputeValidRadiusRange()) newValidRadiusRange;
+    Unqualified<decltype(m_demToTopoFilter->GetValidShiftRange())> newValidShiftRange;
+    Unqualified<decltype(m_demToTopoFilter->GetValidRadiusRange())> newValidRadiusRange;
 
     bool reapplyRadiusToUI = false, reapplyShiftToUI = false;
 
     // The current radius determines the valid shift range and vice versa.
     // So if one changes, update the other's range and check again if this changes the current value.
-    for (int i = 0; i < 2; ++i)
+    for (int i = 0; i < 3; ++i)
     {
         if (radiusChanged)
         {
             m_demToTopoFilter->SetTopographyRadius(newRadius);
-            newValidShiftRange = m_demToTopoFilter->ComputeValidShiftRange();
+            newValidShiftRange = m_demToTopoFilter->GetValidShiftRange();
             if (!shiftChanged && !newValidShiftRange.contains(newShift))
             {
                 // new radius enforces to also change the shift
@@ -814,7 +869,7 @@ void DEMWidget::applyUIChanges()
         if (shiftChanged)
         {
             m_demToTopoFilter->SetTopographyShiftXY(newShift);
-            newValidRadiusRange = m_demToTopoFilter->ComputeValidRadiusRange();
+            newValidRadiusRange = m_demToTopoFilter->GetValidRadiusRange();
             if (!radiusChanged && !newValidRadiusRange.contains(newRadius))
             {
                 // new shift enforces to also change the radius
@@ -849,6 +904,9 @@ void DEMWidget::applyUIChanges()
         m_ui->topographyCenterXSpinBox->setSingleStep(step[0]);
         m_ui->topographyCenterYSpinBox->setSingleStep(step[1]);
     }
+
+    assert(!checkIfRadiusChanged());
+    assert(!checkIfShiftChanged());
 }
 
 std::vector<QSignalBlocker> DEMWidget::uiSignalBlockers()
@@ -871,4 +929,30 @@ vtkSmartPointer<vtkPassArrays> DEMWidget::createMeshCleanupFilter()
     cleanup->AddFieldType(vtkDataObject::AttributeTypes::FIELD);
 
     return cleanup;
+}
+
+bool DEMWidget::checkIfRadiusChanged() const
+{
+    // assuming UI precision will not be changed
+    static const auto d = std::pow(10.0, -m_ui->topographyRadiusSpinBox->decimals());
+
+    const auto uiRadius = m_ui->topographyRadiusSpinBox->value();
+    const auto algRadius = m_demToTopoFilter->GetTopographyRadius();
+
+    return std::abs(uiRadius - algRadius) > d;
+}
+
+bool DEMWidget::checkIfShiftChanged() const
+{
+    // assuming UI precision will not be changed
+    static const auto d = std::pow(10.0, -m_ui->topographyCenterXSpinBox->decimals());
+
+    const auto uiShift = vtkVector2d{
+        m_ui->topographyCenterXSpinBox->value(),
+        m_ui->topographyCenterYSpinBox->value()
+    };
+    const auto algShift = m_demToTopoFilter->GetTopographyShiftXY();
+    const auto diff = maxComponent(abs(uiShift - algShift));
+
+    return diff > d;
 }

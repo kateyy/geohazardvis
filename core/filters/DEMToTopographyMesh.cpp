@@ -1,6 +1,5 @@
 #include "DEMToTopographyMesh.h"
 
-#include <vtkDemandDrivenPipeline.h>
 #include <vtkImageData.h>
 #include <vtkImageShiftScale.h>
 #include <vtkInformation.h>
@@ -8,6 +7,7 @@
 #include <vtkObjectFactory.h>
 #include <vtkPolyData.h>
 #include <vtkProbeFilter.h>
+#include <vtkStreamingDemandDrivenPipeline.h>
 #include <vtkTransform.h>
 #include <vtkTransformPolyDataFilter.h>
 #include <vtkWarpScalar.h>
@@ -31,121 +31,34 @@ DEMToTopographyMesh::DEMToTopographyMesh()
 
 DEMToTopographyMesh::~DEMToTopographyMesh() = default;
 
-bool DEMToTopographyMesh::CenterTopoMesh()
+void DEMToTopographyMesh::CenterTopoMesh()
 {
-    auto dem = this->CheckUpdateInputDEM();
-    if (!dem)
-    {
-        return false;
-    }
-
-    const auto demCenter = convert<2>(DataBounds(dem->GetBounds()).center());
-    this->SetTopographyShiftXY(demCenter);
-
-    return true;
+    this->SetTopographyShiftXY(GetValidShiftRange().center());
 }
 
-bool DEMToTopographyMesh::MatchTopoMeshRadius()
+void DEMToTopographyMesh::MatchTopoMeshRadius()
 {
-    auto dem = this->CheckUpdateInputDEM();
-    if (!dem)
-    {
-        return false;
-    }
-
-    bool isValid = false;
-    const auto radiusRange = this->ComputeValidRadiusRange(&isValid);
-    if (!isValid)
-    {
-        return false;
-    }
-
-    this->SetTopographyRadius(radiusRange[1]);
-
-    return true;
+    this->SetTopographyRadius(GetValidRadiusRange().max());
 }
 
-bool DEMToTopographyMesh::SetParametersToMatching()
+void DEMToTopographyMesh::SetParametersToMatching()
 {
-    if (!CenterTopoMesh())
-    {
-        return false;
-    }
-
-    return MatchTopoMeshRadius();
+    CenterTopoMesh();
+    MatchTopoMeshRadius();
 }
 
-DataExtent<double, 2> DEMToTopographyMesh::ComputeValidShiftRange(bool * isValid)
+const DataExtent<double, 2> & DEMToTopographyMesh::GetValidShiftRange()
 {
-    if (isValid)
-    {
-        *isValid = false;
-    }
+    this->GetExecutive()->UpdateInformation();
 
-    auto xyRange = decltype(DEMToTopographyMesh::ComputeValidShiftRange()){};
-
-    auto dem = this->CheckUpdateInputDEM();
-
-    if (!dem)
-    {
-        return xyRange;
-    }
-
-    const auto currentRadius = this->TopographyRadius;
-
-    const auto demBounds = DataBounds(dem->GetBounds()).convertTo<2>();
-    const auto demCenter = demBounds.center();
-
-    // clamp valid mesh center to the DEM bounds reduced by current radius
-    const auto mins = min(demBounds.minRange() + currentRadius, demCenter);
-    const auto maxs = max(demBounds.maxRange() - currentRadius, demCenter);
-
-    xyRange.setDimension(0, vtkVector2d{ mins[0], maxs[0] });
-    xyRange.setDimension(1, vtkVector2d{ mins[1], maxs[1] });
-
-    if (isValid)
-    {
-        *isValid = true;
-    }
-
-    return xyRange;
+    return this->ValidShiftRange;
 }
 
-DataExtent<double, 1> DEMToTopographyMesh::ComputeValidRadiusRange(bool * isValid)
+const DataExtent<double, 1> & DEMToTopographyMesh::GetValidRadiusRange()
 {
-    if (isValid)
-    {
-        *isValid = false;
-    }
+    this->GetExecutive()->UpdateInformation();
 
-    auto range = decltype(DEMToTopographyMesh::ComputeValidRadiusRange()){};
-
-    auto dem = this->CheckUpdateInputDEM();
-    if (!dem)
-    {
-        return range;
-    }
-
-    const auto demBounds = DataBounds(dem->GetBounds()).convertTo<2>();
-    if (!demBounds.contains(this->TopographyShiftXY))
-    {
-        return range;
-    }
-
-    if (isValid)
-    {
-        *isValid = true;
-    }
-
-    // use minimum of x- and y-spacing as sensible minimal radius
-    range[0] = minComponent(vtkVector2d(dem->GetSpacing()));
-
-    // clamp from topography center to the nearest DEM border
-    range[1] = std::min(
-        minComponent(abs(this->TopographyShiftXY - demBounds.minRange())),
-        minComponent(abs(this->TopographyShiftXY - demBounds.maxRange())));
-
-    return range;
+    return this->ValidRadiusRange;
 }
 
 int DEMToTopographyMesh::FillOutputPortInformation(int port, vtkInformation * info)
@@ -211,7 +124,7 @@ int DEMToTopographyMesh::RequestDataObject(vtkInformation * /*request*/,
 {
     this->SetupPipeline();
 
-    this->WarpElevation->UpdateDataObject();
+    this->CenterOutputMeshFilter->UpdateDataObject();
 
     outputVector->GetInformationObject(0)->Set(vtkDataObject::DATA_OBJECT(),
         this->CenterOutputMeshFilter->GetOutput());
@@ -224,9 +137,75 @@ int DEMToTopographyMesh::RequestDataObject(vtkInformation * /*request*/,
 
 int DEMToTopographyMesh::RequestInformation(
     vtkInformation * /*request*/,
-    vtkInformationVector ** /*inputVector*/,
+    vtkInformationVector ** inputVector,
     vtkInformationVector * /*outputVector*/)
 {
+    this->ValidShiftRange = {};
+
+    auto inInfo = inputVector[0]->GetInformationObject(0);
+
+    DataBounds demBounds3d;
+    if (inInfo->Has(vtkDataObject::BOUNDING_BOX()))
+    {
+        inInfo->Get(vtkDataObject::BOUNDING_BOX(), demBounds3d.data());
+    }
+    else if (inInfo->Has(vtkStreamingDemandDrivenPipeline::BOUNDS()))
+    {
+        inInfo->Get(vtkStreamingDemandDrivenPipeline::BOUNDS(), demBounds3d.data());
+    }
+    else if (inInfo->Has(vtkStreamingDemandDrivenPipeline::WHOLE_EXTENT()) 
+        && inInfo->Has(vtkDataObject::SPACING()) && inInfo->Has(vtkDataObject::ORIGIN()))
+    {
+        auto boundsCheck = vtkSmartPointer<vtkImageData>::New();
+        boundsCheck->SetExtent(inInfo->Get(vtkStreamingDemandDrivenPipeline::WHOLE_EXTENT()));
+        boundsCheck->SetSpacing(inInfo->Get(vtkDataObject::SPACING()));
+        boundsCheck->SetOrigin(inInfo->Get(vtkDataObject::ORIGIN()));
+
+        boundsCheck->GetBounds(demBounds3d.data());
+    }
+    else
+    {
+        // TODO fall back to information setup in RequestData() ?
+        return 0;
+    }
+
+    if (!inInfo->Has(vtkDataObject::SPACING()))
+    {
+        return 0;
+    }
+
+    const auto currentRadius = this->TopographyRadius;
+
+    const auto demBounds = demBounds3d.convertTo<2>();
+    const auto demCenter = demBounds.center();
+
+    // clamp valid mesh center to the DEM bounds reduced by current radius
+    const auto mins = min(demBounds.min() + currentRadius, demCenter);
+    const auto maxs = max(demBounds.max() - currentRadius, demCenter);
+
+    this->ValidShiftRange.setDimension(0, mins[0], maxs[0]);
+    this->ValidShiftRange.setDimension(1, mins[1], maxs[1]);
+
+
+    vtkVector3d demSpacing;
+    inInfo->Get(vtkDataObject::SPACING(), demSpacing.GetData());
+
+    // use minimum of x- and y-spacing as sensible minimal radius
+    this->ValidRadiusRange[0] = minComponent(convertTo<2>(demSpacing));
+
+    if (demBounds.contains(this->TopographyShiftXY))
+    {
+        // clamp from topography center to the nearest DEM border
+        this->ValidRadiusRange[1] = std::min(
+            minComponent(abs(this->TopographyShiftXY - demBounds.min())),
+            minComponent(abs(this->TopographyShiftXY - demBounds.max())));
+    }
+    else
+    {
+        // if current shift is invalid, also set the radius range to invalid
+        this->ValidRadiusRange[1] = 0.0;
+    }
+
     return 1;
 }
 
@@ -313,28 +292,6 @@ void DEMToTopographyMesh::SetupPipeline()
     this->CenterOutputMeshFilter = vtkSmartPointer<vtkTransformPolyDataFilter>::New();
     this->CenterOutputMeshFilter->SetTransform(this->CenterOutputMeshTransform);
     this->CenterOutputMeshFilter->SetInputConnection(this->WarpElevation->GetOutputPort());
-}
-
-vtkImageData * DEMToTopographyMesh::CheckUpdateInputDEM()
-{
-    auto demInput = this->GetInputAlgorithm(0, 0);
-    if (!demInput)
-    {
-        vtkWarningMacro("Missing input DEM.");
-        return nullptr;
-    }
-
-    demInput->Update();
-
-    auto dem = vtkImageData::SafeDownCast(this->GetInputDataObject(0, 0));
-
-    if (!dem)
-    {
-        vtkWarningMacro("Invalid input DEM.");
-        return nullptr;
-    }
-
-    return dem;
 }
 
 void DEMToTopographyMesh::SetInputDEM(vtkImageData * dem)

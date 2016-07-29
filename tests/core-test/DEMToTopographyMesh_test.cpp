@@ -8,6 +8,7 @@
 #include <vtkPolyData.h>
 
 #include <core/filters/DEMToTopographyMesh.h>
+#include <core/filters/SimpleDEMGeoCoordToLocalFilter.h>
 #include <core/utility/DataExtent.h>
 #include <core/utility/vtkvectorhelper.h>
 
@@ -162,4 +163,36 @@ TEST_F(DEMToTopographyMesh_test, ResetsToMatching)
     // x dimension is limiting
     ASSERT_EQ(0.5 * demBounds.extractDimension(0).componentSize(), filter->GetTopographyRadius());
     ASSERT_EQ(convertTo<2>(demBounds.center()), filter->GetTopographyShiftXY());
+}
+
+TEST_F(DEMToTopographyMesh_test, DEMToLocal_CorrectMeshBounds)
+{
+    auto dem = generateDEM();
+    auto mesh = generateMesh();
+
+    const auto inMeshBounds = DataBounds(mesh->GetBounds());
+
+    auto demToLocalFilter = vtkSmartPointer<SimpleDEMGeoCoordToLocalFilter>::New();
+    demToLocalFilter->SetInputData(dem);
+
+    auto filter = vtkSmartPointer<DEMToTopographyMesh>::New();
+    filter->SetInputConnection(0, demToLocalFilter->GetOutputPort());
+    filter->SetInputMeshTemplate(mesh);
+
+    filter->SetParametersToMatching();
+
+    filter->Update();
+
+    const auto localDEMBounds = DataBounds(demToLocalFilter->GetOutput()->GetBounds());
+    const auto transformedMeshBounds = DataBounds(filter->GetOutputTopoMeshOnDEM()->GetBounds());
+
+    const auto inMeshRatio = inMeshBounds.extractDimension(0).componentSize()
+        / inMeshBounds.extractDimension(1).componentSize();
+    const auto outMeshRation = transformedMeshBounds.extractDimension(0).componentSize()
+        / transformedMeshBounds.extractDimension(1).componentSize();
+
+    ASSERT_TRUE(localDEMBounds.contains(transformedMeshBounds));
+    ASSERT_FLOAT_EQ(localDEMBounds.extractDimension(0)[0], transformedMeshBounds.extractDimension(0)[0]);
+    ASSERT_FLOAT_EQ(localDEMBounds.extractDimension(0)[1], transformedMeshBounds.extractDimension(0)[1]);
+    ASSERT_FLOAT_EQ(inMeshRatio, outMeshRation);
 }

@@ -64,28 +64,28 @@ public:
 
     /** Set the topography position to be centered on the DEM's coordinates.
     * This requires valid inputs on port 0 and 1. */
-    bool CenterTopoMesh();
+    void CenterTopoMesh();
 
     /** Set the topography radius to the minimum of the DEM's x and y size.
     * This requires valid inputs on port 0 and 1. */
-    bool MatchTopoMeshRadius();
+    void MatchTopoMeshRadius();
 
     /** Center the topography mesh in the DEM and select the maximum radius so that all mesh points
     * fall into the DEM area.*/
-    bool SetParametersToMatching();
+    void SetParametersToMatching();
 
-    /** Based on the current topography extent and TopographyRadius value, compute valid shift 
+    /** Based on the current topography extent and TopographyRadius value, compute valid shift
     * ranges for the topography mesh in x and y direction.
     * A mesh position is valid, if all mesh points lie within the DEM area.
     * @returns a valid (non-empty) range only if a valid input topography is set and the radius
     *   value is valid (smaller than the topography's x and y size) */
-    DataExtent<double, 2> ComputeValidShiftRange(bool * isValid = nullptr);
+    const DataExtent<double, 2> & GetValidShiftRange();
     /** Based on the current topography extent and TopographyShiftXY values, compute the maximum
     * mesh radius so that all mesh points lie inside the DEM area.
     * This does not modify any parameters, but requires valid input data.
     * @returns a valid (non-empty) range only if a valid input topography is set and the current
     *   topography shift is valid (mesh center inside the input DEM area). */
-    DataExtent<double, 1> ComputeValidRadiusRange(bool * isValid = nullptr);
+    const DataExtent<double, 1> & GetValidRadiusRange();
 
 protected:
     DEMToTopographyMesh();
@@ -115,8 +115,6 @@ protected:
 private:
     void SetupPipeline();
 
-    vtkImageData * CheckUpdateInputDEM();
-
 private:
     vtkSmartPointer<vtkImageShiftScale> DEMScaleElevationFilter;
     vtkSmartPointer<vtkTransform> MeshTransform;
@@ -128,6 +126,9 @@ private:
     double ElevationScaleFactor;
     double TopographyRadius;
     vtkVector2d TopographyShiftXY;
+
+    DataExtent<double, 2> ValidShiftRange;
+    DataExtent<double, 1> ValidRadiusRange;
 
 private:
     DEMToTopographyMesh(const DEMToTopographyMesh &) = delete;

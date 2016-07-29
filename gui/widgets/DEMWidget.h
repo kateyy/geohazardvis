@@ -23,6 +23,7 @@ class DataSetHandler;
 class DEMToTopographyMesh;
 class ImageDataObject;
 class PolyDataObject;
+class SimpleDEMGeoCoordToLocalFilter;
 class Ui_DEMWidget;
 
 
@@ -42,12 +43,18 @@ public:
     PolyDataObject * meshTemplate();
     void setMeshTemplate(PolyDataObject * meshTemplate);
 
+    bool transformDEMToLocalCoords() const;
+    void setTransformDEMToLocalCoords(bool doTransform);
+
     double topoRadius() const;
     void setTopoRadius(double radius);
     const vtkVector2d & topoShiftXY() const;
     void setTopoShiftXY(const vtkVector2d & shift);
     int demUnitScaleExponent() const;
     void setDEMUnitScaleExponent(int exponent);
+
+    bool centerTopographyMesh() const;
+    void setCenterTopographyMesh(bool doCenter);
 
     /** Show a preview for the currently configured topography and setup default visualization parameters */
     void showPreview();
@@ -102,6 +109,9 @@ private:
 
     static vtkSmartPointer<vtkPassArrays> createMeshCleanupFilter();
 
+    bool checkIfRadiusChanged() const;
+    bool checkIfShiftChanged() const;
+
 private:
     DataMapping & m_dataMapping;
 
@@ -118,6 +128,7 @@ private:
 
     vtkSmartPointer<vtkAlgorithm> m_demPipelineStart;
     vtkSmartPointer<vtkAlgorithm> m_meshPipelineStart;
+    vtkSmartPointer<SimpleDEMGeoCoordToLocalFilter> m_demToLocalFilter;
     vtkSmartPointer<DEMToTopographyMesh> m_demToTopoFilter;
     vtkSmartPointer<vtkPassArrays> m_cleanupOutputMeshAttributes;
 
@@ -125,6 +136,7 @@ private:
     QPointer<AbstractRenderView> m_previewRenderer;
 
     std::unique_ptr<PolyDataObject> m_dataPreview;
+    std::unique_ptr<ImageDataObject> m_demPreview;
 
     ImageDataObject * m_lastPreviewedDEM;
     ImageDataObject * m_demSelection;

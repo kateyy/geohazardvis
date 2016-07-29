@@ -62,6 +62,8 @@ set(sources
     filters/LinearSelectorXY.cpp
     filters/NoiseImageSource.h
     filters/NoiseImageSource.cpp
+    filters/SimpleDEMGeoCoordToLocalFilter.h
+    filters/SimpleDEMGeoCoordToLocalFilter.cpp
     filters/StackedImageDataLIC3D.h
     filters/StackedImageDataLIC3D.cpp
     filters/TransformTextureCoords.h

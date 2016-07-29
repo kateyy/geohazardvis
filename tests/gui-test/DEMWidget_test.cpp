@@ -6,6 +6,7 @@
 
 #include <vtkDiskSource.h>
 #include <vtkImageData.h>
+#include <vtkPointData.h>
 #include <vtkPolyData.h>
 
 #include <core/DataSetHandler.h>
@@ -81,7 +82,9 @@ public:
         return std::make_unique<PolyDataObject>("Topo", *poly);
     }
 
-    static std::unique_ptr<ImageDataObject> generateDEM(const ImageExtent & extent = ImageExtent({0, 10, 0, 20, 0, 0}))
+    static std::unique_ptr<ImageDataObject> generateDEM(
+        const ImageExtent & extent = ImageExtent({0, 10, 0, 20, 0, 0}),
+        const ValueRange<double> & elevationRange = ValueRange<double>({ -3, 3 }))
     {
         auto ext = extent;
         auto demData = vtkSmartPointer<vtkImageData>::New();
@@ -90,8 +93,9 @@ public:
         auto ptr = reinterpret_cast<float *>(demData->GetScalarPointer());
         for (size_t i = 0; i < ext.numberOfPoints(); ++i)
         {
-            ptr[i] = 0.0f;
+            ptr[i] = elevationRange.min() + elevationRange.componentSize() * i / (ext.numberOfPoints() - 1.0);
         }
+        demData->GetPointData()->GetScalars()->SetName("Elevations");
 
         return std::make_unique<ImageDataObject>("DEM", *demData);
     }
@@ -137,6 +141,8 @@ TEST_F(DEMWidget_test, DefaultConfigIsMatching)
 
     Test_DEMWidget demWidget;
 
+    demWidget.setTransformDEMToLocalCoords(false);
+    demWidget.setCenterTopographyMesh(false);
     demWidget.setDEM(dem.get());
     demWidget.setMeshTemplate(topo.get());
 
@@ -146,8 +152,30 @@ TEST_F(DEMWidget_test, DefaultConfigIsMatching)
 
     const auto bounds = DataBounds(newMesh->bounds());
     ASSERT_EQ(demBounds.center(), bounds.center());
-    ASSERT_EQ(demBounds.size()[0], bounds.size()[0]);
-    ASSERT_EQ(demBounds.size()[0], bounds.size()[1]);    // height (y) should be limited to DEM's height
+    ASSERT_EQ(demBounds.componentSize()[0], bounds.componentSize()[0]);
+    ASSERT_EQ(demBounds.componentSize()[0], bounds.componentSize()[1]);    // height (y) should be limited to DEM's height
+}
+
+TEST_F(DEMWidget_test, DefaultConfigCreatesElevations)
+{
+    auto topo = generateTopo();
+    auto dem = generateDEM();
+    env.dataSetHandler->addExternalData({ topo.get(), dem.get() });
+
+    ValueRange<double> demElevationRange;
+    dem->dataSet()->GetPointData()->GetScalars()->GetRange(demElevationRange.data());
+
+    Test_DEMWidget demWidget;
+    demWidget.setDEM(dem.get());
+    demWidget.setMeshTemplate(topo.get());
+    demWidget.setTransformDEMToLocalCoords(false);
+    demWidget.setCenterTopographyMesh(false);
+
+    auto newMesh = demWidget.saveRelease();
+
+    auto newElevationRange = DataBounds(newMesh->bounds()).extractDimension(2);
+    ASSERT_TRUE(demElevationRange.contains(newElevationRange));
+    ASSERT_GT(newElevationRange.componentSize(), 0.0);
 }
 
 TEST_F(DEMWidget_test, ResetToDefaults)
@@ -164,7 +192,8 @@ TEST_F(DEMWidget_test, ResetToDefaults)
 
     demWidget.setDEM(dem.get());
     demWidget.setMeshTemplate(topo.get());
-
+    demWidget.setTransformDEMToLocalCoords(false);
+    demWidget.setCenterTopographyMesh(false);
 
     // NOTE: the minimal valid radius is defined by the DEM's spacing (0.1)
     const double topoRadius = 1.5;
@@ -181,6 +210,34 @@ TEST_F(DEMWidget_test, ResetToDefaults)
 
     const auto bounds = DataBounds(newMesh->bounds());
     ASSERT_EQ(demBounds.center(), bounds.center());
-    ASSERT_EQ(demBounds.size()[0], bounds.size()[0]);
-    ASSERT_EQ(demBounds.size()[0], bounds.size()[1]);    // height (y) should be limited to DEM's height
+    ASSERT_EQ(demBounds.componentSize()[0], bounds.componentSize()[0]);
+    ASSERT_EQ(demBounds.componentSize()[0], bounds.componentSize()[1]);    // height (y) should be limited to DEM's height
+}
+
+TEST_F(DEMWidget_test, DEMTransformedToLocal)
+{
+    auto topo = generateTopo();
+    auto dem = generateDEM();
+
+    env.dataSetHandler->addExternalData({ topo.get(), dem.get() });
+
+    ValueRange<double> demElevationRange;
+    dem->dataSet()->GetPointData()->GetScalars()->GetRange(demElevationRange.data());
+
+    Test_DEMWidget demWidget;
+
+    demWidget.setDEM(dem.get());
+    demWidget.setMeshTemplate(topo.get());
+    demWidget.setTransformDEMToLocalCoords(true);
+    demWidget.setCenterTopographyMesh(false);
+
+    demWidget.resetParametersForCurrentInputs();
+
+    const auto newMesh = demWidget.saveRelease();
+
+    const auto newElevationRange = DataBounds(newMesh->bounds()).extractDimension(2);
+
+    ASSERT_TRUE(demElevationRange.contains(newElevationRange));
+    ASSERT_GT(newElevationRange.componentSize(), 0.0);
+    ASSERT_TRUE(newElevationRange.contains(0.0));
 }
