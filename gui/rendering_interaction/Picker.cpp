@@ -207,19 +207,38 @@ void Picker::appendPolyDataInfo(QTextStream & stream, PolyDataObject & polyData)
 
     auto concreteMapper = vtkMapper::SafeDownCast(cellMapper);
     assert(concreteMapper);
-    auto arrayName = concreteMapper->GetArrayName();
-    auto  scalars = arrayName ? polyData.processedDataSet()->GetCellData()->GetArray(arrayName) : nullptr;
-    if (scalars)
+    if (!concreteMapper->GetScalarVisibility())
     {
-        const auto component = concreteMapper->GetLookupTable()->GetVectorComponent();
-        assert(component >= 0);
-        auto tuple = std::vector<double>(scalars->GetNumberOfComponents());
-        scalars->GetTuple(m_pickedIndex, tuple.data());
-        const double value = tuple[component];
-
-        stream << endl << endl << "Attribute: " << QString::fromUtf8(arrayName) << " (" << + component + 1 << ")" << endl;
-        stream << "Value: " << value;
+        return;
     }
+
+    const auto scalarMode = concreteMapper->GetScalarMode();
+    auto sourceAttributes = [scalarMode, concreteMapper] () -> vtkDataSetAttributes *
+    {
+        switch (scalarMode)
+        {
+        case VTK_SCALAR_MODE_USE_CELL_DATA:
+            return concreteMapper->GetInputAsDataSet()->GetCellData();
+        case VTK_SCALAR_MODE_USE_POINT_DATA:
+            return concreteMapper->GetInputAsDataSet()->GetPointData();
+        default:
+            return nullptr;
+        }
+    }();
+
+    if (!sourceAttributes)
+    {
+        return;
+    }
+
+    auto scalars = sourceAttributes->GetArray(concreteMapper->GetArrayName());
+
+    if (!scalars)
+    {
+        return;
+    }
+
+    printScalarInfo(stream, concreteMapper->GetLookupTable(), *scalars, m_pickedIndex);
 }
 
 void Picker::appendImageDataInfo(QTextStream & stream, vtkImageSlice & slice)
@@ -241,29 +260,9 @@ void Picker::appendImageDataInfo(QTextStream & stream, vtkImageSlice & slice)
         << "X = : " << pos[0] << endl
         << "Y = : " << pos[1] << endl;
 
-    auto scalars = dataSet->GetPointData()->GetScalars();
-
-    if (scalars)
+    if (auto scalars = dataSet->GetPointData()->GetScalars())
     {
-        const auto tuple = scalars->GetTuple(m_pickedIndex);
-        if (auto lut = slice.GetProperty()->GetLookupTable())
-        {
-            auto component = lut->GetVectorComponent();
-            double value = tuple[component];
-            stream << endl << "Attribute component: " << component + 1 << endl;
-            stream << "Value: " << value;
-        }
-        else if (scalars->GetNumberOfComponents() >= 3)
-        {
-            stream << endl << "Color" << endl;
-            stream << "R: " << tuple[0] << endl;
-            stream << "G: " << tuple[1] << endl;
-            stream << "B: " << tuple[2] << endl;
-            if (scalars->GetNumberOfComponents() >= 4)
-            {
-                stream << "A: " << tuple[1];
-            }
-        }
+        printScalarInfo(stream, slice.GetProperty()->GetLookupTable(), *scalars, m_pickedIndex);
     }
 }
 
@@ -279,4 +278,36 @@ void Picker::appendGenericPointInfo(QTextStream & stream)
         << "X = " << pos[0] << endl
         << "Y = " << pos[1] << endl
         << "Z = " << pos[2];
+}
+
+void Picker::printScalarInfo(QTextStream & stream, vtkScalarsToColors * lut,
+    vtkDataArray & scalars, vtkIdType pickedIndex)
+{
+    auto tuple = std::vector<double>(scalars.GetNumberOfComponents());
+    scalars.GetTuple(pickedIndex, tuple.data());
+
+    if (lut)
+    {
+        const auto component = lut->GetVectorComponent();
+        assert(component >= 0);
+        const double value = tuple[component];
+
+        stream << endl << endl << "Attribute: " << QString::fromUtf8(scalars.GetName());
+        if (tuple.size() > 1)
+        {
+            stream << " (Component " << component + 1 << ")";
+        }
+        stream << endl << "Value: " << value;
+    }
+    else if (tuple.size() == 3 || tuple.size() == 4)
+    {
+        stream << endl << "Color" << endl;
+        stream << "R: " << tuple[0] << endl;
+        stream << "G: " << tuple[1] << endl;
+        stream << "B: " << tuple[2] << endl;
+        if (tuple.size() == 4)
+        {
+            stream << "A: " << tuple[3];
+        }
+    }
 }
