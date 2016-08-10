@@ -8,7 +8,7 @@ vtkStandardNewMacro(CameraInteractorStyleSwitch);
 
 CameraInteractorStyleSwitch::CameraInteractorStyleSwitch()
     : InteractorStyleSwitch()
-    , m_currentCameraStyle(nullptr)
+    , m_currentCameraStyle{ nullptr }
 {
 }
 
@@ -17,7 +17,9 @@ CameraInteractorStyleSwitch::~CameraInteractorStyleSwitch() = default;
 void CameraInteractorStyleSwitch::resetCameraToDefault(vtkCamera & camera)
 {
     if (!m_currentCameraStyle)
+    {
         return;
+    }
 
     m_currentCameraStyle->resetCameraToDefault(camera);
 }
@@ -25,7 +27,9 @@ void CameraInteractorStyleSwitch::resetCameraToDefault(vtkCamera & camera)
 void CameraInteractorStyleSwitch::moveCameraTo(AbstractVisualizedData & visualization, vtkIdType index, IndexType indexType, bool overTime)
 {
     if (!m_currentCameraStyle)
+    {
         return;
+    }
 
     m_currentCameraStyle->moveCameraTo(visualization, index, indexType, overTime);
 }

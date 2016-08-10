@@ -17,10 +17,10 @@ vtkStandardNewMacro(PickerHighlighterInteractorObserver);
 
 PickerHighlighterInteractorObserver::PickerHighlighterInteractorObserver()
     : vtkInteractorObserver()
-    , m_callbackTag(0u)
-    , m_mouseMoved(false)
-    , m_picker(std::make_unique<Picker>())
-    , m_highlighter(std::make_unique<Highlighter>())
+    , m_callbackTag{ 0u }
+    , m_mouseMoved{ false }
+    , m_picker{ std::make_unique<Picker>() }
+    , m_highlighter{ std::make_unique<Highlighter>() }
 {
     connect(m_highlighter.get(), &Highlighter::geometryChanged,
             this, &PickerHighlighterInteractorObserver::geometryChanged);
@@ -116,7 +116,9 @@ void PickerHighlighterInteractorObserver::EventCallback(vtkObject * /*subject*/,
 void PickerHighlighterInteractorObserver::pick()
 {
     if (!this->Interactor)
+    {
         return;
+    }
 
     vtkVector2i clickPos;
     this->Interactor->GetEventPosition(clickPos.GetData());
@@ -124,7 +126,9 @@ void PickerHighlighterInteractorObserver::pick()
     assert(renderer);
 
     if (!renderer)
+    {
         return;
+    }
 
     m_picker->pick(clickPos, *renderer);
 
@@ -139,7 +143,9 @@ void PickerHighlighterInteractorObserver::highlight()
     assert(renderer);
 
     if (!renderer)
+    {
         return;
+    }
 
     m_highlighter->setRenderer(renderer);
     m_highlighter->setTarget(

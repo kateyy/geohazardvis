@@ -1,5 +1,6 @@
 #include "Picker.h"
 
+#include <array>
 #include <cassert>
 #include <vector>
 
@@ -29,13 +30,13 @@
 
 
 Picker::Picker()
-    : m_propPicker(vtkSmartPointer<vtkPropPicker>::New())
-    , m_cellPicker(vtkSmartPointer<vtkCellPicker>::New())
-    , m_pointPicker(vtkSmartPointer<vtkPointPicker>::New())
-    , m_pickedIndex(-1)
-    , m_pickedIndexType(IndexType::points)
-    , m_pickedDataObject(nullptr)
-    , m_pickedVisualizedData(nullptr)
+    : m_propPicker{ vtkSmartPointer<vtkPropPicker>::New() }
+    , m_cellPicker{ vtkSmartPointer<vtkCellPicker>::New() }
+    , m_pointPicker{ vtkSmartPointer<vtkPointPicker>::New() }
+    , m_pickedIndex{ -1 }
+    , m_pickedIndexType{ IndexType::points }
+    , m_pickedDataObject{ nullptr }
+    , m_pickedVisualizedData{ nullptr }
 {
     m_cellPicker->PickFromListOn();
     m_pointPicker->PickFromListOn();
@@ -196,8 +197,8 @@ void Picker::appendPolyDataInfo(QTextStream & stream, PolyDataObject & polyData)
 
     assert(cellMapper);
 
-    double centroid[3];
-    polyData.cellCenters()->GetPoint(m_pickedIndex, centroid);
+    std::array<double, 3> centroid;
+    polyData.cellCenters()->GetPoint(m_pickedIndex, centroid.data());
     stream
         << "Triangle Index: " << m_pickedIndex << endl
         << "X = " << centroid[0] << endl
@@ -233,7 +234,8 @@ void Picker::appendImageDataInfo(QTextStream & stream, vtkImageSlice & slice)
         return;
     }
 
-    double * pos = m_pointPicker->GetPickPosition();
+    std::array<double, 3> pos;
+    m_pointPicker->GetPickPosition(pos.data());
 
     stream
         << "X = : " << pos[0] << endl
@@ -267,7 +269,8 @@ void Picker::appendImageDataInfo(QTextStream & stream, vtkImageSlice & slice)
 
 void Picker::appendGenericPointInfo(QTextStream & stream)
 {
-    const double * pos = m_pointPicker->GetPickPosition();
+    std::array<double, 3> pos;
+    m_pointPicker->GetPickPosition(pos.data());
 
     // TODO check how to match (resampled) glyph/volume slice indices with input data indices
     m_pickedIndex = -1;

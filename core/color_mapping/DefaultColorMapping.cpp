@@ -26,7 +26,9 @@ void DefaultColorMapping::configureMapper(AbstractVisualizedData * visualizedDat
     ColorMappingData::configureMapper(visualizedData, mapper);
 
     if (auto m = vtkMapper::SafeDownCast(mapper))
+    {
         m->ScalarVisibilityOff();
+    }
 }
 
 QMap<int, QPair<double, double>> DefaultColorMapping::updateBounds()

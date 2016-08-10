@@ -17,8 +17,8 @@ vtkStandardNewMacro(InteractorStyleTerrain);
 
 InteractorStyleTerrain::InteractorStyleTerrain()
     : Superclass()
-    , m_cameraDolly(std::make_unique<CameraDolly>())
-    , m_mouseMoved(false)
+    , m_cameraDolly{ std::make_unique<CameraDolly>() }
+    , m_mouseMoved{ false }
 {
 }
 
@@ -68,7 +68,9 @@ void InteractorStyleTerrain::OnMiddleButtonDown()
     FindPokedRenderer(GetInteractor()->GetEventPosition()[0], GetInteractor()->GetEventPosition()[1]);
 
     if (!GetCurrentRenderer())
+    {
         return;
+    }
 
     StartDolly();
 }
@@ -92,7 +94,9 @@ void InteractorStyleTerrain::OnRightButtonDown()
     FindPokedRenderer(GetInteractor()->GetEventPosition()[0], GetInteractor()->GetEventPosition()[1]);
 
     if (!GetCurrentRenderer())
+    {
         return;
+    }
 
     StartPan();
 }
@@ -130,7 +134,9 @@ void InteractorStyleTerrain::OnChar()
     // disable most magic keys
 
     if (this->Interactor->GetKeyCode() == 'l')
+    {
         Superclass::OnChar();
+    }
 }
 
 void InteractorStyleTerrain::resetCameraToDefault(vtkCamera & camera)
@@ -150,14 +156,18 @@ void InteractorStyleTerrain::moveCameraTo(AbstractVisualizedData & visualization
 void InteractorStyleTerrain::MouseWheelDolly(bool forward)
 {
     if (!CurrentRenderer)
+    {
         return;
+    }
 
     GrabFocus(EventCallbackCommand);
     StartDolly();
 
     double factor = MotionFactor * 0.2 * MouseWheelMotionFactor;
     if (!forward)
+    {
         factor *= -1;
+    }
     factor = std::pow(1.1, factor);
 
     auto camera = CurrentRenderer->GetActiveCamera();

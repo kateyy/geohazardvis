@@ -10,7 +10,7 @@ vtkStandardNewMacro(InteractorStyleSwitch);
 
 InteractorStyleSwitch::InteractorStyleSwitch()
     : vtkInteractorStyle()
-    , m_currentStyle(nullptr)
+    , m_currentStyle{ nullptr }
 {
 }
 
@@ -36,14 +36,18 @@ void InteractorStyleSwitch::addStyle(const std::string & name, vtkInteractorStyl
 void InteractorStyleSwitch::setCurrentStyle(const std::string & name)
 {
     if (m_currentStyleName == name)
+    {
         return;
+    }
 
     auto styleIt = m_namedStyles.find(name);
     assert(styleIt != m_namedStyles.end());
 
 
     if (m_currentStyle)
+    {
         m_currentStyle->SetInteractor(nullptr);
+    }
 
     m_currentStyleName = name;
     m_currentStyle = styleIt->second;
@@ -70,7 +74,9 @@ void InteractorStyleSwitch::SetInteractor(vtkRenderWindowInteractor * interactor
     vtkInteractorStyle::SetInteractor(interactor);
 
     if (m_currentStyle)
+    {
         m_currentStyle->SetInteractor(interactor);
+    }
 }
 
 void InteractorStyleSwitch::SetAutoAdjustCameraClippingRange(int value)
@@ -78,7 +84,9 @@ void InteractorStyleSwitch::SetAutoAdjustCameraClippingRange(int value)
     vtkInteractorStyle::SetAutoAdjustCameraClippingRange(value);
 
     for (auto & it : m_namedStyles)
+    {
         it.second->SetAutoAdjustCameraClippingRange(value);
+    }
 }
 
 void InteractorStyleSwitch::SetDefaultRenderer(vtkRenderer * renderer)
@@ -86,7 +94,9 @@ void InteractorStyleSwitch::SetDefaultRenderer(vtkRenderer * renderer)
     vtkInteractorStyle::SetDefaultRenderer(renderer);
 
     for (auto & it : m_namedStyles)
+    {
         it.second->SetDefaultRenderer(renderer);
+    }
 }
 
 void InteractorStyleSwitch::SetCurrentRenderer(vtkRenderer * renderer)
@@ -94,7 +104,9 @@ void InteractorStyleSwitch::SetCurrentRenderer(vtkRenderer * renderer)
     vtkInteractorStyle::SetCurrentRenderer(renderer);
 
     for (auto & it : m_namedStyles)
+    {
         it.second->SetCurrentRenderer(renderer);
+    }
 }
 
 void InteractorStyleSwitch::styleAddedEvent(vtkInteractorStyle * /*interactorStyle*/)

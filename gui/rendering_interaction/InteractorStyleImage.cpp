@@ -1,5 +1,7 @@
 #include "InteractorStyleImage.h"
 
+#include <array>
+
 #include <vtkCallbackCommand.h>
 #include <vtkCamera.h>
 #include <vtkObjectFactory.h>
@@ -11,8 +13,8 @@ vtkStandardNewMacro(InteractorStyleImage);
 
 InteractorStyleImage::InteractorStyleImage()
     : Superclass()
-    , m_mouseMoved(false)
-    , m_mouseButtonDown(false)
+    , m_mouseMoved{ false }
+    , m_mouseButtonDown{ false }
 {
 }
 
@@ -32,12 +34,14 @@ void InteractorStyleImage::OnMouseMove()
 
 void InteractorStyleImage::OnLeftButtonDown()
 {
-    int eventPos[2];
-    GetInteractor()->GetEventPosition(eventPos);
+    std::array<int, 2> eventPos;
+    GetInteractor()->GetEventPosition(eventPos.data());
     FindPokedRenderer(eventPos[0], eventPos[1]);
 
     if (!GetCurrentRenderer())
+    {
         return;
+    }
 
     m_mouseMoved = false;
     m_mouseButtonDown = true;
@@ -55,12 +59,14 @@ void InteractorStyleImage::OnLeftButtonUp()
 
 void InteractorStyleImage::OnMiddleButtonDown()
 {
-    int eventPos[2];
-    GetInteractor()->GetEventPosition(eventPos);
+    std::array<int, 2> eventPos;
+    GetInteractor()->GetEventPosition(eventPos.data());
     FindPokedRenderer(eventPos[0], eventPos[1]);
 
     if (!GetCurrentRenderer())
+    {
         return;
+    }
 
     StartDolly();
 }

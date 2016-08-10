@@ -65,11 +65,15 @@ void ColorMapping::setVisualizedData(const QList<AbstractVisualizedData *> & vis
         connect(&vis->dataObject(), &DataObject::attributeArraysChanged, this, &ColorMapping::updateAvailableScalars);
     }
 
-    m_data = ColorMappingRegistry::instance().createMappingsValidFor(visualizedData);
-    for (auto & pair : m_data)
+    if (!m_visualizedData.isEmpty())
     {
-        auto & scalars = pair.second;
-        scalars->setLookupTable(gradient());
+        m_data = ColorMappingRegistry::instance().createMappingsValidFor(m_visualizedData);
+
+        for (auto & pair : m_data)
+        {
+            auto & scalars = pair.second;
+            scalars->setLookupTable(gradient());
+        }
     }
 
     // Try to reuse previous configuration.
@@ -139,7 +143,9 @@ QStringList ColorMapping::scalarsNames() const
 {
     QStringList names;
     for (auto & s : m_data)
+    {
         names << s.first;
+    }
 
     return names;
 }

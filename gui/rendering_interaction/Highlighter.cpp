@@ -37,7 +37,7 @@ class HighlighterImpl
 {
 public:
     explicit HighlighterImpl(Highlighter & highlighter)
-        : m_highlighter(highlighter)
+        : m_highlighter{ highlighter }
     {
     }
 
@@ -259,8 +259,8 @@ class HighlighterImplementationSwitch
 {
 public:
     explicit HighlighterImplementationSwitch(Highlighter & highlighter)
-        : m_point2DImpl(highlighter)
-        , m_cellImpl(highlighter)
+        : m_point2DImpl{ highlighter }
+        , m_cellImpl{ highlighter }
         , m_currentImpl{ nullptr }
     {
     }
@@ -416,7 +416,9 @@ vtkIdTypeArray * Highlighter::targetIndices()
 vtkIdType Highlighter::lastTargetIndex() const
 {
     if (m_indices->GetSize() == 0)
+    {
         return -1;
+    }
 
     return m_indices->GetValue(m_indices->GetSize() - 1);
 }
@@ -447,11 +449,10 @@ void Highlighter::clearIndices()
 
 void Highlighter::flashTargets()
 {
-    if (!m_renderer)
+    if (!m_renderer || m_indices->GetSize() == 0)
+    {
         return;
-
-    if (m_indices->GetSize() == 0)
-        return;
+    }
 
     assert(m_visualizedData);
 
@@ -543,12 +544,12 @@ void Highlighter::highlightCells()
         return;
     }
 
-    const vtkIdType index = m_indices->GetValue(0);
+    const auto index = m_indices->GetValue(0);
 
     // extract picked triangle and create highlighting geometry
     // create two shifted polygons to work around occlusion
 
-    vtkCell * selection = dataSet->GetCell(index);
+    auto selection = dataSet->GetCell(index);
 
     // this is probably a glyph or the like; we don't have an implementation for that in the moment
     if (!selection || selection->GetCellType() == VTK_VOXEL)
