@@ -143,6 +143,8 @@ set(sources
     color_mapping/GradientResourceManager.cpp
     color_mapping/ImageDataLIC2DMapping.h
     color_mapping/ImageDataLIC2DMapping.cpp
+    color_mapping/SlopeAngleMapping.h
+    color_mapping/SlopeAngleMapping.cpp
     color_mapping/VectorMagnitudeColorMapping.h
     color_mapping/VectorMagnitudeColorMapping.cpp
     color_mapping/VertexComponentColorMapping.h
