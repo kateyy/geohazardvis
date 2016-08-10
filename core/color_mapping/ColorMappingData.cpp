@@ -11,12 +11,15 @@
 #include <core/utility/macros.h>
 
 
-ColorMappingData::ColorMappingData(const QList<AbstractVisualizedData *> & visualizedData, int numDataComponents)
+ColorMappingData::ColorMappingData(const QList<AbstractVisualizedData *> & visualizedData,
+    int numDataComponents,
+    bool mapsScalarsToColors)
     : m_isValid{ false }
     , m_visualizedData(visualizedData)
     , m_numDataComponents{ numDataComponents }
     , m_dataComponent{ 0 }
     , m_isActive{ false }
+    , m_mapsScalarsToColors{ mapsScalarsToColors }
     , m_dataMinValue(numDataComponents, std::numeric_limits<double>::max())
     , m_dataMaxValue(numDataComponents, std::numeric_limits<double>::lowest())
     , m_minValue(numDataComponents, std::numeric_limits<double>::max())
@@ -95,6 +98,11 @@ void ColorMappingData::setDataComponent(int component)
         m_lut->SetTableRange(minValue(), maxValue());
         m_lut->Build();
     }
+}
+
+bool ColorMappingData::mapsScalarsToColors() const
+{
+    return m_mapsScalarsToColors;
 }
 
 void ColorMappingData::initialize()

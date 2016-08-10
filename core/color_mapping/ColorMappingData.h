@@ -37,7 +37,9 @@ public:
     static std::vector<std::unique_ptr<ColorMappingData>> newInstance(const QList<AbstractVisualizedData *> & visualizedData);
 
 public:
-    explicit ColorMappingData(const QList<AbstractVisualizedData *> & visualizedData, int numDataComponents = 1);
+    explicit ColorMappingData(const QList<AbstractVisualizedData *> & visualizedData,
+        int numDataComponents = 1,
+        bool mapsScalarsToColors = true);
 
     virtual void activate();
     virtual void deactivate();
@@ -51,6 +53,9 @@ public:
     int numDataComponents() const;
     int dataComponent() const;
     void setDataComponent(int component);
+
+    /** Return whether scalars are mapped/transformed to colors or used directly as color values. */
+    bool mapsScalarsToColors() const;
 
     /** create a filter to map values to color, applying current min/max settings
       * @param dataObject is required to setup object specific parameters on the filter.
@@ -112,6 +117,8 @@ private:
     const int m_numDataComponents;
     int m_dataComponent;
     bool m_isActive;
+
+    const bool m_mapsScalarsToColors;
 
     /** per data component: value range and user selected subrange */
     std::vector<double> m_dataMinValue;

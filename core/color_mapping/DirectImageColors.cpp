@@ -31,35 +31,39 @@ std::vector<std::unique_ptr<ColorMappingData>> DirectImageColors::newInstances(c
     {
         for (auto i = 0; i < attributes->GetNumberOfArrays(); ++i)
         {
-            vtkUnsignedCharArray * colors = vtkUnsignedCharArray::SafeDownCast(attributes->GetArray(i));
+            auto colors = vtkUnsignedCharArray::SafeDownCast(attributes->GetArray(i));
             if (!colors || colors->GetNumberOfComponents() != 3)
+            {
                 continue;
+            }
 
             // skip arrays that are marked as auxiliary
-            vtkInformation * arrayInfo = colors->GetInformation();
+            auto arrayInfo = colors->GetInformation();
             if (arrayInfo->Has(DataObject::ArrayIsAuxiliaryKey())
                 && arrayInfo->Get(DataObject::ArrayIsAuxiliaryKey()))
+            {
                 continue;
+            }
 
-            QString name = QString::fromUtf8(colors->GetName());
-
-            arrayLocs.insert(name, attributeLocation);
+            arrayLocs.insert(QString::fromUtf8(colors->GetName()), attributeLocation);
         }
     };
 
     QList<AbstractVisualizedData *> supportedData;
 
     // list all available array names, check for same number of components
-    for (AbstractVisualizedData * vis : visualizedData)
+    for (auto vis : visualizedData)
     {
         if (vis->contentType() == ContentType::Context2D)   // don't try to map colors to a plot
+        {
             continue;
+        }
 
         supportedData << vis;
 
         for (auto i = 0; i < vis->numberOfColorMappingInputs(); ++i)
         {
-            vtkDataSet * dataSet = vis->colorMappingInputData(i);
+            auto dataSet = vis->colorMappingInputData(i);
 
             checkAddAttributeArrays(dataSet->GetCellData(), vtkAssignAttribute::CELL_DATA);
             checkAddAttributeArrays(dataSet->GetPointData(), vtkAssignAttribute::POINT_DATA);
@@ -81,7 +85,7 @@ std::vector<std::unique_ptr<ColorMappingData>> DirectImageColors::newInstances(c
 }
 
 DirectImageColors::DirectImageColors(const QList<AbstractVisualizedData *> & visualizedData, QString dataArrayName, int attributeLocation)
-    : ColorMappingData(visualizedData)
+    : ColorMappingData(visualizedData, 1, false)
     , m_attributeLocation{ attributeLocation }
     , m_dataArrayName{ dataArrayName }
 {

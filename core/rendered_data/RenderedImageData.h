@@ -17,6 +17,13 @@ public:
 
     std::unique_ptr<reflectionzeug::PropertyGroup> createConfigGroup() override;
 
+    enum Interpolation
+    {
+        nearest = VTK_NEAREST_INTERPOLATION,
+        linear = VTK_LINEAR_INTERPOLATION,
+        cubic = VTK_CUBIC_INTERPOLATION
+    };
+
 protected:
     vtkSmartPointer<vtkPropCollection> fetchViewProps() override;
     vtkImageSlice * slice();

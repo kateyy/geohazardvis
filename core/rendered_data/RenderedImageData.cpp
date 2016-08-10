@@ -24,15 +24,6 @@
 
 using namespace reflectionzeug;
 
-namespace
-{
-    enum Interpolation
-    {
-        nearest = VTK_NEAREST_INTERPOLATION,
-        linear = VTK_LINEAR_INTERPOLATION,
-        cubic = VTK_CUBIC_INTERPOLATION
-    };
-}
 
 RenderedImageData::RenderedImageData(ImageDataObject & dataObject)
     : RenderedData(ContentType::Rendered2D, dataObject)
@@ -131,9 +122,9 @@ void RenderedImageData::scalarsForColorMappingChangedEvent()
 
     if (m_colorMappingData->usesFilter())
     {
-        vtkSmartPointer<vtkAlgorithm> filter = m_colorMappingData->createFilter(this);
+        auto filter = m_colorMappingData->createFilter(this);
         filter->Update();
-        vtkDataSet * image = vtkDataSet::SafeDownCast(filter->GetOutputDataObject(0));
+        auto image = vtkDataSet::SafeDownCast(filter->GetOutputDataObject(0));
         // use filter only if it outputs scalars. To prevent segfault in image slice.
         if (image->GetPointData()->GetScalars())
             m_mapper->SetInputConnection(filter->GetOutputPort());
@@ -148,6 +139,11 @@ void RenderedImageData::scalarsForColorMappingChangedEvent()
     property()->SetOpacity(colorMapping().isEnabled()
         ? 1.0
         : 0.0);
+
+    // hack required for DirectImageColors: how to enforce to use color data directly?
+    property()->SetLookupTable(m_colorMappingData->mapsScalarsToColors()
+        ? m_gradient
+        : nullptr);
 }
 
 void RenderedImageData::colorMappingGradientChangedEvent()
