@@ -32,6 +32,8 @@ DataObjectPrivate::DataObjectPrivate(DataObject & dataObject, const QString & na
 
 DataObjectPrivate::~DataObjectPrivate()
 {
+    assert(m_deferEventsRequests == 0);
+
     disconnectAllEvents();
 }
 
@@ -54,11 +56,13 @@ void DataObjectPrivate::addObserver(const QString & eventName, vtkObject & subje
 
 void DataObjectPrivate::disconnectEventGroup(const QString & eventName)
 {
-    auto && map = m_namedObserverIds[eventName];
+    auto & map = m_namedObserverIds[eventName];
     for (auto it = map.begin(); it != map.end(); ++it)
     {
         if (!it.key())    // subject already deleted
-            return;
+        {
+            continue;
+        }
 
         it.key()->RemoveObserver(it.value());
     }

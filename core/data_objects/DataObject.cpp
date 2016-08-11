@@ -68,10 +68,7 @@ DataObject::DataObject(const QString & name, vtkDataSet * dataSet)
     }
 }
 
-DataObject::~DataObject()
-{
-    disconnectAllEvents();
-}
+DataObject::~DataObject() = default;
 
 std::unique_ptr<RenderedData> DataObject::createRendered()
 {
@@ -302,6 +299,7 @@ void DataObject::disconnectEventGroup(const QString & eventName)
 
 void DataObject::disconnectAllEvents()
 {
+    d_ptr->disconnectAllEvents();
 }
 
 void DataObject::_dataChanged()
