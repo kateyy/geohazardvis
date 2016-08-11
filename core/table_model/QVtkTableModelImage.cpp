@@ -113,7 +113,9 @@ bool QVtkTableModelImage::setData(const QModelIndex & index, const QVariant & va
 
     m_vtkImageData->SetScalarComponentFromDouble(imageRow, imageColumn, 0, component, f_value);
     // SetScalarComponentFromDouble does not set the scalar array as modified, so that the pipeline won't be updated
-    m_vtkImageData->GetPointData()->GetScalars()->Modified();
+    // TODO ImageDataObject does not listen to scalar array changes, so triggered the event on the point data instead.
+    //m_vtkImageData->GetPointData()->GetScalars()->Modified();
+    m_vtkImageData->GetPointData()->Modified();
 
     return true;
 }

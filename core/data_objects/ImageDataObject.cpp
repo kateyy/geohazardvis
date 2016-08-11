@@ -43,8 +43,6 @@ ImageDataObject::ImageDataObject(const QString & name, vtkImageData & dataSet)
         dataSet.AllocateScalars(VTK_FLOAT, 1);
     }
 
-    connectObserver("dataChanged", scalars(), vtkCommand::ModifiedEvent, *this, &ImageDataObject::_dataChanged);
-
     dataSet.GetExtent(m_extent.data());
 }
 
