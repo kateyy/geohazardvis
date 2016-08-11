@@ -49,18 +49,17 @@
 
 MainWindow::MainWindow()
     : QMainWindow()
-    , m_ui()
-    , m_dataSetHandler(std::make_unique<DataSetHandler>())
-    , m_dataMapping()
-    , m_colorMappingChooser(new ColorMappingChooser())
-    , m_vectorMappingChooser(new GlyphMappingChooser())
-    , m_renderConfigWidget(new RenderConfigWidget())
-    , m_rendererConfigWidget(new RendererConfigWidget())
-    , m_canvasExporter(new CanvasExporterWidget(this))
-    , m_recentFileListMaxEntries(0)
-    , m_loadWatchersMutex(std::make_unique<QMutex>())
+    , m_ui{ std::make_unique<Ui_MainWindow>() }
+    , m_dataSetHandler{ std::make_unique<DataSetHandler>() }
+    , m_dataMapping{}
+    , m_colorMappingChooser{ new ColorMappingChooser() }
+    , m_vectorMappingChooser{ new GlyphMappingChooser() }
+    , m_renderConfigWidget{ new RenderConfigWidget() }
+    , m_rendererConfigWidget{ new RendererConfigWidget() }
+    , m_canvasExporter{ new CanvasExporterWidget(this) }
+    , m_recentFileListMaxEntries{ 0 }
+    , m_loadWatchersMutex{ std::make_unique<QMutex>() }
 {
-    m_ui = std::make_unique<Ui_MainWindow>();
     m_ui->setupUi(this);
     m_ui->actionOpen->setIcon(qApp->style()->standardIcon(QStyle::SP_DialogOpenButton));
     m_ui->actionExportDataset->setIcon(qApp->style()->standardIcon(QStyle::SP_DialogSaveButton));

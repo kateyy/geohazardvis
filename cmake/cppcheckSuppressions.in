@@ -1,7 +1,6 @@
 
 missingIncludeSystem
 unmatchedSuppression
-purgedConfiguration
 
 *:@CMAKE_BINARY_DIR@/ThirdParty/*
 
@@ -13,12 +12,8 @@ purgedConfiguration
 operatorEqVarError:@PROJECT_SOURCE_DIR@/core/data_objects/DataObject.hpp:46
 
 assertWithSideEffect:@PROJECT_SOURCE_DIR@/core/data_objects/ImageDataObject.cpp:81
-assertWithSideEffect:@PROJECT_SOURCE_DIR@/core/data_objects/PolyDataObject.cpp:121
-assertWithSideEffect:@PROJECT_SOURCE_DIR@/core/data_objects/PolyDataObject.cpp:149
+assertWithSideEffect:@PROJECT_SOURCE_DIR@/core/data_objects/PolyDataObject.cpp:126
+assertWithSideEffect:@PROJECT_SOURCE_DIR@/core/data_objects/PolyDataObject.cpp:158
 
-unusedStructMember:@PROJECT_SOURCE_DIR@/core/io/TextFileReader.h:28
 unusedStructMember:@PROJECT_SOURCE_DIR@/core/io/TextFileReader.h:29
 unusedStructMember:@PROJECT_SOURCE_DIR@/core/io/TextFileReader.h:30
-unusedStructMember:@PROJECT_SOURCE_DIR@/core/io/types.h:40
-
-syntaxError:@PROJECT_SOURCE_DIR@/core/utility/DataExtent.hpp:222

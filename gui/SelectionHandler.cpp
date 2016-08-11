@@ -13,7 +13,7 @@
 
 
 SelectionHandler::SelectionHandler()
-    : m_syncToggleMenu(nullptr)
+    : m_syncToggleMenu{ nullptr }
 {
 }
 
@@ -26,7 +26,7 @@ SelectionHandler::~SelectionHandler()
 
 void SelectionHandler::addTableView(TableView * tableView)
 {
-    QAction * syncToggleAction = addAbstractDataView(tableView);
+    auto syncToggleAction = addAbstractDataView(tableView);
 
     m_tableViews.insert(tableView, syncToggleAction);
     updateSyncToggleMenu();
@@ -39,7 +39,7 @@ void SelectionHandler::addTableView(TableView * tableView)
 
 void SelectionHandler::addRenderView(AbstractRenderView * renderView)
 {
-    QAction * syncToggleAction = addAbstractDataView(renderView);
+    auto syncToggleAction = addAbstractDataView(renderView);
 
     m_renderViews.insert(renderView, syncToggleAction);
     updateSyncToggleMenu();
@@ -47,7 +47,7 @@ void SelectionHandler::addRenderView(AbstractRenderView * renderView)
 
 QAction * SelectionHandler::addAbstractDataView(AbstractDataView * dataView)
 {
-    QAction * syncToggleAction = new QAction(dataView->windowTitle(), this);
+    auto syncToggleAction = new QAction(dataView->windowTitle(), this);
     syncToggleAction->setCheckable(true);
     syncToggleAction->setChecked(true);
 
@@ -59,7 +59,7 @@ QAction * SelectionHandler::addAbstractDataView(AbstractDataView * dataView)
 
 void SelectionHandler::removeTableView(TableView * tableView)
 {
-    QAction * action = m_tableViews[tableView];
+    auto action = m_tableViews[tableView];
 
     m_tableViews.remove(tableView);
 
@@ -70,7 +70,7 @@ void SelectionHandler::removeTableView(TableView * tableView)
 
 void SelectionHandler::removeRenderView(AbstractRenderView * renderView)
 {
-    QAction * action = m_renderViews[renderView];
+    auto action = m_renderViews[renderView];
 
     m_renderViews.remove(renderView);
 
@@ -87,8 +87,10 @@ void SelectionHandler::setSyncToggleMenu(QMenu * syncToggleMenu)
 void SelectionHandler::updateSelection(DataObject * dataObject, vtkIdType index, IndexType indexType)
 {
     QAction * action = nullptr;
-    if (TableView * table = dynamic_cast<TableView *>(sender()))
+    if (auto table = dynamic_cast<TableView *>(sender()))
+    {
         action = m_tableViews[table];
+    }
     else
     {
         assert(dynamic_cast<AbstractRenderView *>(sender()));
@@ -97,38 +99,52 @@ void SelectionHandler::updateSelection(DataObject * dataObject, vtkIdType index,
     assert(action);
 
     if (!action->isChecked())
+    {
         return;
+    }
 
 
     for (auto it = m_renderViews.begin(); it != m_renderViews.end(); ++it)
     {
         if (it.value()->isChecked() && it.key()->dataObjects().contains(dataObject))
+        {
             it.key()->setSelection(dataObject, index, indexType);
+        }
     }
     for (auto it = m_tableViews.begin(); it != m_tableViews.end(); ++it)
     {
         if (it.value()->isChecked() && it.key()->dataObject() == dataObject)
+        {
             it.key()->setSelection(dataObject, index, indexType);
+        }
     }
 }
 
 void SelectionHandler::renderViewsLookAt(DataObject * dataObject, vtkIdType index, IndexType indexType)
 {
     if (!dataObject)
+    {
         return;
+    }
 
     for (auto it = m_renderViews.begin(); it != m_renderViews.end(); ++it)
     {
         if (it.value()->isChecked())
+        {
             if (it.key()->dataObjects().contains(dataObject))
+            {
                 it.key()->lookAtData(*dataObject, index, indexType);
+            }
+        }
     }
 }
 
 void SelectionHandler::updateSyncToggleMenu()
 {
     if (!m_syncToggleMenu)  // for standalone / testing usage
+    {
         return;
+    }
 
     m_syncToggleMenu->clear();
 

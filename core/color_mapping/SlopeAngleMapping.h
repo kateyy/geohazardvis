@@ -6,7 +6,7 @@
 class CORE_API SlopeAngleMapping : public ColorMappingData
 {
 public:
-    SlopeAngleMapping(const QList<AbstractVisualizedData *> & visualizedData);
+    explicit SlopeAngleMapping(const QList<AbstractVisualizedData *> & visualizedData);
 
     QString name() const override;
     QString scalarsName() const override;

@@ -29,6 +29,8 @@ PolyDataObject::PolyDataObject(const QString & name, vtkPolyData & dataSet)
     m_cellNormals->SetInputData(&dataSet);
 }
 
+PolyDataObject::~PolyDataObject() = default;
+
 bool PolyDataObject::is3D() const
 {
     return true;

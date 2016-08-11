@@ -421,7 +421,7 @@ void RenderView::updateGuiForSelectedData(AbstractVisualizedData * renderedData)
 void RenderView::updateGuiForRemovedData()
 {
     auto nextSelection = m_contents.empty()
-        ? (AbstractVisualizedData *)(nullptr) : m_contents.front().get();
+        ? static_cast<AbstractVisualizedData *>(nullptr) : m_contents.front().get();
     
     updateGuiForSelectedData(nextSelection);
 }
