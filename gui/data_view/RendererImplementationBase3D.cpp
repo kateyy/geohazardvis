@@ -22,7 +22,6 @@
 #include <vtkTextRepresentation.h>
 #include <vtkTextWidget.h>
 
-#include <core/t_QVTKWidget.h>
 #include <core/types.h>
 #include <core/color_mapping/ColorBarRepresentation.h>
 #include <core/color_mapping/ColorMapping.h>
@@ -34,6 +33,7 @@
 #include <gui/data_view/AbstractRenderView.h>
 #include <gui/data_view/RenderViewStrategy.h>
 #include <gui/data_view/RenderViewStrategyNull.h>
+#include <gui/data_view/t_QVTKWidget.h>
 #include <gui/rendering_interaction/CameraInteractorStyleSwitch.h>
 #include <gui/rendering_interaction/Highlighter.h>
 #include <gui/rendering_interaction/InteractorStyleImage.h>
@@ -94,6 +94,12 @@ void RendererImplementationBase3D::activate(t_QVTKWidget & qvtkWidget)
     assignInteractor();
 
     m_cursorCallback->setQWidget(&qvtkWidget);
+
+    renderView().setInfoTextCallback([this] () -> QString
+    {
+        m_pickerHighlighter->requestPickedInfoUpdate();
+        return m_pickerHighlighter->pickedInfo();
+    });
 }
 
 void RendererImplementationBase3D::deactivate(t_QVTKWidget & qvtkWidget)

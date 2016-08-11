@@ -44,6 +44,9 @@ set(sources
     data_view/RenderViewStrategy3D.cpp
     data_view/ResidualVerificationView.h
     data_view/ResidualVerificationView.cpp
+    data_view/t_QVTKWidget.h
+    data_view/t_QVTKWidgetFwd.h
+    data_view/t_QVTKWidget.cpp
     data_view/TableView.h
     data_view/TableView.cpp
 

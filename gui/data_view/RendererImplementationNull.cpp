@@ -3,8 +3,8 @@
 #include <vtkRenderer.h>
 
 #include <core/AbstractVisualizedData.h>
-#include <core/t_QVTKWidget.h>
 #include <core/types.h>
+#include <gui/data_view/t_QVTKWidget.h>
 
 
 RendererImplementationNull::RendererImplementationNull(AbstractRenderView & renderView)

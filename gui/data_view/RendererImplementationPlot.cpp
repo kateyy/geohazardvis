@@ -11,7 +11,6 @@
 #include <vtkPlot.h>
 #include <vtkRendererCollection.h>
 
-#include <core/t_QVTKWidget.h>
 #include <core/types.h>
 #include <core/data_objects/DataObject.h>
 #include <core/context2D_data/Context2DData.h>
@@ -20,6 +19,7 @@
 #include <core/utility/macros.h>
 #include <gui/data_view/AbstractRenderView.h>
 #include <gui/data_view/ChartXY.h>
+#include <gui/data_view/t_QVTKWidget.h>
 
 
 bool RendererImplementationPlot::s_isRegistered = RendererImplementation::registerImplementation<RendererImplementationPlot>();

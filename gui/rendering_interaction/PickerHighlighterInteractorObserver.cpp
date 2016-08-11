@@ -19,6 +19,7 @@ PickerHighlighterInteractorObserver::PickerHighlighterInteractorObserver()
     : vtkInteractorObserver()
     , m_callbackTag{ 0u }
     , m_mouseMoved{ false }
+    , m_pickOnMouseMove{ false }
     , m_picker{ std::make_unique<Picker>() }
     , m_highlighter{ std::make_unique<Highlighter>() }
 {
@@ -88,6 +89,26 @@ const Highlighter & PickerHighlighterInteractorObserver::highlighter() const
     return *m_highlighter;
 }
 
+bool PickerHighlighterInteractorObserver::picksOnMouseMove() const
+{
+    return m_pickOnMouseMove;
+}
+
+void PickerHighlighterInteractorObserver::setPickOnMouseMove(bool doPick)
+{
+    m_pickOnMouseMove = doPick;
+}
+
+const QString & PickerHighlighterInteractorObserver::pickedInfo() const
+{
+    return picker().pickedObjectInfo();
+}
+
+void PickerHighlighterInteractorObserver::requestPickedInfoUpdate()
+{
+    pick();
+}
+
 void PickerHighlighterInteractorObserver::EventCallback(vtkObject * /*subject*/, unsigned long eventId, void * /*userData*/)
 {
     if (!this->Enabled)
@@ -100,7 +121,10 @@ void PickerHighlighterInteractorObserver::EventCallback(vtkObject * /*subject*/,
         break;
     case vtkCommand::MouseMoveEvent:
         m_mouseMoved = true;
-        pick();
+        if (m_pickOnMouseMove)
+        {
+            pick();
+        }
         break;
     case vtkCommand::LeftButtonReleaseEvent:
         if (!m_mouseMoved)

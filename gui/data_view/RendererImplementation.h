@@ -9,8 +9,8 @@
 
 #include <vtkType.h>
 
-#include <core/t_QVTKWidgetFwd.h>
 #include <gui/gui_api.h>
+#include <gui/data_view/t_QVTKWidgetFwd.h>
 
 
 class vtkIdTypeArray;

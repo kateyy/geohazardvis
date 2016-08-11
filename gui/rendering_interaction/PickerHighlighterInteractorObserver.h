@@ -31,6 +31,12 @@ public:
     Highlighter & highlighter();
     const Highlighter & highlighter() const;
 
+    bool picksOnMouseMove() const;
+    void setPickOnMouseMove(bool doPick);
+
+    const QString & pickedInfo() const;
+    void requestPickedInfoUpdate();
+
 signals:
     void pickedInfoChanged(const QString & infoText);
     void dataPicked(AbstractVisualizedData * visualizedData, vtkIdType index, IndexType indexType);
@@ -48,6 +54,7 @@ protected:
 private:
     unsigned long m_callbackTag;
     bool m_mouseMoved;
+    bool m_pickOnMouseMove;
 
     std::unique_ptr<Picker> m_picker;
     std::unique_ptr<Highlighter> m_highlighter;

@@ -10,8 +10,8 @@
 
 #include <vtkGenericOpenGLRenderWindow.h>
 
-#include <core/t_QVTKWidget.h>
 #include <gui/data_view/RendererImplementation.h>
+#include <gui/data_view/t_QVTKWidget.h>
 
 
 AbstractRenderView::AbstractRenderView(DataMapping & dataMapping, int index, QWidget * parent, Qt::WindowFlags flags)
@@ -175,6 +175,21 @@ void AbstractRenderView::showInfoText(const QString & info)
 QString AbstractRenderView::infoText() const
 {
     return toolTip();
+}
+
+void AbstractRenderView::setInfoTextCallback(std::function<QString()> callback)
+{
+    disconnect(m_infoTextConnection);
+    m_infoTextCallback = callback;
+
+    if (m_infoTextCallback)
+    {
+        m_infoTextConnection = connect(&qvtkWidget(), &t_QVTKWidget::beforeTooltipPopup, 
+            [this] ()
+        {
+            showInfoText(m_infoTextCallback());
+        });
+    }
 }
 
 QWidget * AbstractRenderView::contentWidget()

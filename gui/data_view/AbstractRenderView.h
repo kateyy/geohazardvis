@@ -1,9 +1,11 @@
 #pragma once
 
+#include <functional>
+
 #include <core/types.h>
-#include <core/t_QVTKWidgetFwd.h>
 
 #include <gui/data_view/AbstractDataView.h>
+#include <gui/data_view/t_QVTKWidgetFwd.h>
 
 
 class vtkRenderWindow;
@@ -75,6 +77,10 @@ public:
     void showInfoText(const QString & text);
     QString infoText() const;
 
+    /** Set a function that is called each time an info text is required.
+    * This can be used to implement the text update in a pull instead of a push style. */
+    void setInfoTextCallback(std::function<QString()> callback);
+
 signals:
     /** emitted after changing the list of visible objects */
     void visualizationsChanged();
@@ -115,4 +121,7 @@ private:
     bool m_axesEnabled;
 
     unsigned int m_activeSubViewIndex;
+
+    QMetaObject::Connection m_infoTextConnection;
+    std::function<QString()> m_infoTextCallback;
 };

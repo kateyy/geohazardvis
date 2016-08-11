@@ -13,8 +13,6 @@ set(sources
     DataSetHandler.cpp
     RuntimeInfo.h
     RuntimeInfo.cpp
-    t_QVTKWidget.h
-    t_QVTKWidgetFwd.h
     types.h
     TextureManager.h
     TextureManager.cpp
