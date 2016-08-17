@@ -797,7 +797,7 @@ void DEMWidget::updatePreviewRendererContents()
     }
 
     bool resetTopoVis = false;
-    if (!m_lastPreviewedTopo && currentTopo)
+    if (m_lastPreviewedTopo != currentTopo)
     {
         resetTopoVis = true;
     }

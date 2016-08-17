@@ -119,7 +119,9 @@ AbstractRenderView * DataMapping::openInRenderView(const QList<DataObject *> & d
     bool viewStillOpen = addToRenderView(dataObjects, renderView);
 
     if (!viewStillOpen)
+    {
         return nullptr;
+    }
 
     setFocusedView(renderView);
 
@@ -153,7 +155,11 @@ bool DataMapping::addToRenderView(const QList<DataObject *> & dataObjects, Abstr
 
 AbstractRenderView * DataMapping::createDefaultRenderViewType()
 {
-    return createRenderView<RenderView>();
+    auto renderView = createRenderView<RenderView>();
+
+    setFocusedView(renderView);
+
+    return renderView;
 }
 
 AbstractRenderView * DataMapping::focusedRenderView()
