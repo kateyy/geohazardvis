@@ -9,6 +9,7 @@ set(sources
     BinaryFile_test.cpp
     DataExtent_test.cpp
     DataObject_test.cpp
+    DataSetFilter_test.cpp
     DataSetHandler_test.cpp
     DEMToTopographyMesh_test.cpp
     RenderedData_test.cpp

@@ -50,15 +50,15 @@ DataSetFilter::ScopedLock::~ScopedLock()
 {
     if (m_dataSetFilter)
     {
-        m_dataSetFilter->discardUpdates(std::move(m_lock));
+        m_dataSetFilter->releaseUpdates(std::move(m_lock));
     }
 }
 
-void DataSetFilter::ScopedLock::release()
+void DataSetFilter::ScopedLock::discardFurtherUpdates()
 {
     if (m_dataSetFilter)
     {
-        m_dataSetFilter->releaseUpdates(std::move(m_lock));
+        m_dataSetFilter->discardUpdates(std::move(m_lock));
     }
 
     m_dataSetFilter = nullptr;

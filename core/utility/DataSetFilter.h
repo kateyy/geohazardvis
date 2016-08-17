@@ -35,15 +35,16 @@ public:
 
     const QList<DataObject *> & filteredDataSetList() const;
 
-    /** Calls blockUpdates on construction and, if release was not called, discardUpdates on deletion.
-      * release redirects to releaseUpdates. If release is called, the destructor doesn't do anything. */
+    /** Calls blockUpdates on construction and, by default, releaseUpdates on deletion.
+      * If discardFurtherUpdates is called, the filter function be unset, thus blocking all further
+      * update calls. */
     class CORE_API ScopedLock
     {
     public:
         explicit ScopedLock(DataSetFilter & dataSetFilter);
         ~ScopedLock();
 
-        void release();
+        void discardFurtherUpdates();
 
         ScopedLock(ScopedLock && other);
         ScopedLock(const ScopedLock &) = delete;

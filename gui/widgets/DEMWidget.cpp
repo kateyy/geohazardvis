@@ -473,8 +473,8 @@ void DEMWidget::saveAndClose()
         return;
     }
 
-    topoLock.release();
-    demLock.release();
+    topoLock.discardFurtherUpdates();
+    demLock.discardFurtherUpdates();
 }
 
 void DEMWidget::matchTopoMeshRadius()
