@@ -564,7 +564,6 @@ void DEMWidget::setupPipeline()
     m_meshPipelineStart = cleanupMeshAttributes;
 
     m_demToLocalFilter = vtkSmartPointer<SimpleDEMGeoCoordToLocalFilter>::New();
-    m_demToLocalFilter->SetUseNorthWestAsOrigin(true);
     m_demToLocalFilter->SetEnabled(m_ui->demToLocalCoordsCheckBox->isChecked());
     m_demPipelineStart = m_demToLocalFilter;
 

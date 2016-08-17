@@ -19,8 +19,6 @@ vtkStandardNewMacro(SimpleDEMGeoCoordToLocalFilter);
 SimpleDEMGeoCoordToLocalFilter::SimpleDEMGeoCoordToLocalFilter()
     : Superclass()
     , Enabled{ true }
-    , UseNorthWestAsOrigin{ true }
-    , GeoOrigin{ 0.0, 0.0 }
     , TranslateFilter{ vtkSmartPointer<vtkImageChangeInformation>::New() }
     , ScaleFilter{ vtkSmartPointer<vtkImageChangeInformation>::New() }
 {
@@ -48,12 +46,6 @@ int SimpleDEMGeoCoordToLocalFilter::RequestDataObject(vtkInformation * /*request
         this->ScaleFilter->GetOutput());
 
     return 1;
-}
-
-const vtkVector2d & SimpleDEMGeoCoordToLocalFilter::GetGeoOrigin()
-{
-    vtkDebugMacro(<< this->GetClassName() << " (" << this << "): returning GeoOrigin of " << this->GeoOrigin);
-    return this->GeoOrigin;
 }
 
 int SimpleDEMGeoCoordToLocalFilter::RequestInformation(vtkInformation * request, 
@@ -88,7 +80,7 @@ int SimpleDEMGeoCoordToLocalFilter::RequestInformation(vtkInformation * request,
         return 0;
     }
 
-    SetParameters(inBounds.min());
+    SetParameters(convertTo<2>(inBounds.center()));
 
     this->ScaleFilter->UpdateInformation();
     auto internalOutInfo = this->ScaleFilter->GetOutputInformation(0);
@@ -124,14 +116,14 @@ int SimpleDEMGeoCoordToLocalFilter::RequestData(vtkInformation * /*request*/,
     return this->ScaleFilter->GetExecutive()->Update();
 }
 
-void SimpleDEMGeoCoordToLocalFilter::SetParameters(const vtkVector3d & inputGeoNorthWest)
+void SimpleDEMGeoCoordToLocalFilter::SetParameters(const vtkVector2d & inputGeoCentroid)
 {
     // approximations for regions not larger than a few hundreds of kilometers:
      /*
      auto transformApprox = [earthR] (double Fi, double La, double Fi0, double La0, double & X, double & Y)
      {
      Y = earthR * (Fi - Fi0) * vtkMath::Pi() / 180;
-     X = earthR * (La - La0) * std::cos(Fi0 / 180 * vtkMath::Pi()) * vtkMath::Pi() / 180;
+     X = earthR * (La - La0) * std::cos(Fi0 * vtkMath::Pi() / 180a ) * vtkMath::Pi() / 180;
      };
      */
 
@@ -141,12 +133,8 @@ void SimpleDEMGeoCoordToLocalFilter::SetParameters(const vtkVector3d & inputGeoN
     {
         static const double earthR = 6378.138;
 
-        const auto geoOrigin = this->UseNorthWestAsOrigin
-            ? convertTo<2>(inputGeoNorthWest)
-            : this->GeoOrigin;
-
-        const auto Fi0 = geoOrigin[0];   // most western longitude (Greek lambda)
-        const auto La0 = geoOrigin[1];   // most northern latitude (Greek phi)
+        const auto Fi0 = inputGeoCentroid[0];   // average longitude (Greek lambda)
+        const auto La0 = inputGeoCentroid[1];   // average latitude (Greek phi)
 
         toLocalTranslation = vtkVector3d{
             -La0,
@@ -154,7 +142,7 @@ void SimpleDEMGeoCoordToLocalFilter::SetParameters(const vtkVector3d & inputGeoN
             0.0
         };
         toLocalScale = vtkVector3d{
-            earthR * std::cos(Fi0) * vtkMath::Pi() / 180.0,
+            earthR * std::cos(Fi0 * vtkMath::Pi() / 180.0) * vtkMath::Pi() / 180.0,
             earthR * vtkMath::Pi() / 180.0,
             0.0  // flattening, elevation is stored in scalars
         };

@@ -2,12 +2,12 @@
 
 #include <vtkImageAlgorithm.h>
 #include <vtkSmartPointer.h>
-#include <vtkVector.h>
 
 #include <core/core_api.h>
 
 
 class vtkImageChangeInformation;
+class vtkVector2d;
 
 
 /** This filter transforms a DEM grid from geographic coordinates (latitude, longitude)
@@ -21,12 +21,6 @@ public:
 
     vtkGetMacro(Enabled, bool);
     vtkSetMacro(Enabled, bool);
-
-    vtkGetMacro(UseNorthWestAsOrigin, bool);
-    vtkSetMacro(UseNorthWestAsOrigin, bool);
-
-    const vtkVector2d & GetGeoOrigin();
-    vtkSetMacro(GeoOrigin, vtkVector2d);
 
 protected:
     SimpleDEMGeoCoordToLocalFilter();
@@ -52,12 +46,10 @@ private:
     SimpleDEMGeoCoordToLocalFilter(const SimpleDEMGeoCoordToLocalFilter &) = delete;
     void operator=(const SimpleDEMGeoCoordToLocalFilter &) = delete;
 
-    void SetParameters(const vtkVector3d & inputGeoNorthWest);
+    void SetParameters(const vtkVector2d & inputGeoCentroid);
 
 private:
     bool Enabled;
-    bool UseNorthWestAsOrigin;
-    vtkVector2d GeoOrigin;
 
     vtkSmartPointer<vtkImageChangeInformation> TranslateFilter;
     vtkSmartPointer<vtkImageChangeInformation> ScaleFilter;
