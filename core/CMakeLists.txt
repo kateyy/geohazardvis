@@ -48,12 +48,12 @@ set(sources
     data_objects/VectorGrid3DDataObject.h
     data_objects/VectorGrid3DDataObject.cpp
 
+    filters/ArrayChangeInformationFilter.h
+    filters/ArrayChangeInformationFilter.cpp
     filters/CentroidAsScalarsFilter.h
     filters/CentroidAsScalarsFilter.cpp
     filters/DEMToTopographyMesh.h
     filters/DEMToTopographyMesh.cpp
-    filters/ArrayRenameFilter.h
-    filters/ArrayRenameFilter.cpp
     filters/ImagePlaneWidget.h
     filters/ImagePlaneWidget.cpp
     filters/LinearSelectorXY.h

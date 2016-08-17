@@ -23,7 +23,7 @@
 
 #include <core/color_mapping/ColorMappingData.h>
 #include <core/data_objects/VectorGrid3DDataObject.h>
-#include <core/filters/ArrayRenameFilter.h>
+#include <core/filters/ArrayChangeInformationFilter.h>
 #include <core/filters/ImagePlaneWidget.h>
 
 
@@ -425,8 +425,8 @@ vtkAlgorithmOutput * RenderedVectorGrid3D::colorMappingInput(int connection)
     {
         bool hasVectors = dataObject().dataSet()->GetPointData()->GetVectors() != nullptr;
 
-        auto rename = vtkSmartPointer<ArrayRenameFilter>::New();
-        rename->SetScalarsName(dataObject().dataSet()->GetPointData()->GetScalars()->GetName());
+        auto rename = vtkSmartPointer<ArrayChangeInformationFilter>::New();
+        rename->SetArrayName(dataObject().dataSet()->GetPointData()->GetScalars()->GetName());
         rename->SetInputConnection(m_planeWidgets[connection]->GetReslice()->GetOutputPort());
         filter = rename;
 
