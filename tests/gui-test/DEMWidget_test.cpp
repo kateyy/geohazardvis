@@ -16,6 +16,7 @@
 #include <core/utility/DataExtent.h>
 #include <core/utility/vtkvectorhelper.h>
 #include <gui/DataMapping.h>
+#include <gui/data_view/AbstractRenderView.h>
 #include <gui/widgets/DEMWidget.h>
 
 #include "app_helper.h"
@@ -59,7 +60,7 @@ public:
     static TestEnv env;
 
 
-    static std::unique_ptr<PolyDataObject> generateTopo()
+    static std::unique_ptr<PolyDataObject> generateTopo(const QString & name = "Topo")
     {
         const double r = 10.f;
         const double top = 0, right = 1, bottom = 2, left = 3, center = 4;
@@ -79,12 +80,20 @@ public:
             points, 0, 1,
             triangleIds, 0);
 
-        return std::make_unique<PolyDataObject>("Topo", *poly);
+        return std::make_unique<PolyDataObject>(name, *poly);
+    }
+
+    static std::unique_ptr<ImageDataObject> generateDEM(const QString & name)
+    {
+        return generateDEM(ImageExtent({ 0, 10, 0, 20, 0, 0 }),
+            ValueRange<double>({ -3, 3 }),
+            name);
     }
 
     static std::unique_ptr<ImageDataObject> generateDEM(
         const ImageExtent & extent = ImageExtent({0, 10, 0, 20, 0, 0}),
-        const ValueRange<double> & elevationRange = ValueRange<double>({ -3, 3 }))
+        const ValueRange<double> & elevationRange = ValueRange<double>({ -3, 3 }),
+        const QString & name = "DEM")
     {
         auto ext = extent;
         auto demData = vtkSmartPointer<vtkImageData>::New();
@@ -97,7 +106,7 @@ public:
         }
         demData->GetPointData()->GetScalars()->SetName("Elevations");
 
-        return std::make_unique<ImageDataObject>("DEM", *demData);
+        return std::make_unique<ImageDataObject>(name, *demData);
     }
 };
 
@@ -240,4 +249,49 @@ TEST_F(DEMWidget_test, DEMTransformedToLocal)
     ASSERT_TRUE(demElevationRange.contains(newElevationRange));
     ASSERT_GT(newElevationRange.componentSize(), 0.0);
     ASSERT_TRUE(newElevationRange.contains(0.0));
+}
+
+TEST_F(DEMWidget_test, ShowPreview)
+{
+    auto topo = generateTopo("topo1");
+    auto dem = generateDEM("dem1");
+
+    env.dataSetHandler->addExternalData({ topo.get(), dem.get() });
+
+    Test_DEMWidget demWidget;
+    demWidget.setDEM(dem.get());
+    demWidget.setMeshTemplate(topo.get());
+    ASSERT_NO_THROW(demWidget.showPreview());
+
+    ASSERT_EQ(1, env.dataMapping->renderViews().size());
+
+    auto & previewWindow = *env.dataMapping->renderViews().first();
+    const auto visDataObjects = previewWindow.dataObjects();
+
+    // simulate normal GUI behavior. The main window would normally add the render view to itself,
+    // thus triggering an actual close event on shutdown. The deletion of visualization is done
+    // in the close event, and it won't work correctly without showing the data view once.
+    previewWindow.show();
+}
+
+TEST_F(DEMWidget_test, DeleteCurrentDemAndTopo)
+{
+    auto dem1 = static_cast<ImageDataObject *>(env.dataSetHandler->takeData(generateDEM()));
+    auto topo1 = static_cast<PolyDataObject *>(env.dataSetHandler->takeData(generateTopo()));
+
+    auto topo2 = generateTopo("topo2");
+    auto dem2 = generateDEM("dem2");
+
+    env.dataSetHandler->addExternalData({ topo2.get(), dem2.get() });
+
+    Test_DEMWidget demWidget;
+    demWidget.setDEM(dem1);
+    demWidget.setMeshTemplate(topo1);
+    demWidget.showPreview();
+    auto & previewRenderer = *env.dataMapping->renderViews().first();
+    previewRenderer.show();
+
+    ASSERT_NO_THROW(env.dataSetHandler->deleteData({ topo1, dem1 }));
+
+    previewRenderer.close();
 }

@@ -26,7 +26,7 @@ public:
 
     /** Add data objects to the global data management.
         The DataSetHandler will take ownership of this data, so it can also delete it at any time. */
-    void takeData(std::unique_ptr<DataObject> dataObject);
+    DataObject * takeData(std::unique_ptr<DataObject> dataObject);
     void takeData(std::vector<std::unique_ptr<DataObject>> dataObjects);
     void deleteData(const QList<DataObject *> & dataObjects);
 

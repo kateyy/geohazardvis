@@ -45,15 +45,19 @@ DataSetHandler::DataSetHandler()
 
 DataSetHandler::~DataSetHandler() = default;
 
-void DataSetHandler::takeData(std::unique_ptr<DataObject> dataObject)
+DataObject * DataSetHandler::takeData(std::unique_ptr<DataObject> dataObject)
 {
     // passing by value requires callers to use "unique_ptr<..> obj; takeData(move(obj));"
     // thus, it's more explicit "move" on the caller's side
+
+    DataObject * rawPtr = dataObject.get();
 
     // initializer list don't support move semantics, so we need a push_back(move...)) here
     std::vector<std::unique_ptr<DataObject>> vec;
     vec.push_back(std::move(dataObject));
     takeData(move(vec));
+
+    return rawPtr;
 }
 
 void DataSetHandler::takeData(std::vector<std::unique_ptr<DataObject>> dataObjects)
@@ -139,9 +143,11 @@ void DataSetHandler::deleteData(const QList<DataObject *> & dataObjects)
 {
     bool dataChanged = false, rawDataChanged = false;
 
+    std::vector<std::unique_ptr<DataObject>> dataToDelete;
+
     {
         std::lock_guard<std::mutex>(d_ptr->mutex);
-        for (DataObject * dataObject : dataObjects)
+        for (auto dataObject : dataObjects)
         {
             // deleteData might be called multiple times for fast interactions, 
             // so check if we already processed this request.
@@ -168,7 +174,9 @@ void DataSetHandler::deleteData(const QList<DataObject *> & dataObjects)
                 auto it = findUnique(d_ptr->rawVectors, dataObject);
                 // we can only delete data that we own
                 if (it == d_ptr->rawVectors.end())
+                {
                     continue;
+                }
 
                 d_ptr->rawVectors.erase(it);
                 d_ptr->allRawVectors.removeOne(rawData);
@@ -180,8 +188,11 @@ void DataSetHandler::deleteData(const QList<DataObject *> & dataObjects)
             auto it = findUnique(d_ptr->dataSets, dataObject);
             // we can only delete data that we own
             if (it == d_ptr->dataSets.end())
+            {
                 continue;
+            }
 
+            dataToDelete.push_back(std::move(*it));
             d_ptr->dataSets.erase(it);
             d_ptr->allDataSets.removeOne(dataObject);
             d_ptr->dataSetOwnerships.remove(dataObject);
