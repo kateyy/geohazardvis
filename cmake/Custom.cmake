@@ -1,17 +1,26 @@
 
 include(CppCheckTargets)
 
+include(CMakeParseArguments)    # include not required in CMake 3.5+
+
+set(PLUGIN_TARGETS_DOC_STRING "Ensure that the main executable is always run with up to date plugin libraries.")
+set(PLUGIN_TARGETS "" CACHE INTERNAL ${PLUGIN_TARGETS_DOC_STRING})
+
 function(configure_cxx_target target)
+
+    cmake_parse_arguments(option
+        "PLUGIN_TARGET AUX_PLUGIN_TARGET NO_CPPCHECK"
+        "IDE_FOLDER"
+        ""
+        ${ARGN})
+    
+    if (NOT option_IDE_FOLDER)
+        set(option_IDE_FOLDER ${IDE_FOLDER})
+    endif()
 
     target_compile_definitions(${target} PRIVATE ${DEFAULT_COMPILE_DEFS} ${VTK_DEFINITIONS})
 
     target_compile_options(${target} PRIVATE ${DEFAULT_COMPILE_FLAGS})
-
-    if (ARGV1)
-        set(_ideFolder ${ARGV1})
-    else()
-        set(_ideFolder ${IDE_FOLDER})
-    endif()
 
     set_target_properties(${target}
         PROPERTIES
@@ -23,7 +32,7 @@ function(configure_cxx_target target)
         DEBUG_POSTFIX                       "_d${DEBUG_POSTFIX}"
         RELWITHDEBINFO_POSTFIX              "_rd${DEBUG_POSTFIX}"
         RELNOOPTIMIZATION_POSTFIX           "_rd0${DEBUG_POSTFIX}"
-        FOLDER                              "${_ideFolder}"
+        FOLDER                              "${option_IDE_FOLDER}"
     )
 
     if (NOT CMAKE_VERSION VERSION_LESS 3.1)
@@ -34,44 +43,35 @@ function(configure_cxx_target target)
         )
     endif()
 
-    cppcheck_target(${target})
-
-endfunction()
-
-set(PLUGIN_TARGETS_DOC_STRING "Ensure that the main executable is always run with up to date plugin libraries.")
-set(PLUGIN_TARGETS "" CACHE INTERNAL ${PLUGIN_TARGETS_DOC_STRING})
-
-function(configure_auxiliary_cxx_plugin_target target)
-
-    configure_cxx_target(${target})
-
-    # TODO replace by generator expressions, once requiring CMake 3.4
-    if(generatorIsMultiConfig)
-        foreach(_config Debug Release RelWithDebInfo RelNoOptimization)
-            string(TOUPPER ${_config} _configUpper)
+    if (NOT option_NO_CPPCHECK)
+        cppcheck_target(${target})
+    endif()
+    
+    if (option_AUX_PLUGIN_TARGET OR option_PLUGIN_TARGET)
+        # TODO replace by generator expressions, once requiring CMake 3.4
+        if(generatorIsMultiConfig)
+            foreach(_config Debug Release RelWithDebInfo RelNoOptimization)
+                string(TOUPPER ${_config} _configUpper)
+                set_target_properties(${target}
+                    PROPERTIES
+                    RUNTIME_OUTPUT_DIRECTORY_${_configUpper} "${CMAKE_BINARY_DIR}/${_config}/plugins"
+                    LIBRARY_OUTPUT_DIRECTORY_${_configUpper} "${CMAKE_BINARY_DIR}/${_config}/plugins"
+                    ARCHIVE_OUTPUT_DIRECTORY_${_configUpper} "${CMAKE_BINARY_DIR}/${_config}/plugins"
+                )
+            endforeach()
+        else()
             set_target_properties(${target}
                 PROPERTIES
-                RUNTIME_OUTPUT_DIRECTORY_${_configUpper} "${CMAKE_BINARY_DIR}/${_config}/plugins"
-                LIBRARY_OUTPUT_DIRECTORY_${_configUpper} "${CMAKE_BINARY_DIR}/${_config}/plugins"
-                ARCHIVE_OUTPUT_DIRECTORY_${_configUpper} "${CMAKE_BINARY_DIR}/${_config}/plugins"
+                RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/plugins"
+                LIBRARY_OUTPUT_DIRECTORY "${RUNTIME_OUTPUT_DIRECTORY}"
+                ARCHIVE_OUTPUT_DIRECTORY "${RUNTIME_OUTPUT_DIRECTORY}"
             )
-        endforeach()
-    else()
-        set_target_properties(${target}
-            PROPERTIES
-            RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/plugins"
-            LIBRARY_OUTPUT_DIRECTORY "${RUNTIME_OUTPUT_DIRECTORY}"
-            ARCHIVE_OUTPUT_DIRECTORY "${RUNTIME_OUTPUT_DIRECTORY}"
-        )
+        endif()
     endif()
-
-endfunction()
-
-function(configure_cxx_plugin target)
-
-    configure_auxiliary_cxx_plugin_target(${target})
-
-    set(PLUGIN_TARGETS "${PLUGIN_TARGETS};${target}" CACHE INTERNAL ${PLUGIN_TARGETS_DOC_STRING})
+    
+    if (option_PLUGIN_TARGET)
+        set(PLUGIN_TARGETS "${PLUGIN_TARGETS};${target}" CACHE INTERNAL ${PLUGIN_TARGETS_DOC_STRING})
+    endif()
 
 endfunction()
 

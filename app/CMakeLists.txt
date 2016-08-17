@@ -19,7 +19,7 @@ if (PLUGIN_TARGETS)
     add_dependencies(${target} ${PLUGIN_TARGETS})
 endif()
 
-configure_cxx_target( ${target} )
+configure_cxx_target(${target})
 setupProjectUserConfig(${target})
 
 install(TARGETS ${target}

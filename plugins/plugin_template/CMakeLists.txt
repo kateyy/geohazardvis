@@ -23,7 +23,7 @@ target_link_libraries(${target}
     gui
 )
 
-configure_cxx_plugin(${target})
+configure_cxx_target(${target} PLUGIN_TARGET)
 
 
 # install(TARGETS ${target}

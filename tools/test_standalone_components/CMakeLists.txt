@@ -12,7 +12,7 @@ source_group_by_path(${CMAKE_CURRENT_SOURCE_DIR} ".*" "" "CMakeLists.txt")
 
 add_executable(${target} ${sources})
 
-target_link_libraries( ${target}
+target_link_libraries(${target}
     # ${LIBZEUG_REFLECTION_LIBRARY}
     # ${LIBZEUG_SIGNAL_LIBRARY}
     ${VTK_LIBRARIES}
@@ -28,5 +28,5 @@ target_include_directories(${target} SYSTEM
         ${LIBZEUG_REFLECTION_INCLUDE_DIR}
 )
 
-configure_cxx_target( ${target} )
+configure_cxx_target(${target})
 setupProjectUserConfig(${target})

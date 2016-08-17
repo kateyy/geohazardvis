@@ -22,5 +22,5 @@ target_link_libraries(${target}
     ${GTEST_LIBRARIES}
 )
 
-configure_cxx_target(${target})
+configure_cxx_target(${target} NO_CPPCHECK)
 setupProjectUserConfig(${target})
