@@ -21,16 +21,57 @@ set(sources
 
     canvas_export/CanvasExporter.h
     canvas_export/CanvasExporter.cpp
-    canvas_export/CanvasExporterRegistry.h
-    canvas_export/CanvasExporterRegistry.cpp
     canvas_export/CanvasExporterImages.h
     canvas_export/CanvasExporterImages.cpp
     canvas_export/CanvasExporterPNG.h
     canvas_export/CanvasExporterPNG.cpp
     canvas_export/CanvasExporterPS.h
     canvas_export/CanvasExporterPS.cpp
+    canvas_export/CanvasExporterRegistry.h
+    canvas_export/CanvasExporterRegistry.cpp
     canvas_export/CanvasExporterTIFF.h
     canvas_export/CanvasExporterTIFF.cpp
+
+    color_mapping/AttributeArrayComponentMapping.h
+    color_mapping/AttributeArrayComponentMapping.cpp
+    color_mapping/ColorBarRepresentation.h
+    color_mapping/ColorBarRepresentation.cpp
+    color_mapping/ColorMapping.h
+    color_mapping/ColorMapping.cpp
+    color_mapping/ColorMappingData.h
+    color_mapping/ColorMappingData.hpp
+    color_mapping/ColorMappingData.cpp
+    color_mapping/ColorMappingRegistry.h
+    color_mapping/ColorMappingRegistry.cpp
+    color_mapping/DefaultColorMapping.h
+    color_mapping/DefaultColorMapping.cpp
+    color_mapping/DirectImageColors.h
+    color_mapping/DirectImageColors.cpp
+    color_mapping/GlyphColorMapping.h
+    color_mapping/GlyphColorMapping.cpp
+    color_mapping/GlyphColorMappingGlyphListener.h
+    color_mapping/GlyphColorMappingGlyphListener.cpp
+    color_mapping/GlyphMagnitudeColorMapping.h
+    color_mapping/GlyphMagnitudeColorMapping.cpp
+    color_mapping/GradientResourceManager.h
+    color_mapping/GradientResourceManager.cpp
+    color_mapping/ImageDataLIC2DMapping.h
+    color_mapping/ImageDataLIC2DMapping.cpp
+    color_mapping/SlopeAngleMapping.h
+    color_mapping/SlopeAngleMapping.cpp
+    color_mapping/VectorMagnitudeColorMapping.h
+    color_mapping/VectorMagnitudeColorMapping.cpp
+    color_mapping/VertexComponentColorMapping.h
+    color_mapping/VertexComponentColorMapping.cpp
+
+    context2D_data/Context2DData.h
+    context2D_data/Context2DData.cpp
+    context2D_data/ImageProfileContextPlot.h
+    context2D_data/ImageProfileContextPlot.cpp
+    context2D_data/vtkContextItemCollection.h
+    context2D_data/vtkContextItemCollection.cpp
+    context2D_data/vtkPlotCollection.h
+    context2D_data/vtkPlotCollection.cpp
 
     data_objects/DataObject.h
     data_objects/DataObject.hpp
@@ -67,6 +108,18 @@ set(sources
     filters/TransformTextureCoords.h
     filters/TransformTextureCoords.cxx
 
+    glyph_mapping/GlyphMapping.h
+    glyph_mapping/GlyphMapping.cpp
+    glyph_mapping/GlyphMappingData.h
+    glyph_mapping/GlyphMappingData.hpp
+    glyph_mapping/GlyphMappingData.cpp
+    glyph_mapping/GlyphMappingRegistry.h
+    glyph_mapping/GlyphMappingRegistry.cpp
+    glyph_mapping/Grid3dGlyphMapping.h
+    glyph_mapping/Grid3dGlyphMapping.cpp
+    glyph_mapping/PolyDataAttributeGlyphMapping.h
+    glyph_mapping/PolyDataAttributeGlyphMapping.cpp
+
     io/BinaryFile.h
     io/BinaryFile.hpp
     io/BinaryFile.cpp
@@ -83,6 +136,10 @@ set(sources
     io/TextFileReader.cpp
     io/types.h
 
+    reflectionzeug_extension/QStringProperty.h
+    reflectionzeug_extension/QStringProperty.hpp
+    reflectionzeug_extension/QStringProperty.cpp
+
     rendered_data/RenderedData.h
     rendered_data/RenderedData.cpp
     rendered_data/RenderedData3D.h
@@ -93,15 +150,6 @@ set(sources
     rendered_data/RenderedPolyData.cpp
     rendered_data/RenderedVectorGrid3D.h
     rendered_data/RenderedVectorGrid3D.cpp
-
-    context2D_data/Context2DData.h
-    context2D_data/Context2DData.cpp
-    context2D_data/ImageProfileContextPlot.h
-    context2D_data/ImageProfileContextPlot.cpp
-    context2D_data/vtkContextItemCollection.h
-    context2D_data/vtkContextItemCollection.cpp
-    context2D_data/vtkPlotCollection.h
-    context2D_data/vtkPlotCollection.cpp
 
     table_model/QVtkTableModel.h
     table_model/QVtkTableModel.cpp
@@ -115,54 +163,6 @@ set(sources
     table_model/QVtkTableModelRawVector.cpp
     table_model/QVtkTableModelVectorGrid3D.h
     table_model/QVtkTableModelVectorGrid3D.cpp
-
-    color_mapping/ColorBarRepresentation.h
-    color_mapping/ColorBarRepresentation.cpp
-    color_mapping/ColorMapping.h
-    color_mapping/ColorMapping.cpp
-    color_mapping/ColorMappingData.h
-    color_mapping/ColorMappingData.hpp
-    color_mapping/ColorMappingData.cpp
-    color_mapping/ColorMappingRegistry.h
-    color_mapping/ColorMappingRegistry.cpp
-    color_mapping/AttributeArrayComponentMapping.h
-    color_mapping/AttributeArrayComponentMapping.cpp
-    color_mapping/DefaultColorMapping.h
-    color_mapping/DefaultColorMapping.cpp
-    color_mapping/DirectImageColors.h
-    color_mapping/DirectImageColors.cpp
-    color_mapping/GlyphColorMapping.h
-    color_mapping/GlyphColorMapping.cpp
-    color_mapping/GlyphColorMappingGlyphListener.h
-    color_mapping/GlyphColorMappingGlyphListener.cpp
-    color_mapping/GlyphMagnitudeColorMapping.h
-    color_mapping/GlyphMagnitudeColorMapping.cpp
-    color_mapping/GradientResourceManager.h
-    color_mapping/GradientResourceManager.cpp
-    color_mapping/ImageDataLIC2DMapping.h
-    color_mapping/ImageDataLIC2DMapping.cpp
-    color_mapping/SlopeAngleMapping.h
-    color_mapping/SlopeAngleMapping.cpp
-    color_mapping/VectorMagnitudeColorMapping.h
-    color_mapping/VectorMagnitudeColorMapping.cpp
-    color_mapping/VertexComponentColorMapping.h
-    color_mapping/VertexComponentColorMapping.cpp
-
-    glyph_mapping/GlyphMapping.h
-    glyph_mapping/GlyphMapping.cpp
-    glyph_mapping/GlyphMappingData.h
-    glyph_mapping/GlyphMappingData.hpp
-    glyph_mapping/GlyphMappingData.cpp
-    glyph_mapping/GlyphMappingRegistry.h
-    glyph_mapping/GlyphMappingRegistry.cpp
-    glyph_mapping/Grid3dGlyphMapping.h
-    glyph_mapping/Grid3dGlyphMapping.cpp
-    glyph_mapping/PolyDataAttributeGlyphMapping.h
-    glyph_mapping/PolyDataAttributeGlyphMapping.cpp
-
-    reflectionzeug_extension/QStringProperty.h
-    reflectionzeug_extension/QStringProperty.hpp
-    reflectionzeug_extension/QStringProperty.cpp
 
     ThirdParty/alphanum.hpp
     ThirdParty/dark_fusion_style.hpp
