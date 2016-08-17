@@ -22,11 +22,13 @@
 #include <vtkPropPicker.h>
 #include <vtkScalarsToColors.h>
 #include <vtkVector.h>
+#include <vtkVersionMacros.h>
 
 #include <core/types.h>
 #include <core/data_objects/ImageDataObject.h>
 #include <core/data_objects/PolyDataObject.h>
 #include <core/rendered_data/RenderedData.h>
+#include <core/utility/macros.h>
 
 
 Picker::Picker()
@@ -286,6 +288,15 @@ void Picker::printScalarInfo(QTextStream & stream, vtkScalarsToColors * lut,
     auto tuple = std::vector<double>(scalars.GetNumberOfComponents());
     scalars.GetTuple(pickedIndex, tuple.data());
 
+    QString unitStr;
+#if VTK_CHECK_VERSION(7, 1, 0)
+    unitStr = scalars.GetInformation()->Get(vtkDataArray::UNITS_LABEL());
+    if (!unitStr.isEmpty())
+    {
+        unitStr.prepend(" ");
+    }
+#endif
+
     if (lut)
     {
         const auto component = lut->GetVectorComponent();
@@ -297,17 +308,17 @@ void Picker::printScalarInfo(QTextStream & stream, vtkScalarsToColors * lut,
         {
             stream << " (Component " << component + 1 << ")";
         }
-        stream << endl << "Value: " << value;
+        stream << endl << "Value: " << value << unitStr;
     }
     else if (tuple.size() == 3 || tuple.size() == 4)
     {
         stream << endl << "Color" << endl;
-        stream << "R: " << tuple[0] << endl;
-        stream << "G: " << tuple[1] << endl;
-        stream << "B: " << tuple[2] << endl;
+        stream << "R: " << tuple[0] << unitStr << endl;
+        stream << "G: " << tuple[1] << unitStr << endl;
+        stream << "B: " << tuple[2] << unitStr;
         if (tuple.size() == 4)
         {
-            stream << "A: " << tuple[3];
+            stream << endl << "A: " << tuple[3] << unitStr;
         }
     }
 }

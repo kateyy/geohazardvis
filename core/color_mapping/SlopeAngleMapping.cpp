@@ -12,6 +12,7 @@
 #include <core/types.h>
 #include <core/data_objects/PolyDataObject.h>
 #include <core/color_mapping/ColorMappingRegistry.h>
+#include <core/filters/ArrayChangeInformationFilter.h>
 
 
 namespace
@@ -78,26 +79,34 @@ vtkSmartPointer<vtkAlgorithm> SlopeAngleMapping::createFilter(AbstractVisualized
         }
     }
 
-    auto filter = vtkSmartPointer<vtkArrayCalculator>::New();
-    filter->SetInputConnection(visualizedData->colorMappingInput(connection));
-    filter->AddScalarVariable("z", "Normals", 2);
-    filter->SetResultArrayName(arrayName.data());
-    filter->SetAttributeModeToUseCellData();
+    auto calculator = vtkSmartPointer<vtkArrayCalculator>::New();
+    calculator->SetInputConnection(visualizedData->colorMappingInput(connection));
+    calculator->AddScalarVariable("z", "Normals", 2);
+    calculator->SetResultArrayName(arrayName.data());
+    calculator->SetAttributeModeToUseCellData();
     static const auto fun = "acos(z) * 180 / " + [] () {
         std::stringstream piStr;
         piStr.precision(16);
         piStr << vtkMath::Pi(); 
         return piStr.str();
     }();
-    filter->SetFunction(fun.c_str());
+    calculator->SetFunction(fun.c_str());
 
     auto assignAttibute = vtkSmartPointer<vtkAssignAttribute>::New();
-    assignAttibute->SetInputConnection(filter->GetOutputPort());
+    assignAttibute->SetInputConnection(calculator->GetOutputPort());
     assignAttibute->Assign(arrayName.data(), vtkDataSetAttributes::SCALARS, vtkAssignAttribute::CELL_DATA);
 
-    m_filters[visualizedData][connection] = assignAttibute;
+    auto unitSetter = vtkSmartPointer<ArrayChangeInformationFilter>::New();
+    unitSetter->SetInputConnection(assignAttibute->GetOutputPort());
+    unitSetter->SetAttributeLocation(ArrayChangeInformationFilter::CELL_DATA);
+    unitSetter->SetAttributeType(vtkDataSetAttributes::SCALARS);
+    unitSetter->EnableRenameOff();
+    unitSetter->EnableSetUnitOn();
+    unitSetter->SetArrayUnit(QString(QChar(0x00B0)).toUtf8().data());   // degree sign
 
-    return assignAttibute;
+    m_filters[visualizedData][connection] = unitSetter;
+
+    return unitSetter;
 }
 
 bool SlopeAngleMapping::usesFilter() const
