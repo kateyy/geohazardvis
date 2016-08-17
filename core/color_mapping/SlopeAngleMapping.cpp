@@ -13,6 +13,8 @@
 #include <core/data_objects/PolyDataObject.h>
 #include <core/color_mapping/ColorMappingRegistry.h>
 #include <core/filters/ArrayChangeInformationFilter.h>
+#include <core/utility/type_traits.h>
+#include <core/utility/DataExtent.h>
 
 
 namespace
@@ -27,7 +29,7 @@ const bool SlopeAngleMapping::s_isRegistered = ColorMappingRegistry::instance().
 
 std::vector<std::unique_ptr<ColorMappingData>> SlopeAngleMapping::newInstance(const QList<AbstractVisualizedData *> & visualizedData)
 {
-    QList<AbstractVisualizedData *> validVisualizations;
+    Unqualified<decltype(visualizedData)> validVisualizations;
 
     for (auto vis : visualizedData)
     {
@@ -56,6 +58,8 @@ SlopeAngleMapping::SlopeAngleMapping(const QList<AbstractVisualizedData *> & vis
 
     m_isValid = true;
 }
+
+SlopeAngleMapping::~SlopeAngleMapping() = default;
 
 QString SlopeAngleMapping::name() const
 {
@@ -129,7 +133,7 @@ void SlopeAngleMapping::configureMapper(AbstractVisualizedData * visualizedData,
     mapper->SelectColorArray(scalarsName().toUtf8().data());
 }
 
-QMap<int, QPair<double, double>> SlopeAngleMapping::updateBounds()
+std::vector<ValueRange<>> SlopeAngleMapping::updateBounds()
 {
-    return{ { 0, { 0.0, 90.0 } } };
+    return{ decltype(updateBounds())::value_type({ 0.0, 90.0 }) };
 }

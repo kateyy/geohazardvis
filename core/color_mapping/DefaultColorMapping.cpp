@@ -4,8 +4,8 @@
 
 #include <vtkMapper.h>
 
-#include <core/AbstractVisualizedData.h>
 #include <core/types.h>
+#include <core/utility/DataExtent.h>
 
 
 const QString DefaultColorMapping::s_name = "user-defined color";
@@ -31,7 +31,7 @@ void DefaultColorMapping::configureMapper(AbstractVisualizedData * visualizedDat
     }
 }
 
-QMap<int, QPair<double, double>> DefaultColorMapping::updateBounds()
+std::vector<ValueRange<>> DefaultColorMapping::updateBounds()
 {
-    return{ { 0, { 0.0, 0.0 } } };
+    return{ ValueRange<>({ 0.0, 0.0 }) };
 }

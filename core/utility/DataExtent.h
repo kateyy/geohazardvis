@@ -4,14 +4,7 @@
 
 #include <vtkVector.h>
 
-
-template<typename T, size_t Dimensions>
-class DataExtent;
-
-
-using ImageExtent = DataExtent<int, 3u>;
-using DataBounds = DataExtent<double, 3u>;
-template<typename T> using ValueRange = DataExtent<T, 1u>;
+#include <core/utility/DataExtent_fwd.h>
 
 
 template<typename T, size_t Dimensions = 3u>
@@ -89,7 +82,12 @@ public:
     DataExtent & add(const DataExtent & other);
     DataExtent sum(DataExtent other) const;
 
+    /** Returns a copy of this intersected by other. See intersect() */
     DataExtent intersection(DataExtent other) const;
+    /** Minima per dimension are set to the highest value of this and other. The inverse is done
+    * for the maxima per dimension.
+    * An intersection involving an empty extent is always empty. No intersection is computed in
+    * this case, instead the extent is reinitialized. */
     DataExtent & intersect(const DataExtent & other);
 
     template<size_t Dimensions1 = Dimensions>

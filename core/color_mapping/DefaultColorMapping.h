@@ -18,7 +18,7 @@ public:
     void configureMapper(AbstractVisualizedData * visualizedData, vtkAbstractMapper * mapper) override;
 
 protected:
-    QMap<int, QPair<double, double>> updateBounds() override;
+    std::vector<ValueRange<>> updateBounds() override;
 
 private:
     static const QString s_name;

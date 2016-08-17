@@ -183,6 +183,7 @@ set(sources
     utility/conversions.hpp
     utility/DataExtent.h
     utility/DataExtent.hpp
+    utility/DataExtent_fwd.h
     utility/DataSetFilter.h
     utility/DataSetFilter.cpp
     utility/font.h
@@ -199,6 +200,7 @@ set(sources
     utility/memory.hpp
     utility/ScalarBarActor.h
     utility/ScalarBarActor.cpp
+    utility/type_traits.h
     utility/vtkcamerahelper.h
     utility/vtkcamerahelper.cpp
     utility/vtkCameraSynchronization.h

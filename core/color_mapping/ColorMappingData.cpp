@@ -1,13 +1,13 @@
 #include "ColorMappingData.h"
 
 #include <cassert>
-#include <limits>
 
-#include <vtkMapper.h>
+#include <vtkAlgorithm.h>
 #include <vtkLookupTable.h>
 
 #include <core/AbstractVisualizedData.h>
 #include <core/data_objects/DataObject.h>
+#include <core/utility/DataExtent.h>
 #include <core/utility/macros.h>
 
 
@@ -257,26 +257,26 @@ void ColorMappingData::updateBoundsLocked() const
     auto & lockedThis = const_cast<ColorMappingData &>(*this);
 
     auto newBounds = lockedThis.updateBounds();
+    assert(newBounds.size() == m_numDataComponents);
 
     bool minMaxChanged = false;
 
-    for (auto it = newBounds.begin(); it != newBounds.end(); ++it)
+    for (int component = 0; component < m_numDataComponents; ++component)
     {
-        auto component = it.key();
-        const QPair<double, double> & minMax = it.value();
+        const auto & valueRange = newBounds[component];
 
-        assert(minMax.first <= minMax.second);
+        assert(!valueRange.isEmpty());
 
-        if (lockedThis.m_dataMinValue[component] == minMax.first
-            && lockedThis.m_dataMaxValue[component] == minMax.second)
+        if (lockedThis.m_dataMinValue[component] == valueRange.min()
+            && lockedThis.m_dataMaxValue[component] == valueRange.max())
         {
             continue;
         }
 
         minMaxChanged = true;
 
-        lockedThis.m_minValue[component] = lockedThis.m_dataMinValue[component] = minMax.first;
-        lockedThis.m_maxValue[component] = lockedThis.m_dataMaxValue[component] = minMax.second;
+        lockedThis.m_minValue[component] = lockedThis.m_dataMinValue[component] = valueRange.min();
+        lockedThis.m_maxValue[component] = lockedThis.m_dataMaxValue[component] = valueRange.max();
     }
 
     lockedThis.m_boundsValid = true;

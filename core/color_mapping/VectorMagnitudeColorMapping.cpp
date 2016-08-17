@@ -19,6 +19,7 @@
 #include <core/AbstractVisualizedData.h>
 #include <core/data_objects/DataObject.h>
 #include <core/color_mapping/ColorMappingRegistry.h>
+#include <core/utility/DataExtent.h>
 
 
 namespace
@@ -167,17 +168,16 @@ void VectorMagnitudeColorMapping::configureMapper(AbstractVisualizedData * visua
     }
 }
 
-QMap<int, QPair<double, double>> VectorMagnitudeColorMapping::updateBounds()
+std::vector<ValueRange<>> VectorMagnitudeColorMapping::updateBounds()
 {
-    double totalMin = std::numeric_limits<double>::max();
-    double totalMax = std::numeric_limits<double>::lowest();
+    decltype(updateBounds())::value_type totalRange;
 
     for (auto norms : m_vectorNorms.values())
     {
-        for (vtkVectorNorm * norm : norms)
+        for (auto norm : norms)
         {
             norm->Update();
-            vtkDataSet * dataSet = norm->GetOutput();
+            auto dataSet = norm->GetOutput();
             vtkDataArray * normData = nullptr;
             if (m_attributeLocation == vtkAssignAttribute::CELL_DATA)
                 normData = dataSet->GetCellData()->GetScalars();
@@ -185,12 +185,11 @@ QMap<int, QPair<double, double>> VectorMagnitudeColorMapping::updateBounds()
                 normData = dataSet->GetPointData()->GetScalars();
             assert(normData);
 
-            double range[2];
-            normData->GetRange(range);
-            totalMin = std::min(totalMin, range[0]);
-            totalMax = std::max(totalMax, range[1]);
+            decltype(totalRange) range;
+            normData->GetRange(range.data());
+            totalRange.add(range);
         }
     }
 
-    return{ { 0, { totalMin, totalMax } } };
+    return{ totalRange };
 }

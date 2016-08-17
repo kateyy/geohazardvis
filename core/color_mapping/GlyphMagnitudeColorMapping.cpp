@@ -17,6 +17,7 @@
 #include <core/rendered_data/RenderedData3D.h>
 #include <core/glyph_mapping/GlyphMapping.h>
 #include <core/glyph_mapping/GlyphMappingData.h>
+#include <core/utility/DataExtent.h>
 
 
 namespace
@@ -121,14 +122,13 @@ void GlyphMagnitudeColorMapping::configureMapper(AbstractVisualizedData * visual
     }
 }
 
-QMap<int, QPair<double, double>> GlyphMagnitudeColorMapping::updateBounds()
+std::vector<ValueRange<>> GlyphMagnitudeColorMapping::updateBounds()
 {
-    double totalMin = std::numeric_limits<double>::max();
-    double totalMax = std::numeric_limits<double>::lowest();
+    decltype(updateBounds())::value_type totalRange;
 
     for (auto norms : m_vectorNorms.values())
     {
-        for (vtkVectorNorm * norm : norms)
+        for (auto norm : norms)
         {
             assert(norm && norm->GetNumberOfInputConnections(0) > 0);
             norm->Update();
@@ -138,12 +138,11 @@ QMap<int, QPair<double, double>> GlyphMagnitudeColorMapping::updateBounds()
                 normData = norm->GetOutput()->GetCellData()->GetScalars();
             assert(normData);
 
-            double range[2];
-            normData->GetRange(range);
-            totalMin = std::min(totalMin, range[0]);
-            totalMax = std::max(totalMax, range[1]);
+            decltype(totalRange) range;
+            normData->GetRange(range.data());
+            totalRange.add(range);
         }
     }
 
-    return{ { 0, { totalMin, totalMax } } };
+    return{ totalRange };
 }

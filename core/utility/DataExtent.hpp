@@ -300,6 +300,8 @@ auto DataExtent<T, Dimensions>::intersect(const DataExtent & other) -> DataExten
 {
     if (isEmpty() || other.isEmpty())
     {
+        *this = DataExtent();
+
         return *this;
     }
 

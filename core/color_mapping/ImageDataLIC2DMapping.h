@@ -1,5 +1,7 @@
 #pragma once
 
+#include <QMap>
+
 #include <core/color_mapping/ColorMappingData.h>
 
 
@@ -23,7 +25,7 @@ public:
 
 
 protected:
-    QMap<int, QPair<double, double>> updateBounds() override;
+    std::vector<ValueRange<>> updateBounds() override;
 
     vtkRenderWindow * glContext();
 

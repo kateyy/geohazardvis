@@ -20,7 +20,7 @@ public:
 protected:
     static std::vector<std::unique_ptr<ColorMappingData>> newInstances(const QList<AbstractVisualizedData *> & visualizedData);
 
-    QMap<int, QPair<double, double>> updateBounds() override;
+    std::vector<ValueRange<>> updateBounds() override;
 
 private:
     static const bool s_isRegistered;

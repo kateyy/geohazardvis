@@ -5,12 +5,12 @@
 #include <vector>
 
 #include <QList>
-#include <QMap>
 #include <QObject>
 
 #include <vtkSmartPointer.h>
 
 #include <core/core_api.h>
+#include <core/utility/DataExtent_fwd.h>
 
 
 class QString;
@@ -96,8 +96,8 @@ protected:
     virtual void initialize();
 
     /** update data bounds
-        @return a map of component -> (min, max) */
-    virtual QMap<int, QPair<double, double>> updateBounds() = 0;
+        @return a vector containing value ranges per component */
+    virtual std::vector<ValueRange<>> updateBounds() = 0;
 
 protected:
     virtual void lookupTableChangedEvent();

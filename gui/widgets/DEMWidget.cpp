@@ -19,14 +19,11 @@
 #include <core/utility/DataSetFilter.h>
 #include <core/utility/macros.h>
 #include <core/utility/qthelper.h>
+#include <core/utility/type_traits.h>
 #include <core/utility/vtkvectorhelper.h>
 #include <gui/DataMapping.h>
 #include <gui/data_view/AbstractRenderView.h>
 #include <gui/data_view/RendererImplementationBase3D.h>
-
-
-template<typename T>
-using Unqualified = typename std::remove_cv<typename std::remove_reference<T>::type>::type;
 
 
 DEMWidget::DEMWidget(DataMapping & dataMapping, AbstractRenderView * previewRenderer, QWidget * parent, Qt::WindowFlags f,

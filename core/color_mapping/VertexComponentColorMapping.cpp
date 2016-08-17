@@ -8,6 +8,7 @@
 #include <core/rendered_data/RenderedPolyData.h>
 #include <core/filters/CentroidAsScalarsFilter.h>
 #include <core/color_mapping/ColorMappingRegistry.h>
+#include <core/utility/DataExtent.h>
 
 
 namespace
@@ -92,20 +93,19 @@ void VertexComponentColorMapping::configureMapper(AbstractVisualizedData * visua
         m->ScalarVisibilityOn();
 }
 
-QMap<int, QPair<double, double>> VertexComponentColorMapping::updateBounds()
+std::vector<ValueRange<>> VertexComponentColorMapping::updateBounds()
 {
     // get min/max coordinate values on our axis/component
 
-    double totalMin = std::numeric_limits<double>::max();
-    double totalMax = std::numeric_limits<double>::lowest();
+    decltype(updateBounds())::value_type totalRange;
 
-    for (AbstractVisualizedData * vis: m_visualizedData)
+    for (auto vis: m_visualizedData)
     {
-        const double * objectBounds = vis->dataObject().bounds();
+        DataBounds objectBounds;
+        vis->dataObject().bounds(objectBounds.data());
 
-        totalMin = std::min(totalMin, objectBounds[2 * m_component]);
-        totalMax = std::max(totalMax, objectBounds[2 * m_component + 1]);
+        totalRange.add(objectBounds.extractDimension(m_component));
     }
 
-    return{ { 0, { totalMin, totalMax } } };
+    return{ totalRange };
 }

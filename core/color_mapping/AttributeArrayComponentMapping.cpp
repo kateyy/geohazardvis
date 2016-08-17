@@ -2,7 +2,6 @@
 
 #include <algorithm>
 #include <cassert>
-#include <limits>
 
 #include <QDebug>
 
@@ -22,6 +21,7 @@
 #include <core/types.h>
 #include <core/data_objects/DataObject.h>
 #include <core/color_mapping/ColorMappingRegistry.h>
+#include <core/utility/DataExtent.h>
 
 
 namespace
@@ -204,52 +204,56 @@ void AttributeArrayComponentMapping::configureMapper(AbstractVisualizedData * vi
     }
 }
 
-QMap<int, QPair<double, double>> AttributeArrayComponentMapping::updateBounds()
+std::vector<ValueRange<>> AttributeArrayComponentMapping::updateBounds()
 {
-    QByteArray utf8Name = m_dataArrayName.toUtf8();
+    const auto utf8Name = m_dataArrayName.toUtf8();
 
-    QMap<int, QPair<double, double>> bounds;
+    auto bounds = decltype(updateBounds())(numDataComponents());
 
     for (auto c = 0; c < numDataComponents(); ++c)
     {
-        double totalMin = std::numeric_limits<double>::max();
-        double totalMax = std::numeric_limits<double>::lowest();
+        decltype(bounds)::value_type totalRange;
 
-        for (AbstractVisualizedData * visualizedData : m_visualizedData)
+        for (auto visualizedData : m_visualizedData)
         {
             int attributeLocation = m_attributeLocations.value(visualizedData, -1);
             if (attributeLocation == -1)
+            {
                 continue;
+            }
 
             for (int i = 0; i < visualizedData->numberOfColorMappingInputs(); ++i)
             {
-                vtkDataSet * dataSet = visualizedData->colorMappingInputData(i);
+                auto dataSet = visualizedData->colorMappingInputData(i);
                 vtkDataArray * dataArray = 
                     attributeLocation == vtkAssignAttribute::CELL_DATA ? dataSet->GetCellData()->GetArray(utf8Name.data())
                     : (attributeLocation == vtkAssignAttribute::POINT_DATA ? dataSet->GetPointData()->GetArray(utf8Name.data())
                     : nullptr);
 
                 if (!dataArray)
+                {
                     continue;
+                }
 
-                double range[2];
-                dataArray->GetRange(range, c);
+                decltype(totalRange) range;
+                dataArray->GetRange(range.data(), c);
 
                 // ignore arrays with invalid data
-                if (range[1] < range[0])
+                if (range.isEmpty())
+                {
                     continue;
+                }
 
-                totalMin = std::min(totalMin, range[0]);
-                totalMax = std::max(totalMax, range[1]);
+                totalRange.add(range);
             }
         }
 
-        if (totalMin > totalMax)    // invalid data in all arrays on this component
+        if (totalRange.isEmpty())    // invalid data in all arrays on this component
         {
-            totalMin = totalMax = 0;
+            totalRange[0] = totalRange[1] = 0.0;
         }
 
-        bounds.insert(c, { totalMin, totalMax });
+        bounds[c] = totalRange;
     }
 
     return bounds;

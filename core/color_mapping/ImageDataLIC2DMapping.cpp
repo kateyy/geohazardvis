@@ -2,7 +2,6 @@
 
 #include <algorithm>
 #include <cassert>
-#include <limits>
 
 #include <QVector>
 
@@ -18,6 +17,7 @@
 #include <core/AbstractVisualizedData.h>
 #include <core/color_mapping/ColorMappingRegistry.h>
 #include <core/filters/NoiseImageSource.h>
+#include <core/utility/DataExtent.h>
 
 #include "config.h"
 
@@ -116,9 +116,9 @@ bool ImageDataLIC2DMapping::usesFilter() const
     return true;
 }
 
-QMap<int, QPair<double, double>> ImageDataLIC2DMapping::updateBounds()
+std::vector<ValueRange<>> ImageDataLIC2DMapping::updateBounds()
 {
-    return{ { 0, { 0, 1 } } };  // by LIC definition
+    return{ decltype(updateBounds())::value_type({ 0.0, 1.0 }) };  // by LIC definition
 }
 
 vtkRenderWindow * ImageDataLIC2DMapping::glContext()

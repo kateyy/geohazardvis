@@ -12,6 +12,7 @@
 #include <core/types.h>
 #include <core/color_mapping/ColorMappingRegistry.h>
 #include <core/data_objects/DataObject.h>
+#include <core/utility/DataExtent.h>
 
 
 namespace
@@ -136,10 +137,8 @@ void DirectImageColors::configureMapper(AbstractVisualizedData * visualizedData,
     }
 }
 
-QMap<int, QPair<double, double>> DirectImageColors::updateBounds()
+std::vector<ValueRange<>> DirectImageColors::updateBounds()
 {
     // value range is 0..0xFF, but is not supposed to be configured in the ui
-    return{
-        { 0, { 0, 0 } }
-    };
+    return{ decltype(updateBounds())::value_type({ 0, 0 }) };
 }
