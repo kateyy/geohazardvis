@@ -18,3 +18,11 @@
 #else//__GNUC__ - may need other defines for different compilers
 #   define WARN(exp) ("WARNING: " exp)
 #endif
+
+
+// Boolean expression checking if VTK version is at least MAJOR.MINOR.BUILD
+// This requires to include vtkVersionMacros.h BEFORE this header.
+#define VTK_CHECK_VERSION(MAJOR, MINOR, BUILD) \
+    (VTK_MAJOR_VERSION > MAJOR \
+    || (VTK_MAJOR_VERSION == MAJOR && VTK_MINOR_VERSION > MINOR) \
+    || (VTK_MAJOR_VERSION == MAJOR && VTK_MINOR_VERSION == MINOR && VTK_BUILD_VERSION >= BUILD))

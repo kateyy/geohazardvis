@@ -17,6 +17,7 @@
 #include <core/filters/SimpleDEMGeoCoordToLocalFilter.h>
 #include <core/rendered_data/RenderedPolyData.h>
 #include <core/utility/DataSetFilter.h>
+#include <core/utility/macros.h>
 #include <core/utility/qthelper.h>
 #include <core/utility/vtkvectorhelper.h>
 #include <gui/DataMapping.h>
@@ -627,7 +628,7 @@ void DEMWidget::configureMeshVisualization()
     topoRendered->renderProperty()->DeepCopy(prop);
     topoRendered->setRepresentation(RenderedData::Representation::both);
 
-#if VTK_MAJOR_VERSION < 7 || VTK_MINOR_VERSION < 1
+#if !VTK_CHECK_VERSION(7, 1, 0)
     topoRendered->renderProperty()->LightingOn();   // bug: flag not copied in VTK < 7.1
 #endif
 }
