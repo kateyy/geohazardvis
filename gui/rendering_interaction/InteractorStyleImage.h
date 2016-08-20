@@ -33,4 +33,8 @@ protected:
 private:
     bool m_mouseMoved;
     bool m_mouseButtonDown;
+
+private:
+    InteractorStyleImage(const InteractorStyleImage &) = delete;
+    void operator=(const InteractorStyleImage &) = delete;
 };

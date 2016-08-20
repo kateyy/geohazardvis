@@ -36,7 +36,6 @@ private:
     void updateSelection(DataObject * dataObject, vtkIdType index, IndexType indexType);
     void renderViewsLookAt(DataObject * dataObject, vtkIdType index, IndexType indexType);
 
-private:
     void updateSyncToggleMenu();
 
     QAction * addAbstractDataView(AbstractDataView * dataView);

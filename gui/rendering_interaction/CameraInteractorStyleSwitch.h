@@ -21,4 +21,8 @@ protected:
 
 private:
     ICameraInteractionStyle * m_currentCameraStyle;
+
+private:
+    CameraInteractorStyleSwitch(const CameraInteractorStyleSwitch &) = delete;
+    void operator=(const CameraInteractorStyleSwitch &) = delete;
 };

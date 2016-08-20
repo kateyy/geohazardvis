@@ -106,7 +106,9 @@ ResidualVerificationView::~ResidualVerificationView()
     for (auto & vis : m_visualizations)
     {
         if (!vis)
+        {
             continue;
+        }
 
         toDelete << vis.get();
     }
@@ -184,7 +186,9 @@ void ResidualVerificationView::lookAtData(DataObject & dataObject, vtkIdType ind
     {
         auto & vis = *m_visualizations[i].get();
         if (&vis.dataObject() != &dataObject)
+        {
             continue;
+        }
 
         lookAtData(vis, index, indexType, static_cast<int>(i));
     }
@@ -196,7 +200,9 @@ void ResidualVerificationView::lookAtData(AbstractVisualizedData & vis, vtkIdTyp
     {
         unsigned int specificSubViewIdx = static_cast<unsigned int>(subViewIndex);
         if (m_visualizations[specificSubViewIdx].get() != &vis)
+        {
             return;
+        }
 
         implementation().lookAtData(vis, index, indexType, specificSubViewIdx);
         return;
@@ -205,7 +211,9 @@ void ResidualVerificationView::lookAtData(AbstractVisualizedData & vis, vtkIdTyp
     for (unsigned int i = 0; i < numberOfSubViews(); ++i)
     {
         if (m_visualizations[i].get() != &vis)
+        {
             continue;
+        }
 
         implementation().lookAtData(vis, index, indexType, i);
         return;
@@ -219,16 +227,19 @@ AbstractVisualizedData * ResidualVerificationView::visualizationFor(DataObject *
         for (unsigned int i = 0; i < numberOfSubViews(); ++i)
         {
             if (dataAt(i) == dataObject)
+            {
                 return m_visualizations[i].get();
+            }
         }
         return nullptr;
     }
 
     assert(subViewIndex >= 0 && subViewIndex < 3);
 
-    bool validAccess = dataAt(unsigned(subViewIndex)) == dataObject;
-    if (!validAccess)
+    if (dataAt(unsigned(subViewIndex)) != dataObject)
+    {
         return nullptr;
+    }
 
     return m_visualizations[subViewIndex].get();
 }
@@ -238,7 +249,9 @@ int ResidualVerificationView::subViewContaining(const AbstractVisualizedData & v
     for (unsigned int i = 0u; i < numberOfSubViews(); ++i)
     {
         if (m_visualizations[i].get() == &visualizedData)
+        {
             return static_cast<int>(i);
+        }
     }
     
     return -1;
@@ -277,7 +290,9 @@ int ResidualVerificationView::observationUnitDecimalExponent() const
 void ResidualVerificationView::setObservationUnitDecimalExponent(int exponent)
 {
     if (m_observationUnitDecimalExponent == exponent)
+    {
         return;
+    }
 
     m_observationUnitDecimalExponent = exponent;
 
@@ -292,7 +307,9 @@ int ResidualVerificationView::modelUnitDecimalExponent() const
 void ResidualVerificationView::setModelUnitDecimalExponent(int exponent)
 {
     if (m_modelUnitDecimalExponent == exponent)
+    {
         return;
+    }
 
     m_modelUnitDecimalExponent = exponent;
 
@@ -314,7 +331,9 @@ const vtkVector3d & ResidualVerificationView::inSARLineOfSight() const
 void ResidualVerificationView::setInterpolationMode(InterpolationMode mode)
 {
     if (m_interpolationMode == mode)
+    {
         return;
+    }
 
     m_interpolationMode = mode;
 
@@ -339,7 +358,9 @@ void ResidualVerificationView::setDataHelper(unsigned int subViewIndex, DataObje
     assert(subViewIndex != residualIndex);
 
     if (dataAt(subViewIndex) == dataObject)
+    {
         return;
+    }
 
     setDataInternal(subViewIndex, dataObject, nullptr);
 
@@ -393,7 +414,9 @@ void ResidualVerificationView::showDataObjectsImpl(const QList<DataObject *> & d
         qDebug() << "Multiple objects per sub-view not supported in the ResidualVerificationView.";
 
     for (int i = 1; i < dataObjects.size(); ++i)
+    {
         incompatibleObjects << dataObjects[i];
+    }
 
     auto dataObject = dataObjects.isEmpty() ? nullptr : dataObjects.first();
 
@@ -406,7 +429,9 @@ void ResidualVerificationView::hideDataObjectsImpl(const QList<DataObject *> & d
     bool relevantRequest = dataObjects.contains(dataAt(subViewIndex));
 
     if (relevantRequest)
+    {
         setDataHelper(subViewIndex, nullptr);
+    }
 }
 
 QList<DataObject *> ResidualVerificationView::dataObjectsImpl(int subViewIndex) const
@@ -417,7 +442,9 @@ QList<DataObject *> ResidualVerificationView::dataObjectsImpl(int subViewIndex) 
         for (unsigned i = 0; i < numberOfSubViews(); ++i)
         {
             if (auto dataObject = dataAt(i))
+            {
                 objects << dataObject;
+            }
         }
 
         return objects;
@@ -461,13 +488,19 @@ QList<AbstractVisualizedData *> ResidualVerificationView::visualizationsImpl(int
     if (subViewIndex == -1)
     {
         for (auto & vis : m_visualizations)
+        {
             if (vis)
+            {
                 validVis << vis.get();
+            }
+        }
         return validVis;
     }
 
     if (m_visualizations[subViewIndex])
+    {
         return{ m_visualizations[subViewIndex].get() };
+    }
 
     return{};
 }
@@ -480,7 +513,9 @@ void ResidualVerificationView::axesEnabledChangedEvent(bool enabled)
 void ResidualVerificationView::initialize()
 {
     if (m_implementation)
+    {
         return;
+    }
 
     m_implementation = std::make_unique<RendererImplementationResidual>(*this);
     m_implementation->activate(qvtkWidget());
@@ -848,11 +883,15 @@ void ResidualVerificationView::updateGuiAfterDataChange()
     for (unsigned int i = 0; i < numberOfSubViews(); ++i)
     {
         if (!dataAt(i) || !m_visualizations[i])
+        {
             continue;
+        }
 
         auto attributeName = m_projectedAttributeNames[i];
         if (attributeName.isEmpty())
+        {
             attributeName = m_attributeNamesLocations[i].first;
+        }
 
         m_visualizations[i]->colorMapping().setCurrentScalarsByName(attributeName);
         m_visualizations[i]->colorMapping().setEnabled(true);
@@ -863,13 +902,19 @@ void ResidualVerificationView::updateGuiAfterDataChange()
 
     QList<DataObject *> validInputData;
     if (m_observationData)
+    {
         validInputData << m_observationData;
+    }
     if (m_modelData)
+    {
         validInputData << m_modelData;
+    }
     m_implementation->strategy2D().setInputData(validInputData);
 
     if (!validInputData.isEmpty())
+    {
         implementation().resetCamera(true, 0);
+    }
 
     render();
 }
@@ -920,12 +965,16 @@ bool ResidualVerificationView::setDataAt(unsigned int i, DataObject * dataObject
     {
     case observationIndex:
         if (m_observationData == dataObject)
+        {
             return false;
+        }
         m_observationData = dataObject;
         break;
     case modelIndex:
         if (m_modelData == dataObject)
+        {
             return false;
+        }
         m_modelData = dataObject;
         break;
     default:
@@ -942,28 +991,30 @@ std::pair<QString, bool> ResidualVerificationView::findDataSetAttributeName(vtkD
         if (auto scalars = dataSet.GetPointData()->GetScalars())
         {
             if (auto name = scalars->GetName())
-                return std::make_pair(QString::fromUtf8(name), false);
-        }
-        else
-        {
-            if (auto firstArray = dataSet.GetPointData()->GetArray(0))
             {
-                if (auto name = firstArray->GetName())
-                    return std::make_pair(QString::fromUtf8(name), false);
+                return std::make_pair(QString::fromUtf8(name), false);
+            }
+        }
+        else if (auto firstArray = dataSet.GetPointData()->GetArray(0))
+        {
+            if (auto name = firstArray->GetName())
+            {
+                return std::make_pair(QString::fromUtf8(name), false);
             }
         }
 
         if (auto scalars = dataSet.GetCellData()->GetScalars())
         {
             if (auto name = scalars->GetName())
-                return std::make_pair(QString::fromUtf8(name), true);
-        }
-        else
-        {
-            if (auto firstArray = dataSet.GetCellData()->GetArray(0))
             {
-                if (auto name = firstArray->GetName())
-                    return std::make_pair(QString::fromUtf8(name), true);
+                return std::make_pair(QString::fromUtf8(name), true);
+            }
+        }
+        else if (auto firstArray = dataSet.GetCellData()->GetArray(0))
+        {
+            if (auto name = firstArray->GetName())
+            {
+                return std::make_pair(QString::fromUtf8(name), true);
             }
         }
         return{};
@@ -974,7 +1025,9 @@ std::pair<QString, bool> ResidualVerificationView::findDataSetAttributeName(vtkD
         if (auto scalars = dataSet.GetPointData()->GetVectors())
         {
             if (auto name = scalars->GetName())
+            {
                 return std::make_pair(QString::fromUtf8(name), false);
+            }
         }
         else
         {
@@ -982,17 +1035,23 @@ std::pair<QString, bool> ResidualVerificationView::findDataSetAttributeName(vtkD
             {
                 auto array = dataSet.GetPointData()->GetArray(i);
                 if (array->GetNumberOfComponents() != 3)
+                {
                     continue;
+                }
 
                 if (auto name = array->GetName())
+                {
                     return std::make_pair(QString::fromUtf8(name), false);
+                }
             }
         }
 
         if (auto scalars = dataSet.GetCellData()->GetVectors())
         {
             if (auto name = scalars->GetName())
+            {
                 return std::make_pair(QString::fromUtf8(name), true);
+            }
         }
         else
         {
@@ -1000,10 +1059,14 @@ std::pair<QString, bool> ResidualVerificationView::findDataSetAttributeName(vtkD
             {
                 auto array = dataSet.GetCellData()->GetArray(i);
                 if (array->GetNumberOfComponents() != 3)
+                {
                     continue;
+                }
 
                 if (auto name = array->GetName())
+                {
                     return std::make_pair(QString::fromUtf8(name), false);
+                }
             }
         }
         return{};
@@ -1023,20 +1086,28 @@ std::pair<QString, bool> ResidualVerificationView::findDataSetAttributeName(vtkD
             // assuming that we store attributes in polygonal data always per cell
             auto scalars = dataSet.GetCellData()->GetScalars();
             if (!scalars)
+            {
                 scalars = dataSet.GetCellData()->GetArray("displacement vectors");
+            }
             if (!scalars)
+            {
                 scalars = dataSet.GetCellData()->GetArray("U-");
+            }
             if (scalars)
             {
                 auto name = scalars->GetName();
                 if (name)
+                {
                     return std::make_pair(QString::fromUtf8(name), true);
+                }
             }
         }
 
         auto result = checkDefaultVectors(dataSet);
         if (!result.first.isEmpty())
+        {
             return result;
+        }
 
         return checkDefaultScalars(dataSet);
     }

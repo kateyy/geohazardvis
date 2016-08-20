@@ -10,11 +10,11 @@
 
 Context2DData::Context2DData(DataObject & dataObject)
     : AbstractVisualizedData(ContentType::Context2D, dataObject)
-    , m_plotsInvalidated(true)
+    , m_plotsInvalidated{ true }
 {
 }
 
-vtkSmartPointer<vtkPlotCollection> Context2DData::plots()
+const vtkSmartPointer<vtkPlotCollection> & Context2DData::plots()
 {
     if (m_plotsInvalidated)
     {
@@ -32,8 +32,10 @@ void Context2DData::visibilityChangedEvent(bool visible)
 {
     vtkCollectionSimpleIterator it;
     plots()->InitTraversal(it);
-    while (vtkPlot * item = plots()->GetNextPlot(it))
+    while (auto item = plots()->GetNextPlot(it))
+    {
         item->SetVisible(visible);
+    }
 }
 
 void Context2DData::invalidateContextItems()

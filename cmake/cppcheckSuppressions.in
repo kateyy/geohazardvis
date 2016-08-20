@@ -9,11 +9,5 @@ unmatchedSuppression
 
 // False positives
 
-operatorEqVarError:@PROJECT_SOURCE_DIR@/core/data_objects/DataObject.hpp:46
-
-assertWithSideEffect:@PROJECT_SOURCE_DIR@/core/data_objects/ImageDataObject.cpp:81
-assertWithSideEffect:@PROJECT_SOURCE_DIR@/core/data_objects/PolyDataObject.cpp:126
-assertWithSideEffect:@PROJECT_SOURCE_DIR@/core/data_objects/PolyDataObject.cpp:158
-
 unusedStructMember:@PROJECT_SOURCE_DIR@/core/io/TextFileReader.h:29
 unusedStructMember:@PROJECT_SOURCE_DIR@/core/io/TextFileReader.h:30

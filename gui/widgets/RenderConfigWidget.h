@@ -3,7 +3,6 @@
 #include <memory>
 
 #include <QDockWidget>
-#include <QScopedPointer>
 
 #include <gui/gui_api.h>
 
@@ -38,7 +37,7 @@ private:
     void updateTitle();
 
 private:
-    QScopedPointer<Ui_RenderConfigWidget> m_ui;
+    std::unique_ptr<Ui_RenderConfigWidget> m_ui;
 
     std::unique_ptr<reflectionzeug::PropertyGroup> m_propertyRoot;
 

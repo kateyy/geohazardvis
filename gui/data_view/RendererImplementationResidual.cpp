@@ -27,7 +27,9 @@ void RendererImplementationResidual::activate(t_QVTKWidget & qvtkWidget)
     RendererImplementationBase3D::activate(qvtkWidget);
 
     if (m_isInitialized)
+    {
         return;
+    }
 
     m_strategy = std::make_unique<RenderViewStrategy2D>(*this);
     m_strategy->activate();

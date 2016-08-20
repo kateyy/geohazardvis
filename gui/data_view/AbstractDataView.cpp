@@ -41,27 +41,30 @@ int AbstractDataView::index() const
     return m_index;
 }
 
-void AbstractDataView::updateTitle(QString message)
+void AbstractDataView::updateTitle(const QString & message)
 {
-    QString title;
-
-    if (message.isEmpty())
-        title = friendlyName();
-    else
-        title = QString::number(index()) + ": " + message;
+    const auto title = message.isEmpty()
+        ? friendlyName()
+        : QString::number(index()) + ": " + message;
 
     if (title == windowTitle())
+    {
         return;
+    }
 
     setWindowTitle(title);
     if (hasDockWidgetParent())
+    {
         dockWidgetParent()->setWindowTitle(title);
+    }
 }
 
 QToolBar * AbstractDataView::toolBar()
 {
     if (m_toolBar)
+    {
         return m_toolBar;
+    }
 
     m_toolBar = new QToolBar();
     auto font = m_toolBar->font();
@@ -77,7 +80,9 @@ QToolBar * AbstractDataView::toolBar()
 bool AbstractDataView::toolBarIsVisible() const
 {
     if (!m_toolBar)
+    {
         return false;
+    }
 
     return m_toolBar->isVisible();
 }
@@ -85,7 +90,9 @@ bool AbstractDataView::toolBarIsVisible() const
 void AbstractDataView::setToolBarVisible(bool visible)
 {
     if (!visible && !m_toolBar)
+    {
         return;
+    }
 
     toolBar()->setVisible(visible);
 }
@@ -178,7 +185,9 @@ const DataObject * AbstractDataView::selectedDataObject() const
 void AbstractDataView::showEvent(QShowEvent * /*event*/)
 {
     if (m_initialized)
+    {
         return;
+    }
 
     contentWidget()->installEventFilter(this);
 
@@ -200,10 +209,12 @@ void AbstractDataView::setCurrent(bool isCurrent)
 
 bool AbstractDataView::eventFilter(QObject * obj, QEvent * ev)
 {
-    DockableWidget::eventFilter(obj, ev);
+    const auto result = DockableWidget::eventFilter(obj, ev);
 
     if (ev->type() == QEvent::FocusIn)
+    {
         emit focused(this);
+    }
 
-    return false;
+    return result;
 }

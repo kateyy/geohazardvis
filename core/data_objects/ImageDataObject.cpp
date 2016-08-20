@@ -76,14 +76,16 @@ const QString & ImageDataObject::dataTypeName_s()
 
 vtkImageData * ImageDataObject::imageData()
 {
-    assert(dynamic_cast<vtkImageData *>(dataSet()));
-    return static_cast<vtkImageData *>(dataSet());
+    auto img = dataSet();
+    assert(dynamic_cast<vtkImageData *>(img));
+    return static_cast<vtkImageData *>(img);
 }
 
 const vtkImageData * ImageDataObject::imageData() const
 {
-    assert(dynamic_cast<const vtkImageData *>(dataSet()));
-    return static_cast<const vtkImageData *>(dataSet());
+    auto img = dataSet();
+    assert(dynamic_cast<const vtkImageData *>(img));
+    return static_cast<const vtkImageData *>(img);
 }
 
 vtkDataArray & ImageDataObject::scalars()

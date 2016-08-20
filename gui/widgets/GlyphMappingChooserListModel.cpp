@@ -8,7 +8,7 @@
 
 GlyphMappingChooserListModel::GlyphMappingChooserListModel(QObject * parent)
     : QAbstractListModel(parent)
-    , m_mapping(nullptr)
+    , m_mapping{ nullptr }
 {
 }
 
@@ -58,7 +58,9 @@ QVariant GlyphMappingChooserListModel::headerData(int /*section*/, Qt::Orientati
 int GlyphMappingChooserListModel::rowCount(const QModelIndex & /*parent*/) const
 {
     if (!m_mapping)
+    {
         return 0;
+    }
 
     return m_mapping->vectors().size();
 }
@@ -71,7 +73,9 @@ bool GlyphMappingChooserListModel::setData(const QModelIndex & index, const QVar
         Qt::CheckState state = static_cast<Qt::CheckState>(value.toInt(&ok));
         assert(ok);
         if (!ok)
+        {
             return false;
+        }
 
         m_vectors[index.row()]->setVisible(state == Qt::Checked);
 

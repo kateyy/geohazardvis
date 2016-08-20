@@ -41,4 +41,8 @@ private:
     std::unique_ptr<CameraDolly> m_cameraDolly;
 
     bool m_mouseMoved;
+
+private:
+    InteractorStyleTerrain(const InteractorStyleTerrain &) = delete;
+    void operator=(const InteractorStyleTerrain &) = delete;
 };

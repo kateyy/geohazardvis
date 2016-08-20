@@ -26,7 +26,7 @@ public:
     DataSetHandler & dataSetHandler() const;
     int index() const;
 
-    void updateTitle(QString message = {});
+    void updateTitle(const QString & message = {});
 
     QToolBar * toolBar();
     bool toolBarIsVisible() const;

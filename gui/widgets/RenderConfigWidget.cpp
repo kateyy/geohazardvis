@@ -14,10 +14,10 @@ using namespace reflectionzeug;
 
 RenderConfigWidget::RenderConfigWidget(QWidget * parent)
     : QDockWidget(parent)
-    , m_ui(new Ui_RenderConfigWidget())
-    , m_propertyRoot(nullptr)
-    , m_renderView(nullptr)
-    , m_content(nullptr)
+    , m_ui{ std::make_unique<Ui_RenderConfigWidget>() }
+    , m_propertyRoot{ nullptr }
+    , m_renderView{ nullptr }
+    , m_content{ nullptr }
 {
     m_ui->setupUi(this);
 
@@ -48,7 +48,9 @@ void RenderConfigWidget::clear()
 void RenderConfigWidget::checkDeletedContent(const QList<AbstractVisualizedData *> & content)
 {
     if (content.contains(m_content))
+    {
         clear();
+    }
 }
 
 void RenderConfigWidget::setCurrentRenderView(AbstractRenderView * renderView)
@@ -75,7 +77,9 @@ void RenderConfigWidget::setCurrentRenderView(AbstractRenderView * renderView)
     updateTitle();
 
     if (!m_content)
+    {
         return;
+    }
 
     m_propertyRoot = m_content->createConfigGroup();
 
@@ -88,7 +92,9 @@ void RenderConfigWidget::setCurrentRenderView(AbstractRenderView * renderView)
 void RenderConfigWidget::setSelectedData(DataObject * dataObject)
 {
     if (!m_renderView)
+    {
         return;
+    }
 
     AbstractVisualizedData * content = m_renderView->visualizationFor(dataObject);
     if (!content || (content == m_content))
@@ -115,11 +121,9 @@ void RenderConfigWidget::setSelectedData(AbstractRenderView * renderView, DataOb
 
 void RenderConfigWidget::updateTitle()
 {
-    QString title;
-    if (!m_content)
-        title = "(No object selected)";
-    else
-        title = QString::number(m_renderView->index()) + ": " + m_content->dataObject().name();
+    const auto && title = !m_content
+        ? "(No object selected)"
+        : QString::number(m_renderView->index()) + ": " + m_content->dataObject().name();
 
     m_ui->relatedDataObject->setText(title);
 }

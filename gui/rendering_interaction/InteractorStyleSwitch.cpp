@@ -9,7 +9,7 @@
 vtkStandardNewMacro(InteractorStyleSwitch);
 
 InteractorStyleSwitch::InteractorStyleSwitch()
-    : vtkInteractorStyle()
+    : Superclass()
     , m_currentStyle{ nullptr }
 {
 }

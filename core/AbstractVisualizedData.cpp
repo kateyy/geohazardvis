@@ -17,8 +17,8 @@
 vtkInformationKeyMacro(AbstractVisualizedData, VisualizedDataKey, IntegerPointer);
 
 
-AbstractVisualizedData::AbstractVisualizedData(ContentType contentType, DataObject & dataObject, QObject * parent)
-    : QObject(parent)
+AbstractVisualizedData::AbstractVisualizedData(ContentType contentType, DataObject & dataObject)
+    : QObject()
     , m_colorMappingData{ nullptr }
     , m_contentType{ contentType }
     , m_dataObject{ dataObject }
@@ -79,7 +79,9 @@ ColorMapping & AbstractVisualizedData::colorMapping()
 void AbstractVisualizedData::setScalarsForColorMapping(ColorMappingData * scalars)
 {
     if (scalars == m_colorMappingData)
+    {
         return;
+    }
 
     m_colorMappingData = scalars;
 
@@ -89,7 +91,9 @@ void AbstractVisualizedData::setScalarsForColorMapping(ColorMappingData * scalar
 void AbstractVisualizedData::setColorMappingGradient(vtkScalarsToColors * gradient)
 {
     if (m_gradient == gradient)
+    {
         return;
+    }
 
     m_gradient = gradient;
 

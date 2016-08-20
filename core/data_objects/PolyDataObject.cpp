@@ -38,12 +38,16 @@ bool PolyDataObject::is3D() const
 
 vtkPolyData * PolyDataObject::polyDataSet()
 {
-    return static_cast<vtkPolyData *>(dataSet());
+    auto ds = dataSet();
+    assert(dynamic_cast<vtkPolyData *>(ds));
+    return static_cast<vtkPolyData *>(ds);
 }
 
 const vtkPolyData * PolyDataObject::polyDataSet() const
 {
-    return static_cast<const vtkPolyData *>(dataSet());
+    auto ds = dataSet();
+    assert(dynamic_cast<const vtkPolyData *>(ds));
+    return static_cast<const vtkPolyData *>(ds);
 }
 
 vtkDataSet * PolyDataObject::processedDataSet()
@@ -122,13 +126,14 @@ bool PolyDataObject::is2p5D()
 
 bool PolyDataObject::setCellCenterComponent(vtkIdType cellId, int component, double value)
 {
+    auto ds = polyDataSet();
     assert(component >= 0 && component < 3);
-    assert(cellId <= dataSet()->GetNumberOfCells());
-    vtkCell * cell = dataSet()->GetCell(cellId);
-    vtkIdList * pointIds = cell->GetPointIds();
+    assert(cellId <= ds->GetNumberOfCells());
+    auto cell = ds->GetCell(cellId);
+    auto pointIds = cell->GetPointIds();
 
-    vtkPoints * centers = cellCenters()->GetPoints();
-    vtkPoints * vertices = static_cast<vtkPolyData *>(dataSet())->GetPoints();
+    auto centers = cellCenters()->GetPoints();
+    auto vertices = ds->GetPoints();
 
     const double oldValue = [centers, cellId, component] () -> double {
         std::array<double, 3> point;
@@ -147,15 +152,16 @@ bool PolyDataObject::setCellCenterComponent(vtkIdType cellId, int component, dou
         vertices->SetPoint(pointId, point.data());
     }
 
-    dataSet()->Modified();
+    ds->Modified();
 
     return true;
 }
 
 bool PolyDataObject::setCellNormalComponent(vtkIdType cellId, int component, double value)
 {
+    auto ds = polyDataSet();
     assert(component >= 0 && component < 3);
-    assert(cellId <= dataSet()->GetNumberOfCells());
+    assert(cellId <= ds->GetNumberOfCells());
 
     auto normals = processedDataSet()->GetCellData()->GetNormals();
     assert(normals);
@@ -192,9 +198,9 @@ bool PolyDataObject::setCellNormalComponent(vtkIdType cellId, int component, dou
 
 
     // apply the rotation to all vertices of the triangle
-    vtkCell * cell = dataSet()->GetCell(cellId);
-    vtkIdList * pointIds = cell->GetPointIds();
-    vtkPoints * vertices = static_cast<vtkPolyData *>(dataSet())->GetPoints();
+    auto cell = ds->GetCell(cellId);
+    auto pointIds = cell->GetPointIds();
+    auto vertices = ds->GetPoints();
     std::array<double, 3> point;
     for (int i = 0; i < pointIds->GetNumberOfIds(); ++i)
     {
@@ -204,7 +210,7 @@ bool PolyDataObject::setCellNormalComponent(vtkIdType cellId, int component, dou
         vertices->SetPoint(pointId, point.data());
     }
 
-    dataSet()->Modified();
+    ds->Modified();
 
     return true;
 }

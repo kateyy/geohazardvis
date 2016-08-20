@@ -15,7 +15,7 @@ class CORE_API Context2DData : public AbstractVisualizedData
 public:
     explicit Context2DData(DataObject & dataObject);
 
-    vtkSmartPointer<vtkPlotCollection> plots();
+    const vtkSmartPointer<vtkPlotCollection> & plots();
 
 protected:
     void visibilityChangedEvent(bool visible) override;

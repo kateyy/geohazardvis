@@ -184,10 +184,14 @@ void DataMapping::setFocusedView(AbstractDataView * view)
     if (view->isRenderer())
     {
         if (m_focusedRenderView == view)
+        {
             return;
+        }
 
         if (m_focusedRenderView)
+        {
             m_focusedRenderView->setCurrent(false);
+        }
 
         assert(dynamic_cast<AbstractRenderView *>(view));
         m_focusedRenderView = static_cast<AbstractRenderView *>(view);

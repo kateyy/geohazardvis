@@ -15,7 +15,7 @@
 
 TableView::TableView(DataMapping & dataMapping, int index, QWidget * parent, Qt::WindowFlags flags)
     : AbstractDataView(dataMapping, index, parent, flags)
-    , m_ui{ new Ui_TableView() }
+    , m_ui{ std::make_unique<Ui_TableView>() }
     , m_dataObject{ nullptr }
     , m_selectColumnsMenu{ nullptr }
 {
@@ -68,15 +68,20 @@ void TableView::showDataObject(DataObject * dataObject)
     m_selectColumnsMenu->clear();
     for (int i = 0; i < m_dataObject->tableModel()->columnCount(); ++i)
     {
-        QString title = m_dataObject->tableModel()->headerData(i, Qt::Horizontal).toString();
-        QAction * action = m_selectColumnsMenu->addAction(title);
+        const auto title = m_dataObject->tableModel()->headerData(i, Qt::Horizontal).toString();
+        auto action = m_selectColumnsMenu->addAction(title);
         action->setCheckable(true);
         action->setChecked(!view->isColumnHidden(i));
-        connect(action, &QAction::triggered, [view, i] (bool checked) {
+        connect(action, &QAction::triggered, [view, i] (bool checked)
+        {
             if (checked)
+            {
                 view->showColumn(i);
+            }
             else
+            {
                 view->hideColumn(i);
+            }
         });
     }
 }
@@ -101,7 +106,9 @@ void TableView::setModel(QVtkTableModel * model)
         [this, model] (const QItemSelection & selected, const QItemSelection & /*deselected*/)
     {
         if (selected.indexes().isEmpty())
+        {
             return;
+        }
 
         vtkIdType index = model->itemIdAt(selected.indexes().first());
         model->setHighlightItemId(index);

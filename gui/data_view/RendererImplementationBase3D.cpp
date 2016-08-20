@@ -175,7 +175,7 @@ void RendererImplementationBase3D::onRemoveContent(AbstractVisualizedData * cont
     }
 
     assert(dynamic_cast<RenderedData *>(content));
-    RenderedData * renderedData = static_cast<RenderedData *>(content);
+    auto renderedData = static_cast<RenderedData *>(content);
 
     // update camera and axes. signal/slots are already disconnected for this object, so explicitly trigger the updates
     if (content->isVisible())

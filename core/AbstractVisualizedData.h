@@ -30,7 +30,7 @@ class CORE_API AbstractVisualizedData : public QObject
     Q_OBJECT
 
 public:
-    AbstractVisualizedData(ContentType contentType, DataObject & dataObject, QObject * parent = nullptr);
+    AbstractVisualizedData(ContentType contentType, DataObject & dataObject);
     ~AbstractVisualizedData() override;
 
     ContentType contentType() const;
