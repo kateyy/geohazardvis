@@ -8,12 +8,13 @@ set(PLUGIN_TARGETS "" CACHE INTERNAL ${PLUGIN_TARGETS_DOC_STRING})
 
 function(configure_cxx_target target)
 
-    cmake_parse_arguments(option
-        "PLUGIN_TARGET AUX_PLUGIN_TARGET NO_CPPCHECK"
-        "IDE_FOLDER"
-        ""
-        ${ARGN})
-    
+    set(options PLUGIN_TARGET AUX_PLUGIN_TARGET NO_CPPCHECK)
+    set(oneValueArgs IDE_FOLDER)
+    set(multiValueArgs)
+
+    cmake_parse_arguments("option"
+        "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
+
     if (NOT option_IDE_FOLDER)
         set(option_IDE_FOLDER ${IDE_FOLDER})
     endif()
@@ -46,7 +47,7 @@ function(configure_cxx_target target)
     if (NOT option_NO_CPPCHECK)
         cppcheck_target(${target})
     endif()
-    
+
     if (option_AUX_PLUGIN_TARGET OR option_PLUGIN_TARGET)
         # TODO replace by generator expressions, once requiring CMake 3.4
         if(generatorIsMultiConfig)
@@ -68,7 +69,7 @@ function(configure_cxx_target target)
             )
         endif()
     endif()
-    
+
     if (option_PLUGIN_TARGET)
         set(PLUGIN_TARGETS "${PLUGIN_TARGETS};${target}" CACHE INTERNAL ${PLUGIN_TARGETS_DOC_STRING})
     endif()
