@@ -294,4 +294,5 @@ TEST_F(DEMWidget_test, DeleteCurrentDemAndTopo)
     ASSERT_NO_THROW(env.dataSetHandler->deleteData({ topo1, dem1 }));
 
     previewRenderer.close();
+    qApp->processEvents();
 }
