@@ -24,8 +24,8 @@ public:
     const QString & dataTypeName() const override;
     static const QString & dataTypeName_s();
 
-    vtkImageData * imageData();
-    const vtkImageData * imageData() const;
+    vtkImageData & imageData();
+    const vtkImageData & imageData() const;
 
     /** number of values on each axis (x, y, z) */
     const int * dimensions();

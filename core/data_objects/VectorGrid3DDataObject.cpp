@@ -1,5 +1,6 @@
 #include "VectorGrid3DDataObject.h"
 
+#include <cassert>
 #include <limits>
 
 #include <QDebug>
@@ -73,24 +74,28 @@ const QString & VectorGrid3DDataObject::dataTypeName_s()
     return name;
 }
 
-vtkImageData * VectorGrid3DDataObject::imageData()
+vtkImageData & VectorGrid3DDataObject::imageData()
 {
-    return static_cast<vtkImageData *>(dataSet());
+    auto ds = dataSet();
+    assert(dynamic_cast<vtkImageData *>(ds));
+    return static_cast<vtkImageData &>(*ds);
 }
 
-const vtkImageData * VectorGrid3DDataObject::imageData() const
+const vtkImageData & VectorGrid3DDataObject::imageData() const
 {
-    return static_cast<const vtkImageData *>(dataSet());
+    auto ds = dataSet();
+    assert(dynamic_cast<const vtkImageData *>(ds));
+    return static_cast<const vtkImageData &>(*ds);
 }
 
 const int * VectorGrid3DDataObject::dimensions()
 {
-    return static_cast<vtkImageData *>(dataSet())->GetDimensions();
+    return imageData().GetDimensions();
 }
 
 const int * VectorGrid3DDataObject::extent()
 {
-    return static_cast<vtkImageData *>(dataSet())->GetExtent();
+    return imageData().GetExtent();
 }
 
 int VectorGrid3DDataObject::numberOfComponents()
@@ -119,7 +124,7 @@ bool VectorGrid3DDataObject::checkIfStructureChanged()
     }
 
     decltype(m_extent) newExtent;
-    imageData()->GetExtent(newExtent.data());
+    imageData().GetExtent(newExtent.data());
 
     const bool changed = newExtent != m_extent;
 

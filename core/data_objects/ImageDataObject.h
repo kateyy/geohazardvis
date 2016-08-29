@@ -23,8 +23,8 @@ public:
     const QString & dataTypeName() const override;
     static const QString & dataTypeName_s();
 
-    vtkImageData * imageData();
-    const vtkImageData * imageData() const;
+    vtkImageData & imageData();
+    const vtkImageData & imageData() const;
 
     /** @return scalars assigned to the image point data. All ImageDataObjects are assumed to have valid scalar data
         with a name set. */

@@ -191,7 +191,7 @@ TEST_F(DEMWidget_test, ResetToDefaults)
 {
     auto topo = generateTopo();
     auto dem = generateDEM(ImageExtent({ 0, 100, 0, 200, 0, 0 }));
-    dem->imageData()->SetSpacing(0.1, 0.1, 0.1);
+    dem->imageData().SetSpacing(0.1, 0.1, 0.1);
     // resulting DEM size: (10, 20, 0)
     env.dataSetHandler->addExternalData({ topo.get(), dem.get() });
 

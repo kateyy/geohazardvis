@@ -20,8 +20,8 @@ public:
 
     bool is3D() const override;
 
-    vtkPolyData * polyDataSet();
-    const vtkPolyData * polyDataSet() const;
+    vtkPolyData & polyDataSet();
+    const vtkPolyData & polyDataSet() const;
 
     /** @return poly data set with cell normals */
     vtkDataSet * processedDataSet() override;

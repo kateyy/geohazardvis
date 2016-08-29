@@ -418,9 +418,9 @@ std::unique_ptr<PolyDataObject> DEMWidget::saveRelease()
     {
         surface = vtkSmartPointer<vtkPolyData>::New();
         auto points = vtkSmartPointer<vtkPoints>::New();
-        points->DeepCopy(m_dataPreview->polyDataSet()->GetPoints());
+        points->DeepCopy(m_dataPreview->polyDataSet().GetPoints());
         auto polys = vtkSmartPointer<vtkCellArray>::New();
-        polys->DeepCopy(m_dataPreview->polyDataSet()->GetPolys());
+        polys->DeepCopy(m_dataPreview->polyDataSet().GetPolys());
         surface->SetPoints(points);
         surface->SetPolys(polys);
     }

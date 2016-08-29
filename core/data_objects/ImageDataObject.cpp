@@ -74,18 +74,18 @@ const QString & ImageDataObject::dataTypeName_s()
     return name;
 }
 
-vtkImageData * ImageDataObject::imageData()
+vtkImageData & ImageDataObject::imageData()
 {
     auto img = dataSet();
     assert(dynamic_cast<vtkImageData *>(img));
-    return static_cast<vtkImageData *>(img);
+    return static_cast<vtkImageData &>(*img);
 }
 
-const vtkImageData * ImageDataObject::imageData() const
+const vtkImageData & ImageDataObject::imageData() const
 {
     auto img = dataSet();
     assert(dynamic_cast<const vtkImageData *>(img));
-    return static_cast<const vtkImageData *>(img);
+    return static_cast<const vtkImageData &>(*img);
 }
 
 vtkDataArray & ImageDataObject::scalars()
@@ -97,17 +97,17 @@ vtkDataArray & ImageDataObject::scalars()
 
 const int * ImageDataObject::dimensions()
 {
-    return imageData()->GetDimensions();
+    return imageData().GetDimensions();
 }
 
 const int * ImageDataObject::extent()
 {
-    return imageData()->GetExtent();
+    return imageData().GetExtent();
 }
 
 const double * ImageDataObject::minMaxValue()
 {
-    return imageData()->GetScalarRange();
+    return imageData().GetScalarRange();
 }
 
 std::unique_ptr<QVtkTableModel> ImageDataObject::createTableModel()
@@ -126,7 +126,7 @@ bool ImageDataObject::checkIfStructureChanged()
     }
 
     decltype(m_extent) newExtent;
-    imageData()->GetExtent(newExtent.data());
+    imageData().GetExtent(newExtent.data());
 
     bool changed = newExtent != m_extent;
 

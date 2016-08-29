@@ -18,9 +18,9 @@
 
 DataBrowser::DataBrowser(QWidget* parent, Qt::WindowFlags f)
     : QWidget(parent, f)
-    , m_ui(new Ui_DataBrowser)
-    , m_tableModel(new DataBrowserTableModel)
-    , m_dataMapping(nullptr)
+    , m_ui{ std::make_unique<Ui_DataBrowser>() }
+    , m_tableModel{ new DataBrowserTableModel }
+    , m_dataMapping{ nullptr }
 {
     m_ui->setupUi(this);
 
@@ -65,11 +65,13 @@ void DataBrowser::setDataMapping(DataMapping * dataMapping)
 
 void DataBrowser::setSelectedData(DataObject * dataObject)
 {
-    int row = m_tableModel->rowForDataObject(dataObject);
+    const int row = m_tableModel->rowForDataObject(dataObject);
 
     auto currentSelection = m_ui->dataTableView->selectionModel()->selectedRows();
     if (currentSelection.size() == 1 && currentSelection.first().row() == row)
+    {
         return;
+    }
 
     m_ui->dataTableView->clearSelection();
     m_ui->dataTableView->selectRow(m_tableModel->rowForDataObject(dataObject));
@@ -79,7 +81,7 @@ bool DataBrowser::eventFilter(QObject * /*obj*/, QEvent * ev)
 {
     QModelIndex index;
 
-    QMouseEvent * mouseEvent = static_cast<QMouseEvent *>(ev);
+    auto mouseEvent = static_cast<QMouseEvent *>(ev);
 
     switch (ev->type())
     {
@@ -99,7 +101,9 @@ bool DataBrowser::eventFilter(QObject * /*obj*/, QEvent * ev)
     if ((selection.size() > 1)
         && selection.contains(index)
         && (index.column() < m_tableModel->numButtonColumns()))
+    {
         return true;
+    }
 
     return false;
 }
@@ -122,17 +126,21 @@ void DataBrowser::updateModel(AbstractRenderView * renderView)
 
 void DataBrowser::showTable()
 {
-    for (DataObject * dataObject : selectedDataObjects())
+    for (auto dataObject : selectedDataObjects())
+    {
         m_dataMapping->openInTable(dataObject);
+    }
 }
 
 void DataBrowser::changeRenderedVisibility(DataObject * clickedObject)
 {
-    QList<DataObject *> selection = selectedDataSets();
+    const auto && selection = selectedDataSets();
     if (selection.isEmpty())
+    {
         return;
+    }
 
-    AbstractRenderView * renderView = m_dataMapping->focusedRenderView();
+    auto renderView = m_dataMapping->focusedRenderView();
     // no current render view: add selection to new view
     if (!renderView)
     {
@@ -150,38 +158,48 @@ void DataBrowser::changeRenderedVisibility(DataObject * clickedObject)
     {
         bool allSame = true;
         bool firstValue = renderView->contains(selection.first());
-        for (DataObject * dataObject : selection)
+        for (auto dataObject : selection)
+        {
             allSame = allSame && (firstValue == renderView->contains(dataObject));
+        }
 
         if (!allSame)
+        {
             setToVisible = wasVisible;
+        }
     }
 
     if (setToVisible)
+    {
         // dataMapping may open multiple views if needed
         m_dataMapping->addToRenderView(selection, renderView);
+    }
     else
+    {
         renderView->hideDataObjects(selection);
+    }
 
     updateModel(renderView);
 }
 
 void DataBrowser::menuAssignDataToIndexes(const QPoint & position, DataObject * clickedData)
 {
-    QString title = "Assign to Data Set";
+    const QString title = "Assign to Data Set";
 
-    RawVectorData * rawVector = dynamic_cast<RawVectorData*>(clickedData);
+    auto rawVector = dynamic_cast<RawVectorData*>(clickedData);
     if (!rawVector)
+    {
         return;
+    }
 
-    vtkDataArray * dataArray = rawVector->dataArray();
+    auto dataArray = rawVector->dataArray();
 
-    QMenu * assignMenu = new QMenu(title, this);
+    auto assignMenu = new QMenu(title, this);
     assignMenu->setAttribute(Qt::WA_DeleteOnClose);
 
-    QAction * titleA = assignMenu->addAction(title);
+    auto titleA = assignMenu->addAction(title);
     titleA->setEnabled(false);
-    QFont titleFont = titleA->font();
+    auto titleFont = titleA->font();
     titleFont.setBold(true);
     titleA->setFont(titleFont);
 
@@ -189,13 +207,13 @@ void DataBrowser::menuAssignDataToIndexes(const QPoint & position, DataObject * 
     
     if (m_dataMapping->dataSetHandler().dataSets().isEmpty())
     {
-        QAction * loadFirst = assignMenu->addAction("(Load data sets first)");
+        auto loadFirst = assignMenu->addAction("(Load data sets first)");
         loadFirst->setEnabled(false);
     }
     else
         for (auto && indexes : m_dataMapping->dataSetHandler().dataSets())
         {
-        QAction * assignAction = assignMenu->addAction(indexes->name());
+        auto assignAction = assignMenu->addAction(indexes->name());
         connect(assignAction, &QAction::triggered,
             [indexes, dataArray] (bool) {
             assert(dataArray);
@@ -208,12 +226,14 @@ void DataBrowser::menuAssignDataToIndexes(const QPoint & position, DataObject * 
 
 void DataBrowser::removeFile()
 {
-    QList<DataObject *> selection = selectedDataObjects();
+    const auto && selection = selectedDataObjects();
     QList<DataObject *> deletable;
     for (auto dataObject : selection)
     {
         if (m_dataMapping->dataSetHandler().ownsData(dataObject))
+        {
             deletable << dataObject;
+        }
     }
 
     m_dataMapping->removeDataObjects(deletable);
@@ -230,11 +250,15 @@ void DataBrowser::evaluateItemViewClick(const QModelIndex & index, const QPoint 
         return showTable();
     case 1:
     {
-        DataObject * dataObject = m_tableModel->dataObjectAt(index);
+        auto dataObject = m_tableModel->dataObjectAt(index);
         if (dataObject && dataObject->dataSet())
+        {
             return changeRenderedVisibility(dataObject);
+        }
         if (dataObject /* && !dataObject->dataSet() */)
+        {
             return menuAssignDataToIndexes(position, dataObject);
+        }
     }
     case 2:
         return removeFile();
@@ -243,21 +267,21 @@ void DataBrowser::evaluateItemViewClick(const QModelIndex & index, const QPoint 
 
 QList<DataObject *> DataBrowser::selectedDataObjects() const
 {
-    QModelIndexList selection = m_ui->dataTableView->selectionModel()->selectedRows();
+    const auto selection = m_ui->dataTableView->selectionModel()->selectedRows();
 
     return m_tableModel->dataObjects(selection);
 }
 
 QList<DataObject *> DataBrowser::selectedDataSets() const
 {
-    QModelIndexList selection = m_ui->dataTableView->selectionModel()->selectedRows();
+    const auto selection = m_ui->dataTableView->selectionModel()->selectedRows();
 
     return m_tableModel->dataSets(selection);
 }
 
 QList<DataObject *> DataBrowser::selectedAttributeVectors() const
 {
-    QModelIndexList selection = m_ui->dataTableView->selectionModel()->selectedRows();
+    const auto selection = m_ui->dataTableView->selectionModel()->selectedRows();
 
     return m_tableModel->rawVectors(selection);
 }
