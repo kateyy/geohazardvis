@@ -147,7 +147,7 @@ void RenderView::showDataObjectsImpl(const QList<DataObject *> & uncheckedDataOb
         return;
     }
 
-    bool wasEmpty = m_contents.empty();
+    const bool wasEmpty = m_contents.empty();
 
     if (wasEmpty)
     {

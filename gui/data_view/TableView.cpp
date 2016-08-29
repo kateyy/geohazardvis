@@ -49,15 +49,14 @@ QString TableView::friendlyName() const
     return QString::number(index()) + ": " + m_dataObject->name();
 }
 
-void TableView::showDataObject(DataObject * dataObject)
+void TableView::showDataObject(DataObject & dataObject)
 {
-    if (m_dataObject == dataObject)
+    if (m_dataObject == &dataObject)
     {
         return;
     }
+    m_dataObject = &dataObject;
 
-    assert(dataObject);
-    m_dataObject = dataObject;
     setModel(m_dataObject->tableModel());
 
     updateTitle();
@@ -102,6 +101,7 @@ void TableView::setModel(QVtkTableModel * model)
     disconnect(m_hightlightUpdateConnection);
 
     m_ui->tableView->setModel(model);
+
     m_hightlightUpdateConnection = connect(m_ui->tableView->selectionModel(), &QItemSelectionModel::selectionChanged,
         [this, model] (const QItemSelection & selected, const QItemSelection & /*deselected*/)
     {

@@ -134,9 +134,13 @@ void DataSetHandler::takeData(std::vector<std::unique_ptr<DataObject>> dataObjec
     }
 
     if (dataChanged)
+    {
         emit dataObjectsChanged();
+    }
     if (rawDataChanged)
+    {
         emit rawVectorsChanged();
+    }
 }
 
 void DataSetHandler::deleteData(const QList<DataObject *> & dataObjects)
@@ -202,9 +206,13 @@ void DataSetHandler::deleteData(const QList<DataObject *> & dataObjects)
     }
 
     if (dataChanged)
+    {
         emit dataObjectsChanged();
+    }
     if (rawDataChanged)
+    {
         emit rawVectorsChanged();
+    }
 }
 
 void DataSetHandler::addExternalData(const QList<DataObject*>& dataObjects)
@@ -280,9 +288,13 @@ void DataSetHandler::addExternalData(const QList<DataObject*>& dataObjects)
     }
 
     if (dataChanged)
+    {
         emit dataObjectsChanged();
+    }
     if (rawDataChanged)
+    {
         emit rawVectorsChanged();
+    }
 }
 
 void DataSetHandler::removeExternalData(const QList<DataObject*>& dataObjects)
@@ -319,9 +331,13 @@ void DataSetHandler::removeExternalData(const QList<DataObject*>& dataObjects)
     }
 
     if (dataChanged)
+    {
         emit dataObjectsChanged();
+    }
     if (rawDataChanged)
+    {
         emit rawVectorsChanged();
+    }
 }
 
 const QList<DataObject *> & DataSetHandler::dataSets() const
@@ -355,7 +371,9 @@ const QMap<RawVectorData*, bool>& DataSetHandler::rawVectorOwnerships() const
 bool DataSetHandler::ownsData(DataObject * data)
 {
     if (auto rawVector = dynamic_cast<RawVectorData*>(data))
+    {
         return rawVectorOwnerships().value(rawVector, false);
+    }
 
     return dataSetOwnerships().value(data, false);
 }

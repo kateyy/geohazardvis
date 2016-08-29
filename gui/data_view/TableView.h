@@ -32,7 +32,7 @@ public:
     QVtkTableModel * model();
     void setModel(QVtkTableModel * model);
 
-    void showDataObject(DataObject * dataObject);
+    void showDataObject(DataObject & dataObject);
     DataObject * dataObject();
 
 signals:

@@ -45,7 +45,7 @@ ContentType RendererImplementationPlot::contentType() const
 
 bool RendererImplementationPlot::canApplyTo(const QList<DataObject *> & dataObjects)
 {
-    for (DataObject * dataObject : dataObjects)
+    for (auto dataObject : dataObjects)
     {
         if (auto && cd = dataObject->createContextData())
         {
@@ -60,11 +60,15 @@ QList<DataObject *> RendererImplementationPlot::filterCompatibleObjects(const QL
 {
     QList<DataObject *> compatible;
 
-    for (DataObject * dataObject : dataObjects)
+    for (auto dataObject : dataObjects)
         if (dataObject->dataTypeName() == "image profile") // hard-coded for now
+        {
             compatible << dataObject;
+        }
         else
+        {
             incompatibleObjects << dataObject;
+        }
 
     return compatible;
 }
@@ -89,7 +93,9 @@ void RendererImplementationPlot::deactivate(t_QVTKWidget & qvtkWidget)
 void RendererImplementationPlot::render()
 {
     if (!m_renderView.isVisible())
+    {
         return;
+    }
 
     m_contextView->Render();
 }
@@ -286,7 +292,9 @@ std::unique_ptr<AbstractVisualizedData> RendererImplementationPlot::requestVisua
 void RendererImplementationPlot::initialize()
 {
     if (m_isInitialized)
+    {
         return;
+    }
 
     m_contextView = vtkSmartPointer<vtkContextView>::New();
     m_renderWindow = vtkSmartPointer<vtkGenericOpenGLRenderWindow>::New();
@@ -313,7 +321,9 @@ void RendererImplementationPlot::initialize()
 void RendererImplementationPlot::updateBounds()
 {
     if (m_axesAutoUpdate)
+    {
         m_chart->RecalculateBounds();
+    }
 }
 
 void RendererImplementationPlot::fetchContextItems(Context2DData * data)
@@ -327,7 +337,9 @@ void RendererImplementationPlot::fetchContextItems(Context2DData * data)
     vtkCollectionSimpleIterator it;
     items->InitTraversal(it);
     while (vtkPlot * item = items->GetNextPlot(it))
+    {
         m_chart->RemovePlotInstance(item);
+    }
     items->RemoveAllItems();
 
     // insert all new props
@@ -345,8 +357,11 @@ void RendererImplementationPlot::fetchContextItems(Context2DData * data)
 void RendererImplementationPlot::dataVisibilityChanged(Context2DData * data)
 {
     if (data->isVisible())
+    {
         connect(&data->dataObject(), &DataObject::boundsChanged, this, &RendererImplementationPlot::updateBounds);
+    }
     else
+    {
         disconnect(&data->dataObject(), &DataObject::boundsChanged, this, &RendererImplementationPlot::updateBounds);
 }
 

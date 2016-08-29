@@ -53,26 +53,35 @@ void DataMapping::removeDataObjects(const QList<DataObject *> & dataObjects)
     // copy, as this list can change while we are processing it
     // e.g., deleting an image -> delete related plots -> close related plot renderer
     auto currentRenderViews = m_renderViews.values();
-    for (AbstractRenderView * renderView : currentRenderViews)
+    for (auto renderView : currentRenderViews)
     {
         if (!m_renderViews.values().contains(renderView))
+        {
             continue;
+        }
 
         renderView->prepareDeleteData(dataObjects);
     }
 
-    QList<TableView*> currentTableViews = m_tableViews.values();
-    for (TableView * tableView : currentTableViews)
+    auto currentTableViews = m_tableViews.values();
+    for (auto tableView : currentTableViews)
     {
         if (dataObjects.contains(tableView->dataObject()))
+        {
             tableView->close();
+        }
     }
 }
 
 void DataMapping::openInTable(DataObject * dataObject)
 {
+    if (!dataObject)
+    {
+        return;
+    }
+
     TableView * table = nullptr;
-    for (TableView * existingTable : m_tableViews)
+    for (auto existingTable : m_tableViews)
     {
         if (existingTable->dataObject() == dataObject)
         {
@@ -109,14 +118,14 @@ void DataMapping::openInTable(DataObject * dataObject)
     
     QCoreApplication::processEvents();
 
-    table->showDataObject(dataObject);
+    table->showDataObject(*dataObject);
 }
 
 AbstractRenderView * DataMapping::openInRenderView(const QList<DataObject *> & dataObjects)
 {
     auto renderView = createRenderView<RenderView>();
 
-    bool viewStillOpen = addToRenderView(dataObjects, renderView);
+    const bool viewStillOpen = addToRenderView(dataObjects, renderView);
 
     if (!viewStillOpen)
     {
@@ -214,7 +223,9 @@ void DataMapping::setFocusedView(AbstractDataView * view)
 void DataMapping::focusNextRenderView()
 {
     if (m_renderViews.isEmpty())
+    {
         m_focusedRenderView = nullptr;
+    }
     else
     {
         m_focusedRenderView = m_renderViews.first();
@@ -226,7 +237,7 @@ void DataMapping::focusNextRenderView()
 
 void DataMapping::tableClosed()
 {
-    TableView * table = dynamic_cast<TableView*>(sender());
+    auto table = dynamic_cast<TableView*>(sender());
     assert(table);
 
     m_selectionHandler->removeTableView(table);
@@ -244,7 +255,9 @@ void DataMapping::renderViewClosed()
     m_renderViews.remove(renderView->index());
 
     if (renderView == m_focusedRenderView)
+    {
         focusNextRenderView();
+    }
 
     renderView->deleteLater();
 
@@ -271,8 +284,10 @@ void DataMapping::addRenderView(AbstractRenderView * renderView)
 bool DataMapping::askForNewRenderView(const QString & rendererName, const QList<DataObject *> & relevantObjects)
 {
     QString msg = "Cannot add some data to the current render view (" + rendererName + "):\n";
-    for (DataObject * object : relevantObjects)
+    for (auto object : relevantObjects)
+    {
         msg += object->name() + ", ";
+    }
     msg.chop(2);
     msg += "\n\n";
     msg += "Should we try to open these in a new view?";
