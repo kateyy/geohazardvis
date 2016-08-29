@@ -53,13 +53,7 @@ public:
 
     vtkRenderWindowInteractor * interactor() override;
 
-    void setSelectedData(AbstractVisualizedData * vis, vtkIdType index, IndexType indexType) override;
-    void setSelectedData(AbstractVisualizedData * vis, vtkIdTypeArray & indices, IndexType indexType) override;
-    void clearSelection() override;
-    AbstractVisualizedData * selectedData() const override;
-    vtkIdType selectedIndex() const override;
-    IndexType selectedIndexType() const override;
-    void lookAtData(AbstractVisualizedData & vis, vtkIdType index, IndexType indexType, unsigned int subViewIndex) override;
+    void lookAtData(const VisualizationSelection & selection, unsigned int subViewIndex) override;
     void resetCamera(bool toInitialPosition, unsigned int subViewIndex) override;
 
     void dataBounds(double bounds[6], unsigned int subViewIndex) const;
@@ -103,6 +97,9 @@ protected:
     void onAddContent(AbstractVisualizedData * content, unsigned int subViewIndex) override;
     void onRemoveContent(AbstractVisualizedData * content, unsigned int subViewIndex) override;
     virtual void onDataVisibilityChanged(AbstractVisualizedData * content, unsigned int subViewIndex);
+
+    void onSetSelection(const VisualizationSelection & selection) override;
+    void onClearSelection() override;
 
     /** @return current strategy or, if not applicable, a null implementation */
     RenderViewStrategy & strategy() const;

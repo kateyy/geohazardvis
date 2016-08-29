@@ -14,6 +14,7 @@ set(sources
     RuntimeInfo.h
     RuntimeInfo.cpp
     types.h
+    types.cpp
     TextureManager.h
     TextureManager.cpp
     VersionInfo.h

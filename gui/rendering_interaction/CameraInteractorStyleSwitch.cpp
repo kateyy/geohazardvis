@@ -24,14 +24,14 @@ void CameraInteractorStyleSwitch::resetCameraToDefault(vtkCamera & camera)
     m_currentCameraStyle->resetCameraToDefault(camera);
 }
 
-void CameraInteractorStyleSwitch::moveCameraTo(AbstractVisualizedData & visualization, vtkIdType index, IndexType indexType, bool overTime)
+void CameraInteractorStyleSwitch::moveCameraTo(const VisualizationSelection & selection, bool overTime)
 {
     if (!m_currentCameraStyle)
     {
         return;
     }
 
-    m_currentCameraStyle->moveCameraTo(visualization, index, indexType, overTime);
+    m_currentCameraStyle->moveCameraTo(selection, overTime);
 }
 
 void CameraInteractorStyleSwitch::currentStyleChangedEvent()

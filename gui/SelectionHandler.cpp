@@ -31,10 +31,8 @@ void SelectionHandler::addTableView(TableView * tableView)
     m_tableViews.insert(tableView, syncToggleAction);
     updateSyncToggleMenu();
     
-    connect(tableView, &TableView::itemDoubleClicked, 
-        [this] (DataObject * dataObject, vtkIdType index, IndexType indexType) {
-        renderViewsLookAt(dataObject, index, indexType);
-    });
+    connect(tableView, &TableView::itemDoubleClicked,
+        this, &SelectionHandler::renderViewsLookAt);
 }
 
 void SelectionHandler::addRenderView(AbstractRenderView * renderView)
@@ -52,7 +50,7 @@ QAction * SelectionHandler::addAbstractDataView(AbstractDataView * dataView)
     syncToggleAction->setChecked(true);
 
     connect(dataView, &AbstractDataView::windowTitleChanged, syncToggleAction, &QAction::setText);
-    connect(dataView, &AbstractDataView::objectPicked, this, &SelectionHandler::updateSelection);
+    connect(dataView, &AbstractDataView::selectionChanged, this, &SelectionHandler::updateSelection);
 
     return syncToggleAction;
 }
@@ -84,8 +82,13 @@ void SelectionHandler::setSyncToggleMenu(QMenu * syncToggleMenu)
     m_syncToggleMenu = syncToggleMenu;
 }
 
-void SelectionHandler::updateSelection(DataObject * dataObject, vtkIdType index, IndexType indexType)
+void SelectionHandler::updateSelection(AbstractDataView * /*sourceView*/, const DataSelection & selection)
 {
+    if (selection.isEmpty())
+    {
+        return;
+    }
+
     QAction * action = nullptr;
     if (auto table = dynamic_cast<TableView *>(sender()))
     {
@@ -106,23 +109,23 @@ void SelectionHandler::updateSelection(DataObject * dataObject, vtkIdType index,
 
     for (auto it = m_renderViews.begin(); it != m_renderViews.end(); ++it)
     {
-        if (it.value()->isChecked() && it.key()->dataObjects().contains(dataObject))
+        if (it.value()->isChecked() && it.key()->dataObjects().contains(selection.dataObject))
         {
-            it.key()->setSelection(dataObject, index, indexType);
+            it.key()->setSelection(selection);
         }
     }
     for (auto it = m_tableViews.begin(); it != m_tableViews.end(); ++it)
     {
-        if (it.value()->isChecked() && it.key()->dataObject() == dataObject)
+        if (it.value()->isChecked() && it.key()->dataObject() == selection.dataObject)
         {
-            it.key()->setSelection(dataObject, index, indexType);
+            it.key()->setSelection(selection);
         }
     }
 }
 
-void SelectionHandler::renderViewsLookAt(DataObject * dataObject, vtkIdType index, IndexType indexType)
+void SelectionHandler::renderViewsLookAt(const DataSelection & selection)
 {
-    if (!dataObject)
+    if (!selection.dataObject)
     {
         return;
     }
@@ -131,9 +134,9 @@ void SelectionHandler::renderViewsLookAt(DataObject * dataObject, vtkIdType inde
     {
         if (it.value()->isChecked())
         {
-            if (it.key()->dataObjects().contains(dataObject))
+            if (it.key()->dataObjects().contains(selection.dataObject))
             {
-                it.key()->lookAtData(*dataObject, index, indexType);
+                it.key()->lookAtData(selection);
             }
         }
     }

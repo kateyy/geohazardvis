@@ -156,66 +156,68 @@ ContentType ResidualVerificationView::contentType() const
     return ContentType::Rendered2D;
 }
 
-DataObject * ResidualVerificationView::selectedData() const
+void ResidualVerificationView::lookAtData(const DataSelection & selection, int subViewIndex)
 {
-    if (auto vis = selectedDataVisualization())
+    if (!selection.dataObject)
     {
-        return &vis->dataObject();
-    }
-
-    return nullptr;
-}
-
-AbstractVisualizedData * ResidualVerificationView::selectedDataVisualization() const
-{
-    return implementation().selectedData();
-}
-
-void ResidualVerificationView::lookAtData(DataObject & dataObject, vtkIdType index, IndexType indexType, int subViewIndex)
-{
-    if (subViewIndex >= 0 && subViewIndex < static_cast<int>(numberOfSubViews()))
-    {
-        unsigned int specificSubViewIdx = static_cast<unsigned int>(subViewIndex);
-
-        lookAtData(*m_visualizations[specificSubViewIdx].get(), index, indexType, subViewIndex);
-
         return;
     }
 
-    for (unsigned int i = 0; i < numberOfSubViews(); ++i)
-    {
-        auto & vis = *m_visualizations[i].get();
-        if (&vis.dataObject() != &dataObject)
-        {
-            continue;
-        }
-
-        lookAtData(vis, index, indexType, static_cast<int>(i));
-    }
-}
-
-void ResidualVerificationView::lookAtData(AbstractVisualizedData & vis, vtkIdType index, IndexType indexType, int subViewIndex)
-{
     if (subViewIndex >= 0 && subViewIndex < static_cast<int>(numberOfSubViews()))
     {
-        unsigned int specificSubViewIdx = static_cast<unsigned int>(subViewIndex);
-        if (m_visualizations[specificSubViewIdx].get() != &vis)
+        const auto specificSubViewIdx = static_cast<unsigned int>(subViewIndex);
+
+        auto vis = m_visualizations[specificSubViewIdx].get();
+        if (!vis)
         {
             return;
         }
 
-        implementation().lookAtData(vis, index, indexType, specificSubViewIdx);
+        lookAtData(VisualizationSelection(selection,
+            vis,
+            vis->defaultVisualizationPort()),
+            subViewIndex);
+
         return;
     }
 
     for (unsigned int i = 0; i < numberOfSubViews(); ++i)
     {
-        if (m_visualizations[i].get() != &vis)
+        auto * vis = m_visualizations[i].get();
+        if (&vis->dataObject() != selection.dataObject)
         {
             continue;
         }
 
-        implementation().lookAtData(vis, index, indexType, i);
+        lookAtData(VisualizationSelection(selection,
+            vis,
+            vis->defaultVisualizationPort()),
+            subViewIndex);
+    }
+}
+
+void ResidualVerificationView::lookAtData(const VisualizationSelection & selection, int subViewIndex)
+{
+    if (subViewIndex >= 0 && subViewIndex < static_cast<int>(numberOfSubViews()))
+    {
+        unsigned int specificSubViewIdx = static_cast<unsigned int>(subViewIndex);
+        if (m_visualizations[specificSubViewIdx].get() != selection.visualization)
+        {
+            return;
+        }
+
+        implementation().lookAtData(selection, specificSubViewIdx);
+        return;
+    }
+
+    for (unsigned int i = 0; i < numberOfSubViews(); ++i)
+    {
+        if (m_visualizations[i].get() != selection.visualization)
+        {
+            continue;
+        }
+
+        implementation().lookAtData(selection, i);
         return;
     }
 }
@@ -259,11 +261,15 @@ int ResidualVerificationView::subViewContaining(const AbstractVisualizedData & v
 
 void ResidualVerificationView::setObservationData(DataObject * observation)
 {
+    waitForResidualUpdate();
+
     setDataHelper(observationIndex, observation);
 }
 
 void ResidualVerificationView::setModelData(DataObject * model)
 {
+    waitForResidualUpdate();
+
     setDataHelper(modelIndex, model);
 }
 
@@ -349,6 +355,11 @@ ResidualVerificationView::InterpolationMode ResidualVerificationView::interpolat
 
 void ResidualVerificationView::waitForResidualUpdate()
 {
+    if (!m_updateWatcher->isStarted())
+    {
+        return;
+    }
+
     m_updateWatcher->waitForFinished();
     QCoreApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
 }
@@ -423,15 +434,43 @@ void ResidualVerificationView::showDataObjectsImpl(const QList<DataObject *> & d
     setDataHelper(subViewIndex, dataObject);
 }
 
-void ResidualVerificationView::hideDataObjectsImpl(const QList<DataObject *> & dataObjects, unsigned int subViewIndex)
+void ResidualVerificationView::hideDataObjectsImpl(const QList<DataObject *> & dataObjects, int subViewIndex)
 {
-    // no caching for now, just remove the object
-    bool relevantRequest = dataObjects.contains(dataAt(subViewIndex));
-
-    if (relevantRequest)
+    // check if this request is relevant
+    if (subViewIndex < 0)
     {
-        setDataHelper(subViewIndex, nullptr);
+        if (dataObjects.toSet().intersect({ m_observationData, m_modelData }).isEmpty())
+        {
+            return;
+        }
     }
+    else if (!dataObjects.contains(dataAt(static_cast<unsigned>(subViewIndex))))
+    {
+        return;
+    }
+
+    waitForResidualUpdate();
+
+    // no caching for now, just remove the object
+
+    if (subViewIndex >= 0)
+    {
+        setDataHelper(static_cast<unsigned>(subViewIndex), nullptr, true);
+    }
+    else
+    {
+        for (unsigned i = 0; i < numberOfViews; ++i)
+        {
+            if (dataObjects.contains(dataAt(i)))
+            {
+                setDataHelper(i, nullptr, true);
+            }
+        }
+    }
+
+    updateResidualAsync();
+
+    waitForResidualUpdate();
 }
 
 QList<DataObject *> ResidualVerificationView::dataObjectsImpl(int subViewIndex) const
@@ -458,22 +497,24 @@ QList<DataObject *> ResidualVerificationView::dataObjectsImpl(int subViewIndex) 
 
 void ResidualVerificationView::prepareDeleteDataImpl(const QList<DataObject *> & dataObjects)
 {
-    bool changed = false;
+    const bool unsetObservation = dataObjects.contains(m_observationData);
+    const bool unsetModel = dataObjects.contains(m_modelData);
 
-    if (dataObjects.contains(m_observationData))
-    {
-        setDataHelper(observationIndex, nullptr, true);
-        changed = true;
-    }
-    if (dataObjects.contains(m_modelData))
-    {
-        setDataHelper(modelIndex, nullptr, true);
-        changed = true;
-    }
-
-    if (!changed)
+    if (!unsetObservation && !unsetModel)
     {
         return;
+    }
+
+    // don't change internal data if the update process is currently running
+    waitForResidualUpdate();
+    
+    if (unsetObservation)
+    {
+        setDataHelper(observationIndex, nullptr, true);
+    }
+    if (unsetModel)
+    {
+        setDataHelper(modelIndex, nullptr, true);
     }
 
     updateResidualAsync();
@@ -505,6 +546,11 @@ QList<AbstractVisualizedData *> ResidualVerificationView::visualizationsImpl(int
     return{};
 }
 
+void ResidualVerificationView::visualizationSelectionChangedEvent(const VisualizationSelection & /*selection*/)
+{
+    updateTitle();
+}
+
 void ResidualVerificationView::axesEnabledChangedEvent(bool enabled)
 {
     implementation().setAxesVisibility(enabled);
@@ -522,9 +568,9 @@ void ResidualVerificationView::initialize()
 
     m_cameraSync = std::make_unique<vtkCameraSynchronization>();
     for (unsigned int i = 0; i < numberOfSubViews(); ++i)
+    {
         m_cameraSync->add(m_implementation->renderer(i));
-
-    connect(m_implementation.get(), &RendererImplementation::dataSelectionChanged, this, &ResidualVerificationView::updateGuiSelection);
+    }
 }
 
 void ResidualVerificationView::setDataInternal(unsigned int subViewIndex, DataObject * dataObject, std::unique_ptr<DataObject> ownedObject)
@@ -709,10 +755,17 @@ void ResidualVerificationView::updateResidual()
     const auto & modelAttributeName = m_attributeNamesLocations[modelIndex].first;
     bool useModelCellData = m_attributeNamesLocations[modelIndex].second;
 
-
     if (observationAttributeName.isEmpty() || modelAttributeName.isEmpty())
     {
-        qDebug() << "Cannot find suitable data attributes";
+        qDebug() << "ResidualVerificationView::updateResidual: Cannot find suitable data attributes";
+
+        for (unsigned i = 0; i < numberOfViews; ++i)
+        {
+            if (m_attributeNamesLocations[i].first.isEmpty())
+            {
+                m_projectedAttributeNames = {};
+            }
+        }
 
         return;
     }
@@ -923,25 +976,42 @@ void ResidualVerificationView::updateGuiSelection()
 {
     updateTitle();
 
-    auto selectedVis = implementation().selectedData();
-    auto selection = selectedVis ? &selectedVis->dataObject() : static_cast<DataObject *>(nullptr);
+    auto selectedVis = implementation().selection().visualization;
 
-    // it's more convenient to chose on of the contents as "current", even if none is directly selected
-    if (!selection)
+    if (selectedVis)
     {
-        selection = dataAt(activeSubViewIndex());
+        return;
     }
-    if (!selection)
+
+    // It's more convenient to chose on of the contents as "current", even if none is directly selected.
+    // Prefer to use the active sub view data.
+    // Check for the visualzation and the data object. If we are currently removing the data object,
+    // the visualzation might not be cleaned up yet.
+    QVector<unsigned int> indices(numberOfViews);
     {
-        auto vis = std::find_if(m_visualizations.begin(), m_visualizations.end(),
-            [] (const decltype(m_visualizations)::value_type & vis) { return vis != nullptr; });
-        if (vis != m_visualizations.end())
+        unsigned int i = 0;
+        std::generate(indices.begin(), indices.end(), [&i] () { return i++; });
+        indices.removeOne(activeSubViewIndex());
+        indices.prepend(activeSubViewIndex());
+    }
+
+    for (auto i : indices)
+    {
+        auto d = dataAt(i);
+        auto vis = m_visualizations[i].get();
+        if (d && vis && (&vis->dataObject() == d))
         {
-            selection = &(*vis)->dataObject();
+            selectedVis = vis;
+            break;
         }
     }
 
-    emit selectedDataChanged(this, selection);
+    if (!selectedVis)
+    {
+        return;
+    }
+
+    setVisualizationSelection(VisualizationSelection(selectedVis));
 }
 
 DataObject * ResidualVerificationView::dataAt(unsigned int i) const

@@ -7,8 +7,6 @@
 #include <QLayout>
 #include <QToolBar>
 
-#include <vtkIdTypeArray.h>
-
 #include <gui/DataMapping.h>
 
 
@@ -19,8 +17,6 @@ AbstractDataView::AbstractDataView(
     , m_index{ index }
     , m_initialized{ false }
     , m_toolBar{ nullptr }
-    , m_selectedDataObject{ nullptr }
-    , m_selectedIndices{ vtkSmartPointer<vtkIdTypeArray>::New() }
 {
 }
 
@@ -102,84 +98,37 @@ QString AbstractDataView::subViewFriendlyName(unsigned int /*subViewIndex*/) con
     return "";
 }
 
-void AbstractDataView::setSelection(DataObject * dataObject, vtkIdType selectionIndex, IndexType indexType)
+void AbstractDataView::setSelection(const DataSelection & selection)
 {
-    bool oldSingleSelection = m_selectedIndices->GetSize() == 1;
-    auto singleSelection = oldSingleSelection ? m_selectedIndices->GetValue(0) : vtkIdType(-1);
-
-    if (m_selectedDataObject == dataObject && singleSelection == selectionIndex && m_selectionIndexType == indexType)
-        return;
-
-    m_selectedDataObject = dataObject;
-    m_selectedIndices->SetNumberOfValues(1);
-    m_selectedIndices->SetValue(0, selectionIndex);
-    m_selectionIndexType = indexType;
-
-    selectionChangedEvent(dataObject, m_selectedIndices, m_selectionIndexType);
-}
-
-void AbstractDataView::setSelection(DataObject * dataObject, vtkIdTypeArray & selectionIndices, IndexType indexType)
-{
-    bool changed = 
-        m_selectedDataObject != dataObject
-        || m_selectionIndexType != indexType
-        || m_selectedIndices->GetSize() != selectionIndices.GetSize();
-
-    assert(selectionIndices.GetNumberOfComponents() == 1);
-    const auto numIndices = selectionIndices.GetNumberOfTuples();
-    m_selectedIndices->SetNumberOfValues(numIndices);
-
-    for (vtkIdType i = 0; i < numIndices; ++i)
+    if (selection == m_selection)
     {
-        auto newValue = selectionIndices.GetValue(i);
-        auto storedValuePtr = m_selectedIndices->GetPointer(i);
-        changed = changed || (*storedValuePtr != newValue);
-        *storedValuePtr = newValue;
+        return;
     }
 
-    if (!changed)
-        return;
+    m_selection = selection;
 
-    m_selectedDataObject = dataObject;
-    m_selectionIndexType = indexType;
+    onSetSelection(m_selection);
 
-    selectionChangedEvent(dataObject, m_selectedIndices, m_selectionIndexType);
+    emit selectionChanged(this, m_selection);
 }
 
 void AbstractDataView::clearSelection()
 {
-    auto empty = vtkSmartPointer<vtkIdTypeArray>::New();
-    setSelection(nullptr, *empty, m_selectionIndexType);
+    if (m_selection.isEmpty())
+    {
+        return;
+    }
+
+    m_selection.clear();
+
+    onClearSelection();
+
+    emit selectionChanged(this, m_selection);
 }
 
-vtkIdType AbstractDataView::lastSelectedIndex() const
+const DataSelection & AbstractDataView::selection() const
 {
-    auto numSelections = m_selectedIndices->GetSize();
-
-    if (numSelections == 0)
-        return -1;
-
-    return m_selectedIndices->GetValue(numSelections - 1);
-}
-
-vtkIdTypeArray * AbstractDataView::selectedIndices()
-{
-    return m_selectedIndices;
-}
-
-IndexType AbstractDataView::selectedIndexType() const
-{
-    return m_selectionIndexType;
-}
-
-DataObject * AbstractDataView::selectedDataObject()
-{
-    return m_selectedDataObject;
-}
-
-const DataObject * AbstractDataView::selectedDataObject() const
-{
-    return m_selectedDataObject;
+    return m_selection;
 }
 
 void AbstractDataView::showEvent(QShowEvent * /*event*/)

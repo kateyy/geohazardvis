@@ -6,12 +6,11 @@
 
 #include <vtkInteractorObserver.h>
 
+#include <core/types.h>
 #include <gui/gui_api.h>
 
 
-class AbstractVisualizedData;
 class Highlighter;
-enum class IndexType;
 class Picker;
 
 
@@ -39,7 +38,7 @@ public:
 
 signals:
     void pickedInfoChanged(const QString & infoText);
-    void dataPicked(AbstractVisualizedData * visualizedData, vtkIdType index, IndexType indexType);
+    void dataPicked(const VisualizationSelection & selection);
     void geometryChanged();
 
 protected:

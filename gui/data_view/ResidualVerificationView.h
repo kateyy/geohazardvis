@@ -67,10 +67,8 @@ public:
 
     ContentType contentType() const override;
 
-    DataObject * selectedData() const override;
-    AbstractVisualizedData * selectedDataVisualization() const override;
-    void lookAtData(DataObject & dataObject, vtkIdType index, IndexType indexType, int subViewIndex = -1) override;
-    void lookAtData(AbstractVisualizedData & vis, vtkIdType index, IndexType indexType, int subViewIndex = -1) override;
+    void lookAtData(const DataSelection & selection, int subViewIndex = -1) override;
+    void lookAtData(const VisualizationSelection & selection, int subViewIndex = -1) override;
 
     AbstractVisualizedData * visualizationFor(DataObject * dataObject, int subViewIndex = -1) const override;
     int subViewContaining(const AbstractVisualizedData & visualizedData) const override;
@@ -85,10 +83,12 @@ protected:
     void showDataObjectsImpl(const QList<DataObject *> & dataObjects,
         QList<DataObject *> & incompatibleObjects,
         unsigned int subViewIndex) override;
-    void hideDataObjectsImpl(const QList<DataObject *> & dataObjects, unsigned int subViewIndex) override;
+    void hideDataObjectsImpl(const QList<DataObject *> & dataObjects, int subViewIndex) override;
     QList<DataObject *> dataObjectsImpl(int subViewIndex) const override;
     void prepareDeleteDataImpl(const QList<DataObject *> & dataObjects) override;
     QList<AbstractVisualizedData *> visualizationsImpl(int subViewIndex) const override;
+
+    void visualizationSelectionChangedEvent(const VisualizationSelection & selection) override;
 
     void axesEnabledChangedEvent(bool enabled) override;
 

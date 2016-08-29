@@ -1,7 +1,5 @@
 #pragma once
 
-
-#include <vtkType.h>
 #include <memory>
 
 #include <gui/data_view/AbstractDataView.h>
@@ -13,7 +11,6 @@ class QMenu;
 
 class Ui_TableView;
 class QVtkTableModel;
-class DataObject;
 
 
 class GUI_API TableView : public AbstractDataView
@@ -36,11 +33,12 @@ public:
     DataObject * dataObject();
 
 signals:
-    void itemDoubleClicked(DataObject * dataObject, vtkIdType index, IndexType indexType);
+    void itemDoubleClicked(const DataSelection & selection);
 
 protected:
     QWidget * contentWidget() override;
-    void selectionChangedEvent(DataObject * dataObject, vtkIdTypeArray * selection, IndexType indexType) override;
+    void onSetSelection(const DataSelection & selection) override;
+    void onClearSelection() override;
 
     bool eventFilter(QObject * obj, QEvent * ev) override;
 

@@ -10,6 +10,7 @@
 
 #include <vtkGenericOpenGLRenderWindow.h>
 
+#include <core/AbstractVisualizedData.h>
 #include <gui/data_view/RendererImplementation.h>
 #include <gui/data_view/t_QVTKWidget.h>
 
@@ -69,10 +70,10 @@ void AbstractRenderView::showDataObjects(
     showDataObjectsImpl(dataObjects, incompatibleObjects, subViewIndex);
 }
 
-void AbstractRenderView::hideDataObjects(const QList<DataObject *> & dataObjects, unsigned int subViewIndex)
+void AbstractRenderView::hideDataObjects(const QList<DataObject *> & dataObjects, int subViewIndex)
 {
-    assert(subViewIndex < numberOfSubViews());
-    if (subViewIndex >= numberOfSubViews())
+    assert(subViewIndex < 0 || static_cast<unsigned>(subViewIndex) < numberOfSubViews());
+    if (subViewIndex >= 0 && static_cast<unsigned>(subViewIndex) >= numberOfSubViews())
     {
         qDebug() << "Trying to AbstractRenderView::hideDataObjects on sub-view" << subViewIndex << "while having only" << numberOfSubViews() << "views.";
         return;
@@ -108,6 +109,29 @@ QList<AbstractVisualizedData *> AbstractRenderView::visualizations(int subViewIn
 {
     assert(subViewIndex == -1 || (unsigned int)(subViewIndex) < numberOfSubViews());
     return visualizationsImpl(subViewIndex);
+}
+
+void AbstractRenderView::setVisualizationSelection(const VisualizationSelection & selection)
+{
+    if (selection == visualzationSelection())
+    {
+        return;
+    }
+
+    implementation().setSelection(selection);
+
+    // Trigger update according to the more generic AbstractDataView interface.
+    // This doesn't contain information regarding the actual visualization.
+    setSelection(DataSelection(selection));
+
+    visualizationSelectionChangedEvent(implementation().selection());
+
+    emit visualizationSelectionChanged(this, implementation().selection());
+}
+
+const VisualizationSelection & AbstractRenderView::visualzationSelection() const
+{
+    return implementation().selection();
 }
 
 unsigned int AbstractRenderView::numberOfSubViews() const
@@ -248,18 +272,33 @@ bool AbstractRenderView::eventFilter(QObject * watched, QEvent * event)
     return AbstractDataView::eventFilter(watched, event);
 }
 
-void AbstractRenderView::selectionChangedEvent(DataObject * dataObject, vtkIdTypeArray * selection, IndexType indexType)
+void AbstractRenderView::onSetSelection(const DataSelection & selection)
 {
-    assert((dataObject != nullptr) == (selection != nullptr));
+    assert(selection.dataObject && dataObjects().contains(selection.dataObject));
 
-    AbstractVisualizedData * vis = nullptr;
-    if (!dataObject || !(vis = visualizationFor(dataObject)))
-    {
-        implementation().clearSelection();
-        return;
-    }
+    const auto vis = visualizationFor(selection.dataObject);
+    assert(vis);
 
-    implementation().setSelectedData(vis, *selection, indexType);
+    auto && newVisSelection = VisualizationSelection(
+        selection,
+        vis,
+        vis->defaultVisualizationPort()
+    );
+
+    setVisualizationSelection(newVisSelection);
+}
+
+void AbstractRenderView::onClearSelection()
+{
+    implementation().clearSelection();
+
+    visualizationSelectionChangedEvent(implementation().selection());
+
+    emit visualizationSelectionChanged(this, implementation().selection());
+}
+
+void AbstractRenderView::visualizationSelectionChangedEvent(const VisualizationSelection & /*selection*/)
+{
 }
 
 void AbstractRenderView::activeSubViewChangedEvent(unsigned int /*subViewIndex*/)

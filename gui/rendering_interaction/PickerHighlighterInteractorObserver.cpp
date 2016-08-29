@@ -101,7 +101,7 @@ void PickerHighlighterInteractorObserver::setPickOnMouseMove(bool doPick)
 
 const QString & PickerHighlighterInteractorObserver::pickedInfo() const
 {
-    return picker().pickedObjectInfo();
+    return picker().pickedObjectInfoString();
 }
 
 void PickerHighlighterInteractorObserver::requestPickedInfoUpdate()
@@ -156,7 +156,7 @@ void PickerHighlighterInteractorObserver::pick()
 
     m_picker->pick(clickPos, *renderer);
 
-    emit pickedInfoChanged(m_picker->pickedObjectInfo());
+    emit pickedInfoChanged(m_picker->pickedObjectInfoString());
 }
 
 void PickerHighlighterInteractorObserver::highlight()
@@ -172,11 +172,7 @@ void PickerHighlighterInteractorObserver::highlight()
     }
 
     m_highlighter->setRenderer(renderer);
-    m_highlighter->setTarget(
-        m_picker->pickedVisualizedData(),
-        0,
-        m_picker->pickedIndex(),
-        m_picker->pickedIndexType());
+    m_highlighter->setTarget(m_picker->pickedObjectInfo());
 
-    emit dataPicked(m_picker->pickedVisualizedData(), m_picker->pickedIndex(), m_picker->pickedIndexType());
+    emit dataPicked(m_picker->pickedObjectInfo());
 }

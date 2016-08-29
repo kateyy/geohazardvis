@@ -95,6 +95,42 @@ void RendererImplementation::renderViewContentsChanged()
     onRenderViewContentsChanged();
 }
 
+void RendererImplementation::setSelection(const VisualizationSelection & selection)
+{
+    // This is either called by the view (setVisualizationSelection etc)
+    // or by the picking/highlighting implementations.
+
+    if (selection == m_selection)
+    {
+        return;
+    }
+
+    m_selection = selection;
+
+    onSetSelection(m_selection);
+
+    m_renderView.setVisualizationSelection(selection);
+}
+
+void RendererImplementation::clearSelection()
+{
+    if (m_selection.isEmpty())
+    {
+        return;
+    }
+
+    m_selection.clear();
+
+    onClearSelection();
+
+    m_renderView.clearSelection();
+}
+
+const VisualizationSelection & RendererImplementation::selection() const
+{
+    return m_selection;
+}
+
 const QList<RendererImplementation::ImplementationConstructor> & RendererImplementation::constructors()
 {
     return s_constructors();

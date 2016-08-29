@@ -317,10 +317,6 @@ private:
 
 Highlighter::Highlighter()
     : QObject()
-    , m_visualizedData{ nullptr }
-    , m_visOutputPort{ -1 }
-    , m_indices{ vtkSmartPointer<vtkIdTypeArray>::New() }
-    , m_indexType{ IndexType::points }
     , m_flashAfterSetTarget{ true }
     , m_flashTimeMilliseconds{ 2000 }
     , m_impl{ std::make_unique<HighlighterImplementationSwitch>(*this) }
@@ -346,100 +342,57 @@ vtkRenderer * Highlighter::renderer() const
     return m_renderer;
 }
 
-void Highlighter::setTarget(AbstractVisualizedData * vis, int visOutputPort, vtkIdType index, IndexType indexType)
+void Highlighter::setTarget(const VisualizationSelection & selection)
 {
-    if (index < 0)
+    if (m_selection == selection)
     {
-        clearIndices();
         return;
     }
 
-    m_indices->SetNumberOfValues(1);
-    m_indices->SetValue(0, index);
+    auto newSelection = selection;
+    newSelection.indices.clear();
 
-    setTargetInternal(vis, visOutputPort, indexType);
-
-    updateHighlight();
-}
-
-void Highlighter::setTarget(AbstractVisualizedData * vis, int visOutputPort, vtkIdTypeArray & indices, IndexType indexType)
-{
-    std::vector<vtkIdType> validIndices;
-    validIndices.reserve(indices.GetSize());
-    for (vtkIdType i = 0; i < indices.GetSize(); ++i)
+    for (size_t i = 0; i < selection.indices.size(); ++i)
     {
-        const auto && val = indices.GetValue(i);
+        const auto val = selection.indices[i];
         if (val >= 0)
         {
-            validIndices.push_back(val);
+            newSelection.indices.push_back(val);
         }
     }
 
-    m_indices->Resize(validIndices.size());
-    for (vtkIdType i = 0; i < vtkIdType(validIndices.size()); ++i)
-    {
-        m_indices->SetValue(i, validIndices[i]);
-    }
-
-    setTargetInternal(vis, visOutputPort, indexType);
+    setTargetInternal(newSelection);
 
     updateHighlight();
 }
 
-void Highlighter::setTargetInternal(AbstractVisualizedData * vis, int visOutputPort, IndexType indexType)
+void Highlighter::setTargetInternal(VisualizationSelection selection)
 {
-    if (m_visualizedData)
+    if (m_selection.visualization)
     {
-        disconnect(m_visualizedData, &AbstractVisualizedData::visibilityChanged, this, &Highlighter::checkDataVisibility);
+        disconnect(m_selection.visualization, &AbstractVisualizedData::visibilityChanged, this, &Highlighter::checkDataVisibility);
     }
 
-    m_visualizedData = vis;
-    m_visOutputPort = visOutputPort;
-    m_indexType = indexType;
+    m_selection = selection;
 
-    if (vis)
+    if (m_selection.visualization)
     {
-        connect(vis, &AbstractVisualizedData::visibilityChanged, this, &Highlighter::checkDataVisibility);
+        connect(m_selection.visualization, &AbstractVisualizedData::visibilityChanged, this, &Highlighter::checkDataVisibility);
     }
-}
-
-AbstractVisualizedData * Highlighter::targetVisualization() const
-{
-    return m_visualizedData;
-}
-
-vtkIdTypeArray * Highlighter::targetIndices()
-{
-    return m_indices;
-}
-
-vtkIdType Highlighter::lastTargetIndex() const
-{
-    if (m_indices->GetSize() == 0)
-    {
-        return -1;
-    }
-
-    return m_indices->GetValue(m_indices->GetSize() - 1);
-}
-
-IndexType Highlighter::targetIndexType() const
-{
-    return m_indexType;
 }
 
 void Highlighter::clear()
 {
     clearIndices();
 
-    setTargetInternal(nullptr, -1, m_indexType);
+    setTargetInternal(VisualizationSelection());
 
     m_renderer = nullptr;
 }
 
 void Highlighter::clearIndices()
 {
-    m_indices->SetNumberOfValues(0);
+    m_selection.indices.clear();
 
     if (m_renderer)
     {
@@ -449,12 +402,12 @@ void Highlighter::clearIndices()
 
 void Highlighter::flashTargets()
 {
-    if (!m_renderer || m_indices->GetSize() == 0)
+    if (!m_renderer || m_selection.indices.empty())
     {
         return;
     }
 
-    assert(m_visualizedData);
+    assert(m_selection.visualization);
 
 
     if (!m_highlightFlashTimer)
@@ -494,13 +447,16 @@ void Highlighter::updateHighlight()
         clear();
         return;
     }
-    if (!m_visualizedData || m_indices->GetSize() == 0)
+    if (!m_selection.visualization || m_selection.indices.empty())
     {
         clearIndices();
+
+        emit geometryChanged();
+
         return;
     }
 
-    switch (m_indexType)
+    switch (m_selection.indexType)
     {
     case IndexType::points:
         highlightPoints();
@@ -518,15 +474,15 @@ void Highlighter::updateHighlight()
 
 void Highlighter::highlightPoints()
 {
-    assert(m_renderer && m_visualizedData && m_indices->GetSize() > 0);
+    assert(m_renderer && m_selection.visualization && !m_selection.indices.empty());
 
-    auto dataSet = m_visualizedData->colorMappingInputData(m_visOutputPort);
+    auto dataSet = m_selection.visualization->colorMappingInputData(m_selection.visOutputPort);
     if (!dataSet)
     {
         return;
     }
 
-    const vtkIdType index = m_indices->GetValue(0);
+    const vtkIdType index = m_selection.indices.front();
     double point[3];
     dataSet->GetPoint(index, point);
     m_impl->highlightPoint2D(point);
@@ -536,15 +492,15 @@ void Highlighter::highlightPoints()
 
 void Highlighter::highlightCells()
 {
-    assert(m_renderer && m_visualizedData && m_indices->GetSize() > 0);
+    assert(m_renderer && m_selection.visualization && !m_selection.indices.empty());
 
-    auto dataSet = m_visualizedData->colorMappingInputData(m_visOutputPort);
+    auto dataSet = m_selection.visualization->colorMappingInputData(m_selection.visOutputPort);
     if (!dataSet)
     {
         return;
     }
 
-    const auto index = m_indices->GetValue(0);
+    const auto index = m_selection.indices.front();
 
     // extract picked triangle and create highlighting geometry
     // create two shifted polygons to work around occlusion
@@ -564,8 +520,8 @@ void Highlighter::highlightCells()
 
 void Highlighter::checkDataVisibility()
 {
-    assert(sender() == m_visualizedData);
-    assert(!m_visualizedData->isVisible());
+    assert(sender() == m_selection.visualization);
+    assert(!m_selection.visualization->isVisible());
 
     clear();
 }

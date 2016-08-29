@@ -81,6 +81,11 @@ void RenderView::closeEvent(QCloseEvent * event)
     AbstractRenderView::closeEvent(event);
 }
 
+void RenderView::visualizationSelectionChangedEvent(const VisualizationSelection & selection)
+{
+    updateGuiForSelectedData(selection.visualization);
+}
+
 void RenderView::axesEnabledChangedEvent(bool enabled)
 {
     implementation().setAxesVisibility(enabled && !m_contents.empty());
@@ -90,9 +95,6 @@ void RenderView::updateImplementation(const QList<DataObject *> & contents)
 {
     implementation().deactivate(qvtkWidget());
 
-    disconnect(&implementation(), &RendererImplementation::dataSelectionChanged,
-        this, &RenderView::updateGuiForSelectedData);
-
     assert(m_contents.empty());
     m_contentCache.clear();
     m_dataObjectToVisualization.clear();
@@ -100,9 +102,6 @@ void RenderView::updateImplementation(const QList<DataObject *> & contents)
     m_implementationSwitch->findSuitableImplementation(contents);
 
     implementation().activate(qvtkWidget());
-
-    connect(&implementation(), &RendererImplementation::dataSelectionChanged,
-        this, &RenderView::updateGuiForSelectedData);
 
     emit implementationChanged();
 }
@@ -130,12 +129,12 @@ AbstractVisualizedData * RenderView::addDataObject(DataObject * dataObject)
         return nullptr;
     }
 
-    implementation().addContent(newContent.get(), 0);
-
     auto newContentPtr = newContent.get();
     m_contents.push_back(std::move(newContent));
 
     m_dataObjectToVisualization.insert(dataObject, newContentPtr);
+
+    implementation().addContent(newContentPtr, 0);
 
     return newContentPtr;
 }
@@ -156,7 +155,7 @@ void RenderView::showDataObjectsImpl(const QList<DataObject *> & uncheckedDataOb
 
     AbstractVisualizedData * aNewObject = nullptr;
 
-    QList<DataObject *> dataObjects = implementation().filterCompatibleObjects(uncheckedDataObjects, incompatibleObjects);
+    const auto && dataObjects = implementation().filterCompatibleObjects(uncheckedDataObjects, incompatibleObjects);
 
     if (dataObjects.isEmpty())
     {
@@ -214,7 +213,7 @@ void RenderView::showDataObjectsImpl(const QList<DataObject *> & uncheckedDataOb
     updateTitle();
 }
 
-void RenderView::hideDataObjectsImpl(const QList<DataObject *> & dataObjects, unsigned int /*suViewIndex*/)
+void RenderView::hideDataObjectsImpl(const QList<DataObject *> & dataObjects, int /*suViewIndex*/)
 {
     bool changed = false;
     for (auto dataObject : dataObjects)
@@ -348,38 +347,27 @@ QList<AbstractVisualizedData *> RenderView::visualizationsImpl(int /*subViewInde
     return vis;
 }
 
-DataObject * RenderView::selectedData() const
+void RenderView::lookAtData(const DataSelection & selection, int subViewIndex)
 {
-    if (auto vis = selectedDataVisualization())
-    {
-        return &vis->dataObject();
-    }
-
-    return nullptr;
-}
-
-AbstractVisualizedData * RenderView::selectedDataVisualization() const
-{
-    return implementation().selectedData();
-}
-
-void RenderView::lookAtData(DataObject & dataObject, vtkIdType index, IndexType indexType, int subViewIndex)
-{
-    auto vis = m_dataObjectToVisualization.value(&dataObject, nullptr);
+    auto vis = m_dataObjectToVisualization.value(selection.dataObject, nullptr);
     if (!vis)
     {
         return;
     }
 
-    lookAtData(*vis, index, indexType, subViewIndex);
+    lookAtData(VisualizationSelection(
+        selection, 
+        vis,
+        vis->defaultVisualizationPort()), // TODO how to find the correct visualization output port?
+        subViewIndex);
 }
 
-void RenderView::lookAtData(AbstractVisualizedData & vis, vtkIdType index, IndexType indexType, int DEBUG_ONLY(subViewIndex))
+void RenderView::lookAtData(const VisualizationSelection & selection, int DEBUG_ONLY(subViewIndex))
 {
     assert(subViewIndex == 0 || subViewIndex == -1);
-    assert(containsUnique(m_contents, &vis));
+    assert(containsUnique(m_contents, selection.visualization));
 
-    implementation().lookAtData(vis, index, indexType, 0u);
+    implementation().lookAtData(selection, 0u);
 }
 
 AbstractVisualizedData * RenderView::visualizationFor(DataObject * dataObject, int subViewIndex) const
@@ -411,11 +399,19 @@ RendererImplementation & RenderView::implementation() const
 
 void RenderView::updateGuiForSelectedData(AbstractVisualizedData * renderedData)
 {
-    auto current = renderedData ? &renderedData->dataObject() : nullptr;
-
     updateTitle();
 
-    emit selectedDataChanged(this, current);
+    if (visualzationSelection().visualization != renderedData)
+    {
+        if (renderedData)
+        {
+            setVisualizationSelection(VisualizationSelection(renderedData));
+        }
+        else
+        {
+            clearSelection();
+        }
+    }
 }
 
 void RenderView::updateGuiForRemovedData()

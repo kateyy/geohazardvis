@@ -61,18 +61,18 @@ void RenderConfigWidget::setCurrentRenderView(AbstractRenderView * renderView)
     {
         disconnect(m_renderView, &AbstractRenderView::beforeDeleteVisualizations,
             this, &RenderConfigWidget::checkDeletedContent);
-        disconnect(m_renderView, &AbstractRenderView::selectedDataChanged,
-            this, static_cast<void (RenderConfigWidget::*)(AbstractRenderView *, DataObject *)>(&RenderConfigWidget::setSelectedData));
+        disconnect(m_renderView, &AbstractRenderView::visualizationSelectionChanged,
+            this, &RenderConfigWidget::setSelectedVisualization);
     }
 
     m_renderView = renderView;
-    m_content = renderView ? renderView->selectedDataVisualization() : nullptr;
+    m_content = renderView ? renderView->visualzationSelection().visualization : nullptr;
     if (renderView)
     {
         connect(renderView, &AbstractRenderView::beforeDeleteVisualizations,
             this, &RenderConfigWidget::checkDeletedContent);
-        connect(m_renderView, &AbstractRenderView::selectedDataChanged,
-            this, static_cast<void (RenderConfigWidget::*)(AbstractRenderView *, DataObject *)>(&RenderConfigWidget::setSelectedData));
+        connect(m_renderView, &AbstractRenderView::visualizationSelectionChanged,
+            this, &RenderConfigWidget::setSelectedVisualization);
     }
     updateTitle();
 
@@ -96,27 +96,46 @@ void RenderConfigWidget::setSelectedData(DataObject * dataObject)
         return;
     }
 
-    AbstractVisualizedData * content = m_renderView->visualizationFor(dataObject);
-    if (!content || (content == m_content))
+    auto vis = m_renderView->visualizationFor(dataObject);
+    if (!vis)
+    {
         return;
+    }
+
+    setSelectedVisualization(m_renderView, VisualizationSelection(vis));
+}
+
+void RenderConfigWidget::setSelectedVisualization(AbstractRenderView * renderView, const VisualizationSelection & selection)
+{
+    if (m_renderView != renderView)
+    {
+        setCurrentRenderView(renderView);
+    }
+
+    if (!m_renderView)
+    {
+        return;
+    }
+
+    if (m_content == selection.visualization)
+    {
+        return;
+    }
 
     clear();
 
-    m_content = content;
+    if (!selection.visualization)
+    {
+        return;
+    }
+
+    m_content = selection.visualization;
     updateTitle();
     m_propertyRoot = m_content->createConfigGroup();
     m_ui->propertyBrowser->setRoot(m_propertyRoot.get());
     m_ui->propertyBrowser->resizeColumnToContents(0);
 
     update();
-}
-
-void RenderConfigWidget::setSelectedData(AbstractRenderView * renderView, DataObject * dataObject)
-{
-    if (renderView != m_renderView)
-        setCurrentRenderView(renderView);
-
-    setSelectedData(dataObject);
 }
 
 void RenderConfigWidget::updateTitle()

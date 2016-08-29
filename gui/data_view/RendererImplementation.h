@@ -7,8 +7,7 @@
 #include <QMap>
 #include <QStringList>
 
-#include <vtkType.h>
-
+#include <core/types.h>
 #include <gui/gui_api.h>
 #include <gui/data_view/t_QVTKWidgetFwd.h>
 
@@ -66,14 +65,11 @@ public:
     void renderViewContentsChanged();
 
     /** mark dataObject (and, if set, it's point/cell) as current selection */
-    virtual void setSelectedData(AbstractVisualizedData * vis, vtkIdType index, IndexType indexType) = 0;
-    virtual void setSelectedData(AbstractVisualizedData * vis, vtkIdTypeArray & indices, IndexType indexType) = 0;
-    virtual void clearSelection() = 0;
-    virtual AbstractVisualizedData * selectedData() const = 0;
-    virtual vtkIdType selectedIndex() const = 0;
-    virtual IndexType selectedIndexType() const = 0;
+    void setSelection(const VisualizationSelection & selection);
+    void clearSelection();
+    const VisualizationSelection & selection() const;
     /** Move camera so that the specified part of the visualization becomes visible. */
-    virtual void lookAtData(AbstractVisualizedData & vis, vtkIdType itemId, IndexType indexType, unsigned int subViewIndex) = 0;
+    virtual void lookAtData(const VisualizationSelection & selection, unsigned int subViewIndex) = 0;
 
     /** Resets the camera so that all view content are visible.
         Moves back to the initial position if requested. */
@@ -89,8 +85,6 @@ public:
     static const QList<ImplementationConstructor> & constructors();
 
 signals:
-    void dataSelectionChanged(AbstractVisualizedData * selectedData);
-
     void interactionStrategyChanged(const QString & strategyName);
     void supportedInteractionStrategiesChanged(const QStringList & stategyNames);
 
@@ -102,6 +96,9 @@ protected:
     virtual void onAddContent(AbstractVisualizedData * content, unsigned int subViewIndex) = 0;
     virtual void onRemoveContent(AbstractVisualizedData * content, unsigned int subViewIndex) = 0;
     virtual void onRenderViewContentsChanged();
+
+    virtual void onSetSelection(const VisualizationSelection & selection) = 0;
+    virtual void onClearSelection() = 0;
 
     /** Call in sub-classes, to update the list of supported interaction strategies
     * @param strategyName Names of supported strategies. These names must be unique. 
@@ -123,6 +120,8 @@ private:
     static QList<ImplementationConstructor> & s_constructors();
 
     QMap<AbstractVisualizedData *, QList<QMetaObject::Connection>> m_visConnections;
+
+    VisualizationSelection m_selection;
 
     QStringList m_supportedInteractionStrategies;
     QString m_currentInteractionStrategy;

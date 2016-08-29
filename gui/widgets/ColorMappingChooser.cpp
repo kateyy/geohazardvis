@@ -73,16 +73,16 @@ void ColorMappingChooser::setCurrentRenderView(AbstractRenderView * renderView)
 
     m_renderView = renderView;
 
-    setSelectedData(m_renderView ? m_renderView->selectedData() : nullptr);
+    setSelectedVisualization(m_renderView ? m_renderView->visualzationSelection().visualization : nullptr);
 
     if (m_renderView)
     {
         m_viewConnections << connect(renderView, &AbstractRenderView::beforeDeleteVisualizations,
             this, &ColorMappingChooser::checkRemovedData);
-        m_viewConnections << connect(m_renderView, &AbstractRenderView::selectedDataChanged,
-            [this] (AbstractRenderView * DEBUG_ONLY(view), DataObject * dataObject) {
+        m_viewConnections << connect(m_renderView, &AbstractRenderView::visualizationSelectionChanged,
+            [this] (AbstractRenderView * DEBUG_ONLY(view), const VisualizationSelection & selection) {
             assert(view == m_renderView);
-            setSelectedData(dataObject);
+            setSelectedVisualization(selection.visualization);
         });
         m_viewConnections << connect(this, &ColorMappingChooser::renderSetupChanged, m_renderView, &AbstractRenderView::render);
     }
@@ -90,38 +90,32 @@ void ColorMappingChooser::setCurrentRenderView(AbstractRenderView * renderView)
 
 void ColorMappingChooser::setSelectedData(DataObject * dataObject)
 {
-    assert(m_mapping || 
-        (m_colorLegendObserverIds.isEmpty() && m_guiConnections.isEmpty() && !m_dataMinMaxChangedConnection));
-
-    AbstractVisualizedData * currentVisualization = nullptr;
-
-    if (m_renderView)
+    if (!m_renderView || !dataObject)
     {
-        currentVisualization = m_renderView->visualizationFor(dataObject, m_renderView->activeSubViewIndex());
-        if (!currentVisualization && dataObject)
-        {   // fall back to an object in any of the sub views
-            currentVisualization = m_renderView->visualizationFor(dataObject);
-        }
-        if (!currentVisualization)
-        {   // fall back to an object in the current sub view
-            auto && currentSubViewVis = m_renderView->visualizations(m_renderView->activeSubViewIndex());
-            currentVisualization = currentSubViewVis.isEmpty() ? nullptr : currentSubViewVis.first();
-        }
-        if (!currentVisualization)
-        {   // fall back to any object in the view
-            auto && currentViewVis = m_renderView->visualizations();
-            currentVisualization = currentViewVis.isEmpty() ? nullptr : currentViewVis.first();
-        }
-    }
-
-    // An object was selected that is not contained in the current view or doesn't implement glyph mapping,
-    // so stick to the current selection.
-    if (dataObject && !currentVisualization)
-    {
+        setSelectedVisualization(nullptr);
         return;
     }
 
-    auto newMapping = currentVisualization ? &currentVisualization->colorMapping() : nullptr;
+    const auto vis = m_renderView->visualizationFor(
+        dataObject,
+        m_renderView->activeSubViewIndex());
+
+    if (!vis)
+    {
+        // An object was selected that is not contained in the current view, 
+        // so stick to the current selection.
+        return;
+    }
+
+    setSelectedVisualization(vis);
+}
+
+void ColorMappingChooser::setSelectedVisualization(AbstractVisualizedData * visualization)
+{
+    assert(m_mapping || 
+        (m_colorLegendObserverIds.isEmpty() && m_guiConnections.isEmpty() && !m_dataMinMaxChangedConnection));
+
+    auto newMapping = visualization ? &visualization->colorMapping() : nullptr;
 
     if (newMapping == m_mapping)
     {

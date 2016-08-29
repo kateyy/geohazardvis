@@ -2,16 +2,15 @@
 
 #include <vtkSmartPointer.h>
 
+#include <core/types.h>
+
 #include <gui/widgets/DockableWidget.h>
 
 
 class QToolBar;
-class vtkIdTypeArray;
 
 class DataMapping;
-class DataObject;
 class DataSetHandler;
-enum class IndexType;
 
 
 class GUI_API AbstractDataView : public DockableWidget
@@ -41,29 +40,19 @@ public:
     virtual QString subViewFriendlyName(unsigned int subViewIndex) const;
 
     /** highlight requested index */
-    void setSelection(DataObject * dataObject, vtkIdType selectionIndex, IndexType indexType);
-    void setSelection(DataObject * dataObject, vtkIdTypeArray & selectionIndices, IndexType indexType);
+    void setSelection(const DataSelection & selection);
     void clearSelection();
-    /** Selected element in the currently selected data object. For multi-selections, this returns the last index in the list.
-      * (The most recently added index) */
-    vtkIdType lastSelectedIndex() const;
-    /** List of selected cells or points that are selected in the current data object.
-      * @warning This cannot be const, due to the non-const vtkAbstractArray interface. Do not modify the contents of the returned array! */
-    vtkIdTypeArray * selectedIndices();
-    IndexType selectedIndexType() const;
-    DataObject * selectedDataObject();
-    const DataObject * selectedDataObject() const;
+    const DataSelection & selection() const;
+
+public:
+    /** highlight this view as currently selected of its type */
+    void setCurrent(bool isCurrent);
 
 signals:
     /** signaled when the widget receive the keyboard focus (focusInEvent) */
     void focused(AbstractDataView * dataView);
 
-    /** user selected some content */
-    void objectPicked(DataObject * dataObject, vtkIdType selectionIndex, IndexType indexType);
-
-public:
-    /** highlight this view as currently selected of its type */
-    void setCurrent(bool isCurrent);
+    void selectionChanged(AbstractDataView * view, const DataSelection & selection);
 
 protected:
     virtual QWidget * contentWidget() = 0;
@@ -73,9 +62,9 @@ protected:
 
     bool eventFilter(QObject * obj, QEvent * ev) override;
 
-    /** Handle selection changes in concrete sub-classes 
-      * @warning selection array cannot be const, due to the non-const vtkAbstractArray interface. Do not modify its contents! */
-    virtual void selectionChangedEvent(DataObject * dataObject, vtkIdTypeArray * selection, IndexType indexType) = 0;
+    /** Handle selection changes in concrete sub-classes */
+    virtual void onSetSelection(const DataSelection & selection) = 0;
+    virtual void onClearSelection() = 0;
 
 private:
     DataMapping & m_dataMapping;
@@ -84,7 +73,5 @@ private:
 
     QToolBar * m_toolBar;
 
-    DataObject * m_selectedDataObject;
-    vtkSmartPointer<vtkIdTypeArray> m_selectedIndices;
-    IndexType m_selectionIndexType;
+    DataSelection m_selection;
 };

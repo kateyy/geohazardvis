@@ -29,7 +29,7 @@ public:
     void OnChar() override;
 
     void resetCameraToDefault(vtkCamera & camera) override;
-    void moveCameraTo(AbstractVisualizedData & visualization, vtkIdType index, IndexType indexType, bool overTime = true) override;
+    void moveCameraTo(const VisualizationSelection & selection, bool overTime = true) override;
 
 protected:
     explicit InteractorStyleTerrain();

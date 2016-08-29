@@ -147,10 +147,20 @@ void InteractorStyleTerrain::resetCameraToDefault(vtkCamera & camera)
     TerrainCamera::setVerticalElevation(camera, 45);
 }
 
-void InteractorStyleTerrain::moveCameraTo(AbstractVisualizedData & visualization, vtkIdType index, IndexType indexType, bool overTime)
+void InteractorStyleTerrain::moveCameraTo(const VisualizationSelection & selection, bool overTime)
 {
+    if (!selection.visualization || selection.indices.empty() || selection.indexType == IndexType::invalid)
+    {
+        return;
+    }
+
     m_cameraDolly->setRenderer(GetCurrentRenderer());
-    m_cameraDolly->moveTo(visualization, index, indexType, overTime);
+
+    m_cameraDolly->moveTo(
+        *selection.visualization,
+        selection.indices.front(),
+        selection.indexType,
+        overTime);
 }
 
 void InteractorStyleTerrain::MouseWheelDolly(bool forward)

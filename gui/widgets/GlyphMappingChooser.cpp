@@ -59,16 +59,17 @@ void GlyphMappingChooser::setCurrentRenderView(AbstractRenderView * renderView)
 
     m_renderView = renderView;
 
-    setSelectedData(m_renderView ? m_renderView->selectedData() : nullptr);
+    setSelectedData(m_renderView ? m_renderView->selection().dataObject : nullptr);
 
     if (m_renderView)
     {
         m_viewConnections << connect(renderView, &AbstractRenderView::beforeDeleteVisualizations,
             this, &GlyphMappingChooser::checkRemovedData);
-        m_viewConnections << connect(m_renderView, &AbstractRenderView::selectedDataChanged,
-            [this] (AbstractRenderView * DEBUG_ONLY(view), DataObject * dataObject) {
+        m_viewConnections << connect(m_renderView, &AbstractDataView::selectionChanged,
+            [this] (AbstractDataView * DEBUG_ONLY(view), const DataSelection & selection)
+        {
             assert(view == m_renderView);
-            setSelectedData(dataObject);
+            setSelectedData(selection.dataObject);
         });
         m_viewConnections << connect(this, &GlyphMappingChooser::renderSetupChanged, m_renderView, &AbstractRenderView::render);
     }

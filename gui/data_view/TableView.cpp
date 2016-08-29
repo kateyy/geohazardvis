@@ -7,8 +7,6 @@
 #include <QMenu>
 #include <QAction>
 
-#include <vtkIdTypeArray.h>
-
 #include <core/table_model/QVtkTableModel.h>
 #include <core/data_objects/DataObject.h>
 
@@ -83,6 +81,8 @@ void TableView::showDataObject(DataObject & dataObject)
             }
         });
     }
+
+    setSelection(DataSelection(&dataObject));
 }
 
 DataObject * TableView::dataObject()
@@ -105,15 +105,17 @@ void TableView::setModel(QVtkTableModel * model)
     m_hightlightUpdateConnection = connect(m_ui->tableView->selectionModel(), &QItemSelectionModel::selectionChanged,
         [this, model] (const QItemSelection & selected, const QItemSelection & /*deselected*/)
     {
+        // TODO support multiple selections
+
         if (selected.indexes().isEmpty())
         {
+            clearSelection();
             return;
         }
 
-        vtkIdType index = model->itemIdAt(selected.indexes().first());
-        model->setHighlightItemId(index);
-
-        emit objectPicked(m_dataObject, index, model->indexType());
+        setSelection(DataSelection(m_dataObject,
+            model->indexType(),
+            model->itemIdAt(selected.indexes().first())));
     });
 }
 
@@ -122,16 +124,23 @@ QWidget * TableView::contentWidget()
     return m_ui->tableView;
 }
 
-void TableView::selectionChangedEvent(DataObject * dataObject, vtkIdTypeArray * indices, IndexType indexType)
+void TableView::onSetSelection(const DataSelection & selection)
 {
-    assert((dataObject != nullptr) == (indices != nullptr));
-
-    if (dataObject && dataObject != m_dataObject)
+    // check for invalid/not implemented selection
+    if ((selection.dataObject && selection.dataObject != m_dataObject)
+        || selection.indexType != model()->indexType())
     {
         return;
     }
 
-    if (!dataObject || (indices->GetSize() == 0) || (indexType != model()->indexType()))
+    // check for unchanged selection
+    if (selection.dataObject && !selection.indices.empty() 
+        && selection.indices.front() == model()->hightlightItemId())
+    {
+        return;
+    }
+
+    if (selection.isIndexListEmpty())
     {
         model()->setHighlightItemId(-1);
         return;
@@ -139,12 +148,17 @@ void TableView::selectionChangedEvent(DataObject * dataObject, vtkIdTypeArray * 
 
     // TODO implement multiple selections
 
-    auto index = indices->GetValue(0);
+    const auto index = selection.indices.front();
 
-    QModelIndex selection(model()->index(static_cast<int>(index), 0));
-    m_ui->tableView->scrollTo(selection);
+    const QModelIndex modelIndex(model()->index(static_cast<int>(index), 0));
+    m_ui->tableView->scrollTo(modelIndex);
 
     model()->setHighlightItemId(index);
+}
+
+void TableView::onClearSelection()
+{
+    model()->setHighlightItemId(-1);
 }
 
 bool TableView::eventFilter(QObject * obj, QEvent * ev)
@@ -157,7 +171,7 @@ bool TableView::eventFilter(QObject * obj, QEvent * ev)
         if (index.column() == 0)
         {
             vtkIdType id = static_cast<vtkIdType>(index.row());
-            emit itemDoubleClicked(m_dataObject, id, model()->indexType());
+            emit itemDoubleClicked(DataSelection(m_dataObject, model()->indexType(), id));
             return true;
         }
     }

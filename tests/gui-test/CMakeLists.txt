@@ -12,11 +12,12 @@ set(sources
     RenderView_test_tools.h
     RenderView_test_tools.cpp
     RenderViewStrategy_test.cpp
+    ResidualView_test.cpp
 )
 
 add_executable(${target} ${sources})
 
-target_link_libraries(${target} 
+target_link_libraries(${target}
     gui
     ${GTEST_LIBRARIES}
 )

@@ -37,13 +37,7 @@ public:
 
     vtkRenderWindowInteractor * interactor() override;
 
-    void setSelectedData(AbstractVisualizedData * vis, vtkIdType index, IndexType indexType) override;
-    void setSelectedData(AbstractVisualizedData * vis, vtkIdTypeArray & indices, IndexType indexType) override;
-    void clearSelection() override;
-    AbstractVisualizedData * selectedData() const override;
-    vtkIdType selectedIndex() const override;
-    IndexType selectedIndexType() const override;
-    void lookAtData(AbstractVisualizedData & vis, vtkIdType index, IndexType indexType, unsigned int subViewIndex) override;
+    void lookAtData(const VisualizationSelection & selection, unsigned int subViewIndex) override;
     void resetCamera(bool toInitialPosition, unsigned int subViewIndex) override;
 
     void setAxesVisibility(bool visible) override;
@@ -60,6 +54,9 @@ public:
 protected:
     void onAddContent(AbstractVisualizedData * content, unsigned int subViewIndex) override;
     void onRemoveContent(AbstractVisualizedData * content, unsigned int subViewIndex) override;
+
+    void onSetSelection(const VisualizationSelection & selection) override;
+    void onClearSelection() override;
 
     Context2DData * contextDataContaining(const vtkPlot & plot) const;
 
@@ -89,6 +86,8 @@ private:
 
     // plots fetched per visualized data
     QMap<Context2DData *, vtkSmartPointer<vtkPlotCollection>> m_plots;
+
+    Context2DData * m_selectedPlot;
 
     static bool s_isRegistered;
 };

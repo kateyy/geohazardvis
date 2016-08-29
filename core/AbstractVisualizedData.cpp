@@ -119,6 +119,11 @@ vtkDataSet * AbstractVisualizedData::colorMappingInputData(int connection)
     return vtkDataSet::SafeDownCast(alg->GetOutputDataObject(0));
 }
 
+int AbstractVisualizedData::defaultVisualizationPort() const
+{
+    return 0;
+}
+
 void AbstractVisualizedData::setupInformation(vtkInformation & information, AbstractVisualizedData & visualization)
 {
     auto & dataObject = visualization.dataObject();

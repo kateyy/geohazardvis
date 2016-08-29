@@ -1,14 +1,11 @@
 #pragma once
 
-#include <vtkType.h>
+#include <core/types.h>
 
 #include <gui/gui_api.h>
 
 
 class vtkCamera;
-
-class AbstractVisualizedData;
-enum class IndexType;
 
 
 /** Interface extensions for the vtkInteractorStyle classes 
@@ -18,8 +15,7 @@ class GUI_API ICameraInteractionStyle
 public:
     virtual void resetCameraToDefault(vtkCamera & camera) = 0;
     virtual void moveCameraTo(
-        AbstractVisualizedData & visualization, 
-        vtkIdType index, IndexType indexType, 
+        const VisualizationSelection & selection,
         bool overTime = true) = 0;
 
     virtual ~ICameraInteractionStyle() = default;

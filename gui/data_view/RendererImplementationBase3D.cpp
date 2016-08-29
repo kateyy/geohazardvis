@@ -169,11 +169,6 @@ void RendererImplementationBase3D::onAddContent(AbstractVisualizedData * content
 
 void RendererImplementationBase3D::onRemoveContent(AbstractVisualizedData * content, unsigned int subViewIndex)
 {
-    if (m_pickerHighlighter->highlighter().targetVisualization() == content)
-    {
-        m_pickerHighlighter->highlighter().clear();
-    }
-
     assert(dynamic_cast<RenderedData *>(content));
     auto renderedData = static_cast<RenderedData *>(content);
 
@@ -182,6 +177,10 @@ void RendererImplementationBase3D::onRemoveContent(AbstractVisualizedData * cont
     {
         content->setVisible(false);
         dataVisibilityChanged(renderedData, subViewIndex);
+    }
+    else
+    {
+        assert(selection().visualization != content);
     }
 
     auto & renderer = *this->renderer(subViewIndex);
@@ -202,57 +201,32 @@ void RendererImplementationBase3D::onDataVisibilityChanged(AbstractVisualizedDat
 {
 }
 
-void RendererImplementationBase3D::setSelectedData(AbstractVisualizedData * vis, vtkIdType index, IndexType indexType)
-{
-    auto indices = vtkSmartPointer<vtkIdTypeArray>::New();
-    indices->SetNumberOfValues(1);
-    indices->SetValue(0, index);
-
-    setSelectedData(vis, *indices, indexType);
-}
-
-void RendererImplementationBase3D::setSelectedData(AbstractVisualizedData * vis, vtkIdTypeArray & indices, IndexType indexType)
+void RendererImplementationBase3D::onSetSelection(const VisualizationSelection & selection)
 {
     auto & highlighter = m_pickerHighlighter->highlighter();
-    if (!vis)
+    if (!selection.visualization)
     {
         highlighter.clearIndices();
+        return;
     }
 
-    auto subViewIndex = m_renderView.subViewContaining(*vis);
+    auto subViewIndex = m_renderView.subViewContaining(*selection.visualization);
     assert(subViewIndex >= 0);
 
     highlighter.setRenderer(viewportSetup(subViewIndex).renderer);
-    // TODO well, how to find the correct output port here to select a data point on a slice plane for the 3D grids?
-    int visOutputPort = 0;
-    highlighter.setTarget(vis, visOutputPort, indices, indexType);
+    highlighter.setTarget(selection);
 }
 
-void RendererImplementationBase3D::clearSelection()
+void RendererImplementationBase3D::onClearSelection()
 {
     m_pickerHighlighter->highlighter().clearIndices();
 }
 
-AbstractVisualizedData * RendererImplementationBase3D::selectedData() const
-{
-    return m_pickerHighlighter->highlighter().targetVisualization();
-}
-
-vtkIdType RendererImplementationBase3D::selectedIndex() const
-{
-    return m_pickerHighlighter->highlighter().lastTargetIndex();
-}
-
-IndexType RendererImplementationBase3D::selectedIndexType() const
-{
-    return m_pickerHighlighter->highlighter().targetIndexType();
-}
-
-void RendererImplementationBase3D::lookAtData(AbstractVisualizedData & vis, vtkIdType index, IndexType indexType, unsigned int subViewIndex)
+void RendererImplementationBase3D::lookAtData(const VisualizationSelection & selection, unsigned int subViewIndex)
 {
     m_interactorStyle->SetCurrentRenderer(m_viewportSetups[subViewIndex].renderer);
 
-    m_interactorStyle->moveCameraTo(vis, index, indexType);
+    m_interactorStyle->moveCameraTo(selection);
 }
 
 void RendererImplementationBase3D::resetCamera(bool toInitialPosition, unsigned int subViewIndex)
@@ -457,11 +431,16 @@ void RendererImplementationBase3D::initialize()
     connect(m_pickerHighlighter, &PickerHighlighterInteractorObserver::pickedInfoChanged,
         &m_renderView, &AbstractRenderView::showInfoText);
     connect(m_pickerHighlighter, &PickerHighlighterInteractorObserver::dataPicked,
-            [this] (AbstractVisualizedData * vis, vtkIdType index, IndexType indexType) {
-        emit dataSelectionChanged(vis);
-
-        if (vis)
-            m_renderView.objectPicked(&vis->dataObject(), index, indexType);
+        [this] (const VisualizationSelection & selection)
+    {
+        if (selection.isEmpty())
+        {
+            m_renderView.clearSelection();
+        }
+        else
+        {
+            m_renderView.setVisualizationSelection(selection);
+        }
     });
     connect(m_pickerHighlighter, &PickerHighlighterInteractorObserver::geometryChanged,
         this, &RendererImplementation::render);
@@ -663,15 +642,29 @@ void RendererImplementationBase3D::dataVisibilityChanged(RenderedData * rendered
         disconnect(&rendered->dataObject(), &DataObject::boundsChanged, this, &RendererImplementationBase3D::updateBounds);
     }
 
-    // The render view's dataObjects() doesn't yet contain the rendered->dataObject(), if it is currently added.
-    // If it's currently removed, it's not yet removed from the list
+    // If the object is currently removed, it's not yet removed from the list
     const auto && currentObjects = renderView().dataObjects();
-    const bool isEmpty =
-        !rendered->isVisible()
-        && (currentObjects.isEmpty() || (currentObjects.size() == 1
-            && (currentObjects[0] == &rendered->dataObject())));
+    const bool isEmpty = currentObjects.isEmpty() ||
+        (!rendered->isVisible()
+            && currentObjects.size() == 1
+            && currentObjects.front() == &rendered->dataObject());
 
     m_pickerHighlighter->SetEnabled(!isEmpty);
+
+    if (rendered->isVisible())
+    {
+        // If there isn't any selected target and rendered is visible, use rendered as the currently
+        // active object. This is the one the user most recently worked with.
+        if (!selection().visualization)
+        {
+            m_renderView.setVisualizationSelection(VisualizationSelection(rendered));
+        }
+    }
+    else if (selection().visualization == rendered)
+    {
+        // If the current object is selected but not visible anymore, clear the selection
+        m_renderView.clearSelection();
+    }
 
     onDataVisibilityChanged(rendered, subViewIndex);
 

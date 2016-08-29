@@ -15,6 +15,7 @@ class Ui_RenderConfigWidget;
 class AbstractRenderView;
 class AbstractVisualizedData;
 class DataObject;
+struct VisualizationSelection;
 
 
 class GUI_API RenderConfigWidget : public QDockWidget
@@ -25,9 +26,8 @@ public:
 
 public:
     void setCurrentRenderView(AbstractRenderView * renderView = nullptr);
-    /** switch to specified dataObject, in case it is visible in my current render view */
     void setSelectedData(DataObject * dataObject);
-    void setSelectedData(AbstractRenderView * renderView, DataObject * dataObject);
+    void setSelectedVisualization(AbstractRenderView * renderView, const VisualizationSelection & selection);
     void clear();
 
 private:

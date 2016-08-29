@@ -35,10 +35,6 @@ Picker::Picker()
     : m_propPicker{ vtkSmartPointer<vtkPropPicker>::New() }
     , m_cellPicker{ vtkSmartPointer<vtkCellPicker>::New() }
     , m_pointPicker{ vtkSmartPointer<vtkPointPicker>::New() }
-    , m_pickedIndex{ -1 }
-    , m_pickedIndexType{ IndexType::points }
-    , m_pickedDataObject{ nullptr }
-    , m_pickedVisualizedData{ nullptr }
 {
     m_cellPicker->PickFromListOn();
     m_pointPicker->PickFromListOn();
@@ -48,10 +44,8 @@ Picker::~Picker() = default;
 
 void Picker::pick(const vtkVector2i & clickPosXY, vtkRenderer & renderer)
 {
+    m_pickedObjectInfoString.clear();
     m_pickedObjectInfo.clear();
-    m_pickedIndex = -1;
-    m_pickedDataObject = nullptr;
-    m_pickedVisualizedData = nullptr;
 
     // pick points first; if this picker does not hit, we will also not hit cells
     m_propPicker->Pick(clickPosXY[0], clickPosXY[1], 0, &renderer);
@@ -90,14 +84,15 @@ void Picker::pick(const vtkVector2i & clickPosXY, vtkRenderer & renderer)
 
     auto & mapperInfo = *abstractMapper->GetInformation();
 
-    m_pickedVisualizedData = AbstractVisualizedData::readPointer(mapperInfo);
-    if (!m_pickedVisualizedData)
+    m_pickedObjectInfo.visualization = AbstractVisualizedData::readPointer(mapperInfo);
+    if (!m_pickedObjectInfo.visualization)
     {
         qDebug() << "no visualization referenced in mapper";
         return;
     }
 
-    m_pickedDataObject = &m_pickedVisualizedData->dataObject();
+    // TODO determine correct visualization port
+    m_pickedObjectInfo.visOutputPort = m_pickedObjectInfo.visualization->defaultVisualizationPort();
 
     QString content;
     QTextStream stream;
@@ -119,10 +114,10 @@ void Picker::pick(const vtkVector2i & clickPosXY, vtkRenderer & renderer)
     // object type specific picking
     // ----------------------------
 
-    assert(dynamic_cast<RenderedData *>(m_pickedVisualizedData));
-    auto renderedData = static_cast<RenderedData *>(m_pickedVisualizedData);
+    assert(dynamic_cast<RenderedData *>(m_pickedObjectInfo.visualization));
+    auto renderedData = static_cast<RenderedData *>(m_pickedObjectInfo.visualization);
 
-    if (auto poly = dynamic_cast<PolyDataObject *>(m_pickedDataObject))
+    if (auto poly = dynamic_cast<PolyDataObject *>(&m_pickedObjectInfo.visualization->dataObject()))
     {
         // let the cell picker only see the current object, to work around different precisions of vtkPropPicker and vtkCellPicker
         m_cellPicker->GetPickList()->RemoveAllItems();
@@ -158,51 +153,38 @@ void Picker::pick(const vtkVector2i & clickPosXY, vtkRenderer & renderer)
         }
     }
 
-    m_pickedObjectInfo = stream.readAll();
+    m_pickedObjectInfoString = stream.readAll();
 }
 
-const QString & Picker::pickedObjectInfo() const
+const QString & Picker::pickedObjectInfoString() const
+{
+    return m_pickedObjectInfoString;
+}
+
+const VisualizationSelection & Picker::pickedObjectInfo() const
 {
     return m_pickedObjectInfo;
-}
-
-vtkIdType Picker::pickedIndex() const
-{
-    return m_pickedIndex;
-}
-
-IndexType Picker::pickedIndexType() const
-{
-    return m_pickedIndexType;
-}
-
-DataObject * Picker::pickedDataObject() const
-{
-    return m_pickedDataObject;
-}
-
-AbstractVisualizedData * Picker::pickedVisualizedData() const
-{
-    return m_pickedVisualizedData;
 }
 
 void Picker::appendPolyDataInfo(QTextStream & stream, PolyDataObject & polyData)
 {
     auto cellMapper = m_cellPicker->GetMapper();
-    m_pickedIndex = m_cellPicker->GetCellId();
-    m_pickedIndexType = IndexType::cells;
+    const auto pickedIndex = m_cellPicker->GetCellId();
 
-    if (m_pickedIndex == -1)
+    if (pickedIndex == -1)
     {
         return;
     }
 
+    m_pickedObjectInfo.indexType = IndexType::cells;
+    m_pickedObjectInfo.indices = { pickedIndex };
+
     assert(cellMapper);
 
     std::array<double, 3> centroid;
-    polyData.cellCenters()->GetPoint(m_pickedIndex, centroid.data());
+    polyData.cellCenters()->GetPoint(pickedIndex, centroid.data());
     stream
-        << "Triangle Index: " << m_pickedIndex << endl
+        << "Triangle Index: " << pickedIndex << endl
         << "X = " << centroid[0] << endl
         << "Y = " << centroid[1] << endl
         << "Z = " << centroid[2];
@@ -240,20 +222,21 @@ void Picker::appendPolyDataInfo(QTextStream & stream, PolyDataObject & polyData)
         return;
     }
 
-    printScalarInfo(stream, concreteMapper->GetLookupTable(), *scalars, m_pickedIndex);
+    printScalarInfo(stream, concreteMapper->GetLookupTable(), *scalars, pickedIndex);
 }
 
 void Picker::appendImageDataInfo(QTextStream & stream, vtkImageSlice & slice)
 {
-    m_pickedIndex = m_pointPicker->GetPointId();
-    m_pickedIndexType = IndexType::points;
-
+    const auto pickedIndex = m_pointPicker->GetPointId();
     auto dataSet = m_pointPicker->GetDataSet();
 
-    if (!dataSet)
+    if (pickedIndex == -1 || !dataSet)
     {
         return;
     }
+
+    m_pickedObjectInfo.indexType = IndexType::points;
+    m_pickedObjectInfo.indices = { pickedIndex };
 
     std::array<double, 3> pos;
     m_pointPicker->GetPickPosition(pos.data());
@@ -264,7 +247,7 @@ void Picker::appendImageDataInfo(QTextStream & stream, vtkImageSlice & slice)
 
     if (auto scalars = dataSet->GetPointData()->GetScalars())
     {
-        printScalarInfo(stream, slice.GetProperty()->GetLookupTable(), *scalars, m_pickedIndex);
+        printScalarInfo(stream, slice.GetProperty()->GetLookupTable(), *scalars, pickedIndex);
     }
 }
 
@@ -274,7 +257,8 @@ void Picker::appendGenericPointInfo(QTextStream & stream)
     m_pointPicker->GetPickPosition(pos.data());
 
     // TODO check how to match (resampled) glyph/volume slice indices with input data indices
-    m_pickedIndex = -1;
+    m_pickedObjectInfo.indexType = IndexType::invalid;
+    m_pickedObjectInfo.indices.clear();
 
     stream
         << "X = " << pos[0] << endl

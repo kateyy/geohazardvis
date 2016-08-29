@@ -56,34 +56,7 @@ vtkRenderWindowInteractor * RendererImplementationNull::interactor()
     return nullptr;
 }
 
-void RendererImplementationNull::setSelectedData(AbstractVisualizedData *, vtkIdType, IndexType)
-{
-}
-
-void RendererImplementationNull::setSelectedData(AbstractVisualizedData *, vtkIdTypeArray &, IndexType)
-{
-}
-
-void RendererImplementationNull::clearSelection()
-{
-}
-
-AbstractVisualizedData * RendererImplementationNull::selectedData() const
-{
-    return nullptr;
-}
-
-vtkIdType RendererImplementationNull::selectedIndex() const
-{
-    return -1;
-}
-
-IndexType RendererImplementationNull::selectedIndexType() const
-{
-    return IndexType();
-}
-
-void RendererImplementationNull::lookAtData(AbstractVisualizedData &, vtkIdType, IndexType, unsigned int)
+void RendererImplementationNull::lookAtData(const VisualizationSelection &, unsigned int)
 {
 }
 
@@ -110,5 +83,13 @@ void RendererImplementationNull::onAddContent(AbstractVisualizedData *, unsigned
 }
 
 void RendererImplementationNull::onRemoveContent(AbstractVisualizedData *, unsigned int)
+{
+}
+
+void RendererImplementationNull::onSetSelection(const VisualizationSelection &)
+{
+}
+
+void RendererImplementationNull::onClearSelection()
 {
 }

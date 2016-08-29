@@ -108,7 +108,7 @@ void InteractorStyleImage::resetCameraToDefault(vtkCamera & camera)
     camera.ParallelProjectionOn();
 }
 
-void InteractorStyleImage::moveCameraTo(AbstractVisualizedData & /*visualization*/, vtkIdType /*index*/, IndexType /*indexType*/, bool /*overTime*/)
+void InteractorStyleImage::moveCameraTo(const VisualizationSelection & /*selection*/, bool /*overTime*/)
 {
     // TODO
 }

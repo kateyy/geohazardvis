@@ -57,6 +57,8 @@ public:
     virtual vtkAlgorithmOutput * colorMappingInput(int connection = 0);
     vtkDataSet * colorMappingInputData(int connection = 0);
 
+    virtual int defaultVisualizationPort() const;
+
     /** store data object name and pointers in the information object */
     static void setupInformation(vtkInformation & information, AbstractVisualizedData & visualization);
 

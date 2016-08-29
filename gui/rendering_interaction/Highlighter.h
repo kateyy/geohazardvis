@@ -7,16 +7,15 @@
 #include <vtkSmartPointer.h>
 #include <vtkWeakPointer.h>
 
+#include <core/types.h>
 #include <gui/gui_api.h>
 
 
 class QTime;
 class QTimer;
-class vtkIdTypeArray;
 class vtkRenderer;
 
 class AbstractVisualizedData;
-enum class IndexType;
 
 class HighlighterImplementationSwitch;
 
@@ -33,15 +32,9 @@ public:
     void setRenderer(vtkRenderer * renderer);
     vtkRenderer * renderer() const;
 
-    /** Set visualization and one primitive on it to be highlighted. Discards previous indices. */
-    void setTarget(AbstractVisualizedData * vis, int visOutputPort, vtkIdType index, IndexType indexType);
-    /** Set visualization and a list of primitives to be highlighted. Discards previous indices.
-      * @param indices Cannot be const, due to the non-const vtkIdTypeArray getters. */
-    void setTarget(AbstractVisualizedData * vis, int visOutputPort, vtkIdTypeArray & indices, IndexType indexType);
-    AbstractVisualizedData * targetVisualization() const;
-    vtkIdTypeArray * targetIndices();
-    vtkIdType lastTargetIndex() const;
-    IndexType targetIndexType() const;
+    /** Set visualization and a list of primitives to be highlighted. Discards previous indices. */
+    void setTarget(const VisualizationSelection & selection);
+    const VisualizationSelection & selection() const;
 
     /** Remove all highlights from the renderer, clear all internal settings */
     void clear();
@@ -62,7 +55,7 @@ signals:
 
 private:
     void updateHighlight();
-    void setTargetInternal(AbstractVisualizedData * vis, int visOutputPort, IndexType indexType);
+    void setTargetInternal(VisualizationSelection selection);
 
     void highlightPoints();
     void highlightCells();
@@ -71,10 +64,7 @@ private:
 
 private:
     vtkWeakPointer<vtkRenderer> m_renderer;
-    AbstractVisualizedData * m_visualizedData;
-    int m_visOutputPort;
-    vtkSmartPointer<vtkIdTypeArray> m_indices;
-    IndexType m_indexType;
+    VisualizationSelection m_selection;
 
     bool m_flashAfterSetTarget;
     unsigned int m_flashTimeMilliseconds;

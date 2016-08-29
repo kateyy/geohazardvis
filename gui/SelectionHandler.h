@@ -3,7 +3,7 @@
 #include <QObject>
 #include <QMap>
 
-#include <vtkType.h>
+#include <core/types.h>
 
 
 class QAction;
@@ -12,8 +12,6 @@ class QMenu;
 
 class AbstractDataView;
 class AbstractRenderView;
-class DataObject;
-enum class IndexType;
 class TableView;
 
 
@@ -33,8 +31,8 @@ public:
     void setSyncToggleMenu(QMenu * syncToggleMenu);
 
 private:
-    void updateSelection(DataObject * dataObject, vtkIdType index, IndexType indexType);
-    void renderViewsLookAt(DataObject * dataObject, vtkIdType index, IndexType indexType);
+    void updateSelection(AbstractDataView * sourceView, const DataSelection & selection);
+    void renderViewsLookAt(const DataSelection & selection);
 
     void updateSyncToggleMenu();
 

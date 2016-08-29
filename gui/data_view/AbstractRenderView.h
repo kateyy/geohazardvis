@@ -2,17 +2,12 @@
 
 #include <functional>
 
-#include <core/types.h>
-
 #include <gui/data_view/AbstractDataView.h>
 #include <gui/data_view/t_QVTKWidgetFwd.h>
 
 
 class vtkRenderWindow;
 
-class AbstractVisualizedData;
-enum class ContentType;
-enum class IndexType;
 class RendererImplementation;
 
 
@@ -36,7 +31,7 @@ public:
         QList<DataObject *> & incompatibleObjects,
         unsigned int subViewIndex = 0);
     /** hide rendered representations of data objects, keep render data and settings */
-    void hideDataObjects(const QList<DataObject *> & dataObjects, unsigned int subViewIndex = 0);
+    void hideDataObjects(const QList<DataObject *> & dataObjects, int subViewIndex = -1);
     /** check if the this objects is currently rendered
         @param subViewIndex The index of the sub view in composed render views. -1 means to check for the
         DataObject in any of the sub views */
@@ -52,12 +47,14 @@ public:
     /** @return the sub view index that contains the specified visualization, or -1 if this is not part of this view */
     virtual int subViewContaining(const AbstractVisualizedData & visualizedData) const = 0;
 
-    /** The data object whose visualization is selected by the user. This visualization can be configured in the UI */
-    virtual DataObject * selectedData() const = 0;
-    /** The data visualization that is currently selected by the user. It can be configured in the UI. */
-    virtual AbstractVisualizedData * selectedDataVisualization() const = 0;
-    virtual void lookAtData(DataObject & dataObject, vtkIdType index, IndexType indexType, int subViewIndex = -1) = 0;
-    virtual void lookAtData(AbstractVisualizedData & visualization, vtkIdType index, IndexType indexType, int subViewIndex = -1) = 0;
+    /** More specialized variant of AbstractDataView::setSelection
+      * Compared to the base class function, this allows also allows to specify a visualization
+      * and its output port. */
+    void setVisualizationSelection(const VisualizationSelection & selection);
+    const VisualizationSelection & visualzationSelection() const;
+
+    virtual void lookAtData(const DataSelection & selection, int subViewIndex = -1) = 0;
+    virtual void lookAtData(const VisualizationSelection & selection, int subViewIndex = -1) = 0;
 
     virtual unsigned int numberOfSubViews() const;
     unsigned int activeSubViewIndex() const;
@@ -89,7 +86,7 @@ signals:
     * Do not access pointers to the previous implementation when receiving this signal! */
     void implementationChanged();
 
-    void selectedDataChanged(AbstractRenderView * renderView, DataObject * dataObject);
+    void visualizationSelectionChanged(AbstractRenderView * renderView, const VisualizationSelection & selection);
     void activeSubViewChanged(unsigned int activeSubViewIndex);
 
     void beforeDeleteVisualizations(const QList<AbstractVisualizedData *> & visualizations);
@@ -101,12 +98,16 @@ protected:
     void showEvent(QShowEvent * event) override;
     bool eventFilter(QObject * watched, QEvent * event) override;
 
-    void selectionChangedEvent(DataObject * dataObject, vtkIdTypeArray * selection, IndexType indexType) override;
+    void onSetSelection(const DataSelection & selection) override;
+    void onClearSelection() override;
+
+    /** Called when the current selection is changed (set or clear) */
+    virtual void visualizationSelectionChangedEvent(const VisualizationSelection & selection);
 
     virtual void showDataObjectsImpl(const QList<DataObject *> & dataObjects,
         QList<DataObject *> & incompatibleObjects,
         unsigned int subViewIndex) = 0;
-    virtual void hideDataObjectsImpl(const QList<DataObject *> & dataObjects, unsigned int subViewIndex) = 0;
+    virtual void hideDataObjectsImpl(const QList<DataObject *> & dataObjects, int subViewIndex) = 0;
     virtual QList<DataObject *> dataObjectsImpl(int subViewIndex) const = 0;
     virtual void prepareDeleteDataImpl(const QList<DataObject *> & dataObjects) = 0;
     virtual QList<AbstractVisualizedData *> visualizationsImpl(int subViewIndex) const = 0;

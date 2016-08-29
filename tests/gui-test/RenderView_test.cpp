@@ -4,11 +4,15 @@
 
 #include <QApplication>
 
+#include <vtkCellData.h>
+#include <vtkFloatArray.h>
 #include <vtkPoints.h>
 #include <vtkPolyData.h>
 
 #include <core/DataSetHandler.h>
 #include <core/data_objects/PolyDataObject.h>
+#include <core/data_objects/ImageProfileData.h>
+#include <core/utility/DataExtent.h>
 
 #include <gui/DataMapping.h>
 #include <gui/data_view/RenderView.h>
@@ -75,6 +79,36 @@ public:
 
         return std::make_unique<PolyDataObject>("PolyData", *poly);
     }
+
+    struct ProfileData
+    {
+        std::unique_ptr<PolyDataObject> sourceData;
+        std::unique_ptr<ImageProfileData> profile;
+    };
+
+    static ProfileData genProfileData()
+    {
+        ProfileData profileData;
+        profileData.sourceData = genPolyData();
+
+        auto scalars = vtkSmartPointer<vtkFloatArray>::New();
+        scalars->SetName("scalars");
+        scalars->SetNumberOfTuples(profileData.sourceData->numberOfCells());
+        for (vtkIdType i = 0; i < scalars->GetNumberOfTuples(); ++i)
+        {
+            scalars->SetValue(i, static_cast<float>(i));
+        }
+        profileData.sourceData->dataSet()->GetCellData()->AddArray(scalars);
+
+        profileData.profile = std::make_unique<ImageProfileData>(
+            "Profile", *profileData.sourceData,
+            "scalars", IndexType::cells, 0);
+
+        const auto inBounds = DataBounds(profileData.sourceData->bounds()).convertTo<2>();
+        profileData.profile->setPoints(inBounds.min(), inBounds.max());
+
+        return profileData;
+    }
 };
 
 TEST_F(RenderView_test, AbortLoadingDeletedData)
@@ -117,3 +151,66 @@ TEST_F(RenderView_test, DontMissNewDataAtSameLocation)
     ASSERT_EQ(renderView->dataObjects().size(), 1);
 }
 
+TEST_F(RenderView_test, UnselectDeletedData)
+{
+    auto polyData = genPolyData();
+
+    env->dataSetHandler.addExternalData({ polyData.get() });
+    auto renderView = env->dataMapping.openInRenderView({ polyData.get() });
+
+    env->dataMapping.removeDataObjects({ polyData.get() });
+    env->dataSetHandler.removeExternalData({ polyData.get() });
+    polyData.reset();
+
+    auto selection = renderView->selection();
+    ASSERT_EQ(nullptr, selection.dataObject);
+}
+
+TEST_F(RenderView_test, UnselectHiddendData)
+{
+    auto polyData = genPolyData();
+
+    env->dataSetHandler.addExternalData({ polyData.get() });
+    auto renderView = env->dataMapping.openInRenderView({ polyData.get() });
+
+    renderView->hideDataObjects({ polyData.get() });
+
+    auto selection = renderView->selection();
+    ASSERT_EQ(nullptr, selection.dataObject);
+
+    env->dataMapping.removeDataObjects({ polyData.get() });
+    env->dataSetHandler.removeExternalData({ polyData.get() });
+}
+
+TEST_F(RenderView_test, UnselectDeletedProfileData)
+{
+    auto profileData = genProfileData();
+    auto profile = profileData.profile.get();
+
+    env->dataSetHandler.addExternalData({ profile });
+    auto renderView = env->dataMapping.openInRenderView({ profile });
+
+    env->dataMapping.removeDataObjects({ profile });
+    env->dataSetHandler.removeExternalData({ profile });
+    profileData = {};
+
+    auto selection = renderView->selection();
+    ASSERT_EQ(nullptr, selection.dataObject);
+}
+
+TEST_F(RenderView_test, UnselectHiddendProfileData)
+{
+    auto profileData = genProfileData();
+    auto profile = profileData.profile.get();
+
+    env->dataSetHandler.addExternalData({ profile });
+    auto renderView = env->dataMapping.openInRenderView({ profile });
+
+    renderView->hideDataObjects({ profile });
+
+    auto selection = renderView->selection();
+    ASSERT_EQ(nullptr, selection.dataObject);
+
+    env->dataMapping.removeDataObjects({ profile });
+    env->dataSetHandler.removeExternalData({ profile });
+}

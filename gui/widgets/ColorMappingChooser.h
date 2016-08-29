@@ -36,6 +36,7 @@ public:
     void setCurrentRenderView(AbstractRenderView * renderView);
     /** switch to specified dataObject, in case it is visible in my current render view */
     void setSelectedData(DataObject * dataObject);
+    void setSelectedVisualization(AbstractVisualizedData * visualization);
 
 signals:
     void renderSetupChanged();

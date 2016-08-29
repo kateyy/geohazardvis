@@ -4,6 +4,7 @@
 
 #include <vtkSmartPointer.h>
 
+#include <core/types.h>
 #include <gui/gui_api.h>
 
 
@@ -17,9 +18,6 @@ class vtkRenderer;
 class vtkScalarsToColors;
 class vtkVector2i;
 
-class AbstractVisualizedData;
-class DataObject;
-enum class IndexType;
 class PolyDataObject;
 
 
@@ -31,12 +29,9 @@ public:
 
     void pick(const vtkVector2i & clickPosXY, vtkRenderer & renderer);
 
-    const QString & pickedObjectInfo() const;
+    const QString & pickedObjectInfoString() const;
 
-    vtkIdType pickedIndex() const;
-    IndexType pickedIndexType() const;
-    DataObject * pickedDataObject() const;
-    AbstractVisualizedData * pickedVisualizedData() const;
+    const VisualizationSelection & pickedObjectInfo() const;
 
 private:
     void appendPolyDataInfo(QTextStream & stream, PolyDataObject & polyData);
@@ -51,9 +46,6 @@ private:
     vtkSmartPointer<vtkCellPicker> m_cellPicker;
     vtkSmartPointer<vtkPointPicker> m_pointPicker;
 
-    QString m_pickedObjectInfo;
-    vtkIdType m_pickedIndex;
-    IndexType m_pickedIndexType;
-    DataObject * m_pickedDataObject;
-    AbstractVisualizedData * m_pickedVisualizedData;
+    QString m_pickedObjectInfoString;
+    VisualizationSelection m_pickedObjectInfo;
 };

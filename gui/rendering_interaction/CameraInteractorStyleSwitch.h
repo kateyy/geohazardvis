@@ -11,7 +11,7 @@ public:
     vtkTypeMacro(CameraInteractorStyleSwitch, InteractorStyleSwitch);
 
     void resetCameraToDefault(vtkCamera & camera) override;
-    void moveCameraTo(AbstractVisualizedData & visualization, vtkIdType index, IndexType indexType, bool overTime = true) override;
+    void moveCameraTo(const VisualizationSelection & selection, bool overTime = true) override;
     
 protected:
     CameraInteractorStyleSwitch();
