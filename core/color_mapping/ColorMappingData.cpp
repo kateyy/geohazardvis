@@ -13,13 +13,15 @@
 
 ColorMappingData::ColorMappingData(const QList<AbstractVisualizedData *> & visualizedData,
     int numDataComponents,
-    bool mapsScalarsToColors)
+    bool mapsScalarsToColors,
+    bool usesOwnLookupTable)
     : m_isValid{ false }
     , m_visualizedData(visualizedData)
     , m_numDataComponents{ numDataComponents }
     , m_dataComponent{ 0 }
     , m_isActive{ false }
     , m_mapsScalarsToColors{ mapsScalarsToColors }
+    , m_usesOwnLookupTable{ usesOwnLookupTable }
     , m_dataMinValue(numDataComponents, std::numeric_limits<double>::max())
     , m_dataMaxValue(numDataComponents, std::numeric_limits<double>::lowest())
     , m_minValue(numDataComponents, std::numeric_limits<double>::max())
@@ -103,6 +105,23 @@ void ColorMappingData::setDataComponent(int component)
 bool ColorMappingData::mapsScalarsToColors() const
 {
     return m_mapsScalarsToColors;
+}
+
+bool ColorMappingData::usesOwnLookupTable() const
+{
+    return m_usesOwnLookupTable;
+}
+
+vtkScalarsToColors * ColorMappingData::ownLookupTable()
+{
+    assert(usesOwnLookupTable());
+
+    if (!m_ownLut)
+    {
+        m_ownLut = createOwnLookupTable();
+    }
+
+    return m_ownLut;
 }
 
 void ColorMappingData::initialize()
@@ -216,6 +235,12 @@ void ColorMappingData::setMaxValue(double value, int component)
     m_maxValue[component] = std::min(std::max(m_dataMinValue[component], value), m_dataMaxValue[component]);
 
     minMaxChangedEvent();
+}
+
+vtkSmartPointer<vtkScalarsToColors> ColorMappingData::createOwnLookupTable()
+{
+    assert(false);
+    return{};
 }
 
 void ColorMappingData::lookupTableChangedEvent()

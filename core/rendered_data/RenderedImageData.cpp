@@ -144,9 +144,13 @@ void RenderedImageData::scalarsForColorMappingChangedEvent()
         : 0.0);
 
     // hack required for DirectImageColors: how to enforce to use color data directly?
-    property()->SetLookupTable(m_colorMappingData->mapsScalarsToColors()
-        ? m_gradient
-        : nullptr);
+    auto lut = m_colorMappingData->mapsScalarsToColors()
+        ? m_gradient : nullptr;
+    if (m_colorMappingData->usesOwnLookupTable())
+    {
+        lut = m_colorMappingData->ownLookupTable();
+    }
+    property()->SetLookupTable(lut);
 }
 
 void RenderedImageData::colorMappingGradientChangedEvent()

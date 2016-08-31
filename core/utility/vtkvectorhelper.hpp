@@ -238,6 +238,27 @@ convertTo(const vtkVector<T, SizeIn> & other, const T initValue)
     return result;
 }
 
+template<typename TOut, typename TIn, int Size>
+typename std::enable_if<std::is_same<TOut, TIn>::value, vtkVector<TOut, Size>>::type
+convertTo(vtkVector<TIn, Size> other)
+{
+    return other;
+}
+
+template<typename TOut, typename TIn, int Size>
+typename std::enable_if<!std::is_same<TOut, TIn>::value, vtkVector<TOut, Size>>::type
+convertTo(const vtkVector<TIn, Size> & other)
+{
+    vtkVector<TOut, Size> result;
+
+    for (int i = 0; i < Size; ++i)
+    {
+        result[i] = static_cast<TOut>(other[i]);
+    }
+
+    return result;
+}
+
 template<typename T, int Size>
 vtkVector<T, Size> abs(const vtkVector<T, Size> & other)
 {

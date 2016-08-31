@@ -81,6 +81,14 @@ template<int SizeOut, int SizeIn, typename T>
 typename std::enable_if<(SizeOut > SizeIn), vtkVector<T, SizeOut>>::type
 convertTo(const vtkVector<T, SizeIn> & other, const T initValue = T());
 
+template<typename TOut, typename TIn, int Size>
+typename std::enable_if<std::is_same<TOut, TIn>::value, vtkVector<TOut, Size>>::type
+convertTo(vtkVector<TIn, Size> other);
+
+template<typename TOut, typename TIn, int Size>
+typename std::enable_if<!std::is_same<TOut, TIn>::value, vtkVector<TOut, Size>>::type
+convertTo(const vtkVector<TIn, Size> & other);
+
 template<typename T, int Size>
 vtkVector<T, Size> abs(const vtkVector<T, Size> & other);
 

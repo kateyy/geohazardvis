@@ -17,6 +17,7 @@ class QString;
 class vtkAlgorithm;
 class vtkAbstractMapper;
 class vtkLookupTable;
+class vtkScalarsToColors;
 
 class AbstractVisualizedData;
 
@@ -39,7 +40,8 @@ public:
 public:
     explicit ColorMappingData(const QList<AbstractVisualizedData *> & visualizedData,
         int numDataComponents = 1,
-        bool mapsScalarsToColors = true);
+        bool mapsScalarsToColors = true,
+        bool usesOwnLookupTable = false);
 
     virtual void activate();
     virtual void deactivate();
@@ -56,6 +58,11 @@ public:
 
     /** Return whether scalars are mapped/transformed to colors or used directly as color values. */
     bool mapsScalarsToColors() const;
+
+    /** Return whether this mapping requires an own lookup table instead of a user-configured one.
+      * If this returns true, use the lookup table returned by ownLookupTable() in visualizations. */
+    bool usesOwnLookupTable() const;
+    vtkScalarsToColors * ownLookupTable();
 
     /** create a filter to map values to color, applying current min/max settings
       * @param dataObject is required to setup object specific parameters on the filter.
@@ -99,6 +106,9 @@ protected:
         @return a vector containing value ranges per component */
     virtual std::vector<ValueRange<>> updateBounds() = 0;
 
+    /** Subclass have to override this if and only if usesOwnLookupTable was set to true in the constructor. */
+    virtual vtkSmartPointer<vtkScalarsToColors> createOwnLookupTable();
+
 protected:
     virtual void lookupTableChangedEvent();
     virtual void dataComponentChangedEvent();
@@ -108,6 +118,7 @@ protected:
     bool m_isValid;
     QList<AbstractVisualizedData *> m_visualizedData;
     vtkSmartPointer<vtkLookupTable> m_lut;
+    vtkSmartPointer<vtkScalarsToColors> m_ownLut;
 
 private:
     void forceUpdateBoundsLocked() const;
@@ -119,6 +130,7 @@ private:
     bool m_isActive;
 
     const bool m_mapsScalarsToColors;
+    const bool m_usesOwnLookupTable;
 
     /** per data component: value range and user selected subrange */
     std::vector<double> m_dataMinValue;

@@ -282,7 +282,8 @@ bool ColorMapping::currentScalarsUseMappingLegend() const
 {
     auto & scalars = currentScalars();
 
-    return scalars.dataMinValue() != scalars.dataMaxValue();
+    return (scalars.dataMinValue() != scalars.dataMaxValue())
+        && !scalars.usesOwnLookupTable();
 }
 
 ColorBarRepresentation & ColorMapping::colorBarRepresentation()
