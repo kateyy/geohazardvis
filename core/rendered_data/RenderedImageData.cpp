@@ -104,8 +104,11 @@ void RenderedImageData::setupColorMapping(ColorMapping & colorMapping)
 {
     RenderedData::setupColorMapping(colorMapping);
 
+    auto & image = static_cast<ImageDataObject &>(dataObject());
+    auto & scalars = image.scalars();
+
     // visualizing images without color mapping doesn't make sense in most cases
-    colorMapping.setEnabled(true);
+    colorMapping.setCurrentScalarsByName(QString::fromUtf8(scalars.GetName()), true);
 }
 
 void RenderedImageData::scalarsForColorMappingChangedEvent()
