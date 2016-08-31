@@ -47,9 +47,22 @@ public:
     /** Set the vtkDataArray::UNITS_LABEL on the array. This requires VTK version 7.1.0 or newer */
     vtkSetStringMacro(ArrayUnit);
 
+
+    /** Also pass the input array to the output.
+    * By default, the input array is copied (and information are changed), but not passed to the output.
+    * This does only make sense if renaming is enabled, since data set attributes to not meant to 
+    * be used with multiple arrays with same names. */
+    vtkBooleanMacro(PassInputArray, bool);
+    vtkGetMacro(PassInputArray, bool);
+    vtkSetMacro(PassInputArray, bool);
+
 protected:
     ArrayChangeInformationFilter();
     ~ArrayChangeInformationFilter() override;
+
+    int RequestInformation(vtkInformation * request,
+        vtkInformationVector ** inputVector,
+        vtkInformationVector * outputVector) override;
 
     int RequestData(vtkInformation * request,
         vtkInformationVector ** inputVector,
@@ -68,4 +81,6 @@ private:
 
     bool EnableSetUnit;
     char * ArrayUnit;
+
+    bool PassInputArray;
 };

@@ -55,6 +55,7 @@ ArrayChangeInformationFilter::ArrayChangeInformationFilter()
     , ArrayName{ nullptr }
     , EnableSetUnit{ false }
     , ArrayUnit{ nullptr }
+    , PassInputArray{ false }
 {
 }
 
@@ -62,6 +63,51 @@ ArrayChangeInformationFilter::~ArrayChangeInformationFilter()
 {
     this->SetArrayName(nullptr);
     this->SetArrayUnit(nullptr);
+}
+
+int ArrayChangeInformationFilter::RequestInformation(
+    vtkInformation * request,
+    vtkInformationVector ** inputVector,
+    vtkInformationVector * outputVector)
+{
+    if (!Superclass::RequestInformation(request, inputVector, outputVector))
+    {
+        return 0;
+    }
+
+    const int fieldAssociation = this->AttributeLocation == POINT_DATA
+        ? vtkDataObject::FIELD_ASSOCIATION_POINTS
+        : vtkDataObject::FIELD_ASSOCIATION_CELLS;
+
+    auto inInfo = inputVector[0]->GetInformationObject(0);
+
+    vtkIdType arrayType = -1;
+    vtkIdType numComponents = -1;
+    vtkIdType numTuples = -1;
+    const char * inName = nullptr;
+
+    if (auto inFieldInfo = vtkDataObject::GetActiveFieldInformation(
+        inInfo,
+        fieldAssociation,
+        this->AttributeType))
+    {
+        arrayType = inFieldInfo->Get(vtkDataObject::FIELD_ARRAY_TYPE());
+        numComponents = inFieldInfo->Get(vtkDataObject::FIELD_NUMBER_OF_COMPONENTS());
+        numTuples = inFieldInfo->Get(vtkDataObject::FIELD_NUMBER_OF_TUPLES());
+        inName = inFieldInfo->Get(vtkDataObject::FIELD_NAME());
+    }
+
+    auto outInfo = outputVector->GetInformationObject(0);
+    vtkDataObject::SetActiveAttributeInfo(
+        outInfo,
+        fieldAssociation,
+        this->AttributeType,
+        this->EnableRename ? this->ArrayName : inName,
+        arrayType != 0 ? arrayType : -1,
+        numComponents > 0 ? numComponents : -1,
+        numTuples > 0 ? numTuples : -1);
+
+    return 1;
 }
 
 int ArrayChangeInformationFilter::RequestData(
@@ -107,28 +153,32 @@ int ArrayChangeInformationFilter::RequestData(
         outAttribute.TakeReference(inAttribute->NewInstance());
         outAttribute->DeepCopy(inAttribute);
 
-        int outAttrIndexPassed = -1;
-        for (int i = 0; i < inDsAttributes->GetNumberOfArrays(); ++i)
+        if (this->EnableRename)
         {
-            if (inDsAttributes->GetArray(i) == inAttribute)
-            {
-                outAttrIndexPassed = i;
-                break;
-            }
+            outAttribute->SetName(this->ArrayName);
         }
 
-        assert(outAttrIndexPassed != -1);
-
         // replace the array (and active attribute) by a copy
-        outDsAttributes->RemoveArray(outAttrIndexPassed);
+        if (!this->PassInputArray || !this->EnableRename)
+        {
+            int outAttrIndexPassed = -1;
+            for (int i = 0; i < inDsAttributes->GetNumberOfArrays(); ++i)
+            {
+                if (inDsAttributes->GetArray(i) == inAttribute)
+                {
+                    outAttrIndexPassed = i;
+                    break;
+                }
+            }
+
+            assert(outAttrIndexPassed != -1);
+
+            outDsAttributes->RemoveArray(outAttrIndexPassed);
+        }
         const int outAttrIndexCopied = outDsAttributes->AddArray(outAttribute);
         outDsAttributes->SetActiveAttribute(outAttrIndexCopied, this->AttributeType);
     }
 
-    if (this->EnableRename)
-    {
-        outAttribute->SetName(this->ArrayName);
-    }
 
 #if VTK_CHECK_VERSION(7, 1, 0)
     if (this->EnableSetUnit)
