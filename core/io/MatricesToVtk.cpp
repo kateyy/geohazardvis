@@ -107,6 +107,7 @@ std::unique_ptr<DataObject> MatricesToVtk::loadGrid2D(const QString & name, cons
     }
 
     auto parsedImage = parseGrid2D(inputData);
+    parsedImage->GetPointData()->GetScalars()->SetName(name.toUtf8());
 
     return std::make_unique<ImageDataObject>(name, *parsedImage);
 }
