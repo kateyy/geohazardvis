@@ -32,7 +32,8 @@ struct DEMShadingWorker
     }
 
     vtkVector3d invNormLightDirection;
-    double ambientRatio = 0.0;
+    double diffuse = 1.0;
+    double ambient = 0.0;
 
     template <typename NormalsArrayType, typename OutputArrayType>
     void operator() (NormalsArrayType * normals, OutputArrayType * lightness)
@@ -44,10 +45,11 @@ struct DEMShadingWorker
         using OutputValueType = typename vtkDataArrayAccessor<OutputArrayType>::APIType;
 
         const auto lightDir = convertTo<OutputValueType>(invNormLightDirection);
-        const auto ambient = this->ambientRatio;
+        const auto d = this->diffuse;
+        const auto a = this->ambient;
 
         vtkSMPTools::For(0, normals->GetNumberOfTuples(),
-            [ambient, lightDir, normals, lightness] (vtkIdType begin, vtkIdType end)
+            [d, a, lightDir, normals, lightness] (vtkIdType begin, vtkIdType end)
         {
             vtkDataArrayAccessor<NormalsArrayType> n(normals);
             vtkDataArrayAccessor<OutputArrayType> l(lightness);
@@ -63,7 +65,7 @@ struct DEMShadingWorker
                     static_cast<OutputValueType>(convertTo<OutputValueType>(normal).Dot(lightDir))
                 );
 
-                l.Set(tupleIdx, 0, static_cast<OutputValueType>(ambient + (1.0 - ambient) * df));
+                l.Set(tupleIdx, 0, static_cast<OutputValueType>(std::min(1.0, a + d * df)));
             }
         });
     }
@@ -73,7 +75,8 @@ struct DEMShadingWorker
 
 DEMShadingFilter::DEMShadingFilter()
     : Superclass()
-    , AmbientRatio{ 0.0 }
+    , Diffuse{ 0.7 }
+    , Ambient{ 0.3 }
 {
 }
 
@@ -97,10 +100,10 @@ int DEMShadingFilter::RequestInformation(vtkInformation * request,
     const int numComponents = 1;
     const auto scalarsName = "Lightness";
 
-    if (auto inScalarInfo = vtkDataObject::GetActiveFieldInformation(inInfo,
-        vtkDataObject::FIELD_ASSOCIATION_POINTS, vtkDataSetAttributes::SCALARS))
+    if (auto inNormalsInfo = vtkDataObject::GetActiveFieldInformation(inInfo,
+        vtkDataObject::FIELD_ASSOCIATION_POINTS, vtkDataSetAttributes::NORMALS))
     {
-        numTuples = inScalarInfo->Get(vtkDataObject::FIELD_NUMBER_OF_TUPLES());
+        numTuples = inNormalsInfo->Get(vtkDataObject::FIELD_NUMBER_OF_TUPLES());
     }
     if (numTuples <= 0)
     {
@@ -159,10 +162,12 @@ int DEMShadingFilter::RequestData(vtkInformation * /*request*/,
     outImage->AllocateScalars(outInfo);
 
     auto lightness = outImage->GetPointData()->GetScalars();
+    lightness->SetName("Lightness");
 
     DEMShadingWorker worker;
     worker.setLightDirection({ 1, 1, 0 });  // Light in the north west
-    worker.ambientRatio = this->AmbientRatio;
+    worker.diffuse = this->Diffuse;
+    worker.ambient = this->Ambient;
 
     using Dispatcher = vtkArrayDispatch::Dispatch2ByValueType<
         vtkArrayDispatch::Reals,

@@ -137,9 +137,6 @@ int DEMImageNormals::RequestInformation(vtkInformation * request,
     }
 
     vtkDataObject::SetActiveAttributeInfo(outInfo,
-        vtkImageData::FIELD_ASSOCIATION_POINTS, vtkDataSetAttributes::SCALARS, "Normals",
-        scalarType, numComponents, numTuples);
-    vtkDataObject::SetActiveAttributeInfo(outInfo,
         vtkImageData::FIELD_ASSOCIATION_POINTS, vtkDataSetAttributes::NORMALS, "Normals",
         scalarType, numComponents, numTuples);
 
@@ -213,13 +210,11 @@ int DEMImageNormals::RequestData(vtkInformation * /*request*/,
         || normals->GetNumberOfTuples() != numberOfPoints
         || normals->GetNumberOfComponents() != 3)
     {
-        outImage->GetPointData()->SetActiveScalars(nullptr);
-        vtkImageData::SetScalarType(i_x->GetDataType(), outInfo);
-        outImage->AllocateScalars(outInfo);
-        normals = outImage->GetPointData()->GetScalars();
+        normals.TakeReference(elevations->NewInstance());
+        normals->SetNumberOfComponents(3);
+        normals->SetNumberOfTuples(numberOfPoints);
     }
 
-    outImage->GetPointData()->SetScalars(normals);
     outImage->GetPointData()->SetNormals(normals);
 
     using Dispatcher = vtkArrayDispatch::Dispatch3BySameValueType<vtkArrayDispatch::Reals>;

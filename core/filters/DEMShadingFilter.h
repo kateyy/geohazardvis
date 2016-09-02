@@ -10,8 +10,11 @@ public:
     static DEMShadingFilter * New();
     vtkTypeMacro(DEMShadingFilter, vtkImageAlgorithm);
 
-    vtkGetMacro(AmbientRatio, double);
-    vtkSetClampMacro(AmbientRatio, double, 0.0, 1.0);
+    vtkGetMacro(Diffuse, double);
+    vtkSetClampMacro(Diffuse, double, 0.0, 1.0);
+
+    vtkGetMacro(Ambient, double);
+    vtkSetClampMacro(Ambient, double, 0.0, 1.0);
 
 protected:
     DEMShadingFilter();
@@ -26,7 +29,8 @@ protected:
         vtkInformationVector * outputVector) override;
 
 private:
-    double AmbientRatio;
+    double Diffuse;
+    double Ambient;
 
 private:
     DEMShadingFilter(const DEMShadingFilter &) = delete;

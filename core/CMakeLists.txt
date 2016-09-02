@@ -46,8 +46,6 @@ set(sources
     color_mapping/ColorMappingRegistry.cpp
     color_mapping/DefaultColorMapping.h
     color_mapping/DefaultColorMapping.cpp
-    color_mapping/DEMReliefShading.h
-    color_mapping/DEMReliefShading.cpp
     color_mapping/DirectImageColors.h
     color_mapping/DirectImageColors.cpp
     color_mapping/GlyphColorMapping.h
@@ -96,6 +94,8 @@ set(sources
     filters/ArrayChangeInformationFilter.cpp
     filters/CentroidAsScalarsFilter.h
     filters/CentroidAsScalarsFilter.cpp
+    filters/DEMApplyShadingToColors.h
+    filters/DEMApplyShadingToColors.cpp
     filters/DEMImageNormals.h
     filters/DEMImageNormals.cpp
     filters/DEMShadingFilter.h
