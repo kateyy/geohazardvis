@@ -52,7 +52,7 @@ std::unique_ptr<DataObject> MatricesToVtk::loadIndexedTriangles(const QString & 
 
     const InputVector * indices = nullptr;
     const InputVector * vertices = nullptr;
-    std::map<std::string, const InputVector *> vectorArrays;
+    std::map<QString, const InputVector *> vectorArrays;
 
     for (const ReadDataSet & dataSet : datasets)
     {
@@ -79,7 +79,7 @@ std::unique_ptr<DataObject> MatricesToVtk::loadIndexedTriangles(const QString & 
 
         assert(size_t(polyData->GetNumberOfCells()) == vector.front().size());
 
-        auto a = parseFloatVector(vector, namedVector.first.c_str(), 0, int(vector.size() - 1));
+        auto a = parseFloatVector(vector, namedVector.first, 0, int(vector.size() - 1));
 
         polyData->GetCellData()->AddArray(a);
     }

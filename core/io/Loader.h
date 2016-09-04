@@ -37,8 +37,6 @@ public:
     readFile(const QString & fileName);
 
 private:
-    static std::unique_ptr<DataObject> loadTextFile(const QString & fileName);
-
     static const std::map<Category, std::map<QString, QStringList>> &fileFormatExtensionMaps();
 };
 

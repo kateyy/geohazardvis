@@ -12,5 +12,5 @@ unmatchedSuppression
 assertWithSideEffect:@PROJECT_SOURCE_DIR@/core/rendered_data/RenderedImageData.cpp:43
 assertWithSideEffect:@PROJECT_SOURCE_DIR@/core/types.cpp:134
 
-unusedStructMember:@PROJECT_SOURCE_DIR@/core/io/TextFileReader.h:29
-unusedStructMember:@PROJECT_SOURCE_DIR@/core/io/TextFileReader.h:30
+unusedStructMember:@PROJECT_SOURCE_DIR@/core/io/TextFileReader.h:33
+unusedStructMember:@PROJECT_SOURCE_DIR@/core/io/TextFileReader.h:34

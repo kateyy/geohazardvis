@@ -25,11 +25,7 @@
 #include <core/data_objects/PolyDataObject.h>
 #include <core/data_objects/VectorGrid3DDataObject.h>
 #include <core/io/TextFileReader.h>
-#include <core/io/types.h>
-#include <core/io/MatricesToVtk.h>
 
-
-using namespace io;
 
 namespace
 {
@@ -294,39 +290,16 @@ std::unique_ptr<DataObject> Loader::readFile(const QString & filename)
             return nullptr;
         }
 
-        vtkDataArray * scalars = image->GetPointData()->GetScalars();
+        auto scalars = image->GetPointData()->GetScalars();
         // readers set the scalar name to something like "JPEGdata"..
         if (scalars)
+        {
             scalars->SetName(baseName.toUtf8().data());
+        }
 
         return std::make_unique<ImageDataObject>(baseName, *image);
     }
 
     // handle all other files as our text file format
-    return loadTextFile(filename);
-}
-
-std::unique_ptr<DataObject> Loader::loadTextFile(const QString & filename)
-{
-    std::vector<ReadDataSet> readDatasets;
-    std::shared_ptr<InputFileInfo> inputInfo = TextFileReader::read(filename.toStdString(), readDatasets);
-    if (!inputInfo)
-        return nullptr;
-
-    QString dataSetName = QString::fromStdString(inputInfo->name);
-    switch (inputInfo->type)
-    {
-    case ModelType::triangles:
-        return MatricesToVtk::loadIndexedTriangles(dataSetName, readDatasets);
-    case ModelType::DEM:
-    case ModelType::grid2D:
-        return MatricesToVtk::loadGrid2D(dataSetName, readDatasets);
-    case ModelType::vectorGrid3D:
-        return MatricesToVtk::loadGrid3D(dataSetName, readDatasets);
-    case ModelType::raw:
-        return MatricesToVtk::readRawFile(filename);
-    default:
-        cerr << "Warning: model type unsupported by the loader: " << int(inputInfo->type) << endl;
-        return nullptr;
-    }
+    return TextFileReader::read(filename);
 }

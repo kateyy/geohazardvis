@@ -13,16 +13,18 @@
 
 #include <vtkImageData.h>
 
+#include <core/data_objects/DataObject.h>
 #include <core/io/FileParser.h>
+#include <core/io/MatricesToVtk.h>
 
 
 using namespace io;
 using std::ifstream;
 using std::map;
-using std::shared_ptr;
 using std::stringstream;
 using std::string;
 using std::vector;
+
 
 namespace
 {
@@ -60,28 +62,56 @@ string rtrim(const string & s)
 
 }
 
-InputFileInfo::InputFileInfo(const string & name, ModelType type)
-    : name(name)
-    , type(type)
+TextFileReader::InputFileInfo::InputFileInfo(const QString & name, ModelType type)
+    : name{ name }
+    , type{ type }
 {
 }
 
-shared_ptr<InputFileInfo> TextFileReader::read(const string & filename, vector<ReadDataSet> & readDataSets)
+std::unique_ptr<DataObject> TextFileReader::read(const QString & fileName)
 {
-    ifstream inputStream(filename);
+    std::vector<ReadDataSet> readDatasets;
+    auto inputInfo = TextFileReader::readMetaData(fileName, readDatasets);
+    if (inputInfo)
+    {
+        return nullptr;
+    }
+
+    switch (inputInfo->type)
+    {
+    case ModelType::triangles:
+        return MatricesToVtk::loadIndexedTriangles(inputInfo->name, readDatasets);
+    case ModelType::DEM:
+    case ModelType::grid2D:
+        return MatricesToVtk::loadGrid2D(inputInfo->name, readDatasets);
+    case ModelType::vectorGrid3D:
+        return MatricesToVtk::loadGrid3D(inputInfo->name, readDatasets);
+    case ModelType::raw:
+        return MatricesToVtk::readRawFile(fileName);
+    default:
+        cerr << "Warning: model type unsupported by the loader: " << int(inputInfo->type) << endl;
+        return nullptr;
+    }
+}
+
+auto TextFileReader::readMetaData(
+    const QString & fileName,
+    vector<ReadDataSet> & readDataSets) -> std::unique_ptr<InputFileInfo>
+{
+    ifstream inputStream(fileName.toStdString());
 
     if (!inputStream.good())
     {
-        cerr << "Cannot access file: \"" << filename << "\"" << endl;
+        cerr << "Cannot access file: \"" << fileName.toStdString() << "\"" << endl;
         return nullptr;
     }
 
     vector<DataSetDef> datasetDefs;
-    shared_ptr<InputFileInfo> input = readHeader(inputStream, datasetDefs);
+    auto input = readHeader(inputStream, datasetDefs);
 
     if (!input)
     {
-        cerr << "could not read input text file: \"" << filename << "\"" << endl;
+        cerr << "could not read input text file: \"" << fileName.toStdString() << "\"" << endl;
         return nullptr;
     }
     assert(input);
@@ -97,19 +127,20 @@ shared_ptr<InputFileInfo> TextFileReader::read(const string & filename, vector<R
         }
         else {
             assert(false);
-            cerr << "could not read input data set in " << filename << endl;
+            cerr << "could not read input data set in " << fileName.toStdString() << endl;
         }
     }
     return input;
 }
 
-shared_ptr<InputFileInfo> TextFileReader::readHeader(ifstream & inputStream, vector<DataSetDef> & inputDefs)
+auto TextFileReader::readHeader(ifstream & inputStream, vector<DataSetDef> & inputDefs) 
+    -> std::unique_ptr<InputFileInfo>
 {
     assert(inputStream.good());
 
     bool validFile = false;
     bool started = false;
-    shared_ptr<InputFileInfo> input;
+    std::unique_ptr<InputFileInfo> input;
 
     string line;
 
@@ -129,7 +160,7 @@ shared_ptr<InputFileInfo> TextFileReader::readHeader(ifstream & inputStream, vec
 
         if (!started) {
             //cerr << "invalid input file (does not begin with the $begin tag)." << endl;
-            return std::make_shared<InputFileInfo>("", ModelType::raw);
+            return std::make_unique<InputFileInfo>("", ModelType::raw);
         }
 
         // define the current 3d/2d model
@@ -150,7 +181,7 @@ shared_ptr<InputFileInfo> TextFileReader::readHeader(ifstream & inputStream, vec
                 cerr << "Invalid model type \"" << type << "\"" << endl;
                 return nullptr;
             }
-            input = std::make_shared<InputFileInfo>(name, it->second);
+            input = std::make_unique<InputFileInfo>(QString::fromStdString(name), it->second);
 
             switch (input->type)
             {
@@ -249,7 +280,7 @@ bool TextFileReader::readHeader_triangles(ifstream & inputStream, vector<DataSet
         }
         assert(tupleSize);
         assert(numTuples);
-        inputDefs.push_back({ currentDataType, numTuples, tupleSize, attributeName, nullptr });
+        inputDefs.push_back({ currentDataType, numTuples, tupleSize, QString::fromStdString(attributeName), nullptr });
     }
 
     return false;

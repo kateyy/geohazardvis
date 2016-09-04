@@ -1,7 +1,8 @@
 #pragma once
 
-#include <string>
 #include <vector>
+
+#include <QString>
 
 #include <vtkSmartPointer.h>
 
@@ -39,7 +40,7 @@ struct ReadDataSet
 {
     DataSetType type;
     InputVector data;
-    std::string attributeName;
+    QString attributeName;
     vtkSmartPointer<vtkDataObject> vtkMetaData;
 };
 
