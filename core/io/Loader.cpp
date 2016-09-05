@@ -24,7 +24,7 @@
 #include <core/data_objects/ImageDataObject.h>
 #include <core/data_objects/PolyDataObject.h>
 #include <core/data_objects/VectorGrid3DDataObject.h>
-#include <core/io/TextFileReader.h>
+#include <core/io/MetaTextFileReader.h>
 
 
 namespace
@@ -301,5 +301,5 @@ std::unique_ptr<DataObject> Loader::readFile(const QString & filename)
     }
 
     // handle all other files as our text file format
-    return TextFileReader::read(filename);
+    return MetaTextFileReader::read(filename);
 }

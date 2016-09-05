@@ -11,7 +11,7 @@
 #include <vtkPolyData.h>
 
 #include <core/data_objects/PolyDataObject.h>
-#include <core/io/FileParser.h>
+#include <core/io/TextFileReader.h>
 #include <core/io/Loader.h>
 #include <core/io/MatricesToVtk.h>
 
@@ -104,7 +104,8 @@ void DataImporterWidget::openPointCoords()
     m_ui->coordsFileEdit->setText(fileName);
 
     m_coordinateData.clear();
-    if (!FileParser::populateIOVectors(fileName.toStdString(), m_coordinateData))
+    const auto result = TextFileReader::read(fileName, m_coordinateData);
+    if (result.state != TextFileReader::Result::noError)
     {
         QMessageBox::warning(this, "Read Error", "Cannot open the specified point coordinates file.");
     }
@@ -123,7 +124,8 @@ void DataImporterWidget::openTriangleIndices()
     m_ui->indicesFileEdit->setText(fileName);
 
     m_indexData.clear();
-    if (!FileParser::populateIOVectors(fileName.toStdString(), m_indexData))
+    const auto result = TextFileReader::read(fileName, m_indexData);
+    if (result.state != TextFileReader::Result::noError)
     {
         QMessageBox::warning(this, "Read Error", "Cannot open the specified point coordinates file.");
     }

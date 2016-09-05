@@ -1,49 +1,39 @@
 #pragma once
 
-#include <iosfwd>
-#include <memory>
-
+#include <core/core_api.h>
 #include <core/io/types.h>
 
 
-class DataObject;
-
-
-class TextFileReader
+class CORE_API TextFileReader
 {
 public:
-    static std::unique_ptr<DataObject> read(const QString & fileName);
-
-private:
-    struct InputFileInfo
+    struct Result
     {
-        InputFileInfo(const QString & name, const io::ModelType type);
+        enum State
+        {
+            noError,
+            invalidFile,    // input file does not exist or is not readable
+            // end of file was reached before filling all columns of the last row, or before
+            // numberOfValues values were read (if specified)
+            eof,
+            invalidOffset   // offset points behind the end of the file or is too large of qint64
+        };
 
-        const QString name;
-        const io::ModelType type;
+        Result(State state, size_t filePos = {});
+
+        State state;
+        size_t filePos = 0;
     };
 
-    static std::unique_ptr<InputFileInfo> readMetaData(
-        const QString & fileName,
-        std::vector<io::ReadDataSet> & readDatasets);
+    static Result read(
+        const QString & inputFileName,
+        io::InputVector & ioVectors,
+        size_t offset = {},
+        size_t numberOfValues = {});
 
-    struct DataSetDef
+    struct CORE_API Impl
     {
-        io::DataSetType type;
-        size_t nbLines;
-        size_t nbColumns;
-        QString attributeName;
-        vtkSmartPointer<vtkDataObject> vtkMetaData;
+        static Result qFile_QByteArray(const QString & inputFileName,
+            io::InputVector & ioVectors, size_t offset, size_t numberOfValues);
     };
-
-    /// read the file header and leave the input stream at a position directly behind the header end
-    /// @return a unique pointer to an InputFileInfo object, if the file contains a valid header
-    static std::unique_ptr<InputFileInfo> readHeader(std::ifstream & inputStream, std::vector<DataSetDef>& inputDefs);
-
-    static bool readHeader_triangles(std::ifstream & inputStream, std::vector<DataSetDef>& inputDefs);
-    static bool readHeader_DEM(std::ifstream & inputStream, std::vector<DataSetDef>& inputDefs);
-    static bool readHeader_grid2D(std::ifstream & inputStream, std::vector<DataSetDef>& inputDefs);
-    static bool readHeader_vectorGrid3D(std::ifstream & inputStream, std::vector<DataSetDef>& inputDefs);
-
-    static io::DataSetType checkDataSetType(const std::string & nameString);
 };

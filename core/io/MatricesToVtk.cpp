@@ -24,7 +24,6 @@
 #include <core/data_objects/RawVectorData.h>
 #include <core/data_objects/VectorGrid3DDataObject.h>
 #include <core/io/TextFileReader.h>
-#include <core/io/FileParser.h>
 
 
 using namespace io;
@@ -359,20 +358,31 @@ vtkSmartPointer<vtkPolyData> MatricesToVtk::parseIndexedTriangles(
 std::unique_ptr<DataObject> MatricesToVtk::readRawFile(const QString & fileName)
 {
     InputVector inputVectors;
-    FileParser::populateIOVectors(fileName.toStdString(), inputVectors);
+    const auto result = TextFileReader::read(fileName, inputVectors);
+
+    if (result.state != TextFileReader::Result::noError)
+    {
+        return nullptr;
+    }
 
     int numColumns = (int)inputVectors.size();
     if (numColumns == 0)
+    {
         return nullptr;
+    }
     int numRows = (int)inputVectors.at(0).size();
     if (numRows == 0)
+    {
         return nullptr;
+    }
 
     bool switchRowsColumns = numColumns > numRows;
     if (switchRowsColumns)
+    {
         std::swap(numColumns, numRows);
+    }
 
-    vtkSmartPointer<vtkFloatArray> dataArray = vtkSmartPointer<vtkFloatArray>::New();
+    auto dataArray = vtkSmartPointer<vtkFloatArray>::New();
     dataArray->SetNumberOfComponents(numColumns);
     dataArray->SetNumberOfTuples(numRows);
 

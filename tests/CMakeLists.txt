@@ -1,4 +1,9 @@
 
+add_subdirectory(TestEnvironment)
+
+set(TestEnvIncludeDir ${CMAKE_CURRENT_SOURCE_DIR}/TestEnvironment)
+
+
 # This policy was introduced in 3.0.0 and does not allow targets named "test" or "help" ...
 # Since we do not rely on cmake testing we stick to the old policy for now.
 if(POLICY CMP0037)

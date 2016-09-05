@@ -13,14 +13,20 @@ set(sources
     DataSetHandler_test.cpp
     DEMToTopographyMesh_test.cpp
     RenderedData_test.cpp
+    TextFileReader_test.cpp
     VTKAlgorithmImplementations_test.cpp
 )
 
 add_executable(${target} ${sources})
 
-target_link_libraries(${target} 
+target_link_libraries(${target}
     core
     ${GTEST_LIBRARIES}
+    TestEnvironment
+)
+
+target_include_directories(${target}
+    PRIVATE ${TestEnvIncludeDir}
 )
 
 configure_cxx_target(${target} NO_CPPCHECK)

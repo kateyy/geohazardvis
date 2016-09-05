@@ -132,11 +132,11 @@ set(sources
     io/BinaryFile.cpp
     io/Exporter.h
     io/Exporter.cpp
-    io/FileParser.h
-    io/FileParser.cpp
     io/Loader.h
     io/Loader.hpp
     io/Loader.cpp
+    io/MetaTextFileReader.h
+    io/MetaTextFileReader.cpp
     io/MatricesToVtk.h
     io/MatricesToVtk.cpp
     io/TextFileReader.h

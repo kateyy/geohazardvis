@@ -1,7 +1,5 @@
 #include <gtest/gtest.h>
 
-#include <QApplication>
-
 #include <vtkActor.h>
 #include <vtkFloatArray.h>
 #include <vtkImageData.h>
@@ -55,12 +53,6 @@ TEST_F(RenderedData_test, RenderedPolyData_SetsMapperInfo)
 
 TEST_F(RenderedData_test, ImageData_SetsMapperInfo)
 {
-    int argc = 0;
-    char ** argv = nullptr;
-    // for color mapping, GradientResourceManger is called, which create QPixmaps;
-    // This requires the Qt platform integration to be setup.
-    QApplication app(argc, argv);
-
     auto data = vtkSmartPointer<vtkImageData>::New();
 
     auto dataObject = std::make_unique<ImageDataObject>("noname", *data);

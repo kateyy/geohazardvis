@@ -14,7 +14,7 @@
 #include <vtkPointData.h>
 
 #include <core/data_objects/ImageDataObject.h>
-#include <core/io/FileParser.h>
+#include <core/io/TextFileReader.h>
 #include <core/io/Loader.h>
 #include <core/io/MatricesToVtk.h>
 
@@ -80,7 +80,8 @@ void GridDataImporterWidget::openImageDataFile()
     m_ui->imageFileEdit->setText(fileName);
 
     m_imageDataVector.clear();
-    if (!FileParser::populateIOVectors(fileName.toStdString(), m_imageDataVector))
+    const auto result = TextFileReader::read(fileName, m_imageDataVector);
+    if (result.state != TextFileReader::Result::noError)
     {
         QMessageBox::warning(this, "Read Error", "Cannot open the specified file.");
     }
