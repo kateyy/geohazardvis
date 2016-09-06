@@ -1,24 +1,17 @@
 #pragma once
 
-#include <QString>
+#include <memory>
 
-#include <vtkSmartPointer.h>
-
-#include <core/types.h>
 #include <gui/gui_api.h>
 
 
-class QTextStream;
-class vtkCellPicker;
+class QString;
 class vtkDataArray;
-class vtkImageSlice;
-class vtkPointPicker;
-class vtkPropPicker;
 class vtkRenderer;
-class vtkScalarsToColors;
 class vtkVector2i;
 
-class PolyDataObject;
+class Picker_private;
+struct VisualizationSelection;
 
 
 class GUI_API Picker
@@ -33,19 +26,11 @@ public:
 
     const VisualizationSelection & pickedObjectInfo() const;
 
-private:
-    void appendPolyDataInfo(QTextStream & stream, PolyDataObject & polyData);
-    void appendImageDataInfo(QTextStream & stream, vtkImageSlice & slice);
-    void appendGenericPointInfo(QTextStream & stream);
+    vtkDataArray * pickedScalarArray();
 
-    static void printScalarInfo(QTextStream & stream, vtkScalarsToColors * lut,
-        vtkDataArray & scalars, vtkIdType pickedIndex);
-    
-private:
-    vtkSmartPointer<vtkPropPicker> m_propPicker;
-    vtkSmartPointer<vtkCellPicker> m_cellPicker;
-    vtkSmartPointer<vtkPointPicker> m_pointPicker;
+    Picker(Picker && other);
+    Picker & operator=(Picker && other);
 
-    QString m_pickedObjectInfoString;
-    VisualizationSelection m_pickedObjectInfo;
+private:
+    std::unique_ptr<Picker_private> d_ptr;
 };

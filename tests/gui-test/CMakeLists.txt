@@ -7,6 +7,7 @@ set(sources
     main.cpp
     ColorMapping_test.cpp
     DEMWidget_test.cpp
+    Picker_test.cpp
     RenderView_test.cpp
     RenderView_test_tools.h
     RenderView_test_tools.cpp

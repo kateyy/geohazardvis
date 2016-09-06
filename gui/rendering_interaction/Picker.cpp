@@ -1,6 +1,5 @@
 #include "Picker.h"
 
-#include <array>
 #include <cassert>
 #include <vector>
 
@@ -11,7 +10,6 @@
 #include <vtkCellPicker.h>
 #include <vtkImageSlice.h>
 #include <vtkImageMapper3D.h>
-#include <vtkImageProperty.h>
 #include <vtkInformation.h>
 #include <vtkInformationStringKey.h>
 #include <vtkMapper.h>
@@ -20,49 +18,83 @@
 #include <vtkPolyData.h>
 #include <vtkPropCollection.h>
 #include <vtkPropPicker.h>
-#include <vtkScalarsToColors.h>
 #include <vtkVector.h>
 #include <vtkVersionMacros.h>
+#include <vtkWeakPointer.h>
 
 #include <core/types.h>
-#include <core/data_objects/ImageDataObject.h>
+#include <core/color_mapping/ColorMapping.h>
+#include <core/color_mapping/ColorMappingData.h>
 #include <core/data_objects/PolyDataObject.h>
 #include <core/rendered_data/RenderedData.h>
+#include <core/utility/DataExtent.h>
 #include <core/utility/macros.h>
 
 
-Picker::Picker()
-    : m_propPicker{ vtkSmartPointer<vtkPropPicker>::New() }
-    , m_cellPicker{ vtkSmartPointer<vtkCellPicker>::New() }
-    , m_pointPicker{ vtkSmartPointer<vtkPointPicker>::New() }
+class Picker_private
 {
-    m_cellPicker->PickFromListOn();
-    m_pointPicker->PickFromListOn();
+public:
+    Picker_private(Picker & picker)
+        : q_ptr{ picker }
+        , propPicker{ vtkSmartPointer<vtkPropPicker>::New() }
+        , cellPicker{ vtkSmartPointer<vtkCellPicker>::New() }
+        , pointPicker{ vtkSmartPointer<vtkPointPicker>::New() }
+    {
+        cellPicker->PickFromListOn();
+        pointPicker->PickFromListOn();
+    }
+
+    void appendPolyDataInfo(QTextStream & stream, PolyDataObject & polyData);
+    void appendGenericPositionInfo(QTextStream & stream, vtkDataSet & dataSet);
+    static void appendPositionInfo(QTextStream & stream, vtkIdType index, const vtkVector3d & position,
+        const QString & indexPrefix, const QString & coordinatePrefix);
+
+    void appendScalarInfo(QTextStream & stream, int activeComponent, bool scalarsAreMapped);
+
+
+    vtkSmartPointer<vtkPropPicker> propPicker;
+    vtkSmartPointer<vtkCellPicker> cellPicker;
+    vtkSmartPointer<vtkPointPicker> pointPicker;
+
+    QString pickedObjectInfoString;
+    VisualizationSelection pickedObjectInfo;
+    vtkWeakPointer<vtkDataArray> pickedScalarArray;
+
+private:
+    Picker & q_ptr;
+};
+
+
+Picker::Picker()
+    : d_ptr{ std::make_unique<Picker_private>(*this) }
+{
 }
 
 Picker::~Picker() = default;
 
+Picker::Picker(Picker && other) = default;
+
+Picker & Picker::operator=(Picker && other) = default;
+
 void Picker::pick(const vtkVector2i & clickPosXY, vtkRenderer & renderer)
 {
-    m_pickedObjectInfoString.clear();
-    m_pickedObjectInfo.clear();
+    d_ptr->pickedObjectInfoString.clear();
+    d_ptr->pickedObjectInfo.clear();
+    d_ptr->pickedScalarArray = nullptr;
 
     // pick points first; if this picker does not hit, we will also not hit cells
-    m_propPicker->Pick(clickPosXY[0], clickPosXY[1], 0, &renderer);
+    d_ptr->propPicker->Pick(clickPosXY[0], clickPosXY[1], 0, &renderer);
 
-    auto prop3D = m_propPicker->GetProp3D();
+    auto prop3D = d_ptr->propPicker->GetProp3D();
     if (!prop3D)
     {
         return;
     }
 
     vtkAbstractMapper * abstractMapper = nullptr;
-    vtkActor * actor = nullptr;
     vtkImageSlice * imageSlice = nullptr;
 
-    actor = m_propPicker->GetActor();
-
-    if (actor)
+    if (auto actor = d_ptr->propPicker->GetActor())
     {
         abstractMapper = actor->GetMapper();
     }
@@ -84,15 +116,25 @@ void Picker::pick(const vtkVector2i & clickPosXY, vtkRenderer & renderer)
 
     auto & mapperInfo = *abstractMapper->GetInformation();
 
-    m_pickedObjectInfo.visualization = AbstractVisualizedData::readPointer(mapperInfo);
-    if (!m_pickedObjectInfo.visualization)
+    d_ptr->pickedObjectInfo.visualization = AbstractVisualizedData::readPointer(mapperInfo);
+    if (!d_ptr->pickedObjectInfo.visualization)
     {
         qDebug() << "no visualization referenced in mapper";
         return;
     }
 
+    auto & visualization = *d_ptr->pickedObjectInfo.visualization;
+
+    // extract data values encoded by the color mapping
+    auto & colorMapping = visualization.colorMapping();
+    auto & colorMappingData = colorMapping.currentScalars();
+    if (colorMapping.isEnabled())
+    {
+        d_ptr->pickedObjectInfo.indexType = colorMappingData.scalarsAssociation(visualization);
+    }
+
     // TODO determine correct visualization port
-    m_pickedObjectInfo.visOutputPort = m_pickedObjectInfo.visualization->defaultVisualizationPort();
+    d_ptr->pickedObjectInfo.visOutputPort = visualization.defaultVisualizationPort();
 
     QString content;
     QTextStream stream;
@@ -106,171 +148,203 @@ void Picker::pick(const vtkVector2i & clickPosXY, vtkRenderer & renderer)
     {
         inputName = "(unnamed)";
     }
+    else
+    {
+        inputName = "\"" + inputName + "\"";
+    }
 
     stream << "Data Set: " << inputName << endl;
 
+
+    const auto polyData = dynamic_cast<PolyDataObject *>(&visualization.dataObject());
+    const bool isPolyDataObject = polyData != nullptr;
+
+    // no active color mapping -> pick default locations
+    if (d_ptr->pickedObjectInfo.indexType == IndexType::invalid)
+    {
+        if (isPolyDataObject)
+        {
+            d_ptr->pickedObjectInfo.indexType = IndexType::cells;
+        }
+        else
+        {
+            d_ptr->pickedObjectInfo.indexType = IndexType::points;
+        }
+    }
+
+    assert(d_ptr->pickedObjectInfo.indexType != IndexType::invalid);
+
+    assert(dynamic_cast<RenderedData *>(d_ptr->pickedObjectInfo.visualization));
+    auto renderedData = static_cast<RenderedData *>(d_ptr->pickedObjectInfo.visualization);
+
+    auto activePicker = d_ptr->pickedObjectInfo.indexType == IndexType::points
+        ? static_cast<vtkPicker *>(d_ptr->pointPicker)
+        : static_cast<vtkPicker *>(d_ptr->cellPicker);
+    assert(activePicker);
+
+    auto pickList = activePicker->GetPickList();
+    pickList->RemoveAllItems();
+    auto viewProps = renderedData->viewProps();
+    vtkCollectionSimpleIterator viewPropIt;
+    for (viewProps->InitTraversal(viewPropIt); auto prop = viewProps->GetNextProp(viewPropIt);)
+    {
+        pickList->AddItem(prop);
+    }
+    
+    activePicker->Pick(clickPosXY[0], clickPosXY[1], 0, &renderer);
+
+    if (!activePicker->GetDataSet())
+    {
+        d_ptr->pickedObjectInfo.indexType = IndexType::invalid;
+        d_ptr->pickedObjectInfoString = stream.readAll();
+        return;
+    }
+
+    auto & dataSet = *activePicker->GetDataSet();
+
+    if (d_ptr->pickedObjectInfo.indexType == IndexType::cells)
+    {
+        d_ptr->pickedObjectInfo.setIndex(d_ptr->cellPicker->GetCellId());
+    }
+    else
+    {
+        d_ptr->pickedObjectInfo.setIndex(d_ptr->pointPicker->GetPointId());
+    }
+
+    if (d_ptr->pickedObjectInfo.isIndexListEmpty())
+    {
+        d_ptr->pickedObjectInfo.indexType = IndexType::invalid;
+        d_ptr->pickedObjectInfoString = stream.readAll();
+        return;
+    }
 
     // ----------------------------
     // object type specific picking
     // ----------------------------
 
-    assert(dynamic_cast<RenderedData *>(m_pickedObjectInfo.visualization));
-    auto renderedData = static_cast<RenderedData *>(m_pickedObjectInfo.visualization);
-
-    if (auto poly = dynamic_cast<PolyDataObject *>(&m_pickedObjectInfo.visualization->dataObject()))
+    if (isPolyDataObject)
     {
-        // let the cell picker only see the current object, to work around different precisions of vtkPropPicker and vtkCellPicker
-        m_cellPicker->GetPickList()->RemoveAllItems();
-        auto && viewProps = renderedData->viewProps();
-
-        for (viewProps->InitTraversal(); auto prop = viewProps->GetNextProp();)
-        {
-            m_cellPicker->GetPickList()->AddItem(prop);
-        }
-
-        m_cellPicker->Pick(clickPosXY[0], clickPosXY[1], 0, &renderer);
-        appendPolyDataInfo(stream, *poly);
+        // poly data: may have point or cell scalars
+        d_ptr->appendPolyDataInfo(stream, *polyData);
     }
     else // point based data sets: images, volumes, volume slices, glyphs
     {
-        m_pointPicker->GetPickList()->RemoveAllItems();
-        auto && viewProps = renderedData->viewProps();
+        d_ptr->appendGenericPositionInfo(stream, dataSet);
+    }
 
-        for (viewProps->InitTraversal(); auto prop = viewProps->GetNextProp();)
-        {
-            m_pointPicker->GetPickList()->AddItem(prop);
-        }
+    if (!d_ptr->pickedObjectInfo.isIndexListEmpty() && colorMapping.isEnabled())
+    {
+        auto attributes = d_ptr->pickedObjectInfo.indexType == IndexType::cells
+            ? static_cast<vtkDataSetAttributes *>(dataSet.GetCellData())
+            : static_cast<vtkDataSetAttributes *>(dataSet.GetPointData());
 
-        m_pointPicker->Pick(clickPosXY[0], clickPosXY[1], 0, &renderer);
+        d_ptr->pickedScalarArray = attributes->GetArray(colorMappingData.scalarsName(visualization).toUtf8().data());
 
-        if (imageSlice)
+        if (d_ptr->pickedScalarArray)
         {
-            appendImageDataInfo(stream, *imageSlice);
-        }
-        else
-        {
-            appendGenericPointInfo(stream);
+            d_ptr->appendScalarInfo(stream, colorMappingData.dataComponent(), colorMappingData.mapsScalarsToColors());
         }
     }
 
-    m_pickedObjectInfoString = stream.readAll();
+    if (!isPolyDataObject && !imageSlice)
+    {
+        // TODO check how to match (resampled) glyph/volume slice indices with input data indices
+        d_ptr->pickedObjectInfo.indexType = IndexType::invalid;
+        d_ptr->pickedObjectInfo.indices.clear();
+    }
+
+    d_ptr->pickedObjectInfoString = stream.readAll();
 }
 
 const QString & Picker::pickedObjectInfoString() const
 {
-    return m_pickedObjectInfoString;
+    return d_ptr->pickedObjectInfoString;
 }
 
 const VisualizationSelection & Picker::pickedObjectInfo() const
 {
-    return m_pickedObjectInfo;
+    return d_ptr->pickedObjectInfo;
 }
 
-void Picker::appendPolyDataInfo(QTextStream & stream, PolyDataObject & polyData)
+vtkDataArray * Picker::pickedScalarArray()
 {
-    auto cellMapper = m_cellPicker->GetMapper();
-    const auto pickedIndex = m_cellPicker->GetCellId();
+    return d_ptr->pickedScalarArray;
+}
 
-    if (pickedIndex == -1)
+void Picker_private::appendPolyDataInfo(QTextStream & stream, PolyDataObject & polyData)
+{
+    const auto pickedIndex = pickedObjectInfo.indices.front();
+    vtkVector3d position;
+    QString indexPrefix, coordinatePrefix;
+
+    if (pickedObjectInfo.indexType == IndexType::cells)
     {
-        return;
+        polyData.cellCenters()->GetPoint(pickedIndex, position.GetData());
+        indexPrefix = "Triangle";
+        coordinatePrefix = "Centroid";
+    }
+    else
+    {
+        polyData.processedDataSet()->GetPoint(pickedIndex, position.GetData());
+        stream << endl
+            << "Point Index: " << pickedIndex << endl
+            << "X = " << position[0] << endl
+            << "Y = " << position[1] << endl
+            << "Z = " << position[2];
+        indexPrefix = "Point";
     }
 
-    m_pickedObjectInfo.indexType = IndexType::cells;
-    m_pickedObjectInfo.indices = { pickedIndex };
+    appendPositionInfo(stream, pickedIndex, position, indexPrefix, coordinatePrefix);
+}
 
-    assert(cellMapper);
+void Picker_private::appendGenericPositionInfo(QTextStream & stream, vtkDataSet & dataSet)
+{
+    const auto pickedIndex = pickedObjectInfo.indices.front();
+    vtkVector3d position;
+    QString indexPrefix, coordinatePrefix;
 
-    std::array<double, 3> centroid;
-    polyData.cellCenters()->GetPoint(pickedIndex, centroid.data());
+    if (pickedObjectInfo.indexType == IndexType::points)
+    {
+        dataSet.GetPoint(pickedIndex, position.GetData());
+        indexPrefix = "Point";
+    }
+    else
+    {
+        DataBounds cellBounds;
+        dataSet.GetCellBounds(pickedIndex, cellBounds.data());
+        position = cellBounds.center();
+        indexPrefix = "Grid";
+        coordinatePrefix = "Centroid";
+    }
+
+    appendPositionInfo(stream, pickedIndex, position, indexPrefix, coordinatePrefix);
+}
+
+void Picker_private::appendPositionInfo(QTextStream & stream, vtkIdType index, const vtkVector3d & position,
+    const QString & indexPrefix, const QString & coordinatePrefix)
+{
     stream
-        << "Triangle Index: " << pickedIndex << endl
-        << "X = " << centroid[0] << endl
-        << "Y = " << centroid[1] << endl
-        << "Z = " << centroid[2];
-
-    auto concreteMapper = vtkMapper::SafeDownCast(cellMapper);
-    assert(concreteMapper);
-    if (!concreteMapper->GetScalarVisibility())
+        << indexPrefix << (indexPrefix.isEmpty() ? "" : " ") << "Index: " << index << endl;
+    QString coordinateIndent;
+    if (!coordinatePrefix.isEmpty())
     {
-        return;
+        stream
+            << coordinatePrefix << ":" << endl;
+        coordinateIndent = "    ";
     }
-
-    const auto scalarMode = concreteMapper->GetScalarMode();
-    auto sourceAttributes = [scalarMode, concreteMapper] () -> vtkDataSetAttributes *
-    {
-        switch (scalarMode)
-        {
-        case VTK_SCALAR_MODE_USE_CELL_DATA:
-            return concreteMapper->GetInputAsDataSet()->GetCellData();
-        case VTK_SCALAR_MODE_USE_POINT_DATA:
-            return concreteMapper->GetInputAsDataSet()->GetPointData();
-        default:
-            return nullptr;
-        }
-    }();
-
-    if (!sourceAttributes)
-    {
-        return;
-    }
-
-    auto scalars = sourceAttributes->GetArray(concreteMapper->GetArrayName());
-
-    if (!scalars)
-    {
-        return;
-    }
-
-    printScalarInfo(stream, concreteMapper->GetLookupTable(), *scalars, pickedIndex);
-}
-
-void Picker::appendImageDataInfo(QTextStream & stream, vtkImageSlice & slice)
-{
-    const auto pickedIndex = m_pointPicker->GetPointId();
-    auto dataSet = m_pointPicker->GetDataSet();
-
-    if (pickedIndex == -1 || !dataSet)
-    {
-        return;
-    }
-
-    m_pickedObjectInfo.indexType = IndexType::points;
-    m_pickedObjectInfo.indices = { pickedIndex };
-
-    std::array<double, 3> pos;
-    m_pointPicker->GetPickPosition(pos.data());
-
     stream
-        << "X = : " << pos[0] << endl
-        << "Y = : " << pos[1] << endl;
-
-    if (auto scalars = dataSet->GetPointData()->GetScalars())
-    {
-        printScalarInfo(stream, slice.GetProperty()->GetLookupTable(), *scalars, pickedIndex);
-    }
+        << coordinateIndent << "X = " << position[0] << endl
+        << coordinateIndent << "Y = " << position[1] << endl
+        << coordinateIndent << "Z = " << position[2];
 }
 
-void Picker::appendGenericPointInfo(QTextStream & stream)
+void Picker_private::appendScalarInfo(QTextStream & stream, int activeComponent, bool scalarsAreMapped)
 {
-    std::array<double, 3> pos;
-    m_pointPicker->GetPickPosition(pos.data());
-
-    // TODO check how to match (resampled) glyph/volume slice indices with input data indices
-    m_pickedObjectInfo.indexType = IndexType::invalid;
-    m_pickedObjectInfo.indices.clear();
-
-    stream
-        << "X = " << pos[0] << endl
-        << "Y = " << pos[1] << endl
-        << "Z = " << pos[2];
-}
-
-void Picker::printScalarInfo(QTextStream & stream, vtkScalarsToColors * lut,
-    vtkDataArray & scalars, vtkIdType pickedIndex)
-{
+    assert(pickedScalarArray && !pickedObjectInfo.isIndexListEmpty());
+    auto & scalars = *pickedScalarArray;
+    const auto index = pickedObjectInfo.indices.front();
     auto tuple = std::vector<double>(scalars.GetNumberOfComponents());
-    scalars.GetTuple(pickedIndex, tuple.data());
+    scalars.GetTuple(pickedObjectInfo.indices.front(), tuple.data());
 
     QString unitStr;
 #if VTK_CHECK_VERSION(7, 1, 0)
@@ -281,22 +355,35 @@ void Picker::printScalarInfo(QTextStream & stream, vtkScalarsToColors * lut,
     }
 #endif
 
-    if (lut)
-    {
-        const auto component = lut->GetVectorComponent();
-        assert(component >= 0);
-        const double value = tuple[component];
+    const QString locationString = pickedObjectInfo.indexType == IndexType::cells
+        ? "Cell"
+        : "Point";
 
-        stream << endl << endl << "Attribute: " << QString::fromUtf8(scalars.GetName());
+    if (scalarsAreMapped)
+    {
+        assert(activeComponent >= 0);
+
+        stream << endl << endl << locationString << " Attribute: \"" << QString::fromUtf8(scalars.GetName()) << "\"";
         if (tuple.size() > 1)
         {
-            stream << " (Component " << component + 1 << ")";
+            stream << " (active component: " << activeComponent + 1 << ")";
+            for (size_t i = 0; i < tuple.size(); ++i)
+            {
+                stream << endl << "[" << i + 1 << "] " << tuple[i] << unitStr;
+                if (i == activeComponent)
+                {
+                    stream << " *";
+                }
+            }
         }
-        stream << endl << "Value: " << value << unitStr;
+        else
+        {
+            stream << endl << "Value: " << tuple[activeComponent] << unitStr;
+        }
     }
     else if (tuple.size() == 3 || tuple.size() == 4)
     {
-        stream << endl << "Color" << endl;
+        stream << endl << locationString << " Color" << endl;
         stream << "R: " << tuple[0] << unitStr << endl;
         stream << "G: " << tuple[1] << unitStr << endl;
         stream << "B: " << tuple[2] << unitStr;
