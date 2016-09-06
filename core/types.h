@@ -64,6 +64,9 @@ struct CORE_API DataSelection
       * type is empty or invalid. */
     bool isIndexListEmpty() const;
 
+    /** Set indices to a single index (if index is not -1), or clear it. */
+    void setIndex(vtkIdType index);
+
     bool operator==(const DataSelection & other) const;
     bool operator!=(const DataSelection & other) const;
     bool operator==(const VisualizationSelection & visSelection) const;
@@ -110,6 +113,9 @@ struct CORE_API VisualizationSelection
     * This returns true if the visualization is unset (isEmpty()) or if the index list or index
     * type is empty or invalid. */
     bool isIndexListEmpty() const;
+
+    /** Set indices to a single index (if index is not -1), or clear it. */
+    void setIndex(vtkIdType index);
 
     bool operator==(const DataSelection & dataSelection) const;
     bool operator!=(const DataSelection & dataSelection) const;

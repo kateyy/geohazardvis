@@ -105,6 +105,18 @@ bool DataSelection::isIndexListEmpty() const
         || indices.empty();
 }
 
+void DataSelection::setIndex(vtkIdType index)
+{
+    if (index != -1)
+    {
+        indices = { index };
+    }
+    else
+    {
+        indices.clear();
+    }
+}
+
 bool DataSelection::operator==(const DataSelection & other) const
 {
     return
@@ -182,6 +194,18 @@ bool VisualizationSelection::isIndexListEmpty() const
     return isEmpty()
         || indexType == IndexType::invalid
         || indices.empty();
+}
+
+void VisualizationSelection::setIndex(vtkIdType index)
+{
+    if (index != -1)
+    {
+        indices = { index };
+    }
+    else
+    {
+        indices.clear();
+    }
 }
 
 bool VisualizationSelection::operator==(const DataSelection & dataSelection) const
