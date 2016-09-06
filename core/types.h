@@ -7,6 +7,8 @@
 #include <core/core_api.h>
 
 
+class QDebug;
+
 class AbstractVisualizedData;
 class DataObject;
 
@@ -28,8 +30,11 @@ enum class IndexType
 };
 
 
-struct VisualizationSelection;
+QDebug & operator<<(QDebug & qdebug, ContentType contentType);
+QDebug & operator<<(QDebug & qdebug, IndexType indexType);
 
+
+struct VisualizationSelection;
 
 struct CORE_API DataSelection
 {

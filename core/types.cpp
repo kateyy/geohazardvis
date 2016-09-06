@@ -2,6 +2,8 @@
 
 #include <cassert>
 
+#include <QDebug>
+
 #include <core/AbstractVisualizedData.h>
 
 
@@ -20,6 +22,40 @@ DataSelection::Indices_t genIndexArrayOrEmpty(vtkIdType index)
     return indices;
 }
 
+}
+
+
+QDebug & operator<<(QDebug & qdebug, ContentType contentType)
+{
+    qdebug.noquote().nospace() << [contentType] () -> QString
+    {
+        switch (contentType)
+        {
+        case ContentType::Rendered3D: return "Rendered3D";
+        case ContentType::Rendered2D: return "Rendered2D";
+        case ContentType::Context2D: return "Context2D";
+        case ContentType::invalid: return "invalid";
+        default: return "[invalid value: " + QString::number(static_cast<int>(contentType)) + "]";
+        }
+    }();
+    
+    return qdebug.maybeQuote().maybeSpace();
+}
+
+QDebug & operator<<(QDebug & qdebug, IndexType indexType)
+{
+    qdebug.noquote().nospace() << [indexType] () -> QString
+    {
+        switch (indexType)
+        {
+        case IndexType::points: return "points";
+        case IndexType::cells: return "cells";
+        case IndexType::invalid: return "invalid";
+        default: return "[invalid value: " + QString::number(static_cast<int>(indexType)) + "]";
+        }
+    }();
+
+    return qdebug.maybeQuote().maybeSpace();
 }
 
 
