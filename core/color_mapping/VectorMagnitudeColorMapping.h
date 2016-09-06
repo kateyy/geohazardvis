@@ -38,5 +38,5 @@ private:
     const QString m_dataArrayName;
     const QString m_magnitudeArrayName;
 
-    QMap<AbstractVisualizedData *, QVector<vtkSmartPointer<vtkVectorNorm>>> m_vectorNorms;
+    QMap<AbstractVisualizedData *, QVector<vtkSmartPointer<vtkAlgorithm>>> m_filters;
 };

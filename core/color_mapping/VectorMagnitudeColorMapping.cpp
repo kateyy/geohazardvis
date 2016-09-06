@@ -112,6 +112,7 @@ VectorMagnitudeColorMapping::VectorMagnitudeColorMapping(
     , m_magnitudeArrayName{ dataArrayName + " Magnitude" }
 {
     const auto utf8Name = m_dataArrayName.toUtf8();
+    const auto utf8MagnitudeName = m_magnitudeArrayName.toUtf8();
 
     // establish pipeline here, so that we have valid data whenever updateBounds() requests norm outputs
 
@@ -124,7 +125,7 @@ VectorMagnitudeColorMapping::VectorMagnitudeColorMapping(
 
     for (auto vis : visualizedData)
     {
-        QVector<vtkSmartPointer<vtkVectorNorm>> norms;
+        QVector<vtkSmartPointer<vtkAlgorithm>> filters;
 
         for (int i = 0; i < vis->numberOfColorMappingInputs(); ++i)
         {
@@ -144,10 +145,17 @@ VectorMagnitudeColorMapping::VectorMagnitudeColorMapping(
 
             norm->SetInputConnection(activeVectors->GetOutputPort());
 
-            norms << norm;
+            auto setMagnitudeName = vtkSmartPointer<ArrayChangeInformationFilter>::New();
+            setMagnitudeName->SetAttributeLocation(renameLocation);
+            setMagnitudeName->SetAttributeType(vtkDataSetAttributes::SCALARS);
+            setMagnitudeName->EnableRenameOn();
+            setMagnitudeName->SetArrayName(utf8MagnitudeName.data());
+            setMagnitudeName->SetInputConnection(norm->GetOutputPort());
+
+            filters << setMagnitudeName;
         }
 
-        m_vectorNorms.insert(vis, norms);
+        m_filters.insert(vis, filters);
     }
 
     m_isValid = true;
@@ -173,7 +181,7 @@ IndexType VectorMagnitudeColorMapping::scalarsAssociation(AbstractVisualizedData
 vtkSmartPointer<vtkAlgorithm> VectorMagnitudeColorMapping::createFilter(AbstractVisualizedData & visualizedData, int connection)
 {
     /** vtkVectorNorm sets norm array as current scalars; it doesn't set a name */
-    auto & norms = m_vectorNorms.value(&visualizedData);
+    auto & norms = m_filters.value(&visualizedData);
 
     assert(norms.size() > connection);
     auto norm = norms[connection];
@@ -210,12 +218,12 @@ std::vector<ValueRange<>> VectorMagnitudeColorMapping::updateBounds()
 {
     decltype(updateBounds())::value_type totalRange;
 
-    for (auto norms : m_vectorNorms.values())
+    for (auto filters : m_filters.values())
     {
-        for (auto norm : norms)
+        for (auto filter : filters)
         {
-            norm->Update();
-            auto dataSet = norm->GetOutput();
+            filter->Update();
+            auto dataSet = vtkDataSet::SafeDownCast(filter->GetOutputDataObject(0));
             vtkDataArray * normData = nullptr;
             if (m_attributeLocation == IndexType::cells)
             {
