@@ -2,8 +2,6 @@
 
 #include <array>
 
-#include <QApplication>
-
 #include <vtkCellData.h>
 #include <vtkFloatArray.h>
 #include <vtkPoints.h>
@@ -17,7 +15,6 @@
 #include <gui/data_view/ResidualVerificationView.h>
 #include <gui/data_view/RendererImplementationResidual.h>
 
-#include "app_helper.h"
 #include "RenderView_test_tools.h"
 
 
@@ -26,9 +23,7 @@ class ResidualView_test : public testing::Test
 public:
     void SetUp() override
     {
-        int argc = 1;
-
-        env = std::make_unique<TestEnv>(argc, main_argv);
+        env = std::make_unique<TestEnv>();
     }
     void TearDown() override
     {
@@ -37,15 +32,13 @@ public:
 
     struct TestEnv
     {
-        TestEnv(int & argc, char ** argv)
-            : app(argc, argv)
-            , dataSetHandler{}
+        TestEnv()
+            : dataSetHandler{}
             , dataMapping(dataSetHandler)
             , signalHelper{}
         {
         }
 
-        QApplication app;
         DataSetHandler dataSetHandler;
         DataMapping dataMapping;
         SignalHelper signalHelper;

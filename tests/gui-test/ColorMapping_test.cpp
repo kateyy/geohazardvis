@@ -4,8 +4,6 @@
 
 #include <vector>
 
-#include <QApplication>
-
 #include <vtkCamera.h>
 #include <vtkImageData.h>
 #include <vtkPointData.h>
@@ -22,14 +20,10 @@
 #include <core/data_objects/ImageDataObject.h>
 #include <core/rendered_data/RenderedImageData.h>
 
-#include "app_helper.h"
-
 
 class ColorMapping_test : public testing::Test
 {
 public:
-    QApplication app{ main_argc, main_argv };
-
     static vtkSmartPointer<vtkUnsignedCharArray> createUCharColors()
     {
         auto colorData = std::vector<unsigned char>{ // r, g, b [0,255]; 2x2

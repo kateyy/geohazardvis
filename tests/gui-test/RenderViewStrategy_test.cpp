@@ -1,7 +1,5 @@
 #include <gtest/gtest.h>
 
-#include <QApplication>
-
 #include <vtkImageData.h>
 
 #include <core/data_objects/ImageDataObject.h>
@@ -14,24 +12,16 @@
 #include <gui/data_view/RendererImplementationResidual.h>
 #include <gui/data_view/RenderViewStrategy2D.h>
 
-#include "app_helper.h"
-
 
 class RenderViewStrategy_test : public testing::Test
 {
 public:
     void SetUp() override
     {
-        int argc = 1;
-
-        app = std::make_unique<QApplication>(argc, main_argv);
-        app->startingUp();
     }
     void TearDown() override
     {
     }
-
-    std::unique_ptr<QApplication> app;
 };
 
 TEST_F(RenderViewStrategy_test, CreateCorrectNumberOfPlots)

@@ -19,31 +19,24 @@
 #include <gui/data_view/AbstractRenderView.h>
 #include <gui/widgets/DEMWidget.h>
 
-#include "app_helper.h"
-
 
 class DEMWidget_test : public testing::Test
 {
 public:
     void SetUp() override
     {
-        int argc = 1;
-
-        env.app = std::make_unique<QApplication>(argc, main_argv);
         env.dataSetHandler = std::make_unique<DataSetHandler>();
         env.dataMapping = std::make_unique<DataMapping>(*env.dataSetHandler);
     }
 
     void TearDown() override
     {
-        env.app.reset();
         env.dataSetHandler.reset();
         env.dataMapping.reset();
     }
 
     struct TestEnv
     {
-        std::unique_ptr<QApplication> app;
         std::unique_ptr<DataSetHandler> dataSetHandler;
         std::unique_ptr<DataMapping> dataMapping;
     };
