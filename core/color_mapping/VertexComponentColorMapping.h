@@ -13,10 +13,10 @@ public:
 
     QString name() const override;
 
-    vtkSmartPointer<vtkAlgorithm> createFilter(AbstractVisualizedData * visualizedData, int connection = 0) override;
+    vtkSmartPointer<vtkAlgorithm> createFilter(AbstractVisualizedData & visualizedData, int connection = 0) override;
     bool usesFilter() const override;
 
-    void configureMapper(AbstractVisualizedData * visualizedData, vtkAbstractMapper * mapper) override;
+    void configureMapper(AbstractVisualizedData & visualizedData, vtkAbstractMapper & mapper) override;
 
 protected:
     static std::vector<std::unique_ptr<ColorMappingData>> newInstances(const QList<AbstractVisualizedData*> & visualizedData);

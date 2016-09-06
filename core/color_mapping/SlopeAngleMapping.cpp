@@ -66,25 +66,30 @@ QString SlopeAngleMapping::name() const
     return l_dataArrayName;
 }
 
-QString SlopeAngleMapping::scalarsName() const
+QString SlopeAngleMapping::scalarsName(AbstractVisualizedData & /*vis*/) const
 {
     return l_dataArrayName;
 }
 
-vtkSmartPointer<vtkAlgorithm> SlopeAngleMapping::createFilter(AbstractVisualizedData * visualizedData, int connection)
+IndexType SlopeAngleMapping::scalarsAssociation(AbstractVisualizedData & /*vis*/) const
 {
-    static const auto arrayName = scalarsName().toUtf8();
+    return IndexType::cells;
+}
 
-    if (m_filters.contains(visualizedData))
+vtkSmartPointer<vtkAlgorithm> SlopeAngleMapping::createFilter(AbstractVisualizedData & visualizedData, int connection)
+{
+    static const auto arrayName = scalarsName(visualizedData).toUtf8();
+
+    if (m_filters.contains(&visualizedData))
     {
-        if (m_filters[visualizedData].contains(connection))
+        if (m_filters[&visualizedData].contains(connection))
         {
-            return m_filters[visualizedData][connection];
+            return m_filters[&visualizedData][connection];
         }
     }
 
     auto calculator = vtkSmartPointer<vtkArrayCalculator>::New();
-    calculator->SetInputConnection(visualizedData->colorMappingInput(connection));
+    calculator->SetInputConnection(visualizedData.colorMappingInput(connection));
     calculator->AddScalarVariable("z", "Normals", 2);
     calculator->SetResultArrayName(arrayName.data());
     calculator->SetAttributeModeToUseCellData();
@@ -108,7 +113,7 @@ vtkSmartPointer<vtkAlgorithm> SlopeAngleMapping::createFilter(AbstractVisualized
     unitSetter->EnableSetUnitOn();
     unitSetter->SetArrayUnit(QString(QChar(0x00B0)).toUtf8().data());   // degree sign
 
-    m_filters[visualizedData][connection] = unitSetter;
+    m_filters[&visualizedData][connection] = unitSetter;
 
     return unitSetter;
 }
@@ -118,11 +123,11 @@ bool SlopeAngleMapping::usesFilter() const
     return true;
 }
 
-void SlopeAngleMapping::configureMapper(AbstractVisualizedData * visualizedData, vtkAbstractMapper * abstractMapper)
+void SlopeAngleMapping::configureMapper(AbstractVisualizedData & visualizedData, vtkAbstractMapper & abstractMapper)
 {
     ColorMappingData::configureMapper(visualizedData, abstractMapper);
 
-    auto mapper = vtkMapper::SafeDownCast(abstractMapper);
+    auto mapper = vtkMapper::SafeDownCast(&abstractMapper);
     if (!mapper)
     {
         return;
@@ -130,7 +135,7 @@ void SlopeAngleMapping::configureMapper(AbstractVisualizedData * visualizedData,
 
     mapper->ScalarVisibilityOn();
     mapper->SetScalarModeToUseCellData();
-    mapper->SelectColorArray(scalarsName().toUtf8().data());
+    mapper->SelectColorArray(scalarsName(visualizedData).toUtf8().data());
 }
 
 std::vector<ValueRange<>> SlopeAngleMapping::updateBounds()

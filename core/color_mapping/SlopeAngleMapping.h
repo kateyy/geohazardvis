@@ -12,12 +12,13 @@ public:
     ~SlopeAngleMapping() override;
 
     QString name() const override;
-    QString scalarsName() const override;
+    QString scalarsName(AbstractVisualizedData & vis) const override;
+    IndexType scalarsAssociation(AbstractVisualizedData & vis) const override;
 
-    vtkSmartPointer<vtkAlgorithm> createFilter(AbstractVisualizedData * visualizedData, int connection = 0) override;
+    vtkSmartPointer<vtkAlgorithm> createFilter(AbstractVisualizedData & visualizedData, int connection = 0) override;
     bool usesFilter() const override;
 
-    void configureMapper(AbstractVisualizedData * visualizedData, vtkAbstractMapper * mapper) override;
+    void configureMapper(AbstractVisualizedData & visualizedData, vtkAbstractMapper & mapper) override;
 
 protected:
     static std::vector<std::unique_ptr<ColorMappingData>> newInstance(const QList<AbstractVisualizedData *> & visualizedData);

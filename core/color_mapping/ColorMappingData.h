@@ -20,6 +20,7 @@ class vtkLookupTable;
 class vtkScalarsToColors;
 
 class AbstractVisualizedData;
+enum class IndexType;
 
 
 /**
@@ -50,7 +51,11 @@ public:
     bool isActive() const;
 
     virtual QString name() const = 0;
-    virtual QString scalarsName() const;
+    /** Name of the scalar/vector array that is mapped to colors. This can be empty.
+    * Also, this can be an array that is part of the source data object, or an additional attribute
+    * created by the color mapping itself. */
+    virtual QString scalarsName(AbstractVisualizedData & vis) const;
+    virtual IndexType scalarsAssociation(AbstractVisualizedData & vis) const;
 
     int numDataComponents() const;
     int dataComponent() const;
@@ -65,15 +70,15 @@ public:
     vtkScalarsToColors * ownLookupTable();
 
     /** create a filter to map values to color, applying current min/max settings
-      * @param dataObject is required to setup object specific parameters on the filter.
+      * @param visualizedData is required to setup object specific parameters on the filter.
       *        The filter inputs are set as required.
       * May be implemented by subclasses, returns nullptr by default. */
-    virtual vtkSmartPointer<vtkAlgorithm> createFilter(AbstractVisualizedData * visualizedData, int connection = 0);
+    virtual vtkSmartPointer<vtkAlgorithm> createFilter(AbstractVisualizedData & visualizedData, int connection = 0);
     virtual bool usesFilter() const;
 
     /** set parameters on the mapper that is used to render the visualizedData.
         @param visualizedData must be one of the objects that where passed when calling the mapping's constructor */
-    virtual void configureMapper(AbstractVisualizedData * visualizedData, vtkAbstractMapper * mapper);
+    virtual void configureMapper(AbstractVisualizedData & visualizedData, vtkAbstractMapper & mapper);
 
     void setLookupTable(vtkLookupTable * lookupTable);
 

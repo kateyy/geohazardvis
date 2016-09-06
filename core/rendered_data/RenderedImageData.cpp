@@ -225,7 +225,7 @@ void RenderedImageData::scalarsForColorMappingChangedEvent()
 
     if (m_colorMappingData && m_colorMappingData->usesFilter())
     {
-        auto filter = m_colorMappingData->createFilter(this);
+        auto filter = m_colorMappingData->createFilter(*this);
         filter->Update();
 
         auto image = vtkDataSet::SafeDownCast(filter->GetOutputDataObject(0));
@@ -315,7 +315,7 @@ void RenderedImageData::configureVisPipeline()
         currentPipelineStep = m_colorMappingFilter->GetOutputPort();
 
         assert(m_colorMappingData);
-        m_colorMappingData->configureMapper(this, m_mapper);
+        m_colorMappingData->configureMapper(*this, *m_mapper);
         component = m_colorMappingData->dataComponent();
 
         mapScalarsToColors = m_colorMappingData->mapsScalarsToColors();

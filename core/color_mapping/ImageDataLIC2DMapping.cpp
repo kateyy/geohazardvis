@@ -15,7 +15,9 @@
 #include <vtkPointData.h>
 
 #include <core/AbstractVisualizedData.h>
+#include <core/types.h>
 #include <core/color_mapping/ColorMappingRegistry.h>
+#include <core/data_objects/DataObject.h>
 #include <core/filters/NoiseImageSource.h>
 #include <core/utility/DataExtent.h>
 
@@ -39,17 +41,23 @@ ImageDataLIC2DMapping::ImageDataLIC2DMapping(const QList<AbstractVisualizedData 
 {
     vtkImageData * image;
     for (AbstractVisualizedData * v : visualizedData)
+    {
         for (int i = 0; !m_isValid && i < v->numberOfColorMappingInputs(); ++i)
+        {
             if ((image = vtkImageData::SafeDownCast(v->colorMappingInputData(i)))
                 && (image->GetPointData()->GetVectors()
-                && (image->GetDataDimension() == 2)))
+                    && (image->GetDataDimension() == 2)))
             {
                 m_isValid = true;
                 break;
             }
+        }
+    }
 
     if (!m_isValid)
+    {
         return;
+    }
 
     m_noiseImage = vtkSmartPointer<NoiseImageSource>::New();
     m_noiseImage->SetExtent(0, 1023, 0, 1023, 0, 0);
@@ -64,10 +72,22 @@ QString ImageDataLIC2DMapping::name() const
     return "LIC 2D";
 }
 
-vtkSmartPointer<vtkAlgorithm> ImageDataLIC2DMapping::createFilter(AbstractVisualizedData * visualizedData, int connection)
+QString ImageDataLIC2DMapping::scalarsName(AbstractVisualizedData & vis) const
+{
+    auto vectors = vis.dataObject().processedDataSet()->GetPointData()->GetVectors();
+    assert(vectors);
+    return QString::fromUtf8(vectors->GetName());
+}
+
+IndexType ImageDataLIC2DMapping::scalarsAssociation(AbstractVisualizedData & /*vis*/) const
+{
+    return IndexType::points;
+}
+
+vtkSmartPointer<vtkAlgorithm> ImageDataLIC2DMapping::createFilter(AbstractVisualizedData & visualizedData, int connection)
 {
     vtkDataArray * imageVectors = nullptr;
-    vtkImageData * image = vtkImageData::SafeDownCast(visualizedData->colorMappingInputData(connection));
+    vtkImageData * image = vtkImageData::SafeDownCast(visualizedData.colorMappingInputData(connection));
 
     if (image)
         imageVectors = image->GetPointData()->GetVectors();
@@ -75,12 +95,12 @@ vtkSmartPointer<vtkAlgorithm> ImageDataLIC2DMapping::createFilter(AbstractVisual
     if (!image || image->GetDataDimension() != 2 || !imageVectors)
     {
         auto filter = vtkSmartPointer<vtkPassThrough>::New();
-        filter->SetInputConnection(visualizedData->colorMappingInput(connection));
+        filter->SetInputConnection(visualizedData.colorMappingInput(connection));
         return filter;
     }
 
 
-    auto & lics = m_lic2D[visualizedData];
+    auto & lics = m_lic2D[&visualizedData];
 
     if (lics.size() <= connection)
         lics.resize(connection + 1);
@@ -90,7 +110,7 @@ vtkSmartPointer<vtkAlgorithm> ImageDataLIC2DMapping::createFilter(AbstractVisual
     if (!lic)
     {
         auto assignScalars = vtkSmartPointer<vtkAssignAttribute>::New();
-        assignScalars->SetInputConnection(visualizedData->colorMappingInput(connection));
+        assignScalars->SetInputConnection(visualizedData.colorMappingInput(connection));
         assignScalars->Assign(vtkDataSetAttributes::VECTORS, vtkDataSetAttributes::SCALARS, vtkAssignAttribute::POINT_DATA);
 
         auto normalize = vtkSmartPointer<vtkImageNormalize>::New();

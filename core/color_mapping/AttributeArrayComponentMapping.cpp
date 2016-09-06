@@ -42,12 +42,12 @@ std::vector<std::unique_ptr<ColorMappingData>> AttributeArrayComponentMapping::n
         {
         }
         int numComponents;
-        QMap<AbstractVisualizedData *, int> attributeLocations;
+        QMap<AbstractVisualizedData *, IndexType> attributeLocations;
     };
 
     auto checkAttributeArrays = [] (
         AbstractVisualizedData * vis, vtkDataSetAttributes * attributes, 
-        int attributeLocation, vtkIdType expectedTupleCount,
+        IndexType attributeLocation, vtkIdType expectedTupleCount,
         QMap<QString, ArrayInfo> & arrayInfos) -> void
     {
         for (auto i = 0; i < attributes->GetNumberOfArrays(); ++i)
@@ -85,8 +85,8 @@ std::vector<std::unique_ptr<ColorMappingData>> AttributeArrayComponentMapping::n
                 qDebug() << "Array named" << name << "found with different number of components (" << lastNumComp << "," << dataArray->GetNumberOfComponents() << ")";
                 continue;
             }
-            int lastLocation = arrayInfo.attributeLocations.value(vis, -1);
-            if (lastLocation != -1 && lastLocation != attributeLocation)
+            auto lastLocation = arrayInfo.attributeLocations.value(vis, IndexType::invalid);
+            if (lastLocation != IndexType::invalid && lastLocation != attributeLocation)
             {
                 qDebug() << "Array named" << name << "found in different attribute locations in the same data set";
                 continue;
@@ -113,8 +113,8 @@ std::vector<std::unique_ptr<ColorMappingData>> AttributeArrayComponentMapping::n
             vtkDataSet * dataSet = vis->colorMappingInputData(i);
 
             // in case of conflicts, prefer point over cell arrays (as they probably have a higher precision)
-            checkAttributeArrays(vis, dataSet->GetPointData(), vtkAssignAttribute::POINT_DATA, dataSet->GetNumberOfPoints(), arrayInfos);
-            checkAttributeArrays(vis, dataSet->GetCellData(), vtkAssignAttribute::CELL_DATA, dataSet->GetNumberOfCells(), arrayInfos);
+            checkAttributeArrays(vis, dataSet->GetPointData(), IndexType::points, dataSet->GetNumberOfPoints(), arrayInfos);
+            checkAttributeArrays(vis, dataSet->GetCellData(), IndexType::cells, dataSet->GetNumberOfCells(), arrayInfos);
         }
     }
 
@@ -139,7 +139,7 @@ std::vector<std::unique_ptr<ColorMappingData>> AttributeArrayComponentMapping::n
 
 AttributeArrayComponentMapping::AttributeArrayComponentMapping(
     const QList<AbstractVisualizedData *> & visualizedData, const QString & dataArrayName, 
-    int numDataComponents, const QMap<AbstractVisualizedData *, int> & attributeLocations)
+    int numDataComponents, const QMap<AbstractVisualizedData *, IndexType> & attributeLocations)
     : ColorMappingData(visualizedData, numDataComponents)
     , m_dataArrayName{ dataArrayName }
     , m_attributeLocations(attributeLocations)
@@ -149,30 +149,38 @@ AttributeArrayComponentMapping::AttributeArrayComponentMapping(
     m_isValid = true;
 }
 
+AttributeArrayComponentMapping::~AttributeArrayComponentMapping() = default;
+
 QString AttributeArrayComponentMapping::name() const
 {
     return m_dataArrayName;
 }
 
-QString AttributeArrayComponentMapping::scalarsName() const
+QString AttributeArrayComponentMapping::scalarsName(AbstractVisualizedData & /*vis*/) const
 {
     return m_dataArrayName;
 }
 
-vtkSmartPointer<vtkAlgorithm> AttributeArrayComponentMapping::createFilter(AbstractVisualizedData * visualizedData, int connection)
+IndexType AttributeArrayComponentMapping::scalarsAssociation(AbstractVisualizedData & vis) const
 {
-    int attributeLocation = m_attributeLocations.value(visualizedData, -1);
+    return m_attributeLocations.value(&vis, IndexType::invalid);
+}
 
-    if (attributeLocation == -1)
+vtkSmartPointer<vtkAlgorithm> AttributeArrayComponentMapping::createFilter(AbstractVisualizedData & visualizedData, int connection)
+{
+    const auto attributeLocation = m_attributeLocations.value(&visualizedData, IndexType::invalid);
+
+    if (attributeLocation == IndexType::invalid)
     {
         auto filter = vtkSmartPointer<vtkPassThrough>::New();
-        filter->SetInputConnection(visualizedData->colorMappingInput(connection));
+        filter->SetInputConnection(visualizedData.colorMappingInput(connection));
         return filter;
     }
 
     auto filter = vtkSmartPointer<vtkAssignAttribute>::New();
-    filter->SetInputConnection(visualizedData->colorMappingInput(connection));
-    filter->Assign(m_dataArrayName.toUtf8().data(), vtkDataSetAttributes::SCALARS, attributeLocation);
+    filter->SetInputConnection(visualizedData.colorMappingInput(connection));
+    filter->Assign(m_dataArrayName.toUtf8().data(), vtkDataSetAttributes::SCALARS,
+        attributeLocation == IndexType::points ? vtkAssignAttribute::POINT_DATA : vtkAssignAttribute::CELL_DATA);
     return filter;
 }
 
@@ -181,21 +189,25 @@ bool AttributeArrayComponentMapping::usesFilter() const
     return true;
 }
 
-void AttributeArrayComponentMapping::configureMapper(AbstractVisualizedData * visualizedData, vtkAbstractMapper * abstractMapper)
+void AttributeArrayComponentMapping::configureMapper(AbstractVisualizedData & visualizedData, vtkAbstractMapper & abstractMapper)
 {
     ColorMappingData::configureMapper(visualizedData, abstractMapper);
 
-    int attributeLocation = m_attributeLocations.value(visualizedData, -1);
-    auto mapper = vtkMapper::SafeDownCast(abstractMapper);
+    const auto attributeLocation = m_attributeLocations.value(&visualizedData, IndexType::invalid);
+    auto mapper = vtkMapper::SafeDownCast(&abstractMapper);
 
-    if (mapper && attributeLocation != -1)
+    if (mapper && attributeLocation != IndexType::invalid)
     {
         mapper->ScalarVisibilityOn();
 
-        if (attributeLocation == vtkAssignAttribute::CELL_DATA)
+        if (attributeLocation == IndexType::cells)
+        {
             mapper->SetScalarModeToUseCellData();
-        else if (attributeLocation == vtkAssignAttribute::POINT_DATA)
+        }
+        else if (attributeLocation == IndexType::points)
+        {
             mapper->SetScalarModeToUsePointData();
+        }
         mapper->SelectColorArray(m_dataArrayName.toUtf8().data());
     }
     else if (mapper)
@@ -216,8 +228,8 @@ std::vector<ValueRange<>> AttributeArrayComponentMapping::updateBounds()
 
         for (auto visualizedData : m_visualizedData)
         {
-            int attributeLocation = m_attributeLocations.value(visualizedData, -1);
-            if (attributeLocation == -1)
+            auto attributeLocation = m_attributeLocations.value(visualizedData, IndexType::invalid);
+            if (attributeLocation == IndexType::invalid)
             {
                 continue;
             }
@@ -226,8 +238,8 @@ std::vector<ValueRange<>> AttributeArrayComponentMapping::updateBounds()
             {
                 auto dataSet = visualizedData->colorMappingInputData(i);
                 vtkDataArray * dataArray = 
-                    attributeLocation == vtkAssignAttribute::CELL_DATA ? dataSet->GetCellData()->GetArray(utf8Name.data())
-                    : (attributeLocation == vtkAssignAttribute::POINT_DATA ? dataSet->GetPointData()->GetArray(utf8Name.data())
+                    attributeLocation == IndexType::cells ? dataSet->GetCellData()->GetArray(utf8Name.data())
+                    : (attributeLocation == IndexType::points ? dataSet->GetPointData()->GetArray(utf8Name.data())
                     : nullptr);
 
                 if (!dataArray)

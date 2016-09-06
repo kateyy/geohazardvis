@@ -13,6 +13,7 @@
 #include <vtkPointData.h>
 #include <vtkVectorNorm.h>
 
+#include <core/types.h>
 #include <core/color_mapping/ColorMappingRegistry.h>
 #include <core/rendered_data/RenderedData3D.h>
 #include <core/glyph_mapping/GlyphMapping.h>
@@ -88,9 +89,19 @@ QString GlyphMagnitudeColorMapping::name() const
     return "Glyph Magnitude: " + m_vectorName;
 }
 
-vtkSmartPointer<vtkAlgorithm> GlyphMagnitudeColorMapping::createFilter(AbstractVisualizedData * visualizedData, int connection)
+QString GlyphMagnitudeColorMapping::scalarsName(AbstractVisualizedData & /*vis*/) const
 {
-    auto & filters = m_assignedVectors.value(visualizedData, {});
+    return m_vectorName;
+}
+
+IndexType GlyphMagnitudeColorMapping::scalarsAssociation(AbstractVisualizedData & /*vis*/) const
+{
+    return IndexType::points;
+}
+
+vtkSmartPointer<vtkAlgorithm> GlyphMagnitudeColorMapping::createFilter(AbstractVisualizedData & visualizedData, int connection)
+{
+    auto & filters = m_assignedVectors.value(&visualizedData, {});
 
     if (filters.isEmpty())  // required/valid filters are already created
         return vtkPassThrough::New();
@@ -107,14 +118,14 @@ bool GlyphMagnitudeColorMapping::usesFilter() const
     return true;
 }
 
-void GlyphMagnitudeColorMapping::configureMapper(AbstractVisualizedData * visualizedData, vtkAbstractMapper * mapper)
+void GlyphMagnitudeColorMapping::configureMapper(AbstractVisualizedData & visualizedData, vtkAbstractMapper & mapper)
 {
     GlyphColorMapping::configureMapper(visualizedData, mapper);
 
-    assert(m_vectorNorms.contains(visualizedData));
-    assert(m_assignedVectors.contains(visualizedData));
+    assert(m_vectorNorms.contains(&visualizedData));
+    assert(m_assignedVectors.contains(&visualizedData));
 
-    if (auto m = vtkMapper::SafeDownCast(mapper))
+    if (auto m = vtkMapper::SafeDownCast(&mapper))
     {
         m->UseLookupTableScalarRangeOn();
         m->SetLookupTable(m_lut);

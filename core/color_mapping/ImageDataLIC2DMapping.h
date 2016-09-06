@@ -19,8 +19,10 @@ public:
     ~ImageDataLIC2DMapping() override;
 
     QString name() const override;
+    QString scalarsName(AbstractVisualizedData & vis) const override;
+    IndexType scalarsAssociation(AbstractVisualizedData & vis) const override;
 
-    vtkSmartPointer<vtkAlgorithm> createFilter(AbstractVisualizedData * visualizedData, int connection) override;
+    vtkSmartPointer<vtkAlgorithm> createFilter(AbstractVisualizedData & visualizedData, int connection) override;
     bool usesFilter() const override;
 
 

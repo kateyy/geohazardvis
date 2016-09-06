@@ -6,6 +6,7 @@
 #include <vtkLookupTable.h>
 
 #include <core/AbstractVisualizedData.h>
+#include <core/types.h>
 #include <core/data_objects/DataObject.h>
 #include <core/utility/DataExtent.h>
 #include <core/utility/macros.h>
@@ -63,9 +64,14 @@ bool ColorMappingData::isActive() const
     return m_isActive;
 }
 
-QString ColorMappingData::scalarsName() const
+QString ColorMappingData::scalarsName(AbstractVisualizedData & /*vis*/) const
 {
     return "";
+}
+
+IndexType ColorMappingData::scalarsAssociation(AbstractVisualizedData & /*vis*/) const
+{
+    return IndexType::invalid;
 }
 
 int ColorMappingData::numDataComponents() const
@@ -137,7 +143,7 @@ bool ColorMappingData::isValid() const
     return m_isValid;
 }
 
-vtkSmartPointer<vtkAlgorithm> ColorMappingData::createFilter(AbstractVisualizedData * /*visualizedData*/, int /*connection*/)
+vtkSmartPointer<vtkAlgorithm> ColorMappingData::createFilter(AbstractVisualizedData & /*visualizedData*/, int /*connection*/)
 {
     return nullptr;
 }
@@ -147,9 +153,9 @@ bool ColorMappingData::usesFilter() const
     return false;
 }
 
-void ColorMappingData::configureMapper(AbstractVisualizedData * DEBUG_ONLY(visualizedData), vtkAbstractMapper * /*mapper*/)
+void ColorMappingData::configureMapper(AbstractVisualizedData & DEBUG_ONLY(visualizedData), vtkAbstractMapper & /*mapper*/)
 {
-    assert(m_visualizedData.contains(visualizedData));
+    assert(m_visualizedData.contains(&visualizedData));
 }
 
 void ColorMappingData::setLookupTable(vtkLookupTable * lookupTable)

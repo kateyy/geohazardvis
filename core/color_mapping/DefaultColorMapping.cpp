@@ -21,11 +21,11 @@ QString DefaultColorMapping::name() const
     return s_name;
 }
 
-void DefaultColorMapping::configureMapper(AbstractVisualizedData * visualizedData, vtkAbstractMapper * mapper)
+void DefaultColorMapping::configureMapper(AbstractVisualizedData & visualizedData, vtkAbstractMapper & mapper)
 {
     ColorMappingData::configureMapper(visualizedData, mapper);
 
-    if (auto m = vtkMapper::SafeDownCast(mapper))
+    if (auto m = vtkMapper::SafeDownCast(&mapper))
     {
         m->ScalarVisibilityOff();
     }

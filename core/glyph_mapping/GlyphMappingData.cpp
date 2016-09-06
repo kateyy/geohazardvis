@@ -347,9 +347,9 @@ void GlyphMappingData::colorMappingChangedEvent(ColorMappingData * colorMappingD
     if (colorMappingData && colorMappingData->usesFilter())
     {
         m_arrowGlyph->SetInputConnection(
-            colorMappingData->createFilter(&renderedData())->GetOutputPort());
+            colorMappingData->createFilter(renderedData())->GetOutputPort());
 
-        colorMappingData->configureMapper(&renderedData(), m_mapper);
+        colorMappingData->configureMapper(renderedData(), *m_mapper);
     }
     else
     {

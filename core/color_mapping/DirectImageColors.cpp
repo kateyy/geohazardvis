@@ -26,9 +26,9 @@ const bool DirectImageColors::s_isRegistered = ColorMappingRegistry::instance().
 
 std::vector<std::unique_ptr<ColorMappingData>> DirectImageColors::newInstances(const QList<AbstractVisualizedData *> & visualizedData)
 {
-    QMultiMap<QString, int> arrayLocs;
+    QMultiMap<QString, IndexType> arrayLocs;
 
-    auto checkAddAttributeArrays = [&arrayLocs] (vtkDataSetAttributes * attributes, int attributeLocation) -> void
+    auto checkAddAttributeArrays = [&arrayLocs] (vtkDataSetAttributes * attributes, IndexType attributeLocation) -> void
     {
         for (auto i = 0; i < attributes->GetNumberOfArrays(); ++i)
         {
@@ -66,8 +66,8 @@ std::vector<std::unique_ptr<ColorMappingData>> DirectImageColors::newInstances(c
         {
             auto dataSet = vis->colorMappingInputData(i);
 
-            checkAddAttributeArrays(dataSet->GetCellData(), vtkAssignAttribute::CELL_DATA);
-            checkAddAttributeArrays(dataSet->GetPointData(), vtkAssignAttribute::POINT_DATA);
+            checkAddAttributeArrays(dataSet->GetCellData(), IndexType::cells);
+            checkAddAttributeArrays(dataSet->GetPointData(), IndexType::points);
         }
     }
 
@@ -85,7 +85,8 @@ std::vector<std::unique_ptr<ColorMappingData>> DirectImageColors::newInstances(c
     return instances;
 }
 
-DirectImageColors::DirectImageColors(const QList<AbstractVisualizedData *> & visualizedData, QString dataArrayName, int attributeLocation)
+DirectImageColors::DirectImageColors(const QList<AbstractVisualizedData *> & visualizedData,
+    const QString & dataArrayName, IndexType attributeLocation)
     : ColorMappingData(visualizedData, 1, false)
     , m_attributeLocation{ attributeLocation }
     , m_dataArrayName{ dataArrayName }
@@ -100,17 +101,22 @@ QString DirectImageColors::name() const
     return m_dataArrayName + " (direct colors)";
 }
 
-QString DirectImageColors::scalarsName() const
+QString DirectImageColors::scalarsName(AbstractVisualizedData & /*vis*/) const
 {
     return m_dataArrayName;
 }
 
-vtkSmartPointer<vtkAlgorithm> DirectImageColors::createFilter(AbstractVisualizedData * visualizedData, int connection)
+IndexType DirectImageColors::scalarsAssociation(AbstractVisualizedData & /*vis*/) const
+{
+    return m_attributeLocation;
+}
+
+vtkSmartPointer<vtkAlgorithm> DirectImageColors::createFilter(AbstractVisualizedData & visualizedData, int connection)
 {
     auto filter = vtkSmartPointer<vtkAssignAttribute>::New();
-    filter->SetInputConnection(visualizedData->colorMappingInput(connection));
+    filter->SetInputConnection(visualizedData.colorMappingInput(connection));
     filter->Assign(m_dataArrayName.toUtf8().data(), vtkDataSetAttributes::SCALARS,
-        m_attributeLocation);
+        m_attributeLocation == IndexType::points ? vtkAssignAttribute::POINT_DATA : vtkAssignAttribute::CELL_DATA);
 
     return filter;
 }
@@ -120,17 +126,21 @@ bool DirectImageColors::usesFilter() const
     return true;
 }
 
-void DirectImageColors::configureMapper(AbstractVisualizedData * visualizedData, vtkAbstractMapper * mapper)
+void DirectImageColors::configureMapper(AbstractVisualizedData & visualizedData, vtkAbstractMapper & mapper)
 {
     ColorMappingData::configureMapper(visualizedData, mapper);
 
-    if (auto m = vtkMapper::SafeDownCast(mapper))
+    if (auto m = vtkMapper::SafeDownCast(&mapper))
     {
         m->ScalarVisibilityOn();
-        if (m_attributeLocation == vtkAssignAttribute::CELL_DATA)
+        if (m_attributeLocation == IndexType::cells)
+        {
             m->SetScalarModeToUseCellData();
-        else if (m_attributeLocation == vtkAssignAttribute::POINT_DATA)
+        }
+        else if (m_attributeLocation == IndexType::points)
+        {
             m->SetScalarModeToUsePointData();
+        }
         m->SelectColorArray(m_dataArrayName.toUtf8().data());
 
         m->SetColorModeToDirectScalars();

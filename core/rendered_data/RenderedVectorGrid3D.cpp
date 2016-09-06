@@ -298,7 +298,7 @@ void RenderedVectorGrid3D::scalarsForColorMappingChangedEvent()
         for (int i = 0; i < 3; ++i)
         {
             m_planeWidgets[i]->GetTexture()->SetInputConnection(
-                m_colorMappingData->createFilter(this, i)->GetOutputPort());
+                m_colorMappingData->createFilter(*this, i)->GetOutputPort());
         }
     }
     else

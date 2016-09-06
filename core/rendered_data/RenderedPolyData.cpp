@@ -289,13 +289,13 @@ void RenderedPolyData::scalarsForColorMappingChangedEvent()
         return;
     }
 
-    m_colorMappingData->configureMapper(this, m_mapper);
+    m_colorMappingData->configureMapper(*this, *m_mapper);
 
     vtkSmartPointer<vtkAlgorithm> filter;
 
     if (m_colorMappingData->usesFilter())
     {
-        filter = m_colorMappingData->createFilter(this);
+        filter = m_colorMappingData->createFilter(*this);
         m_colorMappingOutput = filter->GetOutputPort();
     }
     else
