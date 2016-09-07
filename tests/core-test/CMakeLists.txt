@@ -12,6 +12,8 @@ set(sources
     DataSetFilter_test.cpp
     DataSetHandler_test.cpp
     DEMToTopographyMesh_test.cpp
+    PipelineInformationHelper.h
+    PipelineInformationHelper.cpp
     RenderedData_test.cpp
     TextFileReader_test.cpp
     VTKAlgorithmImplementations_test.cpp
