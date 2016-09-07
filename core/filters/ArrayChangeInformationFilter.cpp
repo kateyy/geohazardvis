@@ -97,15 +97,28 @@ int ArrayChangeInformationFilter::RequestInformation(
         inName = inFieldInfo->Get(vtkDataObject::FIELD_NAME());
     }
 
+    if (arrayType <= 0)
+    {
+        arrayType = -1;
+    }
+    if (numComponents <= 0)
+    {
+        numComponents = -1;
+    }
+    if (numTuples <= 0)
+    {
+        numTuples = -1;
+    }
+
     auto outInfo = outputVector->GetInformationObject(0);
     vtkDataObject::SetActiveAttributeInfo(
         outInfo,
         fieldAssociation,
         this->AttributeType,
         this->EnableRename ? this->ArrayName : inName,
-        arrayType != 0 ? arrayType : -1,
-        numComponents > 0 ? numComponents : -1,
-        numTuples > 0 ? numTuples : -1);
+        arrayType,
+        numComponents,
+        numTuples);
 
     return 1;
 }
@@ -146,10 +159,9 @@ int ArrayChangeInformationFilter::RequestData(
     // Check if there already is a copy of the array
     vtkSmartPointer<vtkDataArray> outAttribute = extractAttribute(*dsOutput, 
         this->AttributeLocation, this->AttributeType, outDsAttributes);
-    if (outAttribute == inAttribute) // passed attribute only -> copy is required
+    if (!outAttribute                   // originial attribute not copied
+        || outAttribute == inAttribute) // passed attribute only -> copy is required
     {
-        assert(outAttribute);
-
         outAttribute.TakeReference(inAttribute->NewInstance());
         outAttribute->DeepCopy(inAttribute);
 
