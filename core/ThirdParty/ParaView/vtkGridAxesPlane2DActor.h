@@ -21,13 +21,13 @@
 
 #include "vtkProp3D.h"
 
-#include "vtkGridAxesHelper.h"
-#include "vtkNew.h"
-#include "vtkSmartPointer.h"
-#include "vtkVector.h"
-#include <deque>
+#include "vtkGridAxesHelper.h" // For face enumeration
+#include "vtkNew.h" // For member variables
+#include "vtkSmartPointer.h" // For member variables
+#include <deque> // For keeping track of tick marks
 
 #include <core/core_api.h>
+#include <core/VTK_backwards_compat.h>
 
 
 class vtkActor;
@@ -201,12 +201,11 @@ protected:
   bool HelperManagedExternally;
 
 private:
-  vtkGridAxesPlane2DActor(const vtkGridAxesPlane2DActor&); // Not implemented.
-  void operator=(const vtkGridAxesPlane2DActor&); // Not implemented.
+  vtkGridAxesPlane2DActor(const vtkGridAxesPlane2DActor&) VTK_DELETE_FUNCTION;
+  void operator=(const vtkGridAxesPlane2DActor&) VTK_DELETE_FUNCTION;
   std::deque<double> EmptyVector;
 
   typedef std::pair<vtkVector3d, vtkVector3d> LineSegmentType;
   std::deque<LineSegmentType> LineSegments;
-
 
 };

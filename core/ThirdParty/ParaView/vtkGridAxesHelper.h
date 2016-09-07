@@ -28,6 +28,7 @@
 #include "vtkVector.h" // needed for vtkVector.
 
 #include <core/core_api.h>
+#include <core/VTK_backwards_compat.h>
 
 
 class vtkMatrix4x4;
@@ -187,11 +188,11 @@ protected:
   vtkTuple<vtkVector2d, 4> ViewportNormals;
   bool Backface;
 
-  unsigned long GetPointsMTime;
-  unsigned long GetTransformedPointsMTime;
+  vtkMTimeType GetPointsMTime;
+  vtkMTimeType GetTransformedPointsMTime;
 
 private:
-  vtkGridAxesHelper(const vtkGridAxesHelper&); // Not implemented.
-  void operator=(const vtkGridAxesHelper&); // Not implemented.
+  vtkGridAxesHelper(const vtkGridAxesHelper&) VTK_DELETE_FUNCTION;
+  void operator=(const vtkGridAxesHelper&) VTK_DELETE_FUNCTION;
 
 };

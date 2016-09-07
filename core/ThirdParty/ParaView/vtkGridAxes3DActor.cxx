@@ -399,7 +399,7 @@ int vtkGridAxes3DActor::GetForegroundLayer()
 //----------------------------------------------------------------------------
 double *vtkGridAxes3DActor::GetBounds()
 {
-  unsigned long mtime = this->GetMTime();
+  vtkMTimeType mtime = this->GetMTime();
   if (mtime == this->GetBoundsMTime)
     {
     return this->Bounds;

@@ -26,6 +26,7 @@
 #include "vtkStdString.h" // needed for vtkStdString.
 
 #include <core/core_api.h>
+#include <core/VTK_backwards_compat.h>
 
 
 class vtkAxis;
@@ -198,7 +199,7 @@ public:
 
   // Description:
   // Overridden to include the mtime for the text properties.
-  unsigned long GetMTime();
+  vtkMTimeType GetMTime();
 
 
 protected:
@@ -231,8 +232,8 @@ protected:
   vtkTimeStamp UpdateLabelTextPropertiesMTime;
 
 private:
-  vtkGridAxes2DActor(const vtkGridAxes2DActor&); // Not implemented.
-  void operator=(const vtkGridAxes2DActor&); // Not implemented.
+  vtkGridAxes2DActor(const vtkGridAxes2DActor&) VTK_DELETE_FUNCTION;
+  void operator=(const vtkGridAxes2DActor&) VTK_DELETE_FUNCTION;
 
   class vtkLabels;
   vtkLabels* Labels;

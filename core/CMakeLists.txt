@@ -19,6 +19,7 @@ set(sources
     TextureManager.cpp
     VersionInfo.h
     VersionInfo.cpp
+    VTK_backwards_compat.h
 
     canvas_export/CanvasExporter.h
     canvas_export/CanvasExporter.cpp

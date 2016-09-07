@@ -38,6 +38,7 @@
 #include <vector> // For ivars
 
 #include <core/core_api.h>
+#include <core/VTK_backwards_compat.h>
 
 class vtkAxis;
 class vtkContextScene;
@@ -200,6 +201,6 @@ protected:
   int AddRangeAnnotations;
 
 private:
-  vtkPVScalarBarActor(const vtkPVScalarBarActor &);     // Not implemented.
-  void operator=(const vtkPVScalarBarActor &);          // Not implemented.
+  vtkPVScalarBarActor(const vtkPVScalarBarActor &) VTK_DELETE_FUNCTION;
+  void operator=(const vtkPVScalarBarActor &) VTK_DELETE_FUNCTION;
 };
