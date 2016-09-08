@@ -22,6 +22,9 @@ private:
 
         const QString name;
         const io::ModelType type;
+
+        InputFileInfo(InputFileInfo && other);
+        void operator=(const InputFileInfo &) = delete;
     };
 
     struct DataSetDef

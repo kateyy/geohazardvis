@@ -10,7 +10,7 @@ unmatchedSuppression
 // False positives
 
 assertWithSideEffect:@PROJECT_SOURCE_DIR@/core/rendered_data/RenderedImageData.cpp:43
-assertWithSideEffect:@PROJECT_SOURCE_DIR@/core/types.cpp:134
+assertWithSideEffect:@PROJECT_SOURCE_DIR@/core/types.cpp:182
 
-unusedStructMember:@PROJECT_SOURCE_DIR@/core/io/TextFileReader.h:33
-unusedStructMember:@PROJECT_SOURCE_DIR@/core/io/TextFileReader.h:34
+unusedStructMember:@PROJECT_SOURCE_DIR@/core/io/MetaTextFileReader.h:33
+unusedStructMember:@PROJECT_SOURCE_DIR@/core/io/MetaTextFileReader.h:34

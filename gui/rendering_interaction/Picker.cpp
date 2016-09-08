@@ -34,7 +34,7 @@
 class Picker_private
 {
 public:
-    Picker_private(Picker & picker)
+    explicit Picker_private(Picker & picker)
         : q_ptr{ picker }
         , propPicker{ vtkSmartPointer<vtkPropPicker>::New() }
         , cellPicker{ vtkSmartPointer<vtkCellPicker>::New() }
@@ -60,6 +60,8 @@ public:
     VisualizationSelection pickedObjectInfo;
     vtkWeakPointer<vtkDataArray> pickedScalarArray;
 
+    void operator=(const Picker_private &) = delete;
+
 private:
     Picker & q_ptr;
 };
@@ -72,9 +74,10 @@ Picker::Picker()
 
 Picker::~Picker() = default;
 
-Picker::Picker(Picker && other) = default;
-
-Picker & Picker::operator=(Picker && other) = default;
+Picker::Picker(Picker && other)
+    : d_ptr{ std::move(other.d_ptr) }
+{
+}
 
 void Picker::pick(const vtkVector2i & clickPosXY, vtkRenderer & renderer)
 {
@@ -344,7 +347,7 @@ void Picker_private::appendScalarInfo(QTextStream & stream, int activeComponent,
     auto & scalars = *pickedScalarArray;
     const auto index = pickedObjectInfo.indices.front();
     auto tuple = std::vector<double>(scalars.GetNumberOfComponents());
-    scalars.GetTuple(pickedObjectInfo.indices.front(), tuple.data());
+    scalars.GetTuple(index, tuple.data());
 
     QString unitStr;
 #if VTK_CHECK_VERSION(7, 1, 0)

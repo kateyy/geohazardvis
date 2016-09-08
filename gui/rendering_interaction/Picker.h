@@ -29,7 +29,6 @@ public:
     vtkDataArray * pickedScalarArray();
 
     Picker(Picker && other);
-    Picker & operator=(Picker && other);
 
 private:
     std::unique_ptr<Picker_private> d_ptr;

@@ -68,6 +68,11 @@ MetaTextFileReader::InputFileInfo::InputFileInfo(const QString & name, ModelType
 {
 }
 
+MetaTextFileReader::InputFileInfo::InputFileInfo(InputFileInfo && other)
+    : InputFileInfo(other.name, other.type)
+{
+}
+
 std::unique_ptr<DataObject> MetaTextFileReader::read(const QString & fileName)
 {
     std::vector<ReadDataSet> readDatasets;

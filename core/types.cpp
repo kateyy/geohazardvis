@@ -31,10 +31,10 @@ QDebug & operator<<(QDebug & qdebug, ContentType contentType)
     {
         switch (contentType)
         {
-        case ContentType::Rendered3D: return "Rendered3D";
-        case ContentType::Rendered2D: return "Rendered2D";
-        case ContentType::Context2D: return "Context2D";
-        case ContentType::invalid: return "invalid";
+        case ContentType::Rendered3D: return QString("Rendered3D");
+        case ContentType::Rendered2D: return QString("Rendered2D");
+        case ContentType::Context2D: return QString("Context2D");
+        case ContentType::invalid: return QString("invalid");
         default: return "[invalid value: " + QString::number(static_cast<int>(contentType)) + "]";
         }
     }();
@@ -48,9 +48,9 @@ QDebug & operator<<(QDebug & qdebug, IndexType indexType)
     {
         switch (indexType)
         {
-        case IndexType::points: return "points";
-        case IndexType::cells: return "cells";
-        case IndexType::invalid: return "invalid";
+        case IndexType::points: return QString("points");
+        case IndexType::cells: return QString("cells");
+        case IndexType::invalid: return QString("invalid");
         default: return "[invalid value: " + QString::number(static_cast<int>(indexType)) + "]";
         }
     }();
@@ -67,7 +67,7 @@ DataSelection::DataSelection(DataObject * dataObject)
 DataSelection::DataSelection(DataObject * dataObject, IndexType indexType, Indices_t indices)
     : dataObject{ dataObject }
     , indexType{ indexType }
-    , indices{ indices }
+    , indices(indices)
 {
 }
 
@@ -162,7 +162,7 @@ VisualizationSelection::VisualizationSelection(
     : visualization{ visualization }
     , visOutputPort{ visOutputPort }
     , indexType{ indexType }
-    , indices{ indices }
+    , indices(indices)
 {
 }
 

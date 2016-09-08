@@ -77,6 +77,19 @@ public:
     {
         std::unique_ptr<PolyDataObject> sourceData;
         std::unique_ptr<ImageProfileData> profile;
+
+        ProfileData() = default;
+        ProfileData(ProfileData && other)
+            : sourceData{ std::move(other.sourceData) }
+            , profile{ std::move(other.profile) }
+        {
+        }
+        ProfileData & operator=(ProfileData && other)
+        {
+            sourceData = std::move(other.sourceData);
+            profile = std::move(other.profile);
+            return *this;
+        }
     };
 
     static ProfileData genProfileData()

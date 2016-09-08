@@ -41,8 +41,6 @@ struct CalcNormalsWorker
         VTK_ASSUME(genericI_y->GetNumberOfComponents() == 1);
         VTK_ASSUME(normals->GetNumberOfComponents() == 3);
 
-        const vtkIdType numTuples = normals->GetNumberOfTuples();
-
         using ValueType = typename vtkDataArrayAccessor<ArrayType>::APIType;
 
         const auto spacing = this->xySpacing * this->CoordinatesUnitScale;

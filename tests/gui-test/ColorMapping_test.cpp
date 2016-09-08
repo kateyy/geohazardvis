@@ -47,6 +47,15 @@ public:
         std::unique_ptr<ImageDataObject> image;
         std::unique_ptr<RenderedImageData> rendered;
         QString scalarsName;
+
+        ImageStruct() = default;
+
+        ImageStruct(ImageStruct && other)
+            : image{ std::move(other.image) }
+            , rendered{ std::move(other.rendered) }
+            , scalarsName{ std::move(other.scalarsName) }
+        {
+        }
     };
 
     static ImageStruct createImage(vtkUnsignedCharArray & colors)
