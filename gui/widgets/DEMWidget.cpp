@@ -16,6 +16,7 @@
 #include <core/filters/DEMToTopographyMesh.h>
 #include <core/filters/SimpleDEMGeoCoordToLocalFilter.h>
 #include <core/rendered_data/RenderedPolyData.h>
+#include <core/rendered_data/RenderedImageData.h>
 #include <core/utility/DataSetFilter.h>
 #include <core/utility/macros.h>
 #include <core/utility/qthelper.h>
@@ -585,13 +586,13 @@ void DEMWidget::configureDEMVisualization()
 
     auto dem = m_demPreview.get();
 
-    auto demVis = dynamic_cast<RenderedData *>(m_previewRenderer->visualizationFor(dem));
-    auto demRendered = dynamic_cast<RenderedData *>(demVis);
+    auto demRendered = dynamic_cast<RenderedImageData *>(m_previewRenderer->visualizationFor(dem));
     assert(demRendered);
     demRendered->setRepresentation(RenderedData::Representation::both);
         
-    auto scalarsName = QString::fromUtf8(dem->scalars().GetName());
-    demVis->colorMapping().setCurrentScalarsByName(scalarsName);
+    const auto scalarsName = QString::fromUtf8(dem->scalars().GetName());
+    demRendered->colorMapping().setCurrentScalarsByName(scalarsName);
+    demRendered->setEnableShading(true);
 }
 
 void DEMWidget::configureMeshVisualization()
