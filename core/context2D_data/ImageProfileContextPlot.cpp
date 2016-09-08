@@ -71,7 +71,7 @@ std::unique_ptr<PropertyGroup> ImageProfileContextPlot::createConfigGroup()
         m_plotLine->SetWidth(width);
         emit geometryChanged();
     });
-    prop_width->setOption("minimum", 0.000001f);
+    prop_width->setOption("minimum", 0.001f);
 
     return root;
 }
