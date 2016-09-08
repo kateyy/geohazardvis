@@ -24,6 +24,7 @@ public:
     void add(vtkRenderer * renderer);
     void remove(vtkRenderer * renderer);
     void set(const QList<vtkRenderer *> & renderers);
+    void clear();
 
 private:
     void cameraChanged(vtkObject * source, unsigned long event, void * userData);

@@ -8,8 +8,8 @@
 
 
 vtkCameraSynchronization::vtkCameraSynchronization()
-    : m_isEnabled(true)
-    , m_currentlySyncing(false)
+    : m_isEnabled{ true }
+    , m_currentlySyncing{ false }
 {
 }
 
@@ -30,7 +30,9 @@ void vtkCameraSynchronization::add(vtkRenderer * renderer)
 {
     auto camera = renderer->GetActiveCamera();
     if (m_cameras.contains(camera))
+    {
         return;
+    }
 
     auto observerTag = camera->AddObserver(vtkCommand::ModifiedEvent, this, &vtkCameraSynchronization::cameraChanged);
 
@@ -44,7 +46,9 @@ void vtkCameraSynchronization::remove(vtkRenderer * renderer)
     auto it = m_cameras.find(camera);
 
     if (it == m_cameras.end())
+    {
         return;
+    }
 
     camera->RemoveObserver(it.value());
 
@@ -54,14 +58,29 @@ void vtkCameraSynchronization::remove(vtkRenderer * renderer)
 
 void vtkCameraSynchronization::set(const QList<vtkRenderer *> & renderers)
 {
+    clear();
+
     for (auto & renderer : renderers)
+    {
         add(renderer);
+    }
+}
+
+void vtkCameraSynchronization::clear()
+{
+    auto oldRenderers = m_renderers;
+    for (auto & renderer : oldRenderers)
+    {
+        remove(renderer);
+    }
 }
 
 void vtkCameraSynchronization::cameraChanged(vtkObject * source, unsigned long /*event*/, void * /*userData*/)
 {
     if (!m_isEnabled || m_currentlySyncing)
+    {
         return;
+    }
 
     m_currentlySyncing = true;
 
