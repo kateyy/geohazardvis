@@ -16,6 +16,8 @@ DefaultColorMapping::DefaultColorMapping(const QList<AbstractVisualizedData *> &
     m_isValid = true;
 }
 
+DefaultColorMapping::~DefaultColorMapping() = default;
+
 QString DefaultColorMapping::name() const
 {
     return s_name;

@@ -32,4 +32,8 @@ public:
     static vtkSmartPointer<vtkDataArray> parseFloatVector(
         const io::InputVector & inputData, const QString & arrayName, size_t firstColumn, size_t lastColumn,
         int vtk_dataType = VTK_FLOAT);
+
+private:
+    MatricesToVtk() = delete;
+    ~MatricesToVtk() = delete;
 };

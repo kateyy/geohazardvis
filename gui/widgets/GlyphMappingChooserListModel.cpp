@@ -12,6 +12,8 @@ GlyphMappingChooserListModel::GlyphMappingChooserListModel(QObject * parent)
 {
 }
 
+GlyphMappingChooserListModel::~GlyphMappingChooserListModel() = default;
+
 void GlyphMappingChooserListModel::setMapping(GlyphMapping * mapping)
 {
     beginResetModel();

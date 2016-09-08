@@ -58,4 +58,7 @@ private:
     QList<QMetaObject::Connection> m_vectorsRenderConnections;
     GlyphMappingChooserListModel * m_listModel;
     std::vector<std::unique_ptr<reflectionzeug::PropertyGroup>> m_propertyGroups;
+
+private:
+    Q_DISABLE_COPY(GlyphMappingChooser)
 };

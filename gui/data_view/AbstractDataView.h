@@ -74,4 +74,7 @@ private:
     QToolBar * m_toolBar;
 
     DataSelection m_selection;
+
+private:
+    Q_DISABLE_COPY(AbstractDataView)
 };

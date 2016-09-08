@@ -22,6 +22,7 @@ class GUI_API RendererImplementationPlot : public RendererImplementation
 {
 public:
     explicit RendererImplementationPlot(AbstractRenderView & renderView);
+    ~RendererImplementationPlot() override;
 
     QString name() const override;
 
@@ -90,4 +91,7 @@ private:
     Context2DData * m_selectedPlot;
 
     static bool s_isRegistered;
+
+private:
+    Q_DISABLE_COPY(RendererImplementationPlot)
 };

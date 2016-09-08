@@ -13,6 +13,8 @@ GlyphColorMappingGlyphListener::GlyphColorMappingGlyphListener(QObject * parent)
 {
 }
 
+GlyphColorMappingGlyphListener::~GlyphColorMappingGlyphListener() = default;
+
 void GlyphColorMappingGlyphListener::setData(const QList<AbstractVisualizedData *> & visualizedData)
 {
     m_data.clear();

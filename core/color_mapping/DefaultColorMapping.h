@@ -12,6 +12,7 @@ class CORE_API DefaultColorMapping : public ColorMappingData
 {
 public:
     explicit DefaultColorMapping(const QList<AbstractVisualizedData *> & visualizedData);
+    ~DefaultColorMapping() override;
 
     QString name() const override;
 
@@ -22,4 +23,7 @@ protected:
 
 private:
     static const QString s_name;
+
+private:
+    Q_DISABLE_COPY(DefaultColorMapping)
 };

@@ -10,6 +10,7 @@ class CORE_API QVtkTableModelProfileData : public QVtkTableModel
 {
 public:
     explicit QVtkTableModelProfileData(QObject * parent = nullptr);
+    ~QVtkTableModelProfileData() override;
     int rowCount(const QModelIndex &parent = QModelIndex()) const override;
     int columnCount(const QModelIndex &parent = QModelIndex()) const override;
     QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
@@ -23,4 +24,7 @@ protected:
 
 private:
     ImageProfileData * m_data;
+
+private:
+    Q_DISABLE_COPY(QVtkTableModelProfileData)
 };

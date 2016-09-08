@@ -63,4 +63,7 @@ private:
     std::unique_ptr<reflectionzeug::PropertyGroup> m_propertyRoot;
     AbstractRenderView * m_currentRenderView;
     QMap<vtkSmartPointer<vtkCamera>, unsigned long> m_cameraObserverTags;
+
+private:
+    Q_DISABLE_COPY(RendererConfigWidget)
 };

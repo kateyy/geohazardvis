@@ -19,6 +19,8 @@ RenderViewStrategy3D::RenderViewStrategy3D(RendererImplementationBase3D & contex
     connect(&context.renderView(), &AbstractRenderView::visualizationsChanged, this, &RenderViewStrategy3D::updateImageWidgets);
 }
 
+RenderViewStrategy3D::~RenderViewStrategy3D() = default;
+
 QString RenderViewStrategy3D::name() const
 {
     return "3D terrain";

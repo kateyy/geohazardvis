@@ -17,4 +17,7 @@ public:
     /** @return true, if there are any stored settings for the application.
       * Normally, this returns false only if the application never ran on the current system/user. */
     static bool settingsExist();
+
+private:
+    Q_DISABLE_COPY(ApplicationSettings)
 };

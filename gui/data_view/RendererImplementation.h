@@ -125,6 +125,9 @@ private:
 
     QStringList m_supportedInteractionStrategies;
     QString m_currentInteractionStrategy;
+
+private:
+    Q_DISABLE_COPY(RendererImplementation)
 };
 
 template <typename ImplType>

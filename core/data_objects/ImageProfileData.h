@@ -34,6 +34,7 @@ public:
         const QString & scalarsName,
         IndexType scalarsLocation,
         vtkIdType vectorComponent);
+    ~ImageProfileData() override;
 
     /** @return whether valid scalar data was found in the constructor. Otherwise, just delete your instance.. */
     bool isValid() const;
@@ -87,4 +88,7 @@ private:
 
     vtkSmartPointer<vtkTransformPolyDataFilter> m_outputTransformation;
     vtkSmartPointer<vtkWarpScalar> m_graphLine;
+
+private:
+    Q_DISABLE_COPY(ImageProfileData)
 };

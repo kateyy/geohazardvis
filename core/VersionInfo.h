@@ -18,4 +18,8 @@ public:
     static const QString & gitRevision();
     static const QString & gitCommitDateString();
     static const QDateTime & gitCommitDate();
+
+private:
+    VersionInfo() = delete;
+    ~VersionInfo() = delete;
 };

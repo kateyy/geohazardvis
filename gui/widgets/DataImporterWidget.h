@@ -59,6 +59,9 @@ private:
     io::InputVector m_coordinateData;
     io::InputVector m_indexData;
     std::unique_ptr<PolyDataObject> m_polyData;
+
+private:
+    Q_DISABLE_COPY(DataImporterWidget)
 };
 
 template<> inline void DataImporterWidget::setImportDataType<float>()

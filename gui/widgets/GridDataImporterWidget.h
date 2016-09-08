@@ -50,6 +50,9 @@ private:
     int m_importDataType;
     io::InputVector m_imageDataVector;
     std::unique_ptr<ImageDataObject> m_imageData;
+
+private:
+    Q_DISABLE_COPY(GridDataImporterWidget)
 };
 
 template<> inline void GridDataImporterWidget::setImportDataType<float>()

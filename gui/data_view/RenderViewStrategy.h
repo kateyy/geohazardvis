@@ -16,14 +16,13 @@ class vtkCamera;
 class RendererImplementationBase3D;
 class DataObject;
 class DataMapping;
-class RenderedData;
 
 
 class GUI_API RenderViewStrategy : public QObject
 {
 public:
     explicit RenderViewStrategy(RendererImplementationBase3D & context);
-    virtual ~RenderViewStrategy();
+    ~RenderViewStrategy() override;
 
     DataMapping & dataMapping() const;
 
@@ -72,6 +71,9 @@ protected:
 
 private:
     static std::vector<StategyConstructor> & s_constructors();
+
+private:
+    Q_DISABLE_COPY(RenderViewStrategy)
 };
 
 template <typename Strategy>

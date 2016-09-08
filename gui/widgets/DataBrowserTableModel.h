@@ -14,6 +14,7 @@ class DataBrowserTableModel : public QAbstractTableModel
 {
 public:
     explicit DataBrowserTableModel(QObject * parent = nullptr);
+    ~DataBrowserTableModel() override;
 
     void setDataSetHandler(const DataSetHandler * dataSetHandler);
 
@@ -48,4 +49,7 @@ private:
     QMap<QString, QIcon> m_icons;
     int m_numDataObjects;
     int m_numAttributeVectors;
+
+private:
+    Q_DISABLE_COPY(DataBrowserTableModel)
 };

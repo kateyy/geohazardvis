@@ -43,9 +43,6 @@ protected:
         vtkInformationVector * outputVector) override;
 
 private:
-    SimpleDEMGeoCoordToLocalFilter(const SimpleDEMGeoCoordToLocalFilter &) = delete;
-    void operator=(const SimpleDEMGeoCoordToLocalFilter &) = delete;
-
     void SetParameters(const vtkVector2d & inputGeoCentroid);
 
 private:
@@ -53,4 +50,8 @@ private:
 
     vtkSmartPointer<vtkImageChangeInformation> TranslateFilter;
     vtkSmartPointer<vtkImageChangeInformation> ScaleFilter;
+
+private:
+    SimpleDEMGeoCoordToLocalFilter(const SimpleDEMGeoCoordToLocalFilter &) = delete;
+    void operator=(const SimpleDEMGeoCoordToLocalFilter &) = delete;
 };

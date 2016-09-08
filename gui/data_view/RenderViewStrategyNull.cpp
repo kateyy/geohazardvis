@@ -6,6 +6,8 @@ RenderViewStrategyNull::RenderViewStrategyNull(RendererImplementationBase3D & co
 {
 }
 
+RenderViewStrategyNull::~RenderViewStrategyNull() = default;
+
 QString RenderViewStrategyNull::name() const
 {
     return "";

@@ -35,4 +35,8 @@ private:
 
     QMap<vtkSmartPointer<vtkCamera>, unsigned long> m_cameras;
     QMap<vtkCamera *, vtkRenderer *> m_renderers;
+
+private:
+    vtkCameraSynchronization(const vtkCameraSynchronization &) = delete;
+    void operator=(const vtkCameraSynchronization &) = delete;
 };

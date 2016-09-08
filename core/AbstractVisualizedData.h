@@ -91,4 +91,7 @@ private:
 
     /** Color mappings can be shared between multiple visualizations. */
     std::unique_ptr<ColorMapping> m_colorMapping;
+
+private:
+    Q_DISABLE_COPY(AbstractVisualizedData)
 };

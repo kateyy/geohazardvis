@@ -50,4 +50,8 @@ private:
     static std::unique_ptr<InputFileInfo> readData(
         const QString & fileName,
         std::vector<io::ReadDataSet> & readDatasets);
+
+private:
+    MetaTextFileReader() = delete;
+    ~MetaTextFileReader() = delete;
 };

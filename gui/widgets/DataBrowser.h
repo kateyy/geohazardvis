@@ -55,4 +55,7 @@ private:
     std::unique_ptr<Ui_DataBrowser> m_ui;
     DataBrowserTableModel * m_tableModel;
     DataMapping * m_dataMapping;
+
+private:
+    Q_DISABLE_COPY(DataBrowser)
 };

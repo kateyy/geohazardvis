@@ -44,4 +44,7 @@ protected:
 
 private:
     std::array<int, 6> m_extent;
+
+private:
+    Q_DISABLE_COPY(ImageDataObject)
 };

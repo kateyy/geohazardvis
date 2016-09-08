@@ -8,6 +8,7 @@ class CORE_API DirectImageColors : public ColorMappingData
 public:
     DirectImageColors(const QList<AbstractVisualizedData *> & visualizedData,
         const QString & dataArrayName, IndexType attributeLocation);
+    ~DirectImageColors() override;
 
     QString name() const override;
     QString scalarsName(AbstractVisualizedData & vis) const override;
@@ -28,4 +29,7 @@ private:
 
     const IndexType m_attributeLocation;
     const QString m_dataArrayName;
+
+private:
+    Q_DISABLE_COPY(DirectImageColors)
 };

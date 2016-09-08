@@ -12,6 +12,7 @@ class GUI_API RendererImplementationNull : public RendererImplementation
 {
 public:
     explicit RendererImplementationNull(AbstractRenderView & renderView);
+    ~RendererImplementationNull() override;
 
     QString name() const override;
     ContentType contentType() const override;
@@ -40,4 +41,7 @@ protected:
 
 private:
     vtkSmartPointer<vtkRenderer> m_renderer;
+
+private:
+    Q_DISABLE_COPY(RendererImplementationNull)
 };

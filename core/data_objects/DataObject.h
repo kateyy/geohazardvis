@@ -83,11 +83,6 @@ public:
     static QString readName(vtkInformation & information);
     static void storeName(vtkInformation & information, const DataObject & object);
 
-    DataObject(const DataObject &) = delete;
-    DataObject(DataObject &&) = delete;
-    void operator=(const DataObject &) = delete;
-    void operator=(DataObject &&) = delete;
-
 signals:
     void dataChanged();
     void boundsChanged();
@@ -135,6 +130,9 @@ private:
 
 private:
     std::unique_ptr<DataObjectPrivate> d_ptr;
+
+private:
+    Q_DISABLE_COPY(DataObject)
 };
 
 

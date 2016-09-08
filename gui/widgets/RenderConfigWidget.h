@@ -43,4 +43,7 @@ private:
 
     AbstractRenderView * m_renderView;
     AbstractVisualizedData * m_content;
+
+private:
+    Q_DISABLE_COPY(RenderConfigWidget)
 };

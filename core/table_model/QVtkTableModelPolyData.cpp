@@ -18,6 +18,8 @@ QVtkTableModelPolyData::QVtkTableModelPolyData(QObject * parent)
 {
 }
 
+QVtkTableModelPolyData::~QVtkTableModelPolyData() = default;
+
 int QVtkTableModelPolyData::rowCount(const QModelIndex &/*parent*/) const
 {
     if (!m_polyData)

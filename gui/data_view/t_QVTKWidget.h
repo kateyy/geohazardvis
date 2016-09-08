@@ -23,4 +23,7 @@ signals:
 
 protected:
     bool event(QEvent * event) override;
+
+private:
+    Q_DISABLE_COPY(t_QVTKWidget)
 };

@@ -26,7 +26,7 @@ class GUI_API Highlighter : public QObject
 
 public:
     Highlighter();
-    virtual ~Highlighter();
+    ~Highlighter() override;
 
     /** Clear the current highlighting target and set a new renderer */
     void setRenderer(vtkRenderer * renderer);
@@ -73,4 +73,7 @@ private:
 
     std::unique_ptr<QTimer> m_highlightFlashTimer;
     std::unique_ptr<QTime> m_highlightFlashTime;
+
+private:
+    Q_DISABLE_COPY(Highlighter)
 };

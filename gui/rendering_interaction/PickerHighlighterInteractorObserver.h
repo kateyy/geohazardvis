@@ -14,7 +14,7 @@ class Highlighter;
 class Picker;
 
 
-class GUI_API PickerHighlighterInteractorObserver :public QObject, public vtkInteractorObserver
+class GUI_API PickerHighlighterInteractorObserver : public QObject, public vtkInteractorObserver
 {
     Q_OBJECT
 

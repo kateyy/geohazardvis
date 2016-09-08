@@ -14,6 +14,7 @@ class CanvasExporterImages : public CanvasExporter
 public:
     /** @param writer Subclasses must provide a vtkImageWriter subclass */
     explicit CanvasExporterImages(vtkImageWriter * writer);
+    ~CanvasExporterImages() override;
 
     bool write() override;
 

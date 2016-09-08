@@ -27,6 +27,8 @@ RenderedData::RenderedData(ContentType contentType, DataObject & dataObject)
     m_outlineProperty->SetColor(darkGray, darkGray, darkGray);
 }
 
+RenderedData::~RenderedData() = default;
+
 RenderedData::Representation RenderedData::representation() const
 {
     return m_representation;

@@ -49,6 +49,8 @@ DataBrowserTableModel::DataBrowserTableModel(QObject * parent)
     }
 }
 
+DataBrowserTableModel::~DataBrowserTableModel() = default;
+
 void DataBrowserTableModel::setDataSetHandler(const DataSetHandler * dataSetHandler)
 {
     m_dataSetHandler = dataSetHandler;

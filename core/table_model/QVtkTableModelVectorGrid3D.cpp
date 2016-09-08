@@ -19,6 +19,8 @@ QVtkTableModelVectorGrid3D::QVtkTableModelVectorGrid3D(QObject * parent)
 {
 }
 
+QVtkTableModelVectorGrid3D::~QVtkTableModelVectorGrid3D() = default;
+
 int QVtkTableModelVectorGrid3D::rowCount(const QModelIndex &/*parent*/) const
 {
     if (!m_gridData)

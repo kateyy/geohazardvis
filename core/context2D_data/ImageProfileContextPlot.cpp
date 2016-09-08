@@ -29,6 +29,8 @@ ImageProfileContextPlot::ImageProfileContextPlot(ImageProfileData & dataObject)
     connect(&dataObject, &DataObject::dataChanged, this, &ImageProfileContextPlot::updatePlot);
 }
 
+ImageProfileContextPlot::~ImageProfileContextPlot() = default;
+
 std::unique_ptr<PropertyGroup> ImageProfileContextPlot::createConfigGroup()
 {
     auto root = std::make_unique<PropertyGroup>();

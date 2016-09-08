@@ -14,6 +14,7 @@ class CORE_API Context2DData : public AbstractVisualizedData
 
 public:
     explicit Context2DData(DataObject & dataObject);
+    ~Context2DData() override;
 
     const vtkSmartPointer<vtkPlotCollection> & plots();
 
@@ -29,4 +30,7 @@ signals:
 private:
     vtkSmartPointer<vtkPlotCollection> m_plots;
     bool m_plotsInvalidated;
+
+private:
+    Q_DISABLE_COPY(Context2DData)
 };

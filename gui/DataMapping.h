@@ -82,6 +82,9 @@ private:
     QMap<int, AbstractRenderView *> m_renderViews;
 
     AbstractRenderView * m_focusedRenderView;
+
+private:
+    Q_DISABLE_COPY(DataMapping)
 };
 
 

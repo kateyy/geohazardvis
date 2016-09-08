@@ -10,6 +10,10 @@
 vtkStandardNewMacro(ImagePlaneWidget);
 
 
+ImagePlaneWidget::ImagePlaneWidget() = default;
+
+ImagePlaneWidget::~ImagePlaneWidget() = default;
+
 vtkActor * ImagePlaneWidget::GetTexturePlaneActor()
 {
     assert(this->TexturePlaneActor);

@@ -15,7 +15,6 @@ class CORE_API PolyDataObject : public DataObject
 {
 public:
     PolyDataObject(const QString & name, vtkPolyData & dataSet);
-
     ~PolyDataObject() override;
 
     bool is3D() const override;
@@ -55,4 +54,7 @@ private:
 
     enum class Is2p5D { yes, no, unchecked };
     Is2p5D m_is2p5D;
+
+private:
+    Q_DISABLE_COPY(PolyDataObject)
 };

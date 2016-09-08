@@ -13,6 +13,8 @@ QVtkTableModel::QVtkTableModel(QObject * parent)
 {
 }
 
+QVtkTableModel::~QVtkTableModel() = default;
+
 QVariant QVtkTableModel::headerData(int section, Qt::Orientation orientation, int role) const
 {
     if (role != Qt::DisplayRole || orientation != Qt::Vertical)

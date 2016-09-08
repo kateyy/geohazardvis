@@ -15,6 +15,8 @@ QVtkTableModelProfileData::QVtkTableModelProfileData(QObject * parent)
 {
 }
 
+QVtkTableModelProfileData::~QVtkTableModelProfileData() = default;
+
 int QVtkTableModelProfileData::rowCount(const QModelIndex &/*parent*/) const
 {
     if (!m_data)

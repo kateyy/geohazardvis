@@ -40,6 +40,8 @@ CanvasExporterImages::CanvasExporterImages(vtkImageWriter * writer)
     m_writer->SetInputConnection(m_depthToUChar->GetOutputPort());
 }
 
+CanvasExporterImages::~CanvasExporterImages() = default;
+
 bool CanvasExporterImages::write()
 {
     m_toImageFilter->SetInput(nullptr); // the filter does not update its image after one successful export without this line

@@ -43,4 +43,7 @@ protected:
     std::array<QSpinBox *, 3> m_spinBoxes;
 
     reflectionzeug::ColorPropertyInterface * m_property;
+
+private:
+    Q_DISABLE_COPY(ColorEditorRGB)
 };

@@ -66,6 +66,8 @@ RenderedPolyData::RenderedPolyData(PolyDataObject & dataObject)
     m_mapper->UseLookupTableScalarRangeOn();
 }
 
+RenderedPolyData::~RenderedPolyData() = default;
+
 PolyDataObject & RenderedPolyData::polyDataObject()
 {
     return static_cast<PolyDataObject &>(dataObject());

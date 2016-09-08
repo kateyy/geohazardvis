@@ -2,12 +2,9 @@
 
 #include <QString>
 
-#include <vtkWeakPointer.h>
-
 #include <core/context2D_data/Context2DData.h>
 
 
-class vtkDataArray;
 class vtkPlot;
 
 class ImageProfileData;
@@ -22,6 +19,7 @@ class CORE_API ImageProfileContextPlot : public Context2DData
 {
 public:
     explicit ImageProfileContextPlot(ImageProfileData & dataObject);
+    ~ImageProfileContextPlot() override;
 
     std::unique_ptr<reflectionzeug::PropertyGroup> createConfigGroup() override;
 
@@ -42,4 +40,7 @@ private:
     vtkSmartPointer<vtkPlot> m_plotLine;
 
     QString m_title;
+
+private:
+    Q_DISABLE_COPY(ImageProfileContextPlot)
 };

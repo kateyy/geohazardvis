@@ -142,4 +142,7 @@ private:
     ImageDataObject * m_demSelection;
     PolyDataObject * m_lastPreviewedTopo;
     PolyDataObject * m_topoTemplateSelection;
+
+private:
+    Q_DISABLE_COPY(DEMWidget)
 };

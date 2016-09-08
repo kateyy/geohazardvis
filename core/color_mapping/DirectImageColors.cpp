@@ -96,6 +96,8 @@ DirectImageColors::DirectImageColors(const QList<AbstractVisualizedData *> & vis
     m_isValid = true;
 }
 
+DirectImageColors::~DirectImageColors() = default;
+
 QString DirectImageColors::name() const
 {
     return m_dataArrayName + " (direct colors)";

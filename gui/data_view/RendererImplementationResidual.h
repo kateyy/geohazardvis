@@ -27,4 +27,7 @@ private:
     bool m_isInitialized;
 
     std::unique_ptr<RenderViewStrategy2D> m_strategy;
+
+private:
+    Q_DISABLE_COPY(RendererImplementationResidual)
 };

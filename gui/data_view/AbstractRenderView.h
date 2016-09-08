@@ -17,6 +17,7 @@ class GUI_API AbstractRenderView : public AbstractDataView
 
 public:
     AbstractRenderView(DataMapping & dataMapping, int index, QWidget * parent = nullptr, Qt::WindowFlags flags = 0);
+    ~AbstractRenderView() override;
 
     bool isTable() const override;
     bool isRenderer() const override;
@@ -125,4 +126,7 @@ private:
 
     QMetaObject::Connection m_infoTextConnection;
     std::function<QString()> m_infoTextCallback;
+
+private:
+    Q_DISABLE_COPY(AbstractRenderView)
 };

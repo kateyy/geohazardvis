@@ -15,6 +15,8 @@ GlyphColorMapping::GlyphColorMapping(const QList<AbstractVisualizedData *> & vis
 {
 }
 
+GlyphColorMapping::~GlyphColorMapping() = default;
+
 void GlyphColorMapping::activate()
 {
     for (GlyphMappingData * glyphMapping : glyphMappingData())

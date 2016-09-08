@@ -21,6 +21,7 @@ class CORE_API RenderedImageData : public RenderedData
 {
 public:
     explicit RenderedImageData(ImageDataObject & dataObject);
+    ~RenderedImageData() override;
 
     ImageDataObject & imageDataObject();
     const ImageDataObject & imageDataObject() const;
@@ -72,4 +73,7 @@ private:
     vtkSmartPointer<vtkImageSliceMapper> m_mapper;
     vtkSmartPointer<vtkImageSlice> m_slice;
     vtkSmartPointer<vtkImageProperty> m_property;
+
+private:
+    Q_DISABLE_COPY(RenderedImageData)
 };

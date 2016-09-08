@@ -48,4 +48,7 @@ private:
     QMenu * m_selectColumnsMenu;
 
     QMetaObject::Connection m_hightlightUpdateConnection;
+
+private:
+    Q_DISABLE_COPY(TableView)
 };

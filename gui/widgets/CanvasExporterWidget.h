@@ -45,4 +45,7 @@ private:
     AbstractRenderView * m_renderView;
 
     std::map<QString, std::unique_ptr<CanvasExporter>> m_exporters;
+
+private:
+    Q_DISABLE_COPY(CanvasExporterWidget)
 };

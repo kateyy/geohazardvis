@@ -43,4 +43,7 @@ private:
     QMap<AbstractRenderView *, QAction *> m_renderViews;
 
     QMenu * m_syncToggleMenu;
+
+private:
+    Q_DISABLE_COPY(SelectionHandler)
 };

@@ -12,6 +12,8 @@ RendererImplementationNull::RendererImplementationNull(AbstractRenderView & rend
 {
 }
 
+RendererImplementationNull::~RendererImplementationNull() = default;
+
 QString RendererImplementationNull::name() const
 {
     return "NullImplementation";

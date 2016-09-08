@@ -74,4 +74,7 @@ private:
 
     vtkSmartPointer<vtkLineWidget2> m_lineWidget;
     QMultiMap<vtkSmartPointer<vtkObject>, unsigned long> m_observerTags;
+
+private:
+    Q_DISABLE_COPY(RenderViewStrategy2D)
 };

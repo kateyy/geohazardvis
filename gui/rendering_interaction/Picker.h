@@ -32,4 +32,8 @@ public:
 
 private:
     std::unique_ptr<Picker_private> d_ptr;
+
+private:
+    Picker(const Picker &) = delete;
+    void operator=(const Picker &) = delete;
 };

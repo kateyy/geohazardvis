@@ -42,6 +42,8 @@ RenderedImageData::RenderedImageData(ImageDataObject & dataObject)
     setupInformation(*m_mapper->GetInformation(), *this);
 }
 
+RenderedImageData::~RenderedImageData() = default;
+
 ImageDataObject & RenderedImageData::imageDataObject()
 {
     assert(dynamic_cast<ImageDataObject *>(&dataObject()));

@@ -46,12 +46,11 @@ signals:
     void dataObjectsChanged();
     void rawVectorsChanged();
 
-public:
-    DataSetHandler(const DataSetHandler&) = delete;
-    void operator=(const DataSetHandler&) = delete;
-
 private:
     friend class DataSetHandler_test;
 
     std::unique_ptr<DataSetHandlerPrivate> d_ptr;
+
+private:
+    Q_DISABLE_COPY(DataSetHandler)
 };

@@ -31,6 +31,8 @@ ColorMappingData::ColorMappingData(const QList<AbstractVisualizedData *> & visua
 {
 }
 
+ColorMappingData::~ColorMappingData() = default;
+
 void ColorMappingData::activate()
 {
     for (auto vis : m_visualizedData)

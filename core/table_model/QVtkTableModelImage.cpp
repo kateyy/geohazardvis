@@ -26,6 +26,8 @@ QVtkTableModelImage::QVtkTableModelImage(QObject * parent)
 {
 }
 
+QVtkTableModelImage::~QVtkTableModelImage() = default;
+
 int QVtkTableModelImage::rowCount(const QModelIndex &/*parent*/) const
 {
     if (!m_vtkImageData)

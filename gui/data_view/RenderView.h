@@ -77,4 +77,7 @@ private:
     QMap<DataObject *, AbstractVisualizedData *> m_dataObjectToVisualization;
     // DataObjects, that emitted deleted() and that we didn't remove yet
     QSet<DataObject *> m_deletedData;
+
+private:
+    Q_DISABLE_COPY(RenderView)
 };

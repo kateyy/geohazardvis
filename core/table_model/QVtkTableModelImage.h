@@ -12,6 +12,7 @@ class CORE_API QVtkTableModelImage : public QVtkTableModel
 {
 public:
     explicit QVtkTableModelImage(QObject * parent = nullptr);
+    ~QVtkTableModelImage() override;
     int rowCount(const QModelIndex &parent = QModelIndex()) const override;
     int columnCount(const QModelIndex &parent = QModelIndex()) const override;
     QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
@@ -29,4 +30,7 @@ protected:
 
 private:
     vtkSmartPointer<vtkImageData> m_vtkImageData;
+
+private:
+    Q_DISABLE_COPY(QVtkTableModelImage)
 };

@@ -36,4 +36,7 @@ public:
         static Result qFile_QByteArray(const QString & inputFileName,
             io::InputVector & ioVectors, size_t offset, size_t numberOfValues);
     };
+
+    TextFileReader() = delete;
+    ~TextFileReader() = delete;
 };

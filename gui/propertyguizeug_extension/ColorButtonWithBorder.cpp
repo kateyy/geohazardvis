@@ -12,6 +12,8 @@ ColorButtonWithBorder::ColorButtonWithBorder(QWidget * parent, const QColor & in
 {
 }
 
+ColorButtonWithBorder::~ColorButtonWithBorder() = default;
+
 void ColorButtonWithBorder::paint(QPainter * painter, const QPoint & topLeft, const QColor & color)
 {
     const auto metrics = painter->fontMetrics();

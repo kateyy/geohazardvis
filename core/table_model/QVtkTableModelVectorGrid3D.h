@@ -13,6 +13,7 @@ class CORE_API QVtkTableModelVectorGrid3D : public QVtkTableModel
 {
 public:
     explicit QVtkTableModelVectorGrid3D(QObject * parent = nullptr);
+    ~QVtkTableModelVectorGrid3D() override;
     int rowCount(const QModelIndex &parent = QModelIndex()) const override;
     int columnCount(const QModelIndex &parent = QModelIndex()) const override;
     QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
@@ -29,4 +30,7 @@ protected:
 private:
     vtkSmartPointer<vtkDataSet> m_gridData;
     vtkSmartPointer<vtkDataArray> m_scalars;
+
+private:
+    Q_DISABLE_COPY(QVtkTableModelVectorGrid3D)
 };

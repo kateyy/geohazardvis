@@ -139,4 +139,7 @@ private:
     // -- contents and annotation --
 
     std::vector<ViewportSetup> m_viewportSetups;
+
+private:
+    Q_DISABLE_COPY(RendererImplementationBase3D)
 };

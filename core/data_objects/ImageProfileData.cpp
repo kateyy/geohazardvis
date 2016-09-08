@@ -109,6 +109,8 @@ ImageProfileData::ImageProfileData(
     m_isValid = true;
 }
 
+ImageProfileData::~ImageProfileData() = default;
+
 bool ImageProfileData::isValid() const
 {
     return m_isValid;

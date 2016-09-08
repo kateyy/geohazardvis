@@ -96,4 +96,7 @@ private:
     // connections for various parameters and signals related to the color mapping
     QList<QMetaObject::Connection> m_guiConnections;
     QMetaObject::Connection m_dataMinMaxChangedConnection;
+
+private:
+    Q_DISABLE_COPY(ColorMappingChooser)
 };

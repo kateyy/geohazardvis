@@ -17,6 +17,7 @@ class CORE_API RenderedPolyData : public RenderedData3D
 {
 public:
     explicit RenderedPolyData(PolyDataObject & dataObject);
+    ~RenderedPolyData() override;
 
     PolyDataObject & polyDataObject();
     const PolyDataObject & polyDataObject() const;
@@ -50,4 +51,7 @@ private:
     vtkSmartPointer<vtkAlgorithm> m_colorMappingOutput;
 
     QString m_textureFileName;
+
+private:
+    Q_DISABLE_COPY(RenderedPolyData)
 };

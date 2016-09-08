@@ -30,6 +30,8 @@ CanvasExporterTIFF::CanvasExporterTIFF()
 {
 }
 
+CanvasExporterTIFF::~CanvasExporterTIFF() = default;
+
 std::unique_ptr<reflectionzeug::PropertyGroup> CanvasExporterTIFF::createPropertyGroup()
 {
     auto group = CanvasExporterImages::createPropertyGroup();

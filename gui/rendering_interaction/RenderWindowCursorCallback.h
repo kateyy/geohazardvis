@@ -41,4 +41,7 @@ private:
     int m_currentVtkCursor;
 
     bool m_holdingMouse;
+
+private:
+    Q_DISABLE_COPY(RenderWindowCursorCallback)
 };

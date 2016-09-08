@@ -106,6 +106,8 @@ RenderedVectorGrid3D::RenderedVectorGrid3D(VectorGrid3DDataObject & dataObject)
     m_isInitialized = true;
 }
 
+RenderedVectorGrid3D::~RenderedVectorGrid3D() = default;
+
 void RenderedVectorGrid3D::setRenderWindowInteractor(vtkRenderWindowInteractor * interactor)
 {
     for (auto widget : m_planeWidgets)

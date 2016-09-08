@@ -17,6 +17,8 @@ CanvasExporterPNG::CanvasExporterPNG()
 {
 }
 
+CanvasExporterPNG::~CanvasExporterPNG() = default;
+
 std::unique_ptr<reflectionzeug::PropertyGroup> CanvasExporterPNG::createPropertyGroup()
 {
     auto group = CanvasExporterImages::createPropertyGroup();

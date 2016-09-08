@@ -14,6 +14,7 @@ class GlyphMappingChooserListModel : public QAbstractListModel
 
 public:
     explicit GlyphMappingChooserListModel(QObject * parent = nullptr);
+    ~GlyphMappingChooserListModel() override;
 
     void setMapping(GlyphMapping * mapping);
 
@@ -30,4 +31,7 @@ private:
     GlyphMapping * m_mapping;
     QStringList m_vectorNames;
     QList<GlyphMappingData *> m_vectors;
+
+private:
+    Q_DISABLE_COPY(GlyphMappingChooserListModel)
 };

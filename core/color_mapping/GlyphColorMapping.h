@@ -13,6 +13,7 @@ public:
     GlyphColorMapping(const QList<AbstractVisualizedData *> & visualizedData,
         const QList<GlyphMappingData *> & glyphMappingData,
         int numDataComponents = 1);
+    ~GlyphColorMapping() override;
 
     /** override superclass activate/deactivate: enable color mapping on glyph representations */
     void activate() override;
@@ -23,4 +24,7 @@ protected:
 
 private:
     QList<GlyphMappingData *> m_glyphMappingData;
+
+private:
+    Q_DISABLE_COPY(GlyphColorMapping)
 };

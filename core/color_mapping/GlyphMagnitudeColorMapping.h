@@ -18,6 +18,7 @@ public:
     GlyphMagnitudeColorMapping(const QList<AbstractVisualizedData *> & visualizedData,
         const QList<GlyphMappingData *> & glyphMappingData,
         const QString & vectorsName);
+    ~GlyphMagnitudeColorMapping() override;
 
     QString name() const override;
     QString scalarsName(AbstractVisualizedData & vis) const override;
@@ -39,4 +40,7 @@ private:
     const QString m_vectorName;
     QMap<AbstractVisualizedData *, QVector<vtkSmartPointer<vtkVectorNorm>>> m_vectorNorms;
     QMap<AbstractVisualizedData *, QVector<vtkSmartPointer<vtkAssignAttribute>>> m_assignedVectors;
+
+private:
+    Q_DISABLE_COPY(GlyphMagnitudeColorMapping)
 };

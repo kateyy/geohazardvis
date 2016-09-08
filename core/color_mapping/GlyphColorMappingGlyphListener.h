@@ -14,6 +14,7 @@ class GlyphColorMappingGlyphListener : public QObject
 
 public:
     explicit GlyphColorMappingGlyphListener(QObject * parent = nullptr);
+    ~GlyphColorMappingGlyphListener() override;
 
     void setData(const QList<AbstractVisualizedData *> & visualizedData);
 
@@ -23,4 +24,7 @@ signals:
 private:
     QList<RenderedData3D *> m_data;
     QList<QMetaObject::Connection> m_connects;
+
+private:
+    Q_DISABLE_COPY(GlyphColorMappingGlyphListener)
 };

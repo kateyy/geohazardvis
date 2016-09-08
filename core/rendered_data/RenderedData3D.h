@@ -42,4 +42,7 @@ private:
     vtkSmartPointer<vtkProperty> m_renderProperty;
 
     std::unique_ptr<GlyphMapping> m_glyphMapping;
+
+private:
+    Q_DISABLE_COPY(RenderedData3D)
 };

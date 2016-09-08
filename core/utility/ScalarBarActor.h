@@ -15,10 +15,15 @@ public:
 
 protected:
     OrientedScalarBarActor();
+    ~OrientedScalarBarActor();
+
     void LayoutTitle() override;
     void ConfigureTitle() override;
 
 protected:
     bool TitleAlignedWithColorBar;
 
+private:
+    OrientedScalarBarActor(const OrientedScalarBarActor &) = delete;
+    void operator=(const OrientedScalarBarActor &) = delete;
 };

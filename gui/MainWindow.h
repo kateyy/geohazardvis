@@ -94,4 +94,7 @@ private:
     std::map<std::unique_ptr<QFutureWatcher<FileLoadResults>>, QStringList> m_loadWatchers;
 
     std::unique_ptr<GuiPluginManager> m_pluginManager;
+
+private:
+    Q_DISABLE_COPY(MainWindow)
 };

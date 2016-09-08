@@ -38,6 +38,8 @@ void OrientedScalarBarActor::PrintSelf(ostream &os, vtkIndent indent)
     os << indent << "Title aligned with the color bar: " << this->TitleAlignedWithColorBar << "\n";
 }
 
+OrientedScalarBarActor::~OrientedScalarBarActor() = default;
+
 void OrientedScalarBarActor::LayoutTitle()
 {
     this->Superclass::LayoutTitle();

@@ -16,9 +16,13 @@ public:
     using Type = reflectionzeug::ColorPropertyInterface;
 
     ColorButtonWithBorder(QWidget * parent = nullptr, const QColor & initialColor = Qt::black);
+    ~ColorButtonWithBorder() override;
 
     static void paint(
         QPainter * painter,
         const QPoint & topLeft,
         const QColor & color);
+
+private:
+    Q_DISABLE_COPY(ColorButtonWithBorder)
 };

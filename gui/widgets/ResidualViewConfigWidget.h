@@ -31,4 +31,7 @@ private:
 
     ResidualVerificationView * m_currentView;
     QList<QMetaObject::Connection> m_viewConnects;
+
+private:
+    Q_DISABLE_COPY(ResidualViewConfigWidget)
 };

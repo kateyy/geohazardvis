@@ -5,6 +5,7 @@ class CanvasExporterPNG : public CanvasExporterImages
 {
 public:
     CanvasExporterPNG();
+    ~CanvasExporterPNG() override;
 
 protected:
     std::unique_ptr<reflectionzeug::PropertyGroup> createPropertyGroup() override;

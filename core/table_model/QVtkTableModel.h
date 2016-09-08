@@ -16,6 +16,7 @@ class CORE_API QVtkTableModel : public QAbstractTableModel
 {
 public:
     explicit QVtkTableModel(QObject * parent = nullptr);
+    ~QVtkTableModel() override;
 
     QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override;
 
@@ -42,4 +43,7 @@ private:
     vtkIdType m_hightlightId;
 
     QList<QMetaObject::Connection> m_dataObjectConnections;
+
+private:
+    Q_DISABLE_COPY(QVtkTableModel)
 };

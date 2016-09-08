@@ -18,7 +18,8 @@ public:
     vtkPolyDataMapper * GetTexturePlaneMapper();
 
 protected:
-    ImagePlaneWidget() = default;
+    ImagePlaneWidget();
+    ~ImagePlaneWidget() override;
 
 private:
     ImagePlaneWidget(const ImagePlaneWidget &) = delete;

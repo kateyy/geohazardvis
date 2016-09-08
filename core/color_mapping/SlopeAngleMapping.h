@@ -29,4 +29,7 @@ private:
     static const bool s_isRegistered;
 
     QMap<AbstractVisualizedData *, QMap<int, vtkSmartPointer<vtkAlgorithm>>> m_filters;
+
+private:
+    Q_DISABLE_COPY(SlopeAngleMapping)
 };

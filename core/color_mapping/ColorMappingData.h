@@ -43,6 +43,7 @@ public:
         int numDataComponents = 1,
         bool mapsScalarsToColors = true,
         bool usesOwnLookupTable = false);
+    ~ColorMappingData() override;
 
     virtual void activate();
     virtual void deactivate();
@@ -144,6 +145,9 @@ private:
     std::vector<double> m_maxValue;
     bool m_boundsValid;
     mutable std::mutex m_boundsUpdateMutex;
+
+private:
+    Q_DISABLE_COPY(ColorMappingData)
 };
 
 #include "ColorMappingData.hpp"

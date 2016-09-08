@@ -34,6 +34,8 @@ RendererImplementationPlot::RendererImplementationPlot(AbstractRenderView & rend
     assert(renderView.numberOfSubViews() == 1); // multi view not implemented yet. Is that even possible with the vtkContextView?
 }
 
+RendererImplementationPlot::~RendererImplementationPlot() = default;
+
 QString RendererImplementationPlot::name() const
 {
     return "Context View";

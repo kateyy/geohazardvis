@@ -27,4 +27,7 @@ private:
     static const bool s_isRegistered;
 
     const int m_component;
+
+private:
+    Q_DISABLE_COPY(VertexComponentColorMapping)
 };

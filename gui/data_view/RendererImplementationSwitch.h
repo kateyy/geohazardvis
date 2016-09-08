@@ -23,4 +23,8 @@ private:
     AbstractRenderView & m_view;
     std::unique_ptr<RendererImplementation> m_currentImpl;
     std::unique_ptr<RendererImplementation> m_nullImpl;
+
+private:
+    RendererImplementationSwitch(const RendererImplementationSwitch &) = delete;
+    void operator=(const RendererImplementationSwitch &) = delete;
 };

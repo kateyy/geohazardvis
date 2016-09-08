@@ -13,6 +13,8 @@ QVtkTableModelRawVector::QVtkTableModelRawVector(QObject * parent)
 {
 }
 
+QVtkTableModelRawVector::~QVtkTableModelRawVector() = default;
+
 int QVtkTableModelRawVector::rowCount(const QModelIndex &/*parent*/) const
 {
     if (!m_data)

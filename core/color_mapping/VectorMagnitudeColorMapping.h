@@ -39,4 +39,7 @@ private:
     const QString m_magnitudeArrayName;
 
     QMap<AbstractVisualizedData *, QVector<vtkSmartPointer<vtkAlgorithm>>> m_filters;
+
+private:
+    Q_DISABLE_COPY(VectorMagnitudeColorMapping)
 };

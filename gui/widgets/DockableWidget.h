@@ -31,4 +31,7 @@ protected:
     
 private:
     QDockWidget * m_dockWidgetParent;
+
+private:
+    Q_DISABLE_COPY(DockableWidget)
 };

@@ -33,6 +33,8 @@ CollapsibleGroupBox::CollapsibleGroupBox(const QString &title, QWidget * parent)
     connect(this, &QGroupBox::toggled, this, &CollapsibleGroupBox::applyCollapsed);
 }
 
+CollapsibleGroupBox::~CollapsibleGroupBox() = default;
+
 bool CollapsibleGroupBox::isCollapsed() const
 {
     return isChecked();

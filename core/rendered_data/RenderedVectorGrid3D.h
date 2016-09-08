@@ -22,6 +22,7 @@ class CORE_API RenderedVectorGrid3D : public RenderedData3D
 
 public:
     explicit RenderedVectorGrid3D(VectorGrid3DDataObject & dataObject);
+    ~RenderedVectorGrid3D() override;
 
     /** the interactor needs to be set in order to use the image plane widgets */
     void setRenderWindowInteractor(vtkRenderWindowInteractor * interactor);
@@ -71,4 +72,7 @@ private:
 
     std::array<bool, 3> m_slicesEnabled;
     std::array<int, 3> m_storedSliceIndexes;
+
+private:
+    Q_DISABLE_COPY(RenderedVectorGrid3D)
 };

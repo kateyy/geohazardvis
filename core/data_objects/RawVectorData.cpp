@@ -15,6 +15,8 @@ RawVectorData::RawVectorData(const QString & name, vtkFloatArray & dataArray)
     connectObserver("dataChanged", dataArray, vtkCommand::ModifiedEvent, *this, &RawVectorData::_dataChanged);
 }
 
+RawVectorData::~RawVectorData() = default;
+
 bool RawVectorData::is3D() const
 {
     return false;

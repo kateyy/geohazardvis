@@ -14,6 +14,8 @@ Context2DData::Context2DData(DataObject & dataObject)
 {
 }
 
+Context2DData::~Context2DData() = default;
+
 const vtkSmartPointer<vtkPlotCollection> & Context2DData::plots()
 {
     if (m_plotsInvalidated)

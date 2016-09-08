@@ -30,6 +30,8 @@ CanvasExporterPS::CanvasExporterPS()
     m_exporter->CompressOff();
 }
 
+CanvasExporterPS::~CanvasExporterPS() = default;
+
 QString CanvasExporterPS::fileExtension() const
 {
     QString format = outputFormat();

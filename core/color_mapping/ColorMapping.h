@@ -101,4 +101,7 @@ private:
     QString m_currentScalarsName;
     vtkSmartPointer<vtkLookupTable> m_gradient;
     QString m_gradientName;
+
+private:
+    Q_DISABLE_COPY(ColorMapping)
 };

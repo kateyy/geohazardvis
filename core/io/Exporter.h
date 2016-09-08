@@ -21,4 +21,8 @@ public:
     static bool exportImageFormat(ImageDataObject & image, const QString & fileName);
     static bool exportVTKXMLPolyData(DataObject & polyData, const QString & fileName);
     static bool exportVTKXMLImageData(DataObject & image, const QString & fileName);
+
+private:
+    Exporter() = delete;
+    ~Exporter() = delete;
 };

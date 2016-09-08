@@ -7,6 +7,7 @@ class GUI_API RenderViewStrategy3D : public RenderViewStrategy
 {
 public:
     explicit RenderViewStrategy3D(RendererImplementationBase3D & context);
+    ~RenderViewStrategy3D() override;
 
     QString name() const override;
 
@@ -22,4 +23,7 @@ private:
 
 private:
     static const bool s_isRegistered;
+
+private:
+    Q_DISABLE_COPY(RenderViewStrategy3D)
 };

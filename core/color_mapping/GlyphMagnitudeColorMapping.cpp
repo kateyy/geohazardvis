@@ -84,6 +84,8 @@ GlyphMagnitudeColorMapping::GlyphMagnitudeColorMapping(
     }
 }
 
+GlyphMagnitudeColorMapping::~GlyphMagnitudeColorMapping() = default;
+
 QString GlyphMagnitudeColorMapping::name() const
 {
     return "Glyph Magnitude: " + m_vectorName;

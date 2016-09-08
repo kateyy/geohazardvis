@@ -10,6 +10,8 @@ CanvasExporterRegistry::CanvasExporterRegistry()
 {
 }
 
+CanvasExporterRegistry::~CanvasExporterRegistry() = default;
+
 CanvasExporterRegistry & CanvasExporterRegistry::instance()
 {
     static CanvasExporterRegistry reg;

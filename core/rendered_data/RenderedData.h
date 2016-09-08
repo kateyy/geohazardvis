@@ -19,6 +19,7 @@ class CORE_API RenderedData : public AbstractVisualizedData
 
 public:
     RenderedData(ContentType contentType, DataObject & dataObject);
+    ~RenderedData() override;
 
     enum class Representation { content, outline, both };
 
@@ -53,4 +54,7 @@ private:
 
     vtkSmartPointer<vtkProperty> m_outlineProperty;
     vtkSmartPointer<vtkActor> m_outlineActor;
+
+private:
+    Q_DISABLE_COPY(RenderedData)
 };

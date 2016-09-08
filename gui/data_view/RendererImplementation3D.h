@@ -38,4 +38,7 @@ private:
     RenderViewStrategy * m_currentStrategy;
 
     static bool s_isRegistered;
+
+private:
+    Q_DISABLE_COPY(RendererImplementation3D)
 };

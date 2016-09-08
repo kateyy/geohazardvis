@@ -45,6 +45,8 @@ AbstractRenderView::AbstractRenderView(DataMapping & dataMapping, int index, QWi
     m_qvtkWidget->installEventFilter(this);
 }
 
+AbstractRenderView::~AbstractRenderView() = default;
+
 bool AbstractRenderView::isTable() const
 {
     return false;

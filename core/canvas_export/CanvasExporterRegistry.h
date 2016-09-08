@@ -24,6 +24,7 @@ public:
 
 private:
     CanvasExporterRegistry();
+    ~CanvasExporterRegistry();
     static CanvasExporterRegistry & instance();
 
 private:

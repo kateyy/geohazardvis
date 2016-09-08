@@ -38,6 +38,10 @@ public:
 
 private:
     static const std::map<Category, std::map<QString, QStringList>> &fileFormatExtensionMaps();
+
+private:
+    Loader() = delete;
+    ~Loader() = delete;
 };
 
 

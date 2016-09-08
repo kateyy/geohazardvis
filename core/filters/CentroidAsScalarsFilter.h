@@ -17,7 +17,7 @@ public:
 
 protected:
     CentroidAsScalarsFilter();
-    ~CentroidAsScalarsFilter();
+    ~CentroidAsScalarsFilter() override;
 
     int RequestData(
         vtkInformation * request,
@@ -25,8 +25,9 @@ protected:
         vtkInformationVector * outputVector) override;
 
 private:
-    CentroidAsScalarsFilter(const CentroidAsScalarsFilter&);    // Not implemented.
-    void operator=(const CentroidAsScalarsFilter&);             // Not implemented.
-
     int Component;
+
+private:
+    CentroidAsScalarsFilter(const CentroidAsScalarsFilter&) = delete;
+    void operator=(const CentroidAsScalarsFilter&) = delete;
 };
