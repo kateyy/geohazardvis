@@ -42,6 +42,11 @@ if (OPTION_ADD_CPPCHECK_TARGETS AND NOT CPPCHECK_EXECUTABLE)
     )
 endif()
 
+if (NOT CPPCHECK_EXECUTABLE)
+    message(WARNING "Could not find cppcheck. Skipping cppcheck targets.")
+    return()
+endif()
+
 
 set(cppcheckSuppressionsFile_in ${PROJECT_SOURCE_DIR}/cmake/cppcheckSuppressions.in)
 set(cppcheckSuppressionsFile ${CMAKE_BINARY_DIR}/cppcheckSuppressions.txt)

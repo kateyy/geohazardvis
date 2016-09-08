@@ -22,7 +22,7 @@ set(META_VERSION                "${META_VERSION_MAJOR}.${META_VERSION_MINOR}.${M
 set(META_NAME_VERSION           "${META_PROJECT_NAME} v${META_VERSION} (${META_VERSION_REVISION})")
 
 
-option(OPTION_ADD_CPPCHECK_TARGETS "Add a cppcheck target per C++-target." OFF)
+option(OPTION_ADD_CPPCHECK_TARGETS "Add a cppcheck target per C++-target." ON)
 option(OPTION_BUILD_TESTS "Build tests (if gtest is found)." ON)
 option(OPTION_BUILD_TOOLS "" ON)
 option(OPTION_IDE_SPLIT_HEADERS_SOURCES "List header and source files in different IDE folders." ON)
