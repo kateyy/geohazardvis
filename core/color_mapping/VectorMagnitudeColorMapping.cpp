@@ -68,6 +68,11 @@ std::vector<std::unique_ptr<ColorMappingData>> VectorMagnitudeColorMapping::newI
 
     for (auto vis : visualizedData)
     {
+        if (vis->contentType() != ContentType::Rendered2D && vis->contentType() != ContentType::Rendered3D)
+        {
+            continue;
+        }
+
         for (int i = 0; i < vis->numberOfColorMappingInputs(); ++i)
         {
             auto dataSet = vis->colorMappingInputData(i);
