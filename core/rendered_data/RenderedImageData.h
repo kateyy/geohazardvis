@@ -27,12 +27,8 @@ public:
 
     std::unique_ptr<reflectionzeug::PropertyGroup> createConfigGroup() override;
 
-    enum Interpolation
-    {
-        nearest = VTK_NEAREST_INTERPOLATION,
-        linear = VTK_LINEAR_INTERPOLATION,
-        cubic = VTK_CUBIC_INTERPOLATION
-    };
+    bool isInterpolationEnabled() const;
+    void setInterpolationEnabled(bool enable);
 
     bool isShadingEnabled() const;
     void setEnableShading(bool enable);

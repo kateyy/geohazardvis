@@ -32,8 +32,12 @@ RenderedImageData::RenderedImageData(ImageDataObject & dataObject)
     , m_isShadingEnabled{ false }
     , m_mapper{ vtkSmartPointer<vtkImageSliceMapper>::New() } // replace with vtkImageResliceMapper?
     , m_demShading{ vtkSmartPointer<DEMShadingFilter>::New() }
+    , m_property{ vtkSmartPointer<vtkImageProperty>::New() }
 {
     m_mapper->SetInputConnection(dataObject.processedOutputPort());
+    m_property->UseLookupTableScalarRangeOn();
+    // Linear interpolation is not working correctly, at least not on the legacy OpenGL backend
+    m_property->SetInterpolationTypeToCubic();
 
     setupInformation(*m_mapper->GetInformation(), *this);
 }
@@ -54,20 +58,14 @@ std::unique_ptr<PropertyGroup> RenderedImageData::createConfigGroup()
 {
     auto renderSettings = RenderedData::createConfigGroup();
 
-    auto prop_interpolation = renderSettings->addProperty<Interpolation>("Interpolation",
+    renderSettings->addProperty<bool>("Interpolation",
         [this] () {
-        return static_cast<Interpolation>(property()->GetInterpolationType());
+        return isInterpolationEnabled();
     },
-        [this] (Interpolation interpolation) {
-        property()->SetInterpolationType(static_cast<int>(interpolation));
+        [this] (bool enable) {
+        setInterpolationEnabled(enable);
         emit geometryChanged();
     });
-    prop_interpolation->setStrings({
-            { Interpolation::nearest, "nearest" },
-            { Interpolation::linear, "linear" },
-            { Interpolation::cubic, "cubic" }
-    });
-
 
     renderSettings->addProperty<double>("Transparency",
         [this] () {
@@ -114,6 +112,7 @@ std::unique_ptr<PropertyGroup> RenderedImageData::createConfigGroup()
         emit geometryChanged();
     })
         ->setOptions({
+            { "title", "Ambient Light" },
             { "minimum", 0.0 },
             { "maximum", 1.0 },
             { "step", 0.01 }
@@ -130,12 +129,30 @@ std::unique_ptr<PropertyGroup> RenderedImageData::createConfigGroup()
         emit geometryChanged();
     })
         ->setOptions({
+            { "title", "Diffuse Light" },
             { "minimum", 0.0 },
             { "maximum", 1.0 },
             { "step", 0.01 }
     });
 
     return renderSettings;
+}
+
+bool RenderedImageData::isInterpolationEnabled() const
+{
+    return m_property->GetInterpolationType() != VTK_NEAREST_INTERPOLATION;
+}
+
+void RenderedImageData::setInterpolationEnabled(bool enable)
+{
+    if (isInterpolationEnabled() == enable)
+    {
+        return;
+    }
+
+    m_property->SetInterpolationType(enable
+        ? VTK_CUBIC_INTERPOLATION
+        : VTK_NEAREST_INTERPOLATION);
 }
 
 bool RenderedImageData::isShadingEnabled() const
@@ -197,12 +214,6 @@ vtkImageSlice * RenderedImageData::slice()
 
 vtkImageProperty * RenderedImageData::property()
 {
-    if (!m_property)
-    {
-        m_property = vtkSmartPointer<vtkImageProperty>::New();
-        m_property->UseLookupTableScalarRangeOn();
-    }
-
     return m_property;
 }
 

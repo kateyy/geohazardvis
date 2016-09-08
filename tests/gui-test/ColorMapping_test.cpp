@@ -14,8 +14,6 @@
 #include <vtkVector.h>
 #include <vtkWindowToImageFilter.h>
 
-#include <reflectionzeug/PropertyGroup.h>
-
 #include <core/color_mapping/ColorMapping.h>
 #include <core/data_objects/ImageDataObject.h>
 #include <core/rendered_data/RenderedImageData.h>
@@ -93,9 +91,7 @@ TEST_F(ColorMapping_test, DirectImageColors_renders_uchar)
     auto img = createImage(*colorArray);
 
     img.rendered->colorMapping().setCurrentScalarsByName(img.scalarsName);
-    auto config = img.rendered->createConfigGroup();
-    auto interpolationProp = config->property<RenderedImageData::Interpolation>("Interpolation");
-    interpolationProp->setValue(RenderedImageData::nearest);
+    img.rendered->setInterpolationEnabled(false);
 
     auto viewProps = img.rendered->viewProps();
 
