@@ -6,7 +6,11 @@
 
 #define VTK_RENDERING_BACKEND @VTK_RENDERING_BACKEND_VERSION@
 #define VTK_has_GLExport2PS @VTK_has_GLExport2PS@
+
 #cmakedefine OPTION_LOCAL_INSTALL
+
+#cmakedefine OPTION_ENABLE_LIC2D
+#cmakedefine OPTION_ENABLE_TEXTURING
 
 
 namespace config

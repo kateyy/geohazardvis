@@ -15,8 +15,6 @@ set(sources
     RuntimeInfo.cpp
     types.h
     types.cpp
-    TextureManager.h
-    TextureManager.cpp
     VersionInfo.h
     VersionInfo.cpp
     VTK_backwards_compat.h
@@ -57,8 +55,6 @@ set(sources
     color_mapping/GlyphMagnitudeColorMapping.cpp
     color_mapping/GradientResourceManager.h
     color_mapping/GradientResourceManager.cpp
-    color_mapping/ImageDataLIC2DMapping.h
-    color_mapping/ImageDataLIC2DMapping.cpp
     color_mapping/SlopeAngleMapping.h
     color_mapping/SlopeAngleMapping.cpp
     color_mapping/VectorMagnitudeColorMapping.h
@@ -107,14 +103,8 @@ set(sources
     filters/ImagePlaneWidget.cpp
     filters/LinearSelectorXY.h
     filters/LinearSelectorXY.cpp
-    filters/NoiseImageSource.h
-    filters/NoiseImageSource.cpp
     filters/SimpleDEMGeoCoordToLocalFilter.h
     filters/SimpleDEMGeoCoordToLocalFilter.cpp
-    filters/StackedImageDataLIC3D.h
-    filters/StackedImageDataLIC3D.cpp
-    filters/TransformTextureCoords.h
-    filters/TransformTextureCoords.cxx
 
     glyph_mapping/GlyphMapping.h
     glyph_mapping/GlyphMapping.cpp
@@ -218,6 +208,27 @@ set(sources
     utility/vtkvectorhelper.h
     utility/vtkvectorhelper.hpp
 )
+
+if (OPTION_ENABLE_LIC2D)
+    list(APPEND sources
+        color_mapping/ImageDataLIC2DMapping.h
+        color_mapping/ImageDataLIC2DMapping.cpp
+        filters/NoiseImageSource.h
+        filters/NoiseImageSource.cpp
+        filters/StackedImageDataLIC3D.h
+        filters/StackedImageDataLIC3D.cpp
+    )
+endif()
+
+if (OPTION_ENABLE_TEXTURING)
+    list(APPEND sources
+        TextureManager.h
+        TextureManager.cpp
+        filters/TransformTextureCoords.h
+        filters/TransformTextureCoords.cxx
+    )
+endif()
+
 
 source_group_by_path_and_type(${CMAKE_CURRENT_SOURCE_DIR} ${sources})
 source_group_by_path(${CMAKE_CURRENT_BINARY_DIR} ".*" "Generated" ${CMAKE_CURRENT_BINARY_DIR}/${target}_api.h)

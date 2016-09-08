@@ -42,9 +42,6 @@ enum ResliceInterpolation
     cubic = VTK_CUBIC_RESLICE
 };
 
-const std::string s_resliceOutputArray = "ImageScalars";
-const std::string s_lic2DWithMangnitudes = "LIC2DWithMagnitudes";
-
 }
 
 RenderedVectorGrid3D::RenderedVectorGrid3D(VectorGrid3DDataObject & dataObject)

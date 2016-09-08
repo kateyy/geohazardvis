@@ -28,6 +28,9 @@ option(OPTION_BUILD_TOOLS "" ON)
 option(OPTION_IDE_SPLIT_HEADERS_SOURCES "List header and source files in different IDE folders." ON)
 option(OPTION_INSTALL_3RDPARTY_BINARIES "Include 3rdparty libraries (libzeug, VTK, Qt) in installations and packages." ON)
 
+option(OPTION_ENABLE_LIC2D "Integrate Line Integral Convolution representation for displacement volume slices." OFF)
+option(OPTION_ENABLE_TEXTURING "Enable texturing support for polygonal meshes." OFF)
+
 # Generate folders for IDE targets (e.g., VisualStudio solutions)
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 set_property(DIRECTORY PROPERTY VS_STARTUP_PROJECT ${META_PROJECT_NAME})

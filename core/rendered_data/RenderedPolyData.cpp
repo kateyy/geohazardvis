@@ -2,33 +2,32 @@
 
 #include <cassert>
 
-#include <QImage>
+#include <QDebug>
 
-#include <vtkInformation.h>
-#include <vtkInformationIntegerPointerKey.h>
-#include <vtkInformationStringKey.h>
-
+#include <vtkActor.h>
 #include <vtkAlgorithmOutput.h>
+#include <vtkDoubleArray.h>
 #include <vtkPolyData.h>
 #include <vtkPolyDataMapper.h>
 #include <vtkPolyDataNormals.h>
-#include <vtkScalarsToColors.h>
-
-#include <vtkProperty.h>
-#include <vtkActor.h>
 #include <vtkProp3DCollection.h>
-#include <vtkDoubleArray.h>
-#include <vtkFieldData.h>
-#include <vtkImageData.h>
-#include <vtkTexture.h>
-#include <vtkTextureMapToPlane.h>
+#include <vtkProperty.h>
+#include <vtkScalarsToColors.h>
 
 #include <reflectionzeug/PropertyGroup.h>
 
-#include <core/TextureManager.h>
 #include <core/data_objects/PolyDataObject.h>
-#include <core/filters/TransformTextureCoords.h>
 #include <core/color_mapping/ColorMappingData.h>
+
+#include "config.h"
+
+#if OPTION_ENABLE_TEXTURING
+#include <vtkFieldData.h>
+#include <vtkTexture.h>
+#include <vtkTextureMapToPlane.h>
+#include <core/TextureManager.h>
+#include <core/filters/TransformTextureCoords.h>
+#endif
 
 
 using namespace reflectionzeug;
@@ -48,8 +47,8 @@ namespace
 
 RenderedPolyData::RenderedPolyData(PolyDataObject & dataObject)
     : RenderedData3D(dataObject)
-    , m_mapper(vtkSmartPointer<vtkPolyDataMapper>::New())
-    , m_normals(vtkSmartPointer<vtkPolyDataNormals>::New())
+    , m_mapper{ vtkSmartPointer<vtkPolyDataMapper>::New() }
+    , m_normals{ vtkSmartPointer<vtkPolyDataNormals>::New() }
 {
     setupInformation(*m_mapper->GetInformation(), *this);
 
@@ -57,8 +56,8 @@ RenderedPolyData::RenderedPolyData(PolyDataObject & dataObject)
     m_normals->ComputeCellNormalsOff();
 
     // disabled color mapping by default
-    m_colorMappingOutput = dataObject.processedOutputPort();
-    m_normals->SetInputConnection(m_colorMappingOutput);
+    m_colorMappingOutput = dataObject.processedOutputPort()->GetProducer();
+    m_normals->SetInputConnection(m_colorMappingOutput->GetOutputPort());
 
     m_mapper->ScalarVisibilityOff();
     m_mapper->SetInputConnection(m_normals->GetOutputPort());
@@ -205,6 +204,7 @@ std::unique_ptr<PropertyGroup> RenderedPolyData::createConfigGroup()
     })
         ->setOption("title", "Back-face culling");
 
+#if OPTION_ENABLE_TEXTURING
     renderSettings->addProperty<FilePath>("OverlayTexture",
         [this] () { return texture().toStdString(); },
         [this] (const FilePath & filePath) {
@@ -213,6 +213,7 @@ std::unique_ptr<PropertyGroup> RenderedPolyData::createConfigGroup()
         emit geometryChanged();
     })
         ->setOption("title", "Overlay Texture");
+#endif
 
     return renderSettings;
 }
@@ -222,8 +223,10 @@ const QString & RenderedPolyData::texture() const
     return m_textureFileName;
 }
 
+#if OPTION_ENABLE_TEXTURING
 void RenderedPolyData::setTexture(const QString & fileName)
 {
+
     if (m_textureFileName == fileName)
     {
         return;
@@ -238,7 +241,11 @@ void RenderedPolyData::setTexture(const QString & fileName)
     }
 
     mainActor()->SetTexture(tex);
+
 }
+#else
+void RenderedPolyData::setTexture(const QString & /*fileName*/) {}
+#endif()
 
 vtkSmartPointer<vtkProperty> RenderedPolyData::createDefaultRenderProperty() const
 {
@@ -284,7 +291,7 @@ void RenderedPolyData::scalarsForColorMappingChangedEvent()
     // no mapping yet, so just render the data set
     if (!m_colorMappingData)
     {
-        m_colorMappingOutput = dataObject().processedOutputPort();
+        m_colorMappingOutput = dataObject().processedOutputPort()->GetProducer();
         finalizePipeline();
         return;
     }
@@ -296,11 +303,11 @@ void RenderedPolyData::scalarsForColorMappingChangedEvent()
     if (m_colorMappingData->usesFilter())
     {
         filter = m_colorMappingData->createFilter(*this);
-        m_colorMappingOutput = filter->GetOutputPort();
+        m_colorMappingOutput = filter;
     }
     else
     {
-        m_colorMappingOutput = dataObject().processedOutputPort();
+        m_colorMappingOutput = dataObject().processedOutputPort()->GetProducer();
     }
 
     finalizePipeline();
@@ -322,11 +329,15 @@ void RenderedPolyData::visibilityChangedEvent(bool visible)
 
 void RenderedPolyData::finalizePipeline()
 {
-    auto textureCoords = vtkSmartPointer<vtkTextureMapToPlane>::New();
-    textureCoords->SetInputConnection(m_colorMappingOutput);
-    textureCoords->SetNormal(0, 0, 1);
+    vtkSmartPointer<vtkAlgorithm> upstreamAlgorithm = m_colorMappingOutput;
 
-    vtkDoubleArray * demBoundsArray = vtkDoubleArray::SafeDownCast(
+#if OPTION_ENABLE_TEXTURING
+    auto textureCoords = vtkSmartPointer<vtkTextureMapToPlane>::New();
+    textureCoords->SetInputConnection(upstreamAlgorithm);
+    textureCoords->SetNormal(0, 0, 1);
+    upstreamAlgorithm = textureCoords;
+
+    auto demBoundsArray = vtkDoubleArray::SafeDownCast(
         dataObject().dataSet()->GetFieldData()->GetArray("DEM_Bounds"));
     if (demBoundsArray)
     {
@@ -355,20 +366,9 @@ void RenderedPolyData::finalizePipeline()
             (thisCenter[1] - demCenter[1]) / demSize[1],
             0);
 
-        m_normals->SetInputConnection(transformTexCoords->GetOutputPort());
+        upstreamAlgorithm = transformTexCoords;
     }
-    else
-    {
-        m_normals->SetInputConnection(textureCoords->GetOutputPort());
-    }
-}
+#endif
 
-vtkAlgorithmOutput * RenderedPolyData::colorMappingOutput()
-{
-    return m_colorMappingOutput;
-}
-
-vtkPolyDataMapper * RenderedPolyData::mapper()
-{
-    return m_mapper;
+    m_normals->SetInputConnection(upstreamAlgorithm->GetOutputPort());
 }

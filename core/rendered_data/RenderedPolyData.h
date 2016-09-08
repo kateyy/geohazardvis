@@ -7,7 +7,6 @@
 
 class vtkActor;
 class vtkAlgorithm;
-class vtkAlgorithmOutput;
 class vtkPolyDataMapper;
 class vtkPolyDataNormals;
 
@@ -42,16 +41,13 @@ protected:
         with the mapper. */
     virtual void finalizePipeline();
 
-    vtkAlgorithmOutput * colorMappingOutput();
-    vtkPolyDataMapper * mapper();
-
 private:
     vtkSmartPointer<vtkPolyDataMapper> m_mapper;
     vtkSmartPointer<vtkActor> m_mainActor;
 
     vtkSmartPointer<vtkPolyDataNormals> m_normals;      // required for lighting/interpolation
 
-    vtkSmartPointer<vtkAlgorithmOutput> m_colorMappingOutput;
+    vtkSmartPointer<vtkAlgorithm> m_colorMappingOutput;
 
     QString m_textureFileName;
 };

@@ -3,7 +3,7 @@
 #
 # This module finds required third party packages.
 # Include it in the top CMakeLists.txt file of the project to include third party variables in the project scope!
-# 
+#
 # This module depends on ExternalProjectMapBuild.cmake
 #
 #
@@ -43,7 +43,6 @@ find_package(OpenGL REQUIRED)
 set(VTK_COMPONENTS
     vtkGUISupportQtOpenGL   # QVTKWidget2
     vtkRenderingAnnotation  # vtkCubeAxesActor, vtkScalarBarActor
-    vtkFiltersTexture
     vtkInteractionWidgets
     vtkIOXML
     vtkViewsContext2D
@@ -55,14 +54,14 @@ find_package(VTK COMPONENTS ${VTK_COMPONENTS})
 set(VTK_VERSION "${VTK_MAJOR_VERSION}.${VTK_MINOR_VERSION}.${VTK_BUILD_VERSION}")
 set(VTK_REQUIRED_VERSION 6.3)
 
-if(VTK_VERSION VERSION_LESS VTK_REQUIRED_VERSION)
+if (VTK_VERSION VERSION_LESS VTK_REQUIRED_VERSION)
     message(FATAL_ERROR "VTK version ${VTK_VERSION} was found but version 6.3 or newer is required.")
 endif()
 
 # replaced by explicit calls on the relevant targets (http://www.kitware.com/source/home/post/116)
 #include(${VTK_USE_FILE})
 
-if(NOT "${VTK_QT_VERSION}" STREQUAL "5")
+if (NOT "${VTK_QT_VERSION}" STREQUAL "5")
     message(FATAL_ERROR "VTK was built with Qt version ${VTK_QT_VERSION}, but Qt5 is required.")
 endif()
 
@@ -83,27 +82,34 @@ endif()
 
 # configuration dependent VTK components
 
-if(VTK_RENDERING_BACKEND_VERSION EQUAL 2)
-    list(APPEND VTK_COMPONENTS vtkRenderingLICOpenGL2)
-    list(APPEND VTK_COMPONENTS vtkRenderingContextOpenGL2)
-else()
-    list(APPEND VTK_COMPONENTS vtkRenderingLIC)
+if (OPTION_ENABLE_LIC2D)
+    if (VTK_RENDERING_BACKEND_VERSION EQUAL 2)
+        list(APPEND VTK_COMPONENTS vtkRenderingLICOpenGL2)
+        list(APPEND VTK_COMPONENTS vtkRenderingContextOpenGL2)
+    else()
+        list(APPEND VTK_COMPONENTS vtkRenderingLIC)
+    endif()
 endif()
 
-if(VTK_VERSION VERSION_LESS 7.1)
+
+if (OPTION_ENABLE_TEXTURING)
+    list(APPEND VTK_COMPONENTS vtkFiltersTexture)
+endif()
+
+if (VTK_VERSION VERSION_LESS 7.1)
     set(_vtkIOExport_module_name "vtkIOExport")
     set(_vtkRenderingGL2PS_module_name "vtkRenderingGL2PS")
 else()
     # OpenGL context based PostScript export is now optional
     set(_vtkIOExport_module_name "vtkIOExport${VTK_RENDERING_BACKEND}")
-    if(VTK_RENDERING_BACKEND_VERSION EQUAL 1)
+    if (VTK_RENDERING_BACKEND_VERSION EQUAL 1)
         set(_vtkRenderingGL2PS_module_name "vtkRenderingGL2PS")
     else()
         set(_vtkRenderingGL2PS_module_name "vtkRenderingGL2PSOpenGL2")
     endif()
 endif()
 
-if(TARGET ${_vtkIOExport_module_name} AND TARGET ${_vtkRenderingGL2PS_module_name})
+if (TARGET ${_vtkIOExport_module_name} AND TARGET ${_vtkRenderingGL2PS_module_name})
     set(VTK_has_GLExport2PS 1)
     list(APPEND VTK_COMPONENTS ${_vtkIOExport_module_name} ${_vtkRenderingGL2PS_module_name})
 else()
@@ -153,16 +159,16 @@ foreach(libName ${actualVTKLibraries})
 endforeach()
 
 
-        
+
 #========= Qt5 =========
-        
+
 set(PROJECT_QT_COMPONENTS Core Gui Widgets OpenGL)
 if (UNIX)
     # required for platform plugin deployment
     list(APPEND PROJECT_QT_COMPONENTS DBus Svg X11Extras)
 endif()
 find_package(Qt5 5.3 COMPONENTS ${PROJECT_QT_COMPONENTS})
-if(NOT ${Qt5Core_VERSION} VERSION_LESS 5.5)
+if (NOT ${Qt5Core_VERSION} VERSION_LESS 5.5)
     find_package(Qt5 COMPONENTS Concurrent)
     list(APPEND PROJECT_QT_COMPONENTS Concurrent)
 endif()
@@ -187,7 +193,7 @@ option(OPTION_USE_SYSTEM_LIBZEUG "Search for installed libzeug libraries instead
 CMAKE_DEPENDENT_CACHEVARIABLE(OPTION_LIBZEUG_GIT_REPOSITORY "https://github.com/kateyy/libzeug.git" STRING
     "URL/path of the libzeug git repository" "NOT OPTION_USE_SYSTEM_LIBZEUG" OFF)
 
-if(OPTION_USE_SYSTEM_LIBZEUG)
+if (OPTION_USE_SYSTEM_LIBZEUG)
     find_package(libzeug REQUIRED)
 else()
     set(LIBZEUG_FOUND 1)
@@ -227,7 +233,7 @@ else()
 
     set(LIBZEUG_INCLUDES ${libzeug_DIR}/include)
 
-    if(WIN32)
+    if (WIN32)
         set(LIBZEUG_LIBRARIES
             "${libzeug_DIR}/lib/signalzeug$<$<CONFIG:Debug>:d>.lib"
             "${libzeug_DIR}/lib/loggingzeug$<$<CONFIG:Debug>:d>.lib"
@@ -247,7 +253,7 @@ endif()
 
 #========= Third Party Deployment =========
 
-if(OPTION_INSTALL_3RDPARTY_BINARIES)
+if (OPTION_INSTALL_3RDPARTY_BINARIES)
     include(cmake/DeploySystemLibraries.cmake)
 
     if (VTK_BUILD_SHARED_LIBS)
@@ -309,7 +315,7 @@ CMAKE_DEPENDENT_OPTION(OPTION_USE_SYSTEM_GTEST "Search for installed Google Test
 CMAKE_DEPENDENT_CACHEVARIABLE(OPTION_GTEST_GIT_REPOSITORY "https://github.com/google/googletest" STRING
     "URL/path of the gtest git repository" "NOT OPTION_USE_SYSTEM_GTEST" OFF)
 
-if(OPTION_BUILD_TESTS)
+if (OPTION_BUILD_TESTS)
 
     if (OPTION_USE_SYSTEM_GTEST)
         find_package(GTEST)
@@ -319,7 +325,7 @@ if(OPTION_BUILD_TESTS)
         set(GTEST_BUILD_DIR ${THIRD_PARTY_BUILD_DIR}/gtest)
         set(GTEST_INSTALL_DIR ${GTEST_BUILD_DIR}/install-$<CONFIG>)
 
-        if(WIN32)
+        if (WIN32)
             set(_gtestLib "${GTEST_INSTALL_DIR}/lib/gtest.lib")
             set(_gmockLib "${GTEST_INSTALL_DIR}/lib/gmock.lib")
         else()
@@ -356,7 +362,7 @@ if(OPTION_BUILD_TESTS)
         )
     endif()
 
-    if(NOT GTEST_FOUND)
+    if (NOT GTEST_FOUND)
         message(WARNING "Tests skipped: gtest not found")
     endif()
 endif()

@@ -19,7 +19,6 @@
 #include <core/ApplicationSettings.h>
 #include <core/DataSetHandler.h>
 #include <core/RuntimeInfo.h>
-#include <core/TextureManager.h>
 #include <core/VersionInfo.h>
 #include <core/data_objects/DataObject.h>
 #include <core/io/Exporter.h>
@@ -46,6 +45,10 @@
 
 #include "config.h"
 
+#if OPTION_ENABLE_TEXTURING
+#include <core/TextureManager.h>
+#endif
+
 
 MainWindow::MainWindow()
     : QMainWindow()
@@ -71,7 +74,9 @@ MainWindow::MainWindow()
     connect(m_dataMapping.get(), &DataMapping::renderViewCreated, this, &MainWindow::addRenderView);
     connect(m_dataMapping.get(), &DataMapping::tableViewCreated, this, &MainWindow::addTableView);
 
+#if OPTION_ENABLE_TEXTURING
     TextureManager::initialize();
+#endif
 
     connect(m_ui->actionOpen, &QAction::triggered, [this] () { openFiles(dialog_inputFileName()); });
     connect(m_ui->actionImport_CSV_Triangle_Mesh, &QAction::triggered, [this] () {
@@ -212,7 +217,9 @@ MainWindow::~MainWindow()
 
     m_ui.reset();
 
+#if OPTION_ENABLE_TEXTURING
     TextureManager::release();
+#endif
 }
 
 QStringList MainWindow::dialog_inputFileName()
