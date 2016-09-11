@@ -31,20 +31,12 @@ endif()
 
 if (OPTION_ADD_CPPCHECK_TARGETS AND NOT CPPCHECK_EXECUTABLE)
     find_program(CPPCHECK_EXECUTABLE cppcheck
-        PATHS
-            $ENV{PATH}
-            $ENV{ProgramFiles}
-            $ENV{ProgramFiles\(x86\)}
-            /usr/bin
-        PATH_SUFFIXES
-            cppcheck
-        CMAKE_FIND_ROOT_PATH_BOTH
+        PATH_SUFFIXES cppcheck
     )
 endif()
 
-if (NOT CPPCHECK_EXECUTABLE)
-    message(WARNING "Could not find cppcheck. Skipping cppcheck targets.")
-    return()
+if (OPTION_ADD_CPPCHECK_TARGETS AND NOT CPPCHECK_EXECUTABLE)
+    message("Could not find cppcheck. Skipping cppcheck targets.")
 endif()
 
 
@@ -78,40 +70,40 @@ function(cppcheck_target TARGET)
     endforeach()
 
     # https://arcanis.me/en/2015/10/17/cppcheck-and-clang-format/
-    if (OPTION_ADD_CPPCHECK_TARGETS AND CPPCHECK_EXECUTABLE)
-        set(_cppcheckParams
-            # --check-config
-            --enable=warning,style,performance,portability,information,missingInclude
-            --suppressions-list=${cppcheckSuppressionsFile}
-            -v
-            --quiet
-            --template="{file} \({line}\): {message} [{severity}:{id}]"
-            --library=std
-            --library=qt
-            --language=c++
-            -j ${PROCESSOR_COUNT}
-            -UQT_NAMESPACE
-        )
-        if (WIN32)
-            list(APPEND _cppcheckParams --library=windows)
-        endif()
-
-        add_custom_target( cppcheck_${TARGET}
-            COMMAND ${CPPCHECK_EXECUTABLE}
-            ${_cppcheckParams}
-            ${_includes}
-            ${_sources}
-        )
-        set_target_properties( cppcheck_${TARGET}
-            PROPERTIES
-            FOLDER              "Tests"
-            EXCLUDE_FROM_ALL    ON
-        )
+    set(_cppcheckParams
+        # --check-config
+        --enable=warning,style,performance,portability,information,missingInclude
+        --suppressions-list=${cppcheckSuppressionsFile}
+        -v
+        --quiet
+        --template="{file} \({line}\): {message} [{severity}:{id}]"
+        --library=std
+        --library=qt
+        --language=c++
+        -j ${PROCESSOR_COUNT}
+        -UQT_NAMESPACE
+    )
+    if (WIN32)
+        list(APPEND _cppcheckParams --library=windows)
     endif()
+
+    add_custom_target( cppcheck_${TARGET}
+        COMMAND ${CPPCHECK_EXECUTABLE}
+        ${_cppcheckParams}
+        ${_includes}
+        ${_sources}
+    )
+    set_target_properties( cppcheck_${TARGET}
+        PROPERTIES
+        FOLDER              "Tests"
+        EXCLUDE_FROM_ALL    ON
+    )
 
 endfunction()
 
 
 function(generate_cppcheck_suppressions)
-    configure_file(${cppcheckSuppressionsFile_in} ${cppcheckSuppressionsFile})
+    if (OPTION_ADD_CPPCHECK_TARGETS)
+        configure_file(${cppcheckSuppressionsFile_in} ${cppcheckSuppressionsFile})
+    endif()
 endfunction()
