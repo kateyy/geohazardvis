@@ -360,7 +360,7 @@ std::unique_ptr<DataObject> MatricesToVtk::readRawFile(const QString & fileName)
     InputVector inputVectors;
     const auto result = TextFileReader::read(fileName, inputVectors);
 
-    if (result.state != TextFileReader::Result::noError)
+    if (result.stateFlags.testFlag(TextFileReader::Result::successful))
     {
         return nullptr;
     }

@@ -107,22 +107,23 @@ TEST_F(TextFileReader_test, BasicReadTest_qFile_QByteArray)
 
     const auto result = TextFileReader::Impl::qFile_QByteArray(testFileName(), data, 0, 0);
 
-    ASSERT_EQ(TextFileReader::Result::noError, result.state);
-    ASSERT_EQ(defaultContentString().size(), result.filePos);
+    ASSERT_TRUE(result.stateFlags.testFlag(TextFileReader::Result::successful));
+    ASSERT_TRUE(result.stateFlags.testFlag(TextFileReader::Result::eof));
 
     ASSERT_TRUE(checkEqual(defaultContent(), data));
 }
 
-TEST_F(TextFileReader_test, LimitedValueCount_QByteArray)
+TEST_F(TextFileReader_test, LimitedLineCount_QByteArray)
 {
     createTestFile();
 
     io::InputVector data;
 
-    const auto result = TextFileReader::Impl::qFile_QByteArray(testFileName(), data, 0, 2);
+    const auto result = TextFileReader::Impl::qFile_QByteArray(testFileName(), data, 0, 1);
 
-    ASSERT_EQ(TextFileReader::Result::noError, result.state);
-    //ASSERT_EQ(defaultContentString().size(), result.filePos);
+    ASSERT_TRUE(result.stateFlags.testFlag(TextFileReader::Result::successful));
+    ASSERT_FALSE(result.stateFlags.testFlag(TextFileReader::Result::eof));
+    ASSERT_EQ(16, result.filePos);
 
     auto firstRow = defaultContent();
     firstRow[0].resize(1);
@@ -137,10 +138,11 @@ TEST_F(TextFileReader_test, StartingFromOffset_QByteArray)
 
     io::InputVector data;
 
-    const auto result1 = TextFileReader::Impl::qFile_QByteArray(testFileName(), data, 0, 2);
+    const auto result1 = TextFileReader::Impl::qFile_QByteArray(testFileName(), data, 0, 1);
     data.clear();
     const auto result2 = TextFileReader::Impl::qFile_QByteArray(testFileName(), data, result1.filePos, 0);
-    ASSERT_EQ(TextFileReader::Result::noError, result2.state);
+    ASSERT_TRUE(result2.stateFlags.testFlag(TextFileReader::Result::successful));
+    ASSERT_TRUE(result2.stateFlags.testFlag(TextFileReader::Result::eof));
 
     io::InputVector secondRow(2);
     secondRow[0].push_back(defaultContent()[0][1]);

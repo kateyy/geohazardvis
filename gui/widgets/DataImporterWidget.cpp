@@ -105,7 +105,7 @@ void DataImporterWidget::openPointCoords()
 
     m_coordinateData.clear();
     const auto result = TextFileReader::read(fileName, m_coordinateData);
-    if (result.state != TextFileReader::Result::noError)
+    if (!result.stateFlags.testFlag(TextFileReader::Result::successful))
     {
         QMessageBox::warning(this, "Read Error", "Cannot open the specified point coordinates file.");
     }
@@ -125,7 +125,7 @@ void DataImporterWidget::openTriangleIndices()
 
     m_indexData.clear();
     const auto result = TextFileReader::read(fileName, m_indexData);
-    if (result.state != TextFileReader::Result::noError)
+    if (result.stateFlags.testFlag(TextFileReader::Result::successful))
     {
         QMessageBox::warning(this, "Read Error", "Cannot open the specified point coordinates file.");
     }

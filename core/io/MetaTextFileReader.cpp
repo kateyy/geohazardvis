@@ -77,7 +77,7 @@ std::unique_ptr<DataObject> MetaTextFileReader::read(const QString & fileName)
 {
     std::vector<ReadDataSet> readDatasets;
     auto inputInfo = MetaTextFileReader::readData(fileName, readDatasets);
-    if (inputInfo)
+    if (!inputInfo)
     {
         return nullptr;
     }
@@ -127,11 +127,10 @@ auto MetaTextFileReader::readData(
     {
         ReadDataSet readData{ dataSetDef.type, {}, dataSetDef.attributeName, dataSetDef.vtkMetaData };
 
-        const auto result = TextFileReader::read(fileName, readData.data, fileOffset,
-            dataSetDef.nbColumns * dataSetDef.nbLines);
+        const auto result = TextFileReader::read(fileName, readData.data, fileOffset, dataSetDef.nbLines);
         fileOffset = result.filePos;
 
-        if (result.state == TextFileReader::Result::noError
+        if (result.stateFlags.testFlag(TextFileReader::Result::successful)
             && readData.data.size() == dataSetDef.nbColumns
             && readData.data.front().size() == dataSetDef.nbLines)
         {
