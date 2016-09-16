@@ -1,17 +1,15 @@
 #include "PolyDataAttributeGlyphMapping.h"
 
+#include <cassert>
 #include <cstring>
 
-#include <vtkPolyData.h>
-
-#include <vtkCellData.h>
-
-#include <vtkGlyph3D.h>
-
+#include <vtkAlgorithmOutput.h>
 #include <vtkAssignAttribute.h>
-
+#include <vtkCellData.h>
 #include <vtkInformation.h>
 #include <vtkInformationIntegerKey.h>
+#include <vtkPolyData.h>
+#include <vtkGlyph3D.h>
 
 #include <core/data_objects/PolyDataObject.h>
 #include <core/rendered_data/RenderedData.h>
@@ -32,29 +30,37 @@ using namespace reflectionzeug;
 
 std::vector<std::unique_ptr<GlyphMappingData>> PolyDataAttributeGlyphMapping::newInstances(RenderedData & renderedData)
 {
-    auto polyData = vtkPolyData::SafeDownCast(renderedData.dataObject().processedDataSet());
+    auto polyData = dynamic_cast<PolyDataObject *>(&renderedData.dataObject());
+
     // only polygonal datasets are supported
     if (!polyData)
+    {
         return{};
-
+    }
 
     // find 3D-vector data, skip the "centroid"
 
-    auto cellData = polyData->GetCellData();
+    auto cellData = polyData->dataSet()->GetCellData();
     QList<vtkDataArray *> vectorArrays;
     for (int i = 0; i < cellData->GetNumberOfArrays(); ++i)
     {
         auto a = cellData->GetArray(i);
 
         if (!a || a->GetNumberOfComponents() != 3)
+        {
             continue;
+        }
 
-        if (QString(a->GetName()) == "centroid")
+        if (QString::fromUtf8(a->GetName()) == "centroid")
+        {
             continue;
+        }
 
         if (a->GetInformation()->Has(DataObject::ArrayIsAuxiliaryKey())
             && a->GetInformation()->Get(DataObject::ArrayIsAuxiliaryKey()))
+        {
             continue;
+        }
 
         vectorArrays << a;
     }
@@ -62,7 +68,7 @@ std::vector<std::unique_ptr<GlyphMappingData>> PolyDataAttributeGlyphMapping::ne
     std::vector<std::unique_ptr<GlyphMappingData>> instances;
     for (auto vectorsArray : vectorArrays)
     {
-        auto mapping = std::make_unique<PolyDataAttributeGlyphMapping>(renderedData, vectorsArray);
+        auto mapping = std::make_unique<PolyDataAttributeGlyphMapping>(renderedData, *polyData, *vectorsArray);
         if (mapping->isValid())
         {
             mapping->initialize();
@@ -73,17 +79,17 @@ std::vector<std::unique_ptr<GlyphMappingData>> PolyDataAttributeGlyphMapping::ne
     return instances;
 }
 
-PolyDataAttributeGlyphMapping::PolyDataAttributeGlyphMapping(RenderedData & renderedData, vtkDataArray * vectorData)
+PolyDataAttributeGlyphMapping::PolyDataAttributeGlyphMapping(
+    RenderedData & renderedData,
+    PolyDataObject & polyDataObject,
+    vtkDataArray & vectorData)
     : GlyphMappingData(renderedData)
-    , m_dataArray(vectorData)
+    , m_dataArray(&vectorData)
 {
-    auto polyData = dynamic_cast<PolyDataObject *>(&renderedData.dataObject());
-    m_isValid = m_isValid && polyData != nullptr;
-
     arrowGlyph()->SetVectorModeToUseVector();
 
     m_assignVectors = vtkSmartPointer<vtkAssignAttribute>::New();
-    m_assignVectors->SetInputConnection(polyData->cellCentersOutputPort());
+    m_assignVectors->SetInputConnection(polyDataObject.cellCentersOutputPort());
     m_assignVectors->Assign(m_dataArray->GetName(), vtkDataSetAttributes::VECTORS, vtkAssignAttribute::POINT_DATA);
 }
 

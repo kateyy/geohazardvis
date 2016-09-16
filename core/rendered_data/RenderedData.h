@@ -9,10 +9,10 @@ class vtkProperty;
 
 
 /**
-Base class for rendered representations of loaded data objects.
-A data object may be rendered in multiple views, each holding its own
-RenderedData instance, referring to the data object.
-*/ 
+Base class for rendered representations of data objects.
+
+Subclasses are visualized in render views that are based on vtkRenderer/vtkRenderWindow.
+*/
 class CORE_API RenderedData : public AbstractVisualizedData
 {
     Q_OBJECT

@@ -71,7 +71,7 @@ void DataSetHandler::takeData(std::vector<std::unique_ptr<DataObject>> dataObjec
             assert(dataObject);
             auto dataObjPtr = dataObject.get();
 
-            // check spacial case: raw vector data
+            // check special case: raw vector data
             if (auto rawData = dynamic_cast<RawVectorData *>(dataObjPtr))
             {
                 // we can't already own this object (this would violate the unique_ptr concept)
@@ -225,7 +225,7 @@ void DataSetHandler::addExternalData(const QList<DataObject*>& dataObjects)
         {
             assert(dataObject);
 
-            // check spacial case: raw vector data
+            // check special case: raw vector data
             if (auto rawData = dynamic_cast<RawVectorData *>(dataObject))
             {
                 // we can't already own this object (this would violate the unique_ptr concept)

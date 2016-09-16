@@ -29,7 +29,9 @@ std::vector<std::unique_ptr<GlyphMappingData>> Grid3dGlyphMapping::newInstances(
 {
     auto renderedGrid = dynamic_cast<RenderedVectorGrid3D *>(&renderedData);
     if (!renderedGrid)
+    {
         return{};
+    }
 
     auto pointData = renderedGrid->resampledDataSet()->GetPointData();
     QList<vtkDataArray *> vectorArrays;
@@ -39,10 +41,14 @@ std::vector<std::unique_ptr<GlyphMappingData>> Grid3dGlyphMapping::newInstances(
 
         if (a->GetInformation()->Has(DataObject::ArrayIsAuxiliaryKey())
             && a->GetInformation()->Get(DataObject::ArrayIsAuxiliaryKey()))
+        {
             continue;
+        }
 
         if (a->GetNumberOfComponents() != 3)
+        {
             continue;
+        }
 
         vectorArrays << a;
     }
@@ -75,7 +81,8 @@ Grid3dGlyphMapping::Grid3dGlyphMapping(RenderedVectorGrid3D & renderedGrid, vtkD
     updateArrowLength();
 
     connect(&renderedGrid, &RenderedVectorGrid3D::sampleRateChanged, [this] (int, int, int) {
-        this->updateArrowLength(); });
+        this->updateArrowLength();
+    });
 
     m_assignVectors = vtkSmartPointer<vtkAssignAttribute>::New();
     m_assignVectors->SetInputConnection(m_renderedGrid.resampledOuputPort());

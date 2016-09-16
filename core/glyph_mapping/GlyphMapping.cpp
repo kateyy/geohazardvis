@@ -22,7 +22,9 @@ QList<QString> GlyphMapping::vectorNames() const
 {
     QList<QString> result;
     for (auto & v : m_vectors)
+    {
         result << v.first;
+    }
 
     return result;
 }
@@ -31,7 +33,9 @@ QList<GlyphMappingData *> GlyphMapping::vectors() const
 {
     QList<GlyphMappingData *> result;
     for (auto & v : m_vectors)
+    {
         result << v.second.get();
+    }
 
     return result;
 }
@@ -78,5 +82,7 @@ void GlyphMapping::updateAvailableVectors()
     m_vectors = std::move(newValidList);
 
     if (_vectorsChanged)
+    {
         emit vectorsChanged();
+    }
 }

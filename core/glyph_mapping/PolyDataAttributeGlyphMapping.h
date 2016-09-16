@@ -6,12 +6,14 @@
 class vtkAssignAttribute;
 class vtkDataArray;
 
+class PolyDataObject;
+
 
 class CORE_API PolyDataAttributeGlyphMapping : public GlyphMappingData
 {
 public:
     /** create an instances that maps vectors from vectorData to the renderedData's geometry */
-    PolyDataAttributeGlyphMapping(RenderedData & renderedData, vtkDataArray * vectorData);
+    PolyDataAttributeGlyphMapping(RenderedData & renderedData, PolyDataObject & polyDataObject, vtkDataArray & vectorData);
 
     QString name() const override;
 

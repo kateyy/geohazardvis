@@ -104,7 +104,9 @@ bool GlyphMappingData::isVisible() const
 void GlyphMappingData::setVisible(bool visible)
 {
     if (m_isVisible == visible)
+    {
         return;
+    }
 
     m_isVisible = visible;
     m_actor->SetVisibility(visible);
@@ -154,15 +156,15 @@ void GlyphMappingData::setArrowLength(float length)
 
 float GlyphMappingData::arrowRadius() const
 {
-    vtkArrowSource * arrowSouce = vtkArrowSource::SafeDownCast(m_arrowSources[Representation::CylindricArrow]);
+    auto arrowSouce = vtkArrowSource::SafeDownCast(m_arrowSources[Representation::CylindricArrow]);
     assert(arrowSouce);
 
-    return (float)arrowSouce->GetTipRadius();
+    return static_cast<float>(arrowSouce->GetTipRadius());
 }
 
 void GlyphMappingData::setArrowRadius(float radius)
 {
-    vtkArrowSource * arrowSouce = vtkArrowSource::SafeDownCast(m_arrowSources[Representation::CylindricArrow]);
+    auto arrowSouce = vtkArrowSource::SafeDownCast(m_arrowSources[Representation::CylindricArrow]);
     assert(arrowSouce);
 
     arrowSouce->SetTipRadius(radius);
@@ -171,15 +173,15 @@ void GlyphMappingData::setArrowRadius(float radius)
 
 float GlyphMappingData::arrowTipLength() const
 {
-    vtkArrowSource * arrowSouce = vtkArrowSource::SafeDownCast(m_arrowSources[Representation::CylindricArrow]);
+    auto arrowSouce = vtkArrowSource::SafeDownCast(m_arrowSources[Representation::CylindricArrow]);
     assert(arrowSouce);
 
-    return (float)arrowSouce->GetTipLength();
+    return static_cast<float>(arrowSouce->GetTipLength());
 }
 
 void GlyphMappingData::setArrowTipLength(float tipLength)
 {
-    vtkArrowSource * arrowSouce = vtkArrowSource::SafeDownCast(m_arrowSources[Representation::CylindricArrow]);
+    auto arrowSouce = vtkArrowSource::SafeDownCast(m_arrowSources[Representation::CylindricArrow]);
     assert(arrowSouce);
 
     arrowSouce->SetTipLength(tipLength);
@@ -187,7 +189,7 @@ void GlyphMappingData::setArrowTipLength(float tipLength)
 
 unsigned GlyphMappingData::lineWidth() const
 {
-    return (unsigned)m_actor->GetProperty()->GetLineWidth();
+    return static_cast<unsigned>(m_actor->GetProperty()->GetLineWidth());
 }
 
 void GlyphMappingData::setLineWidth(unsigned lineWidth)
@@ -199,19 +201,18 @@ std::unique_ptr<PropertyGroup> GlyphMappingData::createPropertyGroup()
 {
     auto group = std::make_unique<PropertyGroup>();
 
-    auto prop_representation = group->addProperty<Representation>("style",
+    group->addProperty<Representation>("Style",
         [this] () {return representation(); },
         [this] (Representation repr) {
         setRepresentation(repr);
         emit geometryChanged();
-    });
-    prop_representation->setStrings({
-            { Representation::Line, "line" },
-            { Representation::SimpleArrow, "arrow (lines)" },
-            { Representation::CylindricArrow, "arrow (cylindric)" }
+    })->setStrings({
+            { Representation::Line, "Line" },
+            { Representation::SimpleArrow, "Arrow (Lines)" },
+            { Representation::CylindricArrow, "Arrow (Cylindric)" }
     });
 
-    auto * edgeColor = group->addProperty<Color>("color",
+    group->addProperty<Color>("Color",
         [this] () {
         double values[3];
         color(values);
@@ -221,49 +222,52 @@ std::unique_ptr<PropertyGroup> GlyphMappingData::createPropertyGroup()
         setColor(color.red() / 255.0, color.green() / 255.0, color.blue() / 255.0);
         emit geometryChanged();
     });
-    edgeColor->setOption("title", "color");
 
-    auto prop_length = group->addProperty<float>("length",
+    group->addProperty<float>("length",
         [this] () { return arrowLength(); },
         [this] (float length) {
         setArrowLength(length);
         emit geometryChanged();
+    })->setOptions({
+        { "title", "Arrow Length" },
+        { "minimum", 0.00001f },
+        { "step", 0.1f }
     });
-    prop_length->setOption("title", "arrow length");
-    prop_length->setOption("minimum", 0.00001f);
-    prop_length->setOption("step", 0.1f);
 
-    auto prop_radius = group->addProperty<float>("radius",
+    group->addProperty<float>("radius",
         [this] () { return arrowRadius(); },
         [this] (float radius) {
         setArrowRadius(radius);
         emit geometryChanged();
+    })->setOptions({
+        { "title", "Tip Radius" },
+        { "minimum", 0.00001f },
+        { "step", 0.01f }
     });
-    prop_radius->setOption("title", "tip radius");
-    prop_radius->setOption("minimum", 0.00001f);
-    prop_radius->setOption("step", 0.01f);
 
-    auto prop_tipLength = group->addProperty<float>("tipLength",
+    group->addProperty<float>("tipLength",
         [this] () { return arrowTipLength(); },
         [this] (float tipLength) {
         setArrowTipLength(tipLength);
         emit geometryChanged();
+    })->setOptions({
+        { "title", "Tip Length" },
+        { "minimum", 0.00001f },
+        { "maximum", 1.f },
+        { "step", 0.01f }
     });
-    prop_tipLength->setOption("title", "tip length");
-    prop_tipLength->setOption("minimum", 0.00001f);
-    prop_tipLength->setOption("maximum", 1.f);
-    prop_tipLength->setOption("step", 0.01f);
 
-    auto prop_lineWidth = group->addProperty<unsigned>("lineWidth",
+    group->addProperty<unsigned>("lineWidth",
         [this] () { return lineWidth(); },
         [this] (unsigned lineWidth) {
         setLineWidth(lineWidth);
         emit geometryChanged();
+    })->setOptions({
+        { "title", "Line Width" },
+        { "minimum", 1 },
+        { "maximum", 100 },
+        { "step", 1 }
     });
-    prop_lineWidth->setOption("title", "line width");
-    prop_lineWidth->setOption("minimum", 1);
-    prop_lineWidth->setOption("maximum", 100);
-    prop_lineWidth->setOption("step", 1);
 
     return group;
 }
@@ -276,7 +280,9 @@ ColorMappingData * GlyphMappingData::colorMappingData()
 void GlyphMappingData::setColorMappingData(ColorMappingData * colorMappingData)
 {
     if (m_colorMappingData == colorMappingData)
+    {
         return;
+    }
 
     m_colorMappingData = colorMappingData;
 
@@ -291,7 +297,9 @@ vtkScalarsToColors * GlyphMappingData::colorMappingGradient()
 void GlyphMappingData::setColorMappingGradient(vtkScalarsToColors * gradient)
 {
     if (m_colorMappingGradient == gradient)
+    {
         return;
+    }
 
     m_colorMappingGradient = gradient;
 

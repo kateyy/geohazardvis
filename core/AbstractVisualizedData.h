@@ -25,6 +25,22 @@ class DataObject;
 class ColorMappingData;
 
 
+/**
+Base class for visual representations of data objects.
+A data object may be visualized in multiple views, each holding its own AbstractVisualizedData
+instance, referring to the data object.
+This base class does not define how the visualization is implemented, it only defines the following
+common features:
+    - Color Mapping:
+        Each visualization own a ColorMapping that provides ColorMappingData subclasses appropriate
+        for this visualization. At least a default (no-op) mapping is always available.
+    - Output Ports:
+        Visualization may provide multiple output ports for different parts/kinds of visual objects.
+    - Information Reference:
+        Visualization reference themselves in their visualization pipeline using the
+        setupInformation function. This allows to quickly link from a visible object, e.g., after
+        picking, back to the related AbstractVisualizedData instance.
+*/
 class CORE_API AbstractVisualizedData : public QObject
 {
     Q_OBJECT

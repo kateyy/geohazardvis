@@ -289,7 +289,9 @@ void RenderedVectorGrid3D::scalarsForColorMappingChangedEvent()
     for (int i = 0; i < 3; ++i)
     {
         if (m_planeWidgets[i]->GetEnabled() != 0)
+        {
             m_storedSliceIndexes[i] = m_planeWidgets[i]->GetSliceIndex();
+        }
     }
 
     if (m_colorMappingData && m_colorMappingData->usesFilter())
@@ -365,7 +367,7 @@ void RenderedVectorGrid3D::updateVisibilities()
 
     for (int i = 0; i < 3; ++i)
     {
-        bool showSliceI = isVisible()
+        const bool showSliceI = isVisible()
             && colorMapping
             && m_gradient // don't show the slice before they can use our gradient
             && (m_planeWidgets[i]->GetInteractor() != nullptr) // don't enable them without an interactor

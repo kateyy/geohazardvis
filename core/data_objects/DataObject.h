@@ -23,7 +23,7 @@ class QVtkTableModel;
 class RenderedData;
 
 
-/** Base class representing loaded data. */
+/** Base class for data set representations. */
 class CORE_API DataObject : public QObject
 {
     Q_OBJECT

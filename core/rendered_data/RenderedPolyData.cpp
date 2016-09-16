@@ -52,14 +52,9 @@ RenderedPolyData::RenderedPolyData(PolyDataObject & dataObject)
 {
     setupInformation(*m_mapper->GetInformation(), *this);
 
+    // point normals required for correct lighting
     m_normals->ComputePointNormalsOn();
     m_normals->ComputeCellNormalsOff();
-
-    // disabled color mapping by default
-    m_colorMappingOutput = dataObject.processedOutputPort()->GetProducer();
-    m_normals->SetInputConnection(m_colorMappingOutput->GetOutputPort());
-
-    m_mapper->ScalarVisibilityOff();
     m_mapper->SetInputConnection(m_normals->GetOutputPort());
 
     // don't break the lut configuration
@@ -279,6 +274,8 @@ vtkActor * RenderedPolyData::mainActor()
         return m_mainActor;
     }
 
+    finalizePipeline();
+
     m_mainActor = vtkSmartPointer<vtkActor>::New();
     m_mainActor->SetMapper(m_mapper);
     m_mainActor->SetProperty(renderProperty());
@@ -293,7 +290,7 @@ void RenderedPolyData::scalarsForColorMappingChangedEvent()
     // no mapping yet, so just render the data set
     if (!m_colorMappingData)
     {
-        m_colorMappingOutput = dataObject().processedOutputPort()->GetProducer();
+        m_colorMappingOutput = colorMappingInput()->GetProducer();
         finalizePipeline();
         return;
     }
@@ -309,7 +306,7 @@ void RenderedPolyData::scalarsForColorMappingChangedEvent()
     }
     else
     {
-        m_colorMappingOutput = dataObject().processedOutputPort()->GetProducer();
+        m_colorMappingOutput = colorMappingInput()->GetProducer();
     }
 
     finalizePipeline();
@@ -331,6 +328,15 @@ void RenderedPolyData::visibilityChangedEvent(bool visible)
 
 void RenderedPolyData::finalizePipeline()
 {
+    // no color mapping set up yet
+    if (!m_colorMappingOutput)
+    {
+        // disabled color mapping and texturing by default
+        m_colorMappingOutput = colorMappingInput()->GetProducer();
+        m_normals->SetInputConnection(m_colorMappingOutput->GetOutputPort());
+        m_mapper->ScalarVisibilityOff();
+    }
+
     vtkSmartPointer<vtkAlgorithm> upstreamAlgorithm = m_colorMappingOutput;
 
 #if OPTION_ENABLE_TEXTURING
