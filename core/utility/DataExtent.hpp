@@ -80,7 +80,9 @@ bool DataExtent<T, Dimensions>::operator==(const T other[ValueCount]) const
     for (size_t i = 0u; i < ValueCount; ++i)
     {
         if (m_extent[i] != other[i])
+        {
             return false;
+        }
     }
     return true;
 }
@@ -241,7 +243,7 @@ ValueRange<T> DataExtent<T, Dimensions>::extractDimension(size_t dimension) cons
 template<typename T, size_t Dimensions>
 auto DataExtent<T, Dimensions>::setDimension(size_t dimension, const ValueRange<T> & range) -> DataExtent &
 {
-    return setDimension(range[0u], range[1u]);
+    return setDimension(dimension, range[0u], range[1u]);
 }
 
 template<typename T, size_t Dimensions>
