@@ -284,11 +284,10 @@ void RenderViewStrategy2D::startProfilePlot()
         m_lineWidget->SetCurrentRenderer(m_context.renderer(0u));   // put the widget in the first renderer, for now
         m_lineWidget->On();
 
-        double bounds[6];
-        m_context.dataBounds(bounds, 0);
+        auto bounds = m_context.dataBounds(0);
         bounds[4] = bounds[5] += g_lineZOffset;
 
-        repr->PlaceWidget(bounds);
+        repr->PlaceWidget(bounds.data());
 
         m_context.render();
     }

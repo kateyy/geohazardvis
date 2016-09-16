@@ -3,9 +3,9 @@
 #include <vector>
 
 #include <vtkSmartPointer.h>
-#include <vtkBoundingBox.h>
 
 #include <gui/data_view/RendererImplementation.h>
+#include <core/utility/DataExtent.h>
 
 
 class vtkCamera;
@@ -56,7 +56,7 @@ public:
     void lookAtData(const VisualizationSelection & selection, unsigned int subViewIndex) override;
     void resetCamera(bool toInitialPosition, unsigned int subViewIndex) override;
 
-    void dataBounds(double bounds[6], unsigned int subViewIndex) const;
+    const DataBounds & dataBounds(unsigned int subViewIndex) const;
 
     void setAxesVisibility(bool visible) override;
 
@@ -87,7 +87,7 @@ protected:
 
         // view props fetched per rendered data
         QMap<RenderedData *, vtkSmartPointer<vtkPropCollection>> dataProps;
-        vtkBoundingBox dataBounds;
+        DataBounds dataBounds;
 
         vtkSmartPointer<vtkGridAxes3DActor> axesActor;
         vtkSmartPointer<vtkTextWidget> titleWidget;

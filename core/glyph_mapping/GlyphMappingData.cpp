@@ -23,6 +23,8 @@
 #include <core/color_mapping/ColorMappingData.h>
 #include <core/data_objects/DataObject.h>
 #include <core/rendered_data/RenderedData.h>
+#include <core/utility/DataExtent.h>
+#include <core/utility/vtkvectorhelper.h>
 
 
 using namespace reflectionzeug;
@@ -78,8 +80,9 @@ GlyphMappingData::GlyphMappingData(RenderedData & renderedData)
     m_arrowGlyph->ScalingOn();
     m_arrowGlyph->SetScaleModeToDataScalingOff();
     m_arrowGlyph->OrientOn();
-    double * bounds = renderedData.dataObject().dataSet()->GetBounds();
-    double maxBoundsSize = std::max(bounds[1] - bounds[0], std::max(bounds[3] - bounds[2], bounds[5] - bounds[4]));
+    DataBounds bounds;
+    renderedData.dataObject().processedDataSet()->GetBounds(bounds.data());
+    const double maxBoundsSize = maxComponent(bounds.componentSize());
     m_arrowGlyph->SetScaleFactor(maxBoundsSize * 0.1);
 
     setRepresentation(Representation::CylindricArrow);

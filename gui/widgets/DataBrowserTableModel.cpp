@@ -13,6 +13,7 @@
 #include <core/data_objects/ImageDataObject.h>
 #include <core/data_objects/ImageProfileData.h>
 #include <core/data_objects/VectorGrid3DDataObject.h>
+#include <core/utility/DataExtent.h>
 
 
 namespace

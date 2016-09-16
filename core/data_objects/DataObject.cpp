@@ -100,11 +100,6 @@ vtkAlgorithmOutput * DataObject::processedOutputPort()
     return d_ptr->trivialProducer()->GetOutputPort();
 }
 
-const double * DataObject::bounds()
-{
-    return processedDataSet()->GetBounds();
-}
-
 vtkDataSet * DataObject::processedDataSet()
 {
     auto passThrough = d_ptr->processedPassThrough();
@@ -113,9 +108,9 @@ vtkDataSet * DataObject::processedDataSet()
     return vtkDataSet::SafeDownCast(passThrough->GetOutputDataObject(0));
 }
 
-void DataObject::bounds(double b[6])
+const DataBounds & DataObject::bounds() const
 {
-    return processedDataSet()->GetBounds(b);
+    return d_ptr->m_bounds;
 }
 
 vtkIdType DataObject::numberOfPoints() const

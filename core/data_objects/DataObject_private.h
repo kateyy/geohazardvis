@@ -1,6 +1,5 @@
 #pragma once
 
-#include <array>
 #include <functional>
 #include <memory>
 #include <mutex>
@@ -12,6 +11,7 @@
 #include <vtkWeakPointer.h>
 
 #include <core/table_model/QVtkTableModel.h>
+#include <core/utility/DataExtent.h>
 
 
 class vtkAlgorithm;
@@ -48,7 +48,7 @@ public:
     vtkSmartPointer<vtkDataSet> m_dataSet;
     std::unique_ptr<QVtkTableModel> m_tableModel;
 
-    std::array<double, 6> m_bounds;
+    DataBounds m_bounds;
     vtkIdType m_numberOfPoints;
     vtkIdType m_numberOfCells;
 

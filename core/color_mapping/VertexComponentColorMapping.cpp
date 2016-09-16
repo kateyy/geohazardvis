@@ -107,10 +107,7 @@ std::vector<ValueRange<>> VertexComponentColorMapping::updateBounds()
 
     for (auto vis: m_visualizedData)
     {
-        DataBounds objectBounds;
-        vis->dataObject().bounds(objectBounds.data());
-
-        totalRange.add(objectBounds.extractDimension(m_component));
+        totalRange.add(vis->dataObject().bounds().extractDimension(m_component));
     }
 
     return{ totalRange };

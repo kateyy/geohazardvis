@@ -7,11 +7,11 @@
 #include <vtkObject.h>
 
 #include <core/core_api.h>
+#include <core/utility/DataExtent_fwd.h>
 
 
 class QStringList;
 class vtkInformation;
-class vtkInformationStringKey;
 class vtkInformationIntegerKey;
 class vtkDataArray;
 class vtkDataSet;
@@ -53,8 +53,8 @@ public:
     /** Convenience method that returns a persistent shallow copy of the output data set of processedOutputPort() */
     vtkDataSet * processedDataSet();
 
-    const double * bounds();
-    void bounds(double b[6]);
+    /** @return Cached versions of the spatial bounds of the source data set */
+    const DataBounds & bounds() const;
 
     vtkIdType numberOfPoints() const;
     vtkIdType numberOfCells() const;

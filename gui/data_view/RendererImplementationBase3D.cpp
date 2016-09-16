@@ -243,7 +243,7 @@ void RendererImplementationBase3D::resetCamera(bool toInitialPosition, unsigned 
         interactorStyleSwitch()->resetCameraToDefault(*viewport.renderer->GetActiveCamera());
     }
 
-    if (viewport.dataBounds.IsValid())
+    if (!viewport.dataBounds.isEmpty())
     {
         viewport.renderer->ResetCamera();
     }
@@ -251,9 +251,9 @@ void RendererImplementationBase3D::resetCamera(bool toInitialPosition, unsigned 
     render();
 }
 
-void RendererImplementationBase3D::dataBounds(double bounds[6], unsigned int subViewIndex) const
+const DataBounds & RendererImplementationBase3D::dataBounds(unsigned int subViewIndex) const
 {
-    m_viewportSetups[subViewIndex].dataBounds.GetBounds(bounds);
+    return m_viewportSetups[subViewIndex].dataBounds;
 }
 
 void RendererImplementationBase3D::setAxesVisibility(bool visible)
@@ -470,7 +470,7 @@ void RendererImplementationBase3D::updateAxes()
     {
 
         // hide axes if we don't have visible objects
-        if (!viewportSetup.dataBounds.IsValid())
+        if (viewportSetup.dataBounds.isEmpty())
         {
             viewportSetup.axesActor->VisibilityOff();
             continue;
@@ -478,18 +478,17 @@ void RendererImplementationBase3D::updateAxes()
 
         viewportSetup.axesActor->SetVisibility(m_renderView.axesEnabled());
 
-        double bounds[6];
-        viewportSetup.dataBounds.GetBounds(bounds);
+        auto gridBounds = viewportSetup.dataBounds;
 
         // for polygonal data (deltaZ > 0) and parallel projection in image interaction:
         // correctly show /required/ axes and labels (XY-plane only)
         if (m_interactorStyle->currentStyleName() == "InteractorStyleImage")
         {
-            const auto zShifted = bounds[5] + 0.00001;   // always show axes in front of the data
-            bounds[4] = bounds[5] = zShifted;
+            const auto zShifted = gridBounds[5] + 0.00001;   // always show axes in front of the data
+            gridBounds[4] = gridBounds[5] = zShifted;
         }
 
-        viewportSetup.axesActor->SetGridBounds(bounds);
+        viewportSetup.axesActor->SetGridBounds(gridBounds.data());
     }
 
     resetClippingRanges();
@@ -503,11 +502,11 @@ void RendererImplementationBase3D::updateBounds()
     {
         auto & dataBounds = m_viewportSetups[viewportIndex].dataBounds;
 
-        dataBounds.Reset();
+        dataBounds = {};
 
         for (auto it : m_renderView.visualizations(int(viewportIndex)))
         {
-            dataBounds.AddBounds(it->dataObject().bounds());
+            dataBounds.add(it->dataObject().bounds());
         }
     }
 
@@ -518,7 +517,7 @@ void RendererImplementationBase3D::addToBounds(RenderedData * renderedData, unsi
 {
     auto & dataBounds = m_viewportSetups[subViewIndex].dataBounds;
 
-    dataBounds.AddBounds(renderedData->dataObject().bounds());
+    dataBounds.add(renderedData->dataObject().bounds());
 
     // TODO update only if necessary
     updateAxes();
@@ -528,7 +527,7 @@ void RendererImplementationBase3D::removeFromBounds(RenderedData * renderedData,
 {
     auto & dataBounds = m_viewportSetups[subViewIndex].dataBounds;
 
-    dataBounds.Reset();
+    dataBounds = {};
 
     for (auto it : m_renderView.visualizations(subViewIndex))
     {
@@ -537,7 +536,7 @@ void RendererImplementationBase3D::removeFromBounds(RenderedData * renderedData,
             continue;
         }
 
-        dataBounds.AddBounds(it->dataObject().bounds());
+        dataBounds.add(it->dataObject().bounds());
     }
 
     updateAxes();
