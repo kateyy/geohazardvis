@@ -95,11 +95,6 @@ const vtkDataSet * DataObject::dataSet() const
     return d_ptr->m_dataSet;
 }
 
-vtkDataSet * DataObject::processedDataSet()
-{
-    return d_ptr->m_dataSet;
-}
-
 vtkAlgorithmOutput * DataObject::processedOutputPort()
 {
     return d_ptr->trivialProducer()->GetOutputPort();
@@ -108,6 +103,14 @@ vtkAlgorithmOutput * DataObject::processedOutputPort()
 const double * DataObject::bounds()
 {
     return processedDataSet()->GetBounds();
+}
+
+vtkDataSet * DataObject::processedDataSet()
+{
+    auto passThrough = d_ptr->processedPassThrough();
+    passThrough->SetInputConnection(processedOutputPort());
+    passThrough->Update();
+    return vtkDataSet::SafeDownCast(passThrough->GetOutputDataObject(0));
 }
 
 void DataObject::bounds(double b[6])
@@ -128,7 +131,9 @@ vtkIdType DataObject::numberOfCells() const
 QVtkTableModel * DataObject::tableModel()
 {
     if (!d_ptr->m_tableModel)
+    {
         d_ptr->m_tableModel = createTableModel();
+    }
 
     return d_ptr->m_tableModel.get();
 }
@@ -235,7 +240,9 @@ void DataObject::addIntrinsicAttributes(
 bool DataObject::checkIfBoundsChanged()
 {
     if (!dataSet())
+    {
         return false;
+    }
 
     decltype(d_ptr->m_bounds) newBounds;
     dataSet()->GetBounds(newBounds.data());

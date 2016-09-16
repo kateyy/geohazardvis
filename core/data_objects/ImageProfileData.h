@@ -45,7 +45,6 @@ public:
     const QString & dataTypeName() const override;
     static const QString & dataTypeName_s();
 
-    vtkDataSet * processedDataSet() override;
     vtkAlgorithmOutput * processedOutputPort() override;
 
     const QString & abscissa() const;

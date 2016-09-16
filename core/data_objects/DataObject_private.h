@@ -34,6 +34,9 @@ public:
     static vtkInformationStringKey * NameKey();
 
     vtkAlgorithm * trivialProducer();
+    /** Filter that shallow copies and passes through the input.
+    This allows to provide a persistent data sets for varying upstreams. */
+    vtkAlgorithm * processedPassThrough();
 
     void addObserver(const QString & eventName, vtkObject & subject, unsigned long tag);
     void disconnectEventGroup(const QString & eventName);
@@ -76,6 +79,7 @@ protected:
 
 private:
     vtkSmartPointer<vtkAlgorithm> m_trivialProducer;
+    vtkSmartPointer<vtkAlgorithm> m_processedPassThrough;
     QMap<QString, QMap<vtkWeakPointer<vtkObject>, unsigned long>> m_namedObserverIds;
 
     friend class EventDeferralLock;

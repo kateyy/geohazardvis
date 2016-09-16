@@ -48,8 +48,10 @@ public:
     vtkDataSet * dataSet();
     const vtkDataSet * dataSet() const;
 
-    virtual vtkDataSet * processedDataSet();
+    /** @return the source data set with specific modifications or enhancements, e.g., computed normals */
     virtual vtkAlgorithmOutput * processedOutputPort();
+    /** Convenience method that returns a persistent shallow copy of the output data set of processedOutputPort() */
+    vtkDataSet * processedDataSet();
 
     const double * bounds();
     void bounds(double b[6]);

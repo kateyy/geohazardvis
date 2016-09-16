@@ -137,13 +137,6 @@ const QString & ImageProfileData::dataTypeName_s()
     return name;
 }
 
-vtkDataSet * ImageProfileData::processedDataSet()
-{
-    m_graphLine->Update();
-
-    return m_graphLine->GetOutput();
-}
-
 vtkAlgorithmOutput * ImageProfileData::processedOutputPort()
 {
     return m_graphLine->GetOutputPort();

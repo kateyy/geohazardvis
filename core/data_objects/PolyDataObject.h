@@ -23,7 +23,6 @@ public:
     const vtkPolyData & polyDataSet() const;
 
     /** @return poly data set with cell normals */
-    vtkDataSet * processedDataSet() override;
     vtkAlgorithmOutput * processedOutputPort() override;
 
     void addDataArray(vtkDataArray & dataArray) override;

@@ -50,12 +50,6 @@ const vtkPolyData & PolyDataObject::polyDataSet() const
     return static_cast<const vtkPolyData &>(*ds);
 }
 
-vtkDataSet * PolyDataObject::processedDataSet()
-{
-    m_cellNormals->Update();
-    return m_cellNormals->GetOutput();
-}
-
 vtkAlgorithmOutput * PolyDataObject::processedOutputPort()
 {
     return m_cellNormals->GetOutputPort();

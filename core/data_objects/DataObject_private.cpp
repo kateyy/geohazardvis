@@ -6,6 +6,7 @@
 #include <vtkInformationIntegerPointerKey.h>
 #include <vtkInformationStringKey.h>
 #include <vtkTrivialProducer.h>
+#include <vtkPassThrough.h>
 
 
 vtkInformationKeyMacro(DataObjectPrivate, DataObjectKey, IntegerPointer);
@@ -47,6 +48,16 @@ vtkAlgorithm * DataObjectPrivate::trivialProducer()
     }
 
     return m_trivialProducer;
+}
+
+vtkAlgorithm * DataObjectPrivate::processedPassThrough()
+{
+    if (!m_processedPassThrough)
+    {
+        m_processedPassThrough = vtkSmartPointer<vtkPassThrough>::New();
+    }
+
+    return m_processedPassThrough;
 }
 
 void DataObjectPrivate::addObserver(const QString & eventName, vtkObject & subject, unsigned long tag)
