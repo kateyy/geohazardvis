@@ -150,3 +150,25 @@ TEST_F(TextFileReader_test, StartingFromOffset_QByteArray)
 
     ASSERT_TRUE(checkEqual(secondRow, data));
 }
+
+TEST_F(TextFileReader_test, ReportEOF_QByteArray)
+{
+    createTestFile();
+
+    io::InputVector data;
+
+    const auto result = TextFileReader::Impl::qFile_QByteArray(testFileName(), data, 0, 3);
+    ASSERT_FALSE(result.stateFlags.testFlag(TextFileReader::Result::successful));
+    ASSERT_TRUE(result.stateFlags.testFlag(TextFileReader::Result::eof));
+
+    ASSERT_TRUE(checkEqual(defaultContent(), data));
+}
+
+TEST_F(TextFileReader_test, ReportInvalidFile_QByteArray)
+{
+    io::InputVector data;
+
+    const auto result = TextFileReader::Impl::qFile_QByteArray(testFileName(), data, 0, 3);
+    ASSERT_FALSE(result.stateFlags.testFlag(TextFileReader::Result::successful));
+    ASSERT_TRUE(result.stateFlags.testFlag(TextFileReader::Result::invalidFile));
+}

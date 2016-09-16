@@ -152,7 +152,7 @@ auto TextFileReader::Impl::qFile_QByteArray(const QString & inputFileName,
         }
     }
 
-    if (numberOfLines != 0 && numberOfLines != numberOfLines)
+    if (numberOfLines != 0 && numberOfLines != numberOfReadLines)
     {
         return Result(Result::eof, file.pos());
     }
