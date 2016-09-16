@@ -122,8 +122,8 @@ void SimpleDEMGeoCoordToLocalFilter::SetParameters(const vtkVector2d & inputGeoC
      /*
      auto transformApprox = [earthR] (double Fi, double La, double Fi0, double La0, double & X, double & Y)
      {
-     Y = earthR * (Fi - Fi0) * vtkMath::Pi() / 180;
      X = earthR * (La - La0) * std::cos(Fi0 * vtkMath::Pi() / 180a ) * vtkMath::Pi() / 180;
+     Y = earthR * (Fi - Fi0) * vtkMath::Pi() / 180;
      };
      */
 
@@ -133,8 +133,8 @@ void SimpleDEMGeoCoordToLocalFilter::SetParameters(const vtkVector2d & inputGeoC
     {
         static const double earthR = 6378.138;
 
-        const auto Fi0 = inputGeoCentroid[0];   // average longitude (Greek lambda)
-        const auto La0 = inputGeoCentroid[1];   // average latitude (Greek phi)
+        const auto La0 = inputGeoCentroid[0];   // average longitude (Greek lambda)
+        const auto Fi0 = inputGeoCentroid[1];   // average latitude (Greek phi)
 
         toLocalTranslation = vtkVector3d{
             -La0,

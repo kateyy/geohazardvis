@@ -15,6 +15,7 @@ set(sources
     PipelineInformationHelper.h
     PipelineInformationHelper.cpp
     RenderedData_test.cpp
+    SimpleDEMGeoCoordToLocalFilter_test.cpp
     TextFileReader_test.cpp
     VTKAlgorithmImplementations_test.cpp
 )

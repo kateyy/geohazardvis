@@ -8,7 +8,6 @@
 #include <vtkPolyData.h>
 
 #include <core/filters/DEMToTopographyMesh.h>
-#include <core/filters/SimpleDEMGeoCoordToLocalFilter.h>
 #include <core/utility/DataExtent.h>
 #include <core/utility/vtkvectorhelper.h>
 
@@ -168,22 +167,20 @@ TEST_F(DEMToTopographyMesh_test, ResetsToMatching)
 TEST_F(DEMToTopographyMesh_test, DEMToLocal_CorrectMeshBounds)
 {
     auto dem = generateDEM();
+    dem->SetOrigin(-1.5, -2.5, 0);  // make sure that tested values are != 0
     auto mesh = generateMesh();
 
     const auto inMeshBounds = DataBounds(mesh->GetBounds());
 
-    auto demToLocalFilter = vtkSmartPointer<SimpleDEMGeoCoordToLocalFilter>::New();
-    demToLocalFilter->SetInputData(dem);
-
     auto filter = vtkSmartPointer<DEMToTopographyMesh>::New();
-    filter->SetInputConnection(0, demToLocalFilter->GetOutputPort());
+    filter->SetInputDEM(dem);
     filter->SetInputMeshTemplate(mesh);
 
     filter->SetParametersToMatching();
 
     filter->Update();
 
-    const auto localDEMBounds = DataBounds(demToLocalFilter->GetOutput()->GetBounds());
+    const auto localDEMBounds = DataBounds(dem->GetBounds());
     const auto transformedMeshBounds = DataBounds(filter->GetOutputTopoMeshOnDEM()->GetBounds());
 
     const auto inMeshRatio = inMeshBounds.extractDimension(0).componentSize()
