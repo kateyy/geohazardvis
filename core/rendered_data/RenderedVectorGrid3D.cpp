@@ -1,7 +1,5 @@
 #include "RenderedVectorGrid3D.h"
 
-#include <array>
-
 #include <vtkProp3DCollection.h>
 #include <vtkLookupTable.h>
 
@@ -50,17 +48,19 @@ RenderedVectorGrid3D::RenderedVectorGrid3D(VectorGrid3DDataObject & dataObject)
     , m_extractVOI{ vtkSmartPointer<vtkExtractVOI>::New() }
     , m_slicesEnabled{}
 {
-    vtkImageData * image = static_cast<vtkImageData *>(dataObject.processedDataSet());
-    assert(image);
+    // assume the source data set has the same extents as the transformed data, and the extent
+    // never changes while this instance exists.
+    m_dataExtent = [this] (VectorGrid3DDataObject & dataObject) {
+        ImageExtent e;
+        dataObject.imageData().GetExtent(e.data());
+        return e;
 
-    std::array<int, 6> extent;
-    image->GetExtent(extent.data());
+    }(dataObject);
 
-    m_extractVOI->SetVOI(extent.data());
-    m_extractVOI->SetInputData(dataObject.dataSet());
+    m_extractVOI->SetVOI(m_dataExtent.data());
 
     // decrease sample rate to prevent crashing/blocking rendering
-    const vtkIdType numPoints = image->GetNumberOfPoints();
+    const auto numPoints = m_dataExtent.numberOfPoints();
     const int sampleRate = std::max(1, (int)std::floor(std::cbrt(float(numPoints) / DefaultMaxNumberOfPoints)));
     setSampleRate(sampleRate, sampleRate, sampleRate);
 
@@ -72,12 +72,8 @@ RenderedVectorGrid3D::RenderedVectorGrid3D(VectorGrid3DDataObject & dataObject)
         /** Reslice widgets  */
 
         m_planeWidgets[i] = vtkSmartPointer<ImagePlaneWidget>::New();
-        // TODO VTK Bug? A pipeline connection does not work for some reason
-        //m_planeWidgets[i]->SetInputConnection(dataObject->processedOutputPort());
-        m_planeWidgets[i]->SetInputData(dataObject.dataSet());
         m_planeWidgets[i]->UserControlledLookupTableOn();
         m_planeWidgets[i]->RestrictPlaneToVolumeOn();
-        m_planeWidgets[i]->SetPlaneOrientation(i);
 
         // this is required to fix picking with multiple planes in a view
         m_planeWidgets[i]->SetPicker(planePicker);
@@ -95,15 +91,10 @@ RenderedVectorGrid3D::RenderedVectorGrid3D(VectorGrid3DDataObject & dataObject)
         property->SetInterpolationToPhong();
         m_planeWidgets[i]->SetTexturePlaneProperty(property);
 
-
-        const int min = extent[2 * i];
-        const int max = extent[2 * i + 1];
-        setSlicePosition(i, (max - min) / 2);
+        setSlicePosition(i, m_dataExtent.center()[i]);
 
         m_slicesEnabled[i] = true;
     }
-
-    m_isInitialized = true;
 }
 
 RenderedVectorGrid3D::~RenderedVectorGrid3D() = default;
@@ -163,15 +154,11 @@ std::unique_ptr<PropertyGroup> RenderedVectorGrid3D::createConfigGroup()
             prop_visibilities->asCollection()->at(i)->setOption("title", std::string{ char('X' + i) });
         }
 
-
-        int extent[6];
-        static_cast<vtkImageData *>(dataObject().dataSet())->GetExtent(extent);
-
         auto prop_positions = group_scalarSlices->addGroup("Positions");
 
         for (int i = 0; i < 3; ++i)
         {
-            std::string axis = { char('X' + i) };
+            const std::string axis = { char('X' + i) };
 
             auto * slice_prop = prop_positions->addProperty<int>(axis + "slice",
                 [this, i] () { return slicePosition(i); },
@@ -180,17 +167,17 @@ std::unique_ptr<PropertyGroup> RenderedVectorGrid3D::createConfigGroup()
                 emit geometryChanged();
             });
             slice_prop->setOption("title", axis);
-            slice_prop->setOption("minimum", extent[2 * i]);
-            slice_prop->setOption("maximum", extent[2 * i + 1]);
+            slice_prop->setOption("minimum", m_dataExtent[2 * i]);
+            slice_prop->setOption("maximum", m_dataExtent[2 * i + 1]);
         }
 
-        std::string depthWarning{ "Using transparency and lighting at the same time probably leads to rendering errors." };
+        const std::string depthWarning{ "Using transparency and lighting at the same time probably leads to rendering errors." };
 
         auto prop_transparencies = group_scalarSlices->addGroup("Transparencies");
 
         for (int i = 0; i < 3; ++i)
         {
-            std::string axis = { char('X' + i) };
+            const std::string axis = { char('X' + i) };
 
             vtkProperty * property = m_planeWidgets[i]->GetTexturePlaneProperty();
 
@@ -266,20 +253,24 @@ std::unique_ptr<PropertyGroup> RenderedVectorGrid3D::createConfigGroup()
 
 vtkImageData * RenderedVectorGrid3D::resampledDataSet()
 {
+    initializePipeline();
+
     m_extractVOI->Update();
     return m_extractVOI->GetOutput();
 }
 
 vtkAlgorithmOutput * RenderedVectorGrid3D::resampledOuputPort()
 {
+    initializePipeline();
+
     return m_extractVOI->GetOutputPort();
 }
 
 vtkSmartPointer<vtkProp3DCollection> RenderedVectorGrid3D::fetchViewProps3D()
 {
-    auto props = RenderedData3D::fetchViewProps3D();
+    initializePipeline();
 
-    return props;
+    return RenderedData3D::fetchViewProps3D();
 }
 
 void RenderedVectorGrid3D::scalarsForColorMappingChangedEvent()
@@ -360,6 +351,29 @@ void RenderedVectorGrid3D::updatePlaneLUT()
     }
 }
 
+void RenderedVectorGrid3D::initializePipeline()
+{
+    if (m_isInitialized)
+    {
+        return;
+    }
+
+    auto transformedImage = vtkImageData::SafeDownCast(dataObject().processedDataSet());
+    assert(transformedImage);
+
+    m_extractVOI->SetInputConnection(dataObject().processedOutputPort());
+
+    for (int i = 0; i < 3; ++i)
+    {
+        m_planeWidgets[i]->SetInputConnection(dataObject().processedOutputPort());
+
+        // This must be called after setting the input
+        m_planeWidgets[i]->SetPlaneOrientation(i);
+    }
+
+    m_isInitialized = true;
+}
+
 void RenderedVectorGrid3D::updateVisibilities()
 {
     const bool colorMapping = m_colorMappingData && m_colorMappingData->usesFilter();
@@ -424,7 +438,9 @@ vtkAlgorithmOutput * RenderedVectorGrid3D::colorMappingInput(int connection)
 
     if (!filter)
     {
-        bool hasVectors = dataObject().dataSet()->GetPointData()->GetVectors() != nullptr;
+        initializePipeline();
+
+        const bool hasVectors = dataObject().dataSet()->GetPointData()->GetVectors() != nullptr;
 
         auto rename = vtkSmartPointer<ArrayChangeInformationFilter>::New();
         rename->SetArrayName(dataObject().dataSet()->GetPointData()->GetScalars()->GetName());

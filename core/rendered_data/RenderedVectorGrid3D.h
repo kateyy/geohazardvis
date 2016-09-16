@@ -3,6 +3,7 @@
 #include <array>
 
 #include <core/rendered_data/RenderedData3D.h>
+#include <core/utility/DataExtent.h>
 
 
 class vtkAlgorithm;
@@ -56,6 +57,7 @@ protected:
     void updatePlaneLUT();
 
 private:
+    void initializePipeline();
     void updateVisibilities();
 
 private:
@@ -72,6 +74,8 @@ private:
 
     std::array<bool, 3> m_slicesEnabled;
     std::array<int, 3> m_storedSliceIndexes;
+
+    ImageExtent m_dataExtent;
 
 private:
     Q_DISABLE_COPY(RenderedVectorGrid3D)
