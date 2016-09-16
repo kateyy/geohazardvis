@@ -14,6 +14,7 @@ set(sources
     DEMToTopographyMesh_test.cpp
     PipelineInformationHelper.h
     PipelineInformationHelper.cpp
+    QVtkTableModel_test.cpp
     RenderedData_test.cpp
     SimpleDEMGeoCoordToLocalFilter_test.cpp
     TextFileReader_test.cpp

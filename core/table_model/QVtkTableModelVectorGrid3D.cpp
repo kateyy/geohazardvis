@@ -60,7 +60,7 @@ QVariant QVtkTableModelVectorGrid3D::data(const QModelIndex &index, int role) co
         return pointId;
     }
 
-    if (index.column() < 3)
+    if (index.column() <= 3)
     {
         std::array<double, 3> point;
         m_gridData->GetPoint(pointId, point.data());
