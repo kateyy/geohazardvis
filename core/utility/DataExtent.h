@@ -92,6 +92,22 @@ public:
     DataExtent & intersect(const DataExtent & other);
 
     template<size_t Dimensions1 = Dimensions>
+    typename std::enable_if<(Dimensions1 == 1u), DataExtent &>::type
+        shift(T shift);
+
+    template<size_t Dimensions1 = Dimensions>
+    typename std::enable_if<(Dimensions1 > 1u), DataExtent &>::type
+        shift(const vtkVector<T, Dimensions> & shiftVector);
+
+    template<size_t Dimensions1 = Dimensions>
+    typename std::enable_if<(Dimensions1 == 1u), DataExtent>::type
+        shifted(T shift) const;
+
+    template<size_t Dimensions1 = Dimensions>
+    typename std::enable_if<(Dimensions1 > 1u), DataExtent>::type
+        shifted(const vtkVector<T, Dimensions> & shiftVector) const;
+
+    template<size_t Dimensions1 = Dimensions>
     typename std::enable_if<(Dimensions1 == 1u), bool>::type
         contains(T value) const;
 

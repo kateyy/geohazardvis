@@ -338,6 +338,51 @@ auto DataExtent<T, Dimensions>::intersect(const DataExtent & other) -> DataExten
 
 template<typename T, size_t Dimensions>
 template<size_t Dimensions1>
+typename std::enable_if<(Dimensions1 == 1u), DataExtent<T, Dimensions> &>::type
+DataExtent<T, Dimensions>::shift(T shift)
+{
+    m_extent[0] += shift;
+    m_extent[1] += shift;
+
+    return *this;
+}
+
+template<typename T, size_t Dimensions>
+template<size_t Dimensions1>
+typename std::enable_if<(Dimensions1 > 1u), DataExtent<T, Dimensions> &>::type
+DataExtent<T, Dimensions>::shift(const vtkVector<T, Dimensions> & shiftVector)
+{
+    for (size_t i = 0u; i < Dimensions; ++i)
+    {
+        m_extent[2u * i] += shiftVector[static_cast<int>(i)];
+        m_extent[2u * i + 1u] += shiftVector[static_cast<int>(i)];
+    }
+
+    return *this;
+}
+
+template<typename T, size_t Dimensions>
+template<size_t Dimensions1>
+typename std::enable_if<(Dimensions1 == 1u), DataExtent<T, Dimensions>>::type
+DataExtent<T, Dimensions>::shifted(T shift) const
+{
+    auto result = *this;
+    result.shift(shift);
+    return result;
+}
+
+template<typename T, size_t Dimensions>
+template<size_t Dimensions1>
+typename std::enable_if<(Dimensions1 > 1u), DataExtent<T, Dimensions>>::type
+DataExtent<T, Dimensions>::shifted(const vtkVector<T, Dimensions> & shiftVector) const
+{
+    auto result = *this;
+    result.shift(shiftVector);
+    return result;
+}
+
+template<typename T, size_t Dimensions>
+template<size_t Dimensions1>
 typename std::enable_if<(Dimensions1 == 1u), bool>::type
 DataExtent<T, Dimensions>::contains(T value) const
 {

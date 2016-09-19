@@ -192,6 +192,32 @@ TEST(DataExtent_test, intersection)
     ASSERT_TRUE(Bounds2({ 1, 2, 1, 2 }).intersection(Bounds2({ 3, 4, 3, 4 })).isEmpty());
 }
 
+TEST(DataExtent_test, shift_ValueRange)
+{
+    auto valueRange = ValueRange<>({ -4, -3 });
+    valueRange.shift(5);
+    ASSERT_EQ(ValueRange<>({ 1, 2 }), valueRange);
+}
+
+TEST(DataExtent_test, shift_Bounds)
+{
+    auto bounds = Bounds2({ -4, -3, 3, 5 });
+    bounds.shift(vtkVector2d{ 5, -6 });
+    ASSERT_EQ(Bounds2({ 1, 2, -3, -1 }), bounds);
+}
+
+TEST(DataExtent_test, shifted_ValueRange)
+{
+    const auto valueRange = ValueRange<>({ -4, -3 });
+    ASSERT_EQ(ValueRange<>({ 1, 2 }), valueRange.shifted(5));
+}
+
+TEST(DataExtent_test, shifted_Bounds)
+{
+    const auto bounds = Bounds2({ -4, -3, 3, 5 });
+    ASSERT_EQ(Bounds2({ 1, 2, -3, -1 }), bounds.shifted(vtkVector2d{ 5, -6 }));
+}
+
 TEST(DataExtent_test, contains_point)
 {
     ASSERT_TRUE(Bounds2({ 0., 1., 0., 1. }).contains(Vec2{ 0.5f, 0.5f }));
