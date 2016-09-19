@@ -16,7 +16,7 @@
 
 
 ImageDataObject::ImageDataObject(const QString & name, vtkImageData & dataSet)
-    : DataObject(name, &dataSet)
+    : CoordinateTransformableDataObject(name, &dataSet)
     , m_extent{}
 {
     vtkVector3d spacing;

@@ -166,7 +166,8 @@ public:
 
     DataBounds updateVisibleBounds() override
     {
-        auto bounds = RenderedPolyData::visibleBounds();
+        DataBounds bounds;
+        dataObject().dataSet()->GetBounds(bounds.data());
 
         for (size_t i = 0; i < bounds.ValueCount; ++i)
         {

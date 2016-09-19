@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <limits>
 #include <type_traits>
 
 #include <vtkVector.h>
@@ -111,5 +112,15 @@ vtkVector<T, Size> min(const vtkVector<T, Size> & lhs, const vtkVector<T, Size> 
 /** Component-wise max */
 template<typename T, int Size>
 vtkVector<T, Size> max(const vtkVector<T, Size> & lhs, const vtkVector<T, Size> & rhs);
+
+
+template<typename T, int Size>
+typename std::enable_if<std::numeric_limits<T>::has_quiet_NaN, void>::type
+uninitializeVector(vtkVector<T, Size> & vector);
+
+template<typename T, int Size>
+typename std::enable_if<std::numeric_limits<T>::has_quiet_NaN, bool>::type
+isVectorInitialized(const vtkVector<T, Size> & vector);
+
 
 #include "vtkvectorhelper.hpp"

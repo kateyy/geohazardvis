@@ -332,7 +332,7 @@ void RenderedVectorGrid3D::visibilityChangedEvent(bool visible)
 DataBounds RenderedVectorGrid3D::updateVisibleBounds()
 {
     DataBounds bounds;
-    dataObject().processedDataSet()->GetBounds(bounds.data());
+    transformedCoordinatesDataSet()->GetBounds(bounds.data());
     return bounds;
 }
 
@@ -365,14 +365,14 @@ void RenderedVectorGrid3D::initializePipeline()
         return;
     }
 
-    auto transformedImage = vtkImageData::SafeDownCast(dataObject().processedDataSet());
+    auto transformedImage = vtkImageData::SafeDownCast(transformedCoordinatesDataSet());
     assert(transformedImage);
 
-    m_extractVOI->SetInputConnection(dataObject().processedOutputPort());
+    m_extractVOI->SetInputConnection(transformedCoordinatesOutputPort());
 
     for (int i = 0; i < 3; ++i)
     {
-        m_planeWidgets[i]->SetInputConnection(dataObject().processedOutputPort());
+        m_planeWidgets[i]->SetInputConnection(transformedCoordinatesOutputPort());
 
         // This must be called after setting the input
         m_planeWidgets[i]->SetPlaneOrientation(i);

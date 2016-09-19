@@ -4,6 +4,7 @@
 
 #include <vtkActor.h>
 #include <vtkOutlineFilter.h>
+#include <vtkPassThrough.h>
 #include <vtkPolyDataMapper.h>
 #include <vtkPropCollection.h>
 #include <vtkProperty.h>
@@ -11,23 +12,71 @@
 #include <reflectionzeug/Property.h>
 #include <reflectionzeug/PropertyGroup.h>
 
-#include <core/data_objects/DataObject.h>
+#include <core/data_objects/CoordinateTransformableDataObject.h>
+#include <core/utility/macros.h>
 
 
 using namespace reflectionzeug;
 
 
-RenderedData::RenderedData(ContentType contentType, DataObject & dataObject)
+RenderedData::RenderedData(ContentType contentType, CoordinateTransformableDataObject & dataObject)
     : AbstractVisualizedData(contentType, dataObject)
     , m_viewPropsInvalid{ true }
     , m_representation{ Representation::content }
     , m_outlineProperty{ vtkSmartPointer<vtkProperty>::New() }
+    , m_transformedCoordinatesOutput{ vtkSmartPointer<vtkPassThrough>::New() }
 {
     const auto darkGray = 0.2;
     m_outlineProperty->SetColor(darkGray, darkGray, darkGray);
+
+    m_transformedCoordinatesOutput->SetInputConnection(dataObject.processedOutputPort());
 }
 
 RenderedData::~RenderedData() = default;
+
+CoordinateTransformableDataObject & RenderedData::transformableObject()
+{
+    return static_cast<CoordinateTransformableDataObject &>(dataObject());
+}
+
+const CoordinateTransformableDataObject & RenderedData::transformableObject() const
+{
+    return static_cast<const CoordinateTransformableDataObject &>(dataObject());
+}
+
+void RenderedData::setDefaultCoordinateSystem(const CoordinateSystemSpecification & coordinateSystem)
+{
+    if (transformableObject().canTransformTo(coordinateSystem))
+    {
+        m_transformedCoordinatesOutput->SetInputConnection(
+            transformableObject().coordinateTransformedOutputPort(coordinateSystem));
+    }
+    else
+    {
+        m_transformedCoordinatesOutput->SetInputConnection(
+            dataObject().processedOutputPort());
+    }
+
+    invalidateVisibleBounds();
+}
+
+vtkAlgorithmOutput * RenderedData::transformedCoordinatesOutputPort()
+{
+    return m_transformedCoordinatesOutput->GetOutputPort();
+}
+
+vtkDataSet * RenderedData::transformedCoordinatesDataSet()
+{
+    m_transformedCoordinatesOutput->Update();
+    return vtkDataSet::SafeDownCast(m_transformedCoordinatesOutput->GetOutput());
+}
+
+vtkAlgorithmOutput * RenderedData::colorMappingInput(int DEBUG_ONLY(connection))
+{
+    assert(connection == 0);
+
+    return transformedCoordinatesOutputPort();
+}
 
 RenderedData::Representation RenderedData::representation() const
 {
@@ -170,7 +219,7 @@ vtkActor * RenderedData::outlineActor()
     }
 
     auto outline = vtkSmartPointer<vtkOutlineFilter>::New();
-    outline->SetInputConnection(dataObject().processedOutputPort());
+    outline->SetInputConnection(transformedCoordinatesOutputPort());
 
     auto mapper = vtkSmartPointer<vtkPolyDataMapper>::New();
     mapper->SetInputConnection(outline->GetOutputPort());

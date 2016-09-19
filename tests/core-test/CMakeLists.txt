@@ -7,6 +7,7 @@ set(sources
     main.cpp
     ArrayChangeInformationFilter_test.cpp
     BinaryFile_test.cpp
+    CoordinateTransformableDataObject_test.cpp
     DataExtent_test.cpp
     DataObject_test.cpp
     DataSetFilter_test.cpp

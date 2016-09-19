@@ -2,7 +2,7 @@
 
 #include <vtkSmartPointer.h>
 
-#include <core/data_objects/DataObject.h>
+#include <core/data_objects/CoordinateTransformableDataObject.h>
 
 
 class vtkPolyData;
@@ -11,7 +11,7 @@ class vtkCellCenters;
 class vtkAlgorithmOutput;
 
 
-class CORE_API PolyDataObject : public DataObject
+class CORE_API PolyDataObject : public CoordinateTransformableDataObject
 {
 public:
     PolyDataObject(const QString & name, vtkPolyData & dataSet);

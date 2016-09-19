@@ -15,7 +15,7 @@
 
 
 VectorGrid3DDataObject::VectorGrid3DDataObject(const QString & name, vtkImageData & dataSet)
-    : DataObject(name, &dataSet)
+    : CoordinateTransformableDataObject(name, &dataSet)
 {
     vtkVector3d spacing;
     bool spacingChanged = false;

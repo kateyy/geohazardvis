@@ -17,7 +17,7 @@ Base class for rendered data represented as vtkActors.
 class CORE_API RenderedData3D : public RenderedData
 {
 public:
-    explicit RenderedData3D(DataObject & dataObject);
+    explicit RenderedData3D(CoordinateTransformableDataObject & dataObject);
     ~RenderedData3D() override;
 
     /** VTK 3D view props visualizing the data object and possibly additional attributes */

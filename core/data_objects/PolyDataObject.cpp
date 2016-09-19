@@ -19,7 +19,7 @@
 
 
 PolyDataObject::PolyDataObject(const QString & name, vtkPolyData & dataSet)
-    : DataObject(name, &dataSet)
+    : CoordinateTransformableDataObject(name, &dataSet)
     , m_cellNormals{ vtkSmartPointer<vtkPolyDataNormals>::New() }
     , m_cellCenters{}
     , m_is2p5D{ Is2p5D::unchecked }

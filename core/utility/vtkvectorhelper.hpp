@@ -317,3 +317,29 @@ vtkVector<T, Size> max(const vtkVector<T, Size> & lhs, const vtkVector<T, Size> 
 
     return result;
 }
+
+template<typename T, int Size>
+typename std::enable_if<std::numeric_limits<T>::has_quiet_NaN, void>::type
+uninitializeVector(vtkVector<T, Size> & vector)
+{
+    const auto n = std::numeric_limits<T>::quiet_NaN();
+    for (int i = 0; i < Size; ++i)
+    {
+        vector[i] = n;
+    }
+}
+
+template<typename T, int Size>
+typename std::enable_if<std::numeric_limits<T>::has_quiet_NaN, bool>::type
+isVectorInitialized(const vtkVector<T, Size> & vector)
+{
+    for (int i = 0; i < Size; ++i)
+    {
+        if (std::isnan(vector[i]))
+        {
+            return false;
+        }
+    }
+
+    return true;
+}

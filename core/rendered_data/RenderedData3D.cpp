@@ -10,7 +10,7 @@
 #include <core/glyph_mapping/GlyphMappingData.h>
 
 
-RenderedData3D::RenderedData3D(DataObject & dataObject)
+RenderedData3D::RenderedData3D(CoordinateTransformableDataObject & dataObject)
     : RenderedData(ContentType::Rendered3D, dataObject)
     , m_glyphMapping{ nullptr }
 {

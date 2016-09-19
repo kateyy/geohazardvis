@@ -35,7 +35,6 @@ RenderedImageData::RenderedImageData(ImageDataObject & dataObject)
     , m_demShading{ vtkSmartPointer<DEMShadingFilter>::New() }
     , m_property{ vtkSmartPointer<vtkImageProperty>::New() }
 {
-    m_mapper->SetInputConnection(dataObject.processedOutputPort());
     m_property->UseLookupTableScalarRangeOn();
     // Linear interpolation is not working correctly, at least not on the legacy OpenGL backend
     m_property->SetInterpolationTypeToCubic();
@@ -207,6 +206,7 @@ vtkImageSlice * RenderedImageData::slice()
 {
     if (!m_slice)
     {
+        configureVisPipeline();
         m_slice = vtkSmartPointer<vtkImageSlice>::New();
         m_slice->SetMapper(m_mapper);
         m_slice->SetProperty(property());
@@ -270,7 +270,7 @@ void RenderedImageData::visibilityChangedEvent(bool visible)
 DataBounds RenderedImageData::updateVisibleBounds()
 {
     DataBounds bounds;
-    dataObject().processedDataSet()->GetBounds(bounds.data());
+    colorMappingInputData()->GetBounds(bounds.data());
     return bounds;
 }
 
@@ -280,6 +280,8 @@ void RenderedImageData::initializePipeline()
     {
         return;
     }
+
+    m_mapper->SetInputConnection(transformedCoordinatesOutputPort());
 
     // Assume immutable scalars name
     const auto scalarsName = imageDataObject().scalars().GetName();

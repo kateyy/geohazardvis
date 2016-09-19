@@ -2,13 +2,13 @@
 
 #include <array>
 
-#include <core/data_objects/DataObject.h>
+#include <core/data_objects/CoordinateTransformableDataObject.h>
 
 
 class vtkImageData;
 
 
-class CORE_API ImageDataObject : public DataObject
+class CORE_API ImageDataObject : public CoordinateTransformableDataObject
 {
 public:
     explicit ImageDataObject(const QString & name, vtkImageData & dataSet);

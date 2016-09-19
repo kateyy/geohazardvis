@@ -2,14 +2,14 @@
 
 #include <array>
 
-#include <core/data_objects/DataObject.h>
+#include <core/data_objects/CoordinateTransformableDataObject.h>
 
 
 class vtkImageData;
 class vtkAssignAttribute;
 
 
-class CORE_API VectorGrid3DDataObject : public DataObject
+class CORE_API VectorGrid3DDataObject : public CoordinateTransformableDataObject
 {
 public:
     VectorGrid3DDataObject(const QString & name, vtkImageData & dataSet);

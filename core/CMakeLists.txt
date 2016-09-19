@@ -10,6 +10,8 @@ set(sources
     AbstractVisualizedData_private.h
     ApplicationSettings.h
     ApplicationSettings.cpp
+    CoordinateSystems.h
+    CoordinateSystems.cpp
     DataSetHandler.h
     DataSetHandler.cpp
     RuntimeInfo.h
@@ -72,6 +74,8 @@ set(sources
     context2D_data/vtkPlotCollection.h
     context2D_data/vtkPlotCollection.cpp
 
+    data_objects/CoordinateTransformableDataObject.h
+    data_objects/CoordinateTransformableDataObject.cpp
     data_objects/DataObject.h
     data_objects/DataObject.hpp
     data_objects/DataObject.cpp
