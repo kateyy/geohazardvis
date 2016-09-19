@@ -38,6 +38,8 @@ protected:
     void colorMappingGradientChangedEvent() override;
     void visibilityChangedEvent(bool visible) override;
 
+    DataBounds updateVisibleBounds() override;
+
     /** Integrate last pipeline steps. By default, this connects the colorMappingOutput
         with the mapper. */
     virtual void finalizePipeline();

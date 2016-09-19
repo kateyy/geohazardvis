@@ -54,6 +54,8 @@ protected:
     void colorMappingGradientChangedEvent() override;
     void visibilityChangedEvent(bool visible) override;
 
+    DataBounds updateVisibleBounds() override;
+
     void updatePlaneLUT();
 
 private:

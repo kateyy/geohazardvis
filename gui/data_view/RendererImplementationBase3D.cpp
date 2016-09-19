@@ -504,9 +504,11 @@ void RendererImplementationBase3D::updateBounds()
 
         dataBounds = {};
 
-        for (auto it : m_renderView.visualizations(int(viewportIndex)))
+        for (auto visualization : m_renderView.visualizations(int(viewportIndex)))
         {
-            dataBounds.add(it->dataObject().bounds());
+            assert(dynamic_cast<RenderedData *>(visualization));
+            auto rendered = static_cast<RenderedData *>(visualization);
+            dataBounds.add(rendered->visibleBounds());
         }
     }
 
@@ -517,7 +519,7 @@ void RendererImplementationBase3D::addToBounds(RenderedData * renderedData, unsi
 {
     auto & dataBounds = m_viewportSetups[subViewIndex].dataBounds;
 
-    dataBounds.add(renderedData->dataObject().bounds());
+    dataBounds.add(renderedData->visibleBounds());
 
     // TODO update only if necessary
     updateAxes();
@@ -529,14 +531,16 @@ void RendererImplementationBase3D::removeFromBounds(RenderedData * renderedData,
 
     dataBounds = {};
 
-    for (auto it : m_renderView.visualizations(subViewIndex))
+    for (auto visualization : m_renderView.visualizations(subViewIndex))
     {
-        if (it == renderedData)
+        if (visualization == renderedData)
         {
             continue;
         }
 
-        dataBounds.add(it->dataObject().bounds());
+        assert(dynamic_cast<RenderedData *>(visualization));
+        auto rendered = static_cast<RenderedData *>(visualization);
+        dataBounds.add(rendered->visibleBounds());
     }
 
     updateAxes();

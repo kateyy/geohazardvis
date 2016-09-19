@@ -329,6 +329,13 @@ void RenderedVectorGrid3D::visibilityChangedEvent(bool visible)
     updateVisibilities();
 }
 
+DataBounds RenderedVectorGrid3D::updateVisibleBounds()
+{
+    DataBounds bounds;
+    dataObject().processedDataSet()->GetBounds(bounds.data());
+    return bounds;
+}
+
 void RenderedVectorGrid3D::updatePlaneLUT()
 {
     if (!m_blackWhiteLUT)

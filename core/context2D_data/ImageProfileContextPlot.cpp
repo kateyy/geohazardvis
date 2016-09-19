@@ -16,6 +16,7 @@
 
 #include <core/data_objects/ImageProfileData.h>
 #include <core/context2D_data/vtkPlotCollection.h>
+#include <core/utility/DataExtent.h>
 
 
 using namespace reflectionzeug;
@@ -114,6 +115,22 @@ vtkSmartPointer<vtkPlotCollection> ImageProfileContextPlot::fetchPlots()
     return items;
 }
 
+DataBounds ImageProfileContextPlot::updateVisibleBounds()
+{
+    auto table = m_plotLine->GetInput();
+    assert(table);
+    auto xAxis = vtkDataArray::SafeDownCast(table->GetColumn(0));
+    auto yAxis = vtkDataArray::SafeDownCast(table->GetColumn(1));
+    const vtkIdType numValues = xAxis->GetNumberOfTuples();
+    assert(xAxis && yAxis && (numValues == yAxis->GetNumberOfTuples()));
+
+    ValueRange<> xRange, yRange;
+    xAxis->GetRange(xRange.data());
+    yAxis->GetRange(yRange.data());
+
+    return DataBounds({ xRange, yRange, ValueRange<>() });
+}
+
 void ImageProfileContextPlot::updatePlot()
 {
     auto profilePoints = profileData().processedDataSet();
@@ -166,6 +183,7 @@ void ImageProfileContextPlot::updatePlot()
     m_plotLine->SetInputData(table, 0, 1);
 
     setPlotIsValid(true);
+    invalidateVisibleBounds();
 }
 
 void ImageProfileContextPlot::setPlotIsValid(bool isValid)

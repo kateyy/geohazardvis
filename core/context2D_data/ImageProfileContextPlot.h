@@ -32,6 +32,8 @@ public:
 protected:
     vtkSmartPointer<vtkPlotCollection> fetchPlots() override;
 
+    DataBounds updateVisibleBounds() override;
+
 private:
     void updatePlot();
     void setPlotIsValid(bool isValid);

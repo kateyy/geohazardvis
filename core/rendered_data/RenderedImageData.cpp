@@ -22,6 +22,7 @@
 #include <core/filters/DEMApplyShadingToColors.h>
 #include <core/filters/DEMImageNormals.h>
 #include <core/filters/DEMShadingFilter.h>
+#include <core/utility/DataExtent.h>
 
 
 using namespace reflectionzeug;
@@ -264,6 +265,13 @@ void RenderedImageData::visibilityChangedEvent(bool visible)
     RenderedData::visibilityChangedEvent(visible);
 
     slice()->SetVisibility(visible);
+}
+
+DataBounds RenderedImageData::updateVisibleBounds()
+{
+    DataBounds bounds;
+    dataObject().processedDataSet()->GetBounds(bounds.data());
+    return bounds;
 }
 
 void RenderedImageData::initializePipeline()

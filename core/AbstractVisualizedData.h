@@ -5,6 +5,7 @@
 #include <QObject>
 
 #include <core/core_api.h>
+#include <core/utility/DataExtent_fwd.h>
 
 
 class vtkAlgorithmOutput;
@@ -55,6 +56,9 @@ public:
     bool isVisible() const;
     void setVisible(bool visible);
 
+    /** @return spatial bounds of the data sets used for the current visualization */
+    const DataBounds & visibleBounds();
+
     virtual std::unique_ptr<reflectionzeug::PropertyGroup> createConfigGroup() = 0;
 
     /** Color mapping used for this visualization. If it doesn't current has a color mapping, a new
@@ -95,6 +99,11 @@ protected:
     ColorMappingData * currentColorMappingData();
     vtkScalarsToColors * currentColorMappingGradient();
 
+    /** Called by sub-classes to update what is returned by visibleBounds() */
+    virtual DataBounds updateVisibleBounds() = 0;
+    /** Called by sub-classes when then visible bounds changed.
+    updateVisibleBounds() will be called again once visibleBounds() is called the next time. */
+    void invalidateVisibleBounds();
 
 private:
     std::unique_ptr<AbstractVisualizedData_private> d_ptr;

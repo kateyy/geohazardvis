@@ -18,6 +18,7 @@
 
 #include <core/data_objects/PolyDataObject.h>
 #include <core/color_mapping/ColorMappingData.h>
+#include <core/utility/DataExtent.h>
 
 #include "config.h"
 
@@ -59,6 +60,9 @@ RenderedPolyData::RenderedPolyData(PolyDataObject & dataObject)
 
     // don't break the lut configuration
     m_mapper->UseLookupTableScalarRangeOn();
+
+    /** Changing vertex/index data may result in changed bounds */
+    connect(this, &AbstractVisualizedData::geometryChanged, this, &RenderedPolyData::invalidateVisibleBounds);
 }
 
 RenderedPolyData::~RenderedPolyData() = default;
@@ -324,6 +328,13 @@ void RenderedPolyData::visibilityChangedEvent(bool visible)
     RenderedData3D::visibilityChangedEvent(visible);
 
     mainActor()->SetVisibility(visible);
+}
+
+DataBounds RenderedPolyData::updateVisibleBounds()
+{
+    DataBounds bounds;
+    mainActor()->GetBounds(bounds.data());
+    return bounds;
 }
 
 void RenderedPolyData::finalizePipeline()

@@ -150,10 +150,14 @@ void AbstractRenderView::setActiveSubView(unsigned int subViewIndex)
 {
     assert(subViewIndex < numberOfSubViews());
     if (subViewIndex >= numberOfSubViews())
+    {
         return;
+    }
 
     if (m_activeSubViewIndex == subViewIndex)
+    {
         return;
+    }
 
     m_activeSubViewIndex = subViewIndex;
 
@@ -176,7 +180,9 @@ const vtkRenderWindow * AbstractRenderView::renderWindow() const
 void AbstractRenderView::setEnableAxes(bool enabled)
 {
     if (m_axesEnabled == enabled)
+    {
         return;
+    }
 
     m_axesEnabled = enabled;
 

@@ -52,6 +52,8 @@ protected:
     void colorMappingGradientChangedEvent() override;
     void visibilityChangedEvent(bool visible) override;
 
+    DataBounds updateVisibleBounds() override;
+
 private:
     void initializePipeline();
     void configureVisPipeline();

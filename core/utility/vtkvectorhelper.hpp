@@ -220,6 +220,13 @@ convertTo(const vtkVector<T, SizeIn> & other)
 }
 
 template<int SizeOut, int SizeIn, typename T>
+typename std::enable_if<(SizeOut == SizeIn), vtkVector<T, SizeOut>>::type
+convertTo(vtkVector<T, SizeIn> other, T /*initValue*/)
+{
+    return other;
+}
+
+template<int SizeOut, int SizeIn, typename T>
 typename std::enable_if<(SizeOut > SizeIn), vtkVector<T, SizeOut>>::type
 convertTo(const vtkVector<T, SizeIn> & other, const T initValue)
 {

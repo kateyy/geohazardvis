@@ -54,6 +54,16 @@ void AbstractVisualizedData::setVisible(bool visible)
     emit visibilityChanged(visible);
 }
 
+const DataBounds & AbstractVisualizedData::visibleBounds()
+{
+    if (!d_ptr->visibleBoundsAreValid())
+    {
+        d_ptr->validateVisibleBounds(updateVisibleBounds());
+    }
+
+    return d_ptr->visibleBounds();
+}
+
 ColorMapping & AbstractVisualizedData::colorMapping()
 {
     if (!d_ptr->colorMapping)
