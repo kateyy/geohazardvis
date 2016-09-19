@@ -285,12 +285,12 @@ void RenderedVectorGrid3D::scalarsForColorMappingChangedEvent()
         }
     }
 
-    if (m_colorMappingData && m_colorMappingData->usesFilter())
+    if (currentColorMappingData() && currentColorMappingData()->usesFilter())
     {
         for (int i = 0; i < 3; ++i)
         {
             m_planeWidgets[i]->GetTexture()->SetInputConnection(
-                m_colorMappingData->createFilter(*this, i)->GetOutputPort());
+                currentColorMappingData()->createFilter(*this, i)->GetOutputPort());
         }
     }
     else
@@ -341,9 +341,9 @@ void RenderedVectorGrid3D::updatePlaneLUT()
         m_blackWhiteLUT->Build();
     }
 
-    vtkLookupTable * lut = (m_colorMappingData && m_colorMappingData->name() == "LIC 2D")
+    vtkLookupTable * lut = (currentColorMappingData() && currentColorMappingData()->name() == "LIC 2D")
         ? m_blackWhiteLUT.Get()
-        : vtkLookupTable::SafeDownCast(m_gradient);
+        : vtkLookupTable::SafeDownCast(currentColorMappingGradient());
 
     for (auto plane : m_planeWidgets)
     {
@@ -376,14 +376,14 @@ void RenderedVectorGrid3D::initializePipeline()
 
 void RenderedVectorGrid3D::updateVisibilities()
 {
-    const bool colorMapping = m_colorMappingData && m_colorMappingData->usesFilter();
+    const bool colorMapping = currentColorMappingData() && currentColorMappingData()->usesFilter();
     bool changed = false;
 
     for (int i = 0; i < 3; ++i)
     {
         const bool showSliceI = isVisible()
             && colorMapping
-            && m_gradient // don't show the slice before they can use our gradient
+            && currentColorMappingGradient() // don't show the slice before they can use our gradient
             && (m_planeWidgets[i]->GetInteractor() != nullptr) // don't enable them without an interactor
             && m_slicesEnabled[i];
 

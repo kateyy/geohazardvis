@@ -236,9 +236,9 @@ void RenderedImageData::scalarsForColorMappingChangedEvent()
 
     m_colorMappingFilter = {};
 
-    if (m_colorMappingData && m_colorMappingData->usesFilter())
+    if (currentColorMappingData() && currentColorMappingData()->usesFilter())
     {
-        auto filter = m_colorMappingData->createFilter(*this);
+        auto filter = currentColorMappingData()->createFilter(*this);
         filter->Update();
 
         auto image = vtkDataSet::SafeDownCast(filter->GetOutputDataObject(0));
@@ -320,22 +320,22 @@ void RenderedImageData::configureVisPipeline()
     vtkSmartPointer<vtkAlgorithm> colorMappingFilter;
     vtkAlgorithmOutput * currentPipelineStep = colorMappingInput();
     bool mapScalarsToColors = false;
-    vtkSmartPointer<vtkScalarsToColors> lut = m_gradient;
+    vtkSmartPointer<vtkScalarsToColors> lut = currentColorMappingGradient();
     int component = 0;
 
     if (m_colorMappingFilter)
     {
         currentPipelineStep = m_colorMappingFilter->GetOutputPort();
 
-        assert(m_colorMappingData);
-        m_colorMappingData->configureMapper(*this, *m_mapper);
-        component = m_colorMappingData->dataComponent();
+        assert(currentColorMappingData());
+        currentColorMappingData()->configureMapper(*this, *m_mapper);
+        component = currentColorMappingData()->dataComponent();
 
-        mapScalarsToColors = m_colorMappingData->mapsScalarsToColors();
+        mapScalarsToColors = currentColorMappingData()->mapsScalarsToColors();
 
-        if (m_colorMappingData->usesOwnLookupTable())
+        if (currentColorMappingData()->usesOwnLookupTable())
         {
-            lut = m_colorMappingData->ownLookupTable();
+            lut = currentColorMappingData()->ownLookupTable();
         }
     }
 

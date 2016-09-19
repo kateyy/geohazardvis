@@ -1,5 +1,7 @@
 #pragma once
 
+#include <vtkSmartPointer.h>
+
 #include <core/AbstractVisualizedData.h>
 
 

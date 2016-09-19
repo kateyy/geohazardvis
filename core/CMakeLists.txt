@@ -7,6 +7,7 @@ set(sources
 
     AbstractVisualizedData.h
     AbstractVisualizedData.cpp
+    AbstractVisualizedData_private.h
     ApplicationSettings.h
     ApplicationSettings.cpp
     DataSetHandler.h

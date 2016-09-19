@@ -1,63 +1,53 @@
 #include "AbstractVisualizedData.h"
 
-#include <cassert>
-
 #include <vtkAlgorithm.h>
 #include <vtkAlgorithmOutput.h>
 #include <vtkDataSet.h>
-#include <vtkInformation.h>
-#include <vtkInformationIntegerPointerKey.h>
 #include <vtkLookupTable.h>
 
-#include <core/color_mapping/ColorMapping.h>
+#include <core/AbstractVisualizedData_private.h>
 #include <core/data_objects/DataObject.h>
 #include <core/utility/macros.h>
 
 
-vtkInformationKeyMacro(AbstractVisualizedData, VisualizedDataKey, IntegerPointer);
-
-
 AbstractVisualizedData::AbstractVisualizedData(ContentType contentType, DataObject & dataObject)
     : QObject()
-    , m_colorMappingData{ nullptr }
-    , m_contentType{ contentType }
-    , m_dataObject{ dataObject }
-    , m_isVisible{ true }
+    , d_ptr{ std::make_unique<AbstractVisualizedData_private>(*this, contentType, dataObject) }
 {
     connect(&dataObject, &DataObject::dataChanged, this, &AbstractVisualizedData::geometryChanged);
 }
 
 AbstractVisualizedData::~AbstractVisualizedData()
 {
-    if (m_colorMapping)
+    if (d_ptr->colorMapping)
     {
-        m_colorMapping->unregisterVisualizedData(this);
+        d_ptr->colorMapping->unregisterVisualizedData(this);
     }
 }
 
 ContentType AbstractVisualizedData::contentType() const
 {
-    return m_contentType;
+    return d_ptr->contentType;
 }
 
 DataObject & AbstractVisualizedData::dataObject()
 {
-    return m_dataObject;
+    return d_ptr->dataObject;
 }
 
 const DataObject & AbstractVisualizedData::dataObject() const
 {
-    return m_dataObject;
+    return d_ptr->dataObject;
 }
 
 bool AbstractVisualizedData::isVisible() const
 {
-    return m_isVisible;
+    return d_ptr->isVisible;
 }
 
 void AbstractVisualizedData::setVisible(bool visible)
 {
-    m_isVisible = visible;
+    d_ptr->isVisible = visible;
 
     visibilityChangedEvent(visible);
 
@@ -66,36 +56,36 @@ void AbstractVisualizedData::setVisible(bool visible)
 
 ColorMapping & AbstractVisualizedData::colorMapping()
 {
-    if (!m_colorMapping)
+    if (!d_ptr->colorMapping)
     {
-        m_colorMapping = std::make_unique<ColorMapping>();
-        m_colorMapping->registerVisualizedData(this);
-        setupColorMapping(*m_colorMapping);
+        d_ptr->colorMapping = std::make_unique<ColorMapping>();
+        d_ptr->colorMapping->registerVisualizedData(this);
+        setupColorMapping(*d_ptr->colorMapping);
     }
 
-    return *m_colorMapping;
+    return *d_ptr->colorMapping;
 }
 
 void AbstractVisualizedData::setScalarsForColorMapping(ColorMappingData * scalars)
 {
-    if (scalars == m_colorMappingData)
+    if (scalars == d_ptr->colorMappingData)
     {
         return;
     }
 
-    m_colorMappingData = scalars;
+    d_ptr->colorMappingData = scalars;
 
     scalarsForColorMappingChangedEvent();
 }
 
 void AbstractVisualizedData::setColorMappingGradient(vtkScalarsToColors * gradient)
 {
-    if (m_gradient == gradient)
+    if (d_ptr->gradient == gradient)
     {
         return;
     }
 
-    m_gradient = gradient;
+    d_ptr->gradient = gradient;
 
     colorMappingGradientChangedEvent();
 }
@@ -136,10 +126,10 @@ AbstractVisualizedData * AbstractVisualizedData::readPointer(vtkInformation & in
 {
     static_assert(sizeof(int*) == sizeof(DataObject*), "");
 
-    if (information.Has(AbstractVisualizedData::VisualizedDataKey()))
+    if (information.Has(AbstractVisualizedData_private::VisualizedDataKey()))
     {
-        assert(information.Length(AbstractVisualizedData::VisualizedDataKey()) == 1);
-        return reinterpret_cast<AbstractVisualizedData *>(information.Get(AbstractVisualizedData::VisualizedDataKey()));
+        assert(information.Length(AbstractVisualizedData_private::VisualizedDataKey()) == 1);
+        return reinterpret_cast<AbstractVisualizedData *>(information.Get(AbstractVisualizedData_private::VisualizedDataKey()));
     }
 
     else return nullptr;
@@ -147,7 +137,7 @@ AbstractVisualizedData * AbstractVisualizedData::readPointer(vtkInformation & in
 
 void AbstractVisualizedData::storePointer(vtkInformation & information, AbstractVisualizedData * visualization)
 {
-    information.Set(AbstractVisualizedData::VisualizedDataKey(), reinterpret_cast<int *>(visualization), 1);
+    information.Set(AbstractVisualizedData_private::VisualizedDataKey(), reinterpret_cast<int *>(visualization), 1);
 }
 
 void AbstractVisualizedData::setupColorMapping(ColorMapping & /*colorMapping*/)
@@ -164,4 +154,19 @@ void AbstractVisualizedData::scalarsForColorMappingChangedEvent()
 
 void AbstractVisualizedData::colorMappingGradientChangedEvent()
 {
+}
+
+ColorMappingData * AbstractVisualizedData::currentColorMappingData()
+{
+    return d_ptr->colorMappingData;
+}
+
+vtkScalarsToColors * AbstractVisualizedData::currentColorMappingGradient()
+{
+    return d_ptr->gradient;
+}
+
+void AbstractVisualizedData::invalidateVisibleBounds()
+{
+    d_ptr->invalidateVisibleBounds();
 }

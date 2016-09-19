@@ -4,21 +4,19 @@
 
 #include <QObject>
 
-#include <vtkSmartPointer.h>
-
 #include <core/core_api.h>
 
 
 class vtkAlgorithmOutput;
 class vtkDataSet;
 class vtkInformation;
-class vtkInformationIntegerPointerKey;
 class vtkScalarsToColors;
 namespace reflectionzeug
 {
     class PropertyGroup;
 }
 
+class AbstractVisualizedData_private;
 class ColorMapping;
 enum class ContentType;
 class DataObject;
@@ -83,6 +81,7 @@ public:
 
 signals:
     void visibilityChanged(bool visible);
+    /** Emitted when the underlaying data or its visible representation was modified */
     void geometryChanged();
 
 protected:
@@ -92,21 +91,13 @@ protected:
     virtual void scalarsForColorMappingChangedEvent();
     virtual void colorMappingGradientChangedEvent();
 
-protected:
-    ColorMappingData * m_colorMappingData;
-    vtkSmartPointer<vtkScalarsToColors> m_gradient;
+    /** Convenience method to return the current data mapped to colors. This may be nullptr */
+    ColorMappingData * currentColorMappingData();
+    vtkScalarsToColors * currentColorMappingGradient();
+
 
 private:
-    static vtkInformationIntegerPointerKey * VisualizedDataKey();
-
-private:
-    const ContentType m_contentType;
-    DataObject & m_dataObject;
-
-    bool m_isVisible;
-
-    /** Color mappings can be shared between multiple visualizations. */
-    std::unique_ptr<ColorMapping> m_colorMapping;
+    std::unique_ptr<AbstractVisualizedData_private> d_ptr;
 
 private:
     Q_DISABLE_COPY(AbstractVisualizedData)

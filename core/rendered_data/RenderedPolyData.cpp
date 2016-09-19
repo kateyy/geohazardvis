@@ -288,20 +288,20 @@ void RenderedPolyData::scalarsForColorMappingChangedEvent()
     RenderedData3D::scalarsForColorMappingChangedEvent();
 
     // no mapping yet, so just render the data set
-    if (!m_colorMappingData)
+    if (!currentColorMappingData())
     {
         m_colorMappingOutput = colorMappingInput()->GetProducer();
         finalizePipeline();
         return;
     }
 
-    m_colorMappingData->configureMapper(*this, *m_mapper);
+    currentColorMappingData()->configureMapper(*this, *m_mapper);
 
     vtkSmartPointer<vtkAlgorithm> filter;
 
-    if (m_colorMappingData->usesFilter())
+    if (currentColorMappingData()->usesFilter())
     {
-        filter = m_colorMappingData->createFilter(*this);
+        filter = currentColorMappingData()->createFilter(*this);
         m_colorMappingOutput = filter;
     }
     else
@@ -316,7 +316,7 @@ void RenderedPolyData::colorMappingGradientChangedEvent()
 {
     RenderedData3D::colorMappingGradientChangedEvent();
 
-    m_mapper->SetLookupTable(m_gradient);
+    m_mapper->SetLookupTable(currentColorMappingGradient());
 }
 
 void RenderedPolyData::visibilityChangedEvent(bool visible)
