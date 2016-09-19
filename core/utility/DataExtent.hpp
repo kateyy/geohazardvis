@@ -34,6 +34,15 @@ DataExtent<T, Dimensions>::DataExtent(const T extent[ValueCount])
     }
 }
 
+template<typename T, size_t Dimensions>
+DataExtent<T, Dimensions>::DataExtent(std::array<ValueRange<T>, Dimensions> componentValueRanges)
+{
+    for (size_t i = 0u; i < Dimensions; ++i)
+    {
+        setDimension(i, componentValueRanges[i]);
+    }
+}
+
 /** Incompatible with Visual Studio 2013 Compiler :( */
 //template<typename T, size_t Dimensions>
 //template<size_t ValueCount1, class...T2, typename std::enable_if<sizeof...(T2) == ValueCount1, int>::type>

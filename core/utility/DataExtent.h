@@ -18,6 +18,7 @@ public:
     DataExtent();
     explicit DataExtent(array_t extent);
     explicit DataExtent(const T extent[ValueCount]);
+    explicit DataExtent(std::array<ValueRange<T>, Dimensions> componentValueRanges);
 
     /** Incompatible with Visual Studio 2013 Compiler :( */
     //template<size_t ValueCount1 = ValueCount, class...T2, typename std::enable_if<sizeof...(T2) == ValueCount1, int>::type = 0>

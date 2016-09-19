@@ -15,14 +15,20 @@ TEST(DataExtent_test, ctors)
     const auto ext1 = ImageExtent({ values });
     const auto ext2 = ImageExtent(ImageExtent::array_t({ values }));
     const ImageExtent::value_type ext3[6] = { values };
+    const auto ext4 = ImageExtent({
+        ValueRange<ImageExtent::value_type>({ 0, 1 }),
+        ValueRange<ImageExtent::value_type>({ 2, 3 }),
+        ValueRange<ImageExtent::value_type>({ 4, 5 })
+    });
 
     /** Incompatible with Visual Studio 2013 Compiler :( */
-    //const auto ext4 = ImageExtent(values);
+    //const auto ext5 = ImageExtent(values);
 #undef values
 
     ASSERT_EQ(ext1, ext2);
     ASSERT_EQ(ext1, ext3);
-    //ASSERT_EQ(ext1, ext4);
+    ASSERT_EQ(ext1, ext4);
+    //ASSERT_EQ(ext1, ext5);
 }
 
 TEST(DataExtent_test, numberOfCells)
