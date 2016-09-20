@@ -24,7 +24,7 @@ set(DEFAULT_COMPILE_FLAGS
     /nologo
     /Zc:wchar_t /Zc:forScope /Zc:rvalueCast /Zc:inline
     /GR /fp:precise /MP /W4
-    /we4150 /we4172 /we4239 /we4390 /we4456 /we4457 /we4700 /we4701 /we4703 /we4715 /we4717
+    /we4150 /we4172 /we4239 /we4390 /we4456 /we4457 /we4458 /we4700 /we4701 /we4703 /we4715 /we4717
     /wd4127 /wd4251 /wd4351 /wd4505 /wd4718
 
     $<$<CONFIG:Debug>:          /MDd /Od /RTC1 >
