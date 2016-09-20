@@ -40,6 +40,8 @@ public:
 
     ContentType contentType() const override;
 
+    void applyCurrentCoordinateSystem(const CoordinateSystemSpecification & spec) override;
+
     bool canApplyTo(const QList<DataObject *> & data) override;
     QList<DataObject *> filterCompatibleObjects(const QList<DataObject *> & dataObjects, 
         QList<DataObject *> & incompatibleObjects) override;

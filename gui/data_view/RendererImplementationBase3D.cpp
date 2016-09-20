@@ -58,6 +58,23 @@ ContentType RendererImplementationBase3D::contentType() const
         : ContentType::Rendered2D;
 }
 
+void RendererImplementationBase3D::applyCurrentCoordinateSystem(const CoordinateSystemSpecification & spec)
+{
+    const auto contents = renderView().visualizations();
+    for (auto visualization : contents)
+    {
+        auto rendered = static_cast<RenderedData *>(visualization);
+        rendered->setDefaultCoordinateSystem(spec);
+    }
+
+    updateBounds();
+
+    for (unsigned int i = 0; i < renderView().numberOfSubViews(); ++i)
+    {
+        resetCamera(true, i);
+    }
+}
+
 bool RendererImplementationBase3D::canApplyTo(const QList<DataObject *> & data)
 {
     for (auto obj : data)
@@ -354,7 +371,15 @@ vtkGridAxes3DActor * RendererImplementationBase3D::axesActor(unsigned int subVie
 
 std::unique_ptr<AbstractVisualizedData> RendererImplementationBase3D::requestVisualization(DataObject & dataObject) const
 {
-    return dataObject.createRendered();
+    auto rendered = dataObject.createRendered();
+
+    const auto & coordinateSystem = renderView().currentCoordinateSystem();
+    if (coordinateSystem.isValid(false))
+    {
+        rendered->setDefaultCoordinateSystem(coordinateSystem);
+    }
+
+    return std::unique_ptr<AbstractVisualizedData>(rendered.release());
 }
 
 void RendererImplementationBase3D::initialize()
@@ -519,9 +544,14 @@ void RendererImplementationBase3D::addToBounds(RenderedData * renderedData, unsi
 {
     auto & dataBounds = m_viewportSetups[subViewIndex].dataBounds;
 
-    dataBounds.add(renderedData->visibleBounds());
+    auto && dataSetBounds = renderedData->visibleBounds();
+    if (dataBounds.contains(dataSetBounds))
+    {
+        return;
+    }
 
-    // TODO update only if necessary
+    dataBounds.add(dataSetBounds);
+
     updateAxes();
 }
 

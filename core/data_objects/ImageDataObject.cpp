@@ -10,6 +10,7 @@
 #include <vtkPointData.h>
 #include <vtkDataArray.h>
 
+#include <core/filters/SimpleDEMGeoCoordToLocalFilter.h>
 #include <core/rendered_data/RenderedImageData.h>
 #include <core/table_model/QVtkTableModelImage.h>
 #include <core/utility/conversions.h>
@@ -136,4 +137,26 @@ bool ImageDataObject::checkIfStructureChanged()
     }
 
     return changed;
+}
+
+vtkSmartPointer<vtkAlgorithm> ImageDataObject::createTransformPipeline(
+    const CoordinateSystemSpecification & toSystem,
+    vtkAlgorithmOutput * pipelineUpstream) const
+{
+    if (coordinateSystem().type != CoordinateSystemType::geographic
+        || coordinateSystem().geographicSystem != "WGS 84")
+    {
+        return nullptr;
+    }
+
+    if (toSystem.type != CoordinateSystemType::metricLocal
+        || toSystem.geographicSystem != "WGS 84"
+        || toSystem.globalMetricSystem != "UTM")
+    {
+        return nullptr;
+    }
+
+    auto filter = vtkSmartPointer<SimpleDEMGeoCoordToLocalFilter>::New();
+    filter->SetInputConnection(pipelineUpstream);
+    return filter;
 }

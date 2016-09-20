@@ -11,6 +11,7 @@
 #include <vtkGenericOpenGLRenderWindow.h>
 
 #include <core/AbstractVisualizedData.h>
+#include <core/data_objects/CoordinateTransformableDataObject.h>
 #include <gui/data_view/RendererImplementation.h>
 #include <gui/data_view/t_QVTKWidget.h>
 
@@ -19,6 +20,7 @@ AbstractRenderView::AbstractRenderView(DataMapping & dataMapping, int index, QWi
     : AbstractDataView(dataMapping, index, parent, flags)
     , m_qvtkWidget{ nullptr }
     , m_onShowInitialized{ false }
+    , m_coordSystem{}
     , m_axesEnabled{ true }
     , m_activeSubViewIndex{ 0u }
 {
@@ -57,6 +59,72 @@ bool AbstractRenderView::isRenderer() const
     return true;
 }
 
+const CoordinateSystemSpecification & AbstractRenderView::currentCoordinateSystem() const
+{
+    return m_coordSystem;
+}
+
+bool AbstractRenderView::setCurrentCoordinateSystem(const CoordinateSystemSpecification & spec)
+{
+    if (m_coordSystem == spec)
+    {
+        return true;
+    }
+
+    if (!canShowDataObjectInCoordinateSystem(spec))
+    {
+        return false;
+    }
+
+    onCoordinateSystemChanged(spec);
+
+    m_coordSystem = spec;
+
+    return true;
+}
+
+bool AbstractRenderView::canShowDataObjectInCoordinateSystem(const CoordinateSystemSpecification & spec)
+{
+    auto contents = visualizations();
+
+    if (contents.isEmpty())
+    {
+        return true;
+    }
+
+    QList<CoordinateTransformableDataObject *> transformableObjects;
+
+    for (auto visualization : contents)
+    {
+        if (auto transf = dynamic_cast<CoordinateTransformableDataObject *>(&visualization->dataObject()))
+        {
+            transformableObjects.push_back(transf);
+        }
+    }
+
+    if (spec.type == CoordinateSystemType::unspecified || transformableObjects.isEmpty())
+    {
+        return (spec.type == CoordinateSystemType::unspecified) 
+            == transformableObjects.isEmpty();
+    }
+
+    if (!transformableObjects.size() == contents.size())
+    {
+        qDebug() << "Unexpectedly rendering transformable and non-transformable objects.";
+        return false;
+    }
+
+    for (auto dataObject : transformableObjects)
+    {
+        if (!dataObject->canTransformTo(spec))
+        {
+            return false;
+        }
+    }
+
+    return true;
+}
+
 void AbstractRenderView::showDataObjects(
     const QList<DataObject *> & dataObjects,
     QList<DataObject *> & incompatibleObjects,
@@ -69,7 +137,59 @@ void AbstractRenderView::showDataObjects(
         return;
     }
 
-    showDataObjectsImpl(dataObjects, incompatibleObjects, subViewIndex);
+    QList<CoordinateTransformableDataObject *> transformableObjects;
+
+    bool hasTransformables = false;
+    for (auto dataObject : dataObjects)
+    {
+        auto transformable = dynamic_cast<CoordinateTransformableDataObject *>(dataObject);
+        transformableObjects << transformable;
+        if (transformable && transformable->coordinateSystem().isValid(false))
+        {
+            hasTransformables = true;
+        }
+    }
+
+    QList<DataObject *> possibleCompatibleObjects;
+    bool haveValidSystem = currentCoordinateSystem().isValid(false);
+
+    // Once there is a valid coordinate system specification, don't allow to mix incompatible
+    // representations
+    if (hasTransformables || haveValidSystem)
+    {
+        for (int inIdx = 0; inIdx < dataObjects.size(); ++inIdx)
+        {
+            auto transformable = transformableObjects[inIdx];
+            if (!transformable)
+            {
+                incompatibleObjects << dataObjects[inIdx];
+                continue;
+            }
+
+            if (!haveValidSystem)
+            {
+                // set the coordinate system to the system of the first loaded object
+                setCurrentCoordinateSystem(transformable->coordinateSystem());
+                haveValidSystem = true;
+                possibleCompatibleObjects << dataObjects[inIdx];
+                continue;
+            }
+
+            if (!transformable->canTransformTo(currentCoordinateSystem()))
+            {
+                incompatibleObjects << dataObjects[inIdx];
+                continue;
+            }
+
+            possibleCompatibleObjects << dataObjects[inIdx];
+        }
+    }
+    else
+    {
+        possibleCompatibleObjects = dataObjects;
+    }
+
+    showDataObjectsImpl(possibleCompatibleObjects, incompatibleObjects, subViewIndex);
 }
 
 void AbstractRenderView::hideDataObjects(const QList<DataObject *> & dataObjects, int subViewIndex)
@@ -303,6 +423,11 @@ void AbstractRenderView::onClearSelection()
     visualizationSelectionChangedEvent(implementation().selection());
 
     emit visualizationSelectionChanged(this, implementation().selection());
+}
+
+void AbstractRenderView::onCoordinateSystemChanged(const CoordinateSystemSpecification & spec)
+{
+    implementation().applyCurrentCoordinateSystem(spec);
 }
 
 void AbstractRenderView::visualizationSelectionChangedEvent(const VisualizationSelection & /*selection*/)

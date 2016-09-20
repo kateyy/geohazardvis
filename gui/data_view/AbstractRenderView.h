@@ -2,6 +2,7 @@
 
 #include <functional>
 
+#include <core/CoordinateSystems.h>
 #include <gui/data_view/AbstractDataView.h>
 #include <gui/data_view/t_QVTKWidgetFwd.h>
 
@@ -23,6 +24,12 @@ public:
     bool isRenderer() const override;
 
     virtual ContentType contentType() const = 0;
+
+    const CoordinateSystemSpecification & currentCoordinateSystem() const;
+    /** Switch to the specified coordinate system. If canShowDataObjectInCoordinateSystem() returns
+    false, this function will do nothing and also return false. */
+    bool setCurrentCoordinateSystem(const CoordinateSystemSpecification & spec);
+    bool canShowDataObjectInCoordinateSystem(const CoordinateSystemSpecification & spec);
 
     /** Add data objects to the view or make already added objects visible again.
         @param incompatibleObjects Objects that cannot be added to the current contents. 
@@ -102,6 +109,8 @@ protected:
     void onSetSelection(const DataSelection & selection) override;
     void onClearSelection() override;
 
+    virtual void onCoordinateSystemChanged(const CoordinateSystemSpecification & spec);
+
     /** Called when the current selection is changed (set or clear) */
     virtual void visualizationSelectionChangedEvent(const VisualizationSelection & selection);
 
@@ -119,6 +128,8 @@ protected:
 private:
     t_QVTKWidget * m_qvtkWidget;
     bool m_onShowInitialized;
+
+    CoordinateSystemSpecification m_coordSystem;
 
     bool m_axesEnabled;
 

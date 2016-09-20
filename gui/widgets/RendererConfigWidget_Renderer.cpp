@@ -3,6 +3,8 @@
 #include <cassert>
 #include <limits>
 
+#include <QMessageBox>
+
 #include <vtkRenderer.h>
 #include <vtkCamera.h>
 #include <vtkTextActor.h>
@@ -55,6 +57,39 @@ void RendererConfigWidget::readCameraStats(vtkObject * DEBUG_ONLY(caller), unsig
 std::unique_ptr<PropertyGroup> RendererConfigWidget::createPropertyGroupRenderer(AbstractRenderView * renderView, RendererImplementationBase3D * impl)
 {
     auto root = std::make_unique<PropertyGroup>();
+
+    auto prop_CoordSystem = root->addProperty<CoordinateSystemType::Value>("CoordinateSystem",
+        [renderView]()
+    {
+        return renderView->currentCoordinateSystem().type;
+    },
+        [renderView, this] (CoordinateSystemType::Value type) {
+        auto spec = renderView->currentCoordinateSystem();
+        if (spec.type == type)
+        {
+            // work-around strange libzeug behavior
+            return;
+        }
+
+        spec.type = type;
+
+        if (!renderView->setCurrentCoordinateSystem(spec))
+        {
+            QMessageBox::warning(nullptr, "Coordinate System Selection",
+                "The currently shown data sets cannot be shown in the selected coordinate system (" + CoordinateSystemType(type).toString() + ").");
+            return;
+        }
+        renderView->render();
+    });
+    prop_CoordSystem->setOptions({
+        { "title", "Coordinate System" }
+    });
+    std::map<CoordinateSystemType::Value, std::string> coordSystemTypeStrings;
+    for (auto & pair : CoordinateSystemType::typeToStringMap())
+    {
+        coordSystemTypeStrings.emplace(pair.first, pair.second.toStdString());
+    }
+    prop_CoordSystem->setStrings(coordSystemTypeStrings);
 
     if (renderView->numberOfSubViews() == 1)
     {

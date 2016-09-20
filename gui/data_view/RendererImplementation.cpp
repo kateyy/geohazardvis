@@ -31,6 +31,10 @@ DataMapping & RendererImplementation::dataMapping() const
     return m_renderView.dataMapping();
 }
 
+void RendererImplementation::applyCurrentCoordinateSystem(const CoordinateSystemSpecification & /*spec*/)
+{
+}
+
 const QStringList & RendererImplementation::supportedInteractionStrategies() const
 {
     return m_supportedInteractionStrategies;

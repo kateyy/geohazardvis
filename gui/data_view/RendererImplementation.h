@@ -21,6 +21,7 @@ enum class ContentType;
 enum class IndexType;
 class DataObject;
 class DataMapping;
+struct CoordinateSystemSpecification;
 
 
 class GUI_API RendererImplementation : public QObject
@@ -37,6 +38,8 @@ public:
     virtual QString name() const = 0;
 
     virtual ContentType contentType() const = 0;
+
+    virtual void applyCurrentCoordinateSystem(const CoordinateSystemSpecification & spec);
 
     /** @param dataObjects Check if we can render these objects with the current view content.
         @param incompatibleObjects Fills this list with discarded objects.

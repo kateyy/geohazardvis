@@ -1,18 +1,20 @@
 #include "DataBrowser.h"
 #include "ui_DataBrowser.h"
 
+#include <QMessageBox>
 #include <QMouseEvent>
 #include <QMenu>
 
 #include <vtkFloatArray.h>
 
 #include <core/DataSetHandler.h>
-#include <core/data_objects/DataObject.h>
+#include <core/data_objects/CoordinateTransformableDataObject.h>
 #include <core/data_objects/RawVectorData.h>
 #include <core/rendered_data/RenderedData.h>
 
 #include <gui/DataMapping.h>
 #include <gui/data_view/AbstractRenderView.h>
+#include <gui/widgets/CoordinateSystemAdjustmentWidget.h>
 #include <gui/widgets/DataBrowserTableModel.h>
 
 
@@ -141,6 +143,60 @@ void DataBrowser::changeRenderedVisibility(DataObject * clickedObject)
     }
 
     auto renderView = m_dataMapping->focusedRenderView();
+
+    QList<CoordinateTransformableDataObject *> transformableMissingInfo;
+    for (auto dataObject : selection)
+    {
+        // don't check again for currently rendered data
+        if (renderView && renderView->contains(dataObject))
+        {
+            continue;
+        }
+
+        auto transformable = dynamic_cast<CoordinateTransformableDataObject *>(dataObject);
+        if (!transformable)
+        {
+            continue;
+        }
+        if (transformable->coordinateSystem().isValid(false))
+        {
+            continue;
+        }
+        transformableMissingInfo << transformable;
+    }
+
+    if (!transformableMissingInfo.isEmpty())
+    {
+        QString names;
+        for (auto transformable : transformableMissingInfo)
+        {
+            names += " - " + transformable->name() + "\n";
+        }
+
+        const auto answer = QMessageBox::question(nullptr, "Missing Coordinate System Information",
+            "The coordinate system of the following data sets is not set:\n"
+            + names
+            + "This may lead to incorrect visualizations. Do you want the set the coordinate system now?",
+            QMessageBox::Yes, QMessageBox::No, QMessageBox::Cancel);
+        switch (answer)
+        {
+        case QMessageBox::Yes:
+        {
+            CoordinateSystemAdjustmentWidget widget;
+            for (auto transformable : transformableMissingInfo)
+            {
+                widget.setDataObject(transformable);
+                widget.exec();
+            }
+            break;
+        }
+        case QMessageBox::No:
+            break;
+        default:
+            return;
+        }
+    }
+
     // no current render view: add selection to new view
     if (!renderView)
     {
