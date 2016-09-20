@@ -1,6 +1,7 @@
 #pragma once
 
 #include <core/utility/DataExtent.h>
+#include <core/utility/vtkvectorhelper.h>
 
 #include <algorithm>
 #include <limits>
@@ -475,4 +476,20 @@ DataExtent<T, Dimensions>::numberOfCells() const
     }
 
     return numCells;
+}
+
+template<typename T, size_t Dimensions>
+template<size_t Dimensions1>
+typename std::enable_if<(Dimensions1 > 1u), vtkVector<double, Dimensions>>::type
+DataExtent<T, Dimensions>::relativeOriginPosition() const
+{
+    return -min() / componentSize();
+}
+
+template<typename T, size_t Dimensions>
+template<size_t Dimensions1>
+typename std::enable_if<(Dimensions1 == 1u), double>::type
+DataExtent<T, Dimensions>::relativeOriginPosition() const
+{
+    return -min() / componentSize();
 }

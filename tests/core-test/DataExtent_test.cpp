@@ -266,3 +266,21 @@ TEST(DataExtent_test, numberOfPoints)
     ASSERT_EQ(2 * 2 * 2, ImageExtent({ 0, 1, 0, 1, 0, 1 }).numberOfPoints());
     ASSERT_EQ(3 * 2 * 6, ImageExtent({ 2, 4, 8, 9, 10, 15 }).numberOfPoints());
 }
+
+TEST(DataExtent_test, relativeOriginPosition_Bounds)
+{
+    ASSERT_EQ(vtkVector2d({ 0.0, 0.0 }), Bounds2({ 0.0, 1.0, 0.0, 1.0 }).relativeOriginPosition());
+    ASSERT_EQ(vtkVector2d({ 1.0, 1.0 }), Bounds2({ -1.0, 0.0, -1.0, 0.0 }).relativeOriginPosition());
+    ASSERT_EQ(vtkVector2d({ 0.25, 0.5 }), Bounds2({ -2.0, 6.0, -4.0, 4.0 }).relativeOriginPosition());
+    ASSERT_EQ(vtkVector2d({ 2.0, 4.0 }), Bounds2({ -2.0, -1.0, -4.0, -3.0 }).relativeOriginPosition());
+    ASSERT_EQ(vtkVector2d({ -1.0, -1.0 }), Bounds2({ 1.0, 2.0, 2.0, 4.0 }).relativeOriginPosition());
+}
+
+TEST(DataExtent_test, relativeOriginPosition_ValueRange)
+{
+    ASSERT_EQ(0.0, ValueRange<>({ 0.0, 1.0 }).relativeOriginPosition());
+    ASSERT_EQ(1.0, ValueRange<>({ -1.0, 0.0 }).relativeOriginPosition());
+    ASSERT_EQ(0.25, ValueRange<>({ -2.0, 6.0 }).relativeOriginPosition());
+    ASSERT_EQ(2.0, ValueRange<>({ -2.0, -1.0 }).relativeOriginPosition());
+    ASSERT_EQ(-1.0, ValueRange<>({ 1.0, 2.0 }).relativeOriginPosition());
+}

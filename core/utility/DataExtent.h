@@ -133,6 +133,14 @@ public:
     typename std::enable_if<std::is_integral<T1>::value, size_t>::type
         numberOfCells() const;
 
+    template<size_t Dimensions1 = Dimensions>
+    typename std::enable_if<(Dimensions1 > 1u), vtkVector<double, Dimensions>>::type
+        relativeOriginPosition() const;
+
+    template<size_t Dimensions1 = Dimensions>
+    typename std::enable_if<(Dimensions1 == 1u), double>::type
+        relativeOriginPosition() const;
+
 private:
     array_t m_extent;
 };
