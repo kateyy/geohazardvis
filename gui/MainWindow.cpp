@@ -20,7 +20,7 @@
 #include <core/DataSetHandler.h>
 #include <core/RuntimeInfo.h>
 #include <core/VersionInfo.h>
-#include <core/data_objects/DataObject.h>
+#include <core/data_objects/CoordinateTransformableDataObject.h>
 #include <core/io/Exporter.h>
 #include <core/io/Loader.h>
 #include <core/rendered_data/RenderedData.h>
@@ -34,6 +34,7 @@
 #include <gui/data_view/TableView.h>
 #include <gui/plugin/GuiPluginInterface.h>
 #include <gui/plugin/GuiPluginManager.h>
+#include <gui/widgets/CoordinateSystemAdjustmentWidget.h>
 #include <gui/widgets/DataImporterWidget.h>
 #include <gui/widgets/GridDataImporterWidget.h>
 #include <gui/widgets/CanvasExporterWidget.h>
@@ -117,6 +118,27 @@ MainWindow::MainWindow()
     });
     connect(m_ui->actionAbout_Qt, &QAction::triggered, [this] () { QMessageBox::aboutQt(this); });
     connect(m_ui->actionApply_Digital_Elevation_Model, &QAction::triggered, this, &MainWindow::showDEMWidget);
+    connect(m_ui->actionAdjust_Coordinate_System, &QAction::triggered, [this] ()
+    {
+        auto && selection = m_dataBrowser->selectedDataSets();
+        if (selection.isEmpty())
+        {
+            QMessageBox::information(this, "Coordinate System Specification",
+                "Please select a data object in the data browser, first!");
+            return;
+        }
+        auto transformableDataObject = dynamic_cast<CoordinateTransformableDataObject *>(selection.first());
+        if (!transformableDataObject)
+        {
+            QMessageBox::information(this, "Coordinate System Specification",
+                "The coordinate system of the selected data object cannot be changed (" ").");
+            return;
+        }
+
+        CoordinateSystemAdjustmentWidget dialog(this);
+        dialog.setDataObject(transformableDataObject);
+        dialog.exec();
+    });
     connect(m_ui->actionNew_Render_View, &QAction::triggered,
         [this] () { m_dataMapping->openInRenderView({}); });
     connect(m_ui->actionExit, &QAction::triggered, qApp, &QApplication::quit);

@@ -89,6 +89,7 @@
     <property name="title">
      <string>&amp;Data Set</string>
     </property>
+    <addaction name="actionAdjust_Coordinate_System"/>
     <addaction name="actionApply_Digital_Elevation_Model"/>
    </widget>
    <addaction name="menuFile"/>
@@ -196,6 +197,11 @@
   <action name="actionImport_CSV_Grid_Data">
    <property name="text">
     <string>Import CSV Grid Data...</string>
+   </property>
+  </action>
+  <action name="actionAdjust_Coordinate_System">
+   <property name="text">
+    <string>Specify Coordinate System</string>
    </property>
   </action>
  </widget>

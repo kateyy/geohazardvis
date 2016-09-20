@@ -91,6 +91,8 @@ set(sources
     widgets/ColorMappingChooser.cpp
     widgets/CollapsibleGroupBox.h
     widgets/CollapsibleGroupBox.cpp
+    widgets/CoordinateSystemAdjustmentWidget.h
+    widgets/CoordinateSystemAdjustmentWidget.cpp
     widgets/DataBrowser.h
     widgets/DataBrowser.cpp
     widgets/DataBrowserTableModel.h
@@ -125,6 +127,7 @@ set(UIs
 
     widgets/CanvasExporterWidget.ui
     widgets/ColorMappingChooser.ui
+    widgets/CoordinateSystemAdjustmentWidget.ui
     widgets/DataBrowser.ui
     widgets/DataImporterWidget.ui
     widgets/DEMWidget.ui
