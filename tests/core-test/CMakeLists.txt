@@ -17,7 +17,7 @@ set(sources
     PipelineInformationHelper.cpp
     QVtkTableModel_test.cpp
     RenderedData_test.cpp
-    SimpleDEMGeoCoordToLocalFilter_test.cpp
+    SimpleImageGeoCoordinateTransformFilter_test.cpp
     TextFileReader_test.cpp
     VTKAlgorithmImplementations_test.cpp
 )

@@ -7,14 +7,15 @@
 #include <vtkPassArrays.h>
 #include <vtkPolyData.h>
 #include <vtkProperty.h>
+#include <vtkVector.h>
 #include <vtkVersionMacros.h>
 
+#include <core/CoordinateSystems.h>
 #include <core/DataSetHandler.h>
 #include <core/color_mapping/ColorMapping.h>
 #include <core/data_objects/ImageDataObject.h>
 #include <core/data_objects/PolyDataObject.h>
 #include <core/filters/DEMToTopographyMesh.h>
-#include <core/filters/SimpleDEMGeoCoordToLocalFilter.h>
 #include <core/rendered_data/RenderedPolyData.h>
 #include <core/rendered_data/RenderedImageData.h>
 #include <core/utility/DataSetFilter.h>
@@ -24,7 +25,7 @@
 #include <core/utility/vtkvectorhelper.h>
 #include <gui/DataMapping.h>
 #include <gui/data_view/AbstractRenderView.h>
-#include <gui/data_view/RendererImplementationBase3D.h>
+#include <gui/data_view/RendererImplementation.h>
 
 
 DEMWidget::DEMWidget(DataMapping & dataMapping, AbstractRenderView * previewRenderer, QWidget * parent, Qt::WindowFlags f,
@@ -50,9 +51,9 @@ DEMWidget::DEMWidget(DataMapping & dataMapping, AbstractRenderView * previewRend
 
     setupPipeline();
 
-    const auto updateComboBox = [this] (QComboBox * _comboBox, const QList<DataObject *> & filteredList)
+    const auto updateComboBox = [this] (QComboBox * comboBoxPtr, const QList<DataObject *> & filteredList, bool updateDEM)
     {
-        auto & comboBox = *_comboBox;
+        auto & comboBox = *comboBoxPtr;
         QSignalBlocker signalBlocker(comboBox);
 
         const auto lastSelection = variantToDataObjectPtr(comboBox.currentData());
@@ -75,24 +76,34 @@ DEMWidget::DEMWidget(DataMapping & dataMapping, AbstractRenderView * previewRend
         }
 
         comboBox.setCurrentIndex(0);
+
+        if (updateDEM)
+        {
+            updateTargetCoordsComboForCurrentDEM();
+        }
+
         updatePreview();
     };
 
     connect(m_topographyMeshes.get(), &DataSetFilter::listChanged,
-        std::bind(updateComboBox, m_ui->topoTemplateCombo, std::placeholders::_1));
+        std::bind(updateComboBox, m_ui->topoTemplateCombo, std::placeholders::_1, false));
     connect(m_dems.get(), &DataSetFilter::listChanged,
-        std::bind(updateComboBox, m_ui->demCombo, std::placeholders::_1));
+        std::bind(updateComboBox, m_ui->demCombo, std::placeholders::_1, true));
 
     m_topographyMeshes->setFilterFunction(topoDataSetFilter);
     m_dems->setFilterFunction(demDataSetFilter);
 
     resetParametersForCurrentInputs();
 
-    const auto indexChangedSignal = static_cast<void(QComboBox::*)(int)>(&QComboBox::currentIndexChanged);
-    connect(m_ui->topoTemplateCombo, indexChangedSignal, this, &DEMWidget::updatePreview);
-    connect(m_ui->demCombo, indexChangedSignal, this, &DEMWidget::updatePreview);
+    const auto comboIndexChangedSignal = static_cast<void(QComboBox::*)(int)>(&QComboBox::currentIndexChanged);
+    connect(m_ui->topoTemplateCombo, comboIndexChangedSignal, this, &DEMWidget::updatePreview);
+    connect(m_ui->demCombo, comboIndexChangedSignal, [this] ()
+    {
+        updateTargetCoordsComboForCurrentDEM();
+        updatePreview();
+    });
 
-    auto applyDEMUnitScale = [this] () -> bool
+    const auto applyDEMUnitScale = [this] () -> bool
     {
         const auto newVal = m_ui->demUnitScaleSpinBox->value();
         if (newVal == m_demUnitDecimalExponent)
@@ -109,7 +120,8 @@ DEMWidget::DEMWidget(DataMapping & dataMapping, AbstractRenderView * previewRend
 
     applyDEMUnitScale();
 
-    connect(m_ui->demUnitScaleSpinBox, &QSpinBox::editingFinished, [this, applyDEMUnitScale] () {
+    connect(m_ui->demUnitScaleSpinBox, &QSpinBox::editingFinished, [this, applyDEMUnitScale] ()
+    {
         if (!applyDEMUnitScale() || !m_dataPreview || !m_previewRenderer)
         {
             return;
@@ -125,20 +137,16 @@ DEMWidget::DEMWidget(DataMapping & dataMapping, AbstractRenderView * previewRend
         }
     });
 
-    connect(m_ui->demToLocalCoordsCheckBox, &QCheckBox::toggled, [this] (bool checked)
+    connect(m_ui->targetCoordinateSystemComboBox, comboIndexChangedSignal, [this] ()
     {
-        m_demToLocalFilter->SetEnabled(checked);
+        // setup pipeline to use the selected coordinate system
+        m_meshParametersInvalid = true;
 
-        resetParametersForCurrentInputs();
-
-        if (m_previewRenderer)
-        {
-            updatePipeline();
-            m_previewRenderer->render();
-        }
+        updatePreview();
     });
 
-    connect(m_ui->radiusMatchingButton, &QAbstractButton::clicked, [this] () {
+    connect(m_ui->radiusMatchingButton, &QAbstractButton::clicked, [this] ()
+    {
         matchTopoMeshRadius();
 
         if (m_previewRenderer)
@@ -147,7 +155,8 @@ DEMWidget::DEMWidget(DataMapping & dataMapping, AbstractRenderView * previewRend
             m_previewRenderer->render();
         }
     });
-    connect(m_ui->templateCenterButton, &QAbstractButton::clicked, [this] () {
+    connect(m_ui->templateCenterButton, &QAbstractButton::clicked, [this] ()
+    {
         centerTopoMesh();
 
         if (m_previewRenderer)
@@ -182,18 +191,18 @@ DEMWidget::DEMWidget(DataMapping & dataMapping, AbstractRenderView * previewRend
 
 DEMWidget::DEMWidget(DataMapping & dataMapping, AbstractRenderView * previewRenderer, QWidget * parent, Qt::WindowFlags f)
     : DEMWidget(dataMapping, previewRenderer, parent, f,
-    t_filterFunction([] (DataObject * dataSet, const DataSetHandler &) -> bool
+    t_filterFunction([] (DataObject * dataObject, const DataSetHandler &) -> bool
     {
-        if (auto poly = dynamic_cast<PolyDataObject *>(dataSet))
+        if (auto poly = dynamic_cast<PolyDataObject *>(dataObject))
         {
             return poly->is2p5D();
         }
 
         return false;
     }),
-    t_filterFunction([] (DataObject * dataSet, const DataSetHandler &) -> bool
+    t_filterFunction([] (DataObject * dataObject, const DataSetHandler &) -> bool
     {
-        return dynamic_cast<ImageDataObject *>(dataSet) != nullptr;
+        return dynamic_cast<ImageDataObject *>(dataObject) != nullptr;
     }))
 {
 }
@@ -226,36 +235,29 @@ DEMWidget::~DEMWidget()
         return;
     }
 
-    QList<DataObject *> objectsToHide;
-    auto dem = m_demPreview.get();
+    QList<DataObject *> objectsToRemove;
+    auto currentDem = dem();
     auto topo = m_dataPreview.get();
-    if (dem)
+    if (currentDem)
     {
-        objectsToHide << dem;
+        objectsToRemove << currentDem;
     }
 
     if (topo)
     {
-        objectsToHide << topo;
+        objectsToRemove << topo;
     }
 
-    if (m_previewRenderer->dataObjects().toSet() == objectsToHide.toSet())
+    if (m_previewRenderer->dataObjects().toSet() == objectsToRemove.toSet())
     {
         // it only shows our data, so close it
         m_previewRenderer->close();
         QCoreApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
     }
-    else
+    else if (!objectsToRemove.isEmpty())
     {
         // remove our data and keep it open
-        if (dem)
-        {
-            m_previewRenderer->hideDataObjects({ dem });
-        }
-        if (topo)
-        {
-            m_previewRenderer->prepareDeleteData({ topo });
-        }
+        m_previewRenderer->prepareDeleteData(objectsToRemove);
     }
 }
 
@@ -295,14 +297,22 @@ void DEMWidget::setMeshTemplate(PolyDataObject * meshTemplate)
     }
 }
 
-bool DEMWidget::transformDEMToLocalCoords() const
+CoordinateSystemType DEMWidget::targetCoordinateSystem() const
 {
-    return m_ui->demToLocalCoordsCheckBox->isChecked();
+    const auto currentSelection = m_ui->targetCoordinateSystemComboBox->currentData();
+
+    return currentSelection.isValid()
+        ? CoordinateSystemType::Value(currentSelection.value<std::underlying_type_t<CoordinateSystemType::Value>>())
+        : CoordinateSystemType::unspecified;
 }
 
-void DEMWidget::setTransformDEMToLocalCoords(bool doTransform)
+void DEMWidget::setTargetCoordinateSystem(CoordinateSystemType targetCoordinateSystem)
 {
-    m_ui->demToLocalCoordsCheckBox->setChecked(doTransform);
+    const int i = m_ui->targetCoordinateSystemComboBox->findData(targetCoordinateSystem.value);
+    if (i >= 0)
+    {
+        m_ui->targetCoordinateSystemComboBox->setCurrentIndex(i);
+    }
 }
 
 double DEMWidget::topoRadius() const
@@ -315,12 +325,12 @@ void DEMWidget::setTopoRadius(double radius)
     m_ui->topographyRadiusSpinBox->setValue(radius);
 }
 
-const vtkVector2d & DEMWidget::topoShiftXY() const
+const vtkVector2d & DEMWidget::topographyCenterXY() const
 {
     return m_demToTopoFilter->GetTopographyShiftXY();
 }
 
-void DEMWidget::setTopoShiftXY(const vtkVector2d & shift)
+void DEMWidget::setTopographyCenterXY(const vtkVector2d & shift)
 {
     // execute update code only once for both widgets
     const auto blockers = uiSignalBlockers();
@@ -362,6 +372,8 @@ void DEMWidget::showPreview()
 
     if (m_previewRenderer)
     {
+        m_previewRenderer->setCurrentCoordinateSystem(targetCoordsDEMSpec());
+
         m_previewRenderer->implementation().resetCamera(true, 0);
 
 
@@ -436,7 +448,10 @@ std::unique_ptr<PolyDataObject> DEMWidget::saveRelease()
     {
         newDataName = m_ui->newTopoModelName->placeholderText();
     }
-    return std::make_unique<PolyDataObject>(newDataName, *surface);
+    auto newDataObject = std::make_unique<PolyDataObject>(newDataName, *surface);
+    newDataObject->specifyCoordinateSystem(targetCoordsTopoSpec());
+
+    return newDataObject;
 }
 
 bool DEMWidget::save()
@@ -561,14 +576,6 @@ void DEMWidget::setupPipeline()
 
     m_meshPipelineStart = cleanupMeshAttributes;
 
-    m_demToLocalFilter = vtkSmartPointer<SimpleDEMGeoCoordToLocalFilter>::New();
-    m_demToLocalFilter->SetEnabled(m_ui->demToLocalCoordsCheckBox->isChecked());
-    m_demPipelineStart = m_demToLocalFilter;
-
-    m_demToLocalFilter->UpdateDataObject();
-    m_demPreview = std::make_unique<ImageDataObject>("Elevation Model", *m_demToLocalFilter->GetOutput());
-
-    m_demToTopoFilter->SetInputConnection(0, m_demToLocalFilter->GetOutputPort());
     m_demToTopoFilter->SetInputConnection(1, cleanupMeshAttributes->GetOutputPort());
 
     m_cleanupOutputMeshAttributes = createMeshCleanupFilter();
@@ -577,14 +584,14 @@ void DEMWidget::setupPipeline()
 
 void DEMWidget::configureDEMVisualization()
 {
-    assert(m_previewRenderer && m_demPreview.get());
+    assert(m_previewRenderer);
 
-    if (!currentDEMChecked())
+    auto dem = currentDEMChecked();
+
+    if (!dem)
     {
         return;
     }
-
-    auto dem = m_demPreview.get();
 
     auto demRendered = dynamic_cast<RenderedImageData *>(m_previewRenderer->visualizationFor(dem));
     assert(demRendered);
@@ -654,9 +661,19 @@ ImageDataObject * DEMWidget::currentDEMChecked()
 
     if (current != m_demSelection)
     {
+        if (m_demSelection)
+        {
+            disconnect(m_demSelection, &CoordinateTransformableDataObject::coordinateSystemChanged, this, &DEMWidget::updateForChangedDEMCoordinateSystem);
+        }
+
         m_demSelection = static_cast<ImageDataObject *>(current);
         m_meshParametersInvalid = true;
         m_previewRebuildRequired = true;
+
+        if (m_demSelection)
+        {
+            connect(m_demSelection, &CoordinateTransformableDataObject::coordinateSystemChanged, this, &DEMWidget::updateForChangedDEMCoordinateSystem);
+        }
     }
 
     return m_demSelection;
@@ -676,6 +693,61 @@ PolyDataObject * DEMWidget::currentTopoTemplateChecked()
     }
 
     return m_topoTemplateSelection;
+}
+
+ReferencedCoordinateSystemSpecification DEMWidget::targetCoordsDEMSpec()
+{
+    ReferencedCoordinateSystemSpecification targetCoords;
+
+    if (auto currentDEM = dem())
+    {
+        targetCoords = currentDEM->coordinateSystem();
+        targetCoords.type = targetCoordinateSystem();
+    }
+
+    return targetCoords;
+}
+
+ReferencedCoordinateSystemSpecification DEMWidget::targetCoordsTopoSpec()
+{
+    ReferencedCoordinateSystemSpecification spec;
+
+    auto currentDEM = dem();
+    if (!currentDEM)
+    {
+        return spec;
+    }
+
+    auto demCoordsSpec = targetCoordsDEMSpec();
+    spec = demCoordsSpec;
+
+    auto transformedDEM = currentDEM->coordinateTransformedDataSet(demCoordsSpec);
+    if (!transformedDEM)
+    {
+        // DEM's coordinate system is not defined, so the output's should also not be defined.
+        return spec;
+    }
+
+    const auto demBounds2D = DataBounds(transformedDEM->GetBounds()).convertTo<2>();
+    if (demBounds2D.isEmpty())
+    {
+        return spec;
+    }
+
+    auto && referenceXY = topographyCenterXY();
+    spec.referencePointLatLong = { referenceXY.GetY(), referenceXY.GetX() };
+
+    // The mesh template is assumed to have its origin (and highest density) at its center.
+    // That's why the mesh center is always positioned on the point selected in the UI
+    spec.referencePointLocalRelative = { 0.5, 0.5 };
+
+    return spec;
+}
+
+void DEMWidget::updateForChangedDEMCoordinateSystem()
+{
+    updateTargetCoordsComboForCurrentDEM();
+    updatePreview();
 }
 
 void DEMWidget::setPipelineInputs()
@@ -704,8 +776,16 @@ void DEMWidget::setPipelineInputs()
         return;
     }
 
-    m_demPipelineStart->SetInputDataObject(dem ? dem->dataSet() : nullptr);
-    m_meshPipelineStart->SetInputDataObject(topo ? topo->dataSet() : nullptr);
+    if (auto transformedDEMPort = dem->coordinateTransformedOutputPort(targetCoordsDEMSpec()))
+    {
+        m_demToTopoFilter->SetInputConnection(transformedDEMPort);
+    }
+    else    // DEM doesn't support any transformations
+    {
+        m_demToTopoFilter->SetInputDataObject(dem->dataSet());
+    }
+
+    m_meshPipelineStart->SetInputDataObject(topo->dataSet());
 
     resetParametersForCurrentInputs();
 
@@ -757,9 +837,10 @@ void DEMWidget::updatePipeline()
 
     // defer UI updates / render events until the whole pipeline is updated
     const ScopedEventDeferral topoDeferral(*m_dataPreview);
-    const ScopedEventDeferral demDefferal(*m_demPreview);
 
     m_cleanupOutputMeshAttributes->Update();
+
+    m_dataPreview->specifyCoordinateSystem(targetCoordsTopoSpec());
 }
 
 void DEMWidget::updatePreviewRendererContents()
@@ -773,13 +854,19 @@ void DEMWidget::updatePreviewRendererContents()
     auto currentDEM = currentDEMChecked();
     if (currentDEM)
     {
-        // always render the internal DEM copy, but if a DEM is selected in the UI
-        objectsToRender << m_demPreview.get();
+        objectsToRender << currentDEM;
     }
 
     if (m_lastPreviewedDEM && (m_lastPreviewedDEM != currentDEM))
     {
-        m_previewRenderer->hideDataObjects({ m_demPreview.get() });
+        if (m_dems->filteredDataSetList().contains(m_lastPreviewedDEM))
+        {
+            m_previewRenderer->hideDataObjects({ m_lastPreviewedDEM });
+        }
+        else
+        {
+            m_previewRenderer->prepareDeleteData({ m_lastPreviewedDEM });
+        }
 
         if (!m_previewRenderer) // hideDataObjects() might process render view close events
         {
@@ -788,23 +875,29 @@ void DEMWidget::updatePreviewRendererContents()
     }
     m_lastPreviewedDEM = currentDEM;
 
-    auto currentTopo = m_dataPreview.get();
-    if (currentTopo)
+    auto currentTopoTemplate = currentTopoTemplateChecked();
+    if (m_dataPreview)
     {
-        objectsToRender << currentTopo;
+        objectsToRender << m_dataPreview.get();
+    }
+    else
+    {
+        currentTopoTemplate = nullptr;
     }
 
     bool resetTopoVis = false;
-    if (m_lastPreviewedTopo != currentTopo)
+    if (m_lastPreviewedTopo != currentTopoTemplate)
     {
         resetTopoVis = true;
     }
-    m_lastPreviewedTopo = currentTopo;
+    m_lastPreviewedTopo = currentTopoTemplate;
 
     if (objectsToRender.isEmpty())
     {
         return;
     }
+
+    m_previewRenderer->setCurrentCoordinateSystem(targetCoordsDEMSpec());
 
     QList<DataObject *> incompatible;
     m_previewRenderer->showDataObjects(objectsToRender, incompatible);
@@ -953,4 +1046,54 @@ bool DEMWidget::checkIfShiftChanged() const
     const auto diff = maxComponent(abs(uiShift - algShift));
 
     return diff > d;
+}
+
+void DEMWidget::updateTargetCoordsComboForCurrentDEM()
+{
+    auto & combo = *m_ui->targetCoordinateSystemComboBox;
+    QSignalBlocker blocker(combo);
+    combo.clear();
+
+    if (!dem() || !dem()->coordinateSystem().isValid(false))
+    {
+        combo.addItem(CoordinateSystemType(CoordinateSystemType::unspecified).toString(), CoordinateSystemType::unspecified);
+        combo.setEnabled(false);
+        return;
+    }
+
+    combo.setEnabled(true);
+
+    auto & currentDEM = *dem();
+
+    auto && dataSetCoords = currentDEM.coordinateSystem();
+
+    int ownIndex = -1;
+    int i = 0;
+    for (auto && typeAndName : CoordinateSystemType::typeToStringMap())
+    {
+        if (typeAndName.first == dataSetCoords.type)
+        {
+            ownIndex = i;
+        }
+
+        // this widget only allows between geographic/global/local in the same reference system
+        auto checkCoords = dataSetCoords;
+        checkCoords.type = typeAndName.first;
+        if (!currentDEM.canTransformTo(checkCoords))
+        {
+            continue;
+        }
+
+        combo.addItem(checkCoords.type.toString(), checkCoords.type.value);
+        ++i;
+    }
+
+    if (ownIndex == -1)
+    {
+        combo.insertItem(0, dataSetCoords.type.toString(), dataSetCoords.type.value);
+        ownIndex = 0;
+    }
+
+    // always use the data set's coordinate system as default
+    combo.setCurrentIndex(ownIndex);
 }

@@ -10,7 +10,7 @@
 #include <vtkPointData.h>
 #include <vtkDataArray.h>
 
-#include <core/filters/SimpleDEMGeoCoordToLocalFilter.h>
+#include <core/filters/SimpleImageGeoCoordinateTransformFilter.h>
 #include <core/rendered_data/RenderedImageData.h>
 #include <core/table_model/QVtkTableModelImage.h>
 #include <core/utility/conversions.h>
@@ -143,20 +143,32 @@ vtkSmartPointer<vtkAlgorithm> ImageDataObject::createTransformPipeline(
     const CoordinateSystemSpecification & toSystem,
     vtkAlgorithmOutput * pipelineUpstream) const
 {
-    if (coordinateSystem().type != CoordinateSystemType::geographic
-        || coordinateSystem().geographicSystem != "WGS 84")
-    {
-        return nullptr;
-    }
-
-    if (toSystem.type != CoordinateSystemType::metricLocal
+    if (coordinateSystem().geographicSystem != "WGS 84"
         || toSystem.geographicSystem != "WGS 84"
-        || toSystem.globalMetricSystem != "UTM")
+        || coordinateSystem().globalMetricSystem != "UTM"
+        || toSystem.globalMetricSystem != "UTM"
+        || !coordinateSystem().isReferencePointValid())
     {
         return nullptr;
     }
 
-    auto filter = vtkSmartPointer<SimpleDEMGeoCoordToLocalFilter>::New();
-    filter->SetInputConnection(pipelineUpstream);
-    return filter;
+    if (coordinateSystem().type == CoordinateSystemType::geographic
+        && toSystem.type == CoordinateSystemType::metricLocal)
+    {
+        auto filter = vtkSmartPointer<SimpleImageGeoCoordinateTransformFilter>::New();
+        filter->SetInputConnection(pipelineUpstream);
+        filter->SetTargetCoordinateSystem(SimpleImageGeoCoordinateTransformFilter::LOCAL_METRIC);
+        return filter;
+    }
+
+    if (coordinateSystem().type == CoordinateSystemType::metricLocal
+        && toSystem.type == CoordinateSystemType::geographic)
+    {
+        auto filter = vtkSmartPointer<SimpleImageGeoCoordinateTransformFilter>::New();
+        filter->SetInputConnection(pipelineUpstream);
+        filter->SetTargetCoordinateSystem(SimpleImageGeoCoordinateTransformFilter::GLOBAL_GEOGRAPHIC);
+        return filter;
+    }
+
+    return nullptr;
 }

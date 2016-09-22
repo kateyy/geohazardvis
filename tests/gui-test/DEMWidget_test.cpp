@@ -99,7 +99,16 @@ public:
         }
         demData->GetPointData()->GetScalars()->SetName("Elevations");
 
-        return std::make_unique<ImageDataObject>(name, *demData);
+        auto img = std::make_unique<ImageDataObject>(name, *demData);
+        img->specifyCoordinateSystem(ReferencedCoordinateSystemSpecification(
+            CoordinateSystemType::geographic,
+            "a geo system",
+            "a metric system",
+            { img->bounds().center()[1], img->bounds().center()[0] },
+            { 0.5, 0.5 }
+        ));
+
+        return img;
     }
 };
 
@@ -143,7 +152,6 @@ TEST_F(DEMWidget_test, DefaultConfigIsMatching)
 
     Test_DEMWidget demWidget;
 
-    demWidget.setTransformDEMToLocalCoords(false);
     demWidget.setCenterTopographyMesh(false);
     demWidget.setDEM(dem.get());
     demWidget.setMeshTemplate(topo.get());
@@ -170,7 +178,6 @@ TEST_F(DEMWidget_test, DefaultConfigCreatesElevations)
     Test_DEMWidget demWidget;
     demWidget.setDEM(dem.get());
     demWidget.setMeshTemplate(topo.get());
-    demWidget.setTransformDEMToLocalCoords(false);
     demWidget.setCenterTopographyMesh(false);
 
     auto newMesh = demWidget.saveRelease();
@@ -194,7 +201,6 @@ TEST_F(DEMWidget_test, ResetToDefaults)
 
     demWidget.setDEM(dem.get());
     demWidget.setMeshTemplate(topo.get());
-    demWidget.setTransformDEMToLocalCoords(false);
     demWidget.setCenterTopographyMesh(false);
 
     // NOTE: the minimal valid radius is defined by the DEM's spacing (0.1)
@@ -203,8 +209,8 @@ TEST_F(DEMWidget_test, ResetToDefaults)
     ASSERT_EQ(topoRadius, demWidget.topoRadius());
     // DEM center is at (5, 10, 0)
     const auto topoShift = vtkVector2d(6, 8);
-    demWidget.setTopoShiftXY(topoShift);
-    ASSERT_EQ(topoShift, demWidget.topoShiftXY());
+    demWidget.setTopographyCenterXY(topoShift);
+    ASSERT_EQ(topoShift, demWidget.topographyCenterXY());
 
     demWidget.resetParametersForCurrentInputs();
 
@@ -230,7 +236,7 @@ TEST_F(DEMWidget_test, DEMTransformedToLocal)
 
     demWidget.setDEM(dem.get());
     demWidget.setMeshTemplate(topo.get());
-    demWidget.setTransformDEMToLocalCoords(true);
+    demWidget.setTargetCoordinateSystem(CoordinateSystemType::metricLocal);
     demWidget.setCenterTopographyMesh(false);
 
     demWidget.resetParametersForCurrentInputs();
@@ -284,7 +290,7 @@ TEST_F(DEMWidget_test, DeleteCurrentDemAndTopo)
     auto & previewRenderer = *env.dataMapping->renderViews().first();
     previewRenderer.show();
 
-    ASSERT_NO_THROW(env.dataSetHandler->deleteData({ topo1, dem1 }));
+    ASSERT_NO_THROW(env.dataSetHandler->deleteData({ dem1, topo1 }));
 
     previewRenderer.close();
     qApp->processEvents();

@@ -1,10 +1,12 @@
 #include <gtest/gtest.h>
 
+#include <vtkExecutive.h>
 #include <vtkFloatArray.h>
 #include <vtkImageData.h>
 #include <vtkPointData.h>
 
-#include <core/filters/SimpleDEMGeoCoordToLocalFilter.h>
+#include <core/CoordinateSystems.h>
+#include <core/filters/SimpleImageGeoCoordinateTransformFilter.h>
 #include <core/utility/DataExtent.h>
 
 
@@ -26,6 +28,15 @@ public:
         }
 
         image->GetPointData()->SetScalars(elevations);
+        const auto centerXY = DataBounds(image->GetBounds()).center();
+
+        ReferencedCoordinateSystemSpecification(
+            CoordinateSystemType::geographic,
+            "some geo system",
+            "some metric system",
+            { centerXY[1], centerXY[0] },
+            { 0.5, 0.5 }
+        ).writeToInformation(*image->GetInformation());
 
         return image;
     }
@@ -35,11 +46,11 @@ public:
 
 TEST_F(SimpleDEMGeoCoordToLocalFilter_test, OutputMeshIsLocal)
 {
-    auto filter = vtkSmartPointer<SimpleDEMGeoCoordToLocalFilter>::New();
+    auto filter = vtkSmartPointer<SimpleImageGeoCoordinateTransformFilter>::New();
     auto dem = generateDEM();
 
     filter->SetInputData(dem);
-    filter->Update();
+    ASSERT_TRUE(filter->GetExecutive()->Update());
     auto localDem = filter->GetOutput();
 
     DataBounds bounds;

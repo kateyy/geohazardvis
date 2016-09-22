@@ -108,8 +108,8 @@ set(sources
     filters/ImagePlaneWidget.cpp
     filters/LinearSelectorXY.h
     filters/LinearSelectorXY.cpp
-    filters/SimpleDEMGeoCoordToLocalFilter.h
-    filters/SimpleDEMGeoCoordToLocalFilter.cpp
+    filters/SimpleImageGeoCoordinateTransformFilter.h
+    filters/SimpleImageGeoCoordinateTransformFilter.cpp
 
     glyph_mapping/GlyphMapping.h
     glyph_mapping/GlyphMapping.cpp

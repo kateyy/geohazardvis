@@ -7,15 +7,16 @@
 #include <QPointer>
 
 #include <vtkSmartPointer.h>
-#include <vtkVector.h>
 
 #include <gui/widgets/DockableWidget.h>
 
 
 class vtkAlgorithm;
 class vtkPassArrays;
+class vtkVector2d;
 
 class AbstractRenderView;
+struct CoordinateSystemType;
 class DataMapping;
 class DataObject;
 class DataSetFilter;
@@ -23,7 +24,7 @@ class DataSetHandler;
 class DEMToTopographyMesh;
 class ImageDataObject;
 class PolyDataObject;
-class SimpleDEMGeoCoordToLocalFilter;
+struct ReferencedCoordinateSystemSpecification;
 class Ui_DEMWidget;
 
 
@@ -43,13 +44,13 @@ public:
     PolyDataObject * meshTemplate();
     void setMeshTemplate(PolyDataObject * meshTemplate);
 
-    bool transformDEMToLocalCoords() const;
-    void setTransformDEMToLocalCoords(bool doTransform);
+    CoordinateSystemType targetCoordinateSystem() const;
+    void setTargetCoordinateSystem(CoordinateSystemType targetCoordinateSystem);
 
     double topoRadius() const;
     void setTopoRadius(double radius);
-    const vtkVector2d & topoShiftXY() const;
-    void setTopoShiftXY(const vtkVector2d & shift);
+    const vtkVector2d & topographyCenterXY() const;
+    void setTopographyCenterXY(const vtkVector2d & center);
     int demUnitScaleExponent() const;
     void setDEMUnitScaleExponent(int exponent);
 
@@ -85,6 +86,10 @@ private:
     ImageDataObject * currentDEMChecked();
     PolyDataObject * currentTopoTemplateChecked();
 
+    ReferencedCoordinateSystemSpecification targetCoordsDEMSpec();
+    ReferencedCoordinateSystemSpecification targetCoordsTopoSpec();
+    void updateForChangedDEMCoordinateSystem();
+
     /** Pass input DEM and mesh template to the pipeline, as far as available */
     void setPipelineInputs();
     /** Prepare output data object, if pipeline inputs are set */
@@ -112,6 +117,8 @@ private:
     bool checkIfRadiusChanged() const;
     bool checkIfShiftChanged() const;
 
+    void updateTargetCoordsComboForCurrentDEM();
+
 private:
     DataMapping & m_dataMapping;
 
@@ -126,9 +133,7 @@ private:
     /** Due to changed input data sets, the output/preview data set needs to be rebuilt */
     bool m_previewRebuildRequired;
 
-    vtkSmartPointer<vtkAlgorithm> m_demPipelineStart;
     vtkSmartPointer<vtkAlgorithm> m_meshPipelineStart;
-    vtkSmartPointer<SimpleDEMGeoCoordToLocalFilter> m_demToLocalFilter;
     vtkSmartPointer<DEMToTopographyMesh> m_demToTopoFilter;
     vtkSmartPointer<vtkPassArrays> m_cleanupOutputMeshAttributes;
 
@@ -136,7 +141,6 @@ private:
     QPointer<AbstractRenderView> m_previewRenderer;
 
     std::unique_ptr<PolyDataObject> m_dataPreview;
-    std::unique_ptr<ImageDataObject> m_demPreview;
 
     ImageDataObject * m_lastPreviewedDEM;
     ImageDataObject * m_demSelection;
