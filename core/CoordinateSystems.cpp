@@ -3,11 +3,15 @@
 #include <algorithm>
 #include <type_traits>
 
+#include <vtkCharArray.h>
+#include <vtkFieldData.h>
 #include <vtkInformation.h>
 #include <vtkInformationDoubleVectorKey.h>
 #include <vtkInformationIntegerKey.h>
 #include <vtkInformationStringKey.h>
+#include <vtkVariantCast.h>
 
+#include <core/utility/vtkstringhelper.h>
 #include <core/utility/vtkvectorhelper.h>
 
 
@@ -26,6 +30,212 @@ const QString & coordinateSytemTypeStringUnkown()
     static const QString unkown = "(unspecified)";
     return unkown;
 }
+
+const char * arrayName_type()
+{
+    static const char * const name = "CoordinateSystem_type";
+    return name;
+}
+
+const char * arrayName_geographicSystem()
+{
+    static const char * const name = "CoordinateSystem_GeographicSystem";
+    return name;
+}
+
+const char * arrayName_metricSystem()
+{
+    static const char * const name = "CoordinateSystem_MetricSystem";
+    return name;
+}
+
+const char * arrayName_geoReference()
+{
+    static const char * const name = "CoordinateSystem_GeoReferencePoint";
+    return name;
+}
+
+const char * arrayName_relativeReference()
+{
+    static const char * const name = "CoordinateSystem_LocalRelativeReferencePoint";
+    return name;
+}
+
+
+template<typename ValueType, typename = std::enable_if_t<std::is_arithmetic<ValueType>::value>>
+ValueType vtkVariantToValue(const vtkVariant & variant, bool * isValid = nullptr)
+{
+    return vtkVariantCast<ValueType>(variant, isValid);
+}
+
+template<typename ValueType>
+std::enable_if_t<std::is_enum<ValueType>::value, ValueType>
+vtkVariantToValue(const vtkVariant & variant, bool * isValid = nullptr)
+{
+    using underlying_t = std::underlying_type_t<ValueType>;
+    return static_cast<ValueType>(vtkVariantToValue<underlying_t>(variant, isValid));
+};
+
+
+template<typename T, typename = std::enable_if_t<std::is_arithmetic<T>::value>>
+int vtkTypeForValueType();
+
+template<> int vtkTypeForValueType<int32_t>()
+{
+    return VTK_TYPE_INT32;
+}
+template<> int vtkTypeForValueType<int64_t>()
+{
+    return VTK_TYPE_INT64;
+}
+template<> int vtkTypeForValueType<uint32_t>()
+{
+    return VTK_TYPE_UINT32;
+}
+template<> int vtkTypeForValueType<uint64_t>()
+{
+    return VTK_TYPE_UINT64;
+}
+template<> int vtkTypeForValueType<double>()
+{
+    return VTK_DOUBLE;
+}
+template<> int vtkTypeForValueType<char>()
+{
+    return VTK_CHAR;
+}
+template<typename T, typename = std::enable_if_t<std::is_enum<T>::value>, typename Underlying = std::underlying_type_t<T>>
+int vtkTypeForValueType()
+{
+    return vtkTypeForValueType<Underlying>();
+};
+
+template<typename ValueType, int NumComponents = 1, typename = std::enable_if_t<!std::is_enum<ValueType>::value>>
+void checkSetArray(vtkFieldData & fieldData, const vtkTuple<ValueType, NumComponents> & value,
+    const vtkTuple<ValueType, NumComponents> & nullValue, const char * arrayName)
+{
+    int arrayIndex;
+    vtkSmartPointer<vtkAbstractArray> abstractArray = fieldData.GetAbstractArray(arrayName, arrayIndex);
+    const int vtkType = vtkTypeForValueType<ValueType>();
+    if (abstractArray && abstractArray->GetDataType() != vtkType)
+    {
+        fieldData.RemoveArray(arrayIndex);
+        abstractArray = nullptr;
+    }
+
+    if (value != nullValue)
+    {
+        if (!abstractArray)
+        {
+            abstractArray.TakeReference(vtkDataArray::CreateDataArray(vtkType));
+            abstractArray->SetName(arrayName);
+            fieldData.AddArray(abstractArray);
+        }
+        abstractArray->SetNumberOfComponents(NumComponents);
+        abstractArray->SetNumberOfTuples(1);
+        for (int i = 0; i < NumComponents; ++i)
+        {
+            abstractArray->SetVariantValue(i, value[i]);
+        }
+    }
+    else if (abstractArray)
+    {
+        fieldData.RemoveArray(arrayIndex);
+    }
+}
+
+template<typename ValueType, int NumComponents = 1, typename = std::enable_if_t<std::is_enum<ValueType>::value>,
+    typename Underlying = std::underlying_type_t<ValueType>>
+void checkSetArray(vtkFieldData & fieldData, const vtkTuple<ValueType, NumComponents> & value,
+    const vtkTuple<ValueType, NumComponents> & nullValue, const char * arrayName)
+{
+    return checkSetArray(fieldData,
+        reinterpret_cast<const vtkTuple<Underlying, NumComponents> &>(value),
+        reinterpret_cast<const vtkTuple<Underlying, NumComponents> &>(nullValue),
+        arrayName);
+}
+
+template<typename ValueType>
+void checkSetArray(vtkFieldData & fieldData, ValueType value, ValueType nullValue, const char * arrayName)
+{
+    vtkTuple<ValueType, 1> v{ value }, n{ nullValue };
+    return checkSetArray(fieldData, v, n, arrayName);
+}
+
+void checkSetArray(vtkFieldData & fieldData, const QString & value, const char * arrayName)
+{
+    int arrayIndex;
+    auto abstractArray = fieldData.GetAbstractArray(arrayName, arrayIndex);
+    vtkSmartPointer<vtkCharArray> charArray = vtkCharArray::SafeDownCast(abstractArray);
+    if (abstractArray && !charArray)    // existing array with invalid type
+    {
+        fieldData.RemoveArray(arrayIndex);
+        abstractArray = nullptr;
+        charArray = nullptr;
+    }
+
+    if (!value.isEmpty())
+    {
+        if (!charArray)
+        {
+            charArray = vtkSmartPointer<vtkCharArray>::New();
+            charArray->SetName(arrayName);
+            fieldData.AddArray(charArray);
+        }
+        qstringToVtkArray(value, *charArray);
+    }
+    else if (charArray)
+    {
+        fieldData.RemoveArray(arrayIndex);
+    }
+}
+
+template<typename ValueType, int NumComponents = 1>
+void readIfExists(vtkFieldData & fieldData, const char * arrayName, vtkTuple<ValueType, NumComponents> & result)
+{
+    auto array = fieldData.GetAbstractArray(arrayName);
+    if (!array)
+    {
+        return;
+    }
+    if (array->GetDataType() != vtkTypeForValueType<ValueType>()
+        || array->GetNumberOfComponents() != NumComponents
+        || array->GetNumberOfValues() == 0)
+    {
+        return;
+    }
+    bool isValid = true;
+    std::remove_reference_t<decltype(result)> tmp;
+    for (int i = 0; i < NumComponents && isValid; ++i)
+    {
+        tmp[i] = vtkVariantToValue<ValueType>(array->GetVariantValue(i), &isValid);
+    }
+    if (isValid)
+    {
+        result = tmp;
+    }
+}
+
+template<typename ValueType, typename = std::enable_if_t<std::is_scalar<ValueType>::value>>
+void readIfExists(vtkFieldData & fieldData, const char * arrayName, ValueType & result)
+{
+    vtkTuple<ValueType, 1> r { result };
+    readIfExists(fieldData, arrayName, r);
+    result = r[0];
+}
+
+void readIfExists(vtkFieldData & fieldData, const char * arrayName, QString & result)
+{
+    if (auto array = fieldData.GetArray(arrayName))
+    {
+        result = vtkArrayToQString(*array);
+    }
+    else
+    {
+        result = QString();
+    }
+}
+
 
 }
 
@@ -189,6 +399,32 @@ CoordinateSystemSpecification CoordinateSystemSpecification::fromInformation(vtk
     return spec;
 }
 
+void CoordinateSystemSpecification::readFromFieldData(vtkFieldData & fieldData)
+{
+    *this = CoordinateSystemSpecification();
+
+    readIfExists(fieldData, arrayName_type(), type.value);
+    readIfExists(fieldData, arrayName_geographicSystem(), geographicSystem);
+    readIfExists(fieldData, arrayName_metricSystem(), globalMetricSystem);
+}
+
+void CoordinateSystemSpecification::writeToFieldData(vtkFieldData & fieldData) const
+{
+    static_assert(std::is_same<std::underlying_type_t<CoordinateSystemType::Value>, int32_t>::value,
+        "Unexpected enum type of CoordinateSystemType::Value");
+
+    checkSetArray(fieldData, type.value, CoordinateSystemType::unspecified, arrayName_type());
+    checkSetArray(fieldData, geographicSystem, arrayName_geographicSystem());
+    checkSetArray(fieldData, globalMetricSystem, arrayName_metricSystem());
+}
+
+ReferencedCoordinateSystemSpecification CoordinateSystemSpecification::fromFieldData(vtkFieldData & fieldData)
+{
+    ReferencedCoordinateSystemSpecification spec;
+    spec.readFromFieldData(fieldData);
+    return spec;
+}
+
 ReferencedCoordinateSystemSpecification::ReferencedCoordinateSystemSpecification()
     : CoordinateSystemSpecification()
 {
@@ -269,5 +505,33 @@ ReferencedCoordinateSystemSpecification ReferencedCoordinateSystemSpecification:
 {
     ReferencedCoordinateSystemSpecification spec;
     spec.readFromInformation(information);
+    return spec;
+}
+
+void ReferencedCoordinateSystemSpecification::readFromFieldData(vtkFieldData & fieldData)
+{
+    CoordinateSystemSpecification::readFromFieldData(fieldData);
+
+    uninitializeVector(referencePointLatLong);
+    uninitializeVector(referencePointLocalRelative);
+
+    readIfExists(fieldData, arrayName_geoReference(), referencePointLatLong);
+    readIfExists(fieldData, arrayName_relativeReference(), referencePointLocalRelative);
+}
+
+void ReferencedCoordinateSystemSpecification::writeToFieldData(vtkFieldData & fieldData) const
+{
+    CoordinateSystemSpecification::writeToFieldData(fieldData);
+
+    const auto defaultValue = uninitializedVector<double, 2>();
+
+    checkSetArray(fieldData, referencePointLatLong, defaultValue, arrayName_geoReference());
+    checkSetArray(fieldData, referencePointLocalRelative, defaultValue, arrayName_relativeReference());
+}
+
+ReferencedCoordinateSystemSpecification ReferencedCoordinateSystemSpecification::fromFieldData(vtkFieldData & fieldData)
+{
+    ReferencedCoordinateSystemSpecification spec;
+    spec.readFromFieldData(fieldData);
     return spec;
 }

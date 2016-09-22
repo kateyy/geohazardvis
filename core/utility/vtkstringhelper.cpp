@@ -9,32 +9,40 @@
 
 vtkSmartPointer<vtkCharArray> qstringToVtkArray(const QString & string)
 {
-    auto bytes = string.toUtf8();
-
     auto array = vtkSmartPointer<vtkCharArray>::New();
-    array->SetNumberOfValues(bytes.size());
 
-    for (int i = 0; i < bytes.size(); ++i)
-    {
-        array->SetValue(i, bytes.at(i));
-    }
+    qstringToVtkArray(string, *array);
 
     return array;
 }
 
+void qstringToVtkArray(const QString & string, vtkCharArray & array)
+{
+    const auto bytes = string.toUtf8();
+
+    array.SetNumberOfValues(bytes.size());
+
+    for (int i = 0; i < bytes.size(); ++i)
+    {
+        array.SetValue(i, bytes.at(i));
+    }
+}
+
 QString vtkArrayToQString(vtkDataArray & data)
 {
-    if (vtkCharArray * chars = vtkCharArray::SafeDownCast(&data))
+    if (auto chars = vtkCharArray::SafeDownCast(&data))
     {
         return QString::fromUtf8(
             chars->GetPointer(0),
             static_cast<int>(chars->GetSize()));
     }
 
-    if (vtkStringArray * string = vtkStringArray::SafeDownCast(&data))
+    if (auto string = vtkStringArray::SafeDownCast(&data))
     {
         if (string->GetSize() == 0)
+        {
             return{};
+        }
 
         return QString::fromStdString(string->GetValue(0));
     }

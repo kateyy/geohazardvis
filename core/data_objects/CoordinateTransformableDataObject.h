@@ -70,12 +70,12 @@ protected:
 private:
     ConversionCheckResult canTransformToInternal(const CoordinateSystemSpecification & coordinateSystem) const;
 
-    /** Information object of the basic data set of this object.
+    /** Basic data set of this object.
     This data set is either provided in the constructor, or using processedOutputPort().
     This may also be nullptr, if subclasses do not provide a data set at all. In this case,
     coordinate system information will only be stored temporarily.
     */
-    vtkInformation * informationStorage();
+    vtkDataSet * baseDataSet();
 
     /** Fall-back if transformation is not supported, and no-op, if no transformation is required */
     vtkAlgorithm * passThrough();

@@ -1,5 +1,7 @@
 #include "CoordinateTransformableDataObject.h"
 
+#include <QDebug>
+
 #include <vtkAlgorithmOutput.h>
 #include <vtkDataSet.h>
 #include <vtkPassThrough.h>
@@ -9,9 +11,33 @@ CoordinateTransformableDataObject::CoordinateTransformableDataObject(
     const QString & name, vtkDataSet * dataSet)
     : DataObject(name, dataSet)
 {
-    if (dataSet)
+    if (!dataSet)
     {
-        m_spec.readFromInformation(*dataSet->GetInformation());
+        return;
+    }
+
+    const auto infoSpec = ReferencedCoordinateSystemSpecification::fromInformation(*dataSet->GetInformation());
+    const bool infoSpecIsValid = infoSpec.isValid(false);
+    const auto fieldSpec = ReferencedCoordinateSystemSpecification::fromFieldData(*dataSet->GetFieldData());
+    const bool fieldSpecIsValid = fieldSpec.isValid(false);
+
+    if (infoSpecIsValid)
+    {
+        if (fieldSpecIsValid)
+        {
+            qWarning() << "[" + name + "] Found coordinate system specification in data set "
+                "information and field data. Ignoring the field data specification";
+        }
+        m_spec = infoSpec;
+    }
+    else if (fieldSpecIsValid)
+    {
+        m_spec = fieldSpec;
+    }
+    if (infoSpecIsValid || fieldSpecIsValid)
+    {
+        m_spec.writeToInformation(*dataSet->GetInformation());
+        m_spec.writeToFieldData(*dataSet->GetFieldData());
     }
 }
 
@@ -31,7 +57,7 @@ vtkSmartPointer<vtkAlgorithm> CoordinateTransformableDataObject::createTransform
 ConversionCheckResult CoordinateTransformableDataObject::canTransformToInternal(
     const CoordinateSystemSpecification & toSystem) const
 {
-    // check for missing/superfluous parameters
+    // check for missing parameters
     if (!toSystem.isValid(false))
     {
         return ConversionCheckResult::invalidParameters();
@@ -114,9 +140,10 @@ bool CoordinateTransformableDataObject::specifyCoordinateSystem(
     }
 
     m_spec = coordinateSystem;
-    if (auto info = informationStorage())
+    if (auto ds = baseDataSet())
     {
-        m_spec.writeToInformation(*info);
+        m_spec.writeToInformation(*ds->GetInformation());
+        m_spec.writeToFieldData(*ds->GetFieldData());
     }
 
     emit coordinateSystemChanged();
@@ -149,11 +176,11 @@ vtkSmartPointer<vtkDataSet> CoordinateTransformableDataObject::coordinateTransfo
     return vtkDataSet::SafeDownCast(port->GetProducer()->GetOutputDataObject(0));
 }
 
-vtkInformation * CoordinateTransformableDataObject::informationStorage()
+vtkDataSet * CoordinateTransformableDataObject::baseDataSet()
 {
     if (auto d = dataSet())
     {
-        return d->GetInformation();
+        return d;
     }
 
     auto port = processedOutputPort();
@@ -169,13 +196,7 @@ vtkInformation * CoordinateTransformableDataObject::informationStorage()
     }
 
     producer->UpdateInformation();
-    auto dataObject = producer->GetOutputDataObject(0);
-    if (!dataObject)
-    {
-        return nullptr;
-    }
-
-    return dataObject->GetInformation();
+    return vtkDataSet::SafeDownCast(producer->GetOutputDataObject(0));
 }
 
 vtkAlgorithm * CoordinateTransformableDataObject::passThrough()

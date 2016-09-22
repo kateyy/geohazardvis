@@ -330,6 +330,15 @@ uninitializeVector(vtkVector<T, Size> & vector)
 }
 
 template<typename T, int Size>
+typename std::enable_if<std::numeric_limits<T>::has_quiet_NaN, vtkVector<T, Size>>::type
+uninitializedVector()
+{
+    vtkVector<T, Size> vector;
+    uninitializeVector(vector);
+    return vector;
+}
+
+template<typename T, int Size>
 typename std::enable_if<std::numeric_limits<T>::has_quiet_NaN, bool>::type
 isVectorInitialized(const vtkVector<T, Size> & vector)
 {

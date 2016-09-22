@@ -11,6 +11,7 @@
 #include <core/core_api.h>
 
 
+class vtkFieldData;
 class vtkInformation;
 class vtkInformationDoubleVectorKey;
 class vtkInformationIntegerKey;
@@ -70,6 +71,14 @@ struct CORE_API CoordinateSystemSpecification
     virtual void writeToInformation(vtkInformation & information) const;
     static CoordinateSystemSpecification fromInformation(vtkInformation & information);
 
+    /** vtkDataSet information is not stored in VTK XML files, thus information has to be written to
+    the data set's field data for persistent storage. For pipeline requests, however, it is 
+    more useful to store the coordinate system in the data set's information, as the will be
+    available in pipeline update requests already. */
+    virtual void readFromFieldData(vtkFieldData & fieldData);
+    virtual void writeToFieldData(vtkFieldData & fieldData) const;
+    static ReferencedCoordinateSystemSpecification fromFieldData(vtkFieldData & fieldData);
+
     static vtkInformationIntegerKey * CoordinateSystemType_InfoKey();
     static vtkInformationStringKey * GeographicCoordinateSystemName_InfoKey();
     static vtkInformationStringKey * MetricCoordinateSystemName_InfoKey();
@@ -104,6 +113,10 @@ struct CORE_API ReferencedCoordinateSystemSpecification : public CoordinateSyste
     void readFromInformation(vtkInformation & information) override;
     void writeToInformation(vtkInformation & information) const override;
     static ReferencedCoordinateSystemSpecification fromInformation(vtkInformation & information);
+
+    void readFromFieldData(vtkFieldData & fieldData) override;
+    void writeToFieldData(vtkFieldData & fieldData) const override;
+    static ReferencedCoordinateSystemSpecification fromFieldData(vtkFieldData & fieldData);
 
     static vtkInformationDoubleVectorKey * ReferencePointLatLong_InfoKey();
     static vtkInformationDoubleVectorKey * ReferencePointLocalRelative_InfoKey();
