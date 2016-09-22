@@ -211,15 +211,15 @@ DEMWidget::DEMWidget(PolyDataObject & templateMesh, ImageDataObject & dem,
     DataMapping & dataMapping, AbstractRenderView * previewRenderer,
     QWidget * parent, Qt::WindowFlags f)
     : DEMWidget(dataMapping, previewRenderer, parent, f,
-    t_filterFunction([&templateMesh] (DataObject * dataSet, const DataSetHandler &) -> bool
+    t_filterFunction([&templateMesh] (DataObject * dataObject, const DataSetHandler &) -> bool
     {
-        return dynamic_cast<PolyDataObject *>(dataSet) != nullptr
-            && dataSet->name() == templateMesh.name();
+        return dynamic_cast<PolyDataObject *>(dataObject) != nullptr
+            && dataObject == &templateMesh;
     }),
-    t_filterFunction([&dem] (DataObject * dataSet, const DataSetHandler &) -> bool
+    t_filterFunction([&dem] (DataObject * dataObject, const DataSetHandler &) -> bool
     {
-        return dynamic_cast<ImageDataObject *>(dataSet) != nullptr
-            && dataSet->name() == dem.name();
+        return dynamic_cast<ImageDataObject *>(dataObject) != nullptr
+            && dataObject == &dem;
     }))
 {
     m_ui->topoTemplateCombo->setEnabled(false);
