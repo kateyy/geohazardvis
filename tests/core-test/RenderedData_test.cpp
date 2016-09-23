@@ -53,9 +53,9 @@ public:
         assert(DataBounds(image->GetBounds()) == bounds);
 
         auto scalars = vtkSmartPointer<vtkFloatArray>::New();
+        scalars->SetNumberOfComponents(Dims == 3 ? 3 : 1);
         scalars->SetNumberOfTuples(image->GetNumberOfPoints());
         scalars->SetName("scalars");
-        scalars->SetNumberOfComponents(Dims == 3 ? 3 : 1);
         image->GetPointData()->SetScalars(scalars);
 
         return std::make_unique<T>("GridData", *image);

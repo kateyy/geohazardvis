@@ -869,8 +869,8 @@ void ResidualVerificationView::updateResidual()
 
     auto residualData = vtkSmartPointer<vtkDataArray>::Take(modelLosDisp->NewInstance());
     residualData->SetName(m_attributeNamesLocations[residualIndex].first.toUtf8().data());
-    residualData->SetNumberOfTuples(modelLosDisp->GetNumberOfTuples());
     residualData->SetNumberOfComponents(1);
+    residualData->SetNumberOfTuples(modelLosDisp->GetNumberOfTuples());
 
     const double observationUnitFactor = std::pow(10, m_observationUnitDecimalExponent);
     const double modelUnitFactor = std::pow(10, m_modelUnitDecimalExponent);

@@ -314,8 +314,8 @@ int main()
 
     auto residualData = vtkSmartPointer<vtkDataArray>::Take(modelData->NewInstance());
     residualData->SetName("Residual");
-    residualData->SetNumberOfTuples(modelData->GetNumberOfTuples());
     residualData->SetNumberOfComponents(1);
+    residualData->SetNumberOfTuples(modelData->GetNumberOfTuples());
 
     for (vtkIdType i = 0; i < residualData->GetNumberOfTuples(); ++i)
     {

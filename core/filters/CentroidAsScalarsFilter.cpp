@@ -44,8 +44,8 @@ int CentroidAsScalarsFilter::RequestData(vtkInformation *vtkNotUsed(request),
     }
 
     auto centroidScalars = vtkSmartPointer<vtkFloatArray>::New();
-    centroidScalars->SetNumberOfTuples(numCells);
     centroidScalars->SetNumberOfComponents(1);
+    centroidScalars->SetNumberOfTuples(numCells);
 
     for (vtkIdType i = 0; i < numCells; ++i)
     {
