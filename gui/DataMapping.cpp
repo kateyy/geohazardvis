@@ -290,7 +290,7 @@ bool DataMapping::askForNewRenderView(const QString & rendererName, const QList<
     }
     msg.chop(2);
     msg += "\n\n";
-    msg += "Should we try to open these in a new view?";
+    msg += "Do you want open them in a new view?";
 
     return QMessageBox(QMessageBox::Question, "", msg, QMessageBox::Yes | QMessageBox::No).exec() == QMessageBox::Yes;
 }

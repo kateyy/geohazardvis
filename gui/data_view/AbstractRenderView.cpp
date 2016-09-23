@@ -71,7 +71,15 @@ bool AbstractRenderView::setCurrentCoordinateSystem(const CoordinateSystemSpecif
         return true;
     }
 
-    if (!canShowDataObjectInCoordinateSystem(spec))
+    if (spec.type != CoordinateSystemType::unspecified && !spec.isValid(true))
+    {
+        return false;
+    }
+
+    // If the coordinate system is specified, only allow to switch if all data objects support the transformation.
+    // Setting it to CoordinateSystemType::unspecified is okay, if this user insists in setting this.
+    // (this results in a pass-through)
+    if (spec.isValid(false) && !canShowDataObjectInCoordinateSystem(spec))
     {
         return false;
     }
