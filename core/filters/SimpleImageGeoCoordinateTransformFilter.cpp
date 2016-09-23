@@ -1,16 +1,15 @@
 #include <core/filters/SimpleImageGeoCoordinateTransformFilter.h>
 
+#include <vtkDataObject.h>
 #include <vtkImageChangeInformation.h>
-#include <vtkImageData.h>
 #include <vtkInformation.h>
 #include <vtkInformationVector.h>
+#include <vtkInformationIntegerVectorKey.h>
 #include <vtkMath.h>
 #include <vtkObjectFactory.h>
-#include <vtkSmartPointer.h>
 #include <vtkStreamingDemandDrivenPipeline.h>
 
 #include <core/CoordinateSystems.h>
-#include <core/utility/DataExtent.h>
 #include <core/utility/vtkvectorhelper.h>
 
 
@@ -45,7 +44,7 @@ int SimpleImageGeoCoordinateTransformFilter::RequestDataObject(vtkInformation * 
     this->Step2->UpdateDataObject();
 
     outputVector->GetInformationObject(0)->Set(vtkDataObject::DATA_OBJECT(),
-        this->Step2->GetOutput());
+        this->Step2->GetOutputDataObject(0));
 
     return 1;
 }
@@ -93,32 +92,6 @@ int SimpleImageGeoCoordinateTransformFilter::RequestInformation(vtkInformation *
         return 0;
     }
 
-    DataBounds inBounds;
-
-    if (inInfo->Has(vtkDataObject::BOUNDING_BOX()))
-    {
-        inInfo->Get(vtkDataObject::BOUNDING_BOX(), inBounds.data());
-    }
-    else if (inInfo->Has(vtkStreamingDemandDrivenPipeline::BOUNDS()))
-    {
-        inInfo->Get(vtkStreamingDemandDrivenPipeline::BOUNDS(), inBounds.data());
-    }
-    else if (inInfo->Has(vtkStreamingDemandDrivenPipeline::WHOLE_EXTENT())
-        && inInfo->Has(vtkDataObject::SPACING()) && inInfo->Has(vtkDataObject::ORIGIN()))
-    {
-        auto boundsCheck = vtkSmartPointer<vtkImageData>::New();
-        boundsCheck->SetExtent(inInfo->Get(vtkStreamingDemandDrivenPipeline::WHOLE_EXTENT()));
-        boundsCheck->SetSpacing(inInfo->Get(vtkDataObject::SPACING()));
-        boundsCheck->SetOrigin(inInfo->Get(vtkDataObject::ORIGIN()));
-
-        boundsCheck->GetBounds(inBounds.data());
-    }
-    else
-    {
-        vtkErrorMacro("Missing input data bounds information.");
-        return 0;
-    }
-
     auto outCoordinateSystem = inCoordinateSytem;
     outCoordinateSystem.type = (this->TargetCoordinateSystem == GLOBAL_GEOGRAPHIC)
         ? CoordinateSystemType::geographic
@@ -127,33 +100,40 @@ int SimpleImageGeoCoordinateTransformFilter::RequestInformation(vtkInformation *
 
     SetFilterParameters(outCoordinateSystem);
 
-    this->Step2->UpdateInformation();
+    if (!this->Step2->GetExecutive()->UpdateInformation())
+    {
+        vtkErrorMacro("Error occured while updating transform information.");
+        return 0;
+    }
+
     auto internalOutInfo = this->Step2->GetOutputInformation(0);
 
     auto outInfo = outputVector->GetInformationObject(0);
 
     vtkVector3d newSpacing, newOrigin;
-    ImageExtent newWholeExtent;
 
     if (this->SourceCoordinateSystem != this->TargetCoordinateSystem)
     {
-        internalOutInfo->Get(vtkStreamingDemandDrivenPipeline::WHOLE_EXTENT(), newWholeExtent.data());
         internalOutInfo->Get(vtkDataObject::SPACING(), newSpacing.GetData());
         internalOutInfo->Get(vtkDataObject::ORIGIN(), newOrigin.GetData());
     }
     else
     {
-        inInfo->Get(vtkStreamingDemandDrivenPipeline::WHOLE_EXTENT(), newWholeExtent.data());
         inInfo->Get(vtkDataObject::SPACING(), newSpacing.GetData());
         inInfo->Get(vtkDataObject::ORIGIN(), newOrigin.GetData());
     }
 
-    outInfo->Set(vtkStreamingDemandDrivenPipeline::WHOLE_EXTENT(), newWholeExtent.data(), newWholeExtent.ValueCount);
+    if (inInfo->Has(vtkStreamingDemandDrivenPipeline::WHOLE_EXTENT()))
+    {
+        outInfo->Set(vtkStreamingDemandDrivenPipeline::WHOLE_EXTENT(),
+            inInfo->Get(vtkStreamingDemandDrivenPipeline::WHOLE_EXTENT()),
+            vtkStreamingDemandDrivenPipeline::WHOLE_EXTENT()->Length(inInfo));
+    }
     outInfo->Set(vtkDataObject::SPACING(), newSpacing.GetData(), newSpacing.GetSize());
     outInfo->Set(vtkDataObject::ORIGIN(), newOrigin.GetData(), newOrigin.GetSize());
 
     outCoordinateSystem.writeToInformation(*outInfo);
-    outCoordinateSystem.writeToInformation(*this->Step2->GetOutput()->GetInformation());
+    outCoordinateSystem.writeToInformation(*this->Step2->GetOutputDataObject(0)->GetInformation());
 
     return Superclass::RequestInformation(request, inputVector, outputVector);
 }
@@ -213,7 +193,7 @@ void SimpleImageGeoCoordinateTransformFilter::SetFilterParameters(const Referenc
         scale = vtkVector3d{
             toDegrees / (earthR * cosPhi0),
             toDegrees / earthR,
-            1.0
+            0.0
         };
         postTranslate = vtkVector3d{
             La0,
