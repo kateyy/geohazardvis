@@ -36,7 +36,7 @@ public:
             "some metric system",
             { centerXY[1], centerXY[0] },
             { 0.5, 0.5 }
-        ).writeToInformation(*image->GetInformation());
+        ).writeToFieldData(*image->GetFieldData());
 
         return image;
     }

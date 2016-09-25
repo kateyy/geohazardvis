@@ -2,20 +2,21 @@
 
 #include <cstdint>
 #include <utility>
+#include <iosfwd>
 #include <vector>
 
 #include <QString>
 
 #include <vtkVector.h>
 
-#include <core/core_api.h>
+#include <core/CoordinateSystems_fwd.h>
 
 
 class vtkFieldData;
 class vtkInformation;
-class vtkInformationDoubleVectorKey;
-class vtkInformationIntegerKey;
-class vtkInformationStringKey;
+class vtkInformationDoubleVectorMetaDataKey;
+class vtkInformationIntegerMetaDataKey;
+class vtkInformationStringMetaDataKey;
 
 
 struct CORE_API CoordinateSystemType
@@ -39,10 +40,12 @@ struct CORE_API CoordinateSystemType
     CoordinateSystemType & fromString(const QString & typeName);
 
     static const std::vector<std::pair<CoordinateSystemType, QString>> & typeToStringMap();
+
+    friend CORE_API std::ostream & operator<<(std::ostream & os, const CoordinateSystemType & coordsType);
 };
 
+CORE_API std::ostream & operator<<(std::ostream & os, const CoordinateSystemType & coordsType);
 
-struct ReferencedCoordinateSystemSpecification;
 
 struct CORE_API CoordinateSystemSpecification
 {
@@ -65,7 +68,9 @@ struct CORE_API CoordinateSystemSpecification
     bool isValid(bool allowUnspecified) const;
 
     bool operator==(const CoordinateSystemSpecification & other) const;
+    bool operator!=(const CoordinateSystemSpecification & other) const;
     bool operator==(const ReferencedCoordinateSystemSpecification & referencedSpec) const;
+    bool operator!=(const ReferencedCoordinateSystemSpecification & referencedSpec) const;
 
     virtual void readFromInformation(vtkInformation & information);
     virtual void writeToInformation(vtkInformation & information) const;
@@ -79,10 +84,14 @@ struct CORE_API CoordinateSystemSpecification
     virtual void writeToFieldData(vtkFieldData & fieldData) const;
     static ReferencedCoordinateSystemSpecification fromFieldData(vtkFieldData & fieldData);
 
-    static vtkInformationIntegerKey * CoordinateSystemType_InfoKey();
-    static vtkInformationStringKey * GeographicCoordinateSystemName_InfoKey();
-    static vtkInformationStringKey * MetricCoordinateSystemName_InfoKey();
+    static vtkInformationIntegerMetaDataKey * CoordinateSystemType_InfoKey();
+    static vtkInformationStringMetaDataKey * GeographicCoordinateSystemName_InfoKey();
+    static vtkInformationStringMetaDataKey * MetricCoordinateSystemName_InfoKey();
+
+    friend CORE_API std::ostream & operator<<(std::ostream & os, const CoordinateSystemSpecification & spec);
 };
+
+CORE_API std::ostream & operator<<(std::ostream & os, const CoordinateSystemSpecification & spec);
 
 
 struct CORE_API ReferencedCoordinateSystemSpecification : public CoordinateSystemSpecification
@@ -99,7 +108,9 @@ struct CORE_API ReferencedCoordinateSystemSpecification : public CoordinateSyste
     bool isReferencePointValid() const;
 
     bool operator==(const CoordinateSystemSpecification & unreferencedSpec) const;
+    bool operator!=(const CoordinateSystemSpecification & unreferencedSpec) const;
     bool operator==(const ReferencedCoordinateSystemSpecification & other) const;
+    bool operator!=(const ReferencedCoordinateSystemSpecification & other) const;
 
     /** The reference point is required to convert between global and local coordinates.
     This parameter sets latitude and longitude of the reference point in the coordinate system
@@ -118,33 +129,10 @@ struct CORE_API ReferencedCoordinateSystemSpecification : public CoordinateSyste
     void writeToFieldData(vtkFieldData & fieldData) const override;
     static ReferencedCoordinateSystemSpecification fromFieldData(vtkFieldData & fieldData);
 
-    static vtkInformationDoubleVectorKey * ReferencePointLatLong_InfoKey();
-    static vtkInformationDoubleVectorKey * ReferencePointLocalRelative_InfoKey();
+    static vtkInformationDoubleVectorMetaDataKey * ReferencePointLatLong_InfoKey();
+    static vtkInformationDoubleVectorMetaDataKey * ReferencePointLocalRelative_InfoKey();
+
+    friend CORE_API std::ostream & operator<<(std::ostream & os, const ReferencedCoordinateSystemSpecification & spec);
 };
 
-
-struct ConversionCheckResult
-{
-    enum class Result
-    {
-        okay, missingInformation, unsupported, invalidParameters
-    };
-
-    explicit ConversionCheckResult(Result result) : result{ result } { }
-
-    static ConversionCheckResult okay()
-        { return ConversionCheckResult(Result::okay); };
-    static ConversionCheckResult missingInformation()
-        { return ConversionCheckResult(Result::missingInformation); };
-    static ConversionCheckResult unsupported()
-        { return ConversionCheckResult(Result::unsupported); };
-    static ConversionCheckResult invalidParameters()
-        { return ConversionCheckResult(Result::invalidParameters); };
-
-    operator bool() const
-    {
-        return result == Result::okay;
-    }
-
-    const Result result;
-};
+CORE_API std::ostream & operator<<(std::ostream & os, const ReferencedCoordinateSystemSpecification & spec);

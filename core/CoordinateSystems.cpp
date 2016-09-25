@@ -1,25 +1,26 @@
 #include "CoordinateSystems.h"
 
 #include <algorithm>
+#include <ostream>
 #include <type_traits>
 
 #include <vtkCharArray.h>
 #include <vtkFieldData.h>
 #include <vtkInformation.h>
-#include <vtkInformationDoubleVectorKey.h>
-#include <vtkInformationIntegerKey.h>
-#include <vtkInformationStringKey.h>
 #include <vtkVariantCast.h>
 
+#include <core/filters/vtkInformationDoubleVectorMetaDataKey.h>
+#include <core/filters/vtkInformationIntegerMetaDataKey.h>
+#include <core/filters/vtkInformationStringMetaDataKey.h>
 #include <core/utility/vtkstringhelper.h>
 #include <core/utility/vtkvectorhelper.h>
 
 
-vtkInformationKeyMacro(CoordinateSystemSpecification, CoordinateSystemType_InfoKey, Integer);
-vtkInformationKeyMacro(CoordinateSystemSpecification, GeographicCoordinateSystemName_InfoKey, String);
-vtkInformationKeyMacro(CoordinateSystemSpecification, MetricCoordinateSystemName_InfoKey, String);
-vtkInformationKeyMacro(ReferencedCoordinateSystemSpecification, ReferencePointLatLong_InfoKey, DoubleVector);
-vtkInformationKeyMacro(ReferencedCoordinateSystemSpecification, ReferencePointLocalRelative_InfoKey, DoubleVector);
+vtkInformationKeyMacro(CoordinateSystemSpecification, CoordinateSystemType_InfoKey, IntegerMetaData);
+vtkInformationKeyMacro(CoordinateSystemSpecification, GeographicCoordinateSystemName_InfoKey, StringMetaData);
+vtkInformationKeyMacro(CoordinateSystemSpecification, MetricCoordinateSystemName_InfoKey, StringMetaData);
+vtkInformationKeyMacro(ReferencedCoordinateSystemSpecification, ReferencePointLatLong_InfoKey, DoubleVectorMetaData);
+vtkInformationKeyMacro(ReferencedCoordinateSystemSpecification, ReferencePointLocalRelative_InfoKey, DoubleVectorMetaData);
 
 
 namespace
@@ -341,9 +342,19 @@ bool CoordinateSystemSpecification::operator==(const CoordinateSystemSpecificati
         && globalMetricSystem == other.globalMetricSystem;
 }
 
+bool CoordinateSystemSpecification::operator!=(const CoordinateSystemSpecification & other) const
+{
+    return !(*this == other);
+}
+
 bool CoordinateSystemSpecification::operator==(const ReferencedCoordinateSystemSpecification & referencedSpec) const
 {
     return referencedSpec == *this;
+}
+
+bool CoordinateSystemSpecification::operator!=(const ReferencedCoordinateSystemSpecification & referencedSpec) const
+{
+    return !(*this == referencedSpec);
 }
 
 void CoordinateSystemSpecification::readFromInformation(vtkInformation & info)
@@ -455,11 +466,21 @@ bool ReferencedCoordinateSystemSpecification::operator==(const CoordinateSystemS
     return CoordinateSystemSpecification::operator==(unreferencedSpec);
 }
 
+bool ReferencedCoordinateSystemSpecification::operator!=(const CoordinateSystemSpecification & unreferencedSpec) const
+{
+    return !(*this == unreferencedSpec);
+}
+
 bool ReferencedCoordinateSystemSpecification::operator==(const ReferencedCoordinateSystemSpecification & other) const
 {
     return CoordinateSystemSpecification::operator==(static_cast<const CoordinateSystemSpecification &>(other))
         && referencePointLatLong == other.referencePointLatLong
         && referencePointLocalRelative == other.referencePointLocalRelative;
+}
+
+bool ReferencedCoordinateSystemSpecification::operator!=(const ReferencedCoordinateSystemSpecification & other) const
+{
+    return !(*this == other);
 }
 
 void ReferencedCoordinateSystemSpecification::readFromInformation(vtkInformation & info)
@@ -534,4 +555,30 @@ ReferencedCoordinateSystemSpecification ReferencedCoordinateSystemSpecification:
     ReferencedCoordinateSystemSpecification spec;
     spec.readFromFieldData(fieldData);
     return spec;
+}
+
+std::ostream & operator<<(std::ostream & os, const CoordinateSystemType & coordsType)
+{
+    os << coordsType.toString().toStdString();
+    return os;
+}
+
+std::ostream & operator<<(std::ostream & os, const CoordinateSystemSpecification & spec)
+{
+    os << spec.type << " (" << spec.geographicSystem.toStdString() << ", " << spec.globalMetricSystem.toStdString() << ")";
+    return os;
+}
+
+std::ostream & operator<<(std::ostream & os, const ReferencedCoordinateSystemSpecification & spec)
+{
+    static const char degree = 248;
+
+    os << static_cast<const CoordinateSystemSpecification &>(spec)
+        << " (reference point, global: ["
+        << spec.referencePointLatLong[0] << degree << " N, "
+        << spec.referencePointLatLong[1] << degree << " E], "
+        << "relative: ["
+        << spec.referencePointLocalRelative[0] << "x, "
+        << spec.referencePointLocalRelative[1] << "y])";
+    return os;
 }

@@ -10,6 +10,7 @@
 #include <vtkPointData.h>
 #include <vtkDataArray.h>
 
+#include <core/CoordinateSystems.h>
 #include <core/filters/SimpleImageGeoCoordinateTransformFilter.h>
 #include <core/rendered_data/RenderedImageData.h>
 #include <core/table_model/QVtkTableModelImage.h>

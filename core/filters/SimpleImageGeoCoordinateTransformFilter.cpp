@@ -10,6 +10,7 @@
 #include <vtkStreamingDemandDrivenPipeline.h>
 
 #include <core/CoordinateSystems.h>
+#include <core/filters/SetCoordinateSystemInformationFilter.h>
 #include <core/utility/vtkvectorhelper.h>
 
 
@@ -22,9 +23,10 @@ SimpleImageGeoCoordinateTransformFilter::SimpleImageGeoCoordinateTransformFilter
     , TargetCoordinateSystem{ CoordinateSystem::LOCAL_METRIC }
     , Step1{ vtkSmartPointer<vtkImageChangeInformation>::New() }
     , Step2{ vtkSmartPointer<vtkImageChangeInformation>::New() }
+    , InfoSetter{ vtkSmartPointer<SetCoordinateSystemInformationFilter>::New() }
 {
-    this->Step2->SetInputConnection(
-        this->Step1->GetOutputPort());
+    this->Step2->SetInputConnection(this->Step1->GetOutputPort());
+    this->InfoSetter->SetInputConnection(this->Step2->GetOutputPort());
 }
 
 SimpleImageGeoCoordinateTransformFilter::~SimpleImageGeoCoordinateTransformFilter() = default;
@@ -41,10 +43,10 @@ int SimpleImageGeoCoordinateTransformFilter::ProcessRequest(vtkInformation * req
 
 int SimpleImageGeoCoordinateTransformFilter::RequestDataObject(vtkInformation * /*request*/, vtkInformationVector ** /*inputVector*/, vtkInformationVector * outputVector)
 {
-    this->Step2->UpdateDataObject();
+    this->InfoSetter->UpdateDataObject();
 
     outputVector->GetInformationObject(0)->Set(vtkDataObject::DATA_OBJECT(),
-        this->Step2->GetOutputDataObject(0));
+        this->InfoSetter->GetOutputDataObject(0));
 
     return 1;
 }
@@ -59,17 +61,12 @@ int SimpleImageGeoCoordinateTransformFilter::RequestInformation(vtkInformation *
 
     this->Step1->SetInputData(inData);
 
-    const auto inCoordinateSytem = [inInfo, inData] ()
+    auto inCoordinateSytem = ReferencedCoordinateSystemSpecification::fromInformation(*inInfo);
+    if (!inCoordinateSytem.isValid(false)
+        || !inCoordinateSytem.isReferencePointValid())
     {
-        auto spec = ReferencedCoordinateSystemSpecification::fromInformation(*inData->GetInformation());
-        if (spec.isValid(false))
-        {
-            return spec;
-        }
-
-        spec.fromInformation(*inInfo);
-        return spec;
-    }();
+        inCoordinateSytem = ReferencedCoordinateSystemSpecification::fromFieldData(*inData->GetFieldData());
+    }
 
     if (!inCoordinateSytem.isValid(false)
         || !inCoordinateSytem.isReferencePointValid())
@@ -97,18 +94,24 @@ int SimpleImageGeoCoordinateTransformFilter::RequestInformation(vtkInformation *
         ? CoordinateSystemType::geographic
         : CoordinateSystemType::metricLocal;
 
+    this->InfoSetter->SetCoordinateSystemSpec(outCoordinateSystem);
+
 
     SetFilterParameters(outCoordinateSystem);
 
-    if (!this->Step2->GetExecutive()->UpdateInformation())
+    if (!this->InfoSetter->GetExecutive()->UpdateInformation())
     {
-        vtkErrorMacro("Error occured while updating transform information.");
+        vtkErrorMacro("Error occurred while updating transform information.");
         return 0;
     }
 
-    auto internalOutInfo = this->Step2->GetOutputInformation(0);
-
+    auto internalOutInfo = this->InfoSetter->GetOutputInformation(0);
     auto outInfo = outputVector->GetInformationObject(0);
+
+    // Pass through available upstream information...
+    outInfo->Copy(internalOutInfo);
+
+    // and overwrite changed values.
 
     vtkVector3d newSpacing, newOrigin;
 
@@ -132,16 +135,13 @@ int SimpleImageGeoCoordinateTransformFilter::RequestInformation(vtkInformation *
     outInfo->Set(vtkDataObject::SPACING(), newSpacing.GetData(), newSpacing.GetSize());
     outInfo->Set(vtkDataObject::ORIGIN(), newOrigin.GetData(), newOrigin.GetSize());
 
-    outCoordinateSystem.writeToInformation(*outInfo);
-    outCoordinateSystem.writeToInformation(*this->Step2->GetOutputDataObject(0)->GetInformation());
-
     return Superclass::RequestInformation(request, inputVector, outputVector);
 }
 
 int SimpleImageGeoCoordinateTransformFilter::RequestData(vtkInformation * /*request*/,
     vtkInformationVector ** /*inputVector*/, vtkInformationVector * /*outputVector*/)
 {
-    return this->Step2->GetExecutive()->Update();
+    return this->InfoSetter->GetExecutive()->Update();
 }
 
 void SimpleImageGeoCoordinateTransformFilter::SetFilterParameters(const ReferencedCoordinateSystemSpecification & targetSpec)

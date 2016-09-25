@@ -9,6 +9,7 @@
 class vtkImageChangeInformation;
 
 struct ReferencedCoordinateSystemSpecification;
+class SetCoordinateSystemInformationFilter;
 
 
 /** This filter transforms an image between from geographic coordinates (latitude, longitude)
@@ -68,6 +69,7 @@ private:
 
     vtkSmartPointer<vtkImageChangeInformation> Step1;
     vtkSmartPointer<vtkImageChangeInformation> Step2;
+    vtkSmartPointer<SetCoordinateSystemInformationFilter> InfoSetter;
 
 private:
     SimpleImageGeoCoordinateTransformFilter(const SimpleImageGeoCoordinateTransformFilter &) = delete;

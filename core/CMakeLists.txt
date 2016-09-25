@@ -11,6 +11,7 @@ set(sources
     ApplicationSettings.h
     ApplicationSettings.cpp
     CoordinateSystems.h
+    CoordinateSystems_fwd.h
     CoordinateSystems.cpp
     DataSetHandler.h
     DataSetHandler.cpp
@@ -108,8 +109,16 @@ set(sources
     filters/ImagePlaneWidget.cpp
     filters/LinearSelectorXY.h
     filters/LinearSelectorXY.cpp
+    filters/SetCoordinateSystemInformationFilter.h
+    filters/SetCoordinateSystemInformationFilter.cpp
     filters/SimpleImageGeoCoordinateTransformFilter.h
     filters/SimpleImageGeoCoordinateTransformFilter.cpp
+    filters/vtkInformationDoubleVectorMetaDataKey.h
+    filters/vtkInformationDoubleVectorMetaDataKey.cpp
+    filters/vtkInformationIntegerMetaDataKey.h
+    filters/vtkInformationIntegerMetaDataKey.cpp
+    filters/vtkInformationStringMetaDataKey.h
+    filters/vtkInformationStringMetaDataKey.cpp
 
     glyph_mapping/GlyphMapping.h
     glyph_mapping/GlyphMapping.cpp

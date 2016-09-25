@@ -5,11 +5,13 @@
 #include <vtkSmartPointer.h>
 #include <vtkVector.h>
 
-#include <core/CoordinateSystems.h>
+#include <core/CoordinateSystems_fwd.h>
 #include <core/data_objects/DataObject.h>
 
 
 class vtkAlgorithm;
+
+class SetCoordinateSystemInformationFilter;
 
 
 /** Superclass for data objects that can be represented in different coordinate systems.
@@ -54,6 +56,8 @@ public:
     This may be nullptr, if the selected transformation is not supported. */
     vtkSmartPointer<vtkDataSet> coordinateTransformedDataSet(const CoordinateSystemSpecification & spec);
 
+    vtkAlgorithmOutput * processedOutputPort() override;
+
 signals:
     /** Emitted when the data objects coordinate system was changed using specifyCoordinateSystem() */
     void coordinateSystemChanged();
@@ -70,21 +74,13 @@ protected:
 private:
     ConversionCheckResult canTransformToInternal(const CoordinateSystemSpecification & coordinateSystem) const;
 
-    /** Basic data set of this object.
-    This data set is either provided in the constructor, or using processedOutputPort().
-    This may also be nullptr, if subclasses do not provide a data set at all. In this case,
-    coordinate system information will only be stored temporarily.
-    */
-    vtkDataSet * baseDataSet();
-
     /** Fall-back if transformation is not supported, and no-op, if no transformation is required */
     vtkAlgorithm * passThrough();
 
     vtkAlgorithm * transformFilter(const CoordinateSystemSpecification & toSystem);
 
 private:
-    ReferencedCoordinateSystemSpecification m_spec;
-
+    vtkSmartPointer<SetCoordinateSystemInformationFilter> m_coordsSetter;
     vtkSmartPointer<vtkAlgorithm> m_passThrough;
     /** The pipeline output m_pipelines[type, geoName, metricName] converts the current data set to 
     a representation of in type, using the geographic coordinates geoName, and depending on the
