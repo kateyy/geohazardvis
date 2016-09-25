@@ -113,6 +113,8 @@ set(sources
     filters/SetCoordinateSystemInformationFilter.cpp
     filters/SimpleImageGeoCoordinateTransformFilter.h
     filters/SimpleImageGeoCoordinateTransformFilter.cpp
+    filters/SimplePolyGeoCoordinateTransformFilter.h
+    filters/SimplePolyGeoCoordinateTransformFilter.cpp
     filters/vtkInformationDoubleVectorMetaDataKey.h
     filters/vtkInformationDoubleVectorMetaDataKey.cpp
     filters/vtkInformationIntegerMetaDataKey.h

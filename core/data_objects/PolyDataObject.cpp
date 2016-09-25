@@ -5,15 +5,15 @@
 #include <cmath>
 #include <limits>
 
-#include <vtkPolyDataNormals.h>
-#include <vtkCellCenters.h>
-
-#include <vtkCellData.h>
 #include <vtkCell.h>
-
+#include <vtkCellCenters.h>
+#include <vtkCellData.h>
 #include <vtkMath.h>
+#include <vtkPolyDataNormals.h>
 #include <vtkTransform.h>
 
+#include <core/CoordinateSystems.h>
+#include <core/filters/SimplePolyGeoCoordinateTransformFilter.h>
 #include <core/rendered_data/RenderedPolyData.h>
 #include <core/table_model/QVtkTableModelPolyData.h>
 
@@ -26,7 +26,6 @@ PolyDataObject::PolyDataObject(const QString & name, vtkPolyData & dataSet)
 {
     m_cellNormals->ComputeCellNormalsOn();
     m_cellNormals->ComputePointNormalsOff();
-    m_cellNormals->SetInputData(&dataSet);
 }
 
 PolyDataObject::~PolyDataObject() = default;
@@ -52,6 +51,7 @@ const vtkPolyData & PolyDataObject::polyDataSet() const
 
 vtkAlgorithmOutput * PolyDataObject::processedOutputPort()
 {
+    m_cellNormals->SetInputConnection(CoordinateTransformableDataObject::processedOutputPort());
     return m_cellNormals->GetOutputPort();
 }
 
@@ -101,8 +101,8 @@ bool PolyDataObject::is2p5D()
 
     m_is2p5D = Is2p5D::yes;
 
-    m_cellNormals->Update();
-    auto normals = m_cellNormals->GetOutput()->GetCellData()->GetNormals();
+    auto dsWithNormals = processedDataSet();
+    auto normals = dsWithNormals->GetCellData()->GetNormals();
     
     for (vtkIdType i = 0; i < normals->GetNumberOfTuples(); ++i)
     {
@@ -215,6 +215,38 @@ std::unique_ptr<QVtkTableModel> PolyDataObject::createTableModel()
     model->setDataObject(this);
 
     return model;
+}
+
+vtkSmartPointer<vtkAlgorithm> PolyDataObject::createTransformPipeline(const CoordinateSystemSpecification & toSystem, vtkAlgorithmOutput * pipelineUpstream) const
+{
+    if (coordinateSystem().geographicSystem != "WGS 84"
+        || toSystem.geographicSystem != "WGS 84"
+        || coordinateSystem().globalMetricSystem != "UTM"
+        || toSystem.globalMetricSystem != "UTM"
+        || !coordinateSystem().isReferencePointValid())
+    {
+        return nullptr;
+    }
+
+    if (coordinateSystem().type == CoordinateSystemType::geographic
+        && toSystem.type == CoordinateSystemType::metricLocal)
+    {
+        auto filter = vtkSmartPointer<SimplePolyGeoCoordinateTransformFilter>::New();
+        filter->SetInputConnection(pipelineUpstream);
+        filter->SetTargetCoordinateSystem(SimplePolyGeoCoordinateTransformFilter::LOCAL_METRIC);
+        return filter;
+    }
+
+    if (coordinateSystem().type == CoordinateSystemType::metricLocal
+        && toSystem.type == CoordinateSystemType::geographic)
+    {
+        auto filter = vtkSmartPointer<SimplePolyGeoCoordinateTransformFilter>::New();
+        filter->SetInputConnection(pipelineUpstream);
+        filter->SetTargetCoordinateSystem(SimplePolyGeoCoordinateTransformFilter::GLOBAL_GEOGRAPHIC);
+        return filter;
+    }
+
+    return nullptr;
 }
 
 void PolyDataObject::setupCellCenters()

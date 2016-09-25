@@ -44,6 +44,10 @@ public:
 protected:
     std::unique_ptr<QVtkTableModel> createTableModel() override;
 
+    vtkSmartPointer<vtkAlgorithm> createTransformPipeline(
+        const CoordinateSystemSpecification & toSystem,
+        vtkAlgorithmOutput * pipelineUpstream) const override;
+
 private:
     void setupCellCenters();
 
