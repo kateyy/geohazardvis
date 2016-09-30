@@ -104,11 +104,6 @@ int SimplePolyGeoCoordinateTransformFilter::RequestInformation(vtkInformation * 
         return 0;
     }
 
-    auto internalOutInfo = this->InfoSetter->GetOutputInformation(0);
-    auto outInfo = outputVector->GetInformationObject(0);
-
-    outInfo->Copy(internalOutInfo);
-
     this->SetFilterParameters(outCoordinateSystem);
 
     return Superclass::RequestInformation(request, inputVector, outputVector);

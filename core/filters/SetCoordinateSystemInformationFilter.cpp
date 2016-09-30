@@ -26,7 +26,6 @@ int SetCoordinateSystemInformationFilter::RequestInformation(vtkInformation * re
     }
 
     auto outInfo = outputVector->GetInformationObject(0);
-    auto outData = outInfo->Get(vtkDataObject::DATA_OBJECT());
 
     this->CoordinateSystemSpec.writeToInformation(*outInfo);
 

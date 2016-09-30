@@ -108,9 +108,6 @@ int SimpleImageGeoCoordinateTransformFilter::RequestInformation(vtkInformation *
     auto internalOutInfo = this->InfoSetter->GetOutputInformation(0);
     auto outInfo = outputVector->GetInformationObject(0);
 
-    // Pass through available upstream information...
-    outInfo->Copy(internalOutInfo);
-
     // and overwrite changed values.
 
     vtkVector3d newSpacing, newOrigin;
