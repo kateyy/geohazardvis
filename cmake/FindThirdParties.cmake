@@ -313,7 +313,7 @@ endif()
 CMAKE_DEPENDENT_OPTION(OPTION_USE_SYSTEM_GTEST "Search for installed Google Test Libraries instead of compiling them" OFF
     "OPTION_BUILD_TESTS" OFF)
 CMAKE_DEPENDENT_CACHEVARIABLE(OPTION_GTEST_GIT_REPOSITORY "https://github.com/google/googletest" STRING
-    "URL/path of the gtest git repository" "NOT OPTION_USE_SYSTEM_GTEST" OFF)
+    "URL/path of the gtest git repository" "NOT OPTION_USE_SYSTEM_GTEST;OPTION_BUILD_TESTS" OFF)
 
 if (OPTION_BUILD_TESTS)
 
@@ -345,7 +345,7 @@ if (OPTION_BUILD_TESTS)
             PREFIX ${GTEST_BUILD_DIR}
             SOURCE_DIR ${GTEST_SOURCE_DIR}
             GIT_REPOSITORY ${OPTION_GTEST_GIT_REPOSITORY}
-            GIT_TAG "0a439623f75c029912728d80cb7f1b8b48739ca4"
+            GIT_TAG "release-1.8.0"
             ${_git_shallow_flag}
             BUILD_COMMAND ${CMAKE_COMMAND}
                 -DBUILD_CONFIG:STRING=$<CONFIG>
