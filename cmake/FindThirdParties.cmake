@@ -96,6 +96,10 @@ if (OPTION_ENABLE_TEXTURING)
     list(APPEND VTK_COMPONENTS vtkFiltersTexture)
 endif()
 
+if (VTK_VERSION VERSION_GREATER 7.0)
+    list(APPEND VTK_COMPONENTS vtkRenderingContext${VTK_RENDERING_BACKEND})
+endif()
+
 if (VTK_VERSION VERSION_LESS 7.1)
     set(_vtkIOExport_module_name "vtkIOExport")
     set(_vtkRenderingGL2PS_module_name "vtkRenderingGL2PS")
