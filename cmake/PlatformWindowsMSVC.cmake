@@ -4,7 +4,8 @@ list(APPEND DEFAULT_COMPILE_DEFS
     WIN32                       # Windows system
     UNICODE                     # Use unicode
     _UNICODE                    # Use unicode
-#    _SCL_SECURE_NO_WARNINGS        # Calling any one of the potentially unsafe methods in the Standard C++ Library
+    _SCL_SECURE_NO_WARNINGS     # Calling any one of the potentially unsafe methods in the Standard C++ Library
+                                # Required for vtkDataArrayAccessor and vtkAOSDataArrayTemplate related classes
 #    _CRT_SECURE_NO_DEPRECATE   # Disable CRT deprecation warnings
 )
 

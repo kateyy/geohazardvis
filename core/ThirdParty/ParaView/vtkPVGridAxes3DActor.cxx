@@ -12,11 +12,6 @@
      PURPOSE.  See the above copyright notice for more information.
 
 =========================================================================*/
-
-#if defined(_MSC_VER)
-#define _SCL_SECURE_NO_WARNINGS // for "unsafe" use of std::copy
-#endif
-
 #include "vtkPVGridAxes3DActor.h"
 
 #include "vtkObjectFactory.h"
@@ -24,7 +19,6 @@
 #include "vtkMatrix4x4.h"
 
 #include <algorithm>
-
 
 vtkStandardNewMacro(vtkPVGridAxes3DActor);
 //----------------------------------------------------------------------------

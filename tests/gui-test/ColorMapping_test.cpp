@@ -1,5 +1,3 @@
-#define _SCL_SECURE_NO_WARNINGS
-
 #include <gtest/gtest.h>
 
 #include <vector>
