@@ -75,8 +75,8 @@ struct DEMShadingWorker
 
 DEMShadingFilter::DEMShadingFilter()
     : Superclass()
-    , Diffuse{ 0.8 }
-    , Ambient{ 0.6 }
+    , Diffuse{ 1.0 }
+    , Ambient{ 0.2 }
 {
 }
 
