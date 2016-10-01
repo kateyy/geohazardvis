@@ -126,6 +126,8 @@ bool CoordinateTransformableDataObject::specifyCoordinateSystem(
         return true;
     }
 
+    const ScopedEventDeferral deferral(*this);
+
     m_coordsSetter->SetCoordinateSystemSpec(coordinateSystem);
 
     // Make the information available to the output of dataSet().
