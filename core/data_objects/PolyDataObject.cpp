@@ -9,6 +9,7 @@
 #include <vtkCellCenters.h>
 #include <vtkCellData.h>
 #include <vtkMath.h>
+#include <vtkPointData.h>
 #include <vtkPolyDataNormals.h>
 #include <vtkTransform.h>
 
@@ -103,6 +104,15 @@ bool PolyDataObject::is2p5D()
 
     auto dsWithNormals = processedDataSet();
     auto normals = dsWithNormals->GetCellData()->GetNormals();
+    if (!normals)   // point data?
+    {
+        normals = dsWithNormals->GetPointData()->GetNormals();
+    }
+    if (!normals)   // cannot be determined, assume "no"
+    {
+        m_is2p5D = Is2p5D::no;
+        return false;
+    }
     
     for (vtkIdType i = 0; i < normals->GetNumberOfTuples(); ++i)
     {

@@ -365,9 +365,6 @@ void RenderedVectorGrid3D::initializePipeline()
         return;
     }
 
-    auto transformedImage = vtkImageData::SafeDownCast(transformedCoordinatesDataSet());
-    assert(transformedImage);
-
     m_extractVOI->SetInputConnection(transformedCoordinatesOutputPort());
 
     for (int i = 0; i < 3; ++i)

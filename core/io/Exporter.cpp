@@ -95,7 +95,10 @@ bool Exporter::exportImageFormat(ImageDataObject & image, const QString & fileNa
     else if (ext == "bmp")
         writer = vtkSmartPointer<vtkBMPWriter>::New();
 
-    assert(writer);
+    if (!writer)
+    {
+        return false;
+    }
 
     const auto scalars = image.dataSet()->GetPointData()->GetScalars();
     if (!scalars)
