@@ -377,7 +377,14 @@ AbstractVisualizedData * RenderView::visualizationFor(DataObject * dataObject, i
         return nullptr;
     }
 
-    return m_dataObjectToVisualization.value(dataObject, nullptr);
+    auto vis = m_dataObjectToVisualization.value(dataObject, nullptr);
+    // If it's not visible, it's only cached. In this case, it should not be passed to the public interface.
+    if (!vis || !vis->isVisible())
+    {
+        return nullptr;
+    }
+
+    return vis;
 }
 
 int RenderView::subViewContaining(const AbstractVisualizedData & visualizedData) const
