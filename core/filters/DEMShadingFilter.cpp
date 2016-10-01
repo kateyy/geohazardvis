@@ -26,12 +26,12 @@ namespace
 
 struct DEMShadingWorker
 {
-    void setLightDirection(const vtkVector3d & lightDirection)
+    void setDirectionToLight(const vtkVector3d & toLight)
     {
-        invNormLightDirection = -lightDirection.Normalized();
+        this->toLightDirection = toLight.Normalized();
     }
 
-    vtkVector3d invNormLightDirection;
+    vtkVector3d toLightDirection;
     double diffuse = 1.0;
     double ambient = 0.0;
 
@@ -44,12 +44,12 @@ struct DEMShadingWorker
         using NormalsValueType = typename vtkDataArrayAccessor<NormalsArrayType>::APIType;
         using OutputValueType = typename vtkDataArrayAccessor<OutputArrayType>::APIType;
 
-        const auto lightDir = convertTo<OutputValueType>(invNormLightDirection);
+        const auto toLight = convertTo<OutputValueType>(toLightDirection);
         const auto d = this->diffuse;
         const auto a = this->ambient;
 
         vtkSMPTools::For(0, normals->GetNumberOfTuples(),
-            [d, a, lightDir, normals, lightness] (vtkIdType begin, vtkIdType end)
+            [d, a, toLight, normals, lightness] (vtkIdType begin, vtkIdType end)
         {
             vtkDataArrayAccessor<NormalsArrayType> n(normals);
             vtkDataArrayAccessor<OutputArrayType> l(lightness);
@@ -62,7 +62,7 @@ struct DEMShadingWorker
 
                 const auto df = std::max(
                     static_cast<OutputValueType>(0.0),
-                    static_cast<OutputValueType>(convertTo<OutputValueType>(normal).Dot(lightDir))
+                    convertTo<OutputValueType>(normal).Dot(toLight)
                 );
 
                 l.Set(tupleIdx, 0, static_cast<OutputValueType>(std::min(1.0, a + d * df)));
@@ -165,7 +165,7 @@ int DEMShadingFilter::RequestData(vtkInformation * /*request*/,
     lightness->SetName("Lightness");
 
     DEMShadingWorker worker;
-    worker.setLightDirection({ 1, 1, 0 });  // Light in the north west
+    worker.setDirectionToLight({ -1, 1, 1 });  // Light from north west
     worker.diffuse = this->Diffuse;
     worker.ambient = this->Ambient;
 

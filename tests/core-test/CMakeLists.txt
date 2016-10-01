@@ -12,6 +12,7 @@ set(sources
     DataObject_test.cpp
     DataSetFilter_test.cpp
     DataSetHandler_test.cpp
+    DEMImageNormals_test.cpp
     DEMToTopographyMesh_test.cpp
     PipelineInformationHelper.h
     PipelineInformationHelper.cpp

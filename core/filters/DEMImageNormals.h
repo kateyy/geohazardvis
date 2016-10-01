@@ -1,14 +1,14 @@
 #pragma once
 
-#include <vtkImageAlgorithm.h>
+#include <vtkThreadedImageAlgorithm.h>
 
 #include <core/core_api.h>
 
 
-class CORE_API DEMImageNormals : public vtkImageAlgorithm
+class CORE_API DEMImageNormals : public vtkThreadedImageAlgorithm
 {
 public:
-    vtkTypeMacro(DEMImageNormals, vtkImageAlgorithm);
+    vtkTypeMacro(DEMImageNormals, vtkThreadedImageAlgorithm);
     static DEMImageNormals * New();
 
     vtkGetMacro(CoordinatesUnitScale, double);
@@ -28,6 +28,15 @@ protected:
     int RequestData(vtkInformation * request,
         vtkInformationVector ** inputVector,
         vtkInformationVector * outputVector) override;
+    
+    void CopyAttributeData(vtkImageData * in, vtkImageData * out,
+        vtkInformationVector ** inputVector) override;
+
+    void ThreadedRequestData(vtkInformation * request,
+        vtkInformationVector ** inputVector,
+        vtkInformationVector * outputVector,
+        vtkImageData *** inData, vtkImageData ** outData,
+        int outExt[6], int id) override;
 
 private:
     double CoordinatesUnitScale;

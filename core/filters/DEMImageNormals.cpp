@@ -6,14 +6,12 @@
 #include <vtkDataArray.h>
 #include <vtkDataArrayAccessor.h>
 #include <vtkExecutive.h>
-#include <vtkImageConvolve.h>
 #include <vtkImageData.h>
 #include <vtkInformation.h>
 #include <vtkInformationVector.h>
 #include <vtkObjectFactory.h>
 #include <vtkPointData.h>
 #include <vtkSmartPointer.h>
-#include <vtkSMPTools.h>
 #include <vtkStreamingDemandDrivenPipeline.h>
 #include <vtkVector.h>
 
@@ -29,47 +27,77 @@ namespace
 
 struct CalcNormalsWorker
 {
-    double ElevationUnitScale = 1.0;
-    double CoordinatesUnitScale = 1.0;
-
-    vtkVector2d xySpacing = { 1.0, 1.0 };
-
-    template <typename ArrayType>
-    void operator() (ArrayType * genericI_x, ArrayType * genericI_y, ArrayType * normals)
+    CalcNormalsWorker(vtkImageData & image, ImageExtent workerExtent,
+        double elevationUnitScale, double coordinateUnitScale)
+        : Image{ image }
+        , WorkerExtent{ workerExtent }
+        , ElevationUnitScale{elevationUnitScale}
+        , CoordinatesUnitScale{ coordinateUnitScale }
     {
-        VTK_ASSUME(genericI_x->GetNumberOfComponents() == 1);
-        VTK_ASSUME(genericI_y->GetNumberOfComponents() == 1);
+    }
+
+    vtkImageData & Image;
+    ImageExtent WorkerExtent;
+
+    double ElevationUnitScale;
+    double CoordinatesUnitScale;
+
+    template <typename ElevationArray, typename NormalArray>
+    void operator()(ElevationArray * elevations, NormalArray * normals)
+    {
+        VTK_ASSUME(elevations->GetNumberOfComponents() == 1);
         VTK_ASSUME(normals->GetNumberOfComponents() == 3);
+        VTK_ASSUME(elevations->GetNumberOfTuples() == normals->GetNumberOfTuples());
 
-        using ValueType = typename vtkDataArrayAccessor<ArrayType>::APIType;
+        using NormalValueType = typename vtkDataArrayAccessor<NormalArray>::APIType;
 
-        const auto spacing = this->xySpacing * this->CoordinatesUnitScale;
-        const auto scale = convertTo<ValueType>(this->ElevationUnitScale * spacing);
+        ImageExtent wholeExtent;
+        this->Image.GetExtent(wholeExtent.data());
 
-        vtkSMPTools::For(0, normals->GetNumberOfTuples(),
-            [genericI_x, genericI_y, normals, scale]
-        (vtkIdType begin, vtkIdType end)
+        assert(wholeExtent.contains(this->WorkerExtent));
+        assert(!this->WorkerExtent.isEmpty());
+
+        vtkVector3d spacing;
+        this->Image.GetSpacing(spacing.GetData());
+
+        const auto xySpacing = convertTo<2>(spacing) * this->CoordinatesUnitScale;
+        const auto xyScale = convertTo<NormalValueType>(this->ElevationUnitScale / xySpacing);
+
+        vtkDataArrayAccessor<ElevationArray> e(elevations);
+        vtkDataArrayAccessor<NormalArray> n(normals);
+        vtkVector3<NormalValueType> normal;
+
+        vtkVector3<vtkIdType> incs;
+        this->Image.GetIncrements(incs.GetData());
+
+        for (int z = this->WorkerExtent[4]; z <= this->WorkerExtent[5]; ++z)
         {
-            vtkDataArrayAccessor<ArrayType> i_x(genericI_x);
-            vtkDataArrayAccessor<ArrayType> i_y(genericI_y);
-            vtkDataArrayAccessor<ArrayType> n(normals);
-
-            vtkVector3<ValueType> normal;
-
-            for (auto tupleIdx = begin; tupleIdx < end; ++tupleIdx)
+            for (int y = this->WorkerExtent[2]; y <= this->WorkerExtent[3]; ++y)
             {
-                normal = {
-                    -i_x.Get(tupleIdx, 0) * scale[0],
-                    -i_y.Get(tupleIdx, 0) * scale[1],
-                    1.0
-                };
-                normal.Normalize();
+                const int yDirection = y == wholeExtent[3] ? -1 : 1;
+                for (int x = this->WorkerExtent[0]; x <= this->WorkerExtent[1]; ++x)
+                {
+                    const int xDirection = x == wholeExtent[1] ? -1 : 1;
 
-                n.Set(tupleIdx, 0, normal.GetX());
-                n.Set(tupleIdx, 1, normal.GetY());
-                n.Set(tupleIdx, 2, normal.GetZ());
+                    const auto idx_pos = ((x - wholeExtent[0]) * incs[0] + (y - wholeExtent[2]) * incs[1] + (z - wholeExtent[4]) * incs[2]);
+                    const auto idx_east = ((x + xDirection - wholeExtent[0]) * incs[0] + (y - wholeExtent[2]) * incs[1] + (z - wholeExtent[4]) * incs[2]);
+                    const auto idx_south = ((x - wholeExtent[0]) * incs[0] + (y + yDirection - wholeExtent[2]) * incs[1] + (z - wholeExtent[4]) * incs[2]);
+
+                    const auto e_pos = e.Get(idx_pos, 0);
+                    const auto e_diffEast = e_pos - e.Get(idx_east, 0);
+                    const auto e_diffSouth = e_pos - e.Get(idx_south, 0);
+
+                    normal = {
+                        static_cast<NormalValueType>(e_diffEast * xyScale[0]),
+                        static_cast<NormalValueType>(e_diffSouth * xyScale[1]),
+                        static_cast<NormalValueType>(1.0)
+                    };
+                    normal.Normalize();
+
+                    n.Set(idx_pos, normal.GetData());
+                }
             }
-        });
+        }
     }
 };
 
@@ -107,9 +135,14 @@ int DEMImageNormals::RequestInformation(vtkInformation * request,
         scalarType = inScalarInfo->Get(vtkDataObject::FIELD_ARRAY_TYPE());
         numTuples = inScalarInfo->Get(vtkDataObject::FIELD_NUMBER_OF_TUPLES());
     }
-    if (scalarType < 0)
+    if (scalarType <= 0)
     {
         scalarType = vtkImageData::GetScalarType(inInfo);
+    }
+    if (scalarType <= 0)
+    {
+        // default as fall back
+        scalarType = VTK_DOUBLE;
     }
     if (numTuples <= 0)
     {
@@ -134,14 +167,18 @@ int DEMImageNormals::RequestInformation(vtkInformation * request,
         numTuples = -1;
     }
 
+    vtkDataObject::SetPointDataActiveScalarInfo(outInfo, scalarType, 1);
+
+    vtkDataObject::SetActiveAttribute(outInfo,
+        vtkDataObject::FIELD_ASSOCIATION_POINTS, "Normals", vtkDataSetAttributes::NORMALS);
     vtkDataObject::SetActiveAttributeInfo(outInfo,
-        vtkImageData::FIELD_ASSOCIATION_POINTS, vtkDataSetAttributes::NORMALS, "Normals",
+        vtkDataObject::FIELD_ASSOCIATION_POINTS, vtkDataSetAttributes::NORMALS, "Normals",
         scalarType, numComponents, numTuples);
 
     return 1;
 }
 
-int DEMImageNormals::RequestData(vtkInformation * /*request*/,
+int DEMImageNormals::RequestData(vtkInformation * request,
     vtkInformationVector ** inputVector,
     vtkInformationVector * outputVector)
 {
@@ -158,77 +195,72 @@ int DEMImageNormals::RequestData(vtkInformation * /*request*/,
         return 0;
     }
 
-    static const double kernel_x[3 * 3]{
-        -1, 0, 1,
-        -1, 0, 1,
-        -1, 0, 1
-    };
-    static const double kernel_y[3 * 3]{
-        1, 1, 1,
-        0, 0, 0,
-        -1, -1, -1
-    };
+    ImageExtent inExtent(inImage->GetExtent());
+    ImageExtent outExtent(vtkStreamingDemandDrivenPipeline::GetUpdateExtent(outInfo));
 
-    auto computeIx = vtkSmartPointer<vtkImageConvolve>::New();
-    computeIx->SetInputData(inImage);
-    computeIx->SetKernel3x3(kernel_x);
-
-    auto computeIy = vtkSmartPointer<vtkImageConvolve>::New();
-    computeIy->SetInputData(inImage);
-    computeIy->SetKernel3x3(kernel_y);
-
-    vtkSmartPointer<vtkDataArray> i_x, i_y;
-
-    if (computeIx->GetExecutive()->Update())
+    if (inExtent != outExtent)
     {
-        i_x = computeIx->GetOutput()->GetPointData()->GetScalars();
-    }
-    if (i_x && computeIy->GetExecutive()->Update())
-    {
-        i_y = computeIy->GetOutput()->GetPointData()->GetScalars();
-    }
-
-    const auto numberOfPoints = inImage->GetNumberOfPoints();
-
-    if (!i_x || !i_y
-        || (i_x->GetNumberOfTuples() != i_y->GetNumberOfTuples())
-        || (i_x->GetNumberOfTuples() != numberOfPoints))
-    {
-        vtkErrorMacro("Could not convolve input image for normals computation");
+        vtkErrorMacro("Different input and output (update) extents are not implemented.");
         return 0;
     }
 
-    outImage->CopyStructure(inImage);
-    outImage->GetPointData()->PassData(inImage->GetPointData());
-    outImage->GetCellData()->PassData(inImage->GetCellData());
-
-    vtkSmartPointer<vtkDataArray> normals = outImage->GetPointData()->GetArray("Normals");
-    if (!normals
-        || normals->GetDataType() != i_x->GetDataType()
-        || normals->GetNumberOfTuples() != numberOfPoints
-        || normals->GetNumberOfComponents() != 3)
+    vtkSmartPointer<vtkDataArray> normals = outImage->GetPointData()->GetNormals();
+    if (!normals)
     {
-        normals.TakeReference(elevations->NewInstance());
-        normals->SetNumberOfComponents(3);
-        normals->SetNumberOfTuples(numberOfPoints);
+        normals.TakeReference(vtkDataArray::CreateDataArray(elevations->GetDataType()));
     }
-
+    normals->SetNumberOfComponents(3);
+    normals->SetNumberOfTuples(outExtent.numberOfPoints());
+    normals->SetName("Normals");
     outImage->GetPointData()->SetNormals(normals);
 
-    using Dispatcher = vtkArrayDispatch::Dispatch3BySameValueType<vtkArrayDispatch::Reals>;
-
-    vtkVector3d spacing;
-    outImage->GetSpacing(spacing.GetData());
-
-    CalcNormalsWorker worker;
-    worker.ElevationUnitScale = this->ElevationUnitScale;
-    worker.CoordinatesUnitScale = this->CoordinatesUnitScale;
-    worker.xySpacing = { spacing[0], spacing[1] };
-
-    if (!Dispatcher::Execute(i_x, i_y, normals, worker))
+    if (minComponent(convertTo<2>(inExtent.componentSize())) > 1)
     {
-        worker(i_x.Get(), i_y.Get(), normals.Get());
+        if (!Superclass::RequestData(request, inputVector, outputVector))
+        {
+            return 0;
+        }
+    }
+    else
+    {
+        vtkDebugMacro("Not computing normals, image is too small.");
     }
 
+    // preserve current scalars
+    outImage->GetPointData()->SetScalars(elevations);
+
     return 1;
+}
+
+void DEMImageNormals::CopyAttributeData(vtkImageData * in, vtkImageData * out, vtkInformationVector ** inputVector)
+{
+    vtkSmartPointer<vtkDataArray> normals = out->GetPointData()->GetNormals();
+    Superclass::CopyAttributeData(in, out, inputVector);
+    out->GetPointData()->SetNormals(normals);
+}
+
+void DEMImageNormals::ThreadedRequestData(vtkInformation * /*request*/,
+    vtkInformationVector ** /*inputVector*/,
+    vtkInformationVector * /*outputVector*/,
+    vtkImageData *** inData,
+    vtkImageData ** outData,
+    int outExt[6], int /*id*/)
+{
+    auto inImage = inData[0][0];
+    auto outImage = outData[0];
+
+    auto elevations = inImage->GetPointData()->GetScalars();
+    auto normals = outImage->GetPointData()->GetNormals();
+
+    CalcNormalsWorker worker(
+        *inImage, ImageExtent(outExt),
+        this->ElevationUnitScale, this->CoordinatesUnitScale);
+
+    typedef vtkArrayDispatch::Dispatch2ByValueType
+        <vtkArrayDispatch::Reals, vtkArrayDispatch::Reals> Dispatcher;
+
+    if (!Dispatcher::Execute(elevations, normals, worker))
+    {
+        worker(elevations, normals);
+    }
 }
