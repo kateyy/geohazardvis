@@ -46,14 +46,16 @@ RenderedImageData::~RenderedImageData() = default;
 
 ImageDataObject & RenderedImageData::imageDataObject()
 {
-    assert(dynamic_cast<ImageDataObject *>(&dataObject()));
-    return static_cast<ImageDataObject &>(dataObject());
+    auto & baseData = dataObject();
+    assert(dynamic_cast<ImageDataObject *>(&baseData));
+    return static_cast<ImageDataObject &>(baseData);
 }
 
 const ImageDataObject & RenderedImageData::imageDataObject() const
 {
-    assert(dynamic_cast<const ImageDataObject *>(&dataObject()));
-    return static_cast<const ImageDataObject &>(dataObject());
+    auto & baseData = dataObject();
+    assert(dynamic_cast<const ImageDataObject *>(&baseData));
+    return static_cast<const ImageDataObject &>(baseData);
 }
 
 std::unique_ptr<PropertyGroup> RenderedImageData::createConfigGroup()
@@ -337,15 +339,16 @@ void RenderedImageData::configureVisPipeline()
     {
         currentPipelineStep = m_colorMappingFilter->GetOutputPort();
 
-        assert(currentColorMappingData());
-        currentColorMappingData()->configureMapper(*this, *m_mapper);
-        component = currentColorMappingData()->dataComponent();
+        auto colorMappingData = currentColorMappingData();
+        assert(colorMappingData);
+        colorMappingData->configureMapper(*this, *m_mapper);
+        component = colorMappingData->dataComponent();
 
-        mapScalarsToColors = currentColorMappingData()->mapsScalarsToColors();
+        mapScalarsToColors = colorMappingData->mapsScalarsToColors();
 
-        if (currentColorMappingData()->usesOwnLookupTable())
+        if (colorMappingData->usesOwnLookupTable())
         {
-            lut = currentColorMappingData()->ownLookupTable();
+            lut = colorMappingData->ownLookupTable();
         }
     }
 

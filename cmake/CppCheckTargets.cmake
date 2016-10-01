@@ -89,10 +89,13 @@ function(cppcheck_target TARGET)
 
     add_custom_target( cppcheck_${TARGET}
         COMMAND ${CPPCHECK_EXECUTABLE}
-        ${_cppcheckParams}
-        ${_includes}
-        ${_sources}
+            ${_cppcheckParams}
+            ${_includes}
+            ${_sources}
+        SOURCES
+            ${cppcheckSuppressionsFile_in}
     )
+    source_group("" FILES ${cppcheckSuppressionsFile_in})
     set_target_properties( cppcheck_${TARGET}
         PROPERTIES
         FOLDER              "Tests"
