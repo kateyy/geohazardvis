@@ -21,6 +21,7 @@
 #include <core/context2D_data/DataProfile2DContextPlot.h>
 #include <core/filters/LinearSelectorXY.h>
 #include <core/table_model/QVtkTableModelProfileData.h>
+#include <core/utility/DataExtent.h>
 #include <core/utility/vtkvectorhelper.h>
 
 
@@ -167,10 +168,10 @@ vtkIdType DataProfile2DDataObject::vectorComponent() const
     return m_vectorComponent;
 }
 
-const double * DataProfile2DDataObject::scalarRange()
+ValueRange<> DataProfile2DDataObject::scalarRange()
 {
     // x-y-plot -> value range on the y axis
-    return &processedDataSet()->GetBounds()[2];
+    return ValueRange<>(&processedDataSet()->GetBounds()[2]);
 }
 
 int DataProfile2DDataObject::numberOfScalars()

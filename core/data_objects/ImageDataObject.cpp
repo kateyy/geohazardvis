@@ -15,6 +15,7 @@
 #include <core/rendered_data/RenderedImageData.h>
 #include <core/table_model/QVtkTableModelImage.h>
 #include <core/utility/conversions.h>
+#include <core/utility/DataExtent.h>
 
 
 ImageDataObject::ImageDataObject(const QString & name, vtkImageData & dataSet)
@@ -97,19 +98,15 @@ vtkDataArray & ImageDataObject::scalars()
     return *s;
 }
 
-const int * ImageDataObject::dimensions()
+ImageExtent ImageDataObject::extent()
 {
-    return imageData().GetDimensions();
+    assert(ImageExtent(m_extent) == ImageExtent(imageData().GetExtent()));
+    return ImageExtent(m_extent);
 }
 
-const int * ImageDataObject::extent()
+ValueRange<> ImageDataObject::scalarRange()
 {
-    return imageData().GetExtent();
-}
-
-const double * ImageDataObject::minMaxValue()
-{
-    return imageData().GetScalarRange();
+    return ValueRange<>(imageData().GetScalarRange());
 }
 
 std::unique_ptr<QVtkTableModel> ImageDataObject::createTableModel()

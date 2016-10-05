@@ -12,6 +12,7 @@
 #include <core/rendered_data/RenderedVectorGrid3D.h>
 #include <core/table_model/QVtkTableModelVectorGrid3D.h>
 #include <core/utility/conversions.h>
+#include <core/utility/DataExtent.h>
 
 
 VectorGrid3DDataObject::VectorGrid3DDataObject(const QString & name, vtkImageData & dataSet)
@@ -88,14 +89,10 @@ const vtkImageData & VectorGrid3DDataObject::imageData() const
     return static_cast<const vtkImageData &>(*ds);
 }
 
-const int * VectorGrid3DDataObject::dimensions()
+ImageExtent VectorGrid3DDataObject::extent()
 {
-    return imageData().GetDimensions();
-}
-
-const int * VectorGrid3DDataObject::extent()
-{
-    return imageData().GetExtent();
+    assert(ImageExtent(m_extent) == ImageExtent(imageData().GetExtent()));
+    return ImageExtent(m_extent);
 }
 
 int VectorGrid3DDataObject::numberOfComponents()
@@ -103,9 +100,9 @@ int VectorGrid3DDataObject::numberOfComponents()
     return dataSet()->GetPointData()->GetScalars()->GetNumberOfComponents();
 }
 
-const double * VectorGrid3DDataObject::scalarRange(int component)
+ValueRange<> VectorGrid3DDataObject::scalarRange(int component)
 {
-    return dataSet()->GetPointData()->GetScalars()->GetRange(component);
+    return ValueRange<>(dataSet()->GetPointData()->GetScalars()->GetRange(component));
 }
 
 std::unique_ptr<QVtkTableModel> VectorGrid3DDataObject::createTableModel()

@@ -5,6 +5,7 @@
 
 #include <core/types.h>
 #include <core/data_objects/DataObject.h>
+#include <core/utility/DataExtent_fwd.h>
 
 
 class vtkLineSource;
@@ -54,7 +55,7 @@ public:
     IndexType scalarsLocation() const;
     vtkIdType vectorComponent() const;
 
-    const double * scalarRange();
+    ValueRange<> scalarRange();
     int numberOfScalars();
 
     /** @return X,Y-coordinates for the first point */

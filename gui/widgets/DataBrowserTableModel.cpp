@@ -246,8 +246,9 @@ QVariant DataBrowserTableModel::data_dataObject(int row, int column, int role) c
             QString::number(dataObject->dataSet()->GetNumberOfPoints()) + " vertices";
         if (dataTypeName == "regular 2D grid")
         {
-            ImageDataObject * imageData = static_cast<ImageDataObject*>(dataObject);
-            return QString::number(imageData->dimensions()[0]) + "x" + QString::number(imageData->dimensions()[1]) + " values";
+            auto & imageData = static_cast<ImageDataObject &>(*dataObject);
+            auto && dimensions = imageData.extent().componentSize();
+            return QString::number(dimensions[0]) + "x" + QString::number(dimensions[1]) + " values";
         }
         if (dataTypeName == "Data Set Profile (2D)")
         {
@@ -255,7 +256,8 @@ QVariant DataBrowserTableModel::data_dataObject(int row, int column, int role) c
         }
         if (dataTypeName == "3D vector grid")
         {
-            const int * dimensions = static_cast<VectorGrid3DDataObject*>(dataObject)->dimensions();
+            auto & gridData = static_cast<VectorGrid3DDataObject &>(*dataObject);
+            auto && dimensions = gridData.extent().componentSize();
             return QString::number(dimensions[0]) + "x" + QString::number(dimensions[1]) + "x" + QString::number(dimensions[2]) + " vectors";
         }
         break;
@@ -269,17 +271,17 @@ QVariant DataBrowserTableModel::data_dataObject(int row, int column, int role) c
             return "";
         if (dataTypeName == "regular 2D grid")
         {
-            const double * minMax = static_cast<ImageDataObject*>(dataObject)->minMaxValue();
-            return QString::number(minMax[0]) + "; " + QString::number(minMax[1]);
+            auto && range = static_cast<ImageDataObject *>(dataObject)->scalarRange();
+            return QString::number(range[0]) + "; " + QString::number(range[1]);
         }
         if (dataTypeName == "Data Set Profile (2D)")
         {
-            const double * range = static_cast<DataProfile2DDataObject *>(dataObject)->scalarRange();
+            auto && range = static_cast<DataProfile2DDataObject *>(dataObject)->scalarRange();
             return QString::number(range[0]) + "; " + QString::number(range[1]);
         }
         if (dataTypeName == "3D vector grid")
         {
-            VectorGrid3DDataObject * vectorGrid = static_cast<VectorGrid3DDataObject*>(dataObject);
+            auto vectorGrid = static_cast<VectorGrid3DDataObject*>(dataObject);
             QString line;
             int numComponents = vectorGrid->numberOfComponents();
             for (int c = 0; c < numComponents; ++c)

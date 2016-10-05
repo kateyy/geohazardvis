@@ -3,6 +3,7 @@
 #include <array>
 
 #include <core/data_objects/CoordinateTransformableDataObject.h>
+#include <core/utility/DataExtent_fwd.h>
 
 
 class vtkImageData;
@@ -30,12 +31,10 @@ public:
         with a name set. */
     vtkDataArray & scalars();
 
-    /** number of values on each axis (x, y, z) */
-    const int * dimensions();
     /** index of first and last point on each axis (min/max per x, y, z) */
-    const int * extent();
+    ImageExtent extent();
     /** scalar range */
-    const double * minMaxValue();
+    ValueRange<> scalarRange();
 
 protected:
     std::unique_ptr<QVtkTableModel> createTableModel() override;
