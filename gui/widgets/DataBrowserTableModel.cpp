@@ -11,7 +11,7 @@
 #include <core/DataSetHandler.h>
 #include <core/data_objects/RawVectorData.h>
 #include <core/data_objects/ImageDataObject.h>
-#include <core/data_objects/ImageProfileData.h>
+#include <core/data_objects/DataProfile2DDataObject.h>
 #include <core/data_objects/VectorGrid3DDataObject.h>
 #include <core/utility/DataExtent.h>
 
@@ -249,9 +249,9 @@ QVariant DataBrowserTableModel::data_dataObject(int row, int column, int role) c
             ImageDataObject * imageData = static_cast<ImageDataObject*>(dataObject);
             return QString::number(imageData->dimensions()[0]) + "x" + QString::number(imageData->dimensions()[1]) + " values";
         }
-        if (dataTypeName == "image profile")
+        if (dataTypeName == "Data Set Profile (2D)")
         {
-            return QString::number(static_cast<ImageProfileData *>(dataObject)->numberOfScalars()) + " values";
+            return QString::number(static_cast<DataProfile2DDataObject *>(dataObject)->numberOfScalars()) + " values";
         }
         if (dataTypeName == "3D vector grid")
         {
@@ -272,9 +272,9 @@ QVariant DataBrowserTableModel::data_dataObject(int row, int column, int role) c
             const double * minMax = static_cast<ImageDataObject*>(dataObject)->minMaxValue();
             return QString::number(minMax[0]) + "; " + QString::number(minMax[1]);
         }
-        if (dataTypeName == "image profile")
+        if (dataTypeName == "Data Set Profile (2D)")
         {
-            const double * range = static_cast<ImageProfileData *>(dataObject)->scalarRange();
+            const double * range = static_cast<DataProfile2DDataObject *>(dataObject)->scalarRange();
             return QString::number(range[0]) + "; " + QString::number(range[1]);
         }
         if (dataTypeName == "3D vector grid")

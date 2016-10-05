@@ -14,7 +14,7 @@
 
 #include <core/data_objects/ImageDataObject.h>
 #include <core/data_objects/PolyDataObject.h>
-#include <core/data_objects/ImageProfileData.h>
+#include <core/data_objects/DataProfile2DDataObject.h>
 #include <core/data_objects/RawVectorData.h>
 #include <core/data_objects/VectorGrid3DDataObject.h>
 
@@ -80,7 +80,7 @@ TEST_F(QVtkTableModel_test, init_QVtkTableModelProfileData)
     dataSet->SetExtent(0, 2, 0, 3, 0, 0);
     dataSet->AllocateScalars(VTK_FLOAT, 1);
     ImageDataObject image("image", *dataSet);
-    ImageProfileData profile("profile", image, "ImageScalars", IndexType::points, 0);
+    DataProfile2DDataObject profile("profile", image, "ImageScalars", IndexType::points, 0);
     profile.setPoints({ 0, 0 }, { 0, 2 });
 
     QVtkTableModelProfileData tableModel;

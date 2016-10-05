@@ -3,7 +3,7 @@
 #include <core/table_model/QVtkTableModel.h>
 
 
-class ImageProfileData;
+class DataProfile2DDataObject;
 
 
 class CORE_API QVtkTableModelProfileData : public QVtkTableModel
@@ -23,7 +23,7 @@ protected:
     void resetDisplayData() override;
 
 private:
-    ImageProfileData * m_data;
+    DataProfile2DDataObject * m_data;
 
 private:
     Q_DISABLE_COPY(QVtkTableModelProfileData)

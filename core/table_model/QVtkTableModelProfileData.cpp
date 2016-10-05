@@ -6,7 +6,7 @@
 #include <vtkDataSet.h>
 
 #include <core/types.h>
-#include <core/data_objects/ImageProfileData.h>
+#include <core/data_objects/DataProfile2DDataObject.h>
 
 
 QVtkTableModelProfileData::QVtkTableModelProfileData(QObject * parent)
@@ -62,11 +62,13 @@ QVariant QVtkTableModelProfileData::headerData(int section, Qt::Orientation orie
 
     switch (section)
     {
-    case 0: return "position";
+    case 0: return "Position";
     case 1:
         if (m_data)
+        {
             return m_data->scalarsName();
-        return "value";
+        }
+        return "Value";
     }
 
     return QVariant();
@@ -79,5 +81,5 @@ IndexType QVtkTableModelProfileData::indexType() const
 
 void QVtkTableModelProfileData::resetDisplayData()
 {
-    m_data = dynamic_cast<ImageProfileData *>(dataObject());
+    m_data = dynamic_cast<DataProfile2DDataObject *>(dataObject());
 }

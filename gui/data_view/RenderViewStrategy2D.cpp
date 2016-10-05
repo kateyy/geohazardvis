@@ -23,7 +23,7 @@
 #include <core/DataSetHandler.h>
 #include <core/color_mapping/ColorMapping.h>
 #include <core/color_mapping/ColorMappingData.h>
-#include <core/data_objects/ImageProfileData.h>
+#include <core/data_objects/DataProfile2DDataObject.h>
 #include <core/rendered_data/RenderedData.h>
 #include <core/utility/qthelper.h>
 #include <gui/DataMapping.h>
@@ -246,7 +246,7 @@ void RenderViewStrategy2D::startProfilePlot()
             ? IndexType::cells
             : IndexType::points;
 
-        auto profile = std::make_unique<ImageProfileData>(
+        auto profile = std::make_unique<DataProfile2DDataObject>(
             dataObject->name() + " plot",
             *dataObject,
             scalarsName,
@@ -417,7 +417,7 @@ void RenderViewStrategy2D::lineMoved()
 
     for (auto && profile : m_previewProfiles)
     {
-        static_cast<ImageProfileData *>(profile.get())->setPoints(
+        static_cast<DataProfile2DDataObject *>(profile.get())->setPoints(
         { point1_[0], point1_[1] },
         { point2_[0], point2_[1] });
     }

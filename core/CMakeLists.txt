@@ -68,8 +68,8 @@ set(sources
 
     context2D_data/Context2DData.h
     context2D_data/Context2DData.cpp
-    context2D_data/ImageProfileContextPlot.h
-    context2D_data/ImageProfileContextPlot.cpp
+    context2D_data/DataProfile2DContextPlot.h
+    context2D_data/DataProfile2DContextPlot.cpp
     context2D_data/vtkContextItemCollection.h
     context2D_data/vtkContextItemCollection.cpp
     context2D_data/vtkPlotCollection.h
@@ -82,10 +82,10 @@ set(sources
     data_objects/DataObject.cpp
     data_objects/DataObject_private.h
     data_objects/DataObject_private.cpp
+    data_objects/DataProfile2DDataObject.h
+    data_objects/DataProfile2DDataObject.cpp
     data_objects/ImageDataObject.h
     data_objects/ImageDataObject.cpp
-    data_objects/ImageProfileData.h
-    data_objects/ImageProfileData.cpp
     data_objects/PolyDataObject.h
     data_objects/PolyDataObject.cpp
     data_objects/RawVectorData.h

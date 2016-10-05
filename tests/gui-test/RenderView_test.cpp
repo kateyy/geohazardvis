@@ -9,7 +9,7 @@
 
 #include <core/DataSetHandler.h>
 #include <core/data_objects/PolyDataObject.h>
-#include <core/data_objects/ImageProfileData.h>
+#include <core/data_objects/DataProfile2DDataObject.h>
 #include <core/utility/DataExtent.h>
 
 #include <gui/DataMapping.h>
@@ -76,7 +76,7 @@ public:
     struct ProfileData
     {
         std::unique_ptr<PolyDataObject> sourceData;
-        std::unique_ptr<ImageProfileData> profile;
+        std::unique_ptr<DataProfile2DDataObject> profile;
 
         ProfileData() = default;
         ProfileData(ProfileData && other)
@@ -106,7 +106,7 @@ public:
         }
         profileData.sourceData->dataSet()->GetCellData()->AddArray(scalars);
 
-        profileData.profile = std::make_unique<ImageProfileData>(
+        profileData.profile = std::make_unique<DataProfile2DDataObject>(
             "Profile", *profileData.sourceData,
             "scalars", IndexType::cells, 0);
 

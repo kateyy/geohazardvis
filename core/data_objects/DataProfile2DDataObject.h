@@ -19,7 +19,7 @@ class LinearSelectorXY;
 /**
 * Probes the source data along a line defined by two points on the XY-plane and creates a plot for the interpolated data.
 */
-class CORE_API ImageProfileData : public DataObject
+class CORE_API DataProfile2DDataObject : public DataObject
 {
 public:
     /** Create profile with given specifications
@@ -28,13 +28,13 @@ public:
       * @param scalarsName Scalars to probe in the source data object 
       * @param scalarsLocation Specifies whether to probe point or cell scalars 
       * @param vectorComponent For multi component scalars/vectors, specify which component will be extracted */
-    ImageProfileData(
+    DataProfile2DDataObject(
         const QString & name, 
         DataObject & sourceData, 
         const QString & scalarsName,
         IndexType scalarsLocation,
         vtkIdType vectorComponent);
-    ~ImageProfileData() override;
+    ~DataProfile2DDataObject() override;
 
     /** @return whether valid scalar data was found in the constructor. Otherwise, just delete your instance.. */
     bool isValid() const;
@@ -89,5 +89,5 @@ private:
     vtkSmartPointer<vtkWarpScalar> m_graphLine;
 
 private:
-    Q_DISABLE_COPY(ImageProfileData)
+    Q_DISABLE_COPY(DataProfile2DDataObject)
 };

@@ -1,4 +1,4 @@
-#include "ImageProfileData.h"
+#include "DataProfile2DDataObject.h"
 
 #include <algorithm>
 #include <cmath>
@@ -18,13 +18,13 @@
 
 #include <core/data_objects/ImageDataObject.h>
 #include <core/data_objects/PolyDataObject.h>
-#include <core/context2D_data/ImageProfileContextPlot.h>
+#include <core/context2D_data/DataProfile2DContextPlot.h>
 #include <core/filters/LinearSelectorXY.h>
 #include <core/table_model/QVtkTableModelProfileData.h>
 #include <core/utility/vtkvectorhelper.h>
 
 
-ImageProfileData::ImageProfileData(
+DataProfile2DDataObject::DataProfile2DDataObject(
     const QString & name,
     DataObject & sourceData,
     const QString & scalarsName,
@@ -109,86 +109,86 @@ ImageProfileData::ImageProfileData(
     m_isValid = true;
 }
 
-ImageProfileData::~ImageProfileData() = default;
+DataProfile2DDataObject::~DataProfile2DDataObject() = default;
 
-bool ImageProfileData::isValid() const
+bool DataProfile2DDataObject::isValid() const
 {
     return m_isValid;
 }
 
-bool ImageProfileData::is3D() const
+bool DataProfile2DDataObject::is3D() const
 {
     return false;
 }
 
-std::unique_ptr<Context2DData> ImageProfileData::createContextData()
+std::unique_ptr<Context2DData> DataProfile2DDataObject::createContextData()
 {
-    return std::make_unique<ImageProfileContextPlot>(*this);
+    return std::make_unique<DataProfile2DContextPlot>(*this);
 }
 
-const QString & ImageProfileData::dataTypeName() const
+const QString & DataProfile2DDataObject::dataTypeName() const
 {
     return dataTypeName_s();
 }
 
-const QString & ImageProfileData::dataTypeName_s()
+const QString & DataProfile2DDataObject::dataTypeName_s()
 {
-    static const QString name{ "image profile" };
+    static const QString name{ "Data Set Profile (2D)" };
     return name;
 }
 
-vtkAlgorithmOutput * ImageProfileData::processedOutputPort()
+vtkAlgorithmOutput * DataProfile2DDataObject::processedOutputPort()
 {
     return m_graphLine->GetOutputPort();
 }
 
-const QString & ImageProfileData::abscissa() const
+const QString & DataProfile2DDataObject::abscissa() const
 {
     return m_abscissa;
 }
 
-const DataObject & ImageProfileData::sourceData() const
+const DataObject & DataProfile2DDataObject::sourceData() const
 {
     return m_sourceData;
 }
 
-const QString & ImageProfileData::scalarsName() const
+const QString & DataProfile2DDataObject::scalarsName() const
 {
     return m_scalarsName;
 }
 
-IndexType ImageProfileData::scalarsLocation() const
+IndexType DataProfile2DDataObject::scalarsLocation() const
 {
     return m_scalarsLocation;
 }
 
-vtkIdType ImageProfileData::vectorComponent() const
+vtkIdType DataProfile2DDataObject::vectorComponent() const
 {
     return m_vectorComponent;
 }
 
-const double * ImageProfileData::scalarRange()
+const double * DataProfile2DDataObject::scalarRange()
 {
     // x-y-plot -> value range on the y axis
     return &processedDataSet()->GetBounds()[2];
 }
 
-int ImageProfileData::numberOfScalars()
+int DataProfile2DDataObject::numberOfScalars()
 {
     return static_cast<int>(processedDataSet()->GetNumberOfPoints());
 }
 
-const vtkVector2d & ImageProfileData::point1() const
+const vtkVector2d & DataProfile2DDataObject::point1() const
 {
     return m_point1;
 }
 
-const vtkVector2d & ImageProfileData::point2() const
+const vtkVector2d & DataProfile2DDataObject::point2() const
 {
     return m_point2;
 }
 
-void ImageProfileData::setPoints(const vtkVector2d & point1, const vtkVector2d & point2)
+void DataProfile2DDataObject::setPoints(const vtkVector2d & point1, const vtkVector2d & point2)
 {
     m_point1 = point1;
     m_point2 = point2;
@@ -230,7 +230,7 @@ void ImageProfileData::setPoints(const vtkVector2d & point1, const vtkVector2d &
     emit boundsChanged();
 }
 
-std::unique_ptr<QVtkTableModel> ImageProfileData::createTableModel()
+std::unique_ptr<QVtkTableModel> DataProfile2DDataObject::createTableModel()
 {
     std::unique_ptr<QVtkTableModel> tableModel = std::make_unique<QVtkTableModelProfileData>();
     tableModel->setDataObject(this);

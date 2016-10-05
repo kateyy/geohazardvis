@@ -1,4 +1,4 @@
-#include "ImageProfileContextPlot.h"
+#include "DataProfile2DContextPlot.h"
 
 #include <cassert>
 #include <vector>
@@ -14,7 +14,7 @@
 
 #include <reflectionzeug/PropertyGroup.h>
 
-#include <core/data_objects/ImageProfileData.h>
+#include <core/data_objects/DataProfile2DDataObject.h>
 #include <core/context2D_data/vtkPlotCollection.h>
 #include <core/utility/DataExtent.h>
 
@@ -22,17 +22,17 @@
 using namespace reflectionzeug;
 
 
-ImageProfileContextPlot::ImageProfileContextPlot(ImageProfileData & dataObject)
+DataProfile2DContextPlot::DataProfile2DContextPlot(DataProfile2DDataObject & dataObject)
     : Context2DData(dataObject)
     , m_plotLine{ vtkSmartPointer<vtkPlotLine>::New() }
     , m_title{ dataObject.scalarsName() }
 {
-    connect(&dataObject, &DataObject::dataChanged, this, &ImageProfileContextPlot::updatePlot);
+    connect(&dataObject, &DataObject::dataChanged, this, &DataProfile2DContextPlot::updatePlot);
 }
 
-ImageProfileContextPlot::~ImageProfileContextPlot() = default;
+DataProfile2DContextPlot::~DataProfile2DContextPlot() = default;
 
-std::unique_ptr<PropertyGroup> ImageProfileContextPlot::createConfigGroup()
+std::unique_ptr<PropertyGroup> DataProfile2DContextPlot::createConfigGroup()
 {
     auto root = std::make_unique<PropertyGroup>();
 
@@ -79,22 +79,22 @@ std::unique_ptr<PropertyGroup> ImageProfileContextPlot::createConfigGroup()
     return root;
 }
 
-ImageProfileData & ImageProfileContextPlot::profileData()
+DataProfile2DDataObject & DataProfile2DContextPlot::profileData()
 {
-    return static_cast<ImageProfileData &>(dataObject());
+    return static_cast<DataProfile2DDataObject &>(dataObject());
 }
 
-const ImageProfileData & ImageProfileContextPlot::profileData() const
+const DataProfile2DDataObject & DataProfile2DContextPlot::profileData() const
 {
-    return static_cast<const ImageProfileData &>(dataObject());
+    return static_cast<const DataProfile2DDataObject &>(dataObject());
 }
 
-const QString & ImageProfileContextPlot::title() const
+const QString & DataProfile2DContextPlot::title() const
 {
     return m_title;
 }
 
-void ImageProfileContextPlot::setTitle(const QString & title)
+void DataProfile2DContextPlot::setTitle(const QString & title)
 {
     if (title == m_title)
         return;
@@ -104,7 +104,7 @@ void ImageProfileContextPlot::setTitle(const QString & title)
     updatePlot();
 }
 
-vtkSmartPointer<vtkPlotCollection> ImageProfileContextPlot::fetchPlots()
+vtkSmartPointer<vtkPlotCollection> DataProfile2DContextPlot::fetchPlots()
 {
     auto items = vtkSmartPointer<vtkPlotCollection>::New();
 
@@ -115,7 +115,7 @@ vtkSmartPointer<vtkPlotCollection> ImageProfileContextPlot::fetchPlots()
     return items;
 }
 
-DataBounds ImageProfileContextPlot::updateVisibleBounds()
+DataBounds DataProfile2DContextPlot::updateVisibleBounds()
 {
     auto table = m_plotLine->GetInput();
     assert(table);
@@ -131,7 +131,7 @@ DataBounds ImageProfileContextPlot::updateVisibleBounds()
     return DataBounds({ xRange, yRange, ValueRange<>() });
 }
 
-void ImageProfileContextPlot::updatePlot()
+void DataProfile2DContextPlot::updatePlot()
 {
     auto profilePoints = profileData().processedDataSet();
     const vtkIdType numPoints = profilePoints->GetNumberOfPoints();
@@ -186,7 +186,7 @@ void ImageProfileContextPlot::updatePlot()
     invalidateVisibleBounds();
 }
 
-void ImageProfileContextPlot::setPlotIsValid(bool isValid)
+void DataProfile2DContextPlot::setPlotIsValid(bool isValid)
 {
     m_plotLine->SetVisible(isValid);
 }

@@ -7,7 +7,7 @@
 
 class vtkPlot;
 
-class ImageProfileData;
+class DataProfile2DDataObject;
 
 
 /**
@@ -15,16 +15,16 @@ class ImageProfileData;
 
     This class expects to find its scalars (named by scalarsName parameter in constructor) in the plot lines point data.
 */
-class CORE_API ImageProfileContextPlot : public Context2DData
+class CORE_API DataProfile2DContextPlot : public Context2DData
 {
 public:
-    explicit ImageProfileContextPlot(ImageProfileData & dataObject);
-    ~ImageProfileContextPlot() override;
+    explicit DataProfile2DContextPlot(DataProfile2DDataObject & dataObject);
+    ~DataProfile2DContextPlot() override;
 
     std::unique_ptr<reflectionzeug::PropertyGroup> createConfigGroup() override;
 
-    ImageProfileData & profileData();
-    const ImageProfileData & profileData() const;
+    DataProfile2DDataObject & profileData();
+    const DataProfile2DDataObject & profileData() const;
 
     const QString & title() const;
     void setTitle(const QString & title);
@@ -44,5 +44,5 @@ private:
     QString m_title;
 
 private:
-    Q_DISABLE_COPY(ImageProfileContextPlot)
+    Q_DISABLE_COPY(DataProfile2DContextPlot)
 };
