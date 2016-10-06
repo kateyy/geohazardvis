@@ -47,6 +47,7 @@ private:
     const DataSetHandler * m_dataSetHandler;
     QMap<const DataObject *, bool> m_visibilities;
     QMap<QString, QIcon> m_icons;
+    QList<QMetaObject::Connection> m_dataObjectConnections;
     int m_numDataObjects;
     int m_numAttributeVectors;
 

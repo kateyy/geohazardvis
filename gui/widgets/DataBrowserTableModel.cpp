@@ -1,7 +1,8 @@
 #include "DataBrowserTableModel.h"
 
-#include <cassert>
 #include <algorithm>
+#include <cassert>
+#include <functional>
 
 #include <QIcon>
 
@@ -14,6 +15,7 @@
 #include <core/data_objects/DataProfile2DDataObject.h>
 #include <core/data_objects/VectorGrid3DDataObject.h>
 #include <core/utility/DataExtent.h>
+#include <core/utility/qthelper.h>
 
 
 namespace
@@ -214,13 +216,49 @@ void DataBrowserTableModel::updateDataList(const QList<DataObject *> & visibleOb
     m_numAttributeVectors = rawVectors.size();
 
     m_visibilities.clear();
+    disconnectAll(m_dataObjectConnections);
+
+    auto rowUpdateFunc = [this] (int row)
+    {
+        const auto left = index(row, 0);
+        const auto right = index(row, columnCount() - 1);
+
+        emit dataChanged(left, right, { Qt::DisplayRole });
+    };
+
+    int currentRow = 0;
+
     for (auto dataObject : dataSets)
     {
         m_visibilities.insert(dataObject, visibleObjects.contains(dataObject));
+
+        m_dataObjectConnections <<
+            connect(dataObject, &DataObject::dataChanged, std::bind(rowUpdateFunc, currentRow));
+        m_dataObjectConnections <<
+            connect(dataObject, &DataObject::boundsChanged, std::bind(rowUpdateFunc, currentRow));
+        m_dataObjectConnections <<
+            connect(dataObject, &DataObject::valueRangeChanged, std::bind(rowUpdateFunc, currentRow));
+        m_dataObjectConnections <<
+            connect(dataObject, &DataObject::attributeArraysChanged, std::bind(rowUpdateFunc, currentRow));
+        m_dataObjectConnections <<
+            connect(dataObject, &DataObject::structureChanged, std::bind(rowUpdateFunc, currentRow));
+        ++currentRow;
     }
     for (auto attr : rawVectors)
     {
         m_visibilities.insert(attr, visibleObjects.contains(attr));
+
+        m_dataObjectConnections <<
+            connect(attr, &DataObject::dataChanged, std::bind(rowUpdateFunc, currentRow));
+        m_dataObjectConnections <<
+            connect(attr, &DataObject::boundsChanged, std::bind(rowUpdateFunc, currentRow));
+        m_dataObjectConnections <<
+            connect(attr, &DataObject::valueRangeChanged, std::bind(rowUpdateFunc, currentRow));
+        m_dataObjectConnections <<
+            connect(attr, &DataObject::attributeArraysChanged, std::bind(rowUpdateFunc, currentRow));
+        m_dataObjectConnections <<
+            connect(attr, &DataObject::structureChanged, std::bind(rowUpdateFunc, currentRow));
+        ++currentRow;
     }
 
     endResetModel();
