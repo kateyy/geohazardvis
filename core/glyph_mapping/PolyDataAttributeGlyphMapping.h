@@ -4,16 +4,15 @@
 
 
 class vtkAssignAttribute;
-class vtkDataArray;
 
-class PolyDataObject;
+class RenderedPolyData;
 
 
 class CORE_API PolyDataAttributeGlyphMapping : public GlyphMappingData
 {
 public:
     /** create an instances that maps vectors from vectorData to the renderedData's geometry */
-    PolyDataAttributeGlyphMapping(RenderedData & renderedData, PolyDataObject & polyDataObject, vtkDataArray & vectorData);
+    PolyDataAttributeGlyphMapping(RenderedPolyData & renderedData, const QString & attributeName);
 
     QString name() const override;
 
@@ -27,5 +26,5 @@ private:
     static const bool s_registered;
 
     vtkSmartPointer<vtkAssignAttribute> m_assignVectors;
-    vtkSmartPointer<vtkDataArray> m_dataArray;
+    QString m_attributeName;
 };

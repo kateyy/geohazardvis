@@ -7,6 +7,8 @@
 
 class vtkActor;
 class vtkAlgorithm;
+class vtkCellCenters;
+class vtkPolyData;
 class vtkPolyDataMapper;
 class vtkPolyDataNormals;
 
@@ -21,6 +23,10 @@ public:
 
     PolyDataObject & polyDataObject();
     const PolyDataObject & polyDataObject() const;
+
+    /** Return cell centers transformed to the coordinate system specified by setDefaultCoordinateSystem() */
+    vtkAlgorithmOutput * transformedCellCenterOutputPort();
+    vtkDataSet * transformedCellCenterDataSet();
 
     std::unique_ptr<reflectionzeug::PropertyGroup> createConfigGroup() override;
 
@@ -51,6 +57,8 @@ private:
     vtkSmartPointer<vtkPolyDataNormals> m_normals;      // required for lighting/interpolation
 
     vtkSmartPointer<vtkAlgorithm> m_colorMappingOutput;
+
+    vtkSmartPointer<vtkCellCenters> m_transformedCellCenters;
 
     QString m_textureFileName;
 

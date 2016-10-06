@@ -1,18 +1,16 @@
 #include "PolyDataAttributeGlyphMapping.h"
 
-#include <cassert>
-#include <cstring>
+#include <QDebug>
 
-#include <vtkAlgorithmOutput.h>
 #include <vtkAssignAttribute.h>
-#include <vtkCellData.h>
+#include <vtkDataSet.h>
 #include <vtkInformation.h>
 #include <vtkInformationIntegerKey.h>
-#include <vtkPolyData.h>
+#include <vtkPointData.h>
 #include <vtkGlyph3D.h>
 
-#include <core/data_objects/PolyDataObject.h>
-#include <core/rendered_data/RenderedData.h>
+#include <core/data_objects/DataObject.h>
+#include <core/rendered_data/RenderedPolyData.h>
 #include <core/glyph_mapping/GlyphMappingRegistry.h>
 
 
@@ -30,28 +28,34 @@ using namespace reflectionzeug;
 
 std::vector<std::unique_ptr<GlyphMappingData>> PolyDataAttributeGlyphMapping::newInstances(RenderedData & renderedData)
 {
-    auto polyData = dynamic_cast<PolyDataObject *>(&renderedData.dataObject());
+    auto renderedPolyData = dynamic_cast<RenderedPolyData *>(&renderedData);
 
     // only polygonal datasets are supported
-    if (!polyData)
+    if (!renderedPolyData)
     {
         return{};
     }
 
-    // find 3D-vector data, skip the "centroid"
+    // find 3D-vector data, skip the "centroid" attribute array
 
-    auto cellData = polyData->dataSet()->GetCellData();
-    QList<vtkDataArray *> vectorArrays;
-    for (int i = 0; i < cellData->GetNumberOfArrays(); ++i)
+    auto centroids = renderedPolyData->transformedCellCenterDataSet();
+
+    auto pointData = centroids->GetPointData();
+    const vtkIdType numPoints = centroids->GetNumberOfPoints();
+
+    QStringList vectorArrayNames;
+    for (int i = 0; i < pointData->GetNumberOfArrays(); ++i)
     {
-        auto a = cellData->GetArray(i);
+        auto a = pointData->GetArray(i);
 
-        if (!a || a->GetNumberOfComponents() != 3)
+        if (!a || a->GetNumberOfComponents() != 3 || a->GetNumberOfTuples() != numPoints)
         {
             continue;
         }
 
-        if (QString::fromUtf8(a->GetName()) == "centroid")
+        const auto name = QString::fromUtf8(a->GetName());
+
+        if (name.toLower() == "centroid")
         {
             continue;
         }
@@ -62,13 +66,19 @@ std::vector<std::unique_ptr<GlyphMappingData>> PolyDataAttributeGlyphMapping::ne
             continue;
         }
 
-        vectorArrays << a;
+        if (vectorArrayNames.contains(name))
+        {
+            qWarning() << "Duplicated cell array name """ + name + """ in data object """ + renderedPolyData->dataObject().name() + """";
+            continue;
+        }
+
+        vectorArrayNames << name;
     }
 
     std::vector<std::unique_ptr<GlyphMappingData>> instances;
-    for (auto vectorsArray : vectorArrays)
+    for (auto && vectorName : vectorArrayNames)
     {
-        auto mapping = std::make_unique<PolyDataAttributeGlyphMapping>(renderedData, *polyData, *vectorsArray);
+        auto mapping = std::make_unique<PolyDataAttributeGlyphMapping>(*renderedPolyData, vectorName);
         if (mapping->isValid())
         {
             mapping->initialize();
@@ -80,23 +90,21 @@ std::vector<std::unique_ptr<GlyphMappingData>> PolyDataAttributeGlyphMapping::ne
 }
 
 PolyDataAttributeGlyphMapping::PolyDataAttributeGlyphMapping(
-    RenderedData & renderedData,
-    PolyDataObject & polyDataObject,
-    vtkDataArray & vectorData)
+    RenderedPolyData & renderedData,
+    const QString & attributeName)
     : GlyphMappingData(renderedData)
-    , m_dataArray(&vectorData)
+    , m_attributeName{ attributeName }
 {
     arrowGlyph()->SetVectorModeToUseVector();
 
     m_assignVectors = vtkSmartPointer<vtkAssignAttribute>::New();
-    m_assignVectors->SetInputConnection(polyDataObject.cellCentersOutputPort());
-    m_assignVectors->Assign(m_dataArray->GetName(), vtkDataSetAttributes::VECTORS, vtkAssignAttribute::POINT_DATA);
+    m_assignVectors->SetInputConnection(renderedData.transformedCellCenterOutputPort());
+    m_assignVectors->Assign(m_attributeName.toUtf8().data(), vtkDataSetAttributes::VECTORS, vtkAssignAttribute::POINT_DATA);
 }
 
 QString PolyDataAttributeGlyphMapping::name() const
 {
-    assert(m_dataArray);
-    return QString::fromUtf8(m_dataArray->GetName());
+    return m_attributeName;
 }
 
 vtkAlgorithmOutput * PolyDataAttributeGlyphMapping::vectorDataOutputPort()

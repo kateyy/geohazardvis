@@ -6,6 +6,7 @@
 
 #include <vtkActor.h>
 #include <vtkAlgorithmOutput.h>
+#include <vtkCellCenters.h>
 #include <vtkDoubleArray.h>
 #include <vtkPolyData.h>
 #include <vtkPolyDataMapper.h>
@@ -50,6 +51,7 @@ RenderedPolyData::RenderedPolyData(PolyDataObject & dataObject)
     : RenderedData3D(dataObject)
     , m_mapper{ vtkSmartPointer<vtkPolyDataMapper>::New() }
     , m_normals{ vtkSmartPointer<vtkPolyDataNormals>::New() }
+    , m_transformedCellCenters{ vtkSmartPointer<vtkCellCenters>::New() }
 {
     setupInformation(*m_mapper->GetInformation(), *this);
 
@@ -60,6 +62,8 @@ RenderedPolyData::RenderedPolyData(PolyDataObject & dataObject)
 
     // don't break the lut configuration
     m_mapper->UseLookupTableScalarRangeOn();
+
+    m_transformedCellCenters->SetInputConnection(transformedCoordinatesOutputPort());
 
     /** Changing vertex/index data may result in changed bounds */
     connect(this, &AbstractVisualizedData::geometryChanged, this, &RenderedPolyData::invalidateVisibleBounds);
@@ -75,6 +79,17 @@ PolyDataObject & RenderedPolyData::polyDataObject()
 const PolyDataObject & RenderedPolyData::polyDataObject() const
 {
     return static_cast<const PolyDataObject &>(dataObject());
+}
+
+vtkAlgorithmOutput * RenderedPolyData::transformedCellCenterOutputPort()
+{
+    return m_transformedCellCenters->GetOutputPort();
+}
+
+vtkDataSet * RenderedPolyData::transformedCellCenterDataSet()
+{
+    m_transformedCellCenters->Update();
+    return m_transformedCellCenters->GetOutput();
 }
 
 std::unique_ptr<PropertyGroup> RenderedPolyData::createConfigGroup()
