@@ -13,6 +13,7 @@
 
 #include <reflectionzeug/PropertyGroup.h>
 
+#include <core/data_objects/CoordinateTransformableDataObject.h>
 #include <core/utility/macros.h>
 #include <core/utility/vtkcamerahelper.h>
 #include <core/reflectionzeug_extension/QStringProperty.h>
@@ -63,12 +64,29 @@ std::unique_ptr<PropertyGroup> RendererConfigWidget::createPropertyGroupRenderer
     {
         return renderView->currentCoordinateSystem().type;
     },
-        [renderView, this] (CoordinateSystemType::Value type) {
+        [renderView, this] (CoordinateSystemType::Value type)
+    {
         auto spec = renderView->currentCoordinateSystem();
         if (spec.type == type)
         {
             // work-around strange libzeug behavior
             return;
+        }
+
+        if (!spec.isValid(false) && type != CoordinateSystemType::unspecified)
+        {
+            // Switching from unspecified to some valid coordinate system type.
+            // Try to set more information.
+            auto && dataObjects = renderView->dataObjects();
+            const auto it = std::find_if(dataObjects.cbegin(), dataObjects.cend(),
+                [] (DataObject * dataObject)
+            {
+                return dynamic_cast<CoordinateTransformableDataObject *>(dataObject) != nullptr;
+            });
+            if (it != dataObjects.cend())
+            {
+                spec = static_cast<CoordinateTransformableDataObject *>(*it)->coordinateSystem();
+            }
         }
 
         spec.type = type;
