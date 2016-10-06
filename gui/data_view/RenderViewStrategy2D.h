@@ -2,6 +2,7 @@
 
 #include <QMap>
 
+#include <core/CoordinateSystems_fwd.h>
 #include <gui/data_view/RenderViewStrategy.h>
 
 
@@ -46,8 +47,8 @@ private:
     /** Delete current plots, but do not change the GUI state */
     void clearProfilePlots();
     void lineMoved();
-
     void updateAutomaticPlots();
+    void updateForViewCoordinateSystemChange(const CoordinateSystemSpecification & spec);
 
 private:
     static const bool s_isRegistered;
@@ -71,6 +72,7 @@ private:
 
     vtkSmartPointer<vtkLineWidget2> m_lineWidget;
     QMultiMap<vtkSmartPointer<vtkObject>, unsigned long> m_observerTags;
+    bool m_pausePointsUpdate;
 
 private:
     Q_DISABLE_COPY(RenderViewStrategy2D)

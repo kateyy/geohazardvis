@@ -455,6 +455,16 @@ ReferencedCoordinateSystemSpecification::ReferencedCoordinateSystemSpecification
 {
 }
 
+ReferencedCoordinateSystemSpecification::ReferencedCoordinateSystemSpecification(
+    const CoordinateSystemSpecification & unreferencedSpec,
+    const vtkVector2d & referencePointLatLong,
+    const vtkVector2d & referencePointLocalRelative)
+    : CoordinateSystemSpecification(unreferencedSpec)
+    , referencePointLatLong{ referencePointLatLong }
+    , referencePointLocalRelative{ referencePointLocalRelative }
+{
+}
+
 bool ReferencedCoordinateSystemSpecification::isReferencePointValid() const
 {
     return isVectorInitialized(referencePointLatLong)

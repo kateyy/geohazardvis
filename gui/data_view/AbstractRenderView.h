@@ -97,6 +97,8 @@ signals:
     void visualizationSelectionChanged(AbstractRenderView * renderView, const VisualizationSelection & selection);
     void activeSubViewChanged(unsigned int activeSubViewIndex);
 
+    void currentCoordinateSystemChanged(const CoordinateSystemSpecification & spec);
+
     void beforeDeleteVisualizations(const QList<AbstractVisualizedData *> & visualizations);
 
 protected:

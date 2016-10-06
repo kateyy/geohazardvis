@@ -88,6 +88,8 @@ bool AbstractRenderView::setCurrentCoordinateSystem(const CoordinateSystemSpecif
 
     m_coordSystem = spec;
 
+    emit currentCoordinateSystemChanged(m_coordSystem);
+
     return true;
 }
 
@@ -156,6 +158,11 @@ void AbstractRenderView::showDataObjects(
         {
             hasTransformables = true;
         }
+    }
+
+    if (visualizations().isEmpty())
+    {
+        setCurrentCoordinateSystem({});
     }
 
     QList<DataObject *> possibleCompatibleObjects;

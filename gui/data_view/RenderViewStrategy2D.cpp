@@ -26,6 +26,7 @@
 #include <core/data_objects/DataProfile2DDataObject.h>
 #include <core/rendered_data/RenderedData.h>
 #include <core/utility/qthelper.h>
+#include <core/utility/vtkvectorhelper.h>
 #include <gui/DataMapping.h>
 #include <gui/data_view/AbstractRenderView.h>
 #include <gui/data_view/RendererImplementationBase3D.h>
@@ -48,6 +49,7 @@ RenderViewStrategy2D::RenderViewStrategy2D(RendererImplementationBase3D & contex
     , m_profilePlotAcceptAction{ nullptr }
     , m_profilePlotAbortAction{ nullptr }
     , m_previewRenderer{ nullptr }
+    , m_pausePointsUpdate{ false }
 {
 }
 
@@ -142,10 +144,16 @@ void RenderViewStrategy2D::onActivateEvent()
 
     connect(&m_context.renderView(), &AbstractRenderView::visualizationsChanged,
         this, &RenderViewStrategy2D::updateAutomaticPlots);
+
+    connect(&m_context.renderView(), &AbstractRenderView::currentCoordinateSystemChanged,
+        this, &RenderViewStrategy2D::updateForViewCoordinateSystemChange);
 }
 
 void RenderViewStrategy2D::onDeactivateEvent()
 {
+    disconnect(&m_context.renderView(), &AbstractRenderView::currentCoordinateSystemChanged,
+        this, &RenderViewStrategy2D::updateForViewCoordinateSystemChange);
+
     disconnect(&m_context.renderView(), &AbstractRenderView::visualizationsChanged,
         this, &RenderViewStrategy2D::updateAutomaticPlots);
 
@@ -270,6 +278,8 @@ void RenderViewStrategy2D::startProfilePlot()
         {
             continue;
         }
+
+        profile->setPointsCoordinateSystem(m_context.renderView().currentCoordinateSystem());
 
         m_previewProfiles.push_back(std::move(profile));
     }
@@ -428,17 +438,23 @@ void RenderViewStrategy2D::clearProfilePlots()
 
 void RenderViewStrategy2D::lineMoved()
 {
-    assert(m_previewProfiles.size() > 0 && m_lineWidget);
+    assert(m_state == State::plotSetup || m_state == State::plotting);
+    assert(!m_previewProfiles.empty() && m_lineWidget);
 
-    double point1_[3], point2_[3];
-    m_lineWidget->GetLineRepresentation()->GetPoint1WorldPosition(point1_);
-    m_lineWidget->GetLineRepresentation()->GetPoint2WorldPosition(point2_);
+    if (m_pausePointsUpdate)
+    {
+        return;
+    }
+
+    vtkVector3d point1, point2;
+    m_lineWidget->GetLineRepresentation()->GetPoint1WorldPosition(point1.GetData());
+    m_lineWidget->GetLineRepresentation()->GetPoint2WorldPosition(point2.GetData());
 
     for (auto && profile : m_previewProfiles)
     {
-        static_cast<DataProfile2DDataObject *>(profile.get())->setPoints(
-        { point1_[0], point1_[1] },
-        { point2_[0], point2_[1] });
+        static_cast<DataProfile2DDataObject *>(profile.get())->setProfileLinePoints(
+            convertTo<2>(point1), 
+            convertTo<2>(point2));
     }
 }
 
@@ -460,5 +476,28 @@ void RenderViewStrategy2D::updateAutomaticPlots()
         {
             abortProfilePlot();
         }
+    }
+}
+
+void RenderViewStrategy2D::updateForViewCoordinateSystemChange(const CoordinateSystemSpecification & spec)
+{
+    if (m_state != State::plotting)
+    {
+        return;
+    }
+
+    m_pausePointsUpdate = true;
+
+    auto bounds = m_context.dataBounds(0);
+    bounds[4] = bounds[5] += g_lineZOffset;
+    auto repr = m_lineWidget->GetRepresentation();
+    repr->PlaceWidget(bounds.data());
+
+    m_pausePointsUpdate = false;
+    lineMoved();
+
+    for (auto && profile : m_previewProfiles)
+    {
+        static_cast<DataProfile2DDataObject *>(profile.get())->setPointsCoordinateSystem(spec);
     }
 }

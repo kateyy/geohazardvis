@@ -3,6 +3,7 @@
 #include <vtkSmartPointer.h>
 #include <vtkVector.h>
 
+#include <core/CoordinateSystems.h>
 #include <core/types.h>
 #include <core/data_objects/DataObject.h>
 #include <core/utility/DataExtent_fwd.h>
@@ -14,7 +15,10 @@ class vtkTransformPolyDataFilter;
 class vtkWarpScalar;
 
 enum class IndexType;
+class CoordinateTransformableDataObject;
 class LinearSelectorXY;
+class SetCoordinateSystemInformationFilter;
+class SimplePolyGeoCoordinateTransformFilter;
 
 
 /**
@@ -31,7 +35,7 @@ public:
       * @param vectorComponent For multi component scalars/vectors, specify which component will be extracted */
     DataProfile2DDataObject(
         const QString & name, 
-        DataObject & sourceData, 
+        DataObject & sourceData,
         const QString & scalarsName,
         IndexType scalarsLocation,
         vtkIdType vectorComponent);
@@ -59,13 +63,23 @@ public:
     int numberOfScalars();
 
     /** @return X,Y-coordinates for the first point */
-    const vtkVector2d & point1() const;
+    const vtkVector2d & profileLinePoint1() const;
     /** @return X,Y-coordinates for the second point */
-    const vtkVector2d & point2() const;
-    void setPoints(const vtkVector2d & point1, const vtkVector2d & point2);
+    const vtkVector2d & profileLinePoint2() const;
+    void setProfileLinePoints(const vtkVector2d & point1, const vtkVector2d & point2);
+    /** Convenience method to request the points to be transformed from their current coordinate 
+      * system to the coordinate system of the source data set.
+      * If the specified coordinate system is empty, not valid, or not supported, the points won't
+      * be transformed and used as is. */
+    void setPointsCoordinateSystem(const CoordinateSystemSpecification & coordsSpec);
+    const CoordinateSystemSpecification & pointsCoordinateSystem() const;
 
 protected:
     std::unique_ptr<QVtkTableModel> createTableModel() override;
+
+private:
+    CoordinateTransformableDataObject & sourceData();
+    void updateTransformInputPoints();
 
 private:
     bool m_isValid;
@@ -75,8 +89,13 @@ private:
     IndexType m_scalarsLocation;
     vtkIdType m_vectorComponent;
 
-    vtkVector2d m_point1;
-    vtkVector2d m_point2;
+    vtkVector2d m_profileLinePoint1;
+    vtkVector2d m_profileLinePoint2;
+    CoordinateSystemSpecification m_profileLinePointsCoordsSpec;
+    ReferencedCoordinateSystemSpecification m_targetCoordsSpec;
+    bool m_doTransformPoints;
+    vtkSmartPointer<SetCoordinateSystemInformationFilter> m_pointsSetCoordsSpecFilter;
+    vtkSmartPointer<SimplePolyGeoCoordinateTransformFilter> m_pointsTransformFilter;
 
     // extraction from vtkImageData
     const bool m_inputIsImage;

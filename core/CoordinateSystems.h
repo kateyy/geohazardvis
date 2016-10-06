@@ -103,6 +103,10 @@ struct CORE_API ReferencedCoordinateSystemSpecification : public CoordinateSyste
         const QString & globalMetricSystem,
         const vtkVector2d & referencePointLatLong,
         const vtkVector2d & referencePointLocalRelative);
+    ReferencedCoordinateSystemSpecification(
+        const CoordinateSystemSpecification & unreferencedSpec,
+        const vtkVector2d & referencePointLatLong,
+        const vtkVector2d & referencePointLocalRelative);
     ~ReferencedCoordinateSystemSpecification() override = default;
 
     bool isReferencePointValid() const;

@@ -81,7 +81,7 @@ TEST_F(QVtkTableModel_test, init_QVtkTableModelProfileData)
     dataSet->AllocateScalars(VTK_FLOAT, 1);
     ImageDataObject image("image", *dataSet);
     DataProfile2DDataObject profile("profile", image, "ImageScalars", IndexType::points, 0);
-    profile.setPoints({ 0, 0 }, { 0, 2 });
+    profile.setProfileLinePoints({ 0, 0 }, { 0, 2 });
 
     QVtkTableModelProfileData tableModel;
     tableModel.setDataObject(&profile);

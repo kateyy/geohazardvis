@@ -111,7 +111,7 @@ public:
             "scalars", IndexType::cells, 0);
 
         const auto inBounds = DataBounds(profileData.sourceData->bounds()).convertTo<2>();
-        profileData.profile->setPoints(inBounds.min(), inBounds.max());
+        profileData.profile->setProfileLinePoints(inBounds.min(), inBounds.max());
 
         return profileData;
     }
