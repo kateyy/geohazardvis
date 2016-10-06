@@ -26,7 +26,7 @@ SimplePolyGeoCoordinateTransformFilter::SimplePolyGeoCoordinateTransformFilter()
     , Transform{ vtkSmartPointer<vtkTransform>::New() }
     , InfoSetter{ vtkSmartPointer<SetCoordinateSystemInformationFilter>::New() }
 {
-    this->Transform->PreMultiply();
+    this->Transform->PostMultiply();
     this->TransformFilter->SetTransform(Transform);
     this->InfoSetter->SetInputConnection(this->TransformFilter->GetOutputPort());
 }
@@ -112,7 +112,7 @@ int SimplePolyGeoCoordinateTransformFilter::RequestInformation(vtkInformation * 
 int SimplePolyGeoCoordinateTransformFilter::RequestData(vtkInformation * /*request*/,
     vtkInformationVector ** /*inputVector*/, vtkInformationVector * /*outputVector*/)
 {
-    return this->TransformFilter->GetExecutive()->Update();
+    return this->InfoSetter->GetExecutive()->Update();
 }
 
 void SimplePolyGeoCoordinateTransformFilter::SetFilterParameters(const ReferencedCoordinateSystemSpecification & targetSpec)
