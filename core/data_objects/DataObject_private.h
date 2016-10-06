@@ -52,6 +52,10 @@ public:
     vtkIdType m_numberOfPoints;
     vtkIdType m_numberOfCells;
 
+    /** Workaround flag for vtkPolyData::CopyStructure triggering ModifiedEvent after copying
+    points, but not after copying cell arrays */
+    bool m_inCopyStructure;
+
     using EventMemberPointer = std::function<void()>;
 
     class CORE_API EventDeferralLock

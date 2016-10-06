@@ -44,6 +44,8 @@ public:
 protected:
     std::unique_ptr<QVtkTableModel> createTableModel() override;
 
+    bool checkIfStructureChanged() override;
+
     vtkSmartPointer<vtkAlgorithm> createTransformPipeline(
         const CoordinateSystemSpecification & toSystem,
         vtkAlgorithmOutput * pipelineUpstream) const override;

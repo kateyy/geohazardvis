@@ -115,20 +115,17 @@ std::unique_ptr<QVtkTableModel> VectorGrid3DDataObject::createTableModel()
 
 bool VectorGrid3DDataObject::checkIfStructureChanged()
 {
-    if (DataObject::checkIfStructureChanged())
-    {
-        return true;
-    }
+    const auto superclassResult = CoordinateTransformableDataObject::checkIfStructureChanged();
 
     decltype(m_extent) newExtent;
     imageData().GetExtent(newExtent.data());
 
-    const bool changed = newExtent != m_extent;
+    bool changed = newExtent != m_extent;
 
     if (changed)
     {
         m_extent = newExtent;
     }
 
-    return changed;
+    return superclassResult || changed;
 }

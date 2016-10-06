@@ -20,6 +20,7 @@ DataObjectPrivate::DataObjectPrivate(DataObject & dataObject, const QString & na
     , m_bounds{}
     , m_numberOfPoints{ 0 }
     , m_numberOfCells{ 0 }
+    , m_inCopyStructure{ false }
     , q_ptr{ dataObject }
     , m_deferEventsRequests{ 0 }
 {

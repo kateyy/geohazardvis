@@ -9,6 +9,8 @@
 #include <vtkSmartPointer.h>
 
 #include <core/data_objects/ImageDataObject.h>
+#include <core/data_objects/PolyDataObject.h>
+#include <core/data_objects/VectorGrid3DDataObject.h>
 #include <core/table_model/QVtkTableModel.h>
 #include <core/data_objects/DataObject_private.h>
 #include <core/utility/DataExtent.h>
@@ -149,6 +151,141 @@ TEST_F(DataObject_test, ClearAttributesKeepsIntrinsicAttributes)
     ASSERT_TRUE(dataSet->GetPointData()->HasArray(intrPointAttr->GetName()));
     ASSERT_TRUE(dataSet->GetCellData()->HasArray(intrCellAttr->GetName()));
     ASSERT_TRUE(dataSet->GetFieldData()->HasArray(intrFieldAttr->GetName()));
+}
+
+TEST_F(DataObject_test, CopyStructure_triggers_structureChanged_ImageDataObject)
+{
+    auto dataSet = vtkSmartPointer<vtkImageData>::New();
+
+    auto referenceDataSet = vtkSmartPointer<vtkImageData>::New();
+    referenceDataSet->SetExtent(1, 3, 1, 4, 0, 0);
+    referenceDataSet->AllocateScalars(VTK_FLOAT, 1);
+
+    bool structureChangedSignaled = false;
+
+    ImageDataObject image("testImage", *dataSet);
+    QObject::connect(&image, &DataObject::structureChanged,
+        [&structureChangedSignaled] ()
+    {
+        structureChangedSignaled = true;
+    });
+
+    dataSet->CopyStructure(referenceDataSet);
+
+    ASSERT_TRUE(structureChangedSignaled);
+}
+
+TEST_F(DataObject_test, CopyStructure_triggers_structureChanged_PolyDataObject)
+{
+    auto dataSet = vtkSmartPointer<vtkPolyData>::New();
+
+    auto referenceDataSet = vtkSmartPointer<vtkPolyData>::New();
+    auto points = vtkSmartPointer<vtkPoints>::New();
+    points->SetNumberOfPoints(1);
+    points->SetPoint(0, 1, 2, 3);
+    referenceDataSet->SetPoints(points);
+
+    bool structureChangedSignaled = false;
+
+    PolyDataObject poly("testPoly", *dataSet);
+    QObject::connect(&poly, &DataObject::structureChanged,
+        [&structureChangedSignaled] ()
+    {
+        structureChangedSignaled = true;
+    });
+
+    dataSet->CopyStructure(referenceDataSet);
+
+    ASSERT_TRUE(structureChangedSignaled);
+}
+
+TEST_F(DataObject_test, CopyStructure_updates_ImageDataObject_extent)
+{
+    ImageExtent extent({ 1, 3, 1, 4, 0, 0 });
+
+    auto dataSet = vtkSmartPointer<vtkImageData>::New();
+
+    auto referenceDataSet = vtkSmartPointer<vtkImageData>::New();
+    referenceDataSet->SetExtent(extent.data());
+    referenceDataSet->AllocateScalars(VTK_FLOAT, 1);
+
+    ImageDataObject image("testImage", *dataSet);
+
+    dataSet->CopyStructure(referenceDataSet);
+
+    ASSERT_EQ(extent, image.extent());
+}
+
+TEST_F(DataObject_test, CopyStructure_updates_VectorGrid3DDataObject_extent)
+{
+    ImageExtent extent({ 1, 3, 1, 4, 3, 5 });
+
+    auto dataSet = vtkSmartPointer<vtkImageData>::New();
+
+    auto referenceDataSet = vtkSmartPointer<vtkImageData>::New();
+    referenceDataSet->SetExtent(extent.data());
+    referenceDataSet->AllocateScalars(VTK_FLOAT, 1);
+
+    VectorGrid3DDataObject grid("testGrid", *dataSet);
+
+    dataSet->CopyStructure(referenceDataSet);
+
+    ASSERT_EQ(extent, grid.extent());
+}
+
+TEST_F(DataObject_test, CopyStructure_Modified_updates_PolyDataObject_pointsCells)
+{
+    const vtkIdType numPoints = 3;
+    const vtkIdType numCells = 2;
+
+    auto dataSet = vtkSmartPointer<vtkPolyData>::New();
+
+    auto referenceDataSet = vtkSmartPointer<vtkPolyData>::New();
+    auto points = vtkSmartPointer<vtkPoints>::New();
+    points->SetNumberOfPoints(numPoints);
+    points->SetPoint(0, 1, 2, 3);
+    points->SetPoint(1, 2, 2, 3);
+    points->SetPoint(2, 3, 2, 3);
+    referenceDataSet->SetPoints(points);
+    auto cells = vtkSmartPointer<vtkCellArray>::New();
+    cells->InsertNextCell(3, std::vector<vtkIdType>({ 0, 1, 2 }).data());
+    cells->InsertNextCell(3, std::vector<vtkIdType>({ 0, 2, 1 }).data());
+    referenceDataSet->SetVerts(cells);
+
+    PolyDataObject poly("testPoly", *dataSet);
+
+    dataSet->CopyStructure(referenceDataSet);
+    dataSet->Modified();
+
+    ASSERT_EQ(numPoints, poly.numberOfPoints());
+    ASSERT_EQ(numCells, poly.numberOfCells());
+}
+
+TEST_F(DataObject_test, DataObject_CopyStructure_updates_PolyDataObject_pointsCells)
+{
+    const vtkIdType numPoints = 3;
+    const vtkIdType numCells = 2;
+
+    auto dataSet = vtkSmartPointer<vtkPolyData>::New();
+
+    auto referenceDataSet = vtkSmartPointer<vtkPolyData>::New();
+    auto points = vtkSmartPointer<vtkPoints>::New();
+    points->SetNumberOfPoints(numPoints);
+    points->SetPoint(0, 1, 2, 3);
+    points->SetPoint(1, 2, 2, 3);
+    points->SetPoint(2, 3, 2, 3);
+    referenceDataSet->SetPoints(points);
+    auto cells = vtkSmartPointer<vtkCellArray>::New();
+    cells->InsertNextCell(3, std::vector<vtkIdType>({ 0, 1, 2 }).data());
+    cells->InsertNextCell(3, std::vector<vtkIdType>({ 0, 2, 1 }).data());
+    referenceDataSet->SetVerts(cells);
+
+    PolyDataObject poly("testPoly", *dataSet);
+
+    poly.CopyStructure(*referenceDataSet);
+
+    ASSERT_EQ(numPoints, poly.numberOfPoints());
+    ASSERT_EQ(numCells, poly.numberOfCells());
 }
 
 TEST(ScopedEventDeferral_test, ExecutesDeferred)

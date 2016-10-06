@@ -713,11 +713,13 @@ void ResidualVerificationView::handleUpdateFinished()
             upToDateResidual = newlyCreatedResidual.get();
         }
 
+        {
 
-        ScopedEventDeferral residualDeferal(*upToDateResidual);
+            ScopedEventDeferral residualDeferal(*upToDateResidual);
 
-        targetDataSet->CopyStructure(computedResidual);
-        targetDataSet->CopyAttributes(computedResidual);
+            upToDateResidual->CopyStructure(*computedResidual);
+            upToDateResidual->dataSet()->CopyAttributes(computedResidual);
+        }
 
         if (newlyCreatedResidual)
         {

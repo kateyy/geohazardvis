@@ -119,10 +119,7 @@ std::unique_ptr<QVtkTableModel> ImageDataObject::createTableModel()
 
 bool ImageDataObject::checkIfStructureChanged()
 {
-    if (DataObject::checkIfStructureChanged())
-    {
-        return true;
-    }
+    const auto superclassResult = CoordinateTransformableDataObject::checkIfStructureChanged();
 
     decltype(m_extent) newExtent;
     imageData().GetExtent(newExtent.data());
@@ -134,7 +131,7 @@ bool ImageDataObject::checkIfStructureChanged()
         m_extent = newExtent;
     }
 
-    return changed;
+    return superclassResult || changed;
 }
 
 vtkSmartPointer<vtkAlgorithm> ImageDataObject::createTransformPipeline(

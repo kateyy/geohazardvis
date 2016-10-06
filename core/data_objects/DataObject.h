@@ -48,6 +48,12 @@ public:
     vtkDataSet * dataSet();
     const vtkDataSet * dataSet() const;
 
+    /** Copy structure of other to this->dataSet() (if is set).
+      * This is a workaround for vtkPolyData::CopyStructure that does not trigger Modified events
+      * for modifications of cell arrays.
+      * This method should always be used instead of using vtkDataSet::CopyStructure directly! */
+    void CopyStructure(vtkDataSet & other);
+
     /** @return the source data set with specific modifications or enhancements, e.g., computed normals */
     virtual vtkAlgorithmOutput * processedOutputPort();
     /** Convenience method that returns a persistent shallow copy of the output data set of processedOutputPort() */

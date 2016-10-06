@@ -14,6 +14,7 @@
 #include <vtkTransform.h>
 
 #include <core/CoordinateSystems.h>
+#include <core/data_objects/DataObject_private.h>
 #include <core/filters/SimplePolyGeoCoordinateTransformFilter.h>
 #include <core/rendered_data/RenderedPolyData.h>
 #include <core/table_model/QVtkTableModelPolyData.h>
@@ -225,6 +226,13 @@ std::unique_ptr<QVtkTableModel> PolyDataObject::createTableModel()
     model->setDataObject(this);
 
     return model;
+}
+
+bool PolyDataObject::checkIfStructureChanged()
+{
+    const bool superclassResult = CoordinateTransformableDataObject::checkIfStructureChanged();
+
+    return superclassResult || dPtr().m_inCopyStructure;
 }
 
 vtkSmartPointer<vtkAlgorithm> PolyDataObject::createTransformPipeline(const CoordinateSystemSpecification & toSystem, vtkAlgorithmOutput * pipelineUpstream) const

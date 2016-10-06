@@ -34,6 +34,25 @@ namespace
         static const char * const _name = "Name";
         return _name;
     }
+
+
+    struct SetResetFlag
+    {
+        SetResetFlag(bool & flag)
+            : previousValue{ flag }
+            , flag{ flag }
+        {
+            flag = true;
+        }
+        ~SetResetFlag()
+        {
+            flag = previousValue;
+        }
+
+    private:
+        bool previousValue;
+        bool & flag;
+    };
 }
 
 
@@ -93,6 +112,29 @@ vtkDataSet * DataObject::dataSet()
 const vtkDataSet * DataObject::dataSet() const
 {
     return d_ptr->m_dataSet;
+}
+
+void DataObject::CopyStructure(vtkDataSet & other)
+{
+    auto ds = dataSet();
+    if (!ds)
+    {
+        return;
+    }
+
+    // vtkPolyData applies a static_cast<vtkPolyData *>() to its argument
+    if (!other.IsA(ds->GetClassName()))
+    {
+        qFatal(("Invalid call to DataObject::CopyStructure on """ + name()
+            + """ with parameter of type """ + other.GetClassName() + """").toUtf8().data());
+    }
+
+    const SetResetFlag setResetFlag(d_ptr->m_inCopyStructure);
+
+    ds->CopyStructure(&other);
+
+    // explicitly trigger Modified to catch up missed changes
+    ds->Modified();
 }
 
 vtkAlgorithmOutput * DataObject::processedOutputPort()
@@ -268,7 +310,7 @@ bool DataObject::checkIfStructureChanged()
     const vtkIdType newNumPoints = dataSet()->GetNumberOfPoints();
     const vtkIdType newNumCells = dataSet()->GetNumberOfCells();
 
-    bool changed =
+    const bool changed =
         (newNumPoints != d_ptr->m_numberOfPoints)
         || (newNumCells != d_ptr->m_numberOfCells);
 
