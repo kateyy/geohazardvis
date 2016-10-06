@@ -43,7 +43,7 @@ namespace
 
 RenderViewStrategy2D::RenderViewStrategy2D(RendererImplementationBase3D & context)
     : RenderViewStrategy(context)
-    , m_isInitialized{ false }
+    , m_state{ State::uninitialized }
     , m_profilePlotAction{ nullptr }
     , m_profilePlotAcceptAction{ nullptr }
     , m_profilePlotAbortAction{ nullptr }
@@ -102,8 +102,10 @@ void RenderViewStrategy2D::setInputData(const QList<DataObject *> & inputData)
 
 void RenderViewStrategy2D::initialize()
 {
-    if (m_isInitialized)
+    if (m_state != State::uninitialized)
+    {
         return;
+    }
 
     m_profilePlotAction = new QAction(QIcon(":/icons/graph_line"), "create &profile plot", nullptr);
     connect(m_profilePlotAction, &QAction::triggered, this, &RenderViewStrategy2D::startProfilePlot);
@@ -116,7 +118,7 @@ void RenderViewStrategy2D::initialize()
 
     m_actions << m_profilePlotAction << m_profilePlotAcceptAction << m_profilePlotAbortAction;
 
-    m_isInitialized = true;
+    m_state = State::notPlotting;
 }
 
 QString RenderViewStrategy2D::name() const
@@ -181,6 +183,14 @@ QList<DataObject *> RenderViewStrategy2D::filterCompatibleObjects(const QList<Da
 
 void RenderViewStrategy2D::startProfilePlot()
 {
+    assert(m_state == State::notPlotting || m_state == State::plotting);
+
+    if (m_state == State::plotting)
+    {
+        // restart plotting
+        clearProfilePlots();
+    }
+
     assert(m_previewProfiles.empty());
 
     // check input images
@@ -204,6 +214,7 @@ void RenderViewStrategy2D::startProfilePlot()
         return;
     }
 
+    m_state = State::plotSetup;
     m_profilePlotAction->setEnabled(false);
 
 
@@ -286,7 +297,6 @@ void RenderViewStrategy2D::startProfilePlot()
 
         auto bounds = m_context.dataBounds(0);
         bounds[4] = bounds[5] += g_lineZOffset;
-
         repr->PlaceWidget(bounds.data());
 
         m_context.render();
@@ -297,7 +307,9 @@ void RenderViewStrategy2D::startProfilePlot()
 
     QList<DataObject *> profiles;
     for (auto && profile : m_previewProfiles)
+    {
         profiles << profile.get();
+    }
 
     if (creatingNewRenderer)
     {
@@ -339,12 +351,15 @@ void RenderViewStrategy2D::startProfilePlot()
         addLineObservation(m_lineWidget->GetLineRepresentation()->GetPoint2Representation());
     }
 
+    m_state = State::plotting;
     m_profilePlotAcceptAction->setVisible(true);
     m_profilePlotAbortAction->setVisible(true);
 }
 
 void RenderViewStrategy2D::acceptProfilePlot()
 {
+    assert(m_state == State::plotting);
+    m_state = State::accepting;
     m_profilePlotAcceptAction->setVisible(false);
     m_profilePlotAbortAction->setVisible(false);
 
@@ -358,11 +373,13 @@ void RenderViewStrategy2D::acceptProfilePlot()
     m_lineWidget = nullptr;
     m_context.render();
 
+    m_state = State::notPlotting;
     m_profilePlotAction->setEnabled(true);
 }
 
 void RenderViewStrategy2D::abortProfilePlot()
 {
+    assert(m_state == State::plotting || m_state == State::plotSetup);
     clearProfilePlots();
 
     if (m_previewRenderer)
@@ -378,6 +395,7 @@ void RenderViewStrategy2D::abortProfilePlot()
         m_context.render();
     }
 
+    m_state = State::notPlotting;
     m_profilePlotAcceptAction->setVisible(false);
     m_profilePlotAbortAction->setVisible(false);
     m_profilePlotAction->setEnabled(true);
@@ -390,6 +408,7 @@ QString RenderViewStrategy2D::defaultInteractorStyle() const
 
 void RenderViewStrategy2D::clearProfilePlots()
 {
+    assert(m_state == State::plotSetup || m_state == State::plotting);
     auto oldProfiles = std::move(m_previewProfiles);
     auto oldInputs = std::move(m_activeInputData);
 
@@ -432,14 +451,14 @@ void RenderViewStrategy2D::updateAutomaticPlots()
     }
 
     // refresh the automatically fetched plots
-    if (m_previewRenderer)
+    if (m_state == State::plotting)
     {
-        clearProfilePlots();
+        assert(m_previewRenderer);
         startProfilePlot();
-    }
 
-    if (m_activeInputData.isEmpty())
-    {
-        abortProfilePlot();
+        if (m_activeInputData.isEmpty())
+        {
+            abortProfilePlot();
+        }
     }
 }

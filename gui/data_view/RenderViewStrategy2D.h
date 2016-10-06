@@ -1,11 +1,6 @@
 #pragma once
 
-#include <memory>
-#include <vector>
-
 #include <QMap>
-
-#include <vtkSmartPointer.h>
 
 #include <gui/data_view/RenderViewStrategy.h>
 
@@ -15,7 +10,6 @@ class vtkObject;
 class vtkLineWidget2;
 
 class AbstractRenderView;
-class DataObject;
 
 
 class GUI_API RenderViewStrategy2D : public RenderViewStrategy
@@ -51,7 +45,6 @@ private:
 
     /** Delete current plots, but do not change the GUI state */
     void clearProfilePlots();
-
     void lineMoved();
 
     void updateAutomaticPlots();
@@ -59,7 +52,11 @@ private:
 private:
     static const bool s_isRegistered;
 
-    bool m_isInitialized;
+    enum class State
+    {
+        uninitialized, notPlotting, plotSetup, plotting, accepting
+    };
+    State m_state;
 
     QAction * m_profilePlotAction;
     QAction * m_profilePlotAcceptAction;
