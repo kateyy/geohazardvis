@@ -34,7 +34,9 @@ DataBrowser::DataBrowser(QWidget* parent, Qt::WindowFlags f)
     connect(m_ui->dataTableView->selectionModel(), &QItemSelectionModel::selectionChanged,
         [this] (const QItemSelection &selected, const QItemSelection &) {
         if (selected.indexes().isEmpty())
+        {
             return;
+        }
         
         emit selectedDataChanged(m_tableModel->dataObjectAt(selected.indexes().first()));
     });
@@ -100,14 +102,9 @@ bool DataBrowser::eventFilter(QObject * /*obj*/, QEvent * ev)
 
     // for multi selections: don't discard the selection when clicking on the buttons
     QItemSelection selection = m_ui->dataTableView->selectionModel()->selection();
-    if ((selection.size() > 1)
+    return selection.size() > 1
         && selection.contains(index)
-        && (index.column() < m_tableModel->numButtonColumns()))
-    {
-        return true;
-    }
-
-    return false;
+        && index.column() < m_tableModel->numButtonColumns();
 }
 
 void DataBrowser::updateModelForFocusedView()
@@ -119,7 +116,9 @@ void DataBrowser::updateModel(AbstractRenderView * renderView)
 {
     QList<DataObject *> visibleObjects;
     if (renderView)
+    {
         visibleObjects = renderView->dataObjects();
+    }
 
     m_tableModel->updateDataList(visibleObjects);
 
@@ -269,12 +268,13 @@ void DataBrowser::menuAssignDataToIndexes(const QPoint & position, DataObject * 
     else
         for (auto && indexes : m_dataMapping->dataSetHandler().dataSets())
         {
-        auto assignAction = assignMenu->addAction(indexes->name());
-        connect(assignAction, &QAction::triggered,
-            [indexes, dataArray] (bool) {
-            assert(dataArray);
-            indexes->addDataArray(*dataArray);
-        });
+            auto assignAction = assignMenu->addAction(indexes->name());
+            connect(assignAction, &QAction::triggered,
+                [indexes, dataArray] (bool)
+            {
+                assert(dataArray);
+                indexes->addDataArray(*dataArray);
+            });
         }
 
     assignMenu->popup(position);
