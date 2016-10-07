@@ -2,6 +2,7 @@
 #include "ui_RendererConfigWidget.h"
 
 #include <cassert>
+#include <functional>
 
 #include <QGridLayout>
 
@@ -10,6 +11,7 @@
 
 #include <reflectionzeug/PropertyGroup.h>
 
+#include <core/utility/qthelper.h>
 #include <gui/data_view/RendererImplementationBase3D.h>
 #include <gui/data_view/RendererImplementationPlot.h>
 #include <gui/data_view/ResidualVerificationView.h>
@@ -30,6 +32,7 @@ RendererConfigWidget::RendererConfigWidget(QWidget * parent)
     , m_currentRenderView{ nullptr }
 {
     m_ui->setupUi(this);
+    m_ui->cameraButtonsWidget->setVisible(false);
 
     connect(m_ui->interactionModeCombo, static_cast<void(QComboBox::*)(const QString &)>(&QComboBox::currentIndexChanged),
         this, &RendererConfigWidget::setInteractionStyle);
@@ -63,9 +66,10 @@ void RendererConfigWidget::setCurrentRenderView(AbstractRenderView * renderView)
     m_ui->propertyBrowser->setRoot(nullptr);
     m_propertyRoot.reset();
 
+    disconnectAll(m_cameraResetConnections);
+
     auto lastRenderView = m_currentRenderView;
     m_currentRenderView = renderView;
-
 
     auto residualView = dynamic_cast<ResidualVerificationView *>(renderView);
     if (residualView && !m_residualUi)
@@ -76,7 +80,7 @@ void RendererConfigWidget::setCurrentRenderView(AbstractRenderView * renderView)
         layout->setContentsMargins(0, 0, 0, 0);
         layout->addWidget(m_residualUi);
         m_residualGroupBox->setLayout(layout);
-        m_ui->formLayout_2->addRow(m_residualGroupBox);
+        m_ui->customWidgetsLayout->addRow(m_residualGroupBox);
     }
 
     if (m_residualUi)
@@ -125,6 +129,19 @@ void RendererConfigWidget::setCurrentRenderView(AbstractRenderView * renderView)
         auto camera = impl3D->camera(0);  // assuming synchronized cameras
         auto tag = camera->AddObserver(vtkCommand::ModifiedEvent, this, &RendererConfigWidget::readCameraStats);
         m_cameraObserverTags.insert(camera, tag);
+
+        auto resetCamera = [impl3D] (bool toInitial)
+        {
+            const auto numViews = impl3D->renderView().numberOfSubViews();
+            for (unsigned int i = 0; i < numViews; ++i)
+            {
+                impl3D->resetCamera(toInitial, i);
+            }
+        };
+        
+        m_ui->cameraButtonsWidget->setVisible(true);
+        m_cameraResetConnections << connect(m_ui->zoomToDataButton, &QAbstractButton::clicked, std::bind(resetCamera, false));
+        m_cameraResetConnections << connect(m_ui->resetCameraButton, &QAbstractButton::clicked, std::bind(resetCamera, true));
     }
 
     updateTitle();

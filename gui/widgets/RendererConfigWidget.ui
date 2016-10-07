@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>327</width>
-    <height>384</height>
+    <height>420</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -24,7 +24,7 @@
     </item>
     <item>
      <widget class="QWidget" name="interactionModeWidget" native="true">
-      <layout class="QFormLayout" name="formLayout_2">
+      <layout class="QFormLayout" name="customWidgetsLayout">
        <property name="leftMargin">
         <number>0</number>
        </property>
@@ -32,6 +32,9 @@
         <number>0</number>
        </property>
        <property name="rightMargin">
+        <number>0</number>
+       </property>
+       <property name="bottomMargin">
         <number>0</number>
        </property>
        <item row="0" column="0">
@@ -46,6 +49,51 @@
        </item>
        <item row="0" column="1">
         <widget class="QComboBox" name="interactionModeCombo"/>
+       </item>
+       <item row="1" column="0" colspan="2">
+        <widget class="QWidget" name="cameraButtonsWidget" native="true">
+         <layout class="QGridLayout" name="gridLayout">
+          <property name="leftMargin">
+           <number>0</number>
+          </property>
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <property name="rightMargin">
+           <number>0</number>
+          </property>
+          <property name="bottomMargin">
+           <number>0</number>
+          </property>
+          <item row="0" column="1">
+           <widget class="QPushButton" name="zoomToDataButton">
+            <property name="text">
+             <string>Zoom To Data</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="0">
+           <spacer name="horizontalSpacer">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item row="0" column="2">
+           <widget class="QPushButton" name="resetCameraButton">
+            <property name="text">
+             <string>Reset Camera</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
        </item>
       </layout>
      </widget>
@@ -63,6 +111,12 @@
    <header>propertyguizeug/PropertyBrowser.h</header>
   </customwidget>
  </customwidgets>
+ <tabstops>
+  <tabstop>interactionModeCombo</tabstop>
+  <tabstop>zoomToDataButton</tabstop>
+  <tabstop>resetCameraButton</tabstop>
+  <tabstop>propertyBrowser</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>

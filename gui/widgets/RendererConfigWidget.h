@@ -4,6 +4,7 @@
 
 #include <QDockWidget>
 #include <QMap>
+#include <QList>
 
 #include <vtkSmartPointer.h>
 
@@ -63,6 +64,7 @@ private:
     std::unique_ptr<reflectionzeug::PropertyGroup> m_propertyRoot;
     AbstractRenderView * m_currentRenderView;
     QMap<vtkSmartPointer<vtkCamera>, unsigned long> m_cameraObserverTags;
+    QList<QMetaObject::Connection> m_cameraResetConnections;
 
 private:
     Q_DISABLE_COPY(RendererConfigWidget)
