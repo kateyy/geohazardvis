@@ -125,9 +125,9 @@ void DataImporterWidget::openTriangleIndices()
 
     m_indexData.clear();
     const auto result = TextFileReader::read(fileName, m_indexData);
-    if (result.stateFlags.testFlag(TextFileReader::Result::successful))
+    if (!result.stateFlags.testFlag(TextFileReader::Result::successful))
     {
-        QMessageBox::warning(this, "Read Error", "Cannot open the specified point coordinates file.");
+        QMessageBox::warning(this, "Read Error", "Cannot open the specified triangle index file.");
     }
 
     updateSummary();
