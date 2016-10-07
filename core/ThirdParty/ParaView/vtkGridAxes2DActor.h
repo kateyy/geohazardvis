@@ -149,6 +149,12 @@ public:
   // for the axis.
   void SetCustomTickPositions(int axis, vtkDoubleArray* positions);
 
+  // XXX GeohazardVis
+  // Set custom axis labels in printf notation. The default is "%g"
+  // If an empty string is passed, the axis notation style is set to vtkAxis::STANDARD_NOTATION;
+  void SetPrintfAxisLabelFormat(int axis, const vtkStdString & formatString);
+  // XXX End GeohazardVis
+
   //---------------------------------------------------------------------------
   // *** Properties to control grid rendering ***
   //---------------------------------------------------------------------------

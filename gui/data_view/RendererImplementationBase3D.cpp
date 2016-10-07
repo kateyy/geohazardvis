@@ -67,6 +67,8 @@ void RendererImplementationBase3D::applyCurrentCoordinateSystem(const Coordinate
         rendered->setDefaultCoordinateSystem(spec);
     }
 
+    updateAxisLabelFormat(spec);
+
     updateBounds();
 
     for (unsigned int i = 0; i < renderView().numberOfSubViews(); ++i)
@@ -117,6 +119,8 @@ void RendererImplementationBase3D::activate(t_QVTKWidget & qvtkWidget)
         m_pickerHighlighter->requestPickedInfoUpdate();
         return m_pickerHighlighter->pickedInfo();
     });
+
+    updateAxisLabelFormat(renderView().currentCoordinateSystem());
 }
 
 void RendererImplementationBase3D::deactivate(t_QVTKWidget & qvtkWidget)
@@ -517,6 +521,22 @@ void RendererImplementationBase3D::updateAxes()
     }
 
     resetClippingRanges();
+}
+
+void RendererImplementationBase3D::updateAxisLabelFormat(const CoordinateSystemSpecification & spec)
+{
+    static const auto degreeLabel = (QString("%g") + QChar(0x00B0)).toUtf8();
+
+    const auto label = spec.type == CoordinateSystemType::geographic
+        ? degreeLabel   // latitude/longitude
+        : "";           // Northing/Easting
+
+    for (unsigned i = 0; i < renderView().numberOfSubViews(); ++i)
+    {
+        auto axes = axesActor(i);
+        axes->SetPrintfAxisLabelFormat(0, label.data());
+        axes->SetPrintfAxisLabelFormat(1, label.data());
+    }
 }
 
 void RendererImplementationBase3D::updateBounds()

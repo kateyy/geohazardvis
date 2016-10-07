@@ -309,6 +309,27 @@ void vtkGridAxes2DActor::SetCustomTickPositions(int axis, vtkDoubleArray* positi
     }
 }
 
+// XXX GeohazardVis
+void vtkGridAxes2DActor::SetPrintfAxisLabelFormat(int axis, const vtkStdString & formatString)
+{
+  if (axis < 0 || axis >= 3)
+    {
+    return;
+    }
+
+  if (formatString.empty())
+    {
+    this->AxisHelpers[axis]->SetNotation(vtkAxis::STANDARD_NOTATION);
+    }
+  else
+    {
+    this->AxisHelpers[axis]->SetNotation(vtkAxis::PRINTF_NOTATION);
+    this->AxisHelpers[axis]->SetLabelFormat(formatString);
+    }
+  this->Modified();
+}
+// XXX End GeohazardVis
+
 //----------------------------------------------------------------------------
 int vtkGridAxes2DActor::RenderOpaqueGeometry(vtkViewport *viewport)
 {

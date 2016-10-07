@@ -115,6 +115,7 @@ private:
     void assignInteractor();
 
     void updateAxes();
+    void updateAxisLabelFormat(const CoordinateSystemSpecification & spec);
     void updateBounds();
     void addToBounds(RenderedData * renderedData, unsigned int subViewIndex);
     void removeFromBounds(RenderedData * renderedData, unsigned int subViewIndex);

@@ -187,6 +187,17 @@ void vtkGridAxes3DActor::SetLabel(int axis, vtkIdType index, double value)
     }
 }
 
+// XXX GeohazardVis
+void vtkGridAxes3DActor::SetPrintfAxisLabelFormat(int axis, const vtkStdString & formatString)
+{
+    for (int cc=0; cc < 6; cc++)
+      {
+      this->GridAxes2DActors[cc]->SetPrintfAxisLabelFormat(axis, formatString);
+      }
+    this->Modified();
+}
+// XXX End GeohazardVis
+
 //----------------------------------------------------------------------------
 void vtkGridAxes3DActor::SetLabelTextProperty(int axis, vtkTextProperty* tprop)
 {
