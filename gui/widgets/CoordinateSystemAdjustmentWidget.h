@@ -4,6 +4,7 @@
 
 #include <QDialog>
 #include <QPointer>
+#include <QVector>
 
 #include <gui/gui_api.h>
 
@@ -27,16 +28,15 @@ private:
     void updateInfoText();
     void finish();
 
+    void setupQuickSetActions();
+
     ReferencedCoordinateSystemSpecification specFromUi() const;
     void specToUi(const ReferencedCoordinateSystemSpecification & spec);
 
 private:
     std::unique_ptr<Ui_CoordinateSystemAdjustmentWidget> m_ui;
     std::unique_ptr<QMenu> m_autoSetReferencePointMenu;
-    QAction * m_actionUnsupportedType;
-    QAction * m_actionRefToNorthWest;
-    QAction * m_actionRefCenter;
-    QAction * m_actionRefOrigin;
+    QVector<QAction *> m_refPointQuickSetActions;
 
     QPointer<CoordinateTransformableDataObject> m_dataObject;
 

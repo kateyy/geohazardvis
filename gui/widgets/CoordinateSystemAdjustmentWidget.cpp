@@ -1,6 +1,9 @@
 #include "CoordinateSystemAdjustmentWidget.h"
 #include "ui_CoordinateSystemAdjustmentWidget.h"
 
+#include <cassert>
+#include <map>
+
 #include <QMenu>
 #include <QMessageBox>
 
@@ -8,6 +11,84 @@
 #include <core/data_objects/CoordinateTransformableDataObject.h>
 #include <core/utility/DataExtent.h>
 #include <core/utility/vtkvectorhelper.h>
+
+
+namespace
+{
+
+enum RefPointQuickly
+{
+    refUnsupported,
+    refToCenter,
+    refToNorthEast,
+    refToNorthWest,
+    refToSouthEast,
+    refToSouthWest,
+    refToOrigin,
+    refAdjustLocalToGeo,
+    refAdjustGeoToLocal,
+    RefPointQuicklyNumValues
+};
+
+const QString & refPointQuicklyName(RefPointQuickly actionType)
+{
+    static const std::map<RefPointQuickly, QString> map = {
+        { refUnsupported, "Set coordinate system type first..." },
+        { refToCenter, "Center" },
+        { refToNorthEast, "North East" },
+        { refToNorthWest, "North West" },
+        { refToSouthEast, "South East" },
+        { refToSouthWest, "South West" },
+        { refToOrigin, "Origin" },
+        { refAdjustLocalToGeo, "Adjust Local Reference to Geographic" },
+        { refAdjustGeoToLocal, "Adjust Geographic Reference to Local" },
+    };
+
+    auto && it = map.find(actionType);
+    assert(it != map.end());
+    return it->second;
+}
+
+vtkVector2d refPointQuicklyToVec(RefPointQuickly actionType)
+{
+    switch (actionType)
+    {
+        // relative x,y coordinate -> "Easting", "Northing"
+    case refToCenter: return{ 0.5, 0.5 };
+    case refToNorthEast: return{ 1.0, 1.0 };
+    case refToNorthWest: return{ 0.0, 1.0 };
+    case refToSouthEast: return{ 1.0, 0.0 };
+    case refToSouthWest: return{ 0.0, 0.0 };
+    default:
+        assert(false);
+        return{ 0, 0 };
+    }
+}
+
+bool refPointQuicklySupports(RefPointQuickly actionType, CoordinateSystemType coordinateSystemType)
+{
+    switch (actionType)
+    {
+    case refUnsupported:
+        return coordinateSystemType == CoordinateSystemType::unspecified;
+    case refToCenter:
+    case refToNorthEast:
+    case refToNorthWest:
+    case refToSouthEast:
+    case refToSouthWest:
+        return coordinateSystemType != CoordinateSystemType::unspecified;
+    case refToOrigin:
+        return coordinateSystemType == CoordinateSystemType::metricLocal;
+    case refAdjustLocalToGeo:
+    case refAdjustGeoToLocal:
+        return coordinateSystemType == CoordinateSystemType::geographic;
+    default:
+        assert(false);
+        return false;
+    }
+}
+
+}
 
 
 CoordinateSystemAdjustmentWidget::CoordinateSystemAdjustmentWidget(QWidget * parent, Qt::WindowFlags f)
@@ -28,59 +109,8 @@ CoordinateSystemAdjustmentWidget::CoordinateSystemAdjustmentWidget(QWidget * par
     connect(m_ui->referencePointGlobalCheckBox, &QCheckBox::toggled, m_ui->refPointGlobalWidget, &QWidget::setEnabled);
     connect(m_ui->referencePointLocalCheckBox, &QCheckBox::toggled, m_ui->refPointLocalWidget, &QWidget::setEnabled);
 
-    m_actionUnsupportedType = m_autoSetReferencePointMenu->addAction("Set coordinate system type first...");
-    m_actionUnsupportedType->setEnabled(false);
-    m_actionRefToNorthWest = m_autoSetReferencePointMenu->addAction("North West");
-    connect(m_actionRefToNorthWest, &QAction::triggered, [this] ()
-    {
-        if (!m_dataObject)
-        {
-            return;
-        }
+    setupQuickSetActions();
 
-        auto spec = specFromUi();
-        spec.referencePointLocalRelative = { 0.0, 0.0 };
-        if (spec.type == CoordinateSystemType::geographic)
-        {
-            const auto targetLongLat = m_dataObject->bounds().convertTo<2>().min();
-            spec.referencePointLatLong = { targetLongLat[1], targetLongLat[0] };
-        }
-        specToUi(spec);
-    });
-    m_actionRefCenter = m_autoSetReferencePointMenu->addAction("Center");
-    connect(m_actionRefCenter, &QAction::triggered, [this] ()
-    {
-        if (!m_dataObject)
-        {
-            return;
-        }
-
-        auto spec = specFromUi();
-        spec.referencePointLocalRelative = { 0.5, 0.5 };
-        if (spec.type == CoordinateSystemType::geographic)
-        {
-            const auto targetLongLat = m_dataObject->bounds().convertTo<2>().center();
-            spec.referencePointLatLong = { targetLongLat[1], targetLongLat[0] };
-        }
-        specToUi(spec);
-    });
-    m_actionRefOrigin = m_autoSetReferencePointMenu->addAction("Origin");
-    connect(m_actionRefOrigin, &QAction::triggered, [this] ()
-    {
-        if (!m_dataObject)
-        {
-            return;
-        }
-
-        auto spec = specFromUi();
-        if (spec.type != CoordinateSystemType::metricLocal)
-        {
-            return;
-        }
-        const auto bounds = m_dataObject->bounds().convertTo<2>();
-        spec.referencePointLocalRelative = bounds.relativeOriginPosition();
-        specToUi(spec);
-    });
     connect(m_ui->autoSetReferencePointButton, &QPushButton::clicked, [this] ()
     {
         m_autoSetReferencePointMenu->exec(
@@ -140,18 +170,13 @@ void CoordinateSystemAdjustmentWidget::updateInfoText()
     const auto center = bounds2D.center();
     coordsRangesText += "Center: " + QString::number(center[0]) + "; " + QString::number(center[1]) + "\n";
 
-    if (currentType == CoordinateSystemType::metricLocal)
-    {
-        const auto relOrigin = bounds2D.relativeOriginPosition();
-        coordsRangesText += "Relative Position of (0; 0): " + QString::number(relOrigin[0]) + "; " + QString::number(relOrigin[1]);
-    }
-
     m_ui->coordinateValueRangesEdit->setPlainText(coordsRangesText);
 
-    m_actionUnsupportedType->setVisible(currentType == CoordinateSystemType::unspecified);
-    m_actionRefToNorthWest->setVisible(currentType != CoordinateSystemType::unspecified);
-    m_actionRefCenter->setVisible(currentType != CoordinateSystemType::unspecified);
-    m_actionRefOrigin->setVisible(currentType == CoordinateSystemType::metricLocal);
+    for (int i = 0; i < RefPointQuicklyNumValues; ++i)
+    {
+        const auto actionType = static_cast<RefPointQuickly>(i);
+        m_refPointQuickSetActions[i]->setVisible(refPointQuicklySupports(actionType, currentType));
+    }
 }
 
 void CoordinateSystemAdjustmentWidget::finish()
@@ -173,6 +198,109 @@ void CoordinateSystemAdjustmentWidget::finish()
     m_dataObject->specifyCoordinateSystem(spec);
 
     accept();
+}
+
+void CoordinateSystemAdjustmentWidget::setupQuickSetActions()
+{
+    auto addRefAction = [this] (RefPointQuickly actionType) -> QAction *
+    {
+        auto action = m_autoSetReferencePointMenu->addAction(refPointQuicklyName(actionType));
+        const auto idx = static_cast<int>(actionType);
+        m_refPointQuickSetActions.resize(idx + 1);
+        assert(m_refPointQuickSetActions[idx] == nullptr);
+        m_refPointQuickSetActions[idx] = action;
+        return action;
+    };
+
+    auto unsupportedAction = addRefAction(refUnsupported);
+    unsupportedAction->setEnabled(false);
+
+    for (auto actionType : { refToCenter, refToNorthEast, refToNorthWest, refToSouthEast, refToSouthWest })
+    {
+        auto action = addRefAction(actionType);
+        connect(action, &QAction::triggered, [this, actionType] ()
+        {
+            if (!m_dataObject)
+            {
+                return;
+            }
+
+            auto spec = specFromUi();
+            spec.referencePointLocalRelative = refPointQuicklyToVec(actionType);
+
+            if (spec.type == CoordinateSystemType::geographic)
+            {
+                auto && min = m_dataObject->bounds().convertTo<2>().min();  // x: longitudes, y: latitudes
+                auto && size = m_dataObject->bounds().convertTo<2>().componentSize();
+
+                const auto refLongLat = min + size * spec.referencePointLocalRelative;
+
+                spec.referencePointLatLong = { refLongLat[1], refLongLat[0] };
+            }
+            specToUi(spec);
+        });
+    }
+
+    auto originAction = addRefAction(refToOrigin);
+    connect(originAction, &QAction::triggered, [this] ()
+    {
+        if (!m_dataObject)
+        {
+            return;
+        }
+
+        auto spec = specFromUi();
+        if (spec.type != CoordinateSystemType::metricLocal)
+        {
+            return;
+        }
+        spec.referencePointLocalRelative = m_dataObject->bounds().convertTo<2>().relativeOriginPosition();
+        specToUi(spec);
+    });
+
+    auto adjustLocalToGeoAction = addRefAction(refAdjustLocalToGeo);
+    connect(adjustLocalToGeoAction, &QAction::triggered, [this] ()
+    {
+        if (!m_dataObject)
+        {
+            return;
+        }
+
+        auto spec = specFromUi();
+        if (spec.type != CoordinateSystemType::geographic)
+        {
+            return;
+        }
+
+        auto && min = m_dataObject->bounds().convertTo<2>().min();
+        auto && size = m_dataObject->bounds().convertTo<2>().componentSize();
+        const auto refLongLat = vtkVector2d{ spec.referencePointLatLong[1], spec.referencePointLatLong[0] };
+
+        spec.referencePointLocalRelative = (refLongLat - min) / size;
+        specToUi(spec);
+    });
+
+    auto adjustGeoToLocalAction = addRefAction(refAdjustGeoToLocal);
+    connect(adjustGeoToLocalAction, &QAction::triggered, [this] ()
+    {
+        if (!m_dataObject)
+        {
+            return;
+        }
+
+        auto spec = specFromUi();
+        if (spec.type != CoordinateSystemType::geographic)
+        {
+            return;
+        }
+
+        auto && min = m_dataObject->bounds().convertTo<2>().min();
+        auto && size = m_dataObject->bounds().convertTo<2>().componentSize();
+        const auto refLongLat = min + size * spec.referencePointLocalRelative;
+
+        spec.referencePointLatLong = { refLongLat[1], refLongLat[0] };
+        specToUi(spec);
+    });
 }
 
 ReferencedCoordinateSystemSpecification CoordinateSystemAdjustmentWidget::specFromUi() const
