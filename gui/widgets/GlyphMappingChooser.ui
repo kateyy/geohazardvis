@@ -67,7 +67,14 @@
        </property>
        <layout class="QVBoxLayout" name="verticalLayout">
         <item>
-         <widget class="propertyguizeug::PropertyBrowser" name="propertyBrowser"/>
+         <widget class="propertyguizeug::PropertyBrowser" name="propertyBrowser">
+          <property name="font">
+           <font>
+            <weight>50</weight>
+            <bold>false</bold>
+           </font>
+          </property>
+         </widget>
         </item>
        </layout>
       </widget>
