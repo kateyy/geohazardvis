@@ -7,8 +7,11 @@
 #include <vtkPointData.h>
 #include <vtkPolyData.h>
 #include <vtkSmartPointer.h>
+#include <vtkTriangle.h>
+#include <vtkVertex.h>
 
 #include <core/data_objects/ImageDataObject.h>
+#include <core/data_objects/PointCloudDataObject.h>
 #include <core/data_objects/PolyDataObject.h>
 #include <core/data_objects/VectorGrid3DDataObject.h>
 #include <core/table_model/QVtkTableModel.h>
@@ -49,6 +52,19 @@ public:
     }
     void TearDown() override
     {
+    }
+
+    static vtkSmartPointer<vtkPolyData> createPolyDataPoints(vtkIdType numPoints)
+    {
+        auto polyData = vtkSmartPointer<vtkPolyData>::New();
+        auto points = vtkSmartPointer<vtkPoints>::New();
+        points->SetNumberOfPoints(numPoints);
+        for (vtkIdType i = 0; i < numPoints; ++i)
+        {
+            points->SetPoint(i, i + 1, numPoints - 1, numPoints);
+        }
+        polyData->SetPoints(points);
+        return polyData;
     }
 };
 
@@ -179,11 +195,7 @@ TEST_F(DataObject_test, CopyStructure_triggers_structureChanged_PolyDataObject)
 {
     auto dataSet = vtkSmartPointer<vtkPolyData>::New();
 
-    auto referenceDataSet = vtkSmartPointer<vtkPolyData>::New();
-    auto points = vtkSmartPointer<vtkPoints>::New();
-    points->SetNumberOfPoints(1);
-    points->SetPoint(0, 1, 2, 3);
-    referenceDataSet->SetPoints(points);
+    auto referenceDataSet = createPolyDataPoints(1);
 
     bool structureChangedSignaled = false;
 
@@ -240,13 +252,7 @@ TEST_F(DataObject_test, CopyStructure_Modified_updates_PolyDataObject_pointsCell
 
     auto dataSet = vtkSmartPointer<vtkPolyData>::New();
 
-    auto referenceDataSet = vtkSmartPointer<vtkPolyData>::New();
-    auto points = vtkSmartPointer<vtkPoints>::New();
-    points->SetNumberOfPoints(numPoints);
-    points->SetPoint(0, 1, 2, 3);
-    points->SetPoint(1, 2, 2, 3);
-    points->SetPoint(2, 3, 2, 3);
-    referenceDataSet->SetPoints(points);
+    auto referenceDataSet = createPolyDataPoints(3);
     auto cells = vtkSmartPointer<vtkCellArray>::New();
     cells->InsertNextCell(3, std::vector<vtkIdType>({ 0, 1, 2 }).data());
     cells->InsertNextCell(3, std::vector<vtkIdType>({ 0, 2, 1 }).data());
@@ -268,13 +274,7 @@ TEST_F(DataObject_test, DataObject_CopyStructure_updates_PolyDataObject_pointsCe
 
     auto dataSet = vtkSmartPointer<vtkPolyData>::New();
 
-    auto referenceDataSet = vtkSmartPointer<vtkPolyData>::New();
-    auto points = vtkSmartPointer<vtkPoints>::New();
-    points->SetNumberOfPoints(numPoints);
-    points->SetPoint(0, 1, 2, 3);
-    points->SetPoint(1, 2, 2, 3);
-    points->SetPoint(2, 3, 2, 3);
-    referenceDataSet->SetPoints(points);
+    auto referenceDataSet = createPolyDataPoints(3);
     auto cells = vtkSmartPointer<vtkCellArray>::New();
     cells->InsertNextCell(3, std::vector<vtkIdType>({ 0, 1, 2 }).data());
     cells->InsertNextCell(3, std::vector<vtkIdType>({ 0, 2, 1 }).data());
@@ -286,6 +286,38 @@ TEST_F(DataObject_test, DataObject_CopyStructure_updates_PolyDataObject_pointsCe
 
     ASSERT_EQ(numPoints, poly.numberOfPoints());
     ASSERT_EQ(numCells, poly.numberOfCells());
+}
+
+TEST_F(DataObject_test, GenericPolyDataObject_instantiate_PolyDataObject)
+{
+    auto polyData = createPolyDataPoints(3);
+    auto triangles = vtkSmartPointer<vtkCellArray>::New();
+    auto triangle = vtkSmartPointer<vtkTriangle>::New();
+    triangle->GetPointIds()->SetId(0, 0);
+    triangle->GetPointIds()->SetId(1, 1);
+    triangle->GetPointIds()->SetId(2, 2);
+    triangles->InsertNextCell(triangle);
+    polyData->SetPolys(triangles);
+
+    auto polyDataObject = GenericPolyDataObject::createInstance("triangles", *polyData);
+    ASSERT_TRUE(polyDataObject);
+    ASSERT_TRUE(dynamic_cast<PolyDataObject *>(polyDataObject.get()));
+    ASSERT_EQ(polyData.Get(), polyDataObject->dataSet());
+}
+
+TEST_F(DataObject_test, GenericPolyDataObject_instantiate_PointCloudDataObject)
+{
+    auto polyData = createPolyDataPoints(1);
+    auto vertices = vtkSmartPointer<vtkCellArray>::New();
+    auto vertex = vtkSmartPointer<vtkVertex>::New();
+    vertex->GetPointIds()->SetId(0, 0);
+    vertices->InsertNextCell(vertex);
+    polyData->SetVerts(vertices);
+
+    auto pointCloudDataObject = GenericPolyDataObject::createInstance("vertices", *polyData);
+    ASSERT_TRUE(pointCloudDataObject);
+    ASSERT_TRUE(dynamic_cast<PointCloudDataObject *>(pointCloudDataObject.get()));
+    ASSERT_EQ(polyData.Get(), pointCloudDataObject->dataSet());
 }
 
 TEST(ScopedEventDeferral_test, ExecutesDeferred)

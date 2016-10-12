@@ -5,6 +5,7 @@
 
 #include <QMouseEvent>
 #include <QMenu>
+#include <QMessageBox>
 #include <QAction>
 
 #include <core/table_model/QVtkTableModel.h>
@@ -63,6 +64,14 @@ void TableView::showDataObject(DataObject & dataObject)
     view->resizeColumnsToContents();
 
     m_selectColumnsMenu->clear();
+
+    if (!m_dataObject->tableModel())
+    {
+        QMessageBox::information(this, "", "Unfortunately, listing the selected data set in a table view is not implemented.");
+        setSelection(DataSelection{});
+        return;
+    }
+
     for (int i = 0; i < m_dataObject->tableModel()->columnCount(); ++i)
     {
         const auto title = m_dataObject->tableModel()->headerData(i, Qt::Horizontal).toString();

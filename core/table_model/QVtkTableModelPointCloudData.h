@@ -3,14 +3,15 @@
 #include <core/table_model/QVtkTableModel.h>
 
 
-class PolyDataObject;
+class GenericPolyDataObject;
 
 
-class CORE_API QVtkTableModelPolyData : public QVtkTableModel
+/** Table model representing coordinate information of polygonal data or point clouds. */
+class CORE_API QVtkTableModelPointCloudData : public QVtkTableModel
 {
 public:
-    explicit QVtkTableModelPolyData(QObject * parent = nullptr);
-    ~QVtkTableModelPolyData() override;
+    explicit QVtkTableModelPointCloudData(QObject * parent = nullptr);
+    ~QVtkTableModelPointCloudData() override;
     int rowCount(const QModelIndex &parent = QModelIndex()) const override;
     int columnCount(const QModelIndex &parent = QModelIndex()) const override;
     QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
@@ -25,9 +26,8 @@ protected:
     void resetDisplayData() override;
 
 private:
-    PolyDataObject * m_polyData;
-    QString m_cellTypeName;
+    GenericPolyDataObject * m_data;
 
 private:
-    Q_DISABLE_COPY(QVtkTableModelPolyData)
+    Q_DISABLE_COPY(QVtkTableModelPointCloudData)
 };

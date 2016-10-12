@@ -2,25 +2,18 @@
 
 #include <vtkSmartPointer.h>
 
-#include <core/data_objects/CoordinateTransformableDataObject.h>
+#include <core/data_objects/GenericPolyDataObject.h>
 
 
-class vtkPolyData;
 class vtkPolyDataNormals;
 class vtkCellCenters;
-class vtkAlgorithmOutput;
 
 
-class CORE_API PolyDataObject : public CoordinateTransformableDataObject
+class CORE_API PolyDataObject : public GenericPolyDataObject
 {
 public:
     PolyDataObject(const QString & name, vtkPolyData & dataSet);
     ~PolyDataObject() override;
-
-    bool is3D() const override;
-
-    vtkPolyData & polyDataSet();
-    const vtkPolyData & polyDataSet() const;
 
     /** @return poly data set with cell normals */
     vtkAlgorithmOutput * processedOutputPort() override;
@@ -38,7 +31,9 @@ public:
 
     bool is2p5D();
 
+    double cellCenterComponent(vtkIdType cellId, int component, bool * validId = nullptr);
     bool setCellCenterComponent(vtkIdType cellId, int component, double value);
+    double cellNormalComponent(vtkIdType cellId, int component, bool * validId = nullptr);
     bool setCellNormalComponent(vtkIdType cellId, int component, double value);
 
 protected:

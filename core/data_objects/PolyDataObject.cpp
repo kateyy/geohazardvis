@@ -21,7 +21,7 @@
 
 
 PolyDataObject::PolyDataObject(const QString & name, vtkPolyData & dataSet)
-    : CoordinateTransformableDataObject(name, &dataSet)
+    : GenericPolyDataObject(name, dataSet)
     , m_cellNormals{ vtkSmartPointer<vtkPolyDataNormals>::New() }
     , m_cellCenters{}
     , m_is2p5D{ Is2p5D::unchecked }
@@ -31,25 +31,6 @@ PolyDataObject::PolyDataObject(const QString & name, vtkPolyData & dataSet)
 }
 
 PolyDataObject::~PolyDataObject() = default;
-
-bool PolyDataObject::is3D() const
-{
-    return true;
-}
-
-vtkPolyData & PolyDataObject::polyDataSet()
-{
-    auto ds = dataSet();
-    assert(dynamic_cast<vtkPolyData *>(ds));
-    return static_cast<vtkPolyData &>(*ds);
-}
-
-const vtkPolyData & PolyDataObject::polyDataSet() const
-{
-    auto ds = dataSet();
-    assert(dynamic_cast<const vtkPolyData *>(ds));
-    return static_cast<const vtkPolyData &>(*ds);
-}
 
 vtkAlgorithmOutput * PolyDataObject::processedOutputPort()
 {
@@ -129,6 +110,26 @@ bool PolyDataObject::is2p5D()
     return m_is2p5D == Is2p5D::yes;
 }
 
+double PolyDataObject::cellCenterComponent(vtkIdType cellId, int component, bool * validIdPtr)
+{
+    auto & centroids = *cellCenters()->GetPoints()->GetData();
+
+    const auto isValid = cellId < centroids.GetNumberOfTuples()
+        && component < centroids.GetNumberOfComponents();
+
+    if (validIdPtr)
+    {
+        *validIdPtr = isValid;
+    }
+
+    if (!isValid)
+    {
+        return{};
+    }
+
+    return centroids.GetComponent(cellId, component);
+}
+
 bool PolyDataObject::setCellCenterComponent(vtkIdType cellId, int component, double value)
 {
     auto & ds = polyDataSet();
@@ -138,6 +139,7 @@ bool PolyDataObject::setCellCenterComponent(vtkIdType cellId, int component, dou
     auto pointIds = cell->GetPointIds();
 
     auto centers = cellCenters()->GetPoints();
+    assert(centers);
     auto vertices = ds.GetPoints();
 
     const double oldValue = [centers, cellId, component] () -> double {
@@ -162,6 +164,27 @@ bool PolyDataObject::setCellCenterComponent(vtkIdType cellId, int component, dou
     return true;
 }
 
+double PolyDataObject::cellNormalComponent(vtkIdType cellId, int component, bool * validIdPtr)
+{
+    auto normals = processedDataSet()->GetCellData()->GetNormals();
+
+    const auto isValid = normals
+        && cellId < normals->GetNumberOfTuples()
+        && component < normals->GetNumberOfComponents();
+
+    if (validIdPtr)
+    {
+        *validIdPtr = isValid;
+    }
+
+    if (!isValid)
+    {
+        return{};
+    }
+
+    return normals->GetComponent(cellId, component);
+}
+
 bool PolyDataObject::setCellNormalComponent(vtkIdType cellId, int component, double value)
 {
     auto & ds = polyDataSet();
@@ -169,7 +192,16 @@ bool PolyDataObject::setCellNormalComponent(vtkIdType cellId, int component, dou
     assert(cellId <= ds.GetNumberOfCells());
 
     auto normals = processedDataSet()->GetCellData()->GetNormals();
-    assert(normals);
+
+    const auto isValid = normals
+        && cellId < normals->GetNumberOfTuples()
+        && component < normals->GetNumberOfComponents();
+
+    if (!isValid)
+    {
+        return false;
+    }
+
     std::array<double, 3> oldNormal, newNormal;
     normals->GetTuple(cellId, oldNormal.data());
     newNormal = oldNormal;

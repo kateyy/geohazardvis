@@ -1,11 +1,9 @@
 #include "QVtkTableModelPolyData.h"
 
-#include <array>
 #include <cassert>
 
-#include <vtkPolyData.h>
-#include <vtkCellData.h>
 #include <vtkCell.h>
+#include <vtkDataSet.h>
 #include <vtkCellTypes.h>
 
 #include <core/types.h>
@@ -27,7 +25,7 @@ int QVtkTableModelPolyData::rowCount(const QModelIndex &/*parent*/) const
         return 0;
     }
 
-    return static_cast<int>(m_polyData->dataSet()->GetNumberOfCells());
+    return static_cast<int>(m_polyData->numberOfCells());
 }
 
 int QVtkTableModelPolyData::columnCount(const QModelIndex &/*parent*/) const
@@ -39,10 +37,10 @@ QVariant QVtkTableModelPolyData::data(const QModelIndex &index, int role) const
 {
     if (role != Qt::DisplayRole || !m_polyData)
     {
-        return QVariant();
+        return{};
     }
 
-    vtkIdType cellId = index.row();
+    const auto cellId = static_cast<vtkIdType>(index.row());
 
     switch (index.column())
     {
@@ -50,7 +48,7 @@ QVariant QVtkTableModelPolyData::data(const QModelIndex &index, int role) const
         return cellId;
     case 1:
     {
-        vtkCell * cell = m_polyData->dataSet()->GetCell(cellId);
+        auto cell = m_polyData->dataSet()->GetCell(cellId);
         assert(cell);
         QString idListString;
         for (auto i = 0; i < cell->GetNumberOfPoints(); ++i)
@@ -64,25 +62,29 @@ QVariant QVtkTableModelPolyData::data(const QModelIndex &index, int role) const
     case 3:
     case 4:
     {
-        vtkSmartPointer<vtkPolyData> centroids = m_polyData->cellCenters();
-        assert(centroids->GetNumberOfPoints() > cellId);
-        std::array<double, 3> centroid;
-        centroids->GetPoint(cellId, centroid.data());
         const int component = index.column() - 2;
         assert(component >= 0 && component < 3);
-        return centroid[component];
+        bool okay;
+        const auto value = m_polyData->cellCenterComponent(cellId, component, &okay);
+        if (!okay)
+        {
+            return{};
+        }
+        return value;
     }
     case 5:
     case 6:
     case 7:
     {
-        vtkDataArray * normals = m_polyData->processedDataSet()->GetCellData()->GetNormals();
-        assert(normals);
-        std::array<double, 3> normal;
-        normals->GetTuple(cellId, normal.data());
         const int component = index.column() - 5;
         assert(component >= 0 && component < 3);
-        return normal[component];
+        bool okay;
+        const auto value = m_polyData->cellNormalComponent(cellId, component, &okay);
+        if (!okay)
+        {
+            return{};
+        }
+        return value;
     }
     }
 
@@ -129,12 +131,14 @@ bool QVtkTableModelPolyData::setData(const QModelIndex & index, const QVariant &
 
     if (index.column() < 5)
     {
-        int component = index.column() - 2;
+        const int component = index.column() - 2;
+        assert(component >= 0 && component < 3);
         return m_polyData->setCellCenterComponent(cellId, component, newValue);
     }
     else if (index.column() < 8)
     {
-        int component = index.column() - 5;
+        const int component = index.column() - 5;
+        assert(component >= 0 && component < 3);
         return m_polyData->setCellNormalComponent(cellId, component, newValue);
     }
 

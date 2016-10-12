@@ -84,8 +84,12 @@ set(sources
     data_objects/DataObject_private.cpp
     data_objects/DataProfile2DDataObject.h
     data_objects/DataProfile2DDataObject.cpp
+    data_objects/GenericPolyDataObject.h
+    data_objects/GenericPolyDataObject.cpp
     data_objects/ImageDataObject.h
     data_objects/ImageDataObject.cpp
+    data_objects/PointCloudDataObject.h
+    data_objects/PointCloudDataObject.cpp
     data_objects/PolyDataObject.h
     data_objects/PolyDataObject.cpp
     data_objects/RawVectorData.h
@@ -160,6 +164,8 @@ set(sources
     rendered_data/RenderedData3D.cpp
     rendered_data/RenderedImageData.h
     rendered_data/RenderedImageData.cpp
+    rendered_data/RenderedPointCloudData.h
+    rendered_data/RenderedPointCloudData.cpp
     rendered_data/RenderedPolyData.h
     rendered_data/RenderedPolyData.cpp
     rendered_data/RenderedVectorGrid3D.h
@@ -169,6 +175,8 @@ set(sources
     table_model/QVtkTableModel.cpp
     table_model/QVtkTableModelImage.h
     table_model/QVtkTableModelImage.cpp
+    table_model/QVtkTableModelPointCloudData.h
+    table_model/QVtkTableModelPointCloudData.cpp
     table_model/QVtkTableModelPolyData.h
     table_model/QVtkTableModelPolyData.cpp
     table_model/QVtkTableModelProfileData.h

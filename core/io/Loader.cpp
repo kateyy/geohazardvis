@@ -21,8 +21,8 @@
 #include <vtkXMLImageDataReader.h>
 #include <vtkXMLPolyDataReader.h>
 
+#include <core/data_objects/GenericPolyDataObject.h>
 #include <core/data_objects/ImageDataObject.h>
-#include <core/data_objects/PolyDataObject.h>
 #include <core/data_objects/VectorGrid3DDataObject.h>
 #include <core/io/MetaTextFileReader.h>
 
@@ -301,7 +301,13 @@ std::unique_ptr<DataObject> Loader::readFile(const QString & filename)
             dataSetName = baseName;
         }
 
-        return std::make_unique<PolyDataObject>(dataSetName, *polyData);
+        auto instance = GenericPolyDataObject::createInstance(dataSetName, *polyData);
+        if (!instance)
+        {
+            qDebug() << "Invalid VTK PolyData file: " << filename;
+            return nullptr;
+        }
+        return std::move(instance);
     }
 
     if (vtkImageFileExts().contains(ext))

@@ -26,7 +26,7 @@ public:
     {
     }
 
-    static std::unique_ptr<PolyDataObject> genPolyData(const DataBounds & bounds)
+    static std::unique_ptr<GenericPolyDataObject> genPolyData(const DataBounds & bounds, int cellType)
     {
         auto poly = vtkSmartPointer<vtkPolyData>::New();
         auto points = vtkSmartPointer<vtkPoints>::New();
@@ -37,10 +37,10 @@ public:
         poly->SetPoints(points);
         std::array<vtkIdType, 3> pointIds = { 0, 1, 2 };
         poly->Allocate(static_cast<vtkIdType>(pointIds.size()));
-        poly->InsertNextCell(VTK_TRIANGLE, static_cast<int>(pointIds.size()), pointIds.data());
+        poly->InsertNextCell(cellType, static_cast<int>(pointIds.size()), pointIds.data());
         assert(DataBounds(poly->GetBounds()) == bounds);
 
-        return std::make_unique<PolyDataObject>("PolyData", *poly);
+        return GenericPolyDataObject::createInstance("PolyData", *poly);
     }
 
     template<typename T, int Dims>
@@ -143,7 +143,15 @@ TEST_F(RenderedData_test, VectorGrid3D_SetsMapperInfo)
 TEST_F(RenderedData_test, RenderedPolyData_reportsVisibleBounds)
 {
     const auto dataBounds = DataBounds({ -2, 5, -3, 6, -4, 7 });
-    const auto visibleBounds = genPolyData(dataBounds)->createRendered()->visibleBounds();
+    const auto visibleBounds = genPolyData(dataBounds, VTK_TRIANGLE)->createRendered()->visibleBounds();
+
+    ASSERT_EQ(dataBounds, visibleBounds);
+}
+
+TEST_F(RenderedData_test, RenderedPointCloudData_reportsVisibleBounds)
+{
+    const auto dataBounds = DataBounds({ -2, 5, -3, 6, -4, 7 });
+    const auto visibleBounds = genPolyData(dataBounds, VTK_VERTEX)->createRendered()->visibleBounds();
 
     ASSERT_EQ(dataBounds, visibleBounds);
 }

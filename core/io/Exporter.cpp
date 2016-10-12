@@ -21,6 +21,7 @@
 #include <vtkXMLPolyDataWriter.h>
 
 #include <core/data_objects/ImageDataObject.h>
+#include <core/data_objects/PointCloudDataObject.h>
 #include <core/data_objects/PolyDataObject.h>
 #include <core/data_objects/VectorGrid3DDataObject.h>
 #include <core/utility/DataExtent.h>
@@ -56,7 +57,7 @@ bool Exporter::exportData(DataObject & data, const QString & fileName)
         return exportImageFormat(*image, fileName);
     }
 
-    if (auto polyData = dynamic_cast<PolyDataObject *>(&data))
+    if (auto polyData = dynamic_cast<GenericPolyDataObject *>(&data))
     {
         return exportVTKXMLPolyData(*polyData, fileName);
     }
@@ -81,8 +82,11 @@ QString Exporter::formatFilter(const DataObject & data)
 
 const QMap<QString, QString> & Exporter::formatFilters()
 {
+    static const QString vtps = "VTK XML PolyData Files (*.vtp)";
+
     static QMap<QString, QString> ff = {
-        { PolyDataObject::dataTypeName_s(), "VTK XML PolyData Files (*.vtp)" },
+        { PointCloudDataObject::dataTypeName_s(), vtps },
+        { PolyDataObject::dataTypeName_s(), vtps },
         { ImageDataObject::dataTypeName_s(), "Bitmap (*.bmp);;JPEG (*.jpg  *.jpeg);;PNG (*.png);;VTK XML Image Files (*.vti)" },
         { VectorGrid3DDataObject::dataTypeName_s(), "VTK XML Image Files (*.vti)" }
     };

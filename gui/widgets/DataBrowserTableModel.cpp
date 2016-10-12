@@ -310,6 +310,10 @@ QVariant DataBrowserTableModel::data_dataObject(int row, int column, int role) c
                 QString::number(dataObject->dataSet()->GetNumberOfCells()) + " triangles, " +
                 QString::number(dataObject->dataSet()->GetNumberOfPoints()) + " points";
         }
+        if (dataTypeName == "Point Cloud")
+        {
+            return QString::number(dataObject->dataSet()->GetNumberOfPoints()) + " points";
+        }
         if (dataTypeName == "Regular 2D Grid")
         {
             auto & imageData = static_cast<ImageDataObject &>(*dataObject);
