@@ -38,7 +38,7 @@ namespace
 
     struct SetResetFlag
     {
-        SetResetFlag(bool & flag)
+        explicit SetResetFlag(bool & flag)
             : previousValue{ flag }
             , flag{ flag }
         {

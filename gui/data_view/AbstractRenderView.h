@@ -106,10 +106,15 @@ protected:
     t_QVTKWidget & qvtkWidget();
 
     void showEvent(QShowEvent * event) override;
+    void paintEvent(QPaintEvent * event) override;
     bool eventFilter(QObject * watched, QEvent * event) override;
 
     void onSetSelection(const DataSelection & selection) override;
     void onClearSelection() override;
+
+    /** Called once the first time the widget is shown.
+      * Initialize OpenGL contexts in function so that it is not done before the application setup.*/
+    virtual void initializeRenderContext() = 0;
 
     virtual void onCoordinateSystemChanged(const CoordinateSystemSpecification & spec);
 
@@ -128,8 +133,11 @@ protected:
     virtual void axesEnabledChangedEvent(bool enabled) = 0;
 
 private:
+    void initializeForFirstPaint();
+
+private:
     t_QVTKWidget * m_qvtkWidget;
-    bool m_onShowInitialized;
+    bool m_onFirstPaintInitialized;
 
     CoordinateSystemSpecification m_coordSystem;
 

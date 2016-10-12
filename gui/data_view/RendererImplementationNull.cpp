@@ -1,6 +1,7 @@
 #include "RendererImplementationNull.h"
 
 #include <vtkRenderer.h>
+#include <vtkRenderWindow.h>
 
 #include <core/AbstractVisualizedData.h>
 #include <core/types.h>
@@ -38,14 +39,14 @@ void RendererImplementationNull::activate(t_QVTKWidget & qvtkWidget)
         m_renderer->SetBackground(1, 1, 1);
     }
 
-    qvtkWidget.GetRenderWindow()->AddRenderer(m_renderer);
+    qvtkWidget.GetRenderWindowBase()->AddRenderer(m_renderer);
 }
 
 void RendererImplementationNull::deactivate(t_QVTKWidget & qvtkWidget)
 {
     if (m_renderer)
     {
-        qvtkWidget.GetRenderWindow()->RemoveRenderer(m_renderer);
+        qvtkWidget.GetRenderWindowBase()->RemoveRenderer(m_renderer);
     }
 }
 

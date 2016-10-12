@@ -34,6 +34,8 @@ public:
 
 protected:
     void closeEvent(QCloseEvent * event) override;
+    
+    void initializeRenderContext() override;
 
     void visualizationSelectionChangedEvent(const VisualizationSelection & selection) override;
 
@@ -60,8 +62,6 @@ private:
     // @return list of dangling rendered data object that you have to delete.
     std::vector<std::unique_ptr<AbstractVisualizedData>> removeFromInternalLists(QList<DataObject *> dataObjects = {});
 
-
-private:
     /** update configuration widgets to focus on my content. */
     void updateGuiForSelectedData(AbstractVisualizedData * content);
     void updateGuiForRemovedData();

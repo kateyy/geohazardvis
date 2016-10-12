@@ -262,7 +262,7 @@ void DataProfile2DDataObject::setPointsCoordinateSystem(const CoordinateSystemSp
 
     struct Checker
     {
-        Checker(bool & value) : ptr{ &value } { }
+        explicit Checker(bool & value) : ptr{ &value } { }
         ~Checker() { if (ptr) *ptr = false; }
         void validate() { *ptr = true; ptr = nullptr; }
     private:

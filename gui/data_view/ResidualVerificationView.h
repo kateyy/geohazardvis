@@ -78,7 +78,7 @@ public:
     RendererImplementation & implementation() const override;
 
 protected:
-    void showEvent(QShowEvent * event) override;
+    void initializeRenderContext() override;
 
     void showDataObjectsImpl(const QList<DataObject *> & dataObjects,
         QList<DataObject *> & incompatibleObjects,

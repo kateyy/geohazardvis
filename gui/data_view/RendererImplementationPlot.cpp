@@ -8,10 +8,10 @@
 #include <vtkContextScene.h>
 #include <vtkContextView.h>
 #include <vtkIdTypeArray.h>
+#include <vtkGenericOpenGLRenderWindow.h>
 #include <vtkPlot.h>
 #include <vtkRendererCollection.h>
 
-#include <core/types.h>
 #include <core/data_objects/DataObject.h>
 #include <core/context2D_data/Context2DData.h>
 #include <core/context2D_data/vtkPlotCollection.h>
@@ -81,7 +81,7 @@ void RendererImplementationPlot::activate(t_QVTKWidget & qvtkWidget)
     initialize();
 
     // see also: vtkRenderViewBase documentation
-    m_contextView->SetInteractor(qvtkWidget.GetInteractor());
+    m_contextView->SetInteractor(qvtkWidget.GetInteractorBase());
     qvtkWidget.SetRenderWindow(m_renderWindow);
 }
 

@@ -8,12 +8,14 @@
 
 #include <vtkBoundingBox.h>
 #include <vtkCamera.h>
+#include <vtkGenericOpenGLRenderWindow.h>
 #include <vtkIdTypeArray.h>
 #include <vtkLightKit.h>
 #include <vtkProperty.h>
 #include <vtkProperty2D.h>
 #include <vtkRenderer.h>
 #include <vtkRendererCollection.h>
+#include <vtkRenderWindowInteractor.h>
 #include <vtkScalarBarActor.h>
 #include <vtkScalarBarRepresentation.h>
 #include <vtkScalarBarWidget.h>
@@ -104,11 +106,11 @@ void RendererImplementationBase3D::activate(t_QVTKWidget & qvtkWidget)
     initialize();
 
     // make sure to reuse the existing render window interactor
-    m_renderWindow->SetInteractor(qvtkWidget.GetInteractor());
+    m_renderWindow->SetInteractor(qvtkWidget.GetInteractorBase());
     // pass my render window to the qvtkWidget
     qvtkWidget.SetRenderWindow(m_renderWindow);
 
-    m_renderWindow->GetInteractor()->SetInteractorStyle(m_interactorStyle);
+    qvtkWidget.GetInteractorBase()->SetInteractorStyle(m_interactorStyle);
 
     assignInteractor();
 

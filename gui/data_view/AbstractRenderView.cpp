@@ -19,7 +19,7 @@
 AbstractRenderView::AbstractRenderView(DataMapping & dataMapping, int index, QWidget * parent, Qt::WindowFlags flags)
     : AbstractDataView(dataMapping, index, parent, flags)
     , m_qvtkWidget{ nullptr }
-    , m_onShowInitialized{ false }
+    , m_onFirstPaintInitialized{ false }
     , m_coordSystem{}
     , m_axesEnabled{ true }
     , m_activeSubViewIndex{ 0u }
@@ -30,16 +30,6 @@ AbstractRenderView::AbstractRenderView(DataMapping & dataMapping, int index, QWi
 
     m_qvtkWidget = new t_QVTKWidget();
     m_qvtkWidget->setMinimumSize(300, 300);
-
-#if defined (Q_VTK_WIDGET2_H)
-    if (auto qvtkWidget2 = dynamic_cast<QVTKWidget2 *>(m_qvtkWidget))
-    {
-        auto renWin = qvtkWidget2->GetRenderWindow();
-        renWin->SetMultiSamples(1);
-        qvtkWidget2->setFormat(QVTKWidget2::GetDefaultVTKFormat(renWin));
-    }
-#endif
-
     layout->addWidget(m_qvtkWidget);
 
     setLayout(layout);
@@ -203,6 +193,8 @@ void AbstractRenderView::showDataObjects(
     {
         possibleCompatibleObjects = dataObjects;
     }
+
+    initializeForFirstPaint();
 
     showDataObjectsImpl(possibleCompatibleObjects, incompatibleObjects, subViewIndex);
 }
@@ -371,37 +363,18 @@ t_QVTKWidget & AbstractRenderView::qvtkWidget()
     return *m_qvtkWidget;
 }
 
-void AbstractRenderView::showEvent(QShowEvent * /*event*/)
+void AbstractRenderView::showEvent(QShowEvent * event)
 {
-    if (m_onShowInitialized)
-    {
-        return;
-    }
+    AbstractDataView::showEvent(event);
 
-    m_onShowInitialized = true;
+    initializeForFirstPaint();
+}
 
-    auto updateRenWinDpi = [this] () -> void
-    {
-        auto renWin = renderWindow();
-        auto nativeParent = nativeParentWidget();
-        if (!renWin || !nativeParent)
-        {
-            return;
-        }
+void AbstractRenderView::paintEvent(QPaintEvent * event)
+{
+    AbstractDataView::paintEvent(event);
 
-        const auto dpi = static_cast<int>(nativeParent->windowHandle()->screen()->logicalDotsPerInch());
-        if (dpi != renWin->GetDPI())
-        {
-            renWin->SetDPI(dpi);
-        }
-    };
-
-    if (auto nativeParent = nativeParentWidget())
-    {
-        connect(nativeParent->windowHandle(), &QWindow::screenChanged, updateRenWinDpi);
-    }
-
-    updateRenWinDpi();
+    initializeForFirstPaint();
 }
 
 bool AbstractRenderView::eventFilter(QObject * watched, QEvent * event)
@@ -451,4 +424,40 @@ void AbstractRenderView::visualizationSelectionChangedEvent(const VisualizationS
 
 void AbstractRenderView::activeSubViewChangedEvent(unsigned int /*subViewIndex*/)
 {
+}
+
+void AbstractRenderView::initializeForFirstPaint()
+{
+    if (m_onFirstPaintInitialized)
+    {
+        return;
+    }
+
+    m_onFirstPaintInitialized = true;
+
+    // let the subclass create a context first
+    initializeRenderContext();
+
+    auto updateRenWinDpi = [this] () -> void
+    {
+        auto renWin = renderWindow();
+        auto nativeParent = nativeParentWidget();
+        if (!renWin || !nativeParent)
+        {
+            return;
+        }
+
+        const auto dpi = static_cast<int>(nativeParent->windowHandle()->screen()->logicalDotsPerInch());
+        if (dpi != renWin->GetDPI())
+        {
+            renWin->SetDPI(dpi);
+        }
+    };
+
+    if (auto nativeParent = nativeParentWidget())
+    {
+        connect(nativeParent->windowHandle(), &QWindow::screenChanged, updateRenWinDpi);
+    }
+
+    updateRenWinDpi();
 }

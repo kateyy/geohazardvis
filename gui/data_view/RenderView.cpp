@@ -26,8 +26,6 @@ RenderView::RenderView(
     , m_closingRequested{ false }
 {
     updateTitle();
-
-    updateImplementation({});
 }
 
 RenderView::~RenderView()
@@ -78,7 +76,17 @@ void RenderView::closeEvent(QCloseEvent * event)
 {
     m_closingRequested = true;
 
+    // remove all visualization and reset to null implementation to correctly cleanup OpenGL states
+    prepareDeleteData(dataObjects());
+    updateImplementation({});
+
     AbstractRenderView::closeEvent(event);
+}
+
+void RenderView::initializeRenderContext()
+{
+    assert(m_contents.empty() && m_contentCache.empty());
+    updateImplementation({});
 }
 
 void RenderView::visualizationSelectionChangedEvent(const VisualizationSelection & selection)

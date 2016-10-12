@@ -52,6 +52,8 @@ public:
     ImplT & impl() const { return *m_impl; }
 
 protected:
+    void initializeRenderContext() override { }
+
     void showDataObjectsImpl(const QList<DataObject *> & dataObjects,
         QList<DataObject *> & incompatibleObjects,
         unsigned int /*subViewIndex*/) override

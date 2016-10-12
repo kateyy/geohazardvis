@@ -403,10 +403,8 @@ RendererImplementation & ResidualVerificationView::implementation() const
     return *m_implementation;
 }
 
-void ResidualVerificationView::showEvent(QShowEvent * event)
+void ResidualVerificationView::initializeRenderContext()
 {
-    AbstractRenderView::showEvent(event);
-
     initialize();
 }
 
@@ -575,7 +573,7 @@ void ResidualVerificationView::initialize()
 
 void ResidualVerificationView::setDataInternal(unsigned int subViewIndex, DataObject * dataObject, std::unique_ptr<DataObject> ownedObject)
 {
-    initialize();
+    assert(m_implementation);
     
     assert(!dataObject || !ownedObject); // only one of them should be used in the interface
     auto newData = dataObject ? dataObject : ownedObject.get();
