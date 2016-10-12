@@ -23,6 +23,8 @@
 #include <core/data_objects/ImageDataObject.h>
 #include <core/data_objects/PolyDataObject.h>
 #include <core/data_objects/VectorGrid3DDataObject.h>
+#include <core/utility/DataExtent.h>
+
 
 namespace
 {
@@ -47,16 +49,22 @@ bool Exporter::exportData(DataObject & data, const QString & fileName)
     if (auto image = dynamic_cast<ImageDataObject *>(&data))
     {
         if (QFileInfo(fileName).suffix().toLower() == "vti")
+        {
             return exportVTKXMLImageData(data, fileName);
+        }
 
         return exportImageFormat(*image, fileName);
     }
 
     if (auto polyData = dynamic_cast<PolyDataObject *>(&data))
+    {
         return exportVTKXMLPolyData(*polyData, fileName);
+    }
 
     if (auto grid = dynamic_cast<VectorGrid3DDataObject *>(&data))
+    {
         return exportVTKXMLImageData(*grid, fileName);
+    }
 
     return false;
 }
@@ -89,11 +97,17 @@ bool Exporter::exportImageFormat(ImageDataObject & image, const QString & fileNa
     vtkSmartPointer<vtkImageWriter> writer;
 
     if (ext == "png")
+    {
         writer = vtkSmartPointer<vtkPNGWriter>::New();
+    }
     else if (ext == "jpg" || ext == "jpeg")
+    {
         writer = vtkSmartPointer<vtkJPEGWriter>::New();
+    }
     else if (ext == "bmp")
+    {
         writer = vtkSmartPointer<vtkBMPWriter>::New();
+    }
 
     if (!writer)
     {
@@ -127,14 +141,13 @@ bool Exporter::exportImageFormat(ImageDataObject & image, const QString & fileNa
         lut->SetSaturationRange(0, 0);
         lut->SetValueRange(0, 1);
 
-        double totalRange[2] = { std::numeric_limits<double>::max(), std::numeric_limits<double>::lowest() };
+        ValueRange<> totalRange;
             
         for (int c = 0; c < components; ++c)
         {
-            double range[2];
-            scalars->GetRange(range, c);
-            totalRange[0] = std::min(totalRange[0], range[0]);
-            totalRange[1] = std::min(totalRange[1], range[1]);
+            ValueRange<> range;
+            scalars->GetRange(range.data(), c);
+            totalRange.add(range);
         }
 
         toUChar->SetOutputFormat(

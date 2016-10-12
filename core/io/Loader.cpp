@@ -55,7 +55,9 @@ const QSet<QString> & vtkImageFileExts()
     static const auto _vtkImageFileExts = [] () {
         QSet<QString> exts;
         for (const auto & f_exts : vtkImageFormats())
+        {
             exts += f_exts.second.toSet();
+        }
         return exts;
     }();
 
@@ -78,11 +80,17 @@ const QString & Loader::fileFormatFilters(Category category)
                 // remove duplicates, sort alphabetically
                 std::set<QString> allExts;
                 for (const auto & it : categoryMap->second)
+                {
                     for (const auto & ext : it.second)
+                    {
                         allExts.insert(ext);
+                    }
+                }
 
                 for (const auto & ext : allExts)
+                {
                     filters += "*." + ext + " ";
+                }
 
                 filters.truncate(filters.length() - 1);
                 filters += ");;";
@@ -92,7 +100,9 @@ const QString & Loader::fileFormatFilters(Category category)
             {
                 filters += it->first + " (";
                 for (const auto & ext : it->second)
+                {
                     filters += "*." + ext + " ";
+                }
                 filters.truncate(filters.length() - 1);
                 filters += ");;";
             }
@@ -161,10 +171,13 @@ std::unique_ptr<DataObject> Loader::readFile(const QString & filename)
     QString baseName = fileInfo.baseName();
     QString ext = fileInfo.suffix().toLower();
 
-    auto getName = [] (vtkDataSet * dataSet) -> QString {
-        vtkCharArray * nameArray = vtkCharArray::SafeDownCast(dataSet->GetFieldData()->GetArray("Name"));
+    auto getName = [] (vtkDataSet * dataSet) -> QString
+    {
+        auto nameArray = vtkCharArray::SafeDownCast(dataSet->GetFieldData()->GetArray("Name"));
         if (!nameArray)
+        {
             return "";
+        }
 
         return QString::fromUtf8(
             nameArray->GetPointer(0),
@@ -197,7 +210,9 @@ std::unique_ptr<DataObject> Loader::readFile(const QString & filename)
             reader->SetFileName(filename.toUtf8().data());
 
             if (reader->GetExecutive()->Update() == 1)
+            {
                 image = reader->GetOutput();
+            }
 
             if (!image)
             {
@@ -213,14 +228,24 @@ std::unique_ptr<DataObject> Loader::readFile(const QString & filename)
         {
             vtkDataArray * data = nullptr;
             if (!(data = image->GetPointData()->GetScalars()))
+            {
                 if (!(data = image->GetPointData()->GetVectors()))
+                {
                     if (!(data = image->GetCellData()->GetScalars()))
+                    {
                         data = image->GetCellData()->GetVectors();
+                    }
+                }
+            }
             if (data && data->GetName())
+            {
                 dataSetName = QString::fromUtf8(data->GetName());
+            }
         }
         if (dataSetName.isEmpty())
+        {
             dataSetName = baseName;
+        }
 
         switch (image->GetDataDimension())
         {
@@ -242,7 +267,9 @@ std::unique_ptr<DataObject> Loader::readFile(const QString & filename)
 
         vtkSmartPointer<vtkPolyData> polyData;
         if (reader->GetExecutive()->Update() == 1)
+        {
             polyData = reader->GetOutput();
+        }
 
         if (!polyData)
         {
@@ -255,14 +282,24 @@ std::unique_ptr<DataObject> Loader::readFile(const QString & filename)
         {
             vtkDataArray * data = nullptr;
             if (!(data = polyData->GetCellData()->GetScalars()))
+            {
                 if (!(data = polyData->GetPointData()->GetScalars()))
+                {
                     if (!(data = polyData->GetCellData()->GetVectors()))
+                    {
                         data = polyData->GetPointData()->GetVectors();
+                    }
+                }
+            }
             if (data && data->GetName())
+            {
                 dataSetName = QString::fromUtf8(data->GetName());
+            }
         }
         if (dataSetName.isEmpty())
+        {
             dataSetName = baseName;
+        }
 
         return std::make_unique<PolyDataObject>(dataSetName, *polyData);
     }
@@ -282,7 +319,9 @@ std::unique_ptr<DataObject> Loader::readFile(const QString & filename)
         vtkImageData * image = nullptr;
         reader->SetFileName(filename.toUtf8().data());
         if (reader->GetExecutive()->Update() == 1)
+        {
             image = reader->GetOutput();
+        }
 
         if (!image)
         {
