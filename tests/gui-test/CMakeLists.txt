@@ -29,4 +29,4 @@ target_include_directories(${target}
 )
 
 configure_cxx_target(${target} NO_CPPCHECK)
-setupProjectUserConfig(${target})
+setupProjectUserConfig(${target} GTEST_TARGET)

@@ -1,10 +1,11 @@
 
-
 if(MSVC)
     option(OPTION_MSVC_AUTOMATIC_PROJECT_CONFIG
         "Automatically setup user specific MSVC project configuration (environment, working directory)"
         ON)
 endif()
+
+include(CMakeParseArguments)    # include not required in CMake 3.5+
 
 if(NOT OPTION_MSVC_AUTOMATIC_PROJECT_CONFIG)
 
@@ -59,6 +60,13 @@ function(setupProjectUserConfig TARGET)
         return()
     endif()
 
+    set(options GTEST_TARGET)
+    set(oneValueArgs)
+    set(multiValueArgs)
+
+    cmake_parse_arguments("option"
+        "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
+
     set(MSVC_LOCAL_DEBUGGER_WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
 
     # prepend executable paths for 3rdparty libraries to configuration specific PATHs
@@ -93,9 +101,16 @@ function(setupProjectUserConfig TARGET)
        )
     endforeach()
 
-    configure_file(
-        ${PROJECT_SOURCE_DIR}/cmake/project_config_templates/vcxproj.user.in
-        ${CMAKE_CURRENT_BINARY_DIR}/${TARGET}.vcxproj.user
-    )
+    if(NOT option_GTEST_TARGET)
+        configure_file(
+            ${PROJECT_SOURCE_DIR}/cmake/project_config_templates/vcxproj.user.in
+            ${CMAKE_CURRENT_BINARY_DIR}/${TARGET}.vcxproj.user
+        )
+    else()
+        configure_file(
+            ${PROJECT_SOURCE_DIR}/cmake/project_config_templates/test.vcxproj.user.in
+            ${CMAKE_CURRENT_BINARY_DIR}/${TARGET}.vcxproj.user
+        )
+    endif()
 
 endfunction()
