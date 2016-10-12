@@ -73,7 +73,7 @@ const QString & ImageDataObject::dataTypeName() const
 
 const QString & ImageDataObject::dataTypeName_s()
 {
-    static const QString name{ "regular 2D grid" };
+    static const QString name{ "Regular 2D Grid" };
     return name;
 }
 

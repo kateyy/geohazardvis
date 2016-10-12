@@ -71,7 +71,7 @@ const QString & VectorGrid3DDataObject::dataTypeName() const
 
 const QString & VectorGrid3DDataObject::dataTypeName_s()
 {
-    static const QString name{ "3D vector grid" };
+    static const QString name{ "Regular 3D Grid" };
     return name;
 }
 

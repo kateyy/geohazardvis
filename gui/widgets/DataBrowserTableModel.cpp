@@ -304,13 +304,13 @@ QVariant DataBrowserTableModel::data_dataObject(int row, int column, int role) c
     case s_btnClms + 1:
         return dataObject->dataTypeName();
     case s_btnClms + 2:
-        if (dataTypeName == "polygonal mesh")
+        if (dataTypeName == "Polygonal Mesh")
         {
             return
                 QString::number(dataObject->dataSet()->GetNumberOfCells()) + " triangles, " +
-                QString::number(dataObject->dataSet()->GetNumberOfPoints()) + " vertices";
+                QString::number(dataObject->dataSet()->GetNumberOfPoints()) + " points";
         }
-        if (dataTypeName == "regular 2D grid")
+        if (dataTypeName == "Regular 2D Grid")
         {
             auto & imageData = static_cast<ImageDataObject &>(*dataObject);
             auto && dimensions = imageData.extent().componentSize();
@@ -320,7 +320,7 @@ QVariant DataBrowserTableModel::data_dataObject(int row, int column, int role) c
         {
             return QString::number(static_cast<DataProfile2DDataObject *>(dataObject)->numberOfScalars()) + " values";
         }
-        if (dataTypeName == "3D vector grid")
+        if (dataTypeName == "Regular 3D Grid")
         {
             auto & gridData = static_cast<VectorGrid3DDataObject &>(*dataObject);
             auto && dimensions = gridData.extent().componentSize();
@@ -333,11 +333,11 @@ QVariant DataBrowserTableModel::data_dataObject(int row, int column, int role) c
             ", y: " + QString::number(dataObject->bounds()[2]) + "; " + QString::number(dataObject->bounds()[3]) +
             ", z: " + QString::number(dataObject->bounds()[4]) + "; " + QString::number(dataObject->bounds()[5]);
     case s_btnClms + 4:
-        if (dataTypeName == "polygonal mesh")
+        if (dataTypeName == "Polygonal Mesh")
         {
             return "";
         }
-        if (dataTypeName == "regular 2D grid")
+        if (dataTypeName == "Regular 2D Grid")
         {
             auto && range = static_cast<ImageDataObject *>(dataObject)->scalarRange();
             return QString::number(range[0]) + "; " + QString::number(range[1]);
@@ -347,7 +347,7 @@ QVariant DataBrowserTableModel::data_dataObject(int row, int column, int role) c
             auto && range = static_cast<DataProfile2DDataObject *>(dataObject)->scalarRange();
             return QString::number(range[0]) + "; " + QString::number(range[1]);
         }
-        if (dataTypeName == "3D vector grid")
+        if (dataTypeName == "Regular 3D Grid")
         {
             auto vectorGrid = static_cast<VectorGrid3DDataObject*>(dataObject);
             QString line;

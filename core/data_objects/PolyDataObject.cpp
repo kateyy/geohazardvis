@@ -89,7 +89,7 @@ const QString & PolyDataObject::dataTypeName() const
 
 const QString & PolyDataObject::dataTypeName_s()
 {
-    static const QString name{ "polygonal mesh" };
+    static const QString name{ "Polygonal Mesh" };
 
     return name;
 }

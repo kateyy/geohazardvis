@@ -261,7 +261,7 @@ void RenderViewStrategy2D::startProfilePlot()
 
         // TODO this should be propagated by the color mapping
         // this here is a dangerous assumption
-        const auto location = dataObject->dataTypeName() == "polygonal mesh"
+        const auto location = dataObject->dataTypeName() == "Polygonal Mesh"
             ? IndexType::cells
             : IndexType::points;
 

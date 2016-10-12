@@ -29,7 +29,7 @@ const QString & RawVectorData::dataTypeName() const
 
 const QString & RawVectorData::dataTypeName_s()
 {
-    static QString name{ "raw vector" };
+    static QString name{ "Raw Data Vector" };
     return name;
 }
 
