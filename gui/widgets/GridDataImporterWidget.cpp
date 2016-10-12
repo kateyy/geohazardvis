@@ -46,7 +46,7 @@ std::unique_ptr<ImageDataObject> GridDataImporterWidget::releaseLoadedImageData(
 
 std::unique_ptr<DataObject> GridDataImporterWidget::releaseLoadedData()
 {
-    return std::unique_ptr<DataObject>(m_imageData.release());
+    return std::move(m_imageData);
 }
 
 const QString & GridDataImporterWidget::openFileDirectory() const

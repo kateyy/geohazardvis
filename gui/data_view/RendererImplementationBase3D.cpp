@@ -385,7 +385,7 @@ std::unique_ptr<AbstractVisualizedData> RendererImplementationBase3D::requestVis
         rendered->setDefaultCoordinateSystem(coordinateSystem);
     }
 
-    return std::unique_ptr<AbstractVisualizedData>(rendered.release());
+    return std::move(rendered);
 }
 
 void RendererImplementationBase3D::initialize()

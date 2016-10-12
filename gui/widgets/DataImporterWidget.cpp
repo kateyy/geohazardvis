@@ -70,7 +70,7 @@ std::unique_ptr<PolyDataObject> DataImporterWidget::releaseLoadedPolyData()
 
 std::unique_ptr<DataObject> DataImporterWidget::releaseLoadedData()
 {
-    return std::unique_ptr<DataObject>(m_polyData.release());
+    return std::move(m_polyData);
 }
 
 const QString & DataImporterWidget::openFileDirectory() const
