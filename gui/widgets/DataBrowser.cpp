@@ -135,10 +135,17 @@ void DataBrowser::showTable()
 
 void DataBrowser::changeRenderedVisibility(DataObject * clickedObject)
 {
-    const auto && selection = selectedDataSets();
+    auto selection = selectedDataSets();
     if (selection.isEmpty())
     {
         return;
+    }
+
+    // make sure that the clicked object is used to set rendering/view defaults
+    if (selection.first() != clickedObject)
+    {
+        selection.removeOne(clickedObject);
+        selection.push_front(clickedObject);
     }
 
     auto renderView = m_dataMapping->focusedRenderView();
