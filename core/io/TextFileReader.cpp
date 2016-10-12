@@ -11,8 +11,27 @@ TextFileReader::Result::Result(StateFlags stateFlags, size_t filePos)
 {
 }
 
-auto TextFileReader::Impl::qFile_QByteArray(const QString & inputFileName,
-    io::InputVector & ioVectors,
+namespace
+{
+
+template<typename T>
+struct qFile_QByteArray_Worker
+{
+    using ValueType = T;
+    using Result = TextFileReader::Result;
+
+    static Result read(const QString & inputFileName,
+        std::vector<std::vector<T>> & ioVectors,
+        size_t stdOffset,
+        size_t numberOfLines);
+
+    static bool checkValue(const QByteArray & readValue, T & checkedValue);
+};
+
+
+template<typename T>
+auto qFile_QByteArray_Worker<T>::read(const QString & inputFileName,
+    std::vector<std::vector<T>> & ioVectors,
     size_t stdOffset,
     size_t numberOfLines) -> Result
 {
@@ -41,9 +60,9 @@ auto TextFileReader::Impl::qFile_QByteArray(const QString & inputFileName,
         return Result(Result::invalidOffset | Result::eof);
     }
 
-    io::t_FP input_FP;
+    ValueType checkedValue;
     ioVectors.clear();
-    
+
     size_t numberOfReadLines = 0;
     // allow to skip empty lines in the beginning
     bool assumeStarted = false;
@@ -81,25 +100,10 @@ auto TextFileReader::Impl::qFile_QByteArray(const QString & inputFileName,
                 // don't expect data after once reading an empty line
                 return Result(Result::mismatchingColumnCount | (file.atEnd() ? Result::eof : Result::unset), file.pos());
             }
-            if (input == "NaN")
+
+            if (!checkValue(input, checkedValue))
             {
-                input_FP = std::numeric_limits<io::t_FP>::quiet_NaN();
-            }
-            else
-            {
-                bool validConversion = false;
-                if (std::is_same<io::t_FP, float>::value)
-                {
-                    input_FP = input.toFloat(&validConversion);
-                }
-                else
-                {
-                    input_FP = input.toDouble(&validConversion);
-                }
-                if (!validConversion)
-                {
-                    return Result(Result::invalidValue | (file.atEnd() ? Result::eof : Result::unset), file.pos());
-                }
+                return Result(Result::invalidValue | (file.atEnd() ? Result::eof : Result::unset), file.pos());
             }
 
             if (ioVectors.size() <= currentColumn)
@@ -116,7 +120,7 @@ auto TextFileReader::Impl::qFile_QByteArray(const QString & inputFileName,
                 }
             }
 
-            ioVectors[currentColumn].push_back(input_FP);
+            ioVectors[currentColumn].push_back(checkedValue);
 
             ++currentColumn;
         }
@@ -160,6 +164,53 @@ auto TextFileReader::Impl::qFile_QByteArray(const QString & inputFileName,
     return Result(Result::successful | (file.atEnd() ? Result::eof : Result::unset), file.pos());
 }
 
+
+template<>
+bool qFile_QByteArray_Worker<io::t_FP>::checkValue(const QByteArray & readValue, ValueType & checkedValue)
+{
+    if (readValue == "NaN")
+    {
+        checkedValue = std::numeric_limits<ValueType>::quiet_NaN();
+        return true;
+    }
+
+    bool validConversion = false;
+    if (std::is_same<ValueType, float>::value)
+    {
+        checkedValue = readValue.toFloat(&validConversion);
+    }
+    else
+    {
+        checkedValue = readValue.toDouble(&validConversion);
+    }
+    return validConversion;
+}
+
+template<>
+bool qFile_QByteArray_Worker<QString>::checkValue(const QByteArray & readValue, ValueType & checkedValue)
+{
+    checkedValue = readValue;
+    return true;
+}
+
+}
+
+auto TextFileReader::Impl::qFile_QByteArray(const QString & inputFileName,
+    io::InputVector & ioVectors,
+    size_t stdOffset,
+    size_t numberOfLines) -> Result
+{
+    return qFile_QByteArray_Worker<io::t_FP>::read(inputFileName, ioVectors, stdOffset, numberOfLines);
+}
+
+auto TextFileReader::Impl::qFile_QByteArrayAsString(const QString & inputFileName,
+    StringVectors & ioVectors,
+    size_t stdOffset,
+    size_t numberOfLines) -> Result
+{
+    return qFile_QByteArray_Worker<QString>::read(inputFileName, ioVectors, stdOffset, numberOfLines);
+}
+
 auto TextFileReader::read(
     const QString & inputFileName,
     io::InputVector & ioVectors,
@@ -167,4 +218,13 @@ auto TextFileReader::read(
     size_t numberOfLines) -> Result
 {
     return Impl::qFile_QByteArray(inputFileName, ioVectors, stdOffset, numberOfLines);
+}
+
+auto TextFileReader::readAsString(
+    const QString & inputFileName,
+    StringVectors & ioVectors,
+    size_t stdOffset,
+    size_t numberOfLines) -> Result
+{
+    return Impl::qFile_QByteArrayAsString(inputFileName, ioVectors, stdOffset, numberOfLines);
 }

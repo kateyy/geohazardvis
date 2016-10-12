@@ -43,10 +43,21 @@ public:
         size_t offset = {},
         size_t numberOfLines = {});
 
+    using StringVectors = std::vector<std::vector<QString>>;
+
+    static Result readAsString(
+        const QString & inputFileName,
+        StringVectors & ioVectors,
+        size_t offset = {},
+        size_t numberOfLines = {});
+
     struct CORE_API Impl
     {
         static Result qFile_QByteArray(const QString & inputFileName,
             io::InputVector & ioVectors, size_t offset, size_t numberOfLines);
+
+        static Result qFile_QByteArrayAsString(const QString & inputFileName,
+            StringVectors & ioVectors, size_t offset, size_t numberOfLines);
     };
 
     TextFileReader() = delete;
