@@ -138,6 +138,21 @@ else()  # Visual Studio 14 2015 as minimum
         $<$<CONFIG:Release>: /guard:cf>
         $<$<CONFIG:RelWithDebInfo>: /guard:cf>
     )
+    
+    # Visual Studio 2015 Update 3 introduced a new optimizer
+    #   https://blogs.msdn.microsoft.com/vcblog/2016/05/04/new-code-optimizer/
+    # with a few bugs, see:
+    # https://bugreports.qt.io/browse/QTBUG-54443
+    # https://connect.microsoft.com/VisualStudio/feedback/details/2992985
+    # https://connect.microsoft.com/VisualStudio/feedback/details/2988420
+    # https://connect.microsoft.com/VisualStudio/Feedback/Details/2984689
+    # Just to be safe, disable this optimizer until these bugs are fixed.
+    if (NOT CMAKE_CXX_COMPILER_VERSION VERSION_GREATER "19.0.24215.1")
+        message("Disabling new MSVC optimizer to workaround some bugs (-d2SSAOptimizer-).")
+        list(APPEND DEFAULT_COMPILE_FLAGS -d2SSAOptimizer-)
+    else()
+        message(WARNING "Unknown MSVC 2015 compiler version. Please recheck bug reports regarding the new MSVC SSA Optimizer.")
+    endif()
 
 endif()
 
