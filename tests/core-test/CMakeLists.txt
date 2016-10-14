@@ -14,6 +14,7 @@ set(sources
     DataSetHandler_test.cpp
     DEMImageNormals_test.cpp
     DEMToTopographyMesh_test.cpp
+    DeformationTimeSeriesTextFileReader_test.cpp
     PipelineInformationHelper.h
     PipelineInformationHelper.cpp
     QVtkTableModel_test.cpp

@@ -24,6 +24,7 @@
 #include <core/data_objects/GenericPolyDataObject.h>
 #include <core/data_objects/ImageDataObject.h>
 #include <core/data_objects/VectorGrid3DDataObject.h>
+#include <core/io/DeformationTimeSeriesTextFileReader.h>
 #include <core/io/MetaTextFileReader.h>
 
 
@@ -343,6 +344,21 @@ std::unique_ptr<DataObject> Loader::readFile(const QString & filename)
         }
 
         return std::make_unique<ImageDataObject>(baseName, *image);
+    }
+
+    {
+        DeformationTimeSeriesTextFileReader deformationReader(filename);
+        const auto state = deformationReader.readInformation();
+        if (state == DeformationTimeSeriesTextFileReader::validInformation)
+        {
+            if (deformationReader.readData() != DeformationTimeSeriesTextFileReader::validData)
+            {
+                qDebug() << "Invalid deformation file: " << filename;
+                return nullptr;
+            }
+            return deformationReader.generateDataObject();
+        }
+        qDebug() << "Text file not recognized as valid deformation time series file.";
     }
 
     // handle all other files as our text file format

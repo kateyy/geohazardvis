@@ -141,6 +141,8 @@ set(sources
     io/BinaryFile.h
     io/BinaryFile.hpp
     io/BinaryFile.cpp
+    io/DeformationTimeSeriesTextFileReader.h
+    io/DeformationTimeSeriesTextFileReader.cpp
     io/Exporter.h
     io/Exporter.cpp
     io/Loader.h
