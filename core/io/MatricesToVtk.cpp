@@ -358,9 +358,9 @@ vtkSmartPointer<vtkPolyData> MatricesToVtk::parseIndexedTriangles(
 std::unique_ptr<DataObject> MatricesToVtk::readRawFile(const QString & fileName)
 {
     InputVector inputVectors;
-    const auto result = TextFileReader::read(fileName, inputVectors);
+    auto && result = TextFileReader(fileName).read(inputVectors);
 
-    if (result.stateFlags.testFlag(TextFileReader::Result::successful))
+    if (result.testFlag(TextFileReader::successful))
     {
         return nullptr;
     }

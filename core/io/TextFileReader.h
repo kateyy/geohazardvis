@@ -1,67 +1,97 @@
 #pragma once
 
+#include <memory>
+#include <vector>
+
+#include <QString>
+
 #include <core/core_api.h>
-#include <core/io/types.h>
 
 
 class CORE_API TextFileReader
 {
 public:
-    struct Result
+    explicit TextFileReader(const QString & fileName = {});
+    virtual ~TextFileReader();
+    TextFileReader(TextFileReader && other);
+    TextFileReader & operator=(TextFileReader && other);
+
+    const QString & fileName() const;
+    void setFileName(const QString & fileName);
+
+    template<typename T>
+    using Vector_t = std::vector<std::vector<T>>;
+    using FloatVectors = Vector_t<float>;
+    using DoubleVectors = Vector_t<double>;
+    using StringVectors = Vector_t<QString>;
+
+    enum StateFlag
     {
-        enum StateFlag
-        {
-            unset = 0x0,
-            successful = 0x1,
-            // End of file was reached when returning. Check if this is combined with successful
-            // or an error flag to check if the result contents are valid.
-            eof = 0x2,
-            // input file does not exist or is not readable
-            invalidFile = 0x4,
-            // end of file was reached before filling all columns of the last row, or before
-            // numberOfLines complete lines were read (if specified)
-            // the number of columns is not the same for all read rows
-            mismatchingColumnCount = 0x8,
-            // A value could not be converted to a floating point representation
-            invalidValue = 0x10,
-            // offset points behind the end of the file or is too large of qint64
-            invalidOffset = 0x20
-        };
-        Q_DECLARE_FLAGS(StateFlags, StateFlag);
+        unset = 0x0,
+        successful = 0x1,
+        // End of file was reached when returning. Check if this is combined with successful
+        // or an error flag to check if the result contents are valid.
+        eof = 0x2,
+        // input file does not exist or is not readable
+        invalidFile = 0x4,
+        // end of file was reached before filling all columns of the last row, or before
+        // numberOfLines complete lines were read (if specified)
+        // the number of columns is not the same for all read rows
+        mismatchingColumnCount = 0x8,
+        // A value could not be converted to a floating point representation
+        invalidValue = 0x10,
+        // offset points behind the end of the file or is too large of qint64
+        invalidOffset = 0x20
+    };
+    Q_DECLARE_FLAGS(StateFlags, StateFlag);
 
-        Result(StateFlags stateFlags, size_t filePos = {});
+    StateFlags stateFlags() const;
+    /** Byte position in the file after reading the last complete line.
+      * This value is undefined if State::eof is set. */
+    uint64_t filePos() const;
+    void seekTo(uint64_t filePos);
 
-        StateFlags stateFlags = StateFlag::unset;
-        /** Byte position in the file after reading the last complete line.
-          * This value is unspecified if State::eof is set. */
-        size_t filePos = 0;
+    StateFlags read(FloatVectors & floatIOVectors, size_t numberOfLines = {});
+    StateFlags read(DoubleVectors & doubleIOVectors, size_t numberOfLines = {});
+    StateFlags read(StringVectors & stringIOVectors, size_t numberOfLines = {});
+
+
+    friend void swap(TextFileReader & lhs, TextFileReader & rhs);
+
+    enum class ImplementationID { Qt };
+    class CORE_API ImplBase
+    {
+    public:
+        explicit ImplBase(TextFileReader & reader);
+        virtual ~ImplBase() = 0;
+
+        virtual void setFileName(const QString & fileName) = 0;
+
+        virtual void read(FloatVectors & floatIOVectors, size_t numberOfLines = {}) = 0;
+        virtual void read(DoubleVectors & doubleIOVectors, size_t numberOfLines = {}) = 0;
+        virtual void read(StringVectors & stringIOVectors, size_t numberOfLines = {}) = 0;
+        virtual uint64_t filePos() = 0;
+        virtual void seekTo(size_t filePos) = 0;
+
+        StateFlags stateFlags() const;
+
+    protected:
+        TextFileReader & m_reader;
+        StateFlags m_stateFlags;
     };
 
-    static Result read(
-        const QString & inputFileName,
-        io::InputVector & ioVectors,
-        size_t offset = {},
-        size_t numberOfLines = {});
+protected:
+    explicit TextFileReader(ImplementationID implId, const QString & fileName);
 
-    using StringVectors = std::vector<std::vector<QString>>;
+private:
+    explicit TextFileReader(nullptr_t);
 
-    static Result readAsString(
-        const QString & inputFileName,
-        StringVectors & ioVectors,
-        size_t offset = {},
-        size_t numberOfLines = {});
+private:
+    std::unique_ptr<ImplBase> m_implementation;
+    QString m_fileName;
 
-    struct CORE_API Impl
-    {
-        static Result qFile_QByteArray(const QString & inputFileName,
-            io::InputVector & ioVectors, size_t offset, size_t numberOfLines);
-
-        static Result qFile_QByteArrayAsString(const QString & inputFileName,
-            StringVectors & ioVectors, size_t offset, size_t numberOfLines);
-    };
-
-    TextFileReader() = delete;
-    ~TextFileReader() = delete;
+private:
+    Q_DISABLE_COPY(TextFileReader)
 };
 
-Q_DECLARE_OPERATORS_FOR_FLAGS(TextFileReader::Result::StateFlags);
+Q_DECLARE_OPERATORS_FOR_FLAGS(TextFileReader::StateFlags);

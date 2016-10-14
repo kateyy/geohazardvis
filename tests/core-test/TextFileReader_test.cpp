@@ -15,7 +15,7 @@
 namespace
 {
 
-bool checkEqual(const io::InputVector & lhs, const io::InputVector & rhs)
+bool checkEqual(const TextFileReader::FloatVectors & lhs, const TextFileReader::FloatVectors & rhs)
 {
     if (lhs.size() != rhs.size())
     {
@@ -44,6 +44,15 @@ bool checkEqual(const io::InputVector & lhs, const io::InputVector & rhs)
     return true;
 }
 
+class TestQtTextFileReader : public TextFileReader
+{
+public:
+    TestQtTextFileReader(const QString & fileName)
+        : TextFileReader(TextFileReader::ImplementationID::Qt, fileName)
+    {
+    }
+};
+
 }
 
 
@@ -70,10 +79,10 @@ public:
 
         return content;
     }
-    static const io::InputVector & defaultContent()
+    static const TextFileReader::FloatVectors & defaultContent()
     {
-        static const io::InputVector content = {
-            { -1.0, std::numeric_limits<io::t_FP>::quiet_NaN() }, // column 0
+        static const TextFileReader::FloatVectors content = {
+            { -1.0, std::numeric_limits<float>::quiet_NaN() }, // column 0
             { 1.0, 2.0 } // column 1
         };
 
@@ -103,12 +112,12 @@ TEST_F(TextFileReader_test, BasicReadTest_qFile_QByteArray)
 {
     createTestFile();
 
-    io::InputVector data;
+    TextFileReader::FloatVectors data;
+    auto reader = TestQtTextFileReader(testFileName());
+    const auto result = reader.read(data);
 
-    const auto result = TextFileReader::Impl::qFile_QByteArray(testFileName(), data, 0, 0);
-
-    ASSERT_TRUE(result.stateFlags.testFlag(TextFileReader::Result::successful));
-    ASSERT_TRUE(result.stateFlags.testFlag(TextFileReader::Result::eof));
+    ASSERT_TRUE(result.testFlag(TextFileReader::successful));
+    ASSERT_TRUE(result.testFlag(TextFileReader::eof));
 
     ASSERT_TRUE(checkEqual(defaultContent(), data));
 }
@@ -117,13 +126,13 @@ TEST_F(TextFileReader_test, LimitedLineCount_QByteArray)
 {
     createTestFile();
 
-    io::InputVector data;
+    TextFileReader::FloatVectors data;
+    auto reader = TestQtTextFileReader(testFileName());
+    const auto result = reader.read(data, 1);
 
-    const auto result = TextFileReader::Impl::qFile_QByteArray(testFileName(), data, 0, 1);
-
-    ASSERT_TRUE(result.stateFlags.testFlag(TextFileReader::Result::successful));
-    ASSERT_FALSE(result.stateFlags.testFlag(TextFileReader::Result::eof));
-    ASSERT_EQ(16, result.filePos);
+    ASSERT_TRUE(result.testFlag(TextFileReader::successful));
+    ASSERT_FALSE(result.testFlag(TextFileReader::eof));
+    ASSERT_EQ(16u, reader.filePos());
 
     auto firstRow = defaultContent();
     firstRow[0].resize(1);
@@ -136,15 +145,21 @@ TEST_F(TextFileReader_test, StartingFromOffset_QByteArray)
 {
     createTestFile();
 
-    io::InputVector data;
-
-    const auto result1 = TextFileReader::Impl::qFile_QByteArray(testFileName(), data, 0, 1);
+    TextFileReader::FloatVectors data;
+    
+    auto reader1 = TestQtTextFileReader(testFileName());
+    const auto result1 = reader1.read(data, 1);
+    const auto filePos1 = reader1.filePos();
+    reader1 = TestQtTextFileReader("");
     data.clear();
-    const auto result2 = TextFileReader::Impl::qFile_QByteArray(testFileName(), data, result1.filePos, 0);
-    ASSERT_TRUE(result2.stateFlags.testFlag(TextFileReader::Result::successful));
-    ASSERT_TRUE(result2.stateFlags.testFlag(TextFileReader::Result::eof));
 
-    io::InputVector secondRow(2);
+    auto reader2 = TestQtTextFileReader(testFileName());
+    reader2.seekTo(filePos1);
+    const auto result2 = reader2.read(data);
+    ASSERT_TRUE(result2.testFlag(TextFileReader::successful));
+    ASSERT_TRUE(result2.testFlag(TextFileReader::eof));
+
+    TextFileReader::FloatVectors secondRow(2);
     secondRow[0].push_back(defaultContent()[0][1]);
     secondRow[1].push_back(defaultContent()[1][1]);
 
@@ -155,20 +170,20 @@ TEST_F(TextFileReader_test, ReportEOF_QByteArray)
 {
     createTestFile();
 
-    io::InputVector data;
+    TextFileReader::FloatVectors data;
 
-    const auto result = TextFileReader::Impl::qFile_QByteArray(testFileName(), data, 0, 3);
-    ASSERT_FALSE(result.stateFlags.testFlag(TextFileReader::Result::successful));
-    ASSERT_TRUE(result.stateFlags.testFlag(TextFileReader::Result::eof));
+    const auto result = TestQtTextFileReader(testFileName()).read(data, 3);
+    ASSERT_FALSE(result.testFlag(TextFileReader::successful));
+    ASSERT_TRUE(result.testFlag(TextFileReader::eof));
 
     ASSERT_TRUE(checkEqual(defaultContent(), data));
 }
 
 TEST_F(TextFileReader_test, ReportInvalidFile_QByteArray)
 {
-    io::InputVector data;
+    TextFileReader::FloatVectors data;
 
-    const auto result = TextFileReader::Impl::qFile_QByteArray(testFileName(), data, 0, 3);
-    ASSERT_FALSE(result.stateFlags.testFlag(TextFileReader::Result::successful));
-    ASSERT_TRUE(result.stateFlags.testFlag(TextFileReader::Result::invalidFile));
+    const auto result = TestQtTextFileReader(testFileName()).read(data, 3);
+    ASSERT_FALSE(result.testFlag(TextFileReader::successful));
+    ASSERT_TRUE(result.testFlag(TextFileReader::invalidFile));
 }

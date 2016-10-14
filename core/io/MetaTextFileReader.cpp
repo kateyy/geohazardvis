@@ -121,20 +121,25 @@ auto MetaTextFileReader::readData(
     }
     assert(input);
 
-    size_t fileOffset = static_cast<size_t>(inputStream.tellg());
+    auto reader = TextFileReader(fileName);
+    reader.seekTo(static_cast<uint64_t>(inputStream.tellg()));
+    if (!reader.stateFlags().testFlag(TextFileReader::successful))
+    {
+        cerr << "could not read input data set in " << fileName.toStdString() << endl;
+        return input;
+    }
 
     for (const auto & dataSetDef : datasetDefs)
     {
         ReadDataSet readData{ dataSetDef.type, {}, dataSetDef.attributeName, dataSetDef.vtkMetaData };
 
-        const auto result = TextFileReader::read(fileName, readData.data, fileOffset, dataSetDef.nbLines);
-        fileOffset = result.filePos;
+        reader.read(readData.data, dataSetDef.nbLines);
 
-        if (result.stateFlags.testFlag(TextFileReader::Result::successful)
+        if (reader.stateFlags().testFlag(TextFileReader::successful)
             && readData.data.size() == dataSetDef.nbColumns
             && readData.data.front().size() == dataSetDef.nbLines)
         {
-            readDataSets.push_back(readData);
+            readDataSets.push_back(std::move(readData));
         }
         else
         {
