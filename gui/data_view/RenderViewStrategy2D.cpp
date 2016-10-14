@@ -257,13 +257,7 @@ void RenderViewStrategy2D::startProfilePlot()
         }
 
         const auto component = currentScalars.dataComponent();
-
-
-        // TODO this should be propagated by the color mapping
-        // this here is a dangerous assumption
-        const auto location = dataObject->dataTypeName() == "Polygonal Mesh"
-            ? IndexType::cells
-            : IndexType::points;
+        const auto location = currentScalars.scalarsAssociation(*visualization);
 
         auto profile = std::make_unique<DataProfile2DDataObject>(
             dataObject->name() + " plot",
