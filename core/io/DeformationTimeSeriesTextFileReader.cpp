@@ -308,8 +308,8 @@ auto DeformationTimeSeriesTextFileReader::readData() -> State
     m_readPolyData->SetVerts(verts);
 
     ReferencedCoordinateSystemSpecification dataObjectCoordinateSystem;
-    dataObjectCoordinateSystem.geographicSystem = "UTM";
-    dataObjectCoordinateSystem.globalMetricSystem = "WGS84";
+    dataObjectCoordinateSystem.geographicSystem = "WGS 84";
+    dataObjectCoordinateSystem.globalMetricSystem = "UTM";
     dataObjectCoordinateSystem.referencePointLocalRelative = { 0.5, 0.5 };
 
     auto coordsArrayLongLat = dataArrays[coordArrayIdx(Coordinate::LongitudeLatitude)];

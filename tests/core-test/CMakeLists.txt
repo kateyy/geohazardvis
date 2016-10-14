@@ -6,6 +6,7 @@ message(STATUS "Test ${target}")
 set(sources
     main.cpp
     ArrayChangeInformationFilter_test.cpp
+    AssignPointAttributeToCoordinatesFilter_test.cpp
     BinaryFile_test.cpp
     CoordinateTransformableDataObject_test.cpp
     DataExtent_test.cpp

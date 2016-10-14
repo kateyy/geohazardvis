@@ -22,6 +22,13 @@ public:
     double pointCoordinateComponent(vtkIdType pointId, int component, bool * validId = nullptr);
     bool setPointCoordinateComponent(vtkIdType pointId, int component, double value);
 
+protected:
+    bool checkIfStructureChanged() override;
+
+    vtkSmartPointer<vtkAlgorithm> createTransformPipeline(
+        const CoordinateSystemSpecification & toSystem,
+        vtkAlgorithmOutput * pipelineUpstream) const override;
+
 private:
     Q_DISABLE_COPY(GenericPolyDataObject)
 };

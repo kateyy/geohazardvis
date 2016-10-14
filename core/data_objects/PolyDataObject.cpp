@@ -13,9 +13,6 @@
 #include <vtkPolyDataNormals.h>
 #include <vtkTransform.h>
 
-#include <core/CoordinateSystems.h>
-#include <core/data_objects/DataObject_private.h>
-#include <core/filters/SimplePolyGeoCoordinateTransformFilter.h>
 #include <core/rendered_data/RenderedPolyData.h>
 #include <core/table_model/QVtkTableModelPolyData.h>
 
@@ -258,45 +255,6 @@ std::unique_ptr<QVtkTableModel> PolyDataObject::createTableModel()
     model->setDataObject(this);
 
     return model;
-}
-
-bool PolyDataObject::checkIfStructureChanged()
-{
-    const bool superclassResult = CoordinateTransformableDataObject::checkIfStructureChanged();
-
-    return superclassResult || dPtr().m_inCopyStructure;
-}
-
-vtkSmartPointer<vtkAlgorithm> PolyDataObject::createTransformPipeline(const CoordinateSystemSpecification & toSystem, vtkAlgorithmOutput * pipelineUpstream) const
-{
-    if (coordinateSystem().geographicSystem != "WGS 84"
-        || toSystem.geographicSystem != "WGS 84"
-        || coordinateSystem().globalMetricSystem != "UTM"
-        || toSystem.globalMetricSystem != "UTM"
-        || !coordinateSystem().isReferencePointValid())
-    {
-        return nullptr;
-    }
-
-    if (coordinateSystem().type == CoordinateSystemType::geographic
-        && toSystem.type == CoordinateSystemType::metricLocal)
-    {
-        auto filter = vtkSmartPointer<SimplePolyGeoCoordinateTransformFilter>::New();
-        filter->SetInputConnection(pipelineUpstream);
-        filter->SetTargetCoordinateSystem(SimplePolyGeoCoordinateTransformFilter::LOCAL_METRIC);
-        return filter;
-    }
-
-    if (coordinateSystem().type == CoordinateSystemType::metricLocal
-        && toSystem.type == CoordinateSystemType::geographic)
-    {
-        auto filter = vtkSmartPointer<SimplePolyGeoCoordinateTransformFilter>::New();
-        filter->SetInputConnection(pipelineUpstream);
-        filter->SetTargetCoordinateSystem(SimplePolyGeoCoordinateTransformFilter::GLOBAL_GEOGRAPHIC);
-        return filter;
-    }
-
-    return nullptr;
 }
 
 void PolyDataObject::setupCellCenters()

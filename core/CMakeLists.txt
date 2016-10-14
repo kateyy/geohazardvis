@@ -99,6 +99,8 @@ set(sources
 
     filters/ArrayChangeInformationFilter.h
     filters/ArrayChangeInformationFilter.cpp
+    filters/AssignPointAttributeToCoordinatesFilter.h
+    filters/AssignPointAttributeToCoordinatesFilter.cpp
     filters/CentroidAsScalarsFilter.h
     filters/CentroidAsScalarsFilter.cpp
     filters/DEMApplyShadingToColors.h
