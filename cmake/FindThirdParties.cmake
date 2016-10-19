@@ -41,12 +41,12 @@ find_package(OpenGL REQUIRED)
 #========= VTK =========
 
 set(VTK_COMPONENTS
+    vtkChartsCore
     vtkGUISupportQtOpenGL   # QVTKWidget2
-    vtkRenderingAnnotation  # vtkCubeAxesActor, vtkScalarBarActor
     vtkInteractionWidgets
     vtkIOXML
+    vtkRenderingAnnotation  # vtkCubeAxesActor, vtkScalarBarActor
     vtkViewsContext2D
-    vtkChartsCore
 )
 
 find_package(VTK COMPONENTS ${VTK_COMPONENTS})
@@ -55,7 +55,9 @@ set(VTK_VERSION "${VTK_MAJOR_VERSION}.${VTK_MINOR_VERSION}.${VTK_BUILD_VERSION}"
 set(VTK_REQUIRED_VERSION 7.1)
 
 if (VTK_VERSION VERSION_LESS VTK_REQUIRED_VERSION)
-    message(FATAL_ERROR "VTK version ${VTK_VERSION} was found but version 6.3 or newer is required.")
+    message(FATAL_ERROR "VTK version ${VTK_VERSION} was found but version ${VTK_REQUIRED_VERSION} or newer is required.")
+else()
+    message(STATUS "Searching VTK version ${VTK_REQUIRED_VERSION} (found ${VTK_VERSION})")
 endif()
 
 # replaced by explicit calls on the relevant targets (http://www.kitware.com/source/home/post/116)
@@ -69,16 +71,29 @@ if ("${VTK_RENDERING_BACKEND}" STREQUAL "")
     set(VTK_RENDERING_BACKEND "OpenGL")
 endif()
 if ("${VTK_RENDERING_BACKEND}" STREQUAL "OpenGL" OR "${VTK_RENDERING_BACKEND}" STREQUAL "OpenGL2")
-    message(STATUS "VTK Rendering Backend: " ${VTK_RENDERING_BACKEND})
     if (${VTK_RENDERING_BACKEND} STREQUAL "OpenGL")
         set(VTK_RENDERING_BACKEND_VERSION 1)
+        set(VTK_RENDERING_BACKEND_INFO "OpenGL (legacy)")
     else()
         set(VTK_RENDERING_BACKEND_VERSION 2)
+        set(VTK_RENDERING_BACKEND_INFO "OpenGL2")
     endif()
+    message(STATUS "    Rendering Backend: ${VTK_RENDERING_BACKEND_INFO}")
 else()
     message(FATAL_ERROR "Unsupported VTK Rendering Backend: ${VTK_RENDERING_BACKEND}")
 endif()
 
+
+# OpenGL backend dependent modules
+list(APPEND VTK_COMPONENTS
+    vtkIOExport${VTK_RENDERING_BACKEND}
+    vtkRenderingContext${VTK_RENDERING_BACKEND}
+)
+if (VTK_RENDERING_BACKEND_VERSION EQUAL 1)
+    list(APPEND VTK_COMPONENTS vtkRenderingGL2PS)
+else()
+    list(APPEND VTK_COMPONENTS vtkRenderingGL2PSOpenGL2)
+endif()
 
 # configuration dependent VTK components
 
@@ -96,33 +111,9 @@ if (OPTION_ENABLE_TEXTURING)
     list(APPEND VTK_COMPONENTS vtkFiltersTexture)
 endif()
 
-if (VTK_VERSION VERSION_GREATER 7.0)
-    list(APPEND VTK_COMPONENTS vtkRenderingContext${VTK_RENDERING_BACKEND})
-endif()
-
-if (VTK_VERSION VERSION_LESS 7.1)
-    set(_vtkIOExport_module_name "vtkIOExport")
-    set(_vtkRenderingGL2PS_module_name "vtkRenderingGL2PS")
-else()
-    # OpenGL context based PostScript export is now optional
-    set(_vtkIOExport_module_name "vtkIOExport${VTK_RENDERING_BACKEND}")
-    if (VTK_RENDERING_BACKEND_VERSION EQUAL 1)
-        set(_vtkRenderingGL2PS_module_name "vtkRenderingGL2PS")
-    else()
-        set(_vtkRenderingGL2PS_module_name "vtkRenderingGL2PSOpenGL2")
-    endif()
-endif()
-
-if (TARGET ${_vtkIOExport_module_name} AND TARGET ${_vtkRenderingGL2PS_module_name})
-    set(VTK_has_GLExport2PS 1)
-    list(APPEND VTK_COMPONENTS ${_vtkIOExport_module_name} ${_vtkRenderingGL2PS_module_name})
-else()
-    set(VTK_has_GLExport2PS 0)
-    message("VTK was not build with ${_vtkIOExport_module_name} and ${_vtkRenderingGL2PS_module_name}, PostScript/EPS export will not be available.")
-endif()
-
 
 # find additional VTK components
+message(STATUS "    Requested components: ${VTK_COMPONENTS}")
 find_package(VTK COMPONENTS ${VTK_COMPONENTS})
 
 # When using VTK kits, the provided library names are just interfaces to underlaying targets

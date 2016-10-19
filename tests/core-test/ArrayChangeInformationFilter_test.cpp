@@ -10,7 +10,6 @@
 #include <vtkPointData.h>
 #include <vtkPolyData.h>
 #include <vtkSmartPointer.h>
-#include <vtkVersionMacros.h>
 
 #include <core/filters/ArrayChangeInformationFilter.h>
 #include <core/utility/macros.h>
@@ -38,13 +37,6 @@ public:
     vtkSmartPointer<ArrayChangeInformationFilter> filter = vtkSmartPointer<ArrayChangeInformationFilter>::New();
 };
 
-
-#if VTK_CHECK_VERSION(7, 1, 0)
-#define CHECKED_VTK_VERSION(TEST_NAME) TEST_NAME
-#else
-#define CHECKED_VTK_VERSION(TEST_NAME) DISABLED_##TEST_NAME
-#endif
-
 TEST_F(ArrayChangeInformationFilter_test, DoRename)
 {
     inDs->GetPointData()->SetScalars(inAttr);
@@ -58,9 +50,8 @@ TEST_F(ArrayChangeInformationFilter_test, DoRename)
     ASSERT_STREQ("out", outAttr->GetName());
 }
 
-TEST_F(ArrayChangeInformationFilter_test, CHECKED_VTK_VERSION(DoSetUnit))
+TEST_F(ArrayChangeInformationFilter_test, DoSetUnit)
 {
-CHECKED_VTK_VERSION(
     inDs->GetPointData()->SetScalars(inAttr);
 
     filter->EnableSetUnitOn();
@@ -70,7 +61,6 @@ CHECKED_VTK_VERSION(
     auto outAttr = getScalars();
 
     ASSERT_STREQ("someUnit", outAttr->GetInformation()->Get(vtkDataArray::UNITS_LABEL()));
-    )
 }
 
 TEST_F(ArrayChangeInformationFilter_test, CreateArrayCopy)
@@ -89,11 +79,9 @@ TEST_F(ArrayChangeInformationFilter_test, DontChangeInArray)
     inAttr->SetName("someName");
     filter->SetArrayName("otherName");
 
-    CHECKED_VTK_VERSION(
-        inAttr->GetInformation()->Set(vtkDataArray::UNITS_LABEL(), "someUnit");
-        filter->SetArrayUnit("otherUnit");
-        filter->EnableSetUnitOn();
-    )
+    inAttr->GetInformation()->Set(vtkDataArray::UNITS_LABEL(), "someUnit");
+    filter->SetArrayUnit("otherUnit");
+    filter->EnableSetUnitOn();
 
     inDs->GetPointData()->SetScalars(inAttr);
 
@@ -101,9 +89,7 @@ TEST_F(ArrayChangeInformationFilter_test, DontChangeInArray)
 
     ASSERT_STREQ("someName", inAttr->GetName());
 
-    CHECKED_VTK_VERSION(
-        ASSERT_STREQ("someUnit", inAttr->GetInformation()->Get(vtkDataArray::UNITS_LABEL()));
-    )
+    ASSERT_STREQ("someUnit", inAttr->GetInformation()->Get(vtkDataArray::UNITS_LABEL()));
 }
 
 TEST_F(ArrayChangeInformationFilter_test, AttributeLocationAndType)

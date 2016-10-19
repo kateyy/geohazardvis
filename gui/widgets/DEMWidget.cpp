@@ -8,7 +8,6 @@
 #include <vtkPolyData.h>
 #include <vtkProperty.h>
 #include <vtkVector.h>
-#include <vtkVersionMacros.h>
 
 #include <core/CoordinateSystems.h>
 #include <core/DataSetHandler.h>
@@ -19,7 +18,6 @@
 #include <core/rendered_data/RenderedPolyData.h>
 #include <core/rendered_data/RenderedImageData.h>
 #include <core/utility/DataSetFilter.h>
-#include <core/utility/macros.h>
 #include <core/utility/qthelper.h>
 #include <core/utility/type_traits.h>
 #include <core/utility/vtkvectorhelper.h>
@@ -631,10 +629,6 @@ void DEMWidget::configureMeshVisualization()
 
     topoRendered->renderProperty()->DeepCopy(prop);
     topoRendered->setRepresentation(RenderedData::Representation::both);
-
-#if !VTK_CHECK_VERSION(7, 1, 0)
-    topoRendered->renderProperty()->LightingOn();   // bug: flag not copied in VTK < 7.1
-#endif
 }
 
 void DEMWidget::releasePreviewData()

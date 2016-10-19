@@ -1,8 +1,5 @@
 #pragma once
 
-#include "config.h"
-#if VTK_has_GLExport2PS
-
 #include <core/canvas_export/CanvasExporter.h>
 
 
@@ -31,5 +28,3 @@ private:
 
     static const bool s_isRegistered;
 };
-
-#endif

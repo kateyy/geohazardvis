@@ -10,7 +10,6 @@
 #include <vtkObjectFactory.h>
 #include <vtkPointData.h>
 #include <vtkSmartPointer.h>
-#include <vtkVersionMacros.h>
 
 #include <core/utility/macros.h>
 
@@ -191,13 +190,10 @@ int ArrayChangeInformationFilter::RequestData(
         outDsAttributes->SetActiveAttribute(outAttrIndexCopied, this->AttributeType);
     }
 
-
-#if VTK_CHECK_VERSION(7, 1, 0)
     if (this->EnableSetUnit)
     {
         outAttribute->GetInformation()->Set(vtkDataArray::UNITS_LABEL(), this->ArrayUnit);
     }
-#endif
 
     return 1;
 }

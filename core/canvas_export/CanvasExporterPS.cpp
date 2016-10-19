@@ -1,7 +1,5 @@
 #include "CanvasExporterPS.h"
 
-#if VTK_has_GLExport2PS
-
 #include <cassert>
 
 #include <QFileInfo>
@@ -139,5 +137,3 @@ QStringList CanvasExporterPS::fileFormats() const
 
     return formats;
 }
-
-#endif

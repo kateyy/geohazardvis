@@ -19,7 +19,6 @@
 #include <vtkPropCollection.h>
 #include <vtkPropPicker.h>
 #include <vtkVector.h>
-#include <vtkVersionMacros.h>
 #include <vtkWeakPointer.h>
 
 #include <core/types.h>
@@ -28,7 +27,6 @@
 #include <core/data_objects/PolyDataObject.h>
 #include <core/rendered_data/RenderedData.h>
 #include <core/utility/DataExtent.h>
-#include <core/utility/macros.h>
 
 
 class Picker_private
@@ -349,14 +347,11 @@ void Picker_private::appendScalarInfo(QTextStream & stream, int activeComponent,
     auto tuple = std::vector<double>(scalars.GetNumberOfComponents());
     scalars.GetTuple(index, tuple.data());
 
-    QString unitStr;
-#if VTK_CHECK_VERSION(7, 1, 0)
-    unitStr = scalars.GetInformation()->Get(vtkDataArray::UNITS_LABEL());
+    auto unitStr = QString::fromUtf8(scalars.GetInformation()->Get(vtkDataArray::UNITS_LABEL()));
     if (!unitStr.isEmpty())
     {
         unitStr.prepend(" ");
     }
-#endif
 
     const QString locationString = pickedObjectInfo.indexType == IndexType::cells
         ? "Cell"
