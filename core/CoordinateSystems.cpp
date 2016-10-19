@@ -2,17 +2,16 @@
 
 #include <algorithm>
 #include <ostream>
-#include <type_traits>
 
 #include <vtkCharArray.h>
 #include <vtkFieldData.h>
 #include <vtkInformation.h>
-#include <vtkVariantCast.h>
 
 #include <core/filters/vtkInformationDoubleVectorMetaDataKey.h>
 #include <core/filters/vtkInformationIntegerMetaDataKey.h>
 #include <core/filters/vtkInformationStringMetaDataKey.h>
 #include <core/utility/vtkstringhelper.h>
+#include <core/utility/vtkvarianthelper.h>
 #include <core/utility/vtkvectorhelper.h>
 
 
@@ -61,55 +60,6 @@ const char * arrayName_relativeReference()
     static const char * const name = "CoordinateSystem_LocalRelativeReferencePoint";
     return name;
 }
-
-
-template<typename ValueType, typename = std::enable_if_t<std::is_arithmetic<ValueType>::value>>
-ValueType vtkVariantToValue(const vtkVariant & variant, bool * isValid = nullptr)
-{
-    return vtkVariantCast<ValueType>(variant, isValid);
-}
-
-template<typename ValueType>
-std::enable_if_t<std::is_enum<ValueType>::value, ValueType>
-vtkVariantToValue(const vtkVariant & variant, bool * isValid = nullptr)
-{
-    using underlying_t = std::underlying_type_t<ValueType>;
-    return static_cast<ValueType>(vtkVariantToValue<underlying_t>(variant, isValid));
-};
-
-
-template<typename T, typename = std::enable_if_t<std::is_arithmetic<T>::value>>
-int vtkTypeForValueType();
-
-template<> int vtkTypeForValueType<int32_t>()
-{
-    return VTK_TYPE_INT32;
-}
-template<> int vtkTypeForValueType<int64_t>()
-{
-    return VTK_TYPE_INT64;
-}
-template<> int vtkTypeForValueType<uint32_t>()
-{
-    return VTK_TYPE_UINT32;
-}
-template<> int vtkTypeForValueType<uint64_t>()
-{
-    return VTK_TYPE_UINT64;
-}
-template<> int vtkTypeForValueType<double>()
-{
-    return VTK_DOUBLE;
-}
-template<> int vtkTypeForValueType<char>()
-{
-    return VTK_CHAR;
-}
-template<typename T, typename = std::enable_if_t<std::is_enum<T>::value>, typename Underlying = std::underlying_type_t<T>>
-int vtkTypeForValueType()
-{
-    return vtkTypeForValueType<Underlying>();
-};
 
 template<typename ValueType, int NumComponents = 1, typename = std::enable_if_t<!std::is_enum<ValueType>::value>>
 void checkSetArray(vtkFieldData & fieldData, const vtkTuple<ValueType, NumComponents> & value,

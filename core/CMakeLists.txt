@@ -233,6 +233,8 @@ set(sources
     utility/vtkCameraSynchronization.cpp
     utility/vtkstringhelper.h
     utility/vtkstringhelper.cpp
+    utility/vtkvarianthelper.h
+    utility/vtkvarianthelper.hpp
     utility/vtkvectorhelper.h
     utility/vtkvectorhelper.hpp
 )

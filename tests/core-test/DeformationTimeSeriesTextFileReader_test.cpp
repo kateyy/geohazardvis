@@ -3,9 +3,9 @@
 #include <QDir>
 #include <QFile>
 
-#include <vtkDataArray.h>
-#include <vtkDataSet.h>
+#include <vtkFloatArray.h>
 #include <vtkPointData.h>
+#include <vtkPolyData.h>
 #include <vtkVector.h>
 
 #include <core/data_objects/DataObject.h>
@@ -18,6 +18,9 @@ class DeformationTimeSeriesTextFileReader_test : public testing::Test
 {
 public:
     using t_FP = float;
+    using vtktFPArray = vtkFloatArray;
+    using vtkVector2tFP = vtkVector2f;
+    using vtkVector3tFP = vtkVector3f;
 
     static const char * testFileContents()
     {
@@ -72,9 +75,9 @@ public:
         return tss;
     }
 
-    static const std::vector<vtkVector2d> & utmWGS85Coords()
+    static const std::vector<vtkVector2tFP> & utmWGS85Coords()
     {
-        static const std::vector<vtkVector2d> coords = {
+        static const std::vector<vtkVector2tFP> coords = {
             { 380000.0f, 3100000.0f },
             { 380001.1f, 3100001.1f },
             { 380002.2f, 3100002.2f },
@@ -86,18 +89,18 @@ public:
         static const std::vector<t_FP> coherences = { 0.8f, 0.81f, 0.82f };
         return coherences;
     }
-    static const std::vector<vtkVector2d> & azimuthRangeCoords()
+    static const std::vector<vtkVector2tFP> & azimuthRangeCoords()
     {
-        static const std::vector<vtkVector2d> coords = {
+        static const std::vector<vtkVector2tFP> coords = {
             { 160.0f, 140.0f },
             { 160.1f, 140.1f },
             { 160.2f, 140.2f },
         };
         return coords;
     }
-    static const std::vector<vtkVector2d> & latLongCoords()
+    static const std::vector<vtkVector2tFP> & latLongCoords()
     {
-        static const std::vector<vtkVector2d> coords = {
+        static const std::vector<vtkVector2tFP> coords = {
             { 28.0f, -16.0f },
             { 28.1f, -16.1f },
             { 28.2f, -16.2f },
@@ -165,15 +168,17 @@ TEST_F(DeformationTimeSeriesTextFileReader_test, readWith_UTM_WGS84_Coordinates)
     ASSERT_EQ(DeformationTimeSeriesTextFileReader::validData, reader.state());
     auto readData = reader.generateDataObject();
     ASSERT_TRUE(readData);
-    ASSERT_TRUE(readData->dataSet());
+    auto readPoly = vtkPolyData::SafeDownCast(readData->dataSet());
+    ASSERT_TRUE(readPoly);
+    auto points = vtktFPArray::SafeDownCast(readPoly->GetPoints()->GetData());
+    ASSERT_TRUE(points);
+    ASSERT_EQ(3, points->GetNumberOfComponents());
 
-    auto & dataSet = *readData->dataSet();
-
-    ASSERT_EQ(numberOfDataPoints(), dataSet.GetNumberOfPoints());
-    vtkVector3d point;
+    ASSERT_EQ(numberOfDataPoints(), points->GetNumberOfTuples());
+    vtkVector3tFP point;
     for (vtkIdType i = 0; i < numberOfDataPoints(); ++i)
     {
-        dataSet.GetPoint(i, point.GetData());
+        points->GetTypedTuple(i, point.GetData());
         ASSERT_FLOAT_EQ(utmWGS85Coords()[static_cast<size_t>(i)].GetX(), point.GetX());
         ASSERT_FLOAT_EQ(utmWGS85Coords()[static_cast<size_t>(i)].GetY(), point.GetY());
     }
@@ -189,15 +194,17 @@ TEST_F(DeformationTimeSeriesTextFileReader_test, readWith_AzimuthRange_Coordinat
     ASSERT_EQ(DeformationTimeSeriesTextFileReader::validData, reader.state());
     auto readData = reader.generateDataObject();
     ASSERT_TRUE(readData);
-    ASSERT_TRUE(readData->dataSet());
+    auto readPoly = vtkPolyData::SafeDownCast(readData->dataSet());
+    ASSERT_TRUE(readPoly);
+    auto points = vtktFPArray::SafeDownCast(readPoly->GetPoints()->GetData());
+    ASSERT_TRUE(points);
+    ASSERT_EQ(3, points->GetNumberOfComponents());
 
-    auto & dataSet = *readData->dataSet();
-
-    ASSERT_EQ(numberOfDataPoints(), dataSet.GetNumberOfPoints());
-    vtkVector3d point;
+    ASSERT_EQ(numberOfDataPoints(), points->GetNumberOfTuples());
+    vtkVector3tFP point;
     for (vtkIdType i = 0; i < numberOfDataPoints(); ++i)
     {
-        dataSet.GetPoint(i, point.GetData());
+        points->GetTypedTuple(i, point.GetData());
         ASSERT_FLOAT_EQ(azimuthRangeCoords()[static_cast<size_t>(i)].GetX(), point.GetX());
         ASSERT_FLOAT_EQ(azimuthRangeCoords()[static_cast<size_t>(i)].GetY(), point.GetY());
     }
@@ -213,18 +220,21 @@ TEST_F(DeformationTimeSeriesTextFileReader_test, readWith_LongitudeLatitude_Coor
     ASSERT_EQ(DeformationTimeSeriesTextFileReader::validData, reader.state());
 
     auto readData = reader.generateDataObject();
-    ASSERT_TRUE(readData && readData->dataSet());
+    ASSERT_TRUE(readData);
+    auto readPoly = vtkPolyData::SafeDownCast(readData->dataSet());
+    ASSERT_TRUE(readPoly);
+    auto points = vtktFPArray::SafeDownCast(readPoly->GetPoints()->GetData());
+    ASSERT_TRUE(points);
+    ASSERT_EQ(3, points->GetNumberOfComponents());
 
-    auto & dataSet = *readData->dataSet();
-
-    ASSERT_EQ(numberOfDataPoints(), dataSet.GetNumberOfPoints());
-    vtkVector3d point;
+    ASSERT_EQ(numberOfDataPoints(), points->GetNumberOfTuples());
+    vtkVector3tFP point;
     for (vtkIdType i = 0; i < numberOfDataPoints(); ++i)
     {
-        dataSet.GetPoint(i, point.GetData());
+        points->GetTypedTuple(i, point.GetData());
         // swapped latitude/longitude to facilitate rendering
-        ASSERT_FLOAT_EQ(latLongCoords()[static_cast<size_t>(i)].GetY(), point.GetX());
-        ASSERT_FLOAT_EQ(latLongCoords()[static_cast<size_t>(i)].GetX(), point.GetY());
+        ASSERT_FLOAT_EQ(latLongCoords()[static_cast<size_t>(i)].GetY(), static_cast<float>(point.GetX()));
+        ASSERT_FLOAT_EQ(latLongCoords()[static_cast<size_t>(i)].GetX(), static_cast<float>(point.GetY()));
     }
 }
 
@@ -244,9 +254,9 @@ TEST_F(DeformationTimeSeriesTextFileReader_test, readWith_UTM_WGS84_OthersAsPoin
 
     auto utm_WGS84_array = dataSet.GetPointData()->GetArray(reader.arrayName_UTM_WGS84());
     ASSERT_FALSE(utm_WGS84_array);
-    auto azimuthRangeArray = dataSet.GetPointData()->GetArray(reader.arrayName_AzimuthRange());
+    auto azimuthRangeArray = vtktFPArray::SafeDownCast(dataSet.GetPointData()->GetArray(reader.arrayName_AzimuthRange()));
     ASSERT_TRUE(azimuthRangeArray);
-    auto longLat = dataSet.GetPointData()->GetArray(reader.arrayName_LongitudeLatitude());
+    auto longLat = vtktFPArray::SafeDownCast(dataSet.GetPointData()->GetArray(reader.arrayName_LongitudeLatitude()));
     ASSERT_TRUE(longLat);
 
     ASSERT_EQ(numberOfDataPoints(), azimuthRangeArray->GetNumberOfTuples());
@@ -256,11 +266,11 @@ TEST_F(DeformationTimeSeriesTextFileReader_test, readWith_UTM_WGS84_OthersAsPoin
 
     for (vtkIdType i = 0; i < numberOfDataPoints(); ++i)
     {
-        ASSERT_FLOAT_EQ(azimuthRangeCoords()[static_cast<size_t>(i)].GetX(), azimuthRangeArray->GetComponent(i, 0));
-        ASSERT_FLOAT_EQ(azimuthRangeCoords()[static_cast<size_t>(i)].GetY(), azimuthRangeArray->GetComponent(i, 1));
+        ASSERT_FLOAT_EQ(azimuthRangeCoords()[static_cast<size_t>(i)].GetX(), azimuthRangeArray->GetTypedComponent(i, 0));
+        ASSERT_FLOAT_EQ(azimuthRangeCoords()[static_cast<size_t>(i)].GetY(), azimuthRangeArray->GetTypedComponent(i, 1));
         // swapped latitude/longitude to facilitate rendering
-        ASSERT_FLOAT_EQ(latLongCoords()[static_cast<size_t>(i)].GetY(), longLat->GetComponent(i, 0));
-        ASSERT_FLOAT_EQ(latLongCoords()[static_cast<size_t>(i)].GetX(), longLat->GetComponent(i, 1));
+        ASSERT_FLOAT_EQ(latLongCoords()[static_cast<size_t>(i)].GetY(), longLat->GetTypedComponent(i, 0));
+        ASSERT_FLOAT_EQ(latLongCoords()[static_cast<size_t>(i)].GetX(), longLat->GetTypedComponent(i, 1));
     }
 }
 
@@ -277,9 +287,9 @@ TEST_F(DeformationTimeSeriesTextFileReader_test, readWith_LongLat_OthersAsPointA
     ASSERT_TRUE(readData && readData->dataSet());
     auto & dataSet = *readData->dataSet();
 
-    auto utm_WGS84_array = dataSet.GetPointData()->GetArray(reader.arrayName_UTM_WGS84());
+    auto utm_WGS84_array = vtktFPArray::SafeDownCast(dataSet.GetPointData()->GetArray(reader.arrayName_UTM_WGS84()));
     ASSERT_TRUE(utm_WGS84_array);
-    auto azimuthRangeArray = dataSet.GetPointData()->GetArray(reader.arrayName_AzimuthRange());
+    auto azimuthRangeArray = vtktFPArray::SafeDownCast(dataSet.GetPointData()->GetArray(reader.arrayName_AzimuthRange()));
     ASSERT_TRUE(azimuthRangeArray);
     auto longLatArray = dataSet.GetPointData()->GetArray(reader.arrayName_LongitudeLatitude());
     ASSERT_FALSE(longLatArray);
@@ -291,10 +301,10 @@ TEST_F(DeformationTimeSeriesTextFileReader_test, readWith_LongLat_OthersAsPointA
 
     for (vtkIdType i = 0; i < numberOfDataPoints(); ++i)
     {
-        ASSERT_FLOAT_EQ(utmWGS85Coords()[static_cast<size_t>(i)].GetX(), utm_WGS84_array->GetComponent(i, 0));
-        ASSERT_FLOAT_EQ(utmWGS85Coords()[static_cast<size_t>(i)].GetY(), utm_WGS84_array->GetComponent(i, 1));
-        ASSERT_FLOAT_EQ(azimuthRangeCoords()[static_cast<size_t>(i)].GetX(), azimuthRangeArray->GetComponent(i, 0));
-        ASSERT_FLOAT_EQ(azimuthRangeCoords()[static_cast<size_t>(i)].GetY(), azimuthRangeArray->GetComponent(i, 1));
+        ASSERT_FLOAT_EQ(utmWGS85Coords()[static_cast<size_t>(i)].GetX(), utm_WGS84_array->GetTypedComponent(i, 0));
+        ASSERT_FLOAT_EQ(utmWGS85Coords()[static_cast<size_t>(i)].GetY(), utm_WGS84_array->GetTypedComponent(i, 1));
+        ASSERT_FLOAT_EQ(azimuthRangeCoords()[static_cast<size_t>(i)].GetX(), azimuthRangeArray->GetTypedComponent(i, 0));
+        ASSERT_FLOAT_EQ(azimuthRangeCoords()[static_cast<size_t>(i)].GetY(), azimuthRangeArray->GetTypedComponent(i, 1));
     }
 }
 
@@ -309,7 +319,7 @@ TEST_F(DeformationTimeSeriesTextFileReader_test, readTemporalInterferometricCohe
     auto readData = reader.generateDataObject();
     auto & dataSet = *readData->dataSet();
 
-    auto dataArray = dataSet.GetPointData()->GetArray(reader.arrayName_TemporalInterferometricCoherence());
+    auto dataArray = vtktFPArray::SafeDownCast(dataSet.GetPointData()->GetArray(reader.arrayName_TemporalInterferometricCoherence()));
     ASSERT_TRUE(dataArray);
     ASSERT_EQ(numberOfDataPoints(), dataArray->GetNumberOfTuples());
     ASSERT_EQ(1, dataArray->GetNumberOfComponents());
@@ -317,7 +327,7 @@ TEST_F(DeformationTimeSeriesTextFileReader_test, readTemporalInterferometricCohe
     for (vtkIdType i = 0; i < numberOfDataPoints(); ++i)
     {
         ASSERT_FLOAT_EQ(temporalInterferometricCoherence()[static_cast<size_t>(i)],
-            dataArray->GetComponent(i, 0));
+            dataArray->GetTypedComponent(i, 0));
     }
 }
 
@@ -332,7 +342,7 @@ TEST_F(DeformationTimeSeriesTextFileReader_test, readDeformationVelocity)
     auto readData = reader.generateDataObject();
     auto & dataSet = *readData->dataSet();
 
-    auto dataArray = dataSet.GetPointData()->GetArray(reader.arrayName_DeformationVelocity());
+    auto dataArray = vtktFPArray::SafeDownCast(dataSet.GetPointData()->GetArray(reader.arrayName_DeformationVelocity()));
     ASSERT_TRUE(dataArray);
     ASSERT_EQ(numberOfDataPoints(), dataArray->GetNumberOfTuples());
     ASSERT_EQ(1, dataArray->GetNumberOfComponents());
@@ -340,7 +350,7 @@ TEST_F(DeformationTimeSeriesTextFileReader_test, readDeformationVelocity)
     for (vtkIdType i = 0; i < numberOfDataPoints(); ++i)
     {
         ASSERT_FLOAT_EQ(deformationVelocity()[static_cast<size_t>(i)],
-            dataArray->GetComponent(i, 0));
+            dataArray->GetTypedComponent(i, 0));
     }
 }
 
@@ -355,7 +365,7 @@ TEST_F(DeformationTimeSeriesTextFileReader_test, readResidual)
     auto readData = reader.generateDataObject();
     auto & dataSet = *readData->dataSet();
 
-    auto dataArray = dataSet.GetPointData()->GetArray(reader.arrayName_ResidualTopography());
+    auto dataArray = vtktFPArray::SafeDownCast(dataSet.GetPointData()->GetArray(reader.arrayName_ResidualTopography()));
     ASSERT_TRUE(dataArray);
     ASSERT_EQ(numberOfDataPoints(), dataArray->GetNumberOfTuples());
     ASSERT_EQ(1, dataArray->GetNumberOfComponents());
@@ -363,7 +373,7 @@ TEST_F(DeformationTimeSeriesTextFileReader_test, readResidual)
     for (vtkIdType i = 0; i < numberOfDataPoints(); ++i)
     {
         ASSERT_FLOAT_EQ(residualTopo()[static_cast<size_t>(i)],
-            dataArray->GetComponent(i, 0));
+            dataArray->GetTypedComponent(i, 0));
     }
 }
 
@@ -381,7 +391,7 @@ TEST_F(DeformationTimeSeriesTextFileReader_test, readTemporalData)
     {
         auto && timeStamp = timeStamps()[t];
 
-        auto deformations = dataSet.GetPointData()->GetArray((reader.deformationArrayBaseName() + timeStamp).toUtf8().data());
+        auto deformations = vtktFPArray::SafeDownCast(dataSet.GetPointData()->GetArray((reader.deformationArrayBaseName() + timeStamp).toUtf8().data()));
         ASSERT_TRUE(deformations);
         ASSERT_EQ(numberOfDataPoints(), deformations->GetNumberOfTuples());
         ASSERT_EQ(1, deformations->GetNumberOfComponents());
@@ -389,7 +399,7 @@ TEST_F(DeformationTimeSeriesTextFileReader_test, readTemporalData)
         for (vtkIdType p = 0; p < numberOfDataPoints(); ++p)
         {
             ASSERT_FLOAT_EQ(temporalDeformation()[static_cast<size_t>(t)][static_cast<size_t>(p)],
-                deformations->GetComponent(p, 0));
+                deformations->GetTypedComponent(p, 0));
         }
     }
 }

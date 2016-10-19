@@ -118,7 +118,7 @@ TEST_F(DEMToTopographyMesh_test, PreservesMeshXYRatio)
     const auto inputXYRatio = inputBounds[0] / inputBounds[1];
     const auto outputXYRatio = outputBounds[0] / outputBounds[1];
 
-    ASSERT_FLOAT_EQ(inputXYRatio, outputXYRatio);
+    ASSERT_DOUBLE_EQ(inputXYRatio, outputXYRatio);
 }
 
 TEST_F(DEMToTopographyMesh_test, OutputElevationInInputElevationRange)
@@ -188,7 +188,7 @@ TEST_F(DEMToTopographyMesh_test, DEMToLocal_CorrectMeshBounds)
         / transformedMeshBounds.extractDimension(1).componentSize();
 
     ASSERT_TRUE(localDEMBounds.contains(transformedMeshBounds));
-    ASSERT_FLOAT_EQ(localDEMBounds.extractDimension(0)[0], transformedMeshBounds.extractDimension(0)[0]);
-    ASSERT_FLOAT_EQ(localDEMBounds.extractDimension(0)[1], transformedMeshBounds.extractDimension(0)[1]);
-    ASSERT_FLOAT_EQ(inMeshRatio, outMeshRation);
+    ASSERT_DOUBLE_EQ(localDEMBounds.extractDimension(0)[0], transformedMeshBounds.extractDimension(0)[0]);
+    ASSERT_DOUBLE_EQ(localDEMBounds.extractDimension(0)[1], transformedMeshBounds.extractDimension(0)[1]);
+    ASSERT_DOUBLE_EQ(inMeshRatio, outMeshRation);
 }

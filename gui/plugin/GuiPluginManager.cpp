@@ -135,15 +135,17 @@ QList<GuiPluginLibrary *> GuiPluginManager::pluginLibraries() const
     QList<GuiPluginLibrary *> libs;
 
     for (auto && it : m_libraries)
+    {
         libs << it.get();
+    }
 
-        return libs;
+    return libs;
 }
 
 bool GuiPluginManager::loadLibrary(const QString & filePath, GuiPluginInterface && pluginInterface)
 {
     // Check if library is already loaded and reload is not requested
-    if (m_libraries.end() != std::find_if(m_libraries.begin(), m_libraries.end(), 
+    if (m_libraries.end() != std::find_if(m_libraries.begin(), m_libraries.end(),
         [&filePath] (const std::unique_ptr<GuiPluginLibrary> & lib) { return lib->filePath() == filePath; }))
     {
         return true;
