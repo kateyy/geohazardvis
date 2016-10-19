@@ -2,8 +2,12 @@ build*/*
 screenshots*/*
 simulation*/*
 testing*/*
+.codelite/*
+cmake-build-*/*
+/*.project
+/*.workspace
 .kdev4/*
-*.kdev4
-*settings.ini
+/*.kdev4
+/*settings.ini
 CMakeLists.txt.user
 
