@@ -176,10 +176,11 @@ int DEMApplyShadingToColors::RequestData(vtkInformation * /*request*/,
     using Dispatcher = vtkArrayDispatch::Dispatch3ByValueType<
         vtkArrayDispatch::Reals,
         vtkArrayDispatch::AllTypes,
-        vtkArrayDispatch::AllTypes>;
+        vtkArrayDispatch::Reals>;
 
     if (!Dispatcher::Execute(lightness, colors, output, worker))
     {
+        vtkWarningMacro("Data array dispatch failed");
         worker(lightness, colors, output);
     }
 
