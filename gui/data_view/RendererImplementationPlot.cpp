@@ -380,7 +380,7 @@ void RendererImplementationPlot::dataVisibilityChanged(Context2DData * data)
     {
         disconnect(&data->dataObject(), &DataObject::boundsChanged, this, &RendererImplementationPlot::updateBounds);
 
-        if (m_selectedPlot = data)
+        if (m_selectedPlot == data)
         {
             m_renderView.clearSelection();
         }

@@ -108,7 +108,7 @@ bool AbstractRenderView::canShowDataObjectInCoordinateSystem(const CoordinateSys
             == transformableObjects.isEmpty();
     }
 
-    if (!transformableObjects.size() == contents.size())
+    if (transformableObjects.size() != contents.size())
     {
         qDebug() << "Unexpectedly rendering transformable and non-transformable objects.";
         return false;
