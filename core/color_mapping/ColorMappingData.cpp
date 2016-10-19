@@ -290,7 +290,7 @@ void ColorMappingData::updateBoundsLocked() const
     auto & lockedThis = const_cast<ColorMappingData &>(*this);
 
     auto newBounds = lockedThis.updateBounds();
-    assert(newBounds.size() == m_numDataComponents);
+    assert(newBounds.size() == static_cast<size_t>(m_numDataComponents));
 
     bool minMaxChanged = false;
 

@@ -138,7 +138,7 @@ void RendererImplementationPlot::onAddContent(AbstractVisualizedData * content, 
     m_plots.insert(contextData, items);
 
 
-    addConnectionForContent(content, 
+    addConnectionForContent(content,
         connect(contextData, &Context2DData::plotCollectionChanged,
         [this, contextData] () { fetchContextItems(contextData); }));
 
@@ -182,7 +182,7 @@ void RendererImplementationPlot::onSetSelection(const VisualizationSelection & s
     assert(selection.visualization);
 
     // Note: selection.visualization might not be a Context2DData *.
-    // That's a safe cast only if the visualization is contained in m_plots (which needs to be 
+    // That's a safe cast only if the visualization is contained in m_plots (which needs to be
     // checked anyways).
     const auto & plots = m_plots.value(static_cast<Context2DData *>(selection.visualization));
     if (!plots)
@@ -220,8 +220,8 @@ void RendererImplementationPlot::onSetSelection(const VisualizationSelection & s
 
     m_selectedPlot = static_cast<Context2DData *>(selection.visualization);
 
-    vtkSmartPointer<vtkIdTypeArray> indices = plot->GetSelection()
-        ? plot->GetSelection()
+    auto indices = plot->GetSelection()
+        ? vtkSmartPointer<vtkIdTypeArray>(plot->GetSelection())
         : vtkSmartPointer<vtkIdTypeArray>::New();
     indices->Resize(selection.indices.size());
     for (size_t i = 0; i < selection.indices.size(); ++i)

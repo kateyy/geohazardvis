@@ -464,6 +464,9 @@ void Highlighter::updateHighlight()
     case IndexType::cells:
         highlightCells();
         break;
+    case IndexType::invalid:
+    default:
+        return;
     }
 
     if (m_flashAfterSetTarget)

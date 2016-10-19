@@ -33,9 +33,10 @@ struct DEMShadingToColorsWorker
     {
         VTK_ASSUME(lightness->GetNumberOfComponents() == 1);
         VTK_ASSUME(colors->GetNumberOfComponents() == output->GetNumberOfComponents());
+        VTK_ASSUME(lightness->GetNumberOfTuples() == colors->GetNumberOfTuples());
+        VTK_ASSUME(lightness->GetNumberOfTuples() == output->GetNumberOfTuples());
 
-        using LightnessValueType = typename vtkDataArrayAccessor<LightnessArrayType>::APIType;
-        using ColorValueType = typename vtkDataArrayAccessor<ColorArrayType>::APIType;
+        using OutputValueType = typename vtkDataArrayAccessor<OutputArrayType>::APIType;
 
         vtkSMPTools::For(0, lightness->GetNumberOfTuples(),
             [lightness, colors, output] (vtkIdType begin, vtkIdType end)
@@ -49,17 +50,17 @@ struct DEMShadingToColorsWorker
 
             for (auto tupleIdx = begin; tupleIdx < end; ++tupleIdx)
             {
-                const auto lightValue = l.Get(tupleIdx, 0);
+                const auto lightValue = static_cast<OutputValueType>(l.Get(tupleIdx, 0));
 
                 for (int component = 0; component < numComponents; ++component)
                 {
-                    const auto colorComp = c.Get(tupleIdx, component);
-                    o.Set(tupleIdx, component,
-                        lightValue * colorComp);
+                    const auto colorComp = static_cast<OutputValueType>(c.Get(tupleIdx, component));
+                    o.Set(tupleIdx, component, lightValue * colorComp);
                 }
                 if (passAlpha)
                 {
-                    o.Set(tupleIdx, 3, c.Get(tupleIdx, 3));
+                    o.Set(tupleIdx, 3,
+                        static_cast<OutputValueType>(c.Get(tupleIdx, 3)));
                 }
             }
         });

@@ -198,14 +198,13 @@ auto DeformationTimeSeriesTextFileReader::readData() -> State
         for (auto && def : defs) { sum += def.numFileColumns; }
         return sum;
     }(attributeDefs);
-    
+
     if (NumAttributeColumns > m_numColumnsBeforeDeformations)
     {
         qWarning() << "Expected more attribute columns than found, in" << m_fileName;
         return setState(invalidFileFormat);
     }
 
-    static const auto NumCoordinateTypes = 3u;
     auto coordArrayIdx = [] (Coordinate coordinate) -> unsigned
     {
         switch (coordinate)
@@ -242,7 +241,7 @@ auto DeformationTimeSeriesTextFileReader::readData() -> State
             && def.numFileColumns > 0 && def.numFileColumns <= def.numMemColumns
             && def.arrayName);
         auto & array = dataArrays[attrIdx];
-        
+
         array = vtkSmartPointer<vtkFloatArray>::New();
         array->SetNumberOfComponents(def.numMemColumns);
         array->SetNumberOfTuples(numPoints);
@@ -285,7 +284,7 @@ auto DeformationTimeSeriesTextFileReader::readData() -> State
 
         for (vtkIdType i = 0; i < numPoints; ++i)
         {
-            array->SetTypedComponent(i, 0, 
+            array->SetTypedComponent(i, 0,
                 readDataColumns[m_numColumnsBeforeDeformations + timestampIdx][i]);
         }
         timestampArrays.push_back(array);
@@ -348,8 +347,8 @@ auto DeformationTimeSeriesTextFileReader::readData() -> State
     case DeformationTimeSeriesTextFileReader::Coordinate::UTM_WGS84:
         dataObjectCoordinateSystem.type = CoordinateSystemType::metricGlobal;
         break;
-    //case DeformationTimeSeriesTextFileReader::Coordinate::AzimuthRange:
-        //break;    // not implemented
+    case DeformationTimeSeriesTextFileReader::Coordinate::AzimuthRange:
+        break;    // not implemented
     case DeformationTimeSeriesTextFileReader::Coordinate::LongitudeLatitude:
         dataObjectCoordinateSystem.type = CoordinateSystemType::geographic;
         break;
@@ -388,7 +387,7 @@ auto DeformationTimeSeriesTextFileReader::readInformation() -> State
         return setState(State::invalidFileName);
     }
     if (!flags.testFlag(TextFileReader::successful)
-        || flags.testFlag(TextFileReader::eof) 
+        || flags.testFlag(TextFileReader::eof)
         || flags.testFlag(TextFileReader::mismatchingColumnCount)
         || flags.testFlag(TextFileReader::invalidOffset)
         || strings.size() != 3
@@ -397,7 +396,7 @@ auto DeformationTimeSeriesTextFileReader::readInformation() -> State
         return setState(State::invalidFileFormat);
     }
 
-    assert(std::all_of(strings.cbegin(), strings.cend(), 
+    assert(std::all_of(strings.cbegin(), strings.cend(),
         [] (const decltype(strings)::value_type & column) { return column.size() == 1; }));
 
     bool valueOkay = false;

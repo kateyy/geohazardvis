@@ -31,8 +31,8 @@ using namespace reflectionzeug;
 RenderedImageData::RenderedImageData(ImageDataObject & dataObject)
     : RenderedData(ContentType::Rendered2D, dataObject)
     , m_isShadingEnabled{ false }
-    , m_mapper{ vtkSmartPointer<vtkImageSliceMapper>::New() } // replace with vtkImageResliceMapper?
     , m_demShading{ vtkSmartPointer<DEMShadingFilter>::New() }
+    , m_mapper{ vtkSmartPointer<vtkImageSliceMapper>::New() } // replace with vtkImageResliceMapper?
     , m_property{ vtkSmartPointer<vtkImageProperty>::New() }
 {
     m_property->UseLookupTableScalarRangeOn();
@@ -183,7 +183,7 @@ double RenderedImageData::ambient() const
 
 void RenderedImageData::setAmbient(double ambient)
 {
-    m_demShading->SetAmbient(ambient);    
+    m_demShading->SetAmbient(ambient);
 }
 
 double RenderedImageData::diffuse() const

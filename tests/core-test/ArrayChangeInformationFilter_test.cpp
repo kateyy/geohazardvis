@@ -157,7 +157,7 @@ TEST_F(ArrayChangeInformationFilter_test, PassScalarInformation)
         inAttr->GetName(),
         inAttr->GetDataType(),
         inAttr->GetNumberOfComponents(),
-        inAttr->GetNumberOfTuples());
+        static_cast<int>(inAttr->GetNumberOfTuples()));
 
     filter->SetAttributeLocation(ArrayChangeInformationFilter::POINT_DATA);
     filter->SetAttributeType(vtkDataSetAttributes::SCALARS);
@@ -206,7 +206,7 @@ TEST_F(ArrayChangeInformationFilter_test, PassVectorInformation)
         inAttr->GetName(),
         inAttr->GetDataType(),
         inAttr->GetNumberOfComponents(),
-        inAttr->GetNumberOfTuples());
+        static_cast<int>(inAttr->GetNumberOfTuples()));
 
     filter->SetAttributeLocation(ArrayChangeInformationFilter::POINT_DATA);
     filter->SetAttributeType(vtkDataSetAttributes::VECTORS);
@@ -255,7 +255,7 @@ TEST_F(ArrayChangeInformationFilter_test, CheckWhichInformation_vtkAssignAttribu
         inAttr->GetName(),
         inAttr->GetDataType(),
         inAttr->GetNumberOfComponents(),
-        inAttr->GetNumberOfTuples());
+        static_cast<int>(inAttr->GetNumberOfTuples()));
 
     filter->SetAttributeLocation(ArrayChangeInformationFilter::POINT_DATA);
     filter->SetAttributeType(vtkDataSetAttributes::SCALARS);
@@ -325,7 +325,7 @@ TEST_F(ArrayChangeInformationFilter_test, CheckWhichInformation_vtkAssignAttribu
         inAttr->GetName(),
         inAttr->GetDataType(),
         inAttr->GetNumberOfComponents(),
-        inAttr->GetNumberOfTuples());
+        static_cast<int>(inAttr->GetNumberOfTuples()));
 
     filter->SetAttributeLocation(ArrayChangeInformationFilter::POINT_DATA);
     filter->SetAttributeType(vtkDataSetAttributes::SCALARS);
@@ -394,7 +394,7 @@ TEST_F(ArrayChangeInformationFilter_test, vtkAssignAttribute_CorrectNumberOfComp
         inAttr->GetName(),
         inAttr->GetDataType(),
         inAttr->GetNumberOfComponents(),
-        inAttr->GetNumberOfTuples());
+        static_cast<int>(inAttr->GetNumberOfTuples()));
 
     filter->SetAttributeLocation(ArrayChangeInformationFilter::POINT_DATA);
     filter->SetAttributeType(vtkDataSetAttributes::SCALARS);

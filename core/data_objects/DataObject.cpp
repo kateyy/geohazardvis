@@ -125,8 +125,8 @@ void DataObject::CopyStructure(vtkDataSet & other)
     // vtkPolyData applies a static_cast<vtkPolyData *>() to its argument
     if (!other.IsA(ds->GetClassName()))
     {
-        qFatal(("Invalid call to DataObject::CopyStructure on """ + name()
-            + """ with parameter of type """ + other.GetClassName() + """").toUtf8().data());
+        qFatal("Invalid call to DataObject::CopyStructure on \"%s\" with parameter of type \"%s\"",
+            name().toUtf8().data(), other.GetClassName());
     }
 
     const SetResetFlag setResetFlag(d_ptr->m_inCopyStructure);

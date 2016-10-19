@@ -137,7 +137,7 @@ DataExtent<newT, newDimensions> DataExtent<T, Dimensions>::convertTo() const
 
     for (size_t i = 0u; i < initValues; ++i)
     {
-        result[i] = m_extent[i];
+        result[i] = static_cast<newT>(m_extent[i]);
     }
 
     return result;

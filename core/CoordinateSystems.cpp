@@ -581,7 +581,7 @@ std::ostream & operator<<(std::ostream & os, const CoordinateSystemSpecification
 
 std::ostream & operator<<(std::ostream & os, const ReferencedCoordinateSystemSpecification & spec)
 {
-    static const char degree = 248;
+    static const auto degree = static_cast<unsigned char>(248);
 
     os << static_cast<const CoordinateSystemSpecification &>(spec)
         << " (reference point, global: ["

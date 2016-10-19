@@ -95,7 +95,8 @@ public:
         auto ptr = reinterpret_cast<float *>(demData->GetScalarPointer());
         for (size_t i = 0; i < ext.numberOfPoints(); ++i)
         {
-            ptr[i] = elevationRange.min() + elevationRange.componentSize() * i / (ext.numberOfPoints() - 1.0);
+            ptr[i] = static_cast<float>(elevationRange.min()) + static_cast<float>(elevationRange.componentSize())
+                * static_cast<float>(i) / (static_cast<float>(ext.numberOfPoints()) - 1.f);
         }
         demData->GetPointData()->GetScalars()->SetName("Elevations");
 
@@ -121,8 +122,6 @@ TEST_F(DEMWidget_test, BaseGUIRunPassToDataSetHandler)
     auto topo = generateTopo();
     auto dem = generateDEM();
     env.dataSetHandler->addExternalData({ topo.get(), dem.get() });
-
-    const auto demBounds = DataBounds(dem->bounds());
 
     Test_DEMWidget demWidget;
 

@@ -137,7 +137,7 @@ QString ResidualVerificationView::subViewFriendlyName(unsigned int subViewIndex)
         break;
     case 1u:
         name = "Model";
-        break; 
+        break;
     case 2u:
         name = "Residual";
         break;
@@ -255,7 +255,7 @@ int ResidualVerificationView::subViewContaining(const AbstractVisualizedData & v
             return static_cast<int>(i);
         }
     }
-    
+
     return -1;
 }
 
@@ -383,7 +383,7 @@ void ResidualVerificationView::setDataHelper(unsigned int subViewIndex, DataObje
     }
     else
     {
-        m_attributeNamesLocations[subViewIndex] = {};
+        m_attributeNamesLocations[subViewIndex] = std::pair<QString, bool>{};
     }
 
     if (!skipResidualUpdate)
@@ -505,7 +505,7 @@ void ResidualVerificationView::prepareDeleteDataImpl(const QList<DataObject *> &
 
     // don't change internal data if the update process is currently running
     waitForResidualUpdate();
-    
+
     if (unsetObservation)
     {
         setDataHelper(observationIndex, nullptr, true);
@@ -574,7 +574,7 @@ void ResidualVerificationView::initialize()
 void ResidualVerificationView::setDataInternal(unsigned int subViewIndex, DataObject * dataObject, std::unique_ptr<DataObject> ownedObject)
 {
     assert(m_implementation);
-    
+
     assert(!dataObject || !ownedObject); // only one of them should be used in the interface
     auto newData = dataObject ? dataObject : ownedObject.get();
 
@@ -626,7 +626,7 @@ void ResidualVerificationView::setDataInternal(unsigned int subViewIndex, DataOb
 
 void ResidualVerificationView::updateResidualAsync()
 {
-    waitForResidualUpdate();    // prevent locking the mutex multiple times in the main thread 
+    waitForResidualUpdate();    // prevent locking the mutex multiple times in the main thread
 
     std::unique_lock<std::mutex> updateLock(m_updateMutex);
 
@@ -798,9 +798,9 @@ void ResidualVerificationView::updateResidual()
 
 
     // project displacement vectors to the line of sight vector, if required
-    // This also adds the projection result as scalars to the respective data set, so that it can be used 
+    // This also adds the projection result as scalars to the respective data set, so that it can be used
     // in the visualization.
-    auto getProjectedDisp = [this] (vtkDataArray & displacement, unsigned int dataIndex, vtkDataSet & dataSet) 
+    auto getProjectedDisp = [this] (vtkDataArray & displacement, unsigned int dataIndex, vtkDataSet & dataSet)
         -> vtkSmartPointer<vtkDataArray> {
 
         if (displacement.GetNumberOfComponents() == 1)

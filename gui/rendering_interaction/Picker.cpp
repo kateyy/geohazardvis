@@ -35,10 +35,10 @@ class Picker_private
 {
 public:
     explicit Picker_private(Picker & picker)
-        : q_ptr{ picker }
-        , propPicker{ vtkSmartPointer<vtkPropPicker>::New() }
+        : propPicker{ vtkSmartPointer<vtkPropPicker>::New() }
         , cellPicker{ vtkSmartPointer<vtkCellPicker>::New() }
         , pointPicker{ vtkSmartPointer<vtkPointPicker>::New() }
+        , q_ptr{ picker }
     {
         cellPicker->PickFromListOn();
         pointPicker->PickFromListOn();
@@ -193,7 +193,7 @@ void Picker::pick(const vtkVector2i & clickPosXY, vtkRenderer & renderer)
     {
         pickList->AddItem(prop);
     }
-    
+
     activePicker->Pick(clickPosXY[0], clickPosXY[1], 0, &renderer);
 
     if (!activePicker->GetDataSet())
@@ -373,7 +373,7 @@ void Picker_private::appendScalarInfo(QTextStream & stream, int activeComponent,
             for (size_t i = 0; i < tuple.size(); ++i)
             {
                 stream << endl << "[" << i + 1 << "] " << tuple[i] << unitStr;
-                if (i == activeComponent)
+                if (i == static_cast<size_t>(activeComponent))
                 {
                     stream << " *";
                 }

@@ -1,7 +1,5 @@
 #include "CentroidAsScalarsFilter.h"
 
-#include <array>
-
 #include <vtkObjectFactory.h>
 #include <vtkSmartPointer.h>
 #include <vtkFloatArray.h>
@@ -27,7 +25,8 @@ int CentroidAsScalarsFilter::RequestData(vtkInformation *vtkNotUsed(request),
 {
     // get the input and output
     vtkPolyData * input = vtkPolyData::GetData(inputVector[0], 0);
-    vtkPolyData * centroids = vtkPolyData::GetData(inputVector[1], 0);
+    vtkPolyData * centroidsPoly = vtkPolyData::GetData(inputVector[1], 0);
+    auto centroids = centroidsPoly->GetPoints()->GetData();
     vtkPolyData * output = vtkPolyData::GetData(outputVector, 0);
 
     // Check the size of the input.
@@ -37,7 +36,7 @@ int CentroidAsScalarsFilter::RequestData(vtkInformation *vtkNotUsed(request),
         vtkDebugMacro("No input!");
         return 1;
     }
-    if (numCells != centroids->GetNumberOfPoints())
+    if (numCells != centroids->GetNumberOfTuples())
     {
         vtkDebugMacro("Number of cells doesn't match number of centroid points!");
         return 1;
@@ -49,9 +48,8 @@ int CentroidAsScalarsFilter::RequestData(vtkInformation *vtkNotUsed(request),
 
     for (vtkIdType i = 0; i < numCells; ++i)
     {
-        std::array<double, 3> point;
-        centroids->GetPoint(i, point.data());
-        centroidScalars->SetValue(i, point[Component]);
+        centroidScalars->SetValue(i,
+            static_cast<float>(centroids->GetComponent(i, this->Component)));
     }
 
     char componentName[2] = { static_cast<char>('x' + Component), '\0' };

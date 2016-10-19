@@ -261,7 +261,7 @@ void RenderedPolyData::setTexture(const QString & fileName)
 }
 #else
 void RenderedPolyData::setTexture(const QString & /*fileName*/) {}
-#endif()
+#endif
 
 vtkSmartPointer<vtkProperty> RenderedPolyData::createDefaultRenderProperty() const
 {

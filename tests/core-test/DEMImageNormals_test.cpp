@@ -59,6 +59,6 @@ TEST_F(DEMImageNormals_test, NormalsAreNormalized)
     {
         vtkVector3d normal;
         normals->GetTuple(i, normal.GetData());
-        ASSERT_FLOAT_EQ(1.0, normal.Norm());
+        ASSERT_FLOAT_EQ(1.f, static_cast<float>(normal.Norm()));
     }
 }

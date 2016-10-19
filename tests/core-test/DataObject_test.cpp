@@ -23,8 +23,8 @@ class DataObject_test_DataObject : public DataObject
 {
 public:
     DataObject_test_DataObject() : DataObject("", nullptr) { }
-    DataObject_test_DataObject(const QString & name, vtkDataSet * dataSet) 
-        : DataObject(name, dataSet) 
+    DataObject_test_DataObject(const QString & name, vtkDataSet * dataSet)
+        : DataObject(name, dataSet)
     {
     }
 
@@ -61,7 +61,10 @@ public:
         points->SetNumberOfPoints(numPoints);
         for (vtkIdType i = 0; i < numPoints; ++i)
         {
-            points->SetPoint(i, i + 1, numPoints - 1, numPoints);
+            points->SetPoint(i,
+                static_cast<double>(i + 1),
+                static_cast<double>(numPoints - 1),
+                static_cast<double>(numPoints));
         }
         polyData->SetPoints(points);
         return polyData;
@@ -326,7 +329,7 @@ TEST(ScopedEventDeferral_test, ExecutesDeferred)
 
     bool isSignaled = false;
 
-    QObject::connect(&data, &DataObject::attributeArraysChanged, [&isSignaled] () -> void 
+    QObject::connect(&data, &DataObject::attributeArraysChanged, [&isSignaled] () -> void
     {
         isSignaled = true;
     });

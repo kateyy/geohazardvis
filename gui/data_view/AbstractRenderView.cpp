@@ -104,7 +104,7 @@ bool AbstractRenderView::canShowDataObjectInCoordinateSystem(const CoordinateSys
 
     if (spec.type == CoordinateSystemType::unspecified || transformableObjects.isEmpty())
     {
-        return (spec.type == CoordinateSystemType::unspecified) 
+        return (spec.type == CoordinateSystemType::unspecified)
             == transformableObjects.isEmpty();
     }
 
@@ -343,7 +343,7 @@ void AbstractRenderView::setInfoTextCallback(std::function<QString()> callback)
 
     if (m_infoTextCallback)
     {
-        m_infoTextConnection = connect(&qvtkWidget(), &t_QVTKWidget::beforeTooltipPopup, 
+        m_infoTextConnection = connect(&qvtkWidget(), &t_QVTKWidget::beforeTooltipPopup,
             [this] ()
         {
             showInfoText(m_infoTextCallback());

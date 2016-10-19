@@ -23,12 +23,12 @@ public:
         auto elevations = vtkSmartPointer<vtkFloatArray>::New();
         elevations->SetNumberOfValues(image->GetNumberOfPoints());
         elevations->SetName("elevations");
-        
+
         for (int i = 0; i < elevations->GetNumberOfValues(); ++i)
         {
-            elevations->SetValue(i, i / (elevations->GetNumberOfValues() - 1));
+            elevations->SetValue(i, static_cast<float>(i / (elevations->GetNumberOfValues() - 1)));
         }
-        
+
         image->GetPointData()->SetScalars(elevations);
 
         return image;
@@ -63,7 +63,6 @@ TEST_F(DEMToTopographyMesh_test, MatchingParameters)
 {
     auto dem = generateDEM();
     auto mesh = generateMesh();
-    auto inputMeshBounds = DataBounds(mesh->GetBounds());
 
     auto filter = vtkSmartPointer<DEMToTopographyMesh>::New();
     filter->SetInputDEM(dem);

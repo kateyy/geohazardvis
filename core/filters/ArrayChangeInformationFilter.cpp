@@ -20,7 +20,7 @@ vtkStandardNewMacro(ArrayChangeInformationFilter);
 
 namespace
 {
-vtkDataArray * extractAttribute(vtkDataSet & dataSet, 
+vtkDataArray * extractAttribute(vtkDataSet & dataSet,
     ArrayChangeInformationFilter::AttributeLocations location, int attributeType,
     vtkDataSetAttributes * & dsAttributes)
 {
@@ -81,9 +81,9 @@ int ArrayChangeInformationFilter::RequestInformation(
 
     auto inInfo = inputVector[0]->GetInformationObject(0);
 
-    vtkIdType arrayType = -1;
-    vtkIdType numComponents = -1;
-    vtkIdType numTuples = -1;
+    int arrayType = -1;
+    int numComponents = -1;
+    int numTuples = -1;
     const char * inName = nullptr;
 
     if (auto inFieldInfo = vtkDataObject::GetActiveFieldInformation(
@@ -157,7 +157,7 @@ int ArrayChangeInformationFilter::RequestData(
     // Instead, create a copy of the array and change information on this object.
 
     // Check if there already is a copy of the array
-    vtkSmartPointer<vtkDataArray> outAttribute = extractAttribute(*dsOutput, 
+    vtkSmartPointer<vtkDataArray> outAttribute = extractAttribute(*dsOutput,
         this->AttributeLocation, this->AttributeType, outDsAttributes);
     if (!outAttribute                   // originial attribute not copied
         || outAttribute == inAttribute) // passed attribute only -> copy is required

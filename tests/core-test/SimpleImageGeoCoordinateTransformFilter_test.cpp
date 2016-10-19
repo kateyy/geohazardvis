@@ -24,7 +24,7 @@ public:
 
         for (int i = 0; i < elevations->GetNumberOfValues(); ++i)
         {
-            elevations->SetValue(i, i / (elevations->GetNumberOfValues() - 1));
+            elevations->SetValue(i, static_cast<float>(i / (elevations->GetNumberOfValues() - 1)));
         }
 
         image->GetPointData()->SetScalars(elevations);

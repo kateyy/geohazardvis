@@ -35,10 +35,10 @@ DEMWidget::DEMWidget(DataMapping & dataMapping, AbstractRenderView * previewRend
     , m_dataMapping{ dataMapping }
     , m_ui{ std::make_unique<Ui_DEMWidget>() }
     , m_topographyMeshes{ std::make_unique<DataSetFilter>(dataMapping.dataSetHandler()) }
+    , m_dems{ std::make_unique<DataSetFilter>(dataMapping.dataSetHandler()) }
     , m_demUnitDecimalExponent{ 0 }
     , m_meshParametersInvalid{ true }
     , m_previewRebuildRequired{ true }
-    , m_dems{ std::make_unique<DataSetFilter>(dataMapping.dataSetHandler()) }
     , m_demToTopoFilter{ vtkSmartPointer<DEMToTopographyMesh>::New() }
     , m_previewRenderer{ previewRenderer }
     , m_dataPreview{ nullptr }
@@ -166,7 +166,7 @@ DEMWidget::DEMWidget(DataMapping & dataMapping, AbstractRenderView * previewRend
         }
     });
 
-    // NOTE: QAbstractSpinBox::editingFinished is ONLY emitted when the widget loses focus or when 
+    // NOTE: QAbstractSpinBox::editingFinished is ONLY emitted when the widget loses focus or when
     // enter is pressed, but NOT when changing its value via ->setValue();
     // only valueChanged(T/QString) is emitted in this case
     const auto valueDChanged = static_cast<void(QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged);
@@ -596,7 +596,7 @@ void DEMWidget::configureDEMVisualization()
     auto demRendered = dynamic_cast<RenderedImageData *>(m_previewRenderer->visualizationFor(dem));
     assert(demRendered);
     demRendered->setRepresentation(RenderedData::Representation::both);
-        
+
     const auto scalarsName = QString::fromUtf8(dem->scalars().GetName());
     demRendered->colorMapping().setCurrentScalarsByName(scalarsName);
     demRendered->setEnableShading(true);
@@ -622,7 +622,7 @@ void DEMWidget::configureMeshVisualization()
     assert(topoVis);
     auto topoRendered = dynamic_cast<RenderedPolyData *>(topoVis);
     assert(topoRendered);
-        
+
     auto prop = topoRendered->createDefaultRenderProperty();
     prop->EdgeVisibilityOn();
     prop->LightingOn();
@@ -684,7 +684,7 @@ PolyDataObject * DEMWidget::currentTopoTemplateChecked()
     const int listIndex = m_ui->topoTemplateCombo->currentIndex() - 1;
     auto current = m_topographyMeshes->filteredDataSetList().value(listIndex, nullptr);
     assert(!current || dynamic_cast<PolyDataObject *>(current));
-    
+
     if (current != m_topoTemplateSelection)
     {
         m_topoTemplateSelection = static_cast<PolyDataObject *>(current);
@@ -803,7 +803,7 @@ bool DEMWidget::updatePreviewDataObject()
     }
 
     // release, and rebuild (if possible) the output data object
-    
+
     releasePreviewData();
 
     if (!demPtr || !topoPtr)

@@ -146,9 +146,10 @@ TEST_F(TextFileReader_test, StartingFromOffset_QByteArray)
     createTestFile();
 
     TextFileReader::FloatVectors data;
-    
+
     auto reader1 = TestQtTextFileReader(testFileName());
     const auto result1 = reader1.read(data, 1);
+    ASSERT_TRUE(result1.testFlag(TextFileReader::successful));
     const auto filePos1 = reader1.filePos();
     reader1 = TestQtTextFileReader("");
     data.clear();

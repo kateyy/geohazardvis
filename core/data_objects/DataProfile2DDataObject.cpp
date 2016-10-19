@@ -384,8 +384,8 @@ void DataProfile2DDataObject::updateTransformInputPoints()
     }
 
     auto transformedSourceData = m_targetCoordsSpec.isValid(false)
-        ? sourceData().coordinateTransformedDataSet(m_targetCoordsSpec)
-        : sourceData().processedDataSet();
+        ? vtkSmartPointer<vtkDataSet>(sourceData().coordinateTransformedDataSet(m_targetCoordsSpec))
+        : vtkSmartPointer<vtkDataSet>(sourceData().processedDataSet());
 
     const auto probeVector = p2 - p1;
 
