@@ -324,12 +324,9 @@ auto DeformationTimeSeriesTextFileReader::readData() -> State
     points->SetData(currentCoordsArray);
 
     {   // set coordinate array information
-        static const auto degreeSign = QString(QChar(0x00B0)).toUtf8();
-
         auto arraySpec = dataObjectCoordinateSystem;
         arraySpec.type = CoordinateSystemType::geographic;
         arraySpec.writeToInformation(*coordsArrayLongLat->GetInformation());
-        coordsArrayLongLat->GetInformation()->Set(vtkDataArray::UNITS_LABEL(), degreeSign.data());
 
         arraySpec.type = CoordinateSystemType::metricGlobal;
         auto utmArray = dataArrays[coordArrayIdx(Coordinate::UTM_WGS84)];
@@ -339,7 +336,6 @@ auto DeformationTimeSeriesTextFileReader::readData() -> State
         arraySpec.type = CoordinateSystemType::other; // current not implemented
         auto azimuthRangeArray = dataArrays[coordArrayIdx(Coordinate::AzimuthRange)];
         arraySpec.writeToInformation(*azimuthRangeArray->GetInformation());
-        azimuthRangeArray->GetInformation()->Set(vtkDataArray::UNITS_LABEL(), degreeSign.data());
     }
 
     switch (m_coordinatesToUse)
