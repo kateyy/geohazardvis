@@ -4,7 +4,10 @@
 # This module finds required third party packages.
 # Include it in the top CMakeLists.txt file of the project to include third party variables in the project scope!
 #
-# This module depends on ExternalProjectMapBuild.cmake
+# Module Dependencies:
+#   * ExternalProjectMapBuild.cmake
+#   * GetGitRevisionDescription.cmake
+#   * GitDate.cmake
 #
 #
 # Handled external dependencies:
@@ -36,6 +39,45 @@ include(ExternalProject)
 
 
 find_package(OpenGL REQUIRED)
+
+
+# helper functions
+
+
+# Read git revision and date.
+# This only works if BUILD_DIR refers to the build directory, not an installed version of package
+function(get_source_dir_from_build PACKAGE_NAME BUILD_DIR _SOURCE_DIR)
+    set(cacheFile "${BUILD_DIR}/CMakeCache.txt")
+    if (NOT EXISTS ${cacheFile})
+        set(${_SOURCE_DIR} "" PARENT_SCOPE)
+        return()
+    endif()
+    set(ts_var cachedSourceDirTimestamp_${PACKAGE_NAME})
+    set(cachedResultVar cachedSourceDir_${PACKAGE_NAME})
+    file(TIMESTAMP ${cacheFile} newTimestamp)
+    if (${ts_var} AND ${ts_var} STREQUAL newTimestamp)  # cached
+        set(${_SOURCE_DIR} ${${cachedResultVar}} PARENT_SCOPE)
+        return()
+    endif()
+    # need to read again
+    set(${ts_var} ${newTimestamp} CACHE INTERNAL "" FORCE)
+    file(STRINGS ${cacheFile} cache_entries)
+    foreach(entry ${cache_entries})
+        string(FIND "${entry}" "CMAKE_HOME_DIRECTORY:INTERNAL=" in_str_idx)
+        if (in_str_idx EQUAL -1)
+            continue()
+        endif()
+        string(SUBSTRING "${entry}" 30 -1 entry)
+        set(${_SOURCE_DIR} ${entry} PARENT_SCOPE)
+        set(${cachedResultVar} ${entry} CACHE INTERNAL "" FORCE)
+        break()
+    endforeach()
+endfunction()
+
+function(deploy_license_file PACKAGE_NAME FILE_PATH)
+    install(FILES ${FILE_PATH} DESTINATION ${INSTALL_THIRDPARTY_LICENSES}
+        RENAME "${PACKAGE_NAME}.txt")
+endfunction()
 
 
 #========= VTK =========
@@ -154,6 +196,19 @@ foreach(libName ${actualVTKLibraries})
 endforeach()
 
 
+# Read VTK git revision and date.
+get_source_dir_from_build("VTK" ${VTK_DIR} VTK_SOURCE_DIR)
+if (VTK_SOURCE_DIR)
+    get_git_head_revision(VTK_GIT_REFSPEC VTK_GIT_SHA1 ${VTK_SOURCE_DIR})
+    if (NOT VTK_GIT_SHA1 EQUAL 000000000000)
+        string(SUBSTRING "${VTK_GIT_SHA1}" 0 12 VTK_GIT_REV)
+        get_git_commit_date(${VTK_GIT_SHA1} VTK_GIT_DATE ${VTK_SOURCE_DIR})
+    endif()
+    deploy_license_file("VTK" "${VTK_SOURCE_DIR}/Copyright.txt")
+endif()
+# Some components of ParaView are used
+deploy_license_file("ParaView" "${PROJECT_SOURCE_DIR}/core/ThirdParty/ParaView/License_v1.2_ParaViewOnly.txt")
+
 
 #========= Qt5 =========
 
@@ -244,6 +299,8 @@ else()
         )
     endif()
 endif()
+
+deploy_license_file("libzeug" "${libzeug_DIR}/LICENSE")
 
 
 #========= Third Party Deployment =========
@@ -361,3 +418,7 @@ if (OPTION_BUILD_TESTS)
         message(WARNING "Tests skipped: gtest not found")
     endif()
 endif()
+
+
+# Further third party licenses to deploy
+deploy_license_file("Alphanum" "${PROJECT_SOURCE_DIR}/core/ThirdParty/alphanum_license.txt")

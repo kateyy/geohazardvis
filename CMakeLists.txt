@@ -107,14 +107,6 @@ include(cmake/Custom.cmake)
 include(cmake/GetGitRevisionDescription.cmake)
 include(cmake/GitDate.cmake)
 
-# Get git revision
-get_git_head_revision(GIT_REFSPEC GIT_SHA1)
-string(SUBSTRING "${GIT_SHA1}" 0 12 GIT_REV)
-get_git_commit_date(${GIT_SHA1} GIT_DATE)
-set(GIT_REVISION_FILE ${PROJECT_BINARY_DIR}/revision)
-set(VERSION_INFO_FILE ${PROJECT_BINARY_DIR}/vcs_commit_info.h)
-configure_file(cmake/vcs_commit_info.h.in ${VERSION_INFO_FILE})
-
 
 # PLATFORM AND ARCHITECTURE
 
@@ -174,6 +166,7 @@ if(WIN32)
     set(INSTALL_PLUGINS_BIN "${INSTALL_BIN}/plugins")
     set(INSTALL_PLUGINS_SHARED "${INSTALL_SHARED}/plugins")
     set(INSTALL_PLUGINS_LIB "${INSTALL_LIB}/plugins")
+    set(INSTALL_THIRDPARTY_LICENSES "licenses")
 
 elseif(UNIX)
     set(OPTION_LOCAL_INSTALL ON CACHE INTERNAL "Local installation enforced, packaging is not supported yet on linux systems.")
@@ -193,6 +186,7 @@ elseif(UNIX)
     set(INSTALL_PLUGINS_BIN "${INSTALL_BIN}/plugins")
     set(INSTALL_PLUGINS_SHARED "${INSTALL_SHARED}/plugins")
     set(INSTALL_PLUGINS_LIB "${INSTALL_LIB}/plugins")
+    set(INSTALL_THIRDPARTY_LICENSES "licenses")
 
     install(PROGRAMS packages/${META_PROJECT_NAME}.sh
         DESTINATION ${INSTALL_ROOT})
@@ -220,6 +214,16 @@ include_directories(
 )
 
 include(cmake/FindThirdParties.cmake)
+
+
+# Get git revision
+get_git_head_revision(GIT_REFSPEC GIT_SHA1)
+string(SUBSTRING "${GIT_SHA1}" 0 12 GIT_REV)
+get_git_commit_date(${GIT_SHA1} GIT_DATE)
+set(GIT_REVISION_FILE ${PROJECT_BINARY_DIR}/revision)
+set(VERSION_INFO_FILE ${PROJECT_BINARY_DIR}/vcs_commit_info.h)
+# Write git information for this project and supported third parties
+configure_file(cmake/vcs_commit_info.h.in ${VERSION_INFO_FILE})
 
 
 set(CONFIG_FILE ${PROJECT_BINARY_DIR}/config.h)

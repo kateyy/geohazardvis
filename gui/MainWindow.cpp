@@ -100,21 +100,39 @@ MainWindow::MainWindow()
         prependRecentFiles({});
     });
     connect(m_ui->actionAbout, &QAction::triggered, [this] () {
-        QMessageBox::about(this, config::metaProjectName,
-            QString(
-                "Maintainer contact:\n"
-                "\t%1\n"
-                "Version %2.%3.%4\n"
-                "Source GIT revision:\n"
-                "\t%5\n"
-                "Revision date:\n"
-                "\t%6")
-            .arg(VersionInfo::maintainerEmail())
-            .arg(VersionInfo::versionMajor())
-            .arg(VersionInfo::versionMinor())
-            .arg(VersionInfo::versionPatch())
-            .arg(VersionInfo::gitRevision())
-            .arg(VersionInfo::gitCommitDate().toString()));
+        auto && projectInfo = VersionInfo::projectInfo();
+        auto infoString = QString(
+            "Maintainer contact:\n"
+            "\t%1\n"
+            "\n"
+            "Project Version: %2.%3.%4\n"
+            "\tRevision: %5\n"
+            "\tDate: %6\n"
+            "\n"
+            "Third Party Libraries:\n")
+            .arg(projectInfo.maintainerEmail)
+            .arg(projectInfo.major)
+            .arg(projectInfo.minor)
+            .arg(projectInfo.patch)
+            .arg(projectInfo.gitRevision)
+            .arg(projectInfo.gitCommitDate.date().toString());
+        for (auto && thirdParty : VersionInfo::supportedThirdParties())
+        {
+            auto && info = VersionInfo::versionInfoFor(thirdParty);
+            infoString += QString(
+                "%1 (Version %2.%3.%4)\n"
+                "\tRevision: %5\n"
+                "\tDate: %6\n")
+                .arg(thirdParty)
+                .arg(info.major)
+                .arg(info.minor)
+                .arg(info.patch)
+                .arg(info.gitRevision)
+                .arg(info.gitCommitDate.date().toString());
+        }
+        infoString += QString("Plese refer to the \"") + config::installThirdPartyLicensePath + 
+            "\" folder in the appplication folder for further information and licenses.";
+        QMessageBox::about(this, config::metaProjectName, infoString);
     });
     connect(m_ui->actionAbout_Qt, &QAction::triggered, [this] () { QMessageBox::aboutQt(this); });
     connect(m_ui->actionApply_Digital_Elevation_Model, &QAction::triggered, this, &MainWindow::showDEMWidget);

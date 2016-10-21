@@ -10,8 +10,14 @@ function(get_git_commit_date hash _var)
         return()
     endif()
 
+    if(ARGC EQUAL 3)
+        set(GIT_PARENT_DIR ${ARGV2})
+    else()
+        set(GIT_PARENT_DIR "${CMAKE_SOURCE_DIR}")
+    endif()
+
     execute_process(COMMAND "${GIT_EXECUTABLE}" log ${hash} -n1 --format=%ad --date=iso
-        WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+        WORKING_DIRECTORY "${GIT_PARENT_DIR}"
         RESULT_VARIABLE res
         OUTPUT_VARIABLE out
         ERROR_VARIABLE err

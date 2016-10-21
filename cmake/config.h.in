@@ -25,5 +25,6 @@ const char * const metaProjectName = "@META_PROJECT_NAME@";
 const char * const installDataRelativePath = "@INSTALL_DATA@";
 const char * const installBinRelativePath = "@INSTALL_BIN@";
 const char * const installPluginsSharedRelativePath = "@INSTALL_PLUGINS_SHARED@";
+const char * const installThirdPartyLicensePath = "@INSTALL_THIRDPARTY_LICENSES@";
 
 }
