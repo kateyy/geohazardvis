@@ -336,7 +336,7 @@ auto DeformationTimeSeriesTextFileReader::readData() -> State
         arraySpec.writeToInformation(*utmArray->GetInformation());
         utmArray->GetInformation()->Set(vtkDataArray::UNITS_LABEL(), "m");
 
-        arraySpec.type = CoordinateSystemType::unspecified; // current not implemented
+        arraySpec.type = CoordinateSystemType::other; // current not implemented
         auto azimuthRangeArray = dataArrays[coordArrayIdx(Coordinate::AzimuthRange)];
         arraySpec.writeToInformation(*azimuthRangeArray->GetInformation());
         azimuthRangeArray->GetInformation()->Set(vtkDataArray::UNITS_LABEL(), degreeSign.data());

@@ -5,22 +5,21 @@
 
 #include <QDebug>
 
-#include <vtkInformation.h>
-#include <vtkInformationIntegerKey.h>
-
 #include <vtkAlgorithmOutput.h>
+#include <vtkAssignAttribute.h>
+#include <vtkCellData.h>
 #include <vtkDataArray.h>
 #include <vtkDataSet.h>
-#include <vtkCellData.h>
+#include <vtkInformation.h>
+#include <vtkMapper.h>
 #include <vtkPassThrough.h>
 #include <vtkPointData.h>
-#include <vtkMapper.h>
-#include <vtkAssignAttribute.h>
 
 #include <core/AbstractVisualizedData.h>
 #include <core/types.h>
 #include <core/data_objects/DataObject.h>
 #include <core/color_mapping/ColorMappingRegistry.h>
+#include <core/CoordinateSystems.h>
 #include <core/utility/DataExtent.h>
 
 
@@ -52,17 +51,26 @@ std::vector<std::unique_ptr<ColorMappingData>> AttributeArrayComponentMapping::n
     {
         for (auto i = 0; i < attributes->GetNumberOfArrays(); ++i)
         {
-            vtkDataArray * dataArray = attributes->GetArray(i);
+            auto dataArray = attributes->GetArray(i);
             if (!dataArray)
+            {
                 continue;
+            }
 
             // skip arrays that are marked as auxiliary
-            vtkInformation * dataArrayInfo = dataArray->GetInformation();
-            if (dataArrayInfo->Has(DataObject::ArrayIsAuxiliaryKey())
-                && dataArrayInfo->Get(DataObject::ArrayIsAuxiliaryKey()))
+            auto & dataArrayInfo = *dataArray->GetInformation();
+            if (dataArrayInfo.Has(DataObject::ArrayIsAuxiliaryKey())
+                && dataArrayInfo.Get(DataObject::ArrayIsAuxiliaryKey()))
+            {
                 continue;
+            }
+            // skip point coordinates stored in point data
+            if (CoordinateSystemSpecification::fromInformation(dataArrayInfo).isValid(false))
+            {
+                continue;
+            }
 
-            QString name = QString::fromUtf8(dataArray->GetName());
+            const auto name = QString::fromUtf8(dataArray->GetName());
 
             const vtkIdType tupleCount = dataArray->GetNumberOfTuples();
             if (expectedTupleCount > tupleCount)
@@ -75,17 +83,17 @@ std::vector<std::unique_ptr<ColorMappingData>> AttributeArrayComponentMapping::n
                 qDebug() << "Too many tuples in array" << name << ":" << tupleCount << ", expected" << expectedTupleCount << ", location" << attributeLocation << "(ignoring superfluous data)";
             }
 
-            ArrayInfo & arrayInfo = arrayInfos[name];
+            auto & arrayInfo = arrayInfos[name];
 
-            int lastNumComp = arrayInfo.numComponents;
-            int currentNumComp = dataArray->GetNumberOfComponents();
+            const int lastNumComp = arrayInfo.numComponents;
+            const int currentNumComp = dataArray->GetNumberOfComponents();
 
             if (lastNumComp && lastNumComp != currentNumComp)
             {
                 qDebug() << "Array named" << name << "found with different number of components (" << lastNumComp << "," << dataArray->GetNumberOfComponents() << ")";
                 continue;
             }
-            auto lastLocation = arrayInfo.attributeLocations.value(vis, IndexType::invalid);
+            const auto lastLocation = arrayInfo.attributeLocations.value(vis, IndexType::invalid);
             if (lastLocation != IndexType::invalid && lastLocation != attributeLocation)
             {
                 qDebug() << "Array named" << name << "found in different attribute locations in the same data set";
@@ -101,14 +109,16 @@ std::vector<std::unique_ptr<ColorMappingData>> AttributeArrayComponentMapping::n
     QMap<QString, ArrayInfo> arrayInfos;
 
     // list all available array names, check for same number of components
-    for (AbstractVisualizedData * vis : visualizedData)
+    for (auto vis : visualizedData)
     {
         if (vis->contentType() == ContentType::Context2D)   // don't try to map colors to a plot
+        {
             continue;
+        }
 
         supportedData << vis;
 
-        for (auto i = 0; i < vis->numberOfColorMappingInputs(); ++i)
+        for (int i = 0; i < vis->numberOfColorMappingInputs(); ++i)
         {
             vtkDataSet * dataSet = vis->colorMappingInputData(i);
 

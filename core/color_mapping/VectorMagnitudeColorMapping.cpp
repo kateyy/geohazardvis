@@ -2,21 +2,17 @@
 
 #include <cassert>
 
-#include <QVector>
-
-#include <vtkInformation.h>
-
+#include <vtkAssignAttribute.h>
 #include <vtkCellData.h>
 #include <vtkDataArray.h>
 #include <vtkDataSet.h>
-#include <vtkPointData.h>
-
-#include <vtkVectorNorm.h>
-#include <vtkAssignAttribute.h>
-
+#include <vtkInformation.h>
 #include <vtkMapper.h>
+#include <vtkPointData.h>
+#include <vtkVectorNorm.h>
 
 #include <core/AbstractVisualizedData.h>
+#include <core/CoordinateSystems.h>
 #include <core/types.h>
 #include <core/data_objects/DataObject.h>
 #include <core/color_mapping/ColorMappingRegistry.h>
@@ -46,9 +42,14 @@ std::vector<std::unique_ptr<ColorMappingData>> VectorMagnitudeColorMapping::newI
             }
 
             // skip arrays that are marked as auxiliary
-            auto arrayInfo = dataArray->GetInformation();
-            if (arrayInfo->Has(DataObject::ArrayIsAuxiliaryKey())
-                && arrayInfo->Get(DataObject::ArrayIsAuxiliaryKey()))
+            auto & arrayInfo = *dataArray->GetInformation();
+            if (arrayInfo.Has(DataObject::ArrayIsAuxiliaryKey())
+                && arrayInfo.Get(DataObject::ArrayIsAuxiliaryKey()))
+            {
+                continue;
+            }
+            // skip point coordinates stored in point data
+            if (CoordinateSystemSpecification::fromInformation(arrayInfo).isValid(false))
             {
                 continue;
             }
@@ -130,7 +131,7 @@ VectorMagnitudeColorMapping::VectorMagnitudeColorMapping(
 
     for (auto vis : visualizedData)
     {
-        QVector<vtkSmartPointer<vtkAlgorithm>> filters;
+        std::vector<vtkSmartPointer<vtkAlgorithm>> filters;
 
         for (int i = 0; i < vis->numberOfColorMappingInputs(); ++i)
         {
@@ -157,7 +158,7 @@ VectorMagnitudeColorMapping::VectorMagnitudeColorMapping(
             setMagnitudeName->SetArrayName(utf8MagnitudeName.data());
             setMagnitudeName->SetInputConnection(norm->GetOutputPort());
 
-            filters << setMagnitudeName;
+            filters.push_back(setMagnitudeName);
         }
 
         m_filters.insert(vis, filters);

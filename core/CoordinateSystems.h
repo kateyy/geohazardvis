@@ -26,6 +26,7 @@ struct CORE_API CoordinateSystemType
         geographic,
         metricGlobal,
         metricLocal,
+        other,
         unspecified
     };
 

@@ -5,7 +5,6 @@
 #include <core/color_mapping/ColorMappingData.h>
 
 
-template<typename T> class QVector;
 class vtkVectorNorm;
 
 
@@ -38,7 +37,7 @@ private:
     const QString m_dataArrayName;
     const QString m_magnitudeArrayName;
 
-    QMap<AbstractVisualizedData *, QVector<vtkSmartPointer<vtkAlgorithm>>> m_filters;
+    QMap<AbstractVisualizedData *, std::vector<vtkSmartPointer<vtkAlgorithm>>> m_filters;
 
 private:
     Q_DISABLE_COPY(VectorMagnitudeColorMapping)

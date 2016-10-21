@@ -64,11 +64,15 @@ bool DockableWidget::eventFilter(QObject * DEBUG_ONLY(obj), QEvent * ev)
 void DockableWidget::closeEvent(QCloseEvent * event)
 {
     if (isVisible())
+    {
         emit closed();
+    }
 
     // if (this) is closed directly, make sure to also close and delete the dock widget
     if (m_dockWidgetParent)
+    {
         m_dockWidgetParent->close();
+    }
 
     QWidget::closeEvent(event);
 }
