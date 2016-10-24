@@ -177,7 +177,7 @@ int DEMApplyShadingToColors::RequestData(vtkInformation * /*request*/,
     using Dispatcher = vtkArrayDispatch::Dispatch3ByValueType<
         vtkArrayDispatch::Reals,
         vtkArrayDispatch::AllTypes,
-        vtkArrayDispatch::Reals>;
+        vtkArrayDispatch::AllTypes>;
 
     if (!Dispatcher::Execute(lightness, colors, output, worker))
     {

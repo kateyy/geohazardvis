@@ -4,6 +4,7 @@
 
 #include <QApplication>
 
+#include <vtkDataArray.h>
 #include <vtkDiskSource.h>
 #include <vtkImageData.h>
 #include <vtkPointData.h>
@@ -92,11 +93,13 @@ public:
         auto demData = vtkSmartPointer<vtkImageData>::New();
         demData->SetExtent(ext.data());
         demData->AllocateScalars(VTK_FLOAT, 1);
-        auto ptr = reinterpret_cast<float *>(demData->GetScalarPointer());
+        auto scalars = demData->GetPointData()->GetScalars();
         for (size_t i = 0; i < ext.numberOfPoints(); ++i)
         {
-            ptr[i] = static_cast<float>(elevationRange.min()) + static_cast<float>(elevationRange.componentSize())
-                * static_cast<float>(i) / (static_cast<float>(ext.numberOfPoints()) - 1.f);
+            const auto val = elevationRange.min() + elevationRange.componentSize() * 
+                static_cast<double>(i) / (static_cast<double>((ext.numberOfPoints()) - 1.0));
+            assert(static_cast<vtkIdType>(i) < scalars->GetNumberOfTuples());
+            scalars->SetComponent(static_cast<vtkIdType>(i), 0, val);
         }
         demData->GetPointData()->GetScalars()->SetName("Elevations");
 
