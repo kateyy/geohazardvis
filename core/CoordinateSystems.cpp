@@ -426,8 +426,17 @@ bool ReferencedCoordinateSystemSpecification::operator!=(const CoordinateSystemS
 
 bool ReferencedCoordinateSystemSpecification::operator==(const ReferencedCoordinateSystemSpecification & other) const
 {
-    return CoordinateSystemSpecification::operator==(static_cast<const CoordinateSystemSpecification &>(other))
-        && referencePointLatLong == other.referencePointLatLong
+    if (!CoordinateSystemSpecification::operator==(static_cast<const CoordinateSystemSpecification &>(other)))
+    {
+        return false;
+    }
+
+    if (!isReferencePointValid() && !other.isReferencePointValid())
+    {
+        return true;
+    }
+
+    return referencePointLatLong == other.referencePointLatLong
         && referencePointLocalRelative == other.referencePointLocalRelative;
 }
 

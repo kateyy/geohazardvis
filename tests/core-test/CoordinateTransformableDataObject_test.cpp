@@ -84,6 +84,27 @@ public:
     }
 };
 
+TEST(ReferencedCoordinateSystemSpecification_test, EqualIfBothInspecified)
+{
+    ReferencedCoordinateSystemSpecification spec1;
+    spec1.type = CoordinateSystemType::geographic;
+    spec1.geographicSystem = "geoSystem";
+    spec1.globalMetricSystem = "metricSystem";
+    
+    auto spec2 = spec1;
+    ASSERT_EQ(spec1, spec2);
+
+    spec2.type = CoordinateSystemType::metricLocal;
+    ASSERT_NE(spec1, spec2);
+
+    spec1.referencePointLatLong = { 1.0, 2.0 };
+    spec1.referencePointLocalRelative = { 0.0, 1.0 };
+    spec2 = spec1;
+    ASSERT_EQ(spec1, spec2);
+    spec2.referencePointLatLong = { 2.0, 3.0 };
+    ASSERT_NE(spec1, spec2);
+}
+
 TEST_F(CoordinateTransformableDataObject_test, NullTransformKeepsBounds)
 {
     auto data = genPolyData<TransformedPolyData>();
