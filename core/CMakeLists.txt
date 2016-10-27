@@ -97,6 +97,8 @@ set(sources
     data_objects/VectorGrid3DDataObject.h
     data_objects/VectorGrid3DDataObject.cpp
 
+    filters/AbstractSimpleGeoCoordinateTransformFilter.h
+    filters/AbstractSimpleGeoCoordinateTransformFilter.cpp
     filters/ArrayChangeInformationFilter.h
     filters/ArrayChangeInformationFilter.cpp
     filters/AssignPointAttributeToCoordinatesFilter.h

@@ -89,6 +89,10 @@ std::unique_ptr<PropertyGroup> RendererConfigWidget::createPropertyGroupRenderer
             }
         }
 
+        if (type == CoordinateSystemType::unspecified)
+        {
+            spec = {};
+        }
         spec.type = type;
 
         if (!renderView->setCurrentCoordinateSystem(spec))

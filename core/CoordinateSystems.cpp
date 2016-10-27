@@ -18,6 +18,7 @@
 vtkInformationKeyMacro(CoordinateSystemSpecification, CoordinateSystemType_InfoKey, IntegerMetaData);
 vtkInformationKeyMacro(CoordinateSystemSpecification, GeographicCoordinateSystemName_InfoKey, StringMetaData);
 vtkInformationKeyMacro(CoordinateSystemSpecification, MetricCoordinateSystemName_InfoKey, StringMetaData);
+vtkInformationKeyMacro(CoordinateSystemSpecification, UnitOfMeasurement_InfoKey, StringMetaData);
 vtkInformationKeyMacro(ReferencedCoordinateSystemSpecification, ReferencePointLatLong_InfoKey, DoubleVectorMetaData);
 vtkInformationKeyMacro(ReferencedCoordinateSystemSpecification, ReferencePointLocalRelative_InfoKey, DoubleVectorMetaData);
 
@@ -46,6 +47,12 @@ const char * arrayName_geographicSystem()
 const char * arrayName_metricSystem()
 {
     static const char * const name = "CoordinateSystem_MetricSystem";
+    return name;
+}
+
+const char * arrayName_unitOfMeasurement()
+{
+    static const char * const name = "CoordinateSystem_UnitOfMeasurement";
     return name;
 }
 
@@ -244,16 +251,19 @@ CoordinateSystemSpecification::CoordinateSystemSpecification()
     : type{ CoordinateSystemType::unspecified }
     , geographicSystem{}
     , globalMetricSystem{}
+    , unitOfMeasurement{}
 {
 }
 
 CoordinateSystemSpecification::CoordinateSystemSpecification(
     CoordinateSystemType type,
     const QString & geographicSystem,
-    const QString & globalMetricSystem)
+    const QString & globalMetricSystem,
+    const QString & unitOfMeasurement)
     : type{ type }
     , geographicSystem{ geographicSystem }
     , globalMetricSystem{ globalMetricSystem }
+    , unitOfMeasurement{ unitOfMeasurement }
 {
 }
 
@@ -269,20 +279,21 @@ bool CoordinateSystemSpecification::isValid() const
         return !geographicSystem.isEmpty();
     }
 
-    return !geographicSystem.isEmpty() && !globalMetricSystem.isEmpty();
+    return !geographicSystem.isEmpty() && !globalMetricSystem.isEmpty() && !unitOfMeasurement.isEmpty();
 }
 
 bool CoordinateSystemSpecification::isUnspecified() const
 {
     return type == CoordinateSystemType::unspecified
-        && geographicSystem.isEmpty() && globalMetricSystem.isEmpty();
+        && geographicSystem.isEmpty() && globalMetricSystem.isEmpty() && unitOfMeasurement.isEmpty();
 }
 
 bool CoordinateSystemSpecification::operator==(const CoordinateSystemSpecification & other) const
 {
     return type == other.type
         && geographicSystem == other.geographicSystem
-        && globalMetricSystem == other.globalMetricSystem;
+        && globalMetricSystem == other.globalMetricSystem
+        && unitOfMeasurement == other.unitOfMeasurement;
 }
 
 bool CoordinateSystemSpecification::operator!=(const CoordinateSystemSpecification & other) const
@@ -316,6 +327,10 @@ void CoordinateSystemSpecification::readFromInformation(vtkInformation & info)
     {
         globalMetricSystem = QString::fromUtf8(info.Get(MetricCoordinateSystemName_InfoKey()));
     }
+    if (info.Has(UnitOfMeasurement_InfoKey()))
+    {
+        unitOfMeasurement = QString::fromUtf8(info.Get(UnitOfMeasurement_InfoKey()));
+    }
 }
 
 void CoordinateSystemSpecification::writeToInformation(vtkInformation & info) const
@@ -344,6 +359,14 @@ void CoordinateSystemSpecification::writeToInformation(vtkInformation & info) co
     {
         info.Remove(MetricCoordinateSystemName_InfoKey());
     }
+    if (!unitOfMeasurement.isEmpty())
+    {
+        info.Set(UnitOfMeasurement_InfoKey(), unitOfMeasurement.toUtf8().data());
+    }
+    else
+    {
+        info.Remove(UnitOfMeasurement_InfoKey());
+    }
 }
 
 CoordinateSystemSpecification CoordinateSystemSpecification::fromInformation(vtkInformation & information)
@@ -360,6 +383,7 @@ void CoordinateSystemSpecification::readFromFieldData(vtkFieldData & fieldData)
     readIfExists(fieldData, arrayName_type(), type.value);
     readIfExists(fieldData, arrayName_geographicSystem(), geographicSystem);
     readIfExists(fieldData, arrayName_metricSystem(), globalMetricSystem);
+    readIfExists(fieldData, arrayName_unitOfMeasurement(), unitOfMeasurement);
 }
 
 void CoordinateSystemSpecification::writeToFieldData(vtkFieldData & fieldData) const
@@ -370,6 +394,7 @@ void CoordinateSystemSpecification::writeToFieldData(vtkFieldData & fieldData) c
     checkSetArray(fieldData, type.value, CoordinateSystemType::unspecified, arrayName_type());
     checkSetArray(fieldData, geographicSystem, arrayName_geographicSystem());
     checkSetArray(fieldData, globalMetricSystem, arrayName_metricSystem());
+    checkSetArray(fieldData, unitOfMeasurement, arrayName_unitOfMeasurement());
 }
 
 ReferencedCoordinateSystemSpecification CoordinateSystemSpecification::fromFieldData(vtkFieldData & fieldData)
@@ -390,9 +415,10 @@ ReferencedCoordinateSystemSpecification::ReferencedCoordinateSystemSpecification
     CoordinateSystemType type,
     const QString & geographicSystem,
     const QString & globalMetricSystem,
+    const QString & coordinatesUnit,
     const vtkVector2d & referencePointLatLong,
     const vtkVector2d & referencePointLocalRelative)
-    : CoordinateSystemSpecification(type, geographicSystem, globalMetricSystem)
+    : CoordinateSystemSpecification(type, geographicSystem, globalMetricSystem, coordinatesUnit)
     , referencePointLatLong{ referencePointLatLong }
     , referencePointLocalRelative{ referencePointLocalRelative }
 {

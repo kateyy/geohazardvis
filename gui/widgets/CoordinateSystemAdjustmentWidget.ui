@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>552</width>
-    <height>431</height>
+    <height>460</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -23,14 +23,69 @@
       <item row="0" column="0">
        <widget class="QLabel" name="label">
         <property name="text">
-         <string>Data Set:</string>
+         <string>&amp;Data Set:</string>
+        </property>
+        <property name="buddy">
+         <cstring>dataSetNameEdit</cstring>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QLineEdit" name="dataSetNameEdit">
+        <property name="readOnly">
+         <bool>true</bool>
         </property>
        </widget>
       </item>
       <item row="1" column="0">
        <widget class="QLabel" name="label_3">
         <property name="text">
-         <string>Data Set Type:</string>
+         <string>Data Set &amp;Type:</string>
+        </property>
+        <property name="buddy">
+         <cstring>dataSetTypeEdit</cstring>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QLineEdit" name="dataSetTypeEdit">
+        <property name="readOnly">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="0">
+       <widget class="QLabel" name="label_6">
+        <property name="text">
+         <string>Coordinate Value &amp;Ranges:</string>
+        </property>
+        <property name="buddy">
+         <cstring>coordinateValueRangesEdit</cstring>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1">
+       <widget class="QPlainTextEdit" name="coordinateValueRangesEdit">
+        <property name="verticalScrollBarPolicy">
+         <enum>Qt::ScrollBarAlwaysOff</enum>
+        </property>
+        <property name="sizeAdjustPolicy">
+         <enum>QAbstractScrollArea::AdjustToContents</enum>
+        </property>
+        <property name="tabChangesFocus">
+         <bool>true</bool>
+        </property>
+        <property name="readOnly">
+         <bool>true</bool>
+        </property>
+        <property name="plainText">
+         <string>X:
+Y:
+Center:
+Relative Position of (0; 0):</string>
+        </property>
+        <property name="textInteractionFlags">
+         <set>Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
         </property>
        </widget>
       </item>
@@ -44,7 +99,10 @@
       <item row="5" column="0">
        <widget class="QLabel" name="label_2">
         <property name="text">
-         <string>Coordinate System Type:</string>
+         <string>&amp;Coordinate System Type:</string>
+        </property>
+        <property name="buddy">
+         <cstring>coordinateSystemTypeCombo</cstring>
         </property>
        </widget>
       </item>
@@ -75,14 +133,10 @@
       <item row="6" column="0">
        <widget class="QLabel" name="label_4">
         <property name="text">
-         <string>Geographic Coordinate System:</string>
+         <string>&amp;Geographic Coordinate System:</string>
         </property>
-       </widget>
-      </item>
-      <item row="7" column="0">
-       <widget class="QLabel" name="label_5">
-        <property name="text">
-         <string>Metric Coordinate System:</string>
+        <property name="buddy">
+         <cstring>geoCoordSystemEdit</cstring>
         </property>
        </widget>
       </item>
@@ -96,6 +150,16 @@
         </property>
        </widget>
       </item>
+      <item row="7" column="0">
+       <widget class="QLabel" name="label_5">
+        <property name="text">
+         <string>&amp;Metric Coordinate System:</string>
+        </property>
+        <property name="buddy">
+         <cstring>metricCoordSystemEdit</cstring>
+        </property>
+       </widget>
+      </item>
       <item row="7" column="1">
        <widget class="QLineEdit" name="metricCoordSystemEdit">
         <property name="text">
@@ -106,7 +170,48 @@
         </property>
        </widget>
       </item>
+      <item row="8" column="0">
+       <widget class="QLabel" name="label_12">
+        <property name="text">
+         <string>&amp;Unit of Measurement:</string>
+        </property>
+        <property name="buddy">
+         <cstring>unitEdit</cstring>
+        </property>
+       </widget>
+      </item>
+      <item row="9" column="0" colspan="2">
+       <widget class="Line" name="line_2">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+       </widget>
+      </item>
+      <item row="10" column="0">
+       <widget class="QLabel" name="label_7">
+        <property name="text">
+         <string>Reference &amp;Point</string>
+        </property>
+        <property name="buddy">
+         <cstring>autoSetReferencePointButton</cstring>
+        </property>
+       </widget>
+      </item>
       <item row="10" column="1">
+       <widget class="QPushButton" name="autoSetReferencePointButton">
+        <property name="text">
+         <string>Set Reference Point To...</string>
+        </property>
+       </widget>
+      </item>
+      <item row="11" column="0">
+       <widget class="QCheckBox" name="referencePointGlobalCheckBox">
+        <property name="text">
+         <string>Gl&amp;obal (geographic)</string>
+        </property>
+       </widget>
+      </item>
+      <item row="11" column="1">
        <widget class="QWidget" name="refPointGlobalWidget" native="true">
         <layout class="QHBoxLayout" name="horizontalLayout">
          <property name="leftMargin">
@@ -125,6 +230,9 @@
           <widget class="QLabel" name="label_8">
            <property name="text">
             <string>Latitude:</string>
+           </property>
+           <property name="buddy">
+            <cstring>refGlobalLatitudeSpinBox</cstring>
            </property>
           </widget>
          </item>
@@ -161,6 +269,9 @@
            <property name="text">
             <string>Longitude:</string>
            </property>
+           <property name="buddy">
+            <cstring>refGlobalLongitudeSpinBox</cstring>
+           </property>
           </widget>
          </item>
          <item>
@@ -194,7 +305,17 @@
         </layout>
        </widget>
       </item>
-      <item row="11" column="1">
+      <item row="12" column="0">
+       <widget class="QCheckBox" name="referencePointLocalCheckBox">
+        <property name="toolTip">
+         <string>(0; 0) is the northwestern corner, (0.5; 0.5) is the center of the data set.</string>
+        </property>
+        <property name="text">
+         <string>&amp;Local (relative)</string>
+        </property>
+       </widget>
+      </item>
+      <item row="12" column="1">
        <widget class="QWidget" name="refPointLocalWidget" native="true">
         <layout class="QHBoxLayout" name="horizontalLayout_2">
          <property name="leftMargin">
@@ -213,6 +334,9 @@
           <widget class="QLabel" name="label_10">
            <property name="text">
             <string>Northing:</string>
+           </property>
+           <property name="buddy">
+            <cstring>refLocalRelativeNorthingSpinBox</cstring>
            </property>
           </widget>
          </item>
@@ -252,6 +376,9 @@
            <property name="text">
             <string>Easting:</string>
            </property>
+           <property name="buddy">
+            <cstring>refLocalRelativeEastingSpinBox</cstring>
+           </property>
           </widget>
          </item>
          <item>
@@ -288,87 +415,10 @@
         </layout>
        </widget>
       </item>
-      <item row="11" column="0">
-       <widget class="QCheckBox" name="referencePointLocalCheckBox">
-        <property name="toolTip">
-         <string>(0; 0) is the northwestern corner, (0.5; 0.5) is the center of the data set.</string>
-        </property>
-        <property name="text">
-         <string>Local (relative)</string>
-        </property>
-       </widget>
-      </item>
-      <item row="10" column="0">
-       <widget class="QCheckBox" name="referencePointGlobalCheckBox">
-        <property name="text">
-         <string>Global (geographic)</string>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="1">
-       <widget class="QLineEdit" name="dataSetNameEdit">
-        <property name="readOnly">
+      <item row="8" column="1">
+       <widget class="QLineEdit" name="unitEdit">
+        <property name="clearButtonEnabled">
          <bool>true</bool>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="1">
-       <widget class="QLineEdit" name="dataSetTypeEdit">
-        <property name="readOnly">
-         <bool>true</bool>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="0">
-       <widget class="QLabel" name="label_6">
-        <property name="text">
-         <string>Coordinate Value Ranges:</string>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="1">
-       <widget class="QPlainTextEdit" name="coordinateValueRangesEdit">
-        <property name="verticalScrollBarPolicy">
-         <enum>Qt::ScrollBarAlwaysOff</enum>
-        </property>
-        <property name="sizeAdjustPolicy">
-         <enum>QAbstractScrollArea::AdjustToContents</enum>
-        </property>
-        <property name="tabChangesFocus">
-         <bool>true</bool>
-        </property>
-        <property name="readOnly">
-         <bool>true</bool>
-        </property>
-        <property name="plainText">
-         <string>X:
-Y:
-Center:
-Relative Position of (0; 0):</string>
-        </property>
-        <property name="textInteractionFlags">
-         <set>Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
-        </property>
-       </widget>
-      </item>
-      <item row="9" column="1">
-       <widget class="QPushButton" name="autoSetReferencePointButton">
-        <property name="text">
-         <string>Set Reference Point To...</string>
-        </property>
-       </widget>
-      </item>
-      <item row="8" column="0" colspan="2">
-       <widget class="Line" name="line_2">
-        <property name="orientation">
-         <enum>Qt::Horizontal</enum>
-        </property>
-       </widget>
-      </item>
-      <item row="9" column="0">
-       <widget class="QLabel" name="label_7">
-        <property name="text">
-         <string>Reference Point</string>
         </property>
        </widget>
       </item>
@@ -394,6 +444,7 @@ Relative Position of (0; 0):</string>
   <tabstop>coordinateSystemTypeCombo</tabstop>
   <tabstop>geoCoordSystemEdit</tabstop>
   <tabstop>metricCoordSystemEdit</tabstop>
+  <tabstop>unitEdit</tabstop>
   <tabstop>autoSetReferencePointButton</tabstop>
   <tabstop>referencePointGlobalCheckBox</tabstop>
   <tabstop>refGlobalLatitudeSpinBox</tabstop>

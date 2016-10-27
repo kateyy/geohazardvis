@@ -47,6 +47,11 @@ ConversionCheckResult CoordinateTransformableDataObject::canTransformToInternal(
     // check for missing parameters
     if (!toSystem.isValid())
     {
+        if (toSystem.isUnspecified())
+        {   // pass-trough is okay here
+            return ConversionCheckResult::okay();
+        }
+        
         return ConversionCheckResult::invalidParameters();
     }
 
@@ -63,33 +68,26 @@ ConversionCheckResult CoordinateTransformableDataObject::canTransformToInternal(
         return ConversionCheckResult::okay();
     }
 
-    // check the cases where a reference point is required
-    const bool referencePointIsDefined = coordinateSystem().isReferencePointValid();
-
-    if (!referencePointIsDefined)
+    // Coordinate unit conversions generally don't require further information
     {
-        do
+        auto equalExceptUnitCheck = toSystem;
+        equalExceptUnitCheck.unitOfMeasurement = coordinateSystem().unitOfMeasurement;
+        if (equalExceptUnitCheck == coordinateSystem())
         {
-            // global<->local transformation in one system
-            if (coordinateSystem().geographicSystem == toSystem.geographicSystem
-                && coordinateSystem().globalMetricSystem == toSystem.globalMetricSystem)
-            {
-                // (my type != new type)
+            return ConversionCheckResult::okay();
+        }
+    }
 
-                return ConversionCheckResult::missingInformation();
-            }
-
-            // conversion between global systems -> no reference point needed
-            if (coordinateSystem().type != CoordinateSystemType::metricLocal
-                && toSystem.type != CoordinateSystemType::metricLocal)
-            {
-                break;
-            }
-
-        } while (false);
-
-        // can't find a reason not to require it
-        return ConversionCheckResult::missingInformation();
+    // Check cases where a reference point is required but not specified.
+    if (!coordinateSystem().isReferencePointValid())
+    {
+        // global<->local transformation in one system always require a reference point.
+        if (coordinateSystem().type != toSystem.type
+            && coordinateSystem().geographicSystem == toSystem.geographicSystem
+            && coordinateSystem().globalMetricSystem == toSystem.globalMetricSystem)
+        {
+            return ConversionCheckResult::missingInformation();
+        }
     }
 
     return ConversionCheckResult::okay();
@@ -98,10 +96,10 @@ ConversionCheckResult CoordinateTransformableDataObject::canTransformToInternal(
 ConversionCheckResult CoordinateTransformableDataObject::canTransformTo(
     const CoordinateSystemSpecification & toSystem)
 {
-    const auto constCheckResult = canTransformToInternal(toSystem);
-    if (!constCheckResult)
+    const auto internalCheckResult = canTransformToInternal(toSystem);
+    if (!internalCheckResult)
     {
-        return constCheckResult;
+        return internalCheckResult;
     }
 
     // now check if subclasses implement the required filter
@@ -218,7 +216,8 @@ vtkAlgorithm * CoordinateTransformableDataObject::transformFilter(const Coordina
         return nullptr;
     }
 
-    if (toSystem == coordinateSystem())
+    if (toSystem == coordinateSystem()
+        || toSystem.isUnspecified())    // allow unspecified if requested
     {
         return passThrough();
     }

@@ -54,7 +54,9 @@ struct CORE_API CoordinateSystemSpecification
     CoordinateSystemSpecification(
         CoordinateSystemType type,
         const QString & geographicSystem,
-        const QString & globalMetricSystem);
+        const QString & globalMetricSystem,
+        const QString & unitOfMeasurement
+    );
 
     virtual ~CoordinateSystemSpecification() = default;
         
@@ -63,8 +65,11 @@ struct CORE_API CoordinateSystemSpecification
     /** Specification for latitude and longitude coordinates, e.g., WGS84 */
     QString geographicSystem;
     /** Metric reference system, e.g., UTM
-    This must not be set if type is set to CoordinateSystemType::geographic. */
+      * This must not be set if type is set to CoordinateSystemType::geographic. */
     QString globalMetricSystem;
+    /** Unit of the coordinates, e.g., m or km for metric coordinates.
+      * For geographic coordinate systems, this is assumed to be degrees and ignored in most places. */
+    QString unitOfMeasurement;
 
     /** Check whether this specification is not CoordinateSystemType::unspecified and at least all
       * required parameters for the current type are set.
@@ -84,10 +89,10 @@ struct CORE_API CoordinateSystemSpecification
     virtual void writeToInformation(vtkInformation & information) const;
     static CoordinateSystemSpecification fromInformation(vtkInformation & information);
 
-    /** vtkDataSet information is not stored in VTK XML files, thus information has to be written to
-    the data set's field data for persistent storage. For pipeline requests, however, it is 
-    more useful to store the coordinate system in the data set's information, as the will be
-    available in pipeline update requests already. */
+    /** vtkDataSet information is not stored in VTK XML files, thus information has to be written
+      * to the data set's field data for persistent storage. For pipeline requests, however, it is 
+      * more useful to store the coordinate system in the data set's information, as the will be
+      * available in pipeline update requests already. */
     virtual void readFromFieldData(vtkFieldData & fieldData);
     virtual void writeToFieldData(vtkFieldData & fieldData) const;
     static ReferencedCoordinateSystemSpecification fromFieldData(vtkFieldData & fieldData);
@@ -95,6 +100,7 @@ struct CORE_API CoordinateSystemSpecification
     static vtkInformationIntegerMetaDataKey * CoordinateSystemType_InfoKey();
     static vtkInformationStringMetaDataKey * GeographicCoordinateSystemName_InfoKey();
     static vtkInformationStringMetaDataKey * MetricCoordinateSystemName_InfoKey();
+    static vtkInformationStringMetaDataKey * UnitOfMeasurement_InfoKey();
 
     friend CORE_API std::ostream & operator<<(std::ostream & os, const CoordinateSystemSpecification & spec);
 };
@@ -109,6 +115,7 @@ struct CORE_API ReferencedCoordinateSystemSpecification : public CoordinateSyste
         CoordinateSystemType type,
         const QString & geographicSystem,
         const QString & globalMetricSystem,
+        const QString & unitOfMeasurement,
         const vtkVector2d & referencePointLatLong,
         const vtkVector2d & referencePointLocalRelative);
     ReferencedCoordinateSystemSpecification(
@@ -125,11 +132,11 @@ struct CORE_API ReferencedCoordinateSystemSpecification : public CoordinateSyste
     bool operator!=(const ReferencedCoordinateSystemSpecification & other) const;
 
     /** The reference point is required to convert between global and local coordinates.
-    This parameter sets latitude and longitude of the reference point in the coordinate system
-    defined by geographicCoordinateSystem. */
+      * This parameter sets latitude and longitude of the reference point in the coordinate system
+      * defined by geographicCoordinateSystem. */
     vtkVector2d referencePointLatLong;
     /** Relative position of the reference point within the data set bounds.
-    * X is the easting, Y is the northing of the data set*/
+      * X is the easting, Y is the northing of the data set*/
     vtkVector2d referencePointLocalRelative;
 
 

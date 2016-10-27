@@ -16,6 +16,8 @@ set(sources
     DEMImageNormals_test.cpp
     DEMToTopographyMesh_test.cpp
     DeformationTimeSeriesTextFileReader_test.cpp
+    GenericPolyDataObject_test.cpp
+    ImageDataObject_test.cpp
     PipelineInformationHelper.h
     PipelineInformationHelper.cpp
     QVtkTableModel_test.cpp

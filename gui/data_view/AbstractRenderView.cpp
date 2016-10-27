@@ -61,7 +61,9 @@ bool AbstractRenderView::setCurrentCoordinateSystem(const CoordinateSystemSpecif
         return true;
     }
 
-    if (!spec.isValid() && !spec.isUnspecified())
+    if (!spec.isValid()
+        // allow setting to unspecified, resulting in a pass-through of stored coordinates
+        && !spec.isUnspecified())
     {
         return false;
     }
@@ -69,7 +71,7 @@ bool AbstractRenderView::setCurrentCoordinateSystem(const CoordinateSystemSpecif
     // If the coordinate system is specified, only allow to switch if all data objects support the transformation.
     // Setting it to CoordinateSystemType::unspecified is okay, if this user insists in setting this.
     // (this results in a pass-through)
-    if (spec.isValid() && !canShowDataObjectInCoordinateSystem(spec))
+    if (!canShowDataObjectInCoordinateSystem(spec))
     {
         return false;
     }
@@ -102,15 +104,9 @@ bool AbstractRenderView::canShowDataObjectInCoordinateSystem(const CoordinateSys
         }
     }
 
-    if (spec.type == CoordinateSystemType::unspecified || transformableObjects.isEmpty())
+    if (transformableObjects.size() != contents.size()
+        && !spec.isUnspecified())
     {
-        return (spec.type == CoordinateSystemType::unspecified)
-            == transformableObjects.isEmpty();
-    }
-
-    if (transformableObjects.size() != contents.size())
-    {
-        qDebug() << "Unexpectedly rendering transformable and non-transformable objects.";
         return false;
     }
 
@@ -174,7 +170,13 @@ void AbstractRenderView::showDataObjects(
             if (!haveValidSystem)
             {
                 // set the coordinate system to the system of the first loaded object
-                setCurrentCoordinateSystem(transformable->coordinateSystem());
+                auto spec = transformable->coordinateSystem();
+                if (spec.type == CoordinateSystemType::metricGlobal
+                    || spec.type == CoordinateSystemType::metricLocal)
+                {
+                    spec.unitOfMeasurement = "km";
+                }
+                setCurrentCoordinateSystem(spec);
                 haveValidSystem = true;
                 possibleCompatibleObjects << dataObjects[inIdx];
                 continue;

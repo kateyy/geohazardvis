@@ -3,55 +3,30 @@
 #include <vtkPolyDataAlgorithm.h>
 #include <vtkSmartPointer.h>
 
-#include <core/core_api.h>
+#include <core/filters/AbstractSimpleGeoCoordinateTransformFilter.h>
 
 
 class vtkTransform;
 class vtkTransformPolyDataFilter;
 
-struct ReferencedCoordinateSystemSpecification;
 class SetCoordinateSystemInformationFilter;
 
 
-/** This filter transforms a poly data set between from geographic coordinates (latitude, longitude)
-* and a local coordinate system. The applied method only works for regions not larger than a few
-* hundred kilometers.
-* This algorithm only covers a simple, specific use case, thus the specification defined by
-* CoordinateSystemSpecification is not used here. However, the coordinate system of input data
-* needs to be defined using the information set by ReferencedCoordinateSystemSpecification. Only
-* CoordinateSystemType::geographic and metricLocal is supported as input coordinate systems.
-* geographicSystem and globalMetricSystem parameters are ignored.
-*/
-class CORE_API SimplePolyGeoCoordinateTransformFilter : public vtkPolyDataAlgorithm
+class CORE_API SimplePolyGeoCoordinateTransformFilter :
+    public AbstractSimpleGeoCoordinateTransformFilter<vtkPolyDataAlgorithm>
 {
 public:
-    vtkTypeMacro(SimplePolyGeoCoordinateTransformFilter, vtkPolyDataAlgorithm);
+    vtkTypeMacro(SimplePolyGeoCoordinateTransformFilter, AbstractSimpleGeoCoordinateTransformFilter);
     static SimplePolyGeoCoordinateTransformFilter * New();
-
-    enum CoordinateSystem
-    {
-        GLOBAL_GEOGRAPHIC,
-        LOCAL_METRIC,
-        UNSPECIFIED
-    };
-
-    /** Target coordinate system to transform to.
-    * This is LOCAL_METRIC by default. */
-    vtkSetClampMacro(TargetCoordinateSystem, CoordinateSystem, GLOBAL_GEOGRAPHIC, LOCAL_METRIC)
-    vtkGetMacro(TargetCoordinateSystem, CoordinateSystem);
 
 
 protected:
     SimplePolyGeoCoordinateTransformFilter();
     ~SimplePolyGeoCoordinateTransformFilter() override;
 
-    int ProcessRequest(vtkInformation * request,
+    int RequestDataObject(vtkInformation * request,
         vtkInformationVector ** inputVector,
         vtkInformationVector * outputVector) override;
-
-    virtual int RequestDataObject(vtkInformation * request,
-        vtkInformationVector ** inputVector,
-        vtkInformationVector * outputVector);
 
     int RequestInformation(vtkInformation * request,
         vtkInformationVector ** inputVector,
@@ -61,12 +36,18 @@ protected:
         vtkInformationVector ** inputVector,
         vtkInformationVector * outputVector) override;
 
-private:
-    void SetFilterParameters(const ReferencedCoordinateSystemSpecification & targetSpec);
+    int FillInputPortInformation(
+        int port, vtkInformation * info) override;
+
+    int FillOutputPortInformation(
+        int port, vtkInformation * info) override;
+
+    void SetFilterParameters(
+        const vtkVector3d & preTranslate,
+        const vtkVector3d & scale,
+        const vtkVector3d & postTranslate) override;
 
 private:
-    CoordinateSystem SourceCoordinateSystem;
-    CoordinateSystem TargetCoordinateSystem;
 
     vtkSmartPointer<vtkTransformPolyDataFilter> TransformFilter;
     vtkSmartPointer<vtkTransform> Transform;

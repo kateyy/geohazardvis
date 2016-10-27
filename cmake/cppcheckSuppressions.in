@@ -6,7 +6,7 @@ unmatchedSuppression
 
 *:@PROJECT_SOURCE_DIR@/core/ThirdParty/ParaView/*
 
-noExplicitConstructor:@PROJECT_SOURCE_DIR@/core/CoordinateSystems.h:34
+noExplicitConstructor:@PROJECT_SOURCE_DIR@/core/CoordinateSystems.h:35
 
 // False positives
 

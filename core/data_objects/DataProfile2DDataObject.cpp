@@ -288,19 +288,10 @@ void DataProfile2DDataObject::setPointsCoordinateSystem(const CoordinateSystemSp
         return;
     }
 
-    auto pointsType = SimplePolyGeoCoordinateTransformFilter::CoordinateSystem::UNSPECIFIED;
-    if (coordsSpec.type == CoordinateSystemType::geographic)
-    {
-        pointsType = SimplePolyGeoCoordinateTransformFilter::CoordinateSystem::GLOBAL_GEOGRAPHIC;
-    }
-    else if (coordsSpec.type == CoordinateSystemType::metricLocal)
-    {
-        pointsType = SimplePolyGeoCoordinateTransformFilter::CoordinateSystem::LOCAL_METRIC;
-    }
+    QList<CoordinateSystemType> supportedTypes{ CoordinateSystemType::metricLocal, CoordinateSystemType::geographic };
 
-    if (pointsType == SimplePolyGeoCoordinateTransformFilter::CoordinateSystem::UNSPECIFIED
-        || coordsSpec.geographicSystem != m_targetCoordsSpec.geographicSystem
-        || coordsSpec.globalMetricSystem != m_targetCoordsSpec.globalMetricSystem)
+    if (coordsSpec.type != m_targetCoordsSpec.type
+        && (!supportedTypes.contains(coordsSpec.type) || !supportedTypes.contains(m_targetCoordsSpec.type)))
     {
         qWarning() << "Unsupported point coordinate system passed to DataProfile2DDataObject. "
             "Line points won't be transformed at all.";
@@ -319,10 +310,7 @@ void DataProfile2DDataObject::setPointsCoordinateSystem(const CoordinateSystemSp
         m_pointsTransformFilter = vtkSmartPointer<SimplePolyGeoCoordinateTransformFilter>::New();
         m_pointsTransformFilter->SetInputConnection(m_pointsSetCoordsSpecFilter->GetOutputPort());
 
-        const auto type = m_targetCoordsSpec.type == CoordinateSystemType::geographic
-            ? SimplePolyGeoCoordinateTransformFilter::CoordinateSystem::GLOBAL_GEOGRAPHIC
-            : SimplePolyGeoCoordinateTransformFilter::CoordinateSystem::LOCAL_METRIC;
-        m_pointsTransformFilter->SetTargetCoordinateSystem(type);
+        m_pointsTransformFilter->SetTargetCoordinateSystemType(coordsSpec.type);
     }
 
     transformPointsCheck.validate();
@@ -351,7 +339,7 @@ void DataProfile2DDataObject::updateTransformInputPoints()
 {
     vtkVector2d p1, p2;
 
-    if (m_doTransformPoints)
+    if (m_doTransformPoints && m_pointsTransformFilter)
     {
         assert(m_pointsSetCoordsSpecFilter);
         auto inPoly = vtkPolyData::SafeDownCast(m_pointsSetCoordsSpecFilter->GetInput());
@@ -369,7 +357,7 @@ void DataProfile2DDataObject::updateTransformInputPoints()
         DEBUG_ONLY(int result = )
             m_pointsTransformFilter->GetExecutive()->Update();
         assert(result);
-        auto outPoly = vtkPolyData::SafeDownCast(m_pointsTransformFilter->GetOutput());
+        auto outPoly = vtkPolyData::SafeDownCast(m_pointsTransformFilter->GetOutputDataObject(0));
         assert(outPoly);
         auto outPoints = outPoly->GetPoints();
         assert(outPoints && outPoints->GetNumberOfPoints() == 2);

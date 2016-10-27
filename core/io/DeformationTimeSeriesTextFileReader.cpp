@@ -306,10 +306,10 @@ auto DeformationTimeSeriesTextFileReader::readData() -> State
     m_readPolyData->SetPoints(points);
     m_readPolyData->SetVerts(verts);
 
-    ReferencedCoordinateSystemSpecification dataObjectCoordinateSystem;
-    dataObjectCoordinateSystem.geographicSystem = "WGS 84";
-    dataObjectCoordinateSystem.globalMetricSystem = "UTM";
-    dataObjectCoordinateSystem.referencePointLocalRelative = { 0.5, 0.5 };
+    ReferencedCoordinateSystemSpecification tempCoordsSpec;
+    tempCoordsSpec.geographicSystem = "WGS 84";
+    tempCoordsSpec.globalMetricSystem = "UTM";
+    tempCoordsSpec.referencePointLocalRelative = { 0.5, 0.5 };
 
     auto coordsArrayLongLat = dataArrays[coordArrayIdx(Coordinate::LongitudeLatitude)];
     auto coordsArrayUTMWGS84 = dataArrays[coordArrayIdx(Coordinate::UTM_WGS84)];
@@ -317,37 +317,43 @@ auto DeformationTimeSeriesTextFileReader::readData() -> State
     // determine geographic reference point
     points->SetData(coordsArrayLongLat);
     const auto longLatCenter = DataBounds(m_readPolyData->GetBounds()).convertTo<2>();
-    dataObjectCoordinateSystem.referencePointLatLong = { longLatCenter[1], longLatCenter[0] };
+    tempCoordsSpec.referencePointLatLong = { longLatCenter[1], longLatCenter[0] };
 
     // set requested coordinates as points
     auto currentCoordsArray = dataArrays[coordArrayIdx(m_coordinatesToUse)];
     points->SetData(currentCoordsArray);
 
+    ReferencedCoordinateSystemSpecification dataObjectCoordinateSystem;
+
     {   // set coordinate array information
-        auto arraySpec = dataObjectCoordinateSystem;
+        auto arraySpec = tempCoordsSpec;
         arraySpec.type = CoordinateSystemType::geographic;
+        // Don't set degree symbol (UTF8) to work around incompatibilities at different parts of VTK.
+        // It is assumed as unit for geographic systems, anyway.
+        arraySpec.unitOfMeasurement.clear();
         arraySpec.writeToInformation(*coordsArrayLongLat->GetInformation());
+        if (m_coordinatesToUse == Coordinate::LongitudeLatitude)
+        {
+            dataObjectCoordinateSystem = arraySpec;
+        }
 
         arraySpec.type = CoordinateSystemType::metricGlobal;
+        arraySpec.unitOfMeasurement = "m";
         auto utmArray = dataArrays[coordArrayIdx(Coordinate::UTM_WGS84)];
         arraySpec.writeToInformation(*utmArray->GetInformation());
-        utmArray->GetInformation()->Set(vtkDataArray::UNITS_LABEL(), "m");
+        if (m_coordinatesToUse == Coordinate::UTM_WGS84)
+        {
+            dataObjectCoordinateSystem = arraySpec;
+        }
 
         arraySpec.type = CoordinateSystemType::other; // current not implemented
+        arraySpec.unitOfMeasurement.clear();
         auto azimuthRangeArray = dataArrays[coordArrayIdx(Coordinate::AzimuthRange)];
         arraySpec.writeToInformation(*azimuthRangeArray->GetInformation());
-    }
-
-    switch (m_coordinatesToUse)
-    {
-    case DeformationTimeSeriesTextFileReader::Coordinate::UTM_WGS84:
-        dataObjectCoordinateSystem.type = CoordinateSystemType::metricGlobal;
-        break;
-    case DeformationTimeSeriesTextFileReader::Coordinate::AzimuthRange:
-        break;    // not implemented
-    case DeformationTimeSeriesTextFileReader::Coordinate::LongitudeLatitude:
-        dataObjectCoordinateSystem.type = CoordinateSystemType::geographic;
-        break;
+        if (m_coordinatesToUse == Coordinate::AzimuthRange)
+        {
+            dataObjectCoordinateSystem = arraySpec;
+        }
     }
 
     dataObjectCoordinateSystem.writeToFieldData(*m_readPolyData->GetFieldData());

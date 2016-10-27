@@ -34,6 +34,7 @@ public:
             CoordinateSystemType::geographic,
             "some geo system",
             "some metric system",
+            "",
             { centerXY[1], centerXY[0] },
             { 0.5, 0.5 }
         ).writeToFieldData(*image->GetFieldData());

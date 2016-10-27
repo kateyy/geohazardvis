@@ -138,32 +138,39 @@ vtkSmartPointer<vtkAlgorithm> ImageDataObject::createTransformPipeline(
     const CoordinateSystemSpecification & toSystem,
     vtkAlgorithmOutput * pipelineUpstream) const
 {
+    // Limited coordinate system support...
     if (coordinateSystem().geographicSystem != "WGS 84"
         || toSystem.geographicSystem != "WGS 84"
         || coordinateSystem().globalMetricSystem != "UTM"
-        || toSystem.globalMetricSystem != "UTM"
-        || !coordinateSystem().isReferencePointValid())
+        || toSystem.globalMetricSystem != "UTM")
     {
-        return nullptr;
+        return{};
     }
 
-    if (coordinateSystem().type == CoordinateSystemType::geographic
-        && toSystem.type == CoordinateSystemType::metricLocal)
-    {
-        auto filter = vtkSmartPointer<SimpleImageGeoCoordinateTransformFilter>::New();
-        filter->SetInputConnection(pipelineUpstream);
-        filter->SetTargetCoordinateSystem(SimpleImageGeoCoordinateTransformFilter::LOCAL_METRIC);
-        return filter;
+    if (!coordinateSystem().isReferencePointValid())
+    {   // If anything else than unit conversions is requested, a reference point is required.
+        auto equalExceptUnitCheck = toSystem;
+        equalExceptUnitCheck.unitOfMeasurement = coordinateSystem().unitOfMeasurement;
+        if (equalExceptUnitCheck != coordinateSystem())
+        {
+            return{};
+        }
     }
 
-    if (coordinateSystem().type == CoordinateSystemType::metricLocal
-        && toSystem.type == CoordinateSystemType::geographic)
+    static const QList<CoordinateSystemType::Value> transformableTypes
+    { CoordinateSystemType::geographic, CoordinateSystemType::metricLocal };
+
+    if ((coordinateSystem().type != toSystem.type)
+        && (!transformableTypes.contains(coordinateSystem().type)
+            || !transformableTypes.contains(toSystem.type)))
     {
-        auto filter = vtkSmartPointer<SimpleImageGeoCoordinateTransformFilter>::New();
-        filter->SetInputConnection(pipelineUpstream);
-        filter->SetTargetCoordinateSystem(SimpleImageGeoCoordinateTransformFilter::GLOBAL_GEOGRAPHIC);
-        return filter;
+        return{};
     }
 
-    return nullptr;
+    // This transforms between local metric coordinates and geographic coordinates,
+    // and/or transforms metric coordinate units.
+    auto filter = vtkSmartPointer<SimpleImageGeoCoordinateTransformFilter>::New();
+    filter->SetInputConnection(pipelineUpstream);
+    filter->SetTargetCoordinateSystemType(toSystem.type);
+    return filter;
 }

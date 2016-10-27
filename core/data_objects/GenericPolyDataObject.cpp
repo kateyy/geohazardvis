@@ -26,7 +26,7 @@ namespace
 
 vtkDataArray * findCoordinatesArray(
     vtkPointSet & dataSet,
-    const CoordinateSystemSpecification & coordsSpec)
+    const CoordinateSystemType & coordsType)
 {
     auto & pointData = *dataSet.GetPointData();
     const auto numArrays = pointData.GetNumberOfArrays();
@@ -38,7 +38,7 @@ vtkDataArray * findCoordinatesArray(
             continue;
         }
         const auto spec = CoordinateSystemSpecification::fromInformation(*array->GetInformation());
-        if (spec.isValid() && (spec == coordsSpec))
+        if (spec.isValid() && (spec.type == coordsType))
         {
             return array;
         }
@@ -170,54 +170,76 @@ bool GenericPolyDataObject::checkIfStructureChanged()
     return superclassResult || dPtr().m_inCopyStructure;
 }
 
-vtkSmartPointer<vtkAlgorithm> GenericPolyDataObject::createTransformPipeline(const CoordinateSystemSpecification & toSystem, vtkAlgorithmOutput * pipelineUpstream) const
+vtkSmartPointer<vtkAlgorithm> GenericPolyDataObject::createTransformPipeline(
+    const CoordinateSystemSpecification & toSystem,
+    vtkAlgorithmOutput * pipelineUpstream) const
 {
+    // Limited coordinate system support...
     if (coordinateSystem().geographicSystem != "WGS 84"
         || toSystem.geographicSystem != "WGS 84"
         || coordinateSystem().globalMetricSystem != "UTM"
-        || toSystem.globalMetricSystem != "UTM"
-        || !coordinateSystem().isReferencePointValid())
+        || toSystem.globalMetricSystem != "UTM")
     {
         return{};
     }
+
+    if (!coordinateSystem().isReferencePointValid())
+    {   // If anything else than unit conversions is requested, a reference point is required.
+        auto equalExceptUnitCheck = toSystem;
+        equalExceptUnitCheck.unitOfMeasurement = coordinateSystem().unitOfMeasurement;
+        if (equalExceptUnitCheck != coordinateSystem())
+        {
+            return{};
+        }
+    }
+
+    vtkSmartPointer<vtkAlgorithm> localPipelineUpstream;
 
     // check if there are stored point coordinates
     pipelineUpstream->GetProducer()->Update();
     auto upstreamPoly = vtkPolyData::SafeDownCast(pipelineUpstream->GetProducer()->GetOutputDataObject(0));
     if (upstreamPoly)
     {
-        if (auto storedCoords = findCoordinatesArray(*upstreamPoly, toSystem))
-        {
-            auto && spec = ReferencedCoordinateSystemSpecification::fromInformation(
-                *storedCoords->GetInformation());
+        // Check if there are stored coordinates in the requested system type.
+        auto storedCoordsByType = findCoordinatesArray(*upstreamPoly, toSystem.type);
 
+        if (storedCoordsByType)
+        {
+            auto && storedCoordsByTypeSpec = ReferencedCoordinateSystemSpecification::fromInformation(
+                *storedCoordsByType->GetInformation());
             auto assignCoords = vtkSmartPointer<AssignPointAttributeToCoordinatesFilter>::New();
             assignCoords->SetInputConnection(pipelineUpstream);
-            assignCoords->SetAttributeArrayToAssign(storedCoords->GetName());
+            assignCoords->SetAttributeArrayToAssign(storedCoordsByType->GetName());
 
             auto setCoordsSpec = vtkSmartPointer<SetCoordinateSystemInformationFilter>::New();
-            setCoordsSpec->SetCoordinateSystemSpec(spec);
+            setCoordsSpec->SetCoordinateSystemSpec(storedCoordsByTypeSpec);
             setCoordsSpec->SetInputConnection(assignCoords->GetOutputPort());
 
-            return setCoordsSpec;
+            // already in the target system?
+            if (storedCoordsByTypeSpec == toSystem)
+            {
+                return setCoordsSpec;
+            }
+            localPipelineUpstream = setCoordsSpec;
         }
-
-        if (toSystem.type == CoordinateSystemType::metricLocal)
+        // Just a metric global->local transformation based on stored global metric coordinates?
+        // This can be done here.
+        else if (toSystem.type == CoordinateSystemType::metricLocal)
         {
-            auto fromGlobalSystem = coordinateSystem();
-            fromGlobalSystem.type = CoordinateSystemType::metricGlobal;
-            auto globalCoords = coordinateSystem().type == CoordinateSystemType::metricGlobal
+            if (auto globalCoords = coordinateSystem().type == CoordinateSystemType::metricGlobal
                 ? upstreamPoly->GetPoints()->GetData()
-                : findCoordinatesArray(*upstreamPoly, fromGlobalSystem);
-
-            if (globalCoords)
+                : findCoordinatesArray(*upstreamPoly, CoordinateSystemType::metricGlobal))
             {
                 DataExtent<double, 2> globalBounds;
                 globalCoords->GetRange(&globalBounds.data()[0], 0);
                 globalCoords->GetRange(&globalBounds.data()[2], 1);
 
-                const auto refPointGlobal = globalBounds.min() 
-                    + globalBounds.componentSize() * fromGlobalSystem.referencePointLocalRelative;
+                const auto globalCoordsSpec = coordinateSystem().type == CoordinateSystemType::metricGlobal
+                    ? coordinateSystem()
+                    : ReferencedCoordinateSystemSpecification::fromInformation(*globalCoords->GetInformation());
+
+                const auto refPointGlobal = globalBounds.min()
+                    + globalBounds.componentSize() * globalCoordsSpec.referencePointLocalRelative;
 
                 auto transform = vtkSmartPointer<vtkTransform>::New();
                 transform->Translate(convertTo<3>(-refPointGlobal).GetData());
@@ -236,35 +258,47 @@ vtkSmartPointer<vtkAlgorithm> GenericPolyDataObject::createTransformPipeline(con
                 transformFilter->SetTransform(transform);
                 transformFilter->SetInputConnection(upstream->GetOutputPort());
 
-                auto && spec = ReferencedCoordinateSystemSpecification::fromInformation(
-                    *globalCoords->GetInformation());
+                auto localCoordsSpec = globalCoordsSpec;
+                localCoordsSpec.type = CoordinateSystemType::metricLocal;
 
                 auto setCoordsSpec = vtkSmartPointer<SetCoordinateSystemInformationFilter>::New();
-                setCoordsSpec->SetCoordinateSystemSpec(spec);
+                setCoordsSpec->SetCoordinateSystemSpec(localCoordsSpec);
                 setCoordsSpec->SetInputConnection(transformFilter->GetOutputPort());
-                
-                return setCoordsSpec;
+
+                // already in the target system?
+                if (localCoordsSpec == toSystem)
+                {
+                    return setCoordsSpec;
+                }
+                localPipelineUpstream = setCoordsSpec;
             }
         }
     }
 
-    if (coordinateSystem().type == CoordinateSystemType::geographic
-        && toSystem.type == CoordinateSystemType::metricLocal)
+    // If the target system could not be generated using stored coordinates, support from the
+    // transform filter is required.
+    if (!localPipelineUpstream)
     {
-        auto filter = vtkSmartPointer<SimplePolyGeoCoordinateTransformFilter>::New();
-        filter->SetInputConnection(pipelineUpstream);
-        filter->SetTargetCoordinateSystem(SimplePolyGeoCoordinateTransformFilter::LOCAL_METRIC);
-        return filter;
+        static const QList<CoordinateSystemType::Value> transformableTypes
+        { CoordinateSystemType::geographic, CoordinateSystemType::metricLocal };
+
+        if ((coordinateSystem().type != toSystem.type)
+            && (!transformableTypes.contains(coordinateSystem().type)
+                || !transformableTypes.contains(toSystem.type)))
+        {
+            return{};
+        }
+        else
+        {
+            // Just pass the work to the SimplePolyGeoCoordinateTransformFilter
+            localPipelineUpstream = pipelineUpstream->GetProducer();
+        }
     }
 
-    if (coordinateSystem().type == CoordinateSystemType::metricLocal
-        && toSystem.type == CoordinateSystemType::geographic)
-    {
-        auto filter = vtkSmartPointer<SimplePolyGeoCoordinateTransformFilter>::New();
-        filter->SetInputConnection(pipelineUpstream);
-        filter->SetTargetCoordinateSystem(SimplePolyGeoCoordinateTransformFilter::GLOBAL_GEOGRAPHIC);
-        return filter;
-    }
-
-    return{};
+    // This transforms between local metric coordinates and geographic coordinates,
+    // and/or transforms metric coordinate units.
+    auto filter = vtkSmartPointer<SimplePolyGeoCoordinateTransformFilter>::New();
+    filter->SetInputConnection(localPipelineUpstream->GetOutputPort());
+    filter->SetTargetCoordinateSystemType(toSystem.type);
+    return filter;
 }

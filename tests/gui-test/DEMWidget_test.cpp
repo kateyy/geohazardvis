@@ -108,6 +108,7 @@ public:
             CoordinateSystemType::geographic,
             "a geo system",
             "a metric system",
+            "",
             { img->bounds().center()[1], img->bounds().center()[0] },
             { 0.5, 0.5 }
         ));

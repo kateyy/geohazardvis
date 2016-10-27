@@ -531,7 +531,7 @@ void RendererImplementationBase3D::updateAxisLabelFormat(const CoordinateSystemS
 
     const auto label = spec.type == CoordinateSystemType::geographic
         ? degreeLabel   // latitude/longitude
-        : "";           // Northing/Easting
+        : "%g km";      // Northing/Easting
 
     for (unsigned i = 0; i < renderView().numberOfSubViews(); ++i)
     {

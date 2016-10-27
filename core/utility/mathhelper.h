@@ -3,6 +3,9 @@
 #include <core/core_api.h>
 
 
+class QString;
+
+
 namespace mathhelper
 {
 
@@ -10,6 +13,9 @@ namespace mathhelper
 template <typename T> char sgn(const T & value);
 
 bool CORE_API circleLineIntersection(double radius, double P0[2], double P1[2], double intersection1[2], double intersection2[2]);
+
+double CORE_API scaleFactorForMetricUnits(const QString & from, const QString & to);
+bool CORE_API isValidMetricUnit(const QString & unit);
 
 }
 

@@ -121,11 +121,11 @@ TEST_F(CoordinateTransformableDataObject_test, TransformAppliedToVisibleBounds)
     const auto coordsSpec = ReferencedCoordinateSystemSpecification(
         CoordinateSystemType::geographic,
         "testSystem",
-        {}, {}, {});
+        {}, {}, {}, {});
     const auto targetCoordsSpec = ReferencedCoordinateSystemSpecification(
         CoordinateSystemType::geographic,
         "otherTestSystem",
-        {}, {}, {});
+        {}, {}, {}, {});
 
     auto data = genPolyData<TransformedPolyData>();
     data->specifyCoordinateSystem(coordsSpec);
@@ -151,8 +151,9 @@ TEST_F(CoordinateTransformableDataObject_test, ApplyCoordinateSystemFromFieldDat
     const auto coordsSpec = ReferencedCoordinateSystemSpecification(
         CoordinateSystemType::geographic,
         "testGeoSystem",
-        "testMetricSystem"
-        , { 100, 200 }, {0.2, 0.3});
+        "testMetricSystem",
+        "",
+        { 100, 200 }, {0.2, 0.3});
 
     coordsSpec.writeToFieldData(*dataSet->GetFieldData());
     
@@ -168,8 +169,9 @@ TEST_F(CoordinateTransformableDataObject_test, PersistentCoordsSpec_PolyData)
     const auto coordsSpec = ReferencedCoordinateSystemSpecification(
         CoordinateSystemType::geographic,
         "testGeoSystem",
-        "testMetricSystem"
-        , { 100, 200 }, { 0.2, 0.3 });
+        "testMetricSystem",
+        "",
+        { 100, 200 }, { 0.2, 0.3 });
 
     dataObject->specifyCoordinateSystem(coordsSpec);
 
@@ -193,8 +195,9 @@ TEST_F(CoordinateTransformableDataObject_test, PersistentCoordsSpec_ImageData)
     const auto coordsSpec = ReferencedCoordinateSystemSpecification(
         CoordinateSystemType::geographic,
         "testGeoSystem",
-        "testMetricSystem"
-        , { 100, 200 }, { 0.2, 0.3 });
+        "testMetricSystem",
+        "",
+        { 100, 200 }, { 0.2, 0.3 });
 
     dataObject.specifyCoordinateSystem(coordsSpec);
 
@@ -214,8 +217,9 @@ TEST_F(CoordinateTransformableDataObject_test, coordsPassToProcessedFieldData)
     const auto coordsSpec = ReferencedCoordinateSystemSpecification(
         CoordinateSystemType::geographic,
         "testGeoSystem",
-        "testMetricSystem"
-        , { 100, 200 }, { 0.2, 0.3 });
+        "testMetricSystem",
+        "",
+        { 100, 200 }, { 0.2, 0.3 });
 
     dataObject->specifyCoordinateSystem(coordsSpec);
 

@@ -10,6 +10,7 @@
 #include <core/CoordinateSystems.h>
 #include <core/data_objects/CoordinateTransformableDataObject.h>
 #include <core/utility/DataExtent.h>
+#include <core/utility/mathhelper.h>
 #include <core/utility/vtkvectorhelper.h>
 
 
@@ -133,6 +134,8 @@ void CoordinateSystemAdjustmentWidget::setDataObject(CoordinateTransformableData
         return;
     }
 
+    disconnect(m_ui->coordinateSystemTypeCombo, &QComboBox::currentTextChanged, this, &CoordinateSystemAdjustmentWidget::updateInfoText);
+
     if (!dataObject)
     {
         return;
@@ -142,11 +145,11 @@ void CoordinateSystemAdjustmentWidget::setDataObject(CoordinateTransformableData
     m_ui->dataSetNameEdit->setText(dataObject->name());
     m_ui->dataSetTypeEdit->setText(dataObject->dataTypeName());
 
+    specToUi(dataObject->coordinateSystem());
+
     updateInfoText();
 
     connect(m_ui->coordinateSystemTypeCombo, &QComboBox::currentTextChanged, this, &CoordinateSystemAdjustmentWidget::updateInfoText);
-    
-    specToUi(dataObject->coordinateSystem());
 }
 
 void CoordinateSystemAdjustmentWidget::updateInfoText()
@@ -177,6 +180,24 @@ void CoordinateSystemAdjustmentWidget::updateInfoText()
         const auto actionType = static_cast<RefPointQuickly>(i);
         m_refPointQuickSetActions[i]->setVisible(refPointQuicklySupports(actionType, currentType));
     }
+
+    // Geographic systems always have to use degrees as unit, metric systems are in *m;
+    m_ui->unitEdit->setReadOnly(currentType == CoordinateSystemType::geographic);
+    switch (currentType.value)
+    {
+    case CoordinateSystemType::geographic:
+        m_ui->unitEdit->setPlaceholderText(QChar(0xb0));    // degree
+        m_ui->unitEdit->setText("");
+        break;
+    case CoordinateSystemType::metricGlobal:
+    case CoordinateSystemType::metricLocal:
+        m_ui->unitEdit->setPlaceholderText("km");
+        break;
+    case CoordinateSystemType::other:
+    case CoordinateSystemType::unspecified:
+        m_ui->unitEdit->setPlaceholderText("");
+        break;
+    }
 }
 
 void CoordinateSystemAdjustmentWidget::finish()
@@ -190,8 +211,13 @@ void CoordinateSystemAdjustmentWidget::finish()
 
     if (!spec.isValid())
     {
-        QMessageBox::warning(this, windowTitle(),
-            "Coordinate System Specification is not valid.");
+        auto infoText = QString("Coordinate System Specification is not valid.");
+        if (spec.type == CoordinateSystemType::metricGlobal
+            || spec.type == CoordinateSystemType::metricLocal)
+        {
+            infoText += " The unit of measurement is not valid or unsupported.";
+        }
+        QMessageBox::warning(this, windowTitle(), infoText);
         return;
     }
 
@@ -312,6 +338,16 @@ ReferencedCoordinateSystemSpecification CoordinateSystemAdjustmentWidget::specFr
     spec.geographicSystem = m_ui->geoCoordSystemEdit->text();
     spec.globalMetricSystem = m_ui->metricCoordSystemEdit->text();
 
+    auto && uiUnit = m_ui->unitEdit->text();
+    if (spec.type != CoordinateSystemType::geographic)
+    {
+        auto && unit = uiUnit.isEmpty() ? m_ui->unitEdit->placeholderText() : uiUnit;
+        if (mathhelper::isValidMetricUnit(unit))
+        {
+            spec.unitOfMeasurement = unit;
+        }
+    }
+
     if (m_ui->referencePointGlobalCheckBox->isChecked())
     {
         spec.referencePointLatLong.SetX(m_ui->refGlobalLatitudeSpinBox->value());
@@ -341,6 +377,8 @@ void CoordinateSystemAdjustmentWidget::specToUi(const ReferencedCoordinateSystem
 
     //spec.geographicSystem // not implemented yet
     //spec.globalMetricSystem // not implemented yet
+
+    m_ui->unitEdit->setText(spec.unitOfMeasurement);
 
     const bool hasRefPointGlobal = isVectorInitialized(spec.referencePointLatLong);
     m_ui->referencePointGlobalCheckBox->setChecked(hasRefPointGlobal);

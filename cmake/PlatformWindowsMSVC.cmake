@@ -26,7 +26,7 @@ set(DEFAULT_COMPILE_FLAGS
     /Zc:wchar_t /Zc:forScope /Zc:rvalueCast /Zc:inline
     /GR /fp:precise /MP /W4
     /we4150 /we4172 /we4239 /we4390 /we4456 /we4457 /we4458 /we4700 /we4701 /we4703 /we4715 /we4717
-    /wd4127 /wd4251 /wd4351 /wd4505 /wd4718
+    /wd4127 /wd4251 /wd4351 /wd4505 /wd4661 /wd4718
 
     $<$<CONFIG:Debug>:          /MDd /Od /RTC1 >
     $<$<CONFIG:Release>:        /MD  /O2 >
@@ -91,6 +91,7 @@ set(DEFAULT_COMPILE_FLAGS
     #   4458       -> declaration of 'x' hides class member
     #   4505       -> 'function' : unreferenced local function has been removed (caused by libzeug)
     #   4512       -> 'class' : assignment operator could not be generated
+    #   4661       -> 'identifier' : no suitable definition provided for explicit template instantiation request (AbstractSimpleGeoCoordinateTransformFilter.h)
     #   4700       -> uninitialized local variable 'name' used
     #   4701       -> Potentially uninitialized local variable 'name' used
     #   4703       -> Potentially uninitialized local pointer variable 'name' used

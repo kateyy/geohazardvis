@@ -55,11 +55,8 @@ function(cppcheck_target TARGET)
 
     set(_sources)
     foreach(_src ${_rawSources})
-        if (IS_ABSOLUTE ${_src})
-            list(APPEND _sources ${_src})
-        else()
-            list(APPEND _sources ${_sourceDir}/${_src})
-        endif()
+        get_filename_component(absoluteFilePath ${_src} ABSOLUTE ${_sourceDir})
+        list(APPEND _sources ${absoluteFilePath})
     endforeach()
 
     set(_includes)
