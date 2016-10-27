@@ -8,6 +8,7 @@
 #include <vtkSmartPointer.h>
 
 #include <core/DataSetHandler.h>
+#include <core/types.h>
 #include <core/data_objects/DataObject.h>
 #include <core/table_model/QVtkTableModel.h>
 #include <core/utility/DataSetFilter.h>
@@ -24,6 +25,11 @@ public:
     bool is3D() const override
     {
         return false;
+    }
+
+    IndexType defaultAttributeLocation() const override
+    {
+        return IndexType::points;
     }
 
     const QString & dataTypeName() const override

@@ -4,6 +4,7 @@
 #include <vtkDataSet.h>
 #include <vtkPointData.h>
 
+#include <core/types.h>
 #include <core/rendered_data/RenderedPointCloudData.h>
 #include <core/table_model/QVtkTableModelPointCloudData.h>
 
@@ -14,6 +15,11 @@ PointCloudDataObject::PointCloudDataObject(const QString & name, vtkPolyData & d
 }
 
 PointCloudDataObject::~PointCloudDataObject() = default;
+
+IndexType PointCloudDataObject::defaultAttributeLocation() const
+{
+    return IndexType::points;
+}
 
 std::unique_ptr<RenderedData> PointCloudDataObject::createRendered()
 {

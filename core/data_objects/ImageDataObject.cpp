@@ -11,6 +11,7 @@
 #include <vtkDataArray.h>
 
 #include <core/CoordinateSystems.h>
+#include <core/types.h>
 #include <core/filters/SimpleImageGeoCoordinateTransformFilter.h>
 #include <core/rendered_data/RenderedImageData.h>
 #include <core/table_model/QVtkTableModelImage.h>
@@ -54,6 +55,11 @@ ImageDataObject::~ImageDataObject() = default;
 bool ImageDataObject::is3D() const
 {
     return false;
+}
+
+IndexType ImageDataObject::defaultAttributeLocation() const
+{
+    return IndexType::points;
 }
 
 std::unique_ptr<RenderedData> ImageDataObject::createRendered()

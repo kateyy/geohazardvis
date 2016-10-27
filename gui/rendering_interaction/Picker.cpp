@@ -18,13 +18,14 @@
 #include <vtkPolyData.h>
 #include <vtkPropCollection.h>
 #include <vtkPropPicker.h>
+#include <vtkTriangle.h>
 #include <vtkVector.h>
 #include <vtkWeakPointer.h>
 
 #include <core/types.h>
 #include <core/color_mapping/ColorMapping.h>
 #include <core/color_mapping/ColorMappingData.h>
-#include <core/data_objects/PolyDataObject.h>
+#include <core/data_objects/GenericPolyDataObject.h>
 #include <core/rendered_data/RenderedData.h>
 #include <core/utility/DataExtent.h>
 
@@ -42,7 +43,7 @@ public:
         pointPicker->PickFromListOn();
     }
 
-    void appendPolyDataInfo(QTextStream & stream, PolyDataObject & polyData);
+    void appendPolyDataInfo(QTextStream & stream, GenericPolyDataObject & polyData);
     void appendGenericPositionInfo(QTextStream & stream, vtkDataSet & dataSet);
     static void appendPositionInfo(QTextStream & stream, vtkIdType index, const vtkVector3d & position,
         const QString & indexPrefix, const QString & coordinatePrefix);
@@ -157,20 +158,13 @@ void Picker::pick(const vtkVector2i & clickPosXY, vtkRenderer & renderer)
     stream << "Data Set: " << inputName << endl;
 
 
-    const auto polyData = dynamic_cast<PolyDataObject *>(&visualization.dataObject());
+    const auto polyData = dynamic_cast<GenericPolyDataObject *>(&visualization.dataObject());
     const bool isPolyDataObject = polyData != nullptr;
 
     // no active color mapping -> pick default locations
     if (d_ptr->pickedObjectInfo.indexType == IndexType::invalid)
     {
-        if (isPolyDataObject)
-        {
-            d_ptr->pickedObjectInfo.indexType = IndexType::cells;
-        }
-        else
-        {
-            d_ptr->pickedObjectInfo.indexType = IndexType::points;
-        }
+        d_ptr->pickedObjectInfo.indexType = visualization.dataObject().defaultAttributeLocation();
     }
 
     assert(d_ptr->pickedObjectInfo.indexType != IndexType::invalid);
@@ -272,7 +266,7 @@ vtkDataArray * Picker::pickedScalarArray()
     return d_ptr->pickedScalarArray;
 }
 
-void Picker_private::appendPolyDataInfo(QTextStream & stream, PolyDataObject & polyData)
+void Picker_private::appendPolyDataInfo(QTextStream & stream, GenericPolyDataObject & polyData)
 {
     const auto pickedIndex = pickedObjectInfo.indices.front();
     vtkVector3d position;
@@ -280,19 +274,23 @@ void Picker_private::appendPolyDataInfo(QTextStream & stream, PolyDataObject & p
 
     if (pickedObjectInfo.indexType == IndexType::cells)
     {
-        polyData.cellCenters()->GetPoint(pickedIndex, position.GetData());
+        auto pickedCell = polyData.polyDataSet().GetCell(pickedIndex);
+        if (pickedCell->GetNumberOfPoints() != 3)
+        {   // other than triangles not considered for now
+            return;
+        }
+        auto points = pickedCell->GetPoints();
+
+        vtkTriangle::TriangleCenter(
+            points->GetPoint(0), points->GetPoint(1), points->GetPoint(2),
+            position.GetData());
+
         indexPrefix = "Triangle";
         coordinatePrefix = "Centroid";
     }
     else
     {
         polyData.processedDataSet()->GetPoint(pickedIndex, position.GetData());
-        stream << endl
-            << "Point Index: " << pickedIndex << endl
-            << "X = " << position[0] << endl
-            << "Y = " << position[1] << endl
-            << "Z = " << position[2];
-        indexPrefix = "Point";
     }
 
     appendPositionInfo(stream, pickedIndex, position, indexPrefix, coordinatePrefix);

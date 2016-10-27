@@ -19,6 +19,7 @@ class vtkAlgorithmOutput;
 
 class Context2DData;
 class DataObjectPrivate;
+enum class IndexType;
 class QVtkTableModel;
 class RenderedData;
 
@@ -34,6 +35,7 @@ public:
 
     /** @return true if this is a 3D geometry (and false if it's image/2D data) */
     virtual bool is3D() const = 0;
+    virtual IndexType defaultAttributeLocation() const = 0;
 
     /** create a visualization instance; Subclasses may implement one or both
         -> createRendered: flexible/generic rendering 

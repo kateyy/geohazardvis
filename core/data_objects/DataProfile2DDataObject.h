@@ -45,6 +45,7 @@ public:
     bool isValid() const;
 
     bool is3D() const override;
+    IndexType defaultAttributeLocation() const override;
     std::unique_ptr<Context2DData> createContextData() override;
 
     const QString & dataTypeName() const override;

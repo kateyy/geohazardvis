@@ -11,6 +11,7 @@
 #include <vtkTransformPolyDataFilter.h>
 
 #include <core/CoordinateSystems.h>
+#include <core/types.h>
 #include <core/data_objects/DataObject_private.h>
 #include <core/data_objects/PointCloudDataObject.h>
 #include <core/data_objects/PolyDataObject.h>

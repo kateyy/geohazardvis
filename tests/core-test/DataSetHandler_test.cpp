@@ -6,6 +6,7 @@
 #include <vtkFloatArray.h>
 
 #include <core/DataSetHandler.h>
+#include <core/types.h>
 #include <core/data_objects/DataObject.h>
 #include <core/data_objects/RawVectorData.h>
 #include <core/table_model/QVtkTableModel.h>
@@ -28,6 +29,7 @@ public:
     }
 
     bool is3D() const override { return false; }
+    IndexType defaultAttributeLocation() const override { return IndexType::points; }
     const QString & dataTypeName() const override { return m_dataTypeName; }
     std::unique_ptr<QVtkTableModel> createTableModel() override { return nullptr; }
 

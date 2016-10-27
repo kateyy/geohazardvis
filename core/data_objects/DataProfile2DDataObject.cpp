@@ -171,6 +171,11 @@ bool DataProfile2DDataObject::is3D() const
     return false;
 }
 
+IndexType DataProfile2DDataObject::defaultAttributeLocation() const
+{
+    return IndexType::points;
+}
+
 std::unique_ptr<Context2DData> DataProfile2DDataObject::createContextData()
 {
     return std::make_unique<DataProfile2DContextPlot>(*this);

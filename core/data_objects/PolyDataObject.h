@@ -15,6 +15,8 @@ public:
     PolyDataObject(const QString & name, vtkPolyData & dataSet);
     ~PolyDataObject() override;
 
+    IndexType defaultAttributeLocation() const override;
+
     /** @return poly data set with cell normals */
     vtkAlgorithmOutput * processedOutputPort() override;
 

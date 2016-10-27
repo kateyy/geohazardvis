@@ -3,6 +3,7 @@
 #include <vtkCommand.h>
 #include <vtkFloatArray.h>
 
+#include <core/types.h>
 #include <core/table_model/QVtkTableModelRawVector.h>
 
 
@@ -20,6 +21,11 @@ RawVectorData::~RawVectorData() = default;
 bool RawVectorData::is3D() const
 {
     return false;
+}
+
+IndexType RawVectorData::defaultAttributeLocation() const
+{
+    return IndexType::invalid;
 }
 
 const QString & RawVectorData::dataTypeName() const

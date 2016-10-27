@@ -16,6 +16,7 @@ public:
     ~ImageDataObject() override;
 
     bool is3D() const override;
+    IndexType defaultAttributeLocation() const override;
 
     std::unique_ptr<RenderedData> createRendered() override;
 

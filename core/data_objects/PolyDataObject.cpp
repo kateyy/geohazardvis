@@ -13,6 +13,7 @@
 #include <vtkPolyDataNormals.h>
 #include <vtkTransform.h>
 
+#include <core/types.h>
 #include <core/rendered_data/RenderedPolyData.h>
 #include <core/table_model/QVtkTableModelPolyData.h>
 
@@ -28,6 +29,11 @@ PolyDataObject::PolyDataObject(const QString & name, vtkPolyData & dataSet)
 }
 
 PolyDataObject::~PolyDataObject() = default;
+
+IndexType PolyDataObject::defaultAttributeLocation() const
+{
+    return IndexType::cells;
+}
 
 vtkAlgorithmOutput * PolyDataObject::processedOutputPort()
 {

@@ -9,6 +9,7 @@
 #include <vtkPointData.h>
 #include <vtkDataArray.h>
 
+#include <core/types.h>
 #include <core/rendered_data/RenderedVectorGrid3D.h>
 #include <core/table_model/QVtkTableModelVectorGrid3D.h>
 #include <core/utility/conversions.h>
@@ -52,6 +53,11 @@ VectorGrid3DDataObject::~VectorGrid3DDataObject() = default;
 bool VectorGrid3DDataObject::is3D() const
 {
     return true;
+}
+
+IndexType VectorGrid3DDataObject::defaultAttributeLocation() const
+{
+    return IndexType::points;
 }
 
 std::unique_ptr<RenderedData> VectorGrid3DDataObject::createRendered()

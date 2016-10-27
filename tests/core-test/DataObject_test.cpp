@@ -10,6 +10,7 @@
 #include <vtkTriangle.h>
 #include <vtkVertex.h>
 
+#include <core/types.h>
 #include <core/data_objects/ImageDataObject.h>
 #include <core/data_objects/PointCloudDataObject.h>
 #include <core/data_objects/PolyDataObject.h>
@@ -29,6 +30,7 @@ public:
     }
 
     bool is3D() const override { return false; }
+    IndexType defaultAttributeLocation() const override { return IndexType::invalid; }
 
     const QString & dataTypeName() const override { static QString empty; return empty; }
 
