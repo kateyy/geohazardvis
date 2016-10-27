@@ -274,7 +274,8 @@ bool CoordinateSystemSpecification::isValid() const
         return false;
     }
 
-    if (type == CoordinateSystemType::geographic)
+    if (type == CoordinateSystemType::geographic
+        || type == CoordinateSystemType::other)
     {
         return !geographicSystem.isEmpty();
     }
