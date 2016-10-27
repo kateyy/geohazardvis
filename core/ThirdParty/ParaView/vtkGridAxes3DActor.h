@@ -24,7 +24,6 @@
 #include "vtkStdString.h" // needed for vtkStdString.
 
 #include <core/core_api.h>
-#include <core/VTK_backwards_compat.h>
 
 
 class vtkDoubleArray;

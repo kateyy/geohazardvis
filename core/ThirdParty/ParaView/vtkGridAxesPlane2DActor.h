@@ -27,7 +27,6 @@
 #include <deque> // For keeping track of tick marks
 
 #include <core/core_api.h>
-#include <core/VTK_backwards_compat.h>
 
 
 class vtkActor;

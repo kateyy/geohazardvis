@@ -28,7 +28,6 @@
 #include "vtkVector.h" // needed for vtkVector.
 
 #include <core/core_api.h>
-#include <core/VTK_backwards_compat.h>
 
 
 class vtkMatrix4x4;
