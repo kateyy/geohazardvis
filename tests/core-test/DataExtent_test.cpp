@@ -218,6 +218,32 @@ TEST(DataExtent_test, shifted_Bounds)
     ASSERT_EQ(Bounds2({ 1, 2, -3, -1 }), bounds.shifted(vtkVector2d{ 5, -6 }));
 }
 
+TEST(DataExtent_test, scale_ValueRange)
+{
+    auto valueRange = ValueRange<>({ -4, -3 });
+    valueRange.scale(-0.5);
+    ASSERT_EQ(ValueRange<>({ 2, 1.5 }), valueRange);
+}
+
+TEST(DataExtent_test, scale_Bounds)
+{
+    auto bounds = Bounds2({ -4, -3, 3, 5 });
+    bounds.scale(vtkVector2d{ -2, 3 });
+    ASSERT_EQ(Bounds2({ 8, 6, 9, 15 }), bounds);
+}
+
+TEST(DataExtent_test, scaled_ValueRange)
+{
+    const auto valueRange = ValueRange<>({ -4, -3 });
+    ASSERT_EQ(ValueRange<>({ 2, 1.5 }), valueRange.scaled(-0.5));
+}
+
+TEST(DataExtent_test, scaled_Bounds)
+{
+    const auto bounds = Bounds2({ -4, -3, 3, 5 });
+    ASSERT_EQ(Bounds2({ 8, 6, 9, 15 }), bounds.scaled(vtkVector2d{ -2, 3 }));
+}
+
 TEST(DataExtent_test, contains_point)
 {
     ASSERT_TRUE(Bounds2({ 0., 1., 0., 1. }).contains(Vec2{ 0.5f, 0.5f }));

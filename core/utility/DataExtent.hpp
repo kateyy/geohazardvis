@@ -340,10 +340,10 @@ auto DataExtent<T, Dimensions>::intersect(const DataExtent & other) -> DataExten
 template<typename T, size_t Dimensions>
 template<size_t Dimensions1>
 typename std::enable_if<(Dimensions1 == 1u), DataExtent<T, Dimensions> &>::type
-DataExtent<T, Dimensions>::shift(T shift)
+DataExtent<T, Dimensions>::shift(T shiftValue)
 {
-    m_extent[0] += shift;
-    m_extent[1] += shift;
+    m_extent[0] += shiftValue;
+    m_extent[1] += shiftValue;
 
     return *this;
 }
@@ -365,10 +365,10 @@ DataExtent<T, Dimensions>::shift(const vtkVector<T, Dimensions> & shiftVector)
 template<typename T, size_t Dimensions>
 template<size_t Dimensions1>
 typename std::enable_if<(Dimensions1 == 1u), DataExtent<T, Dimensions>>::type
-DataExtent<T, Dimensions>::shifted(T shift) const
+DataExtent<T, Dimensions>::shifted(T shiftValue) const
 {
     auto result = *this;
-    result.shift(shift);
+    result.shift(shiftValue);
     return result;
 }
 
@@ -379,6 +379,51 @@ DataExtent<T, Dimensions>::shifted(const vtkVector<T, Dimensions> & shiftVector)
 {
     auto result = *this;
     result.shift(shiftVector);
+    return result;
+}
+
+template<typename T, size_t Dimensions>
+template<size_t Dimensions1>
+typename std::enable_if<(Dimensions1 == 1u), DataExtent<T, Dimensions> &>::type
+DataExtent<T, Dimensions>::scale(T scaleFactor)
+{
+    m_extent[0] *= scaleFactor;
+    m_extent[1] *= scaleFactor;
+
+    return *this;
+}
+
+template<typename T, size_t Dimensions>
+template<size_t Dimensions1>
+typename std::enable_if<(Dimensions1 > 1u), DataExtent<T, Dimensions> &>::type
+DataExtent<T, Dimensions>::scale(const vtkVector<T, Dimensions> & scaleVector)
+{
+    for (size_t i = 0u; i < Dimensions; ++i)
+    {
+        m_extent[2u * i] *= scaleVector[static_cast<int>(i)];
+        m_extent[2u * i + 1u] *= scaleVector[static_cast<int>(i)];
+    }
+
+    return *this;
+}
+
+template<typename T, size_t Dimensions>
+template<size_t Dimensions1>
+typename std::enable_if<(Dimensions1 == 1u), DataExtent<T, Dimensions>>::type
+DataExtent<T, Dimensions>::scaled(T scaleFactor) const
+{
+    auto result = *this;
+    result.scale(scaleFactor);
+    return result;
+}
+
+template<typename T, size_t Dimensions>
+template<size_t Dimensions1>
+typename std::enable_if<(Dimensions1 > 1u), DataExtent<T, Dimensions>>::type
+DataExtent<T, Dimensions>::scaled(const vtkVector<T, Dimensions> & scaleVector) const
+{
+    auto result = *this;
+    result.scale(scaleVector);
     return result;
 }
 

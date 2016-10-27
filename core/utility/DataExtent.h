@@ -93,7 +93,7 @@ public:
 
     template<size_t Dimensions1 = Dimensions>
     typename std::enable_if<(Dimensions1 == 1u), DataExtent &>::type
-        shift(T shift);
+        shift(T shiftValue);
 
     template<size_t Dimensions1 = Dimensions>
     typename std::enable_if<(Dimensions1 > 1u), DataExtent &>::type
@@ -101,11 +101,27 @@ public:
 
     template<size_t Dimensions1 = Dimensions>
     typename std::enable_if<(Dimensions1 == 1u), DataExtent>::type
-        shifted(T shift) const;
+        shifted(T shiftValue) const;
 
     template<size_t Dimensions1 = Dimensions>
     typename std::enable_if<(Dimensions1 > 1u), DataExtent>::type
         shifted(const vtkVector<T, Dimensions> & shiftVector) const;
+
+    template<size_t Dimensions1 = Dimensions>
+    typename std::enable_if<(Dimensions1 == 1u), DataExtent &>::type
+        scale(T scaleFactor);
+
+    template<size_t Dimensions1 = Dimensions>
+    typename std::enable_if<(Dimensions1 > 1u), DataExtent &>::type
+        scale(const vtkVector<T, Dimensions> & scaleVector);
+
+    template<size_t Dimensions1 = Dimensions>
+    typename std::enable_if<(Dimensions1 == 1u), DataExtent>::type
+        scaled(T scaleFactor) const;
+
+    template<size_t Dimensions1 = Dimensions>
+    typename std::enable_if<(Dimensions1 > 1u), DataExtent>::type
+        scaled(const vtkVector<T, Dimensions> & scaleVector) const;
 
     template<size_t Dimensions1 = Dimensions>
     typename std::enable_if<(Dimensions1 == 1u), bool>::type
