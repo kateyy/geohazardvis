@@ -22,7 +22,7 @@ CoordinateTransformableDataObject::CoordinateTransformableDataObject(
     m_coordsSetter->SetInputConnection(DataObject::processedOutputPort());
 
     const auto spec = ReferencedCoordinateSystemSpecification::fromFieldData(*dataSet->GetFieldData());
-    if (spec.isValid(false))
+    if (spec.isValid())
     {
         m_coordsSetter->SetCoordinateSystemSpec(spec);
     }
@@ -45,13 +45,13 @@ ConversionCheckResult CoordinateTransformableDataObject::canTransformToInternal(
     const CoordinateSystemSpecification & toSystem) const
 {
     // check for missing parameters
-    if (!toSystem.isValid(false))
+    if (!toSystem.isValid())
     {
         return ConversionCheckResult::invalidParameters();
     }
 
     // check for missing specification for the data set
-    if (!coordinateSystem().isValid(false))
+    if (!coordinateSystem().isValid())
     {
         return ConversionCheckResult::missingInformation();
     }
@@ -116,7 +116,7 @@ ConversionCheckResult CoordinateTransformableDataObject::canTransformTo(
 bool CoordinateTransformableDataObject::specifyCoordinateSystem(
     const ReferencedCoordinateSystemSpecification & coordinateSystem)
 {
-    if (!coordinateSystem.isValid(true))
+    if (!coordinateSystem.isValid() && !coordinateSystem.isUnspecified())
     {
         return false;
     }

@@ -257,32 +257,25 @@ CoordinateSystemSpecification::CoordinateSystemSpecification(
 {
 }
 
-bool CoordinateSystemSpecification::isValid(bool allowUnspecified) const
+bool CoordinateSystemSpecification::isValid() const
 {
     if (type == CoordinateSystemType::unspecified)
     {
-        if (!allowUnspecified)
-        {
-            return false;
-        }
-
-        return geographicSystem.isEmpty() && globalMetricSystem.isEmpty();
-    }
-
-    if (type == CoordinateSystemType::geographic
-        && geographicSystem.isEmpty())
-    {
         return false;
     }
 
-    if (type != CoordinateSystemType::geographic
-        && (geographicSystem.isEmpty()
-            || globalMetricSystem.isEmpty()))
+    if (type == CoordinateSystemType::geographic)
     {
-        return false;
+        return !geographicSystem.isEmpty();
     }
 
-    return true;
+    return !geographicSystem.isEmpty() && !globalMetricSystem.isEmpty();
+}
+
+bool CoordinateSystemSpecification::isUnspecified() const
+{
+    return type == CoordinateSystemType::unspecified
+        && geographicSystem.isEmpty() && globalMetricSystem.isEmpty();
 }
 
 bool CoordinateSystemSpecification::operator==(const CoordinateSystemSpecification & other) const

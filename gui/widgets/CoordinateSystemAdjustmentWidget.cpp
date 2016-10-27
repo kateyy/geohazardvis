@@ -188,7 +188,7 @@ void CoordinateSystemAdjustmentWidget::finish()
 
     const auto spec = specFromUi();
 
-    if (!spec.isValid(false))
+    if (!spec.isValid())
     {
         QMessageBox::warning(this, windowTitle(),
             "Coordinate System Specification is not valid.");

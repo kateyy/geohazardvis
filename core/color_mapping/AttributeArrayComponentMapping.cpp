@@ -65,7 +65,7 @@ std::vector<std::unique_ptr<ColorMappingData>> AttributeArrayComponentMapping::n
                 continue;
             }
             // skip point coordinates stored in point data
-            if (CoordinateSystemSpecification::fromInformation(dataArrayInfo).isValid(false))
+            if (CoordinateSystemSpecification::fromInformation(dataArrayInfo).isValid())
             {
                 continue;
             }

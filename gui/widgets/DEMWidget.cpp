@@ -1050,7 +1050,7 @@ void DEMWidget::updateTargetCoordsComboForCurrentDEM()
     QSignalBlocker blocker(combo);
     combo.clear();
 
-    if (!dem() || !dem()->coordinateSystem().isValid(false))
+    if (!dem() || !dem()->coordinateSystem().isValid())
     {
         combo.addItem(CoordinateSystemType(CoordinateSystemType::unspecified).toString(), CoordinateSystemType::unspecified);
         combo.setEnabled(false);

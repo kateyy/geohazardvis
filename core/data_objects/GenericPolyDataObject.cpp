@@ -38,7 +38,7 @@ vtkDataArray * findCoordinatesArray(
             continue;
         }
         const auto spec = CoordinateSystemSpecification::fromInformation(*array->GetInformation());
-        if (spec.isValid(false) && (spec == coordsSpec))
+        if (spec.isValid() && (spec == coordsSpec))
         {
             return array;
         }

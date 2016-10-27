@@ -380,7 +380,7 @@ std::unique_ptr<AbstractVisualizedData> RendererImplementationBase3D::requestVis
     auto rendered = dataObject.createRendered();
 
     const auto & coordinateSystem = renderView().currentCoordinateSystem();
-    if (coordinateSystem.isValid(false))
+    if (coordinateSystem.isValid())
     {
         rendered->setDefaultCoordinateSystem(coordinateSystem);
     }

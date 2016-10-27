@@ -61,7 +61,7 @@ bool AbstractRenderView::setCurrentCoordinateSystem(const CoordinateSystemSpecif
         return true;
     }
 
-    if (spec.type != CoordinateSystemType::unspecified && !spec.isValid(true))
+    if (!spec.isValid() && !spec.isUnspecified())
     {
         return false;
     }
@@ -69,7 +69,7 @@ bool AbstractRenderView::setCurrentCoordinateSystem(const CoordinateSystemSpecif
     // If the coordinate system is specified, only allow to switch if all data objects support the transformation.
     // Setting it to CoordinateSystemType::unspecified is okay, if this user insists in setting this.
     // (this results in a pass-through)
-    if (spec.isValid(false) && !canShowDataObjectInCoordinateSystem(spec))
+    if (spec.isValid() && !canShowDataObjectInCoordinateSystem(spec))
     {
         return false;
     }
@@ -144,7 +144,7 @@ void AbstractRenderView::showDataObjects(
     {
         auto transformable = dynamic_cast<CoordinateTransformableDataObject *>(dataObject);
         transformableObjects << transformable;
-        if (transformable && transformable->coordinateSystem().isValid(false))
+        if (transformable && transformable->coordinateSystem().isValid())
         {
             hasTransformables = true;
         }
@@ -156,7 +156,7 @@ void AbstractRenderView::showDataObjects(
     }
 
     QList<DataObject *> possibleCompatibleObjects;
-    bool haveValidSystem = currentCoordinateSystem().isValid(false);
+    bool haveValidSystem = currentCoordinateSystem().isValid();
 
     // Once there is a valid coordinate system specification, don't allow to mix incompatible
     // representations

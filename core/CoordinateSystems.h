@@ -66,7 +66,14 @@ struct CORE_API CoordinateSystemSpecification
     This must not be set if type is set to CoordinateSystemType::geographic. */
     QString globalMetricSystem;
 
-    bool isValid(bool allowUnspecified) const;
+    /** Check whether this specification is not CoordinateSystemType::unspecified and at least all
+      * required parameters for the current type are set.
+      * geographic -> requires geographicSystem (unit is generally degree)
+      * metricGlobal/Local -> additionally require globalMetricSystem and coordinatesUnit */
+    bool isValid() const;
+    /** Check whether type is unspecified and no further parameters are set. This allows to detect
+      * incomplete specifications. */
+    bool isUnspecified() const;
 
     bool operator==(const CoordinateSystemSpecification & other) const;
     bool operator!=(const CoordinateSystemSpecification & other) const;

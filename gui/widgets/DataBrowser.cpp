@@ -164,7 +164,7 @@ void DataBrowser::changeRenderedVisibility(DataObject * clickedObject)
         {
             continue;
         }
-        if (transformable->coordinateSystem().isValid(false))
+        if (transformable->coordinateSystem().isValid())
         {
             continue;
         }

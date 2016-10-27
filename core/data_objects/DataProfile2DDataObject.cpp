@@ -62,7 +62,7 @@ DataProfile2DDataObject::DataProfile2DDataObject(
     auto & transformedSource = this->sourceData();
     auto && sourceCoordSystem = transformedSource.coordinateSystem();
 
-    if (sourceCoordSystem.isValid(false))
+    if (sourceCoordSystem.isValid())
     {
         auto checkCoords = sourceCoordSystem;
         checkCoords.type = CoordinateSystemType::metricLocal;
@@ -81,7 +81,7 @@ DataProfile2DDataObject::DataProfile2DDataObject(
 
     vtkSmartPointer<vtkDataSet> inputData;
     vtkAlgorithmOutput * inputAlgorithmPort = nullptr;
-    if (m_targetCoordsSpec.isValid(false))
+    if (m_targetCoordsSpec.isValid())
     {
         inputData = transformedSource.coordinateTransformedDataSet(m_targetCoordsSpec);
         inputAlgorithmPort = transformedSource.coordinateTransformedOutputPort(m_targetCoordsSpec);
@@ -269,13 +269,13 @@ void DataProfile2DDataObject::setPointsCoordinateSystem(const CoordinateSystemSp
         bool * ptr;
     } transformPointsCheck(m_doTransformPoints);
 
-    if (!m_targetCoordsSpec.isValid(false))
+    if (!m_targetCoordsSpec.isValid())
     {
         // Source data coordinate system is not defined, so assume all coordinates to be untransformed.
         return;
     }
 
-    if (!coordsSpec.isValid(true))
+    if (!coordsSpec.isValid() && !coordsSpec.isUnspecified())
     {
         qWarning() << "Invalid point coordinate system passed to DataProfile2DDataObject. "
             "Line points won't be transformed at all.";
@@ -383,7 +383,7 @@ void DataProfile2DDataObject::updateTransformInputPoints()
         p2 = m_profileLinePoint2;
     }
 
-    auto transformedSourceData = m_targetCoordsSpec.isValid(false)
+    auto transformedSourceData = m_targetCoordsSpec.isValid()
         ? vtkSmartPointer<vtkDataSet>(sourceData().coordinateTransformedDataSet(m_targetCoordsSpec))
         : vtkSmartPointer<vtkDataSet>(sourceData().processedDataSet());
 

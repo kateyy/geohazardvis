@@ -73,7 +73,7 @@ std::unique_ptr<PropertyGroup> RendererConfigWidget::createPropertyGroupRenderer
             return;
         }
 
-        if (!spec.isValid(false) && type != CoordinateSystemType::unspecified)
+        if (!spec.isValid())
         {
             // Switching from unspecified to some valid coordinate system type.
             // Try to set more information.

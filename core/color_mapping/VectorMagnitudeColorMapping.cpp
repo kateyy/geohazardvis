@@ -49,7 +49,7 @@ std::vector<std::unique_ptr<ColorMappingData>> VectorMagnitudeColorMapping::newI
                 continue;
             }
             // skip point coordinates stored in point data
-            if (CoordinateSystemSpecification::fromInformation(arrayInfo).isValid(false))
+            if (CoordinateSystemSpecification::fromInformation(arrayInfo).isValid())
             {
                 continue;
             }
