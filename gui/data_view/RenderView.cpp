@@ -30,6 +30,8 @@ RenderView::RenderView(
 
 RenderView::~RenderView()
 {
+    signalClosing();
+
     QList<AbstractVisualizedData *> toDelete;
 
     for (auto & rendered : m_contents)

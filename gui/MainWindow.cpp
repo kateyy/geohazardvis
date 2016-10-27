@@ -205,7 +205,7 @@ MainWindow::MainWindow()
     connect(m_ui->actionResidual_Verification_View, &QAction::triggered,
         [this] (bool) {
         auto view = m_dataMapping->createRenderView<ResidualVerificationView>();
-        m_dataMapping->setFocusedView(view);
+        m_dataMapping->setFocusedRenderView(view);
     });
 
     connect(m_ui->actionDark_Style, &QAction::triggered, this, &MainWindow::setDarkFusionStyle);

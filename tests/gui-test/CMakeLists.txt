@@ -6,6 +6,7 @@ message(STATUS "Test ${target}")
 set(sources
     main.cpp
     ColorMapping_test.cpp
+    DataMapping_test.cpp
     DEMWidget_test.cpp
     Picker_test.cpp
     RendererImplementationBase3D_test.cpp

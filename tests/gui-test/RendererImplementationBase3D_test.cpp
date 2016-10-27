@@ -25,6 +25,7 @@ public:
     }
     ~TestRenderView() override
     {
+        signalClosing();
         m_impl->deactivate(qvtkWidget());
     }
 

@@ -96,6 +96,8 @@ ResidualVerificationView::ResidualVerificationView(DataMapping & dataMapping, in
 
 ResidualVerificationView::~ResidualVerificationView()
 {
+    signalClosing();
+
     {
         m_destructorCalled = true;
         waitForResidualUpdate();

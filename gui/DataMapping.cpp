@@ -1,12 +1,14 @@
 #include "DataMapping.h"
 
+#include <algorithm>
 #include <cassert>
 
 #include <QCoreApplication>
+#include <QDockWidget>
 #include <QMessageBox>
 
 #include <core/data_objects/DataObject.h>
-
+#include <core/utility/memory.h>
 #include <gui/SelectionHandler.h>
 #include <gui/data_view/TableView.h>
 #include <gui/data_view/RenderView.h>
@@ -14,6 +16,7 @@
 
 DataMapping::DataMapping(DataSetHandler & dataSetHandler)
     : m_dataSetHandler{ dataSetHandler }
+    , m_deleting{ false }
     , m_selectionHandler{ std::make_unique<SelectionHandler>() }
     , m_nextTableIndex{ 0 }
     , m_nextRenderViewIndex{ 0 }
@@ -23,18 +26,20 @@ DataMapping::DataMapping(DataSetHandler & dataSetHandler)
 
 DataMapping::~DataMapping()
 {
-    // prevent GUI/focus updates
-    auto renderView = m_renderViews;
-    auto tableViews = m_tableViews;
+    m_deleting = true;
 
-    emit renderViewsChanged({});
+    while (!m_renderViews.empty())
+    {
+        renderViewDeleteLater(m_renderViews.begin()->get());
+    }
+    while (!m_tableViews.empty())
+    {
+        tableViewDeleteLater(m_tableViews.begin()->get());
+    }
+
+    QCoreApplication::processEvents();
+
     emit focusedRenderViewChanged(nullptr);
-
-    m_renderViews.clear();
-    m_tableViews.clear();
-
-    qDeleteAll(renderView);
-    qDeleteAll(tableViews);
 }
 
 DataSetHandler & DataMapping::dataSetHandler() const
@@ -52,21 +57,39 @@ void DataMapping::removeDataObjects(const QList<DataObject *> & dataObjects)
 {
     // copy, as this list can change while we are processing it
     // e.g., deleting an image -> delete related plots -> close related plot renderer
-    auto currentRenderViews = m_renderViews.values();
+    const auto currentRenderViews = [this] ()
+    {
+        std::vector<AbstractRenderView *> views;
+        for (auto && it : m_renderViews)
+        {
+            views.push_back(it.get());
+        }
+        return views;
+    }();
+    const auto currentTableViews = [this] ()
+    {
+        std::vector<TableView *> views;
+        for (auto && it : m_tableViews)
+        {
+            views.push_back(it.get());
+        }
+        return views;
+    }();
+
+
     for (auto renderView : currentRenderViews)
     {
-        if (!m_renderViews.values().contains(renderView))
+        if (containsUnique(m_renderViews, renderView))
         {
-            continue;
+            renderView->prepareDeleteData(dataObjects);
         }
 
-        renderView->prepareDeleteData(dataObjects);
     }
 
-    auto currentTableViews = m_tableViews.values();
     for (auto tableView : currentTableViews)
     {
-        if (dataObjects.contains(tableView->dataObject()))
+        if (containsUnique(m_tableViews, tableView)
+            && dataObjects.contains(tableView->dataObject()))
         {
             tableView->close();
         }
@@ -80,24 +103,26 @@ void DataMapping::openInTable(DataObject * dataObject)
         return;
     }
 
-    TableView * table = nullptr;
-    for (auto existingTable : m_tableViews)
+    // Open a new table only if there isn't already a table containing dataObject.
+    const auto tableIt = std::find_if(m_tableViews.begin(), m_tableViews.end(),
+        [dataObject] (const decltype(m_tableViews)::value_type & view)
     {
-        if (existingTable->dataObject() == dataObject)
-        {
-            table = existingTable;
-            break;
-        }
-    }
+        return view->dataObject() == dataObject;
+    });
+    auto table = tableIt != m_tableViews.end() ? tableIt->get() : static_cast<TableView *>(nullptr);
 
     if (!table)
     {
-        table = new TableView(*this, m_nextTableIndex++);
+        auto ownedTable = std::make_unique<TableView>(*this, m_nextTableIndex++);
+        table = ownedTable.get();
+        m_tableViews.push_back(std::move(ownedTable));
         connect(table, &TableView::closed, this, &DataMapping::tableClosed);
+
+        table->showDataObject(*dataObject);
 
         // find the first existing docked table, and tabify with it
         QDockWidget * tabMaster = nullptr;
-        for (auto other : m_tableViews)
+        for (auto && other : m_tableViews)
         {
             if (other->hasDockWidgetParent())
             {
@@ -109,16 +134,10 @@ void DataMapping::openInTable(DataObject * dataObject)
 
         emit tableViewCreated(table, tabMaster);
 
-        connect(table, &TableView::focused, this, &DataMapping::setFocusedView);
-
-        m_tableViews.insert(table->index(), table);
-
         m_selectionHandler->addTableView(table);
     }
     
     QCoreApplication::processEvents();
-
-    table->showDataObject(*dataObject);
 }
 
 AbstractRenderView * DataMapping::openInRenderView(const QList<DataObject *> & dataObjects)
@@ -132,14 +151,14 @@ AbstractRenderView * DataMapping::openInRenderView(const QList<DataObject *> & d
         return nullptr;
     }
 
-    setFocusedView(renderView);
+    setFocusedRenderView(renderView);
 
     return renderView;
 }
 
 bool DataMapping::addToRenderView(const QList<DataObject *> & dataObjects, AbstractRenderView * renderView, unsigned int subViewIndex)
 {
-    assert(m_renderViews.key(renderView, -1) >= 0);
+    assert(containsUnique(m_renderViews, renderView));
     assert(subViewIndex < renderView->numberOfSubViews());
 
     QList<DataObject *> incompatibleObjects;
@@ -148,7 +167,7 @@ bool DataMapping::addToRenderView(const QList<DataObject *> & dataObjects, Abstr
     // RenderView::showDataObjects triggers QApplication::processEvents(), so the view might be closed again
     // in that case, the user probably wants to abort his last action or close the app
     // so abort everything from here
-    if (!m_renderViews.values().contains(renderView))
+    if (!containsUnique(m_renderViews, renderView))
     {
         return false;
     }
@@ -166,7 +185,7 @@ AbstractRenderView * DataMapping::createDefaultRenderViewType()
 {
     auto renderView = createRenderView<RenderView>();
 
-    setFocusedView(renderView);
+    setFocusedRenderView(renderView);
 
     return renderView;
 }
@@ -178,71 +197,83 @@ AbstractRenderView * DataMapping::focusedRenderView()
 
 QList<AbstractRenderView *> DataMapping::renderViews() const
 {
-    return m_renderViews.values();
+    decltype(renderViews()) list;
+    for (auto && it : m_renderViews)
+    {
+        list.push_back(it.get());
+    }
+    return list;
 }
 
 QList<TableView *> DataMapping::tableViews() const
 {
-    return m_tableViews.values();
+    decltype(tableViews()) list;
+    for (auto && it : m_tableViews)
+    {
+        list.push_back(it.get());
+    }
+    return list;
 }
 
-void DataMapping::setFocusedView(AbstractDataView * view)
+void DataMapping::setFocusedRenderView(AbstractDataView * renderView)
 {
-    assert(view);
-
-    if (view->isRenderer())
+    if (m_focusedRenderView == renderView)
     {
-        if (m_focusedRenderView == view)
-        {
-            return;
-        }
+        return;
+    }
 
-        if (m_focusedRenderView)
-        {
-            m_focusedRenderView->setCurrent(false);
-        }
+    if (renderView && !renderView->isRenderer())
+    {
+        return;
+    }
 
-        assert(dynamic_cast<AbstractRenderView *>(view));
-        m_focusedRenderView = static_cast<AbstractRenderView *>(view);
+    // check if the user clicked on a view that we are currently closing
+    if (renderView && renderView->isClosed())
+    {
+        focusNextRenderView();
+        return;
+    }
 
-        // check if the user clicked on a view that we are currently closing
-        if (m_renderViews.value(view->index()) != view) 
-        {
-            assert(!view->isVisible());
-            focusNextRenderView();
-            return;
-        }
+    if (m_focusedRenderView)
+    {
+        m_focusedRenderView->setCurrent(false);
+    }
 
+    assert(!renderView || dynamic_cast<AbstractRenderView *>(renderView));
+    m_focusedRenderView = static_cast<AbstractRenderView *>(renderView);
+
+    if (m_focusedRenderView)
+    {
         m_focusedRenderView->setCurrent(true);
         m_focusedRenderView->setFocus();
-
-        emit focusedRenderViewChanged(m_focusedRenderView);
-    }
-}
-
-void DataMapping::focusNextRenderView()
-{
-    if (m_renderViews.isEmpty())
-    {
-        m_focusedRenderView = nullptr;
-    }
-    else
-    {
-        m_focusedRenderView = m_renderViews.first();
-        m_focusedRenderView->setCurrent(true);
     }
 
     emit focusedRenderViewChanged(m_focusedRenderView);
 }
 
+void DataMapping::focusNextRenderView()
+{
+    auto nextViewIt = std::find_if(m_renderViews.begin(), m_renderViews.end(),
+    [this] (const decltype(m_renderViews)::value_type & view)
+    {
+        return (m_focusedRenderView != view.get()) && !view->isClosed();
+    });
+
+    auto nextView = nextViewIt != m_renderViews.end()
+        ? nextViewIt->get()
+        : static_cast<decltype(nextViewIt->get())>(nullptr);
+
+    setFocusedRenderView(nextView);
+}
+
 void DataMapping::tableClosed()
 {
-    auto table = dynamic_cast<TableView*>(sender());
-    assert(table);
+    assert(dynamic_cast<TableView *>(sender()));
+    auto table = static_cast<TableView *>(sender());
 
     m_selectionHandler->removeTableView(table);
-    m_tableViews.remove(table->index());
-    table->deleteLater();
+
+    tableViewDeleteLater(table);
 }
 
 void DataMapping::renderViewClosed()
@@ -252,33 +283,57 @@ void DataMapping::renderViewClosed()
 
     m_selectionHandler->removeRenderView(renderView);
 
-    m_renderViews.remove(renderView->index());
-
     if (renderView == m_focusedRenderView)
     {
         focusNextRenderView();
     }
 
-    renderView->deleteLater();
-
-    emit renderViewsChanged(m_renderViews.values());
+    renderViewDeleteLater(renderView);
 }
 
-void DataMapping::addRenderView(AbstractRenderView * renderView)
+void DataMapping::renderViewDeleteLater(AbstractRenderView * view)
 {
-    assert(!m_renderViews.contains(renderView->index()));
-    assert(!m_renderViews.values().contains(renderView));
+    deleteLaterFrom(view, m_renderViews);
+}
 
-    m_renderViews.insert(renderView->index(), renderView);
+void DataMapping::tableViewDeleteLater(TableView * view)
+{
+    deleteLaterFrom(view, m_tableViews);
+}
 
-    connect(renderView, &AbstractDataView::focused, this, &DataMapping::setFocusedView);
+template<typename View_t, typename Vector_t>
+void DataMapping::deleteLaterFrom(View_t * view, Vector_t & vector)
+{
+    auto ownedViewIt = findUnique(vector, view);
+    if (ownedViewIt == vector.end())
+    {
+        // Reentered this function while calling view->dockWidgetParent()->close();
+        return;
+    }
+
+    auto viewOwnership = std::move(*ownedViewIt);
+    vector.erase(ownedViewIt);
+
+    // Handle deletion in Qt event loop (but not if the DataMapping is currently deleted)
+    if (!m_deleting)
+    {
+        viewOwnership.release()->deleteLater();
+    }
+}
+
+void DataMapping::addRenderView(std::unique_ptr<AbstractRenderView> ownedRenderView)
+{
+    assert(ownedRenderView);
+    auto renderView = ownedRenderView.get();
+
+    m_renderViews.push_back(std::move(ownedRenderView));
+
+    connect(renderView, &AbstractDataView::focused, this, &DataMapping::setFocusedRenderView);
     connect(renderView, &AbstractDataView::closed, this, &DataMapping::renderViewClosed);
 
     m_selectionHandler->addRenderView(renderView);
 
     emit renderViewCreated(renderView);
-
-    emit renderViewsChanged(m_renderViews.values());
 }
 
 bool DataMapping::askForNewRenderView(const QString & rendererName, const QList<DataObject *> & relevantObjects)

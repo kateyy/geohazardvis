@@ -1,9 +1,9 @@
 #pragma once
 
 #include <memory>
+#include <vector>
 
 #include <QObject>
-#include <QMap>
 
 #include <gui/gui_api.h>
 
@@ -16,7 +16,6 @@ class AbstractRenderView;
 class DataObject;
 class DataSetHandler;
 class SelectionHandler;
-class RenderView;
 class TableView;
 
 
@@ -48,38 +47,40 @@ public:
     AbstractRenderView * createDefaultRenderViewType();
 
     AbstractRenderView * focusedRenderView();
+    void setFocusedRenderView(AbstractDataView * renderView);
 
     QList<AbstractRenderView *> renderViews() const;
     QList<TableView *> tableViews() const;
 
-public:
-    void setFocusedView(AbstractDataView * renderView);
-
 signals:
     void renderViewCreated(AbstractRenderView * renderView);
-    void tableViewCreated(TableView * tableView, QDockWidget * dockTabifyPartner);
-    void renderViewsChanged(const QList<AbstractRenderView *> & widgets);
     void focusedRenderViewChanged(AbstractRenderView * renderView);
+    void tableViewCreated(TableView * tableView, QDockWidget * dockTabifyPartner);
 
 private:
     void focusNextRenderView();
 
     void tableClosed();
     void renderViewClosed();
+    /** Pass responsibility for deletion to Qt, calling QObject::deleteLater() */
+    void renderViewDeleteLater(AbstractRenderView * view);
+    void tableViewDeleteLater(TableView * view);
+    template<typename View_t, typename Vector_t>
+    void deleteLaterFrom(View_t * view, Vector_t & vector);
 
-private:
-    void addRenderView(AbstractRenderView * renderView);
+    void addRenderView(std::unique_ptr<AbstractRenderView> renderView);
     bool askForNewRenderView(const QString & rendererName, const QList<DataObject *> & relevantObjects);
 
 private:
     DataSetHandler & m_dataSetHandler;
+    bool m_deleting;
 
     std::unique_ptr<SelectionHandler> m_selectionHandler;
 
     int m_nextTableIndex;
     int m_nextRenderViewIndex;
-    QMap<int, TableView *> m_tableViews;
-    QMap<int, AbstractRenderView *> m_renderViews;
+    std::vector<std::unique_ptr<TableView>> m_tableViews;
+    std::vector<std::unique_ptr<AbstractRenderView>> m_renderViews;
 
     AbstractRenderView * m_focusedRenderView;
 
@@ -91,9 +92,10 @@ private:
 template<typename T>
 T * DataMapping::createRenderView()
 {
-    auto view = new T(*this, m_nextRenderViewIndex++);
+    auto view = std::make_unique<T>(*this, m_nextRenderViewIndex++);
+    auto ptr = view.get();
 
-    addRenderView(view);
+    addRenderView(std::move(view));
 
-    return view;
+    return ptr;
 }

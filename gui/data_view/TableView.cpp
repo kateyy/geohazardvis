@@ -31,7 +31,10 @@ TableView::TableView(DataMapping & dataMapping, int index, QWidget * parent, Qt:
     });
 }
 
-TableView::~TableView() = default;
+TableView::~TableView()
+{
+    signalClosing();
+}
 
 bool TableView::isTable() const
 {

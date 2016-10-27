@@ -265,14 +265,6 @@ TEST_F(DEMWidget_test, ShowPreview)
     ASSERT_NO_THROW(demWidget.showPreview());
 
     ASSERT_EQ(1, env.dataMapping->renderViews().size());
-
-    auto & previewWindow = *env.dataMapping->renderViews().first();
-    const auto visDataObjects = previewWindow.dataObjects();
-
-    // simulate normal GUI behavior. The main window would normally add the render view to itself,
-    // thus triggering an actual close event on shutdown. The deletion of visualization is done
-    // in the close event, and it won't work correctly without showing the data view once.
-    previewWindow.show();
 }
 
 TEST_F(DEMWidget_test, DeleteCurrentDemAndTopo)

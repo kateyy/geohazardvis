@@ -228,6 +228,8 @@ DEMWidget::DEMWidget(PolyDataObject & templateMesh, ImageDataObject & dem,
 
 DEMWidget::~DEMWidget()
 {
+    signalClosing();
+
     if (!m_previewRenderer)
     {
         return;
