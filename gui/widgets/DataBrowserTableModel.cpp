@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cassert>
+#include <cmath>
 #include <functional>
 
 #include <QIcon>
@@ -16,12 +17,25 @@
 #include <core/data_objects/VectorGrid3DDataObject.h>
 #include <core/utility/DataExtent.h>
 #include <core/utility/qthelper.h>
+#include <core/utility/vtkvectorhelper.h>
 
 
 namespace
 {
 
-const int s_btnClms = 3;
+const int s_numBtnColumns = 3;
+const int s_colBtnTable = 0;
+const int s_colBtnRenderView = 1;
+const int s_colBtnDelete = 2;
+
+const int s_colName = s_numBtnColumns + 0;
+const int s_colDataSetType = s_numBtnColumns + 1;
+const int s_colReferencePoint = s_numBtnColumns + 2;
+const int s_colDimensions = s_numBtnColumns + 3;
+const int s_colSpatialExtent = s_numBtnColumns + 4;
+const int s_colValueRange = s_numBtnColumns + 5;
+
+const int s_numColumns = s_numBtnColumns + 6;
 
 }
 
@@ -64,7 +78,7 @@ int DataBrowserTableModel::rowCount(const QModelIndex &/*parent = QModelIndex()*
 
 int DataBrowserTableModel::columnCount(const QModelIndex &/*parent = QModelIndex()*/) const
 {
-    return s_btnClms + 5;
+    return s_numColumns;
 }
 
 QVariant DataBrowserTableModel::data(const QModelIndex &index, int role /*= Qt::DisplayRole*/) const
@@ -95,11 +109,12 @@ QVariant DataBrowserTableModel::headerData(int section, Qt::Orientation orientat
 
     switch (section)
     {
-    case s_btnClms + 0: return "Name";
-    case s_btnClms + 1: return "Data Set Type";
-    case s_btnClms + 2: return "Dimensions";
-    case s_btnClms + 3: return "Spatial Extent";
-    case s_btnClms + 4: return "Value Range";
+    case s_colName: return "Name";
+    case s_colDataSetType: return "Data Set Type";
+    case s_colReferencePoint: return "Reference Point";
+    case s_colDimensions: return "Dimensions";
+    case s_colSpatialExtent: return "Spatial Extent";
+    case s_colValueRange: return "Value Range";
     }        
 
     return QVariant();
@@ -194,7 +209,7 @@ QList<DataObject *> DataBrowserTableModel::rawVectors(QModelIndexList indexes)
 
 int DataBrowserTableModel::numButtonColumns()
 {
-    return s_btnClms;
+    return s_numBtnColumns;
 }
 
 QString DataBrowserTableModel::componentName(int component, int numComponents)
@@ -268,6 +283,8 @@ QVariant DataBrowserTableModel::data_dataObject(int row, int column, int role) c
 {
     assert(m_dataSetHandler);
 
+    static const auto degreeSign = QString(QChar(0x00B0));
+
     const QList<DataObject *> & dataSets = m_dataSetHandler->dataSets();
     assert(row < dataSets.size());
 
@@ -277,33 +294,92 @@ QVariant DataBrowserTableModel::data_dataObject(int row, int column, int role) c
     {
         switch (column)
         {
-        case 0:
+        case s_colBtnTable:
             return m_icons["table"];
-        case 1:
+        case s_colBtnRenderView:
             return m_visibilities[dataObjectAt(row)]
                 ? m_icons["rendered"]
                 : m_icons["notRendered"];
-        case 2:
+        case s_colBtnDelete:
             return m_dataSetHandler->dataSetOwnerships().value(dataObject, false)
                 ? QVariant(m_icons["delete_red"])
                 : QVariant();
+        default:
+            return{};
         }
+    }
+
+    if (role == Qt::ToolTipRole)
+    {
+        switch (column)
+        {
+        case s_colReferencePoint:
+            if (auto transformable = dynamic_cast<CoordinateTransformableDataObject *>(dataObject))
+            {
+                auto && coordsSpec = transformable->coordinateSystem();
+                if (!coordsSpec.isValid())
+                {
+                    return{};
+                }
+                QString toolTip = "Coordinate System: "
+                    + coordsSpec.geographicSystem + ", " + coordsSpec.globalMetricSystem
+                    + (coordsSpec.type == CoordinateSystemType::metricLocal
+                        ? " (Local coordinates)" : "");
+                const int maxlRef = 10000;
+                const int centerlRef = maxlRef / 2;
+                auto && lRef = coordsSpec.referencePointLocalRelative;
+                const auto lRefI = convertTo<int>(lRef * double(maxlRef));
+                toolTip += "\nReference Point within Data Set: ";
+                if (lRefI[0] == centerlRef && lRefI[1] == centerlRef)
+                {
+                    toolTip += "Center";
+                }
+                else
+                {
+                    const auto NRef = QString(lRefI[1] == 0 ? "North" : (lRefI[1] == maxlRef ? "South" : ""));
+                    const auto ERef = QString(lRefI[0] == 0 ? "East" : (lRefI[0] == maxlRef ? "West" : ""));
+                    if (!NRef.isEmpty() && !ERef.isEmpty())
+                    {
+                        toolTip += NRef + " " + ERef;
+                    }
+                    else
+                    {
+                        toolTip += QString::number(static_cast<int>(lRef[1] * 100.0)) + "% North, "
+                            + QString::number(static_cast<int>(lRef[0] * 100.0)) + "% East";
+                    }
+                }
+                return toolTip;
+            }
+        default:
+            return{};
+        }
+
     }
 
     if (role != Qt::DisplayRole)
     {
-        return QVariant();
+        return{};
     }
 
-    QString dataTypeName = dataObject->dataTypeName();
+    auto && dataTypeName = dataObject->dataTypeName();
 
     switch (column)
     {
-    case s_btnClms:
+    case s_colName:
         return dataObject->name();
-    case s_btnClms + 1:
+    case s_colDataSetType:
         return dataObject->dataTypeName();
-    case s_btnClms + 2:
+    case s_colReferencePoint:
+        if (auto transformable = dynamic_cast<CoordinateTransformableDataObject *>(dataObject))
+        {
+            auto && coordsSpec = transformable->coordinateSystem();
+            auto && ref = coordsSpec.referencePointLatLong;
+            return coordsSpec.isReferencePointValid()
+                ? QString::number(std::abs(ref.GetX())) + degreeSign + (ref.GetX() >= 0 ? "N" : "S") + ", "
+                + QString::number(std::abs(ref.GetY())) + degreeSign + (ref.GetY() >= 0 ? "E" : "W")
+                : QString();
+        }
+    case s_colDimensions:
         if (dataTypeName == "Polygonal Mesh")
         {
             return
@@ -331,12 +407,12 @@ QVariant DataBrowserTableModel::data_dataObject(int row, int column, int role) c
             return QString::number(dimensions[0]) + "x" + QString::number(dimensions[1]) + "x" + QString::number(dimensions[2]) + " vectors";
         }
         break;
-    case s_btnClms + 3:
+    case s_colSpatialExtent:
         return
             "x: " + QString::number(dataObject->bounds()[0]) + "; " + QString::number(dataObject->bounds()[1]) +
             ", y: " + QString::number(dataObject->bounds()[2]) + "; " + QString::number(dataObject->bounds()[3]) +
             ", z: " + QString::number(dataObject->bounds()[4]) + "; " + QString::number(dataObject->bounds()[5]);
-    case s_btnClms + 4:
+    case s_colValueRange:
         if (dataTypeName == "Polygonal Mesh")
         {
             return "";
@@ -382,9 +458,9 @@ QVariant DataBrowserTableModel::data_attributeVector(int row, int column, int ro
     {
         switch (column)
         {
-        case 0: return m_icons["table"];
-        case 1: return m_icons["assign_to_geometry"];
-        case 2:
+        case s_colBtnTable: return m_icons["table"];
+        case s_colBtnRenderView: return m_icons["assign_to_geometry"];
+        case s_colBtnDelete:
             return m_dataSetHandler->rawVectorOwnerships().value(attributeVector, false)
                 ? QVariant(m_icons["delete_red"])
                 : QVariant();
@@ -396,7 +472,7 @@ QVariant DataBrowserTableModel::data_attributeVector(int row, int column, int ro
     {
         switch (column)
         {
-        case 1: return "Assign to Geometry";
+        case s_colBtnRenderView: return "Assign to Geometry";
         default: return QVariant();
         }
     }
@@ -411,21 +487,21 @@ QVariant DataBrowserTableModel::data_attributeVector(int row, int column, int ro
 
     switch (column)
     {
-    case s_btnClms:
+    case s_colName:
         return attributeVector->name();
-    case s_btnClms + 1:
+    case s_colDataSetType:
         return QString::number(numComponents) + " component vector";
-    case s_btnClms + 2:
+    case s_colDimensions:
         return QString::number(dataArray->GetNumberOfTuples()) + " tuples";
-    case s_btnClms + 3:
+    case s_colSpatialExtent:
         return "";
-    case s_btnClms + 4:
+    case s_colValueRange:
     {
         QString ranges;
-        double range[2];
+        std::array<double, 2> range;
         for (int c = 0; c < numComponents; ++c)
         {
-            dataArray->GetRange(range, c);
+            dataArray->GetRange(range.data(), c);
             ranges += componentName(c, numComponents) + ": " + QString::number(range[0]) + "; " + QString::number(range[1]) + ", ";
         }
         ranges.remove(ranges.length() - 2, 2);
