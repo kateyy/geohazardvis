@@ -1,17 +1,21 @@
 #pragma once
 
-#include <QMap>
+#include <map>
+#include <vector>
 
 #include <core/color_mapping/ColorMappingData.h>
 
 
-class CORE_API VertexComponentColorMapping : public ColorMappingData
+class CORE_API CentroidColorMapping : public ColorMappingData
 {
 public:
-    VertexComponentColorMapping(const QList<AbstractVisualizedData*> & visualizedData, int component);
-    ~VertexComponentColorMapping() override;
+    CentroidColorMapping(const QList<AbstractVisualizedData*> & visualizedData);
+    ~CentroidColorMapping() override;
 
     QString name() const override;
+
+    QString scalarsName(AbstractVisualizedData & vis) const override;
+    IndexType scalarsAssociation(AbstractVisualizedData & vis) const override;
 
     vtkSmartPointer<vtkAlgorithm> createFilter(AbstractVisualizedData & visualizedData, int connection = 0) override;
     bool usesFilter() const override;
@@ -25,9 +29,8 @@ protected:
 
 private:
     static const bool s_isRegistered;
-
-    const int m_component;
+    std::map<AbstractVisualizedData *, std::vector<vtkSmartPointer<vtkAlgorithm>>> m_filters;
 
 private:
-    Q_DISABLE_COPY(VertexComponentColorMapping)
+    Q_DISABLE_COPY(CentroidColorMapping)
 };

@@ -37,6 +37,8 @@ set(sources
 
     color_mapping/AttributeArrayComponentMapping.h
     color_mapping/AttributeArrayComponentMapping.cpp
+    color_mapping/CentroidColorMapping.h
+    color_mapping/CentroidColorMapping.cpp
     color_mapping/ColorBarRepresentation.h
     color_mapping/ColorBarRepresentation.cpp
     color_mapping/ColorMapping.h
@@ -62,8 +64,6 @@ set(sources
     color_mapping/SlopeAngleMapping.cpp
     color_mapping/VectorMagnitudeColorMapping.h
     color_mapping/VectorMagnitudeColorMapping.cpp
-    color_mapping/VertexComponentColorMapping.h
-    color_mapping/VertexComponentColorMapping.cpp
 
     context2D_data/Context2DData.h
     context2D_data/Context2DData.cpp

@@ -12,9 +12,6 @@ public:
 
     static CentroidAsScalarsFilter * New();
 
-    vtkSetClampMacro(Component, int, 0, 2);
-    vtkGetMacro(Component, int);
-
 protected:
     CentroidAsScalarsFilter();
     ~CentroidAsScalarsFilter() override;
@@ -23,9 +20,6 @@ protected:
         vtkInformation * request,
         vtkInformationVector ** inputVector,
         vtkInformationVector * outputVector) override;
-
-private:
-    int Component;
 
 private:
     CentroidAsScalarsFilter(const CentroidAsScalarsFilter&) = delete;
