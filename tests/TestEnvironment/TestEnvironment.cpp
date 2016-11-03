@@ -21,7 +21,7 @@ const QString & testDataDirName()
 }
 
 
-void TestEnvironment::init(int argc, char ** argv)
+void TestEnvironment::init(int & argc, char ** argv)
 {
     assert(!l_app);
     l_app = std::make_unique<QApplication>(argc, argv);

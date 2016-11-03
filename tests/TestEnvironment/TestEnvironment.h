@@ -7,7 +7,7 @@ class QString;
 class TestEnvironment
 {
 public:
-    static void init(int argc, char ** argv);
+    static void init(int & argc, char ** argv);
     static void release();
 
     static const QString & applicationFilePath();
