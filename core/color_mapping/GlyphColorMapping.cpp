@@ -2,7 +2,6 @@
 
 #include <vtkLookupTable.h>
 
-#include <core/rendered_data/RenderedData3D.h>
 #include <core/glyph_mapping/GlyphMapping.h>
 #include <core/glyph_mapping/GlyphMappingData.h>
 
@@ -17,24 +16,25 @@ GlyphColorMapping::GlyphColorMapping(const QList<AbstractVisualizedData *> & vis
 
 GlyphColorMapping::~GlyphColorMapping() = default;
 
-void GlyphColorMapping::activate()
+const QList<GlyphMappingData *> & GlyphColorMapping::glyphMappingData() const
 {
-    for (GlyphMappingData * glyphMapping : glyphMappingData())
+    return m_glyphMappingData;
+}
+
+void GlyphColorMapping::assignToVisualization()
+{
+    for (auto glyphMapping : m_glyphMappingData)
     {
         glyphMapping->setColorMappingData(this);
         glyphMapping->setColorMappingGradient(m_lut);
     }
 }
 
-void GlyphColorMapping::deactivate()
+void GlyphColorMapping::unassignFromVisualization()
 {
-    for (GlyphMappingData * glyphMapping : glyphMappingData())
+    for (auto glyphMapping : m_glyphMappingData)
     {
         glyphMapping->setColorMappingData(nullptr);
+        glyphMapping->setColorMappingGradient(nullptr);
     }
-}
-
-const QList<GlyphMappingData *> & GlyphColorMapping::glyphMappingData() const
-{
-    return m_glyphMappingData;
 }

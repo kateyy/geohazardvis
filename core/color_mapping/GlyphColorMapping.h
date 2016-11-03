@@ -15,12 +15,11 @@ public:
         int numDataComponents = 1);
     ~GlyphColorMapping() override;
 
-    /** override superclass activate/deactivate: enable color mapping on glyph representations */
-    void activate() override;
-    void deactivate() override;
-
 protected:
     const QList<GlyphMappingData *> & glyphMappingData() const;
+
+    void assignToVisualization() override;
+    void unassignFromVisualization() override;
 
 private:
     QList<GlyphMappingData *> m_glyphMappingData;

@@ -209,6 +209,7 @@ void AttributeArrayComponentMapping::configureMapper(AbstractVisualizedData & vi
     if (mapper && attributeLocation != IndexType::invalid)
     {
         mapper->ScalarVisibilityOn();
+        mapper->SetColorModeToMapScalars();
 
         if (attributeLocation == IndexType::cells)
         {

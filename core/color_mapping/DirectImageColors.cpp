@@ -135,17 +135,16 @@ void DirectImageColors::configureMapper(AbstractVisualizedData & visualizedData,
     if (auto m = vtkMapper::SafeDownCast(&mapper))
     {
         m->ScalarVisibilityOn();
+        m->SetColorModeToDirectScalars();
         if (m_attributeLocation == IndexType::cells)
         {
-            m->SetScalarModeToUseCellData();
+            m->SetScalarModeToUseCellFieldData();
         }
         else if (m_attributeLocation == IndexType::points)
         {
-            m->SetScalarModeToUsePointData();
+            m->SetScalarModeToUsePointFieldData();
         }
         m->SelectColorArray(m_dataArrayName.toUtf8().data());
-
-        m->SetColorModeToDirectScalars();
     }
 }
 

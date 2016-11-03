@@ -208,15 +208,18 @@ void VectorMagnitudeColorMapping::configureMapper(AbstractVisualizedData & visua
     if (auto m = vtkMapper::SafeDownCast(&mapper))
     {
         m->ScalarVisibilityOn();
+        m->SetColorModeToMapScalars();
 
         if (m_attributeLocation == IndexType::cells)
         {
-            m->SetScalarModeToUseCellData();
+            m->SetScalarModeToUseCellFieldData();
         }
         else if (m_attributeLocation == IndexType::points)
         {
-            m->SetScalarModeToUsePointData();
+            m->SetScalarModeToUsePointFieldData();
         }
+
+        m->SelectColorArray(m_magnitudeArrayName.toUtf8().data());
     }
 }
 

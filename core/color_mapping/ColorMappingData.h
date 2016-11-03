@@ -45,8 +45,8 @@ public:
         bool usesOwnLookupTable = false);
     ~ColorMappingData() override;
 
-    virtual void activate();
-    virtual void deactivate();
+    void activate();
+    void deactivate();
     /** @return true only if this object is active. Initially, an object is inactive.
     * Only active objects shall change the state of depending object (e.g, the lookup table) */
     bool isActive() const;
@@ -107,6 +107,11 @@ protected:
     bool isValid() const;
     /** call initialize on valid instances */
     virtual void initialize();
+
+    virtual void onActivate();
+    virtual void onDeactivate();
+    virtual void assignToVisualization();
+    virtual void unassignFromVisualization();
 
     /** update data bounds
         @return a vector containing value ranges per component */

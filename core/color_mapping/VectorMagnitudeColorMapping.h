@@ -5,9 +5,6 @@
 #include <core/color_mapping/ColorMappingData.h>
 
 
-class vtkVectorNorm;
-
-
 class CORE_API VectorMagnitudeColorMapping : public ColorMappingData
 {
 public:

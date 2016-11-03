@@ -35,10 +35,7 @@ ColorMappingData::~ColorMappingData() = default;
 
 void ColorMappingData::activate()
 {
-    for (auto vis : m_visualizedData)
-    {
-        vis->setScalarsForColorMapping(this);
-    }
+    assignToVisualization();
 
     if (m_lut)
     {
@@ -49,16 +46,17 @@ void ColorMappingData::activate()
     }
 
     m_isActive = true;
+
+    onActivate();
 }
 
 void ColorMappingData::deactivate()
 {
     m_isActive = false;
 
-    for (auto vis : m_visualizedData)
-    {
-        vis->setScalarsForColorMapping(nullptr);
-    }
+    onDeactivate();
+
+    unassignFromVisualization();
 }
 
 bool ColorMappingData::isActive() const
@@ -137,6 +135,31 @@ void ColorMappingData::initialize()
     for (auto vis : m_visualizedData)
     {
         connect(&vis->dataObject(), &DataObject::valueRangeChanged, this, &ColorMappingData::forceUpdateBoundsLocked);
+    }
+}
+
+void ColorMappingData::onActivate()
+{
+}
+
+void ColorMappingData::onDeactivate()
+{
+}
+
+void ColorMappingData::assignToVisualization()
+{
+    for (auto vis : m_visualizedData)
+    {
+        vis->setScalarsForColorMapping(this);
+    }
+}
+
+void ColorMappingData::unassignFromVisualization()
+{
+
+    for (auto vis : m_visualizedData)
+    {
+        vis->setScalarsForColorMapping(nullptr);
     }
 }
 

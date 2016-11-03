@@ -480,7 +480,16 @@ void ColorMappingChooser::updateScalarsSelection()
 
 void ColorMappingChooser::updateScalarsEnabled()
 {
-    m_ui->scalarsGroupBox->setChecked(m_mapping ? m_mapping->isEnabled() : false);
+    const bool newState = m_mapping ? m_mapping->isEnabled() : false;
+
+    m_ui->scalarsGroupBox->setChecked(newState);
+
+    // When switching the state here, the internal ColorMappingData in the m_mapping changes.
+    // Make sure that the UI provides valid values if we are currently enabling the mapping.
+    if (newState)
+    {
+        updateGuiValueRanges();
+    }
 }
 
 void ColorMappingChooser::setupGuiConnections()

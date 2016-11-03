@@ -2,8 +2,6 @@
 
 #include <cassert>
 
-#include <QVector>
-
 #include <vtkAssignAttribute.h>
 #include <vtkCellData.h>
 #include <vtkDataSet.h>
@@ -15,6 +13,7 @@
 
 #include <core/types.h>
 #include <core/color_mapping/ColorMappingRegistry.h>
+#include <core/filters/ArrayChangeInformationFilter.h>
 #include <core/rendered_data/RenderedData3D.h>
 #include <core/glyph_mapping/GlyphMapping.h>
 #include <core/glyph_mapping/GlyphMappingData.h>
@@ -24,6 +23,8 @@
 namespace
 {
     const QString s_name = "Glyph Magnitude";
+
+    const char * const s_normScalarsName = "VectorNorm";
 }
 
 const bool GlyphMagnitudeColorMapping::s_isRegistered = ColorMappingRegistry::instance().registerImplementation(
@@ -35,14 +36,18 @@ std::vector<std::unique_ptr<ColorMappingData>> GlyphMagnitudeColorMapping::newIn
     QMap<QString, QList<GlyphMappingData *>> glyphMappings;
     for (auto vis : visualizedData)
     {
-        RenderedData3D * data = dynamic_cast<RenderedData3D *>(vis);
+        auto data = dynamic_cast<RenderedData3D *>(vis);
         if (!data)
+        {
             continue;
+        }
 
         for (auto & vectorData : data->glyphMapping().vectors())
         {
             if (vectorData->isVisible())
+            {
                 glyphMappings[vectorData->name()] << vectorData;
+            }
         }
     }
 
@@ -67,7 +72,7 @@ GlyphMagnitudeColorMapping::GlyphMagnitudeColorMapping(
     : GlyphColorMapping(visualizedData, glyphMappingData, 1)
     , m_vectorName{ vectorsName }
 {
-    for (GlyphMappingData * glyphMapping : glyphMappingData)
+    for (auto glyphMapping : glyphMappingData)
     {
         auto norm = vtkSmartPointer<vtkVectorNorm>::New();
         norm->SetInputConnection(glyphMapping->vectorDataOutputPort());
@@ -76,9 +81,16 @@ GlyphMagnitudeColorMapping::GlyphMagnitudeColorMapping(
         assignVectors->Assign(vectorsName.toUtf8().data(), vtkDataSetAttributes::VECTORS, vtkAssignAttribute::POINT_DATA);
         assignVectors->SetInputConnection(norm->GetOutputPort());
 
+        auto setArrayName = vtkSmartPointer<ArrayChangeInformationFilter>::New();
+        setArrayName->EnableRenameOn();
+        setArrayName->SetArrayName(s_normScalarsName);
+        setArrayName->SetAttributeType(vtkDataSetAttributes::SCALARS);
+        setArrayName->SetAttributeLocation(ArrayChangeInformationFilter::POINT_DATA);
+        setArrayName->SetInputConnection(assignVectors->GetOutputPort());
+
         // if needed: support multiple connections
         m_vectorNorms.insert(&glyphMapping->renderedData(), { norm });
-        m_assignedVectors.insert(&glyphMapping->renderedData(), { assignVectors });
+        m_assignedVectors.insert(&glyphMapping->renderedData(), { setArrayName });
 
         m_isValid = true;
     }
@@ -105,8 +117,10 @@ vtkSmartPointer<vtkAlgorithm> GlyphMagnitudeColorMapping::createFilter(AbstractV
 {
     auto & filters = m_assignedVectors.value(&visualizedData, {});
 
-    if (filters.isEmpty())  // required/valid filters are already created
-        return vtkPassThrough::New();
+    if (filters.empty())  // required/valid filters are already created
+    {
+        return vtkSmartPointer<vtkPassThrough>::New();
+    }
 
     assert(filters.size() > connection);
     auto filter = filters[connection];
@@ -132,6 +146,9 @@ void GlyphMagnitudeColorMapping::configureMapper(AbstractVisualizedData & visual
         m->UseLookupTableScalarRangeOn();
         m->SetLookupTable(m_lut);
         m->ScalarVisibilityOn();
+        m->SetColorModeToMapScalars();
+        m->SetScalarModeToUsePointFieldData();
+        m->SelectColorArray(s_normScalarsName);
     }
 }
 

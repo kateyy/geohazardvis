@@ -134,7 +134,8 @@ void SlopeAngleMapping::configureMapper(AbstractVisualizedData & visualizedData,
     }
 
     mapper->ScalarVisibilityOn();
-    mapper->SetScalarModeToUseCellData();
+    mapper->SetColorModeToMapScalars();
+    mapper->SetScalarModeToUseCellFieldData();
     mapper->SelectColorArray(scalarsName(visualizedData).toUtf8().data());
 }
 

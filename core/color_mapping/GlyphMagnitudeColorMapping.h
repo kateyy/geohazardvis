@@ -1,12 +1,13 @@
 #pragma once
 
+#include <vector>
+
 #include <QMap>
 
 #include <core/color_mapping/GlyphColorMapping.h>
 
 
-template<typename T> class QVector;
-class vtkAssignAttribute;
+class vtkAlgorithm;
 class vtkVectorNorm;
 
 class GlyphMappingData;
@@ -38,8 +39,8 @@ private:
     static const bool s_isRegistered;
 
     const QString m_vectorName;
-    QMap<AbstractVisualizedData *, QVector<vtkSmartPointer<vtkVectorNorm>>> m_vectorNorms;
-    QMap<AbstractVisualizedData *, QVector<vtkSmartPointer<vtkAssignAttribute>>> m_assignedVectors;
+    QMap<AbstractVisualizedData *, std::vector<vtkSmartPointer<vtkVectorNorm>>> m_vectorNorms;
+    QMap<AbstractVisualizedData *, std::vector<vtkSmartPointer<vtkAlgorithm>>> m_assignedVectors;
 
 private:
     Q_DISABLE_COPY(GlyphMagnitudeColorMapping)
