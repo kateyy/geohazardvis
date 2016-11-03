@@ -33,6 +33,8 @@ if(OPTION_BUILD_TESTS AND GTEST_FOUND)
     # Target 'test'
     add_custom_target(test)
     set_target_properties(test PROPERTIES EXCLUDE_FROM_DEFAULT_BUILD 1)
+    
+    set(TEST_MAIN_CPP_FILEPATH "${CMAKE_CURRENT_SOURCE_DIR}/test-main.cpp")
 
     # Tests
     add_test_without_ctest(core-test)

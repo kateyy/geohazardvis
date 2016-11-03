@@ -4,7 +4,7 @@ message(STATUS "Test ${target}")
 
 
 set(sources
-    main.cpp
+    ${TEST_MAIN_CPP_FILEPATH}
     ArrayChangeInformationFilter_test.cpp
     AssignPointAttributeToCoordinatesFilter_test.cpp
     BinaryFile_test.cpp

@@ -4,24 +4,24 @@
     <LocalDebuggerWorkingDirectory>@MSVC_LOCAL_DEBUGGER_WORKING_DIRECTORY@</LocalDebuggerWorkingDirectory>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
     <LocalDebuggerEnvironment>@MSVC_LOCAL_DEBUGGER_ENVIRONMENT_RELWITHDEBINFO@</LocalDebuggerEnvironment>
-    <LocalDebuggerCommandArguments>--gtest_catch_exceptions=0</LocalDebuggerCommandArguments>
+    <LocalDebuggerCommandArguments>--gtest_catch_exceptions=0 --waitAfterFinished</LocalDebuggerCommandArguments>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LocalDebuggerWorkingDirectory>@MSVC_LOCAL_DEBUGGER_WORKING_DIRECTORY@</LocalDebuggerWorkingDirectory>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
     <LocalDebuggerEnvironment>@MSVC_LOCAL_DEBUGGER_ENVIRONMENT_DEBUG@</LocalDebuggerEnvironment>
-    <LocalDebuggerCommandArguments>--gtest_catch_exceptions=0</LocalDebuggerCommandArguments>
+    <LocalDebuggerCommandArguments>--gtest_catch_exceptions=0 --waitAfterFinished</LocalDebuggerCommandArguments>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LocalDebuggerWorkingDirectory>@MSVC_LOCAL_DEBUGGER_WORKING_DIRECTORY@</LocalDebuggerWorkingDirectory>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
     <LocalDebuggerEnvironment>@MSVC_LOCAL_DEBUGGER_ENVIRONMENT_RELEASE@</LocalDebuggerEnvironment>
-    <LocalDebuggerCommandArguments>--gtest_catch_exceptions=0</LocalDebuggerCommandArguments>
+    <LocalDebuggerCommandArguments>--gtest_catch_exceptions=0 --waitAfterFinished</LocalDebuggerCommandArguments>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='RelNoOptimization|x64'">
     <LocalDebuggerWorkingDirectory>@MSVC_LOCAL_DEBUGGER_WORKING_DIRECTORY@</LocalDebuggerWorkingDirectory>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
     <LocalDebuggerEnvironment>@MSVC_LOCAL_DEBUGGER_ENVIRONMENT_RELNOOPTIMIZATION@</LocalDebuggerEnvironment>
-    <LocalDebuggerCommandArguments>--gtest_catch_exceptions=0</LocalDebuggerCommandArguments>
+    <LocalDebuggerCommandArguments>--gtest_catch_exceptions=0 --waitAfterFinished</LocalDebuggerCommandArguments>
   </PropertyGroup>
 </Project>

@@ -4,7 +4,7 @@ message(STATUS "Test ${target}")
 
 
 set(sources
-    main.cpp
+    ${TEST_MAIN_CPP_FILEPATH}
     ColorMapping_test.cpp
     DataMapping_test.cpp
     DEMWidget_test.cpp
