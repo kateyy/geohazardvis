@@ -71,7 +71,7 @@ function(setupProjectUserConfig TARGET)
 
     # prepend executable paths for 3rdparty libraries to configuration specific PATHs
 
-    foreach(CONFIG_TYPE ${CMAKE_CONFIGURATION_TYPES})
+    foreach(CONFIG_TYPE ${ACCEPTED_CONFIGURATION_TYPES})
         string(TOUPPER ${CONFIG_TYPE} UPPER_CONFIG_TYPE)
 
         set(PROJECT_RUNTIME_PATHS)

@@ -23,15 +23,15 @@ endif()
 
 set(DEFAULT_COMPILE_FLAGS
     /nologo
-    /Zc:wchar_t /Zc:forScope /Zc:rvalueCast /Zc:inline
+    /Zc:forScope /Zc:inline /Zc:rvalueCast /Zc:wchar_t
     /GR /fp:precise /MP /W4
     /we4150 /we4172 /we4239 /we4390 /we4456 /we4457 /we4458 /we4700 /we4701 /we4703 /we4715 /we4717
     /wd4127 /wd4251 /wd4351 /wd4505 /wd4661 /wd4718
 
-    $<$<CONFIG:Debug>:          /MDd /Od /RTC1 >
-    $<$<CONFIG:Release>:        /MD  /O2 >
-    $<$<CONFIG:RelWithDebInfo>: /MD  /O2 /Zo /Zi>
-    $<$<CONFIG:RelNoOptimization>: /MD /Od /RTC1>
+    $<$<CONFIG:Debug>:             /MDd /Od /RTC1> # /Z* flag: see version specific flags
+    $<$<CONFIG:Release>:           /MD  /O2 >
+    $<$<CONFIG:RelWithDebInfo>:    /MD  /O2 /Zo /Zi>
+    $<$<CONFIG:RelNoOptimization>: /MD  /Od /RTC1>
 
     # nologo       -> Suppresses the display of the copyright banner when the compiler starts up and display of informational messages during compiling.
 
@@ -68,11 +68,12 @@ set(DEFAULT_COMPILE_FLAGS
     # Zc:rvalueCast -> treat rvalue references according to section 5.4 of the C++11 standard
     # Zc:inline    -> enforce section 3.2 and section 7.1.2. of the C++11 standard: definitions of called inline functions must be visible
     # Zc:throwingNew -> assume operator new throws on failure (Visual Studio 2015)
+    # Zc:strictStrings -> strict const-qualification conformance for pointer initlized by using string literals (Visual Studio 2015)
     # Zc:referenceBinding -> a temporary will not bind to an non-const lvalue reference (Visual Studio 2015)
 
     # Zi           -> debug information format: program database
     # ZI           -> debug information format: program database supporting edit and continue (Visual Studio 2015)
-    # Zo           -> generates richer debugging information for optimized code (non- /Od builds) (VS2013 Update 3)
+    # Zo           -> generates richer debugging information for optimized code (non- /Od builds) (VS2013 Update 3, default in VS2015 when /Zi is specified)
 
     # wd           -> disable warning
     # we           -> treat warning as error
@@ -132,14 +133,15 @@ if(MSVC_VERSION VERSION_LESS 1900)
 else()  # Visual Studio 14 2015 as minimum
 
     list(APPEND DEFAULT_COMPILE_FLAGS
-        /Zc:throwingNew /Zc:referenceBinding
+        /Zc:referenceBinding /Zc:strictStrings /Zc:throwingNew
         # allow native edit and continue: http://blogs.msdn.com/b/vcblog/archive/2015/07/22/c-edit-and-continue-in-visual-studio-2015.aspx
-        $<$<CONFIG:Debug>: /ZI>
+        $<$<CONFIG:Debug>:             /ZI>
         $<$<CONFIG:RelNoOptimization>: /ZI>
-        $<$<CONFIG:Release>: /guard:cf>
-        $<$<CONFIG:RelWithDebInfo>: /guard:cf>
+        # Enable compiler generation of Control Flow Guard security checks. (incompatible with /ZI)
+        $<$<CONFIG:Release>:           /guard:cf>
+        $<$<CONFIG:RelWithDebInfo>:    /guard:cf>
     )
-    
+
     # Visual Studio 2015 Update 3 introduced a new optimizer
     #   https://blogs.msdn.microsoft.com/vcblog/2016/05/04/new-code-optimizer/
     # with a few bugs, see:
@@ -169,8 +171,8 @@ set(DEFAULT_LINKER_FLAGS
 )
 
 set(DEFAULT_LINKER_FLAGS_DEBUG
-    "${DEFAULT_LINKER_FLAGS} /INCREMENTAL /DEBUG"
-    # DEBUG        -> create debug info
+    "${DEFAULT_LINKER_FLAGS} /DEBUG"
+    # DEBUG        -> create debug info, implies /INCREMENTAL
 )
 
 set(DEFAULT_LINKER_FLAGS_RELNOOPTIMIZATION ${DEFAULT_LINKER_FLAGS_DEBUG})

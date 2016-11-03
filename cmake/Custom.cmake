@@ -55,7 +55,7 @@ function(configure_cxx_target target)
     if (option_AUX_PLUGIN_TARGET OR option_PLUGIN_TARGET)
         # TODO replace by generator expressions, once requiring CMake 3.4
         if(generatorIsMultiConfig)
-            foreach(_config Debug Release RelWithDebInfo RelNoOptimization)
+            foreach(_config ${ACCEPTED_CONFIGURATION_TYPES})
                 string(TOUPPER ${_config} _configUpper)
                 set_target_properties(${target}
                     PROPERTIES
