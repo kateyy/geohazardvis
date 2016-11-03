@@ -89,9 +89,12 @@ bool VertexComponentColorMapping::usesFilter() const
     return true;
 }
 
-void VertexComponentColorMapping::configureMapper(AbstractVisualizedData & visualizedData, vtkAbstractMapper & mapper)
+void VertexComponentColorMapping::configureMapper(
+    AbstractVisualizedData & visualizedData,
+    vtkAbstractMapper & mapper,
+    int connection)
 {
-    ColorMappingData::configureMapper(visualizedData, mapper);
+    ColorMappingData::configureMapper(visualizedData, mapper, connection);
 
     if (auto m = vtkMapper::SafeDownCast(&mapper))
     {

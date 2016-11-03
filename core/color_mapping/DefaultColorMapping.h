@@ -16,7 +16,7 @@ public:
 
     QString name() const override;
 
-    void configureMapper(AbstractVisualizedData & visualizedData, vtkAbstractMapper & mapper) override;
+    void configureMapper(AbstractVisualizedData & visualizedData, vtkAbstractMapper & mapper, int connection = 0) override;
 
 protected:
     std::vector<ValueRange<>> updateBounds() override;

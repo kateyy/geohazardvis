@@ -128,9 +128,12 @@ bool DirectImageColors::usesFilter() const
     return true;
 }
 
-void DirectImageColors::configureMapper(AbstractVisualizedData & visualizedData, vtkAbstractMapper & mapper)
+void DirectImageColors::configureMapper(
+    AbstractVisualizedData & visualizedData,
+    vtkAbstractMapper & mapper,
+    int connection)
 {
-    ColorMappingData::configureMapper(visualizedData, mapper);
+    ColorMappingData::configureMapper(visualizedData, mapper, connection);
 
     if (auto m = vtkMapper::SafeDownCast(&mapper))
     {

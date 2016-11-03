@@ -123,9 +123,12 @@ bool SlopeAngleMapping::usesFilter() const
     return true;
 }
 
-void SlopeAngleMapping::configureMapper(AbstractVisualizedData & visualizedData, vtkAbstractMapper & abstractMapper)
+void SlopeAngleMapping::configureMapper(
+    AbstractVisualizedData & visualizedData,
+    vtkAbstractMapper & abstractMapper,
+    int connection)
 {
-    ColorMappingData::configureMapper(visualizedData, abstractMapper);
+    ColorMappingData::configureMapper(visualizedData, abstractMapper, connection);
 
     auto mapper = vtkMapper::SafeDownCast(&abstractMapper);
     if (!mapper)

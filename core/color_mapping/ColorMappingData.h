@@ -79,7 +79,7 @@ public:
 
     /** set parameters on the mapper that is used to render the visualizedData.
         @param visualizedData must be one of the objects that where passed when calling the mapping's constructor */
-    virtual void configureMapper(AbstractVisualizedData & visualizedData, vtkAbstractMapper & mapper);
+    virtual void configureMapper(AbstractVisualizedData & visualizedData, vtkAbstractMapper & mapper, int connection = 0);
 
     void setLookupTable(vtkLookupTable * lookupTable);
 

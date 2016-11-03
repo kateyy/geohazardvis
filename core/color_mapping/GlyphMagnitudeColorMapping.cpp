@@ -134,9 +134,9 @@ bool GlyphMagnitudeColorMapping::usesFilter() const
     return true;
 }
 
-void GlyphMagnitudeColorMapping::configureMapper(AbstractVisualizedData & visualizedData, vtkAbstractMapper & mapper)
+void GlyphMagnitudeColorMapping::configureMapper(AbstractVisualizedData & visualizedData, vtkAbstractMapper & mapper, int connection)
 {
-    GlyphColorMapping::configureMapper(visualizedData, mapper);
+    GlyphColorMapping::configureMapper(visualizedData, mapper, connection);
 
     assert(m_vectorNorms.contains(&visualizedData));
     assert(m_assignedVectors.contains(&visualizedData));

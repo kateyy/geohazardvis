@@ -199,9 +199,9 @@ bool AttributeArrayComponentMapping::usesFilter() const
     return true;
 }
 
-void AttributeArrayComponentMapping::configureMapper(AbstractVisualizedData & visualizedData, vtkAbstractMapper & abstractMapper)
+void AttributeArrayComponentMapping::configureMapper(AbstractVisualizedData & visualizedData, vtkAbstractMapper & abstractMapper, int connection)
 {
-    ColorMappingData::configureMapper(visualizedData, abstractMapper);
+    ColorMappingData::configureMapper(visualizedData, abstractMapper, connection);
 
     const auto attributeLocation = m_attributeLocations.value(&visualizedData, IndexType::invalid);
     auto mapper = vtkMapper::SafeDownCast(&abstractMapper);

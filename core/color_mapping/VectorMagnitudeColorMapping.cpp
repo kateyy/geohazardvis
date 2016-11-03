@@ -201,9 +201,12 @@ bool VectorMagnitudeColorMapping::usesFilter() const
     return true;
 }
 
-void VectorMagnitudeColorMapping::configureMapper(AbstractVisualizedData & visualizedData, vtkAbstractMapper & mapper)
+void VectorMagnitudeColorMapping::configureMapper(
+    AbstractVisualizedData & visualizedData,
+    vtkAbstractMapper & mapper,
+    int connection)
 {
-    ColorMappingData::configureMapper(visualizedData, mapper);
+    ColorMappingData::configureMapper(visualizedData, mapper, connection);
 
     if (auto m = vtkMapper::SafeDownCast(&mapper))
     {

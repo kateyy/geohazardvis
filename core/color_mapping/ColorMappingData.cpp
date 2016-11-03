@@ -168,7 +168,9 @@ bool ColorMappingData::isValid() const
     return m_isValid;
 }
 
-vtkSmartPointer<vtkAlgorithm> ColorMappingData::createFilter(AbstractVisualizedData & /*visualizedData*/, int /*connection*/)
+vtkSmartPointer<vtkAlgorithm> ColorMappingData::createFilter(
+    AbstractVisualizedData & /*visualizedData*/,
+    int /*connection*/)
 {
     return nullptr;
 }
@@ -178,7 +180,10 @@ bool ColorMappingData::usesFilter() const
     return false;
 }
 
-void ColorMappingData::configureMapper(AbstractVisualizedData & DEBUG_ONLY(visualizedData), vtkAbstractMapper & /*mapper*/)
+void ColorMappingData::configureMapper(
+    AbstractVisualizedData & DEBUG_ONLY(visualizedData),
+    vtkAbstractMapper & /*mapper*/,
+    int /*connection*/)
 {
     assert(m_visualizedData.contains(&visualizedData));
 }
