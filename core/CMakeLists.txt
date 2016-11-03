@@ -60,6 +60,8 @@ set(sources
     color_mapping/GlyphMagnitudeColorMapping.cpp
     color_mapping/GradientResourceManager.h
     color_mapping/GradientResourceManager.cpp
+    color_mapping/PointCoordinateColorMapping.h
+    color_mapping/PointCoordinateColorMapping.cpp
     color_mapping/SlopeAngleMapping.h
     color_mapping/SlopeAngleMapping.cpp
     color_mapping/VectorMagnitudeColorMapping.h
