@@ -35,7 +35,7 @@ const QString & RawVectorData::dataTypeName() const
 
 const QString & RawVectorData::dataTypeName_s()
 {
-    static QString name{ "Raw Data Vector" };
+    static const QString name{ "Raw Data Vector" };
     return name;
 }
 
@@ -46,8 +46,8 @@ vtkFloatArray * RawVectorData::dataArray()
 
 std::unique_ptr<QVtkTableModel> RawVectorData::createTableModel()
 {
-    std::unique_ptr<QVtkTableModel> model = std::make_unique<QVtkTableModelRawVector>();
+    auto model = std::make_unique<QVtkTableModelRawVector>();
     model->setDataObject(this);
 
-    return model;
+    return std::move(model);
 }

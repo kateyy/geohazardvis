@@ -257,10 +257,10 @@ bool PolyDataObject::setCellNormalComponent(vtkIdType cellId, int component, dou
 
 std::unique_ptr<QVtkTableModel> PolyDataObject::createTableModel()
 {
-    std::unique_ptr<QVtkTableModel> model = std::make_unique<QVtkTableModelPolyData>();
+    auto model = std::make_unique<QVtkTableModelPolyData>();
     model->setDataObject(this);
 
-    return model;
+    return std::move(model);
 }
 
 void PolyDataObject::setupCellCenters()

@@ -117,10 +117,10 @@ ValueRange<> ImageDataObject::scalarRange()
 
 std::unique_ptr<QVtkTableModel> ImageDataObject::createTableModel()
 {
-    std::unique_ptr<QVtkTableModel> model = std::make_unique<QVtkTableModelImage>();
+    auto model = std::make_unique<QVtkTableModelImage>();
     model->setDataObject(this);
 
-    return model;
+    return std::move(model);
 }
 
 bool ImageDataObject::checkIfStructureChanged()

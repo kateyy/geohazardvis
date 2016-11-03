@@ -328,10 +328,10 @@ const CoordinateSystemSpecification & DataProfile2DDataObject::pointsCoordinateS
 
 std::unique_ptr<QVtkTableModel> DataProfile2DDataObject::createTableModel()
 {
-    std::unique_ptr<QVtkTableModel> tableModel = std::make_unique<QVtkTableModelProfileData>();
+    auto tableModel = std::make_unique<QVtkTableModelProfileData>();
     tableModel->setDataObject(this);
 
-    return tableModel;
+    return std::move(tableModel);
 }
 
 CoordinateTransformableDataObject & DataProfile2DDataObject::sourceData()
