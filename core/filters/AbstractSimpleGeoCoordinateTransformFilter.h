@@ -48,13 +48,13 @@ protected:
         vtkInformationVector ** inputVector,
         vtkInformationVector * outputVector);
 
-    virtual int RequestInformation(vtkInformation * request,
+    int RequestInformation(vtkInformation * request,
         vtkInformationVector ** inputVector,
-        vtkInformationVector * outputVector);
+        vtkInformationVector * outputVector) override;
 
-    virtual int RequestData(vtkInformation * request,
+    int RequestData(vtkInformation * request,
         vtkInformationVector ** inputVector,
-        vtkInformationVector * outputVector);
+        vtkInformationVector * outputVector) override;
 
     virtual void SetFilterParameters(
         const vtkVector3d & preTranslate,

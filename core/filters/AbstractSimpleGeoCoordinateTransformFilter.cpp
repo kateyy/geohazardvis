@@ -12,10 +12,6 @@
 #include <core/utility/vtkvectorhelper.h>
 
 
-template class AbstractSimpleGeoCoordinateTransformFilter<vtkImageAlgorithm>;
-template class AbstractSimpleGeoCoordinateTransformFilter<vtkPolyDataAlgorithm>;
-
-
 template<typename Superclass_t>
 AbstractSimpleGeoCoordinateTransformFilter<Superclass_t>::AbstractSimpleGeoCoordinateTransformFilter()
     : Superclass()
@@ -81,7 +77,7 @@ int AbstractSimpleGeoCoordinateTransformFilter<Superclass_t>::RequestDataObject(
 
 template<typename Superclass_t>
 int AbstractSimpleGeoCoordinateTransformFilter<Superclass_t>::RequestInformation(
-    vtkInformation * request, 
+    vtkInformation * request,
     vtkInformationVector ** inputVector,
     vtkInformationVector * outputVector)
 {
@@ -267,3 +263,7 @@ void AbstractSimpleGeoCoordinateTransformFilter<Superclass_t>::ComputeFilterPara
 
     this->SetFilterParameters(preTranslate, scale, postTranslate);
 }
+
+
+template class AbstractSimpleGeoCoordinateTransformFilter<vtkImageAlgorithm>;
+template class AbstractSimpleGeoCoordinateTransformFilter<vtkPolyDataAlgorithm>;
