@@ -35,6 +35,8 @@ public:
         ren = vtkSmartPointer<vtkRenderer>::New();
         renWin->AddRenderer(ren);
         renWin->SetSize(renWinSize.GetX(), renWinSize.GetY());
+        // required on Intel/Linux to prevent seg faults in later render calls
+        renWin->Start();
     }
 
     void setupAddPolyData(const QString & name = "Poly")
@@ -85,7 +87,7 @@ public:
 
     vtkVector2i imageDataPoint8PickPos()
     {
-        return convertTo<int>((convertTo<double>(renWinSize) * 
+        return convertTo<int>((convertTo<double>(renWinSize) *
             vtkVector2d(0.99, 0.66)));
     }
 
@@ -145,7 +147,7 @@ public:
         auto scalars = vtkSmartPointer<vtkFloatArray>::New();
         scalars->SetNumberOfTuples(image->GetNumberOfPoints());
         scalars->SetName(name.toUtf8().data());
-        
+
         for (vtkIdType i = 0; i < scalars->GetNumberOfTuples(); ++i)
         {
             scalars->SetValue(i, static_cast<float>(i));

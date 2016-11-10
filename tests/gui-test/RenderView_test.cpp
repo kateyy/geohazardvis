@@ -2,6 +2,7 @@
 
 #include <array>
 
+#include <vtkCellArray.h>
 #include <vtkCellData.h>
 #include <vtkFloatArray.h>
 #include <vtkPoints.h>
@@ -60,15 +61,16 @@ public:
     {
         auto poly = vtkSmartPointer<vtkPolyData>::New();
         auto points = vtkSmartPointer<vtkPoints>::New();
+        auto indices = vtkSmartPointer<vtkCellArray>::New();
 
         // texture mapping produces warnings if the data set does not contain at least 3 points
         points->InsertNextPoint(0, 0, 0);
         points->InsertNextPoint(0, 1, 0);
         points->InsertNextPoint(1, 1, 0);
-        poly->SetPoints(points);
         std::array<vtkIdType, 3> pointIds = { 0, 1, 2 };
-        poly->Allocate(static_cast<vtkIdType>(pointIds.size()));
-        poly->InsertNextCell(VTK_TRIANGLE, static_cast<int>(pointIds.size()), pointIds.data());
+        indices->InsertNextCell(3, pointIds.data());
+        poly->SetPoints(points);
+        poly->SetPolys(indices);
 
         return std::make_unique<PolyDataObject>("PolyData", *poly);
     }
