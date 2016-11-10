@@ -189,7 +189,7 @@ vtkSmartPointer<vtkAlgorithm> VectorMagnitudeColorMapping::createFilter(Abstract
     /** vtkVectorNorm sets norm array as current scalars; it doesn't set a name */
     auto & norms = m_filters.value(&visualizedData);
 
-    assert(norms.size() > connection);
+    assert(norms.size() > static_cast<size_t>(connection));
     auto norm = norms[connection];
     assert(norm);
 

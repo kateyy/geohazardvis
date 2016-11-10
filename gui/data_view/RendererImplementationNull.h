@@ -17,7 +17,7 @@ public:
     QString name() const override;
     ContentType contentType() const override;
 
-    QList<DataObject *> filterCompatibleObjects(const QList<DataObject *> & dataObjects, QList<DataObject *> & incompatibleObjects);
+    QList<DataObject *> filterCompatibleObjects(const QList<DataObject *> & dataObjects, QList<DataObject *> & incompatibleObjects) override;
 
     void activate(t_QVTKWidget & qvtkWidget) override;
     void deactivate(t_QVTKWidget & qvtkWidget) override;

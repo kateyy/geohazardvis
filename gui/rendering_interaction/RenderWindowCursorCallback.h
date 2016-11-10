@@ -7,10 +7,6 @@
 #include <gui/gui_api.h>
 
 
-namespace Qt
-{
-enum CursorShape;
-}
 class QWidget;
 class vtkObject;
 class vtkRenderWindow;

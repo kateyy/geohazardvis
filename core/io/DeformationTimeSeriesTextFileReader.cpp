@@ -161,7 +161,7 @@ auto DeformationTimeSeriesTextFileReader::readData() -> State
         qWarning() << "File contains more data columns than expected.";
         qWarning() << "File name:" << m_fileName
             << "Expected columns (coordinates, attributes + deformations):"
-            << m_numColumnsBeforeDeformations + " + " << m_numTimeSteps
+            << m_numColumnsBeforeDeformations << " + " << m_numTimeSteps
             << ", but found" << readDataColumns.size() << "columns";
         readDataColumns.resize(expectedNumColumns);
     }

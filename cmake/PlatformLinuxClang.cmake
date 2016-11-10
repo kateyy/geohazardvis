@@ -29,7 +29,6 @@ set(DEFAULT_COMPILE_FLAGS
 
     -Wreorder
     -Wignored-qualifiers
-    -Wmissing-braces
     -Wreturn-type
     -Wswitch
     -Wswitch-default
@@ -47,6 +46,8 @@ set(DEFAULT_COMPILE_FLAGS
 
     # colors in output of ninja builds
     -fcolor-diagnostics
+
+    -Wno-missing-braces
 
     # Disable warnings caused by VTK headers
     -Wno-extra-semi

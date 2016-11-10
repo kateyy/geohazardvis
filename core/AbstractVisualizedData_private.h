@@ -22,15 +22,13 @@ class DataObject;
 class CORE_API AbstractVisualizedData_private
 {
 public:
-    AbstractVisualizedData_private(AbstractVisualizedData & q_ptr,
-        ContentType contentType, DataObject & dataObject)
+    AbstractVisualizedData_private(ContentType contentType, DataObject & dataObject)
         : contentType{ contentType }
         , dataObject{ dataObject }
         , isVisible{ true }
         , colorMappingData{ nullptr }
         , gradient{}
         , colorMapping{}
-        , q_ptr{ q_ptr }
         , m_visibleBounds{}
         , m_visibleBoundsAreValid{ false }
     {
@@ -71,8 +69,6 @@ public:
     static vtkInformationIntegerPointerKey * VisualizedDataKey();
 
 private:
-    AbstractVisualizedData & q_ptr;
-
     DataBounds m_visibleBounds;
     bool m_visibleBoundsAreValid;
 

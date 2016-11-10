@@ -33,11 +33,10 @@
 class Picker_private
 {
 public:
-    explicit Picker_private(Picker & picker)
+    explicit Picker_private()
         : propPicker{ vtkSmartPointer<vtkPropPicker>::New() }
         , cellPicker{ vtkSmartPointer<vtkCellPicker>::New() }
         , pointPicker{ vtkSmartPointer<vtkPointPicker>::New() }
-        , q_ptr{ picker }
     {
         cellPicker->PickFromListOn();
         pointPicker->PickFromListOn();
@@ -60,14 +59,11 @@ public:
     vtkWeakPointer<vtkDataArray> pickedScalarArray;
 
     void operator=(const Picker_private &) = delete;
-
-private:
-    Picker & q_ptr;
 };
 
 
 Picker::Picker()
-    : d_ptr{ std::make_unique<Picker_private>(*this) }
+    : d_ptr{ std::make_unique<Picker_private>() }
 {
 }
 

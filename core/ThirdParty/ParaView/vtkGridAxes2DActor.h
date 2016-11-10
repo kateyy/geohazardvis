@@ -41,7 +41,7 @@ class CORE_API vtkGridAxes2DActor : public vtkProp3D
 public:
   static vtkGridAxes2DActor* New();
   vtkTypeMacro(vtkGridAxes2DActor, vtkProp3D);
-  void PrintSelf(ostream& os, vtkIndent indent);
+  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
 
   //@{
   /**
@@ -230,23 +230,23 @@ public:
   /**
    * Returns the prop bounds.
    */
-  virtual double* GetBounds()
+  double* GetBounds() VTK_OVERRIDE
   {
     this->GetGridBounds(this->Bounds);
     return this->Bounds;
   }
   //@}
 
-  virtual int RenderOpaqueGeometry(vtkViewport*);
-  virtual int RenderTranslucentPolygonalGeometry(vtkViewport* viewport);
-  virtual int RenderOverlay(vtkViewport* viewport);
-  virtual int HasTranslucentPolygonalGeometry();
-  virtual void ReleaseGraphicsResources(vtkWindow*);
+  int RenderOpaqueGeometry(vtkViewport*) VTK_OVERRIDE;
+  int RenderTranslucentPolygonalGeometry(vtkViewport* viewport) VTK_OVERRIDE;
+  int RenderOverlay(vtkViewport* viewport) VTK_OVERRIDE;
+  int HasTranslucentPolygonalGeometry() VTK_OVERRIDE;
+  void ReleaseGraphicsResources(vtkWindow*) VTK_OVERRIDE;
 
   /**
    * Overridden to include the mtime for the text properties.
    */
-  vtkMTimeType GetMTime();
+  vtkMTimeType GetMTime() VTK_OVERRIDE;
 
 protected:
   vtkGridAxes2DActor();

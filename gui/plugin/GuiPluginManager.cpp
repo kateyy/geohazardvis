@@ -168,7 +168,7 @@ bool GuiPluginManager::loadLibrary(const QString & filePath, GuiPluginInterface 
     }
 
     // cast to generic library class and store in member list
-    m_libraries.push_back(std::move(std::unique_ptr<GuiPluginLibrary>{ library.release() }));
+    m_libraries.push_back(std::unique_ptr<GuiPluginLibrary>{ library.release() });
 
     return true;
 }

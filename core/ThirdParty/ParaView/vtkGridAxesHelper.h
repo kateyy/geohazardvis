@@ -41,7 +41,7 @@ class CORE_API vtkGridAxesHelper : public vtkObject
 public:
   static vtkGridAxesHelper* New();
   vtkTypeMacro(vtkGridAxesHelper, vtkObject);
-  void PrintSelf(ostream& os, vtkIndent indent);
+  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
 
   //@{
   /**

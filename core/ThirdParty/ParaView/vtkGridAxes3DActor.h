@@ -38,12 +38,12 @@ class CORE_API vtkGridAxes3DActor : public vtkProp3D
 public:
   static vtkGridAxes3DActor* New();
   vtkTypeMacro(vtkGridAxes3DActor, vtkProp3D);
-  void PrintSelf(ostream& os, vtkIndent indent);
+  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
 
   /**
    * Shallow copy from another vtkGridAxes3DActor.
    */
-  virtual void ShallowCopy(vtkProp* prop);
+  void ShallowCopy(vtkProp* prop) VTK_OVERRIDE;
 
   //@{
   /**
@@ -281,13 +281,13 @@ public:
   /**
    * Returns the prop bounds.
    */
-  virtual double* GetBounds();
+  double* GetBounds() VTK_OVERRIDE;
 
-  virtual int RenderOpaqueGeometry(vtkViewport*);
-  virtual int RenderTranslucentPolygonalGeometry(vtkViewport* viewport);
-  virtual int RenderOverlay(vtkViewport* viewport);
-  virtual int HasTranslucentPolygonalGeometry();
-  virtual void ReleaseGraphicsResources(vtkWindow*);
+  int RenderOpaqueGeometry(vtkViewport*) VTK_OVERRIDE;
+  int RenderTranslucentPolygonalGeometry(vtkViewport* viewport) VTK_OVERRIDE;
+  int RenderOverlay(vtkViewport* viewport) VTK_OVERRIDE;
+  int HasTranslucentPolygonalGeometry() VTK_OVERRIDE;
+  void ReleaseGraphicsResources(vtkWindow*) VTK_OVERRIDE;
 
 protected:
   vtkGridAxes3DActor();

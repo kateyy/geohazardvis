@@ -362,7 +362,14 @@ TEST(ScopedEventDeferral_test, move_lock)
         {
             ScopedEventDeferral d(data);
 
+#if defined (__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wpessimizing-move"
+#endif
             return std::move(d);
+#if defined (__clang__)
+#pragma clang diagnostic pop
+#endif
         };
 
         auto d2 = moveDeferral();

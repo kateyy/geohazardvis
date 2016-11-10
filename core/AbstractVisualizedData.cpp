@@ -12,7 +12,7 @@
 
 AbstractVisualizedData::AbstractVisualizedData(ContentType contentType, DataObject & dataObject)
     : QObject()
-    , d_ptr{ std::make_unique<AbstractVisualizedData_private>(*this, contentType, dataObject) }
+    , d_ptr{ std::make_unique<AbstractVisualizedData_private>(contentType, dataObject) }
 {
     connect(&dataObject, &DataObject::dataChanged, this, &AbstractVisualizedData::geometryChanged);
 }
