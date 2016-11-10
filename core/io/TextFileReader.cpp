@@ -93,7 +93,7 @@ TextFileReader::TextFileReader(ImplementationID implId, const QString & fileName
     m_implementation->setFileName(m_fileName);
 }
 
-TextFileReader::TextFileReader(nullptr_t)
+TextFileReader::TextFileReader(std::nullptr_t)
     : m_implementation{}
     , m_fileName{}
 {

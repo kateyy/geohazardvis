@@ -26,19 +26,28 @@ function(configure_cxx_target target)
     set_target_properties(${target}
         PROPERTIES
         LINKER_LANGUAGE CXX
-        LINK_FLAGS_DEBUG                       "${DEFAULT_LINKER_FLAGS_DEBUG}"
-        LINK_FLAGS_RELEASE                     "${DEFAULT_LINKER_FLAGS_RELEASE}"
-        LINK_FLAGS_RELWITHDEBINFO              "${DEFAULT_LINKER_FLAGS_RELWITHDEBINFO}"
-        LINK_FLAGS_RELNOOPTIMIZATION           "${DEFAULT_LINKER_FLAGS_RELNOOPTIMIZATION}"
-        STATIC_LIBRARY_FLAGS_DEBUG             "${DEFAULT_STATIC_LIBRARY_FLAGS_DEBUG}"
-        STATIC_LIBRARY_FLAGS_RELEASE           "${DEFAULT_STATIC_LIBRARY_FLAGS_RELEASE}"
-        STATIC_LIBRARY_FLAGS_RELWITHDEBINFO    "${DEFAULT_STATIC_LIBRARY_FLAGS_RELWITHDEBINFO}"
-        STATIC_LIBRARY_FLAGS_RELNOOPTIMIZATION "${DEFAULT_STATIC_LIBRARY_FLAGS_RELNOOPTIMIZATION}"
         DEBUG_POSTFIX                          "_d${DEBUG_POSTFIX}"
         RELWITHDEBINFO_POSTFIX                 "_rd${DEBUG_POSTFIX}"
         RELNOOPTIMIZATION_POSTFIX              "_rd0${DEBUG_POSTFIX}"
         FOLDER                                 "${option_IDE_FOLDER}"
     )
+
+    if (DEFAULT_LINKER_FLAGS_DEBUG OR DEFAULT_LINKER_FLAGS_RELEASE)
+        # MSVC flags not properly handled by target_link_libraries, fall-back to legacy is required
+        set_target_properties(${target}
+            PROPERTIES
+            LINK_FLAGS_DEBUG                       "${DEFAULT_LINKER_FLAGS_DEBUG}"
+            LINK_FLAGS_RELEASE                     "${DEFAULT_LINKER_FLAGS_RELEASE}"
+            LINK_FLAGS_RELWITHDEBINFO              "${DEFAULT_LINKER_FLAGS_RELWITHDEBINFO}"
+            LINK_FLAGS_RELNOOPTIMIZATION           "${DEFAULT_LINKER_FLAGS_RELNOOPTIMIZATION}"
+            STATIC_LIBRARY_FLAGS_DEBUG             "${DEFAULT_STATIC_LIBRARY_FLAGS_DEBUG}"
+            STATIC_LIBRARY_FLAGS_RELEASE           "${DEFAULT_STATIC_LIBRARY_FLAGS_RELEASE}"
+            STATIC_LIBRARY_FLAGS_RELWITHDEBINFO    "${DEFAULT_STATIC_LIBRARY_FLAGS_RELWITHDEBINFO}"
+            STATIC_LIBRARY_FLAGS_RELNOOPTIMIZATION "${DEFAULT_STATIC_LIBRARY_FLAGS_RELNOOPTIMIZATION}"
+        )
+    else()
+        target_link_libraries(${target} ${DEFAULT_LINKER_FLAGS})
+    endif()
 
     if (NOT CMAKE_VERSION VERSION_LESS 3.1)
         set_target_properties(${target}

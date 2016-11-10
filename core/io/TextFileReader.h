@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstddef>
 #include <memory>
 #include <vector>
 
@@ -84,7 +85,7 @@ protected:
     explicit TextFileReader(ImplementationID implId, const QString & fileName);
 
 private:
-    explicit TextFileReader(nullptr_t);
+    explicit TextFileReader(std::nullptr_t);
 
 private:
     std::unique_ptr<ImplBase> m_implementation;

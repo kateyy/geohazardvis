@@ -65,7 +65,7 @@ elseif (UNIX)
     string(APPEND _regexLocations ")\\.so")
 
     execute_process(
-        COMMAND bash "-c" "ldd ${_testBinary} | egrep '${_regexLocations}' | awk \'{ print $1\"\;\"$3 }\'"
+        COMMAND bash "-c" "ldd ${_testBinary} | egrep '${_regexLocations}' | awk \'{ printf \"%s;%s\",$1,$3}\'"
         RESULT_VARIABLE _returnValue
         OUTPUT_VARIABLE _lddLibsInfo
     )
@@ -73,11 +73,12 @@ elseif (UNIX)
         message(FATAL_ERROR "Could not determine third party library locations.")
     endif()
 
-    string(REPLACE "\n" ";" _lddLibsInfo ${_lddLibsInfo})
+    string(REPLACE "\n" ";" _lddLibsInfo "${_lddLibsInfo}")
     list(LENGTH _libsToDeploy _numLibsToDeploy)
     list(LENGTH _lddLibsInfo _lddOutputEntryCount)
-    math(EXPR _dummy "${_numLibsToDeploy} * 2 + 1") # including empty line at the end of the list
-    if (NOT _dummy EQUAL _lddOutputEntryCount)
+    math(EXPR _expectedEntryCount1 "${_numLibsToDeploy} * 2")
+    math(EXPR _expectedEntryCount2 "${_numLibsToDeploy} * 2 + 1") # including empty line at the end of the list
+    if (NOT _expectedEntryCount1 EQUAL _lddOutputEntryCount AND NOT _expectedEntryCount2 EQUAL _lddOutputEntryCount)
         message(FATAL_ERROR "Unexpected ldd output. Cannot deploy third party libraries.")
     endif()
 

@@ -10,31 +10,61 @@ list(APPEND DEFAULT_COMPILE_DEFS
 )
 
 set(DEFAULT_COMPILE_FLAGS
-      -fexceptions
-      -pthread      # -> use pthread library
-      -pipe         # -> use pipes
-      -Wall         # ->
-      -Wextra       # ->
-      -fPIC         # -> use position independent code
+    -fexceptions
+    # use position independent code
+    # http://blog.quarkslab.com/clang-hardening-cheat-sheet.html
+    # (-pie dropped in version 3.8?)
+    $<$<STREQUAL:$<TARGET_PROPERTY:TYPE>,EXECUTABLE>: -fPIE
+        $<$<VERSION_LESS:$<CXX_COMPILER_VERSION>,3.8>: -pie>>
+    $<$<STREQUAL:$<TARGET_PROPERTY:TYPE>,SHARED_LIBRARY>: -fPIC>
+    -fsanitize=safe-stack
+    # http://clang.llvm.org/docs/ControlFlowIntegrity.html
+    # LTO (required for CFI is currently broken in Ubuntu packaged clang)
+#     -fsanitize=cfi
+#     -flto
 
-      -fsanitize=safe-stack
+    -Wall
+    -Wextra
+    -Wunused
 
-      -Wcast-align
-      -Wconversion
+    -Wreorder
+    -Wignored-qualifiers
+    -Wmissing-braces
+    -Wreturn-type
+    -Wswitch
+    -Wswitch-default
+    -Wuninitialized
+    -Wmissing-field-initializers
+    -Wpedantic
+    -Wreturn-stack-address
+    $<$<NOT:$<VERSION_LESS:CXX_COMPILER_VERSION,3.9>>: -Wcomma>
 
-      -Werror=return-type # -> missing returns in functions and methods are handled as errors which stops the compilation
+    -Werror=format-security
 
-      $<$<CONFIG:Debug>:
-            -fstack-protector
-      >
+    $<$<CONFIG:Debug>:
+        -fstack-protector
+    >
 
+    # colors in output of ninja builds
+    -fcolor-diagnostics
+
+    # Disable warnings caused by VTK headers
+    -Wno-extra-semi
 )
 
 if (CMAKE_VERSION VERSION_LESS 3.1)
-    list(APPEND DEFAULT_COMPILE_FLAGS -std=c++1y)
+    list(APPEND DEFAULT_COMPILE_FLAGS -std=c++14)
 endif()
 
-set(DEFAULT_LINKER_FLAGS "-pthread -fPIE -pie -fuse-ld=gold")
+if (NOT CMAKE_CXX_COMPILER_VERSION VERSION_LESS 3.8)  # VERSION_GREATER_EQUAL available in CMake 3.7
+    set(OPTION_CLANG_DEBUGGER gdb CACHE STRING "Debugger for that clang optimizes the DWARF debugging information")
+    set_property(CACHE OPTION_CLANG_DEBUGGER PROPERTY STRINGS gdb lldb)
+    list(APPEND DEFAULT_COMPILE_FLAGS $<$<CONFIG:Debug>: -g${OPTION_CLANG_DEBUGGER}>)
+endif()
 
-set(DEFAULT_LINKER_FLAGS_RELEASE "${DEFAULT_LINKER_FLAGS} -flto -Wl,-z,now -Wl,-z,relro")
-set(DEFAULT_LINKER_FLAGS_DEBUG ${DEFAULT_LINKER_FLAGS})
+set(DEFAULT_LINKER_FLAGS
+    -fsanitize=safe-stack
+    -Wl,-z,relro    # read-only relocations...
+    -Wl,-z,now      # ... and immediate binding (symbols resolved at load time)
+)
+# set(DEFAULT_LINKER_FLAGS ${DEFAULT_LINKER_FLAGS} -flto) # currently broken, at least on Ubuntu
