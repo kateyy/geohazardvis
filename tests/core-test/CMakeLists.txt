@@ -17,6 +17,7 @@ set(sources
     DEMToTopographyMesh_test.cpp
     DeformationTimeSeriesTextFileReader_test.cpp
     GenericPolyDataObject_test.cpp
+    GlyphColorMapping_test.cpp
     ImageDataObject_test.cpp
     PipelineInformationHelper.h
     PipelineInformationHelper.cpp

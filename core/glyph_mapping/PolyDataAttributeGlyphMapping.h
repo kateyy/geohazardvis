@@ -16,6 +16,8 @@ public:
 
     QString name() const override;
 
+    IndexType scalarsAssociation() const override;
+
     vtkAlgorithmOutput * vectorDataOutputPort() override;
 
 protected:

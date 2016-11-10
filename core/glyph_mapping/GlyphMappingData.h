@@ -13,12 +13,12 @@
 
 class QString;
 class vtkActor;
+class vtkAlgorithm;
 class vtkAlgorithmOutput;
+class vtkGlyph3D;
+class vtkMapper;
 class vtkProp;
 class vtkProp3D;
-class vtkAlgorithm;
-class vtkMapper;
-class vtkGlyph3D;
 class vtkScalarsToColors;
 
 namespace reflectionzeug
@@ -26,9 +26,10 @@ namespace reflectionzeug
     class PropertyGroup;
 }
 
-class DataObject;
-class RenderedData;
 class ColorMappingData;
+class DataObject;
+enum class IndexType;
+class RenderedData;
 
 
 /**
@@ -55,6 +56,9 @@ public:
     RenderedData & renderedData();
 
     virtual QString name() const = 0;
+
+    /** Location of visualized attribute (points, cells, ...) */
+    virtual IndexType scalarsAssociation() const = 0;
 
     bool isVisible() const;
     void setVisible(bool enabled);

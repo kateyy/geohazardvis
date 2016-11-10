@@ -9,6 +9,7 @@
 #include <vtkPointData.h>
 #include <vtkGlyph3D.h>
 
+#include <core/types.h>
 #include <core/data_objects/DataObject.h>
 #include <core/rendered_data/RenderedPolyData.h>
 #include <core/glyph_mapping/GlyphMappingRegistry.h>
@@ -105,6 +106,11 @@ PolyDataAttributeGlyphMapping::PolyDataAttributeGlyphMapping(
 QString PolyDataAttributeGlyphMapping::name() const
 {
     return m_attributeName;
+}
+
+IndexType PolyDataAttributeGlyphMapping::scalarsAssociation() const
+{
+    return IndexType::cells;
 }
 
 vtkAlgorithmOutput * PolyDataAttributeGlyphMapping::vectorDataOutputPort()

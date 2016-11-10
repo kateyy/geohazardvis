@@ -10,6 +10,7 @@
 
 template<typename T> class QList;
 class QString;
+class QStringList;
 
 class RenderedData;
 class GlyphMappingData;
@@ -28,7 +29,7 @@ public:
     ~GlyphMapping() override;
 
     /** names of vectors that can be used with my data */
-    QList<QString> vectorNames() const;
+    QStringList vectorNames() const;
     /** list of vector data that can be used with my data */
     QList<GlyphMappingData *> vectors() const;
 
@@ -37,7 +38,7 @@ public:
 signals:
     void vectorsChanged();
 
-private slots:
+private:
     /** reread the data set list provided by the DataSetHandler for new/deleted data */
     void updateAvailableVectors();
 

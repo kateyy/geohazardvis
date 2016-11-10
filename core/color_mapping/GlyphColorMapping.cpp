@@ -1,40 +1,53 @@
 #include "GlyphColorMapping.h"
 
+#include <cassert>
+
 #include <vtkLookupTable.h>
 
-#include <core/glyph_mapping/GlyphMapping.h>
+#include <core/types.h>
 #include <core/glyph_mapping/GlyphMappingData.h>
+#include <core/rendered_data/RenderedData3D.h>
 
 
-GlyphColorMapping::GlyphColorMapping(const QList<AbstractVisualizedData *> & visualizedData,
-    const QList<GlyphMappingData *> & glyphMappingData,
+GlyphColorMapping::GlyphColorMapping(
+    const QList<AbstractVisualizedData *> & visualizedData,
+    const std::map<RenderedData3D *, GlyphMappingData *> & glyphMappingData,
     int numDataComponents)
     : ColorMappingData(visualizedData, numDataComponents)
-    , m_glyphMappingData(glyphMappingData)
+    , m_glyphMappingData{ glyphMappingData }
 {
 }
 
 GlyphColorMapping::~GlyphColorMapping() = default;
 
-const QList<GlyphMappingData *> & GlyphColorMapping::glyphMappingData() const
+IndexType GlyphColorMapping::scalarsAssociation(AbstractVisualizedData & vis) const
 {
-    return m_glyphMappingData;
+    auto it = m_glyphMappingData.find(static_cast<RenderedData3D *>(&vis));
+    if (it != m_glyphMappingData.end() && it->second)
+    {
+        assert(it->second);
+        return it->second->scalarsAssociation();
+    }
+
+    return IndexType::invalid;
 }
 
 void GlyphColorMapping::assignToVisualization()
 {
-    for (auto glyphMapping : m_glyphMappingData)
+    for (auto pair : m_glyphMappingData)
     {
-        glyphMapping->setColorMappingData(this);
-        glyphMapping->setColorMappingGradient(m_lut);
+        assert(pair.second);
+        pair.second->setColorMappingData(this);
+        pair.second->setColorMappingGradient(m_lut);
     }
 }
 
 void GlyphColorMapping::unassignFromVisualization()
 {
-    for (auto glyphMapping : m_glyphMappingData)
+    for (auto pair : m_glyphMappingData)
     {
-        glyphMapping->setColorMappingData(nullptr);
-        glyphMapping->setColorMappingGradient(nullptr);
+        assert(pair.second);
+        pair.second->setColorMappingData(nullptr);
+        pair.second->setColorMappingGradient(nullptr);
     }
 }

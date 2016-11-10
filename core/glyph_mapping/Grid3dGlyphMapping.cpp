@@ -8,6 +8,7 @@
 #include <vtkInformationIntegerKey.h>
 #include <vtkPointData.h>
 
+#include <core/types.h>
 #include <core/data_objects/DataObject.h>
 #include <core/rendered_data/RenderedVectorGrid3D.h>
 #include <core/glyph_mapping/GlyphMappingRegistry.h>
@@ -93,6 +94,11 @@ QString Grid3dGlyphMapping::name() const
 {
     assert(m_dataArray);
     return QString::fromUtf8(m_dataArray->GetName());
+}
+
+IndexType Grid3dGlyphMapping::scalarsAssociation() const
+{
+    return IndexType::points;
 }
 
 vtkAlgorithmOutput * Grid3dGlyphMapping::vectorDataOutputPort()

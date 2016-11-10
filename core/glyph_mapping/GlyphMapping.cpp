@@ -18,9 +18,9 @@ GlyphMapping::GlyphMapping(RenderedData & renderedData)
 
 GlyphMapping::~GlyphMapping() = default;
 
-QList<QString> GlyphMapping::vectorNames() const
+QStringList GlyphMapping::vectorNames() const
 {
-    QList<QString> result;
+    QStringList result;
     for (auto & v : m_vectors)
     {
         result << v.first;
