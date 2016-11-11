@@ -52,7 +52,7 @@ QString pathToSelf()
     ssize_t r;
     if (stat(exeSymLink, &sb) == -1)
     {
-        std::cerr << "lstat() failed on \"" << exeSymLink << std::endl;
+        std::cerr << R"(lstat() failed on ")" << exeSymLink << std::endl;
         return {};
     }
 
@@ -67,7 +67,7 @@ QString pathToSelf()
 
     if (r == -1)
     {
-        std::cerr << "readlink() failed on \"" << exeSymLink << std::endl;
+        std::cerr << R"(readlink() failed on ")" << exeSymLink << std::endl;
         return {};
     }
 

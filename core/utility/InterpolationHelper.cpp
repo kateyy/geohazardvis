@@ -35,10 +35,8 @@ vtkSmartPointer<vtkDataArray> InterpolationHelper::interpolateImageOnImage(vtkIm
     {
         return sourceImage.GetPointData()->GetScalars();
     }
-    else
-    {
-        return sourceImage.GetPointData()->GetArray(sourceAttributeName.toUtf8().data());
-    }
+
+    return sourceImage.GetPointData()->GetArray(sourceAttributeName.toUtf8().data());
 }
 
 
@@ -125,13 +123,15 @@ vtkSmartPointer<vtkDataArray> InterpolationHelper::interpolate(vtkDataSet & base
     if (basePoly)
     {
         if (sourceAttributeName.isEmpty())
+        {
             return probedDataSet->GetCellData()->GetScalars();
-        else
-            return probedDataSet->GetCellData()->GetArray(sourceAttributeName.toUtf8().data());
+        }
+        return probedDataSet->GetCellData()->GetArray(sourceAttributeName.toUtf8().data());
     }
 
     if (sourceAttributeName.isEmpty())
+    {
         return probedDataSet->GetPointData()->GetScalars();
-    else
-        return probedDataSet->GetPointData()->GetArray(sourceAttributeName.toUtf8().data());
+    }
+    return probedDataSet->GetPointData()->GetArray(sourceAttributeName.toUtf8().data());
 }

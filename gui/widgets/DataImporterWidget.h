@@ -18,7 +18,7 @@ class GUI_API DataImporterWidget : public QDialog
 public:
     /** @param showNonCsvTypesTabs Set whether to show an additional tab for importing additional data types (single polygonal files).
         This option allows to use the widget as generalized importer widget for arbitrary file types. */
-    explicit DataImporterWidget(QWidget * parent = nullptr, bool showNonCsvTypesTabs = false, Qt::WindowFlags f = {});
+    explicit DataImporterWidget(QWidget * parent = nullptr, bool showNonCsvTypesTabs = false, Qt::WindowFlags flags = {});
     ~DataImporterWidget() override;
 
     /** Release ownership and return the loaded poly data object.

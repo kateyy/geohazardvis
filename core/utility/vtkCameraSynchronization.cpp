@@ -92,7 +92,9 @@ void vtkCameraSynchronization::cameraChanged(vtkObject * source, unsigned long /
         auto & camera = it.key();
 
         if (camera == sourceCamera)
+        {
             continue;
+        }
 
         camera->SetParallelProjection(sourceCamera->GetParallelProjection());
         camera->SetParallelScale(sourceCamera->GetParallelScale());

@@ -130,6 +130,12 @@ std::unique_ptr<DataObject> MatricesToVtk::loadGrid3D(const QString & name, cons
 
     const vtkIdType numPoints = static_cast<vtkIdType>(data[0].size());
 
+    if (numPoints == 0)
+    {
+        qDebug() << "Empty data set";
+        return nullptr;
+    }
+
     // some assumptions on the file format:
     // it's a regular grid...
 
@@ -137,12 +143,19 @@ std::unique_ptr<DataObject> MatricesToVtk::loadGrid3D(const QString & name, cons
 
     int axis[3] = { -1, -1, -1 };   // axes, ordered by majority
 
+    // Find the axis on which the coordinate first changes:
     if (data[0][1] != origin[0])
+    {
         axis[0] = 0;    // x first
+    }
     else if (data[1][1] != origin[1])
+    {
         axis[0] = 1;    // y first
+    }
     else
+    {
         axis[0] = 2;    // z first
+    }
 
     double spacing[3] = { -1, -1, -1 };
     int extent[3] = { -1, -1, -1 };
@@ -156,7 +169,7 @@ std::unique_ptr<DataObject> MatricesToVtk::loadGrid3D(const QString & name, cons
     int remainingAxes[2] = { positive_modulo(firstAxis + 1, 3), positive_modulo(firstAxis + 2, 3) };
     for (vtkIdType i = 0; i < numPoints; ++i)
     {
-        // check for next axis
+        // Check for next axis: does the coordinate change on the next remaining axis?
         t_FP nextCoord = data[remainingAxes[0]][i];
         if (nextCoord != origin[remainingAxes[0]])
         {
@@ -179,6 +192,11 @@ std::unique_ptr<DataObject> MatricesToVtk::loadGrid3D(const QString & name, cons
     }
     assert(spacing[axis[0]] > 0 && extent[firstAxis] > 0);
 
+    if (axis[2] == -1)
+    {
+        qDebug() << "Cannot determine 3D grid memory layout.";
+        return nullptr;
+    }
 
     // count second axis and get last spacing
     extent[axis[1]] = 0;
@@ -210,7 +228,9 @@ std::unique_ptr<DataObject> MatricesToVtk::loadGrid3D(const QString & name, cons
         double intPart;
         double f_floatPart = std::modf(f_lastExtent, &intPart);
         if (f_floatPart < std::numeric_limits<double>::epsilon())
+        {
             extent[axis[2]] = static_cast<int>(intPart);
+        }
     }
 
     if (extent[axis[2]] < 1 || (numPoints != extent[0] * extent[1] * extent[2]))
@@ -251,7 +271,9 @@ std::unique_ptr<DataObject> MatricesToVtk::loadGrid3D(const QString & name, cons
                 float * scalar = reinterpret_cast<float *>(image->GetScalarPointer(imageCoord));
 
                 for (int c = 0; c < numComponents; ++c)
+                {
                     scalar[c] = static_cast<float>(data.at(3 + c).at(sourceIndex));
+                }
 
                 ++sourceIndex;
             }
@@ -264,7 +286,7 @@ std::unique_ptr<DataObject> MatricesToVtk::loadGrid3D(const QString & name, cons
 vtkSmartPointer<vtkImageData> MatricesToVtk::parseGrid2D(const io::InputVector & inputData, int vtk_dataType)
 {
     auto image = vtkSmartPointer<vtkImageData>::New();
-    if (inputData.size() == 0 || inputData.at(0).size() == 0)
+    if (inputData.empty() || inputData.at(0).empty())
     {
         return image;
     }
@@ -289,21 +311,21 @@ vtkSmartPointer<vtkImageData> MatricesToVtk::parseGrid2D(const io::InputVector &
 }
 
 vtkSmartPointer<vtkPolyData> MatricesToVtk::parsePoints(
-    const InputVector & parsedData, size_t firstColumn,
+    const InputVector & inputData, size_t firstColumn,
     int vtk_dataType /*= VTK_FLOAT*/)
 {
-    assert(parsedData.size() > firstColumn);
+    assert(inputData.size() > firstColumn);
 
     auto points = vtkSmartPointer<vtkPoints>::New();
     points->SetDataType(vtk_dataType);
 
-    size_t nbRows = parsedData.at(firstColumn).size();
+    size_t nbRows = inputData.at(firstColumn).size();
     std::vector<vtkIdType> pointIds(nbRows);
 
     // copy triangle vertexes to VTK point list
     for (size_t row = 0; row < nbRows; ++row)
     {
-        pointIds.at(row) = points->InsertNextPoint(parsedData[firstColumn][row], parsedData[firstColumn + 1][row], parsedData[firstColumn + 2][row]);
+        pointIds.at(row) = points->InsertNextPoint(inputData[firstColumn][row], inputData[firstColumn + 1][row], inputData[firstColumn + 2][row]);
     }
 
     // Create the topology of the point (a vertex)
@@ -318,22 +340,22 @@ vtkSmartPointer<vtkPolyData> MatricesToVtk::parsePoints(
 }
 
 vtkSmartPointer<vtkPolyData> MatricesToVtk::parseIndexedTriangles(
-    const InputVector & parsedVertexData, size_t vertexIndexColumn, size_t firstVertexColumn,
-    const InputVector & parsedIndexData, size_t firstIndexColumn,
+    const InputVector & inputVertexData, size_t vertexIndexColumn, size_t firstVertexColumn,
+    const InputVector & inputIndexData, size_t firstIndexColumn,
     int vtk_dataType /*= VTK_FLOAT*/)
 {
     auto points = vtkSmartPointer<vtkPoints>::New();
     points->SetDataType(vtk_dataType);
 
-    size_t nbVertices = parsedVertexData[vertexIndexColumn].size();
-    size_t nbTriangles = parsedIndexData[firstIndexColumn].size();
+    size_t nbVertices = inputVertexData[vertexIndexColumn].size();
+    size_t nbTriangles = inputIndexData[firstIndexColumn].size();
 
     // to let the internal indexes start with 0
-    size_t indexOffset = std::llround(parsedVertexData[vertexIndexColumn][0]);
+    size_t indexOffset = std::llround(inputVertexData[vertexIndexColumn][0]);
 
     for (size_t row = 0; row < nbVertices; ++row)
     {
-        points->InsertNextPoint(parsedVertexData[firstVertexColumn][row], parsedVertexData[firstVertexColumn + 1][row], parsedVertexData[firstVertexColumn + 2][row]);
+        points->InsertNextPoint(inputVertexData[firstVertexColumn][row], inputVertexData[firstVertexColumn + 1][row], inputVertexData[firstVertexColumn + 2][row]);
     }
 
     auto triangles = vtkSmartPointer<vtkCellArray>::New();
@@ -342,9 +364,9 @@ vtkSmartPointer<vtkPolyData> MatricesToVtk::parseIndexedTriangles(
     {
         // set the indexes for the three triangle vertexes
         // hopefully, these indexes map to the vertex indexes from parsedVertexData
-        triangle->GetPointIds()->SetId(0, std::llround(parsedIndexData[firstIndexColumn][row]) - indexOffset);
-        triangle->GetPointIds()->SetId(1, std::llround(parsedIndexData[firstIndexColumn + 1][row]) - indexOffset);
-        triangle->GetPointIds()->SetId(2, std::llround(parsedIndexData[firstIndexColumn + 2][row]) - indexOffset);
+        triangle->GetPointIds()->SetId(0, std::llround(inputIndexData[firstIndexColumn][row]) - indexOffset);
+        triangle->GetPointIds()->SetId(1, std::llround(inputIndexData[firstIndexColumn + 1][row]) - indexOffset);
+        triangle->GetPointIds()->SetId(2, std::llround(inputIndexData[firstIndexColumn + 2][row]) - indexOffset);
         triangles->InsertNextCell(triangle);    // this copies the triangle data into the list
     }
 
@@ -387,15 +409,27 @@ std::unique_ptr<DataObject> MatricesToVtk::readRawFile(const QString & fileName)
     dataArray->SetNumberOfTuples(numRows);
 
     if (!switchRowsColumns)
+    {
         for (vtkIdType component = 0; component < numColumns; ++component)
+        {
             for (vtkIdType cellId = 0; cellId < numRows; ++cellId)
+            {
                 dataArray->SetValue(cellId * numColumns + component,
                     static_cast<float>(inputVectors.at(component).at(cellId)));
+            }
+        }
+    }
     else
+    {
         for (vtkIdType component = 0; component < numColumns; ++component)
+        {
             for (vtkIdType cellId = 0; cellId < numRows; ++cellId)
+            {
                 dataArray->SetValue(cellId * numColumns + component,
                     static_cast<float>(inputVectors.at(cellId).at(component)));
+            }
+        }
+    }
 
     QFileInfo fInfo(fileName);
 
@@ -403,15 +437,15 @@ std::unique_ptr<DataObject> MatricesToVtk::readRawFile(const QString & fileName)
 }
 
 vtkSmartPointer<vtkDataArray> MatricesToVtk::parseFloatVector(
-    const InputVector & parsedData, const QString & arrayName, size_t firstColumn, size_t lastColumn,
+    const InputVector & inputData, const QString & arrayName, size_t firstColumn, size_t lastColumn,
     int vtk_dataType /*= VTK_FLOAT*/)
 {
     assert(firstColumn <= lastColumn);
-    assert(parsedData.size() > lastColumn);
+    assert(inputData.size() > lastColumn);
     int numComponents = static_cast<int>(lastColumn - firstColumn + 1);
-    vtkIdType numTuples = parsedData.at(lastColumn).size();
+    vtkIdType numTuples = inputData.at(lastColumn).size();
 
-    for (auto ax : parsedData)
+    for (auto && ax : inputData)
     {
         assert(ax.size() == size_t(numTuples));
     }
@@ -427,7 +461,7 @@ vtkSmartPointer<vtkDataArray> MatricesToVtk::parseFloatVector(
     {
         for (vtkIdType component = 0; component < numComponents; ++component)
         {
-            tuple[component] = parsedData.at(component).at(cellId);
+            tuple[component] = inputData.at(component).at(cellId);
         }
         a->SetTuple(cellId, tuple.data());
     }

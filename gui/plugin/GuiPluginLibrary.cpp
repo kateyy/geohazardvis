@@ -23,19 +23,25 @@ bool GuiPluginLibrary::isValid() const
 void GuiPluginLibrary::initialize(GuiPluginInterface && pluginInterface)
 {
     if (m_initPtr != nullptr)
+    {
         (*m_initPtr)(pluginInterface);
+    }
 }
 
 void GuiPluginLibrary::release()
 {
     if (m_releasePtr != nullptr)
+    {
         (*m_releasePtr)();
+    }
 }
 
 GuiPlugin * GuiPluginLibrary::plugin() const
 {
     if (m_pluginPtr != nullptr)
+    {
         return (*m_pluginPtr)();
+    }
 
     return nullptr;
 }

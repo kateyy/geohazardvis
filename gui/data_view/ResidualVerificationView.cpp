@@ -422,7 +422,9 @@ void ResidualVerificationView::showDataObjectsImpl(const QList<DataObject *> & d
     }
 
     if (dataObjects.size() > 1)
+    {
         qDebug() << "Multiple objects per sub-view not supported in the ResidualVerificationView.";
+    }
 
     for (int i = 1; i < dataObjects.size(); ++i)
     {
@@ -490,7 +492,9 @@ QList<DataObject *> ResidualVerificationView::dataObjectsImpl(int subViewIndex) 
     }
 
     if (auto dataObject = dataAt(unsigned(subViewIndex)))
+    {
         return{ dataObject };
+    }
 
     return{};
 }
@@ -823,9 +827,13 @@ void ResidualVerificationView::updateResidual()
         projected->SetName(projectedName.toUtf8().data());
 
         if (m_attributeNamesLocations[dataIndex].second)    // use cell data?
+        {
             dataSet.GetCellData()->AddArray(projected);
+        }
         else
+        {
             dataSet.GetPointData()->AddArray(projected);
+        }
 
         return projected;
     };
@@ -917,7 +925,7 @@ void ResidualVerificationView::updateResidual()
 
 void ResidualVerificationView::updateGuiAfterDataChange()
 {
-    if (m_visToDeleteAfterUpdate.size())
+    if (!m_visToDeleteAfterUpdate.empty())
     {
         QList<AbstractVisualizedData *> toDelete;
         for (const auto & vis : m_visToDeleteAfterUpdate)

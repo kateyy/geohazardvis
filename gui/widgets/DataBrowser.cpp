@@ -37,7 +37,7 @@ DataBrowser::DataBrowser(QWidget* parent, Qt::WindowFlags f)
         {
             return;
         }
-        
+
         emit selectedDataChanged(m_tableModel->dataObjectAt(selected.indexes().first()));
     });
 }
@@ -266,13 +266,14 @@ void DataBrowser::menuAssignDataToIndexes(const QPoint & position, DataObject * 
     titleA->setFont(titleFont);
 
     assignMenu->addSeparator();
-    
+
     if (m_dataMapping->dataSetHandler().dataSets().isEmpty())
     {
         auto loadFirst = assignMenu->addAction("(Load data sets first)");
         loadFirst->setEnabled(false);
     }
     else
+    {
         for (auto && indexes : m_dataMapping->dataSetHandler().dataSets())
         {
             auto assignAction = assignMenu->addAction(indexes->name());
@@ -283,6 +284,7 @@ void DataBrowser::menuAssignDataToIndexes(const QPoint & position, DataObject * 
                 indexes->addDataArray(*dataArray);
             });
         }
+    }
 
     assignMenu->popup(position);
 }

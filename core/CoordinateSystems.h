@@ -42,6 +42,11 @@ struct CORE_API CoordinateSystemType
 
     static const std::vector<std::pair<CoordinateSystemType, QString>> & typeToStringMap();
 
+    CoordinateSystemType(const CoordinateSystemType &) = default;
+    CoordinateSystemType(CoordinateSystemType &&) = default;
+    CoordinateSystemType & operator=(const CoordinateSystemType &) = default;
+    CoordinateSystemType & operator=(CoordinateSystemType &&) = default;
+
     friend CORE_API std::ostream & operator<<(std::ostream & os, const CoordinateSystemType & coordsType);
 };
 
@@ -59,7 +64,7 @@ struct CORE_API CoordinateSystemSpecification
     );
 
     virtual ~CoordinateSystemSpecification() = default;
-        
+
     /** Type of the specified coordinate system */
     CoordinateSystemType type;
     /** Specification for latitude and longitude coordinates, e.g., WGS84 */
@@ -90,7 +95,7 @@ struct CORE_API CoordinateSystemSpecification
     static CoordinateSystemSpecification fromInformation(vtkInformation & information);
 
     /** vtkDataSet information is not stored in VTK XML files, thus information has to be written
-      * to the data set's field data for persistent storage. For pipeline requests, however, it is 
+      * to the data set's field data for persistent storage. For pipeline requests, however, it is
       * more useful to store the coordinate system in the data set's information, as the will be
       * available in pipeline update requests already. */
     virtual void readFromFieldData(vtkFieldData & fieldData);
@@ -101,6 +106,11 @@ struct CORE_API CoordinateSystemSpecification
     static vtkInformationStringMetaDataKey * GeographicCoordinateSystemName_InfoKey();
     static vtkInformationStringMetaDataKey * MetricCoordinateSystemName_InfoKey();
     static vtkInformationStringMetaDataKey * UnitOfMeasurement_InfoKey();
+
+    CoordinateSystemSpecification(const CoordinateSystemSpecification &) = default;
+    CoordinateSystemSpecification(CoordinateSystemSpecification &&) = default;
+    CoordinateSystemSpecification & operator=(const CoordinateSystemSpecification &) = default;
+    CoordinateSystemSpecification & operator=(CoordinateSystemSpecification &&) = default;
 
     friend CORE_API std::ostream & operator<<(std::ostream & os, const CoordinateSystemSpecification & spec);
 };
@@ -116,12 +126,12 @@ struct CORE_API ReferencedCoordinateSystemSpecification : public CoordinateSyste
         const QString & geographicSystem,
         const QString & globalMetricSystem,
         const QString & unitOfMeasurement,
-        const vtkVector2d & referencePointLatLong,
-        const vtkVector2d & referencePointLocalRelative);
+        vtkVector2d referencePointLatLong,
+        vtkVector2d referencePointLocalRelative);
     ReferencedCoordinateSystemSpecification(
-        const CoordinateSystemSpecification & unreferencedSpec,
-        const vtkVector2d & referencePointLatLong,
-        const vtkVector2d & referencePointLocalRelative);
+        CoordinateSystemSpecification unreferencedSpec,
+        vtkVector2d referencePointLatLong,
+        vtkVector2d referencePointLocalRelative);
     ~ReferencedCoordinateSystemSpecification() override = default;
 
     bool isReferencePointValid() const;
@@ -150,6 +160,11 @@ struct CORE_API ReferencedCoordinateSystemSpecification : public CoordinateSyste
 
     static vtkInformationDoubleVectorMetaDataKey * ReferencePointLatLong_InfoKey();
     static vtkInformationDoubleVectorMetaDataKey * ReferencePointLocalRelative_InfoKey();
+
+    ReferencedCoordinateSystemSpecification(const ReferencedCoordinateSystemSpecification &) = default;
+    ReferencedCoordinateSystemSpecification(ReferencedCoordinateSystemSpecification &&) = default;
+    ReferencedCoordinateSystemSpecification & operator=(const ReferencedCoordinateSystemSpecification &) = default;
+    ReferencedCoordinateSystemSpecification & operator=(ReferencedCoordinateSystemSpecification &&) = default;
 
     friend CORE_API std::ostream & operator<<(std::ostream & os, const ReferencedCoordinateSystemSpecification & spec);
 };

@@ -34,7 +34,9 @@ CanvasExporterWidget::CanvasExporterWidget(QWidget * parent, Qt::WindowFlags f)
         QString res = QFileDialog::getExistingDirectory(this, "Screenshot Output Folder",
             m_ui->outputFolderEdit->text());
         if (!res.isEmpty())
+        {
             m_ui->outputFolderEdit->setText(res);
+        }
     });
 }
 
@@ -49,16 +51,20 @@ void CanvasExporterWidget::captureScreenshot()
 {
     CanvasExporter * exporter = currentExporterConfigured();
     if (!exporter)
+    {
         return;
+    }
 
-    QString exportFolder = currentExportFolder();
+    const QString exportFolder = currentExportFolder();
 
-    QDir exportDir(exportFolder);
+    const QDir exportDir(exportFolder);
 
     if (!exportDir.exists())
+    {
         return;
+    }
 
-    QString fileName = exportDir.absoluteFilePath(fileNameWithTimeStamp());
+    const QString fileName = exportDir.absoluteFilePath(fileNameWithTimeStamp());
 
     saveScreenshotTo(*exporter, fileName);
 }
@@ -67,21 +73,25 @@ void CanvasExporterWidget::captureScreenshotTo()
 {
     CanvasExporter * exporter = currentExporterConfigured();
     if (!exporter)
+    {
         return;
+    }
 
-    QString target = QFileDialog::getSaveFileName(this, "Export Image", 
+    const QString target = QFileDialog::getSaveFileName(this, "Export Image",
         currentExportFolder() + "/" + fileNameWithTimeStamp(),
         exporter->outputFormat() + " (*." + exporter->fileExtension() + ")");
 
     if (target.isEmpty())
+    {
         return;
+    }
 
     saveScreenshotTo(*exporter, target);
 }
 
 CanvasExporter * CanvasExporterWidget::currentExporter()
 {
-    QString format = m_ui->fileFormatComboBox->currentText();
+    const QString format = m_ui->fileFormatComboBox->currentText();
     auto exporterIt = m_exporters.find(format);
 
     CanvasExporter * exporter = nullptr;
@@ -98,7 +108,9 @@ CanvasExporter * CanvasExporterWidget::currentExporter()
     }
 
     if (!exporter)
+    {
         qDebug() << "CanvasExporterWidget: Selected file format" << format << "is not supported.";
+    }
 
     return exporter;
 }
@@ -118,7 +130,7 @@ CanvasExporter * CanvasExporterWidget::currentExporterConfigured()
 
         if (!exporter->openGLContextSupported())
         {
-            QMessageBox::warning(this, "Unsupported OpenGL Driver", 
+            QMessageBox::warning(this, "Unsupported OpenGL Driver",
                 QString("Unfortunately, the currently selected image export format is not supported with your graphics driver.") +
                 "\nExport format: " + m_ui->fileFormatComboBox->currentText());
             return nullptr;
@@ -134,17 +146,19 @@ QString CanvasExporterWidget::currentExportFolder() const
     exportFolder.replace("\\", "//");
 
     if (!QDir().mkpath(exportFolder))
+    {
         qDebug() << "CanvasExporterWidget: cannot create output folder: " + exportFolder;
+    }
 
     return exportFolder;
 }
 
 QString CanvasExporterWidget::fileNameWithTimeStamp() const
 {
-    QString timestamp = QDateTime::currentDateTime().toString("yyyy-MM-dd HH-mm-ss.zzzz");
+    const QString timestamp = QDateTime::currentDateTime().toString("yyyy-MM-dd HH-mm-ss.zzzz");
     QString baseName = timestamp + " " + m_renderView->windowTitle();
-    // http://msdn.microsoft.com/en-us/library/windows/desktop/aa365247%28v=vs.85%29.aspx
-    baseName.replace(QRegExp("[<>:\"/\\|?*]"), "_");
+    //
+    baseName.replace(QRegExp(R"([<>:"/\|?*])"), "_");
 
     return baseName;
 }
@@ -165,7 +179,9 @@ void CanvasExporterWidget::updateUiForFormat()
 
     auto exporter = currentExporter();
     if (!exporter)
+    {
         return;
+    }
 
     m_ui->exporterSettingsBrowser->setRoot(exporter->propertyGroup());
     m_ui->exporterSettingsBrowser->resizeColumnToContents(0);

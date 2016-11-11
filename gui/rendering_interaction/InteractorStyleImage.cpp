@@ -28,7 +28,7 @@ void InteractorStyleImage::OnMouseMove()
 
         m_mouseMoved = true;
     }
-    
+
     Superclass::OnMouseMove();
 }
 
@@ -78,7 +78,9 @@ void InteractorStyleImage::OnMiddleButtonUp()
     case VTKIS_DOLLY:
         EndDolly();
         if (Interactor)
+        {
             ReleaseFocus();
+        }
         break;
     default:
         Superclass::OnMiddleButtonUp();

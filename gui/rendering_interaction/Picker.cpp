@@ -148,7 +148,7 @@ void Picker::pick(const vtkVector2i & clickPosXY, vtkRenderer & renderer)
     }
     else
     {
-        inputName = "\"" + inputName + "\"";
+        inputName = '\"' + inputName + '\"';
     }
 
     stream << "Data Set: " << inputName << endl;
@@ -355,7 +355,7 @@ void Picker_private::appendScalarInfo(QTextStream & stream, int activeComponent,
     {
         assert(activeComponent >= 0);
 
-        stream << endl << endl << locationString << " Attribute: \"" << QString::fromUtf8(scalars.GetName()) << "\"";
+        stream << endl << endl << locationString << R"( Attribute: ")" << QString::fromUtf8(scalars.GetName()) << '\"';
         if (tuple.size() > 1)
         {
             stream << " (active component: " << activeComponent + 1 << ")";

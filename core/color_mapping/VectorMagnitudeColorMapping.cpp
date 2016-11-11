@@ -158,7 +158,7 @@ VectorMagnitudeColorMapping::VectorMagnitudeColorMapping(
             setMagnitudeName->SetArrayName(utf8MagnitudeName.data());
             setMagnitudeName->SetInputConnection(norm->GetOutputPort());
 
-            filters.push_back(setMagnitudeName);
+            filters.emplace_back(setMagnitudeName);
         }
 
         m_filters.insert(vis, filters);
@@ -230,9 +230,9 @@ std::vector<ValueRange<>> VectorMagnitudeColorMapping::updateBounds()
 {
     decltype(updateBounds())::value_type totalRange;
 
-    for (auto filters : m_filters.values())
+    for (auto && filters : m_filters.values())
     {
-        for (auto filter : filters)
+        for (auto && filter : filters)
         {
             filter->Update();
             auto dataSet = vtkDataSet::SafeDownCast(filter->GetOutputDataObject(0));

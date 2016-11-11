@@ -62,13 +62,13 @@ bool BinaryFile::clear()
         return false;
 
     m_file->close();
-    
+
     return m_file->open(mode);
 }
 
 bool BinaryFile::seek(size_t filePos)
 {
-    auto qpos = static_cast<qint64>(filePos);
+    const auto qpos = static_cast<qint64>(filePos);
 
     if (static_cast<size_t>(qpos) != filePos)
     {

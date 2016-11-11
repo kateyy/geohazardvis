@@ -40,7 +40,8 @@ vtkRenderer * CameraDolly::renderer() const
 void CameraDolly::moveTo(AbstractVisualizedData & visualization, vtkIdType index, IndexType indexType, bool overTime)
 {
     if (!m_renderer)
-        return;
+    {
+        return;}
 
     if (visualization.numberOfColorMappingInputs() == 0)
     {
@@ -77,7 +78,9 @@ void CameraDolly::moveTo(DataObject & dataObject, vtkIdType index, IndexType ind
 void CameraDolly::moveTo(vtkDataSet & dataSet, vtkIdType index, IndexType indexType, bool overTime)
 {
     if (!m_renderer)
+    {
         return;
+    }
 
     if (auto poly = vtkPolyData::SafeDownCast(&dataSet))
     {
@@ -94,7 +97,9 @@ void CameraDolly::moveTo(vtkDataSet & dataSet, vtkIdType index, IndexType indexT
 void CameraDolly::moveToPoly(vtkPolyData & polyData, vtkIdType index, IndexType indexType, bool overTime)
 {
     if (!m_renderer)
+    {
         return;
+    }
 
     double selectionPoint[3], selectionNormal[3];
 
@@ -138,7 +143,9 @@ void CameraDolly::moveToPoly(vtkPolyData & polyData, vtkIdType index, IndexType 
 
     camera.GetFocalPoint(startingFocalPoint);
     for (size_t i = 0; i < 3; ++i)  // look at center of the object
+    {
         targetFocalPoint[i] = objectCenter[i];
+    }
     startingAzimuth = TerrainCamera::getAzimuth(camera);
     startingElevation = TerrainCamera::getVerticalElevation(camera);
 
@@ -162,7 +169,9 @@ void CameraDolly::moveToPoly(vtkPolyData & polyData, vtkIdType index, IndexType 
 
     // make sure to move outside of the selection
     if (viewDistanceXY < selectionRadiusXY)
+    {
         viewDistanceXY = selectionRadiusXY * 1.5;
+    }
 
 
     // choose nearest viewpoint for flat surfaces
@@ -205,9 +214,13 @@ void CameraDolly::moveToPoly(vtkPolyData & polyData, vtkIdType index, IndexType 
             bool towardsPositive = selectionFrontXY[0] > selectionCenterXY[0] || (selectionFrontXY[0] == selectionCenterXY[0] && selectionFrontXY[1] >= selectionCenterXY[1]);
             int intersectionIndex;
             if (towardsPositive == (intersections[0] > intersections[2] || (intersections[0] == intersections[2] && intersections[1] >= intersections[3])))
+            {
                 intersectionIndex = 0;
+            }
             else
+            {
                 intersectionIndex = 2;
+            }
             targetPositionXY[0] = intersections[intersectionIndex];
             targetPositionXY[1] = intersections[intersectionIndex + 1];
         }
@@ -272,7 +285,9 @@ void CameraDolly::moveToPoly(vtkPolyData & polyData, vtkIdType index, IndexType 
             m_renderer->GetRenderWindow()->Render();
 
             if (QTime::currentTime() > deadline)
+            {
                 break;
+            }
 
             QThread::msleep((unsigned long)std::max(0l, sleepMSec - renderTime.elapsed()));
         }

@@ -38,7 +38,7 @@ QDebug & operator<<(QDebug & qdebug, ContentType contentType)
         default: return "[invalid value: " + QString::number(static_cast<int>(contentType)) + "]";
         }
     }();
-    
+
     return qdebug.maybeQuote().maybeSpace();
 }
 
@@ -67,7 +67,7 @@ DataSelection::DataSelection(DataObject * dataObject)
 DataSelection::DataSelection(DataObject * dataObject, IndexType indexType, Indices_t indices)
     : dataObject{ dataObject }
     , indexType{ indexType }
-    , indices(indices)
+    , indices{ std::move(indices) }
 {
 }
 
@@ -162,7 +162,7 @@ VisualizationSelection::VisualizationSelection(
     : visualization{ visualization }
     , visOutputPort{ visOutputPort }
     , indexType{ indexType }
-    , indices(indices)
+    , indices{ std::move(indices) }
 {
 }
 

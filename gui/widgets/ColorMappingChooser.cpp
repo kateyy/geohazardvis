@@ -102,7 +102,7 @@ void ColorMappingChooser::setSelectedData(DataObject * dataObject)
 
     if (!vis)
     {
-        // An object was selected that is not contained in the current view, 
+        // An object was selected that is not contained in the current view,
         // so stick to the current selection.
         return;
     }
@@ -112,7 +112,7 @@ void ColorMappingChooser::setSelectedData(DataObject * dataObject)
 
 void ColorMappingChooser::setSelectedVisualization(AbstractVisualizedData * visualization)
 {
-    assert(m_mapping || 
+    assert(m_mapping ||
         (m_colorLegendObserverIds.isEmpty() && m_guiConnections.isEmpty() && !m_dataMinMaxChangedConnection));
 
     auto newMapping = visualization ? &visualization->colorMapping() : nullptr;
@@ -128,7 +128,9 @@ void ColorMappingChooser::setSelectedVisualization(AbstractVisualizedData * visu
     for (auto it = m_colorLegendObserverIds.begin(); it != m_colorLegendObserverIds.end(); ++it)
     {
         if (it.key())
+        {
             it.key()->RemoveObserver(it.value());
+        }
     }
     m_colorLegendObserverIds.clear();
 
@@ -373,7 +375,9 @@ void ColorMappingChooser::updateTitle()
 {
     QString title;
     if (!m_mapping)
+    {
         title = "<b>(No object selected)</b>";
+    }
     else
     {
         title = "<b>" + QString::number(m_renderView->index()) + ": ";
@@ -522,7 +526,9 @@ void ColorMappingChooser::setupGuiConnections()
         auto property = legend().GetTitleTextProperty();
         auto currentSize = property->GetFontSize();
         if (currentSize == fontSize)
+        {
             return;
+        }
         property->SetFontSize(fontSize);
         emit renderSetupChanged();
     });
@@ -531,7 +537,9 @@ void ColorMappingChooser::setupGuiConnections()
         auto property = legend().GetLabelTextProperty();
         auto currentSize = property->GetFontSize();
         if (currentSize == fontSize)
+        {
             return;
+        }
         property->SetFontSize(fontSize);
         emit renderSetupChanged();
     });
@@ -544,7 +552,9 @@ void ColorMappingChooser::setupGuiConnections()
     m_guiConnections << connect(m_ui->legendAlignTitleCheckBox, &QAbstractButton::toggled, [this] (bool checked) {
         bool currentlyAligned = legend().GetTitleAlignedWithColorBar();
         if (currentlyAligned == checked)
+        {
             return;
+        }
         legend().SetTitleAlignedWithColorBar(checked);
         emit renderSetupChanged();
     });
@@ -552,7 +562,9 @@ void ColorMappingChooser::setupGuiConnections()
     m_guiConnections << connect(m_ui->legendBackgroundCheckBox, &QAbstractButton::toggled, [this] (bool checked) {
         bool currentlyOn = legend().GetDrawBackground();
         if (currentlyOn == checked)
+        {
             return;
+        }
         legend().SetDrawBackground(checked);
         emit renderSetupChanged();
     });
@@ -605,7 +617,7 @@ void ColorMappingChooser::setupValueRangeConnections()
     // depending on the effect of this change, the effect may be the same as setting different scalars
     // e.g., changes between range (n, n) and (n, m)
     m_dataMinMaxChangedConnection = connect(&currentScalars, &ColorMappingData::dataMinMaxChanged,
-        this, &ColorMappingChooser::guiScalarsSelectionChanged);    
+        this, &ColorMappingChooser::guiScalarsSelectionChanged);
 }
 
 void ColorMappingChooser::discardValueRangeConnections()
@@ -681,8 +693,8 @@ void ColorMappingChooser::updateGuiValueRanges()
 
     m_ui->componentLabel->setText("component (" + QString::number(numComponents) + ")");
     QString resetLink = enableRangeGui ? "resetToData" : "";
-    m_ui->minLabel->setText("min (data: <a href=\"" + resetLink + "\">" + QString::number(min) + "</a>)");
-    m_ui->maxLabel->setText("max (data: <a href=\"" + resetLink + "\">" + QString::number(max) + "</a>)");
+    m_ui->minLabel->setText(R"(min (data: <a href=")" + resetLink + '>' + QString::number(min) + "</a>");
+    m_ui->maxLabel->setText(R"(max (data: <a href=")" + resetLink + '>' + QString::number(max) + "</a>");
 
     m_ui->componentSpinBox->setEnabled(numComponents > 1);
     m_ui->minValueSpinBox->setEnabled(enableRangeGui);

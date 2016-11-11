@@ -18,14 +18,16 @@ GlyphColorMappingGlyphListener::~GlyphColorMappingGlyphListener() = default;
 void GlyphColorMappingGlyphListener::setData(const QList<AbstractVisualizedData *> & visualizedData)
 {
     m_data.clear();
-    
+
     disconnectAll(m_connects);
 
     for (auto vis : visualizedData)
     {
-        RenderedData3D * rendered3D = dynamic_cast<RenderedData3D *>(vis);
+        auto rendered3D = dynamic_cast<RenderedData3D *>(vis);
         if (!rendered3D)
+        {
             continue;
+        }
 
         m_data << rendered3D;
 
@@ -33,8 +35,10 @@ void GlyphColorMappingGlyphListener::setData(const QList<AbstractVisualizedData 
         m_connects << connect(&glyphMapping, &GlyphMapping::vectorsChanged,
             this, &GlyphColorMappingGlyphListener::glyphMappingChanged);
 
-        for (GlyphMappingData * data : glyphMapping.vectors())
+        for (auto data : glyphMapping.vectors())
+        {
             m_connects << connect(data, &GlyphMappingData::visibilityChanged,
                 this, &GlyphColorMappingGlyphListener::glyphMappingChanged);
+        }
     }
 }

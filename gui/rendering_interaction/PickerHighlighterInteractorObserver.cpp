@@ -60,7 +60,7 @@ void PickerHighlighterInteractorObserver::SetInteractor(vtkRenderWindowInteracto
         this->Interactor->RemoveObserver(this->m_callbackTag);
         m_highlighter->clear();
     }
-    
+
     if (interactor)
     {
         this->m_callbackTag = interactor->AddObserver(vtkCommand::AnyEvent, this, &PickerHighlighterInteractorObserver::EventCallback);
@@ -112,7 +112,9 @@ void PickerHighlighterInteractorObserver::requestPickedInfoUpdate()
 void PickerHighlighterInteractorObserver::EventCallback(vtkObject * /*subject*/, unsigned long eventId, void * /*userData*/)
 {
     if (!this->Enabled)
+    {
         return;
+    }
 
     switch (eventId)
     {

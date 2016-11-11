@@ -46,7 +46,7 @@ void InteractorStyleTerrain::OnLeftButtonDown()
 
     this->FindPokedRenderer(this->Interactor->GetEventPosition()[0],
                             this->Interactor->GetEventPosition()[1]);
-    if (this->CurrentRenderer == NULL)
+    if (this->CurrentRenderer == nullptr)
     {
         return;
     }
@@ -82,7 +82,9 @@ void InteractorStyleTerrain::OnMiddleButtonUp()
     case VTKIS_DOLLY:
         EndDolly();
         if (Interactor)
+        {
             ReleaseFocus();
+        }
         break;
     default:
         Superclass::OnMiddleButtonUp();
@@ -108,7 +110,9 @@ void InteractorStyleTerrain::OnRightButtonUp()
     case VTKIS_PAN:
         EndPan();
         if (Interactor)
+        {
             ReleaseFocus();
+        }
         break;
     default:
         Superclass::OnRightButtonUp();

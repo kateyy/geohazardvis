@@ -64,7 +64,7 @@ ColorEditorRGB::ColorEditorRGB(reflectionzeug::ColorPropertyInterface * property
     m_button = new ColorButtonWithBorder(this, qcolor);
     boxLayout()->addWidget(m_button);
 
-    QHBoxLayout * spinBoxLayout = new QHBoxLayout();
+    auto spinBoxLayout = new QHBoxLayout();
     boxLayout()->addLayout(spinBoxLayout);
     spinBoxLayout->setMargin(0);
     spinBoxLayout->setSpacing(0);
@@ -97,7 +97,9 @@ void ColorEditorRGB::openColorPicker()
         "Choose Color");
 
     if (qcolor.isValid())
+    {
         setQColor(qcolor);
+    }
 }
 
 void ColorEditorRGB::readUiColor(int)

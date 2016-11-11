@@ -254,7 +254,9 @@ double ColorMappingData::maxValue(int component) const
     updateBoundsLocked();
 
     if (component < 0)
+    {
         component = m_dataComponent;
+    }
 
     return m_maxValue[component];
 }

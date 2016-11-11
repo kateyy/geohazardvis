@@ -35,8 +35,6 @@ vtkPlot *vtkPlotCollection::GetLastPlot()
     {
         return nullptr;
     }
-    else
-    {
-        return static_cast<vtkPlot *>(this->Bottom->Item);
-    }
+
+    return static_cast<vtkPlot *>(this->Bottom->Item);
 }

@@ -41,7 +41,7 @@ class PluginLibraryImpl : public GuiPluginLibrary
 public:
     explicit PluginLibraryImpl(const QString & filePath)
         : GuiPluginLibrary(filePath)
-        , m_handle(0)
+        , m_handle{ nullptr }
     {
         m_handle = dlopen(filePath.toUtf8().data(), RTLD_LAZY);
         if (!m_handle)
@@ -58,7 +58,9 @@ public:
     ~PluginLibraryImpl() override
     {
         if (m_handle)
+        {
             dlclose(m_handle);
+        }
     }
 
 private:

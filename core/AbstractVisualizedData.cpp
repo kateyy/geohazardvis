@@ -142,7 +142,7 @@ AbstractVisualizedData * AbstractVisualizedData::readPointer(vtkInformation & in
         return reinterpret_cast<AbstractVisualizedData *>(information.Get(AbstractVisualizedData_private::VisualizedDataKey()));
     }
 
-    else return nullptr;
+    return nullptr;
 }
 
 void AbstractVisualizedData::storePointer(vtkInformation & information, AbstractVisualizedData * visualization)

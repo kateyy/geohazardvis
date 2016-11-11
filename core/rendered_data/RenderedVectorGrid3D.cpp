@@ -101,7 +101,7 @@ RenderedVectorGrid3D::~RenderedVectorGrid3D() = default;
 
 void RenderedVectorGrid3D::setRenderWindowInteractor(vtkRenderWindowInteractor * interactor)
 {
-    for (auto widget : m_planeWidgets)
+    for (auto && widget : m_planeWidgets)
     {
         widget->SetInteractor(interactor);
     }
@@ -202,8 +202,10 @@ std::unique_ptr<PropertyGroup> RenderedVectorGrid3D::createConfigGroup()
         auto prop_lighting = group_scalarSlices->addProperty<bool>("Lighting",
             [property]() { return property->GetLighting(); },
             [this, property] (bool lighting) {
-            for (auto w : m_planeWidgets)
+            for (auto && w : m_planeWidgets)
+            {
                 w->GetTexturePlaneProperty()->SetLighting(lighting);
+            }
             emit geometryChanged();
         });
         prop_lighting->setOption("tooltip", depthWarning);
@@ -211,8 +213,10 @@ std::unique_ptr<PropertyGroup> RenderedVectorGrid3D::createConfigGroup()
         auto prop_diffLighting = group_scalarSlices->addProperty<double>("DiffuseLighting",
             [property] () { return property->GetDiffuse(); },
             [this, property](double diff) {
-            for (auto w : m_planeWidgets)
+            for (auto && w : m_planeWidgets)
+            {
                 w->GetTexturePlaneProperty()->SetDiffuse(diff);
+            }
             emit geometryChanged();
         });
         prop_diffLighting->setOption("title", "Diffuse Lighting");
@@ -223,8 +227,10 @@ std::unique_ptr<PropertyGroup> RenderedVectorGrid3D::createConfigGroup()
         auto prop_ambientLighting = group_scalarSlices->addProperty<double>("AmbientLighting",
             [property]() { return property->GetAmbient(); },
             [this, property] (double ambient) {
-            for (auto w : m_planeWidgets)
+            for (auto && w : m_planeWidgets)
+            {
                 w->GetTexturePlaneProperty()->SetAmbient(ambient);
+            }
             emit geometryChanged();
         });
         prop_ambientLighting->setOption("title", "Ambient Lighting");
@@ -237,8 +243,10 @@ std::unique_ptr<PropertyGroup> RenderedVectorGrid3D::createConfigGroup()
             return static_cast<ResliceInterpolation>(m_planeWidgets[0]->GetResliceInterpolate());
         },
             [this] (ResliceInterpolation interpolation) {
-            for (auto plane : m_planeWidgets)
+            for (auto && plane : m_planeWidgets)
+            {
                 plane->SetResliceInterpolate(static_cast<int>(interpolation));
+            }
             emit geometryChanged();
         });
         prop_interpolation->setStrings({
@@ -352,7 +360,7 @@ void RenderedVectorGrid3D::updatePlaneLUT()
         ? m_blackWhiteLUT.Get()
         : vtkLookupTable::SafeDownCast(currentColorMappingGradient());
 
-    for (auto plane : m_planeWidgets)
+    for (auto && plane : m_planeWidgets)
     {
         plane->SetLookupTable(lut);
     }

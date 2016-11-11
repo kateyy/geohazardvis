@@ -229,7 +229,7 @@ const ColorMappingData & ColorMapping::currentScalars() const
         return nullColorMapping();
     }
 
-    return *it->second.get();
+    return *it->second;
 }
 
 vtkLookupTable * ColorMapping::gradient()

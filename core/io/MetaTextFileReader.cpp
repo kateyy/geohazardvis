@@ -107,7 +107,7 @@ auto MetaTextFileReader::readData(
 
     if (!inputStream.good())
     {
-        cerr << "Cannot access file: \"" << fileName.toStdString() << "\"" << endl;
+        cerr << R"(Cannot access file: ")" << fileName.toStdString() << '\"' << endl;
         return nullptr;
     }
 
@@ -116,7 +116,7 @@ auto MetaTextFileReader::readData(
 
     if (!input)
     {
-        cerr << "could not read input text file: \"" << fileName.toStdString() << "\"" << endl;
+        cerr << R"(could not read input text file: ")" << fileName.toStdString() << '\"' << endl;
         return nullptr;
     }
     assert(input);
@@ -149,7 +149,7 @@ auto MetaTextFileReader::readData(
     return input;
 }
 
-auto MetaTextFileReader::readHeader(ifstream & inputStream, vector<DataSetDef> & inputDefs) 
+auto MetaTextFileReader::readHeader(ifstream & inputStream, vector<DataSetDef> & inputDefs)
     -> std::unique_ptr<InputFileInfo>
 {
     assert(inputStream.good());
@@ -167,9 +167,12 @@ auto MetaTextFileReader::readHeader(ifstream & inputStream, vector<DataSetDef> &
         line = rtrim(line);
 
         if (ignoreLine(line))
+        {
             continue;
+        }
 
-        if (line == "$begin") {
+        if (line == "$begin")
+        {
             started = true;
             continue;
         }
@@ -194,7 +197,7 @@ auto MetaTextFileReader::readHeader(ifstream & inputStream, vector<DataSetDef> &
             auto it = modelNamesType.find(type);
             if (it == modelNamesType.end())
             {
-                cerr << "Invalid model type \"" << type << "\"" << endl;
+                cerr << R"(Invalid model type ")" << type << '\"' << endl;
                 return nullptr;
             }
             input = std::make_unique<InputFileInfo>(QString::fromStdString(name), it->second);
@@ -214,15 +217,16 @@ auto MetaTextFileReader::readHeader(ifstream & inputStream, vector<DataSetDef> &
                 validFile = readHeader_vectorGrid3D(inputStream, inputDefs);
                 break;
             default:
-                cerr << "Unexpected model type \"" << type << "\"" << endl;
+                cerr << R"(Unexpected model type ")" << type << '\"' << endl;
                 return nullptr;
             }
 
             if (!validFile)
+            {
                 return nullptr;
-            else
-                break;
+            }
 
+            break;
         }
 
         cerr << "Invalid line in input file: \n\t" << line << endl;
@@ -245,11 +249,15 @@ bool MetaTextFileReader::readHeader_triangles(ifstream & inputStream, vector<Dat
         line = rtrim(line);
 
         if (ignoreLine(line))
+        {
             continue;
+        }
 
         // this is the end if the header section, required for valid input files
         if (line == "$end")
+        {
             return true;
+        }
 
         // expecting only some types of datasets from now on
         if (line.substr(0, 2) != "$ ")
@@ -282,7 +290,7 @@ bool MetaTextFileReader::readHeader_triangles(ifstream & inputStream, vector<Dat
             break;
         case DataSetType::vectors:
         {
-            size_t tupleSizePos = parameter.find(" ", 0);
+            const size_t tupleSizePos = parameter.find(' ', 0);
             tupleSize = stoul(parameter.substr(0, tupleSizePos));
             numTuples = numCells;
             attributeName = parameter.substr(tupleSizePos + 1);
@@ -291,7 +299,7 @@ bool MetaTextFileReader::readHeader_triangles(ifstream & inputStream, vector<Dat
         case DataSetType::unknown:
             return false;
         default:
-            cerr << "Data set type \"" + datasetType + "\" not supported with model type \"triangles\"" << endl;
+            cerr << R"(Data set type ")" + datasetType + R"(" not supported with model type "triangles")" << endl;
             return false;
         }
         assert(tupleSize);
@@ -317,7 +325,9 @@ bool MetaTextFileReader::readHeader_DEM(ifstream & inputStream, vector<DataSetDe
         line = rtrim(line);
 
         if (ignoreLine(line))
+        {
             continue;
+        }
 
         if (line == "$end")
         {
@@ -377,10 +387,14 @@ bool MetaTextFileReader::readHeader_DEM(ifstream & inputStream, vector<DataSetDe
     }
 
     if (!atEnd)
+    {
         return false;
+    }
 
     if (columns <= 0 || rows <= 0 || std::isnan(xMin) || std::isnan(yMin))
+    {
         return false;
+    }
 
     auto image = vtkSmartPointer<vtkImageData>::New();
     image->SetExtent(0, columns - 1, 0, rows - 1, 0, 0);
@@ -389,7 +403,9 @@ bool MetaTextFileReader::readHeader_DEM(ifstream & inputStream, vector<DataSetDe
     if (std::isnan(cellSize))
     {
         if (std::isnan(xMax) || std::isnan(yMax))
+        {
             return false;
+        }
 
         image->SetOrigin(xMin, yMin, 0);
         image->SetSpacing(
@@ -400,7 +416,9 @@ bool MetaTextFileReader::readHeader_DEM(ifstream & inputStream, vector<DataSetDe
     else
     {
         if (!std::isnan(xMax) || !std::isnan(yMax))
+        {
             return false;
+        }
 
         image->SetOrigin(xMin, yMin, 0);
         image->SetSpacing(cellSize, cellSize, 1);
@@ -432,7 +450,9 @@ bool MetaTextFileReader::readHeader_grid2D(ifstream & inputStream, vector<DataSe
         line = rtrim(line);
 
         if (ignoreLine(line))
+        {
             continue;
+        }
 
         if (line == "$end")
         {
@@ -463,13 +483,13 @@ bool MetaTextFileReader::readHeader_grid2D(ifstream & inputStream, vector<DataSe
                 return false;
             }
 
-            size_t seperator = paramValue.find_first_of(":");
-            size_t columns = stoul(paramValue.substr(0, seperator));
-            size_t rows = stoul(paramValue.substr(seperator + 1, string::npos));
+            const size_t seperator = paramValue.find_first_of(':');
+            const size_t columns = stoul(paramValue.substr(0, seperator));
+            const size_t rows = stoul(paramValue.substr(seperator + 1, string::npos));
 
             if (!(columns > 0 && rows > 0))
             {
-                cerr << "missing \"columns:rows\" specification for grid2d data set" << endl;
+                cerr << R"(missing "columns:rows" specification for grid2d data set)" << endl;
                 return false;
             }
 
@@ -485,7 +505,7 @@ bool MetaTextFileReader::readHeader_grid2D(ifstream & inputStream, vector<DataSe
             return false;
         }
 
-        size_t seperator = paramValue.find_first_of(":");
+        const size_t seperator = paramValue.find_first_of(':');
         double val1 = stod(paramValue.substr(0, seperator));
         double val2 = stod(paramValue.substr(seperator + 1, string::npos));
 
@@ -507,24 +527,34 @@ bool MetaTextFileReader::readHeader_grid2D(ifstream & inputStream, vector<DataSe
     }
 
     if (!atEnd)
+    {
         return false;
+    }
 
     image->SetExtent(0, static_cast<int>(dataSetDef.nbColumns) - 1, 0, static_cast<int>(dataSetDef.nbLines) - 1, 0, 0);
 
     double spacing[3] = { 1, 1, 1 };
 
     if (dataSetDef.nbColumns > 1 && extent[0] <= extent[1])
+    {
         spacing[0] = (extent[1] - extent[0]) / double(dataSetDef.nbColumns - 1);
+    }
     if (dataSetDef.nbLines > 1 && extent[2] <= extent[3])
+    {
         spacing[1] = (extent[3] - extent[2]) / double(dataSetDef.nbLines - 1);
+    }
 
     image->SetSpacing(spacing);
 
     double origin[3] = { 0, 0, 0 };
     if (extent[0] <= extent[1])
+    {
         origin[0] = extent[0];
+    }
     if (extent[2] <= extent[3])
+    {
         origin[1] = extent[2];
+    }
     image->SetOrigin(origin);
 
     inputDefs.push_back(dataSetDef);
@@ -543,10 +573,14 @@ bool MetaTextFileReader::readHeader_vectorGrid3D(ifstream & inputStream, vector<
         line = rtrim(line);
 
         if (ignoreLine(line))
+        {
             continue;
+        }
 
         if (line == "$end")
+        {
             return true;
+        }
 
         if (!(line.substr(0, 2) == "$ "))
         {

@@ -123,7 +123,7 @@ std::unique_ptr<PropertyGroup> RenderedPolyData::createConfigGroup()
 
     renderSettings->addProperty<bool>("edgesVisible",
         [this]() {
-        return (renderProperty()->GetEdgeVisibility() == 0) ? false : true;
+        return renderProperty()->GetEdgeVisibility() != 0;
     },
         [this](bool vis) {
         renderProperty()->SetEdgeVisibility(vis);

@@ -56,7 +56,7 @@ void InteractorStyleSwitch::setCurrentStyle(const std::string & name)
 
     currentStyleChangedEvent();
 
-    this->InvokeEvent(StyleChangedEvent, NULL);
+    this->InvokeEvent(StyleChangedEvent, nullptr);
 }
 
 const std::string & InteractorStyleSwitch::currentStyleName() const

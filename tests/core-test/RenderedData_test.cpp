@@ -78,7 +78,9 @@ TEST_F(RenderedData_test, RenderedPolyData_SetsMapperInfo)
     {
         auto mapper = actor->GetMapper();
         if (!mapper)
+        {
             continue;
+        }
 
         auto & mapperInfo = *mapper->GetInformation();
 
@@ -103,7 +105,9 @@ TEST_F(RenderedData_test, ImageData_SetsMapperInfo)
     {
         auto mapper = actor->GetMapper();
         if (!mapper)
+        {
             continue;
+        }
 
         auto & mapperInfo = *mapper->GetInformation();
 
@@ -131,7 +135,9 @@ TEST_F(RenderedData_test, VectorGrid3D_SetsMapperInfo)
     {
         auto mapper = actor->GetMapper();
         if (!mapper)
+        {
             continue;
+        }
 
         auto & mapperInfo = *mapper->GetInformation();
 

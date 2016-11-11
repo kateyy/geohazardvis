@@ -45,7 +45,7 @@ std::vector<std::unique_ptr<ColorMappingData>> AttributeArrayComponentMapping::n
     };
 
     auto checkAttributeArrays = [] (
-        AbstractVisualizedData * vis, vtkDataSetAttributes * attributes, 
+        AbstractVisualizedData * vis, vtkDataSetAttributes * attributes,
         IndexType attributeLocation, vtkIdType expectedTupleCount,
         QMap<QString, ArrayInfo> & arrayInfos) -> void
     {
@@ -133,8 +133,8 @@ std::vector<std::unique_ptr<ColorMappingData>> AttributeArrayComponentMapping::n
     {
         const auto & arrayInfo = it.value();
         auto mapping = std::make_unique<AttributeArrayComponentMapping>(
-            supportedData, 
-            it.key(), 
+            supportedData,
+            it.key(),
             arrayInfo.numComponents,
             arrayInfo.attributeLocations);
         if (mapping->isValid())
@@ -148,7 +148,7 @@ std::vector<std::unique_ptr<ColorMappingData>> AttributeArrayComponentMapping::n
 }
 
 AttributeArrayComponentMapping::AttributeArrayComponentMapping(
-    const QList<AbstractVisualizedData *> & visualizedData, const QString & dataArrayName, 
+    const QList<AbstractVisualizedData *> & visualizedData, const QString & dataArrayName,
     int numDataComponents, const QMap<AbstractVisualizedData *, IndexType> & attributeLocations)
     : ColorMappingData(visualizedData, numDataComponents)
     , m_dataArrayName{ dataArrayName }
@@ -248,7 +248,7 @@ std::vector<ValueRange<>> AttributeArrayComponentMapping::updateBounds()
             for (int i = 0; i < visualizedData->numberOfColorMappingInputs(); ++i)
             {
                 auto dataSet = visualizedData->colorMappingInputData(i);
-                vtkDataArray * dataArray = 
+                vtkDataArray * dataArray =
                     attributeLocation == IndexType::cells ? dataSet->GetCellData()->GetArray(utf8Name.data())
                     : (attributeLocation == IndexType::points ? dataSet->GetPointData()->GetArray(utf8Name.data())
                     : nullptr);

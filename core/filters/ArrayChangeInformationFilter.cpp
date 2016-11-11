@@ -51,18 +51,12 @@ ArrayChangeInformationFilter::ArrayChangeInformationFilter()
     : AttributeLocation{ AttributeLocations::POINT_DATA }
     , AttributeType{ vtkDataSetAttributes::SCALARS }
     , EnableRename{ true }
-    , ArrayName{ nullptr }
     , EnableSetUnit{ false }
-    , ArrayUnit{ nullptr }
     , PassInputArray{ false }
 {
 }
 
-ArrayChangeInformationFilter::~ArrayChangeInformationFilter()
-{
-    this->SetArrayName(nullptr);
-    this->SetArrayUnit(nullptr);
-}
+ArrayChangeInformationFilter::~ArrayChangeInformationFilter() = default;
 
 int ArrayChangeInformationFilter::RequestInformation(
     vtkInformation * request,
@@ -114,7 +108,7 @@ int ArrayChangeInformationFilter::RequestInformation(
         outInfo,
         fieldAssociation,
         this->AttributeType,
-        this->EnableRename ? this->ArrayName : inName,
+        this->EnableRename ? this->ArrayName.c_str() : inName,
         arrayType,
         numComponents,
         numTuples);
@@ -123,7 +117,7 @@ int ArrayChangeInformationFilter::RequestInformation(
 }
 
 int ArrayChangeInformationFilter::RequestData(
-    vtkInformation *,
+    vtkInformation * /*request*/,
     vtkInformationVector ** inputVector,
     vtkInformationVector * outputVector)
 {

@@ -39,7 +39,7 @@ public:
     If this returns missingInformation, additional information has to requested from the user and
     supplied to specifyCoordinateSystem().
     If this returns unsupported, kindly inform the user of the inconvenience. */
-    ConversionCheckResult canTransformTo(const CoordinateSystemSpecification & coordinateSystem);
+    ConversionCheckResult canTransformTo(const CoordinateSystemSpecification & toSystem);
 
     /** If stored information regarding the coordinate system of the data set is not set or wrong,
     it can be corrected with this function.
@@ -47,7 +47,7 @@ public:
     NOTE: This invalidates previous output ports and data sets!
     @return false, if the specified parameters are invalid.
     */
-    bool specifyCoordinateSystem(const ReferencedCoordinateSystemSpecification & coordinateSystem);
+    bool specifyCoordinateSystem(const ReferencedCoordinateSystemSpecification & spec);
 
     /** Request the dataset transformed to the specified coordinate system. */
     vtkAlgorithmOutput * coordinateTransformedOutputPort(const CoordinateSystemSpecification & spec);
@@ -72,7 +72,7 @@ protected:
         vtkAlgorithmOutput * pipelineUpstream) const;
 
 private:
-    ConversionCheckResult canTransformToInternal(const CoordinateSystemSpecification & coordinateSystem) const;
+    ConversionCheckResult canTransformToInternal(const CoordinateSystemSpecification & toSystem) const;
 
     /** Fall-back if transformation is not supported, and no-op, if no transformation is required */
     vtkAlgorithm * passThrough();
@@ -82,7 +82,7 @@ private:
 private:
     vtkSmartPointer<SetCoordinateSystemInformationFilter> m_coordsSetter;
     vtkSmartPointer<vtkAlgorithm> m_passThrough;
-    /** The pipeline output m_pipelines[type, geoName, metricName] converts the current data set to 
+    /** The pipeline output m_pipelines[type, geoName, metricName] converts the current data set to
     a representation of in type, using the geographic coordinates geoName, and depending on the
     type, coordinates in the metricName system. */
     QMap<CoordinateSystemType, QMap<QString, QMap<QString, vtkSmartPointer<vtkAlgorithm>>>> m_pipelines;

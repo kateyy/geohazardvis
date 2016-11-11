@@ -20,7 +20,7 @@ public:
     DataSetHandlerPrivate()
     {
     }
-    
+
     std::mutex mutex;
 
     vector<unique_ptr<DataObject>> dataSets;
@@ -153,7 +153,7 @@ void DataSetHandler::deleteData(const QList<DataObject *> & dataObjects)
         std::lock_guard<std::mutex>(d_ptr->mutex);
         for (auto dataObject : dataObjects)
         {
-            // deleteData might be called multiple times for fast interactions, 
+            // deleteData might be called multiple times for fast interactions,
             // so check if we already processed this request.
             // Note: we cannot use dynamic_cast here to determine object types, as the object
             // might already be deleted.
@@ -242,9 +242,9 @@ void DataSetHandler::addExternalData(const QList<DataObject*>& dataObjects)
                     // fine, so nothing to do
                     continue;
                 }
-                
+
                 // new object
-                
+
                 assert(!d_ptr->allRawVectors.contains(rawData));
                 assert(!d_ptr->externalRawVectors.contains(rawData));
 
@@ -310,7 +310,9 @@ void DataSetHandler::removeExternalData(const QList<DataObject*>& dataObjects)
                 assert(!containsUnique(d_ptr->rawVectors, dataObject));
 
                 if (!d_ptr->externalRawVectors.removeOne(rawData))
+                {
                     continue;
+                }
 
                 d_ptr->allRawVectors.removeOne(rawData);
                 d_ptr->rawVectorOwnerships.remove(rawData);
@@ -322,7 +324,9 @@ void DataSetHandler::removeExternalData(const QList<DataObject*>& dataObjects)
             assert(!containsUnique(d_ptr->dataSets, dataObject));
 
             if (!d_ptr->externalDataSets.removeOne(dataObject))
+            {
                 continue;
+            }
 
             d_ptr->allDataSets.removeOne(dataObject);
             d_ptr->dataSetOwnerships.remove(dataObject);

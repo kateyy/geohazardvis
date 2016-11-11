@@ -416,19 +416,19 @@ ReferencedCoordinateSystemSpecification::ReferencedCoordinateSystemSpecification
     CoordinateSystemType type,
     const QString & geographicSystem,
     const QString & globalMetricSystem,
-    const QString & coordinatesUnit,
-    const vtkVector2d & referencePointLatLong,
-    const vtkVector2d & referencePointLocalRelative)
-    : CoordinateSystemSpecification(type, geographicSystem, globalMetricSystem, coordinatesUnit)
+    const QString & unitOfMeasurement,
+    vtkVector2d referencePointLatLong,
+    vtkVector2d referencePointLocalRelative)
+    : CoordinateSystemSpecification(type, geographicSystem, globalMetricSystem, unitOfMeasurement)
     , referencePointLatLong{ referencePointLatLong }
     , referencePointLocalRelative{ referencePointLocalRelative }
 {
 }
 
 ReferencedCoordinateSystemSpecification::ReferencedCoordinateSystemSpecification(
-    const CoordinateSystemSpecification & unreferencedSpec,
-    const vtkVector2d & referencePointLatLong,
-    const vtkVector2d & referencePointLocalRelative)
+    CoordinateSystemSpecification unreferencedSpec,
+    vtkVector2d referencePointLatLong,
+    vtkVector2d referencePointLocalRelative)
     : CoordinateSystemSpecification(unreferencedSpec)
     , referencePointLatLong{ referencePointLatLong }
     , referencePointLocalRelative{ referencePointLocalRelative }

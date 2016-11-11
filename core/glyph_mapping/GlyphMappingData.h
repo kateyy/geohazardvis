@@ -61,7 +61,7 @@ public:
     virtual IndexType scalarsAssociation() const = 0;
 
     bool isVisible() const;
-    void setVisible(bool enabled);
+    void setVisible(bool visible);
 
     Representation representation() const;
     void setRepresentation(Representation representation);

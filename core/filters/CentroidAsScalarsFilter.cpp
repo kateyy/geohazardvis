@@ -17,7 +17,7 @@ CentroidAsScalarsFilter::CentroidAsScalarsFilter()
 
 CentroidAsScalarsFilter::~CentroidAsScalarsFilter() = default;
 
-int CentroidAsScalarsFilter::RequestData(vtkInformation * vtkNotUsed(request),
+int CentroidAsScalarsFilter::RequestData(vtkInformation * /*request*/,
     vtkInformationVector ** inputVector,
     vtkInformationVector * outputVector)
 {

@@ -90,7 +90,8 @@ QString CanvasExporterImages::verifiedFileName() const
     QString ext = outputFormat().toLower();
     QFileInfo info(outputFileName());
     if (info.suffix().toLower() == ext)
+    {
         return outputFileName();
-    else
-        return outputFileName() + "." + ext;
+    }
+    return outputFileName() + "." + ext;
 }

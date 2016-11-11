@@ -49,7 +49,7 @@ private:
 
     static std::unique_ptr<InputFileInfo> readData(
         const QString & fileName,
-        std::vector<io::ReadDataSet> & readDatasets);
+        std::vector<io::ReadDataSet> & readDataSets);
 
 private:
     MetaTextFileReader() = delete;

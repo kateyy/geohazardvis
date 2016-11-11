@@ -64,7 +64,7 @@ public:
         explicit EventDeferralLock(DataObjectPrivate & dop, std::recursive_mutex & mutex);
         EventDeferralLock(EventDeferralLock && other);
 
-        void addDeferredEvent(const QString & name, EventMemberPointer event);
+        void addDeferredEvent(const QString & name, const EventMemberPointer & event);
         void deferEvents();
         bool isDeferringEvents() const;
         void executeDeferredEvents();

@@ -42,17 +42,25 @@ void RendererConfigWidget::readCameraStats(vtkObject * DEBUG_ONLY(caller), unsig
     std::function<void(AbstractProperty &)> updateFunc = [&updateFunc] (AbstractProperty & property)
     {
         if (property.isCollection())
+        {
             property.asCollection()->forEach(updateFunc);
+        }
         if (property.isValue())
+        {
             property.asValue()->valueChanged();
+        }
     };
 
     PropertyGroup * cameraGroup = nullptr;
     if (m_propertyRoot->propertyExists("Camera"))
+    {
         cameraGroup = m_propertyRoot->group("Camera");
+    }
 
     if (cameraGroup)
+    {
         cameraGroup->forEach(updateFunc);
+    }
 }
 
 std::unique_ptr<PropertyGroup> RendererConfigWidget::createPropertyGroupRenderer(AbstractRenderView * renderView, RendererImplementationBase3D * impl)
@@ -163,7 +171,9 @@ std::unique_ptr<PropertyGroup> RendererConfigWidget::createPropertyGroupRenderer
     },
         [renderView, impl] (const Color & color) {
         for (unsigned i = 0; i < renderView->numberOfSubViews(); ++i)
+        {
             impl->renderer(i)->SetBackground(color.red() / 255.0, color.green() / 255.0, color.blue() / 255.0);
+        }
         renderView->render();
     })
         ->setOption("title", "Background Color");
@@ -250,7 +260,7 @@ std::unique_ptr<PropertyGroup> RendererConfigWidget::createPropertyGroupRenderer
                 impl->render();
             })
                 ->setOption("minimum", 0.001f);
-            
+
             cameraGroup->addProperty<ProjectionType>("Projection",
                 [&camera] () {
                 return camera.GetParallelProjection() != 0 ? ProjectionType::parallel : ProjectionType::perspective;

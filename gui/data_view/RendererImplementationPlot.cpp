@@ -64,6 +64,7 @@ QList<DataObject *> RendererImplementationPlot::filterCompatibleObjects(const QL
     QList<DataObject *> compatible;
 
     for (auto dataObject : dataObjects)
+    {
         if (dataObject->dataTypeName() == "Data Set Profile (2D)") // hard-coded for now
         {
             compatible << dataObject;
@@ -72,6 +73,7 @@ QList<DataObject *> RendererImplementationPlot::filterCompatibleObjects(const QL
         {
             incompatibleObjects << dataObject;
         }
+    }
 
     return compatible;
 }

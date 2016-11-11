@@ -135,7 +135,7 @@ bool QVtkTableModelPolyData::setData(const QModelIndex & index, const QVariant &
         assert(component >= 0 && component < 3);
         return m_polyData->setCellCenterComponent(cellId, component, newValue);
     }
-    else if (index.column() < 8)
+    if (index.column() < 8)
     {
         const int component = index.column() - 5;
         assert(component >= 0 && component < 3);

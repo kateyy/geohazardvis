@@ -20,12 +20,16 @@ public:
         , m_desturctorCalledFlag(destructorCalledFlag)
     {
         if (destructorCalledFlag)
+        {
             *destructorCalledFlag = false;
+        }
     }
-    ~DataSetHandler_test_DataObject()
+    ~DataSetHandler_test_DataObject() override
     {
         if (m_desturctorCalledFlag)
+        {
             *m_desturctorCalledFlag = true;
+        }
     }
 
     bool is3D() const override { return false; }
@@ -49,12 +53,16 @@ public:
         , m_desturctorCalledFlag(destructorCalledFlag)
     {
         if (destructorCalledFlag)
+        {
             *destructorCalledFlag = false;
+        }
     }
-    ~TestRawVector()
+    ~TestRawVector() override
     {
         if (m_desturctorCalledFlag)
+        {
             *m_desturctorCalledFlag = true;
+        }
     }
 
 private:

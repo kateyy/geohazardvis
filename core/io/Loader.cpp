@@ -72,15 +72,15 @@ const QString & Loader::fileFormatFilters(Category category)
         std::map<Category, QString> m;
 
         const auto & maps = fileFormatExtensionMaps();
-        for (auto categoryMap = maps.begin(); categoryMap != maps.end(); ++categoryMap)
+        for (auto && categoryMap : maps)
         {
             QString filters;
-            if (categoryMap->second.size() > 1)
+            if (categoryMap.second.size() > 1)
             {
                 filters = "All Supported Files (";
                 // remove duplicates, sort alphabetically
                 std::set<QString> allExts;
-                for (const auto & it : categoryMap->second)
+                for (const auto & it : categoryMap.second)
                 {
                     for (const auto & ext : it.second)
                     {
@@ -97,10 +97,10 @@ const QString & Loader::fileFormatFilters(Category category)
                 filters += ");;";
             }
 
-            for (auto it = categoryMap->second.begin(); it != categoryMap->second.end(); ++it)
+            for (auto && it : categoryMap.second)
             {
-                filters += it->first + " (";
-                for (const auto & ext : it->second)
+                filters += it.first + " (";
+                for (const auto & ext : it.second)
                 {
                     filters += "*." + ext + " ";
                 }
@@ -110,7 +110,7 @@ const QString & Loader::fileFormatFilters(Category category)
 
             filters.truncate(filters.length() - 2);
 
-            m.emplace(categoryMap->first, filters);
+            m.emplace(categoryMap.first, filters);
         }
 
         return m;

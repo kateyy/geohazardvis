@@ -21,14 +21,16 @@ std::map<QString, std::unique_ptr<ColorMappingData>> ColorMappingRegistry::creat
 {
     std::map<QString, std::unique_ptr<ColorMappingData>> validScalars;
 
-    for (auto creator : m_mappingCreators)
+    for (auto && creator : m_mappingCreators)
     {
         auto scalars = creator(visualizedData);
 
         for (auto & s : scalars)
         {
             if (s->isValid())
+            {
                 validScalars.emplace(s->name(), std::move(s));
+            }
         }
     }
 
@@ -44,7 +46,9 @@ bool ColorMappingRegistry::registerImplementation(const QString & name, const Ma
 {
     assert(!m_mappingCreators.contains(name));
     if (m_mappingCreators.contains(name))
+    {
         return false;
+    }
 
     m_mappingCreators.insert(name, creator);
     return true;

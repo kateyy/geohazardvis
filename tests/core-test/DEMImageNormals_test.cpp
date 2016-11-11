@@ -17,7 +17,7 @@ public:
     ImageExtent extent{ { 0, 4, 0, 5, 0, 0 } };
     vtkVector3<vtkIdType> incs;
 
-    void SetUp()
+    void SetUp() override
     {
         dem = vtkSmartPointer<vtkImageData>::New();
         dem->SetExtent(extent.data());

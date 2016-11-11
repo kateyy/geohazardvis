@@ -60,7 +60,7 @@ void ResidualViewConfigWidget::setCurrentView(ResidualVerificationView * view)
         QSignalBlocker signalBlocker(m_ui->interpolationModeCheckBox);
         m_ui->interpolationModeCheckBox->setChecked(iModeToBool(mode));
     });
-    
+
     auto && los = view->inSARLineOfSight();
 
     using LosType = decltype(los);
@@ -144,7 +144,9 @@ void ResidualViewConfigWidget::updateComboBoxes()
         if (auto poly = dynamic_cast<PolyDataObject *>(dataObject))
         {
             if (!poly->is2p5D())
+            {
                 continue;
+            }
 
             m_ui->observationCombo->addItem(dataObject->name(), ptrData);
             m_ui->modelCombo->addItem(dataObject->name(), ptrData);

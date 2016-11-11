@@ -27,7 +27,7 @@ public:
         int vtk_dataType = VTK_FLOAT);
     static vtkSmartPointer<vtkPolyData> parseIndexedTriangles(
         const io::InputVector & inputVertexData, size_t vertexIndexColumn, size_t firstVertexColumn,
-        const io::InputVector & inputIndexData, size_t firstIndexColumn, 
+        const io::InputVector & inputIndexData, size_t firstIndexColumn,
         int vtk_dataType = VTK_FLOAT);
     static vtkSmartPointer<vtkDataArray> parseFloatVector(
         const io::InputVector & inputData, const QString & arrayName, size_t firstColumn, size_t lastColumn,

@@ -112,7 +112,7 @@ std::unique_ptr<GenericPolyDataObject> GenericPolyDataObject::createInstance(con
         qWarning() << "GenericPolyDataObject: data set contains unknown cell type (""" + name + """).";
         return{};
     }
-    
+
     if (hasPolys)
     {
         return std::make_unique<PolyDataObject>(name, dataSet);
@@ -289,11 +289,8 @@ vtkSmartPointer<vtkAlgorithm> GenericPolyDataObject::createTransformPipeline(
         {
             return{};
         }
-        else
-        {
-            // Just pass the work to the SimplePolyGeoCoordinateTransformFilter
-            localPipelineUpstream = pipelineUpstream->GetProducer();
-        }
+        // Just pass the work to the SimplePolyGeoCoordinateTransformFilter
+        localPipelineUpstream = pipelineUpstream->GetProducer();
     }
 
     // This transforms between local metric coordinates and geographic coordinates,

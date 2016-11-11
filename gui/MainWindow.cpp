@@ -130,8 +130,8 @@ MainWindow::MainWindow()
                 .arg(info.gitRevision)
                 .arg(info.gitCommitDate.date().toString());
         }
-        infoString += QString("Plese refer to the \"") + config::installThirdPartyLicensePath + 
-            "\" folder in the appplication folder for further information and licenses.";
+        infoString += QString(R"(Plese refer to the ")") + config::installThirdPartyLicensePath +
+            R"(" folder in the appplication folder for further information and licenses.)";
         QMessageBox::about(this, config::metaProjectName, infoString);
     });
     connect(m_ui->actionAbout_Qt, &QAction::triggered, [this] () { QMessageBox::aboutQt(this); });
@@ -235,7 +235,9 @@ MainWindow::~MainWindow()
         {
             QMutexLocker lock(m_loadWatchersMutex.get());
             if (m_loadWatchers.empty())
+            {
                 break;
+            }
 
             watcher = m_loadWatchers.begin()->first.get();
         }
@@ -264,10 +266,12 @@ MainWindow::~MainWindow()
 
 QStringList MainWindow::dialog_inputFileName()
 {
-    QStringList fileNames = QFileDialog::getOpenFileNames(this, "", m_lastOpenFolder, Loader::fileFormatFilters());
+    const auto fileNames = QFileDialog::getOpenFileNames(this, "", m_lastOpenFolder, Loader::fileFormatFilters());
 
     if (fileNames.isEmpty())
+    {
         return {};
+    }
 
     m_lastOpenFolder = QFileInfo(fileNames.first()).absolutePath();
 
@@ -277,7 +281,9 @@ QStringList MainWindow::dialog_inputFileName()
 void MainWindow::dragEnterEvent(QDragEnterEvent * event)
 {
     if (event->mimeData()->hasUrls())
+    {
         event->acceptProposedAction();
+    }
 }
 
 void MainWindow::dropEvent(QDropEvent * event)
@@ -288,7 +294,9 @@ void MainWindow::dropEvent(QDropEvent * event)
 
     QStringList fileNames;
     for (const QUrl & url : event->mimeData()->urls())
+    {
         fileNames << url.toLocalFile();
+    }
 
     openFiles(fileNames);
 }
@@ -373,7 +381,9 @@ void MainWindow::prependRecentFiles(const QStringList & filePaths, const QString
         }
 
         if (m_recentFileList.contains(oldEntry) || invalid.contains(oldEntry))
+        {
             continue;
+        }
 
         m_recentFileList << oldEntry;
     }
@@ -452,16 +462,18 @@ void MainWindow::dialog_exportDataSet()
             continue;
         }
 
-        QString fileName = QFileDialog::getSaveFileName(this, "", m_lastExportFolder + "/" + dataObject.name(),
+        const auto fileName = QFileDialog::getSaveFileName(this, "", m_lastExportFolder + "/" + dataObject.name(),
             Exporter::formatFilter(dataObject));
 
         if (fileName.isEmpty())
+        {
             continue;
+        }
 
         setWindowTitle("Exporting " + QFileInfo(fileName).baseName() + " ...");
         QApplication::processEvents();
 
-        bool result = Exporter::exportData(dataObject, fileName);
+        const bool result = Exporter::exportData(dataObject, fileName);
 
         if (!result)
         {
@@ -515,7 +527,9 @@ bool MainWindow::darkFusionStyleEnabled() const
 void MainWindow::setDarkFusionStyle(bool enabled)
 {
     if (enabled)
+    {
         widgetzeug::enableDarkFusionStyle();
+    }
     else
     {
 #ifdef _WINDOWS
@@ -566,7 +580,9 @@ void MainWindow::handleAsyncLoadFinished()
         for (toDeleteIt = m_loadWatchers.begin(); toDeleteIt != m_loadWatchers.end(); ++toDeleteIt)
         {
             if (toDeleteIt->first.get() == watcher)
+            {
                 break;
+            }
         }
         assert(toDeleteIt != m_loadWatchers.end());
 

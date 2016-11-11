@@ -125,7 +125,7 @@ void DataObject::CopyStructure(vtkDataSet & other)
     // vtkPolyData applies a static_cast<vtkPolyData *>() to its argument
     if (!other.IsA(ds->GetClassName()))
     {
-        qFatal("Invalid call to DataObject::CopyStructure on \"%s\" with parameter of type \"%s\"",
+        qFatal(R"(Invalid call to DataObject::CopyStructure on "%s" with parameter of type "%s")",
             name().toUtf8().data(), other.GetClassName());
     }
 
@@ -239,7 +239,7 @@ DataObject * DataObject::readPointer(vtkInformation & information)
         return reinterpret_cast<DataObject *>(information.Get(DataObjectPrivate::DataObjectKey()));
     }
 
-    else return nullptr;
+    return nullptr;
 }
 
 void DataObject::storePointer(vtkInformation & information, DataObject * dataObject)

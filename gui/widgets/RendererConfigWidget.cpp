@@ -138,7 +138,7 @@ void RendererConfigWidget::setCurrentRenderView(AbstractRenderView * renderView)
                 impl3D->resetCamera(toInitial, i);
             }
         };
-        
+
         m_ui->cameraButtonsWidget->setVisible(true);
         m_cameraResetConnections << connect(m_ui->zoomToDataButton, &QAbstractButton::clicked, std::bind(resetCamera, false));
         m_cameraResetConnections << connect(m_ui->resetCameraButton, &QAbstractButton::clicked, std::bind(resetCamera, true));
@@ -149,11 +149,9 @@ void RendererConfigWidget::setCurrentRenderView(AbstractRenderView * renderView)
 
 void RendererConfigWidget::updateTitle()
 {
-    QString title;
-    if (m_currentRenderView)
-        title = m_currentRenderView->friendlyName();
-    else
-        title = "(No Render View selected)";
+    auto title = m_currentRenderView
+        ? m_currentRenderView->friendlyName()
+        : QString("(No Render View selected)");
 
     title = "<b>" + title + "</b>";
     m_ui->relatedRenderView->setText(title);

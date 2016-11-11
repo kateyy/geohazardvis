@@ -33,9 +33,9 @@ public:
 
     bool is2p5D();
 
-    double cellCenterComponent(vtkIdType cellId, int component, bool * validId = nullptr);
+    double cellCenterComponent(vtkIdType cellId, int component, bool * validIdPtr = nullptr);
     bool setCellCenterComponent(vtkIdType cellId, int component, double value);
-    double cellNormalComponent(vtkIdType cellId, int component, bool * validId = nullptr);
+    double cellNormalComponent(vtkIdType cellId, int component, bool * validIdPtr = nullptr);
     bool setCellNormalComponent(vtkIdType cellId, int component, double value);
 
 protected:

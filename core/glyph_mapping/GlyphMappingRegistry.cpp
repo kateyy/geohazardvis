@@ -21,14 +21,16 @@ std::map<QString, std::unique_ptr<GlyphMappingData>> GlyphMappingRegistry::creat
 {
     std::map<QString, std::unique_ptr<GlyphMappingData>> validVectors;
 
-    for (auto creator : m_mappingCreators)
+    for (auto && creator : m_mappingCreators)
     {
         auto vectors = creator(renderedData);
 
         for (auto & v : vectors)
         {
             if (v->isValid())
+            {
                 validVectors.emplace(v->name(), std::move(v));
+            }
         }
     }
 
@@ -40,12 +42,14 @@ const QMap<QString, GlyphMappingRegistry::MappingCreator> & GlyphMappingRegistry
     return m_mappingCreators;
 }
 
-bool GlyphMappingRegistry::registerImplementation(const QString & name, const MappingCreator & constructor)
+bool GlyphMappingRegistry::registerImplementation(const QString & name, const MappingCreator & creator)
 {
     assert(!m_mappingCreators.contains(name));
     if (m_mappingCreators.contains(name))
+    {
         return false;
+    }
 
-    m_mappingCreators.insert(name, constructor);
+    m_mappingCreators.insert(name, creator);
     return true;
 }

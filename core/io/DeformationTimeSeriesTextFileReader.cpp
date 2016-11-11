@@ -287,7 +287,7 @@ auto DeformationTimeSeriesTextFileReader::readData() -> State
             array->SetTypedComponent(i, 0,
                 readDataColumns[m_numColumnsBeforeDeformations + timestampIdx][i]);
         }
-        timestampArrays.push_back(array);
+        timestampArrays.emplace_back(array);
     }
 
 

@@ -37,9 +37,7 @@ ColorBarRepresentation::ColorBarRepresentation(ColorMapping & colorMapping)
     connectVisibilities();
 }
 
-ColorBarRepresentation::~ColorBarRepresentation()
-{
-}
+ColorBarRepresentation::~ColorBarRepresentation() = default;
 
 OrientedScalarBarActor & ColorBarRepresentation::actor()
 {

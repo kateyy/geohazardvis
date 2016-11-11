@@ -256,8 +256,7 @@ void DEMImageNormals::ThreadedRequestData(vtkInformation * /*request*/,
         *inImage, ImageExtent(outExt),
         this->ElevationUnitScale, this->CoordinatesUnitScale);
 
-    typedef vtkArrayDispatch::Dispatch2ByValueType
-        <vtkArrayDispatch::Reals, vtkArrayDispatch::Reals> Dispatcher;
+    using Dispatcher = vtkArrayDispatch::Dispatch2ByValueType<vtkArrayDispatch::Reals, vtkArrayDispatch::Reals> ;
 
     if (!Dispatcher::Execute(elevations, normals, worker))
     {

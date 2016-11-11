@@ -73,7 +73,7 @@ int LinearSelectorXY::FillOutputPortInformation(int port, vtkInformation * info)
     return Superclass::FillOutputPortInformation(port, info);
 }
 
-int LinearSelectorXY::RequestData(vtkInformation * vtkNotUsed(request),
+int LinearSelectorXY::RequestData(vtkInformation * /*request*/,
     vtkInformationVector ** inputVector,
     vtkInformationVector * outputVector)
 {
@@ -260,7 +260,7 @@ int LinearSelectorXY::RequestData(vtkInformation * vtkNotUsed(request),
     {
         // need to reorder all attributes
         idGetter = [&sortIndices] (vtkIdType i) -> vtkIdType {
-            return sortIndices.get()[i]; 
+            return sortIndices.get()[i];
         };
     }
     else

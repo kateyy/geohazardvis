@@ -27,7 +27,9 @@ std::unique_ptr<CanvasExporter> CanvasExporterRegistry::createExporter(const QSt
 {
     const ExporterConstructor & ctor = instance().m_formatToExporter.value(formatName, nullptr);
     if (!ctor)
+    {
         return nullptr;
+    }
 
     auto exporter = ctor();
     exporter->setOutputFormat(formatName);

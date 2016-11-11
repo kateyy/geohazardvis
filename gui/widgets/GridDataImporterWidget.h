@@ -16,7 +16,7 @@ class Ui_GridDataImporterWidget;
 class GUI_API GridDataImporterWidget : public QDialog
 {
 public:
-    explicit GridDataImporterWidget(QWidget * parent = nullptr, Qt::WindowFlags f = {});
+    explicit GridDataImporterWidget(QWidget * parent = nullptr, Qt::WindowFlags flags = {});
     ~GridDataImporterWidget() override;
 
     std::unique_ptr<ImageDataObject> releaseLoadedImageData();

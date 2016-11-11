@@ -154,7 +154,9 @@ auto GradientResourceManager::buildFallbackGradient(const QSize & pixmapSize) ->
         gradientData.lookupTable->GetTableValue(i, colorF);
         auto colorUI = vtkColorToQColor(colorF).rgba();
         for (int l = 0; l < pixmapSize.height(); ++l)
+        {
             image.setPixel(i, l, colorUI);
+        }
     }
 
     gradientData.lookupTable->SetNanColor(l_defaultNanColor);

@@ -83,7 +83,7 @@ void DataObjectPrivate::disconnectEventGroup(const QString & eventName)
 
 void DataObjectPrivate::disconnectAllEvents()
 {
-    for (auto eventName : m_namedObserverIds.keys())
+    for (auto && eventName : m_namedObserverIds.keys())
     {
         disconnectEventGroup(eventName);
     }
@@ -106,7 +106,7 @@ DataObjectPrivate::EventDeferralLock::EventDeferralLock(EventDeferralLock && oth
 {
 }
 
-void DataObjectPrivate::EventDeferralLock::addDeferredEvent(const QString & name, EventMemberPointer event)
+void DataObjectPrivate::EventDeferralLock::addDeferredEvent(const QString & name, const EventMemberPointer & event)
 {
     if (!m_dop.m_deferredEvents.contains(name))
     {

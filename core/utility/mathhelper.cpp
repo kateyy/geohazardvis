@@ -53,7 +53,9 @@ bool circleLineIntersection(double radius, double P0[2], double P1[2], double in
 
     double incidence = radius * radius *  dr2 - D * D;
     if (incidence < 0)
+    {
         return false;
+    }
 
     double sqrtIncidence = std::sqrt(incidence);
 
@@ -70,7 +72,7 @@ double scaleFactorForMetricUnits(const QString & from, const QString & to)
 {
     auto warnInvalid = [&from, &to] ()
     {
-        qWarning() << "Unrecognized units, from=\"" << from << "\", to=\"" << to << "\"";
+        qWarning() << R"(Unrecognized units, from=")" << from << R"(", to=")" << to << '\"';
         return 1.0;
     };
 

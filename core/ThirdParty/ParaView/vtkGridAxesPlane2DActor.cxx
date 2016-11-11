@@ -96,7 +96,7 @@ void vtkGridAxesPlane2DActor::SetTickPositions(int index, vtkDoubleArray* data)
   assert(index >= 0 && index < 3 && (data == NULL || data->GetNumberOfComponents() <= 1));
   if (data == NULL)
   {
-    if (this->TickPositions[index].size() != 0)
+    if (this->TickPositions[index].empty())
     {
       this->TickPositions[index].clear();
       this->Modified();

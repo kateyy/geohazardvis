@@ -97,7 +97,9 @@ const QString & DataProfile2DContextPlot::title() const
 void DataProfile2DContextPlot::setTitle(const QString & title)
 {
     if (title == m_title)
+    {
         return;
+    }
 
     m_title = title;
 

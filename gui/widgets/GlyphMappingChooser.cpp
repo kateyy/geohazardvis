@@ -175,11 +175,9 @@ void GlyphMappingChooser::updateGuiForSelection(const QItemSelection & selection
 
 void GlyphMappingChooser::updateTitle()
 {
-    QString title;
-    if (!m_mapping)
-        title = "(No object selected)";
-    else
-        title = QString::number(m_renderView->index()) + ": " + m_mapping->renderedData().dataObject().name();
+    const QString title = m_mapping
+        ? QString::number(m_renderView->index()) + ": " + m_mapping->renderedData().dataObject().name()
+        : QString("(No object selected)");
 
     m_ui->relatedDataObject->setText(title);
 }

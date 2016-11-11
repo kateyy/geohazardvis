@@ -38,7 +38,7 @@ public:
     virtual IndexType defaultAttributeLocation() const = 0;
 
     /** create a visualization instance; Subclasses may implement one or both
-        -> createRendered: flexible/generic rendering 
+        -> createRendered: flexible/generic rendering
         -> createContextData: for specialized views (e.g., plots)
     */
     virtual std::unique_ptr<RenderedData> createRendered();
@@ -76,11 +76,11 @@ public:
       * Remaining attributes are: field data "Name" */
     void clearAttributes();
 
-    /** Queue signals and events such as dataChanged(), boundsChanged() until executeDeferredEvents is called. 
-      * This is required, when changing significant parts of the underlaying data set. 
-      * E.g.: actor bounds updates might cause crash faults, if points or indices of a vtkPointSet are invalid. 
+    /** Queue signals and events such as dataChanged(), boundsChanged() until executeDeferredEvents is called.
+      * This is required, when changing significant parts of the underlaying data set.
+      * E.g.: actor bounds updates might cause crash faults, if points or indices of a vtkPointSet are invalid.
       * This method stacks, i.e., multiple subsequent calls of deferEvents require the same number of executeDeferredEvents calls
-      * to actually execute the deferred events. 
+      * to actually execute the deferred events.
       * @see ScopedEventDeferral */
     void deferEvents();
     void executeDeferredEvents();
@@ -91,7 +91,7 @@ public:
     static void storePointer(vtkInformation & information, DataObject * dataObject);
 
     static QString readName(vtkInformation & information);
-    static void storeName(vtkInformation & information, const DataObject & object);
+    static void storeName(vtkInformation & information, const DataObject & dataObject);
 
 signals:
     void dataChanged();

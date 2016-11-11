@@ -64,7 +64,9 @@ bool CanvasExporterPS::write()
     QString ext = fileExtension();
     QFileInfo info(fileName);
     if (info.suffix().toLower() == ext)
+    {
         fileName.truncate(fileName.length() - ext.length() - 1); // cut ".EXT"
+    }
 
     m_exporter->SetFilePrefix(fileName.toUtf8().data());
     m_exporter->SetFileFormat(vtkPSFormat);
@@ -97,7 +99,9 @@ std::unique_ptr<reflectionzeug::PropertyGroup> CanvasExporterPS::createPropertyG
     group->addProperty<std::string>("Title",
         [this] () -> std::string {
         if (auto title = m_exporter->GetTitle())
+        {
             return title;
+        }
         return "";
     },
         [this] (const std::string & title) {
@@ -133,7 +137,9 @@ QStringList CanvasExporterPS::fileFormats() const
     };
 
     for (QString & f : formats)
+    {
         f = format.arg(f);
+    }
 
     return formats;
 }

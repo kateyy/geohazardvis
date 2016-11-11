@@ -35,8 +35,6 @@ vtkAbstractContextItem *vtkContextItemCollection::GetLastContextItem()
     {
         return nullptr;
     }
-    else
-    {
-        return static_cast<vtkAbstractContextItem *>(this->Bottom->Item);
-    }
+
+    return static_cast<vtkAbstractContextItem *>(this->Bottom->Item);
 }

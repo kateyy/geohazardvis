@@ -51,7 +51,7 @@ ConversionCheckResult CoordinateTransformableDataObject::canTransformToInternal(
         {   // pass-trough is okay here
             return ConversionCheckResult::okay();
         }
-        
+
         return ConversionCheckResult::invalidParameters();
     }
 
@@ -112,21 +112,21 @@ ConversionCheckResult CoordinateTransformableDataObject::canTransformTo(
 }
 
 bool CoordinateTransformableDataObject::specifyCoordinateSystem(
-    const ReferencedCoordinateSystemSpecification & coordinateSystem)
+    const ReferencedCoordinateSystemSpecification & spec)
 {
-    if (!coordinateSystem.isValid() && !coordinateSystem.isUnspecified())
+    if (!spec.isValid() && !spec.isUnspecified())
     {
         return false;
     }
 
-    if (this->coordinateSystem() == coordinateSystem)
+    if (this->coordinateSystem() == spec)
     {
         return true;
     }
 
     const ScopedEventDeferral deferral(*this);
 
-    m_coordsSetter->SetCoordinateSystemSpec(coordinateSystem);
+    m_coordsSetter->SetCoordinateSystemSpec(spec);
 
     // Make the information available to the output of dataSet().
     // This is required where using processedOutputPort() or processedDataSet() is not appropriate,
@@ -184,7 +184,7 @@ vtkAlgorithm * CoordinateTransformableDataObject::passThrough()
 
 vtkAlgorithm * CoordinateTransformableDataObject::transformFilter(const CoordinateSystemSpecification & toSystem)
 {
-    auto currentAlgorithm = 
+    auto currentAlgorithm =
         [this, &toSystem] () -> vtkAlgorithm * {
 
         const auto typeIt = m_pipelines.find(toSystem.type);

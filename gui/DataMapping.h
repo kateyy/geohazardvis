@@ -37,7 +37,7 @@ public:
         @return Might return a nullptr, if the user requested to close the view during this function call. */
     AbstractRenderView * openInRenderView(const QList<DataObject *> & dataObjects);
     /** Open a data set in the specified render view.
-        @return Might return false, if the user requested to close the view during this function call. 
+        @return Might return false, if the user requested to close the view during this function call.
             Some render view implementations call QApplication::processEvents to increase interactivity. */
     bool addToRenderView(const QList<DataObject *> & dataObjects, AbstractRenderView * renderView, unsigned int subViewIndex = 0);
 

@@ -46,7 +46,9 @@ void RendererConfigWidget::createPropertyGroupRenderer2(PropertyGroup & root, Ab
                 [impl, axis] () { return impl->axesActor(0)->GetTitle(axis); },
                 [impl, renderView, axis] (const std::string & label) {
                 for (unsigned int i = 0; i < renderView->numberOfSubViews(); ++i)
+                {
                     impl->axesActor(i)->SetTitle(axis, label);
+                }
                 renderView->render();
             });
         }
@@ -65,7 +67,9 @@ void RendererConfigWidget::createPropertyGroupRenderer2(PropertyGroup & root, Ab
         },
             [renderView, impl] (const Color & color) {
             for (unsigned i = 0; i < renderView->numberOfSubViews(); ++i)
+            {
                 impl->axesActor(i)->GetProperty()->SetColor(color.red() / 255.0, color.green() / 255.0, color.blue() / 255.0);
+            }
             renderView->render();
         });
 

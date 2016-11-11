@@ -68,7 +68,9 @@ void CollapsibleGroupBox::applyCollapsed(bool collapsed)
 void CollapsibleGroupBox::mouseReleaseEvent(QMouseEvent * event)
 {
     if (event->pos().y() > 20)
+    {
         return;
+    }
 
     toggleCollapsed();
 }

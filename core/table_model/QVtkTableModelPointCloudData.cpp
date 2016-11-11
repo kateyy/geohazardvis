@@ -50,7 +50,6 @@ QVariant QVtkTableModelPointCloudData::data(const QModelIndex &index, int role) 
         assert(component >= 0 && component < 3);
         bool okay;
         const auto value = m_data->pointCoordinateComponent(pointId, component, &okay);
-        assert(okay);
         if (okay)
         {
             return value;

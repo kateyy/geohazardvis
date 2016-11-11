@@ -19,7 +19,7 @@ public:
 
     static std::unique_ptr<GenericPolyDataObject> createInstance(const QString & name, vtkPolyData & dataSet);
 
-    double pointCoordinateComponent(vtkIdType pointId, int component, bool * validId = nullptr);
+    double pointCoordinateComponent(vtkIdType pointId, int component, bool * validIdPtr = nullptr);
     bool setPointCoordinateComponent(vtkIdType pointId, int component, double value);
 
 protected:

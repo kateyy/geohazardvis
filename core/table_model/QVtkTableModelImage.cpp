@@ -88,7 +88,9 @@ QVariant QVtkTableModelImage::headerData(int section, Qt::Orientation orientatio
     default: // value columns
         assert(section >= c_firstValueColumn);
         if (m_vtkImageData->GetNumberOfScalarComponents() > 1)
+        {
             return "value (" + QString::number(section - c_firstValueColumn) + ")";
+        }
         return "value";
     }
 }

@@ -382,7 +382,9 @@ void AbstractRenderView::paintEvent(QPaintEvent * event)
 bool AbstractRenderView::eventFilter(QObject * watched, QEvent * event)
 {
     if (event->type() != QEvent::MouseButtonPress || watched != contentWidget())
+    {
         return AbstractDataView::eventFilter(watched, event);
+    }
 
     auto mouseEvent = static_cast<QMouseEvent *>(event);
     setActiveSubView(implementation().subViewIndexAtPos(mouseEvent->pos()));

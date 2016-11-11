@@ -41,12 +41,14 @@ int AssignPointAttributeToCoordinatesFilter::RequestData(
         if (!newPoints)
         {
             vtkErrorMacro("Array to assign not found in input data: " + this->AttributeArrayToAssign);
+            return 0;
         }
 
         if (newPoints->GetNumberOfComponents() != 3
             || newPoints->GetNumberOfTuples() != inData->GetNumberOfPoints())
         {
             vtkErrorMacro("Component/Tuple count mismatching in selected data array: " + this->AttributeArrayToAssign);
+            return 0;
         }
         pointsToAssign = newPoints;
     }
@@ -59,7 +61,7 @@ int AssignPointAttributeToCoordinatesFilter::RequestData(
         newPoints->SetData(pointsToAssign);
         outData->SetPoints(newPoints.Get());
     }
-    
+
     // pass current point coordinates as point attribute
     if (previousPointCoords)
     {

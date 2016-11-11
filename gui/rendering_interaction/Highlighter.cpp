@@ -210,7 +210,7 @@ public:
         show();
     }
 
-    void setFlashColorFactor(double f)
+    void setFlashColorFactor(double f) override
     {
         m_actor->GetProperty()->SetColor(1, f, f);
     }
@@ -352,12 +352,11 @@ void Highlighter::setTarget(const VisualizationSelection & selection)
     auto newSelection = selection;
     newSelection.indices.clear();
 
-    for (size_t i = 0; i < selection.indices.size(); ++i)
+    for (const auto index : selection.indices)
     {
-        const auto val = selection.indices[i];
-        if (val >= 0)
+        if (index >= 0)
         {
-            newSelection.indices.push_back(val);
+            newSelection.indices.push_back(index);
         }
     }
 
@@ -373,7 +372,7 @@ void Highlighter::setTargetInternal(VisualizationSelection selection)
         disconnect(m_selection.visualization, &AbstractVisualizedData::visibilityChanged, this, &Highlighter::checkDataVisibility);
     }
 
-    m_selection = selection;
+    m_selection = std::move(selection);
 
     if (m_selection.visualization)
     {

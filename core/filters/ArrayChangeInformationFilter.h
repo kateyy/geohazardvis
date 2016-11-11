@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vtkDataSetAlgorithm.h>
+#include <vtkStdString.h>
 
 #include <core/core_api.h>
 
@@ -26,7 +27,7 @@ public:
 
     vtkGetMacro(AttributeType, int);
     /** Set the attribute array to be modified.
-    * This value must be one of vtkDataSetAttributes::AttributeTypes and is 
+    * This value must be one of vtkDataSetAttributes::AttributeTypes and is
     * vtkDataSetAttributes::SCALARS by default. */
     vtkSetMacro(AttributeType, int);
 
@@ -35,22 +36,22 @@ public:
     vtkGetMacro(EnableRename, bool);
     vtkSetMacro(EnableRename, bool);
 
-    vtkGetStringMacro(ArrayName);
-    vtkSetStringMacro(ArrayName);
+    vtkGetMacro(ArrayName, vtkStdString);
+    vtkSetMacro(ArrayName, vtkStdString);
 
     /** Toggle whether to modify the array unit. Requires VTK version 7.1.0 or newer */
     vtkBooleanMacro(EnableSetUnit, bool);
     vtkGetMacro(EnableSetUnit, bool);
     vtkSetMacro(EnableSetUnit, bool);
 
-    vtkGetStringMacro(ArrayUnit);
+    vtkGetMacro(ArrayUnit, vtkStdString);
     /** Set the vtkDataArray::UNITS_LABEL on the array. This requires VTK version 7.1.0 or newer */
-    vtkSetStringMacro(ArrayUnit);
+    vtkSetMacro(ArrayUnit, vtkStdString);
 
 
     /** Also pass the input array to the output.
     * By default, the input array is copied (and information are changed), but not passed to the output.
-    * This does only make sense if renaming is enabled, since data set attributes to not meant to 
+    * This does only make sense if renaming is enabled, since data set attributes to not meant to
     * be used with multiple arrays with same names. */
     vtkBooleanMacro(PassInputArray, bool);
     vtkGetMacro(PassInputArray, bool);
@@ -77,10 +78,10 @@ private:
     int AttributeType;
 
     bool EnableRename;
-    char * ArrayName;
+    vtkStdString ArrayName;
 
     bool EnableSetUnit;
-    char * ArrayUnit;
+    vtkStdString ArrayUnit;
 
     bool PassInputArray;
 };

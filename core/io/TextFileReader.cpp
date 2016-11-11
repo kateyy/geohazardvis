@@ -135,7 +135,7 @@ void TextFileReader::setFileName(const QString & fileName)
     }
 
     m_fileName = fileName;
-    
+
     m_implementation->setFileName(fileName);
 }
 
@@ -245,10 +245,8 @@ auto qFile_QByteArray_Worker<T>::read(
 
         size_t currentColumn = 0;
 
-        for (int i = 0; i < items.size(); ++i)
+        for (auto && input : items)
         {
-            auto && input = items[i];
-
             if (input.isEmpty())
             {
                 continue;
