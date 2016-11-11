@@ -19,6 +19,7 @@ set(sources
     GenericPolyDataObject_test.cpp
     GlyphColorMapping_test.cpp
     ImageDataObject_test.cpp
+    MatricesToVtk_test.cpp
     PipelineInformationHelper.h
     PipelineInformationHelper.cpp
     QVtkTableModel_test.cpp

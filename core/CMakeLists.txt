@@ -213,6 +213,8 @@ set(sources
     utility/DataExtent.h
     utility/DataExtent.hpp
     utility/DataExtent_fwd.h
+    utility/DataExtent_print.h
+    utility/DataExtent_print.hpp
     utility/DataSetFilter.h
     utility/DataSetFilter.cpp
     utility/font.h
