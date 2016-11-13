@@ -56,6 +56,8 @@
 #include <stdio.h> // for snprintf
 
 #if defined(_WIN32) && !defined(__CYGWIN__)
+#pragma warning(push)
+#pragma warning(disable:4996)
 #define SNPRINTF _snprintf
 #else
 #define SNPRINTF snprintf
@@ -1162,3 +1164,7 @@ void vtkPVScalarBarActor::BuildScalarBarTexture()
 
   this->ScalarBarTexture->SetInputData(colorMapImage.GetPointer());
 }
+
+#if defined(_WIN32) && !defined(__CYGWIN__)
+#pragma warning(pop)
+#endif
