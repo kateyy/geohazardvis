@@ -11,7 +11,8 @@ std::ostream & operator<<(std::ostream & os, const DataExtent<T, Dimensions> & d
     os << "DataExtent (" << Dimensions << " dimensions)\n";
     for (size_t d = 0u; d < Dimensions; ++d)
     {
-        os << "    " << axisChar << ": " << dataExtent[2u * d] << "; " << dataExtent[2u * d + 1u] << "\n";
+        os << "    " << static_cast<char>(axisChar + d)
+            << ": " << dataExtent[2u * d] << "; " << dataExtent[2u * d + 1u] << "\n";
     }
 
     return os;

@@ -1,5 +1,7 @@
 #include "MatricesToVtk.h"
 
+#include <algorithm>
+#include <array>
 #include <cassert>
 #include <map>
 
@@ -117,8 +119,11 @@ std::unique_ptr<DataObject> MatricesToVtk::loadGrid3D(const QString & name, cons
     assert(datasets.front().type == DataSetType::vectorGrid3D);
     const InputVector & data = datasets.front().data;
     // expecting point data and 3D vectors at minimum
-    assert(data.size() >= 6);
-    const int numComponents = static_cast<int>(data.size() - 3);
+    const int numComponents = static_cast<int>(data.size()) - 3;
+    if (numComponents < 0)
+    {
+        return nullptr;
+    }
 
     assert((data[0].size() == data[1].size()) && (data[0].size() == data[2].size()));
 
@@ -139,9 +144,9 @@ std::unique_ptr<DataObject> MatricesToVtk::loadGrid3D(const QString & name, cons
     // some assumptions on the file format:
     // it's a regular grid...
 
-    double origin[3] = { data[0][0], data[1][0], data[2][0] };
+    std::array<double, 3> origin = { data[0][0], data[1][0], data[2][0] };
 
-    int axis[3] = { -1, -1, -1 };   // axes, ordered by majority
+    std::array<int, 3> axis = { -1, -1, -1 };   // axes, ordered by majority
 
     // Find the axis on which the coordinate first changes:
     if (data[0][1] != origin[0])
@@ -157,16 +162,16 @@ std::unique_ptr<DataObject> MatricesToVtk::loadGrid3D(const QString & name, cons
         axis[0] = 2;    // z first
     }
 
-    double spacing[3] = { -1, -1, -1 };
-    int extent[3] = { -1, -1, -1 };
+    std::array<double, 3> spacing = { -1, -1, -1 };
+    std::array<int, 3> extent = { -1, -1, -1 };
 
-    int firstAxis = axis[0];
+    const int firstAxis = axis[0];
 
     spacing[firstAxis] = std::abs(origin[firstAxis] - data[firstAxis][1]);
 
     // count first axis and get next spacing
     extent[firstAxis] = 0;
-    int remainingAxes[2] = { positive_modulo(firstAxis + 1, 3), positive_modulo(firstAxis + 2, 3) };
+    const std::array<int, 2> remainingAxes = { positive_modulo(firstAxis + 1, 3), positive_modulo(firstAxis + 2, 3) };
     for (vtkIdType i = 0; i < numPoints; ++i)
     {
         // Check for next axis: does the coordinate change on the next remaining axis?
@@ -190,13 +195,17 @@ std::unique_ptr<DataObject> MatricesToVtk::loadGrid3D(const QString & name, cons
 
         ++extent[firstAxis];
     }
-    assert(spacing[axis[0]] > 0 && extent[firstAxis] > 0);
+    assert(spacing[axis[0]] > 0 && extent[axis[0]] > 0);
+    assert(spacing[axis[1]] > 0 && extent[axis[1]] < 0);
+    assert(spacing[axis[2]] < 0 && extent[axis[2]] < 0);
 
     if (axis[2] == -1)
     {
         qDebug() << "Cannot determine 3D grid memory layout.";
         return nullptr;
     }
+    assert(std::all_of(axis.begin(), axis.end(), [] (int axis)
+    { return axis >= 0 && axis < 3; }));
 
     // count second axis and get last spacing
     extent[axis[1]] = 0;
@@ -224,9 +233,9 @@ std::unique_ptr<DataObject> MatricesToVtk::loadGrid3D(const QString & name, cons
     }
     else
     {
-        double f_lastExtent = double(numPoints) / double(extent[axis[0]] * extent[axis[1]]);
+        const double f_lastExtent = double(numPoints) / double(extent[axis[0]] * extent[axis[1]]);
         double intPart;
-        double f_floatPart = std::modf(f_lastExtent, &intPart);
+        const double f_floatPart = std::modf(f_lastExtent, &intPart);
         if (f_floatPart < std::numeric_limits<double>::epsilon())
         {
             extent[axis[2]] = static_cast<int>(intPart);
@@ -240,42 +249,61 @@ std::unique_ptr<DataObject> MatricesToVtk::loadGrid3D(const QString & name, cons
     }
 
     auto image = vtkSmartPointer<vtkImageData>::New();
-    image->SetOrigin(origin);
+    image->SetOrigin(origin.data());
     image->SetExtent(0, extent[0] - 1, 0, extent[1] - 1, 0, extent[2] - 1);
-    image->SetSpacing(spacing);
+    image->SetSpacing(spacing.data());
 
-    auto vectorData = vtkSmartPointer<vtkFloatArray>::New();
-    vectorData->SetNumberOfComponents(numComponents);
-    vectorData->SetNumberOfTuples(numPoints);
-    vectorData->SetName(name.toUtf8().data());
-
-    image->GetPointData()->SetScalars(vectorData);
-
-    if (numComponents == 3)
+    if (numComponents > 0)
     {
-        image->GetPointData()->SetVectors(vectorData);
-    }
-
-    // iterate over source data, calculate indexes for vtkImageData
-    // data in vtkImageData stored in tupleValues - x - y - z - order
-
-    vtkIdType sourceIndex = 0;
-    int imageCoord[3];
-
-    for (imageCoord[axis[2]] = 0; imageCoord[axis[2]] < extent[axis[2]]; ++imageCoord[axis[2]])
-    {
-        for (imageCoord[axis[1]] = 0; imageCoord[axis[1]] < extent[axis[1]]; ++imageCoord[axis[1]])
+        std::array<vtkIdType, 3> increments;
         {
-            for (imageCoord[axis[0]] = 0; imageCoord[axis[0]] < extent[axis[0]]; ++imageCoord[axis[0]])
+            // request the increments for image coordinates only -> use one-component dummy array
+            auto dummyArray = vtkSmartPointer<vtkFloatArray>::New();
+            dummyArray->SetNumberOfComponents(1);
+            const int arrayIdx = image->GetPointData()->SetScalars(dummyArray);
+            image->GetIncrements(increments.data());
+            image->GetPointData()->RemoveArray(arrayIdx);
+            assert(dummyArray->GetReferenceCount() == 1);
+        }
+
+        auto vectorData = vtkSmartPointer<vtkFloatArray>::New();
+        vectorData->SetNumberOfComponents(numComponents);
+        vectorData->SetNumberOfTuples(numPoints);
+        vectorData->SetName(name.toUtf8().data());
+
+        image->GetPointData()->SetScalars(vectorData);
+
+        if (numComponents == 3)
+        {
+            image->GetPointData()->SetVectors(vectorData);
+        }
+
+        // iterate over continuous source data, calculate indexes for vtkImageData
+        // data in vtkImageData stored in tupleValues - x - y - z - order
+
+        for (int c = 0; c < numComponents; ++c)
+        {
+            size_t sourceIndex = 0u;
+            std::array<int, 3> imageCoord = { 0, 0, 0 };
+            auto & sourceColumn = data[static_cast<size_t>(3 + c)];
+
+            for (imageCoord[axis[2]] = 0; imageCoord[axis[2]] < extent[axis[2]]; ++imageCoord[axis[2]])
             {
-                float * scalar = reinterpret_cast<float *>(image->GetScalarPointer(imageCoord));
-
-                for (int c = 0; c < numComponents; ++c)
+                for (imageCoord[axis[1]] = 0; imageCoord[axis[1]] < extent[axis[1]]; ++imageCoord[axis[1]])
                 {
-                    scalar[c] = static_cast<float>(data.at(3 + c).at(sourceIndex));
-                }
+                    for (imageCoord[axis[0]] = 0; imageCoord[axis[0]] < extent[axis[0]]; ++imageCoord[axis[0]])
+                    {
+                        const vtkIdType targetIndex =
+                            imageCoord[0] * increments[0]
+                            + imageCoord[1] * increments[1]
+                            + imageCoord[2] * increments[2];
 
-                ++sourceIndex;
+                        vectorData->SetTypedComponent(targetIndex, c,
+                            static_cast<float>(sourceColumn.at(sourceIndex)));
+
+                        ++sourceIndex;
+                    }
+                }
             }
         }
     }
