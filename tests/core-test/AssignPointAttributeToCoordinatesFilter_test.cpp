@@ -11,7 +11,7 @@
 
 
 
-class AssignPointAttributeToCoordinatesFilter_test : public testing::Test
+class AssignPointAttributeToCoordinatesFilter_test : public ::testing::Test
 {
 public:
     void SetUp() override

@@ -24,7 +24,7 @@
 #include <core/glyph_mapping/GlyphMappingData.h>
 
 
-class GlyphColorMapping_test : public testing::Test
+class GlyphColorMapping_test : public ::testing::Test
 {
 public:
     std::tuple<vtkSmartPointer<vtkPolyData>, vtkSmartPointer<vtkCellArray>, vtkSmartPointer<vtkFloatArray>> genvtkPolyData()

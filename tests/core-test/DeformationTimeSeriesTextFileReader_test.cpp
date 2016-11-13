@@ -14,7 +14,7 @@
 #include "TestEnvironment.h"
 
 
-class DeformationTimeSeriesTextFileReader_test : public testing::Test
+class DeformationTimeSeriesTextFileReader_test : public ::testing::Test
 {
 public:
     using t_FP = float;

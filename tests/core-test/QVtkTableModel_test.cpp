@@ -19,7 +19,7 @@
 #include <core/data_objects/VectorGrid3DDataObject.h>
 
 
-class QVtkTableModel_test : public testing::Test
+class QVtkTableModel_test : public ::testing::Test
 {
 public:
     static bool readAllCells(QVtkTableModel & tableModel)

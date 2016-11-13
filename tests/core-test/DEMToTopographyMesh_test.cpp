@@ -12,7 +12,7 @@
 #include <core/utility/vtkvectorhelper.h>
 
 
-class DEMToTopographyMesh_test : public testing::Test
+class DEMToTopographyMesh_test : public ::testing::Test
 {
 public:
     static vtkSmartPointer<vtkImageData> generateDEM()

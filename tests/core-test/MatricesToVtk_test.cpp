@@ -42,7 +42,7 @@ namespace
 }
 
 
-class MatricesToVtk_Grid3D_test : public testing::TestWithParam<AxesOrders>
+class MatricesToVtk_Grid3D_test : public ::testing::TestWithParam<AxesOrders>
 {
 public:
 

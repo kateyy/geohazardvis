@@ -11,7 +11,7 @@
 #include <gui/data_view/AbstractRenderView.h>
 
 
-class DataMapping_test : public testing::Test
+class DataMapping_test : public ::testing::Test
 {
 public:
     void SetUp() override

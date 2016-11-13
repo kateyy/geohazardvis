@@ -10,7 +10,7 @@
 #include <core/utility/DataExtent.h>
 
 
-class DEMImageNormals_test : public testing::Test
+class DEMImageNormals_test : public ::testing::Test
 {
 public:
     vtkSmartPointer<vtkImageData> dem;

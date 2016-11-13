@@ -21,7 +21,7 @@
 #include <gui/widgets/DEMWidget.h>
 
 
-class DEMWidget_test : public testing::Test
+class DEMWidget_test : public ::testing::Test
 {
 public:
     void SetUp() override

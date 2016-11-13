@@ -16,7 +16,7 @@
 #include <core/utility/vtkvectorhelper.h>
 
 
-class RenderedData_test : public testing::Test
+class RenderedData_test : public ::testing::Test
 {
 public:
     void SetUp() override

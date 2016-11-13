@@ -18,7 +18,7 @@
 #include "RenderView_test_tools.h"
 
 
-class ResidualView_test : public testing::Test
+class ResidualView_test : public ::testing::Test
 {
 public:
     void SetUp() override

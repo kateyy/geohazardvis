@@ -46,7 +46,7 @@ protected:
 using TestDataObject = DataObject_test_DataObject;
 
 
-class DataObject_test : public testing::Test
+class DataObject_test : public ::testing::Test
 {
 public:
     void SetUp() override

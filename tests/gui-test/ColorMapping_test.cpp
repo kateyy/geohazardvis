@@ -17,7 +17,7 @@
 #include <core/rendered_data/RenderedImageData.h>
 
 
-class ColorMapping_test : public testing::Test
+class ColorMapping_test : public ::testing::Test
 {
 public:
     static vtkSmartPointer<vtkUnsignedCharArray> createUCharColors()

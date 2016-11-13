@@ -201,7 +201,7 @@ public:
 };
 
 
-class RendererImplementationBase3D_test : public testing::Test
+class RendererImplementationBase3D_test : public ::testing::Test
 {
 public:
     void SetUp() override

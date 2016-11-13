@@ -56,7 +56,7 @@ public:
 }
 
 
-class TextFileReader_test : public testing::Test
+class TextFileReader_test : public ::testing::Test
 {
 public:
     static const QString & testFileName()

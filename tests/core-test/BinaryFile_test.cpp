@@ -10,7 +10,7 @@
 #include <QFile>
 
 
-class RawFile_test : public testing::Test
+class RawFile_test : public ::testing::Test
 {
 public:
     void SetUp() override

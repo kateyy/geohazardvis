@@ -14,7 +14,7 @@
 #include <core/utility/vtkvectorhelper.h>
 
 
-class GenericPolyDataObject_test : public testing::Test
+class GenericPolyDataObject_test : public ::testing::Test
 {
 public:
     static ReferencedCoordinateSystemSpecification defaultCoordsSpec()

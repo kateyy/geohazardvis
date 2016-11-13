@@ -17,7 +17,7 @@
 #include "PipelineInformationHelper.h"
 
 
-class ArrayChangeInformationFilter_test : public testing::Test
+class ArrayChangeInformationFilter_test : public ::testing::Test
 {
 public:
     void SetUp() override

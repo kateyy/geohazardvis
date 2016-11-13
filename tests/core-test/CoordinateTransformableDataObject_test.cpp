@@ -49,7 +49,7 @@ private:
 };
 
 
-class CoordinateTransformableDataObject_test : public testing::Test
+class CoordinateTransformableDataObject_test : public ::testing::Test
 {
 public:
     void SetUp() override

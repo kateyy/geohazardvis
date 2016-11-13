@@ -25,7 +25,7 @@
 #include <gui/rendering_interaction/Picker.h>
 
 
-class Picker_test : public testing::Test
+class Picker_test : public ::testing::Test
 {
 public:
     void SetUp() override

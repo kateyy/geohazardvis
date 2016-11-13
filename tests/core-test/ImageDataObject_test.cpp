@@ -9,7 +9,7 @@
 #include <core/utility/DataExtent.h>
 
 
-class ImageDataObject_test : public testing::Test
+class ImageDataObject_test : public ::testing::Test
 {
 public:
     static ReferencedCoordinateSystemSpecification defaultCoordsSpec()

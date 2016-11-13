@@ -10,7 +10,7 @@
 #include <core/utility/DataExtent.h>
 
 
-class SimpleDEMGeoCoordToLocalFilter_test : public testing::Test
+class SimpleDEMGeoCoordToLocalFilter_test : public ::testing::Test
 {
 public:
     static vtkSmartPointer<vtkImageData> generateDEM()

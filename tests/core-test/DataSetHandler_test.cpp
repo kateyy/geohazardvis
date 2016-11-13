@@ -69,7 +69,7 @@ private:
     bool * m_desturctorCalledFlag = nullptr;
 };
 
-class DataSetHandler_test: public testing::Test
+class DataSetHandler_test: public ::testing::Test
 {
 public:
     void SetUp() override

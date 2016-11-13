@@ -13,7 +13,7 @@
 #include <gui/data_view/RenderViewStrategy2D.h>
 
 
-class RenderViewStrategy_test : public testing::Test
+class RenderViewStrategy_test : public ::testing::Test
 {
 public:
     void SetUp() override

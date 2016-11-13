@@ -21,7 +21,7 @@
 #include "RenderView_test_tools.h"
 
 
-class RenderView_test : public testing::Test
+class RenderView_test : public ::testing::Test
 {
 public:
     void SetUp() override
