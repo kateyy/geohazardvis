@@ -26,6 +26,8 @@ public:
     /** Convenience class to prevent inclusion of headers such as QVTKInteractor. */
     vtkRenderWindowInteractor * GetInteractorBase();
 
+    void SetRenderWindow(vtkGenericOpenGLRenderWindow * renderWindow) override;
+
 signals:
     void beforeTooltipPopup();
 
