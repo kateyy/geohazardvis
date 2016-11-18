@@ -26,6 +26,7 @@
 #include <core/data_objects/RawVectorData.h>
 #include <core/data_objects/VectorGrid3DDataObject.h>
 #include <core/io/TextFileReader.h>
+#include <core/utility/macros.h>
 
 
 using namespace io;
@@ -473,10 +474,10 @@ vtkSmartPointer<vtkDataArray> MatricesToVtk::parseFloatVector(
     int numComponents = static_cast<int>(lastColumn - firstColumn + 1);
     vtkIdType numTuples = inputData.at(lastColumn).size();
 
-    for (auto && ax : inputData)
+    DEBUG_ONLY(for (auto && ax : inputData)
     {
         assert(ax.size() == size_t(numTuples));
-    }
+    })
 
     auto a = createDataArray(vtk_dataType);
     a->SetName(arrayName.toUtf8().data());
