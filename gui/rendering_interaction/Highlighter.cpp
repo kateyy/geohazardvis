@@ -1,5 +1,6 @@
 #include <gui/rendering_interaction/Highlighter.h>
 
+#include <array>
 #include <cassert>
 #include <cmath>
 
@@ -25,6 +26,7 @@
 #include <vtkPolygon.h>
 #include <vtkRenderer.h>
 #include <vtkRenderWindow.h>
+#include <vtkVector.h>
 
 #include <core/AbstractVisualizedData.h>
 #include <core/types.h>
@@ -40,6 +42,7 @@ public:
         : m_highlighter{ highlighter }
     {
     }
+    virtual ~HighlighterImpl() = default;
 
     virtual void setFlashColorFactor(double f) = 0;
     void show()
@@ -76,11 +79,15 @@ public:
     {
     }
 
-    void setPosition(const double position[3])
+    ~HighlighterPoint2DImpl() override = default;
+
+    void setPosition(const vtkVector3d & position)
     {
         init();
-        m_baseActor->SetPosition(position[0], position[1]);
-        m_innerActor->SetPosition(position[0], position[1]);
+        m_baseActor->GetPositionCoordinate()->SetValue(
+            position[0], position[1], position[2]);;
+        m_innerActor->GetPositionCoordinate()->SetValue(
+            position[0], position[1], position[2]);
         show();
     }
 
@@ -172,6 +179,8 @@ public:
     {
     }
 
+    ~HighlighterCellImpl() override = default;
+
     void setCell(vtkCell & selection)
     {
         init();
@@ -259,11 +268,11 @@ class HighlighterImplementationSwitch
 {
 public:
     explicit HighlighterImplementationSwitch(Highlighter & highlighter)
-        : m_point2DImpl{ highlighter }
-        , m_cellImpl{ highlighter }
+        : m_highligher{ highlighter }
         , m_currentImpl{ nullptr }
     {
     }
+    ~HighlighterImplementationSwitch() = default;
 
     void clear()
     {
@@ -272,14 +281,12 @@ public:
 
     void highlightCell(vtkCell & cell)
     {
-        switchTo(&m_cellImpl);
-        m_cellImpl.setCell(cell);
+        switchToCellImpl().setCell(cell);
     }
 
-    void highlightPoint2D(double position[3])
+    void highlightPoint2D(const vtkVector3d & position)
     {
-        switchTo(&m_point2DImpl);
-        m_point2DImpl.setPosition(position);
+        switchToPoint2DImpl().setPosition(position);
     }
 
     void setFlashColorFactor(double f)
@@ -291,6 +298,32 @@ public:
     }
 
 private:
+    enum ImplID : unsigned int
+    {
+        point2D = 0u,
+        cell = 1u,
+        count = 2u
+    };
+    template <typename Impl_t, ImplID id>
+    auto switchToImpl() -> Impl_t &
+    {
+        auto & ptr = m_impls[id];
+        if (!ptr)
+        {
+            ptr = std::make_unique<Impl_t>(m_highligher);
+        }
+        switchTo(ptr.get());
+        assert(dynamic_cast<Impl_t *>(ptr.get()));
+        return static_cast<Impl_t &>(*ptr);
+    }
+    HighlighterPoint2DImpl & switchToPoint2DImpl()
+    {
+        return switchToImpl<HighlighterPoint2DImpl, point2D>();
+    }
+    HighlighterCellImpl & switchToCellImpl()
+    {
+        return switchToImpl<HighlighterCellImpl, cell>();
+    }
     void switchTo(HighlighterImpl * impl)
     {
         if (m_currentImpl == impl)
@@ -307,9 +340,8 @@ private:
     }
 
 private:
-    HighlighterPoint2DImpl m_point2DImpl;
-    HighlighterCellImpl m_cellImpl;
-
+    Highlighter & m_highligher;
+    std::array<std::unique_ptr<HighlighterImpl>, ImplID::count> m_impls;
     HighlighterImpl * m_currentImpl;
 };
 
@@ -485,8 +517,8 @@ void Highlighter::highlightPoints()
     }
 
     const vtkIdType index = m_selection.indices.front();
-    double point[3];
-    dataSet->GetPoint(index, point);
+    vtkVector3d point;
+    dataSet->GetPoint(index, point.GetData());
     m_impl->highlightPoint2D(point);
 
     emit geometryChanged();
