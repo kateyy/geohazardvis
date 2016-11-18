@@ -1,5 +1,7 @@
 #include <gtest/gtest.h>
 
+#include <vtkImageData.h>
+
 #include <QCoreApplication>
 #include <QDockWidget>
 #include <QMainWindow>
@@ -7,8 +9,25 @@
 #include <QVBoxLayout>
 
 #include <core/DataSetHandler.h>
+#include <core/data_objects/ImageDataObject.h>
 #include <gui/DataMapping.h>
 #include <gui/data_view/AbstractRenderView.h>
+#include <gui/data_view/RendererImplementation3D.h>
+#include <gui/data_view/RenderViewStrategy2D.h>
+
+
+namespace
+{
+
+class TestRendererImplementation3D : public RendererImplementation3D
+{
+public:
+    using RendererImplementation3D::RendererImplementation3D;
+
+    using RendererImplementation3D::strategyIfEnabled;
+};
+
+}
 
 
 class DataMapping_test : public ::testing::Test
@@ -110,6 +129,44 @@ TEST_F(DataMapping_test, ViewDeletedOnAppShutdown)
 
         env.reset();
         ASSERT_FALSE(view);
+    }
+}
+
+TEST_F(DataMapping_test, ViewAndPlotViewCleanedUp)
+{
+    auto img = vtkSmartPointer<vtkImageData>::New();
+    img->SetDimensions(4, 6, 1);
+    img->AllocateScalars(VTK_FLOAT, 1);
+    auto imageObject = std::make_unique<ImageDataObject>("TestImage", *img);
+    auto imgPointer = imageObject.get();
+    env->dataSetHander.takeData(std::move(imageObject));
+
+    {
+        QMainWindow mainWindow;
+
+        QPointer<AbstractRenderView> view = env->mapping.openInRenderView({ imgPointer });
+        ASSERT_TRUE(view);
+        mainWindow.addDockWidget(Qt::LeftDockWidgetArea, view->dockWidgetParent());
+
+        auto impl3D = dynamic_cast<RendererImplementation3D *>(&view->implementation());
+        ASSERT_TRUE(impl3D);
+        auto impl3Dtest = static_cast<TestRendererImplementation3D *>(impl3D); // hacked...
+        auto strategy = dynamic_cast<RenderViewStrategy2D *>(impl3Dtest->strategyIfEnabled());
+        ASSERT_TRUE(strategy);
+        strategy->startProfilePlot();
+
+        ASSERT_EQ(2, env->mapping.renderViews().size());
+        auto first = env->mapping.renderViews()[0];
+        auto second = env->mapping.renderViews()[1];
+        QPointer<AbstractRenderView> plotView = view == first ? second : first;
+
+        mainWindow.addDockWidget(Qt::LeftDockWidgetArea, plotView->dockWidgetParent());
+
+        qApp->processEvents();
+
+        env.reset();
+        ASSERT_FALSE(view);
+        ASSERT_FALSE(plotView);
     }
 }
 
