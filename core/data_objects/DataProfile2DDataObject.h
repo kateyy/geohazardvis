@@ -16,7 +16,8 @@ class vtkWarpScalar;
 
 enum class IndexType;
 class CoordinateTransformableDataObject;
-class LinearSelectorXY;
+class LineOnCellsSelector2D;
+class LineOnPointsSelector2D;
 class SetCoordinateSystemInformationFilter;
 class SimplePolyGeoCoordinateTransformFilter;
 
@@ -80,7 +81,8 @@ protected:
 
 private:
     CoordinateTransformableDataObject & sourceData();
-    void updateTransformInputPoints();
+    void updateLinePointsTransform();
+    void updateLinePoints();
 
 private:
     bool m_isValid;
@@ -99,12 +101,13 @@ private:
     vtkSmartPointer<SimplePolyGeoCoordinateTransformFilter> m_pointsTransformFilter;
 
     // extraction from vtkImageData
-    const bool m_inputIsImage;
+    bool m_inputIsImage;
     vtkSmartPointer<vtkLineSource> m_probeLine;
     vtkSmartPointer<vtkProbeFilter> m_imageProbe;
 
     // extraction from vtkPolyData
-    vtkSmartPointer<LinearSelectorXY> m_polyDataPointsSelector;
+    vtkSmartPointer<LineOnCellsSelector2D> m_polyCentroidsSelector;
+    vtkSmartPointer<LineOnPointsSelector2D> m_polyPointsSelector;
 
     vtkSmartPointer<vtkTransformPolyDataFilter> m_outputTransformation;
     vtkSmartPointer<vtkWarpScalar> m_graphLine;

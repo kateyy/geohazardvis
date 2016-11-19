@@ -10,6 +10,7 @@
 #include <vtkPen.h>
 #include <vtkPlotLine.h>
 #include <vtkPointData.h>
+#include <vtkPointSet.h>
 #include <vtkTable.h>
 
 #include <reflectionzeug/PropertyGroup.h>
@@ -135,8 +136,14 @@ DataBounds DataProfile2DContextPlot::updateVisibleBounds()
 
 void DataProfile2DContextPlot::updatePlot()
 {
-    auto profilePoints = profileData().processedDataSet();
-    const vtkIdType numPoints = profilePoints->GetNumberOfPoints();
+    auto profileDataSet = vtkPointSet::SafeDownCast(profileData().processedDataSet());
+    if (!profileDataSet)
+    {
+        setPlotIsValid(false);
+        return;
+    }
+
+    const vtkIdType numPoints = profileDataSet->GetNumberOfPoints();
 
     if (numPoints < 2)  // produces a warning
     {
@@ -144,7 +151,7 @@ void DataProfile2DContextPlot::updatePlot()
         return;
     }
 
-    auto sourceYValues = profilePoints->GetPointData()->GetArray(profileData().scalarsName().toUtf8().data());
+    auto sourceYValues = profileDataSet->GetPointData()->GetArray(profileData().scalarsName().toUtf8().data());
     assert(sourceYValues && sourceYValues->GetNumberOfTuples() == numPoints);
 
     auto plotYValues = vtkSmartPointer<vtkDataArray>::Take(sourceYValues->NewInstance());
@@ -172,15 +179,14 @@ void DataProfile2DContextPlot::updatePlot()
     auto xAxis = vtkSmartPointer<vtkFloatArray>::New();
     xAxis->SetNumberOfValues(numPoints);
     xAxis->SetName(profileData().abscissa().toUtf8().data());
+    auto profilePoints = profileDataSet->GetPoints()->GetData();
+    for (vtkIdType i = 0; i < numPoints; ++i)
+    {
+        xAxis->SetValue(i, profilePoints->GetComponent(i, 0));
+    }
+
     table->AddColumn(xAxis);
     table->AddColumn(plotYValues);
-
-    for (int i = 0; i < profilePoints->GetNumberOfPoints(); ++i)
-    {
-        double point[3];
-        profilePoints->GetPoint(i, point);
-        table->SetValue(i, 0, point[0]);
-    }
 
     m_plotLine->SetInputData(table, 0, 1);
 

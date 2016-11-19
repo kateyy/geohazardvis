@@ -116,8 +116,10 @@ set(sources
     filters/DEMToTopographyMesh.cpp
     filters/ImagePlaneWidget.h
     filters/ImagePlaneWidget.cpp
-    filters/LinearSelectorXY.h
-    filters/LinearSelectorXY.cpp
+    filters/LineOnCellsSelector2D.h
+    filters/LineOnCellsSelector2D.cpp
+    filters/LineOnPointsSelector2D.h
+    filters/LineOnPointsSelector2D.cpp
     filters/SetCoordinateSystemInformationFilter.h
     filters/SetCoordinateSystemInformationFilter.cpp
     filters/SimpleImageGeoCoordinateTransformFilter.h

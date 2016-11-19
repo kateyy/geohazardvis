@@ -1,11 +1,13 @@
 #include "DataProfile2DDataObject.h"
 
 #include <algorithm>
+#include <array>
 #include <cmath>
 
 #include <QDebug>
 
 #include <vtkAssignAttribute.h>
+#include <vtkCellCenters.h>
 #include <vtkCellData.h>
 #include <vtkExecutive.h>
 #include <vtkImageData.h>
@@ -19,10 +21,10 @@
 #include <vtkTransformPolyDataFilter.h>
 #include <vtkWarpScalar.h>
 
-#include <core/data_objects/ImageDataObject.h>
-#include <core/data_objects/PolyDataObject.h>
+#include <core/data_objects/CoordinateTransformableDataObject.h>
 #include <core/context2D_data/DataProfile2DContextPlot.h>
-#include <core/filters/LinearSelectorXY.h>
+#include <core/filters/LineOnCellsSelector2D.h>
+#include <core/filters/LineOnPointsSelector2D.h>
 #include <core/filters/SetCoordinateSystemInformationFilter.h>
 #include <core/filters/SimplePolyGeoCoordinateTransformFilter.h>
 #include <core/table_model/QVtkTableModelProfileData.h>
@@ -44,17 +46,41 @@ DataProfile2DDataObject::DataProfile2DDataObject(
     , m_scalarsName{ scalarsName }
     , m_scalarsLocation{ scalarsLocation }
     , m_vectorComponent{ vectorComponent }
+    , m_profileLinePoint1{ 0.0, 0.0 }
+    , m_profileLinePoint2{ 1.0, 0.0}
     , m_doTransformPoints{ false }
-    , m_inputIsImage{ dynamic_cast<ImageDataObject *>(&sourceData) != nullptr }
     , m_outputTransformation{ vtkSmartPointer<vtkTransformPolyDataFilter>::New() }
     , m_graphLine{ vtkSmartPointer<vtkWarpScalar>::New() }
 {
+    auto processInputData = m_sourceData.processedDataSet();
+    if (!processInputData || processInputData->GetNumberOfPoints() == 0)
+    {
+        assert(false);
+        return;
+    }
+
     if (!dynamic_cast<CoordinateTransformableDataObject *>(&m_sourceData))
     {
         return;
     }
 
-    if (!m_inputIsImage && !dynamic_cast<PolyDataObject *>(&sourceData))
+
+    auto inputImage = vtkImageData::SafeDownCast(processInputData);
+    m_inputIsImage = (inputImage != nullptr);
+    if (m_inputIsImage)
+    {
+        std::array<int, 3> dimensions;
+        inputImage->GetDimensions(dimensions.data());
+        // only 2D XY-planes are supported
+        if (dimensions[2] != 1)
+        {
+            return;
+        }
+    }
+
+    auto inputPolyData = vtkPolyData::SafeDownCast(processInputData);
+
+    if (!m_inputIsImage && !inputPolyData)
     {
         return;
     }
@@ -66,6 +92,7 @@ DataProfile2DDataObject::DataProfile2DDataObject(
     {
         auto checkCoords = sourceCoordSystem;
         checkCoords.type = CoordinateSystemType::metricLocal;
+        checkCoords.unitOfMeasurement = "km";
 
         if (transformedSource.canTransformTo(checkCoords))
         {
@@ -92,7 +119,8 @@ DataProfile2DDataObject::DataProfile2DDataObject(
         inputAlgorithmPort = sourceData.processedOutputPort();
     }
 
-    if (!inputData)
+    // coordinateTransformed* should not change the data set type.
+    if (!inputData || inputData->IsTypeOf(processInputData->GetClassName()))
     {
         assert(false);
         return;
@@ -137,14 +165,46 @@ DataProfile2DDataObject::DataProfile2DDataObject(
 
         m_outputTransformation->SetInputConnection(m_imageProbe->GetOutputPort());
     }
+    else if (inputPolyData && inputPolyData->GetPoints() && inputPolyData->GetPoints()->GetNumberOfPoints() > 0)
+    {
+        // Polygonal/triangular data
+        if (inputPolyData->GetPolys() && inputPolyData->GetPolys()->GetSize() > 0)
+        {
+            // Cannot reuse PolyDataObject::cellCenters if transformed coordinates are used.
+            // So keep it simple and compute the cell centers here on the fly.
+            auto polygonCenters = vtkSmartPointer<vtkCellCenters>::New();
+            polygonCenters->SetInputConnection(unassignField->GetOutputPort());
+
+            m_polyCentroidsSelector = vtkSmartPointer<LineOnCellsSelector2D>::New();
+            m_polyCentroidsSelector->SetSorting(LineOnCellsSelector2D::SortPoints);
+            m_polyCentroidsSelector->PassDistanceToLineOff();
+            m_polyCentroidsSelector->PassPositionOnLineOff();
+            m_polyCentroidsSelector->SetInputConnection(unassignField->GetOutputPort());
+            m_polyCentroidsSelector->SetCellCentersConnection(polygonCenters->GetOutputPort());
+
+            m_outputTransformation->SetInputConnection(m_polyCentroidsSelector->GetOutputPort(1));
+        }
+        // Point cloud data
+        else if (inputPolyData->GetVerts() && inputPolyData->GetVerts()->GetSize() > 0)
+        {
+            m_polyPointsSelector = vtkSmartPointer<LineOnPointsSelector2D>::New();
+            m_polyPointsSelector->SetSorting(LineOnPointsSelector2D::SortPoints);
+            m_polyPointsSelector->PassDistanceToLineOff();
+            m_polyPointsSelector->PassPositionOnLineOff();
+            m_polyPointsSelector->SetInputConnection(unassignField->GetOutputPort());
+
+            m_outputTransformation->SetInputConnection(m_polyPointsSelector->GetOutputPort(1));
+        }
+        else
+        {
+            qWarning() << "Plotting not supported for the data set type:" << m_sourceData.name();
+            return;
+        }
+    }
     else
     {
-        auto & poly = dynamic_cast<PolyDataObject &>(sourceData);
-        m_polyDataPointsSelector = vtkSmartPointer<LinearSelectorXY>::New();
-        m_polyDataPointsSelector->SetInputConnection(unassignField->GetOutputPort());
-        m_polyDataPointsSelector->SetCellCentersConnection(poly.cellCentersOutputPort());
-
-        m_outputTransformation->SetInputConnection(m_polyDataPointsSelector->GetOutputPort(1));
+        qWarning() << "Plotting not supported for the data set type:" << m_sourceData.name();
+        return;
     }
 
     auto assign = vtkSmartPointer<vtkAssignAttribute>::New();
@@ -253,7 +313,7 @@ void DataProfile2DDataObject::setProfileLinePoints(const vtkVector2d & point1, c
     m_profileLinePoint1 = point1;
     m_profileLinePoint2 = point2;
 
-    updateTransformInputPoints();
+    updateLinePoints();
 }
 
 void DataProfile2DDataObject::setPointsCoordinateSystem(const CoordinateSystemSpecification & coordsSpec)
@@ -265,60 +325,8 @@ void DataProfile2DDataObject::setPointsCoordinateSystem(const CoordinateSystemSp
 
     m_profileLinePointsCoordsSpec = coordsSpec;
 
-    struct Checker
-    {
-        explicit Checker(bool & value) : ptr{ &value } { }
-        ~Checker() { if (ptr) *ptr = false; }
-        void validate() { *ptr = true; ptr = nullptr; }
-    private:
-        bool * ptr;
-    } transformPointsCheck(m_doTransformPoints);
-
-    if (!m_targetCoordsSpec.isValid())
-    {
-        // Source data coordinate system is not defined, so assume all coordinates to be untransformed.
-        return;
-    }
-
-    if (!coordsSpec.isValid() && !coordsSpec.isUnspecified())
-    {
-        qWarning() << "Invalid point coordinate system passed to DataProfile2DDataObject. "
-            "Line points won't be transformed at all.";
-        return;
-    }
-
-    if (coordsSpec.type == CoordinateSystemType::unspecified    // cannot transform
-        || coordsSpec == m_targetCoordsSpec)                    // points already in target system
-    {
-        return;
-    }
-
-    QList<CoordinateSystemType> supportedTypes{ CoordinateSystemType::metricLocal, CoordinateSystemType::geographic };
-
-    if (coordsSpec.type != m_targetCoordsSpec.type
-        && (!supportedTypes.contains(coordsSpec.type) || !supportedTypes.contains(m_targetCoordsSpec.type)))
-    {
-        qWarning() << "Unsupported point coordinate system passed to DataProfile2DDataObject. "
-            "Line points won't be transformed at all.";
-        return;
-    }
-
-    if (!m_pointsTransformFilter)
-    {
-        m_pointsSetCoordsSpecFilter = vtkSmartPointer<SetCoordinateSystemInformationFilter>::New();
-        auto poly = vtkSmartPointer<vtkPolyData>::New();
-        auto points = vtkSmartPointer<vtkPoints>::New();
-        points->SetNumberOfPoints(2);
-        poly->SetPoints(points);
-        m_pointsSetCoordsSpecFilter->SetInputData(poly);
-
-        m_pointsTransformFilter = vtkSmartPointer<SimplePolyGeoCoordinateTransformFilter>::New();
-        m_pointsTransformFilter->SetInputConnection(m_pointsSetCoordsSpecFilter->GetOutputPort());
-
-        m_pointsTransformFilter->SetTargetCoordinateSystemType(coordsSpec.type);
-    }
-
-    transformPointsCheck.validate();
+    updateLinePointsTransform();
+    updateLinePoints();
 }
 
 const CoordinateSystemSpecification & DataProfile2DDataObject::pointsCoordinateSystem() const
@@ -340,7 +348,67 @@ CoordinateTransformableDataObject & DataProfile2DDataObject::sourceData()
     return static_cast<CoordinateTransformableDataObject &>(m_sourceData);
 }
 
-void DataProfile2DDataObject::updateTransformInputPoints()
+void DataProfile2DDataObject::updateLinePointsTransform()
+{
+    struct TransformRequiredCheck
+    {
+        explicit TransformRequiredCheck(bool & value) : ptr{ &value } { }
+        ~TransformRequiredCheck() { if (ptr) *ptr = false; }
+        void validate() { *ptr = true; ptr = nullptr; }
+    private:
+        bool * ptr;
+    } transformPointsCheck(m_doTransformPoints);
+
+    if (!m_targetCoordsSpec.isValid())
+    {
+        // Source data coordinate system is not defined, so assume all coordinates to be untransformed.
+        return;
+    }
+
+    if (!m_profileLinePointsCoordsSpec.isValid() || m_profileLinePointsCoordsSpec.isUnspecified())
+    {
+        qWarning() << "Invalid point coordinate system passed to DataProfile2DDataObject. "
+            "Line points won't be transformed at all.";
+        return;
+    }
+
+    if (m_profileLinePointsCoordsSpec == m_targetCoordsSpec) // points already in target system
+    {
+        return;
+    }
+
+    if (m_profileLinePointsCoordsSpec.type != m_targetCoordsSpec.type)
+    {
+        if (!SimplePolyGeoCoordinateTransformFilter::isConversionSupported(
+            m_profileLinePointsCoordsSpec.type,
+            m_targetCoordsSpec.type))
+        {
+            qWarning() << "Unsupported point coordinate system passed to DataProfile2DDataObject. "
+                "Line points won't be transformed at all.";
+            return;
+        }
+    }
+
+    // A transformation of the line points is required and supported, so create and configure the filter.
+    if (!m_pointsTransformFilter)
+    {
+        m_pointsSetCoordsSpecFilter = vtkSmartPointer<SetCoordinateSystemInformationFilter>::New();
+        auto poly = vtkSmartPointer<vtkPolyData>::New();
+        auto points = vtkSmartPointer<vtkPoints>::New();
+        points->SetNumberOfPoints(2);
+        poly->SetPoints(points);
+        m_pointsSetCoordsSpecFilter->SetInputData(poly);
+
+        m_pointsTransformFilter = vtkSmartPointer<SimplePolyGeoCoordinateTransformFilter>::New();
+        m_pointsTransformFilter->SetInputConnection(m_pointsSetCoordsSpecFilter->GetOutputPort());
+    }
+
+    m_pointsTransformFilter->SetTargetCoordinateSystemType(m_targetCoordsSpec.type);
+
+    transformPointsCheck.validate();
+}
+
+void DataProfile2DDataObject::updateLinePoints()
 {
     vtkVector2d p1, p2;
 
@@ -353,7 +421,7 @@ void DataProfile2DDataObject::updateTransformInputPoints()
         assert(points && points->GetNumberOfPoints() == 2);
         points->SetPoint(0, convertTo<3>(m_profileLinePoint1).GetData());
         points->SetPoint(1, convertTo<3>(m_profileLinePoint2).GetData());
-        inPoly->Modified();
+        points->Modified();
         const auto referencedSpec = ReferencedCoordinateSystemSpecification(m_profileLinePointsCoordsSpec,
             m_targetCoordsSpec.referencePointLatLong,
             m_targetCoordsSpec.referencePointLocalRelative);
@@ -395,10 +463,19 @@ void DataProfile2DDataObject::updateTransformInputPoints()
 
         m_probeLine->SetResolution(numProbePoints);
     }
+    else if (m_polyCentroidsSelector)
+    {
+        m_polyCentroidsSelector->SetStartPoint(p1);
+        m_polyCentroidsSelector->SetEndPoint(p2);
+    }
+    else if (m_polyPointsSelector)
+    {
+        m_polyPointsSelector->SetStartPoint(p1);
+        m_polyPointsSelector->SetEndPoint(p2);
+    }
     else
     {
-        m_polyDataPointsSelector->SetStartPoint(p1);
-        m_polyDataPointsSelector->SetEndPoint(p2);
+        assert(false);
     }
 
 
