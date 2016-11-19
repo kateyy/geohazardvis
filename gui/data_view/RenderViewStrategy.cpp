@@ -21,9 +21,10 @@ DataMapping & RenderViewStrategy::dataMapping() const
 
 void RenderViewStrategy::activate()
 {
-    if (!defaultInteractorStyle().isEmpty())
+    const auto style = defaultInteractorStyle();
+    if (!style.isEmpty())
     {
-        m_context.interactorStyleSwitch()->setCurrentStyle(defaultInteractorStyle().toStdString());
+        m_context.interactorStyleSwitch()->setCurrentStyle(style.toStdString());
     }
 
     restoreCamera();

@@ -1,9 +1,11 @@
 #include "RendererImplementation3D.h"
 
+#include <algorithm>
 #include <cassert>
+#include <limits>
 
 #include <core/AbstractVisualizedData.h>
-#include <core/data_objects/ImageDataObject.h>
+#include <core/data_objects/DataObject.h>
 #include <gui/data_view/AbstractRenderView.h>
 #include <gui/data_view/RenderViewStrategy.h>
 
@@ -125,23 +127,17 @@ QString RendererImplementation3D::mostSuitableStrategy(const QList<DataObject *>
     // use 2D interaction by default, if there is a 2D image in our view
     // viewing 2D images in a 3D terrain view is probably not what we want in most cases
 
-    bool contains2D = false;
-
-    for (auto && data : dataObjects)
+    const bool contains2D = std::any_of(dataObjects.cbegin(), dataObjects.cend(),
+        [] (const DataObject * data)
     {
-        if (!dynamic_cast<ImageDataObject *>(data))
+        if (!data->is3D())
         {
-            continue;
+            return true;
         }
 
-        contains2D = true;
-        break;
-    }
+        return data->bounds().extractDimension(2).componentSize()
+            <= std::numeric_limits<float>::epsilon();
+    });
 
-    if (contains2D)
-    {
-        return "2D image";
-    }
-
-    return "3D terrain";
+    return contains2D ? "2D image" : "3D terrain";
 }
