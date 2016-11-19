@@ -3,6 +3,7 @@
 #include <vtkStdString.h>
 
 #include <core/CoordinateSystems.h>
+#include <core/utility/DataExtent_fwd.h>
 
 
 class vtkInformation;
@@ -12,13 +13,17 @@ class vtkPolyDataAlgorithm;
 class vtkVector3d;
 
 
-/** This filter transforms a data set between geographic coordinates (latitude, longitude)
-* and a local coordinate system. The applied method only works for regions not larger than a few
-* hundred kilometers.
-* Further, it allows to transform the unit of measurement for metric coordinate (global or local).
-* Transformation to or from global metric coordinates (e.g., UTM) is not supported.
-* When transforming between geographic and local coordinates, reference points in the input
-* data set must be set.
+/** This filter implements a set of coordinate system and coordinate unit transformations.
+*
+* The following transformations are provided:
+*   * Geographic (longitude/latitude) <-> local (metric)
+*     A reference point (geographic and local) must be specified for this transformation
+*     The method applied here only works for regions not larger than a few hundred kilometers.
+*   * Global (metric) -> local (metric)
+*     The data set is centered around its local reference point.
+*   * Metric unit conversions
+*     Input/output metric units can be specified/requested with an arbitrary SI unit prefix
+*     (always in *meters).
 */
 template<typename Superclass_t>
 class AbstractSimpleGeoCoordinateTransformFilter : public Superclass_t
@@ -34,6 +39,8 @@ public:
     /** Set the unit of measurement that is used for metric target systems. This is km by default */
     vtkSetMacro(TargetMetricUnit, const vtkStdString &);
     vtkGetMacro(TargetMetricUnit, const vtkStdString &);
+
+    static bool isConversionSupported(CoordinateSystemType from, CoordinateSystemType to);
 
 
 protected:
@@ -52,6 +59,10 @@ protected:
         vtkInformationVector ** inputVector,
         vtkInformationVector * outputVector) override;
 
+    int RequestDataInternal(vtkInformation * request,
+        vtkInformationVector ** inputVector,
+        vtkInformationVector * outputVector);
+
     int RequestData(vtkInformation * request,
         vtkInformationVector ** inputVector,
         vtkInformationVector * outputVector) override;
@@ -62,7 +73,7 @@ protected:
         const vtkVector3d & postTranslate) = 0;
 
 private:
-    void ComputeFilterParameters();
+    void ComputeFilterParameters(const DataBounds * inBounds = nullptr);
 
 protected:
     ReferencedCoordinateSystemSpecification SourceCoordinateSystem;
@@ -71,6 +82,8 @@ protected:
 private:
     CoordinateSystemType TargetCoordinateSystemType;
     vtkStdString TargetMetricUnit;
+
+    bool RequestFilterParametersWithBounds;
 
 private:
     AbstractSimpleGeoCoordinateTransformFilter(const AbstractSimpleGeoCoordinateTransformFilter &) = delete;

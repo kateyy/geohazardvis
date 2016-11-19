@@ -163,20 +163,15 @@ vtkSmartPointer<vtkAlgorithm> ImageDataObject::createTransformPipeline(
         }
     }
 
-    static const QList<CoordinateSystemType::Value> transformableTypes
-    { CoordinateSystemType::geographic, CoordinateSystemType::metricLocal };
-
-    if ((coordinateSystem().type != toSystem.type)
-        && (!transformableTypes.contains(coordinateSystem().type)
-            || !transformableTypes.contains(toSystem.type)))
+    if (!SimpleImageGeoCoordinateTransformFilter::isConversionSupported(
+        coordinateSystem().type, toSystem.type))
     {
         return{};
     }
 
-    // This transforms between local metric coordinates and geographic coordinates,
-    // and/or transforms metric coordinate units.
     auto filter = vtkSmartPointer<SimpleImageGeoCoordinateTransformFilter>::New();
     filter->SetInputConnection(pipelineUpstream);
     filter->SetTargetCoordinateSystemType(toSystem.type);
+    filter->SetTargetMetricUnit(toSystem.unitOfMeasurement.toStdString());
     return filter;
 }

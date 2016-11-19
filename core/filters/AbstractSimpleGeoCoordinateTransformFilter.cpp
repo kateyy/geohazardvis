@@ -8,9 +8,36 @@
 #include <vtkPolyDataAlgorithm.h>
 #include <vtkStreamingDemandDrivenPipeline.h>
 
+#include <core/utility/DataExtent.h>
 #include <core/utility/mathhelper.h>
 #include <core/utility/vtkvectorhelper.h>
 
+
+template<typename Superclass_t>
+bool AbstractSimpleGeoCoordinateTransformFilter<Superclass_t>::isConversionSupported(
+    CoordinateSystemType from, CoordinateSystemType to)
+{
+    if (from == to)
+    {
+        return true;
+    }
+
+    if ((from == CoordinateSystemType::geographic
+        || from == CoordinateSystemType::metricLocal)
+        && (to == CoordinateSystemType::geographic
+            || to == CoordinateSystemType::metricLocal))
+    {
+        return true;
+    }
+
+    if (from == CoordinateSystemType::metricGlobal
+        && to == CoordinateSystemType::metricLocal)
+    {
+        return true;
+    }
+
+    return false;
+}
 
 template<typename Superclass_t>
 AbstractSimpleGeoCoordinateTransformFilter<Superclass_t>::AbstractSimpleGeoCoordinateTransformFilter()
@@ -19,6 +46,7 @@ AbstractSimpleGeoCoordinateTransformFilter<Superclass_t>::AbstractSimpleGeoCoord
     , TargetCoordinateSystem{}
     , TargetCoordinateSystemType{ CoordinateSystemType::metricLocal }
     , TargetMetricUnit{ "km" }
+    , RequestFilterParametersWithBounds{ false }
 {
     this->SetNumberOfInputPorts(1);
     this->SetNumberOfOutputPorts(1);
@@ -60,6 +88,10 @@ int AbstractSimpleGeoCoordinateTransformFilter<Superclass_t>::ProcessRequest(
     }
     if (request->Has(vtkDemandDrivenPipeline::REQUEST_DATA()))
     {
+        if (!this->RequestDataInternal(request, inputVector, outputVector))
+        {
+            return 0;
+        }
         return this->RequestData(request, inputVector, outputVector);
     }
 
@@ -82,7 +114,12 @@ int AbstractSimpleGeoCoordinateTransformFilter<Superclass_t>::RequestInformation
     vtkInformationVector * outputVector)
 {
     auto inInfo = inputVector[0]->GetInformationObject(0);
-    auto inData = inInfo->Get(vtkDataObject::DATA_OBJECT());
+    auto inData = vtkDataSet::SafeDownCast(inInfo->Get(vtkDataObject::DATA_OBJECT()));
+
+    if (!inData)
+    {
+        return 0;
+    }
 
     this->SourceCoordinateSystem = ReferencedCoordinateSystemSpecification::fromInformation(*inInfo);
     if (!this->SourceCoordinateSystem.isValid())
@@ -101,59 +138,29 @@ int AbstractSimpleGeoCoordinateTransformFilter<Superclass_t>::RequestInformation
         return 0;
     }
 
-    bool canConvertCoords = false;
+    const bool canConvertCoords = isConversionSupported(
+        this->SourceCoordinateSystem.type,
+        this->TargetCoordinateSystemType);
 
-    switch (this->SourceCoordinateSystem.type.value)
-    {
-    case CoordinateSystemType::geographic:
-    case CoordinateSystemType::metricLocal:
-        canConvertCoords = true;
-        break;
-    case CoordinateSystemType::metricGlobal:
-        canConvertCoords = false;
-        break;
-    case CoordinateSystemType::other:
-    default:
-        vtkErrorMacro("Unsupported input coordinate system information.");
-        return 0;
-        break;
-    }
+    this->TargetCoordinateSystem = this->SourceCoordinateSystem;
+    this->TargetCoordinateSystem.type = this->TargetCoordinateSystemType;
 
-    auto outCoordinateSystem = this->SourceCoordinateSystem;
-    outCoordinateSystem.type = this->TargetCoordinateSystemType;
-
-    switch (outCoordinateSystem.type.value)
-    {
-    case CoordinateSystemType::geographic:
-    case CoordinateSystemType::metricLocal:
-        //canConvertCoords = canConvertCoords && true;
-        break;
-    case CoordinateSystemType::metricGlobal:
-        canConvertCoords = false;
-        break;
-    case CoordinateSystemType::other:
-    default:
-        vtkErrorMacro("Unsupported target coordinate system information.");
-        return 0;
-        break;
-    }
-
-    if (!canConvertCoords && (this->SourceCoordinateSystem.type != outCoordinateSystem.type))
+    if (!canConvertCoords && (this->SourceCoordinateSystem.type != this->TargetCoordinateSystem.type))
     {
         vtkErrorMacro(<< QString("Transformation of coordinates from %1 to %2 not supported.")
-            .arg(this->SourceCoordinateSystem.type.toString(), outCoordinateSystem.type.toString()).toUtf8().data());
+            .arg(this->SourceCoordinateSystem.type.toString(), this->TargetCoordinateSystem.type.toString()).toUtf8().data());
         return 0;
     }
 
     auto && unitStr = QString::fromUtf8(this->TargetMetricUnit);
 
-    switch (outCoordinateSystem.type.value)
+    switch (this->TargetCoordinateSystem.type.value)
     {
     case CoordinateSystemType::metricLocal:
     case CoordinateSystemType::metricGlobal:
         if (mathhelper::isValidMetricUnit(unitStr))
         {
-            outCoordinateSystem.unitOfMeasurement = unitStr;
+            this->TargetCoordinateSystem.unitOfMeasurement = unitStr;
         }
         else
         {
@@ -167,10 +174,56 @@ int AbstractSimpleGeoCoordinateTransformFilter<Superclass_t>::RequestInformation
         break;
     }
 
-    this->TargetCoordinateSystem = outCoordinateSystem;
-    this->ComputeFilterParameters();
+    DataBounds inBounds;
+    inData->GetBounds(inBounds.data());
+    
+    if (inBounds.isEmpty() && inInfo->Has(vtkDataObject::BOUNDING_BOX()))
+    {
+        inInfo->Get(vtkDataObject::BOUNDING_BOX(), inBounds.data());
+    }
+    else if (inInfo->Has(vtkStreamingDemandDrivenPipeline::BOUNDS()))
+    {
+        inInfo->Get(vtkStreamingDemandDrivenPipeline::BOUNDS(), inBounds.data());
+    }
+
+    if (!inBounds.isEmpty())
+    {
+        this->ComputeFilterParameters(&inBounds);
+    }
+    else
+    {
+        this->ComputeFilterParameters();
+    }
+
 
     return this->Superclass::RequestInformation(request, inputVector, outputVector);
+}
+
+template<typename Superclass_t>
+int AbstractSimpleGeoCoordinateTransformFilter<Superclass_t>::RequestDataInternal(
+    vtkInformation * /*request*/,
+    vtkInformationVector ** inputVector,
+    vtkInformationVector * /*outputVector*/)
+{
+    if (!this->RequestFilterParametersWithBounds)
+    {
+        return 1;
+    }
+
+    auto inData = vtkDataSet::SafeDownCast(
+        inputVector[0]->GetInformationObject(0)->Get(vtkDataObject::DATA_OBJECT()));
+
+    if (!inData)
+    {
+        return 0;
+    }
+
+    DataBounds inBounds;
+    inData->GetBounds(inBounds.data());
+
+    this->ComputeFilterParameters(&inBounds);
+
+    return 1;
 }
 
 template<typename Superclass_t>
@@ -183,7 +236,8 @@ int AbstractSimpleGeoCoordinateTransformFilter<Superclass_t>::RequestData(
 }
 
 template<typename Superclass_t>
-void AbstractSimpleGeoCoordinateTransformFilter<Superclass_t>::ComputeFilterParameters()
+void AbstractSimpleGeoCoordinateTransformFilter<Superclass_t>::ComputeFilterParameters(
+    const DataBounds * inBounds)
 {
     // approximations for regions not larger than a few hundreds of kilometers:
      /*
@@ -197,6 +251,8 @@ void AbstractSimpleGeoCoordinateTransformFilter<Superclass_t>::ComputeFilterPara
      La = X / (earthR * std::cos(Phi0 * vtkMath::Pi() / 180)) / vtkMath::Pi() * 180 + La0;
      Phi = Y / (earthR * vtkMath::Pi()) * 180 + Phi0;
      */
+
+    this->RequestFilterParametersWithBounds = false;
 
     static const double earthR_m = 6378138.0;
 
@@ -229,6 +285,7 @@ void AbstractSimpleGeoCoordinateTransformFilter<Superclass_t>::ComputeFilterPara
 
     if (this->SourceCoordinateSystem.type == this->TargetCoordinateSystem.type)
     {
+        // No coordinate system transformation required, unit transformation only.
         const double unitScale = sourceMetricUnitScale * targetMetricUnitScale;
         scale = vtkVector3d{ unitScale, unitScale, 1.0 };
     }
@@ -259,6 +316,25 @@ void AbstractSimpleGeoCoordinateTransformFilter<Superclass_t>::ComputeFilterPara
             Phi0,
             0.0
         };
+    }
+    else if (this->SourceCoordinateSystem.type == CoordinateSystemType::metricGlobal
+        && this->TargetCoordinateSystem.type == CoordinateSystemType::metricLocal)
+    {
+        // data set bounds required for this transformation
+        if (!inBounds)
+        {
+            this->RequestFilterParametersWithBounds = true;
+            return;
+        }
+
+        const auto metricGlobalBounds = inBounds->convertTo<2>();
+
+        const auto refPointGlobal = metricGlobalBounds.min()
+            + metricGlobalBounds.componentSize() * this->SourceCoordinateSystem.referencePointLocalRelative;
+
+        preTranslate = convertTo<3>(-refPointGlobal);
+        const double unitScale = sourceMetricUnitScale * targetMetricUnitScale;
+        scale = vtkVector3d{ unitScale, unitScale, 1.0 };
     }
 
     this->SetFilterParameters(preTranslate, scale, postTranslate);
