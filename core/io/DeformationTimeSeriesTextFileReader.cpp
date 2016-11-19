@@ -316,8 +316,10 @@ auto DeformationTimeSeriesTextFileReader::readData() -> State
 
     // determine geographic reference point
     points->SetData(coordsArrayLongLat);
-    const auto longLatCenter = DataBounds(m_readPolyData->GetBounds()).convertTo<2>();
-    tempCoordsSpec.referencePointLatLong = { longLatCenter[1], longLatCenter[0] };
+    DataExtent<double, 2u> latLongRange;
+    coordsArrayLongLat->GetRange(latLongRange.dimension(1).data(), 0);
+    coordsArrayLongLat->GetRange(latLongRange.dimension(0).data(), 1);
+    tempCoordsSpec.referencePointLatLong = latLongRange.center();
 
     // set requested coordinates as points
     auto currentCoordsArray = dataArrays[coordArrayIdx(m_coordinatesToUse)];

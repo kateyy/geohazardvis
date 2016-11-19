@@ -251,6 +251,13 @@ ValueRange<T> DataExtent<T, Dimensions>::extractDimension(size_t dimension) cons
 }
 
 template<typename T, size_t Dimensions>
+ValueRange<T> & DataExtent<T, Dimensions>::dimension(size_t dimension)
+{
+    assert(dimension < Dimensions);
+    return reinterpret_cast<ValueRange<T> &>(m_extent[2u * dimension]);
+}
+
+template<typename T, size_t Dimensions>
 auto DataExtent<T, Dimensions>::setDimension(size_t dimension, const ValueRange<T> & range) -> DataExtent &
 {
     return setDimension(dimension, range[0u], range[1u]);

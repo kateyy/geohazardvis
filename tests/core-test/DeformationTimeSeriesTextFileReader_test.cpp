@@ -8,8 +8,10 @@
 #include <vtkPolyData.h>
 #include <vtkVector.h>
 
-#include <core/data_objects/DataObject.h>
+#include <core/CoordinateSystems.h>
+#include <core/data_objects/CoordinateTransformableDataObject.h>
 #include <core/io/DeformationTimeSeriesTextFileReader.h>
+#include <core/utility/DataExtent.h>
 
 #include "TestEnvironment.h"
 
@@ -221,6 +223,8 @@ TEST_F(DeformationTimeSeriesTextFileReader_test, readWith_LongitudeLatitude_Coor
 
     auto readData = reader.generateDataObject();
     ASSERT_TRUE(readData);
+    auto coordinateTransformable = dynamic_cast<CoordinateTransformableDataObject *>(readData.get());
+    ASSERT_TRUE(coordinateTransformable);
     auto readPoly = vtkPolyData::SafeDownCast(readData->dataSet());
     ASSERT_TRUE(readPoly);
     auto points = vtktFPArray::SafeDownCast(readPoly->GetPoints()->GetData());
@@ -236,6 +240,12 @@ TEST_F(DeformationTimeSeriesTextFileReader_test, readWith_LongitudeLatitude_Coor
         ASSERT_FLOAT_EQ(latLongCoords()[static_cast<size_t>(i)].GetY(), static_cast<float>(point.GetX()));
         ASSERT_FLOAT_EQ(latLongCoords()[static_cast<size_t>(i)].GetX(), static_cast<float>(point.GetY()));
     }
+
+    const auto refLatLong = coordinateTransformable->coordinateSystem().referencePointLatLong;
+    DataBounds bounds;
+    readData->dataSet()->GetBounds(bounds.data());
+    ASSERT_DOUBLE_EQ(bounds.center()[0], refLatLong[1]);
+    ASSERT_DOUBLE_EQ(bounds.center()[1], refLatLong[0]);
 }
 
 TEST_F(DeformationTimeSeriesTextFileReader_test, readWith_UTM_WGS84_OthersAsPointAttributes)

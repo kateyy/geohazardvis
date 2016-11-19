@@ -66,6 +66,7 @@ public:
         max() const;
 
     ValueRange<T> extractDimension(size_t dimension) const;
+    ValueRange<T> & dimension(size_t dimension);
     DataExtent & setDimension(size_t dimension, const ValueRange<T> & range);
     DataExtent & setDimension(size_t dimension, T min, T max);
 
