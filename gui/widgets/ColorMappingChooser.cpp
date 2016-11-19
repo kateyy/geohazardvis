@@ -693,8 +693,8 @@ void ColorMappingChooser::updateGuiValueRanges()
 
     m_ui->componentLabel->setText("component (" + QString::number(numComponents) + ")");
     QString resetLink = enableRangeGui ? "resetToData" : "";
-    m_ui->minLabel->setText(R"(min (data: <a href=")" + resetLink + '>' + QString::number(min) + "</a>");
-    m_ui->maxLabel->setText(R"(max (data: <a href=")" + resetLink + '>' + QString::number(max) + "</a>");
+    m_ui->minLabel->setText(R"(min (data: <a href=")" + resetLink + R"(">)" + QString::number(min) + "</a>)");
+    m_ui->maxLabel->setText(R"(max (data: <a href=")" + resetLink + R"(">)" + QString::number(max) + "</a>)");
 
     m_ui->componentSpinBox->setEnabled(numComponents > 1);
     m_ui->minValueSpinBox->setEnabled(enableRangeGui);
