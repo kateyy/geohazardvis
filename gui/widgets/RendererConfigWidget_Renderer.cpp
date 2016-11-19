@@ -103,6 +103,13 @@ std::unique_ptr<PropertyGroup> RendererConfigWidget::createPropertyGroupRenderer
         }
         spec.type = type;
 
+        if ((spec.type == CoordinateSystemType::metricLocal
+            || spec.type == CoordinateSystemType::metricGlobal)
+            && spec.unitOfMeasurement.isEmpty())
+        {
+            spec.unitOfMeasurement = "km";
+        }
+
         if (!renderView->setCurrentCoordinateSystem(spec))
         {
             QMessageBox::warning(nullptr, "Coordinate System Selection",
