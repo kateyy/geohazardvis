@@ -1,10 +1,10 @@
 #pragma once
 
 #include <functional>
+#include <map>
 #include <memory>
 #include <mutex>
 
-#include <QMap>
 #include <QString>
 
 #include <vtkSmartPointer.h>
@@ -42,6 +42,10 @@ public:
     void disconnectEventGroup(const QString & eventName);
     void disconnectAllEvents();
 
+private:
+    void disconnectEventGroup_internal(
+        const std::map<vtkWeakPointer<vtkObject>, unsigned long> & observersToDisconnect) const;
+
 public:
     QString m_name;
 
@@ -64,7 +68,7 @@ public:
         explicit EventDeferralLock(DataObjectPrivate & dop, std::recursive_mutex & mutex);
         EventDeferralLock(EventDeferralLock && other);
 
-        void addDeferredEvent(const QString & name, const EventMemberPointer & event);
+        void addDeferredEvent(const QString & name, EventMemberPointer event);
         void deferEvents();
         bool isDeferringEvents() const;
         void executeDeferredEvents();
@@ -84,10 +88,10 @@ protected:
 private:
     vtkSmartPointer<vtkAlgorithm> m_trivialProducer;
     vtkSmartPointer<vtkAlgorithm> m_processedPassThrough;
-    QMap<QString, QMap<vtkWeakPointer<vtkObject>, unsigned long>> m_namedObserverIds;
+    std::map<QString, std::map<vtkWeakPointer<vtkObject>, unsigned long>> m_namedObserverIds;
 
     friend class EventDeferralLock;
     std::recursive_mutex m_eventDeferralMutex;
     int m_deferEventsRequests;
-    QMap<QString, EventMemberPointer> m_deferredEvents;
+    std::map<QString, EventMemberPointer> m_deferredEvents;
 };

@@ -63,30 +63,43 @@ vtkAlgorithm * DataObjectPrivate::processedPassThrough()
 
 void DataObjectPrivate::addObserver(const QString & eventName, vtkObject & subject, unsigned long tag)
 {
-    m_namedObserverIds[eventName].insert(&subject, tag);
+    m_namedObserverIds[eventName].emplace(&subject, tag);
 }
 
 void DataObjectPrivate::disconnectEventGroup(const QString & eventName)
 {
-    auto & map = m_namedObserverIds[eventName];
-    for (auto it = map.begin(); it != map.end(); ++it)
+    auto observersForEventIt = m_namedObserverIds.find(eventName);
+    if (observersForEventIt == m_namedObserverIds.end())
     {
-        if (!it.key())    // subject already deleted
+        assert(false);
+        return;
+    }
+
+    disconnectEventGroup_internal(observersForEventIt->second);
+    m_namedObserverIds.erase(observersForEventIt);
+}
+
+void DataObjectPrivate::disconnectEventGroup_internal(
+    const std::map<vtkWeakPointer<vtkObject>, unsigned long> & observersToDisconnect) const
+{
+    for (auto && observerAndId : observersToDisconnect)
+    {
+        if (!observerAndId.first)    // subject already deleted
         {
             continue;
         }
 
-        it.key()->RemoveObserver(it.value());
+        observerAndId.first->RemoveObserver(observerAndId.second);
     }
-    m_namedObserverIds.remove(eventName);
 }
 
 void DataObjectPrivate::disconnectAllEvents()
 {
-    for (auto && eventName : m_namedObserverIds.keys())
+    for (auto && observersForEvent : m_namedObserverIds)
     {
-        disconnectEventGroup(eventName);
+        disconnectEventGroup_internal(observersForEvent.second);
     }
+    m_namedObserverIds.clear();
 }
 
 auto DataObjectPrivate::lockEventDeferrals() -> EventDeferralLock
@@ -106,12 +119,9 @@ DataObjectPrivate::EventDeferralLock::EventDeferralLock(EventDeferralLock && oth
 {
 }
 
-void DataObjectPrivate::EventDeferralLock::addDeferredEvent(const QString & name, const EventMemberPointer & event)
+void DataObjectPrivate::EventDeferralLock::addDeferredEvent(const QString & name, EventMemberPointer event)
 {
-    if (!m_dop.m_deferredEvents.contains(name))
-    {
-        m_dop.m_deferredEvents.insert(name, event);
-    }
+    m_dop.m_deferredEvents.emplace(name, std::move(event));
 }
 
 void DataObjectPrivate::EventDeferralLock::deferEvents()
@@ -140,7 +150,7 @@ void DataObjectPrivate::EventDeferralLock::executeDeferredEvents()
 
     for (auto && eventIt : m_dop.m_deferredEvents)
     {
-        eventIt();
+        eventIt.second();
     }
 
     m_dop.m_deferredEvents.clear();
