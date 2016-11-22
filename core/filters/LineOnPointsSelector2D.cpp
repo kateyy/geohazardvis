@@ -296,7 +296,7 @@ int LineOnPointsSelector2D::RequestData(vtkInformation * request,
     else
     {
         // keep the ordering
-        idGetter = std::identity<vtkIdType>();
+        idGetter = [] (vtkIdType i) -> vtkIdType { return i; };
     }
 
     for (vtkIdType outputPointId = 0; outputPointId < outputNumPoints; ++outputPointId)
