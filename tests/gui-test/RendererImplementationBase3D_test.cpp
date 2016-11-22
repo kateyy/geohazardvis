@@ -6,11 +6,13 @@
 #include <core/data_objects/PolyDataObject.h>
 #include <core/rendered_data/RenderedPolyData.h>
 #include <core/ThirdParty/ParaView/vtkGridAxes3DActor.h>
+#include <core/utility/vtkVector_print.h>
 #include <gui/DataMapping.h>
 #include <gui/data_view/AbstractRenderView.h>
 #include <gui/data_view/RendererImplementation3D.h>
 
 #include "RenderView_test_tools.h"
+#include "TestDataExtent.h"
 
 
 template<typename ImplT, ContentType contentTypeT>
@@ -19,7 +21,7 @@ class TestRenderView : public AbstractRenderView
 public:
     TestRenderView(DataMapping & dataMapping, int index = 0)
         : AbstractRenderView(dataMapping, index)
-        , m_impl(std::make_unique<ImplT>(*this))
+        , m_impl{ std::make_unique<ImplT>(*this) }
     {
         m_impl->activate(qvtkWidget());
     }
@@ -258,8 +260,8 @@ TEST_F(RendererImplementationBase3D_test, GridAxesBoundsSetToVisibleBounds)
     auto rendered = dynamic_cast<RenderedData3D *>(vis);
     ASSERT_TRUE(rendered);
 
-    const auto visibleBounds = rendered->visibleBounds();
-    const auto axesBounds = DataBounds(renderView.impl().axesActor(0)->GetBounds());
+    const auto visibleBounds = tDataBounds(rendered->visibleBounds());
+    const auto axesBounds = tDataBounds(renderView.impl().axesActor(0)->GetBounds());
 
     ASSERT_EQ(visibleBounds, axesBounds);
 }
@@ -277,8 +279,8 @@ TEST_F(RendererImplementationBase3D_test, GridAxesBoundsSetToShiftedVisibleBound
     auto rendered = dynamic_cast<RenderedData3D *>(vis);
     ASSERT_TRUE(rendered);
 
-    const auto visibleBounds = rendered->visibleBounds();
-    const auto axesBounds = DataBounds(renderView.impl().axesActor(0)->GetBounds());
+    const auto visibleBounds = tDataBounds(rendered->visibleBounds());
+    const auto axesBounds = tDataBounds(renderView.impl().axesActor(0)->GetBounds());
 
     ASSERT_EQ(visibleBounds, axesBounds);
 }

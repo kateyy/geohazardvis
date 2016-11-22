@@ -9,28 +9,10 @@
 #include <core/data_objects/DataObject.h>
 #include <core/io/MatricesToVtk.h>
 #include <core/utility/DataExtent_print.h>
+#include <core/utility/vtkVector_print.h>
 
+#include "TestDataExtent.h"
 
-/** Workaround for gtest not selecting the expected PrintTo or operator<<
-  * (Cannot work for template classes)
-  * https://stackoverflow.com/questions/25146997/teach-google-test-how-to-print-eigen-matrix
-*/
-class tDataBounds : public DataBounds
-{
-public:
-    using DataBounds::DataBounds;
-};
-
-
-void PrintTo(const tDataBounds & bounds, std::ostream * os)
-{
-    *os << bounds;
-}
-
-void PrintTo(const vtkVector3d & vector, std::ostream * os)
-{
-    *os << vector.GetX() << ":" << vector.GetY() << ":" << vector.GetZ();
-}
 
 namespace
 {

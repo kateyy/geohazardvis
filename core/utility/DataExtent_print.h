@@ -1,6 +1,6 @@
 #pragma once
 
-#include <iostream>
+#include <ostream>
 
 #include <core/utility/DataExtent.h>
 

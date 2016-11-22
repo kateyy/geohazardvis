@@ -3,6 +3,7 @@ set(target TestUtilities)
 
 
 set(sources
+    TestDataExtent.h
     TestEnvironment.h
     TestEnvironment.cpp
 )
