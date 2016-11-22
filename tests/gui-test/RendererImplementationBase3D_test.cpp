@@ -1,5 +1,7 @@
 #include <gtest/gtest.h>
 
+#include <type_traits>
+
 #include <vtkPolyData.h>
 
 #include <core/DataSetHandler.h>
@@ -10,15 +12,28 @@
 #include <gui/DataMapping.h>
 #include <gui/data_view/AbstractRenderView.h>
 #include <gui/data_view/RendererImplementation3D.h>
+#include <gui/data_view/RenderViewStrategy.h>
 
 #include "RenderView_test_tools.h"
 #include "TestDataExtent.h"
 
 
-template<typename ImplT, ContentType contentTypeT>
+template<typename BaseImplT>
+class TestRendererImplementation : public BaseImplT
+{
+public:
+    using BaseImplT::BaseImplT;
+
+    std::enable_if_t<std::is_base_of<RendererImplementationBase3D, BaseImplT>::value, RenderViewStrategy &>
+        strategy() { return BaseImplT::strategy(); }
+};
+
+template<typename ImplT_base, ContentType contentTypeT>
 class TestRenderView : public AbstractRenderView
 {
 public:
+    using ImplT = TestRendererImplementation<ImplT_base>;
+
     TestRenderView(DataMapping & dataMapping, int index = 0)
         : AbstractRenderView(dataMapping, index)
         , m_impl{ std::make_unique<ImplT>(*this) }
@@ -53,6 +68,9 @@ public:
 
     RendererImplementation & implementation() const override { return *m_impl; }
     ImplT & impl() const { return *m_impl; }
+
+    std::enable_if_t<std::is_base_of<RendererImplementationBase3D, ImplT>::value, RenderViewStrategy &>
+        strategy() { return impl().strategy(); }
 
 protected:
     void initializeRenderContext() override { }
@@ -230,7 +248,7 @@ public:
     std::unique_ptr<TestEnv> env;
 
     template<typename T = PolyDataObject>
-    static std::unique_ptr<T> genPolyData()
+    static std::unique_ptr<T> genPolyData2D()
     {
         auto poly = vtkSmartPointer<vtkPolyData>::New();
         auto points = vtkSmartPointer<vtkPoints>::New();
@@ -245,11 +263,20 @@ public:
 
         return std::make_unique<T>("PolyData", *poly);
     }
+
+    template<typename T = PolyDataObject>
+    static std::unique_ptr<T> genPolyData3D()
+    {
+        auto data = genPolyData2D<T>();
+        data->polyDataSet().GetPoints()->SetPoint(2, 1, 1, 0.1);
+        data->polyDataSet().Modified();
+        return data;
+    }
 };
 
-TEST_F(RendererImplementationBase3D_test, GridAxesBoundsSetToVisibleBounds)
+TEST_F(RendererImplementationBase3D_test, GridAxesBoundsSetToVisibleBounds3D)
 {
-    auto data = genPolyData<PolyDataObject>();
+    auto data = genPolyData3D<PolyDataObject>();
 
     TestRenderView<RendererImplementation3D, ContentType::Rendered3D> renderView(env->dataMapping);
     QList<DataObject *> incompatible;
@@ -266,9 +293,31 @@ TEST_F(RendererImplementationBase3D_test, GridAxesBoundsSetToVisibleBounds)
     ASSERT_EQ(visibleBounds, axesBounds);
 }
 
-TEST_F(RendererImplementationBase3D_test, GridAxesBoundsSetToShiftedVisibleBounds)
+TEST_F(RendererImplementationBase3D_test, GridAxesBounds2DInFrontOfVisibleBounds2D)
 {
-    auto data = genPolyData<ShiftedPolyData>();
+    auto data = genPolyData2D<PolyDataObject>();
+
+    TestRenderView<RendererImplementation3D, ContentType::Rendered3D> renderView(env->dataMapping);
+    QList<DataObject *> incompatible;
+    renderView.showDataObjects({ data.get() }, incompatible);
+    ASSERT_TRUE(incompatible.isEmpty());
+    auto vis = renderView.visualizationFor(data.get());
+    ASSERT_TRUE(vis);
+    auto rendered = dynamic_cast<RenderedData3D *>(vis);
+    ASSERT_TRUE(rendered);
+
+    const auto visibleBounds = tDataBounds(rendered->visibleBounds());
+    const auto axesBounds = tDataBounds(renderView.impl().axesActor(0)->GetBounds());
+
+    ASSERT_EQ(visibleBounds.convertTo<2>(), axesBounds.convertTo<2>());
+    const auto shiftedZRange = visibleBounds.extractDimension(2).shifted(0.00001);
+    ASSERT_DOUBLE_EQ(shiftedZRange[0], axesBounds.extractDimension(2)[0]);
+    ASSERT_DOUBLE_EQ(shiftedZRange[1], axesBounds.extractDimension(2)[1]);
+}
+
+TEST_F(RendererImplementationBase3D_test, GridAxesBoundsSetToShiftedVisibleBounds3D)
+{
+    auto data = genPolyData3D<ShiftedPolyData>();
 
     TestRenderView<RendererImplementation3D, ContentType::Rendered3D> renderView(env->dataMapping);
     QList<DataObject *> incompatible;
@@ -283,4 +332,26 @@ TEST_F(RendererImplementationBase3D_test, GridAxesBoundsSetToShiftedVisibleBound
     const auto axesBounds = tDataBounds(renderView.impl().axesActor(0)->GetBounds());
 
     ASSERT_EQ(visibleBounds, axesBounds);
+}
+
+TEST_F(RendererImplementationBase3D_test, GridAxesBounds2DIntFrontOfShiftedVisibleBounds2D)
+{
+    auto data = genPolyData2D<ShiftedPolyData>();
+
+    TestRenderView<RendererImplementation3D, ContentType::Rendered3D> renderView(env->dataMapping);
+    QList<DataObject *> incompatible;
+    renderView.showDataObjects({ data.get() }, incompatible);
+    ASSERT_TRUE(incompatible.isEmpty());
+    auto vis = renderView.visualizationFor(data.get());
+    ASSERT_TRUE(vis);
+    auto rendered = dynamic_cast<RenderedData3D *>(vis);
+    ASSERT_TRUE(rendered);
+
+    const auto visibleBounds = tDataBounds(rendered->visibleBounds());
+    const auto axesBounds = tDataBounds(renderView.impl().axesActor(0)->GetBounds());
+
+    ASSERT_EQ(visibleBounds.convertTo<2>(), axesBounds.convertTo<2>());
+    const auto shiftedZRange = visibleBounds.extractDimension(2).shifted(0.00001);
+    ASSERT_DOUBLE_EQ(shiftedZRange[0], axesBounds.extractDimension(2)[0]);
+    ASSERT_DOUBLE_EQ(shiftedZRange[1], axesBounds.extractDimension(2)[1]);
 }

@@ -9,6 +9,7 @@ set(sources
     DataMapping_test.cpp
     DEMWidget_test.cpp
     Picker_test.cpp
+    RendererImplementation3D_test.cpp
     RendererImplementationBase3D_test.cpp
     RenderView_test.cpp
     RenderView_test_tools.h
