@@ -16,7 +16,7 @@
 #include <core/DataSetHandler.h>
 #include <core/data_objects/PolyDataObject.h>
 #include <core/io/Loader.h>
-#include <core/filters/LinearSelectorXY.h>
+#include <core/filters/LineOnCellsSelector2D.h>
 #include <core/rendered_data/RenderedPolyData.h>
 #include <core/utility/vtkvectorhelper.h>
 
@@ -46,7 +46,7 @@ int main(int argc, char ** argv)
 
     auto inputPolyData = dynamic_cast<PolyDataObject *>(object.get());
 
-    auto selector = vtkSmartPointer<LinearSelectorXY>::New();
+    auto selector = vtkSmartPointer<LineOnCellsSelector2D>::New();
     selector->SetInputData(&dataSet);
     selector->SetCellCentersConnection(inputPolyData->cellCentersOutputPort());
     selector->SetStartPoint(A);

@@ -1,7 +1,5 @@
 
-add_subdirectory(TestEnvironment)
-
-set(TestEnvIncludeDir ${CMAKE_CURRENT_SOURCE_DIR}/TestEnvironment)
+add_subdirectory(TestUtilities)
 
 
 # This policy was introduced in 3.0.0 and does not allow targets named "test" or "help" ...
@@ -33,7 +31,7 @@ if(OPTION_BUILD_TESTS AND GTEST_FOUND)
     # Target 'test'
     add_custom_target(test)
     set_target_properties(test PROPERTIES EXCLUDE_FROM_DEFAULT_BUILD 1)
-    
+
     set(TEST_MAIN_CPP_FILEPATH "${CMAKE_CURRENT_SOURCE_DIR}/test-main.cpp")
 
     # Tests

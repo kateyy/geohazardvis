@@ -20,13 +20,12 @@ set(sources
 add_executable(${target} ${sources})
 
 target_link_libraries(${target}
-    gui
-    ${GTEST_LIBRARIES}
-    TestEnvironment
-)
+    PUBLIC
+        gui
+        ${GTEST_LIBRARIES}
 
-target_include_directories(${target}
-    PRIVATE ${TestEnvIncludeDir}
+    PRIVATE
+        TestUtilities
 )
 
 configure_cxx_target(${target} NO_CPPCHECK)

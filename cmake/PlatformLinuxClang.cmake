@@ -10,6 +10,7 @@ list(APPEND DEFAULT_COMPILE_DEFS
 )
 
 set(DEFAULT_COMPILE_FLAGS
+    PUBLIC
     -fexceptions
     # use position independent code
     # http://blog.quarkslab.com/clang-hardening-cheat-sheet.html
@@ -64,6 +65,7 @@ if (NOT CMAKE_CXX_COMPILER_VERSION VERSION_LESS 3.8)  # VERSION_GREATER_EQUAL av
 endif()
 
 set(DEFAULT_LINKER_FLAGS
+    PUBLIC
     -fsanitize=safe-stack
     -Wl,-z,relro    # read-only relocations...
     -Wl,-z,now      # ... and immediate binding (symbols resolved at load time)

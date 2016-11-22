@@ -242,6 +242,8 @@ set(sources
     utility/vtkstringhelper.cpp
     utility/vtkvarianthelper.h
     utility/vtkvarianthelper.hpp
+    utility/vtkVector_print.h
+    utility/vtkVector_print.cpp
     utility/vtkvectorhelper.h
     utility/vtkvectorhelper.hpp
 )
@@ -289,10 +291,11 @@ target_include_directories(${target} SYSTEM
 )
 
 target_link_libraries(${target}
-    ${OPENGL_LIBRARIES}
-    ${VTK_LIBRARIES}
-    ${LIBZEUG_LIBRARIES}
-    Qt5::Core
+    PUBLIC
+        ${OPENGL_LIBRARIES}
+        ${VTK_LIBRARIES}
+        ${LIBZEUG_LIBRARIES}
+        Qt5::Core
 )
 
 configure_cxx_target(${target})

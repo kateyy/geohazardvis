@@ -166,14 +166,14 @@ target_include_directories(${target} SYSTEM
 )
 
 target_link_libraries(${target}
-    Qt5::Widgets
-    Qt5::OpenGL
-
-    core
+    PUBLIC
+        Qt5::Widgets
+        Qt5::OpenGL
+        core
 )
 
 if (NOT ${Qt5Core_VERSION} VERSION_LESS 5.5)
-    target_link_libraries(${target} Qt5::Concurrent)
+    target_link_libraries(${target} PUBLIC Qt5::Concurrent)
 endif()
 
 

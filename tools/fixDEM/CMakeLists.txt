@@ -12,14 +12,9 @@ source_group_by_path(${CMAKE_CURRENT_SOURCE_DIR} ".*" "" "CMakeLists.txt")
 
 add_executable(${target} ${sources})
 
-target_link_libraries( ${target}
-    # ${LIBZEUG_REFLECTION_LIBRARY}
-    # ${LIBZEUG_SIGNAL_LIBRARY}
-    ${VTK_LIBRARIES}
-    # Qt5::Widgets
-
-    core
-    # gui
+target_link_libraries(${target}
+    PUBLIC
+        core
 )
 
 target_include_directories(${target} SYSTEM

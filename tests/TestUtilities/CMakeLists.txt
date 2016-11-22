@@ -1,5 +1,5 @@
 
-set(target TestEnvironment)
+set(target TestUtilities)
 
 
 set(sources
@@ -9,8 +9,14 @@ set(sources
 
 add_library(${target} STATIC ${sources})
 
+target_include_directories(${target}
+    INTERFACE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+)
+
 target_link_libraries(${target}
-    Qt5::Widgets
+    PUBLIC
+        Qt5::Widgets
 )
 
 configure_cxx_target(${target})
