@@ -87,4 +87,8 @@ private:
     SortMode Sorting;
     bool PassPositionOnLine;
     bool PassDistanceToLine;
+
+public:
+    LineOnCellsSelector2D(const LineOnCellsSelector2D &) = delete;
+    void operator=(const LineOnCellsSelector2D &) = delete;
 };

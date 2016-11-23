@@ -70,10 +70,6 @@ protected:
         vtkInformationVector * outputVector) override;
 
 private:
-    ArrayChangeInformationFilter(const ArrayChangeInformationFilter&) = delete;
-    void operator=(const ArrayChangeInformationFilter&) = delete;
-
-private:
     AttributeLocations AttributeLocation;
     int AttributeType;
 
@@ -84,4 +80,8 @@ private:
     vtkStdString ArrayUnit;
 
     bool PassInputArray;
+
+private:
+    ArrayChangeInformationFilter(const ArrayChangeInformationFilter&) = delete;
+    void operator=(const ArrayChangeInformationFilter&) = delete;
 };

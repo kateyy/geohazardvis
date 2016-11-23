@@ -31,4 +31,8 @@ protected:
 
 private:
     ReferencedCoordinateSystemSpecification CoordinateSystemSpec;
+
+private:
+    SetCoordinateSystemInformationFilter(const SetCoordinateSystemInformationFilter &) = delete;
+    void operator=(const SetCoordinateSystemInformationFilter &) = delete;
 };
