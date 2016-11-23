@@ -9,6 +9,7 @@ set(sources
     VTKAlgorithmImplementations_test.cpp
     color_mapping/ColorMapping_test.cpp
     color_mapping/GlyphColorMapping_test.cpp
+    context2D_data/DataProfile2DContextPlot_test.cpp
     data_objects/CoordinateTransformableDataObject_test.cpp
     data_objects/DataObject_test.cpp
     data_objects/GenericPolyDataObject_test.cpp

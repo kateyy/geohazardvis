@@ -16,6 +16,7 @@
 #include <vtkTrivialProducer.h>
 #include <vtkVector.h>
 
+#include <core/filters/ImageBlankNonFiniteValuesFilter.h>
 #include <core/utility/DataExtent.h>
 
 
@@ -98,9 +99,15 @@ vtkSmartPointer<vtkDataArray> InterpolationHelper::interpolate(vtkDataSet & base
     {
         sourceDataFilter = createFlattener(sourceDataFilter);
     }
+    else if (sourceImage)
+    {
+        auto blankNaNs = vtkSmartPointer<ImageBlankNonFiniteValuesFilter>::New();
+        blankNaNs->SetInputConnection(sourceDataFilter->GetOutputPort());
+        sourceDataFilter = blankNaNs;
+    }
 
 
-    // now probe: at least on of the data sets is a polygonal one here
+    // now probe: at least one of the data sets is a polygonal one here
 
     auto probe = vtkSmartPointer<vtkProbeFilter>::New();
     probe->SetInputConnection(baseDataFilter->GetOutputPort());
@@ -118,7 +125,7 @@ vtkSmartPointer<vtkDataArray> InterpolationHelper::interpolate(vtkDataSet & base
 
     resultAlgorithm->Update();
 
-    vtkSmartPointer<vtkDataSet> probedDataSet = vtkDataSet::SafeDownCast(resultAlgorithm->GetOutputDataObject(0));
+    auto probedDataSet = vtkDataSet::SafeDownCast(resultAlgorithm->GetOutputDataObject(0));
 
     if (basePoly)
     {

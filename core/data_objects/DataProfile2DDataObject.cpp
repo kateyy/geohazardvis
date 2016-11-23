@@ -23,9 +23,11 @@
 
 #include <core/data_objects/CoordinateTransformableDataObject.h>
 #include <core/context2D_data/DataProfile2DContextPlot.h>
+#include <core/filters/ImageBlankNonFiniteValuesFilter.h>
 #include <core/filters/LineOnCellsSelector2D.h>
 #include <core/filters/LineOnPointsSelector2D.h>
 #include <core/filters/SetCoordinateSystemInformationFilter.h>
+#include <core/filters/SetMaskedPointScalarsToNaNFilter.h>
 #include <core/filters/SimplePolyGeoCoordinateTransformFilter.h>
 #include <core/table_model/QVtkTableModelProfileData.h>
 #include <core/utility/DataExtent.h>
@@ -156,14 +158,28 @@ DataProfile2DDataObject::DataProfile2DDataObject(
     unassignField->AddOperation(vtkRearrangeFields::MOVE, c_scalarsName.data(), location, location);
     unassignField->SetInputConnection(filterFields->GetOutputPort());
 
+    auto assignScalars = vtkSmartPointer<vtkAssignAttribute>::New();
+    assignScalars->Assign(c_scalarsName.data(), vtkDataSetAttributes::SCALARS,
+        vtkAssignAttribute::POINT_DATA);
+    assignScalars->SetInputConnection(unassignField->GetOutputPort());
+
     if (m_inputIsImage)
     {
         m_probeLine = vtkSmartPointer<vtkLineSource>::New();
-        m_imageProbe = vtkSmartPointer<vtkProbeFilter>::New();
-        m_imageProbe->SetInputConnection(m_probeLine->GetOutputPort());
-        m_imageProbe->SetSourceConnection(unassignField->GetOutputPort());
 
-        m_outputTransformation->SetInputConnection(m_imageProbe->GetOutputPort());
+        // In case the image contains NaN's, blank them to be correctly processed by vtkProbeFilter
+        auto blankNaNs = vtkSmartPointer<ImageBlankNonFiniteValuesFilter>::New();
+        blankNaNs->SetInputConnection(assignScalars->GetOutputPort());
+
+        auto imageProbe = vtkSmartPointer<vtkProbeFilter>::New();
+        imageProbe->SetInputConnection(m_probeLine->GetOutputPort());
+        imageProbe->SetSourceConnection(blankNaNs->GetOutputPort());
+
+        // restore NaN values after probing (based on invalid point mask)
+        auto invalidToNaN = vtkSmartPointer<SetMaskedPointScalarsToNaNFilter>::New();
+        invalidToNaN->SetInputConnection(imageProbe->GetOutputPort());
+
+        m_outputTransformation->SetInputConnection(invalidToNaN->GetOutputPort());
     }
     else if (inputPolyData && inputPolyData->GetPoints() && inputPolyData->GetPoints()->GetNumberOfPoints() > 0)
     {
@@ -173,13 +189,13 @@ DataProfile2DDataObject::DataProfile2DDataObject(
             // Cannot reuse PolyDataObject::cellCenters if transformed coordinates are used.
             // So keep it simple and compute the cell centers here on the fly.
             auto polygonCenters = vtkSmartPointer<vtkCellCenters>::New();
-            polygonCenters->SetInputConnection(unassignField->GetOutputPort());
+            polygonCenters->SetInputConnection(assignScalars->GetOutputPort());
 
             m_polyCentroidsSelector = vtkSmartPointer<LineOnCellsSelector2D>::New();
             m_polyCentroidsSelector->SetSorting(LineOnCellsSelector2D::SortPoints);
             m_polyCentroidsSelector->PassDistanceToLineOff();
             m_polyCentroidsSelector->PassPositionOnLineOff();
-            m_polyCentroidsSelector->SetInputConnection(unassignField->GetOutputPort());
+            m_polyCentroidsSelector->SetInputConnection(assignScalars->GetOutputPort());
             m_polyCentroidsSelector->SetCellCentersConnection(polygonCenters->GetOutputPort());
 
             m_outputTransformation->SetInputConnection(m_polyCentroidsSelector->GetOutputPort(1));

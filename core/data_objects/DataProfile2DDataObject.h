@@ -10,7 +10,6 @@
 
 
 class vtkLineSource;
-class vtkProbeFilter;
 class vtkTransformPolyDataFilter;
 class vtkWarpScalar;
 
@@ -103,7 +102,6 @@ private:
     // extraction from vtkImageData
     bool m_inputIsImage;
     vtkSmartPointer<vtkLineSource> m_probeLine;
-    vtkSmartPointer<vtkProbeFilter> m_imageProbe;
 
     // extraction from vtkPolyData
     vtkSmartPointer<LineOnCellsSelector2D> m_polyCentroidsSelector;

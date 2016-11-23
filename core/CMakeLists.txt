@@ -114,6 +114,8 @@ set(sources
     filters/DEMShadingFilter.cpp
     filters/DEMToTopographyMesh.h
     filters/DEMToTopographyMesh.cpp
+    filters/ImageBlankNonFiniteValuesFilter.h
+    filters/ImageBlankNonFiniteValuesFilter.cpp
     filters/ImagePlaneWidget.h
     filters/ImagePlaneWidget.cpp
     filters/LineOnCellsSelector2D.h
@@ -122,6 +124,8 @@ set(sources
     filters/LineOnPointsSelector2D.cpp
     filters/SetCoordinateSystemInformationFilter.h
     filters/SetCoordinateSystemInformationFilter.cpp
+    filters/SetMaskedPointScalarsToNaNFilter.h
+    filters/SetMaskedPointScalarsToNaNFilter.cpp
     filters/SimpleImageGeoCoordinateTransformFilter.h
     filters/SimpleImageGeoCoordinateTransformFilter.cpp
     filters/SimplePolyGeoCoordinateTransformFilter.h
