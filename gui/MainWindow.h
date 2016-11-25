@@ -40,6 +40,13 @@ public:
 
     void setDarkFusionStyle(bool enabled);
 
+    /** @return The data mapping that allows to represent loaded data in table and render views.
+      * The data views will be docked to this MainWindow.
+      * Use dataMapping().dataSetHandler() to access current data objects, pass them to the data
+      * mapping or load/delete stored data. */
+    DataMapping & dataMapping();
+    const DataMapping & dataMapping() const;
+
 protected:
     void dragEnterEvent(QDragEnterEvent * event) override;
     void dropEvent(QDropEvent * event) override;

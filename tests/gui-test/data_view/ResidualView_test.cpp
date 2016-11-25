@@ -2,6 +2,8 @@
 
 #include <array>
 
+#include <QCoreApplication>
+
 #include <vtkCellData.h>
 #include <vtkFloatArray.h>
 #include <vtkPoints.h>
@@ -12,6 +14,7 @@
 #include <core/utility/DataExtent.h>
 
 #include <gui/DataMapping.h>
+#include <gui/MainWindow.h>
 #include <gui/data_view/ResidualVerificationView.h>
 #include <gui/data_view/RendererImplementationResidual.h>
 
@@ -152,4 +155,47 @@ TEST_F(ResidualView_test, SwitchInputData)
     env->dataSetHandler.removeExternalData({ obs1.get(), obs2.get() });
 
     residualView->waitForResidualUpdate();
+}
+
+TEST_F(ResidualView_test, AddRemoveResidualToDataSetHandler)
+{
+    auto ownedObservation = genPolyData("observation");
+    auto ownedModel = genPolyData("displacement vectors");
+
+    {
+        auto residualView = env->dataMapping.createRenderView<ResidualVerificationView>();
+
+        ASSERT_EQ(0, env->dataSetHandler.dataSets().size());
+
+        residualView->setObservationData(ownedObservation.get());
+        residualView->setModelData(ownedModel.get());
+        residualView->waitForResidualUpdate();
+
+        ASSERT_EQ(1, env->dataSetHandler.dataSets().size());
+        ASSERT_EQ(residualView->residualData(), env->dataSetHandler.dataSets().front());
+
+        residualView->close();
+        qApp->processEvents();
+    }
+
+    ASSERT_EQ(0, env->dataSetHandler.dataSets().size());
+}
+
+TEST_F(ResidualView_test, CloseAppWhileResidualIsShown)
+{
+    env.reset();
+
+    auto ownedObservation = genPolyData("observation");
+    auto observationPtr = ownedObservation.get();
+    auto ownedModel = genPolyData("displacement vectors");
+    auto modelPtr = ownedModel.get();
+
+    {
+        MainWindow mainWindow;
+
+        auto residualView = mainWindow.dataMapping().createRenderView<ResidualVerificationView>();
+        residualView->setObservationData(observationPtr);
+        residualView->setModelData(modelPtr);
+        residualView->waitForResidualUpdate();
+    }
 }

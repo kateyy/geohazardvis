@@ -120,7 +120,7 @@ ResidualVerificationView::~ResidualVerificationView()
     if (m_residual)
     {
         dataMapping().removeDataObjects({ m_residual.get() });
-        dataSetHandler().removeEventFilter(m_residual.get());
+        dataSetHandler().removeExternalData({ m_residual.get() });
     }
 }
 

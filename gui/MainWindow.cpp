@@ -544,6 +544,16 @@ void MainWindow::setDarkFusionStyle(bool enabled)
     m_ui->actionDark_Style->setChecked(enabled);
 }
 
+DataMapping & MainWindow::dataMapping()
+{
+    return *m_dataMapping;
+}
+
+const DataMapping & MainWindow::dataMapping() const
+{
+    return *m_dataMapping;
+}
+
 void MainWindow::updateWindowTitle()
 {
     QMutexLocker lock(m_loadWatchersMutex.get());
