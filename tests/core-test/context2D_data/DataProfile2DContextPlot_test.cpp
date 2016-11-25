@@ -52,18 +52,16 @@ public:
     {
         //using ScalarType = float;
 
-        auto image = vtkSmartPointer<vtkUniformGrid>::New();
+        auto image = vtkSmartPointer<vtkImageData>::New();
         image->SetDimensions(3, 2, 1);
 
         auto scalars = createDataArray<ScalarType>();
         scalars->SetNumberOfTuples(image->GetNumberOfPoints());
 
         scalars->SetValue(0, std::numeric_limits<ScalarType>::quiet_NaN());
-        image->BlankPoint(0);
         scalars->SetValue(1, ScalarType(1.0));
         scalars->SetValue(2, ScalarType(2.0));
         scalars->SetValue(3, std::numeric_limits<ScalarType>::quiet_NaN());
-        image->BlankPoint(3);
         scalars->SetValue(4, ScalarType(1.0));
         scalars->SetValue(5, ScalarType(2.0));
         scalars->SetName("Scalars");
