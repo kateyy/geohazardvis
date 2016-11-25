@@ -254,8 +254,6 @@ MainWindow::~MainWindow()
     disconnectAll(m_renderViewConnects);
 
     m_dataMapping.reset();
-    // wait to close all views
-    QApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
 
     m_ui.reset();
 

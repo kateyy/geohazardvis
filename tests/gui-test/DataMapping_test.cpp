@@ -141,10 +141,12 @@ TEST_F(DataMapping_test, ViewAndPlotViewCleanedUp)
     auto imgPointer = imageObject.get();
     env->dataSetHander.takeData(std::move(imageObject));
 
+    QPointer<AbstractRenderView> view, plotView;
+
     {
         QMainWindow mainWindow;
 
-        QPointer<AbstractRenderView> view = env->mapping.openInRenderView({ imgPointer });
+        view = env->mapping.openInRenderView({ imgPointer });
         ASSERT_TRUE(view);
         mainWindow.addDockWidget(Qt::LeftDockWidgetArea, view->dockWidgetParent());
 
@@ -158,16 +160,16 @@ TEST_F(DataMapping_test, ViewAndPlotViewCleanedUp)
         ASSERT_EQ(2, env->mapping.renderViews().size());
         auto first = env->mapping.renderViews()[0];
         auto second = env->mapping.renderViews()[1];
-        QPointer<AbstractRenderView> plotView = view == first ? second : first;
+        plotView = view == first ? second : first;
 
         mainWindow.addDockWidget(Qt::LeftDockWidgetArea, plotView->dockWidgetParent());
 
         qApp->processEvents();
 
         env.reset();
-        ASSERT_FALSE(view);
-        ASSERT_FALSE(plotView);
     }
+    ASSERT_FALSE(view);
+    ASSERT_FALSE(plotView);
 }
 
 TEST_F(DataMapping_test, FocusRenderViewAfterCreate)

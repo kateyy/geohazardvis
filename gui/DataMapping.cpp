@@ -6,6 +6,7 @@
 #include <QCoreApplication>
 #include <QDockWidget>
 #include <QMessageBox>
+#include <QPointer>
 
 #include <core/data_objects/DataObject.h>
 #include <core/utility/memory.h>
@@ -16,7 +17,6 @@
 
 DataMapping::DataMapping(DataSetHandler & dataSetHandler)
     : m_dataSetHandler{ dataSetHandler }
-    , m_deleting{ false }
     , m_selectionHandler{ std::make_unique<SelectionHandler>() }
     , m_nextTableIndex{ 0 }
     , m_nextRenderViewIndex{ 0 }
@@ -26,20 +26,60 @@ DataMapping::DataMapping(DataSetHandler & dataSetHandler)
 
 DataMapping::~DataMapping()
 {
-    m_deleting = true;
-
-    while (!m_renderViews.empty())
+    // Close all views and give Qt the chance to correctly handle its hierarchies of ownerships.
+    // E.g., when closing a 2D view with an active plot preview window, both views should be closed
+    // after triggering closing of the original view.
+    // After the first two loops, the qptr*s should be nullptr.
+    // However, if the relevant event loop is not running anymore, the views won't be deleted here
+    // (all qpointers remain valid). This happens at application shutdown (MainWindow destructor)
+    // and in test setups and is highly inconvenient in this case (cannot guarantee that all objects
+    // are cleaned up etc.)
+    // So, finally, it is save to "force" delete all views here at the end. (Given that DataMapping
+    // is not delete within a Qt slot execution).
+    std::vector<QPointer<AbstractRenderView>> qptrRenderViews;
+    std::vector<QPointer<TableView>> qptrTableViews;
+    for (auto && renderView : m_renderViews)
     {
-        renderViewDeleteLater(m_renderViews.begin()->get());
+        qptrRenderViews.emplace_back(renderView.get());
     }
-    while (!m_tableViews.empty())
+    for (auto && tableView : m_tableViews)
     {
-        tableViewDeleteLater(m_tableViews.begin()->get());
+        qptrTableViews.emplace_back(tableView.get());
+    }
+
+    for (auto && renderView : qptrRenderViews)
+    {
+        if (renderView)
+        {
+            renderViewDeleteLater(renderView);
+        }
+    }
+
+    for (auto && tableView : qptrTableViews)
+    {
+        if (tableView)
+        {
+            tableViewDeleteLater(tableView);
+        }
     }
 
     QCoreApplication::processEvents();
 
-    emit focusedRenderViewChanged(nullptr);
+    for (auto && renderView : qptrRenderViews)
+    {
+        if (renderView)
+        {
+            delete renderView;
+        }
+    }
+
+    for (auto && tableView : qptrTableViews)
+    {
+        if (tableView)
+        {
+            delete tableView;
+        }
+    }
 }
 
 DataSetHandler & DataMapping::dataSetHandler() const
@@ -314,11 +354,9 @@ void DataMapping::deleteLaterFrom(View_t * view, Vector_t & vector)
     auto viewOwnership = std::move(*ownedViewIt);
     vector.erase(ownedViewIt);
 
-    // Handle deletion in Qt event loop (but not if the DataMapping is currently deleted)
-    if (!m_deleting)
-    {
-        viewOwnership.release()->deleteLater();
-    }
+    // Handle deletion in Qt event loop. If the event loop is not running anymore (application shutdown),
+    // deletion will be handled in ~DataMapping
+    viewOwnership.release()->deleteLater();
 }
 
 void DataMapping::addRenderView(std::unique_ptr<AbstractRenderView> ownedRenderView)
@@ -345,7 +383,7 @@ bool DataMapping::askForNewRenderView(const QString & rendererName, const QList<
     }
     msg.chop(2);
     msg += "\n\n";
-    msg += "Do you want open them in a new view?";
+    msg += "Do you want to open them in a new view?";
 
     return QMessageBox(QMessageBox::Question, "", msg, QMessageBox::Yes | QMessageBox::No).exec() == QMessageBox::Yes;
 }

@@ -73,7 +73,6 @@ private:
 
 private:
     DataSetHandler & m_dataSetHandler;
-    bool m_deleting;
 
     std::unique_ptr<SelectionHandler> m_selectionHandler;
 
