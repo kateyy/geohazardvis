@@ -1,13 +1,14 @@
 #pragma once
 
+#include <map>
+#include <memory>
+
 #include <QObject>
-#include <QMap>
 
 #include <core/types.h>
 
 
 class QAction;
-class QItemSelection;
 class QMenu;
 
 class AbstractDataView;
@@ -36,11 +37,11 @@ private:
 
     void updateSyncToggleMenu();
 
-    QAction * addAbstractDataView(AbstractDataView * dataView);
+    std::unique_ptr<QAction> createActionForDataView(AbstractDataView * dataView) const;
 
 private:
-    QMap<TableView *, QAction *> m_tableViews;
-    QMap<AbstractRenderView *, QAction *> m_renderViews;
+    std::map<TableView *, std::unique_ptr<QAction>> m_tableViewActions;
+    std::map<AbstractRenderView *, std::unique_ptr<QAction>> m_renderViewActions;
 
     QMenu * m_syncToggleMenu;
 

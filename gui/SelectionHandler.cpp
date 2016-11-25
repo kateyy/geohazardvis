@@ -1,13 +1,14 @@
 #include "SelectionHandler.h"
 
+#include <algorithm>
 #include <cassert>
+#include <utility>
 
-#include <QTableView>
 #include <QAction>
+#include <QList>
 #include <QMenu>
 
-#include <core/data_objects/DataObject.h>
-
+#include <core/ThirdParty/alphanum.hpp>
 #include <gui/data_view/AbstractRenderView.h>
 #include <gui/data_view/TableView.h>
 
@@ -17,18 +18,11 @@ SelectionHandler::SelectionHandler()
 {
 }
 
-SelectionHandler::~SelectionHandler()
-{
-    // delete QActions associated with the views
-    qDeleteAll(m_tableViews.values());
-    qDeleteAll(m_renderViews.values());
-}
+SelectionHandler::~SelectionHandler() = default;
 
 void SelectionHandler::addTableView(TableView * tableView)
 {
-    auto syncToggleAction = addAbstractDataView(tableView);
-
-    m_tableViews.insert(tableView, syncToggleAction);
+    m_tableViewActions.emplace(tableView, createActionForDataView(tableView));
     updateSyncToggleMenu();
     
     connect(tableView, &TableView::itemDoubleClicked,
@@ -37,19 +31,17 @@ void SelectionHandler::addTableView(TableView * tableView)
 
 void SelectionHandler::addRenderView(AbstractRenderView * renderView)
 {
-    auto syncToggleAction = addAbstractDataView(renderView);
-
-    m_renderViews.insert(renderView, syncToggleAction);
+    m_renderViewActions.emplace(renderView, createActionForDataView(renderView));
     updateSyncToggleMenu();
 }
 
-QAction * SelectionHandler::addAbstractDataView(AbstractDataView * dataView)
+std::unique_ptr<QAction> SelectionHandler::createActionForDataView(AbstractDataView * dataView) const
 {
-    auto syncToggleAction = new QAction(dataView->windowTitle(), this);
+    auto syncToggleAction = std::make_unique<QAction>(dataView->windowTitle(), nullptr);
     syncToggleAction->setCheckable(true);
     syncToggleAction->setChecked(true);
 
-    connect(dataView, &AbstractDataView::windowTitleChanged, syncToggleAction, &QAction::setText);
+    connect(dataView, &AbstractDataView::windowTitleChanged, syncToggleAction.get(), &QAction::setText);
     connect(dataView, &AbstractDataView::selectionChanged, this, &SelectionHandler::updateSelection);
 
     return syncToggleAction;
@@ -57,29 +49,46 @@ QAction * SelectionHandler::addAbstractDataView(AbstractDataView * dataView)
 
 void SelectionHandler::removeTableView(TableView * tableView)
 {
-    auto action = m_tableViews[tableView];
+    auto it = m_tableViewActions.find(tableView);
+    if (it == m_tableViewActions.end())
+    {
+        return;
+    }
 
-    m_tableViews.remove(tableView);
+    auto action = std::move(it->second);
+
+    m_tableViewActions.erase(it);
 
     updateSyncToggleMenu();
-
-    delete action;
 }
 
 void SelectionHandler::removeRenderView(AbstractRenderView * renderView)
 {
-    auto action = m_renderViews[renderView];
+    auto it = m_renderViewActions.find(renderView);
+    if (it == m_renderViewActions.end())
+    {
+        return;
+    }
 
-    m_renderViews.remove(renderView);
+    auto action = std::move(it->second);
+
+    m_renderViewActions.erase(it);
 
     updateSyncToggleMenu();
-
-    delete action;
 }
 
 void SelectionHandler::setSyncToggleMenu(QMenu * syncToggleMenu)
 {
+    if (m_syncToggleMenu)
+    {
+        m_syncToggleMenu->clear();
+        m_renderViewActions.clear();
+        m_tableViewActions.clear();
+    }
+
     m_syncToggleMenu = syncToggleMenu;
+
+    updateSyncToggleMenu();
 }
 
 void SelectionHandler::updateSelection(AbstractDataView * /*sourceView*/, const DataSelection & selection)
@@ -92,12 +101,12 @@ void SelectionHandler::updateSelection(AbstractDataView * /*sourceView*/, const 
     QAction * action = nullptr;
     if (auto table = dynamic_cast<TableView *>(sender()))
     {
-        action = m_tableViews[table];
+        action = m_tableViewActions[table].get();
     }
     else
     {
         assert(dynamic_cast<AbstractRenderView *>(sender()));
-        action = m_renderViews.value(static_cast<AbstractRenderView *>(sender()));
+        action = m_renderViewActions[static_cast<AbstractRenderView *>(sender())].get();
     }
     assert(action);
 
@@ -107,18 +116,24 @@ void SelectionHandler::updateSelection(AbstractDataView * /*sourceView*/, const 
     }
 
 
-    for (auto it = m_renderViews.begin(); it != m_renderViews.end(); ++it)
+    for (auto && viewAction : m_renderViewActions)
     {
-        if (it.value()->isChecked() && it.key()->dataObjects().contains(selection.dataObject))
+        auto && view = viewAction.first;
+        auto && vAction = viewAction.second;
+
+        if (vAction->isChecked() && view->dataObjects().contains(selection.dataObject))
         {
-            it.key()->setSelection(selection);
+            view->setSelection(selection);
         }
     }
-    for (auto it = m_tableViews.begin(); it != m_tableViews.end(); ++it)
+    for (auto && viewAction : m_tableViewActions)
     {
-        if (it.value()->isChecked() && it.key()->dataObject() == selection.dataObject)
+        auto && view = viewAction.first;
+        auto && vAction = viewAction.second;
+
+        if (vAction->isChecked() && view->dataObject() == selection.dataObject)
         {
-            it.key()->setSelection(selection);
+            view->setSelection(selection);
         }
     }
 }
@@ -130,14 +145,15 @@ void SelectionHandler::renderViewsLookAt(const DataSelection & selection)
         return;
     }
 
-    for (auto it = m_renderViews.begin(); it != m_renderViews.end(); ++it)
+    for (auto && viewAction : m_renderViewActions)
     {
-        if (it.value()->isChecked())
+        auto && view = viewAction.first;
+        auto && action = viewAction.second;
+
+        if (action->isChecked()
+            && view->dataObjects().contains(selection.dataObject))
         {
-            if (it.key()->dataObjects().contains(selection.dataObject))
-            {
-                it.key()->lookAtData(selection);
-            }
+            view->lookAtData(selection);
         }
     }
 }
@@ -151,10 +167,29 @@ void SelectionHandler::updateSyncToggleMenu()
 
     m_syncToggleMenu->clear();
 
-    m_syncToggleMenu->setEnabled(!m_tableViews.empty() || !m_renderViews.empty());
+    m_syncToggleMenu->setEnabled(!m_tableViewActions.empty() || !m_renderViewActions.empty());
 
+    QList<QAction *> sortedActions;
+    auto nameSorter = [] (const QAction * lhs, const QAction * rhs) -> bool
+    {
+        return doj::alphanum_less<QString>()(lhs->text(), rhs->text());
+    };
 
-    m_syncToggleMenu->addActions(m_tableViews.values());
+    m_syncToggleMenu->addAction("Table Views")->setEnabled(false);
+    for (auto && it : m_tableViewActions)
+    {
+        sortedActions.push_back(it.second.get());
+    }
+    std::sort(sortedActions.begin(), sortedActions.end(), nameSorter);
+    m_syncToggleMenu->addActions(sortedActions);
+    sortedActions.clear();
+
     m_syncToggleMenu->addSeparator();
-    m_syncToggleMenu->addActions(m_renderViews.values());
+    m_syncToggleMenu->addAction("Render Views")->setEnabled(false);
+    for (auto && it : m_renderViewActions)
+    {
+        sortedActions.push_back(it.second.get());
+    }
+    std::sort(sortedActions.begin(), sortedActions.end(), nameSorter);
+    m_syncToggleMenu->addActions(sortedActions);
 }
