@@ -31,13 +31,10 @@ int AssignPointAttributeToCoordinatesFilter::RequestData(
 
     auto previousPointCoords = inData->GetPoints()->GetData();
     vtkDataArray * pointsToAssign = nullptr;
-    int pointsToAssignAttributeIndex = -1;
 
     if (!this->AttributeArrayToAssign.empty())
     {
-        auto newPoints = inData->GetPointData()->GetArray(
-            this->AttributeArrayToAssign.c_str(),
-            pointsToAssignAttributeIndex);
+        auto newPoints = inData->GetPointData()->GetArray(this->AttributeArrayToAssign.c_str());
         if (!newPoints)
         {
             vtkErrorMacro("Array to assign not found in input data: " + this->AttributeArrayToAssign);

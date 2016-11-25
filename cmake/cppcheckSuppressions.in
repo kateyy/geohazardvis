@@ -1,5 +1,6 @@
 
 missingIncludeSystem
+purgedConfiguration
 unmatchedSuppression
 
 *:@CMAKE_BINARY_DIR@/ThirdParty/*
@@ -10,8 +11,8 @@ noExplicitConstructor:@PROJECT_SOURCE_DIR@/core/CoordinateSystems.h:35
 
 // False positives
 
-assertWithSideEffect:@PROJECT_SOURCE_DIR@/core/data_objects/ImageDataObject.cpp:103
-assertWithSideEffect:@PROJECT_SOURCE_DIR@/core/data_objects/VectorGrid3DDataObject.cpp:94
+assertWithSideEffect:@PROJECT_SOURCE_DIR@/core/data_objects/ImageDataObject.cpp:109
+assertWithSideEffect:@PROJECT_SOURCE_DIR@/core/data_objects/VectorGrid3DDataObject.cpp:100
 assertWithSideEffect:@PROJECT_SOURCE_DIR@/core/rendered_data/RenderedImageData.cpp:43
 assertWithSideEffect:@PROJECT_SOURCE_DIR@/core/types.cpp:182
 

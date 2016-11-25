@@ -6,7 +6,7 @@
 class CORE_API PointCoordinateColorMapping : public ColorMappingData
 {
 public:
-    PointCoordinateColorMapping(const QList<AbstractVisualizedData*> & visualizedData);
+    explicit PointCoordinateColorMapping(const QList<AbstractVisualizedData*> & visualizedData);
     ~PointCoordinateColorMapping() override;
 
     QString name() const override;

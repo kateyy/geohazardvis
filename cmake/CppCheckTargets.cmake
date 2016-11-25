@@ -37,6 +37,30 @@ endif()
 
 if (OPTION_ADD_CPPCHECK_TARGETS AND NOT CPPCHECK_EXECUTABLE)
     message("Could not find cppcheck. Skipping cppcheck targets.")
+else()
+    # "cppcheck --version" -> "Cppcheck x.y.z"
+    execute_process(COMMAND ${CPPCHECK_EXECUTABLE} --version
+        RESULT_VARIABLE cppcheckVersionCheckResult
+        OUTPUT_VARIABLE cppcheckVersionCheckOutput
+        ERROR_VARIABLE cppcheckVersionCheckError
+    )
+    if (cppcheckVersionCheckResult)
+        message(WARNING "Error while executing cppcheck (${cppcheckVersionCheckError})")
+    else()
+        string(SUBSTRING "${cppcheckVersionCheckOutput}" 8 -1 CPPCHECK_VERSION)
+        string(STRIP "${CPPCHECK_VERSION}" CPPCHECK_VERSION)
+        string(REPLACE "." ";" versionList ${CPPCHECK_VERSION})
+        list(LENGTH versionList numVersionNumbers)
+        list(GET versionList 0 CPPCHECK_VERSION_MAJOR)
+        set (CPPCHECK_VERSION_MINOR 0)
+        set (CPPCHECK_VERSION_PATCH 0)
+        if (numVersionNumbers GREATER 1)
+            list(GET versionList 1 CPPCHECK_VERSION_MINOR)
+            if (numVersionNumbers GREATER 2)
+                list(GET versionList 2 CPPCHECK_VERSION_PATCH)
+            endif()
+        endif()
+    endif()
 endif()
 
 

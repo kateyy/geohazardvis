@@ -9,7 +9,7 @@
 class CORE_API CentroidColorMapping : public ColorMappingData
 {
 public:
-    CentroidColorMapping(const QList<AbstractVisualizedData*> & visualizedData);
+    explicit CentroidColorMapping(const QList<AbstractVisualizedData*> & visualizedData);
     ~CentroidColorMapping() override;
 
     QString name() const override;
