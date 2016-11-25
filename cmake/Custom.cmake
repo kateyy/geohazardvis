@@ -138,8 +138,7 @@ function(generate_library_export_header LIBNAME)
     generate_export_header( ${LIBNAME}
         BASE_NAME ${LIBNAME}
         EXPORT_MACRO_NAME ${LIBRARY_EXPORT_MACRO}
-        EXPORT_FILE_NAME ${LIBNAME}_api.h
-        STATIC_DEFINE OPTION_BUILD_STATIC)
+        EXPORT_FILE_NAME ${LIBNAME}_api.h)
 
 endfunction()
 

@@ -151,11 +151,7 @@ source_group_by_path_and_type(${CMAKE_CURRENT_SOURCE_DIR} ${sources} ${UIs} ${QR
 source_group_by_path(${CMAKE_CURRENT_BINARY_DIR} ".*" "Generated" ${CMAKE_CURRENT_BINARY_DIR}/${target}_api.h ${UI_Srcs} ${QRC_Srcs})
 source_group_by_path(${CMAKE_CURRENT_SOURCE_DIR} ".*" "" "CMakeLists.txt")
 
-if (OPTION_BUILD_STATIC)
-    add_library(${target} ${sources})
-else()
-    add_library(${target} SHARED ${sources} ${UI_Srcs} ${QRC_Srcs})
-endif()
+add_library(${target} SHARED ${sources} ${UI_Srcs} ${QRC_Srcs})
 
 target_include_directories(${target}
     PRIVATE ${CMAKE_CURRENT_BINARY_DIR}
