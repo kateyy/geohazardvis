@@ -46,8 +46,6 @@ public:
         m_impl->deactivate(qvtkWidget());
     }
 
-    QString friendlyName() const override { return "TestRenderView"; }
-
     ContentType contentType() const override { return contentTypeT; }
 
     AbstractVisualizedData * visualizationFor(DataObject * dataObject, int /*subViewIndex*/ = -1) const override

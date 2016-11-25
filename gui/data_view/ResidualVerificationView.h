@@ -60,9 +60,6 @@ public:
     ResidualVerificationView(DataMapping & dataMapping, int index, QWidget * parent = nullptr, Qt::WindowFlags flags = 0);
     ~ResidualVerificationView() override;
 
-    QString friendlyName() const override;
-    QString subViewFriendlyName(unsigned int subViewIndex) const override;
-
     void update();
 
     ContentType contentType() const override;
@@ -80,6 +77,8 @@ public:
 protected:
     void initializeRenderContext() override;
 
+    std::pair<QString, std::vector<QString>> friendlyNameInternal() const override;
+
     void showDataObjectsImpl(const QList<DataObject *> & dataObjects,
         QList<DataObject *> & incompatibleObjects,
         unsigned int subViewIndex) override;
@@ -87,8 +86,6 @@ protected:
     QList<DataObject *> dataObjectsImpl(int subViewIndex) const override;
     void prepareDeleteDataImpl(const QList<DataObject *> & dataObjects) override;
     QList<AbstractVisualizedData *> visualizationsImpl(int subViewIndex) const override;
-
-    void visualizationSelectionChangedEvent(const VisualizationSelection & selection) override;
 
     void axesEnabledChangedEvent(bool enabled) override;
 

@@ -34,7 +34,6 @@ public:
 
     bool darkFusionStyleEnabled() const;
 
-public:
     void openFiles(const QStringList & fileNames);
     
     void tabbedDockWidgetToFront(QDockWidget * widget);

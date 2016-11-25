@@ -46,11 +46,6 @@ bool TableView::isRenderer() const
     return false;
 }
 
-QString TableView::friendlyName() const
-{
-    return QString::number(index()) + ": " + m_dataObject->name();
-}
-
 void TableView::showDataObject(DataObject & dataObject)
 {
     if (m_dataObject == &dataObject)
@@ -61,6 +56,7 @@ void TableView::showDataObject(DataObject & dataObject)
 
     setModel(m_dataObject->tableModel());
 
+    resetFriendlyName();
     updateTitle();
 
     QTableView * view = m_ui->tableView;
@@ -171,6 +167,22 @@ void TableView::onSetSelection(const DataSelection & selection)
 void TableView::onClearSelection()
 {
     model()->setHighlightItemId(-1);
+}
+
+std::pair<QString, std::vector<QString>> TableView::friendlyNameInternal() const
+{
+    auto newFriendlyName = QString::number(index()) + ": ";
+
+    if (!m_dataObject)
+    {
+        newFriendlyName.append("(empty)");
+    }
+    else
+    {
+        newFriendlyName.append(m_dataObject->name());
+    }
+
+    return{ newFriendlyName, {} };
 }
 
 bool TableView::eventFilter(QObject * obj, QEvent * ev)

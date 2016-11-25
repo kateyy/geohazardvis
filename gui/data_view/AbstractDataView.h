@@ -1,5 +1,8 @@
 #pragma once
 
+#include <utility>
+#include <vector>
+
 #include <vtkSmartPointer.h>
 
 #include <core/types.h>
@@ -25,8 +28,6 @@ public:
     DataSetHandler & dataSetHandler() const;
     int index() const;
 
-    void updateTitle(const QString & message = {});
-
     QToolBar * toolBar();
     bool toolBarIsVisible() const;
     void setToolBarVisible(bool visible);
@@ -34,10 +35,14 @@ public:
     virtual bool isTable() const = 0;
     virtual bool isRenderer() const = 0;
 
-    /** name the id and represented data */
-    virtual QString friendlyName() const = 0;
+    /** Human readable name of the data view. Defaults to "ID: list of contained data" */
+    const QString & friendlyName();
     /** A title specifying contents of a sub-view */
-    virtual QString subViewFriendlyName(unsigned int subViewIndex) const;
+    const QString & subViewFriendlyName(unsigned int subViewIndex);
+
+    virtual unsigned int numberOfSubViews() const;
+    unsigned int activeSubViewIndex() const;
+    void setActiveSubView(unsigned int subViewIndex);
 
     /** highlight requested index */
     void setSelection(const DataSelection & selection);
@@ -52,9 +57,13 @@ signals:
     /** signaled when the widget receive the keyboard focus (focusInEvent) */
     void focused(AbstractDataView * dataView);
 
+    void activeSubViewChanged(unsigned int activeSubViewIndex);
+
     void selectionChanged(AbstractDataView * view, const DataSelection & selection);
 
 protected:
+    void updateTitle(const QString & message = {});
+
     virtual QWidget * contentWidget() = 0;
 
     void showEvent(QShowEvent * event) override;
@@ -62,9 +71,19 @@ protected:
 
     bool eventFilter(QObject * obj, QEvent * ev) override;
 
+    virtual void activeSubViewChangedEvent(unsigned int subViewIndex);
+
     /** Handle selection changes in concrete sub-classes */
     virtual void onSetSelection(const DataSelection & selection) = 0;
     virtual void onClearSelection() = 0;
+
+    /** Request reevaluation of friendlyName() contents.
+      * By default, this is called when the list of contained data objects of the view changes. */
+    void resetFriendlyName();
+    /** Override in subclasses to change the friendly name string.
+      * @return friendly name for the view and list of names for the sub-views. It is not required
+      *     to specify sub-view names. They will default to empty strings. */
+    virtual std::pair<QString, std::vector<QString>> friendlyNameInternal() const = 0;
 
 private:
     DataMapping & m_dataMapping;
@@ -72,6 +91,11 @@ private:
     bool m_initialized;
 
     QToolBar * m_toolBar;
+
+    QString m_friendlyName;
+    std::vector<QString> m_subViewFriendlyNames;
+
+    unsigned int m_activeSubViewIndex;
 
     DataSelection m_selection;
 

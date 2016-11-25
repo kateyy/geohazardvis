@@ -64,10 +64,6 @@ public:
     virtual void lookAtData(const DataSelection & selection, int subViewIndex = -1) = 0;
     virtual void lookAtData(const VisualizationSelection & selection, int subViewIndex = -1) = 0;
 
-    virtual unsigned int numberOfSubViews() const;
-    unsigned int activeSubViewIndex() const;
-    void setActiveSubView(unsigned int subViewIndex);
-
     vtkRenderWindow * renderWindow();
     const vtkRenderWindow * renderWindow() const;
 
@@ -95,7 +91,6 @@ signals:
     void implementationChanged();
 
     void visualizationSelectionChanged(AbstractRenderView * renderView, const VisualizationSelection & selection);
-    void activeSubViewChanged(unsigned int activeSubViewIndex);
 
     void currentCoordinateSystemChanged(const CoordinateSystemSpecification & spec);
 
@@ -111,6 +106,8 @@ protected:
 
     void onSetSelection(const DataSelection & selection) override;
     void onClearSelection() override;
+    
+    std::pair<QString, std::vector<QString>> friendlyNameInternal() const override;
 
     /** Called once the first time the widget is shown.
       * Initialize OpenGL contexts in function so that it is not done before the application setup.*/
@@ -129,7 +126,6 @@ protected:
     virtual void prepareDeleteDataImpl(const QList<DataObject *> & dataObjects) = 0;
     virtual QList<AbstractVisualizedData *> visualizationsImpl(int subViewIndex) const = 0;
 
-    virtual void activeSubViewChangedEvent(unsigned int subViewIndex);
     virtual void axesEnabledChangedEvent(bool enabled) = 0;
 
 private:
@@ -142,8 +138,6 @@ private:
     CoordinateSystemSpecification m_coordSystem;
 
     bool m_axesEnabled;
-
-    unsigned int m_activeSubViewIndex;
 
     QMetaObject::Connection m_infoTextConnection;
     std::function<QString()> m_infoTextCallback;

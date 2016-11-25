@@ -22,7 +22,6 @@ AbstractRenderView::AbstractRenderView(DataMapping & dataMapping, int index, QWi
     , m_onFirstPaintInitialized{ false }
     , m_coordSystem{}
     , m_axesEnabled{ true }
-    , m_activeSubViewIndex{ 0u }
 {
     auto layout = new QBoxLayout(QBoxLayout::Direction::TopToBottom);
     layout->setMargin(0);
@@ -199,6 +198,8 @@ void AbstractRenderView::showDataObjects(
     initializeForFirstPaint();
 
     showDataObjectsImpl(possibleCompatibleObjects, incompatibleObjects, subViewIndex);
+
+    resetFriendlyName();
 }
 
 void AbstractRenderView::hideDataObjects(const QList<DataObject *> & dataObjects, int subViewIndex)
@@ -211,6 +212,8 @@ void AbstractRenderView::hideDataObjects(const QList<DataObject *> & dataObjects
     }
 
     hideDataObjectsImpl(dataObjects, subViewIndex);
+
+    resetFriendlyName();
 }
 
 bool AbstractRenderView::contains(DataObject * dataObject, int subViewIndexOrAll) const
@@ -222,6 +225,8 @@ bool AbstractRenderView::contains(DataObject * dataObject, int subViewIndexOrAll
 void AbstractRenderView::prepareDeleteData(const QList<DataObject *> & dataObjects)
 {
     prepareDeleteDataImpl(dataObjects);
+
+    resetFriendlyName();
 }
 
 QList<DataObject *> AbstractRenderView::dataObjects(int subViewIndexOrAll) const
@@ -263,36 +268,6 @@ void AbstractRenderView::setVisualizationSelection(const VisualizationSelection 
 const VisualizationSelection & AbstractRenderView::visualzationSelection() const
 {
     return implementation().selection();
-}
-
-unsigned int AbstractRenderView::numberOfSubViews() const
-{
-    return 1;
-}
-
-unsigned int AbstractRenderView::activeSubViewIndex() const
-{
-    return m_activeSubViewIndex;
-}
-
-void AbstractRenderView::setActiveSubView(unsigned int subViewIndex)
-{
-    assert(subViewIndex < numberOfSubViews());
-    if (subViewIndex >= numberOfSubViews())
-    {
-        return;
-    }
-
-    if (m_activeSubViewIndex == subViewIndex)
-    {
-        return;
-    }
-
-    m_activeSubViewIndex = subViewIndex;
-
-    activeSubViewChangedEvent(m_activeSubViewIndex);
-
-    emit activeSubViewChanged(m_activeSubViewIndex);
 }
 
 vtkRenderWindow * AbstractRenderView::renderWindow()
@@ -417,16 +392,37 @@ void AbstractRenderView::onClearSelection()
     emit visualizationSelectionChanged(this, implementation().selection());
 }
 
+std::pair<QString, std::vector<QString>> AbstractRenderView::friendlyNameInternal() const
+{
+    auto && contents = this->dataObjects();
+
+    QString newFriendyName;
+
+    for (const auto & dataObject : contents)
+    {
+        newFriendyName += ", " + dataObject->name();
+    }
+
+    if (newFriendyName.isEmpty())
+    {
+        newFriendyName = "(empty)";
+    }
+    else
+    {
+        newFriendyName.remove(0, 2);
+    }
+
+    newFriendyName = QString::number(index()) + ": " + newFriendyName;
+
+    return{ newFriendyName, {} };
+}
+
 void AbstractRenderView::onCoordinateSystemChanged(const CoordinateSystemSpecification & spec)
 {
     implementation().applyCurrentCoordinateSystem(spec);
 }
 
 void AbstractRenderView::visualizationSelectionChangedEvent(const VisualizationSelection & /*selection*/)
-{
-}
-
-void AbstractRenderView::activeSubViewChangedEvent(unsigned int /*subViewIndex*/)
 {
 }
 

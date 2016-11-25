@@ -1,6 +1,7 @@
 #include "AbstractDataView.h"
 
 #include <cassert>
+#include <tuple>
 
 #include <QDockWidget>
 #include <QEvent>
@@ -17,6 +18,8 @@ AbstractDataView::AbstractDataView(
     , m_index{ index }
     , m_initialized{ false }
     , m_toolBar{ nullptr }
+    , m_friendlyName{}
+    , m_activeSubViewIndex{ 0u }
 {
 }
 
@@ -93,9 +96,60 @@ void AbstractDataView::setToolBarVisible(bool visible)
     toolBar()->setVisible(visible);
 }
 
-QString AbstractDataView::subViewFriendlyName(unsigned int /*subViewIndex*/) const
+const QString & AbstractDataView::friendlyName()
 {
-    return "";
+    if (m_friendlyName.isNull())
+    {
+        std::tie(m_friendlyName, m_subViewFriendlyNames) = friendlyNameInternal();
+        if (m_friendlyName.isNull())
+        {
+            m_friendlyName = "";
+        }
+    }
+
+    return m_friendlyName;
+}
+
+const QString & AbstractDataView::subViewFriendlyName(unsigned int subViewIndex)
+{
+    static const QString emptyName = "";
+    friendlyName(); // trigger update if required
+
+    assert(subViewIndex <= numberOfSubViews());
+
+    return subViewIndex < m_subViewFriendlyNames.size()
+        ? m_subViewFriendlyNames[subViewIndex]
+        : emptyName;
+}
+
+unsigned int AbstractDataView::numberOfSubViews() const
+{
+    return 1;
+}
+
+unsigned int AbstractDataView::activeSubViewIndex() const
+{
+    return m_activeSubViewIndex;
+}
+
+void AbstractDataView::setActiveSubView(unsigned int subViewIndex)
+{
+    assert(subViewIndex < numberOfSubViews());
+    if (subViewIndex >= numberOfSubViews())
+    {
+        return;
+    }
+
+    if (m_activeSubViewIndex == subViewIndex)
+    {
+        return;
+    }
+
+    m_activeSubViewIndex = subViewIndex;
+
+    activeSubViewChangedEvent(m_activeSubViewIndex);
+
+    emit activeSubViewChanged(m_activeSubViewIndex);
 }
 
 void AbstractDataView::setSelection(const DataSelection & selection)
@@ -166,4 +220,14 @@ bool AbstractDataView::eventFilter(QObject * obj, QEvent * ev)
     }
 
     return result;
+}
+
+void AbstractDataView::activeSubViewChangedEvent(unsigned int /*subViewIndex*/)
+{
+}
+
+void AbstractDataView::resetFriendlyName()
+{
+    m_friendlyName = QString();
+    m_subViewFriendlyNames.clear();
 }

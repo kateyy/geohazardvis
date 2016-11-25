@@ -124,30 +124,6 @@ ResidualVerificationView::~ResidualVerificationView()
     }
 }
 
-QString ResidualVerificationView::friendlyName() const
-{
-    return QString::number(index()) + ": Residual Verification View";
-}
-
-QString ResidualVerificationView::subViewFriendlyName(unsigned int subViewIndex) const
-{
-    QString name;
-    switch (subViewIndex)
-    {
-    case 0u:
-        name = "Observation";
-        break;
-    case 1u:
-        name = "Model";
-        break;
-    case 2u:
-        name = "Residual";
-        break;
-    }
-
-    return name;
-}
-
 void ResidualVerificationView::update()
 {
     updateResidualAsync();
@@ -410,6 +386,14 @@ void ResidualVerificationView::initializeRenderContext()
     initialize();
 }
 
+std::pair<QString, std::vector<QString>> ResidualVerificationView::friendlyNameInternal() const
+{
+    return{
+        QString::number(index()) + ": Residual Verification View",
+        { "Observation", "Model", "Residual" }
+    };
+}
+
 void ResidualVerificationView::showDataObjectsImpl(const QList<DataObject *> & dataObjects,
     QList<DataObject *> & incompatibleObjects,
     unsigned int subViewIndex)
@@ -550,11 +534,6 @@ QList<AbstractVisualizedData *> ResidualVerificationView::visualizationsImpl(int
     return{};
 }
 
-void ResidualVerificationView::visualizationSelectionChangedEvent(const VisualizationSelection & /*selection*/)
-{
-    updateTitle();
-}
-
 void ResidualVerificationView::axesEnabledChangedEvent(bool enabled)
 {
     implementation().setAxesVisibility(enabled);
@@ -628,6 +607,8 @@ void ResidualVerificationView::setDataInternal(unsigned int subViewIndex, DataOb
         m_visualizations[subViewIndex] = std::move(newVis);
         implementation().addContent(newVisPtr, subViewIndex);
     }
+
+    resetFriendlyName();
 }
 
 void ResidualVerificationView::updateResidualAsync()

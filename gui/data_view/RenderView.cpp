@@ -47,28 +47,6 @@ RenderView::~RenderView()
     emit beforeDeleteVisualizations(toDelete);
 }
 
-QString RenderView::friendlyName() const
-{
-    QString name;
-    for (auto & renderedData : m_contents)
-    {
-        name += ", " + renderedData->dataObject().name();
-    }
-
-    if (name.isEmpty())
-    {
-        name = "(empty)";
-    }
-    else
-    {
-        name.remove(0, 2);
-    }
-
-    name = QString::number(index()) + ": " + name;
-
-    return name;
-}
-
 ContentType RenderView::contentType() const
 {
     return implementation().contentType();

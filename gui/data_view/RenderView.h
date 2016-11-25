@@ -19,8 +19,6 @@ public:
     RenderView(DataMapping & dataMapping, int index, QWidget * parent = nullptr, Qt::WindowFlags flags = 0);
     ~RenderView() override;
 
-    QString friendlyName() const override;
-
     ContentType contentType() const override;
 
     void lookAtData(const DataSelection & selection, int subViewIndex = -1) override;

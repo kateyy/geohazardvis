@@ -24,8 +24,6 @@ public:
     bool isTable() const override;
     bool isRenderer() const override;
 
-    QString friendlyName() const override;
-
     QVtkTableModel * model();
     void setModel(QVtkTableModel * model);
 
@@ -39,6 +37,8 @@ protected:
     QWidget * contentWidget() override;
     void onSetSelection(const DataSelection & selection) override;
     void onClearSelection() override;
+
+    std::pair<QString, std::vector<QString>> friendlyNameInternal() const override;
 
     bool eventFilter(QObject * obj, QEvent * ev) override;
 
