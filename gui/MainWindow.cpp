@@ -158,7 +158,7 @@ MainWindow::MainWindow()
         dialog.exec();
     });
     connect(m_ui->actionNew_Render_View, &QAction::triggered,
-        [this] () { m_dataMapping->openInRenderView({}); });
+        m_dataMapping.get(), &DataMapping::createDefaultRenderViewType);
     connect(m_ui->actionExit, &QAction::triggered, qApp, &QApplication::quit);
 
 

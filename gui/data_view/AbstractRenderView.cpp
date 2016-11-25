@@ -198,8 +198,6 @@ void AbstractRenderView::showDataObjects(
     initializeForFirstPaint();
 
     showDataObjectsImpl(possibleCompatibleObjects, incompatibleObjects, subViewIndex);
-
-    resetFriendlyName();
 }
 
 void AbstractRenderView::hideDataObjects(const QList<DataObject *> & dataObjects, int subViewIndex)
@@ -212,8 +210,6 @@ void AbstractRenderView::hideDataObjects(const QList<DataObject *> & dataObjects
     }
 
     hideDataObjectsImpl(dataObjects, subViewIndex);
-
-    resetFriendlyName();
 }
 
 bool AbstractRenderView::contains(DataObject * dataObject, int subViewIndexOrAll) const
@@ -225,8 +221,6 @@ bool AbstractRenderView::contains(DataObject * dataObject, int subViewIndexOrAll
 void AbstractRenderView::prepareDeleteData(const QList<DataObject *> & dataObjects)
 {
     prepareDeleteDataImpl(dataObjects);
-
-    resetFriendlyName();
 }
 
 QList<DataObject *> AbstractRenderView::dataObjects(int subViewIndexOrAll) const

@@ -198,6 +198,7 @@ void RenderView::showDataObjectsImpl(const QList<DataObject *> & uncheckedDataOb
         implementation().resetCamera(wasEmpty, 0);
     }
 
+    resetFriendlyName();
     updateTitle();
 }
 
@@ -233,6 +234,8 @@ void RenderView::hideDataObjectsImpl(const QList<DataObject *> & dataObjects, in
     {
         return;
     }
+
+    resetFriendlyName();
 
     updateGuiForRemovedData();
 
@@ -320,6 +323,8 @@ std::vector<std::unique_ptr<AbstractVisualizedData>> RenderView::removeFromInter
             }
         }
     }
+
+    resetFriendlyName();
 
     return toDelete;
 }
