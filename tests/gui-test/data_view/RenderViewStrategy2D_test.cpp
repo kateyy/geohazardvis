@@ -13,7 +13,7 @@
 #include <gui/data_view/RenderViewStrategy2D.h>
 
 
-class RenderViewStrategy_test : public ::testing::Test
+class RenderViewStrategy2D_test : public ::testing::Test
 {
 public:
     void SetUp() override
@@ -24,7 +24,7 @@ public:
     }
 };
 
-TEST_F(RenderViewStrategy_test, CreateCorrectNumberOfPlots)
+TEST_F(RenderViewStrategy2D_test, CreateCorrectNumberOfPlots)
 {
     auto mainWindow = std::make_unique<MainWindow>();
 

@@ -6,7 +6,7 @@ message(STATUS "Test ${target}")
 set(sources
     ${TEST_MAIN_CPP_FILEPATH}
     DataMapping_test.cpp
-    data_view/RenderViewStrategy_test.cpp
+    data_view/RenderViewStrategy2D_test.cpp
     data_view/RenderView_test.cpp
     data_view/RenderView_test_tools.cpp
     data_view/RenderView_test_tools.h
