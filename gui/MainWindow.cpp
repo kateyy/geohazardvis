@@ -208,13 +208,14 @@ MainWindow::MainWindow()
         m_dataMapping->setFocusedRenderView(view);
     });
 
-    connect(m_ui->actionDark_Style, &QAction::triggered, this, &MainWindow::setDarkFusionStyle);
+    connect(m_ui->actionReset_Window_Layout, &QAction::triggered, this, &MainWindow::resetUiStateToDefault);
 
-    m_ui->menuViews->insertAction(m_ui->actionDark_Style, m_colorMappingChooser->toggleViewAction());
-    m_ui->menuViews->insertAction(m_ui->actionDark_Style, m_vectorMappingChooser->toggleViewAction());
-    m_ui->menuViews->insertAction(m_ui->actionDark_Style, m_renderConfigWidget->toggleViewAction());
-    m_ui->menuViews->insertAction(m_ui->actionDark_Style, m_rendererConfigWidget->toggleViewAction());
-    m_ui->menuViews->insertSeparator(m_ui->actionDark_Style);
+    m_ui->menuViews->insertAction(m_ui->actionReset_Window_Layout, m_colorMappingChooser->toggleViewAction());
+    m_ui->menuViews->insertAction(m_ui->actionReset_Window_Layout, m_vectorMappingChooser->toggleViewAction());
+    m_ui->menuViews->insertAction(m_ui->actionReset_Window_Layout, m_renderConfigWidget->toggleViewAction());
+    m_ui->menuViews->insertAction(m_ui->actionReset_Window_Layout, m_rendererConfigWidget->toggleViewAction());
+
+    connect(m_ui->actionDark_Style, &QAction::triggered, this, &MainWindow::setDarkFusionStyle);
 
     restoreSettings();
 
@@ -656,9 +657,11 @@ void MainWindow::storeSettings()
 
 void MainWindow::restoreUiState()
 {
+    m_defaultUiState = std::make_pair(saveGeometry(), saveState());
+
     if (!ApplicationSettings::settingsExist())
     {
-        this->setWindowState(Qt::WindowState::WindowMaximized);
+        setWindowState(Qt::WindowState::WindowMaximized);
         return;
     }
 
@@ -672,4 +675,18 @@ void MainWindow::storeUiState()
     ApplicationSettings settings;
     settings.setValue("geometry", saveGeometry());
     settings.setValue("windowState", saveState());
+}
+
+void MainWindow::resetUiStateToDefault()
+{
+    const auto previousWindowState = windowState();
+    const auto previousPosition = pos();
+    const auto previousSize = size();
+
+    restoreGeometry(m_defaultUiState.first);
+    restoreState(m_defaultUiState.second);
+
+    setWindowState(previousWindowState);
+    move(previousPosition);
+    resize(previousSize);
 }

@@ -74,6 +74,8 @@
     <addaction name="actionResidual_Verification_View"/>
     <addaction name="menuSynchronize_Selections"/>
     <addaction name="separator"/>
+    <addaction name="actionReset_Window_Layout"/>
+    <addaction name="separator"/>
     <addaction name="actionDark_Style"/>
    </widget>
    <widget class="QMenu" name="menuImage_Export">
@@ -202,6 +204,11 @@
   <action name="actionAdjust_Coordinate_System">
    <property name="text">
     <string>Specify Coordinate System</string>
+   </property>
+  </action>
+  <action name="actionReset_Window_Layout">
+   <property name="text">
+    <string>Reset Window &amp;Layout</string>
    </property>
   </action>
  </widget>

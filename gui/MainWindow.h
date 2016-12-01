@@ -2,6 +2,7 @@
 
 #include <map>
 #include <memory>
+#include <utility>
 
 #include <QList>
 #include <QMainWindow>
@@ -9,6 +10,7 @@
 #include <gui/gui_api.h>
 
 
+class QByteArray;
 template<typename T> class QFutureWatcher;
 class QMutex;
 class QStringList;
@@ -77,9 +79,11 @@ private:
     void storeSettings();
     void restoreUiState();
     void storeUiState();
+    void resetUiStateToDefault();
 
 private:
     std::unique_ptr<Ui_MainWindow> m_ui;
+    std::pair<QByteArray, QByteArray> m_defaultUiState;
     std::unique_ptr<DataSetHandler> m_dataSetHandler;
     std::unique_ptr<DataMapping> m_dataMapping;
     DataBrowser * m_dataBrowser;
