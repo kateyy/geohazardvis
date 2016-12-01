@@ -1,5 +1,7 @@
 #pragma once
 
+#include <map>
+
 #include <core/color_mapping/GlyphColorMapping.h>
 
 
@@ -32,8 +34,8 @@ private:
     static const bool s_isRegistered;
 
     const QString m_vectorName;
-    std::map<AbstractVisualizedData *, vtkSmartPointer<vtkVectorNorm>> m_vectorNorms;
-    std::map<AbstractVisualizedData *, vtkSmartPointer<vtkAlgorithm>> m_assignedVectors;
+    const std::map<RenderedData3D *, GlyphMappingData *> m_glyphMappingData;
+    std::map<AbstractVisualizedData *, vtkSmartPointer<vtkAlgorithm>> m_filters;
 
 private:
     Q_DISABLE_COPY(GlyphMagnitudeColorMapping)

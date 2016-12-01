@@ -84,7 +84,7 @@ public:
 
     static const QString & glyphMagnitudeColorMappingName()
     {
-        static const QString name = QString("Glyph Magnitude: %1").arg(vectorName());
+        static const QString name = QString("Glyph: %1 Magnitude").arg(vectorName());
         return name;
     }
 };
