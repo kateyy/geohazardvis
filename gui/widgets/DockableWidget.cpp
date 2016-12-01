@@ -13,6 +13,7 @@ DockableWidget::DockableWidget(QWidget * parent, Qt::WindowFlags f)
     , m_dockWidgetParent{ nullptr }
     , m_closingReported{ false }
 {
+    setFocusPolicy(Qt::WheelFocus);
 }
 
 DockableWidget::~DockableWidget()
@@ -30,9 +31,22 @@ QDockWidget * DockableWidget::dockWidgetParent()
     m_dockWidgetParent = new QDockWidget();
     m_dockWidgetParent->setWidget(this);
     m_dockWidgetParent->installEventFilter(this);
-    m_dockWidgetParent->setFocusPolicy(Qt::StrongFocus);
+    m_dockWidgetParent->setFocusPolicy(Qt::WheelFocus);
+    m_dockWidgetParent->setFocusProxy(this);
     m_dockWidgetParent->setWindowTitle(windowTitle());
     m_dockWidgetParent->setAttribute(Qt::WA_DeleteOnClose);
+    // When QDockWidgets are tabbed and a different foreground widget is selected using the tab
+    // labels, the QDockWidget is not automatically focused. Work around this using the
+    // QDockWidget's visibilityChanged signal
+    connect(m_dockWidgetParent, &QDockWidget::visibilityChanged, [this] (bool isVisible)
+    {
+        if (!isVisible || this->hasFocus())
+        {
+            return;
+        }
+
+        this->setFocus();
+    });
 
     return m_dockWidgetParent;
 }
