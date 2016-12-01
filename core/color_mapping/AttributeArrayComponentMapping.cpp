@@ -41,13 +41,13 @@ std::vector<std::unique_ptr<ColorMappingData>> AttributeArrayComponentMapping::n
         {
         }
         int numComponents;
-        QMap<AbstractVisualizedData *, IndexType> attributeLocations;
+        std::map<AbstractVisualizedData *, IndexType> attributeLocations;
     };
 
     auto checkAttributeArrays = [] (
         AbstractVisualizedData * vis, vtkDataSetAttributes * attributes,
         IndexType attributeLocation, vtkIdType expectedTupleCount,
-        QMap<QString, ArrayInfo> & arrayInfos) -> void
+        std::map<QString, ArrayInfo> & arrayInfos) -> void
     {
         for (auto i = 0; i < attributes->GetNumberOfArrays(); ++i)
         {
@@ -93,8 +93,8 @@ std::vector<std::unique_ptr<ColorMappingData>> AttributeArrayComponentMapping::n
                 qDebug() << "Array named" << name << "found with different number of components (" << lastNumComp << "," << dataArray->GetNumberOfComponents() << ")";
                 continue;
             }
-            const auto lastLocation = arrayInfo.attributeLocations.value(vis, IndexType::invalid);
-            if (lastLocation != IndexType::invalid && lastLocation != attributeLocation)
+            const auto lastLocationIt = arrayInfo.attributeLocations.find(vis);
+            if (lastLocationIt != arrayInfo.attributeLocations.end() && lastLocationIt->second != attributeLocation)
             {
                 qDebug() << "Array named" << name << "found in different attribute locations in the same data set";
                 continue;
@@ -106,7 +106,7 @@ std::vector<std::unique_ptr<ColorMappingData>> AttributeArrayComponentMapping::n
     };
 
     QList<AbstractVisualizedData *> supportedData;
-    QMap<QString, ArrayInfo> arrayInfos;
+    std::map<QString, ArrayInfo> arrayInfos;
 
     // list all available array names, check for same number of components
     for (auto vis : visualizedData)
@@ -129,12 +129,12 @@ std::vector<std::unique_ptr<ColorMappingData>> AttributeArrayComponentMapping::n
     }
 
     std::vector<std::unique_ptr<ColorMappingData>> instances;
-    for (auto it = arrayInfos.begin(); it != arrayInfos.end(); ++it)
+    for (const auto & pair : arrayInfos)
     {
-        const auto & arrayInfo = it.value();
+        const auto & arrayInfo = pair.second;
         auto mapping = std::make_unique<AttributeArrayComponentMapping>(
             supportedData,
-            it.key(),
+            pair.first,
             arrayInfo.numComponents,
             arrayInfo.attributeLocations);
         if (mapping->isValid())
@@ -149,7 +149,7 @@ std::vector<std::unique_ptr<ColorMappingData>> AttributeArrayComponentMapping::n
 
 AttributeArrayComponentMapping::AttributeArrayComponentMapping(
     const QList<AbstractVisualizedData *> & visualizedData, const QString & dataArrayName,
-    int numDataComponents, const QMap<AbstractVisualizedData *, IndexType> & attributeLocations)
+    int numDataComponents, const std::map<AbstractVisualizedData *, IndexType> & attributeLocations)
     : ColorMappingData(visualizedData, numDataComponents)
     , m_dataArrayName{ dataArrayName }
     , m_attributeLocations(attributeLocations)
@@ -173,12 +173,15 @@ QString AttributeArrayComponentMapping::scalarsName(AbstractVisualizedData & /*v
 
 IndexType AttributeArrayComponentMapping::scalarsAssociation(AbstractVisualizedData & vis) const
 {
-    return m_attributeLocations.value(&vis, IndexType::invalid);
+    const auto it = m_attributeLocations.find(&vis);
+    return it != m_attributeLocations.end()
+        ? it->second
+        : IndexType::invalid;
 }
 
 vtkSmartPointer<vtkAlgorithm> AttributeArrayComponentMapping::createFilter(AbstractVisualizedData & visualizedData, int connection)
 {
-    const auto attributeLocation = m_attributeLocations.value(&visualizedData, IndexType::invalid);
+    const auto attributeLocation = scalarsAssociation(visualizedData);
 
     if (attributeLocation == IndexType::invalid)
     {
@@ -203,7 +206,7 @@ void AttributeArrayComponentMapping::configureMapper(AbstractVisualizedData & vi
 {
     ColorMappingData::configureMapper(visualizedData, abstractMapper, connection);
 
-    const auto attributeLocation = m_attributeLocations.value(&visualizedData, IndexType::invalid);
+    const auto attributeLocation = scalarsAssociation(visualizedData);
     auto mapper = vtkMapper::SafeDownCast(&abstractMapper);
 
     if (mapper && attributeLocation != IndexType::invalid)
@@ -239,7 +242,7 @@ std::vector<ValueRange<>> AttributeArrayComponentMapping::updateBounds()
 
         for (auto visualizedData : m_visualizedData)
         {
-            auto attributeLocation = m_attributeLocations.value(visualizedData, IndexType::invalid);
+            const auto attributeLocation = scalarsAssociation(*visualizedData);
             if (attributeLocation == IndexType::invalid)
             {
                 continue;

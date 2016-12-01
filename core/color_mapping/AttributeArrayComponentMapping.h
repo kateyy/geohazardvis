@@ -1,6 +1,6 @@
 #pragma once
 
-#include <QMap>
+#include <map>
 
 #include <core/color_mapping/ColorMappingData.h>
 
@@ -9,7 +9,7 @@ class CORE_API AttributeArrayComponentMapping : public ColorMappingData
 {
 public:
     AttributeArrayComponentMapping(const QList<AbstractVisualizedData *> & visualizedData,
-        const QString & dataArrayName, int numDataComponents, const QMap<AbstractVisualizedData *, IndexType> & attributeLocations);
+        const QString & dataArrayName, int numDataComponents, const std::map<AbstractVisualizedData *, IndexType> & attributeLocations);
     ~AttributeArrayComponentMapping() override;
 
     QString name() const override;
@@ -34,5 +34,5 @@ private:
     // Per data set, the location where to find the data array, named as above.
     // Assumption: for a specific data set type, a specific attribute location is generally used
     // e.g.: point data for images, cell data for polygonal data
-    const QMap<AbstractVisualizedData *, IndexType> m_attributeLocations;
+    const std::map<AbstractVisualizedData *, IndexType> m_attributeLocations;
 };
