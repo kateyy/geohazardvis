@@ -35,6 +35,11 @@ public:
     void acceptProfilePlot();
     void abortProfilePlot();
 
+    /** @return the render view that is created to visualize the profile plot.
+      * This is nullptr, if no plot has been started, no valid input data is available, or a
+      * previous plot as been accepted. */
+    AbstractRenderView * plotPreviewRenderer();
+
 protected:
     QString defaultInteractorStyle() const override;
 

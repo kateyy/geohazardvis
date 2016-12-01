@@ -216,12 +216,6 @@ void RenderViewStrategy2D::startProfilePlot()
         m_activeInputData = m_inputData;
     }
 
-    // if there are no inputs, just ignore the request
-    if (m_activeInputData.isEmpty())
-    {
-        return;
-    }
-
     m_state = State::plotSetup;
     m_profilePlotAction->setEnabled(false);
 
@@ -278,6 +272,7 @@ void RenderViewStrategy2D::startProfilePlot()
         m_previewProfiles.push_back(std::move(profile));
     }
 
+    // No input data, no compatible input data, or no scalars found in any input data objects.
     if (m_previewProfiles.empty())
     {
         abortProfilePlot();
@@ -405,6 +400,11 @@ void RenderViewStrategy2D::abortProfilePlot()
     m_profilePlotAction->setEnabled(true);
 }
 
+AbstractRenderView * RenderViewStrategy2D::plotPreviewRenderer()
+{
+    return m_previewRenderer;
+}
+
 QString RenderViewStrategy2D::defaultInteractorStyle() const
 {
     return "InteractorStyleImage";
@@ -466,10 +466,7 @@ void RenderViewStrategy2D::updateAutomaticPlots()
         assert(m_previewRenderer);
         startProfilePlot();
 
-        if (m_activeInputData.isEmpty())
-        {
-            abortProfilePlot();
-        }
+        assert(m_state == (m_activeInputData.empty() ? State::notPlotting : State::plotting));
     }
 }
 
