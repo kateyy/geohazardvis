@@ -1,17 +1,17 @@
 #include <core/utility/mathhelper.h>
 
-#include <QDebug>
-#include <QMap>
-
 #include <cmath>
+#include <map>
+
+#include <QDebug>
 
 
 namespace
 {
 
-const QMap<QString, int> & unitsExponents()
+const std::map<QString, int> & unitsExponents()
 {
-    static const QMap<QString, int> map = {
+    static const std::map<QString, int> map = {
         { "Y", 24 },
         { "Z", 21 },
         { "E", 18 },
@@ -22,10 +22,10 @@ const QMap<QString, int> & unitsExponents()
         { "k", 3 },
         { "h", 2 },
         { "da", 1 },
+        { "", 0 },
         { "d", -1 },
         { "c", -2 },
         { "m", -3 },
-        { "", 0 },
         { QChar(0x00b5), -6 },  // MICRO SIGN
         { "n", -9 },
         { "p", -12 },
@@ -105,7 +105,7 @@ double scaleFactorForMetricUnits(const QString & from, const QString & to)
         {
             return warnInvalid();
         }
-        exponent += expIt.value();
+        exponent += expIt->second;
     }
 
     if (toPrefix.length() > 0)
@@ -115,7 +115,7 @@ double scaleFactorForMetricUnits(const QString & from, const QString & to)
         {
             return warnInvalid();
         }
-        exponent -= expIt.value();
+        exponent -= expIt->second;
     }
 
     return std::pow(10.0, exponent);
@@ -123,7 +123,7 @@ double scaleFactorForMetricUnits(const QString & from, const QString & to)
 
 bool isValidMetricUnit(const QString & unit)
 {
-    return unitsExponents().contains(unit.left(unit.length() - 1));
+    return unitsExponents().find(unit.left(unit.length() - 1)) != unitsExponents().end();
 }
 
 }
