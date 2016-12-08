@@ -23,11 +23,6 @@ endfunction()
 
 
 if(OPTION_BUILD_TESTS AND GTEST_FOUND)
-
-    include_directories(
-        SYSTEM ${GTEST_INCLUDE_DIR}
-    )
-
     # Target 'test'
     add_custom_target(test)
     set_target_properties(test PROPERTIES EXCLUDE_FROM_DEFAULT_BUILD 1)
@@ -37,5 +32,4 @@ if(OPTION_BUILD_TESTS AND GTEST_FOUND)
     # Tests
     add_test_without_ctest(core-test)
     add_test_without_ctest(gui-test)
-
 endif()

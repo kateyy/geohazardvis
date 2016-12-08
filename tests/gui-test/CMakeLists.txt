@@ -22,6 +22,11 @@ source_group_by_path(${CMAKE_CURRENT_SOURCE_DIR} ".*" "" "CMakeLists.txt")
 
 add_executable(${target} ${sources})
 
+target_include_directories(${target} SYSTEM
+    PUBLIC
+        ${GTEST_INCLUDE_DIR}
+})
+
 target_link_libraries(${target}
     PUBLIC
         gui
