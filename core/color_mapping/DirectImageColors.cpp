@@ -64,9 +64,9 @@ std::vector<std::unique_ptr<ColorMappingData>> DirectImageColors::newInstances(c
 
         supportedData.emplace_back(vis);
 
-        for (auto i = 0; i < vis->numberOfColorMappingInputs(); ++i)
+        for (unsigned int i = 0; i < vis->numberOfOutputPorts(); ++i)
         {
-            auto dataSet = vis->colorMappingInputData(i);
+            auto dataSet = vis->processedOutputDataSet(i);
 
             checkAddAttributeArrays(dataSet->GetCellData(), IndexType::cells);
             checkAddAttributeArrays(dataSet->GetPointData(), IndexType::points);
@@ -115,10 +115,10 @@ IndexType DirectImageColors::scalarsAssociation(AbstractVisualizedData & /*vis*/
     return m_attributeLocation;
 }
 
-vtkSmartPointer<vtkAlgorithm> DirectImageColors::createFilter(AbstractVisualizedData & visualizedData, int connection)
+vtkSmartPointer<vtkAlgorithm> DirectImageColors::createFilter(AbstractVisualizedData & visualizedData, unsigned int port)
 {
     auto filter = vtkSmartPointer<vtkAssignAttribute>::New();
-    filter->SetInputConnection(visualizedData.colorMappingInput(connection));
+    filter->SetInputConnection(visualizedData.processedOutputPort(port));
     filter->Assign(m_dataArrayName.toUtf8().data(), vtkDataSetAttributes::SCALARS,
         m_attributeLocation == IndexType::points ? vtkAssignAttribute::POINT_DATA : vtkAssignAttribute::CELL_DATA);
 
@@ -133,9 +133,9 @@ bool DirectImageColors::usesFilter() const
 void DirectImageColors::configureMapper(
     AbstractVisualizedData & visualizedData,
     vtkAbstractMapper & mapper,
-    int connection)
+    unsigned int port)
 {
-    ColorMappingData::configureMapper(visualizedData, mapper, connection);
+    ColorMappingData::configureMapper(visualizedData, mapper, port);
 
     if (auto m = vtkMapper::SafeDownCast(&mapper))
     {

@@ -73,12 +73,12 @@ public:
       * @param visualizedData is required to setup object specific parameters on the filter.
       *        The filter inputs are set as required.
       * May be implemented by subclasses, returns nullptr by default. */
-    virtual vtkSmartPointer<vtkAlgorithm> createFilter(AbstractVisualizedData & visualizedData, int connection = 0);
+    virtual vtkSmartPointer<vtkAlgorithm> createFilter(AbstractVisualizedData & visualizedData, unsigned int port = 0);
     virtual bool usesFilter() const;
 
     /** set parameters on the mapper that is used to render the visualizedData.
         @param visualizedData must be one of the objects that where passed when calling the mapping's constructor */
-    virtual void configureMapper(AbstractVisualizedData & visualizedData, vtkAbstractMapper & mapper, int connection = 0);
+    virtual void configureMapper(AbstractVisualizedData & visualizedData, vtkAbstractMapper & mapper, unsigned int port = 0);
 
     void setLookupTable(vtkLookupTable * lookupTable);
 

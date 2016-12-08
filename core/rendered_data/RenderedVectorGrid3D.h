@@ -41,13 +41,14 @@ public:
     int slicePosition(int axis);
     void setSlicePosition(int axis, int slicePosition);
 
-    int numberOfColorMappingInputs() const override;
-    vtkAlgorithmOutput * colorMappingInput(int connection = 0) override;
+    unsigned int numberOfOutputPorts() const override;
 
 signals:
     void sampleRateChanged(int x, int y, int z);
 
 protected:
+    vtkAlgorithmOutput * processedOutputPortInternal(unsigned int port) override;
+
     vtkSmartPointer<vtkProp3DCollection> fetchViewProps3D() override;
 
     void scalarsForColorMappingChangedEvent() override;

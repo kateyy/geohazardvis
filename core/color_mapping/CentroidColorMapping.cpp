@@ -81,15 +81,12 @@ IndexType CentroidColorMapping::scalarsAssociation(AbstractVisualizedData & /*vi
 
 vtkSmartPointer<vtkAlgorithm> CentroidColorMapping::createFilter(
     AbstractVisualizedData & visualizedData,
-    int connection)
+    unsigned int port)
 {
-    assert(connection >= 0);
-    const size_t conn = static_cast<size_t>(std::max(0, connection));
-
     auto ports = m_filters[&visualizedData];
-    if (ports.size() > conn)
+    if (ports.size() > port)
     {
-        if (auto filter = ports[conn])
+        if (auto filter = ports[port])
         {
             return filter;
         }
@@ -98,7 +95,7 @@ vtkSmartPointer<vtkAlgorithm> CentroidColorMapping::createFilter(
     auto polyData = static_cast<PolyDataObject *>(&visualizedData.dataObject());
 
     auto centroids = vtkSmartPointer<CentroidAsScalarsFilter>::New();
-    centroids->SetInputConnection(0, visualizedData.colorMappingInput(connection));
+    centroids->SetInputConnection(0, visualizedData.processedOutputPort(port));
     centroids->SetInputConnection(1, polyData->cellCentersOutputPort());
 
     auto rename = vtkSmartPointer<ArrayChangeInformationFilter>::New();
@@ -108,8 +105,8 @@ vtkSmartPointer<vtkAlgorithm> CentroidColorMapping::createFilter(
     rename->SetAttributeType(vtkDataSetAttributes::SCALARS);
     rename->SetInputConnection(centroids->GetOutputPort());
 
-    ports.resize(conn + 1);
-    ports[conn] = rename;
+    ports.resize(port + 1);
+    ports[port] = rename;
 
     return rename;
 }
@@ -122,9 +119,9 @@ bool CentroidColorMapping::usesFilter() const
 void CentroidColorMapping::configureMapper(
     AbstractVisualizedData & visualizedData,
     vtkAbstractMapper & mapper,
-    int connection)
+    unsigned int port)
 {
-    ColorMappingData::configureMapper(visualizedData, mapper, connection);
+    ColorMappingData::configureMapper(visualizedData, mapper, port);
 
     if (auto m = vtkMapper::SafeDownCast(&mapper))
     {

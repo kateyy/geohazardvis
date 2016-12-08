@@ -90,9 +90,9 @@ QString GlyphMagnitudeColorMapping::scalarsName(AbstractVisualizedData & /*vis*/
     return m_vectorName;
 }
 
-vtkSmartPointer<vtkAlgorithm> GlyphMagnitudeColorMapping::createFilter(AbstractVisualizedData & visualizedData, int connection)
+vtkSmartPointer<vtkAlgorithm> GlyphMagnitudeColorMapping::createFilter(AbstractVisualizedData & visualizedData, unsigned int port)
 {
-    if (connection != 0)
+    if (port != 0)
     {
         return vtkSmartPointer<vtkPassThrough>::New();
     }
@@ -140,9 +140,9 @@ bool GlyphMagnitudeColorMapping::usesFilter() const
     return true;
 }
 
-void GlyphMagnitudeColorMapping::configureMapper(AbstractVisualizedData & visualizedData, vtkAbstractMapper & mapper, int connection)
+void GlyphMagnitudeColorMapping::configureMapper(AbstractVisualizedData & visualizedData, vtkAbstractMapper & mapper, unsigned int port)
 {
-    GlyphColorMapping::configureMapper(visualizedData, mapper, connection);
+    GlyphColorMapping::configureMapper(visualizedData, mapper, port);
 
     auto filterIt = m_filters.find(&visualizedData);
     if (filterIt == m_filters.end())

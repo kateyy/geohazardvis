@@ -71,13 +71,6 @@ vtkDataSet * RenderedData::transformedCoordinatesDataSet()
     return vtkDataSet::SafeDownCast(m_transformedCoordinatesOutput->GetOutput());
 }
 
-vtkAlgorithmOutput * RenderedData::colorMappingInput(int DEBUG_ONLY(connection))
-{
-    assert(connection == 0);
-
-    return transformedCoordinatesOutputPort();
-}
-
 RenderedData::Representation RenderedData::representation() const
 {
     return m_representation;
@@ -173,6 +166,13 @@ vtkSmartPointer<vtkPropCollection> RenderedData::viewProps()
     }
 
     return m_viewProps;
+}
+
+vtkAlgorithmOutput * RenderedData::processedOutputPortInternal(unsigned int DEBUG_ONLY(port))
+{
+    assert(port == 0);
+
+    return transformedCoordinatesOutputPort();
 }
 
 void RenderedData::visibilityChangedEvent(bool visible)

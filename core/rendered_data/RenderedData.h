@@ -39,7 +39,7 @@ class CORE_API RenderedData : public AbstractVisualizedData
     Q_OBJECT
 
 public:
-    RenderedData(ContentType contentType, CoordinateTransformableDataObject & dataObject);
+    explicit RenderedData(ContentType contentType, CoordinateTransformableDataObject & dataObject);
     ~RenderedData() override;
 
     CoordinateTransformableDataObject & transformableObject();
@@ -61,8 +61,6 @@ public:
     vtkDataSet * transformedCoordinatesDataSet();
 
 
-    vtkAlgorithmOutput * colorMappingInput(int connection = 0) override;
-
     enum class Representation { content, outline, both };
 
     Representation representation() const;
@@ -77,6 +75,7 @@ signals:
     void viewPropCollectionChanged();
 
 protected:
+    vtkAlgorithmOutput * processedOutputPortInternal(unsigned int port) override;
     void visibilityChangedEvent(bool visible) override;
     virtual void representationChangedEvent(Representation representation);
     virtual vtkSmartPointer<vtkPropCollection> fetchViewProps() = 0;

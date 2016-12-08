@@ -406,7 +406,7 @@ void RendererImplementationPlot::handlePlotSelectionEvent(vtkObject * DEBUG_ONLY
 
     auto selection = VisualizationSelection(
         contextData,
-        contextData->defaultVisualizationPort(),
+        contextData->defaultOutputPort(),
         IndexType::points);
 
     if (auto indexArray = plot->GetSelection())

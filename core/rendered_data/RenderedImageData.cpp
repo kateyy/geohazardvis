@@ -272,7 +272,7 @@ void RenderedImageData::visibilityChangedEvent(bool visible)
 DataBounds RenderedImageData::updateVisibleBounds()
 {
     DataBounds bounds;
-    colorMappingInputData()->GetBounds(bounds.data());
+    processedOutputDataSet()->GetBounds(bounds.data());
     return bounds;
 }
 
@@ -330,7 +330,7 @@ void RenderedImageData::configureVisPipeline()
     */
 
     vtkSmartPointer<vtkAlgorithm> colorMappingFilter;
-    vtkAlgorithmOutput * currentPipelineStep = colorMappingInput();
+    vtkAlgorithmOutput * currentPipelineStep = processedOutputPort();
     bool mapScalarsToColors = false;
     vtkSmartPointer<vtkScalarsToColors> lut = currentColorMappingGradient();
     int component = 0;

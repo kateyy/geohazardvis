@@ -140,7 +140,7 @@ void RenderedPointCloudData::scalarsForColorMappingChangedEvent()
     // no mapping yet, so just render the data set
     if (!currentColorMappingData())
     {
-        m_colorMappingOutput = colorMappingInput()->GetProducer();
+        m_colorMappingOutput = processedOutputPort()->GetProducer();
         finalizePipeline();
         return;
     }
@@ -156,7 +156,7 @@ void RenderedPointCloudData::scalarsForColorMappingChangedEvent()
     }
     else
     {
-        m_colorMappingOutput = colorMappingInput()->GetProducer();
+        m_colorMappingOutput = processedOutputPort()->GetProducer();
     }
 
     finalizePipeline();
@@ -189,7 +189,7 @@ void RenderedPointCloudData::finalizePipeline()
     if (!m_colorMappingOutput)
     {
         // disabled color mapping and texturing by default
-        m_colorMappingOutput = colorMappingInput()->GetProducer();
+        m_colorMappingOutput = processedOutputPort()->GetProducer();
         m_mapper->ScalarVisibilityOff();
     }
 

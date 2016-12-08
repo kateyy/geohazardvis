@@ -25,20 +25,21 @@ class ColorMappingData;
 
 
 /**
-Base class for visual representations of data objects.
-A data object may be visualized in multiple views, each holding its own AbstractVisualizedData
-instance, referring to the data object.
-This base class does not define how the visualization is implemented, it only defines the following
-common features:
-    - Color Mapping:
-        Each visualization own a ColorMapping that provides ColorMappingData subclasses appropriate
-        for this visualization. At least a default (no-op) mapping is always available.
-    - Output Ports:
-        Visualization may provide multiple output ports for different parts/kinds of visual objects.
-    - Information Reference:
-        Visualization reference themselves in their visualization pipeline using the
-        setupInformation function. This allows to quickly link from a visible object, e.g., after
-        picking, back to the related AbstractVisualizedData instance.
+ * Base class for visual representations of data objects.
+ *
+ * A data object may be visualized in multiple views, each holding its own AbstractVisualizedData
+ * instance, referring to the data object.
+ * This base class does not define how the visualization is implemented, it only defines the following
+ * common features:
+ *     - Color Mapping:
+ *         Each visualization own a ColorMapping that provides ColorMappingData subclasses appropriate
+ *         for this visualization. At least a default (no-op) mapping is always available.
+ *     - Output Ports:
+ *         Visualization may provide multiple output ports for different parts/kinds of visual objects.
+ *     - Information Reference:
+ *         Visualization reference themselves in their visualization pipeline using the
+ *         setupInformation function. This allows to quickly link from a visible object, e.g., after
+ *         picking, back to the related AbstractVisualizedData instance.
 */
 class CORE_API AbstractVisualizedData : public QObject
 {
@@ -68,14 +69,13 @@ public:
     /** This is used by the ColorMapping to set the current scalars. Don't call this from anywhere else. */
     void setScalarsForColorMapping(ColorMappingData * scalars);
     /** Set gradient that will be applied to colored geometries.
-    * ColorMappingData are responsible for gradient configuration. */
+      * ColorMappingData are responsible for gradient configuration. */
     void setColorMappingGradient(vtkScalarsToColors * gradient);
 
-    virtual int numberOfColorMappingInputs() const;
-    virtual vtkAlgorithmOutput * colorMappingInput(int connection = 0);
-    vtkDataSet * colorMappingInputData(int connection = 0);
-
-    virtual int defaultVisualizationPort() const;
+    virtual unsigned int numberOfOutputPorts() const;
+    virtual unsigned int defaultOutputPort() const;
+    vtkAlgorithmOutput * processedOutputPort(unsigned int port = 0);
+    vtkDataSet * processedOutputDataSet(unsigned int port = 0);
 
     /** store data object name and pointers in the information object */
     static void setupInformation(vtkInformation & information, AbstractVisualizedData & visualization);
@@ -89,6 +89,10 @@ signals:
     void geometryChanged();
 
 protected:
+    /** Allows subclasses to statically customize the visualization pipeline.
+      * Default output is dataObject().processedOutputPort(). */
+    virtual vtkAlgorithmOutput * processedOutputPortInternal(unsigned int port);
+
     /** Subclasses can override this method to set initial parameters on a newly created color mapping */
     virtual void setupColorMapping(ColorMapping & colorMapping);
     virtual void visibilityChangedEvent(bool visible);
@@ -102,7 +106,7 @@ protected:
     /** Called by sub-classes to update what is returned by visibleBounds() */
     virtual DataBounds updateVisibleBounds() = 0;
     /** Called by sub-classes when then visible bounds changed.
-    updateVisibleBounds() will be called again once visibleBounds() is called the next time. */
+      * updateVisibleBounds() will be called again once visibleBounds() is called the next time. */
     void invalidateVisibleBounds();
 
 private:

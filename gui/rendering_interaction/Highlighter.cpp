@@ -510,7 +510,7 @@ void Highlighter::highlightPoints()
 {
     assert(m_renderer && m_selection.visualization && !m_selection.indices.empty());
 
-    auto dataSet = m_selection.visualization->colorMappingInputData(m_selection.visOutputPort);
+    auto dataSet = m_selection.visualization->processedOutputDataSet(m_selection.visOutputPort);
     if (!dataSet)
     {
         return;
@@ -528,7 +528,7 @@ void Highlighter::highlightCells()
 {
     assert(m_renderer && m_selection.visualization && !m_selection.indices.empty());
 
-    auto dataSet = m_selection.visualization->colorMappingInputData(m_selection.visOutputPort);
+    auto dataSet = m_selection.visualization->processedOutputDataSet(m_selection.visOutputPort);
     if (!dataSet)
     {
         return;

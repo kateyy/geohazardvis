@@ -27,7 +27,7 @@ std::vector<std::unique_ptr<ColorMappingData>> PointCoordinateColorMapping::newI
 
     for (auto vis : visualizedData)
     {
-        for (int port = 0; port < vis->numberOfColorMappingInputs(); ++port)
+        for (unsigned int port = 0; port < vis->numberOfOutputPorts(); ++port)
         {
             if (vtkPolyData::SafeDownCast(vis->dataObject().dataSet()))
             {
@@ -83,11 +83,11 @@ IndexType PointCoordinateColorMapping::scalarsAssociation(AbstractVisualizedData
 
 vtkSmartPointer<vtkAlgorithm> PointCoordinateColorMapping::createFilter(
     AbstractVisualizedData & visualizedData,
-    int connection)
+    unsigned int port)
 {
     auto coordsAttribute = vtkSmartPointer<AssignPointAttributeToCoordinatesFilter>::New();
     coordsAttribute->CurrentCoordinatesAsScalarsOn();
-    coordsAttribute->SetInputConnection(visualizedData.colorMappingInput(connection));
+    coordsAttribute->SetInputConnection(visualizedData.processedOutputPort(port));
 
     return coordsAttribute;
 }
@@ -100,13 +100,13 @@ bool PointCoordinateColorMapping::usesFilter() const
 void PointCoordinateColorMapping::configureMapper(
     AbstractVisualizedData & visualizedData,
     vtkAbstractMapper & mapper,
-    int connection)
+    unsigned int port)
 {
-    ColorMappingData::configureMapper(visualizedData, mapper, connection);
+    ColorMappingData::configureMapper(visualizedData, mapper, port);
 
     if (auto m = vtkMapper::SafeDownCast(&mapper))
     {
-        if (auto poly = vtkPolyData::SafeDownCast(visualizedData.colorMappingInputData(connection)))
+        if (auto poly = vtkPolyData::SafeDownCast(visualizedData.processedOutputDataSet(port)))
         {
             m->ScalarVisibilityOn();
             m->SetColorModeToMapScalars();
@@ -126,9 +126,9 @@ std::vector<ValueRange<>> PointCoordinateColorMapping::updateBounds()
 
     for (auto vis: m_visualizedData)
     {
-        for (int port = 0; port < vis->numberOfColorMappingInputs(); ++port)
+        for (unsigned int port = 0; port < vis->numberOfOutputPorts(); ++port)
         {
-            if (auto polyData = vtkPolyData::SafeDownCast(vis->colorMappingInputData(port)))
+            if (auto polyData = vtkPolyData::SafeDownCast(vis->processedOutputDataSet(port)))
             {
                 polyData->GetBounds(dataSetBounds.data());
                 totalBounds.add(dataSetBounds);

@@ -118,9 +118,9 @@ std::vector<std::unique_ptr<ColorMappingData>> AttributeArrayComponentMapping::n
 
         supportedData.emplace_back(vis);
 
-        for (int i = 0; i < vis->numberOfColorMappingInputs(); ++i)
+        for (unsigned int i = 0; i < vis->numberOfOutputPorts(); ++i)
         {
-            vtkDataSet * dataSet = vis->colorMappingInputData(i);
+            auto dataSet = vis->processedOutputDataSet(i);
 
             // in case of conflicts, prefer point over cell arrays (as they probably have a higher precision)
             checkAttributeArrays(vis, dataSet->GetPointData(), IndexType::points, dataSet->GetNumberOfPoints(), arrayInfos);
@@ -179,19 +179,19 @@ IndexType AttributeArrayComponentMapping::scalarsAssociation(AbstractVisualizedD
         : IndexType::invalid;
 }
 
-vtkSmartPointer<vtkAlgorithm> AttributeArrayComponentMapping::createFilter(AbstractVisualizedData & visualizedData, int connection)
+vtkSmartPointer<vtkAlgorithm> AttributeArrayComponentMapping::createFilter(AbstractVisualizedData & visualizedData, unsigned int port)
 {
     const auto attributeLocation = scalarsAssociation(visualizedData);
 
     if (attributeLocation == IndexType::invalid)
     {
         auto filter = vtkSmartPointer<vtkPassThrough>::New();
-        filter->SetInputConnection(visualizedData.colorMappingInput(connection));
+        filter->SetInputConnection(visualizedData.processedOutputPort(port));
         return filter;
     }
 
     auto filter = vtkSmartPointer<vtkAssignAttribute>::New();
-    filter->SetInputConnection(visualizedData.colorMappingInput(connection));
+    filter->SetInputConnection(visualizedData.processedOutputPort(port));
     filter->Assign(m_dataArrayName.toUtf8().data(), vtkDataSetAttributes::SCALARS,
         attributeLocation == IndexType::points ? vtkAssignAttribute::POINT_DATA : vtkAssignAttribute::CELL_DATA);
     return filter;
@@ -202,9 +202,9 @@ bool AttributeArrayComponentMapping::usesFilter() const
     return true;
 }
 
-void AttributeArrayComponentMapping::configureMapper(AbstractVisualizedData & visualizedData, vtkAbstractMapper & abstractMapper, int connection)
+void AttributeArrayComponentMapping::configureMapper(AbstractVisualizedData & visualizedData, vtkAbstractMapper & abstractMapper, unsigned int port)
 {
-    ColorMappingData::configureMapper(visualizedData, abstractMapper, connection);
+    ColorMappingData::configureMapper(visualizedData, abstractMapper, port);
 
     const auto attributeLocation = scalarsAssociation(visualizedData);
     auto mapper = vtkMapper::SafeDownCast(&abstractMapper);
@@ -248,9 +248,9 @@ std::vector<ValueRange<>> AttributeArrayComponentMapping::updateBounds()
                 continue;
             }
 
-            for (int i = 0; i < visualizedData->numberOfColorMappingInputs(); ++i)
+            for (unsigned int i = 0; i < visualizedData->numberOfOutputPorts(); ++i)
             {
-                auto dataSet = visualizedData->colorMappingInputData(i);
+                auto dataSet = visualizedData->processedOutputDataSet(i);
                 vtkDataArray * dataArray =
                     attributeLocation == IndexType::cells ? dataSet->GetCellData()->GetArray(utf8Name.data())
                     : (attributeLocation == IndexType::points ? dataSet->GetPointData()->GetArray(utf8Name.data())

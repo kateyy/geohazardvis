@@ -76,14 +76,14 @@ IndexType SlopeAngleMapping::scalarsAssociation(AbstractVisualizedData & /*vis*/
     return IndexType::cells;
 }
 
-vtkSmartPointer<vtkAlgorithm> SlopeAngleMapping::createFilter(AbstractVisualizedData & visualizedData, int connection)
+vtkSmartPointer<vtkAlgorithm> SlopeAngleMapping::createFilter(AbstractVisualizedData & visualizedData, unsigned int port)
 {
     static const auto arrayName = scalarsName(visualizedData).toUtf8();
 
     const auto filtersIt = m_filters.find(&visualizedData);
     if (filtersIt != m_filters.end())
     {
-        const auto portIt = filtersIt->second.find(connection);
+        const auto portIt = filtersIt->second.find(port);
         if (portIt != filtersIt->second.end())
         {
             return portIt->second;
@@ -91,7 +91,7 @@ vtkSmartPointer<vtkAlgorithm> SlopeAngleMapping::createFilter(AbstractVisualized
     }
 
     auto calculator = vtkSmartPointer<vtkArrayCalculator>::New();
-    calculator->SetInputConnection(visualizedData.colorMappingInput(connection));
+    calculator->SetInputConnection(visualizedData.processedOutputPort(port));
     calculator->AddScalarVariable("z", "Normals", 2);
     calculator->SetResultArrayName(arrayName.data());
     calculator->SetAttributeModeToUseCellData();
@@ -115,7 +115,7 @@ vtkSmartPointer<vtkAlgorithm> SlopeAngleMapping::createFilter(AbstractVisualized
     unitSetter->EnableSetUnitOn();
     unitSetter->SetArrayUnit(QString(QChar(0x00B0)).toUtf8().data());   // degree sign
 
-    m_filters[&visualizedData][connection] = unitSetter;
+    m_filters[&visualizedData][port] = unitSetter;
 
     return unitSetter;
 }
@@ -128,9 +128,9 @@ bool SlopeAngleMapping::usesFilter() const
 void SlopeAngleMapping::configureMapper(
     AbstractVisualizedData & visualizedData,
     vtkAbstractMapper & abstractMapper,
-    int connection)
+    unsigned int port)
 {
-    ColorMappingData::configureMapper(visualizedData, abstractMapper, connection);
+    ColorMappingData::configureMapper(visualizedData, abstractMapper, port);
 
     auto mapper = vtkMapper::SafeDownCast(&abstractMapper);
     if (!mapper)

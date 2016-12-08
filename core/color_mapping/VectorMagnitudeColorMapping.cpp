@@ -75,9 +75,9 @@ std::vector<std::unique_ptr<ColorMappingData>> VectorMagnitudeColorMapping::newI
             continue;
         }
 
-        for (int i = 0; i < vis->numberOfColorMappingInputs(); ++i)
+        for (unsigned int i = 0; i < vis->numberOfOutputPorts(); ++i)
         {
-            auto dataSet = vis->colorMappingInputData(i);
+            auto dataSet = vis->processedOutputDataSet(i);
 
             checkAddAttributeArrays(vis, dataSet->GetCellData(), cellArrays);
             checkAddAttributeArrays(vis, dataSet->GetPointData(), pointArrays);
@@ -134,11 +134,11 @@ VectorMagnitudeColorMapping::VectorMagnitudeColorMapping(
     {
         std::vector<vtkSmartPointer<vtkAlgorithm>> filters;
 
-        for (int i = 0; i < vis->numberOfColorMappingInputs(); ++i)
+        for (unsigned int i = 0; i < vis->numberOfOutputPorts(); ++i)
         {
             auto activeVectors = vtkSmartPointer<vtkAssignAttribute>::New();
             activeVectors->Assign(utf8Name.data(), vtkDataSetAttributes::VECTORS, assignLocation);
-            activeVectors->SetInputConnection(vis->colorMappingInput(i));
+            activeVectors->SetInputConnection(vis->processedOutputPort(i));
 
             auto norm = vtkSmartPointer<vtkVectorNorm>::New();
             if (attributeLocation == IndexType::cells)
@@ -185,19 +185,19 @@ IndexType VectorMagnitudeColorMapping::scalarsAssociation(AbstractVisualizedData
     return m_attributeLocation;
 }
 
-vtkSmartPointer<vtkAlgorithm> VectorMagnitudeColorMapping::createFilter(AbstractVisualizedData & visualizedData, int connection)
+vtkSmartPointer<vtkAlgorithm> VectorMagnitudeColorMapping::createFilter(AbstractVisualizedData & visualizedData, unsigned int port)
 {
     /** vtkVectorNorm sets norm array as current scalars; it doesn't set a name */
     const auto filtersIt = m_filters.find(&visualizedData);
     if (filtersIt == m_filters.end())
     {
         auto filter = vtkSmartPointer<vtkPassThrough>::New();
-        filter->SetInputConnection(visualizedData.colorMappingInput(connection));
+        filter->SetInputConnection(visualizedData.processedOutputPort(port));
         return filter;
     }
 
-    assert(filtersIt->second.size() > static_cast<size_t>(connection));
-    auto & norm = filtersIt->second[connection];
+    assert(filtersIt->second.size() > port);
+    auto & norm = filtersIt->second[port];
     assert(norm);
 
     return norm;
@@ -211,9 +211,9 @@ bool VectorMagnitudeColorMapping::usesFilter() const
 void VectorMagnitudeColorMapping::configureMapper(
     AbstractVisualizedData & visualizedData,
     vtkAbstractMapper & mapper,
-    int connection)
+    unsigned int port)
 {
-    ColorMappingData::configureMapper(visualizedData, mapper, connection);
+    ColorMappingData::configureMapper(visualizedData, mapper, port);
 
     if (auto m = vtkMapper::SafeDownCast(&mapper))
     {

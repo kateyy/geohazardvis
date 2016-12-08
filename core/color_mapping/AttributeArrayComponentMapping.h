@@ -16,10 +16,10 @@ public:
     QString scalarsName(AbstractVisualizedData & vis) const override;
     IndexType scalarsAssociation(AbstractVisualizedData & vis) const override;
 
-    vtkSmartPointer<vtkAlgorithm> createFilter(AbstractVisualizedData & visualizedData, int connection = 0) override;
+    vtkSmartPointer<vtkAlgorithm> createFilter(AbstractVisualizedData & visualizedData, unsigned int port = 0) override;
     bool usesFilter() const override;
 
-    void configureMapper(AbstractVisualizedData & visualizedData, vtkAbstractMapper & mapper, int connection = 0) override;
+    void configureMapper(AbstractVisualizedData & visualizedData, vtkAbstractMapper & mapper, unsigned int port = 0) override;
 
 protected:
     static std::vector<std::unique_ptr<ColorMappingData>> newInstances(const std::vector<AbstractVisualizedData *> & visualizedData);
@@ -29,10 +29,10 @@ protected:
 private:
     static const bool s_isRegistered;
 
-    // name of the attribute array that will be mapped to colors
+    /** name of the attribute array that will be mapped to colors */
     const QString m_dataArrayName;
-    // Per data set, the location where to find the data array, named as above.
-    // Assumption: for a specific data set type, a specific attribute location is generally used
-    // e.g.: point data for images, cell data for polygonal data
+    /** Per data set, the location where to find the data array, named as above.
+     * Assumption: for a specific data set type, a specific attribute location is generally used
+     * e.g.: point data for images, cell data for polygonal data */
     const std::map<AbstractVisualizedData *, IndexType> m_attributeLocations;
 };

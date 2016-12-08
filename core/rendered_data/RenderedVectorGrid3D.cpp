@@ -437,16 +437,16 @@ void RenderedVectorGrid3D::setSlicePosition(int axis, int slicePosition)
     m_planeWidgets[axis]->SetSliceIndex(slicePosition);
 }
 
-int RenderedVectorGrid3D::numberOfColorMappingInputs() const
+unsigned int RenderedVectorGrid3D::numberOfOutputPorts() const
 {
-    return 3;
+    return 3u;
 }
 
-vtkAlgorithmOutput * RenderedVectorGrid3D::colorMappingInput(int connection)
+vtkAlgorithmOutput * RenderedVectorGrid3D::processedOutputPortInternal(unsigned int port)
 {
-    assert(connection >= 0 && connection < 3);
+    assert(port < numberOfOutputPorts());
 
-    auto & filter = m_colorMappingInputs.at(connection);
+    auto & filter = m_colorMappingInputs.at(port);
 
     if (!filter)
     {
@@ -456,7 +456,7 @@ vtkAlgorithmOutput * RenderedVectorGrid3D::colorMappingInput(int connection)
 
         auto rename = vtkSmartPointer<ArrayChangeInformationFilter>::New();
         rename->SetArrayName(dataObject().dataSet()->GetPointData()->GetScalars()->GetName());
-        rename->SetInputConnection(m_planeWidgets[connection]->GetReslice()->GetOutputPort());
+        rename->SetInputConnection(m_planeWidgets[port]->GetReslice()->GetOutputPort());
         filter = rename;
 
         if (hasVectors)

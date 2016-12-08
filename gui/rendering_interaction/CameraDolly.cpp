@@ -43,15 +43,13 @@ void CameraDolly::moveTo(AbstractVisualizedData & visualization, vtkIdType index
     {
         return;}
 
-    if (visualization.numberOfColorMappingInputs() == 0)
+    if (visualization.numberOfOutputPorts() == 0)
     {
         qDebug() << "[CameraDolly] Visualization has no outputs";
         return;
     }
 
-    auto sourceAlgorithm = visualization.colorMappingInput()->GetProducer();
-    sourceAlgorithm->Update();
-    auto dataSet = vtkDataSet::SafeDownCast(sourceAlgorithm->GetOutputDataObject(0));
+    auto dataSet = visualization.processedOutputDataSet(visualization.defaultOutputPort());
 
     if (!dataSet)
     {

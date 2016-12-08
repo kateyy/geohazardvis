@@ -100,28 +100,39 @@ void AbstractVisualizedData::setColorMappingGradient(vtkScalarsToColors * gradie
     colorMappingGradientChangedEvent();
 }
 
-int AbstractVisualizedData::numberOfColorMappingInputs() const
+unsigned int AbstractVisualizedData::numberOfOutputPorts() const
 {
     return 1;
 }
 
-vtkAlgorithmOutput * AbstractVisualizedData::colorMappingInput(int DEBUG_ONLY(connection))
+unsigned int AbstractVisualizedData::defaultOutputPort() const
 {
-    assert(connection == 0);
-
-    return dataObject().processedOutputPort();
+    return 0;
 }
 
-vtkDataSet * AbstractVisualizedData::colorMappingInputData(int connection)
+vtkAlgorithmOutput * AbstractVisualizedData::processedOutputPort(const unsigned int port)
 {
-    auto alg = colorMappingInput(connection)->GetProducer();
+    if (port >= numberOfOutputPorts())
+    {
+        assert(false);
+        return nullptr;
+    }
+
+    return processedOutputPortInternal(port);
+}
+
+vtkDataSet * AbstractVisualizedData::processedOutputDataSet(unsigned int port)
+{
+    auto alg = processedOutputPort(port)->GetProducer();
     alg->Update();
     return vtkDataSet::SafeDownCast(alg->GetOutputDataObject(0));
 }
 
-int AbstractVisualizedData::defaultVisualizationPort() const
+vtkAlgorithmOutput * AbstractVisualizedData::processedOutputPortInternal(unsigned int port)
 {
-    return 0;
+    assert(port == 0);
+
+    return dataObject().processedOutputPort();
 }
 
 void AbstractVisualizedData::setupInformation(vtkInformation & information, AbstractVisualizedData & visualization)

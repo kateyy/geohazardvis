@@ -171,7 +171,7 @@ bool ColorMappingData::isValid() const
 
 vtkSmartPointer<vtkAlgorithm> ColorMappingData::createFilter(
     AbstractVisualizedData & /*visualizedData*/,
-    int /*connection*/)
+    unsigned int /*port*/)
 {
     return nullptr;
 }
@@ -184,7 +184,7 @@ bool ColorMappingData::usesFilter() const
 void ColorMappingData::configureMapper(
     AbstractVisualizedData & DEBUG_ONLY(visualizedData),
     vtkAbstractMapper & /*mapper*/,
-    int /*connection*/)
+    unsigned int /*port*/)
 {
     assert(std::find(m_visualizedData.begin(), m_visualizedData.end(), &visualizedData) != m_visualizedData.end());
 }

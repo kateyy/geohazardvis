@@ -26,9 +26,9 @@ QString DefaultColorMapping::name() const
 void DefaultColorMapping::configureMapper(
     AbstractVisualizedData & visualizedData,
     vtkAbstractMapper & mapper,
-    int connection)
+    unsigned int port)
 {
-    ColorMappingData::configureMapper(visualizedData, mapper, connection);
+    ColorMappingData::configureMapper(visualizedData, mapper, port);
 
     if (auto m = vtkMapper::SafeDownCast(&mapper))
     {
