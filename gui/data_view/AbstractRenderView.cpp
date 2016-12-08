@@ -371,7 +371,7 @@ void AbstractRenderView::onSetSelection(const DataSelection & selection)
     auto && newVisSelection = VisualizationSelection(
         selection,
         vis,
-        vis->defaultOutputPort()
+        0
     );
 
     setVisualizationSelection(newVisSelection);

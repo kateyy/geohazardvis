@@ -77,7 +77,6 @@ public:
     void setColorMappingGradient(vtkScalarsToColors * gradient);
 
     virtual unsigned int numberOfOutputPorts() const;
-    virtual unsigned int defaultOutputPort() const;
     vtkAlgorithmOutput * processedOutputPort(unsigned int port = 0);
     vtkDataSet * processedOutputDataSet(unsigned int port = 0);
 

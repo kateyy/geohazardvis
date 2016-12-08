@@ -351,7 +351,7 @@ void RenderView::lookAtData(const DataSelection & selection, int subViewIndex)
     lookAtData(VisualizationSelection(
         selection, 
         vis,
-        vis->defaultOutputPort()), // TODO how to find the correct visualization output port?
+        0), // TODO how to find the correct visualization output port?
         subViewIndex);
 }
 

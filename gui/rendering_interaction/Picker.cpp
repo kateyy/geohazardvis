@@ -132,7 +132,7 @@ void Picker::pick(const vtkVector2i & clickPosXY, vtkRenderer & renderer)
     }
 
     // TODO determine correct visualization port
-    d_ptr->pickedObjectInfo.visOutputPort = visualization.defaultOutputPort();
+    d_ptr->pickedObjectInfo.visOutputPort = 0;
 
     QString content;
     QTextStream stream;

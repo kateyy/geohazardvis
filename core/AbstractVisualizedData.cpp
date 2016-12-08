@@ -105,11 +105,6 @@ unsigned int AbstractVisualizedData::numberOfOutputPorts() const
     return 1;
 }
 
-unsigned int AbstractVisualizedData::defaultOutputPort() const
-{
-    return 0;
-}
-
 vtkAlgorithmOutput * AbstractVisualizedData::processedOutputPort(const unsigned int port)
 {
     if (port >= numberOfOutputPorts())

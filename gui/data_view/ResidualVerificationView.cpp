@@ -153,7 +153,7 @@ void ResidualVerificationView::lookAtData(const DataSelection & selection, int s
 
         lookAtData(VisualizationSelection(selection,
             vis,
-            vis->defaultOutputPort()),
+            0),
             subViewIndex);
 
         return;
@@ -169,7 +169,7 @@ void ResidualVerificationView::lookAtData(const DataSelection & selection, int s
 
         lookAtData(VisualizationSelection(selection,
             vis,
-            vis->defaultOutputPort()),
+            0),
             subViewIndex);
     }
 }

@@ -49,7 +49,7 @@ void CameraDolly::moveTo(AbstractVisualizedData & visualization, vtkIdType index
         return;
     }
 
-    auto dataSet = visualization.processedOutputDataSet(visualization.defaultOutputPort());
+    auto dataSet = visualization.processedOutputDataSet();
 
     if (!dataSet)
     {
