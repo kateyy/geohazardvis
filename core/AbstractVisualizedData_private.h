@@ -1,7 +1,10 @@
 #pragma once
 
+#include <algorithm>
 #include <cassert>
 #include <memory>
+#include <vector>
+#include <utility>
 
 #include <vtkInformation.h>
 #include <vtkInformationIntegerPointerKey.h>
@@ -29,10 +32,13 @@ public:
         , colorMappingData{ nullptr }
         , gradient{}
         , colorMapping{}
+        , m_nextProcessingStepId{ 0 }
         , m_visibleBounds{}
         , m_visibleBoundsAreValid{ false }
     {
     }
+
+    ~AbstractVisualizedData_private() = default;
 
     const ContentType contentType;
     DataObject & dataObject;
@@ -43,6 +49,24 @@ public:
 
     /** Color mappings can be shared between multiple visualizations. */
     std::unique_ptr<ColorMapping> colorMapping;
+
+    unsigned int getNextProcessingStepId()
+    {
+        if (!m_freedProcessingStepIds.empty())
+        {
+            const auto id = m_freedProcessingStepIds.back();
+            m_freedProcessingStepIds.pop_back();
+            return id;
+        }
+
+        return m_nextProcessingStepId++;
+    }
+    void releaseProcessingStepId(unsigned int id)
+    {
+        m_freedProcessingStepIds.push_back(id);
+    }
+    std::vector<std::vector<std::pair<unsigned int, AbstractVisualizedData::PostProcessingStep>>> postProcessingStepsPerPort;
+    std::vector<vtkSmartPointer<vtkAlgorithmOutput>> pipelineEndpointsPerPort;
 
     const DataBounds & visibleBounds() const
     {
@@ -71,6 +95,9 @@ public:
 private:
     DataBounds m_visibleBounds;
     bool m_visibleBoundsAreValid;
+
+    int m_nextProcessingStepId;
+    std::vector<int> m_freedProcessingStepIds;
 
 private:
     AbstractVisualizedData_private(const AbstractVisualizedData_private &) = delete;

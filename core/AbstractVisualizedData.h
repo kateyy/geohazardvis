@@ -1,13 +1,17 @@
 #pragma once
 
 #include <memory>
+#include <utility>
 
 #include <QObject>
+
+#include <vtkSmartPointer.h>
 
 #include <core/core_api.h>
 #include <core/utility/DataExtent_fwd.h>
 
 
+class vtkAlgorithm;
 class vtkAlgorithmOutput;
 class vtkDataSet;
 class vtkInformation;
@@ -77,6 +81,23 @@ public:
     vtkAlgorithmOutput * processedOutputPort(unsigned int port = 0);
     vtkDataSet * processedOutputDataSet(unsigned int port = 0);
 
+    /** Allow to inject additional post processing steps to the visualization pipeline without
+      * directly modifying the AbstractVisualizedData class hierarchy. */
+    struct PostProcessingStep
+    {
+        /** Visualization output port that this filter is applied to. */
+        unsigned int visualizationPort;
+        /** Processing step entry point that is connected to the current endpoint of the pipeline. */
+        vtkSmartPointer<vtkAlgorithm> pipelineHead;
+        /** Last step of processing step that will be the new endpoint of the pipeline. */
+        vtkSmartPointer<vtkAlgorithm> pipelineTail;
+    };
+    /** Add a post processing step to the visualization pipeline.
+      * @return An boolean that is true if the step was successfully added, and an ID that can
+      * later be used to erase the processing step from the pipeline. */
+    std::pair<bool, unsigned int> injectPostProcessingStep(const PostProcessingStep & postProcessingStep);
+    bool erasePostProcessingStep(unsigned int id);
+
     /** store data object name and pointers in the information object */
     static void setupInformation(vtkInformation & information, AbstractVisualizedData & visualization);
 
@@ -108,6 +129,9 @@ protected:
     /** Called by sub-classes when then visible bounds changed.
       * updateVisibleBounds() will be called again once visibleBounds() is called the next time. */
     void invalidateVisibleBounds();
+
+private:
+    void updatePipeline(unsigned int port);
 
 private:
     std::unique_ptr<AbstractVisualizedData_private> d_ptr;

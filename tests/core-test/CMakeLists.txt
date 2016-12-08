@@ -5,6 +5,7 @@ message(STATUS "Test ${target}")
 
 set(sources
     ${TEST_MAIN_CPP_FILEPATH}
+    AbstractVisualizedData_test.cpp
     DataSetHandler_test.cpp
     VTKAlgorithmImplementations_test.cpp
     color_mapping/ColorMapping_test.cpp

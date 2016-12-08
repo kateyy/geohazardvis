@@ -118,7 +118,14 @@ vtkAlgorithmOutput * AbstractVisualizedData::processedOutputPort(const unsigned 
         return nullptr;
     }
 
-    return processedOutputPortInternal(port);
+    if (d_ptr->pipelineEndpointsPerPort.size() <= port
+        || d_ptr->pipelineEndpointsPerPort[port] == nullptr)
+    {
+        updatePipeline(port);
+    }
+
+    assert(d_ptr->pipelineEndpointsPerPort[port]);
+    return d_ptr->pipelineEndpointsPerPort[port];
 }
 
 vtkDataSet * AbstractVisualizedData::processedOutputDataSet(unsigned int port)
@@ -133,6 +140,78 @@ vtkAlgorithmOutput * AbstractVisualizedData::processedOutputPortInternal(unsigne
     assert(port == 0);
 
     return dataObject().processedOutputPort();
+}
+
+std::pair<bool, unsigned int> AbstractVisualizedData::injectPostProcessingStep(const PostProcessingStep & postProcessingStep)
+{
+    const unsigned int port = postProcessingStep.visualizationPort;
+    if (port < 0)
+    {
+        std::make_pair(false, 0);
+    }
+
+    d_ptr->postProcessingStepsPerPort.resize(static_cast<size_t>(port + 1));
+    auto & stepsForPort = d_ptr->postProcessingStepsPerPort[static_cast<size_t>(port)];
+
+    const auto newId = d_ptr->getNextProcessingStepId();
+
+    stepsForPort.emplace_back(newId, postProcessingStep);
+
+    updatePipeline(port);
+
+    return std::make_pair(true, newId);
+}
+
+bool AbstractVisualizedData::erasePostProcessingStep(const unsigned int id)
+{
+    for (size_t port = 0; port < d_ptr->postProcessingStepsPerPort.size(); ++port)
+    {
+        auto & stepsForPort = d_ptr->postProcessingStepsPerPort[port];
+        const auto it = std::find_if(stepsForPort.begin(), stepsForPort.end(),
+            [id] (const std::pair<unsigned int, PostProcessingStep> & it)
+        {
+            return it.first == id;
+        });
+
+        if (it == stepsForPort.end())
+        {
+            continue;
+        }
+
+        stepsForPort.erase(it);
+        updatePipeline(static_cast<int>(port));
+        d_ptr->releaseProcessingStepId(id);
+
+        return true;
+    }
+
+    return false;
+}
+
+void AbstractVisualizedData::updatePipeline(const unsigned int port)
+{
+    auto upstream = processedOutputPortInternal(port);
+    assert(upstream);
+
+    d_ptr->pipelineEndpointsPerPort.resize(port + 1);
+
+    // No post processing pipeline for this port:
+    if (d_ptr->postProcessingStepsPerPort.size() <= port)
+    {
+        d_ptr->pipelineEndpointsPerPort[port] = upstream;
+        return;
+    }
+
+    vtkSmartPointer<vtkAlgorithmOutput> currentUpstream = upstream;
+
+    const auto & ppSteps = d_ptr->postProcessingStepsPerPort[port];
+    for (const auto & step : ppSteps)
+    {
+        step.second.pipelineHead->SetInputConnection(currentUpstream);
+        currentUpstream = step.second.pipelineTail->GetOutputPort();
+    }
+
+    d_ptr->pipelineEndpointsPerPort[port] = currentUpstream;
 }
 
 void AbstractVisualizedData::setupInformation(vtkInformation & information, AbstractVisualizedData & visualization)
