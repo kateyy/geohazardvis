@@ -21,7 +21,7 @@ GlyphMapping::~GlyphMapping() = default;
 QStringList GlyphMapping::vectorNames() const
 {
     QStringList result;
-    for (auto & v : m_vectors)
+    for (const auto & v : m_vectors)
     {
         result << v.first;
     }
@@ -29,12 +29,12 @@ QStringList GlyphMapping::vectorNames() const
     return result;
 }
 
-QList<GlyphMappingData *> GlyphMapping::vectors() const
+std::vector<GlyphMappingData *> GlyphMapping::vectors() const
 {
-    QList<GlyphMappingData *> result;
-    for (auto & v : m_vectors)
+    std::vector<GlyphMappingData *> result;
+    for (const auto & v : m_vectors)
     {
-        result << v.second.get();
+        result.emplace_back(v.second.get());
     }
 
     return result;

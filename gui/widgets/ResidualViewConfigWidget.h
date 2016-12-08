@@ -1,8 +1,8 @@
 #pragma once
 
 #include <memory>
+#include <vector>
 
-#include <QList>
 #include <QWidget>
 
 #include <gui/gui_api.h>
@@ -30,7 +30,7 @@ private:
     std::unique_ptr<Ui_ResidualViewConfigWidget> m_ui;
 
     ResidualVerificationView * m_currentView;
-    QList<QMetaObject::Connection> m_viewConnects;
+    std::vector<QMetaObject::Connection> m_viewConnects;
 
 private:
     Q_DISABLE_COPY(ResidualViewConfigWidget)

@@ -1,5 +1,6 @@
 #include "ColorMapping.h"
 
+#include <algorithm>
 #include <cassert>
 
 #include <QDebug>
@@ -41,7 +42,7 @@ bool ColorMapping::isEnabled() const
     return m_isEnabled;
 }
 
-void ColorMapping::setVisualizedData(const QList<AbstractVisualizedData *> & visualizedData)
+void ColorMapping::setVisualizedData(const std::vector<AbstractVisualizedData *> & visualizedData)
 {
     // clean up old scalars
     for (auto vis : m_visualizedData)
@@ -65,7 +66,7 @@ void ColorMapping::setVisualizedData(const QList<AbstractVisualizedData *> & vis
         connect(&vis->dataObject(), &DataObject::attributeArraysChanged, this, &ColorMapping::updateAvailableScalars);
     }
 
-    if (!m_visualizedData.isEmpty())
+    if (!m_visualizedData.empty())
     {
         m_data = ColorMappingRegistry::instance().createMappingsValidFor(m_visualizedData);
 
@@ -96,35 +97,38 @@ void ColorMapping::setVisualizedData(const QList<AbstractVisualizedData *> & vis
 
 void ColorMapping::registerVisualizedData(AbstractVisualizedData * visualizedData)
 {
-    if (m_visualizedData.contains(visualizedData))
+    if (std::find(m_visualizedData.begin(), m_visualizedData.end(), visualizedData) != m_visualizedData.end())
     {
         return;
     }
 
     auto newList = m_visualizedData;
-    newList << visualizedData;
+    newList.emplace_back(visualizedData);
 
     setVisualizedData(newList);
 
-    assert(m_visualizedData.contains(visualizedData));
+    assert(std::find(m_visualizedData.begin(), m_visualizedData.end(), visualizedData) != m_visualizedData.end());
 
     emit visualizedDataChanged();
 }
 
 void ColorMapping::unregisterVisualizedData(AbstractVisualizedData * visualizedData)
 {
-    if (!m_visualizedData.contains(visualizedData))
+    const auto visIt = std::find(m_visualizedData.begin(), m_visualizedData.end(), visualizedData);
+    if (visIt == m_visualizedData.end())
     {
         return;
     }
 
+    const auto index = static_cast<size_t>(visIt - m_visualizedData.begin());
+
     auto newList = m_visualizedData;
-    newList.removeOne(visualizedData);
-    assert(!newList.contains(visualizedData));
+    newList.erase(newList.begin() + index);
+    assert(std::find(newList.begin(), newList.end(), visualizedData) == newList.end());
 
     setVisualizedData(newList);
 
-    assert(!m_visualizedData.contains(visualizedData));
+    assert(std::find(m_visualizedData.begin(), m_visualizedData.end(), visualizedData) == m_visualizedData.end());
 
     emit visualizedDataChanged();
 }
@@ -134,7 +138,7 @@ bool ColorMapping::scalarsAvailable() const
     return !m_data.empty();
 }
 
-const QList<AbstractVisualizedData *> & ColorMapping::visualizedData() const
+const std::vector<AbstractVisualizedData *> & ColorMapping::visualizedData() const
 {
     return m_visualizedData;
 }

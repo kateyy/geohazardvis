@@ -11,7 +11,7 @@ Instead, it is activated when disabling color mapping and will allows the user t
 class CORE_API DefaultColorMapping : public ColorMappingData
 {
 public:
-    explicit DefaultColorMapping(const QList<AbstractVisualizedData *> & visualizedData);
+    explicit DefaultColorMapping(const std::vector<AbstractVisualizedData *> & visualizedData);
     ~DefaultColorMapping() override;
 
     QString name() const override;

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <QMap>
+#include <map>
 
 #include <core/color_mapping/ColorMappingData.h>
 
@@ -8,7 +8,7 @@
 class CORE_API SlopeAngleMapping : public ColorMappingData
 {
 public:
-    explicit SlopeAngleMapping(const QList<AbstractVisualizedData *> & visualizedData);
+    explicit SlopeAngleMapping(const std::vector<AbstractVisualizedData *> & visualizedData);
     ~SlopeAngleMapping() override;
 
     QString name() const override;
@@ -21,14 +21,14 @@ public:
     void configureMapper(AbstractVisualizedData & visualizedData, vtkAbstractMapper & mapper, int connection = 0) override;
 
 protected:
-    static std::vector<std::unique_ptr<ColorMappingData>> newInstance(const QList<AbstractVisualizedData *> & visualizedData);
+    static std::vector<std::unique_ptr<ColorMappingData>> newInstance(const std::vector<AbstractVisualizedData *> & visualizedData);
 
     std::vector<ValueRange<>> updateBounds() override;
 
 private:
     static const bool s_isRegistered;
 
-    QMap<AbstractVisualizedData *, QMap<int, vtkSmartPointer<vtkAlgorithm>>> m_filters;
+    std::map<AbstractVisualizedData *, std::map<int, vtkSmartPointer<vtkAlgorithm>>> m_filters;
 
 private:
     Q_DISABLE_COPY(SlopeAngleMapping)

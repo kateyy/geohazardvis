@@ -329,20 +329,20 @@ void RenderViewStrategy2D::startProfilePlot()
 
     if (creatingNewRenderer)
     {
-        m_previewRendererConnections <<
-            connect(m_previewRenderer, &AbstractDataView::closed, this, &RenderViewStrategy2D::abortProfilePlot);
+        m_previewRendererConnections.emplace_back(
+            connect(m_previewRenderer, &AbstractDataView::closed, this, &RenderViewStrategy2D::abortProfilePlot));
 
 
-        for (auto it = m_observerTags.begin(); it != m_observerTags.end(); ++it)
+        for (const auto & observerTagIt : m_observerTags)
         {
-            it.key()->RemoveObserver(it.value());
+            observerTagIt.first->RemoveObserver(observerTagIt.second);
         }
         m_observerTags.clear();
 
         auto addLineObservation = [this] (vtkObject * subject)
         {
             auto tag = subject->AddObserver(vtkCommand::ModifiedEvent, this, &RenderViewStrategy2D::lineMoved);
-            m_observerTags.insert(subject, tag);
+            m_observerTags.emplace(subject, tag);
         };
 
         addLineObservation(m_lineWidget->GetLineRepresentation()->GetLineHandleRepresentation());

@@ -66,12 +66,12 @@ GlyphMappingData::GlyphMappingData(RenderedData & renderedData)
     auto lineArrow = vtkSmartPointer<vtkLineSource>::New();
     lineArrow->SetPoint1(0.f, 0.f, 0.f);
     lineArrow->SetPoint2(1.f, 0.f, 0.f);
-    m_arrowSources.insert(Representation::Line, lineArrow);
+    m_arrowSources.emplace(Representation::Line, lineArrow);
 
-    m_arrowSources.insert(Representation::SimpleArrow, createSimpleArrow());
+    m_arrowSources.emplace(Representation::SimpleArrow, createSimpleArrow());
 
     auto cylindricArrow = vtkSmartPointer<vtkArrowSource>::New();
-    m_arrowSources.insert(Representation::CylindricArrow, cylindricArrow);
+    m_arrowSources.emplace(Representation::CylindricArrow, cylindricArrow);
     cylindricArrow->SetShaftRadius(0.02);
     cylindricArrow->SetTipRadius(0.07);
     cylindricArrow->SetTipLength(0.3);
@@ -159,7 +159,7 @@ void GlyphMappingData::setArrowLength(float length)
 
 float GlyphMappingData::arrowRadius() const
 {
-    auto arrowSouce = vtkArrowSource::SafeDownCast(m_arrowSources[Representation::CylindricArrow]);
+    auto arrowSouce = vtkArrowSource::SafeDownCast(m_arrowSources.at(Representation::CylindricArrow));
     assert(arrowSouce);
 
     return static_cast<float>(arrowSouce->GetTipRadius());
@@ -167,7 +167,7 @@ float GlyphMappingData::arrowRadius() const
 
 void GlyphMappingData::setArrowRadius(float radius)
 {
-    auto arrowSouce = vtkArrowSource::SafeDownCast(m_arrowSources[Representation::CylindricArrow]);
+    auto arrowSouce = vtkArrowSource::SafeDownCast(m_arrowSources.at(Representation::CylindricArrow));
     assert(arrowSouce);
 
     arrowSouce->SetTipRadius(radius);
@@ -176,7 +176,7 @@ void GlyphMappingData::setArrowRadius(float radius)
 
 float GlyphMappingData::arrowTipLength() const
 {
-    auto arrowSouce = vtkArrowSource::SafeDownCast(m_arrowSources[Representation::CylindricArrow]);
+    auto arrowSouce = vtkArrowSource::SafeDownCast(m_arrowSources.at(Representation::CylindricArrow));
     assert(arrowSouce);
 
     return static_cast<float>(arrowSouce->GetTipLength());
@@ -184,7 +184,7 @@ float GlyphMappingData::arrowTipLength() const
 
 void GlyphMappingData::setArrowTipLength(float tipLength)
 {
-    auto arrowSouce = vtkArrowSource::SafeDownCast(m_arrowSources[Representation::CylindricArrow]);
+    auto arrowSouce = vtkArrowSource::SafeDownCast(m_arrowSources.at(Representation::CylindricArrow));
     assert(arrowSouce);
 
     arrowSouce->SetTipLength(tipLength);

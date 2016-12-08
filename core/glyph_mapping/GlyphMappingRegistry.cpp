@@ -23,7 +23,7 @@ std::map<QString, std::unique_ptr<GlyphMappingData>> GlyphMappingRegistry::creat
 
     for (auto && creator : m_mappingCreators)
     {
-        auto vectors = creator(renderedData);
+        auto vectors = creator.second(renderedData);
 
         for (auto & v : vectors)
         {
@@ -37,19 +37,15 @@ std::map<QString, std::unique_ptr<GlyphMappingData>> GlyphMappingRegistry::creat
     return validVectors;
 }
 
-const QMap<QString, GlyphMappingRegistry::MappingCreator> & GlyphMappingRegistry::mappingCreators() const
-{
-    return m_mappingCreators;
-}
-
 bool GlyphMappingRegistry::registerImplementation(const QString & name, const MappingCreator & creator)
 {
-    assert(!m_mappingCreators.contains(name));
-    if (m_mappingCreators.contains(name))
+    auto it = m_mappingCreators.find(name);
+    assert(it == m_mappingCreators.end());
+    if (it != m_mappingCreators.end())
     {
         return false;
     }
 
-    m_mappingCreators.insert(name, creator);
+    m_mappingCreators.emplace(name, creator);
     return true;
 }

@@ -52,10 +52,10 @@ private:
     std::unique_ptr<Ui_GlyphMappingChooser> m_ui;
 
     AbstractRenderView * m_renderView;
-    QList<QMetaObject::Connection> m_viewConnections;
+    std::vector<QMetaObject::Connection> m_viewConnections;
     GlyphMapping * m_mapping;
     QMetaObject::Connection m_vectorListConnection;
-    QList<QMetaObject::Connection> m_vectorsRenderConnections;
+    std::vector<QMetaObject::Connection> m_vectorsRenderConnections;
     GlyphMappingChooserListModel * m_listModel;
     std::vector<std::unique_ptr<reflectionzeug::PropertyGroup>> m_propertyGroups;
 

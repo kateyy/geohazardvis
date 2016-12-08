@@ -1,9 +1,9 @@
 #pragma once
 
+#include <map>
 #include <memory>
 #include <vector>
 
-#include <QMap>
 #include <QObject>
 
 #include <vtkSmartPointer.h>
@@ -120,7 +120,7 @@ private:
     bool m_isVisible;
 
     Representation m_representation;
-    QMap<Representation, vtkSmartPointer<vtkAlgorithm>> m_arrowSources;
+    std::map<Representation, vtkSmartPointer<vtkAlgorithm>> m_arrowSources;
 
     vtkSmartPointer<vtkGlyph3D> m_arrowGlyph;
     vtkSmartPointer<vtkMapper> m_mapper;
@@ -132,6 +132,8 @@ private:
 protected:
     bool m_isValid;
 
+private:
+    Q_DISABLE_COPY(GlyphMappingData)
 };
 
 #include "GlyphMappingData.hpp"

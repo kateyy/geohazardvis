@@ -1,7 +1,8 @@
 #pragma once
 
+#include <vector>
+
 #include <QAbstractTableModel>
-#include <QList>
 
 #include <vtkType.h>
 
@@ -42,7 +43,7 @@ private:
     DataObject * m_dataObject;
     vtkIdType m_hightlightId;
 
-    QList<QMetaObject::Connection> m_dataObjectConnections;
+    std::vector<QMetaObject::Connection> m_dataObjectConnections;
 
 private:
     Q_DISABLE_COPY(QVtkTableModel)

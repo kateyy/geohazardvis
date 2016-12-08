@@ -1,6 +1,6 @@
 #pragma once
 
-#include <QMap>
+#include <map>
 
 #include <core/color_mapping/ColorMappingData.h>
 
@@ -9,7 +9,7 @@ class CORE_API VectorMagnitudeColorMapping : public ColorMappingData
 {
 public:
     VectorMagnitudeColorMapping(
-        const QList<AbstractVisualizedData *> & visualizedData,
+        const std::vector<AbstractVisualizedData *> & visualizedData,
         const QString & dataArrayName, IndexType attributeLocation);
     ~VectorMagnitudeColorMapping() override;
 
@@ -23,7 +23,7 @@ public:
     void configureMapper(AbstractVisualizedData & visualizedData, vtkAbstractMapper & mapper, int connection) override;
 
 protected:
-    static std::vector<std::unique_ptr<ColorMappingData>> newInstances(const QList<AbstractVisualizedData*> & visualizedData);
+    static std::vector<std::unique_ptr<ColorMappingData>> newInstances(const std::vector<AbstractVisualizedData*> & visualizedData);
 
     std::vector<ValueRange<>> updateBounds() override;
 
@@ -34,7 +34,7 @@ private:
     const QString m_dataArrayName;
     const QString m_magnitudeArrayName;
 
-    QMap<AbstractVisualizedData *, std::vector<vtkSmartPointer<vtkAlgorithm>>> m_filters;
+    std::map<AbstractVisualizedData *, std::vector<vtkSmartPointer<vtkAlgorithm>>> m_filters;
 
 private:
     Q_DISABLE_COPY(VectorMagnitudeColorMapping)

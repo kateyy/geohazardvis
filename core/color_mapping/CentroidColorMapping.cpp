@@ -26,20 +26,20 @@ const bool CentroidColorMapping::s_isRegistered = ColorMappingRegistry::instance
     newInstances);
 
 
-std::vector<std::unique_ptr<ColorMappingData>> CentroidColorMapping::newInstances(const QList<AbstractVisualizedData*> & visualizedData)
+std::vector<std::unique_ptr<ColorMappingData>> CentroidColorMapping::newInstances(const std::vector<AbstractVisualizedData*> & visualizedData)
 {
-    QList<AbstractVisualizedData *> polyDataObjects;
+    std::vector<AbstractVisualizedData *> polyDataObjects;
 
     // list all available array names, check for same number of components
     for (auto vis : visualizedData)
     {
         if (dynamic_cast<PolyDataObject *>(&vis->dataObject()))
         {
-            polyDataObjects << vis;
+            polyDataObjects.emplace_back(vis);
         }
     }
 
-    if (polyDataObjects.isEmpty())
+    if (polyDataObjects.empty())
     {
         return{};
     }
@@ -55,7 +55,7 @@ std::vector<std::unique_ptr<ColorMappingData>> CentroidColorMapping::newInstance
     return instances;
 }
 
-CentroidColorMapping::CentroidColorMapping(const QList<AbstractVisualizedData *> & visualizedData)
+CentroidColorMapping::CentroidColorMapping(const std::vector<AbstractVisualizedData *> & visualizedData)
     : ColorMappingData(visualizedData, 3)
 {
     setDataComponent(2);    // elevation mapping by default

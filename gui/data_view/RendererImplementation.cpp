@@ -15,9 +15,9 @@ RendererImplementation::RendererImplementation(AbstractRenderView & renderView)
 
 RendererImplementation::~RendererImplementation()
 {
-    for (auto && list : m_visConnections)
+    for (auto & listIt : m_visConnections)
     {
-        disconnectAll(list);
+        disconnectAll(listIt.second);
     }
 }
 
@@ -65,10 +65,11 @@ void RendererImplementation::activate(t_QVTKWidget & /*qvtkWidget*/)
 
 void RendererImplementation::deactivate(t_QVTKWidget & /*qvtkWidget*/)
 {
-    for (auto && list : m_visConnections)
+    for (auto & listIt : m_visConnections)
     {
-        disconnectAll(list);
+        disconnectAll(listIt.second);
     }
+    m_visConnections.clear();
 }
 
 unsigned int RendererImplementation::subViewIndexAtPos(const QPoint /*pixelCoordinate*/) const
@@ -87,7 +88,10 @@ void RendererImplementation::addContent(AbstractVisualizedData * content, unsign
 
 void RendererImplementation::removeContent(AbstractVisualizedData * content, unsigned int subViewIndex)
 {
-    disconnectAll(m_visConnections.take(content));
+    auto it = m_visConnections.find(content);
+    assert(it != m_visConnections.end());
+    disconnectAll(it->second);
+    m_visConnections.erase(it);
 
     onRemoveContent(content, subViewIndex);
 
@@ -135,14 +139,14 @@ const VisualizationSelection & RendererImplementation::selection() const
     return m_selection;
 }
 
-const QList<RendererImplementation::ImplementationConstructor> & RendererImplementation::constructors()
+const std::vector<RendererImplementation::ImplementationConstructor> & RendererImplementation::constructors()
 {
     return s_constructors();
 }
 
-QList<RendererImplementation::ImplementationConstructor> & RendererImplementation::s_constructors()
+std::vector<RendererImplementation::ImplementationConstructor> & RendererImplementation::s_constructors()
 {
-    static QList<ImplementationConstructor> list;
+    static std::vector<ImplementationConstructor> list;
 
     return list;
 }
@@ -172,5 +176,5 @@ void RendererImplementation::updateForCurrentInteractionStrategy(const QString &
 void RendererImplementation::addConnectionForContent(AbstractVisualizedData * content,
     const QMetaObject::Connection & connection)
 {
-    m_visConnections[content] << connection;
+    m_visConnections[content].emplace_back(connection);
 }

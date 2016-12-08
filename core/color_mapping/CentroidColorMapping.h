@@ -9,7 +9,7 @@
 class CORE_API CentroidColorMapping : public ColorMappingData
 {
 public:
-    explicit CentroidColorMapping(const QList<AbstractVisualizedData*> & visualizedData);
+    explicit CentroidColorMapping(const std::vector<AbstractVisualizedData*> & visualizedData);
     ~CentroidColorMapping() override;
 
     QString name() const override;
@@ -23,7 +23,7 @@ public:
     void configureMapper(AbstractVisualizedData & visualizedData, vtkAbstractMapper & mapper, int connection = 0) override;
 
 protected:
-    static std::vector<std::unique_ptr<ColorMappingData>> newInstances(const QList<AbstractVisualizedData*> & visualizedData);
+    static std::vector<std::unique_ptr<ColorMappingData>> newInstances(const std::vector<AbstractVisualizedData *> & visualizedData);
 
     std::vector<ValueRange<>> updateBounds() override;
 

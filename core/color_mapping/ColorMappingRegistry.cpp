@@ -17,13 +17,14 @@ ColorMappingRegistry & ColorMappingRegistry::instance()
     return registry;
 }
 
-std::map<QString, std::unique_ptr<ColorMappingData>> ColorMappingRegistry::createMappingsValidFor(const QList<AbstractVisualizedData*> & visualizedData) const
+std::map<QString, std::unique_ptr<ColorMappingData>> ColorMappingRegistry::createMappingsValidFor(
+    const std::vector<AbstractVisualizedData *> & visualizedData) const
 {
     std::map<QString, std::unique_ptr<ColorMappingData>> validScalars;
 
-    for (auto && creator : m_mappingCreators)
+    for (const auto & creator : m_mappingCreators)
     {
-        auto scalars = creator(visualizedData);
+        auto scalars = creator.second(visualizedData);
 
         for (auto & s : scalars)
         {
@@ -37,19 +38,15 @@ std::map<QString, std::unique_ptr<ColorMappingData>> ColorMappingRegistry::creat
     return validScalars;
 }
 
-const QMap<QString, ColorMappingRegistry::MappingCreator> & ColorMappingRegistry::mappingCreators() const
-{
-    return m_mappingCreators;
-}
-
 bool ColorMappingRegistry::registerImplementation(const QString & name, const MappingCreator & creator)
 {
-    assert(!m_mappingCreators.contains(name));
-    if (m_mappingCreators.contains(name))
+    auto it = m_mappingCreators.find(name);
+    assert(it == m_mappingCreators.end());
+    if (it != m_mappingCreators.end())
     {
         return false;
     }
 
-    m_mappingCreators.insert(name, creator);
+    m_mappingCreators.emplace(name, creator);
     return true;
 }

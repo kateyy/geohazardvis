@@ -20,7 +20,7 @@ public:
       * @param numDataComponents Number of data components of the attribute (superclass API)
      */
     GlyphColorMapping(
-        const QList<AbstractVisualizedData *> & visualizedData,
+        const std::vector<AbstractVisualizedData *> & visualizedData,
         const std::map<RenderedData3D *, GlyphMappingData *> & glyphMappingData,
         int numDataComponents = 1);
     ~GlyphColorMapping() override;

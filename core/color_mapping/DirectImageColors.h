@@ -6,7 +6,7 @@
 class CORE_API DirectImageColors : public ColorMappingData
 {
 public:
-    DirectImageColors(const QList<AbstractVisualizedData *> & visualizedData,
+    DirectImageColors(const std::vector<AbstractVisualizedData *> & visualizedData,
         const QString & dataArrayName, IndexType attributeLocation);
     ~DirectImageColors() override;
 
@@ -20,7 +20,7 @@ public:
     void configureMapper(AbstractVisualizedData & visualizedData, vtkAbstractMapper & mapper, int connection = 0) override;
 
 protected:
-    static std::vector<std::unique_ptr<ColorMappingData>> newInstances(const QList<AbstractVisualizedData *> & visualizedData);
+    static std::vector<std::unique_ptr<ColorMappingData>> newInstances(const std::vector<AbstractVisualizedData *> & visualizedData);
 
     std::vector<ValueRange<>> updateBounds() override;
 

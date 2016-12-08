@@ -35,7 +35,7 @@ std::vector<std::unique_ptr<GlyphMappingData>> Grid3dGlyphMapping::newInstances(
     }
 
     auto pointData = renderedGrid->resampledDataSet()->GetPointData();
-    QList<vtkDataArray *> vectorArrays;
+    std::vector<vtkDataArray *> vectorArrays;
     for (int i = 0; auto a = pointData->GetArray(i); ++i)
     {
         assert(a);
@@ -51,7 +51,7 @@ std::vector<std::unique_ptr<GlyphMappingData>> Grid3dGlyphMapping::newInstances(
             continue;
         }
 
-        vectorArrays << a;
+        vectorArrays.emplace_back(a);
     }
 
     std::vector<std::unique_ptr<GlyphMappingData>> instances;

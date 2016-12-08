@@ -31,7 +31,7 @@ const bool GlyphMagnitudeColorMapping::s_isRegistered =
     ColorMappingRegistry::instance().registerImplementation(s_name, newInstances);
 
 
-std::vector<std::unique_ptr<ColorMappingData>> GlyphMagnitudeColorMapping::newInstances(const QList<AbstractVisualizedData*> & visualizedData)
+std::vector<std::unique_ptr<ColorMappingData>> GlyphMagnitudeColorMapping::newInstances(const std::vector<AbstractVisualizedData*> & visualizedData)
 {
     // If multiple visualizations share glyph mappings with the same name, the same glyph color
     // mapping will be created for them. Note that this is only relevant if these visualizations
@@ -69,11 +69,10 @@ std::vector<std::unique_ptr<ColorMappingData>> GlyphMagnitudeColorMapping::newIn
 }
 
 GlyphMagnitudeColorMapping::GlyphMagnitudeColorMapping(
-    const QList<AbstractVisualizedData *> & visualizedData,
+    const std::vector<AbstractVisualizedData *> & visualizedData,
     const QString & vectorName,
     const std::map<RenderedData3D *, GlyphMappingData *> & glyphMappingData)
     : GlyphColorMapping(visualizedData, glyphMappingData)
-    , m_glyphMappingData{ glyphMappingData }
     , m_vectorName{ vectorName }
 {
     m_isValid = !glyphMappingData.empty();

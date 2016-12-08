@@ -2,6 +2,8 @@
 
 #include <cassert>
 
+#include <QDebug>
+
 #include <vtkCamera.h>
 #include <vtkCommand.h>
 #include <vtkRenderer.h>
@@ -15,10 +17,7 @@ vtkCameraSynchronization::vtkCameraSynchronization()
 
 vtkCameraSynchronization::~vtkCameraSynchronization()
 {
-    while (!m_renderers.isEmpty())
-    {
-        remove(m_renderers.begin().value());
-    }
+    clear();
 }
 
 void vtkCameraSynchronization::setEnabled(bool enabled)
@@ -28,20 +27,31 @@ void vtkCameraSynchronization::setEnabled(bool enabled)
 
 void vtkCameraSynchronization::add(vtkRenderer * renderer)
 {
+    if (!renderer)
+    {
+        return;
+    }
+
     auto camera = renderer->GetActiveCamera();
-    if (m_cameras.contains(camera))
+    if (m_cameras.find(camera) != m_cameras.end())
     {
         return;
     }
 
     auto observerTag = camera->AddObserver(vtkCommand::ModifiedEvent, this, &vtkCameraSynchronization::cameraChanged);
 
-    m_cameras.insert(camera, observerTag);
-    m_renderers.insert(camera, renderer);
+    m_cameras.emplace(camera, observerTag);
+    m_renderers.emplace(camera, renderer);
 }
 
 void vtkCameraSynchronization::remove(vtkRenderer * renderer)
 {
+    if (!renderer)
+    {
+        qWarning() << "Passed null renderer to vtkCameraSynchronization";
+        return;
+    }
+
     auto camera = renderer->GetActiveCamera();
     auto it = m_cameras.find(camera);
 
@@ -50,17 +60,17 @@ void vtkCameraSynchronization::remove(vtkRenderer * renderer)
         return;
     }
 
-    camera->RemoveObserver(it.value());
+    camera->RemoveObserver(it->second);
 
     m_cameras.erase(it);
-    m_renderers.remove(camera);
+    m_renderers.erase(camera);
 }
 
-void vtkCameraSynchronization::set(const QList<vtkRenderer *> & renderers)
+void vtkCameraSynchronization::set(const std::vector<vtkRenderer *> & renderers)
 {
     clear();
 
-    for (auto & renderer : renderers)
+    for (const auto & renderer : renderers)
     {
         add(renderer);
     }
@@ -69,9 +79,9 @@ void vtkCameraSynchronization::set(const QList<vtkRenderer *> & renderers)
 void vtkCameraSynchronization::clear()
 {
     auto oldRenderers = m_renderers;
-    for (auto & renderer : oldRenderers)
+    for (const auto & renderer : oldRenderers)
     {
-        remove(renderer);
+        remove(renderer.second);
     }
 }
 
@@ -87,9 +97,9 @@ void vtkCameraSynchronization::cameraChanged(vtkObject * source, unsigned long /
     assert(vtkCamera::SafeDownCast(source));
     vtkCamera * sourceCamera = static_cast<vtkCamera *>(source);
 
-    for (auto it = m_cameras.begin(); it != m_cameras.end(); ++it)
+    for (const auto & camIt : m_cameras)
     {
-        auto & camera = it.key();
+        auto & camera = camIt.first;
 
         if (camera == sourceCamera)
         {

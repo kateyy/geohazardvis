@@ -1,13 +1,14 @@
 #pragma once
 
-#include <QMap>
+#include <map>
+#include <vector>
 
 #include <vtkSmartPointer.h>
+#include <vtkWeakPointer.h>
 
 #include <core/core_api.h>
 
 
-template<typename T> class QList;
 class vtkCamera;
 class vtkObject;
 class vtkRenderer;
@@ -23,7 +24,7 @@ public:
 
     void add(vtkRenderer * renderer);
     void remove(vtkRenderer * renderer);
-    void set(const QList<vtkRenderer *> & renderers);
+    void set(const std::vector<vtkRenderer *> & renderers);
     void clear();
 
 private:
@@ -33,8 +34,8 @@ private:
     bool m_isEnabled;
     bool m_currentlySyncing;
 
-    QMap<vtkSmartPointer<vtkCamera>, unsigned long> m_cameras;
-    QMap<vtkCamera *, vtkRenderer *> m_renderers;
+    std::map<vtkSmartPointer<vtkCamera>, unsigned long> m_cameras;
+    std::map<vtkCamera *, vtkWeakPointer<vtkRenderer>> m_renderers;
 
 private:
     vtkCameraSynchronization(const vtkCameraSynchronization &) = delete;

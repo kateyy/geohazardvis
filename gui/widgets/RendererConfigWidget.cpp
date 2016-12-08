@@ -52,9 +52,9 @@ RendererConfigWidget::~RendererConfigWidget()
 void RendererConfigWidget::clear()
 {
     m_currentRenderView = nullptr;
-    for (auto it = m_cameraObserverTags.begin(); it != m_cameraObserverTags.end(); ++it)
+    for (const auto & observerIt : m_cameraObserverTags)
     {
-        it.key()->RemoveObserver(it.value());
+        observerIt.first->RemoveObserver(observerIt.second);
     }
     m_cameraObserverTags.clear();
 
@@ -101,9 +101,14 @@ void RendererConfigWidget::setCurrentRenderView(AbstractRenderView * renderView)
     RendererImplementationBase3D * impl3D = nullptr;
     if (lastRenderView && (impl3D = dynamic_cast<RendererImplementationBase3D *>(&lastRenderView->implementation())))
     {
-        auto camera = impl3D->camera(0);  // assuming synchronized cameras
-        auto tag = m_cameraObserverTags.take(camera);
-        camera->RemoveObserver(tag);
+        const auto camera = impl3D->camera(0);  // assuming synchronized cameras
+        const auto it = m_cameraObserverTags.find(camera);
+        if (it != m_cameraObserverTags.end())
+        {
+            const auto tag = it->second;
+            m_cameraObserverTags.erase(it);
+            camera->RemoveObserver(tag);
+        }
     }
 
     // setup for the new view
@@ -128,7 +133,7 @@ void RendererConfigWidget::setCurrentRenderView(AbstractRenderView * renderView)
     {
         auto camera = impl3D->camera(0);  // assuming synchronized cameras
         auto tag = camera->AddObserver(vtkCommand::ModifiedEvent, this, &RendererConfigWidget::readCameraStats);
-        m_cameraObserverTags.insert(camera, tag);
+        m_cameraObserverTags.emplace(camera, tag);
 
         auto resetCamera = [impl3D] (bool toInitial)
         {
@@ -140,8 +145,8 @@ void RendererConfigWidget::setCurrentRenderView(AbstractRenderView * renderView)
         };
 
         m_ui->cameraButtonsWidget->setVisible(true);
-        m_cameraResetConnections << connect(m_ui->zoomToDataButton, &QAbstractButton::clicked, std::bind(resetCamera, false));
-        m_cameraResetConnections << connect(m_ui->resetCameraButton, &QAbstractButton::clicked, std::bind(resetCamera, true));
+        m_cameraResetConnections.emplace_back(connect(m_ui->zoomToDataButton, &QAbstractButton::clicked, std::bind(resetCamera, false)));
+        m_cameraResetConnections.emplace_back(connect(m_ui->resetCameraButton, &QAbstractButton::clicked, std::bind(resetCamera, true)));
     }
 
     updateTitle();
@@ -205,13 +210,13 @@ std::unique_ptr<PropertyGroup> RendererConfigWidget::createPropertyGroup(Abstrac
     case ContentType::Rendered2D:
     case ContentType::Rendered3D:
     {
-        RendererImplementationBase3D * impl3D = dynamic_cast<RendererImplementationBase3D *>(&renderView->implementation());
+        auto impl3D = dynamic_cast<RendererImplementationBase3D *>(&renderView->implementation());
         assert(impl3D);
         return createPropertyGroupRenderer(renderView, impl3D);
     }
     case ContentType::Context2D:
     {
-        RendererImplementationPlot * implPlot = dynamic_cast<RendererImplementationPlot *>(&renderView->implementation());
+        auto implPlot = dynamic_cast<RendererImplementationPlot *>(&renderView->implementation());
         assert(implPlot);
         return createPropertyGroupPlot(renderView, implPlot);
     }

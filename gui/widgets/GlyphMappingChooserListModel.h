@@ -1,7 +1,9 @@
 #pragma once
 
+#include <vector>
+
 #include <QAbstractListModel>
-#include <QList>
+#include <QStringList>
 
 
 class GlyphMapping;
@@ -30,7 +32,7 @@ signals:
 private:
     GlyphMapping * m_mapping;
     QStringList m_vectorNames;
-    QList<GlyphMappingData *> m_vectors;
+    std::vector<GlyphMappingData *> m_vectors;
 
 private:
     Q_DISABLE_COPY(GlyphMappingChooserListModel)

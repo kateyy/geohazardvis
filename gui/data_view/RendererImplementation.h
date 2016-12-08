@@ -1,10 +1,11 @@
 #pragma once
 
 #include <functional>
+#include <map>
 #include <memory>
+#include <vector>
 
 #include <QObject>
-#include <QMap>
 #include <QStringList>
 
 #include <core/types.h>
@@ -85,7 +86,7 @@ public:
     virtual std::unique_ptr<AbstractVisualizedData> requestVisualization(DataObject & dataObject) const = 0;
 
     using ImplementationConstructor = std::function<std::unique_ptr<RendererImplementation>(AbstractRenderView & view)>;
-    static const QList<ImplementationConstructor> & constructors();
+    static const std::vector<ImplementationConstructor> & constructors();
 
 signals:
     void interactionStrategyChanged(const QString & strategyName);
@@ -120,9 +121,9 @@ protected:
     AbstractRenderView & m_renderView;
 
 private:
-    static QList<ImplementationConstructor> & s_constructors();
+    static std::vector<ImplementationConstructor> & s_constructors();
 
-    QMap<AbstractVisualizedData *, QList<QMetaObject::Connection>> m_visConnections;
+    std::map<AbstractVisualizedData *, std::vector<QMetaObject::Connection>> m_visConnections;
 
     VisualizationSelection m_selection;
 
@@ -136,7 +137,7 @@ private:
 template <typename ImplType>
 bool RendererImplementation::registerImplementation()
 {
-    s_constructors().append(
+    s_constructors().emplace_back(
         [](AbstractRenderView & view) { return std::make_unique<ImplType>(view); }
     );
 

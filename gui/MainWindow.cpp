@@ -304,14 +304,14 @@ void MainWindow::addRenderView(AbstractRenderView * renderView)
 {
     addDockWidget(Qt::DockWidgetArea::TopDockWidgetArea, renderView->dockWidgetParent());
 
-    m_renderViewConnects << connect(renderView, &AbstractDataView::selectionChanged,
+    m_renderViewConnects.emplace_back(connect(renderView, &AbstractDataView::selectionChanged,
         [this] (AbstractDataView * renderView, const DataSelection & selection)
     {
         if (renderView == m_dataMapping->focusedRenderView())
         {
             m_dataBrowser->setSelectedData(selection.dataObject);
         }
-    });
+    }));
 }
 
 void MainWindow::addTableView(TableView * tableView, QDockWidget * dockTabifyPartner)

@@ -1,5 +1,7 @@
 #include <core/color_mapping/DirectImageColors.h>
 
+#include <map>
+
 #include <vtkAssignAttribute.h>
 #include <vtkCellData.h>
 #include <vtkDataSet.h>
@@ -24,9 +26,9 @@ const bool DirectImageColors::s_isRegistered = ColorMappingRegistry::instance().
     s_name,
     newInstances);
 
-std::vector<std::unique_ptr<ColorMappingData>> DirectImageColors::newInstances(const QList<AbstractVisualizedData *> & visualizedData)
+std::vector<std::unique_ptr<ColorMappingData>> DirectImageColors::newInstances(const std::vector<AbstractVisualizedData *> & visualizedData)
 {
-    QMultiMap<QString, IndexType> arrayLocs;
+    std::multimap<QString, IndexType> arrayLocs;
 
     auto checkAddAttributeArrays = [&arrayLocs] (vtkDataSetAttributes * attributes, IndexType attributeLocation) -> void
     {
@@ -46,11 +48,11 @@ std::vector<std::unique_ptr<ColorMappingData>> DirectImageColors::newInstances(c
                 continue;
             }
 
-            arrayLocs.insert(QString::fromUtf8(colors->GetName()), attributeLocation);
+            arrayLocs.emplace(QString::fromUtf8(colors->GetName()), attributeLocation);
         }
     };
 
-    QList<AbstractVisualizedData *> supportedData;
+    std::vector<AbstractVisualizedData *> supportedData;
 
     // list all available array names, check for same number of components
     for (auto vis : visualizedData)
@@ -60,7 +62,7 @@ std::vector<std::unique_ptr<ColorMappingData>> DirectImageColors::newInstances(c
             continue;
         }
 
-        supportedData << vis;
+        supportedData.emplace_back(vis);
 
         for (auto i = 0; i < vis->numberOfColorMappingInputs(); ++i)
         {
@@ -72,9 +74,9 @@ std::vector<std::unique_ptr<ColorMappingData>> DirectImageColors::newInstances(c
     }
 
     std::vector<std::unique_ptr<ColorMappingData>> instances;
-    for (auto it = arrayLocs.begin(); it != arrayLocs.end(); ++it)
+    for (const auto & loc : arrayLocs)
     {
-        auto mapping = std::make_unique<DirectImageColors>(supportedData, it.key(), it.value());
+        auto mapping = std::make_unique<DirectImageColors>(supportedData, loc.first, loc.second);
         if (mapping->isValid())
         {
             mapping->initialize();
@@ -85,13 +87,13 @@ std::vector<std::unique_ptr<ColorMappingData>> DirectImageColors::newInstances(c
     return instances;
 }
 
-DirectImageColors::DirectImageColors(const QList<AbstractVisualizedData *> & visualizedData,
+DirectImageColors::DirectImageColors(const std::vector<AbstractVisualizedData *> & visualizedData,
     const QString & dataArrayName, IndexType attributeLocation)
     : ColorMappingData(visualizedData, 1, false)
     , m_attributeLocation{ attributeLocation }
     , m_dataArrayName{ dataArrayName }
 {
-    assert(!visualizedData.isEmpty());
+    assert(!visualizedData.empty());
 
     m_isValid = true;
 }

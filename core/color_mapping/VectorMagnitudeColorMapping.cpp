@@ -8,6 +8,7 @@
 #include <vtkDataSet.h>
 #include <vtkInformation.h>
 #include <vtkMapper.h>
+#include <vtkPassThrough.h>
 #include <vtkPointData.h>
 #include <vtkVectorNorm.h>
 
@@ -29,9 +30,9 @@ const bool VectorMagnitudeColorMapping::s_isRegistered = ColorMappingRegistry::i
     s_name,
     newInstances);
 
-std::vector<std::unique_ptr<ColorMappingData>> VectorMagnitudeColorMapping::newInstances(const QList<AbstractVisualizedData*> & visualizedData)
+std::vector<std::unique_ptr<ColorMappingData>> VectorMagnitudeColorMapping::newInstances(const std::vector<AbstractVisualizedData*> & visualizedData)
 {
-    auto checkAddAttributeArrays = [] (AbstractVisualizedData * vis, vtkDataSetAttributes * attributes, QMap<QString, QList<AbstractVisualizedData *>> & arrayNames) -> void
+    auto checkAddAttributeArrays = [] (AbstractVisualizedData * vis, vtkDataSetAttributes * attributes, std::map<QString, std::vector<AbstractVisualizedData *>> & arrayNames) -> void
     {
         for (auto i = 0; i < attributes->GetNumberOfArrays(); ++i)
         {
@@ -61,11 +62,11 @@ std::vector<std::unique_ptr<ColorMappingData>> VectorMagnitudeColorMapping::newI
             }
 
             // store a list of relevant objects for each kind of attribute data
-            arrayNames[QString::fromUtf8(dataArray->GetName())] << vis;
+            arrayNames[QString::fromUtf8(dataArray->GetName())].emplace_back(vis);
         }
     };
 
-    QMap<QString, QList<AbstractVisualizedData *>> cellArrays, pointArrays;
+    std::map<QString, std::vector<AbstractVisualizedData *>> cellArrays, pointArrays;
 
     for (auto vis : visualizedData)
     {
@@ -85,15 +86,15 @@ std::vector<std::unique_ptr<ColorMappingData>> VectorMagnitudeColorMapping::newI
 
     std::vector<std::unique_ptr<VectorMagnitudeColorMapping>> unchecked;
 
-    for (auto it = cellArrays.begin(); it != cellArrays.end(); ++it)
+    for (const auto & it : cellArrays)
     {
         unchecked.push_back(
-            std::make_unique<VectorMagnitudeColorMapping>(it.value(), it.key(), IndexType::cells));
+            std::make_unique<VectorMagnitudeColorMapping>(it.second, it.first, IndexType::cells));
     }
-    for (auto it = pointArrays.begin(); it != pointArrays.end(); ++it)
+    for (const auto & it : pointArrays)
     {
         unchecked.push_back(
-            std::make_unique<VectorMagnitudeColorMapping>(it.value(), it.key(), IndexType::points));
+            std::make_unique<VectorMagnitudeColorMapping>(it.second, it.first, IndexType::points));
     }
 
     std::vector<std::unique_ptr<ColorMappingData>> instances;
@@ -110,7 +111,7 @@ std::vector<std::unique_ptr<ColorMappingData>> VectorMagnitudeColorMapping::newI
 }
 
 VectorMagnitudeColorMapping::VectorMagnitudeColorMapping(
-    const QList<AbstractVisualizedData *> & visualizedData,
+    const std::vector<AbstractVisualizedData *> & visualizedData,
     const QString & dataArrayName, IndexType attributeLocation)
     : ColorMappingData(visualizedData)
     , m_attributeLocation{ attributeLocation }
@@ -161,7 +162,7 @@ VectorMagnitudeColorMapping::VectorMagnitudeColorMapping(
             filters.emplace_back(setMagnitudeName);
         }
 
-        m_filters.insert(vis, filters);
+        m_filters.emplace(vis, filters);
     }
 
     m_isValid = true;
@@ -187,10 +188,16 @@ IndexType VectorMagnitudeColorMapping::scalarsAssociation(AbstractVisualizedData
 vtkSmartPointer<vtkAlgorithm> VectorMagnitudeColorMapping::createFilter(AbstractVisualizedData & visualizedData, int connection)
 {
     /** vtkVectorNorm sets norm array as current scalars; it doesn't set a name */
-    auto & norms = m_filters.value(&visualizedData);
+    const auto filtersIt = m_filters.find(&visualizedData);
+    if (filtersIt == m_filters.end())
+    {
+        auto filter = vtkSmartPointer<vtkPassThrough>::New();
+        filter->SetInputConnection(visualizedData.colorMappingInput(connection));
+        return filter;
+    }
 
-    assert(norms.size() > static_cast<size_t>(connection));
-    auto norm = norms[connection];
+    assert(filtersIt->second.size() > static_cast<size_t>(connection));
+    auto & norm = filtersIt->second[connection];
     assert(norm);
 
     return norm;
@@ -230,9 +237,9 @@ std::vector<ValueRange<>> VectorMagnitudeColorMapping::updateBounds()
 {
     decltype(updateBounds())::value_type totalRange;
 
-    for (auto && filters : m_filters.values())
+    for (const auto & filtersIt : m_filters)
     {
-        for (auto && filter : filters)
+        for (const auto & filter : filtersIt.second)
         {
             filter->Update();
             auto dataSet = vtkDataSet::SafeDownCast(filter->GetOutputDataObject(0));

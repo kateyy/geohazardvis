@@ -21,9 +21,9 @@ const bool PointCoordinateColorMapping::s_isRegistered = ColorMappingRegistry::i
     newInstances);
 
 
-std::vector<std::unique_ptr<ColorMappingData>> PointCoordinateColorMapping::newInstances(const QList<AbstractVisualizedData*> & visualizedData)
+std::vector<std::unique_ptr<ColorMappingData>> PointCoordinateColorMapping::newInstances(const std::vector<AbstractVisualizedData*> & visualizedData)
 {
-    QList<AbstractVisualizedData *> polyDataObjects;
+    std::vector<AbstractVisualizedData *> polyDataObjects;
 
     for (auto vis : visualizedData)
     {
@@ -31,13 +31,13 @@ std::vector<std::unique_ptr<ColorMappingData>> PointCoordinateColorMapping::newI
         {
             if (vtkPolyData::SafeDownCast(vis->dataObject().dataSet()))
             {
-                polyDataObjects << vis;
+                polyDataObjects.emplace_back(vis);
                 break;
             }
         }
     }
 
-    if (polyDataObjects.isEmpty())
+    if (polyDataObjects.empty())
     {
         return{};
     }
@@ -53,7 +53,7 @@ std::vector<std::unique_ptr<ColorMappingData>> PointCoordinateColorMapping::newI
     return instances;
 }
 
-PointCoordinateColorMapping::PointCoordinateColorMapping(const QList<AbstractVisualizedData *> & visualizedData)
+PointCoordinateColorMapping::PointCoordinateColorMapping(const std::vector<AbstractVisualizedData *> & visualizedData)
     : ColorMappingData(visualizedData, 3)
 {
     setDataComponent(2);    // elevation mapping by default

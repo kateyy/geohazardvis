@@ -8,7 +8,7 @@
 class CORE_API AttributeArrayComponentMapping : public ColorMappingData
 {
 public:
-    AttributeArrayComponentMapping(const QList<AbstractVisualizedData *> & visualizedData,
+    AttributeArrayComponentMapping(const std::vector<AbstractVisualizedData *> & visualizedData,
         const QString & dataArrayName, int numDataComponents, const std::map<AbstractVisualizedData *, IndexType> & attributeLocations);
     ~AttributeArrayComponentMapping() override;
 
@@ -22,7 +22,7 @@ public:
     void configureMapper(AbstractVisualizedData & visualizedData, vtkAbstractMapper & mapper, int connection = 0) override;
 
 protected:
-    static std::vector<std::unique_ptr<ColorMappingData>> newInstances(const QList<AbstractVisualizedData *> & visualizedData);
+    static std::vector<std::unique_ptr<ColorMappingData>> newInstances(const std::vector<AbstractVisualizedData *> & visualizedData);
 
     std::vector<ValueRange<>> updateBounds() override;
 

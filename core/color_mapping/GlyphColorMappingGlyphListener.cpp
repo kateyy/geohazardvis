@@ -1,7 +1,5 @@
 #include "GlyphColorMappingGlyphListener.h"
 
-#include <QDebug>
-
 #include <core/rendered_data/RenderedData3D.h>
 #include <core/glyph_mapping/GlyphMapping.h>
 #include <core/glyph_mapping/GlyphMappingData.h>
@@ -15,7 +13,7 @@ GlyphColorMappingGlyphListener::GlyphColorMappingGlyphListener(QObject * parent)
 
 GlyphColorMappingGlyphListener::~GlyphColorMappingGlyphListener() = default;
 
-void GlyphColorMappingGlyphListener::setData(const QList<AbstractVisualizedData *> & visualizedData)
+void GlyphColorMappingGlyphListener::setData(const std::vector<AbstractVisualizedData *> & visualizedData)
 {
     m_data.clear();
 
@@ -29,16 +27,16 @@ void GlyphColorMappingGlyphListener::setData(const QList<AbstractVisualizedData 
             continue;
         }
 
-        m_data << rendered3D;
+        m_data.emplace_back(rendered3D);
 
         auto & glyphMapping = rendered3D->glyphMapping();
-        m_connects << connect(&glyphMapping, &GlyphMapping::vectorsChanged,
-            this, &GlyphColorMappingGlyphListener::glyphMappingChanged);
+        m_connects.emplace_back(connect(&glyphMapping, &GlyphMapping::vectorsChanged,
+            this, &GlyphColorMappingGlyphListener::glyphMappingChanged));
 
         for (auto data : glyphMapping.vectors())
         {
-            m_connects << connect(data, &GlyphMappingData::visibilityChanged,
-                this, &GlyphColorMappingGlyphListener::glyphMappingChanged);
+            m_connects.emplace_back(connect(data, &GlyphMappingData::visibilityChanged,
+                this, &GlyphColorMappingGlyphListener::glyphMappingChanged));
         }
     }
 }

@@ -32,7 +32,7 @@ const bool AttributeArrayComponentMapping::s_isRegistered = ColorMappingRegistry
     s_name,
     newInstances);
 
-std::vector<std::unique_ptr<ColorMappingData>> AttributeArrayComponentMapping::newInstances(const QList<AbstractVisualizedData *> & visualizedData)
+std::vector<std::unique_ptr<ColorMappingData>> AttributeArrayComponentMapping::newInstances(const std::vector<AbstractVisualizedData *> & visualizedData)
 {
     struct ArrayInfo
     {
@@ -105,7 +105,7 @@ std::vector<std::unique_ptr<ColorMappingData>> AttributeArrayComponentMapping::n
         }
     };
 
-    QList<AbstractVisualizedData *> supportedData;
+    std::vector<AbstractVisualizedData *> supportedData;
     std::map<QString, ArrayInfo> arrayInfos;
 
     // list all available array names, check for same number of components
@@ -116,7 +116,7 @@ std::vector<std::unique_ptr<ColorMappingData>> AttributeArrayComponentMapping::n
             continue;
         }
 
-        supportedData << vis;
+        supportedData.emplace_back(vis);
 
         for (int i = 0; i < vis->numberOfColorMappingInputs(); ++i)
         {
@@ -148,13 +148,13 @@ std::vector<std::unique_ptr<ColorMappingData>> AttributeArrayComponentMapping::n
 }
 
 AttributeArrayComponentMapping::AttributeArrayComponentMapping(
-    const QList<AbstractVisualizedData *> & visualizedData, const QString & dataArrayName,
+    const std::vector<AbstractVisualizedData *> & visualizedData, const QString & dataArrayName,
     int numDataComponents, const std::map<AbstractVisualizedData *, IndexType> & attributeLocations)
     : ColorMappingData(visualizedData, numDataComponents)
     , m_dataArrayName{ dataArrayName }
     , m_attributeLocations(attributeLocations)
 {
-    assert(!visualizedData.isEmpty());
+    assert(!visualizedData.empty());
 
     m_isValid = true;
 }

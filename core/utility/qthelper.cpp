@@ -1,12 +1,12 @@
 #include "qthelper.h"
 
 #include <cassert>
+#include <algorithm>
 #include <type_traits>
 
 #include <QColor>
 #include <QDebug>
 #include <QEvent>
-#include <QList>
 #include <QMetaEnum>
 #include <QObject>
 
@@ -42,17 +42,15 @@ QColor vtkColorToQColor(double colorF[4])
                   int(colorF[3] * 0xFF));
 }
 
-void disconnectAll(QList<QMetaObject::Connection> & connections)
+void disconnectAll(std::vector<QMetaObject::Connection> & connections)
 {
     disconnectAll(std::move(connections));
 }
 
-void disconnectAll(QList<QMetaObject::Connection> && connections)
+void disconnectAll(std::vector<QMetaObject::Connection> && connections)
 {
-    for (auto && c : connections)
-    {
-        QObject::disconnect(c);
-    }
+    std::for_each(connections.begin(), connections.end(),
+        static_cast<bool(*)(const QMetaObject::Connection &)>(&QObject::disconnect));
 
     connections.clear();
 }

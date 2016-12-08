@@ -1,6 +1,7 @@
 #pragma once
 
-#include <QMap>
+#include <map>
+#include <vector>
 
 #include <core/CoordinateSystems_fwd.h>
 #include <gui/data_view/RenderViewStrategy.h>
@@ -70,13 +71,13 @@ private:
     QList<QAction *> m_actions;
     std::vector<std::unique_ptr<DataObject>> m_previewProfiles;
     AbstractRenderView * m_previewRenderer;
-    QList<QMetaObject::Connection> m_previewRendererConnections;
+    std::vector<QMetaObject::Connection> m_previewRendererConnections;
 
     QList<DataObject *> m_activeInputData;  // currently used input data
     QList<DataObject *> m_inputData;        // input data that was explicitly set
 
     vtkSmartPointer<vtkLineWidget2> m_lineWidget;
-    QMultiMap<vtkSmartPointer<vtkObject>, unsigned long> m_observerTags;
+    std::multimap<vtkSmartPointer<vtkObject>, unsigned long> m_observerTags;
     bool m_pausePointsUpdate;
 
 private:

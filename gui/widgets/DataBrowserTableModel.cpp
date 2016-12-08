@@ -46,10 +46,10 @@ DataBrowserTableModel::DataBrowserTableModel(QObject * parent)
     , m_numDataObjects{ 0 }
     , m_numAttributeVectors{ 0 }
 {
-    m_icons.insert("rendered", QIcon(":/icons/painting.svg"));
-    m_icons.insert("table", QIcon(":/icons/table.svg"));
-    m_icons.insert("delete_red", QIcon(":/icons/delete_red.svg"));
-    m_icons.insert("assign_to_geometry", QIcon(":/icons/file_yellow_paintings_open.svg"));
+    m_icons.emplace("rendered", QIcon(":/icons/painting.svg"));
+    m_icons.emplace("table", QIcon(":/icons/table.svg"));
+    m_icons.emplace("delete_red", QIcon(":/icons/delete_red.svg"));
+    m_icons.emplace("assign_to_geometry", QIcon(":/icons/file_yellow_paintings_open.svg"));
 
     QPixmap pixmap(":/icons/painting.svg"); QImage image = pixmap.toImage();
     for (int i = 0; i < pixmap.width(); ++i)
@@ -61,7 +61,7 @@ DataBrowserTableModel::DataBrowserTableModel(QObject * parent)
             image.setPixel(i, j, qRgba(gray, gray, gray, qAlpha(pixel)));
         };
     }
-    m_icons.insert("notRendered", QIcon(QPixmap().fromImage(image)));
+    m_icons.emplace("notRendered", QIcon(QPixmap().fromImage(image)));
 }
 
 DataBrowserTableModel::~DataBrowserTableModel() = default;
@@ -243,36 +243,36 @@ void DataBrowserTableModel::updateDataList(const QList<DataObject *> & visibleOb
 
     int currentRow = 0;
 
-    for (auto dataObject : dataSets)
+    for (const auto & dataObject : dataSets)
     {
-        m_visibilities.insert(dataObject, visibleObjects.contains(dataObject));
+        m_visibilities.emplace(dataObject, visibleObjects.contains(dataObject));
 
-        m_dataObjectConnections <<
-            connect(dataObject, &DataObject::dataChanged, std::bind(rowUpdateFunc, currentRow));
-        m_dataObjectConnections <<
-            connect(dataObject, &DataObject::boundsChanged, std::bind(rowUpdateFunc, currentRow));
-        m_dataObjectConnections <<
-            connect(dataObject, &DataObject::valueRangeChanged, std::bind(rowUpdateFunc, currentRow));
-        m_dataObjectConnections <<
-            connect(dataObject, &DataObject::attributeArraysChanged, std::bind(rowUpdateFunc, currentRow));
-        m_dataObjectConnections <<
-            connect(dataObject, &DataObject::structureChanged, std::bind(rowUpdateFunc, currentRow));
+        m_dataObjectConnections.emplace_back(
+            connect(dataObject, &DataObject::dataChanged, std::bind(rowUpdateFunc, currentRow)));
+        m_dataObjectConnections.emplace_back(
+            connect(dataObject, &DataObject::boundsChanged, std::bind(rowUpdateFunc, currentRow)));
+        m_dataObjectConnections.emplace_back(
+            connect(dataObject, &DataObject::valueRangeChanged, std::bind(rowUpdateFunc, currentRow)));
+        m_dataObjectConnections.emplace_back(
+            connect(dataObject, &DataObject::attributeArraysChanged, std::bind(rowUpdateFunc, currentRow)));
+        m_dataObjectConnections.emplace_back(
+            connect(dataObject, &DataObject::structureChanged, std::bind(rowUpdateFunc, currentRow)));
         ++currentRow;
     }
-    for (auto attr : rawVectors)
+    for (const auto & attr : rawVectors)
     {
-        m_visibilities.insert(attr, visibleObjects.contains(attr));
+        m_visibilities.emplace(attr, visibleObjects.contains(attr));
 
-        m_dataObjectConnections <<
-            connect(attr, &DataObject::dataChanged, std::bind(rowUpdateFunc, currentRow));
-        m_dataObjectConnections <<
-            connect(attr, &DataObject::boundsChanged, std::bind(rowUpdateFunc, currentRow));
-        m_dataObjectConnections <<
-            connect(attr, &DataObject::valueRangeChanged, std::bind(rowUpdateFunc, currentRow));
-        m_dataObjectConnections <<
-            connect(attr, &DataObject::attributeArraysChanged, std::bind(rowUpdateFunc, currentRow));
-        m_dataObjectConnections <<
-            connect(attr, &DataObject::structureChanged, std::bind(rowUpdateFunc, currentRow));
+        m_dataObjectConnections.emplace_back(
+            connect(attr, &DataObject::dataChanged, std::bind(rowUpdateFunc, currentRow)));
+        m_dataObjectConnections.emplace_back(
+            connect(attr, &DataObject::boundsChanged, std::bind(rowUpdateFunc, currentRow)));
+        m_dataObjectConnections.emplace_back(
+            connect(attr, &DataObject::valueRangeChanged, std::bind(rowUpdateFunc, currentRow)));
+        m_dataObjectConnections.emplace_back(
+            connect(attr, &DataObject::attributeArraysChanged, std::bind(rowUpdateFunc, currentRow)));
+        m_dataObjectConnections.emplace_back(
+            connect(attr, &DataObject::structureChanged, std::bind(rowUpdateFunc, currentRow)));
         ++currentRow;
     }
 
@@ -295,14 +295,14 @@ QVariant DataBrowserTableModel::data_dataObject(int row, int column, int role) c
         switch (column)
         {
         case s_colBtnTable:
-            return m_icons["table"];
+            return m_icons.at("table");
         case s_colBtnRenderView:
-            return m_visibilities[dataObjectAt(row)]
-                ? m_icons["rendered"]
-                : m_icons["notRendered"];
+            return m_visibilities.at(dataObjectAt(row))
+                ? m_icons.at("rendered")
+                : m_icons.at("notRendered");
         case s_colBtnDelete:
             return m_dataSetHandler->dataSetOwnerships().value(dataObject, false)
-                ? QVariant(m_icons["delete_red"])
+                ? QVariant(m_icons.at("delete_red"))
                 : QVariant();
         default:
             return{};
@@ -458,11 +458,11 @@ QVariant DataBrowserTableModel::data_attributeVector(int row, int column, int ro
     {
         switch (column)
         {
-        case s_colBtnTable: return m_icons["table"];
-        case s_colBtnRenderView: return m_icons["assign_to_geometry"];
+        case s_colBtnTable: return m_icons.at("table");
+        case s_colBtnRenderView: return m_icons.at("assign_to_geometry");
         case s_colBtnDelete:
             return m_dataSetHandler->rawVectorOwnerships().value(attributeVector, false)
-                ? QVariant(m_icons["delete_red"])
+                ? QVariant(m_icons.at("delete_red"))
                 : QVariant();
         default: return QVariant();
         }

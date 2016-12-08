@@ -3,11 +3,10 @@
 #include <map>
 #include <memory>
 #include <mutex>
+#include <vector>
 
-#include <QList>
-#include <QMap>
-#include <QString>
 #include <QObject>
+#include <QString>
 
 #include <vtkSmartPointer.h>
 
@@ -42,7 +41,7 @@ public:
     * Otherwise, setEnabled() will have no effect and the null mapping will be used. */
     bool scalarsAvailable() const;
 
-    const QList<AbstractVisualizedData *> & visualizedData() const;
+    const std::vector<AbstractVisualizedData *> & visualizedData() const;
 
     /** list of scalar names that can be used with my rendered data */
     QStringList scalarsNames() const;
@@ -76,7 +75,7 @@ signals:
 private:
     /** setup a list of color mappings which are applicable to the list of rendered data
       * reuse lastly used scalars if possible */
-    void setVisualizedData(const QList<AbstractVisualizedData *> & visualizedData);
+    void setVisualizedData(const std::vector<AbstractVisualizedData *> & visualizedData);
 
     /** reread the data set list provided by the DataSetHandler for new/deleted data */
     void updateAvailableScalars();
@@ -92,7 +91,7 @@ private:
     std::unique_ptr<GlyphColorMappingGlyphListener> m_glyphListener;
     std::unique_ptr<ColorBarRepresentation> m_colorBarRepresenation;
 
-    QList<AbstractVisualizedData *> m_visualizedData;
+    std::vector<AbstractVisualizedData *> m_visualizedData;
 
     std::map<QString, std::unique_ptr<ColorMappingData>> m_data;
     mutable std::unique_ptr<ColorMappingData> m_nullColorMapping;

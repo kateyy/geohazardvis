@@ -1,6 +1,8 @@
 #include "GlyphMappingChooserListModel.h"
 
+#include <algorithm>
 #include <cassert>
+#include <cmath>
 
 #include <core/glyph_mapping/GlyphMapping.h>
 #include <core/glyph_mapping/GlyphMappingData.h>
@@ -64,7 +66,7 @@ int GlyphMappingChooserListModel::rowCount(const QModelIndex & /*parent*/) const
         return 0;
     }
 
-    return m_mapping->vectors().size();
+    return static_cast<int>(std::min(static_cast<size_t>(std::numeric_limits<int>::max()), m_mapping->vectors().size()));
 }
 
 bool GlyphMappingChooserListModel::setData(const QModelIndex & index, const QVariant & value, int role /*= Qt::EditRole*/)

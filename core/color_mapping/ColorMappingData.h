@@ -4,7 +4,6 @@
 #include <mutex>
 #include <vector>
 
-#include <QList>
 #include <QObject>
 
 #include <vtkSmartPointer.h>
@@ -36,10 +35,10 @@ public:
     friend class ColorMappingRegistry;
 
     template<typename SubClass>
-    static std::vector<std::unique_ptr<ColorMappingData>> newInstance(const QList<AbstractVisualizedData *> & visualizedData);
+    static std::vector<std::unique_ptr<ColorMappingData>> newInstance(const std::vector<AbstractVisualizedData *> & visualizedData);
 
 public:
-    explicit ColorMappingData(const QList<AbstractVisualizedData *> & visualizedData,
+    explicit ColorMappingData(const std::vector<AbstractVisualizedData *> & visualizedData,
         int numDataComponents = 1,
         bool mapsScalarsToColors = true,
         bool usesOwnLookupTable = false);
@@ -127,7 +126,7 @@ protected:
 
 protected:
     bool m_isValid;
-    QList<AbstractVisualizedData *> m_visualizedData;
+    std::vector<AbstractVisualizedData *> m_visualizedData;
     vtkSmartPointer<vtkLookupTable> m_lut;
     vtkSmartPointer<vtkScalarsToColors> m_ownLut;
 
@@ -154,5 +153,3 @@ private:
 private:
     Q_DISABLE_COPY(ColorMappingData)
 };
-
-#include "ColorMappingData.hpp"

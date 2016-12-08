@@ -6,7 +6,7 @@
 class CORE_API PointCoordinateColorMapping : public ColorMappingData
 {
 public:
-    explicit PointCoordinateColorMapping(const QList<AbstractVisualizedData*> & visualizedData);
+    explicit PointCoordinateColorMapping(const std::vector<AbstractVisualizedData*> & visualizedData);
     ~PointCoordinateColorMapping() override;
 
     QString name() const override;
@@ -20,7 +20,7 @@ public:
     void configureMapper(AbstractVisualizedData & visualizedData, vtkAbstractMapper & mapper, int connection = 0) override;
 
 protected:
-    static std::vector<std::unique_ptr<ColorMappingData>> newInstances(const QList<AbstractVisualizedData*> & visualizedData);
+    static std::vector<std::unique_ptr<ColorMappingData>> newInstances(const std::vector<AbstractVisualizedData*> & visualizedData);
 
     std::vector<ValueRange<>> updateBounds() override;
 

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <map>
 #include <vector>
 
 #include <vtkSmartPointer.h>
@@ -88,7 +89,7 @@ protected:
         vtkSmartPointer<vtkRenderer> renderer;
 
         // view props fetched per rendered data
-        QMap<RenderedData *, vtkSmartPointer<vtkPropCollection>> dataProps;
+        std::map<RenderedData *, vtkSmartPointer<vtkPropCollection>> dataProps;
         DataBounds dataBounds;
 
         vtkSmartPointer<vtkGridAxes3DActor> axesActor;

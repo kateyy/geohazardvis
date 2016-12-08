@@ -53,13 +53,13 @@ void ResidualViewConfigWidget::setCurrentView(ResidualVerificationView * view)
     connect(&view->dataSetHandler(), &DataSetHandler::dataObjectsChanged, this, &ResidualViewConfigWidget::updateComboBoxes);
 
     m_ui->interpolationModeCheckBox->setChecked(iModeToBool(view->interpolationMode()));
-    m_viewConnects << connect(m_ui->interpolationModeCheckBox, &QCheckBox::toggled, [view, boolToIMode] (bool checked) {
+    m_viewConnects.emplace_back(connect(m_ui->interpolationModeCheckBox, &QCheckBox::toggled, [view, boolToIMode] (bool checked) {
         view->setInterpolationMode(boolToIMode(checked));
-    });
-    m_viewConnects << connect(view, &ResidualVerificationView::interpolationModeChanged, [this, iModeToBool] (ResidualVerificationView::InterpolationMode mode) {
+    }));
+    m_viewConnects.emplace_back(connect(view, &ResidualVerificationView::interpolationModeChanged, [this, iModeToBool] (ResidualVerificationView::InterpolationMode mode) {
         QSignalBlocker signalBlocker(m_ui->interpolationModeCheckBox);
         m_ui->interpolationModeCheckBox->setChecked(iModeToBool(mode));
-    });
+    }));
 
     auto && los = view->inSARLineOfSight();
 
@@ -83,35 +83,35 @@ void ResidualViewConfigWidget::setCurrentView(ResidualVerificationView * view)
         view->setInSARLineOfSight(los);
     };
 
-    m_viewConnects << connect(m_ui->losX, static_cast<void(QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), viewSetLos);
-    m_viewConnects << connect(m_ui->losY, static_cast<void(QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), viewSetLos);
-    m_viewConnects << connect(m_ui->losZ, static_cast<void(QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), viewSetLos);
+    m_viewConnects.emplace_back(connect(m_ui->losX, static_cast<void(QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), viewSetLos));
+    m_viewConnects.emplace_back(connect(m_ui->losY, static_cast<void(QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), viewSetLos));
+    m_viewConnects.emplace_back(connect(m_ui->losZ, static_cast<void(QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), viewSetLos));
 
-    m_viewConnects << connect(view, &ResidualVerificationView::lineOfSightChanged, uiSetLos);
+    m_viewConnects.emplace_back(connect(view, &ResidualVerificationView::lineOfSightChanged, uiSetLos));
 
 
-    m_viewConnects << connect(m_ui->observationScale, static_cast<void(QSpinBox::*)(int)>(&QSpinBox::valueChanged),
-        view, &ResidualVerificationView::setObservationUnitDecimalExponent);
-    m_viewConnects << connect(m_ui->modelScale, static_cast<void(QSpinBox::*)(int)>(&QSpinBox::valueChanged),
-        view, &ResidualVerificationView::setModelUnitDecimalExponent);
+    m_viewConnects.emplace_back(connect(m_ui->observationScale, static_cast<void(QSpinBox::*)(int)>(&QSpinBox::valueChanged),
+        view, &ResidualVerificationView::setObservationUnitDecimalExponent));
+    m_viewConnects.emplace_back(connect(m_ui->modelScale, static_cast<void(QSpinBox::*)(int)>(&QSpinBox::valueChanged),
+        view, &ResidualVerificationView::setModelUnitDecimalExponent));
 
-    m_viewConnects << connect(view, &ResidualVerificationView::unitDecimalExponentsChanged, [this] (int o, int m) {
+    m_viewConnects.emplace_back(connect(view, &ResidualVerificationView::unitDecimalExponentsChanged, [this] (int o, int m) {
         QSignalBlocker observationSignalBlocker(m_ui->observationScale);
         QSignalBlocker modelSignalBlocker(m_ui->modelScale);
 
         m_ui->observationScale->setValue(o);
         m_ui->modelScale->setValue(m);
-    });
+    }));
 
-    m_viewConnects << connect(m_ui->updateButton, &QAbstractButton::pressed, view, &ResidualVerificationView::update);
+    m_viewConnects.emplace_back(connect(m_ui->updateButton, &QAbstractButton::pressed, view, &ResidualVerificationView::update));
 
     updateComboBoxes();
 }
 
 void ResidualViewConfigWidget::updateComboBoxes()
 {
-    QSignalBlocker observationSignalBlocker(m_ui->observationCombo);
-    QSignalBlocker modelSignalBlocker(m_ui->modelCombo);
+    const QSignalBlocker observationSignalBlocker(m_ui->observationCombo);
+    const QSignalBlocker modelSignalBlocker(m_ui->modelCombo);
 
     m_ui->observationCombo->clear();
     m_ui->modelCombo->clear();
@@ -153,8 +153,8 @@ void ResidualViewConfigWidget::updateComboBoxes()
         }
     }
 
-    QString observationName = m_currentView->observationData() ? m_currentView->observationData()->name() : "";
-    QString modelName = m_currentView->modelData() ? m_currentView->modelData()->name() : "";
+    const QString observationName = m_currentView->observationData() ? m_currentView->observationData()->name() : "";
+    const QString modelName = m_currentView->modelData() ? m_currentView->modelData()->name() : "";
     m_ui->observationCombo->setCurrentText(observationName);
     m_ui->modelCombo->setCurrentText(modelName);
 }

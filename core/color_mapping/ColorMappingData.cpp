@@ -1,5 +1,6 @@
 #include "ColorMappingData.h"
 
+#include <algorithm>
 #include <cassert>
 
 #include <vtkAlgorithm.h>
@@ -12,12 +13,12 @@
 #include <core/utility/macros.h>
 
 
-ColorMappingData::ColorMappingData(const QList<AbstractVisualizedData *> & visualizedData,
+ColorMappingData::ColorMappingData(const std::vector<AbstractVisualizedData *> & visualizedData,
     int numDataComponents,
     bool mapsScalarsToColors,
     bool usesOwnLookupTable)
     : m_isValid{ false }
-    , m_visualizedData(visualizedData)
+    , m_visualizedData{ visualizedData }
     , m_numDataComponents{ numDataComponents }
     , m_dataComponent{ 0 }
     , m_isActive{ false }
@@ -185,7 +186,7 @@ void ColorMappingData::configureMapper(
     vtkAbstractMapper & /*mapper*/,
     int /*connection*/)
 {
-    assert(m_visualizedData.contains(&visualizedData));
+    assert(std::find(m_visualizedData.begin(), m_visualizedData.end(), &visualizedData) != m_visualizedData.end());
 }
 
 void ColorMappingData::setLookupTable(vtkLookupTable * lookupTable)

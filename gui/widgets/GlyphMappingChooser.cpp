@@ -63,15 +63,15 @@ void GlyphMappingChooser::setCurrentRenderView(AbstractRenderView * renderView)
 
     if (m_renderView)
     {
-        m_viewConnections << connect(renderView, &AbstractRenderView::beforeDeleteVisualizations,
-            this, &GlyphMappingChooser::checkRemovedData);
-        m_viewConnections << connect(m_renderView, &AbstractDataView::selectionChanged,
+        m_viewConnections.emplace_back(connect(renderView, &AbstractRenderView::beforeDeleteVisualizations,
+            this, &GlyphMappingChooser::checkRemovedData));
+        m_viewConnections.emplace_back(connect(m_renderView, &AbstractDataView::selectionChanged,
             [this] (AbstractDataView * DEBUG_ONLY(view), const DataSelection & selection)
         {
             assert(view == m_renderView);
             setSelectedData(selection.dataObject);
-        });
-        m_viewConnections << connect(this, &GlyphMappingChooser::renderSetupChanged, m_renderView, &AbstractRenderView::render);
+        }));
+        m_viewConnections.emplace_back(connect(this, &GlyphMappingChooser::renderSetupChanged, m_renderView, &AbstractRenderView::render));
     }
 }
 
@@ -133,8 +133,8 @@ void GlyphMappingChooser::updateVectorsList()
     {
         for (auto vectors : m_mapping->vectors())
         {
-            m_propertyGroups.push_back(vectors->createPropertyGroup());
-            m_vectorsRenderConnections << connect(vectors, &GlyphMappingData::geometryChanged, this, &GlyphMappingChooser::renderSetupChanged);
+            m_propertyGroups.emplace_back(vectors->createPropertyGroup());
+            m_vectorsRenderConnections.emplace_back(connect(vectors, &GlyphMappingData::geometryChanged, this, &GlyphMappingChooser::renderSetupChanged));
         }
 
         QModelIndex index(m_listModel->index(0, 0));

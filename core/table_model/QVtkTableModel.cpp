@@ -57,8 +57,8 @@ void QVtkTableModel::rebuild()
 
     endResetModel();
 
-
-    m_dataObjectConnections << connect(m_dataObject, &DataObject::structureChanged, this, &QVtkTableModel::rebuild);
+    m_dataObjectConnections.emplace_back(connect(m_dataObject, &DataObject::structureChanged,
+        this, &QVtkTableModel::rebuild));
 }
 
 DataObject * QVtkTableModel::dataObject()

@@ -28,9 +28,9 @@ ColorBarRepresentation::ColorBarRepresentation(ColorMapping & colorMapping)
 
         for (auto && vis : m_colorMapping.visualizedData())
         {
-            m_visualizationsVisibilitesConnections <<
+            m_visualizationsVisibilitesConnections.emplace_back(
                 connect(vis, &AbstractVisualizedData::visibilityChanged,
-                    this, &ColorBarRepresentation::updateVisibility);
+                    this, &ColorBarRepresentation::updateVisibility));
         }
     };
 

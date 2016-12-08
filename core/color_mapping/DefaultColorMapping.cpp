@@ -10,7 +10,7 @@
 
 const QString DefaultColorMapping::s_name = "user-defined color";
 
-DefaultColorMapping::DefaultColorMapping(const QList<AbstractVisualizedData *> & visualizedData)
+DefaultColorMapping::DefaultColorMapping(const std::vector<AbstractVisualizedData *> & visualizedData)
     : ColorMappingData(visualizedData)
 {
     m_isValid = true;

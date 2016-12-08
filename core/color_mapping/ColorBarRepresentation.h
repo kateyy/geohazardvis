@@ -1,5 +1,7 @@
 #pragma once
 
+#include <vector>
+
 #include <QObject>
 
 #include <vtkSmartPointer.h>
@@ -56,7 +58,7 @@ private:
 
 private:
     ColorMapping & m_colorMapping;
-    QList<QMetaObject::Connection> m_visualizationsVisibilitesConnections;
+    std::vector<QMetaObject::Connection> m_visualizationsVisibilitesConnections;
 
     vtkSmartPointer<OrientedScalarBarActor> m_actor;
     vtkSmartPointer<vtkScalarBarRepresentation> m_scalarBarRepresentation;

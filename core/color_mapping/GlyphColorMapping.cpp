@@ -10,7 +10,7 @@
 
 
 GlyphColorMapping::GlyphColorMapping(
-    const QList<AbstractVisualizedData *> & visualizedData,
+    const std::vector<AbstractVisualizedData *> & visualizedData,
     const std::map<RenderedData3D *, GlyphMappingData *> & glyphMappingData,
     int numDataComponents)
     : ColorMappingData(visualizedData, numDataComponents)
@@ -34,7 +34,7 @@ IndexType GlyphColorMapping::scalarsAssociation(AbstractVisualizedData & vis) co
 
 void GlyphColorMapping::assignToVisualization()
 {
-    for (auto pair : m_glyphMappingData)
+    for (const auto & pair : m_glyphMappingData)
     {
         assert(pair.second);
         pair.second->setColorMappingData(this);
@@ -44,7 +44,7 @@ void GlyphColorMapping::assignToVisualization()
 
 void GlyphColorMapping::unassignFromVisualization()
 {
-    for (auto pair : m_glyphMappingData)
+    for (const auto & pair : m_glyphMappingData)
     {
         assert(pair.second);
         pair.second->setColorMappingData(nullptr);

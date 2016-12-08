@@ -2,13 +2,13 @@
 
 #include <map>
 #include <memory>
+#include <vector>
 
 #include <QObject>
 
 #include <core/core_api.h>
 
 
-template<typename T> class QList;
 class QString;
 class QStringList;
 
@@ -31,7 +31,7 @@ public:
     /** names of vectors that can be used with my data */
     QStringList vectorNames() const;
     /** list of vector data that can be used with my data */
-    QList<GlyphMappingData *> vectors() const;
+    std::vector<GlyphMappingData *> vectors() const;
 
     const RenderedData & renderedData() const;
 

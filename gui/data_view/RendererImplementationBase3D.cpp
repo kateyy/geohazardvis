@@ -176,8 +176,8 @@ void RendererImplementationBase3D::onAddContent(AbstractVisualizedData * content
         renderer->AddViewProp(prop);
     }
 
-    assert(!dataProps.contains(renderedData));
-    dataProps.insert(renderedData, props);
+    assert(dataProps.find(renderedData) == dataProps.end());
+    dataProps.emplace(renderedData, props);
 
     addConnectionForContent(content,
         connect(renderedData, &RenderedData::viewPropCollectionChanged,
@@ -209,8 +209,11 @@ void RendererImplementationBase3D::onRemoveContent(AbstractVisualizedData * cont
     auto & renderer = *this->renderer(subViewIndex);
     auto & dataProps = m_viewportSetups[subViewIndex].dataProps;
 
-    vtkSmartPointer<vtkPropCollection> props = dataProps.take(renderedData);
+    auto propsIt = dataProps.find(renderedData);
+    assert(propsIt != dataProps.end());
+    vtkSmartPointer<vtkPropCollection> props = std::move(propsIt->second);
     assert(props);
+    dataProps.erase(propsIt);
 
     vtkCollectionSimpleIterator it;
     props->InitTraversal(it);
@@ -656,7 +659,9 @@ void RendererImplementationBase3D::fetchViewProps(RenderedData * renderedData, u
     auto && dataProps = m_viewportSetups[subViewIndex].dataProps;
     auto && renderer = m_viewportSetups[subViewIndex].renderer;
 
-    vtkSmartPointer<vtkPropCollection> props = dataProps.value(renderedData);
+    auto propsIt = dataProps.find(renderedData);
+    assert(propsIt != dataProps.end());
+    const auto & props = propsIt->second;
     assert(props);
 
     // TODO add/remove changes only

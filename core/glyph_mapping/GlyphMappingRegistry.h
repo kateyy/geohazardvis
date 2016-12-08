@@ -5,11 +5,10 @@
 #include <memory>
 #include <vector>
 
-#include <QMap>
-
 #include <core/core_api.h>
 
 
+class QString;
 class RenderedData;
 class GlyphMappingData;
 
@@ -29,7 +28,5 @@ private:
     GlyphMappingRegistry();
     ~GlyphMappingRegistry();
 
-    const QMap<QString, MappingCreator> & mappingCreators() const;
-
-    QMap<QString, MappingCreator> m_mappingCreators;
+    std::map<QString, MappingCreator> m_mappingCreators;
 };

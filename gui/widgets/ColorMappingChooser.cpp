@@ -5,6 +5,7 @@
 #include <cassert>
 #include <cmath>
 #include <limits>
+#include <iterator>
 
 #include <QColorDialog>
 #include <QDir>
@@ -77,14 +78,14 @@ void ColorMappingChooser::setCurrentRenderView(AbstractRenderView * renderView)
 
     if (m_renderView)
     {
-        m_viewConnections << connect(renderView, &AbstractRenderView::beforeDeleteVisualizations,
-            this, &ColorMappingChooser::checkRemovedData);
-        m_viewConnections << connect(m_renderView, &AbstractRenderView::visualizationSelectionChanged,
+        m_viewConnections.emplace_back(connect(renderView, &AbstractRenderView::beforeDeleteVisualizations,
+            this, &ColorMappingChooser::checkRemovedData));
+        m_viewConnections.emplace_back(connect(m_renderView, &AbstractRenderView::visualizationSelectionChanged,
             [this] (AbstractRenderView * DEBUG_ONLY(view), const VisualizationSelection & selection) {
             assert(view == m_renderView);
             setSelectedVisualization(selection.visualization);
-        });
-        m_viewConnections << connect(this, &ColorMappingChooser::renderSetupChanged, m_renderView, &AbstractRenderView::render);
+        }));
+        m_viewConnections.emplace_back(connect(this, &ColorMappingChooser::renderSetupChanged, m_renderView, &AbstractRenderView::render));
     }
 }
 
@@ -113,7 +114,7 @@ void ColorMappingChooser::setSelectedData(DataObject * dataObject)
 void ColorMappingChooser::setSelectedVisualization(AbstractVisualizedData * visualization)
 {
     assert(m_mapping ||
-        (m_colorLegendObserverIds.isEmpty() && m_guiConnections.isEmpty() && !m_dataMinMaxChangedConnection));
+        (m_colorLegendObserverIds.empty() && m_guiConnections.empty() && !m_dataMinMaxChangedConnection));
 
     auto newMapping = visualization ? &visualization->colorMapping() : nullptr;
 
@@ -125,11 +126,11 @@ void ColorMappingChooser::setSelectedVisualization(AbstractVisualizedData * visu
     disconnectAll(m_mappingConnections);
     discardGuiConnections();
 
-    for (auto it = m_colorLegendObserverIds.begin(); it != m_colorLegendObserverIds.end(); ++it)
+    for (const auto & observerIt : m_colorLegendObserverIds)
     {
-        if (it.key())
+        if (observerIt.first)
         {
-            it.key()->RemoveObserver(it.value());
+            observerIt.first->RemoveObserver(observerIt.second);
         }
     }
     m_colorLegendObserverIds.clear();
@@ -141,7 +142,7 @@ void ColorMappingChooser::setSelectedVisualization(AbstractVisualizedData * visu
     if (m_mapping)
     {
         auto addObserver = [this] (vtkObject * subject, void(ColorMappingChooser::* callback)()) {
-            m_colorLegendObserverIds.insert(subject,
+            m_colorLegendObserverIds.emplace(subject,
                 subject->AddObserver(vtkCommand::ModifiedEvent, this, callback));
         };
 
@@ -151,12 +152,12 @@ void ColorMappingChooser::setSelectedVisualization(AbstractVisualizedData * visu
         addObserver(legend().GetLabelTextProperty(), &ColorMappingChooser::updateLegendLabelFont);
         addObserver(&legend(), &ColorMappingChooser::updateLegendConfig);
 
-        m_mappingConnections << connect(m_mapping, &ColorMapping::scalarsChanged, [this] () {
+        m_mappingConnections.emplace_back(connect(m_mapping, &ColorMapping::scalarsChanged, [this] () {
             rebuildGui();
             emit renderSetupChanged();
-        });
+        }));
         // in case the active mapping is changed via the C++ interface
-        m_mappingConnections << connect(m_mapping, &ColorMapping::currentScalarsChanged, this, &ColorMappingChooser::mappingScalarsChanged);
+        m_mappingConnections.emplace_back(connect(m_mapping, &ColorMapping::currentScalarsChanged, this, &ColorMappingChooser::mappingScalarsChanged));
     }
 
     rebuildGui();
@@ -365,7 +366,14 @@ void ColorMappingChooser::checkRemovedData(const QList<AbstractVisualizedData *>
         return;
     }
 
-    if (!(content.toSet() | m_mapping->visualizedData().toSet()).isEmpty())
+    auto && mappingVis = m_mapping->visualizedData();
+
+    std::vector<AbstractVisualizedData *> intersection;
+    std::set_intersection(content.begin(), content.end(),
+        mappingVis.begin(), mappingVis.end(),
+        std::back_inserter(intersection));
+
+    if (!intersection.empty())
     {
         setSelectedData(nullptr);
     }
@@ -500,7 +508,7 @@ void ColorMappingChooser::setupGuiConnections()
 {
     assert(m_mapping);
 
-    m_guiConnections << connect(m_ui->scalarsComboBox, &QComboBox::currentTextChanged, this, &ColorMappingChooser::guiScalarsSelectionChanged);
+    m_guiConnections.emplace_back(connect(m_ui->scalarsComboBox, &QComboBox::currentTextChanged, this, &ColorMappingChooser::guiScalarsSelectionChanged));
 
     // all further connections are only relevant if there is currently something to configure
     // don't depend on ColorMapping to always have current scalars
@@ -512,17 +520,17 @@ void ColorMappingChooser::setupGuiConnections()
     const auto && dSpinBoxValueChanged = static_cast<void(QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged);
     const auto && spinBoxValueChanged = static_cast<void(QSpinBox::*)(int)>(&QSpinBox::valueChanged);
 
-    m_guiConnections << connect(m_ui->scalarsGroupBox, &QGroupBox::toggled, m_mapping, &ColorMapping::setEnabled);
-    m_guiConnections << connect(m_ui->componentSpinBox, spinBoxValueChanged, this, &ColorMappingChooser::guiComponentChanged);
-    m_guiConnections << connect(m_ui->minValueSpinBox, dSpinBoxValueChanged, this, &ColorMappingChooser::guiMinValueChanged);
-    m_guiConnections << connect(m_ui->maxValueSpinBox, dSpinBoxValueChanged, this, &ColorMappingChooser::guiMaxValueChanged);
-    m_guiConnections << connect(m_ui->minLabel, &QLabel::linkActivated, this, &ColorMappingChooser::guiResetMinToData);
-    m_guiConnections << connect(m_ui->maxLabel, &QLabel::linkActivated, this, &ColorMappingChooser::guiResetMaxToData);
-    m_guiConnections << connect(m_ui->gradientComboBox, &QComboBox::currentTextChanged, this, &ColorMappingChooser::guiGradientSelectionChanged);
-    m_guiConnections << connect(m_ui->nanColorButton, &QAbstractButton::pressed, this, &ColorMappingChooser::guiSelectNanColor);
-    m_guiConnections << connect(m_ui->legendPositionComboBox, &QComboBox::currentTextChanged, this, &ColorMappingChooser::guiLegendPositionChanged);
+    m_guiConnections.emplace_back(connect(m_ui->scalarsGroupBox, &QGroupBox::toggled, m_mapping, &ColorMapping::setEnabled));
+    m_guiConnections.emplace_back(connect(m_ui->componentSpinBox, spinBoxValueChanged, this, &ColorMappingChooser::guiComponentChanged));
+    m_guiConnections.emplace_back(connect(m_ui->minValueSpinBox, dSpinBoxValueChanged, this, &ColorMappingChooser::guiMinValueChanged));
+    m_guiConnections.emplace_back(connect(m_ui->maxValueSpinBox, dSpinBoxValueChanged, this, &ColorMappingChooser::guiMaxValueChanged));
+    m_guiConnections.emplace_back(connect(m_ui->minLabel, &QLabel::linkActivated, this, &ColorMappingChooser::guiResetMinToData));
+    m_guiConnections.emplace_back(connect(m_ui->maxLabel, &QLabel::linkActivated, this, &ColorMappingChooser::guiResetMaxToData));
+    m_guiConnections.emplace_back(connect(m_ui->gradientComboBox, &QComboBox::currentTextChanged, this, &ColorMappingChooser::guiGradientSelectionChanged));
+    m_guiConnections.emplace_back(connect(m_ui->nanColorButton, &QAbstractButton::pressed, this, &ColorMappingChooser::guiSelectNanColor));
+    m_guiConnections.emplace_back(connect(m_ui->legendPositionComboBox, &QComboBox::currentTextChanged, this, &ColorMappingChooser::guiLegendPositionChanged));
 
-    m_guiConnections << connect(m_ui->legendTitleFontSize, spinBoxValueChanged, [this] (int fontSize) {
+    m_guiConnections.emplace_back(connect(m_ui->legendTitleFontSize, spinBoxValueChanged, [this] (int fontSize) {
         auto property = legend().GetTitleTextProperty();
         auto currentSize = property->GetFontSize();
         if (currentSize == fontSize)
@@ -531,9 +539,9 @@ void ColorMappingChooser::setupGuiConnections()
         }
         property->SetFontSize(fontSize);
         emit renderSetupChanged();
-    });
+    }));
 
-    m_guiConnections << connect(m_ui->legendLabelFontSize, spinBoxValueChanged, [this] (int fontSize) {
+    m_guiConnections.emplace_back(connect(m_ui->legendLabelFontSize, spinBoxValueChanged, [this] (int fontSize) {
         auto property = legend().GetLabelTextProperty();
         auto currentSize = property->GetFontSize();
         if (currentSize == fontSize)
@@ -542,14 +550,14 @@ void ColorMappingChooser::setupGuiConnections()
         }
         property->SetFontSize(fontSize);
         emit renderSetupChanged();
-    });
+    }));
 
-    m_guiConnections << connect(m_ui->legendAspectRatio, dSpinBoxValueChanged, [this] () {
+    m_guiConnections.emplace_back(connect(m_ui->legendAspectRatio, dSpinBoxValueChanged, [this] () {
         legend().SetAspectRatio(m_ui->legendAspectRatio->value());
         emit renderSetupChanged();
-    });
+    }));
 
-    m_guiConnections << connect(m_ui->legendAlignTitleCheckBox, &QAbstractButton::toggled, [this] (bool checked) {
+    m_guiConnections.emplace_back(connect(m_ui->legendAlignTitleCheckBox, &QAbstractButton::toggled, [this] (bool checked) {
         bool currentlyAligned = legend().GetTitleAlignedWithColorBar();
         if (currentlyAligned == checked)
         {
@@ -557,9 +565,9 @@ void ColorMappingChooser::setupGuiConnections()
         }
         legend().SetTitleAlignedWithColorBar(checked);
         emit renderSetupChanged();
-    });
+    }));
 
-    m_guiConnections << connect(m_ui->legendBackgroundCheckBox, &QAbstractButton::toggled, [this] (bool checked) {
+    m_guiConnections.emplace_back(connect(m_ui->legendBackgroundCheckBox, &QAbstractButton::toggled, [this] (bool checked) {
         bool currentlyOn = legend().GetDrawBackground();
         if (currentlyOn == checked)
         {
@@ -567,39 +575,39 @@ void ColorMappingChooser::setupGuiConnections()
         }
         legend().SetDrawBackground(checked);
         emit renderSetupChanged();
-    });
+    }));
 
-    m_guiConnections << connect(m_ui->legendNumLabelsSpinBox, spinBoxValueChanged, [this] () {
+    m_guiConnections.emplace_back(connect(m_ui->legendNumLabelsSpinBox, spinBoxValueChanged, [this] () {
         legend().SetNumberOfLabels(m_ui->legendNumLabelsSpinBox->value());
         emit renderSetupChanged();
-    });
+    }));
 
-    m_guiConnections << connect(m_ui->legendGroupBox, &QGroupBox::toggled, [this] (bool checked) {
+    m_guiConnections.emplace_back(connect(m_ui->legendGroupBox, &QGroupBox::toggled, [this] (bool checked) {
         m_mapping->colorBarRepresentation().setVisible(checked);
         emit renderSetupChanged();
-    });
+    }));
 
-    m_guiConnections << connect(m_ui->legendTickMarksCheckBox, &QCheckBox::toggled, [this] (bool checked) {
+    m_guiConnections.emplace_back(connect(m_ui->legendTickMarksCheckBox, &QCheckBox::toggled, [this] (bool checked) {
         legend().SetDrawTickMarks(checked);
         emit renderSetupChanged();
-    });
+    }));
 
-    m_guiConnections << connect(m_ui->legendTickLabelsCheckBox, &QCheckBox::toggled, [this] (bool checked) {
+    m_guiConnections.emplace_back(connect(m_ui->legendTickLabelsCheckBox, &QCheckBox::toggled, [this] (bool checked) {
         legend().SetDrawTickLabels(checked);
         emit renderSetupChanged();
-    });
+    }));
 
-    m_guiConnections << connect(m_ui->legendSubTickMarksCheckBox, &QCheckBox::toggled, [this] (bool checked) {
+    m_guiConnections.emplace_back(connect(m_ui->legendSubTickMarksCheckBox, &QCheckBox::toggled, [this] (bool checked) {
         legend().SetDrawSubTickMarks(checked);
         emit renderSetupChanged();
-    });
+    }));
 
-    m_guiConnections << connect(m_ui->legendRangeLabelsCheckBox, &QCheckBox::toggled, [this] (bool checked) {
+    m_guiConnections.emplace_back(connect(m_ui->legendRangeLabelsCheckBox, &QCheckBox::toggled, [this] (bool checked) {
         legend().SetAddRangeLabels(checked);
         emit renderSetupChanged();
-    });
+    }));
 
-    m_guiConnections << connect(m_ui->legendTitleEdit, &QLineEdit::editingFinished, this, &ColorMappingChooser::guiLegendTitleChanged);
+    m_guiConnections.emplace_back(connect(m_ui->legendTitleEdit, &QLineEdit::editingFinished, this, &ColorMappingChooser::guiLegendTitleChanged));
 
     setupValueRangeConnections();
 }

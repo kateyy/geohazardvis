@@ -12,7 +12,7 @@ class CORE_API GlyphMagnitudeColorMapping : public GlyphColorMapping
 {
 public:
     GlyphMagnitudeColorMapping(
-        const QList<AbstractVisualizedData *> & visualizedData,
+        const std::vector<AbstractVisualizedData *> & visualizedData,
         const QString & vectorName,
         const std::map<RenderedData3D *, GlyphMappingData *> & glyphMappingData);
     ~GlyphMagnitudeColorMapping() override;
@@ -26,7 +26,7 @@ public:
     void configureMapper(AbstractVisualizedData & visualizedData, vtkAbstractMapper & mapper, int connection = 0) override;
 
 protected:
-    static std::vector<std::unique_ptr<ColorMappingData>> newInstances(const QList<AbstractVisualizedData*> & visualizedData);
+    static std::vector<std::unique_ptr<ColorMappingData>> newInstances(const std::vector<AbstractVisualizedData*> & visualizedData);
 
     std::vector<ValueRange<>> updateBounds() override;
 
@@ -34,7 +34,6 @@ private:
     static const bool s_isRegistered;
 
     const QString m_vectorName;
-    const std::map<RenderedData3D *, GlyphMappingData *> m_glyphMappingData;
     std::map<AbstractVisualizedData *, vtkSmartPointer<vtkAlgorithm>> m_filters;
 
 private:

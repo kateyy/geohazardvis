@@ -1,10 +1,10 @@
 #pragma once
 
+#include <map>
 #include <memory>
+#include <vector>
 
 #include <QDockWidget>
-#include <QList>
-#include <QMap>
 
 #include <vtkSmartPointer.h>
 #include <vtkWeakPointer.h>
@@ -85,16 +85,16 @@ private:
     std::unique_ptr<Ui_ColorMappingChooser> m_ui;
 
     AbstractRenderView * m_renderView;
-    QList<QMetaObject::Connection> m_viewConnections;
+    std::vector<QMetaObject::Connection> m_viewConnections;
     ColorMapping * m_mapping;
 
-    QList<QMetaObject::Connection> m_mappingConnections;
+    std::vector<QMetaObject::Connection> m_mappingConnections;
     /** check if we are moving the actor or if the user interacts */
     bool m_movingColorLegend;
     /** Mapping from subject (color legend coordinate, text property, etc) to observer id */
-    QMap<vtkWeakPointer<vtkObject>, unsigned long> m_colorLegendObserverIds;
+    std::map<vtkWeakPointer<vtkObject>, unsigned long> m_colorLegendObserverIds;
     // connections for various parameters and signals related to the color mapping
-    QList<QMetaObject::Connection> m_guiConnections;
+    std::vector<QMetaObject::Connection> m_guiConnections;
     QMetaObject::Connection m_dataMinMaxChangedConnection;
 
 private:

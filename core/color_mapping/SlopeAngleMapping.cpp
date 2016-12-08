@@ -27,7 +27,7 @@ const bool SlopeAngleMapping::s_isRegistered = ColorMappingRegistry::instance().
     l_name,
     &SlopeAngleMapping::newInstance);
 
-std::vector<std::unique_ptr<ColorMappingData>> SlopeAngleMapping::newInstance(const QList<AbstractVisualizedData *> & visualizedData)
+std::vector<std::unique_ptr<ColorMappingData>> SlopeAngleMapping::newInstance(const std::vector<AbstractVisualizedData *> & visualizedData)
 {
     Unqualified<decltype(visualizedData)> validVisualizations;
 
@@ -37,7 +37,7 @@ std::vector<std::unique_ptr<ColorMappingData>> SlopeAngleMapping::newInstance(co
         {
             if (polyData->is2p5D())
             {
-                validVisualizations << vis;
+                validVisualizations.emplace_back(vis);
             }
         }
     }
@@ -51,10 +51,10 @@ std::vector<std::unique_ptr<ColorMappingData>> SlopeAngleMapping::newInstance(co
     return result;
 }
 
-SlopeAngleMapping::SlopeAngleMapping(const QList<AbstractVisualizedData *> & visualizedData)
+SlopeAngleMapping::SlopeAngleMapping(const std::vector<AbstractVisualizedData *> & visualizedData)
     : ColorMappingData(visualizedData)
 {
-    assert(!visualizedData.isEmpty());
+    assert(!visualizedData.empty());
 
     m_isValid = true;
 }
@@ -80,11 +80,13 @@ vtkSmartPointer<vtkAlgorithm> SlopeAngleMapping::createFilter(AbstractVisualized
 {
     static const auto arrayName = scalarsName(visualizedData).toUtf8();
 
-    if (m_filters.contains(&visualizedData))
+    const auto filtersIt = m_filters.find(&visualizedData);
+    if (filtersIt != m_filters.end())
     {
-        if (m_filters[&visualizedData].contains(connection))
+        const auto portIt = filtersIt->second.find(connection);
+        if (portIt != filtersIt->second.end())
         {
-            return m_filters[&visualizedData][connection];
+            return portIt->second;
         }
     }
 

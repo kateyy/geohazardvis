@@ -1,6 +1,7 @@
 #pragma once
 
-#include <QList>
+#include <vector>
+
 #include <QObject>
 
 
@@ -16,14 +17,14 @@ public:
     explicit GlyphColorMappingGlyphListener(QObject * parent = nullptr);
     ~GlyphColorMappingGlyphListener() override;
 
-    void setData(const QList<AbstractVisualizedData *> & visualizedData);
+    void setData(const std::vector<AbstractVisualizedData *> & visualizedData);
 
 signals:
     void glyphMappingChanged();
 
 private:
-    QList<RenderedData3D *> m_data;
-    QList<QMetaObject::Connection> m_connects;
+    std::vector<RenderedData3D *> m_data;
+    std::vector<QMetaObject::Connection> m_connects;
 
 private:
     Q_DISABLE_COPY(GlyphColorMappingGlyphListener)

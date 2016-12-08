@@ -1,8 +1,10 @@
 #pragma once
 
-#include <core/core_api.h>
+#include <vector>
 
 #include <QMetaObject>
+
+#include <core/core_api.h>
 
 
 class QColor;
@@ -20,8 +22,8 @@ CORE_API QDebug operator<<(QDebug str, const QEvent * ev);
 CORE_API QColor vtkColorToQColor(double colorF[4]);
 
 /** Disconnect all connections and clear the list */
-CORE_API void disconnectAll(QList<QMetaObject::Connection> & connections);
-CORE_API void disconnectAll(QList<QMetaObject::Connection> && connections);
+CORE_API void disconnectAll(std::vector<QMetaObject::Connection> & connections);
+CORE_API void disconnectAll(std::vector<QMetaObject::Connection> && connections);
 
 CORE_API QVariant dataObjectPtrToVariant(DataObject * dataObject);
 CORE_API DataObject * variantToDataObjectPtr(const QVariant & variant);

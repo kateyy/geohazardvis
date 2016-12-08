@@ -44,7 +44,6 @@ set(sources
     color_mapping/ColorMapping.h
     color_mapping/ColorMapping.cpp
     color_mapping/ColorMappingData.h
-    color_mapping/ColorMappingData.hpp
     color_mapping/ColorMappingData.cpp
     color_mapping/ColorMappingRegistry.h
     color_mapping/ColorMappingRegistry.cpp
