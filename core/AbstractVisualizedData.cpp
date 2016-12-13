@@ -163,9 +163,9 @@ bool AbstractVisualizedData::erasePostProcessingStep(const unsigned int id)
     {
         auto & stepsForPort = d_ptr->postProcessingStepsPerPort[port];
         const auto it = std::find_if(stepsForPort.begin(), stepsForPort.end(),
-            [id] (const std::pair<unsigned int, PostProcessingStep> & it)
+            [id] (const std::pair<unsigned int, PostProcessingStep> & step)
         {
-            return it.first == id;
+            return step.first == id;
         });
 
         if (it == stepsForPort.end())

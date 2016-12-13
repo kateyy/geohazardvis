@@ -79,9 +79,9 @@ std::pair<bool, unsigned int> DataObjectPrivate::injectPostProcessingStep(const 
 bool DataObjectPrivate::erasePostProcessingStep(unsigned int id)
 {
     const auto it = std::find_if(m_postProcessingSteps.begin(), m_postProcessingSteps.end(),
-        [id] (const std::pair<unsigned int, PostProcessingStep> & it)
+        [id] (const std::pair<unsigned int, PostProcessingStep> & step)
     {
-        return it.first == id;
+        return step.first == id;
     });
 
     if (it == m_postProcessingSteps.end())
