@@ -87,7 +87,7 @@ bool PolyDataObject::is2p5D()
 
     m_is2p5D = Is2p5D::yes;
 
-    auto dsWithNormals = processedDataSet();
+    auto dsWithNormals = processedOutputDataSet();
     auto normals = dsWithNormals->GetCellData()->GetNormals();
     if (!normals)   // point data?
     {
@@ -169,7 +169,7 @@ bool PolyDataObject::setCellCenterComponent(vtkIdType cellId, int component, dou
 
 double PolyDataObject::cellNormalComponent(vtkIdType cellId, int component, bool * validIdPtr)
 {
-    auto normals = processedDataSet()->GetCellData()->GetNormals();
+    auto normals = processedOutputDataSet()->GetCellData()->GetNormals();
 
     const auto isValid = normals
         && cellId < normals->GetNumberOfTuples()
@@ -194,7 +194,7 @@ bool PolyDataObject::setCellNormalComponent(vtkIdType cellId, int component, dou
     assert(component >= 0 && component < 3);
     assert(cellId <= ds.GetNumberOfCells());
 
-    auto normals = processedDataSet()->GetCellData()->GetNormals();
+    auto normals = processedOutputDataSet()->GetCellData()->GetNormals();
 
     const auto isValid = normals
         && cellId < normals->GetNumberOfTuples()

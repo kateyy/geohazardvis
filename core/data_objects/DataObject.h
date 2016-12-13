@@ -37,9 +37,9 @@ public:
     virtual bool is3D() const = 0;
     virtual IndexType defaultAttributeLocation() const = 0;
 
-    /** create a visualization instance; Subclasses may implement one or both
-        -> createRendered: flexible/generic rendering
-        -> createContextData: for specialized views (e.g., plots)
+    /** Create a visualization instance; Subclasses may implement one or both
+     *  - createRendered: flexible/generic rendering
+     *  - createContextData: for specialized views (e.g., plots)
     */
     virtual std::unique_ptr<RenderedData> createRendered();
     virtual std::unique_ptr<Context2DData> createContextData();
@@ -59,7 +59,7 @@ public:
     /** @return the source data set with specific modifications or enhancements, e.g., computed normals */
     virtual vtkAlgorithmOutput * processedOutputPort();
     /** Convenience method that returns a persistent shallow copy of the output data set of processedOutputPort() */
-    vtkDataSet * processedDataSet();
+    vtkDataSet * processedOutputDataSet();
 
     /** @return Cached versions of the spatial bounds of the source data set */
     const DataBounds & bounds() const;
@@ -69,7 +69,7 @@ public:
 
     QVtkTableModel * tableModel();
 
-    /** assign some kind of data array to my indexes.
+    /** Assign some kind of data array to my indexes.
         Let subclasses decide how to proceed with it; ignores this call by default */
     virtual void addDataArray(vtkDataArray & dataArray);
     /** Remove all attributes for point, cell and field data, except those that are required for the DataObject itself.

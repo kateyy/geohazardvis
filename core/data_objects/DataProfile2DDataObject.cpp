@@ -54,7 +54,7 @@ DataProfile2DDataObject::DataProfile2DDataObject(
     , m_outputTransformation{ vtkSmartPointer<vtkTransformPolyDataFilter>::New() }
     , m_graphLine{ vtkSmartPointer<vtkWarpScalar>::New() }
 {
-    auto processInputData = m_sourceData.processedDataSet();
+    auto processInputData = m_sourceData.processedOutputDataSet();
     if (!processInputData || processInputData->GetNumberOfPoints() == 0)
     {
         assert(false);
@@ -117,7 +117,7 @@ DataProfile2DDataObject::DataProfile2DDataObject(
     }
     else
     {
-        inputData = sourceData.processedDataSet();
+        inputData = sourceData.processedOutputDataSet();
         inputAlgorithmPort = sourceData.processedOutputPort();
     }
 
@@ -301,12 +301,12 @@ vtkIdType DataProfile2DDataObject::vectorComponent() const
 ValueRange<> DataProfile2DDataObject::scalarRange()
 {
     // x-y-plot -> value range on the y axis
-    return ValueRange<>(&processedDataSet()->GetBounds()[2]);
+    return ValueRange<>(&processedOutputDataSet()->GetBounds()[2]);
 }
 
 int DataProfile2DDataObject::numberOfScalars()
 {
-    return static_cast<int>(processedDataSet()->GetNumberOfPoints());
+    return static_cast<int>(processedOutputDataSet()->GetNumberOfPoints());
 }
 
 const vtkVector2d & DataProfile2DDataObject::profileLinePoint1() const
@@ -462,7 +462,7 @@ void DataProfile2DDataObject::updateLinePoints()
 
     auto transformedSourceData = m_targetCoordsSpec.isValid()
         ? vtkSmartPointer<vtkDataSet>(sourceData().coordinateTransformedDataSet(m_targetCoordsSpec))
-        : vtkSmartPointer<vtkDataSet>(sourceData().processedDataSet());
+        : vtkSmartPointer<vtkDataSet>(sourceData().processedOutputDataSet());
 
     const auto probeVector = p2 - p1;
 

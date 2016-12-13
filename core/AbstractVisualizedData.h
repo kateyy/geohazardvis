@@ -92,7 +92,7 @@ public:
         vtkSmartPointer<vtkAlgorithm> pipelineTail;
     };
     /** Add a post processing step to the visualization pipeline.
-      * @return An boolean that is true if the step was successfully added, and an ID that can
+      * @return A boolean that is true if the step was successfully added, and an ID that can
       * later be used to erase the processing step from the pipeline. */
     std::pair<bool, unsigned int> injectPostProcessingStep(const PostProcessingStep & postProcessingStep);
     bool erasePostProcessingStep(unsigned int id);

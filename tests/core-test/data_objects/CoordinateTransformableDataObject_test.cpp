@@ -223,7 +223,7 @@ TEST_F(CoordinateTransformableDataObject_test, coordsPassToProcessedFieldData)
 
     dataObject->specifyCoordinateSystem(coordsSpec);
 
-    auto processedDataSet = dataObject->processedDataSet();
+    auto processedDataSet = dataObject->processedOutputDataSet();
     const auto passedSpec = ReferencedCoordinateSystemSpecification::fromFieldData(*processedDataSet->GetFieldData());
 
     ASSERT_EQ(coordsSpec, passedSpec);

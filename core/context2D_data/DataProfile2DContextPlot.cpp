@@ -136,7 +136,7 @@ DataBounds DataProfile2DContextPlot::updateVisibleBounds()
 
 void DataProfile2DContextPlot::updatePlot()
 {
-    auto profileDataSet = vtkPointSet::SafeDownCast(profileData().processedDataSet());
+    auto profileDataSet = vtkPointSet::SafeDownCast(profileData().processedOutputDataSet());
     if (!profileDataSet)
     {
         setPlotIsValid(false);

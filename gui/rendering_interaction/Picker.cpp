@@ -286,7 +286,7 @@ void Picker_private::appendPolyDataInfo(QTextStream & stream, GenericPolyDataObj
     }
     else
     {
-        polyData.processedDataSet()->GetPoint(pickedIndex, position.GetData());
+        polyData.processedOutputDataSet()->GetPoint(pickedIndex, position.GetData());
     }
 
     appendPositionInfo(stream, pickedIndex, position, indexPrefix, coordinatePrefix);

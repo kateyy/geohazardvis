@@ -81,7 +81,7 @@ GlyphMappingData::GlyphMappingData(RenderedData & renderedData)
     m_arrowGlyph->SetScaleModeToDataScalingOff();
     m_arrowGlyph->OrientOn();
     DataBounds bounds;
-    renderedData.dataObject().processedDataSet()->GetBounds(bounds.data());
+    renderedData.dataObject().processedOutputDataSet()->GetBounds(bounds.data());
     const double maxBoundsSize = maxComponent(bounds.componentSize());
     m_arrowGlyph->SetScaleFactor(maxBoundsSize * 0.1);
 
