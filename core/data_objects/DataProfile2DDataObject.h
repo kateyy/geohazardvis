@@ -51,8 +51,6 @@ public:
     const QString & dataTypeName() const override;
     static const QString & dataTypeName_s();
 
-    vtkAlgorithmOutput * processedOutputPort() override;
-
     const QString & abscissa() const;
 
     const DataObject & sourceData() const;
@@ -76,6 +74,7 @@ public:
     const CoordinateSystemSpecification & pointsCoordinateSystem() const;
 
 protected:
+    vtkAlgorithmOutput * processedOutputPortInternal() override;
     std::unique_ptr<QVtkTableModel> createTableModel() override;
 
 private:

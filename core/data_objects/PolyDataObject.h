@@ -17,9 +17,6 @@ public:
 
     IndexType defaultAttributeLocation() const override;
 
-    /** @return poly data set with cell normals */
-    vtkAlgorithmOutput * processedOutputPort() override;
-
     void addDataArray(vtkDataArray & dataArray) override;
 
     /** @return centroids with normals, computed from polygonal data set cells */
@@ -39,6 +36,9 @@ public:
     bool setCellNormalComponent(vtkIdType cellId, int component, double value);
 
 protected:
+    /** @return poly data set with cell normals */
+    vtkAlgorithmOutput * processedOutputPortInternal() override;
+
     std::unique_ptr<QVtkTableModel> createTableModel() override;
 
 private:

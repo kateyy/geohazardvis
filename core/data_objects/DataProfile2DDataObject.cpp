@@ -268,11 +268,6 @@ const QString & DataProfile2DDataObject::dataTypeName_s()
     return name;
 }
 
-vtkAlgorithmOutput * DataProfile2DDataObject::processedOutputPort()
-{
-    return m_graphLine->GetOutputPort();
-}
-
 const QString & DataProfile2DDataObject::abscissa() const
 {
     return m_abscissa;
@@ -348,6 +343,11 @@ void DataProfile2DDataObject::setPointsCoordinateSystem(const CoordinateSystemSp
 const CoordinateSystemSpecification & DataProfile2DDataObject::pointsCoordinateSystem() const
 {
     return m_profileLinePointsCoordsSpec;
+}
+
+vtkAlgorithmOutput * DataProfile2DDataObject::processedOutputPortInternal()
+{
+    return m_graphLine->GetOutputPort();
 }
 
 std::unique_ptr<QVtkTableModel> DataProfile2DDataObject::createTableModel()

@@ -2,11 +2,13 @@
 
 #include <cassert>
 
+#include <vtkAlgorithmOutput.h>
 #include <vtkDataSet.h>
 #include <vtkInformationIntegerPointerKey.h>
 #include <vtkInformationStringKey.h>
-#include <vtkTrivialProducer.h>
 #include <vtkPassThrough.h>
+#include <vtkTrivialProducer.h>
+
 
 
 vtkInformationKeyMacro(DataObjectPrivate, DataObjectKey, IntegerPointer);
@@ -22,6 +24,7 @@ DataObjectPrivate::DataObjectPrivate(DataObject & dataObject, const QString & na
     , m_numberOfCells{ 0 }
     , m_inCopyStructure{ false }
     , q_ptr{ dataObject }
+    , m_nextProcessingStepId{ 0 }
     , m_deferEventsRequests{ 0 }
 {
     if (dataSet)
@@ -51,14 +54,62 @@ vtkAlgorithm * DataObjectPrivate::trivialProducer()
     return m_trivialProducer;
 }
 
-vtkAlgorithm * DataObjectPrivate::processedPassThrough()
+vtkAlgorithm * DataObjectPrivate::pipelineEndPoint()
 {
     if (!m_processedPassThrough)
     {
+        // Initial hard-coded pipeline. When extending it using injectPostProcessingStep,
+        // updatePipeline() will set a different input here.
         m_processedPassThrough = vtkSmartPointer<vtkPassThrough>::New();
+        m_processedPassThrough->SetInputConnection(q_ptr.processedOutputPortInternal());
     }
 
     return m_processedPassThrough;
+}
+
+std::pair<bool, unsigned int> DataObjectPrivate::injectPostProcessingStep(const PostProcessingStep & postProcessingStep)
+{
+    const auto newId = getNextProcessingStepId();
+    m_postProcessingSteps.emplace_back(newId, postProcessingStep);
+    updatePipeline();
+
+    return std::make_pair(true, newId);
+}
+
+bool DataObjectPrivate::erasePostProcessingStep(unsigned int id)
+{
+    const auto it = std::find_if(m_postProcessingSteps.begin(), m_postProcessingSteps.end(),
+        [id] (const std::pair<unsigned int, PostProcessingStep> & it)
+    {
+        return it.first == id;
+    });
+
+    if (it == m_postProcessingSteps.end())
+    {
+        return false;
+    }
+
+    m_postProcessingSteps.erase(it);
+    updatePipeline();
+    releaseProcessingStepId(id);
+
+    return true;
+}
+
+void DataObjectPrivate::updatePipeline()
+{
+    auto upstream = q_ptr.processedOutputPortInternal();
+    assert(upstream);
+
+    vtkSmartPointer<vtkAlgorithmOutput> currentUpstream = upstream;
+
+    for (const auto & step : m_postProcessingSteps)
+    {
+        step.second.pipelineHead->SetInputConnection(currentUpstream);
+        currentUpstream = step.second.pipelineTail->GetOutputPort();
+    }
+
+    pipelineEndPoint()->SetInputConnection(currentUpstream);
 }
 
 void DataObjectPrivate::addObserver(const QString & eventName, vtkObject & subject, unsigned long tag)
@@ -91,6 +142,23 @@ void DataObjectPrivate::disconnectEventGroup_internal(
 
         observerAndId.first->RemoveObserver(observerAndId.second);
     }
+}
+
+unsigned int DataObjectPrivate::getNextProcessingStepId()
+{
+    if (!m_freedProcessingStepIds.empty())
+    {
+        const auto id = m_freedProcessingStepIds.back();
+        m_freedProcessingStepIds.pop_back();
+        return id;
+    }
+
+    return m_nextProcessingStepId++;
+}
+
+void DataObjectPrivate::releaseProcessingStepId(unsigned int id)
+{
+    m_freedProcessingStepIds.push_back(id);
 }
 
 void DataObjectPrivate::disconnectAllEvents()

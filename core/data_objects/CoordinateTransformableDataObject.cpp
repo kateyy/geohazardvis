@@ -19,7 +19,7 @@ CoordinateTransformableDataObject::CoordinateTransformableDataObject(
         return;
     }
 
-    m_coordsSetter->SetInputConnection(DataObject::processedOutputPort());
+    m_coordsSetter->SetInputConnection(DataObject::processedOutputPortInternal());
 
     const auto spec = ReferencedCoordinateSystemSpecification::fromFieldData(*dataSet->GetFieldData());
     if (spec.isValid())
@@ -166,7 +166,7 @@ vtkSmartPointer<vtkDataSet> CoordinateTransformableDataObject::coordinateTransfo
     return vtkDataSet::SafeDownCast(port->GetProducer()->GetOutputDataObject(0));
 }
 
-vtkAlgorithmOutput * CoordinateTransformableDataObject::processedOutputPort()
+vtkAlgorithmOutput * CoordinateTransformableDataObject::processedOutputPortInternal()
 {
     return m_coordsSetter->GetOutputPort();
 }

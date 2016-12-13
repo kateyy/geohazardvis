@@ -7,6 +7,8 @@
 #include <vtkPointData.h>
 #include <vtkPolyData.h>
 #include <vtkSmartPointer.h>
+#include <vtkTransform.h>
+#include <vtkTransformPolyDataFilter.h>
 #include <vtkTriangle.h>
 #include <vtkVertex.h>
 
@@ -18,6 +20,7 @@
 #include <core/table_model/QVtkTableModel.h>
 #include <core/data_objects/DataObject_private.h>
 #include <core/utility/DataExtent.h>
+#include <core/utility/vtkVector_print.h>
 
 
 class DataObject_test_DataObject : public DataObject
@@ -70,6 +73,18 @@ public:
         }
         polyData->SetPoints(points);
         return polyData;
+    }
+
+    static std::unique_ptr<PointCloudDataObject> createPointCloud(vtkIdType numPoints)
+    {
+        auto polyData = createPolyDataPoints(numPoints);
+        auto vertices = vtkSmartPointer<vtkCellArray>::New();
+        auto vertex = vtkSmartPointer<vtkVertex>::New();
+        vertex->GetPointIds()->SetId(0, 0);
+        vertices->InsertNextCell(vertex);
+        polyData->SetVerts(vertices);
+
+        return std::make_unique<PointCloudDataObject>("vertices", *polyData);
     }
 };
 
@@ -323,6 +338,212 @@ TEST_F(DataObject_test, GenericPolyDataObject_instantiate_PointCloudDataObject)
     ASSERT_TRUE(pointCloudDataObject);
     ASSERT_TRUE(dynamic_cast<PointCloudDataObject *>(pointCloudDataObject.get()));
     ASSERT_EQ(polyData.Get(), pointCloudDataObject->dataSet());
+}
+
+namespace
+{
+
+struct TransformHelper
+{
+    vtkVector3d transformedPoint1;
+    vtkVector3d transformedPoint2;
+    vtkSmartPointer<vtkTransformPolyDataFilter> filter1;
+    vtkSmartPointer<vtkTransformPolyDataFilter> filter2;
+
+    static vtkVector3d testPoint()
+    {
+        return vtkVector3d(8, 16, 64);
+    }
+
+    TransformHelper()
+        : transformedPoint1{ testPoint() + shift }
+        , transformedPoint2{ (testPoint() + shift) * scale }
+        , filter1{ vtkSmartPointer<vtkTransformPolyDataFilter>::New() }
+        , filter2{ vtkSmartPointer<vtkTransformPolyDataFilter>::New() }
+    {
+        auto transform1 = vtkSmartPointer<vtkTransform>::New();
+        transform1->Translate(shift.GetData());
+        filter1->SetTransform(transform1);
+
+        auto transform2 = vtkSmartPointer<vtkTransform>::New();
+        transform2->Scale(scale.GetData());
+        filter2->SetTransform(transform2);
+        filter2->SetInputConnection(filter1->GetOutputPort());
+    }
+
+    static const vtkVector3d shift;
+    static const vtkVector3d scale;
+};
+
+const vtkVector3d TransformHelper::shift = vtkVector3d(8.0, 32.0, 128.0);
+const vtkVector3d TransformHelper::scale = vtkVector3d(2.0, 0.5, 0.25);
+
+}
+
+TEST_F(DataObject_test, InjectPostProcessingStep_Simple)
+{
+    auto dataObject = createPointCloud(1);
+    dataObject->polyDataSet().GetPoints()->SetPoint(0, TransformHelper::testPoint().GetData());
+
+    TransformHelper trHelper;
+    DataObject::PostProcessingStep ppStep;
+    ppStep.pipelineHead = trHelper.filter1;
+    ppStep.pipelineTail = trHelper.filter1;
+
+    bool result;
+    std::tie(result, std::ignore) = dataObject->injectPostProcessingStep(ppStep);
+    ASSERT_TRUE(result);
+
+    auto dataSet = dataObject->processedOutputDataSet();
+
+    ASSERT_TRUE(dataSet);
+    ASSERT_EQ(1, dataSet->GetNumberOfPoints());
+    ASSERT_EQ(trHelper.transformedPoint1, vtkVector3d(dataSet->GetPoint(0)));
+}
+
+TEST_F(DataObject_test, InjectPostProcessingStep_Pipeline)
+{
+    auto dataObject = createPointCloud(1);
+    dataObject->polyDataSet().GetPoints()->SetPoint(0, TransformHelper::testPoint().GetData());
+
+    TransformHelper trHelper;
+    DataObject::PostProcessingStep ppStep;
+    ppStep.pipelineHead = trHelper.filter1;
+    ppStep.pipelineTail = trHelper.filter2;
+
+    bool result;
+    std::tie(result, std::ignore) = dataObject->injectPostProcessingStep(ppStep);
+    ASSERT_TRUE(result);
+
+    auto dataSet = dataObject->processedOutputDataSet();
+
+    ASSERT_TRUE(dataSet);
+    ASSERT_EQ(1, dataSet->GetNumberOfPoints());
+    ASSERT_EQ(trHelper.transformedPoint2, vtkVector3d(dataSet->GetPoint(0)));
+}
+
+TEST_F(DataObject_test, InjectPostProcessingStep_2Steps)
+{
+    auto dataObject = createPointCloud(1);
+    dataObject->polyDataSet().GetPoints()->SetPoint(0, TransformHelper::testPoint().GetData());
+
+    auto trHelper1 = TransformHelper();
+    DataObject::PostProcessingStep ppStep1;
+    ppStep1.pipelineHead = trHelper1.filter1;
+    ppStep1.pipelineTail = trHelper1.filter2;
+
+    auto trHelper2 = TransformHelper();
+    DataObject::PostProcessingStep ppStep2;
+    ppStep2.pipelineHead = trHelper2.filter1;
+    ppStep2.pipelineTail = trHelper2.filter2;
+
+    bool result;
+    std::tie(result, std::ignore) = dataObject->injectPostProcessingStep(ppStep1);
+    ASSERT_TRUE(result);
+    std::tie(result, std::ignore) = dataObject->injectPostProcessingStep(ppStep2);
+    ASSERT_TRUE(result);
+
+    auto dataSet = dataObject->processedOutputDataSet();
+
+    ASSERT_TRUE(dataSet);
+    ASSERT_EQ(1, dataSet->GetNumberOfPoints());
+    ASSERT_EQ(vtkVector3d((trHelper1.transformedPoint2 + TransformHelper::shift) * TransformHelper::scale),
+        vtkVector3d(dataSet->GetPoint(0)));
+}
+
+TEST_F(DataObject_test, InjectPostProcessingStep_Erase)
+{
+    auto dataObject = createPointCloud(1);
+    dataObject->polyDataSet().GetPoints()->SetPoint(0, TransformHelper::testPoint().GetData());
+
+    auto trHelper = TransformHelper();
+
+    DataObject::PostProcessingStep ppStep;
+    ppStep.pipelineHead = trHelper.filter1;
+    ppStep.pipelineTail = trHelper.filter1;
+
+    bool result;
+    unsigned int index;
+    std::tie(result, index) = dataObject->injectPostProcessingStep(ppStep);
+    ASSERT_TRUE(result);
+    ASSERT_TRUE(dataObject->processedOutputDataSet());
+    ASSERT_TRUE(dataObject->erasePostProcessingStep(index));
+
+    auto dataSet = dataObject->processedOutputDataSet();
+    ASSERT_TRUE(dataSet);
+    ASSERT_EQ(1, dataSet->GetNumberOfPoints());
+    ASSERT_EQ(trHelper.testPoint(), vtkVector3d(dataSet->GetPoint(0)));
+}
+
+TEST_F(DataObject_test, InjectPostProcessingStep_2Steps_Erase1)
+{
+    auto dataObject = createPointCloud(1);
+    dataObject->polyDataSet().GetPoints()->SetPoint(0, TransformHelper::testPoint().GetData());
+
+    auto trHelper1 = TransformHelper();
+    DataObject::PostProcessingStep ppStep1;
+    ppStep1.pipelineHead = trHelper1.filter1;
+    ppStep1.pipelineTail = trHelper1.filter2;
+
+    auto trHelper2 = TransformHelper();
+    DataObject::PostProcessingStep ppStep2;
+    ppStep2.pipelineHead = trHelper2.filter1;
+    ppStep2.pipelineTail = trHelper2.filter2;
+
+    bool result;
+    unsigned int index1, index2;
+    std::tie(result, index1) = dataObject->injectPostProcessingStep(ppStep1);
+    ASSERT_TRUE(result);
+    std::tie(result, index2) = dataObject->injectPostProcessingStep(ppStep2);
+    ASSERT_TRUE(result);
+    ASSERT_NE(index1, index2);
+
+    dataObject->processedOutputDataSet();
+
+    ASSERT_TRUE(dataObject->erasePostProcessingStep(index1));
+
+    auto dataSet = dataObject->processedOutputDataSet();
+    ASSERT_TRUE(dataSet);
+    ASSERT_EQ(1, dataSet->GetNumberOfPoints());
+    ASSERT_EQ(trHelper2.transformedPoint2, vtkVector3d(dataSet->GetPoint(0)));
+}
+
+TEST_F(DataObject_test, InjectPostProcessingStep_2Steps_Erase1_Inject)
+{
+    auto dataObject = createPointCloud(1);
+    dataObject->polyDataSet().GetPoints()->SetPoint(0, TransformHelper::testPoint().GetData());
+
+    auto trHelper1 = TransformHelper();
+    DataObject::PostProcessingStep ppStep1;
+    ppStep1.pipelineHead = trHelper1.filter1;
+    ppStep1.pipelineTail = trHelper1.filter2;
+
+    auto trHelper2 = TransformHelper();
+    DataObject::PostProcessingStep ppStep2;
+    ppStep2.pipelineHead = trHelper2.filter1;
+    ppStep2.pipelineTail = trHelper2.filter2;
+
+    bool result;
+    unsigned int index1, index2;
+    std::tie(result, index1) = dataObject->injectPostProcessingStep(ppStep1);
+    ASSERT_TRUE(result);
+    std::tie(result, index2) = dataObject->injectPostProcessingStep(ppStep2);
+    ASSERT_TRUE(result);
+    ASSERT_NE(index1, index2);
+
+    dataObject->processedOutputDataSet();
+
+    ASSERT_TRUE(dataObject->erasePostProcessingStep(index1));
+
+    std::tie(result, index1) = dataObject->injectPostProcessingStep(ppStep1);
+    ASSERT_TRUE(result);
+    ASSERT_NE(index1, index2);
+
+    auto dataSet = dataObject->processedOutputDataSet();
+    ASSERT_TRUE(dataSet);
+    ASSERT_EQ(1, dataSet->GetNumberOfPoints());
+    ASSERT_EQ(vtkVector3d((trHelper1.transformedPoint2 + TransformHelper::shift) * TransformHelper::scale),
+        vtkVector3d(dataSet->GetPoint(0)));
 }
 
 TEST(ScopedEventDeferral_test, ExecutesDeferred)

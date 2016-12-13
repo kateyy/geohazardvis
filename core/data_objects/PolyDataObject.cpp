@@ -35,12 +35,6 @@ IndexType PolyDataObject::defaultAttributeLocation() const
     return IndexType::cells;
 }
 
-vtkAlgorithmOutput * PolyDataObject::processedOutputPort()
-{
-    m_cellNormals->SetInputConnection(CoordinateTransformableDataObject::processedOutputPort());
-    return m_cellNormals->GetOutputPort();
-}
-
 vtkPolyData * PolyDataObject::cellCenters()
 {
     setupCellCenters();
@@ -253,6 +247,12 @@ bool PolyDataObject::setCellNormalComponent(vtkIdType cellId, int component, dou
     ds.Modified();
 
     return true;
+}
+
+vtkAlgorithmOutput * PolyDataObject::processedOutputPortInternal()
+{
+    m_cellNormals->SetInputConnection(CoordinateTransformableDataObject::processedOutputPortInternal());
+    return m_cellNormals->GetOutputPort();
 }
 
 std::unique_ptr<QVtkTableModel> PolyDataObject::createTableModel()

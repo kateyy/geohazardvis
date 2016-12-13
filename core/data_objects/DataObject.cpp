@@ -139,15 +139,24 @@ void DataObject::CopyStructure(vtkDataSet & other)
 
 vtkAlgorithmOutput * DataObject::processedOutputPort()
 {
-    return d_ptr->trivialProducer()->GetOutputPort();
+    return d_ptr->pipelineEndPoint()->GetOutputPort();
 }
 
-vtkDataSet * DataObject::processedDataSet()
+vtkDataSet * DataObject::processedOutputDataSet()
 {
-    auto passThrough = d_ptr->processedPassThrough();
-    passThrough->SetInputConnection(processedOutputPort());
-    passThrough->Update();
-    return vtkDataSet::SafeDownCast(passThrough->GetOutputDataObject(0));
+    auto producer = d_ptr->pipelineEndPoint();
+    producer->Update();
+    return vtkDataSet::SafeDownCast(producer->GetOutputDataObject(0));
+}
+
+std::pair<bool, unsigned int> DataObject::injectPostProcessingStep(const PostProcessingStep & postProcessingStep)
+{
+    return d_ptr->injectPostProcessingStep(postProcessingStep);
+}
+
+bool DataObject::erasePostProcessingStep(unsigned int id)
+{
+    return d_ptr->erasePostProcessingStep(id);
 }
 
 const DataBounds & DataObject::bounds() const
@@ -265,6 +274,11 @@ void DataObject::storeName(vtkInformation & information, const DataObject & data
 DataObjectPrivate & DataObject::dPtr()
 {
     return *d_ptr;
+}
+
+vtkAlgorithmOutput * DataObject::processedOutputPortInternal()
+{
+    return d_ptr->trivialProducer()->GetOutputPort();
 }
 
 void DataObject::addIntrinsicAttributes(

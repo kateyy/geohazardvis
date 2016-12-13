@@ -3,6 +3,7 @@
 #include <memory>
 
 #include <QObject>
+#include <vtkSmartPointer.h>
 
 #include <vtkObject.h>
 
@@ -11,11 +12,12 @@
 
 
 class QStringList;
-class vtkInformation;
-class vtkInformationIntegerKey;
+class vtkAlgorithm;
+class vtkAlgorithmOutput;
 class vtkDataArray;
 class vtkDataSet;
-class vtkAlgorithmOutput;
+class vtkInformation;
+class vtkInformationIntegerKey;
 
 class Context2DData;
 class DataObjectPrivate;
@@ -57,9 +59,24 @@ public:
     void CopyStructure(vtkDataSet & other);
 
     /** @return the source data set with specific modifications or enhancements, e.g., computed normals */
-    virtual vtkAlgorithmOutput * processedOutputPort();
+    vtkAlgorithmOutput * processedOutputPort();
     /** Convenience method that returns a persistent shallow copy of the output data set of processedOutputPort() */
     vtkDataSet * processedOutputDataSet();
+
+    /** Allow to inject additional post processing steps to the pipeline without directly modifying
+      * the AbstractVisualizedData class hierarchy. */
+    struct PostProcessingStep
+    {
+        /** Processing step entry point that is connected to the current endpoint of the pipeline. */
+        vtkSmartPointer<vtkAlgorithm> pipelineHead;
+        /** Last step of processing step that will be the new endpoint of the pipeline. */
+        vtkSmartPointer<vtkAlgorithm> pipelineTail;
+    };
+    /** Add a post processing step to the processing pipeline.
+      * @return A boolean that is true if the step was successfully added, and an ID that can
+      * later be used to erase the processing step from the pipeline. */
+    std::pair<bool, unsigned int> injectPostProcessingStep(const PostProcessingStep & postProcessingStep);
+    bool erasePostProcessingStep(unsigned int id);
 
     /** @return Cached versions of the spatial bounds of the source data set */
     const DataBounds & bounds() const;
@@ -102,7 +119,12 @@ signals:
     void structureChanged();
 
 protected:
+    friend class DataObjectPrivate;
     DataObjectPrivate & dPtr();
+
+    /** Allows subclasses to statically customize the processing pipeline.
+      * Default output is a vtkTrivialProducer containing this->dataSet(). */
+    virtual vtkAlgorithmOutput * processedOutputPortInternal();
 
     virtual std::unique_ptr<QVtkTableModel> createTableModel() = 0;
 

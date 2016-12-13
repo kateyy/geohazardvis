@@ -56,13 +56,13 @@ public:
     This may be nullptr, if the selected transformation is not supported. */
     vtkSmartPointer<vtkDataSet> coordinateTransformedDataSet(const CoordinateSystemSpecification & spec);
 
-    vtkAlgorithmOutput * processedOutputPort() override;
-
 signals:
     /** Emitted when the data objects coordinate system was changed using specifyCoordinateSystem() */
     void coordinateSystemChanged();
 
 protected:
+    vtkAlgorithmOutput * processedOutputPortInternal() override;
+
     /** Setup the part of the pipeline that transform coordinates in one direction.
     This needs to be implemented by subclasses and is call by this superclass as required.
     This may return an empty pointer, in which case the transformation is considered as not supported.
