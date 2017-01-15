@@ -65,7 +65,7 @@ elseif (UNIX)
     string(APPEND _regexLocations ")\\.so")
 
     execute_process(
-        COMMAND bash "-c" "ldd ${_testBinary} | egrep '${_regexLocations}' | awk \'{ printf \"%s;%s\",$1,$3}\'"
+        COMMAND bash "-c" "ldd ${_testBinary} | egrep '${_regexLocations}' | awk \'{ printf \"%s;%s;\",$1,$3}\'"
         RESULT_VARIABLE _returnValue
         OUTPUT_VARIABLE _lddLibsInfo
     )
