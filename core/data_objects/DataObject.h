@@ -102,7 +102,8 @@ public:
     void deferEvents();
     void executeDeferredEvents();
 
-    static vtkInformationIntegerKey * ArrayIsAuxiliaryKey();
+    /** Mark attribute arrays that should not be visible to the user, e.g., in color or glyph mappings. */
+    static vtkInformationIntegerKey * ARRAY_IS_AUXILIARY();
 
     static DataObject * readPointer(vtkInformation & information);
     static void storePointer(vtkInformation & information, DataObject * dataObject);

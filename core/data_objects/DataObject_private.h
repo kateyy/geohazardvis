@@ -33,8 +33,8 @@ public:
 
     virtual ~DataObjectPrivate();
 
-    static vtkInformationIntegerPointerKey * DataObjectKey();
-    static vtkInformationStringKey * NameKey();
+    static vtkInformationIntegerPointerKey * DATA_OBJECT();
+    static vtkInformationStringKey * DATA_OBJECT_NAME();
 
     vtkAlgorithm * trivialProducer();
     /** Persistent processing pipeline end point. This is a pass-through in the simplest case

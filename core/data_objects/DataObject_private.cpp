@@ -11,8 +11,8 @@
 
 
 
-vtkInformationKeyMacro(DataObjectPrivate, DataObjectKey, IntegerPointer);
-vtkInformationKeyMacro(DataObjectPrivate, NameKey, String);
+vtkInformationKeyMacro(DataObjectPrivate, DATA_OBJECT, IntegerPointer);
+vtkInformationKeyMacro(DataObjectPrivate, DATA_OBJECT_NAME, String);
 
 
 DataObjectPrivate::DataObjectPrivate(DataObject & dataObject, const QString & name, vtkDataSet * dataSet)

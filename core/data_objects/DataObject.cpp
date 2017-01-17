@@ -24,7 +24,7 @@
 #include <core/utility/vtkstringhelper.h>
 
 
-vtkInformationKeyMacro(DataObject, ArrayIsAuxiliaryKey, Integer);
+vtkInformationKeyMacro(DataObject, ARRAY_IS_AUXILIARY, Integer);
 
 
 namespace
@@ -242,10 +242,10 @@ DataObject * DataObject::readPointer(vtkInformation & information)
 {
     static_assert(sizeof(int*) == sizeof(DataObject*), "");
 
-    if (information.Has(DataObjectPrivate::DataObjectKey()))
+    if (information.Has(DataObjectPrivate::DATA_OBJECT()))
     {
-        assert(information.Length(DataObjectPrivate::DataObjectKey()) == 1);
-        return reinterpret_cast<DataObject *>(information.Get(DataObjectPrivate::DataObjectKey()));
+        assert(information.Length(DataObjectPrivate::DATA_OBJECT()) == 1);
+        return reinterpret_cast<DataObject *>(information.Get(DataObjectPrivate::DATA_OBJECT()));
     }
 
     return nullptr;
@@ -253,22 +253,22 @@ DataObject * DataObject::readPointer(vtkInformation & information)
 
 void DataObject::storePointer(vtkInformation & information, DataObject * dataObject)
 {
-    information.Set(DataObjectPrivate::DataObjectKey(), reinterpret_cast<int *>(dataObject), 1);
+    information.Set(DataObjectPrivate::DATA_OBJECT(), reinterpret_cast<int *>(dataObject), 1);
 }
 
 QString DataObject::readName(vtkInformation & information)
 {
-    if (!information.Has(DataObjectPrivate::NameKey()))
+    if (!information.Has(DataObjectPrivate::DATA_OBJECT_NAME()))
     {
         return{};
     }
 
-    return QString::fromUtf8(information.Get(DataObjectPrivate::NameKey()));
+    return QString::fromUtf8(information.Get(DataObjectPrivate::DATA_OBJECT_NAME()));
 }
 
 void DataObject::storeName(vtkInformation & information, const DataObject & dataObject)
 {
-    information.Set(DataObjectPrivate::NameKey(), dataObject.name().toUtf8().data());
+    information.Set(DataObjectPrivate::DATA_OBJECT_NAME(), dataObject.name().toUtf8().data());
 }
 
 DataObjectPrivate & DataObject::dPtr()

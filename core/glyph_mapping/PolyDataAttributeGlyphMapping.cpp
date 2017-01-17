@@ -61,8 +61,8 @@ std::vector<std::unique_ptr<GlyphMappingData>> PolyDataAttributeGlyphMapping::ne
             continue;
         }
 
-        if (a->GetInformation()->Has(DataObject::ArrayIsAuxiliaryKey())
-            && a->GetInformation()->Get(DataObject::ArrayIsAuxiliaryKey()))
+        if (a->GetInformation()->Has(DataObject::ARRAY_IS_AUXILIARY())
+            && a->GetInformation()->Get(DataObject::ARRAY_IS_AUXILIARY()))
         {
             continue;
         }

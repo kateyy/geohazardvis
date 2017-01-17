@@ -90,7 +90,7 @@ public:
         return m_visibleBoundsAreValid;
     }
 
-    static vtkInformationIntegerPointerKey * VisualizedDataKey();
+    static vtkInformationIntegerPointerKey * VISUALIZED_DATA();
 
 private:
     DataBounds m_visibleBounds;
@@ -105,4 +105,4 @@ private:
 };
 
 
-vtkInformationKeyMacro(AbstractVisualizedData_private, VisualizedDataKey, IntegerPointer);
+vtkInformationKeyMacro(AbstractVisualizedData_private, VISUALIZED_DATA, IntegerPointer);

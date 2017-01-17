@@ -62,8 +62,8 @@ std::vector<std::unique_ptr<ColorMappingData>> AttributeArrayComponentMapping::n
 
             // skip arrays that are marked as auxiliary
             auto & dataArrayInfo = *dataArray->GetInformation();
-            if (dataArrayInfo.Has(DataObject::ArrayIsAuxiliaryKey())
-                && dataArrayInfo.Get(DataObject::ArrayIsAuxiliaryKey()))
+            if (dataArrayInfo.Has(DataObject::ARRAY_IS_AUXILIARY())
+                && dataArrayInfo.Get(DataObject::ARRAY_IS_AUXILIARY()))
             {
                 continue;
             }

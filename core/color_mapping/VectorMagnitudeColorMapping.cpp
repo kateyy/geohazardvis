@@ -44,8 +44,8 @@ std::vector<std::unique_ptr<ColorMappingData>> VectorMagnitudeColorMapping::newI
 
             // skip arrays that are marked as auxiliary
             auto & arrayInfo = *dataArray->GetInformation();
-            if (arrayInfo.Has(DataObject::ArrayIsAuxiliaryKey())
-                && arrayInfo.Get(DataObject::ArrayIsAuxiliaryKey()))
+            if (arrayInfo.Has(DataObject::ARRAY_IS_AUXILIARY())
+                && arrayInfo.Get(DataObject::ARRAY_IS_AUXILIARY()))
             {
                 continue;
             }

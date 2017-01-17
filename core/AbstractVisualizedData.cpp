@@ -221,10 +221,10 @@ AbstractVisualizedData * AbstractVisualizedData::readPointer(vtkInformation & in
 {
     static_assert(sizeof(int*) == sizeof(DataObject*), "");
 
-    if (information.Has(AbstractVisualizedData_private::VisualizedDataKey()))
+    if (information.Has(AbstractVisualizedData_private::VISUALIZED_DATA()))
     {
-        assert(information.Length(AbstractVisualizedData_private::VisualizedDataKey()) == 1);
-        return reinterpret_cast<AbstractVisualizedData *>(information.Get(AbstractVisualizedData_private::VisualizedDataKey()));
+        assert(information.Length(AbstractVisualizedData_private::VISUALIZED_DATA()) == 1);
+        return reinterpret_cast<AbstractVisualizedData *>(information.Get(AbstractVisualizedData_private::VISUALIZED_DATA()));
     }
 
     return nullptr;
@@ -232,7 +232,7 @@ AbstractVisualizedData * AbstractVisualizedData::readPointer(vtkInformation & in
 
 void AbstractVisualizedData::storePointer(vtkInformation & information, AbstractVisualizedData * visualization)
 {
-    information.Set(AbstractVisualizedData_private::VisualizedDataKey(), reinterpret_cast<int *>(visualization), 1);
+    information.Set(AbstractVisualizedData_private::VISUALIZED_DATA(), reinterpret_cast<int *>(visualization), 1);
 }
 
 void AbstractVisualizedData::setupColorMapping(ColorMapping & /*colorMapping*/)
