@@ -30,6 +30,10 @@ ColorMappingData::ColorMappingData(const std::vector<AbstractVisualizedData *> &
     , m_maxValue(numDataComponents, std::numeric_limits<double>::lowest())
     , m_boundsValid{ false }
 {
+    for (auto vis : visualizedData)
+    {
+        connect(vis, &AbstractVisualizedData::geometryChanged, this, &ColorMappingData::forceUpdateBoundsLocked);
+    }
 }
 
 ColorMappingData::~ColorMappingData() = default;
@@ -349,7 +353,11 @@ void ColorMappingData::updateBoundsLocked() const
 
     if (minMaxChanged)
     {
+        {
+            // Don't emit minMaxChanged(), rely on dataMinMaxChanged only
+            QSignalBlocker blocker(lockedThis);
+            lockedThis.minMaxChangedEvent();
+        }
         emit lockedThis.dataMinMaxChanged();
-        lockedThis.minMaxChangedEvent();
     }
 }

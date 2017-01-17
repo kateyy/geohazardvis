@@ -15,6 +15,7 @@ class Ui_RenderConfigWidget;
 class AbstractRenderView;
 class AbstractVisualizedData;
 class DataObject;
+class TemporalPipelineMediator;
 struct VisualizationSelection;
 
 
@@ -30,6 +31,8 @@ public:
     void setSelectedVisualization(AbstractRenderView * renderView, const VisualizationSelection & selection);
     void clear();
 
+    void setCurrentTimeStep(int timeStepIndex);
+
 private:
     /** remove data from the UI if we currently hold it */
     void checkDeletedContent(const QList<AbstractVisualizedData *> & content);
@@ -38,6 +41,7 @@ private:
 
 private:
     std::unique_ptr<Ui_RenderConfigWidget> m_ui;
+    std::unique_ptr<TemporalPipelineMediator> m_temporalSelector;
 
     std::unique_ptr<reflectionzeug::PropertyGroup> m_propertyRoot;
 

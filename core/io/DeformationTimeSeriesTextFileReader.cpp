@@ -10,14 +10,19 @@
 #include <vtkCellArray.h>
 #include <vtkFloatArray.h>
 #include <vtkInformation.h>
+#include <vtkInformationStringKey.h>
 #include <vtkPointData.h>
 #include <vtkPoints.h>
 #include <vtkPolyData.h>
 
 #include <core/CoordinateSystems.h>
 #include <core/data_objects/PointCloudDataObject.h>
+#include <core/filters/TemporalDataSource.h>
 #include <core/io/TextFileReader.h>
 #include <core/utility/DataExtent.h>
+
+
+vtkInformationKeyMacro(DeformationTimeSeriesTextFileReader, TIME_STEP_STRING, String);
 
 
 DeformationTimeSeriesTextFileReader::DeformationTimeSeriesTextFileReader(const QString & fileName)
@@ -267,16 +272,29 @@ auto DeformationTimeSeriesTextFileReader::readData() -> State
         }
     }
 
-    std::vector<vtkSmartPointer<vtkDataArray>> timestampArrays;
+    auto temporalDataSource = vtkSmartPointer<TemporalDataSource>::New();
+    m_temporalDataSource = temporalDataSource;
+    const auto deformationAttrIdx = temporalDataSource->AddTemporalAttribute(
+        TemporalDataSource::POINT_DATA,
+        arrayName_DeformationTimeSeries());
+
     const auto deformationUnitUtf8 = m_deformationUnitString.toUtf8();
-    for (unsigned timestampIdx = 0; timestampIdx < static_cast<unsigned>(m_numTimeSteps); ++timestampIdx)
+    for (unsigned timeStepIdx = 0; timeStepIdx < static_cast<unsigned>(m_numTimeSteps); ++timeStepIdx)
     {
-        const auto & timestampName = timestamps[timestampIdx][0];
-        auto && arrayName = deformationArrayBaseName() + timestampName;
+        const auto & timestampName = timestamps[timeStepIdx][0];
+        bool okay;
+        const auto timeStep = timestampName.toDouble(&okay);
+        if (!okay)
+        {
+            qWarning() << "Time stamp is not a floating point value:" << timeStep;
+            return setState(State::invalidFileFormat);
+        }
 
         auto array = vtkSmartPointer<vtkFloatArray>::New();
+        // Pass original time step representation as string, so that the user is not confused by
+        // inexact floating point representations
+        array->GetInformation()->Set(TIME_STEP_STRING(), timestampName.toUtf8().data());
         array->SetNumberOfValues(numPoints);
-        array->SetName(arrayName.toUtf8().data());
         if (!deformationUnitUtf8.isEmpty())
         {
             array->GetInformation()->Set(vtkDataArray::UNITS_LABEL(), deformationUnitUtf8.data());
@@ -285,9 +303,13 @@ auto DeformationTimeSeriesTextFileReader::readData() -> State
         for (vtkIdType i = 0; i < numPoints; ++i)
         {
             array->SetTypedComponent(i, 0,
-                readDataColumns[m_numColumnsBeforeDeformations + timestampIdx][i]);
+                readDataColumns[m_numColumnsBeforeDeformations + timeStepIdx][i]);
         }
-        timestampArrays.emplace_back(array);
+
+        temporalDataSource->SetTemporalAttributeTimeStep(TemporalDataSource::POINT_DATA,
+            deformationAttrIdx,
+            timeStep,
+            array);
     }
 
 
@@ -368,10 +390,6 @@ auto DeformationTimeSeriesTextFileReader::readData() -> State
             pointData.AddArray(array);
         }
     }
-    for (const auto & array : timestampArrays)
-    {
-        pointData.AddArray(array);
-    }
 
     return setState(validData);
 }
@@ -430,10 +448,14 @@ std::unique_ptr<DataObject> DeformationTimeSeriesTextFileReader::generateDataObj
     {
         return{};
     }
+    
+    assert(m_readPolyData && m_temporalDataSource);
 
     auto && name = QFileInfo(m_fileName).baseName();
 
-    return std::make_unique<PointCloudDataObject>(name, *m_readPolyData);
+    auto dataObject = std::make_unique<PointCloudDataObject>(name, *m_readPolyData);
+    dataObject->injectPostProcessingStep({ m_temporalDataSource, m_temporalDataSource });
+    return std::move(dataObject);
 }
 
 void DeformationTimeSeriesTextFileReader::clear()
@@ -502,10 +524,10 @@ const char * DeformationTimeSeriesTextFileReader::arrayName_ResidualTopography()
     return arrayName;
 }
 
-const QString & DeformationTimeSeriesTextFileReader::deformationArrayBaseName()
+const char * DeformationTimeSeriesTextFileReader::arrayName_DeformationTimeSeries()
 {
-    static const QString arrayBaseName = "deformation_";
-    return arrayBaseName;
+    static const char * arrayName = "Deformation";
+    return arrayName;
 }
 
 auto DeformationTimeSeriesTextFileReader::setState(State state) -> State

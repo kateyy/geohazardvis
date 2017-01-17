@@ -17,6 +17,8 @@ set(sources
     DataSetHandler.cpp
     RuntimeInfo.h
     RuntimeInfo.cpp
+    TemporalPipelineMediator.h
+    TemporalPipelineMediator.cpp
     types.h
     types.cpp
     VersionInfo.h
@@ -129,6 +131,8 @@ set(sources
     filters/SimpleImageGeoCoordinateTransformFilter.cpp
     filters/SimplePolyGeoCoordinateTransformFilter.h
     filters/SimplePolyGeoCoordinateTransformFilter.cpp
+    filters/TemporalDataSource.h
+    filters/TemporalDataSource.cpp
     filters/vtkInformationDoubleVectorMetaDataKey.h
     filters/vtkInformationDoubleVectorMetaDataKey.cpp
     filters/vtkInformationIntegerMetaDataKey.h

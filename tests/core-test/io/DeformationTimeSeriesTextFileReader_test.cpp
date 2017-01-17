@@ -3,9 +3,14 @@
 #include <QDir>
 #include <QFile>
 
+#include <vtkAlgorithm.h>
+#include <vtkAlgorithmOutput.h>
+#include <vtkExecutive.h>
 #include <vtkFloatArray.h>
+#include <vtkInformation.h>
 #include <vtkPointData.h>
 #include <vtkPolyData.h>
+#include <vtkStreamingDemandDrivenPipeline.h>
 #include <vtkVector.h>
 
 #include <core/CoordinateSystems.h>
@@ -395,13 +400,22 @@ TEST_F(DeformationTimeSeriesTextFileReader_test, readTemporalData)
 
     auto readData = reader.generateDataObject();
     ASSERT_TRUE(readData && readData->dataSet());
-    auto & dataSet = *readData->dataSet();
 
     for (int t = 0; t < timeStamps().size(); ++t)
     {
         auto && timeStamp = timeStamps()[t];
+        const auto timeStep = timeStamp.toDouble();
 
-        auto deformations = vtktFPArray::SafeDownCast(dataSet.GetPointData()->GetArray((reader.deformationArrayBaseName() + timeStamp).toUtf8().data()));
+        auto producer = readData->processedOutputPort()->GetProducer();
+        ASSERT_TRUE(producer->GetExecutive()->UpdateInformation());
+        producer->GetOutputInformation(0)->Set(
+            vtkStreamingDemandDrivenPipeline::UPDATE_TIME_STEP(),
+            timeStep);
+        ASSERT_TRUE(producer->GetExecutive()->Update());
+        auto dataSet = vtkDataSet::SafeDownCast(producer->GetOutputDataObject(0));
+        ASSERT_TRUE(dataSet);
+
+        auto deformations = vtktFPArray::SafeDownCast(dataSet->GetPointData()->GetArray(reader.arrayName_DeformationTimeSeries()));
         ASSERT_TRUE(deformations);
         ASSERT_EQ(numberOfDataPoints(), deformations->GetNumberOfTuples());
         ASSERT_EQ(1, deformations->GetNumberOfComponents());

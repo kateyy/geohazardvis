@@ -9,12 +9,20 @@
 #include <core/core_api.h>
 
 
+class vtkAlgorithm;
+class vtkInformationStringKey;
 class vtkPolyData;
 class DataObject;
 
 
 class CORE_API DeformationTimeSeriesTextFileReader
 {
+public:
+    /** Reference the original string representation of a time step.
+      * VTK stores time step as double, which might not result in the same representation the user
+      * would expect. */
+    static vtkInformationStringKey * TIME_STEP_STRING();
+
 public:
     explicit DeformationTimeSeriesTextFileReader(const QString & fileName = {});
     ~DeformationTimeSeriesTextFileReader();
@@ -76,7 +84,7 @@ public:
     static const char * arrayName_TemporalInterferometricCoherence();
     static const char * arrayName_DeformationVelocity();
     static const char * arrayName_ResidualTopography();
-    static const QString & deformationArrayBaseName();
+    static const char * arrayName_DeformationTimeSeries();
 
     DeformationTimeSeriesTextFileReader(const DeformationTimeSeriesTextFileReader &) = delete;
     void operator=(const DeformationTimeSeriesTextFileReader &) = delete;
@@ -99,4 +107,5 @@ private:
     QString m_deformationUnitString;
 
     vtkSmartPointer<vtkPolyData> m_readPolyData;
+    vtkSmartPointer<vtkAlgorithm> m_temporalDataSource;
 };

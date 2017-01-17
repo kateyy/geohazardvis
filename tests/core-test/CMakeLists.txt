@@ -7,6 +7,7 @@ set(sources
     ${TEST_MAIN_CPP_FILEPATH}
     AbstractVisualizedData_test.cpp
     DataSetHandler_test.cpp
+    TemporalPipelineMediator_test.cpp
     VTKAlgorithmImplementations_test.cpp
     color_mapping/ColorMapping_test.cpp
     color_mapping/GlyphColorMapping_test.cpp
@@ -22,6 +23,7 @@ set(sources
     filters/PipelineInformationHelper.cpp
     filters/PipelineInformationHelper.h
     filters/SimpleImageGeoCoordinateTransformFilter_test.cpp
+    filters/TemporalDataSource_test.cpp
     io/BinaryFile_test.cpp
     io/DeformationTimeSeriesTextFileReader_test.cpp
     io/MatricesToVtk_test.cpp

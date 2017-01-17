@@ -1,10 +1,13 @@
 #include "RenderConfigWidget.h"
 #include "ui_RenderConfigWidget.h"
 
+#include <algorithm>
+
 #include <reflectionzeug/PropertyGroup.h>
 
-#include <core/data_objects/DataObject.h>
 #include <core/AbstractVisualizedData.h>
+#include <core/data_objects/DataObject.h>
+#include <core/TemporalPipelineMediator.h>
 #include <gui/data_view/AbstractRenderView.h>
 #include <gui/propertyguizeug_extension/ColorEditorRGB.h>
 
@@ -15,11 +18,13 @@ using namespace reflectionzeug;
 RenderConfigWidget::RenderConfigWidget(QWidget * parent)
     : QDockWidget(parent)
     , m_ui{ std::make_unique<Ui_RenderConfigWidget>() }
+    , m_temporalSelector{ std::make_unique<TemporalPipelineMediator>() }
     , m_propertyRoot{ nullptr }
     , m_renderView{ nullptr }
     , m_content{ nullptr }
 {
     m_ui->setupUi(this);
+    m_ui->timeSelectionWidget->hide();
 
     m_ui->propertyBrowser->addEditorPlugin<ColorEditorRGB>();
     m_ui->propertyBrowser->addPainterPlugin<ColorEditorRGB>();
@@ -35,7 +40,17 @@ RenderConfigWidget::~RenderConfigWidget()
 
 void RenderConfigWidget::clear()
 {
+    disconnect(m_ui->timeStepCombo, static_cast<void(QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
+        this, &RenderConfigWidget::setCurrentTimeStep);
+    disconnect(m_ui->timeStepSlider, &QSlider::valueChanged,
+        this, &RenderConfigWidget::setCurrentTimeStep);
+
     m_content = nullptr;
+    m_temporalSelector->setVisualization(nullptr);
+
+    m_ui->timeSelectionWidget->hide();
+    m_ui->timeStepCombo->clear();
+    m_ui->timeStepSlider->setRange(0, 0);
 
     updateTitle();
 
@@ -43,6 +58,18 @@ void RenderConfigWidget::clear()
     m_propertyRoot.reset();
 
     update();
+}
+
+void RenderConfigWidget::setCurrentTimeStep(int timeStepIndex)
+{
+    const auto step = std::max(0, std::min(timeStepIndex, static_cast<int>(m_temporalSelector->timeSteps().size())));
+
+    const auto comboBlocker = QSignalBlocker(m_ui->timeStepCombo);
+    const auto sliderBlocker = QSignalBlocker(m_ui->timeStepSlider);
+    m_ui->timeStepCombo->setCurrentIndex(timeStepIndex);
+    m_ui->timeStepSlider->setSliderPosition(timeStepIndex);
+
+    m_temporalSelector->selectTimeStepByIndex(static_cast<size_t>(timeStepIndex));
 }
 
 void RenderConfigWidget::checkDeletedContent(const QList<AbstractVisualizedData *> & content)
@@ -131,6 +158,28 @@ void RenderConfigWidget::setSelectedVisualization(AbstractRenderView * renderVie
 
     m_content = selection.visualization;
     updateTitle();
+
+    m_temporalSelector->setVisualization(m_content);
+    const bool hasTemporalData = !m_temporalSelector->timeSteps().empty();
+    m_ui->timeSelectionWidget->setVisible(hasTemporalData);
+    if (hasTemporalData)
+    {
+        const auto & timeSteps = m_temporalSelector->timeSteps();
+        for (auto && ts : timeSteps)
+        {
+            m_ui->timeStepCombo->addItem(QString::number(ts));
+        }
+        m_ui->timeStepSlider->setRange(0, static_cast<int>(timeSteps.size() - 1));
+
+        m_ui->timeStepCombo->setCurrentIndex(static_cast<int>(m_temporalSelector->currentTimeStepIndex()));
+        m_ui->timeStepSlider->setSliderPosition(static_cast<int>(m_temporalSelector->currentTimeStepIndex()));
+
+        connect(m_ui->timeStepCombo, static_cast<void(QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
+            this, &RenderConfigWidget::setCurrentTimeStep);
+        connect(m_ui->timeStepSlider, &QSlider::valueChanged,
+            this, &RenderConfigWidget::setCurrentTimeStep);
+    }
+
     m_propertyRoot = m_content->createConfigGroup();
     m_ui->propertyBrowser->setRoot(m_propertyRoot.get());
     m_ui->propertyBrowser->resizeColumnToContents(0);
