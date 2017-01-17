@@ -139,20 +139,14 @@ vtkAlgorithmOutput * AbstractVisualizedData::processedOutputPortInternal(unsigne
 
 std::pair<bool, unsigned int> AbstractVisualizedData::injectPostProcessingStep(const PostProcessingStep & postProcessingStep)
 {
-    const unsigned int port = postProcessingStep.visualizationPort;
-    if (port < 0)
-    {
-        std::make_pair(false, 0);
-    }
-
-    d_ptr->postProcessingStepsPerPort.resize(static_cast<size_t>(port + 1));
-    auto & stepsForPort = d_ptr->postProcessingStepsPerPort[static_cast<size_t>(port)];
+    d_ptr->postProcessingStepsPerPort.resize(postProcessingStep.visualizationPort + 1u);
+    auto & stepsForPort = d_ptr->postProcessingStepsPerPort[postProcessingStep.visualizationPort];
 
     const auto newId = d_ptr->getNextProcessingStepId();
 
     stepsForPort.emplace_back(newId, postProcessingStep);
 
-    updatePipeline(port);
+    updatePipeline(postProcessingStep.visualizationPort);
 
     return std::make_pair(true, newId);
 }
