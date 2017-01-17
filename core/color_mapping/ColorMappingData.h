@@ -23,9 +23,10 @@ enum class IndexType;
 
 
 /**
-Abstract base class for scalar data that can be used for surface color mappings.
-Color mappings extract relevant data from input data objects and supply their defined scalar values.
-A subrange of values may be used for the color mapping (setMinValue, setMaxValue).
+ * Abstract base class for scalar data that can be used for surface color mappings.
+ *
+ * Color mappings extract relevant data from input data objects and supply their defined scalar values.
+ * A subrange of values may be used for the color mapping (setMinValue, setMaxValue).
 */
 class CORE_API ColorMappingData : public QObject
 {
@@ -33,9 +34,6 @@ class CORE_API ColorMappingData : public QObject
 
 public:
     friend class ColorMappingRegistry;
-
-    template<typename SubClass>
-    static std::vector<std::unique_ptr<ColorMappingData>> newInstance(const std::vector<AbstractVisualizedData *> & visualizedData);
 
 public:
     explicit ColorMappingData(const std::vector<AbstractVisualizedData *> & visualizedData,
@@ -47,15 +45,21 @@ public:
     void activate();
     void deactivate();
     /** @return true only if this object is active. Initially, an object is inactive.
-    * Only active objects shall change the state of depending object (e.g, the lookup table) */
+     * Only active objects shall change the state of depending object (e.g, the lookup table) */
     bool isActive() const;
 
     virtual QString name() const = 0;
     /** Name of the scalar/vector array that is mapped to colors. This can be empty.
-    * Also, this can be an array that is part of the source data object, or an additional attribute
-    * created by the color mapping itself. */
+     * Also, this can be an array that is part of the source data object, or an additional attribute
+     * created by the color mapping itself. */
     virtual QString scalarsName(AbstractVisualizedData & vis) const;
     virtual IndexType scalarsAssociation(AbstractVisualizedData & vis) const;
+
+    /** Check if this attribute has time steps.
+     * This function returns false in this base class. ColorMappingData generally does not take
+     * take care of time steps, this must be done in the upstream pipeline. This function only
+     * simplifies to detect temporal data in the current setup. */
+    virtual bool isTemporalAttribute() const;
 
     int numDataComponents() const;
     int dataComponent() const;
@@ -65,34 +69,34 @@ public:
     bool mapsScalarsToColors() const;
 
     /** Return whether this mapping requires an own lookup table instead of a user-configured one.
-      * If this returns true, use the lookup table returned by ownLookupTable() in visualizations. */
+     * If this returns true, use the lookup table returned by ownLookupTable() in visualizations. */
     bool usesOwnLookupTable() const;
     vtkScalarsToColors * ownLookupTable();
 
-    /** create a filter to map values to color, applying current min/max settings
-      * @param visualizedData is required to setup object specific parameters on the filter.
-      *        The filter inputs are set as required.
-      * May be implemented by subclasses, returns nullptr by default. */
+    /** Create a filter to map values to color, applying current min/max settings.
+     * @param visualizedData is required to setup object specific parameters on the filter.
+     *        The filter inputs are set as required.
+     * May be implemented by subclasses, returns nullptr by default. */
     virtual vtkSmartPointer<vtkAlgorithm> createFilter(AbstractVisualizedData & visualizedData, unsigned int port = 0);
     virtual bool usesFilter() const;
 
-    /** set parameters on the mapper that is used to render the visualizedData.
-        @param visualizedData must be one of the objects that where passed when calling the mapping's constructor */
+    /** Set parameters on the mapper that is used to render the visualizedData.
+     * @param visualizedData must be one of the objects that where passed when calling the mapping's constructor */
     virtual void configureMapper(AbstractVisualizedData & visualizedData, vtkAbstractMapper & mapper, unsigned int port = 0);
 
     void setLookupTable(vtkLookupTable * lookupTable);
 
-    /** minimal value in the data set
-        @param select a data component to query or use the currently selected component (-1) */
+    /** Minimal value in the data set
+     * @param select a data component to query or use the currently selected component (-1) */
     double dataMinValue(int component = -1) const;
-    /** maximal value in the data set
-        @param select a data component to query or use the currently selected component (-1) */
+    /** Maximal value in the data set
+     * @param select a data component to query or use the currently selected component (-1) */
     double dataMaxValue(int component = -1) const;
 
-    /** minimal value used for color mapping (clamped to [dataMinValue, dataMaxValue]) */
+    /** Minimal value used for color mapping (clamped to [dataMinValue, dataMaxValue]) */
     double minValue(int component = -1) const;
     void setMinValue(double value, int component = -1);
-    /** maximal value used for color mapping (clamped to [dataMinValue, dataMaxValue]) */
+    /** Maximal value used for color mapping (clamped to [dataMinValue, dataMaxValue]) */
     double maxValue(int component = -1) const;
     void setMaxValue(double value, int component = -1);
 
@@ -112,8 +116,8 @@ protected:
     virtual void assignToVisualization();
     virtual void unassignFromVisualization();
 
-    /** update data bounds
-        @return a vector containing value ranges per component */
+    /** Update data bounds
+     * @return a vector containing value ranges per component */
     virtual std::vector<ValueRange<>> updateBounds() = 0;
 
     /** Subclass have to override this if and only if usesOwnLookupTable was set to true in the constructor. */

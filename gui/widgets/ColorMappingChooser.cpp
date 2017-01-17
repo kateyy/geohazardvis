@@ -168,7 +168,7 @@ void ColorMappingChooser::guiScalarsSelectionChanged()
 {
     // The following call is only required if scalars where changed via the GUI.
     // If current scalars / current state where changed directly via ColorMapping interface, it should return immediately.
-    m_mapping->setCurrentScalarsByName(m_ui->scalarsComboBox->currentText());
+    m_mapping->setCurrentScalarsByName(m_ui->scalarsComboBox->currentData().toString());
 
     updateScalarsSelection();
 
@@ -440,15 +440,35 @@ void ColorMappingChooser::rebuildGui()
     m_ui->legendTitleEdit->setText("");
     m_ui->legendTitleEdit->setPlaceholderText("");
 
-    auto scalarsNames = m_mapping ? m_mapping->scalarsNames() : QStringList{};
+    auto scalars = m_mapping ? m_mapping->scalars() : std::vector<ColorMappingData *>{};
 
-    if (!scalarsNames.isEmpty())
+    if (!scalars.empty())
     {
         m_ui->scalarsGroupBox->setEnabled(true);
 
-        std::sort(scalarsNames.begin(), scalarsNames.end(), doj::alphanum_less<QString>());
-        m_ui->scalarsComboBox->addItems(scalarsNames);
-        m_ui->scalarsComboBox->setCurrentText(m_mapping->currentScalarsName());
+        std::sort(scalars.begin(), scalars.end(),
+            [] (const ColorMappingData * lhs, const ColorMappingData * rhs)
+        {
+            assert(lhs && rhs);
+            return doj::alphanum_less<QString>()(lhs->name(), rhs->name());
+        });
+        int currentIndex = -1;
+        int i = 0;
+        for (const auto & sc : scalars)
+        {
+            auto visibleName = sc->name();
+            if (sc->isTemporalAttribute())
+            {
+                visibleName += " (temporal)";
+            }
+            m_ui->scalarsComboBox->addItem(visibleName, sc->name());
+            if (sc == &m_mapping->currentScalars())
+            {
+                currentIndex = i;
+            }
+            ++i;
+        }
+        m_ui->scalarsComboBox->setCurrentIndex(currentIndex);
 
         updateLegendTitleFont();
         updateLegendLabelFont();
@@ -640,7 +660,8 @@ void ColorMappingChooser::mappingScalarsChanged()
     assert(m_mapping == sender());
 
     // for consistency, follow the same update steps as for changing the UI parameters directly
-    m_ui->scalarsComboBox->setCurrentText(m_mapping->currentScalarsName());
+    const int uiIndex = m_ui->scalarsComboBox->findData(m_mapping->currentScalarsName());
+    m_ui->scalarsComboBox->setCurrentIndex(uiIndex);
 
     updateScalarsEnabled();
 

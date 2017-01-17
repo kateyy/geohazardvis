@@ -23,8 +23,9 @@ class GlyphColorMappingGlyphListener;
 
 
 /**
-Sets up scalar to surface color mapping for rendered data and stores the configuration state.
-Uses ColorMappingData to determine scalars that can be mapped on the supplied renderedData.
+ * Sets up scalar to surface color mapping for rendered data and stores the configuration state.
+ *
+ * Uses ColorMappingData to determine scalars that can be mapped on the supplied renderedData.
 */
 class CORE_API ColorMapping : public QObject
 {
@@ -38,19 +39,26 @@ public:
     bool isEnabled() const;
 
     /** @return true only if scalar mappings are available for the current data sets.
-    * Otherwise, setEnabled() will have no effect and the null mapping will be used. */
+     * Otherwise, setEnabled() will have no effect and the null mapping will be used. */
     bool scalarsAvailable() const;
 
     const std::vector<AbstractVisualizedData *> & visualizedData() const;
 
-    /** list of scalar names that can be used with my rendered data */
+    /** List of scalar names that can be used with my rendered data */
     QStringList scalarsNames() const;
+    std::vector<ColorMappingData *> scalars();
+    std::vector<const ColorMappingData *> scalars() const;
 
     const QString & currentScalarsName() const;
     void setCurrentScalarsByName(const QString & scalarsName);
     void setCurrentScalarsByName(const QString & scalarsName, bool enableColorMapping);
     const ColorMappingData & currentScalars() const;
     ColorMappingData & currentScalars();
+
+    /** Access scalars by their name, but don't change current scalar selection.
+     * @return nullptr if the name is not valid. */
+    const ColorMappingData * scalarsByName(const QString & scalarsName) const;
+    ColorMappingData * scalarsByName(const QString & scalarsName);
 
     /** @return gradient lookup table */
     vtkLookupTable * gradient();
@@ -63,7 +71,7 @@ public:
     ColorBarRepresentation & colorBarRepresentation();
 
     /** (un-)register a visualization with this color mapping.
-      * Must ONLY be called by the visualization itself. */
+     * Must ONLY be called by the visualization itself. */
     void registerVisualizedData(AbstractVisualizedData * visualizedData);
     void unregisterVisualizedData(AbstractVisualizedData * visualizedData);
 
@@ -73,11 +81,11 @@ signals:
     void visualizedDataChanged();
 
 private:
-    /** setup a list of color mappings which are applicable to the list of rendered data
-      * reuse lastly used scalars if possible */
+    /** Setup a list of color mappings which are applicable to the list of rendered data.
+     * Reuse most recently used scalars if possible */
     void setVisualizedData(const std::vector<AbstractVisualizedData *> & visualizedData);
 
-    /** reread the data set list provided by the DataSetHandler for new/deleted data */
+    /** Reread the data set list provided by the DataSetHandler for new/deleted data */
     void updateAvailableScalars();
 
     void updateCurrentMappingState(const QString & scalarsName, bool enabled);

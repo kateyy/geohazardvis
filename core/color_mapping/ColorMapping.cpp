@@ -51,7 +51,7 @@ void ColorMapping::setVisualizedData(const std::vector<AbstractVisualizedData *>
         disconnect(&vis->dataObject(), &DataObject::attributeArraysChanged, this, &ColorMapping::updateAvailableScalars);
     }
 
-    auto lastScalars = currentScalarsName();
+    const auto lastScalars = currentScalarsName();
     m_currentScalarsName.clear();
     releaseMappingData();
 
@@ -154,6 +154,26 @@ QStringList ColorMapping::scalarsNames() const
     return names;
 }
 
+std::vector<ColorMappingData *> ColorMapping::scalars()
+{
+    std::vector<ColorMappingData *> result;
+    for (auto & s : m_data)
+    {
+        result.emplace_back(s.second.get());
+    }
+    return result;
+}
+
+std::vector<const ColorMappingData*> ColorMapping::scalars() const
+{
+    std::vector<const ColorMappingData *> result;
+    for (auto & s : m_data)
+    {
+        result.emplace_back(s.second.get());
+    }
+    return result;
+}
+
 const QString & ColorMapping::currentScalarsName() const
 {
     return m_currentScalarsName;
@@ -216,6 +236,18 @@ ColorMappingData & ColorMapping::currentScalars()
 {
     return const_cast<ColorMappingData &>(    // don't implement the same function twice
         (static_cast<const ColorMapping *>(this))->currentScalars());
+}
+
+const ColorMappingData * ColorMapping::scalarsByName(const QString & scalarsName) const
+{
+    const auto it = m_data.find(scalarsName);
+    return it == m_data.end() ? nullptr : it->second.get();
+}
+
+ColorMappingData * ColorMapping::scalarsByName(const QString & scalarsName)
+{
+    const auto it = m_data.find(scalarsName);
+    return it == m_data.end() ? nullptr : it->second.get();
 }
 
 const ColorMappingData & ColorMapping::currentScalars() const

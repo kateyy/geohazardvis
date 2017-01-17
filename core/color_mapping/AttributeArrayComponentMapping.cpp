@@ -32,15 +32,18 @@ const bool AttributeArrayComponentMapping::s_isRegistered = ColorMappingRegistry
     s_name,
     newInstances);
 
-std::vector<std::unique_ptr<ColorMappingData>> AttributeArrayComponentMapping::newInstances(const std::vector<AbstractVisualizedData *> & visualizedData)
+std::vector<std::unique_ptr<ColorMappingData>> AttributeArrayComponentMapping::newInstances(
+    const std::vector<AbstractVisualizedData *> & visualizedData)
 {
     struct ArrayInfo
     {
         explicit ArrayInfo(int comp = 0)
-            : numComponents(comp)
+            : numComponents{ comp }
+            , isTemporal{ false }
         {
         }
         int numComponents;
+        bool isTemporal;
         std::map<AbstractVisualizedData *, IndexType> attributeLocations;
     };
 
@@ -100,6 +103,9 @@ std::vector<std::unique_ptr<ColorMappingData>> AttributeArrayComponentMapping::n
                 continue;
             }
 
+            arrayInfo.isTemporal = arrayInfo.isTemporal ||
+                (0 != dataArray->GetInformation()->Has(vtkDataObject::DATA_TIME_STEP()));
+
             arrayInfo.numComponents = currentNumComp;
             arrayInfo.attributeLocations[vis] = attributeLocation;
         }
@@ -136,6 +142,7 @@ std::vector<std::unique_ptr<ColorMappingData>> AttributeArrayComponentMapping::n
             supportedData,
             pair.first,
             arrayInfo.numComponents,
+            arrayInfo.isTemporal,
             arrayInfo.attributeLocations);
         if (mapping->isValid())
         {
@@ -148,10 +155,14 @@ std::vector<std::unique_ptr<ColorMappingData>> AttributeArrayComponentMapping::n
 }
 
 AttributeArrayComponentMapping::AttributeArrayComponentMapping(
-    const std::vector<AbstractVisualizedData *> & visualizedData, const QString & dataArrayName,
-    int numDataComponents, const std::map<AbstractVisualizedData *, IndexType> & attributeLocations)
+    const std::vector<AbstractVisualizedData *> & visualizedData,
+    const QString & dataArrayName,
+    int numDataComponents,
+    bool isTemporalAttribute,
+    const std::map<AbstractVisualizedData *, IndexType> & attributeLocations)
     : ColorMappingData(visualizedData, numDataComponents)
     , m_dataArrayName{ dataArrayName }
+    , m_isTemporalAttribute{ isTemporalAttribute }
     , m_attributeLocations(attributeLocations)
 {
     assert(!visualizedData.empty());
@@ -177,6 +188,11 @@ IndexType AttributeArrayComponentMapping::scalarsAssociation(AbstractVisualizedD
     return it != m_attributeLocations.end()
         ? it->second
         : IndexType::invalid;
+}
+
+bool AttributeArrayComponentMapping::isTemporalAttribute() const
+{
+    return m_isTemporalAttribute;
 }
 
 vtkSmartPointer<vtkAlgorithm> AttributeArrayComponentMapping::createFilter(AbstractVisualizedData & visualizedData, unsigned int port)

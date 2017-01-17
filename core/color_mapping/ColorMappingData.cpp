@@ -79,6 +79,11 @@ IndexType ColorMappingData::scalarsAssociation(AbstractVisualizedData & /*vis*/)
     return IndexType::invalid;
 }
 
+bool ColorMappingData::isTemporalAttribute() const
+{
+    return false;
+}
+
 int ColorMappingData::numDataComponents() const
 {
     return m_numDataComponents;
