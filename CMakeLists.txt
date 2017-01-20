@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 2.8.12 FATAL_ERROR)
 
 foreach(p
     CMP0053 # CMake 3.1
+    CMP0054 # CMake 3.1
     )
   if(POLICY ${p})
     cmake_policy(SET ${p} NEW)

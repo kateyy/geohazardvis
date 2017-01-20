@@ -25,7 +25,7 @@ add_executable(${target} ${sources})
 target_include_directories(${target} SYSTEM
     PUBLIC
         ${GTEST_INCLUDE_DIR}
-})
+)
 
 target_link_libraries(${target}
     PUBLIC
