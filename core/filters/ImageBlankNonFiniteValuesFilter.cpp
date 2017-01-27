@@ -27,7 +27,6 @@ struct ConvertAndMaskToUniformGridWorker
     template<typename ArrayT>
     void operator()(ArrayT * scalars)
     {
-        using ValueType = typename vtkDataArrayAccessor<ArrayT>::APIType;
         vtkDataArrayAccessor<ArrayT> s(scalars);
 
         const vtkIdType numTuples = scalars->GetNumberOfTuples();
@@ -95,7 +94,7 @@ int ImageBlankNonFiniteValuesFilter::RequestData(
         // nothing to do
         return 1;
     }
-    
+
     ConvertAndMaskToUniformGridWorker worker{ *inImage, *outGrid };
 
     // Dispatching float/double only, for all other scalar types this filter does nothing

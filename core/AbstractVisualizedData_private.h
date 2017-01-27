@@ -32,9 +32,9 @@ public:
         , colorMappingData{ nullptr }
         , gradient{}
         , colorMapping{}
-        , m_nextProcessingStepId{ 0 }
         , m_visibleBounds{}
         , m_visibleBoundsAreValid{ false }
+        , m_nextProcessingStepId{ 0 }
     {
     }
 

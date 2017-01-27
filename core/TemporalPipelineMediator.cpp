@@ -189,7 +189,8 @@ bool TemporalPipelineMediator::updateTimeSteps()
 
         assert(std::is_sorted(timeSteps.begin() + numPreviousTimeSteps, timeSteps.end()));
         // Remove all new time steps that are already in the list.
-        auto newEndIt = std::unique(timeSteps.begin(), timeSteps.end());
+        const auto newEndIt = std::unique(timeSteps.begin(), timeSteps.end());
+        timeSteps.erase(newEndIt, timeSteps.end());
         // Restore sorting of remaining time steps
         std::inplace_merge(timeSteps.begin(),
             timeSteps.begin() + numPreviousTimeSteps,

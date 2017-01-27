@@ -333,11 +333,11 @@ bool qFile_QByteArray_Worker<T>::checkValue(const QByteArray & readValue, ValueT
     bool validConversion = false;
     if (std::is_same<ValueType, float>::value)
     {
-        checkedValue = readValue.toFloat(&validConversion);
+        checkedValue = static_cast<ValueType>(readValue.toFloat(&validConversion));
     }
     else
     {
-        checkedValue = readValue.toDouble(&validConversion);
+        checkedValue = static_cast<ValueType>(readValue.toDouble(&validConversion));
     }
     return validConversion;
 }

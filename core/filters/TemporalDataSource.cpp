@@ -56,7 +56,7 @@ int TemporalDataSource::TemporalAttributeIndex(AttributeLocation attributeLoc, c
 
     if (it != vectorForAttributeType.end())
     {
-        return it - vectorForAttributeType.begin();
+        return static_cast<int>(it - vectorForAttributeType.begin());
     }
 
     return -1;
@@ -83,12 +83,14 @@ bool TemporalDataSource::RemoveTemporalAttribute(AttributeLocation attributeLoc,
 bool TemporalDataSource::RemoveTemporalAttribute(AttributeLocation attributeLoc, int temporalAttributeIndex)
 {
     auto & vectorForAttributeType = temporalData(attributeLoc);
-    if (temporalAttributeIndex < 0 || temporalAttributeIndex >= vectorForAttributeType.size())
+
+    const auto idx = static_cast<size_t>(temporalAttributeIndex);
+
+    if (temporalAttributeIndex < 0 || idx >= vectorForAttributeType.size())
     {
         return false;
     }
 
-    const auto idx = static_cast<size_t>(temporalAttributeIndex);
     vectorForAttributeType.erase(std::next(vectorForAttributeType.begin(), idx));
 
     return true;
@@ -118,12 +120,15 @@ bool TemporalDataSource::SetTemporalAttributeTimeStep(
     vtkAbstractArray * array)
 {
     auto & vectorForAttributeType = temporalData(attributeLoc);
-    if (temporalAttributeIndex < 0 || temporalAttributeIndex >= vectorForAttributeType.size())
+
+    const auto idx = static_cast<size_t>(temporalAttributeIndex);
+
+    if (temporalAttributeIndex < 0 || idx >= vectorForAttributeType.size())
     {
         return false;
     }
 
-    auto & attribute = vectorForAttributeType[static_cast<size_t>(temporalAttributeIndex)];
+    auto & attribute = vectorForAttributeType[idx];
 
     if (array)
     {

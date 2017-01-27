@@ -35,7 +35,7 @@ template<> struct TypeToVTKArrayType<double>
     using type = vtkDoubleArray;
 };
 
-template<typename ScalarType, typename ArrayType = TypeToVTKArrayType<ScalarType>::type>
+template<typename ScalarType, typename ArrayType = typename TypeToVTKArrayType<ScalarType>::type>
 vtkSmartPointer<ArrayType> createDataArray()
 {
     return vtkSmartPointer<ArrayType>::New();
@@ -83,8 +83,8 @@ TYPED_TEST_P(PDataProfile2DContextPlot_test, NaNValuesPassedToRendering)
 {
     using ScalarType = TypeParam;
 
-    auto image = genImageWithNaNs<ScalarType>();
-    const auto bounds2D = image->bounds().convertTo<2>();
+    auto image = DataProfile2DContextPlot_test::genImageWithNaNs<ScalarType>();
+    const auto bounds2D = image->bounds().template convertTo<2>();
     const auto center2D = bounds2D.center();
 
     auto profile = std::make_unique<DataProfile2DDataObject>("Profile", *image,
@@ -100,7 +100,7 @@ TYPED_TEST_P(PDataProfile2DContextPlot_test, NaNValuesPassedToRendering)
 
     auto plotItem = plots->GetLastPlot();
     ASSERT_TRUE(plotItem);
-    
+
     auto table = plotItem->GetInput();
     ASSERT_TRUE(table);
 

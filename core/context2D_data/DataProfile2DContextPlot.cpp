@@ -182,7 +182,7 @@ void DataProfile2DContextPlot::updatePlot()
     auto profilePoints = profileDataSet->GetPoints()->GetData();
     for (vtkIdType i = 0; i < numPoints; ++i)
     {
-        xAxis->SetValue(i, profilePoints->GetComponent(i, 0));
+        xAxis->SetValue(i, static_cast<float>(profilePoints->GetComponent(i, 0)));
     }
 
     table->AddColumn(xAxis);

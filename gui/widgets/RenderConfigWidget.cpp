@@ -62,8 +62,6 @@ void RenderConfigWidget::clear()
 
 void RenderConfigWidget::setCurrentTimeStep(int timeStepIndex)
 {
-    const auto step = std::max(0, std::min(timeStepIndex, static_cast<int>(m_temporalSelector->timeSteps().size())));
-
     const auto comboBlocker = QSignalBlocker(m_ui->timeStepCombo);
     const auto sliderBlocker = QSignalBlocker(m_ui->timeStepSlider);
     m_ui->timeStepCombo->setCurrentIndex(timeStepIndex);

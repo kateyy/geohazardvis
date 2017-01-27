@@ -96,7 +96,7 @@ TEST_F(TemporalDataSource_test, TemporalExtent)
     auto source = createSource();
     ASSERT_TRUE(source->GetExecutive()->UpdateInformation());
     auto outInfo = source->GetOutputInformation(0);
-    
+
     for (auto && timeStep : timeSteps())
     {
         outInfo->Set(vtkStreamingDemandDrivenPipeline::UPDATE_TIME_STEP(), timeStep);
