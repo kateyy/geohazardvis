@@ -22,7 +22,7 @@ class DataMapping;
 class DataSetHandler;
 class GlyphMappingChooser;
 class GuiPluginManager;
-class RenderConfigWidget;
+class RenderPropertyConfigWidget;
 class RendererConfigWidget;
 class TableView;
 class Ui_MainWindow;
@@ -89,7 +89,7 @@ private:
     DataBrowser * m_dataBrowser;
     ColorMappingChooser * m_colorMappingChooser;
     GlyphMappingChooser * m_vectorMappingChooser;
-    RenderConfigWidget * m_renderConfigWidget;
+    RenderPropertyConfigWidget * m_renderPropertyConfigWidget;
     RendererConfigWidget * m_rendererConfigWidget;
     CanvasExporterWidget * m_canvasExporter;
 

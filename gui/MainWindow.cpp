@@ -41,7 +41,7 @@
 #include <gui/widgets/ColorMappingChooser.h>
 #include <gui/widgets/DEMWidget.h>
 #include <gui/widgets/GlyphMappingChooser.h>
-#include <gui/widgets/RenderConfigWidget.h>
+#include <gui/widgets/RenderPropertyConfigWidget.h>
 #include <gui/widgets/RendererConfigWidget.h>
 
 #include "config.h"
@@ -58,7 +58,7 @@ MainWindow::MainWindow()
     , m_dataMapping{}
     , m_colorMappingChooser{ new ColorMappingChooser() }
     , m_vectorMappingChooser{ new GlyphMappingChooser() }
-    , m_renderConfigWidget{ new RenderConfigWidget() }
+    , m_renderPropertyConfigWidget{ new RenderPropertyConfigWidget() }
     , m_rendererConfigWidget{ new RendererConfigWidget() }
     , m_canvasExporter{ new CanvasExporterWidget(this) }
     , m_recentFileListMaxEntries{ 0 }
@@ -173,21 +173,21 @@ MainWindow::MainWindow()
     setCorner(Qt::Corner::BottomRightCorner, Qt::DockWidgetArea::RightDockWidgetArea);
 
     addDockWidget(Qt::DockWidgetArea::LeftDockWidgetArea, m_colorMappingChooser);
-    addDockWidget(Qt::DockWidgetArea::LeftDockWidgetArea, m_renderConfigWidget);
+    addDockWidget(Qt::DockWidgetArea::LeftDockWidgetArea, m_renderPropertyConfigWidget);
     addDockWidget(Qt::DockWidgetArea::LeftDockWidgetArea, m_vectorMappingChooser);
     addDockWidget(Qt::DockWidgetArea::LeftDockWidgetArea, m_rendererConfigWidget);
-    tabifyDockWidget(m_renderConfigWidget, m_vectorMappingChooser);
-    tabifyDockWidget(m_renderConfigWidget, m_rendererConfigWidget);
-    tabbedDockWidgetToFront(m_renderConfigWidget);
+    tabifyDockWidget(m_renderPropertyConfigWidget, m_vectorMappingChooser);
+    tabifyDockWidget(m_renderPropertyConfigWidget, m_rendererConfigWidget);
+    tabbedDockWidgetToFront(m_renderPropertyConfigWidget);
 
     connect(m_dataMapping.get(), &DataMapping::focusedRenderViewChanged, m_colorMappingChooser, &ColorMappingChooser::setCurrentRenderView);
     connect(m_dataMapping.get(), &DataMapping::focusedRenderViewChanged, m_vectorMappingChooser, &GlyphMappingChooser::setCurrentRenderView);
-    connect(m_dataMapping.get(), &DataMapping::focusedRenderViewChanged, m_renderConfigWidget, &RenderConfigWidget::setCurrentRenderView);
+    connect(m_dataMapping.get(), &DataMapping::focusedRenderViewChanged, m_renderPropertyConfigWidget, &RenderPropertyConfigWidget::setCurrentRenderView);
     connect(m_dataMapping.get(), &DataMapping::focusedRenderViewChanged, m_rendererConfigWidget, &RendererConfigWidget::setCurrentRenderView);
 
     connect(m_dataBrowser, &DataBrowser::selectedDataChanged,
         [this] (DataObject * selected) {
-        m_renderConfigWidget->setSelectedData(selected);
+        m_renderPropertyConfigWidget->setSelectedData(selected);
         m_colorMappingChooser->setSelectedData(selected);
         m_vectorMappingChooser->setSelectedData(selected);
     });
@@ -212,7 +212,7 @@ MainWindow::MainWindow()
 
     m_ui->menuViews->insertAction(m_ui->actionReset_Window_Layout, m_colorMappingChooser->toggleViewAction());
     m_ui->menuViews->insertAction(m_ui->actionReset_Window_Layout, m_vectorMappingChooser->toggleViewAction());
-    m_ui->menuViews->insertAction(m_ui->actionReset_Window_Layout, m_renderConfigWidget->toggleViewAction());
+    m_ui->menuViews->insertAction(m_ui->actionReset_Window_Layout, m_renderPropertyConfigWidget->toggleViewAction());
     m_ui->menuViews->insertAction(m_ui->actionReset_Window_Layout, m_rendererConfigWidget->toggleViewAction());
 
     connect(m_ui->actionDark_Style, &QAction::triggered, this, &MainWindow::setDarkFusionStyle);

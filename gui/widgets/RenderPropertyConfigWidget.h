@@ -11,7 +11,7 @@ namespace reflectionzeug
 {
     class PropertyGroup;
 }
-class Ui_RenderConfigWidget;
+class Ui_RenderPropertyConfigWidget;
 class AbstractRenderView;
 class AbstractVisualizedData;
 class DataObject;
@@ -19,11 +19,11 @@ class TemporalPipelineMediator;
 struct VisualizationSelection;
 
 
-class GUI_API RenderConfigWidget : public QDockWidget
+class GUI_API RenderPropertyConfigWidget : public QDockWidget
 {
 public:
-    explicit RenderConfigWidget(QWidget * parent = nullptr);
-    ~RenderConfigWidget() override;
+    explicit RenderPropertyConfigWidget(QWidget * parent = nullptr);
+    ~RenderPropertyConfigWidget() override;
 
 public:
     void setCurrentRenderView(AbstractRenderView * renderView = nullptr);
@@ -40,7 +40,7 @@ private:
     void updateTitle();
 
 private:
-    std::unique_ptr<Ui_RenderConfigWidget> m_ui;
+    std::unique_ptr<Ui_RenderPropertyConfigWidget> m_ui;
     std::unique_ptr<TemporalPipelineMediator> m_temporalSelector;
 
     std::unique_ptr<reflectionzeug::PropertyGroup> m_propertyRoot;
@@ -49,5 +49,5 @@ private:
     AbstractVisualizedData * m_content;
 
 private:
-    Q_DISABLE_COPY(RenderConfigWidget)
+    Q_DISABLE_COPY(RenderPropertyConfigWidget)
 };

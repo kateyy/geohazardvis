@@ -109,13 +109,13 @@ set(sources
     widgets/GlyphMappingChooserListModel.cpp
     widgets/GridDataImporterWidget.h
     widgets/GridDataImporterWidget.cpp
-    widgets/RenderConfigWidget.h
-    widgets/RenderConfigWidget.cpp
     widgets/RendererConfigWidget.h
     widgets/RendererConfigWidget.cpp
     widgets/RendererConfigWidget_Plot.cpp
     widgets/RendererConfigWidget_Renderer.cpp
     widgets/RendererConfigWidget_Renderer2.cpp
+    widgets/RenderPropertyConfigWidget.h
+    widgets/RenderPropertyConfigWidget.cpp
     widgets/ResidualViewConfigWidget.h
     widgets/ResidualViewConfigWidget.cpp
 )
@@ -133,8 +133,8 @@ set(UIs
     widgets/DEMWidget.ui
     widgets/GlyphMappingChooser.ui
     widgets/GridDataImporterWidget.ui
-    widgets/RenderConfigWidget.ui
     widgets/RendererConfigWidget.ui
+    widgets/RenderPropertyConfigWidget.ui
     widgets/ResidualViewConfigWidget.ui
 )
 

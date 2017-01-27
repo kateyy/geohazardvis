@@ -19,7 +19,7 @@
 
 #include <gui/DataMapping.h>
 #include <gui/data_view/RenderView.h>
-#include <gui/widgets/RenderConfigWidget.h>
+#include <gui/widgets/RenderPropertyConfigWidget.h>
 #include <gui/widgets/RendererConfigWidget.h>
 #include <gui/widgets/ColorMappingChooser.h>
 #include <gui/widgets/GlyphMappingChooser.h>
@@ -42,7 +42,7 @@ int main(int argc, char **argv)
     window.addDockWidget(Qt::TopDockWidgetArea, renderView.dockWidgetParent());
     app.setActiveWindow(&renderView);
 
-    RenderConfigWidget renderConfig;
+    RenderPropertyConfigWidget renderConfig;
     renderConfig.setCurrentRenderView(&renderView);
     renderConfig.show();
 

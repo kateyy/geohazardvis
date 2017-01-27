@@ -1,5 +1,5 @@
-#include "RenderConfigWidget.h"
-#include "ui_RenderConfigWidget.h"
+#include "RenderPropertyConfigWidget.h"
+#include "ui_RenderPropertyConfigWidget.h"
 
 #include <algorithm>
 
@@ -15,9 +15,9 @@
 using namespace reflectionzeug;
 
 
-RenderConfigWidget::RenderConfigWidget(QWidget * parent)
+RenderPropertyConfigWidget::RenderPropertyConfigWidget(QWidget * parent)
     : QDockWidget(parent)
-    , m_ui{ std::make_unique<Ui_RenderConfigWidget>() }
+    , m_ui{ std::make_unique<Ui_RenderPropertyConfigWidget>() }
     , m_temporalSelector{ std::make_unique<TemporalPipelineMediator>() }
     , m_propertyRoot{ nullptr }
     , m_renderView{ nullptr }
@@ -33,17 +33,17 @@ RenderConfigWidget::RenderConfigWidget(QWidget * parent)
     updateTitle();
 }
 
-RenderConfigWidget::~RenderConfigWidget()
+RenderPropertyConfigWidget::~RenderPropertyConfigWidget()
 {
     clear();
 }
 
-void RenderConfigWidget::clear()
+void RenderPropertyConfigWidget::clear()
 {
     disconnect(m_ui->timeStepCombo, static_cast<void(QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
-        this, &RenderConfigWidget::setCurrentTimeStep);
+        this, &RenderPropertyConfigWidget::setCurrentTimeStep);
     disconnect(m_ui->timeStepSlider, &QSlider::valueChanged,
-        this, &RenderConfigWidget::setCurrentTimeStep);
+        this, &RenderPropertyConfigWidget::setCurrentTimeStep);
 
     m_content = nullptr;
     m_temporalSelector->setVisualization(nullptr);
@@ -60,7 +60,7 @@ void RenderConfigWidget::clear()
     update();
 }
 
-void RenderConfigWidget::setCurrentTimeStep(int timeStepIndex)
+void RenderPropertyConfigWidget::setCurrentTimeStep(int timeStepIndex)
 {
     const auto comboBlocker = QSignalBlocker(m_ui->timeStepCombo);
     const auto sliderBlocker = QSignalBlocker(m_ui->timeStepSlider);
@@ -70,7 +70,7 @@ void RenderConfigWidget::setCurrentTimeStep(int timeStepIndex)
     m_temporalSelector->selectTimeStepByIndex(static_cast<size_t>(timeStepIndex));
 }
 
-void RenderConfigWidget::checkDeletedContent(const QList<AbstractVisualizedData *> & content)
+void RenderPropertyConfigWidget::checkDeletedContent(const QList<AbstractVisualizedData *> & content)
 {
     if (content.contains(m_content))
     {
@@ -78,16 +78,16 @@ void RenderConfigWidget::checkDeletedContent(const QList<AbstractVisualizedData 
     }
 }
 
-void RenderConfigWidget::setCurrentRenderView(AbstractRenderView * renderView)
+void RenderPropertyConfigWidget::setCurrentRenderView(AbstractRenderView * renderView)
 {
     clear();
 
     if (m_renderView)
     {
         disconnect(m_renderView, &AbstractRenderView::beforeDeleteVisualizations,
-            this, &RenderConfigWidget::checkDeletedContent);
+            this, &RenderPropertyConfigWidget::checkDeletedContent);
         disconnect(m_renderView, &AbstractRenderView::visualizationSelectionChanged,
-            this, &RenderConfigWidget::setSelectedVisualization);
+            this, &RenderPropertyConfigWidget::setSelectedVisualization);
     }
 
     m_renderView = renderView;
@@ -95,9 +95,9 @@ void RenderConfigWidget::setCurrentRenderView(AbstractRenderView * renderView)
     if (renderView)
     {
         connect(renderView, &AbstractRenderView::beforeDeleteVisualizations,
-            this, &RenderConfigWidget::checkDeletedContent);
+            this, &RenderPropertyConfigWidget::checkDeletedContent);
         connect(m_renderView, &AbstractRenderView::visualizationSelectionChanged,
-            this, &RenderConfigWidget::setSelectedVisualization);
+            this, &RenderPropertyConfigWidget::setSelectedVisualization);
     }
     updateTitle();
 
@@ -114,7 +114,7 @@ void RenderConfigWidget::setCurrentRenderView(AbstractRenderView * renderView)
     update();
 }
 
-void RenderConfigWidget::setSelectedData(DataObject * dataObject)
+void RenderPropertyConfigWidget::setSelectedData(DataObject * dataObject)
 {
     if (!m_renderView)
     {
@@ -130,7 +130,7 @@ void RenderConfigWidget::setSelectedData(DataObject * dataObject)
     setSelectedVisualization(m_renderView, VisualizationSelection(vis));
 }
 
-void RenderConfigWidget::setSelectedVisualization(AbstractRenderView * renderView, const VisualizationSelection & selection)
+void RenderPropertyConfigWidget::setSelectedVisualization(AbstractRenderView * renderView, const VisualizationSelection & selection)
 {
     if (m_renderView != renderView)
     {
@@ -173,9 +173,9 @@ void RenderConfigWidget::setSelectedVisualization(AbstractRenderView * renderVie
         m_ui->timeStepSlider->setSliderPosition(static_cast<int>(m_temporalSelector->currentTimeStepIndex()));
 
         connect(m_ui->timeStepCombo, static_cast<void(QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
-            this, &RenderConfigWidget::setCurrentTimeStep);
+            this, &RenderPropertyConfigWidget::setCurrentTimeStep);
         connect(m_ui->timeStepSlider, &QSlider::valueChanged,
-            this, &RenderConfigWidget::setCurrentTimeStep);
+            this, &RenderPropertyConfigWidget::setCurrentTimeStep);
     }
 
     m_propertyRoot = m_content->createConfigGroup();
@@ -185,7 +185,7 @@ void RenderConfigWidget::setSelectedVisualization(AbstractRenderView * renderVie
     update();
 }
 
-void RenderConfigWidget::updateTitle()
+void RenderPropertyConfigWidget::updateTitle()
 {
     const auto && title = !m_content
         ? "(No object selected)"

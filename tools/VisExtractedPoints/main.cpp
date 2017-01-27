@@ -23,7 +23,7 @@
 #include <gui/DataMapping.h>
 #include <gui/data_view/AbstractRenderView.h>
 #include <gui/widgets/ColorMappingChooser.h>
-#include <gui/widgets/RenderConfigWidget.h>
+#include <gui/widgets/RenderPropertyConfigWidget.h>
 #include <gui/widgets/RendererConfigWidget.h>
 
 
@@ -81,7 +81,7 @@ int main(int argc, char ** argv)
 
     ColorMappingChooser cmc;
     cmc.show();
-    RenderConfigWidget rcw;
+    RenderPropertyConfigWidget rcw;
     rcw.show();
     RendererConfigWidget rrcw;
     rrcw.show();
