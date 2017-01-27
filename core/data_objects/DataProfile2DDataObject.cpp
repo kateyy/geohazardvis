@@ -21,8 +21,10 @@
 #include <vtkTransformPolyDataFilter.h>
 #include <vtkWarpScalar.h>
 
+#include <core/TemporalPipelineMediator.h>
 #include <core/data_objects/CoordinateTransformableDataObject.h>
 #include <core/context2D_data/DataProfile2DContextPlot.h>
+#include <core/filters/ExtractTimeStep.h>
 #include <core/filters/ImageBlankNonFiniteValuesFilter.h>
 #include <core/filters/LineOnCellsSelector2D.h>
 #include <core/filters/LineOnPointsSelector2D.h>
@@ -41,6 +43,18 @@ DataProfile2DDataObject::DataProfile2DDataObject(
     const QString & scalarsName,
     IndexType scalarsLocation,
     vtkIdType vectorComponent)
+    : DataProfile2DDataObject(name, sourceData, scalarsName, scalarsLocation, vectorComponent,
+        TemporalPipelineMediator::nullTimeStep())
+{
+}
+
+DataProfile2DDataObject::DataProfile2DDataObject(
+    const QString & name,
+    DataObject & sourceData,
+    const QString & scalarsName,
+    IndexType scalarsLocation,
+    vtkIdType vectorComponent,
+    double timeStep)
     : DataObject(name, vtkSmartPointer<vtkImageData>::New())
     , m_isValid{ false }
     , m_sourceData{ sourceData }
@@ -54,8 +68,8 @@ DataProfile2DDataObject::DataProfile2DDataObject(
     , m_outputTransformation{ vtkSmartPointer<vtkTransformPolyDataFilter>::New() }
     , m_graphLine{ vtkSmartPointer<vtkWarpScalar>::New() }
 {
-    auto processInputData = m_sourceData.processedOutputDataSet();
-    if (!processInputData || processInputData->GetNumberOfPoints() == 0)
+    auto processedInputData = m_sourceData.processedOutputDataSet();
+    if (!processedInputData || processedInputData->GetNumberOfPoints() == 0)
     {
         assert(false);
         return;
@@ -67,7 +81,7 @@ DataProfile2DDataObject::DataProfile2DDataObject(
     }
 
 
-    auto inputImage = vtkImageData::SafeDownCast(processInputData);
+    auto inputImage = vtkImageData::SafeDownCast(processedInputData);
     m_inputIsImage = (inputImage != nullptr);
     if (m_inputIsImage)
     {
@@ -80,7 +94,7 @@ DataProfile2DDataObject::DataProfile2DDataObject(
         }
     }
 
-    auto inputPolyData = vtkPolyData::SafeDownCast(processInputData);
+    auto inputPolyData = vtkPolyData::SafeDownCast(processedInputData);
 
     if (!m_inputIsImage && !inputPolyData)
     {
@@ -122,10 +136,21 @@ DataProfile2DDataObject::DataProfile2DDataObject(
     }
 
     // coordinateTransformed* should not change the data set type.
-    if (!inputData || inputData->IsTypeOf(processInputData->GetClassName()))
+    if (!inputData || inputData->IsTypeOf(processedInputData->GetClassName()))
     {
         assert(false);
         return;
+    }
+
+    vtkSmartPointer<vtkAlgorithm> outputTransformPipeline = m_outputTransformation;
+
+    if (TemporalPipelineMediator::isValidTimeStep(timeStep))
+    {
+        // Inject pipeline step to extract the required time step
+        auto extractTimeStep = vtkSmartPointer<ExtractTimeStep>::New();
+        extractTimeStep->SetTimeStep(timeStep);
+        m_outputTransformation->SetInputConnection(extractTimeStep->GetOutputPort());
+        outputTransformPipeline = extractTimeStep;
     }
 
     auto attributeData = (scalarsLocation == IndexType::points)
@@ -179,7 +204,7 @@ DataProfile2DDataObject::DataProfile2DDataObject(
         auto invalidToNaN = vtkSmartPointer<SetMaskedPointScalarsToNaNFilter>::New();
         invalidToNaN->SetInputConnection(imageProbe->GetOutputPort());
 
-        m_outputTransformation->SetInputConnection(invalidToNaN->GetOutputPort());
+        outputTransformPipeline->SetInputConnection(invalidToNaN->GetOutputPort());
     }
     else if (inputPolyData && inputPolyData->GetPoints() && inputPolyData->GetPoints()->GetNumberOfPoints() > 0)
     {
@@ -198,7 +223,7 @@ DataProfile2DDataObject::DataProfile2DDataObject(
             m_polyCentroidsSelector->SetInputConnection(assignScalars->GetOutputPort());
             m_polyCentroidsSelector->SetCellCentersConnection(polygonCenters->GetOutputPort());
 
-            m_outputTransformation->SetInputConnection(m_polyCentroidsSelector->GetOutputPort(1));
+            outputTransformPipeline->SetInputConnection(m_polyCentroidsSelector->GetOutputPort(1));
         }
         // Point cloud data
         else if (inputPolyData->GetVerts() && inputPolyData->GetVerts()->GetSize() > 0)
@@ -209,7 +234,7 @@ DataProfile2DDataObject::DataProfile2DDataObject(
             m_polyPointsSelector->PassPositionOnLineOff();
             m_polyPointsSelector->SetInputConnection(unassignField->GetOutputPort());
 
-            m_outputTransformation->SetInputConnection(m_polyPointsSelector->GetOutputPort(1));
+            outputTransformPipeline->SetInputConnection(m_polyPointsSelector->GetOutputPort(1));
         }
         else
         {

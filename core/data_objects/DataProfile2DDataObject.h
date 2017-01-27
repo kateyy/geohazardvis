@@ -28,11 +28,20 @@ class CORE_API DataProfile2DDataObject : public DataObject
 {
 public:
     /** Create profile with given specifications
-      * @param name Object name, see DataObject API
-      * @param sourceData source data object that will be probed
-      * @param scalarsName Scalars to probe in the source data object 
-      * @param scalarsLocation Specifies whether to probe point or cell scalars 
-      * @param vectorComponent For multi component scalars/vectors, specify which component will be extracted */
+     * @param name Object name, see DataObject API
+     * @param sourceData source data object that will be probed
+     * @param scalarsName Scalars to probe in the source data object 
+     * @param scalarsLocation Specifies whether to probe point or cell scalars 
+     * @param vectorComponent For multi component scalars/vectors, specify which component will be extracted
+     * @param timeStep For temporal attributes, the time step that will be extracted.
+              Optional, use TemporalPipelineMediator::nullTimeStep() if no time step is known/required. */
+    DataProfile2DDataObject(
+        const QString & name, 
+        DataObject & sourceData,
+        const QString & scalarsName,
+        IndexType scalarsLocation,
+        vtkIdType vectorComponent,
+        double timeStep);
     DataProfile2DDataObject(
         const QString & name, 
         DataObject & sourceData,

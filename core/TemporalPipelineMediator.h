@@ -35,6 +35,11 @@ public:
     size_t currentTimeStepIndex() const;
     double selectedTimeStep() const;
 
+    /** Dummy value to mark that no time step is set. */
+    static double nullTimeStep();
+    static bool isValidTimeStep(double timeStep);
+    static double currentUpdateTimeStep(AbstractVisualizedData & visualization, unsigned int port = 0);
+
 private:
     bool updateTimeSteps();
     bool selectionFromPipeline();

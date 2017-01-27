@@ -115,6 +115,8 @@ set(sources
     filters/DEMShadingFilter.cpp
     filters/DEMToTopographyMesh.h
     filters/DEMToTopographyMesh.cpp
+    filters/ExtractTimeStep.h
+    filters/ExtractTimeStep.cpp
     filters/ImageBlankNonFiniteValuesFilter.h
     filters/ImageBlankNonFiniteValuesFilter.cpp
     filters/ImagePlaneWidget.h

@@ -2,6 +2,8 @@
 
 #include <algorithm>
 #include <cassert>
+#include <cmath>
+#include <limits>
 
 #include <QDebug>
 
@@ -38,6 +40,7 @@ void TemporalPipelineMediator::setVisualization(AbstractVisualizedData * visuali
     m_visualization = visualization;
 
     m_timeSteps.clear();
+    m_pipelineModifiedTime = {};
     m_selection = {};
 
     updateTimeSteps();
@@ -121,6 +124,40 @@ size_t TemporalPipelineMediator::currentTimeStepIndex() const
 double TemporalPipelineMediator::selectedTimeStep() const
 {
     return m_selection.selectedTimeStep;
+}
+
+double TemporalPipelineMediator::nullTimeStep()
+{
+    return std::numeric_limits<double>::quiet_NaN();
+}
+
+bool TemporalPipelineMediator::isValidTimeStep(double timeStep)
+{
+    return !std::isnan(timeStep);
+}
+
+double TemporalPipelineMediator::currentUpdateTimeStep(AbstractVisualizedData & visualization,
+    const unsigned int index)
+{
+    if (visualization.numberOfOutputPorts() < index)
+    {
+        return nullTimeStep();
+    }
+
+    auto producer = visualization.processedOutputPort(index)->GetProducer();
+    if (!producer)
+    {
+        return nullTimeStep();
+    }
+
+    producer->UpdateInformation();
+    auto outInfo = producer->GetOutputInformation(0);
+    if (!outInfo || !outInfo->Has(vtkStreamingDemandDrivenPipeline::UPDATE_TIME_STEP()))
+    {
+        return nullTimeStep();
+    }
+
+    return outInfo->Get(vtkStreamingDemandDrivenPipeline::UPDATE_TIME_STEP());
 }
 
 bool TemporalPipelineMediator::updateTimeSteps()

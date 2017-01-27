@@ -21,6 +21,7 @@
 #include <vtkTextProperty.h>
 
 #include <core/DataSetHandler.h>
+#include <core/TemporalPipelineMediator.h>
 #include <core/color_mapping/ColorMapping.h>
 #include <core/color_mapping/ColorMappingData.h>
 #include <core/data_objects/DataProfile2DDataObject.h>
@@ -252,13 +253,15 @@ void RenderViewStrategy2D::startProfilePlot()
 
         const auto component = currentScalars.dataComponent();
         const auto location = currentScalars.scalarsAssociation(*visualization);
+        const auto timeStep = TemporalPipelineMediator::currentUpdateTimeStep(*visualization);
 
         auto profile = std::make_unique<DataProfile2DDataObject>(
             dataObject->name() + " plot",
             *dataObject,
             scalarsName,
             location,
-            component);
+            component,
+            timeStep);
 
         processedPlots << currentPlotCombination;
 
