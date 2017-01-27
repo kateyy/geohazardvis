@@ -9,6 +9,7 @@
 #include <core/utility/DataExtent_fwd.h>
 
 
+class vtkAlgorithm;
 class vtkLineSource;
 class vtkTransformPolyDataFilter;
 class vtkWarpScalar;
@@ -28,13 +29,14 @@ class CORE_API DataProfile2DDataObject : public DataObject
 {
 public:
     /** Create profile with given specifications
-     * @param name Object name, see DataObject API
-     * @param sourceData source data object that will be probed
+     * @param name Object Name, see DataObject API
+     * @param sourceData Source data object that will be probed. The DataObject will only be used
+        in the constructor, only shared VTK data sets are referenced later.
      * @param scalarsName Scalars to probe in the source data object 
      * @param scalarsLocation Specifies whether to probe point or cell scalars 
      * @param vectorComponent For multi component scalars/vectors, specify which component will be extracted
      * @param timeStep For temporal attributes, the time step that will be extracted.
-              Optional, use TemporalPipelineMediator::nullTimeStep() if no time step is known/required. */
+        Optional, use TemporalPipelineMediator::nullTimeStep() if no time step is known/required. */
     DataProfile2DDataObject(
         const QString & name, 
         DataObject & sourceData,
@@ -62,7 +64,6 @@ public:
 
     const QString & abscissa() const;
 
-    const DataObject & sourceData() const;
     const QString & scalarsName() const;
     IndexType scalarsLocation() const;
     vtkIdType vectorComponent() const;
@@ -87,17 +88,17 @@ protected:
     std::unique_ptr<QVtkTableModel> createTableModel() override;
 
 private:
-    CoordinateTransformableDataObject & sourceData();
     void updateLinePointsTransform();
     void updateLinePoints();
 
 private:
     bool m_isValid;
-    DataObject & m_sourceData;
     QString m_abscissa;
     QString m_scalarsName;
     IndexType m_scalarsLocation;
     vtkIdType m_vectorComponent;
+
+    vtkSmartPointer<vtkAlgorithm> m_sourceAlgorithm;
 
     vtkVector2d m_profileLinePoint1;
     vtkVector2d m_profileLinePoint2;

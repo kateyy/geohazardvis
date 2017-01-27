@@ -6,6 +6,7 @@
 
 #include <QDebug>
 
+#include <vtkAlgorithmOutput.h>
 #include <vtkAssignAttribute.h>
 #include <vtkCellCenters.h>
 #include <vtkCellData.h>
@@ -57,7 +58,6 @@ DataProfile2DDataObject::DataProfile2DDataObject(
     double timeStep)
     : DataObject(name, vtkSmartPointer<vtkImageData>::New())
     , m_isValid{ false }
-    , m_sourceData{ sourceData }
     , m_abscissa{ "position" }
     , m_scalarsName{ scalarsName }
     , m_scalarsLocation{ scalarsLocation }
@@ -68,18 +68,19 @@ DataProfile2DDataObject::DataProfile2DDataObject(
     , m_outputTransformation{ vtkSmartPointer<vtkTransformPolyDataFilter>::New() }
     , m_graphLine{ vtkSmartPointer<vtkWarpScalar>::New() }
 {
-    auto processedInputData = m_sourceData.processedOutputDataSet();
+    auto processedInputData = sourceData.processedOutputDataSet();
     if (!processedInputData || processedInputData->GetNumberOfPoints() == 0)
     {
         assert(false);
         return;
     }
 
-    if (!dynamic_cast<CoordinateTransformableDataObject *>(&m_sourceData))
+    if (!dynamic_cast<CoordinateTransformableDataObject *>(&sourceData))
     {
         return;
     }
 
+    auto &transformedSource = static_cast<CoordinateTransformableDataObject &>(sourceData);
 
     auto inputImage = vtkImageData::SafeDownCast(processedInputData);
     m_inputIsImage = (inputImage != nullptr);
@@ -101,7 +102,6 @@ DataProfile2DDataObject::DataProfile2DDataObject(
         return;
     }
 
-    auto & transformedSource = this->sourceData();
     auto && sourceCoordSystem = transformedSource.coordinateSystem();
 
     if (sourceCoordSystem.isValid())
@@ -122,20 +122,23 @@ DataProfile2DDataObject::DataProfile2DDataObject(
         }
     }
 
-    vtkSmartPointer<vtkDataSet> inputData;
-    vtkAlgorithmOutput * inputAlgorithmPort = nullptr;
     if (m_targetCoordsSpec.isValid())
     {
-        inputData = transformedSource.coordinateTransformedDataSet(m_targetCoordsSpec);
-        inputAlgorithmPort = transformedSource.coordinateTransformedOutputPort(m_targetCoordsSpec);
+        m_sourceAlgorithm = transformedSource.coordinateTransformedOutputPort(m_targetCoordsSpec)->GetProducer();
     }
     else
     {
-        inputData = sourceData.processedOutputDataSet();
-        inputAlgorithmPort = sourceData.processedOutputPort();
+        m_sourceAlgorithm = sourceData.processedOutputPort()->GetProducer();
+    }
+
+    if (!m_sourceAlgorithm->GetExecutive()->Update())
+    {
+        qWarning() << "Error while updating plot source data for" << name;
+        return;
     }
 
     // coordinateTransformed* should not change the data set type.
+    auto inputData = vtkDataSet::SafeDownCast(m_sourceAlgorithm->GetOutputDataObject(0));
     if (!inputData || inputData->IsTypeOf(processedInputData->GetClassName()))
     {
         assert(false);
@@ -174,7 +177,7 @@ DataProfile2DDataObject::DataProfile2DDataObject(
     filterFields->AddFieldType(vtkDataObject::POINT);
     filterFields->AddFieldType(vtkDataObject::CELL);
     filterFields->AddFieldType(vtkDataObject::FIELD);
-    filterFields->SetInputConnection(inputAlgorithmPort);
+    filterFields->SetInputConnection(m_sourceAlgorithm->GetOutputPort());
 
     // Do not discard or distort normal and vector arrays.
     // vtkRearrangeFields will remove the previous attribute assignment, if such exists
@@ -238,13 +241,13 @@ DataProfile2DDataObject::DataProfile2DDataObject(
         }
         else
         {
-            qWarning() << "Plotting not supported for the data set type:" << m_sourceData.name();
+            qWarning() << "Plotting not supported for the data set type:" << sourceData.name();
             return;
         }
     }
     else
     {
-        qWarning() << "Plotting not supported for the data set type:" << m_sourceData.name();
+        qWarning() << "Plotting not supported for the data set type:" << sourceData.name();
         return;
     }
 
@@ -296,11 +299,6 @@ const QString & DataProfile2DDataObject::dataTypeName_s()
 const QString & DataProfile2DDataObject::abscissa() const
 {
     return m_abscissa;
-}
-
-const DataObject & DataProfile2DDataObject::sourceData() const
-{
-    return m_sourceData;
 }
 
 const QString & DataProfile2DDataObject::scalarsName() const
@@ -381,12 +379,6 @@ std::unique_ptr<QVtkTableModel> DataProfile2DDataObject::createTableModel()
     tableModel->setDataObject(this);
 
     return std::move(tableModel);
-}
-
-CoordinateTransformableDataObject & DataProfile2DDataObject::sourceData()
-{
-    assert(dynamic_cast<CoordinateTransformableDataObject *>(&m_sourceData));
-    return static_cast<CoordinateTransformableDataObject &>(m_sourceData);
 }
 
 void DataProfile2DDataObject::updateLinePointsTransform()
@@ -485,9 +477,14 @@ void DataProfile2DDataObject::updateLinePoints()
         p2 = m_profileLinePoint2;
     }
 
-    auto transformedSourceData = m_targetCoordsSpec.isValid()
-        ? vtkSmartPointer<vtkDataSet>(sourceData().coordinateTransformedDataSet(m_targetCoordsSpec))
-        : vtkSmartPointer<vtkDataSet>(sourceData().processedOutputDataSet());
+    if (!m_sourceAlgorithm->GetExecutive()->Update())
+    {
+        qWarning() << "Error while updating plot source data for" << name();
+        return;
+    }
+
+    auto transformedSourceData = vtkSmartPointer<vtkDataSet>(vtkDataSet::SafeDownCast(
+        m_sourceAlgorithm->GetOutputDataObject(0)));
 
     const auto probeVector = p2 - p1;
 
