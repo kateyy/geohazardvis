@@ -65,7 +65,17 @@ public:
     {
         m_freedProcessingStepIds.push_back(id);
     }
-    std::vector<std::vector<std::pair<unsigned int, AbstractVisualizedData::PostProcessingStep>>> postProcessingStepsPerPort;
+    using DynamicPPStepType = std::pair<unsigned int, AbstractVisualizedData::PostProcessingStep>;
+    struct PostProcessingSteps
+    {
+        /** Using unique_ptr for the simple structs to be able to hand out thread safe pointers
+         * to a specific post processing step. Thread safe as long the step itself is not modified
+         * or removed from the pipeline. */
+        std::map<AbstractVisualizedData::StaticProcessingStepCookie,
+            std::unique_ptr<AbstractVisualizedData::PostProcessingStep>> staticStepTypes;
+        std::vector<DynamicPPStepType> dynamicStepTypes;
+    };
+    std::vector<PostProcessingSteps> postProcessingStepsPerPort;
     std::vector<vtkSmartPointer<vtkAlgorithmOutput>> pipelineEndpointsPerPort;
 
     const DataBounds & visibleBounds() const

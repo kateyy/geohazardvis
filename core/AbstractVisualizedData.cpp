@@ -1,5 +1,7 @@
 #include "AbstractVisualizedData.h"
 
+#include <type_traits>
+
 #include <vtkAlgorithm.h>
 #include <vtkAlgorithmOutput.h>
 #include <vtkDataSet.h>
@@ -140,11 +142,12 @@ vtkAlgorithmOutput * AbstractVisualizedData::processedOutputPortInternal(unsigne
 std::pair<bool, unsigned int> AbstractVisualizedData::injectPostProcessingStep(const PostProcessingStep & postProcessingStep)
 {
     d_ptr->postProcessingStepsPerPort.resize(postProcessingStep.visualizationPort + 1u);
-    auto & stepsForPort = d_ptr->postProcessingStepsPerPort[postProcessingStep.visualizationPort];
+    auto & dynamicStepsForPort =
+        d_ptr->postProcessingStepsPerPort[postProcessingStep.visualizationPort].dynamicStepTypes;
 
     const auto newId = d_ptr->getNextProcessingStepId();
 
-    stepsForPort.emplace_back(newId, postProcessingStep);
+    dynamicStepsForPort.emplace_back(newId, postProcessingStep);
 
     updatePipeline(postProcessingStep.visualizationPort);
 
@@ -155,19 +158,19 @@ bool AbstractVisualizedData::erasePostProcessingStep(const unsigned int id)
 {
     for (size_t port = 0; port < d_ptr->postProcessingStepsPerPort.size(); ++port)
     {
-        auto & stepsForPort = d_ptr->postProcessingStepsPerPort[port];
-        const auto it = std::find_if(stepsForPort.begin(), stepsForPort.end(),
+        auto & dynamicStepsForPort = d_ptr->postProcessingStepsPerPort[port].dynamicStepTypes;
+        const auto it = std::find_if(dynamicStepsForPort.begin(), dynamicStepsForPort.end(),
             [id] (const std::pair<unsigned int, PostProcessingStep> & step)
         {
             return step.first == id;
         });
 
-        if (it == stepsForPort.end())
+        if (it == dynamicStepsForPort.end())
         {
             continue;
         }
 
-        stepsForPort.erase(it);
+        dynamicStepsForPort.erase(it);
         updatePipeline(static_cast<int>(port));
         d_ptr->releaseProcessingStepId(id);
 
@@ -194,13 +197,90 @@ void AbstractVisualizedData::updatePipeline(const unsigned int port)
     vtkSmartPointer<vtkAlgorithmOutput> currentUpstream = upstream;
 
     const auto & ppSteps = d_ptr->postProcessingStepsPerPort[port];
-    for (const auto & step : ppSteps)
+    // Simple convention for now: static first, dynamic afterwards.
+    // Now priority, position, dependency for now
+    for (const auto & step : ppSteps.staticStepTypes)
+    {
+        step.second->pipelineHead->SetInputConnection(currentUpstream);
+        currentUpstream = step.second->pipelineTail->GetOutputPort();
+    }
+    // NOTE: steps are inserted in the order they are provided by the static cookie registration.
+    // This order depends on many factors, so take care not to built any dependencies, as long as
+    // they are not supported.
+    for (const auto & step : ppSteps.dynamicStepTypes)
     {
         step.second.pipelineHead->SetInputConnection(currentUpstream);
         currentUpstream = step.second.pipelineTail->GetOutputPort();
     }
 
     d_ptr->pipelineEndpointsPerPort[port] = currentUpstream;
+}
+
+AbstractVisualizedData::StaticProcessingStepCookie AbstractVisualizedData::requestProcessingStepCookie()
+{
+    static std::remove_const_t<decltype(StaticProcessingStepCookie::id)> nextId = {};
+
+    return StaticProcessingStepCookie{ nextId++ };
+}
+
+bool AbstractVisualizedData::injectPostProcessingStep(
+    const StaticProcessingStepCookie & cookie,
+    const PostProcessingStep & postProcessingStep)
+{
+    d_ptr->postProcessingStepsPerPort.resize(postProcessingStep.visualizationPort + 1u);
+    auto & staticStepsForPort =
+        d_ptr->postProcessingStepsPerPort[postProcessingStep.visualizationPort].staticStepTypes;
+
+    const auto result = staticStepsForPort.emplace(cookie, std::make_unique<PostProcessingStep>(postProcessingStep));
+    if (!result.second)
+    {
+        // cookie is already in use, abort the insertion
+        return false;
+    }
+
+    updatePipeline(postProcessingStep.visualizationPort);
+
+    return true;
+}
+
+bool AbstractVisualizedData::hasPostProcessingStep(const StaticProcessingStepCookie & cookie, unsigned int port) const
+{
+    if (d_ptr->postProcessingStepsPerPort.size() <= port)
+    {
+        return false;
+    }
+
+    const auto & staticStepsForPort = d_ptr->postProcessingStepsPerPort[port].staticStepTypes;
+    return staticStepsForPort.find(cookie) != staticStepsForPort.end();
+}
+
+AbstractVisualizedData::PostProcessingStep * AbstractVisualizedData::getPostProcessingStep(
+    const StaticProcessingStepCookie & cookie, unsigned int port)
+{
+    if (d_ptr->postProcessingStepsPerPort.size() <= port)
+    {
+        return nullptr;
+    }
+
+    auto & staticStepsForPort = d_ptr->postProcessingStepsPerPort[port].staticStepTypes;
+    auto it = staticStepsForPort.find(cookie);
+    if (it == staticStepsForPort.end())
+    {
+        return nullptr;
+    }
+
+    return it->second.get();
+}
+
+bool AbstractVisualizedData::erasePostProcessingStep(const StaticProcessingStepCookie & cookie, unsigned int port)
+{
+    if (d_ptr->postProcessingStepsPerPort.size() <= port)
+    {
+        return false;
+    }
+
+    auto & staticStepsForPort = d_ptr->postProcessingStepsPerPort[port].staticStepTypes;
+    return staticStepsForPort.erase(cookie) != 0u;
 }
 
 void AbstractVisualizedData::setupInformation(vtkInformation & information, AbstractVisualizedData & visualization)

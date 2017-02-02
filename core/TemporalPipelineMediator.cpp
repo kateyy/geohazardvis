@@ -4,6 +4,7 @@
 #include <cassert>
 #include <cmath>
 #include <limits>
+#include <utility>
 
 #include <QDebug>
 
@@ -16,8 +17,22 @@
 #include <vtkPointData.h>
 #include <vtkStreamingDemandDrivenPipeline.h>
 
-#include <core/data_objects/DataObject.h>
 #include <core/AbstractVisualizedData.h>
+#include <core/data_objects/DataObject.h>
+#include <core/filters/ExtractTimeStep.h>
+#include <core/utility/macros.h>
+
+
+namespace
+{
+
+const AbstractVisualizedData::StaticProcessingStepCookie & extractTimeStepPPCookie()
+{
+    static const auto cookie = AbstractVisualizedData::requestProcessingStepCookie();
+    return cookie;
+}
+
+}
 
 
 TemporalPipelineMediator::TemporalPipelineMediator()
@@ -69,6 +84,33 @@ void TemporalPipelineMediator::setVisualization(AbstractVisualizedData * visuali
         const ScopedEventDeferral deferral(visualization->dataObject());
         dataSet->GetPointData()->Modified();
         dataSet->GetCellData()->Modified();
+    }
+}
+
+void TemporalPipelineMediator::unregisterFromVisualization(AbstractVisualizedData * visualization)
+{
+    if (!visualization)
+    {
+        return;
+    }
+
+    if (visualization == this->visualzation())
+    {
+        setVisualization(nullptr);
+    }
+
+    bool modified = false;
+
+    const auto numPorts = visualization->numberOfOutputPorts();
+    for (unsigned int port = 0; port < numPorts; ++port)
+    {
+        bool portModified = visualization->erasePostProcessingStep(extractTimeStepPPCookie(), port);
+        modified = modified || portModified;
+    }
+
+    if (modified)
+    {
+        visualization->geometryChanged();
     }
 }
 
@@ -137,27 +179,18 @@ bool TemporalPipelineMediator::isValidTimeStep(double timeStep)
 }
 
 double TemporalPipelineMediator::currentUpdateTimeStep(AbstractVisualizedData & visualization,
-    const unsigned int index)
+    const unsigned int port)
 {
-    if (visualization.numberOfOutputPorts() < index)
+    auto stepPtr = visualization.getPostProcessingStep(extractTimeStepPPCookie(), port);
+    if (!stepPtr)
     {
         return nullTimeStep();
     }
 
-    auto producer = visualization.processedOutputPort(index)->GetProducer();
-    if (!producer)
-    {
-        return nullTimeStep();
-    }
+    auto extractTimeStep = ExtractTimeStep::SafeDownCast(stepPtr->pipelineHead);
+    assert(extractTimeStep);
 
-    producer->UpdateInformation();
-    auto outInfo = producer->GetOutputInformation(0);
-    if (!outInfo || !outInfo->Has(vtkStreamingDemandDrivenPipeline::UPDATE_TIME_STEP()))
-    {
-        return nullTimeStep();
-    }
-
-    return outInfo->Get(vtkStreamingDemandDrivenPipeline::UPDATE_TIME_STEP());
+    return extractTimeStep->GetTimeStep();
 }
 
 bool TemporalPipelineMediator::updateTimeSteps()
@@ -165,31 +198,53 @@ bool TemporalPipelineMediator::updateTimeSteps()
     if (!m_visualization)
     {
         const bool modified = !m_timeSteps.empty();
-        (decltype(m_timeSteps)()).swap(m_timeSteps);
+        m_timeSteps.clear();
         return modified;
     }
 
-    vtkMTimeType currentUpdateTime = {};
+    vtkSmartPointer<vtkAlgorithm> upstreamAlgorithm;
+    int upstreamOutputPort = 0;
+
+    // If a ExtractTimeStep was already injected, processedOutputPort() does not report the
+    // list of time steps anymore.
+    const auto numPorts = m_visualization->numberOfOutputPorts();
+    for (unsigned int port = 0; port < numPorts; ++port)
+    {
+        auto ppStep = m_visualization->getPostProcessingStep(extractTimeStepPPCookie(), port);
+        if (!ppStep)
+        {
+            continue;
+        }
+
+        assert(ppStep->pipelineHead);
+        upstreamAlgorithm = ppStep->pipelineHead->GetInputAlgorithm();
+        assert(upstreamAlgorithm);
+    }
+
+    if (!upstreamAlgorithm)
+    {
+        // Assume there always is a valid port 0
+        auto outputPort = m_visualization->processedOutputPort();
+        upstreamAlgorithm = outputPort->GetProducer();
+        assert(upstreamAlgorithm);
+        upstreamOutputPort = outputPort->GetIndex();
+    }
+
+    if (!upstreamAlgorithm)
+    {
+        qWarning() << "Invalid output port 0 in data set" << m_visualization->dataObject().name();
+        return false;
+    }
 
     // Check if there is new pipeline information
-    for (unsigned int port = 0; port < m_visualization->numberOfOutputPorts(); ++port)
+    // Assume that all visualization ports report the same time steps
+    if (upstreamAlgorithm->GetExecutive()->UpdateInformation() == 0)
     {
-        auto outputPort = m_visualization->processedOutputPort(port);
-        if (!outputPort || !outputPort->GetProducer())
-        {
-            continue;
-        }
-
-        auto algorithm = outputPort->GetProducer();
-
-        if (algorithm->GetExecutive()->UpdateInformation() == 0)
-        {
-            qWarning() << "Algorithm execution unsuccessful for data set" << m_visualization->dataObject().name();
-            continue;
-        }
-
-        currentUpdateTime = std::max(currentUpdateTime, algorithm->GetOutputInformation(port)->GetMTime());
+        qWarning() << "Algorithm execution unsuccessful for data set" << m_visualization->dataObject().name();
+        return false;
     }
+
+    const auto currentUpdateTime = upstreamAlgorithm->GetOutputInformation(upstreamOutputPort)->GetMTime();
 
     if (currentUpdateTime == m_pipelineModifiedTime)
     {
@@ -200,39 +255,22 @@ bool TemporalPipelineMediator::updateTimeSteps()
 
     std::vector<double> timeSteps;
 
-    // Retrieve complete list of time steps for all visualization output ports
-    for (unsigned int port = 0; port < m_visualization->numberOfOutputPorts(); ++port)
+    do
     {
-        auto outputPort = m_visualization->processedOutputPort(port);
-        if (!outputPort || !outputPort->GetProducer() || !outputPort->GetProducer()->GetOutputInformation(port))
-        {
-            continue;
-        }
-
-        auto algorithm = outputPort->GetProducer();
-
-        auto & outInfo = *algorithm->GetOutputInformation(port);
+        auto & outInfo = *upstreamAlgorithm->GetOutputInformation(upstreamOutputPort);
         if (!outInfo.Has(vtkStreamingDemandDrivenPipeline::TIME_STEPS()))
         {
-            continue;
+            break;
         }
 
         assert(outInfo.Length(vtkStreamingDemandDrivenPipeline::TIME_STEPS()) >= 0);
-        const auto numTimeStepsForPort = static_cast<size_t>(
+        const auto numTimeSteps = static_cast<size_t>(
             outInfo.Length(vtkStreamingDemandDrivenPipeline::TIME_STEPS()));
-        timeSteps.resize(timeSteps.size() + numTimeStepsForPort);
-        const auto numPreviousTimeSteps = timeSteps.size() - numTimeStepsForPort;
-        outInfo.Get(vtkStreamingDemandDrivenPipeline::TIME_STEPS(), timeSteps.data() + numPreviousTimeSteps);
+        const auto ptr = outInfo.Get(vtkStreamingDemandDrivenPipeline::TIME_STEPS());
 
-        assert(std::is_sorted(timeSteps.begin() + numPreviousTimeSteps, timeSteps.end()));
-        // Remove all new time steps that are already in the list.
-        const auto newEndIt = std::unique(timeSteps.begin(), timeSteps.end());
-        timeSteps.erase(newEndIt, timeSteps.end());
-        // Restore sorting of remaining time steps
-        std::inplace_merge(timeSteps.begin(),
-            timeSteps.begin() + numPreviousTimeSteps,
-            timeSteps.end());
-    }
+        timeSteps = std::vector<double>(ptr, ptr + numTimeSteps);
+
+    } while (false);
 
     if (m_timeSteps == timeSteps)
     {
@@ -245,7 +283,8 @@ bool TemporalPipelineMediator::updateTimeSteps()
 
 bool TemporalPipelineMediator::selectionFromPipeline()
 {
-    if (!m_visualization)
+    // Nothing to do if there is no visualization or it has not time steps.
+    if (!m_visualization || m_timeSteps.empty())
     {
         return false;
     }
@@ -254,26 +293,35 @@ bool TemporalPipelineMediator::selectionFromPipeline()
     double previousTimeStep = {};
     size_t previousTimeStepIndex = {};
 
-    // Search for a previous update time step
-    for (unsigned int port = 0; port < m_visualization->numberOfOutputPorts(); ++port)
+    const auto numPorts = m_visualization->numberOfOutputPorts();
+
+    // Check for previously injected processing steps
+    for (unsigned int port = 0; port < numPorts; ++port)
     {
-        const auto outputPort = m_visualization->processedOutputPort(port);
-        auto & algoritm = *outputPort->GetProducer();
-        auto & outInfo = *algoritm.GetOutputInformation(outputPort->GetIndex());
-        if (!outInfo.Has(vtkStreamingDemandDrivenPipeline::UPDATE_TIME_STEP()))
+        auto stepPtr = m_visualization->getPostProcessingStep(extractTimeStepPPCookie(), port);
+        if (!stepPtr)
         {
             continue;
         }
-        const auto timeStep = outInfo.Get(vtkStreamingDemandDrivenPipeline::UPDATE_TIME_STEP());
-        const auto it = std::lower_bound(m_timeSteps.begin(), m_timeSteps.end(), timeStep);
-        if (it == m_timeSteps.end() || *it != timeStep)
-        {
-            continue;
-        }
+        auto & step = *stepPtr;
+
+        assert(step.pipelineHead == step.pipelineTail);
+        auto algorithm = ExtractTimeStep::SafeDownCast(step.pipelineHead);
+        assert(algorithm);
 
         hasPreviousTimeStep = true;
-        previousTimeStep = timeStep;
-        previousTimeStepIndex = static_cast<size_t>(it - m_timeSteps.begin());
+
+        auto it = std::lower_bound(m_timeSteps.begin(), m_timeSteps.end(), algorithm->GetTimeStep());
+        if (it == m_timeSteps.end())
+        {
+            previousTimeStepIndex = m_timeSteps.size() - 1u;
+        }
+        else
+        {
+            previousTimeStepIndex = static_cast<size_t>(it - m_timeSteps.begin());
+        }
+        // in case there was no exact match
+        previousTimeStep = m_timeSteps[previousTimeStepIndex];
         break;
     }
 
@@ -297,19 +345,46 @@ void TemporalPipelineMediator::passSelectionToPipeline()
         return;
     }
 
-    for (unsigned int port = 0; port < m_visualization->numberOfOutputPorts(); ++port)
-    {
-        const auto outputPort = m_visualization->processedOutputPort(port);
-        auto & algoritm = *outputPort->GetProducer();
-        auto & outInfo = *algoritm.GetOutputInformation(outputPort->GetIndex());
-        outInfo.Set(vtkStreamingDemandDrivenPipeline::UPDATE_TIME_STEP(), m_selection.selectedTimeStep);
+    bool modified = false;
 
-        // Enforce updating downstream algorithms
-        // TODO Is this the best way to go here?
-        algoritm.Modified();
+    const auto numPorts = m_visualization->numberOfOutputPorts();
+    for (unsigned int port = 0; port < numPorts; ++port)
+    {
+        vtkSmartPointer<ExtractTimeStep> extractTimeStep;
+
+        auto ppStepPtr = m_visualization->getPostProcessingStep(extractTimeStepPPCookie(), port);
+        const bool needToInject = ppStepPtr == nullptr;
+        if (ppStepPtr)
+        {
+            extractTimeStep = ExtractTimeStep::SafeDownCast(ppStepPtr->pipelineHead);
+            assert(extractTimeStep && (ppStepPtr->pipelineHead == ppStepPtr->pipelineTail));
+        }
+        else
+        {
+            extractTimeStep = vtkSmartPointer<ExtractTimeStep>::New();
+        }
+
+        modified = modified || (extractTimeStep->GetTimeStep() != m_selection.selectedTimeStep);
+        extractTimeStep->SetTimeStep(m_selection.selectedTimeStep);
+
+        // Inject the step if not done before
+        if (needToInject)
+        {
+            modified = true;
+            AbstractVisualizedData::PostProcessingStep ppStep;
+            ppStep.visualizationPort = port;
+            ppStep.pipelineHead = extractTimeStep;
+            ppStep.pipelineTail = extractTimeStep;
+            DEBUG_ONLY(const auto result =)
+                m_visualization->injectPostProcessingStep(extractTimeStepPPCookie(), ppStep);
+            assert(result);
+        }
     }
 
-    emit m_visualization->geometryChanged();
+    if (modified)
+    {
+        emit m_visualization->geometryChanged();
+    }
 }
 
 TemporalPipelineMediator::TimeStepSelection::TimeStepSelection()

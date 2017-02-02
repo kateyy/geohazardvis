@@ -97,6 +97,40 @@ public:
     std::pair<bool, unsigned int> injectPostProcessingStep(const PostProcessingStep & postProcessingStep);
     bool erasePostProcessingStep(unsigned int id);
 
+    /** Identifier for a registered kind of post processing steps.
+      * This cookie is identified by its id, not by its instance. Thus, it can be copied as needed.
+      */
+    struct StaticProcessingStepCookie
+    {
+        bool operator<(StaticProcessingStepCookie rhs) const { return id < rhs.id; }
+        const int id;
+    };
+    /** Statically register a specific type of processing steps.
+      * Typically, a user would statically request a cookie for each kind of processing step that
+      * is planned to be injected in visualization pipelines. Later on, for an instance of 
+      * AbstractVisualizedData and a specific visualization port in it, this cookie is used to
+      * check if a specific processing step is already present, and it can be injected or removed
+      * from the pipeline (per port!).
+      * That way it is not required for users to track for each visualizations its processing step
+      * instances. */
+    static StaticProcessingStepCookie requestProcessingStepCookie();
+    /** Inject a specific kind of post processing step, identified by the cookie and unique per for
+      * each pair of visualization instance and visualization port.
+      * Statically registered post processing step types are injected before other (dynamic) types.
+      * The statically registered types are injected into the pipeline in the order their cookies
+      * were requested. (This is only meaningful in local scope, not across compilation units etc.)
+      * @return true only if the postProcessingStep is valid and the cookie is not used yet for
+      * this visualization instance. */
+    bool injectPostProcessingStep(
+        const StaticProcessingStepCookie & cookie,
+        const PostProcessingStep & postProcessingStep);
+    bool hasPostProcessingStep(const StaticProcessingStepCookie & cookie, unsigned int port) const;
+    /** Retrieve a uniquely identified post processing step.
+      * @return nullptr if the post processing step was not injected before. Returns a valid step
+      * otherwise. */
+    PostProcessingStep * getPostProcessingStep(const StaticProcessingStepCookie & cookie, unsigned int port);
+    bool erasePostProcessingStep(const StaticProcessingStepCookie & cookie, unsigned int port);
+
     /** store data object name and pointers in the information object */
     static void setupInformation(vtkInformation & information, AbstractVisualizedData & visualization);
 

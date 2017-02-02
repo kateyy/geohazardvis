@@ -20,6 +20,12 @@ public:
     ~TemporalPipelineMediator() override;
 
     void setVisualization(AbstractVisualizedData * visualization);
+    /** The time step selection handled by the mediator is stored within the visualization, even
+      * if the mediator itself does not currently reference the visualization. Use this function
+      * to undo any settings done by the mediator on the visualization.
+      * If the mediator is currently set to the visualization, its current visualization will be
+      * nullptr after this call. */
+    void unregisterFromVisualization(AbstractVisualizedData * visualization);
     AbstractVisualizedData * visualzation();
     const AbstractVisualizedData * visualzation() const;
 

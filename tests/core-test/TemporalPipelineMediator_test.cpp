@@ -107,7 +107,11 @@ TEST_F(TemporalPipelineMediator_test, SelectTimeStepByIndex_subclassed)
     auto processedDataSet = rendered->processedOutputDataSet();
     ASSERT_TRUE(processedDataSet);
     rendered->processedOutputPort()->GetProducer()->Update();
-    auto & outInfo = *rendered->processedOutputPort()->GetProducer()->GetOutputInformation(0);
+    auto timeStepExtractor = rendered->processedOutputPort()->GetProducer(); // this is quite internal...
+    ASSERT_TRUE(timeStepExtractor);
+    auto upstreamAlgorithm = timeStepExtractor->GetInputAlgorithm();
+    ASSERT_TRUE(upstreamAlgorithm);
+    auto & outInfo = *upstreamAlgorithm->GetOutputInformation(0);
 
     ASSERT_TRUE(outInfo.Has(vtkStreamingDemandDrivenPipeline::UPDATE_TIME_STEP()));
     ASSERT_EQ(timeSteps()[index], outInfo.Get(vtkStreamingDemandDrivenPipeline::UPDATE_TIME_STEP()));
@@ -134,7 +138,11 @@ TEST_F(TemporalPipelineMediator_test, SelectTimeStepByIndex_injected)
     auto processedDataSet = rendered->processedOutputDataSet();
     ASSERT_TRUE(processedDataSet);
     rendered->processedOutputPort()->GetProducer()->Update();
-    auto & outInfo = *rendered->processedOutputPort()->GetProducer()->GetOutputInformation(0);
+    auto timeStepExtractor = rendered->processedOutputPort()->GetProducer(); // this is quite internal...
+    ASSERT_TRUE(timeStepExtractor);
+    auto upstreamAlgorithm = timeStepExtractor->GetInputAlgorithm();
+    ASSERT_TRUE(upstreamAlgorithm);
+    auto & outInfo = *upstreamAlgorithm->GetOutputInformation(0);
 
     ASSERT_TRUE(outInfo.Has(vtkStreamingDemandDrivenPipeline::UPDATE_TIME_STEP()));
     ASSERT_EQ(timeSteps()[index], outInfo.Get(vtkStreamingDemandDrivenPipeline::UPDATE_TIME_STEP()));
