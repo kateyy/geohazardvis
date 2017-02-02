@@ -22,10 +22,8 @@
 #include <vtkTransformPolyDataFilter.h>
 #include <vtkWarpScalar.h>
 
-#include <core/TemporalPipelineMediator.h>
 #include <core/data_objects/CoordinateTransformableDataObject.h>
 #include <core/context2D_data/DataProfile2DContextPlot.h>
-#include <core/filters/ExtractTimeStep.h>
 #include <core/filters/ImageBlankNonFiniteValuesFilter.h>
 #include <core/filters/LineOnCellsSelector2D.h>
 #include <core/filters/LineOnPointsSelector2D.h>
@@ -43,44 +41,74 @@ DataProfile2DDataObject::DataProfile2DDataObject(
     DataObject & sourceData,
     const QString & scalarsName,
     IndexType scalarsLocation,
-    vtkIdType vectorComponent)
-    : DataProfile2DDataObject(name, sourceData, scalarsName, scalarsLocation, vectorComponent,
-        TemporalPipelineMediator::nullTimeStep())
-{
-}
-
-DataProfile2DDataObject::DataProfile2DDataObject(
-    const QString & name,
-    DataObject & sourceData,
-    const QString & scalarsName,
-    IndexType scalarsLocation,
     vtkIdType vectorComponent,
-    double timeStep)
+    const PreprocessingPipeline & preprocessingPipeline)
     : DataObject(name, vtkSmartPointer<vtkImageData>::New())
     , m_isValid{ false }
-    , m_abscissa{ "position" }
+    , m_abscissa{ "Position" }
     , m_scalarsName{ scalarsName }
     , m_scalarsLocation{ scalarsLocation }
     , m_vectorComponent{ vectorComponent }
     , m_profileLinePoint1{ 0.0, 0.0 }
-    , m_profileLinePoint2{ 1.0, 0.0}
+    , m_profileLinePoint2{ 1.0, 0.0 }
     , m_doTransformPoints{ false }
     , m_outputTransformation{ vtkSmartPointer<vtkTransformPolyDataFilter>::New() }
     , m_graphLine{ vtkSmartPointer<vtkWarpScalar>::New() }
 {
-    auto processedInputData = sourceData.processedOutputDataSet();
-    if (!processedInputData || processedInputData->GetNumberOfPoints() == 0)
-    {
-        assert(false);
-        return;
-    }
+    // (1) Check if the input DataObject is transformable to a metric coordinate system
 
     if (!dynamic_cast<CoordinateTransformableDataObject *>(&sourceData))
     {
+        qWarning() << "DataObject type not supported for plotting";
         return;
     }
+    auto & transformedSource = static_cast<CoordinateTransformableDataObject &>(sourceData);
+    const auto & sourceCoordSystem = transformedSource.coordinateSystem();
 
-    auto &transformedSource = static_cast<CoordinateTransformableDataObject &>(sourceData);
+    if (sourceCoordSystem.isValid())
+    {
+        auto checkCoords = sourceCoordSystem;
+        checkCoords.type = CoordinateSystemType::metricLocal;
+        checkCoords.unitOfMeasurement = "km";
+
+        if (transformedSource.canTransformTo(checkCoords))
+        {
+            m_targetCoordsSpec = checkCoords;
+        }
+        else
+        {
+            qWarning() << "DataProfile2DDataObject: source data does not support transformation "
+                "to local coordinates. If it is represented in geographic coordinates (degrees), "
+                "the resulting plot won't make much sense.";
+        }
+    }
+
+    m_sourceAlgorithm = m_targetCoordsSpec.isValid()
+        ? transformedSource.coordinateTransformedOutputPort(m_targetCoordsSpec)->GetProducer()
+        : sourceData.processedOutputPort()->GetProducer();
+
+
+    // (2) Inject preprocessing pipeline
+
+    if (preprocessingPipeline.head && preprocessingPipeline.tail)
+    {
+        preprocessingPipeline.head->SetInputConnection(m_sourceAlgorithm->GetOutputPort());
+        m_sourceAlgorithm = preprocessingPipeline.tail;
+    }
+    else
+    {
+        assert(!preprocessingPipeline.head && !preprocessingPipeline.tail);
+    }
+
+
+    // (3) Check input data type and setup profile pipeline
+
+    auto processedInputData = sourceData.processedOutputDataSet();
+    if (!processedInputData || processedInputData->GetNumberOfPoints() == 0)
+    {
+        qWarning() << "Invalid input data for plot" << name;
+        return;
+    }
 
     auto inputImage = vtkImageData::SafeDownCast(processedInputData);
     m_inputIsImage = (inputImage != nullptr);
@@ -102,34 +130,6 @@ DataProfile2DDataObject::DataProfile2DDataObject(
         return;
     }
 
-    auto && sourceCoordSystem = transformedSource.coordinateSystem();
-
-    if (sourceCoordSystem.isValid())
-    {
-        auto checkCoords = sourceCoordSystem;
-        checkCoords.type = CoordinateSystemType::metricLocal;
-        checkCoords.unitOfMeasurement = "km";
-
-        if (transformedSource.canTransformTo(checkCoords))
-        {
-            m_targetCoordsSpec = checkCoords;
-        }
-        else
-        {
-            qWarning() << "DataProfile2DDataObject: source data does not support transformation "
-                "to local coordinates. If it is represented in geographic coordinates (degrees), "
-                "the resulting plot won't make much sense.";
-        }
-    }
-
-    if (m_targetCoordsSpec.isValid())
-    {
-        m_sourceAlgorithm = transformedSource.coordinateTransformedOutputPort(m_targetCoordsSpec)->GetProducer();
-    }
-    else
-    {
-        m_sourceAlgorithm = sourceData.processedOutputPort()->GetProducer();
-    }
 
     if (!m_sourceAlgorithm->GetExecutive()->Update())
     {
@@ -143,17 +143,6 @@ DataProfile2DDataObject::DataProfile2DDataObject(
     {
         assert(false);
         return;
-    }
-
-    vtkSmartPointer<vtkAlgorithm> outputTransformPipeline = m_outputTransformation;
-
-    if (TemporalPipelineMediator::isValidTimeStep(timeStep))
-    {
-        // Inject pipeline step to extract the required time step
-        auto extractTimeStep = vtkSmartPointer<ExtractTimeStep>::New();
-        extractTimeStep->SetTimeStep(timeStep);
-        m_outputTransformation->SetInputConnection(extractTimeStep->GetOutputPort());
-        outputTransformPipeline = extractTimeStep;
     }
 
     auto attributeData = (scalarsLocation == IndexType::points)
@@ -207,7 +196,7 @@ DataProfile2DDataObject::DataProfile2DDataObject(
         auto invalidToNaN = vtkSmartPointer<SetMaskedPointScalarsToNaNFilter>::New();
         invalidToNaN->SetInputConnection(imageProbe->GetOutputPort());
 
-        outputTransformPipeline->SetInputConnection(invalidToNaN->GetOutputPort());
+        m_outputTransformation->SetInputConnection(invalidToNaN->GetOutputPort());
     }
     else if (inputPolyData && inputPolyData->GetPoints() && inputPolyData->GetPoints()->GetNumberOfPoints() > 0)
     {
@@ -226,7 +215,7 @@ DataProfile2DDataObject::DataProfile2DDataObject(
             m_polyCentroidsSelector->SetInputConnection(assignScalars->GetOutputPort());
             m_polyCentroidsSelector->SetCellCentersConnection(polygonCenters->GetOutputPort());
 
-            outputTransformPipeline->SetInputConnection(m_polyCentroidsSelector->GetOutputPort(1));
+            m_outputTransformation->SetInputConnection(m_polyCentroidsSelector->GetOutputPort(1));
         }
         // Point cloud data
         else if (inputPolyData->GetVerts() && inputPolyData->GetVerts()->GetSize() > 0)
@@ -237,7 +226,7 @@ DataProfile2DDataObject::DataProfile2DDataObject(
             m_polyPointsSelector->PassPositionOnLineOff();
             m_polyPointsSelector->SetInputConnection(unassignField->GetOutputPort());
 
-            outputTransformPipeline->SetInputConnection(m_polyPointsSelector->GetOutputPort(1));
+            m_outputTransformation->SetInputConnection(m_polyPointsSelector->GetOutputPort(1));
         }
         else
         {

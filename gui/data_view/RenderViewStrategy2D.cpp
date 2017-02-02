@@ -10,6 +10,7 @@
 #include <QSet>
 #include <QToolBar>
 
+#include <vtkAlgorithmOutput.h>
 #include <vtkCamera.h>
 #include <vtkCommand.h>
 #include <vtkLineRepresentation.h>
@@ -25,6 +26,7 @@
 #include <core/color_mapping/ColorMapping.h>
 #include <core/color_mapping/ColorMappingData.h>
 #include <core/data_objects/DataProfile2DDataObject.h>
+#include <core/filters/ExtractTimeStep.h>
 #include <core/rendered_data/RenderedData.h>
 #include <core/utility/qthelper.h>
 #include <core/utility/vtkvectorhelper.h>
@@ -190,6 +192,9 @@ QList<DataObject *> RenderViewStrategy2D::filterCompatibleObjects(const QList<Da
     return compatible;
 }
 
+#include <vtkInformation.h>
+#include <core/utility/vtkpipelinehelper.h>
+
 void RenderViewStrategy2D::startProfilePlot()
 {
     assert(m_state == State::notPlotting || m_state == State::plotting);
@@ -253,7 +258,17 @@ void RenderViewStrategy2D::startProfilePlot()
 
         const auto component = currentScalars.dataComponent();
         const auto location = currentScalars.scalarsAssociation(*visualization);
+
+        DataProfile2DDataObject::PreprocessingPipeline ppPipeline;
+
+        // Make sure the plot uses the time step that was set in the visualization
         const auto timeStep = TemporalPipelineMediator::currentUpdateTimeStep(*visualization);
+        if (TemporalPipelineMediator::isValidTimeStep(timeStep))
+        {
+            auto timeStepExtractor = vtkSmartPointer<ExtractTimeStep>::New();
+            timeStepExtractor->SetTimeStep(timeStep);
+            ppPipeline.head = ppPipeline.tail = timeStepExtractor;
+        }
 
         auto profile = std::make_unique<DataProfile2DDataObject>(
             dataObject->name() + " plot",
@@ -261,7 +276,7 @@ void RenderViewStrategy2D::startProfilePlot()
             scalarsName,
             location,
             component,
-            timeStep);
+            ppPipeline);
 
         processedPlots << currentPlotCombination;
 

@@ -28,28 +28,29 @@ class SimplePolyGeoCoordinateTransformFilter;
 class CORE_API DataProfile2DDataObject : public DataObject
 {
 public:
+    struct PreprocessingPipeline
+    {
+        vtkSmartPointer<vtkAlgorithm> head;
+        vtkSmartPointer<vtkAlgorithm> tail;
+    };
+
     /** Create profile with given specifications
      * @param name Object Name, see DataObject API
      * @param sourceData Source data object that will be probed. The DataObject will only be used
         in the constructor, only shared VTK data sets are referenced later.
      * @param scalarsName Scalars to probe in the source data object 
      * @param scalarsLocation Specifies whether to probe point or cell scalars 
-     * @param vectorComponent For multi component scalars/vectors, specify which component will be extracted
-     * @param timeStep For temporal attributes, the time step that will be extracted.
-        Optional, use TemporalPipelineMediator::nullTimeStep() if no time step is known/required. */
+     * @param vectorComponent For multi component scalars/vectors, specify which component will be
+        extracted
+     * @param preprocessingPipeline Optional preprocessing pipeline. Will be injected between the
+        processed/transformed output of the sourceData and the profile transformations. */
     DataProfile2DDataObject(
-        const QString & name, 
+        const QString & name,
         DataObject & sourceData,
         const QString & scalarsName,
         IndexType scalarsLocation,
         vtkIdType vectorComponent,
-        double timeStep);
-    DataProfile2DDataObject(
-        const QString & name, 
-        DataObject & sourceData,
-        const QString & scalarsName,
-        IndexType scalarsLocation,
-        vtkIdType vectorComponent);
+        const PreprocessingPipeline & preprocessingPipeline = {});
     ~DataProfile2DDataObject() override;
 
     /** @return whether valid scalar data was found in the constructor. Otherwise, just delete your instance.. */
