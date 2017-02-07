@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Coordinate System of Specification</string>
+   <string>Coordinate System Specification</string>
   </property>
   <property name="modal">
    <bool>true</bool>
