@@ -49,6 +49,9 @@ public:
     DataMapping & dataMapping();
     const DataMapping & dataMapping() const;
 
+    void addPluginMenuAction(QAction * action);
+    void removePluginMenuAction(QAction * action);
+
 protected:
     void dragEnterEvent(QDragEnterEvent * event) override;
     void dropEvent(QDropEvent * event) override;

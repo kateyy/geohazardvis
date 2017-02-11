@@ -65,6 +65,7 @@ MainWindow::MainWindow()
     , m_loadWatchersMutex{ std::make_unique<QMutex>() }
 {
     m_ui->setupUi(this);
+    m_ui->menuPlugins->hide();
     m_ui->actionOpen->setIcon(qApp->style()->standardIcon(QStyle::SP_DialogOpenButton));
     m_ui->actionExportDataset->setIcon(qApp->style()->standardIcon(QStyle::SP_DialogSaveButton));
     m_ui->actionExit->setIcon(qApp->style()->standardIcon(QStyle::SP_DialogCloseButton));
@@ -551,6 +552,22 @@ DataMapping & MainWindow::dataMapping()
 const DataMapping & MainWindow::dataMapping() const
 {
     return *m_dataMapping;
+}
+
+void MainWindow::addPluginMenuAction(QAction * action)
+{
+    m_ui->menuPlugins->addAction(action);
+    m_ui->menuPlugins->show();
+}
+
+void MainWindow::removePluginMenuAction(QAction * action)
+{
+    m_ui->menuPlugins->removeAction(action);
+
+    if (m_ui->menuPlugins->actions().isEmpty())
+    {
+        m_ui->menuPlugins->hide();
+    }
 }
 
 void MainWindow::updateWindowTitle()

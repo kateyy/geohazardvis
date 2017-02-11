@@ -132,7 +132,7 @@ vtkDataSet * AbstractVisualizedData::processedOutputDataSet(unsigned int port)
     return vtkDataSet::SafeDownCast(alg->GetOutputDataObject(0));
 }
 
-vtkAlgorithmOutput * AbstractVisualizedData::processedOutputPortInternal(unsigned int port)
+vtkAlgorithmOutput * AbstractVisualizedData::processedOutputPortInternal(unsigned int DEBUG_ONLY(port))
 {
     assert(port == 0);
 

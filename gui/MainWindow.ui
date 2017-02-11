@@ -94,10 +94,16 @@
     <addaction name="actionAdjust_Coordinate_System"/>
     <addaction name="actionApply_Digital_Elevation_Model"/>
    </widget>
+   <widget class="QMenu" name="menuPlugins">
+    <property name="title">
+     <string>&amp;Plugins</string>
+    </property>
+   </widget>
    <addaction name="menuFile"/>
    <addaction name="menu_Data_Sets"/>
    <addaction name="menuViews"/>
    <addaction name="menuImage_Export"/>
+   <addaction name="menuPlugins"/>
    <addaction name="menuHelp"/>
   </widget>
   <action name="actionExit">

@@ -28,8 +28,7 @@ public:
     void removeWidget(QDockWidget * widget);
 
     /** Read/Write access to plugin settings stored with user defined application settings.
-      * Such settings should always be accessed via these function, to ensure some consistency.
-    */
+      * Such settings should always be accessed via these function, to ensure some consistency. */
 
     void readSettings(const std::function<void(const QSettings & settings)> & func);
     void readSettings(const QString & group, const std::function<void(const QSettings & settings)> & func);

@@ -46,8 +46,7 @@ void GuiPluginInterface::addWidget(QDockWidget * widget)
     m_mainWindow->addDockWidget(Qt::RightDockWidgetArea, widget);
     widget->hide();
 
-    // Insert the action to the end of the menu bar, before the "Help" menu
-    m_mainWindow->menuBar()->insertAction(*(m_mainWindow->menuBar()->actions().end() - 1), widget->toggleViewAction());
+    m_mainWindow->addPluginMenuAction(widget->toggleViewAction());
 
     m_widgets.push_back(widget);
 }
@@ -63,7 +62,7 @@ void GuiPluginInterface::removeWidget(QDockWidget * widget)
         return;
     }
 
-    m_mainWindow->menuBar()->removeAction(widget->toggleViewAction());
+    m_mainWindow->removePluginMenuAction(widget->toggleViewAction());
 
     // removeDockWidget creates a placeholder item, which is identified by the widget's object name
     // The object name (QString) might be set by the ui-file in the plugin's resources. After unloading
