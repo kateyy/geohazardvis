@@ -212,16 +212,12 @@ deploy_license_file("ParaView" "${PROJECT_SOURCE_DIR}/core/ThirdParty/ParaView/L
 
 #========= Qt5 =========
 
-set(PROJECT_QT_COMPONENTS Core Gui Widgets OpenGL)
+set(PROJECT_QT_COMPONENTS Core Gui Widgets OpenGL Concurrent)
 if (UNIX)
     # required for platform plugin deployment
     list(APPEND PROJECT_QT_COMPONENTS DBus Svg X11Extras)
 endif()
-find_package(Qt5 5.3 COMPONENTS ${PROJECT_QT_COMPONENTS})
-if (NOT ${Qt5Core_VERSION} VERSION_LESS 5.5)
-    find_package(Qt5 COMPONENTS Concurrent)
-    list(APPEND PROJECT_QT_COMPONENTS Concurrent)
-endif()
+find_package(Qt5 5.5 COMPONENTS ${PROJECT_QT_COMPONENTS})
 
 find_program(Qt5QMake_PATH qmake
     DOC "Path to the qmake executable of the currently used Qt5 installation.")

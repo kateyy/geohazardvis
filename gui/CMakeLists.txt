@@ -165,13 +165,9 @@ target_link_libraries(${target}
     PUBLIC
         Qt5::Widgets
         Qt5::OpenGL
+        Qt5::Concurrent
         core
 )
-
-if (NOT ${Qt5Core_VERSION} VERSION_LESS 5.5)
-    target_link_libraries(${target} PUBLIC Qt5::Concurrent)
-endif()
-
 
 configure_cxx_target(${target})
 
