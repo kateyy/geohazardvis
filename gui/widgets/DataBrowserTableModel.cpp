@@ -393,7 +393,7 @@ QVariant DataBrowserTableModel::data_dataObject(int row, int column, int role) c
         if (dataTypeName == "Regular 2D Grid")
         {
             auto & imageData = static_cast<ImageDataObject &>(*dataObject);
-            auto && dimensions = imageData.extent().componentSize();
+            const auto dimensions = imageData.extent().componentSize() + 1;
             return QString::number(dimensions[0]) + "x" + QString::number(dimensions[1]) + " values";
         }
         if (dataTypeName == "Data Set Profile (2D)")
@@ -403,7 +403,7 @@ QVariant DataBrowserTableModel::data_dataObject(int row, int column, int role) c
         if (dataTypeName == "Regular 3D Grid")
         {
             auto & gridData = static_cast<VectorGrid3DDataObject &>(*dataObject);
-            auto && dimensions = gridData.extent().componentSize();
+            const auto dimensions = gridData.extent().componentSize() + 1;
             return QString::number(dimensions[0]) + "x" + QString::number(dimensions[1]) + "x" + QString::number(dimensions[2]) + " vectors";
         }
         break;
