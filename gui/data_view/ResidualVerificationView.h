@@ -70,6 +70,8 @@ public:
     AbstractVisualizedData * visualizationFor(DataObject * dataObject, int subViewIndex = -1) const override;
     int subViewContaining(const AbstractVisualizedData & visualizedData) const override;
 
+    bool isEmpty() const override;
+
     unsigned int numberOfSubViews() const override;
 
     RendererImplementation & implementation() const override;

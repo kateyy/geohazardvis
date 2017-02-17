@@ -392,6 +392,11 @@ int RenderView::subViewContaining(const AbstractVisualizedData & visualizedData)
     return -1;
 }
 
+bool RenderView::isEmpty() const
+{
+    return m_contents.empty();
+}
+
 RendererImplementation & RenderView::implementation() const
 {
     return m_implementationSwitch->currentImplementation();

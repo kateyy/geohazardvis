@@ -55,6 +55,8 @@ public:
     /** @return the sub view index that contains the specified visualization, or -1 if this is not part of this view */
     virtual int subViewContaining(const AbstractVisualizedData & visualizedData) const = 0;
 
+    virtual bool isEmpty() const = 0;
+
     /** More specialized variant of AbstractDataView::setSelection
       * Compared to the base class function, this allows also allows to specify a visualization
       * and its output port. */

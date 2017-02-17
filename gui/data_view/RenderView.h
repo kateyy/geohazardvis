@@ -27,6 +27,8 @@ public:
     AbstractVisualizedData * visualizationFor(DataObject * dataObject, int subViewIndex = -1) const override;
     int subViewContaining(const AbstractVisualizedData & visualizedData) const override;
 
+    bool isEmpty() const override;
+
     // remove from public interface as soon as possible
     RendererImplementation & implementation() const override;
 

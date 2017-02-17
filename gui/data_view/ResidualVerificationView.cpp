@@ -237,6 +237,11 @@ int ResidualVerificationView::subViewContaining(const AbstractVisualizedData & v
     return -1;
 }
 
+bool ResidualVerificationView::isEmpty() const
+{
+    return !m_observationData && !m_modelData;
+}
+
 void ResidualVerificationView::setObservationData(DataObject * observation)
 {
     waitForResidualUpdate();

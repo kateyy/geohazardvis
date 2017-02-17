@@ -53,6 +53,11 @@ public:
         return nullptr;
     }
 
+    bool isEmpty() const override
+    {
+        return m_vis.empty();
+    }
+
     int subViewContaining(const AbstractVisualizedData & /*visualizedData*/) const override { return 0; }
     void lookAtData(const DataSelection & /*selection*/, int /*subViewIndex*/ = -1) override {}
     void lookAtData(const VisualizationSelection & /*selection*/, int /*subViewIndex*/ = -1) override {}
