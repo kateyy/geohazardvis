@@ -17,9 +17,10 @@
 
 #include <core/AbstractVisualizedData.h>
 #include <core/types.h>
+#include <core/CoordinateSystems.h>
 #include <core/data_objects/DataObject.h>
 #include <core/color_mapping/ColorMappingRegistry.h>
-#include <core/CoordinateSystems.h>
+#include <core/filters/AttributeArrayModifiedListener.h>
 #include <core/utility/DataExtent.h>
 
 
@@ -197,19 +198,37 @@ bool AttributeArrayComponentMapping::isTemporalAttribute() const
 
 vtkSmartPointer<vtkAlgorithm> AttributeArrayComponentMapping::createFilter(AbstractVisualizedData & visualizedData, unsigned int port)
 {
+    const auto visIt = m_filters.emplace(&visualizedData, decltype(m_filters)::mapped_type()).first;
+    auto & filter = visIt->second.emplace(port, decltype(visIt->second)::mapped_type()).first->second;
+
+    if (filter)
+    {
+        return filter;
+    }
+
     const auto attributeLocation = scalarsAssociation(visualizedData);
 
     if (attributeLocation == IndexType::invalid)
     {
-        auto filter = vtkSmartPointer<vtkPassThrough>::New();
+        filter = vtkSmartPointer<vtkPassThrough>::New();
         filter->SetInputConnection(visualizedData.processedOutputPort(port));
         return filter;
     }
 
-    auto filter = vtkSmartPointer<vtkAssignAttribute>::New();
-    filter->SetInputConnection(visualizedData.processedOutputPort(port));
-    filter->Assign(m_dataArrayName.toUtf8().data(), vtkDataSetAttributes::SCALARS,
+    auto assign = vtkSmartPointer<vtkAssignAttribute>::New();
+    assign->SetInputConnection(visualizedData.processedOutputPort(port));
+    assign->Assign(m_dataArrayName.toUtf8().data(), vtkDataSetAttributes::SCALARS,
         attributeLocation == IndexType::points ? vtkAssignAttribute::POINT_DATA : vtkAssignAttribute::CELL_DATA);
+
+    auto modifiedListener = vtkSmartPointer<AttributeArrayModifiedListener>::New();
+    modifiedListener->SetInputConnection(assign->GetOutputPort());
+    modifiedListener->SetAttributeLocation(attributeLocation);
+
+    connect(modifiedListener, &AttributeArrayModifiedListener::attributeModified,
+        this, &AttributeArrayComponentMapping::forceUpdateBoundsLocked);
+
+    filter = modifiedListener;
+
     return filter;
 }
 

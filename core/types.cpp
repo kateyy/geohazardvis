@@ -1,6 +1,8 @@
 #include <core/types.h>
 
 #include <cassert>
+#include <ostream>
+#include <string>
 
 #include <QDebug>
 
@@ -22,40 +24,54 @@ DataSelection::Indices_t genIndexArrayOrEmpty(vtkIdType index)
     return indices;
 }
 
+std::string toString(ContentType contentType)
+{
+    switch (contentType)
+    {
+    case ContentType::Rendered3D: return "Rendered3D";
+    case ContentType::Rendered2D: return "Rendered2D";
+    case ContentType::Context2D: return "Context2D";
+    case ContentType::invalid: return "invalid";
+    default: return "[invalid value: " + std::to_string(static_cast<int>(contentType)) + "]";
+    }
+}
+
+std::string toString(IndexType indexType)
+{
+    switch (indexType)
+    {
+    case IndexType::points: return "points";
+    case IndexType::cells: return "cells";
+    case IndexType::invalid: return "invalid";
+    default: return "[invalid value: " + std::to_string(static_cast<int>(indexType)) + "]";
+    }
+}
+
 }
 
 
 QDebug & operator<<(QDebug & qdebug, ContentType contentType)
 {
-    qdebug.noquote().nospace() << [contentType] () -> QString
-    {
-        switch (contentType)
-        {
-        case ContentType::Rendered3D: return QString("Rendered3D");
-        case ContentType::Rendered2D: return QString("Rendered2D");
-        case ContentType::Context2D: return QString("Context2D");
-        case ContentType::invalid: return QString("invalid");
-        default: return "[invalid value: " + QString::number(static_cast<int>(contentType)) + "]";
-        }
-    }();
-
+    qdebug.noquote().nospace() << QString::fromStdString(toString(contentType));
     return qdebug.maybeQuote().maybeSpace();
+}
+
+std::ostream & operator<<(std::ostream & stream, ContentType contentType)
+{
+    stream << toString(contentType);
+    return stream;
 }
 
 QDebug & operator<<(QDebug & qdebug, IndexType indexType)
 {
-    qdebug.noquote().nospace() << [indexType] () -> QString
-    {
-        switch (indexType)
-        {
-        case IndexType::points: return QString("points");
-        case IndexType::cells: return QString("cells");
-        case IndexType::invalid: return QString("invalid");
-        default: return "[invalid value: " + QString::number(static_cast<int>(indexType)) + "]";
-        }
-    }();
-
+    qdebug.noquote().nospace() << QString::fromStdString(toString(indexType));
     return qdebug.maybeQuote().maybeSpace();
+}
+
+std::ostream & operator<<(std::ostream & stream, IndexType indexType)
+{
+    stream << toString(indexType);
+    return stream;
 }
 
 

@@ -128,15 +128,14 @@ protected:
     virtual void dataComponentChangedEvent();
     virtual void minMaxChangedEvent();
 
+    void forceUpdateBoundsLocked() const;
+    void updateBoundsLocked() const;
+
 protected:
     bool m_isValid;
     std::vector<AbstractVisualizedData *> m_visualizedData;
     vtkSmartPointer<vtkLookupTable> m_lut;
     vtkSmartPointer<vtkScalarsToColors> m_ownLut;
-
-private:
-    void forceUpdateBoundsLocked() const;
-    void updateBoundsLocked() const;
 
 private:
     const int m_numDataComponents;

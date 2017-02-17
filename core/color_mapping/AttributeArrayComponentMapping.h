@@ -51,4 +51,5 @@ private:
      * Assumption: for a specific data set type, a specific attribute location is generally used
      * e.g.: point data for images, cell data for polygonal data */
     const std::map<AbstractVisualizedData *, IndexType> m_attributeLocations;
+    std::map<AbstractVisualizedData *, std::map<unsigned int, vtkSmartPointer<vtkAlgorithm>>> m_filters;
 };

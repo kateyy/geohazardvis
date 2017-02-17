@@ -1,5 +1,6 @@
 #pragma once
 
+#include <iosfwd>
 #include <vector>
 
 #include <vtkType.h>
@@ -30,8 +31,10 @@ enum class IndexType
 };
 
 
-QDebug & operator<<(QDebug & qdebug, ContentType contentType);
-QDebug & operator<<(QDebug & qdebug, IndexType indexType);
+CORE_API QDebug & operator<<(QDebug & qdebug, ContentType contentType);
+CORE_API std::ostream & operator<<(std::ostream & stream, ContentType contentType);
+CORE_API QDebug & operator<<(QDebug & qdebug, IndexType indexType);
+CORE_API std::ostream & operator<<(std::ostream & stream, IndexType indexType);
 
 
 struct VisualizationSelection;
