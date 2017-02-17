@@ -3,6 +3,8 @@
 #include <algorithm>
 #include <ostream>
 
+#include <QDataStream>
+
 #include <vtkCharArray.h>
 #include <vtkFieldData.h>
 #include <vtkInformation.h>
@@ -25,6 +27,18 @@ vtkInformationKeyMacro(ReferencedCoordinateSystemSpecification, ReferencePointLo
 
 namespace
 {
+
+bool streamOperatorsRegistered = [] ()
+{
+    qRegisterMetaTypeStreamOperators<CoordinateSystemType>(
+        "CoordinateSystemType");
+    qRegisterMetaTypeStreamOperators<CoordinateSystemSpecification>(
+        "CoordinateSystemSpecification");
+    qRegisterMetaTypeStreamOperators<ReferencedCoordinateSystemSpecification>(
+        "ReferencedCoordinateSystemSpecification");
+
+    return true;
+}();
 
 const QString & coordinateSytemTypeStringUnkown()
 {
@@ -546,16 +560,66 @@ ReferencedCoordinateSystemSpecification ReferencedCoordinateSystemSpecification:
     return spec;
 }
 
+QDataStream & operator<<(QDataStream & stream, const CoordinateSystemType & coordsType)
+{
+    stream << coordsType.toString();
+    return stream;
+}
+
+QDataStream & operator>>(QDataStream & stream, CoordinateSystemType & coordsType)
+{
+    QString type;
+    stream >> type;
+    coordsType.fromString(type);
+    return stream;
+}
+
 std::ostream & operator<<(std::ostream & os, const CoordinateSystemType & coordsType)
 {
     os << coordsType.toString().toStdString();
     return os;
 }
 
+QDataStream & operator<<(QDataStream & stream, const CoordinateSystemSpecification & spec)
+{
+    stream << spec.type
+        << spec.geographicSystem
+        << spec.globalMetricSystem
+        << spec.unitOfMeasurement;
+    return stream;
+}
+
+QDataStream & operator>>(QDataStream & stream, CoordinateSystemSpecification & spec)
+{
+    stream >> spec.type
+        >> spec.geographicSystem
+        >> spec.globalMetricSystem
+        >> spec.unitOfMeasurement;
+    return stream;
+}
+
 std::ostream & operator<<(std::ostream & os, const CoordinateSystemSpecification & spec)
 {
     os << spec.type << " (" << spec.geographicSystem.toStdString() << ", " << spec.globalMetricSystem.toStdString() << ")";
     return os;
+}
+
+QDataStream & operator<<(QDataStream & stream, const ReferencedCoordinateSystemSpecification & spec)
+{
+    stream << static_cast<const CoordinateSystemSpecification &>(spec)
+        << spec.referencePointLatLong.GetX() << spec.referencePointLatLong.GetY()
+        << spec.referencePointLocalRelative.GetX() << spec.referencePointLocalRelative.GetY();
+    return stream;
+}
+
+QDataStream & operator>>(QDataStream & stream, ReferencedCoordinateSystemSpecification & spec)
+{
+    double refX, refY, localX, localY;
+    stream >> static_cast<CoordinateSystemSpecification &>(spec)
+        >> refX >> refY >> localX >> localY;
+    spec.referencePointLatLong = { refX, refY };
+    spec.referencePointLocalRelative = { localX, localY };
+    return stream;
 }
 
 std::ostream & operator<<(std::ostream & os, const ReferencedCoordinateSystemSpecification & spec)

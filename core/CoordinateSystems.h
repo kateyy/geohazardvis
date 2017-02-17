@@ -5,6 +5,7 @@
 #include <iosfwd>
 #include <vector>
 
+#include <QMetaType>
 #include <QString>
 
 #include <vtkVector.h>
@@ -12,6 +13,7 @@
 #include <core/CoordinateSystems_fwd.h>
 
 
+class QDataStream;
 class vtkFieldData;
 class vtkInformation;
 class vtkInformationDoubleVectorMetaDataKey;
@@ -46,9 +48,10 @@ struct CORE_API CoordinateSystemType
     CoordinateSystemType(CoordinateSystemType &&) = default;
     CoordinateSystemType & operator=(const CoordinateSystemType &) = default;
     CoordinateSystemType & operator=(CoordinateSystemType &&) = default;
-
-    friend CORE_API std::ostream & operator<<(std::ostream & os, const CoordinateSystemType & coordsType);
 };
+Q_DECLARE_METATYPE(CoordinateSystemType)
+CORE_API QDataStream & operator<<(QDataStream & stream, const CoordinateSystemType & coordsType);
+CORE_API QDataStream & operator>>(QDataStream & stream, CoordinateSystemType & coordsType);
 
 CORE_API std::ostream & operator<<(std::ostream & os, const CoordinateSystemType & coordsType);
 
@@ -114,6 +117,9 @@ struct CORE_API CoordinateSystemSpecification
 
     friend CORE_API std::ostream & operator<<(std::ostream & os, const CoordinateSystemSpecification & spec);
 };
+Q_DECLARE_METATYPE(CoordinateSystemSpecification)
+CORE_API QDataStream & operator<<(QDataStream & stream, const CoordinateSystemSpecification & spec);
+CORE_API QDataStream & operator>>(QDataStream & stream, CoordinateSystemSpecification & spec);
 
 CORE_API std::ostream & operator<<(std::ostream & os, const CoordinateSystemSpecification & spec);
 
@@ -168,5 +174,8 @@ struct CORE_API ReferencedCoordinateSystemSpecification : public CoordinateSyste
 
     friend CORE_API std::ostream & operator<<(std::ostream & os, const ReferencedCoordinateSystemSpecification & spec);
 };
+Q_DECLARE_METATYPE(ReferencedCoordinateSystemSpecification)
+CORE_API QDataStream & operator<<(QDataStream & stream, const ReferencedCoordinateSystemSpecification & spec);
+CORE_API QDataStream & operator>>(QDataStream & stream, ReferencedCoordinateSystemSpecification & spec);
 
 CORE_API std::ostream & operator<<(std::ostream & os, const ReferencedCoordinateSystemSpecification & spec);
