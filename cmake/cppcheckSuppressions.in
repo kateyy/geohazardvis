@@ -7,14 +7,15 @@ unmatchedSuppression
 
 *:@PROJECT_SOURCE_DIR@/core/ThirdParty/ParaView/*
 
-noExplicitConstructor:@PROJECT_SOURCE_DIR@/core/CoordinateSystems.h:35
+noExplicitConstructor:@PROJECT_SOURCE_DIR@/core/CoordinateSystems.h:37
 
 // False positives
 
 assertWithSideEffect:@PROJECT_SOURCE_DIR@/core/data_objects/ImageDataObject.cpp:109
 assertWithSideEffect:@PROJECT_SOURCE_DIR@/core/data_objects/VectorGrid3DDataObject.cpp:100
 assertWithSideEffect:@PROJECT_SOURCE_DIR@/core/rendered_data/RenderedImageData.cpp:43
-assertWithSideEffect:@PROJECT_SOURCE_DIR@/core/types.cpp:182
+assertWithSideEffect:@PROJECT_SOURCE_DIR@/core/types.cpp:198
 
 unusedStructMember:@PROJECT_SOURCE_DIR@/core/io/MetaTextFileReader.h:33
 unusedStructMember:@PROJECT_SOURCE_DIR@/core/io/MetaTextFileReader.h:34
+unusedStructMember:@PROJECT_SOURCE_DIR@/core/utility/vtkpipelinehelper.h:16

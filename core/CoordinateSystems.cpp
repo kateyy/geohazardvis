@@ -614,7 +614,7 @@ QDataStream & operator<<(QDataStream & stream, const ReferencedCoordinateSystemS
 
 QDataStream & operator>>(QDataStream & stream, ReferencedCoordinateSystemSpecification & spec)
 {
-    double refX, refY, localX, localY;
+    double refX = {}, refY = {}, localX = {}, localY = {};
     stream >> static_cast<CoordinateSystemSpecification &>(spec)
         >> refX >> refY >> localX >> localY;
     spec.referencePointLatLong = { refX, refY };
