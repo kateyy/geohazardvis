@@ -177,7 +177,7 @@ TEST_F(TemporalPipelineMediator_test, UpdateDownStreamAlgorithm)
 
     auto output = vtkDataSet::SafeDownCast(downStreamAlgorithm->GetOutput());
     ASSERT_TRUE(output);
-    auto scalars = vtkFloatArray::SafeDownCast(output->GetPointData()->GetArray(attributeName()));
+    auto scalars = vtkFloatArray::FastDownCast(output->GetPointData()->GetAbstractArray(attributeName()));
     ASSERT_TRUE(scalars);
 
     ASSERT_EQ(timeSteps()[index], scalars->GetInformation()->Get(vtkDataObject::DATA_TIME_STEP()));

@@ -28,9 +28,9 @@ void qstringToVtkArray(const QString & string, vtkCharArray & array)
     }
 }
 
-QString vtkArrayToQString(vtkDataArray & data)
+QString vtkArrayToQString(vtkAbstractArray & data)
 {
-    if (auto chars = vtkCharArray::SafeDownCast(&data))
+    if (auto chars = vtkCharArray::FastDownCast(&data))
     {
         return QString::fromUtf8(
             chars->GetPointer(0),

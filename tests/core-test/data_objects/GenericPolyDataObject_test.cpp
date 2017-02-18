@@ -63,7 +63,7 @@ TEST_F(GenericPolyDataObject_test, TransformCoords_PointCloud_m_to_km_metricGlob
 {
     const int numPoints = 6;
     auto pointCloud = genPointCloud(numPoints);
-    auto coordsM = vtkFloatArray::SafeDownCast(pointCloud->polyDataSet().GetPoints()->GetData());
+    auto coordsM = vtkFloatArray::FastDownCast(pointCloud->polyDataSet().GetPoints()->GetData());
 
     auto specKm = defaultCoordsSpec();
     specKm.unitOfMeasurement = "km";
@@ -76,7 +76,7 @@ TEST_F(GenericPolyDataObject_test, TransformCoords_PointCloud_m_to_km_metricGlob
     auto inKm = vtkPolyData::SafeDownCast(inKmDataSet);
     ASSERT_TRUE(inKm);
 
-    auto coordsKm = vtkFloatArray::SafeDownCast(inKm->GetPoints()->GetData());
+    auto coordsKm = vtkFloatArray::FastDownCast(inKm->GetPoints()->GetData());
     ASSERT_TRUE(coordsKm);
 
     vtkVector3f pointM, pointKm;
@@ -95,7 +95,7 @@ TEST_F(GenericPolyDataObject_test, TransformCoords_PointCloud_m_to_km_metricLoca
     spec.type = CoordinateSystemType::metricLocal;
     const int numPoints = 6;
     auto pointCloud = genPointCloud(numPoints, spec);
-    auto coordsM = vtkFloatArray::SafeDownCast(pointCloud->polyDataSet().GetPoints()->GetData());
+    auto coordsM = vtkFloatArray::FastDownCast(pointCloud->polyDataSet().GetPoints()->GetData());
 
     auto specKm = spec;
     specKm.unitOfMeasurement = "km";
@@ -108,7 +108,7 @@ TEST_F(GenericPolyDataObject_test, TransformCoords_PointCloud_m_to_km_metricLoca
     auto inKm = vtkPolyData::SafeDownCast(inKmDataSet);
     ASSERT_TRUE(inKm);
 
-    auto coordsKm = vtkFloatArray::SafeDownCast(inKm->GetPoints()->GetData());
+    auto coordsKm = vtkFloatArray::FastDownCast(inKm->GetPoints()->GetData());
     ASSERT_TRUE(coordsKm);
 
     vtkVector3f pointM, pointKm;
@@ -129,7 +129,7 @@ TEST_F(GenericPolyDataObject_test, TransformCoords_PointCloud_m_to_km_storedCoor
     specGlobalM.referencePointLocalRelative = { 0.5, 0.5 };
     const int numPoints = 6;
     auto pointCloud = genPointCloud(numPoints, specGlobalM);
-    auto coordsGlobalM = vtkFloatArray::SafeDownCast(pointCloud->polyDataSet().GetPoints()->GetData());
+    auto coordsGlobalM = vtkFloatArray::FastDownCast(pointCloud->polyDataSet().GetPoints()->GetData());
 
     auto shiftToLocalM = -pointCloud->bounds().convertTo<float>().center();
     shiftToLocalM[2] = 0.0;
@@ -161,7 +161,7 @@ TEST_F(GenericPolyDataObject_test, TransformCoords_PointCloud_m_to_km_storedCoor
     auto localInKm = vtkPolyData::SafeDownCast(localInKmDataSet);
     ASSERT_TRUE(localInKm);
     ASSERT_TRUE(localInKm->GetPoints() && localInKm->GetPoints()->GetData());
-    auto coordsLocalKm = vtkFloatArray::SafeDownCast(localInKm->GetPoints()->GetData());
+    auto coordsLocalKm = vtkFloatArray::FastDownCast(localInKm->GetPoints()->GetData());
     ASSERT_TRUE(coordsLocalKm);
 
     vtkVector3f pointLocalM, pointLocalKm;

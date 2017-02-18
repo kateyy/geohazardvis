@@ -122,8 +122,8 @@ DataBounds DataProfile2DContextPlot::updateVisibleBounds()
 {
     auto table = m_plotLine->GetInput();
     assert(table);
-    auto xAxis = vtkDataArray::SafeDownCast(table->GetColumn(0));
-    auto yAxis = vtkDataArray::SafeDownCast(table->GetColumn(1));
+    auto xAxis = vtkDataArray::FastDownCast(table->GetColumn(0));
+    auto yAxis = vtkDataArray::FastDownCast(table->GetColumn(1));
     const vtkIdType numValues = xAxis->GetNumberOfTuples();
     assert(xAxis && yAxis && (numValues == yAxis->GetNumberOfTuples()));
 

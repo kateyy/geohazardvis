@@ -174,7 +174,7 @@ std::unique_ptr<DataObject> Loader::readFile(const QString & filename)
 
     auto getName = [] (vtkDataSet * dataSet) -> QString
     {
-        auto nameArray = vtkCharArray::SafeDownCast(dataSet->GetFieldData()->GetArray("Name"));
+        auto nameArray = vtkCharArray::FastDownCast(dataSet->GetFieldData()->GetAbstractArray("Name"));
         if (!nameArray)
         {
             return "";

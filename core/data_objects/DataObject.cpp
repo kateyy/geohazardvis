@@ -70,10 +70,10 @@ DataObject::DataObject(const QString & name, vtkDataSet * dataSet)
         connectObserver("attributeArraysChanged", *dataSet->GetFieldData(), vtkCommand::ModifiedEvent, *this, &DataObject::_attributeArraysChanged);
 
         bool resetName = true;
-        vtkFieldData * fieldData = dataSet->GetFieldData();
-        if (vtkDataArray * nameArray = fieldData->GetArray(nameAttributeName()))
+        auto fieldData = dataSet->GetFieldData();
+        if (auto nameArray = fieldData->GetAbstractArray(nameAttributeName()))
         {
-            const QString storedName = vtkArrayToQString(*nameArray);
+            const auto storedName = vtkArrayToQString(*nameArray);
             resetName = name != storedName;
         }
 

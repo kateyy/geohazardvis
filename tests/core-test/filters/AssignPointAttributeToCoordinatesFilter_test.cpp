@@ -21,7 +21,7 @@ public:
         points->SetDataTypeToFloat();
         points->SetNumberOfPoints(5);
         points->GetData()->SetName(initialPointsName.c_str());
-        initialPoints = vtkFloatArray::SafeDownCast(points->GetData());
+        initialPoints = vtkFloatArray::FastDownCast(points->GetData());
         inDs->SetPoints(points);
 
         filter = vtkSmartPointer<AssignPointAttributeToCoordinatesFilter>::New();

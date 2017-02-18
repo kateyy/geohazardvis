@@ -94,7 +94,7 @@ int SetMaskedPointScalarsToNaNFilter::RequestData(
     outData->GetPointData()->PassData(inData->GetPointData());
     outData->GetCellData()->PassData(inData->GetCellData());
 
-    auto maskPoints = vtkCharArray::SafeDownCast(inData->GetPointData()->GetArray(
+    auto maskPoints = vtkCharArray::FastDownCast(inData->GetPointData()->GetAbstractArray(
         this->ValidPointMaskArrayName));
     if (!maskPoints)
     {

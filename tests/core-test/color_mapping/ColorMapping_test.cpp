@@ -117,7 +117,7 @@ TEST_F(ColorMapping_test, DirectImageColors_renders_uchar)
     windowToImage->Update();
 
     auto renderedImage = windowToImage->GetOutput();
-    auto renderedColors = vtkUnsignedCharArray::SafeDownCast(renderedImage->GetPointData()->GetScalars());
+    auto renderedColors = vtkUnsignedCharArray::FastDownCast(renderedImage->GetPointData()->GetScalars());
     assert(renderedColors);
 
     ASSERT_EQ(colorArray->GetNumberOfTuples(), renderedColors->GetNumberOfTuples());

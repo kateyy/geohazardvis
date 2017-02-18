@@ -371,8 +371,8 @@ void RenderedPolyData::finalizePipeline()
     textureCoords->SetNormal(0, 0, 1);
     upstreamAlgorithm = textureCoords;
 
-    auto demBoundsArray = vtkDoubleArray::SafeDownCast(
-        dataObject().dataSet()->GetFieldData()->GetArray("DEM_Bounds"));
+    auto demBoundsArray = vtkDoubleArray::FastDownCast(
+        dataObject().dataSet()->GetFieldData()->GetAbstractArray("DEM_Bounds"));
     if (demBoundsArray)
     {
         assert(demBoundsArray->GetNumberOfComponents() * demBoundsArray->GetNumberOfTuples() == 6);

@@ -17,45 +17,16 @@
 #include <core/utility/DataExtent.h>
 
 
-namespace
-{
-
-template<typename ScalarType>
-struct TypeToVTKArrayType
-{
-    using type = void;
-};
-
-template<> struct TypeToVTKArrayType<float>
-{
-    using type = vtkFloatArray;
-};
-template<> struct TypeToVTKArrayType<double>
-{
-    using type = vtkDoubleArray;
-};
-
-template<typename ScalarType, typename ArrayType = typename TypeToVTKArrayType<ScalarType>::type>
-vtkSmartPointer<ArrayType> createDataArray()
-{
-    return vtkSmartPointer<ArrayType>::New();
-}
-
-}
-
-
 class DataProfile2DContextPlot_test : public ::testing::Test
 {
 public:
     template<typename ScalarType>
     std::unique_ptr<ImageDataObject> genImageWithNaNs()
     {
-        //using ScalarType = float;
-
         auto image = vtkSmartPointer<vtkImageData>::New();
         image->SetDimensions(3, 2, 1);
 
-        auto scalars = createDataArray<ScalarType>();
+        auto scalars = vtkSmartPointer<vtkAOSDataArrayTemplate<ScalarType>>::New();
         scalars->SetNumberOfTuples(image->GetNumberOfPoints());
 
         scalars->SetValue(0, std::numeric_limits<ScalarType>::quiet_NaN());
@@ -107,7 +78,7 @@ TYPED_TEST_P(PDataProfile2DContextPlot_test, NaNValuesPassedToRendering)
     ASSERT_EQ(2, table->GetNumberOfColumns());
 
     auto x = table->GetColumn(0);
-    auto y = TypeToVTKArrayType<ScalarType>::type::SafeDownCast(table->GetColumn(1));
+    auto y = vtkAOSDataArrayTemplate<ScalarType>::FastDownCast(table->GetColumn(1));
 
     ASSERT_TRUE(x != nullptr && y != nullptr);
     ASSERT_EQ(3, x->GetNumberOfValues());

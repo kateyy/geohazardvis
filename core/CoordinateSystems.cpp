@@ -138,7 +138,7 @@ void checkSetArray(vtkFieldData & fieldData, const QString & value, const char *
 {
     int arrayIndex;
     auto abstractArray = fieldData.GetAbstractArray(arrayName, arrayIndex);
-    vtkSmartPointer<vtkCharArray> charArray = vtkCharArray::SafeDownCast(abstractArray);
+    vtkSmartPointer<vtkCharArray> charArray = vtkCharArray::FastDownCast(abstractArray);
     if (abstractArray && !charArray)    // existing array with invalid type
     {
         fieldData.RemoveArray(arrayIndex);
@@ -198,7 +198,7 @@ void readIfExists(vtkFieldData & fieldData, const char * arrayName, ValueType & 
 
 void readIfExists(vtkFieldData & fieldData, const char * arrayName, QString & result)
 {
-    if (auto array = fieldData.GetArray(arrayName))
+    if (auto array = fieldData.GetAbstractArray(arrayName))
     {
         result = vtkArrayToQString(*array);
     }

@@ -34,7 +34,7 @@ std::vector<std::unique_ptr<ColorMappingData>> DirectImageColors::newInstances(c
     {
         for (auto i = 0; i < attributes->GetNumberOfArrays(); ++i)
         {
-            auto colors = vtkUnsignedCharArray::SafeDownCast(attributes->GetArray(i));
+            auto colors = vtkUnsignedCharArray::FastDownCast(attributes->GetAbstractArray(i));
             if (!colors || colors->GetNumberOfComponents() != 3)
             {
                 continue;
