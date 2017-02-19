@@ -3,13 +3,17 @@
 #include <algorithm>
 #include <cassert>
 #include <functional>
+#include <type_traits>
 
 #include <QBoxLayout>
 #include <QProgressBar>
 #include <QToolBar>
 #include <QtConcurrent/QtConcurrent>
 
+#include <vtkArrayDispatch.h>
+#include <vtkAssume.h>
 #include <vtkCellData.h>
+#include <vtkDataArrayAccessor.h>
 #include <vtkImageData.h>
 #include <vtkPointData.h>
 #include <vtkPolyData.h>
@@ -27,35 +31,89 @@
 #include <core/utility/DataExtent.h>
 #include <core/utility/InterpolationHelper.h>
 #include <core/utility/vtkCameraSynchronization.h>
+#include <core/utility/vtkvectorhelper.h>
 
 #include <gui/DataMapping.h>
 #include <gui/data_view/RendererImplementationResidual.h>
 #include <gui/data_view/RenderViewStrategy2D.h>
 
-
 namespace
 {
 
-vtkSmartPointer<vtkDataArray> projectToLineOfSight(vtkDataArray & vectors, vtkVector3d lineOfSight)
+struct ProjectToLineOfSightWorker
 {
-    assert(vectors.GetNumberOfComponents() == 3);
+    vtkVector3d lineOfSight;
+    vtkSmartPointer<vtkDataArray> projectedData;
 
-    auto output = vtkSmartPointer<vtkDataArray>::Take(vectors.NewInstance());
-    output->SetNumberOfComponents(1);
-    output->SetNumberOfTuples(vectors.GetNumberOfTuples());
-
-    lineOfSight.Normalize();
-
-    for (vtkIdType i = 0; i < output->GetNumberOfTuples(); ++i)
+    template<typename Vector_t>
+    void operator()(Vector_t * vectors)
     {
-        vtkVector3d vector;
-        vectors.GetTuple(i, vector.GetData());
-        const auto projection = vector.Dot(lineOfSight);
-        output->SetTuple(i, &projection);
-    };
+        VTK_ASSUME(vectors->GetNumberOfComponents() == 3);
 
-    return output;
-}
+        using ValueType = typename vtkDataArrayAccessor<Vector_t>::APIType;
+
+        auto output = vtkSmartPointer<vtkAOSDataArrayTemplate<ValueType>>::New();
+        output->SetNumberOfTuples(vectors->GetNumberOfTuples());
+
+        lineOfSight.Normalize();
+        const auto los = convertTo<ValueType>(lineOfSight);
+        vtkVector3<ValueType> vector;
+
+        vtkDataArrayAccessor<Vector_t> v(vectors);
+        vtkDataArrayAccessor<Vector_t> l(output);
+
+        const auto numVectors = vectors->GetNumberOfTuples();
+        for (vtkIdType i = 0; i < numVectors; ++i)
+        {
+            v.Get(i, vector.GetData());
+            const auto projection = vector.Dot(los);
+            l.Set(i, 0, projection);
+        };
+
+        projectedData = output;
+    }
+};
+
+struct ResidualWorker
+{
+    double observationUnitFactor;
+    double modelUnitFactor;
+
+    vtkSmartPointer<vtkDataArray> residual;
+
+    template<typename Observation_t, typename Model_t>
+    void operator()(Observation_t * observation, Model_t * model)
+    {
+        VTK_ASSUME(observation->GetNumberOfComponents() == 1);
+        VTK_ASSUME(model->GetNumberOfComponents() == 1);
+        VTK_ASSUME(model->GetNumberOfTuples() == observation->GetNumberOfTuples());
+
+        using ObservationValue_t = typename vtkDataArrayAccessor<Observation_t>::APIType;
+        using ModelValue_t = typename vtkDataArrayAccessor<Model_t>::APIType;
+        using ResidualValue_t = std::common_type_t<ObservationValue_t, ModelValue_t>;
+
+        auto res = vtkSmartPointer<vtkAOSDataArrayTemplate<ResidualValue_t>>::New();
+        res->SetNumberOfValues(observation->GetNumberOfTuples());
+
+        vtkDataArrayAccessor<Observation_t> o(observation);
+        vtkDataArrayAccessor<Model_t> m(model);
+        vtkDataArrayAccessor<vtkAOSDataArrayTemplate<ResidualValue_t>> r(res);
+
+        const auto oUnit = static_cast<ObservationValue_t>(observationUnitFactor);
+        const auto mUnit = static_cast<ModelValue_t>(modelUnitFactor);
+
+        const auto numValues = res->GetNumberOfValues();
+        for (vtkIdType i = 0; i < numValues; ++i)
+        {
+            const auto diff = static_cast<ResidualValue_t>(
+                o.Get(i, 0) * oUnit
+                - m.Get(i, 0) * mUnit);
+            r.Set(i, 0, diff);
+        }
+
+        residual = res;
+    }
+};
 
 }
 
@@ -743,9 +801,9 @@ void ResidualVerificationView::updateResidual()
     assert(!m_updateMutex.try_lock());
 
     const auto & observationAttributeName = m_attributeNamesLocations[observationIndex].first;
-    bool useObservationCellData = m_attributeNamesLocations[observationIndex].second;
+    const bool useObservationCellData = m_attributeNamesLocations[observationIndex].second;
     const auto & modelAttributeName = m_attributeNamesLocations[modelIndex].first;
-    bool useModelCellData = m_attributeNamesLocations[modelIndex].second;
+    const bool useModelCellData = m_attributeNamesLocations[modelIndex].second;
 
     if (observationAttributeName.isEmpty() || modelAttributeName.isEmpty())
     {
@@ -806,7 +864,15 @@ void ResidualVerificationView::updateResidual()
             return nullptr;
         }
 
-        auto projected = projectToLineOfSight(displacement, m_inSARLineOfSight);
+        using LosDispatcher = vtkArrayDispatch::DispatchByValueType<vtkArrayDispatch::Reals>;
+        ProjectToLineOfSightWorker losWorker;
+        losWorker.lineOfSight = m_inSARLineOfSight;
+        if (!LosDispatcher::Execute(&displacement, losWorker))
+        {
+            losWorker(&displacement);
+        }
+
+        auto projected = losWorker.projectedData;
 
         auto projectedName = m_attributeNamesLocations[dataIndex].first + " (projected)";
         m_projectedAttributeNames[dataIndex] = projectedName;
@@ -863,26 +929,20 @@ void ResidualVerificationView::updateResidual()
         ? observationDataSet
         : modelDataSet;
 
-    auto residualData = vtkSmartPointer<vtkDataArray>::Take(modelLosDisp->NewInstance());
-    residualData->SetName(m_attributeNamesLocations[residualIndex].first.toUtf8().data());
-    residualData->SetNumberOfComponents(1);
-    residualData->SetNumberOfTuples(modelLosDisp->GetNumberOfTuples());
-
     const double observationUnitFactor = std::pow(10, m_observationUnitDecimalExponent);
     const double modelUnitFactor = std::pow(10, m_modelUnitDecimalExponent);
 
-    for (vtkIdType i = 0; i < residualData->GetNumberOfTuples(); ++i)
+    using ResidualDispatcher = vtkArrayDispatch::Dispatch2ByValueType<
+        vtkArrayDispatch::Reals, vtkArrayDispatch::Reals>;
+    ResidualWorker residualWorker;
+    residualWorker.observationUnitFactor = observationUnitFactor;
+    residualWorker.modelUnitFactor = modelUnitFactor;
+    if (!ResidualDispatcher::Execute(observationLosDisp, modelLosDisp, residualWorker))
     {
-        double o_value, m_value;
-        observationLosDisp->GetTuple(i, &o_value);
-        o_value *= observationUnitFactor;
-        modelLosDisp->GetTuple(i, &m_value);
-        m_value *= modelUnitFactor;
-
-        const double r_value = o_value - m_value;
-        residualData->SetTuple(i, &r_value);
+        residualWorker(observationLosDisp.Get(), modelLosDisp.Get());
     }
-
+    auto residualData = residualWorker.residual;
+    residualData->SetName(m_attributeNamesLocations[residualIndex].first.toUtf8().data());
 
     assert(!m_newResidual);
     m_newResidual = vtkSmartPointer<vtkDataSet>::Take(referenceDataSet.NewInstance());
@@ -972,17 +1032,15 @@ void ResidualVerificationView::updateGuiSelection()
 {
     updateTitle();
 
-    auto selectedVis = implementation().selection().visualization;
-
-    if (selectedVis)
+    if (implementation().selection().visualization)
     {
         return;
     }
 
-    // It's more convenient to chose on of the contents as "current", even if none is directly selected.
+    // It's more convenient to chose one of the contents as "current", even if none is directly selected.
     // Prefer to use the active sub view data.
-    // Check for the visualzation and the data object. If we are currently removing the data object,
-    // the visualzation might not be cleaned up yet.
+    // Check for the visualization and the data object. If we are currently removing the data object,
+    // the visualization might not be cleaned up yet.
     QVector<unsigned int> indices(numberOfViews);
     {
         unsigned int i = 0;
@@ -991,23 +1049,16 @@ void ResidualVerificationView::updateGuiSelection()
         indices.prepend(activeSubViewIndex());
     }
 
-    for (auto i : indices)
+    for (const auto i : indices)
     {
-        auto d = dataAt(i);
-        auto vis = m_visualizations[i].get();
+        const auto d = dataAt(i);
+        const auto vis = m_visualizations[i].get();
         if (d && vis && (&vis->dataObject() == d))
         {
-            selectedVis = vis;
-            break;
+            setVisualizationSelection(VisualizationSelection(vis));
+            return;
         }
     }
-
-    if (!selectedVis)
-    {
-        return;
-    }
-
-    setVisualizationSelection(VisualizationSelection(selectedVis));
 }
 
 DataObject * ResidualVerificationView::dataAt(unsigned int i) const
@@ -1056,14 +1107,14 @@ std::pair<QString, bool> ResidualVerificationView::findDataSetAttributeName(vtkD
     {
         if (auto scalars = dataSet.GetPointData()->GetScalars())
         {
-            if (auto name = scalars->GetName())
+            if (const auto name = scalars->GetName())
             {
                 return std::make_pair(QString::fromUtf8(name), false);
             }
         }
         else if (auto firstArray = dataSet.GetPointData()->GetArray(0))
         {
-            if (auto name = firstArray->GetName())
+            if (const auto name = firstArray->GetName())
             {
                 return std::make_pair(QString::fromUtf8(name), false);
             }
@@ -1071,14 +1122,14 @@ std::pair<QString, bool> ResidualVerificationView::findDataSetAttributeName(vtkD
 
         if (auto scalars = dataSet.GetCellData()->GetScalars())
         {
-            if (auto name = scalars->GetName())
+            if (const auto name = scalars->GetName())
             {
                 return std::make_pair(QString::fromUtf8(name), true);
             }
         }
         else if (auto firstArray = dataSet.GetCellData()->GetArray(0))
         {
-            if (auto name = firstArray->GetName())
+            if (const auto name = firstArray->GetName())
             {
                 return std::make_pair(QString::fromUtf8(name), true);
             }
@@ -1090,7 +1141,7 @@ std::pair<QString, bool> ResidualVerificationView::findDataSetAttributeName(vtkD
     {
         if (auto scalars = dataSet.GetPointData()->GetVectors())
         {
-            if (auto name = scalars->GetName())
+            if (const auto name = scalars->GetName())
             {
                 return std::make_pair(QString::fromUtf8(name), false);
             }
@@ -1105,7 +1156,7 @@ std::pair<QString, bool> ResidualVerificationView::findDataSetAttributeName(vtkD
                     continue;
                 }
 
-                if (auto name = array->GetName())
+                if (const auto name = array->GetName())
                 {
                     return std::make_pair(QString::fromUtf8(name), false);
                 }
@@ -1114,7 +1165,7 @@ std::pair<QString, bool> ResidualVerificationView::findDataSetAttributeName(vtkD
 
         if (auto scalars = dataSet.GetCellData()->GetVectors())
         {
-            if (auto name = scalars->GetName())
+            if (const auto name = scalars->GetName())
             {
                 return std::make_pair(QString::fromUtf8(name), true);
             }
@@ -1129,7 +1180,7 @@ std::pair<QString, bool> ResidualVerificationView::findDataSetAttributeName(vtkD
                     continue;
                 }
 
-                if (auto name = array->GetName())
+                if (const auto name = array->GetName())
                 {
                     return std::make_pair(QString::fromUtf8(name), false);
                 }
@@ -1138,8 +1189,6 @@ std::pair<QString, bool> ResidualVerificationView::findDataSetAttributeName(vtkD
         return{};
     };
 
-    bool isPoly = vtkPolyData::SafeDownCast(&dataSet) != nullptr;
-
     if (inputType == observationIndex)
     {
         return checkDefaultScalars(dataSet);
@@ -1147,7 +1196,7 @@ std::pair<QString, bool> ResidualVerificationView::findDataSetAttributeName(vtkD
 
     if (inputType == modelIndex)
     {
-        if (isPoly)
+        if (vtkPolyData::SafeDownCast(&dataSet) != nullptr)
         {
             // assuming that we store attributes in polygonal data always per cell
             auto scalars = dataSet.GetCellData()->GetScalars();
@@ -1161,15 +1210,14 @@ std::pair<QString, bool> ResidualVerificationView::findDataSetAttributeName(vtkD
             }
             if (scalars)
             {
-                auto name = scalars->GetName();
-                if (name)
+                if (const auto name = scalars->GetName())
                 {
                     return std::make_pair(QString::fromUtf8(name), true);
                 }
             }
         }
 
-        auto result = checkDefaultVectors(dataSet);
+        const auto result = checkDefaultVectors(dataSet);
         if (!result.first.isEmpty())
         {
             return result;
