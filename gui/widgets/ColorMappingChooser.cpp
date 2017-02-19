@@ -366,10 +366,13 @@ void ColorMappingChooser::checkRemovedData(const QList<AbstractVisualizedData *>
         return;
     }
 
-    auto && mappingVis = m_mapping->visualizedData();
+    auto mappingVis = m_mapping->visualizedData();
+    std::sort(mappingVis.begin(), mappingVis.end());
+    auto con = content;
+    std::sort(con.begin(), con.end());
 
     std::vector<AbstractVisualizedData *> intersection;
-    std::set_intersection(content.begin(), content.end(),
+    std::set_intersection(con.begin(), con.end(),
         mappingVis.begin(), mappingVis.end(),
         std::back_inserter(intersection));
 
