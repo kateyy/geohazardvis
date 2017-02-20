@@ -19,16 +19,17 @@ QString arrayToString(const std::array<ValueType, Size> & a,
 template<typename ValueType, size_t Size>
 void stringToArray(const QString & s, std::array<ValueType, Size> & resultArray)
 {
-    auto parts = s.split(" ");
-    if (parts.size() < Size)
+    const auto parts = s.split(" ");
+    const auto numParts = static_cast<size_t>(parts.size());
+    if (numParts < Size)
     {
         resultArray = {};
         return;
     }
 
-    for (int i = 0; i < Size; ++i)
+    for (size_t i = 0u; i < numParts; ++i)
     {
-        resultArray[i] = static_cast<ValueType>(parts[i].toDouble());
+        resultArray[i] = static_cast<ValueType>(parts[static_cast<int>(i)].toDouble());
     }
 }
 
@@ -43,7 +44,7 @@ std::array<ValueType, Size> stringToArray(const QString & s)
 template<typename ValueType, int Size>
 vtkVector<ValueType, Size> stringToVector(const QString & s)
 {
-    vtkVector<T, Size> result;
+    vtkVector<ValueType, Size> result;
 
     stringToVector(s, result);
 

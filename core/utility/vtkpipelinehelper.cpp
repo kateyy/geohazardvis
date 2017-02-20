@@ -13,7 +13,7 @@ void printPipeline(vtkAlgorithm * pipelineEnd)
     std::cout << print(pipelineEnd);
 }
 
-PrintHelper vtkpipelinehelper::print(vtkAlgorithm * pipelineEnd)
+PrintHelper print(vtkAlgorithm * pipelineEnd)
 {
     return PrintHelper{ pipelineEnd };
 }
