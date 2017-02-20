@@ -123,6 +123,13 @@ int main(int argc, char** argv)
     QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
 #endif
 
+#if VTK_RENDERING_BACKEND == 2
+    // Enforce desktop OpenGL, as Angle (OpenGL ES 2.0) and software OpenGL (2.0) are not
+    // sufficient for VTK's new OpenGL backend.
+    // By default, Qt switches to Angle on some older systems (e.g., Intel HD 3000 / Windows).
+    QCoreApplication::setAttribute(Qt::AA_UseDesktopOpenGL);
+#endif
+
     QCoreApplication::setApplicationName(config::metaProjectName);
 
     Application app(argc, argv);
