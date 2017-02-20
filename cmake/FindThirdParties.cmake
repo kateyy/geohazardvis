@@ -296,7 +296,11 @@ else()
     endif()
 endif()
 
-deploy_license_file("libzeug" "${libzeug_DIR}/LICENSE")
+if (WIN32)
+    deploy_license_file("libzeug" "${libzeug_DIR}/LICENSE")
+else()
+    deploy_license_file("libzeug" "${libzeug_DIR}/share/libzeug/LICENSE")
+endif()
 
 
 #========= Third Party Deployment =========
@@ -316,7 +320,7 @@ if (OPTION_INSTALL_3RDPARTY_BINARIES)
             # We have to rely on this correct setup here.
             foreach(_libName ${actualVTKLibraries})
                 get_filename_component(_realPath "lib${_libName}-${VTK_MAJOR_VERSION}.${VTK_MINOR_VERSION}.so" REALPATH
-                    BASE_DIR ${VTK_INSTALL_PREFIX}/lib)
+                    BASE_DIR ${VTK_DIR}/lib)
                 list(APPEND _vtkDeployFiles ${_realPath})
             endforeach()
         endif()
