@@ -303,6 +303,12 @@ if(TARGET libzeug)
     add_dependencies(${target} libzeug)
 endif()
 
+target_include_directories(${target}
+    PUBLIC
+        ${PROJECT_SOURCE_DIR}
+        ${PROJECT_BINARY_DIR}
+)
+
 target_include_directories(${target} SYSTEM
     PUBLIC
         ${Qt5Core_INCLUDE_DIRS} # disable warnings produced by Qt headers (GCC)

@@ -154,11 +154,16 @@ source_group_by_path(${CMAKE_CURRENT_SOURCE_DIR} ".*" "" "CMakeLists.txt")
 add_library(${target} SHARED ${sources} ${UI_Srcs} ${QRC_Srcs})
 
 target_include_directories(${target}
-    PRIVATE ${CMAKE_CURRENT_BINARY_DIR}
+    PUBLIC
+        ${PROJECT_SOURCE_DIR}
+        ${PROJECT_BINARY_DIR}
+    PRIVATE
+        ${CMAKE_CURRENT_BINARY_DIR}
 )
 
 target_include_directories(${target} SYSTEM
-    PUBLIC ${Qt5Gui_INCLUDE_DIRS} # disable warnings produced by Qt headers (GCC)
+    PUBLIC
+        ${Qt5Gui_INCLUDE_DIRS} # disable warnings produced by Qt headers (GCC)
 )
 
 target_link_libraries(${target}

@@ -209,11 +209,6 @@ endif()
 #install(FILES LICENSE DESTINATION               ${INSTALL_ROOT})
 
 
-include_directories(
-    ${PROJECT_BINARY_DIR}
-    ${PROJECT_SOURCE_DIR}
-)
-
 include(cmake/FindThirdParties.cmake)
 
 
