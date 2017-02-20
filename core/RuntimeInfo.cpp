@@ -100,14 +100,7 @@ const QString & RuntimeInfo::dataPath()
 
 const QString & RuntimeInfo::pluginsPath()
 {
-#if WIN32
-    static const QString path = QDir(internalInfos().binariesBaseDir).filePath(config::installPluginsSharedRelativePath);
-#else
     static const QString path = QDir(internalInfos().binariesBaseDir).filePath(
-        internalInfos().isInstalled
-            ? config::installPluginsSharedRelativePath
-            : QString{}    // linux CMake build puts all compiled targets into the build root folder
-        );
-#endif
+        config::installPluginsSharedRelativePath);
     return path;
 }

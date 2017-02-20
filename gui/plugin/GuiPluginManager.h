@@ -12,8 +12,9 @@ class GuiPluginLibrary;
 
 
 /**
-Plugin loading and management based on gloperate's plugin system
-@see https://github.com/cginternals/gloperate
+ * Plugin loading and management based on gloperate's plugin system
+ *
+ * @see https://github.com/cginternals/gloperate
 */
 class GuiPluginManager
 {
@@ -29,8 +30,8 @@ public:
     /** Load all plugins found in the search paths */
     void scan(GuiPluginInterface pluginInterface);
 
-    const QList<GuiPlugin *> & plugins() const;
-    QList<GuiPluginLibrary *> pluginLibraries() const;
+    const std::vector<GuiPlugin *> & plugins() const;
+    std::vector<GuiPluginLibrary *> pluginLibraries() const;
 
 private:
     bool loadLibrary(const QString & filePath, GuiPluginInterface && pluginInterface);
@@ -40,5 +41,5 @@ private:
     QStringList m_searchPaths;
 
     std::vector<std::unique_ptr<GuiPluginLibrary>> m_libraries;
-    QList<GuiPlugin *> m_plugins;
+    std::vector<GuiPlugin *> m_plugins;
 };

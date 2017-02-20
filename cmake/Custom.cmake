@@ -76,9 +76,9 @@ function(configure_cxx_target target)
         else()
             set_target_properties(${target}
                 PROPERTIES
-                RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/plugins"
-                LIBRARY_OUTPUT_DIRECTORY "${RUNTIME_OUTPUT_DIRECTORY}"
-                ARCHIVE_OUTPUT_DIRECTORY "${RUNTIME_OUTPUT_DIRECTORY}"
+                RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${INSTALL_PLUGINS_BIN}"
+                LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${INSTALL_PLUGINS_SHARED}"
+                ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${INSTALL_PLUGINS_LIB}"
             )
         endif()
     endif()

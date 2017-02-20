@@ -127,18 +127,18 @@ void GuiPluginManager::scan(GuiPluginInterface pluginInterface)
     }
 }
 
-const QList<GuiPlugin *> & GuiPluginManager::plugins() const
+const std::vector<GuiPlugin *> & GuiPluginManager::plugins() const
 {
     return m_plugins;
 }
 
-QList<GuiPluginLibrary *> GuiPluginManager::pluginLibraries() const
+std::vector<GuiPluginLibrary *> GuiPluginManager::pluginLibraries() const
 {
-    QList<GuiPluginLibrary *> libs;
+    std::vector<GuiPluginLibrary *> libs;
 
     for (auto && it : m_libraries)
     {
-        libs << it.get();
+        libs.push_back(it.get());
     }
 
     return libs;
@@ -162,15 +162,14 @@ bool GuiPluginManager::loadLibrary(const QString & filePath, GuiPluginInterface 
         return false;
     }
 
-    library->initialize(std::move(pluginInterface));
+    library->initialize(std::forward<GuiPluginInterface>(pluginInterface));
 
     if (auto plugin = library->plugin())
     {
-        m_plugins << plugin;
+        m_plugins.push_back(plugin);
     }
 
-    // cast to generic library class and store in member list
-    m_libraries.push_back(std::unique_ptr<GuiPluginLibrary>{ library.release() });
+    m_libraries.emplace_back(std::move(library));
 
     return true;
 }
