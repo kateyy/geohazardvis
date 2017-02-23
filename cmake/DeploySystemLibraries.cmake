@@ -1,7 +1,16 @@
 
 if (MSVC)
+    if (CMAKE_VERSION VERSION_LESS 3.8)
+        message(WARNING "MSVC Runtime deployment is only tested with CMake version 3.8 or higher.")
+    endif()
+
     set(CMAKE_INSTALL_OPENMP_LIBRARIES ON)
+    set(CMAKE_INSTALL_UCRT_LIBRARIES ON)
     set(CMAKE_INSTALL_SYSTEM_RUNTIME_DESTINATION ${INSTALL_SHARED})
+    option(OPTION_INSTALL_DEBUG_MSVC_RUNTIME
+        "Set to ON to install Debug instead of Release MSVC runtime libraries" OFF)
+    set(CMAKE_INSTALL_DEBUG_LIBRARIES ${OPTION_INSTALL_DEBUG_MSVC_RUNTIME})
+    set(CMAKE_INSTALL_DEBUG_LIBRARIES_ONLY ${OPTION_INSTALL_DEBUG_MSVC_RUNTIME})
     include(InstallRequiredSystemLibraries)
 
 elseif (UNIX)
