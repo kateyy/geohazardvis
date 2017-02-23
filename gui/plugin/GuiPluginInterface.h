@@ -1,8 +1,7 @@
 #pragma once
 
 #include <functional>
-
-#include <QList>
+#include <vector>
 
 #include <gui/gui_api.h>
 
@@ -49,5 +48,5 @@ private:
 private:
     MainWindow * m_mainWindow;
     DataMapping * m_dataMapping;
-    QList<QDockWidget *> m_widgets;
+    std::vector<QDockWidget *> m_widgets;
 };

@@ -1,13 +1,15 @@
 #include "GuiPlugin.h"
 
+#include <utility>
+
 
 GuiPlugin::GuiPlugin(
     const QString & name, const QString & description, const QString & vendor, const QString & version, GuiPluginInterface && pluginInterface)
-    : m_name(name)
-    , m_description(description)
-    , m_vendor(vendor)
-    , m_version(version)
-    , m_pluginInterface(pluginInterface)
+    : m_name{ name }
+    , m_description{ description }
+    , m_vendor{ vendor }
+    , m_version{ version }
+    , m_pluginInterface{ std::forward<GuiPluginInterface>(pluginInterface) }
 {
 }
 

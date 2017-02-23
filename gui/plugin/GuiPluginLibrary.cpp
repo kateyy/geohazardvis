@@ -1,5 +1,7 @@
 #include "GuiPluginLibrary.h"
 
+#include <utility>
+
 
 GuiPluginLibrary::GuiPluginLibrary(const QString & filePath)
     : m_filePath(filePath)
@@ -24,7 +26,7 @@ void GuiPluginLibrary::initialize(GuiPluginInterface && pluginInterface)
 {
     if (m_initPtr != nullptr)
     {
-        (*m_initPtr)(pluginInterface);
+        (*m_initPtr)(std::forward<GuiPluginInterface>(pluginInterface));
     }
 }
 

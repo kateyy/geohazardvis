@@ -21,7 +21,7 @@ class GuiPluginInterface;
     \
     extern "C" GUI_PLUGIN_API void initialize(GuiPluginInterface && pluginInterface) \
     { \
-        g_plugin = new CLASS(NAME, DESCRIPTION, VENDOR, VERSION, std::move(pluginInterface)); \
+        g_plugin = new CLASS(NAME, DESCRIPTION, VENDOR, VERSION, std::forward<GuiPluginInterface>(pluginInterface)); \
     } \
     \
     extern "C" GUI_PLUGIN_API void release() \

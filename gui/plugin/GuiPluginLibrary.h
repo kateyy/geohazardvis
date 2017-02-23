@@ -10,7 +10,7 @@ class GuiPluginInterface;
 class GuiPluginLibrary
 {
 public:
-    using init_ptr = void(*)(GuiPluginInterface &);
+    using init_ptr = void(*)(GuiPluginInterface &&);
     using plugin_ptr = GuiPlugin * (*)();
     using release_ptr = void(*)();
 

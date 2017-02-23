@@ -1,6 +1,8 @@
 #include "gui/plugin/GuiPluginManager.h"
 
 #include <algorithm>
+#include <utility>
+
 #include <sys/stat.h>
 
 #ifdef WIN32

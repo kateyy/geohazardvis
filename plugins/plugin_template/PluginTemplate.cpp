@@ -1,5 +1,7 @@
 #include "PluginTemplate.h"
 
+#include <utility>
+
 #include <QDockWidget>
 #include <QLineEdit>
 #include <QSettings>
@@ -14,7 +16,7 @@ const char settingsPath[] = "PluginTemplate/EditText";
 
 
 PluginTemplate::PluginTemplate(const QString & name, const QString & description, const QString & vendor, const QString & version, GuiPluginInterface && pluginInterface)
-    : GuiPlugin(name, description, vendor, version, std::move(pluginInterface))
+    : GuiPlugin(name, description, vendor, version, std::forward<GuiPluginInterface>(pluginInterface))
     , m_dockWidget(std::make_unique<QDockWidget>())
 {
     QString text;

@@ -22,8 +22,8 @@ const QString & pluginsSettingsGroup()
 
 
 GuiPluginInterface::GuiPluginInterface(MainWindow & mainWindow, DataMapping & dataMapping)
-    : m_mainWindow(&mainWindow)
-    , m_dataMapping(&dataMapping)
+    : m_mainWindow{ &mainWindow }
+    , m_dataMapping{ &dataMapping }
 {
 }
 
@@ -119,10 +119,10 @@ DataMapping & GuiPluginInterface::dataMapping() const
 }
 
 GuiPluginInterface::GuiPluginInterface(const GuiPluginInterface & other)
-    : m_mainWindow(other.m_mainWindow)
-    , m_dataMapping(other.m_dataMapping)
+    : m_mainWindow{ other.m_mainWindow }
+    , m_dataMapping{ other.m_dataMapping }
+    , m_widgets{ other.m_widgets }
 {
-    assert(m_widgets.empty() && other.m_widgets.empty());
 }
 
 void swap(GuiPluginInterface & lhs, GuiPluginInterface & rhs)
@@ -133,12 +133,12 @@ void swap(GuiPluginInterface & lhs, GuiPluginInterface & rhs)
 
     swap(lhs.m_mainWindow, rhs.m_mainWindow);
     swap(lhs.m_dataMapping, rhs.m_dataMapping);
-    assert(lhs.m_widgets.empty() && rhs.m_widgets.empty());
+    swap(lhs.m_widgets, rhs.m_widgets);
 }
 
 GuiPluginInterface::GuiPluginInterface()
-    : m_mainWindow(nullptr)
-    , m_dataMapping(nullptr)
+    : m_mainWindow{ nullptr }
+    , m_dataMapping{ nullptr }
 {
 }
 
@@ -150,6 +150,7 @@ GuiPluginInterface & GuiPluginInterface::operator=(GuiPluginInterface other)
 }
 
 GuiPluginInterface::GuiPluginInterface(GuiPluginInterface && other)
+    : GuiPluginInterface()
 {
     swap(*this, other);
 }
