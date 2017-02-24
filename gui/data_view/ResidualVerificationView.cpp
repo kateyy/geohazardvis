@@ -15,10 +15,11 @@
 #include <vtkCellData.h>
 #include <vtkDataArrayAccessor.h>
 #include <vtkImageData.h>
+#include <vtkInteractorStyle.h>
 #include <vtkPointData.h>
 #include <vtkPolyData.h>
 #include <vtkRenderWindowInteractor.h>
-#include <vtkInteractorStyle.h>
+#include <vtkSMPTools.h>
 #include <vtkVector.h>
 
 #include <core/AbstractVisualizedData.h>
@@ -57,18 +58,21 @@ struct ProjectToLineOfSightWorker
 
         lineOfSight.Normalize();
         const auto los = convertTo<ValueType>(lineOfSight);
-        vtkVector3<ValueType> vector;
 
         vtkDataArrayAccessor<Vector_t> v(vectors);
         vtkDataArrayAccessor<Vector_t> l(output);
 
-        const auto numVectors = vectors->GetNumberOfTuples();
-        for (vtkIdType i = 0; i < numVectors; ++i)
+        vtkSMPTools::For(0, vectors->GetNumberOfTuples(),
+            [v, l, los] (vtkIdType begin, vtkIdType end)
         {
-            v.Get(i, vector.GetData());
-            const auto projection = vector.Dot(los);
-            l.Set(i, 0, projection);
-        };
+            vtkVector3<ValueType> vector;
+            for (vtkIdType i = begin; i < end; ++i)
+            {
+                v.Get(i, vector.GetData());
+                const auto projection = vector.Dot(los);
+                l.Set(i, 0, projection);
+            };
+        });
 
         projectedData = output;
     }
@@ -102,14 +106,17 @@ struct ResidualWorker
         const auto oUnit = static_cast<ObservationValue_t>(observationUnitFactor);
         const auto mUnit = static_cast<ModelValue_t>(modelUnitFactor);
 
-        const auto numValues = res->GetNumberOfValues();
-        for (vtkIdType i = 0; i < numValues; ++i)
+        vtkSMPTools::For(0, res->GetNumberOfValues(),
+            [o, m, r, oUnit, mUnit] (vtkIdType begin, vtkIdType end)
         {
-            const auto diff = static_cast<ResidualValue_t>(
-                o.Get(i, 0) * oUnit
-                - m.Get(i, 0) * mUnit);
-            r.Set(i, 0, diff);
-        }
+            for (vtkIdType i = begin; i < end; ++i)
+            {
+                const auto diff = static_cast<ResidualValue_t>(
+                    o.Get(i, 0) * oUnit
+                    - m.Get(i, 0) * mUnit);
+                r.Set(i, 0, diff);
+            }
+        });
 
         residual = res;
     }
