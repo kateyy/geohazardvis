@@ -17,6 +17,7 @@
 #include <vtkVector.h>
 
 #include <core/filters/ImageBlankNonFiniteValuesFilter.h>
+#include <core/filters/SetMaskedPointScalarsToNaNFilter.h>
 #include <core/utility/DataExtent.h>
 #include <core/utility/vtkvectorhelper.h>
 
@@ -160,6 +161,12 @@ vtkSmartPointer<vtkDataArray> InterpolationHelper::interpolate(vtkDataSet & base
         auto pointToCellData = vtkSmartPointer<vtkPointDataToCellData>::New();
         pointToCellData->SetInputConnection(probe->GetOutputPort());
         resultAlgorithm = pointToCellData;
+    }
+    if (sourceImage)
+    {
+        auto maskedToNaN = vtkSmartPointer<SetMaskedPointScalarsToNaNFilter>::New();
+        maskedToNaN->SetInputConnection(resultAlgorithm->GetOutputPort());
+        resultAlgorithm = maskedToNaN;
     }
 
     resultAlgorithm->Update();
