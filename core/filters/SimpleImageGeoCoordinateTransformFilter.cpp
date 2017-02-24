@@ -10,6 +10,7 @@
 #include <vtkVector.h>
 
 #include <core/filters/SetCoordinateSystemInformationFilter.h>
+#include <core/utility/DataExtent.h>
 
 
 vtkStandardNewMacro(SimpleImageGeoCoordinateTransformFilter);
@@ -52,6 +53,46 @@ int SimpleImageGeoCoordinateTransformFilter::RequestInformation(vtkInformation *
     auto inData = inInfo->Get(vtkDataObject::DATA_OBJECT());
 
     this->Step1->SetInputData(inData);
+    // Update the trivial producer now, so that it won't discard the input information manually
+    // set below.
+    this->Step1->GetInputAlgorithm()->Update();
+
+    // Pass available input information to the internal pipeline
+    ImageExtent inExtent;
+    vtkVector3d inOrigin, inSpacing;
+    if (inInfo->Has(vtkDataObject::ORIGIN()))
+    {
+        inInfo->Get(vtkDataObject::ORIGIN(), inOrigin.GetData());
+        this->Step1->GetInputInformation()->Set(vtkDataObject::ORIGIN(),
+            inOrigin.GetData(), inOrigin.GetSize());
+    }
+    else
+    {
+        this->Step1->GetInputInformation()->Remove(vtkDataObject::ORIGIN());
+    }
+    if (inInfo->Has(vtkDataObject::SPACING()))
+    {
+        inInfo->Get(vtkDataObject::SPACING(), inSpacing.GetData());
+        this->Step1->GetInputInformation()->Set(vtkDataObject::SPACING(),
+            inSpacing.GetData(), inSpacing.GetSize());
+    }
+    else
+    {
+        this->Step1->GetInputInformation()->Remove(vtkDataObject::SPACING());
+    }
+    if (inInfo->Has(vtkStreamingDemandDrivenPipeline::WHOLE_EXTENT()))
+    {
+        inInfo->Get(vtkStreamingDemandDrivenPipeline::WHOLE_EXTENT(), inExtent.data());
+        this->Step1->GetInputInformation()->Set(vtkStreamingDemandDrivenPipeline::WHOLE_EXTENT(),
+            inExtent.data(), inExtent.ValueCount);
+    }
+    else
+    {
+        this->Step1->GetInputInformation()->Remove(vtkStreamingDemandDrivenPipeline::WHOLE_EXTENT());
+    }
+
+    // Make sure the algorithms process the new input information
+    this->Step1->Modified();
 
     this->InfoSetter->SetCoordinateSystemSpec(this->TargetCoordinateSystem);
 
