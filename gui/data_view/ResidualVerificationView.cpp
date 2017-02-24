@@ -635,6 +635,57 @@ void ResidualVerificationView::setDataInternal(unsigned int subViewIndex, DataOb
 
     if (subViewIndex != residualIndex)
     {
+        // Try to find a coordinate system that is supported by both data sets.
+        auto newTransformable = dynamic_cast<CoordinateTransformableDataObject *>(newData);
+        auto presentTransformable = dynamic_cast<CoordinateTransformableDataObject *>(
+            subViewIndex == observationIndex ? dataAt(modelIndex) : dataAt(observationIndex));
+
+        // Change the coordinate system only if it is not currently set or if the new data is not
+        // compatible with the current system.
+        // Meanwhile, make sure that already loaded data can also be shown in the new system.
+        if (newTransformable
+            && (!currentCoordinateSystem().isValid()
+            || (currentCoordinateSystem().type == CoordinateSystemType::unspecified)
+            || !newTransformable->canTransformTo(currentCoordinateSystem())))
+        {
+            auto targetCoords = [newTransformable, presentTransformable] ()
+            {
+                // Prefer local metric coordinates, fall back to global metric.
+                // If even this does not work, use the data set's current system, or just don't
+                // transform at all.
+
+                auto spec = CoordinateSystemSpecification(newTransformable->coordinateSystem());
+                spec.unitOfMeasurement = "km";
+                spec.type = CoordinateSystemType::metricLocal;
+                if (newTransformable->canTransformTo(spec)
+                    && (!presentTransformable || presentTransformable->canTransformTo(spec)))
+                {
+                    return spec;
+                }
+
+                spec.type = CoordinateSystemType::metricGlobal;
+                if (newTransformable->canTransformTo(spec)
+                    && (!presentTransformable || presentTransformable->canTransformTo(spec)))
+                {
+                    return spec;
+                }
+
+                spec = newTransformable->coordinateSystem();
+                if (spec.isValid()
+                    && newTransformable->canTransformTo(spec)
+                    && (!presentTransformable || presentTransformable->canTransformTo(spec)))
+                {
+                    return spec;
+                }
+
+                // No way :(
+                spec = {};
+                return spec;
+            }();
+
+            setCurrentCoordinateSystem(targetCoords);
+        }
+
         setDataAt(subViewIndex, dataObject);
     }
     else // owned residual data object. Update DataSetHandler and GUI accordingly
@@ -647,6 +698,18 @@ void ResidualVerificationView::setDataInternal(unsigned int subViewIndex, DataOb
         }
 
         m_residual = std::move(ownedObject);
+        auto transformableResidual = dynamic_cast<CoordinateTransformableDataObject *>(m_residual.get());
+        auto transformableObservation = dynamic_cast<CoordinateTransformableDataObject *>(m_observationData);
+        if (transformableResidual && transformableObservation)
+        {
+            // Apply reference point from the observation data, set current coordinate system type
+            // to the current view system.
+            auto spec = transformableObservation->coordinateSystem();
+            auto && renderSpec = currentCoordinateSystem();
+            spec.type = renderSpec.type;
+            spec.unitOfMeasurement = renderSpec.unitOfMeasurement;
+            transformableResidual->specifyCoordinateSystem(spec);
+        }
 
         if (m_residual)
         {
@@ -827,10 +890,27 @@ void ResidualVerificationView::updateResidual()
         return;
     }
 
-    assert(m_observationData->dataSet());
-    auto & observationDataSet = *m_observationData->dataSet();
-    assert(m_modelData->dataSet());
-    auto & modelDataSet = *m_modelData->dataSet();
+    auto transformedObservationCoords = dynamic_cast<CoordinateTransformableDataObject *>(m_observationData);
+    auto transformedModelCoords = dynamic_cast<CoordinateTransformableDataObject *>(m_modelData);
+    auto && coordinateSystem = currentCoordinateSystem();
+    const bool useTransformedCoordinates =
+        transformedObservationCoords && transformedModelCoords && coordinateSystem.isValid();
+
+    auto observationDataSetPtr = useTransformedCoordinates
+        ? transformedObservationCoords->coordinateTransformedDataSet(coordinateSystem)
+        : m_observationData->dataSet();
+    auto modelDataSetPtr = useTransformedCoordinates
+        ? transformedModelCoords->coordinateTransformedDataSet(coordinateSystem)
+        : m_modelData->dataSet();
+
+    if (!observationDataSetPtr || !modelDataSetPtr)
+    {
+        qDebug() << "Invalid input coordinates or data sets";
+        return;
+    }
+
+    auto & observationDataSet = *observationDataSetPtr;
+    auto & modelDataSet = *modelDataSetPtr;
 
     const vtkSmartPointer<vtkDataArray> observationData = useObservationCellData
         ? observationDataSet.GetCellData()->GetArray(observationAttributeName.toUtf8().data())
