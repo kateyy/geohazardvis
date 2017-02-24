@@ -18,18 +18,57 @@
 
 #include <core/filters/ImageBlankNonFiniteValuesFilter.h>
 #include <core/utility/DataExtent.h>
+#include <core/utility/vtkvectorhelper.h>
 
 
-vtkSmartPointer<vtkDataArray> InterpolationHelper::interpolateImageOnImage(vtkImageData & baseImage, vtkImageData & sourceImage, const QString & sourceAttributeName)
+vtkSmartPointer<vtkDataArray> InterpolationHelper::interpolateImageOnImage(
+    vtkImageData & baseImage,
+    vtkImageData & sourceImage,
+    const QString & sourceAttributeName)
 {
-    bool structuralMatch =
-        ImageExtent(baseImage.GetExtent()) == ImageExtent(sourceImage.GetExtent())
-        && vtkVector3d(baseImage.GetOrigin()) == vtkVector3d(sourceImage.GetOrigin())
-        && vtkVector3d(baseImage.GetSpacing()) == vtkVector3d(sourceImage.GetSpacing());
+    // Fast image on image interpolation for images with matching structure
 
-    if (!structuralMatch)
+    ImageExtent baseExtent(baseImage.GetExtent()), sourceExtent(sourceImage.GetExtent());
+    vtkVector3d baseOrigin(baseImage.GetOrigin()), sourceOrigin(sourceImage.GetOrigin());
+    vtkVector3d baseSpacing(baseImage.GetSpacing()), sourceSpacing(sourceImage.GetSpacing());
+
+    // Check if the images have the same structure (all points are overlapping).
+    // If the image is just plane and not a volume, don't check the flat dimension.
+    if (baseImage.GetDataDimension() == 2)
+    {
+        unsigned flatDimension = 3;
+        for (unsigned i = 0; i < 3; ++i)
+        {
+            if (baseExtent.componentSize()[i] == 0
+                && sourceExtent.componentSize()[i] == 0)
+            {
+                flatDimension = i;
+                break;
+            }
+        }
+        if (flatDimension <= 2)
+        {
+            baseExtent.setDimension(flatDimension, 0, 0);
+            sourceExtent.setDimension(flatDimension, 0, 0);
+            baseOrigin[flatDimension] = sourceOrigin[flatDimension] = 0.0;
+            baseSpacing[flatDimension] = sourceSpacing[flatDimension] = 1.0;
+        }
+    }
+
+    if (baseExtent != sourceExtent)
     {
         return nullptr;
+    }
+
+    if (baseOrigin != sourceOrigin || baseSpacing != baseSpacing)
+    {
+        const double epsilon = 10.e-5;
+        const auto o = maxComponent(abs(baseOrigin - sourceOrigin));
+        const auto s = maxComponent(abs(baseSpacing - sourceSpacing));
+        if (o > epsilon || s > epsilon)
+        {
+            return nullptr;
+        }
     }
 
     if (sourceAttributeName.isEmpty())
