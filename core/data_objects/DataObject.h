@@ -111,6 +111,15 @@ public:
     static QString readName(vtkInformation & information);
     static void storeName(vtkInformation & information, const DataObject & dataObject);
 
+
+    /**
+     * Inform other components of modifications in the data set.
+     * The corresponding signals will be emitted once the DataObject is not anymore deferring its 
+     * events.
+     */
+    void signal_dataChanged();
+    void signal_attributeArraysChanged();
+
 signals:
     void dataChanged();
     void boundsChanged();
@@ -137,9 +146,6 @@ protected:
         unsigned long event, U & observer, void(T::* slot)(vtkObject*, unsigned long, void*));
     void disconnectEventGroup(const QString & eventName);
     void disconnectAllEvents();
-
-    void _dataChanged();
-    void _attributeArraysChanged();
 
 protected:
     /** Implement in subclasses to add attributes that should not be removed in clearAttributes() */

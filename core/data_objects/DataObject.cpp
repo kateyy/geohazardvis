@@ -63,11 +63,15 @@ DataObject::DataObject(const QString & name, vtkDataSet * dataSet)
 
     if (dataSet)
     {
-        connectObserver("dataChanged", *dataSet, vtkCommand::ModifiedEvent, *this, &DataObject::_dataChanged);
+        connectObserver("dataChanged", *dataSet, vtkCommand::ModifiedEvent,
+            *this, &DataObject::signal_dataChanged);
 
-        connectObserver("attributeArraysChanged", *dataSet->GetPointData(), vtkCommand::ModifiedEvent, *this, &DataObject::_attributeArraysChanged);
-        connectObserver("attributeArraysChanged", *dataSet->GetCellData(), vtkCommand::ModifiedEvent, *this, &DataObject::_attributeArraysChanged);
-        connectObserver("attributeArraysChanged", *dataSet->GetFieldData(), vtkCommand::ModifiedEvent, *this, &DataObject::_attributeArraysChanged);
+        connectObserver("attributeArraysChanged", *dataSet->GetPointData(),
+            vtkCommand::ModifiedEvent, *this, &DataObject::signal_attributeArraysChanged);
+        connectObserver("attributeArraysChanged", *dataSet->GetCellData(),
+            vtkCommand::ModifiedEvent, *this, &DataObject::signal_attributeArraysChanged);
+        connectObserver("attributeArraysChanged", *dataSet->GetFieldData(),
+            vtkCommand::ModifiedEvent, *this, &DataObject::signal_attributeArraysChanged);
 
         bool resetName = true;
         auto fieldData = dataSet->GetFieldData();
@@ -360,13 +364,13 @@ void DataObject::disconnectAllEvents()
     d_ptr->disconnectAllEvents();
 }
 
-void DataObject::_dataChanged()
+void DataObject::signal_dataChanged()
 {
     auto lock = d_ptr->lockEventDeferrals();
 
     if (lock.isDeferringEvents())
     {
-        lock.addDeferredEvent("dataChanged", std::bind(&DataObject::_dataChanged, this));
+        lock.addDeferredEvent("dataChanged", std::bind(&DataObject::signal_dataChanged, this));
         return;
     }
 
@@ -396,13 +400,14 @@ void DataObject::_dataChanged()
     }
 }
 
-void DataObject::_attributeArraysChanged()
+void DataObject::signal_attributeArraysChanged()
 {
     auto lock = d_ptr->lockEventDeferrals();
 
     if (lock.isDeferringEvents())
     {
-        lock.addDeferredEvent("_attributeArraysChanged", std::bind(&DataObject::_attributeArraysChanged, this));
+        lock.addDeferredEvent("attributeArraysChanged",
+            std::bind(&DataObject::signal_attributeArraysChanged, this));
         return;
     }
 
