@@ -63,6 +63,7 @@ private:
 
     vtkSmartPointer<ArrayChangeInformationFilter> m_copyScalarsFilter;
     vtkSmartPointer<vtkImageMapToColors> m_imageScalarsToColors;
+    QMetaObject::Connection m_updateComponentConnection;
 
     vtkSmartPointer<vtkAlgorithm> m_colorMappingFilter;
 

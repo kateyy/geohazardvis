@@ -116,6 +116,8 @@ void ColorMappingData::setDataComponent(int component)
         m_lut->SetTableRange(minValue(), maxValue());
         m_lut->Build();
     }
+
+    emit componentChanged();
 }
 
 bool ColorMappingData::mapsScalarsToColors() const

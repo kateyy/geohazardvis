@@ -235,6 +235,9 @@ void RenderedImageData::setupColorMapping(ColorMapping & colorMapping)
 
 void RenderedImageData::scalarsForColorMappingChangedEvent()
 {
+    disconnect(m_updateComponentConnection);
+    m_updateComponentConnection = {};
+
     RenderedData::scalarsForColorMappingChangedEvent();
 
     m_colorMappingFilter = {};
@@ -253,6 +256,16 @@ void RenderedImageData::scalarsForColorMappingChangedEvent()
     }
 
     configureVisPipeline();
+
+    if (auto scalars = currentColorMappingData())
+    {
+        m_updateComponentConnection =
+            connect(scalars, &ColorMappingData::componentChanged,
+                [this] ()
+        {
+            m_imageScalarsToColors->SetActiveComponent(currentColorMappingData()->dataComponent());
+        });
+    }
 }
 
 void RenderedImageData::colorMappingGradientChangedEvent()

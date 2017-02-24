@@ -104,6 +104,7 @@ signals:
     void lookupTableChanged();
     void minMaxChanged();
     void dataMinMaxChanged();
+    void componentChanged();
 
 protected:
     /** check whether these scalar extraction is applicable for the data objects it was created with */
