@@ -9,7 +9,10 @@
 #include <vtkPoints.h>
 #include <vtkPolyData.h>
 
+#include <core/AbstractVisualizedData.h>
+#include <core/CoordinateSystems.h>
 #include <core/DataSetHandler.h>
+#include <core/color_mapping/ColorMapping.h>
 #include <core/data_objects/PolyDataObject.h>
 #include <core/utility/DataExtent.h>
 
@@ -49,7 +52,7 @@ public:
 
     std::unique_ptr<TestEnv> env;
 
-    static std::unique_ptr<PolyDataObject> genPolyData(const QString & name)
+    static std::unique_ptr<PolyDataObject> genPolyData(const QString & name, int numComponents = 1)
     {
         auto poly = vtkSmartPointer<vtkPolyData>::New();
         auto points = vtkSmartPointer<vtkPoints>::New();
@@ -65,10 +68,16 @@ public:
 
         auto scalars = vtkSmartPointer<vtkFloatArray>::New();
         scalars->SetName(name.toUtf8().data());
+        scalars->SetNumberOfComponents(numComponents);
         scalars->SetNumberOfTuples(poly->GetNumberOfCells());
+        const int maxComponent = numComponents - 1;
         for (vtkIdType i = 0; i < scalars->GetNumberOfTuples(); ++i)
         {
-            scalars->SetValue(i, static_cast<float>(i));
+            scalars->SetTypedComponent(i, maxComponent, static_cast<float>(i));
+        }
+        for (int c = 0; c < maxComponent; ++c)
+        {
+            scalars->FillTypedComponent(c, 0.0f);
         }
         poly->GetCellData()->SetScalars(scalars);
 
@@ -198,4 +207,48 @@ TEST_F(ResidualView_test, CloseAppWhileResidualIsShown)
         residualView->setModelData(modelPtr);
         residualView->waitForResidualUpdate();
     }
+}
+
+TEST_F(ResidualView_test, ProjectToLoS_TransformedCoordinateSystem)
+{
+    const auto coordsSpec = ReferencedCoordinateSystemSpecification(
+        CoordinateSystemType::geographic,
+        "WGS 84",
+        "UTM",
+        {},
+        vtkVector2d(-54.483333, -37.083333),
+        vtkVector2d(0, 0)
+    );
+
+    auto observation = genPolyData("lineOfSightObservation");
+    observation->polyDataSet().GetPoints()->SetPoint(0, -37.083333, -54.483333, 0);
+    observation->polyDataSet().GetPoints()->SetPoint(1, -37.083333, -54.493333, 0);
+    observation->polyDataSet().GetPoints()->SetPoint(2, -37.073333, -54.493333, 0);
+    observation->specifyCoordinateSystem(coordsSpec);
+    auto model = genPolyData("dispVectorModel", 3);
+    model->polyDataSet().GetPoints()->DeepCopy(observation->polyDataSet().GetPoints());
+    model->specifyCoordinateSystem(coordsSpec);
+
+    env->dataSetHandler.addExternalData({ observation.get(), model.get() });
+    auto residualView = env->dataMapping.createRenderView<ResidualVerificationView>();
+
+    residualView->setModelData(model.get());
+    residualView->setObservationData(observation.get());
+    residualView->waitForResidualUpdate();
+
+    auto residual = residualView->residualData();
+    ASSERT_TRUE(residual);
+    ASSERT_TRUE(residual->dataSet());
+    auto residualScalars = residual->dataSet()->GetCellData()->GetScalars();
+    ASSERT_TRUE(residualScalars);
+    ASSERT_EQ(1, residualScalars->GetNumberOfComponents());
+    ASSERT_EQ(observation->numberOfCells(), residualScalars->GetNumberOfTuples());
+
+    for (vtkIdType i = 0; i < residualScalars->GetNumberOfTuples(); ++i)
+    {
+        ASSERT_EQ(0.0, residualScalars->GetComponent(i, 0));
+    }
+
+    residualView->close();
+    qApp->processEvents();
 }

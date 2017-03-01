@@ -890,35 +890,47 @@ void ResidualVerificationView::updateResidual()
         return;
     }
 
+    if (!m_observationData->dataSet() || !m_modelData->dataSet())
+    {
+        // Projected attributes are added to the point/cell data of the DataObject::dataSet().
+        // If the data object does not have such a source data set, where should the projected
+        // data be added, so that it can be found by the color mapping?
+        qDebug() << "Input data is not supported (missing internal source data set)";
+        return;
+    }
+
+    auto & observationDS = *m_observationData->dataSet();
+    auto & modelDS = *m_modelData->dataSet();
+
     auto transformedObservationCoords = dynamic_cast<CoordinateTransformableDataObject *>(m_observationData);
     auto transformedModelCoords = dynamic_cast<CoordinateTransformableDataObject *>(m_modelData);
     auto && coordinateSystem = currentCoordinateSystem();
     const bool useTransformedCoordinates =
         transformedObservationCoords && transformedModelCoords && coordinateSystem.isValid();
 
-    auto observationDataSetPtr = useTransformedCoordinates
+    auto observationDSTransformedPtr = useTransformedCoordinates
         ? transformedObservationCoords->coordinateTransformedDataSet(coordinateSystem)
         : m_observationData->dataSet();
-    auto modelDataSetPtr = useTransformedCoordinates
+    auto modelDSTransformedPtr = useTransformedCoordinates
         ? transformedModelCoords->coordinateTransformedDataSet(coordinateSystem)
         : m_modelData->dataSet();
 
-    if (!observationDataSetPtr || !modelDataSetPtr)
+    if (!observationDSTransformedPtr || !modelDSTransformedPtr)
     {
         qDebug() << "Invalid input coordinates or data sets";
         return;
     }
 
-    auto & observationDataSet = *observationDataSetPtr;
-    auto & modelDataSet = *modelDataSetPtr;
+    auto & observationDSTransformed = *observationDSTransformedPtr;
+    auto & modelDSTransformed = *modelDSTransformedPtr;
 
     const vtkSmartPointer<vtkDataArray> observationData = useObservationCellData
-        ? observationDataSet.GetCellData()->GetArray(observationAttributeName.toUtf8().data())
-        : observationDataSet.GetPointData()->GetArray(observationAttributeName.toUtf8().data());
+        ? observationDS.GetCellData()->GetArray(observationAttributeName.toUtf8().data())
+        : observationDS.GetPointData()->GetArray(observationAttributeName.toUtf8().data());
 
     const vtkSmartPointer<vtkDataArray> modelData = useModelCellData
-        ? modelDataSet.GetCellData()->GetArray(modelAttributeName.toUtf8().data())
-        : modelDataSet.GetPointData()->GetArray(modelAttributeName.toUtf8().data());
+        ? modelDS.GetCellData()->GetArray(modelAttributeName.toUtf8().data())
+        : modelDS.GetPointData()->GetArray(modelAttributeName.toUtf8().data());
 
 
     if (!observationData)
@@ -978,22 +990,24 @@ void ResidualVerificationView::updateResidual()
     };
 
 
-    auto observationLosDisp = getProjectedDisp(*observationData, observationIndex, observationDataSet);
-    auto modelLosDisp = getProjectedDisp(*modelData, modelIndex, modelDataSet);
+    auto observationLosDisp = getProjectedDisp(*observationData, observationIndex, observationDS);
+    auto modelLosDisp = getProjectedDisp(*modelData, modelIndex, modelDS);
     assert(observationLosDisp && modelLosDisp);
 
 
-    // now interpolate one of the data arrays to the other's structure
-
+    // Now interpolate one of the data arrays to the other's structure.
+    // Use the data sets transformed to the user-selected coordinate system.
     if (m_interpolationMode == InterpolationMode::modelToObservation)
     {
         auto attributeName = QString::fromUtf8(modelLosDisp->GetName());
-        modelLosDisp = InterpolationHelper::interpolate(observationDataSet, modelDataSet, attributeName, useModelCellData);
+        modelLosDisp = InterpolationHelper::interpolate(
+            observationDSTransformed, modelDSTransformed, attributeName, useModelCellData);
     }
     else
     {
         auto attributeName = QString::fromUtf8(observationLosDisp->GetName());
-        observationLosDisp = InterpolationHelper::interpolate(modelDataSet, observationDataSet, attributeName, useObservationCellData);
+        observationLosDisp = InterpolationHelper::interpolate(
+            modelDSTransformed, observationDSTransformed, attributeName, useObservationCellData);
     }
 
     if (!observationLosDisp || !modelLosDisp)
@@ -1013,8 +1027,8 @@ void ResidualVerificationView::updateResidual()
     // compute the residual data
 
     auto & referenceDataSet = m_interpolationMode == InterpolationMode::modelToObservation
-        ? observationDataSet
-        : modelDataSet;
+        ? observationDSTransformed
+        : modelDSTransformed;
 
     const double observationUnitFactor = std::pow(10, m_observationUnitDecimalExponent);
     const double modelUnitFactor = std::pow(10, m_modelUnitDecimalExponent);
