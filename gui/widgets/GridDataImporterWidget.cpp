@@ -17,6 +17,7 @@
 #include <core/io/TextFileReader.h>
 #include <core/io/Loader.h>
 #include <core/io/MatricesToVtk.h>
+#include <core/utility/qthelper.h>
 
 
 GridDataImporterWidget::GridDataImporterWidget(QWidget * parent, Qt::WindowFlags flags)
@@ -91,27 +92,13 @@ void GridDataImporterWidget::openImageDataFile()
 
 void GridDataImporterWidget::updateSummary()
 {
-    int rowCount = 0;
-    std::array<size_t, 2> dimensions;
-
-    if (!m_imageDataVector.empty())
     {
-        dimensions = { m_imageDataVector.size(), m_imageDataVector.at(0).size() };
-        rowCount = 2;
-    }
-
-    m_ui->summaryTable->setRowCount(rowCount);
-
-    if (rowCount >= 2)
-    {
-        m_ui->summaryTable->setItem(0, 0,
-            new QTableWidgetItem("Columns (X)"));
-        m_ui->summaryTable->setItem(0, 1,
-            new QTableWidgetItem(QString::number(dimensions[0])));
-        m_ui->summaryTable->setItem(1, 0,
-            new QTableWidgetItem("Rows (Y)"));
-        m_ui->summaryTable->setItem(1, 1,
-            new QTableWidgetItem(QString::number(dimensions[1])));
+        QTableWidgetSetRowsWorker addRow{ *m_ui->summaryTable };
+        if (!m_imageDataVector.empty())
+        {
+            addRow("Columns (X)", QString::number(m_imageDataVector.size()));
+            addRow("Rows (Y)", QString::number(m_imageDataVector[0].size()));
+        }
     }
 
     m_ui->summaryTable->resizeColumnsToContents();

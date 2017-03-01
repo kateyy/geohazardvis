@@ -14,6 +14,7 @@
 #include <core/io/TextFileReader.h>
 #include <core/io/Loader.h>
 #include <core/io/MatricesToVtk.h>
+#include <core/utility/qthelper.h>
 
 
 DataImporterWidget::DataImporterWidget(QWidget * parent, bool showNonCsvTypesTabs, Qt::WindowFlags flags)
@@ -163,58 +164,28 @@ void DataImporterWidget::openPolyDataFile()
 
 void DataImporterWidget::updateSummary()
 {
-    int rowCount = 0;
-    vtkIdType numCoordinates = -1, numTriangles = -1, numAttributeColumns = -1;
-    if (m_polyData)
     {
-        rowCount = 2;
-        numCoordinates = m_polyData->dataSet()->GetNumberOfPoints();
-        numTriangles = m_polyData->dataSet()->GetNumberOfCells();
-    }
-    else
-    {
-        if (!m_coordinateData.empty())
+        QTableWidgetSetRowsWorker addRow{ *m_ui->summaryTable };
+
+        if (m_polyData)
         {
-            rowCount += 1;
-            numCoordinates = static_cast<vtkIdType>(m_coordinateData.front().size());
+            addRow("Point Coordinates",
+                QString::number(m_polyData->dataSet()->GetNumberOfPoints()));
+            addRow("Triangles", QString::number(m_polyData->dataSet()->GetNumberOfCells()));
         }
-        if (!m_indexData.empty())
+        else
         {
-            rowCount += 2;
-            numTriangles = static_cast<vtkIdType>(m_indexData.front().size());
-            numAttributeColumns = static_cast<vtkIdType>(m_indexData.size()) - 3;
+            if (!m_coordinateData.empty())
+            {
+                addRow("Point Coordinates", QString::number(m_coordinateData.front().size()));
+            }
+            if (!m_indexData.empty())
+            {
+                addRow("Triangles", QString::number(m_indexData.front().size()));
+                addRow("Attributes columns per triangle (ignored)",
+                    QString::number(m_indexData.size() - 3));
+            }
         }
-    }
-
-    m_ui->summaryTable->setRowCount(rowCount);
-
-    int currentRow = 0;
-
-    if (numCoordinates >= 0)
-    {
-        m_ui->summaryTable->setItem(currentRow, 0,
-            new QTableWidgetItem("Point coordinates"));
-        m_ui->summaryTable->setItem(currentRow, 1,
-            new QTableWidgetItem(QString::number(numCoordinates)));
-        ++currentRow;
-    }
-
-    if (numTriangles >= 0)
-    {
-        m_ui->summaryTable->setItem(currentRow, 0,
-            new QTableWidgetItem("Triangles"));
-        m_ui->summaryTable->setItem(currentRow, 1,
-            new QTableWidgetItem(QString::number(numTriangles)));
-        ++currentRow;
-    }
-
-    if (numAttributeColumns >= 0)
-    {
-        m_ui->summaryTable->setItem(currentRow, 0,
-            new QTableWidgetItem("Attributes columns per triangle (ignored)"));
-        m_ui->summaryTable->setItem(currentRow, 1,
-            new QTableWidgetItem(QString::number(numAttributeColumns)));
-        ++currentRow;
     }
 
     m_ui->summaryTable->resizeColumnsToContents();
