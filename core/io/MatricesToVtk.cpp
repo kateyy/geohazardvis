@@ -384,18 +384,31 @@ vtkSmartPointer<vtkPolyData> MatricesToVtk::parseIndexedTriangles(
 
     for (size_t row = 0; row < nbVertices; ++row)
     {
-        points->InsertNextPoint(inputVertexData[firstVertexColumn][row], inputVertexData[firstVertexColumn + 1][row], inputVertexData[firstVertexColumn + 2][row]);
+        points->InsertNextPoint(
+            inputVertexData[firstVertexColumn][row],
+            inputVertexData[firstVertexColumn + 1][row],
+            inputVertexData[firstVertexColumn + 2][row]);
     }
 
     auto triangles = vtkSmartPointer<vtkCellArray>::New();
     auto triangle = vtkSmartPointer<vtkTriangle>::New();
+    auto trinagleIds = triangle->GetPointIds();
     for (size_t row = 0; row < nbTriangles; ++row)
     {
-        // set the indexes for the three triangle vertexes
-        // hopefully, these indexes map to the vertex indexes from parsedVertexData
-        triangle->GetPointIds()->SetId(0, std::llround(inputIndexData[firstIndexColumn][row]) - indexOffset);
-        triangle->GetPointIds()->SetId(1, std::llround(inputIndexData[firstIndexColumn + 1][row]) - indexOffset);
-        triangle->GetPointIds()->SetId(2, std::llround(inputIndexData[firstIndexColumn + 2][row]) - indexOffset);
+        // Set the indexes for the three triangle vertexes.
+        const auto ix = std::llround(inputIndexData[firstIndexColumn][row]) - indexOffset;
+        const auto iy = std::llround(inputIndexData[firstIndexColumn + 1][row]) - indexOffset;
+        const auto iz = std::llround(inputIndexData[firstIndexColumn + 2][row]) - indexOffset;
+        
+        if (ix >= nbVertices || iy >= nbVertices || iz >= nbVertices)
+        {
+            qDebug() << "Invalid triangle point indices:" << ix << iy << iz
+                << "Number of points:" << nbVertices;
+            return{};
+        }
+        trinagleIds->SetId(0, ix);
+        trinagleIds->SetId(1, iy);
+        trinagleIds->SetId(2, iz);
         triangles->InsertNextCell(triangle);    // this copies the triangle data into the list
     }
 

@@ -203,7 +203,13 @@ bool DataImporterWidget::importToPolyData()
         m_coordinateData, 0, 1,
         m_indexData, 0,
         m_importDataType);
-    assert(polyData);
+    if (!polyData)
+    {
+        QMessageBox::warning(this, "Import Failed",
+            "The input data is not valid or unsupported. "
+            "Please check that all triangle vertex indices refer to valid coordinates.");
+        return false;
+    }
 
     auto baseName = QFileInfo(m_ui->indicesFileEdit->text()).baseName();
 
