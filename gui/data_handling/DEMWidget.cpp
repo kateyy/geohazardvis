@@ -1,4 +1,4 @@
-#include <gui/widgets/DEMWidget.h>
+#include <gui/data_handling/DEMWidget.h>
 #include "ui_DEMWidget.h"
 
 #include <QDebug>

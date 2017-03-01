@@ -29,20 +29,20 @@
 
 #include <gui/DataMapping.h>
 #include <gui/SelectionHandler.h>
+#include <gui/data_handling/CoordinateSystemAdjustmentWidget.h>
+#include <gui/data_handling/DEMWidget.h>
 #include <gui/data_view/AbstractRenderView.h>
 #include <gui/data_view/ResidualVerificationView.h>
 #include <gui/data_view/TableView.h>
+#include <gui/io/DataImporterWidget.h>
+#include <gui/io/GridDataImporterWidget.h>
+#include <gui/io/CanvasExporterWidget.h>
 #include <gui/plugin/GuiPluginInterface.h>
 #include <gui/plugin/GuiPluginManager.h>
-#include <gui/widgets/CoordinateSystemAdjustmentWidget.h>
-#include <gui/widgets/DataImporterWidget.h>
-#include <gui/widgets/GridDataImporterWidget.h>
-#include <gui/widgets/CanvasExporterWidget.h>
-#include <gui/widgets/ColorMappingChooser.h>
-#include <gui/widgets/DEMWidget.h>
-#include <gui/widgets/GlyphMappingChooser.h>
-#include <gui/widgets/RenderPropertyConfigWidget.h>
-#include <gui/widgets/RendererConfigWidget.h>
+#include <gui/visualization_config/ColorMappingChooser.h>
+#include <gui/visualization_config/GlyphMappingChooser.h>
+#include <gui/visualization_config/RenderPropertyConfigWidget.h>
+#include <gui/visualization_config/RendererConfigWidget.h>
 
 #include "config.h"
 

@@ -16,7 +16,7 @@
 #include <gui/data_view/RendererImplementationPlot.h>
 #include <gui/data_view/ResidualVerificationView.h>
 #include <gui/propertyguizeug_extension/ColorEditorRGB.h>
-#include <gui/widgets/ResidualViewConfigWidget.h>
+#include <gui/visualization_config/ResidualViewConfigWidget.h>
 #include <gui/widgets/CollapsibleGroupBox.h>
 
 

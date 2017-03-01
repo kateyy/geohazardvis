@@ -17,8 +17,8 @@
 #include <core/utility/DataExtent.h>
 #include <core/utility/vtkvectorhelper.h>
 #include <gui/DataMapping.h>
+#include <gui/data_handling/DEMWidget.h>
 #include <gui/data_view/AbstractRenderView.h>
-#include <gui/widgets/DEMWidget.h>
 
 
 class DEMWidget_test : public ::testing::Test

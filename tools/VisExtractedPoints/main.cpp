@@ -22,9 +22,9 @@
 
 #include <gui/DataMapping.h>
 #include <gui/data_view/AbstractRenderView.h>
-#include <gui/widgets/ColorMappingChooser.h>
-#include <gui/widgets/RenderPropertyConfigWidget.h>
-#include <gui/widgets/RendererConfigWidget.h>
+#include <gui/visualization_config/ColorMappingChooser.h>
+#include <gui/visualization_config/RenderPropertyConfigWidget.h>
+#include <gui/visualization_config/RendererConfigWidget.h>
 
 
 

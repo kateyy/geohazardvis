@@ -12,6 +12,15 @@ set(sources
     SelectionHandler.h
     SelectionHandler.cpp
 
+    data_handling/CoordinateSystemAdjustmentWidget.h
+    data_handling/CoordinateSystemAdjustmentWidget.cpp
+    data_handling/DataBrowser.h
+    data_handling/DataBrowser.cpp
+    data_handling/DataBrowserTableModel.h
+    data_handling/DataBrowserTableModel.cpp
+    data_handling/DEMWidget.h
+    data_handling/DEMWidget.cpp
+
     data_view/AbstractDataView.h
     data_view/AbstractDataView.cpp
     data_view/AbstractRenderView.h
@@ -50,6 +59,13 @@ set(sources
     data_view/TableView.h
     data_view/TableView.cpp
 
+    io/CanvasExporterWidget.h
+    io/CanvasExporterWidget.cpp
+    io/DataImporterWidget.h
+    io/DataImporterWidget.cpp
+    io/GridDataImporterWidget.h
+    io/GridDataImporterWidget.cpp
+
     plugin/gui_plugin_api.h
     plugin/GuiPlugin.h
     plugin/GuiPlugin.cpp
@@ -85,39 +101,26 @@ set(sources
     rendering_interaction/RenderWindowCursorCallback.h
     rendering_interaction/RenderWindowCursorCallback.cpp
 
-    widgets/CanvasExporterWidget.h
-    widgets/CanvasExporterWidget.cpp
-    widgets/ColorMappingChooser.h
-    widgets/ColorMappingChooser.cpp
+    visualization_config/ColorMappingChooser.h
+    visualization_config/ColorMappingChooser.cpp
+    visualization_config/GlyphMappingChooser.h
+    visualization_config/GlyphMappingChooser.cpp
+    visualization_config/GlyphMappingChooserListModel.h
+    visualization_config/GlyphMappingChooserListModel.cpp
+    visualization_config/RendererConfigWidget.h
+    visualization_config/RendererConfigWidget.cpp
+    visualization_config/RendererConfigWidget_Plot.cpp
+    visualization_config/RendererConfigWidget_Renderer.cpp
+    visualization_config/RendererConfigWidget_Renderer2.cpp
+    visualization_config/RenderPropertyConfigWidget.h
+    visualization_config/RenderPropertyConfigWidget.cpp
+    visualization_config/ResidualViewConfigWidget.h
+    visualization_config/ResidualViewConfigWidget.cpp
+
     widgets/CollapsibleGroupBox.h
     widgets/CollapsibleGroupBox.cpp
-    widgets/CoordinateSystemAdjustmentWidget.h
-    widgets/CoordinateSystemAdjustmentWidget.cpp
-    widgets/DataBrowser.h
-    widgets/DataBrowser.cpp
-    widgets/DataBrowserTableModel.h
-    widgets/DataBrowserTableModel.cpp
-    widgets/DataImporterWidget.h
-    widgets/DataImporterWidget.cpp
-    widgets/DEMWidget.h
-    widgets/DEMWidget.cpp
     widgets/DockableWidget.h
     widgets/DockableWidget.cpp
-    widgets/GlyphMappingChooser.h
-    widgets/GlyphMappingChooser.cpp
-    widgets/GlyphMappingChooserListModel.h
-    widgets/GlyphMappingChooserListModel.cpp
-    widgets/GridDataImporterWidget.h
-    widgets/GridDataImporterWidget.cpp
-    widgets/RendererConfigWidget.h
-    widgets/RendererConfigWidget.cpp
-    widgets/RendererConfigWidget_Plot.cpp
-    widgets/RendererConfigWidget_Renderer.cpp
-    widgets/RendererConfigWidget_Renderer2.cpp
-    widgets/RenderPropertyConfigWidget.h
-    widgets/RenderPropertyConfigWidget.cpp
-    widgets/ResidualViewConfigWidget.h
-    widgets/ResidualViewConfigWidget.cpp
 )
 
 set(UIs
@@ -125,17 +128,19 @@ set(UIs
 
     data_view/TableView.ui
 
-    widgets/CanvasExporterWidget.ui
-    widgets/ColorMappingChooser.ui
-    widgets/CoordinateSystemAdjustmentWidget.ui
-    widgets/DataBrowser.ui
-    widgets/DataImporterWidget.ui
-    widgets/DEMWidget.ui
-    widgets/GlyphMappingChooser.ui
-    widgets/GridDataImporterWidget.ui
-    widgets/RendererConfigWidget.ui
-    widgets/RenderPropertyConfigWidget.ui
-    widgets/ResidualViewConfigWidget.ui
+    data_handling/CoordinateSystemAdjustmentWidget.ui
+    data_handling/DataBrowser.ui
+    data_handling/DEMWidget.ui
+
+    io/CanvasExporterWidget.ui
+    io/DataImporterWidget.ui
+    io/GridDataImporterWidget.ui
+
+    visualization_config/ColorMappingChooser.ui
+    visualization_config/GlyphMappingChooser.ui
+    visualization_config/RendererConfigWidget.ui
+    visualization_config/RenderPropertyConfigWidget.ui
+    visualization_config/ResidualViewConfigWidget.ui
 )
 
 set(QRCs

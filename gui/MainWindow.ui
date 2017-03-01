@@ -222,7 +222,7 @@
   <customwidget>
    <class>DataBrowser</class>
    <extends>QWidget</extends>
-   <header>gui/widgets/DataBrowser.h</header>
+   <header>gui/data_handling/DataBrowser.h</header>
   </customwidget>
  </customwidgets>
  <resources>

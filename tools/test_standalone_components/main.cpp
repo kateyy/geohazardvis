@@ -19,10 +19,10 @@
 
 #include <gui/DataMapping.h>
 #include <gui/data_view/RenderView.h>
-#include <gui/widgets/RenderPropertyConfigWidget.h>
-#include <gui/widgets/RendererConfigWidget.h>
-#include <gui/widgets/ColorMappingChooser.h>
-#include <gui/widgets/GlyphMappingChooser.h>
+#include <gui/visualization_config/ColorMappingChooser.h>
+#include <gui/visualization_config/GlyphMappingChooser.h>
+#include <gui/visualization_config/RendererConfigWidget.h>
+#include <gui/visualization_config/RenderPropertyConfigWidget.h>
 
 
 int main(int argc, char **argv)

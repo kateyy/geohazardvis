@@ -13,9 +13,9 @@
 #include <core/rendered_data/RenderedData.h>
 
 #include <gui/DataMapping.h>
+#include <gui/data_handling/CoordinateSystemAdjustmentWidget.h>
+#include <gui/data_handling/DataBrowserTableModel.h>
 #include <gui/data_view/AbstractRenderView.h>
-#include <gui/widgets/CoordinateSystemAdjustmentWidget.h>
-#include <gui/widgets/DataBrowserTableModel.h>
 
 
 DataBrowser::DataBrowser(QWidget* parent, Qt::WindowFlags f)
