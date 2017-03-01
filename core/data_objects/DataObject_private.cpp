@@ -187,9 +187,9 @@ DataObjectPrivate::EventDeferralLock::EventDeferralLock(EventDeferralLock && oth
 {
 }
 
-void DataObjectPrivate::EventDeferralLock::addDeferredEvent(const QString & name, EventMemberPointer event)
+void DataObjectPrivate::EventDeferralLock::addDeferredEvent(const std::string & name, EventMemberPointer && event)
 {
-    m_dop.m_deferredEvents.emplace(name, std::move(event));
+    m_dop.m_deferredEvents.emplace(name, std::forward<EventMemberPointer>(event));
 }
 
 void DataObjectPrivate::EventDeferralLock::deferEvents()

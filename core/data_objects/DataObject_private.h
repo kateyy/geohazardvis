@@ -5,6 +5,7 @@
 #include <memory>
 #include <mutex>
 #include <utility>
+#include <string>
 #include <vector>
 
 #include <QString>
@@ -76,7 +77,7 @@ public:
         explicit EventDeferralLock(DataObjectPrivate & dop, std::recursive_mutex & mutex);
         EventDeferralLock(EventDeferralLock && other);
 
-        void addDeferredEvent(const QString & name, EventMemberPointer event);
+        void addDeferredEvent(const std::string & name, EventMemberPointer && event);
         void deferEvents();
         bool isDeferringEvents() const;
         void executeDeferredEvents();
@@ -116,5 +117,5 @@ private:
     friend class EventDeferralLock;
     std::recursive_mutex m_eventDeferralMutex;
     int m_deferEventsRequests;
-    std::map<QString, EventMemberPointer> m_deferredEvents;
+    std::map<std::string, EventMemberPointer> m_deferredEvents;
 };
