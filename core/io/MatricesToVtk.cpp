@@ -315,25 +315,35 @@ std::unique_ptr<DataObject> MatricesToVtk::loadGrid3D(const QString & name, cons
 vtkSmartPointer<vtkImageData> MatricesToVtk::parseGrid2D(const io::InputVector & inputData, int vtk_dataType)
 {
     auto image = vtkSmartPointer<vtkImageData>::New();
-    if (inputData.empty() || inputData.at(0).empty())
+    if (inputData.empty() || inputData.front().empty())
     {
         return image;
     }
 
     const std::array<int, 3> dimensions = {
         static_cast<int>(inputData.size()),
-        static_cast<int>(inputData.at(0).size()),
+        static_cast<int>(inputData.front().size()),
         1
     };
 
     image->SetDimensions(dimensions.data());
-    image->AllocateScalars(vtk_dataType, 1);
+    auto scalars = createDataArray(vtk_dataType);
+    scalars->SetName("Scalars");
+    scalars->SetNumberOfValues(image->GetNumberOfPoints());
+    image->GetPointData()->SetScalars(scalars);
+    vtkIdType incX, incY, incZ;
+    image->GetIncrements(incX, incY, incZ);
+    vtkIdType scalarX = 0;
     for (int x = 0; x < dimensions[0]; ++x)
     {
+        vtkIdType scalarY = 0;
         for (int y = 0; y < dimensions[1]; ++y)
         {
-            image->SetScalarComponentFromDouble(x, y, 0, 0, inputData.at(x).at(y));
+            scalars->SetComponent(scalarX + scalarY, 0,
+                inputData[static_cast<size_t>(x)][static_cast<size_t>(y)]);
+            scalarY += incY;
         }
+        scalarX += incX;
     }
 
     return image;
