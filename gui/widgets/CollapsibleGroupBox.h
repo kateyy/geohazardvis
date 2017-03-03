@@ -2,11 +2,18 @@
 
 #include <QGroupBox>
 
+#if COMPILE_QT_DESIGNER_PLUGIN
+#define GUI_API
+#else
 #include <gui/gui_api.h>
+#endif
 
 
 class GUI_API CollapsibleGroupBox : public QGroupBox
 {
+    Q_OBJECT
+    Q_PROPERTY(bool collapsed READ isCollapsed WRITE setCollapsed)
+
 public:
     explicit CollapsibleGroupBox(QWidget * parent = nullptr);
     explicit CollapsibleGroupBox(const QString &title, QWidget * parent = nullptr);

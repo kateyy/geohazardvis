@@ -191,3 +191,6 @@ install(TARGETS ${target}
     LIBRARY DESTINATION ${INSTALL_SHARED}
     # ARCHIVE DESTINATION ${INSTALL_LIB}
 )
+
+
+add_subdirectory(widgets/qt_designer_plugins)

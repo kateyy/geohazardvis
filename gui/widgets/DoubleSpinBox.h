@@ -4,7 +4,12 @@
 
 #include <QDoubleSpinBox>
 
+
+#if COMPILE_QT_DESIGNER_PLUGIN
+#define GUI_API
+#else
 #include <gui/gui_api.h>
+#endif
 
 
 class DoubleSpinBoxPrivate;
