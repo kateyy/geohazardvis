@@ -100,17 +100,7 @@
        </widget>
       </item>
       <item row="1" column="1">
-       <widget class="QDoubleSpinBox" name="originXSpinBox">
-        <property name="decimals">
-         <number>3</number>
-        </property>
-        <property name="minimum">
-         <double>-999999999999.000000000000000</double>
-        </property>
-        <property name="maximum">
-         <double>999999999999.000000000000000</double>
-        </property>
-       </widget>
+       <widget class="DoubleSpinBox" name="originXSpinBox"/>
       </item>
       <item row="2" column="0">
        <widget class="QLabel" name="label_3">
@@ -143,49 +133,13 @@
        </widget>
       </item>
       <item row="2" column="1">
-       <widget class="QDoubleSpinBox" name="originYSpinBox">
-        <property name="decimals">
-         <number>3</number>
-        </property>
-        <property name="minimum">
-         <double>-999999999999.000000000000000</double>
-        </property>
-        <property name="maximum">
-         <double>999999999999.000000000000000</double>
-        </property>
-       </widget>
+       <widget class="DoubleSpinBox" name="originYSpinBox"/>
       </item>
       <item row="3" column="1">
-       <widget class="QDoubleSpinBox" name="spacingXSpinBox">
-        <property name="decimals">
-         <number>5</number>
-        </property>
-        <property name="minimum">
-         <double>0.001000000000000</double>
-        </property>
-        <property name="maximum">
-         <double>999999999999.000000000000000</double>
-        </property>
-        <property name="value">
-         <double>1.000000000000000</double>
-        </property>
-       </widget>
+       <widget class="DoubleSpinBox" name="spacingXSpinBox"/>
       </item>
       <item row="4" column="1">
-       <widget class="QDoubleSpinBox" name="spacingYSpinBox">
-        <property name="decimals">
-         <number>5</number>
-        </property>
-        <property name="minimum">
-         <double>0.001000000000000</double>
-        </property>
-        <property name="maximum">
-         <double>999999999999.000000000000000</double>
-        </property>
-        <property name="value">
-         <double>1.000000000000000</double>
-        </property>
-       </widget>
+       <widget class="DoubleSpinBox" name="spacingYSpinBox"/>
       </item>
       <item row="0" column="0">
        <widget class="QLabel" name="label">
@@ -234,6 +188,13 @@
    </item>
   </layout>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>DoubleSpinBox</class>
+   <extends>QLineEdit</extends>
+   <header>gui/widgets/DoubleSpinBox.h</header>
+  </customwidget>
+ </customwidgets>
  <tabstops>
   <tabstop>imageFileEdit</tabstop>
   <tabstop>imageFileOpenButton</tabstop>

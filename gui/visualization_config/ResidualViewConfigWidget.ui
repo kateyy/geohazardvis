@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>402</width>
+    <width>335</width>
     <height>288</height>
    </rect>
   </property>
@@ -88,9 +88,9 @@
           <number>0</number>
          </property>
          <item>
-          <widget class="QDoubleSpinBox" name="losX">
-           <property name="decimals">
-            <number>3</number>
+          <widget class="DoubleSpinBox" name="losX">
+           <property name="toolTip">
+            <string>East</string>
            </property>
            <property name="minimum">
             <double>-1.000000000000000</double>
@@ -104,9 +104,9 @@
           </widget>
          </item>
          <item>
-          <widget class="QDoubleSpinBox" name="losY">
-           <property name="decimals">
-            <number>3</number>
+          <widget class="DoubleSpinBox" name="losY">
+           <property name="toolTip">
+            <string>North</string>
            </property>
            <property name="minimum">
             <double>-1.000000000000000</double>
@@ -120,9 +120,12 @@
           </widget>
          </item>
          <item>
-          <widget class="QDoubleSpinBox" name="losZ">
-           <property name="decimals">
-            <number>3</number>
+          <widget class="DoubleSpinBox" name="losZ">
+           <property name="toolTip">
+            <string>Vertical</string>
+           </property>
+           <property name="value">
+            <double>1.000000000000000</double>
            </property>
            <property name="minimum">
             <double>-1.000000000000000</double>
@@ -167,7 +170,7 @@
       <item row="12" column="0">
        <widget class="QLabel" name="label_4">
         <property name="text">
-         <string>Mo&amp;del Scale</string>
+         <string>Model &amp;Scale</string>
         </property>
         <property name="buddy">
          <cstring>modelScale</cstring>
@@ -205,6 +208,24 @@
    </item>
   </layout>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>DoubleSpinBox</class>
+   <extends>QLineEdit</extends>
+   <header>gui/widgets/DoubleSpinBox.h</header>
+  </customwidget>
+ </customwidgets>
+ <tabstops>
+  <tabstop>interpolationModeCheckBox</tabstop>
+  <tabstop>observationCombo</tabstop>
+  <tabstop>modelCombo</tabstop>
+  <tabstop>losX</tabstop>
+  <tabstop>losY</tabstop>
+  <tabstop>losZ</tabstop>
+  <tabstop>observationScale</tabstop>
+  <tabstop>modelScale</tabstop>
+  <tabstop>updateButton</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>

@@ -85,6 +85,7 @@ void GridDataImporterWidget::openImageDataFile()
     if (!result.testFlag(TextFileReader::successful))
     {
         QMessageBox::warning(this, "Read Error", "Cannot open the specified file.");
+        m_imageDataVector.clear();
     }
 
     updateSummary();

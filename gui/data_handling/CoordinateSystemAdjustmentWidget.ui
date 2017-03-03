@@ -237,7 +237,7 @@ Relative Position of (0; 0):</string>
           </widget>
          </item>
          <item>
-          <widget class="QDoubleSpinBox" name="refGlobalLatitudeSpinBox">
+          <widget class="DoubleSpinBox" name="refGlobalLatitudeSpinBox">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
              <horstretch>0</horstretch>
@@ -275,7 +275,7 @@ Relative Position of (0; 0):</string>
           </widget>
          </item>
          <item>
-          <widget class="QDoubleSpinBox" name="refGlobalLongitudeSpinBox">
+          <widget class="DoubleSpinBox" name="refGlobalLongitudeSpinBox">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
              <horstretch>0</horstretch>
@@ -341,7 +341,7 @@ Relative Position of (0; 0):</string>
           </widget>
          </item>
          <item>
-          <widget class="QDoubleSpinBox" name="refLocalRelativeNorthingSpinBox">
+          <widget class="DoubleSpinBox" name="refLocalRelativeNorthingSpinBox">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
              <horstretch>0</horstretch>
@@ -382,7 +382,7 @@ Relative Position of (0; 0):</string>
           </widget>
          </item>
          <item>
-          <widget class="QDoubleSpinBox" name="refLocalRelativeEastingSpinBox">
+          <widget class="DoubleSpinBox" name="refLocalRelativeEastingSpinBox">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
              <horstretch>0</horstretch>
@@ -437,6 +437,13 @@ Relative Position of (0; 0):</string>
    </item>
   </layout>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>DoubleSpinBox</class>
+   <extends>QLineEdit</extends>
+   <header>gui/widgets/DoubleSpinBox.h</header>
+  </customwidget>
+ </customwidgets>
  <tabstops>
   <tabstop>dataSetNameEdit</tabstop>
   <tabstop>dataSetTypeEdit</tabstop>

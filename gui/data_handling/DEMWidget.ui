@@ -105,7 +105,7 @@
        <number>0</number>
       </property>
       <item row="0" column="0">
-       <widget class="QDoubleSpinBox" name="topographyRadiusSpinBox">
+       <widget class="DoubleSpinBox" name="topographyRadiusSpinBox">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
           <horstretch>0</horstretch>
@@ -169,7 +169,7 @@
        </widget>
       </item>
       <item>
-       <widget class="QDoubleSpinBox" name="topographyCenterXSpinBox">
+       <widget class="DoubleSpinBox" name="topographyCenterXSpinBox">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
           <horstretch>0</horstretch>
@@ -201,7 +201,7 @@
        </widget>
       </item>
       <item>
-       <widget class="QDoubleSpinBox" name="topographyCenterYSpinBox">
+       <widget class="DoubleSpinBox" name="topographyCenterYSpinBox">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
           <horstretch>0</horstretch>
@@ -328,6 +328,11 @@
   </layout>
  </widget>
  <customwidgets>
+  <customwidget>
+   <class>DoubleSpinBox</class>
+   <extends>QLineEdit</extends>
+   <header>gui/widgets/DoubleSpinBox.h</header>
+  </customwidget>
   <customwidget>
    <class>DockableWidget</class>
    <extends>QWidget</extends>

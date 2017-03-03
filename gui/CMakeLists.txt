@@ -121,6 +121,8 @@ set(sources
     widgets/CollapsibleGroupBox.cpp
     widgets/DockableWidget.h
     widgets/DockableWidget.cpp
+    widgets/DoubleSpinBox.h
+    widgets/DoubleSpinBox.cpp
 )
 
 set(UIs
