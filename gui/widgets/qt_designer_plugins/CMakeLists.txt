@@ -23,6 +23,28 @@ if (NOT Qt5UiPlugin_FOUND)
 endif()
 
 
+set(deployTargetName "DeployQt5DesignerPlugins")
+set(OPTION_Qt5Designer_plugins_deploy_dir "" CACHE PATH
+    "Deployment path for Qt5 Designer plugins (build target ${deployTargetName})")
+
+set(pluginsIDEFolder "Qt Designer Plugins")
+
+add_custom_target(${deployTargetName})
+set_target_properties(${deployTargetName}
+    PROPERTIES
+    EXCLUDE_FROM_DEFAULT_BUILD 1
+    FOLDER ${pluginsIDEFolder}
+)
+if(OPTION_Qt5Designer_plugins_deploy_dir)
+    add_custom_command(TARGET ${deployTargetName} PRE_BUILD
+        COMMAND ${CMAKE_COMMAND} -E echo
+            "Deploying Qt5 Designer plugins to: ${OPTION_Qt5Designer_plugins_deploy_dir}")
+else()
+    add_custom_command(TARGET ${deployTargetName} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E echo
+            "Set OPTION_BUILD_QT_DESIGNER_PLUGINS in CMake to deploy Qt5 Designer plugins!")
+endif()
+
 function(add_designer_plugin CLASS_NAME)
     set(pluginName "${CLASS_NAME}Plugin")
     add_library(${pluginName} SHARED
@@ -35,7 +57,16 @@ function(add_designer_plugin CLASS_NAME)
     target_link_libraries(${pluginName}
         PUBLIC Qt5::${qt_component}
     )
-    configure_cxx_target(${pluginName} IDE_FOLDER "Qt Designer Plugins")
+    configure_cxx_target(${pluginName} IDE_FOLDER ${pluginsIDEFolder})
+
+    if (OPTION_Qt5Designer_plugins_deploy_dir)
+        add_custom_command(TARGET ${deployTargetName} POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E echo " - ${pluginName}"
+            COMMAND ${CMAKE_COMMAND} -E copy
+                $<TARGET_FILE:${pluginName}> "${OPTION_Qt5Designer_plugins_deploy_dir}")
+    endif()
+    add_dependencies(${deployTargetName} ${pluginName})
+
 endfunction()
 
 add_designer_plugin(CollapsibleGroupBox)
