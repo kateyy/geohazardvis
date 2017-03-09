@@ -177,18 +177,18 @@ public:
   /**
    * Returns the prop bounds.
    */
-  double* GetBounds() VTK_OVERRIDE
+  virtual double* GetBounds() VTK_OVERRIDE
   {
     this->GetGridBounds(this->Bounds);
     return this->Bounds;
   }
   //@}
 
-  int RenderOpaqueGeometry(vtkViewport*) VTK_OVERRIDE;
-  int RenderTranslucentPolygonalGeometry(vtkViewport* viewport) VTK_OVERRIDE;
-  int RenderOverlay(vtkViewport* viewport) VTK_OVERRIDE;
-  int HasTranslucentPolygonalGeometry() VTK_OVERRIDE;
-  void ReleaseGraphicsResources(vtkWindow*) VTK_OVERRIDE;
+  virtual int RenderOpaqueGeometry(vtkViewport*) VTK_OVERRIDE;
+  virtual int RenderTranslucentPolygonalGeometry(vtkViewport* viewport) VTK_OVERRIDE;
+  virtual int RenderOverlay(vtkViewport* viewport) VTK_OVERRIDE;
+  virtual int HasTranslucentPolygonalGeometry() VTK_OVERRIDE;
+  virtual void ReleaseGraphicsResources(vtkWindow*) VTK_OVERRIDE;
 
 protected:
   vtkGridAxesPlane2DActor(vtkGridAxesHelper* helper = NULL);

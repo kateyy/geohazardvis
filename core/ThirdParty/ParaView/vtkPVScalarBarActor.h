@@ -50,7 +50,7 @@ class CORE_API vtkPVScalarBarActor : public vtkScalarBarActor
 {
 public:
   vtkTypeMacro(vtkPVScalarBarActor, vtkScalarBarActor);
-  void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
+  virtual void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
   static vtkPVScalarBarActor* New();
 
   //@{
@@ -148,7 +148,7 @@ public:
    * The parameter window could be used to determine which graphic
    * resources to release.
    */
-  void ReleaseGraphicsResources(vtkWindow*) VTK_OVERRIDE;
+  virtual void ReleaseGraphicsResources(vtkWindow*) VTK_OVERRIDE;
 
   /**
    * Overridden to sync internal variables with renderer state.
@@ -158,7 +158,7 @@ public:
   /**
    * Draw the scalar bar and annotation text to the screen.
    */
-  int RenderOverlay(vtkViewport* viewport) VTK_OVERRIDE;
+  virtual int RenderOverlay(vtkViewport* viewport) VTK_OVERRIDE;
 
 protected:
   vtkPVScalarBarActor();
@@ -168,14 +168,14 @@ protected:
   /**
    * These methods override the subclass implementation.
    */
-  void PrepareTitleText() VTK_OVERRIDE;
-  void ComputeScalarBarThickness() VTK_OVERRIDE;
-  void LayoutTitle() VTK_OVERRIDE;
-  void ComputeScalarBarLength() VTK_OVERRIDE;
-  void LayoutTicks() VTK_OVERRIDE;
-  void ConfigureAnnotations() VTK_OVERRIDE;
-  void ConfigureTitle() VTK_OVERRIDE;
-  void ConfigureTicks() VTK_OVERRIDE;
+  virtual void PrepareTitleText() VTK_OVERRIDE;
+  virtual void ComputeScalarBarThickness() VTK_OVERRIDE;
+  virtual void LayoutTitle() VTK_OVERRIDE;
+  virtual void ComputeScalarBarLength() VTK_OVERRIDE;
+  virtual void LayoutTicks() VTK_OVERRIDE;
+  virtual void ConfigureAnnotations() VTK_OVERRIDE;
+  virtual void ConfigureTitle() VTK_OVERRIDE;
+  virtual void ConfigureTicks() VTK_OVERRIDE;
   //@}
 
   /**
@@ -183,7 +183,7 @@ protected:
 
    * This overrides the subclass implementation.
    */
-  void EditAnnotations() VTK_OVERRIDE;
+  virtual void EditAnnotations() VTK_OVERRIDE;
 
   /**
    * Set up the ScalarBar, ScalarBarMapper, and ScalarBarActor based on the
