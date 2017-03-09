@@ -100,8 +100,8 @@ DoubleSpinBox::DoubleSpinBox(QWidget * parent)
     : QDoubleSpinBox(parent)
     , d_ptr{ std::make_unique<DoubleSpinBoxPrivate>(*this) }
 {
-    setDecimals(1000);
-    setButtonSymbols(QAbstractSpinBox::NoButtons);
+    setDecimals(d_ptr->validator->decimals());
+    setRange(d_ptr->validator->bottom(), d_ptr->validator->top());
 
     lineEdit()->setValidator(d_ptr->validator.get());
 }

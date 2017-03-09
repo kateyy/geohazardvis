@@ -24,7 +24,7 @@ public:
     explicit DoubleSpinBox(QWidget * parent = nullptr);
     ~DoubleSpinBox() override;
 
-    enum class Notation
+    enum Notation
     {
         Standard,
         Scientific,
