@@ -29,7 +29,9 @@ BinaryFile::~BinaryFile() = default;
 bool BinaryFile::isReadable() const
 {
     if (!m_file->isOpen())
+    {
         return false;
+    }
 
     return m_file->isReadable();
 }
@@ -37,7 +39,9 @@ bool BinaryFile::isReadable() const
 bool BinaryFile::isWritable() const
 {
     if (!m_file->isOpen())
+    {
         return false;
+    }
 
     return m_file->isWritable();
 }
@@ -59,7 +63,9 @@ bool BinaryFile::clear()
     m_file->close();
     bool success = m_file->open(QIODevice::WriteOnly | QIODevice::Truncate);
     if (!success)
+    {
         return false;
+    }
 
     m_file->close();
 
@@ -100,10 +106,21 @@ bool BinaryFile::write(const void * data, size_t bytes)
         return true;
     }
 
-    const auto writtenSize = m_file->write(
-        reinterpret_cast<const char *>(data), static_cast<qint64>(bytes));
+    qint64 bytesRemaining = bytes;
+    auto currentPtr = reinterpret_cast<const char *>(data);
 
-    return static_cast<size_t>(writtenSize) == bytes;
+    while (bytesRemaining)
+    {
+        auto bytesWritten = m_file->write(currentPtr, static_cast<qint64>(bytesRemaining));
+        if (bytesWritten == 0)
+        {
+            break;
+        }
+        currentPtr += bytesWritten;
+        bytesRemaining -= bytesWritten;
+    }
+
+    return bytesRemaining == 0;
 }
 
 size_t BinaryFile::read(size_t numBytes, void * dataPtr)
