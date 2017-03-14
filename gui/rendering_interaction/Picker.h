@@ -21,14 +21,15 @@ public:
     virtual ~Picker();
 
     void pick(const vtkVector2i & clickPosXY, vtkRenderer & renderer);
+    /** Discard all picking information, e.g., after modifying renderer contents. */
+    void resetInformation();
 
     const QString & pickedObjectInfoString() const;
-
     const VisualizationSelection & pickedObjectInfo() const;
-
     vtkDataArray * pickedScalarArray();
 
     Picker(Picker && other);
+    Picker & operator=(Picker && other);
 
 private:
     std::unique_ptr<Picker_private> d_ptr;

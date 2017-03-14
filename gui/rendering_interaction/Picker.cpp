@@ -74,11 +74,15 @@ Picker::Picker(Picker && other)
 {
 }
 
+Picker & Picker::operator=(Picker && other)
+{
+    d_ptr = std::move(other.d_ptr);
+    return *this;
+}
+
 void Picker::pick(const vtkVector2i & clickPosXY, vtkRenderer & renderer)
 {
-    d_ptr->pickedObjectInfoString.clear();
-    d_ptr->pickedObjectInfo.clear();
-    d_ptr->pickedScalarArray = nullptr;
+    resetInformation();
 
     // pick points first; if this picker does not hit, we will also not hit cells
     d_ptr->propPicker->Pick(clickPosXY[0], clickPosXY[1], 0, &renderer);
@@ -245,6 +249,13 @@ void Picker::pick(const vtkVector2i & clickPosXY, vtkRenderer & renderer)
     }
 
     d_ptr->pickedObjectInfoString = stream.readAll();
+}
+
+void Picker::resetInformation()
+{
+    d_ptr->pickedObjectInfoString.clear();
+    d_ptr->pickedObjectInfo.clear();
+    d_ptr->pickedScalarArray = nullptr;
 }
 
 const QString & Picker::pickedObjectInfoString() const

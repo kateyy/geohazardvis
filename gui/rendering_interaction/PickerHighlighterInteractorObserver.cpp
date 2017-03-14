@@ -42,6 +42,7 @@ void PickerHighlighterInteractorObserver::SetEnabled(int enabling)
     if (enabling == 0)
     {
         // make sure not to have an invalid info text somewhere, if we don't update anymore
+        m_picker->resetInformation();
         emit pickedInfoChanged("");
     }
 
@@ -106,6 +107,11 @@ const QString & PickerHighlighterInteractorObserver::pickedInfo() const
 
 void PickerHighlighterInteractorObserver::requestPickedInfoUpdate()
 {
+    if (!this->Enabled)
+    {
+        return;
+    }
+
     pick();
 }
 
