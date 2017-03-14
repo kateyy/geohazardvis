@@ -86,7 +86,7 @@ void RendererConfigWidget::setCurrentRenderView(AbstractRenderView * renderView)
     if (m_residualUi)
     {
         m_residualUi->setCurrentView(residualView);
-        m_residualUi->setVisible(residualView != nullptr);
+        m_residualGroupBox->setVisible(residualView != nullptr);
     }
 
 
