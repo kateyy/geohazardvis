@@ -41,19 +41,30 @@ public:
 
     template<typename T>
     bool write(const std::vector<T> & data);
+
+    template<typename T>
+    bool writeStruct(const T & plainDataStruct);
     
     bool write(const void * data, size_t bytes);
 
-    /** Reads numValues value of type T from the current position in the file and store them in vector data
-    * @param data is resized to numValues or less and filled with read data.
-    * @return true only if numValues are read from the file */
+    /**
+     * Reads numValues value of type T from the current position in the file and store them in
+     * vector data.
+     * @param data is resized to numValues or less and filled with read data.
+     * @return true only if numValues are read from the file.
+    */
     template<typename T>
     bool read(size_t numValues, std::vector<T> & data);
 
-    /** Reads numBytes bytes from the current position in the file.
-    * @param dataPtr must point to memory of at least numBytes bytes. 
-    * @return the number of bytes read from the file */
+    /**
+     * Reads numBytes bytes from the current position in the file.
+     * @param dataPtr must point to memory of at least numBytes bytes. 
+     * @return the number of bytes read from the file.
+     */
     size_t read(size_t numBytes, void * dataPtr);
+
+    template<typename T>
+    bool readStruct(T & plainDataStruct);
 
 private:
     std::unique_ptr<QFile> m_file;

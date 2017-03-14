@@ -1,3 +1,5 @@
+#pragma once
+
 #include "BinaryFile.h"
 
 
@@ -5,6 +7,12 @@ template<typename T>
 bool BinaryFile::write(const std::vector<T> & data)
 {
     return write(data.data(), data.size() * sizeof(T));
+}
+
+template<typename T>
+bool BinaryFile::writeStruct(const T & plainDataStruct)
+{
+    return write(&plainDataStruct, sizeof(T));
 }
 
 template<typename T>
@@ -23,4 +31,12 @@ bool BinaryFile::read(size_t numValues, std::vector<T> & data)
     }
 
     return true;
+}
+
+template<typename T>
+bool BinaryFile::readStruct(T & plainDataStruct)
+{
+    const auto numBytesRead = read(sizeof(T), &plainDataStruct);
+
+    return numBytesRead == sizeof(T);
 }
