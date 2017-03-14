@@ -230,6 +230,7 @@ generate_cppcheck_suppressions()
 
 set(IDE_PLUGINS_FOLDER "Plugins")
 set(IDE_TESTS_FOLDER "Tests")
+set(IDE_CPPCHECK_FOLDER "${IDE_TESTS_FOLDER}/Cppcheck")
 set(IDE_DEPLOYMENT_FOLDER "Deployment, Documentation")
 set(IDE_DOC_FOLDER ${IDE_DEPLOYMENT_FOLDER})
 set(IDE_TOOLS_FOLDER "Tools")
@@ -260,3 +261,5 @@ if (OPTION_BUILD_TOOLS)
     set(IDE_FOLDER ${IDE_TOOLS_FOLDER})
     add_subdirectory("tools")
 endif()
+
+create_cppcheck_ALL_target()

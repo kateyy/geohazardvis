@@ -29,13 +29,15 @@ if(NOT DEFINED PROCESSOR_COUNT)
 endif()
 
 
-if (OPTION_ADD_CPPCHECK_TARGETS AND NOT CPPCHECK_EXECUTABLE)
+if (OPTION_ADD_CPPCHECK_TARGETS AND (NOT CPPCHECK_EXECUTABLE OR NOT EXISTS ${CPPCHECK_EXECUTABLE}))
     find_program(CPPCHECK_EXECUTABLE cppcheck
         PATH_SUFFIXES cppcheck
     )
 endif()
 
-if (OPTION_ADD_CPPCHECK_TARGETS AND NOT CPPCHECK_EXECUTABLE)
+set(RUN_CPPCHECK OFF)
+
+if (OPTION_ADD_CPPCHECK_TARGETS AND (NOT CPPCHECK_EXECUTABLE OR NOT EXISTS ${CPPCHECK_EXECUTABLE}))
     message("Could not find cppcheck. Skipping cppcheck targets.")
 else()
     # "cppcheck --version" -> "Cppcheck x.y.z"
@@ -60,6 +62,9 @@ else()
                 list(GET versionList 2 CPPCHECK_VERSION_PATCH)
             endif()
         endif()
+
+        set(RUN_CPPCHECK ON)
+
     endif()
 endif()
 
@@ -67,15 +72,38 @@ endif()
 set(cppcheckSuppressionsFile_in ${PROJECT_SOURCE_DIR}/cmake/cppcheckSuppressions.in)
 set(cppcheckSuppressionsFile ${CMAKE_BINARY_DIR}/cppcheckSuppressions.txt)
 
-function(cppcheck_target TARGET)
+# https://arcanis.me/en/2015/10/17/cppcheck-and-clang-format/
+set(cppcheckParams
+    # --check-config
+    --enable=warning,style,performance,portability,information,missingInclude
+    --suppressions-list=${cppcheckSuppressionsFile}
+    -v
+    --quiet
+    --template="{file} \({line}\): {message} [{severity}:{id}]"
+    --library=std
+    --library=qt
+    --language=c++
+    -j ${PROCESSOR_COUNT}
+    -UQT_NAMESPACE
+)
+if (WIN32)
+    list(APPEND cppcheckParams --library=windows)
+endif()
 
-    if (NOT OPTION_ADD_CPPCHECK_TARGETS OR NOT CPPCHECK_EXECUTABLE)
+
+set(cppcheckAllIncludes CACHE INTERNAL "" FORCE)
+set(cppcheckAllSources CACHE INTERNAL "" FORCE)
+
+
+function(cppcheck_target target)
+
+    if (NOT RUN_CPPCHECK)
         return()
     endif()
 
-    get_target_property(_rawSources ${TARGET} SOURCES)
-    get_target_property(_sourceDir ${TARGET} SOURCE_DIR)
-    get_target_property(_rawIncludes ${TARGET} INCLUDE_DIRECTORIES)
+    get_target_property(_rawSources ${target} SOURCES)
+    get_target_property(_sourceDir ${target} SOURCE_DIR)
+    get_target_property(_rawIncludes ${target} INCLUDE_DIRECTORIES)
 
     set(_sources)
     foreach(_src ${_rawSources})
@@ -90,36 +118,21 @@ function(cppcheck_target TARGET)
         endif()
     endforeach()
 
-    # https://arcanis.me/en/2015/10/17/cppcheck-and-clang-format/
-    set(_cppcheckParams
-        # --check-config
-        --enable=warning,style,performance,portability,information,missingInclude
-        --suppressions-list=${cppcheckSuppressionsFile}
-        -v
-        --quiet
-        --template="{file} \({line}\): {message} [{severity}:{id}]"
-        --library=std
-        --library=qt
-        --language=c++
-        -j ${PROCESSOR_COUNT}
-        -UQT_NAMESPACE
-    )
-    if (WIN32)
-        list(APPEND _cppcheckParams --library=windows)
-    endif()
+    set(cppcheckAllIncludes ${cppcheckAllIncludes} ${_includes} CACHE INTERNAL "" FORCE)
+    set(cppcheckAllSources ${cppcheckAllSources} ${_sources} CACHE INTERNAL "" FORCE)
 
-    add_custom_target( cppcheck_${TARGET}
+    add_custom_target( cppcheck_${target}
         COMMAND ${CPPCHECK_EXECUTABLE}
-            ${_cppcheckParams}
+            ${cppcheckParams}
             ${_includes}
             ${_sources}
         SOURCES
             ${cppcheckSuppressionsFile_in}
     )
     source_group("" FILES ${cppcheckSuppressionsFile_in})
-    set_target_properties( cppcheck_${TARGET}
+    set_target_properties( cppcheck_${target}
         PROPERTIES
-        FOLDER              "Tests"
+        FOLDER              ${IDE_CPPCHECK_FOLDER}
         EXCLUDE_FROM_ALL    ON
     )
 
@@ -130,4 +143,33 @@ function(generate_cppcheck_suppressions)
     if (OPTION_ADD_CPPCHECK_TARGETS)
         configure_file(${cppcheckSuppressionsFile_in} ${cppcheckSuppressionsFile})
     endif()
+endfunction()
+
+
+function(create_cppcheck_ALL_target)
+
+    if (NOT RUN_CPPCHECK)
+        return()
+    endif()
+
+    set(target cppcheck_ALL)
+    
+    list(REMOVE_DUPLICATES cppcheckAllIncludes)
+    list(REMOVE_DUPLICATES cppcheckAllSources)
+
+    add_custom_target(cppcheck_ALL
+        COMMAND ${CPPCHECK_EXECUTABLE}
+            ${cppcheckParams}
+            ${cppcheckAllIncludes}
+            ${cppcheckAllSources}
+        SOURCES
+            ${cppcheckSuppressionsFile_in}
+    )
+    source_group("" FILES ${cppcheckSuppressionsFile_in})
+    set_target_properties(cppcheck_ALL
+        PROPERTIES
+        FOLDER              ${IDE_CPPCHECK_FOLDER}
+        EXCLUDE_FROM_ALL    ON
+    )
+
 endfunction()

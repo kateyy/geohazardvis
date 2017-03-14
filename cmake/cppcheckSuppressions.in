@@ -1,6 +1,7 @@
 
 missingIncludeSystem
 purgedConfiguration
+toomanyconfigs
 unmatchedSuppression
 
 *:@CMAKE_BINARY_DIR@/ThirdParty/*
