@@ -423,11 +423,18 @@ void ResidualVerificationView::setDataHelper(unsigned int subViewIndex, DataObje
 
     setDataInternal(subViewIndex, dataObject, nullptr);
 
-    if (dataObject)
+    vtkSmartPointer<vtkDataSet> dataSet = dataObject ? dataObject->dataSet() : nullptr;
+    if (dataObject && !dataSet)
     {
-        assert(dataObject->dataSet());
-        auto & dataSet = *dataObject->dataSet();
-        m_attributeNamesLocations[subViewIndex] = findDataSetAttributeName(dataSet, subViewIndex);
+        dataSet = dataObject->processedOutputDataSet();
+        if (!dataSet)
+        {
+            qDebug() << "Unsupported data object (no data found):" << dataObject->name();
+        }
+    }
+    if (dataObject && dataSet)
+    {
+        m_attributeNamesLocations[subViewIndex] = findDataSetAttributeName(*dataSet, subViewIndex);
     }
     else
     {
