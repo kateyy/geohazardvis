@@ -53,10 +53,14 @@ void ResidualViewConfigWidget::setCurrentView(ResidualVerificationView * view)
     connect(&view->dataSetHandler(), &DataSetHandler::dataObjectsChanged, this, &ResidualViewConfigWidget::updateComboBoxes);
 
     m_ui->interpolationModeCheckBox->setChecked(iModeToBool(view->interpolationMode()));
-    m_viewConnects.emplace_back(connect(m_ui->interpolationModeCheckBox, &QCheckBox::toggled, [view, boolToIMode] (bool checked) {
+    m_viewConnects.emplace_back(connect(m_ui->interpolationModeCheckBox, &QCheckBox::toggled,
+    [view, boolToIMode] (bool checked)
+    {
         view->setInterpolationMode(boolToIMode(checked));
     }));
-    m_viewConnects.emplace_back(connect(view, &ResidualVerificationView::interpolationModeChanged, [this, iModeToBool] (ResidualVerificationView::InterpolationMode mode) {
+    m_viewConnects.emplace_back(connect(view, &ResidualVerificationView::interpolationModeChanged,
+    [this, iModeToBool] (ResidualVerificationView::InterpolationMode mode)
+    {
         QSignalBlocker signalBlocker(m_ui->interpolationModeCheckBox);
         m_ui->interpolationModeCheckBox->setChecked(iModeToBool(mode));
     }));
@@ -65,14 +69,16 @@ void ResidualViewConfigWidget::setCurrentView(ResidualVerificationView * view)
 
     using LosType = decltype(los);
 
-    auto uiSetLos = [this] (LosType los) {
+    auto uiSetLos = [this] (LosType los)
+    {
         m_ui->losX->setValue(los.GetX());
         m_ui->losY->setValue(los.GetY());
         m_ui->losZ->setValue(los.GetZ());
     };
     uiSetLos(los);
 
-    auto viewSetLos = [this, view] () {
+    auto viewSetLos = [this, view] ()
+    {
         LosType los = { m_ui->losX->value(), m_ui->losY->value(), m_ui->losZ->value() };
 
         if (view->inSARLineOfSight() == los)
@@ -83,19 +89,24 @@ void ResidualViewConfigWidget::setCurrentView(ResidualVerificationView * view)
         view->setInSARLineOfSight(los);
     };
 
-    m_viewConnects.emplace_back(connect(m_ui->losX, static_cast<void(QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), viewSetLos));
-    m_viewConnects.emplace_back(connect(m_ui->losY, static_cast<void(QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), viewSetLos));
-    m_viewConnects.emplace_back(connect(m_ui->losZ, static_cast<void(QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), viewSetLos));
+    const auto qSpinBoxValueChanged = static_cast<void(QSpinBox::*)(int)>(&QSpinBox::valueChanged);
+    const auto qdSpinBoxValueChanged = static_cast<void(QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged);
+
+    m_viewConnects.emplace_back(connect(m_ui->losX, qdSpinBoxValueChanged, viewSetLos));
+    m_viewConnects.emplace_back(connect(m_ui->losY, qdSpinBoxValueChanged, viewSetLos));
+    m_viewConnects.emplace_back(connect(m_ui->losZ, qdSpinBoxValueChanged, viewSetLos));
 
     m_viewConnects.emplace_back(connect(view, &ResidualVerificationView::lineOfSightChanged, uiSetLos));
 
 
-    m_viewConnects.emplace_back(connect(m_ui->observationScale, static_cast<void(QSpinBox::*)(int)>(&QSpinBox::valueChanged),
+    m_viewConnects.emplace_back(connect(m_ui->observationScale, qSpinBoxValueChanged,
         view, &ResidualVerificationView::setObservationUnitDecimalExponent));
-    m_viewConnects.emplace_back(connect(m_ui->modelScale, static_cast<void(QSpinBox::*)(int)>(&QSpinBox::valueChanged),
+    m_viewConnects.emplace_back(connect(m_ui->modelScale, qSpinBoxValueChanged,
         view, &ResidualVerificationView::setModelUnitDecimalExponent));
 
-    m_viewConnects.emplace_back(connect(view, &ResidualVerificationView::unitDecimalExponentsChanged, [this] (int o, int m) {
+    m_viewConnects.emplace_back(connect(view, &ResidualVerificationView::unitDecimalExponentsChanged,
+    [this] (int o, int m)
+    {
         QSignalBlocker observationSignalBlocker(m_ui->observationScale);
         QSignalBlocker modelSignalBlocker(m_ui->modelScale);
 
@@ -132,25 +143,31 @@ void ResidualViewConfigWidget::updateComboBoxes()
             continue;
         }
 
-        const auto ptrData = dataObjectPtrToVariant(dataObject);
+        if (![dataObject] ()
+            {
+                if (dynamic_cast<ImageDataObject *>(dataObject))
+                {
+                    return true;
+                }
 
-        if (dynamic_cast<ImageDataObject *>(dataObject))
+                if (auto genericPoly = dynamic_cast<GenericPolyDataObject *>(dataObject))
+                {
+                    if (auto poly = dynamic_cast<PolyDataObject *>(genericPoly))
+                    {
+                        return poly->is2p5D();
+                    }
+                    return true;
+                }
+
+                return false;
+            }())
         {
-            m_ui->observationCombo->addItem(dataObject->name(), ptrData);
-            m_ui->modelCombo->addItem(dataObject->name(), ptrData);
             continue;
         }
 
-        if (auto poly = dynamic_cast<PolyDataObject *>(dataObject))
-        {
-            if (!poly->is2p5D())
-            {
-                continue;
-            }
-
-            m_ui->observationCombo->addItem(dataObject->name(), ptrData);
-            m_ui->modelCombo->addItem(dataObject->name(), ptrData);
-        }
+        const auto ptrData = dataObjectPtrToVariant(dataObject);
+        m_ui->observationCombo->addItem(dataObject->name(), ptrData);
+        m_ui->modelCombo->addItem(dataObject->name(), ptrData);
     }
 
     const QString observationName = m_currentView->observationData() ? m_currentView->observationData()->name() : "";

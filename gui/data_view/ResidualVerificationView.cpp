@@ -910,10 +910,10 @@ void ResidualVerificationView::updateResidual()
 
     auto observationDSTransformedPtr = useTransformedCoordinates
         ? transformedObservationCoords->coordinateTransformedDataSet(coordinateSystem)
-        : m_observationData->dataSet();
+        : vtkSmartPointer<vtkDataSet>(m_observationData->dataSet());
     auto modelDSTransformedPtr = useTransformedCoordinates
         ? transformedModelCoords->coordinateTransformedDataSet(coordinateSystem)
-        : m_modelData->dataSet();
+        : vtkSmartPointer<vtkDataSet>(m_modelData->dataSet());
 
     if (!observationDSTransformedPtr || !modelDSTransformedPtr)
     {
@@ -1049,25 +1049,23 @@ void ResidualVerificationView::updateResidual()
     m_newResidual = vtkSmartPointer<vtkDataSet>::Take(referenceDataSet.NewInstance());
     m_newResidual->CopyStructure(&referenceDataSet);
 
-    if (auto residualImage = vtkImageData::SafeDownCast(m_newResidual))
-    {
-        assert(residualData->GetNumberOfTuples() == residualImage->GetNumberOfPoints());
+    const bool resultInCellData = m_interpolationMode == InterpolationMode::modelToObservation
+        ? m_attributeNamesLocations[observationIndex].second
+        : m_attributeNamesLocations[modelIndex].second;
+    const auto residualExpectedTuples = resultInCellData
+        ? m_newResidual->GetNumberOfCells()
+        : m_newResidual->GetNumberOfPoints();
 
-        residualImage->GetPointData()->SetScalars(residualData);
-    }
-    else if (auto residualPoly = vtkPolyData::SafeDownCast(m_newResidual))
+    if (residualData->GetNumberOfTuples() != residualExpectedTuples)
     {
-        // assuming that we store attributes in polygonal data always per cell
-        assert(residualPoly->GetNumberOfCells() == residualData->GetNumberOfTuples());
-
-        residualPoly->GetCellData()->SetScalars(residualData);
-    }
-    else
-    {
-        qDebug() << "Residual creation failed";
-
+        qDebug() << "Residual creation failed: Unexpected output size.";
         return;
     }
+
+    auto & resultAttributes = resultInCellData
+        ? static_cast<vtkDataSetAttributes &>(*m_newResidual->GetCellData())
+        : static_cast<vtkDataSetAttributes &>(*m_newResidual->GetPointData());
+    resultAttributes.SetScalars(residualData);
 }
 
 void ResidualVerificationView::updateGuiAfterDataChange()
@@ -1297,34 +1295,62 @@ std::pair<QString, bool> ResidualVerificationView::findDataSetAttributeName(vtkD
 
     if (inputType == modelIndex)
     {
-        if (vtkPolyData::SafeDownCast(&dataSet) != nullptr)
+        // Polygonal data is cell based, point and grid data is point based.
+        bool cellBasedData = false;
+        bool usePrimaryAttribute = true;
+
+        if (auto poly = vtkPolyData::SafeDownCast(&dataSet))
         {
-            // assuming that we store attributes in polygonal data always per cell
-            auto scalars = dataSet.GetCellData()->GetScalars();
-            if (!scalars)
+            if (auto polys = poly->GetPolys())
             {
-                scalars = dataSet.GetCellData()->GetArray("displacement vectors");
+                cellBasedData = polys->GetNumberOfCells() > 0;
             }
-            if (!scalars)
+        }
+
+        auto & primaryAttributes = cellBasedData
+            ? static_cast<vtkDataSetAttributes &>(*dataSet.GetCellData())
+            : static_cast<vtkDataSetAttributes &>(*dataSet.GetPointData());
+        auto & secondaryAttributes = cellBasedData
+            ? static_cast<vtkDataSetAttributes &>(*dataSet.GetPointData())
+            : static_cast<vtkDataSetAttributes &>(*dataSet.GetCellData());
+
+        static const auto modelArrayNames = {
+            "Deformation", "deformation"
+            "Displacement Vectors", "displacement vectors",
+            "U-"
+        };
+
+        auto findDisplacementData = [] (vtkDataSetAttributes & attributes) -> vtkAbstractArray *
+        {
+            for (auto nameIt = modelArrayNames.begin(); nameIt != modelArrayNames.end(); ++nameIt)
             {
-                scalars = dataSet.GetCellData()->GetArray("U-");
-            }
-            if (scalars)
-            {
-                if (const auto name = scalars->GetName())
+                if (auto array = attributes.GetAbstractArray(*nameIt))
                 {
-                    return std::make_pair(QString::fromUtf8(name), true);
+                    return array;
                 }
             }
-        }
+            if (auto vectors = attributes.GetVectors())
+            {
+                return vectors;
+            }
+            return attributes.GetScalars();
+        };
 
-        const auto result = checkDefaultVectors(dataSet);
-        if (!result.first.isEmpty())
+        auto displacementData = findDisplacementData(primaryAttributes);
+        if (!displacementData)
         {
-            return result;
+            usePrimaryAttribute = false;
+            displacementData = findDisplacementData(secondaryAttributes);
         }
 
-        return checkDefaultScalars(dataSet);
+        if (!displacementData)
+        {
+            return {};
+        }
+
+        const bool useCellData = usePrimaryAttribute ? cellBasedData : !cellBasedData;
+
+        return std::make_pair(QString::fromUtf8(displacementData->GetName()), useCellData);
     }
 
     return std::make_pair(QString("Residual"), true);

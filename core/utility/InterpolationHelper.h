@@ -7,6 +7,7 @@ class QString;
 class vtkDataArray;
 class vtkDataSet;
 class vtkImageData;
+class vtkPolyData;
 template<typename T> class vtkSmartPointer;
 
 
@@ -19,9 +20,16 @@ public:
         const QString & sourceAttributeName, 
         bool attributeInCellData);
 
-private:
+    // Fast image on image interpolation for images with matching structure
     static vtkSmartPointer<vtkDataArray> interpolateImageOnImage(
         vtkImageData & baseImage,
         vtkImageData & sourceImage,
         const QString & sourceAttributeName);
+
+    // Fast poly on poly interpolation for data sets with matching structure
+    static vtkSmartPointer<vtkDataArray> interpolatePolyOnPoly(
+        vtkPolyData & basePoly,
+        vtkPolyData & sourcePoly,
+        const QString & sourceAttributeName,
+        bool attributeInCellData);
 };

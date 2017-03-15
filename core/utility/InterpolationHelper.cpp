@@ -1,5 +1,7 @@
 #include <core/utility/InterpolationHelper.h>
 
+#include <algorithm>
+
 #include <QString>
 
 #include <vtkAssignAttribute.h>
@@ -27,8 +29,6 @@ vtkSmartPointer<vtkDataArray> InterpolationHelper::interpolateImageOnImage(
     vtkImageData & sourceImage,
     const QString & sourceAttributeName)
 {
-    // Fast image on image interpolation for images with matching structure
-
     ImageExtent baseExtent(baseImage.GetExtent()), sourceExtent(sourceImage.GetExtent());
     vtkVector3d baseOrigin(baseImage.GetOrigin()), sourceOrigin(sourceImage.GetOrigin());
     vtkVector3d baseSpacing(baseImage.GetSpacing()), sourceSpacing(sourceImage.GetSpacing());
@@ -80,9 +80,92 @@ vtkSmartPointer<vtkDataArray> InterpolationHelper::interpolateImageOnImage(
     return sourceImage.GetPointData()->GetArray(sourceAttributeName.toUtf8().data());
 }
 
+vtkSmartPointer<vtkDataArray> InterpolationHelper::interpolatePolyOnPoly(
+    vtkPolyData & basePoly,
+    vtkPolyData & sourcePoly,
+    const QString & sourceAttributeName,
+    bool attributeInCellData)
+{
+    if (// Point coordinates are required.
+        basePoly.GetNumberOfPoints() != sourcePoly.GetNumberOfPoints()
+        // Lines / strips are not supported here
+        || basePoly.GetNumberOfLines() != 0 || sourcePoly.GetNumberOfLines() != 0
+        || basePoly.GetNumberOfStrips() != 0 || sourcePoly.GetNumberOfStrips() != 0
+        // Number of verts/polys must match and only one type at a time is supported
+        || basePoly.GetNumberOfVerts() != sourcePoly.GetNumberOfVerts()
+        || basePoly.GetNumberOfPolys() != sourcePoly.GetNumberOfPolys()
+        || (basePoly.GetNumberOfPolys() > 0 && basePoly.GetNumberOfVerts() > 0))
+    {
+        return{};
+    }
+
+
+    // First: cheep index comparison
+    const bool isPointCloud = basePoly.GetNumberOfVerts() > 0;
+    auto & baseCells = isPointCloud ? *basePoly.GetVerts() : *basePoly.GetPolys();
+    auto & sourceCells = isPointCloud ? *sourcePoly.GetVerts() : *sourcePoly.GetPolys();
+    baseCells.InitTraversal();
+    sourceCells.InitTraversal();
+    while (true)
+    {
+        vtkIdType baseNumCellPoints, sourceNumCellPoints;
+        vtkIdType * baseCellPointIds, *sourceCellPointIds;
+        const auto baseHasNextCell = baseCells.GetNextCell(baseNumCellPoints, baseCellPointIds);
+        const auto sourceHasNextCell = sourceCells.GetNextCell(sourceNumCellPoints, sourceCellPointIds);
+        if (baseHasNextCell != sourceHasNextCell
+            || baseNumCellPoints != sourceNumCellPoints)
+        {
+            return{};
+        }
+        if (!baseHasNextCell)
+        {
+            // okay, all cells are equal
+            break;
+        }
+        assert(baseCellPointIds && sourceCellPointIds);
+        const auto baseEndIt = baseCellPointIds + baseNumCellPoints;
+        const auto its = std::mismatch(baseCellPointIds, baseEndIt, sourceCellPointIds);
+        if (its.first != baseEndIt)
+        {
+            return{};
+        }
+    }
+
+    const auto numPoints = basePoly.GetNumberOfPoints();
+    for (vtkIdType i = 0; i < numPoints; ++i)
+    {
+        vtkVector3d basePoint, sourcePoint;
+        basePoly.GetPoint(i, basePoint.GetData());
+        sourcePoly.GetPoint(i, sourcePoint.GetData());
+
+        const double epsilon = 10.e-5;
+        // Check if the individual components are close enough, don't compute expensive root.
+        if (maxComponent(abs(basePoint - sourcePoint)) > epsilon)
+        {
+            return{};
+        }
+
+    }
+
+    auto & attributes = attributeInCellData
+        ? static_cast<vtkDataSetAttributes &>(*sourcePoly.GetCellData())
+        : static_cast<vtkDataSetAttributes &>(*sourcePoly.GetPointData());
+
+    if (sourceAttributeName.isEmpty())
+    {
+        return attributes.GetScalars();
+    }
+
+    return attributes.GetArray(sourceAttributeName.toUtf8().data());
+}
+
 
 /** Interpolate the source's attributes to the structure of the base data set */
-vtkSmartPointer<vtkDataArray> InterpolationHelper::interpolate(vtkDataSet & baseDataSet, vtkDataSet & sourceDataSet, const QString & sourceAttributeName, bool attributeInCellData)
+vtkSmartPointer<vtkDataArray> InterpolationHelper::interpolate(
+    vtkDataSet & baseDataSet,
+    vtkDataSet & sourceDataSet,
+    const QString & sourceAttributeName,
+    bool attributeInCellData)
 {
     auto baseImage = vtkImageData::SafeDownCast(&baseDataSet);
     auto sourceImage = vtkImageData::SafeDownCast(&sourceDataSet);
@@ -99,6 +182,15 @@ vtkSmartPointer<vtkDataArray> InterpolationHelper::interpolate(vtkDataSet & base
 
     auto basePoly = vtkPolyData::SafeDownCast(&baseDataSet);
     auto sourcePoly = vtkPolyData::SafeDownCast(&sourceDataSet);
+
+    if (basePoly && sourcePoly)
+    {
+        auto result = interpolatePolyOnPoly(*basePoly, *sourcePoly, sourceAttributeName, attributeInCellData);
+        if (result)
+        {
+            return result;
+        }
+    }
 
     auto baseDataProducer = vtkSmartPointer<vtkTrivialProducer>::New();
     baseDataProducer->SetOutput(&baseDataSet);
@@ -156,7 +248,7 @@ vtkSmartPointer<vtkDataArray> InterpolationHelper::interpolate(vtkDataSet & base
     vtkSmartPointer<vtkAlgorithm> resultAlgorithm = probe;
 
     // the probe creates point based values for polygons, but we want them associated with the centroids
-    if (basePoly)
+    if (basePoly && attributeInCellData)
     {
         auto pointToCellData = vtkSmartPointer<vtkPointDataToCellData>::New();
         pointToCellData->SetInputConnection(probe->GetOutputPort());
@@ -173,18 +265,14 @@ vtkSmartPointer<vtkDataArray> InterpolationHelper::interpolate(vtkDataSet & base
 
     auto probedDataSet = vtkDataSet::SafeDownCast(resultAlgorithm->GetOutputDataObject(0));
 
-    if (basePoly)
-    {
-        if (sourceAttributeName.isEmpty())
-        {
-            return probedDataSet->GetCellData()->GetScalars();
-        }
-        return probedDataSet->GetCellData()->GetArray(sourceAttributeName.toUtf8().data());
-    }
+    auto & probedAttributes = basePoly && attributeInCellData
+        ? static_cast<vtkDataSetAttributes &>(*probedDataSet->GetCellData())
+        : static_cast<vtkDataSetAttributes &>(*probedDataSet->GetPointData());
 
     if (sourceAttributeName.isEmpty())
     {
-        return probedDataSet->GetPointData()->GetScalars();
+        return probedAttributes.GetScalars();
     }
-    return probedDataSet->GetPointData()->GetArray(sourceAttributeName.toUtf8().data());
+
+    return probedAttributes.GetArray(sourceAttributeName.toUtf8().data());
 }
