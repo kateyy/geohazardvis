@@ -15,6 +15,8 @@ public:
     explicit ImageDataObject(const QString & name, vtkImageData & dataSet);
     ~ImageDataObject() override;
 
+    std::unique_ptr<DataObject> newInstance(const QString & name, vtkDataSet * dataSet) const override;
+
     bool is3D() const override;
     IndexType defaultAttributeLocation() const override;
 

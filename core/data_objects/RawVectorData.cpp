@@ -1,5 +1,7 @@
 #include "RawVectorData.h"
 
+#include <QDebug>
+
 #include <vtkCommand.h>
 #include <vtkFloatArray.h>
 
@@ -18,6 +20,13 @@ RawVectorData::RawVectorData(const QString & name, vtkFloatArray & dataArray)
 }
 
 RawVectorData::~RawVectorData() = default;
+
+std::unique_ptr<DataObject> RawVectorData::newInstance(const QString & name, vtkDataSet * /*dataSet*/) const
+{
+    qDebug() << "Call to unsupported newInstance function in RawVectorData, "
+        "trying to create data object named " + name;
+    return{};
+}
 
 bool RawVectorData::is3D() const
 {

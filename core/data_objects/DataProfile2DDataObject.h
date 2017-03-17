@@ -53,6 +53,9 @@ public:
         const PreprocessingPipeline & preprocessingPipeline = {});
     ~DataProfile2DDataObject() override;
 
+    /** Not supported by this class as the parameters are not valid with the ctor. */
+    std::unique_ptr<DataObject> newInstance(const QString & name, vtkDataSet * dataSet) const override;
+
     /** @return whether valid scalar data was found in the constructor. Otherwise, just delete your instance.. */
     bool isValid() const;
 

@@ -11,6 +11,8 @@ public:
     PointCloudDataObject(const QString & name, vtkPolyData & dataSet);
     ~PointCloudDataObject() override;
 
+    std::unique_ptr<DataObject> newInstance(const QString & name, vtkDataSet * dataSet) const override;
+
     IndexType defaultAttributeLocation() const override;
 
     void addDataArray(vtkDataArray & dataArray) override;

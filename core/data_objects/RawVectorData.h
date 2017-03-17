@@ -14,6 +14,9 @@ public:
     RawVectorData(const QString & name, vtkFloatArray & dataArray);
     ~RawVectorData() override;
 
+    /** Unsupported for this class, as the ctor requires a data array as 2nd parameter. */
+    std::unique_ptr<DataObject> newInstance(const QString & name, vtkDataSet * dataSet) const override;
+
     bool is3D() const override;
     IndexType defaultAttributeLocation() const override;
 

@@ -50,6 +50,15 @@ VectorGrid3DDataObject::VectorGrid3DDataObject(const QString & name, vtkImageDat
 
 VectorGrid3DDataObject::~VectorGrid3DDataObject() = default;
 
+std::unique_ptr<DataObject> VectorGrid3DDataObject::newInstance(const QString & name, vtkDataSet * dataSet) const
+{
+    if (auto image = vtkImageData::SafeDownCast(dataSet))
+    {
+        return std::make_unique<VectorGrid3DDataObject>(name, *image);
+    }
+    return{};
+}
+
 bool VectorGrid3DDataObject::is3D() const
 {
     return true;

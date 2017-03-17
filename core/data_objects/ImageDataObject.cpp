@@ -52,6 +52,15 @@ ImageDataObject::ImageDataObject(const QString & name, vtkImageData & dataSet)
 
 ImageDataObject::~ImageDataObject() = default;
 
+std::unique_ptr<DataObject> ImageDataObject::newInstance(const QString & name, vtkDataSet * dataSet) const
+{
+    if (auto image = vtkImageData::SafeDownCast(dataSet))
+    {
+        return std::make_unique<ImageDataObject>(name, *image);
+    }
+    return{};
+}
+
 bool ImageDataObject::is3D() const
 {
     return false;

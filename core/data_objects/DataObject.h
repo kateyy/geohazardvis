@@ -35,6 +35,14 @@ public:
     explicit DataObject(const QString & name, vtkDataSet * dataSet);
     ~DataObject() override;
 
+    /**
+     * Based on a concrete DataObject instance, create a new instance of the same class.
+     *
+     * Not all subclasses implement this function, as some constructor parameters are incompatible.
+     * In this case, nullptr shall be returned.
+     */
+    virtual std::unique_ptr<DataObject> newInstance(const QString & name, vtkDataSet * dataSet) const = 0;
+
     /** @return true if this is a 3D geometry (and false if it's image/2D data) */
     virtual bool is3D() const = 0;
     virtual IndexType defaultAttributeLocation() const = 0;

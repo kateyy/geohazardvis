@@ -32,6 +32,11 @@ public:
     {
     }
 
+    std::unique_ptr<DataObject> newInstance(const QString & name, vtkDataSet * dataSet) const override
+    {
+        return std::make_unique<DataObject_test_DataObject>(name, dataSet);
+    }
+
     bool is3D() const override { return false; }
     IndexType defaultAttributeLocation() const override { return IndexType::invalid; }
 
@@ -87,6 +92,66 @@ public:
         return std::make_unique<PointCloudDataObject>("vertices", *polyData);
     }
 };
+
+TEST_F(DataObject_test, newInstance_ImageDataObject)
+{
+    auto dataSet = vtkSmartPointer<vtkImageData>::New();
+    dataSet->SetDimensions(1, 1, 1);
+    dataSet->AllocateScalars(VTK_FLOAT, 1);
+    auto dataObject1 = std::make_unique<ImageDataObject>("dataObject", *dataSet);
+    auto newInstance = dataObject1->newInstance("newInstance", dataSet);
+    ASSERT_TRUE(newInstance);
+    ASSERT_EQ("newInstance", newInstance->name());
+    ASSERT_EQ(dataSet.Get(), newInstance->dataSet());
+}
+
+TEST_F(DataObject_test, newInstance_PointCloudDataObject)
+{
+    auto dataSet = vtkSmartPointer<vtkPolyData>::New();
+    auto points = vtkSmartPointer<vtkPoints>::New();
+    points->SetNumberOfPoints(1);
+    dataSet->SetPoints(points);
+    auto verts = vtkSmartPointer<vtkCellArray>::New();
+    verts->SetNumberOfCells(1);
+    verts->InsertCellPoint(0);
+    dataSet->SetVerts(verts);
+    auto dataObject1 = std::make_unique<PointCloudDataObject>("dataObject", *dataSet);
+    auto newInstance = dataObject1->newInstance("newInstance", dataSet);
+    ASSERT_TRUE(newInstance);
+    ASSERT_EQ("newInstance", newInstance->name());
+    ASSERT_EQ(dataSet.Get(), newInstance->dataSet());
+}
+
+TEST_F(DataObject_test, newInstance_PolyDataObject)
+{
+    auto dataSet = vtkSmartPointer<vtkPolyData>::New();
+    auto points = vtkSmartPointer<vtkPoints>::New();
+    points->SetNumberOfPoints(3);
+    dataSet->SetPoints(points);
+    auto polys = vtkSmartPointer<vtkCellArray>::New();
+    polys->SetNumberOfCells(1);
+    polys->InsertCellPoint(0);
+    polys->InsertCellPoint(1);
+    polys->InsertCellPoint(2);
+    dataSet->SetPolys(polys);
+    auto dataObject1 = std::make_unique<PolyDataObject>("dataObject", *dataSet);
+    auto newInstance = dataObject1->newInstance("newInstance", dataSet);
+    ASSERT_TRUE(newInstance);
+    ASSERT_EQ("newInstance", newInstance->name());
+    ASSERT_EQ(dataSet.Get(), newInstance->dataSet());
+}
+
+TEST_F(DataObject_test, newInstance_VectorGrid3DDataObject)
+{
+    auto dataSet = vtkSmartPointer<vtkImageData>::New();
+    dataSet->SetDimensions(3, 3, 3);
+    dataSet->AllocateScalars(VTK_FLOAT, 3);
+    auto dataObject1 = std::make_unique<VectorGrid3DDataObject>("dataObject", *dataSet);
+    auto newInstance = dataObject1->newInstance("newInstance", dataSet);
+    ASSERT_TRUE(newInstance);
+    ASSERT_EQ("newInstance", newInstance->name());
+    ASSERT_EQ(dataSet.Get(), newInstance->dataSet());
+}
 
 TEST_F(DataObject_test, ClearAttributesKeepsNameArray)
 {

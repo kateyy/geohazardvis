@@ -30,6 +30,15 @@ PolyDataObject::PolyDataObject(const QString & name, vtkPolyData & dataSet)
 
 PolyDataObject::~PolyDataObject() = default;
 
+std::unique_ptr<DataObject> PolyDataObject::newInstance(const QString & name, vtkDataSet * dataSet) const
+{
+    if (auto poly = vtkPolyData::SafeDownCast(dataSet))
+    {
+        return std::make_unique<PolyDataObject>(name, *poly);
+    }
+    return{};
+}
+
 IndexType PolyDataObject::defaultAttributeLocation() const
 {
     return IndexType::cells;

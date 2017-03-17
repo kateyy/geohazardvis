@@ -22,6 +22,11 @@ public:
     {
     }
 
+    std::unique_ptr<DataObject> newInstance(const QString & name, vtkDataSet * /*dataSet*/) const override
+    {
+        return std::make_unique<TestDataObject>(name);
+    }
+
     bool is3D() const override
     {
         return false;

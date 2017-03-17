@@ -32,6 +32,11 @@ public:
         }
     }
 
+    std::unique_ptr<DataObject> newInstance(const QString & /*name*/, vtkDataSet * /*dataSet*/) const override
+    {
+        return{};
+    }
+
     bool is3D() const override { return false; }
     IndexType defaultAttributeLocation() const override { return IndexType::points; }
     const QString & dataTypeName() const override { return m_dataTypeName; }

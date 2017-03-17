@@ -16,6 +16,8 @@ public:
     VectorGrid3DDataObject(const QString & name, vtkImageData & dataSet);
     ~VectorGrid3DDataObject() override;
 
+    std::unique_ptr<DataObject> newInstance(const QString & name, vtkDataSet * dataSet) const override;
+
     bool is3D() const override;
     IndexType defaultAttributeLocation() const override;
 

@@ -254,6 +254,11 @@ DataProfile2DDataObject::DataProfile2DDataObject(
 
 DataProfile2DDataObject::~DataProfile2DDataObject() = default;
 
+std::unique_ptr<DataObject> DataProfile2DDataObject::newInstance(const QString & /*name*/, vtkDataSet * /*dataSet*/) const
+{
+    return{};
+}
+
 bool DataProfile2DDataObject::isValid() const
 {
     return m_isValid;

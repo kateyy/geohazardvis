@@ -15,6 +15,8 @@ public:
     PolyDataObject(const QString & name, vtkPolyData & dataSet);
     ~PolyDataObject() override;
 
+    std::unique_ptr<DataObject> newInstance(const QString & name, vtkDataSet * dataSet) const override;
+
     IndexType defaultAttributeLocation() const override;
 
     void addDataArray(vtkDataArray & dataArray) override;
