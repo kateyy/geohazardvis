@@ -1,145 +1,45 @@
 #include <gui/data_view/ResidualVerificationView.h>
 
-#include <algorithm>
 #include <cassert>
-#include <functional>
-#include <type_traits>
 
 #include <QBoxLayout>
 #include <QProgressBar>
 #include <QToolBar>
 #include <QtConcurrent/QtConcurrent>
 
-#include <vtkArrayDispatch.h>
-#include <vtkAssume.h>
 #include <vtkCellData.h>
-#include <vtkDataArrayAccessor.h>
 #include <vtkImageData.h>
-#include <vtkInteractorStyle.h>
 #include <vtkPointData.h>
 #include <vtkPolyData.h>
-#include <vtkRenderWindowInteractor.h>
-#include <vtkSMPTools.h>
-#include <vtkVector.h>
 
 #include <core/AbstractVisualizedData.h>
-#include <core/DataSetHandler.h>
-#include <core/types.h>
 #include <core/color_mapping/ColorBarRepresentation.h>
 #include <core/color_mapping/ColorMapping.h>
-#include <core/data_objects/ImageDataObject.h>
-#include <core/data_objects/PolyDataObject.h>
-#include <core/utility/DataExtent.h>
-#include <core/utility/InterpolationHelper.h>
+#include <core/DataSetHandler.h>
+#include <core/data_objects/CoordinateTransformableDataObject.h>
+#include <core/utility/DataSetResidualHelper.h>
+#include <core/utility/macros.h>
 #include <core/utility/vtkCameraSynchronization.h>
-#include <core/utility/vtkvectorhelper.h>
-
 #include <gui/DataMapping.h>
 #include <gui/data_view/RendererImplementationResidual.h>
 #include <gui/data_view/RenderViewStrategy2D.h>
 
-namespace
-{
-
-struct ProjectToLineOfSightWorker
-{
-    vtkVector3d lineOfSight;
-    vtkSmartPointer<vtkDataArray> projectedData;
-
-    template<typename Vector_t>
-    void operator()(Vector_t * vectors)
-    {
-        VTK_ASSUME(vectors->GetNumberOfComponents() == 3);
-
-        using ValueType = typename vtkDataArrayAccessor<Vector_t>::APIType;
-
-        auto output = vtkSmartPointer<vtkAOSDataArrayTemplate<ValueType>>::New();
-        output->SetNumberOfTuples(vectors->GetNumberOfTuples());
-
-        lineOfSight.Normalize();
-        const auto los = convertTo<ValueType>(lineOfSight);
-
-        vtkDataArrayAccessor<Vector_t> v(vectors);
-        vtkDataArrayAccessor<Vector_t> l(output);
-
-        vtkSMPTools::For(0, vectors->GetNumberOfTuples(),
-            [v, l, los] (vtkIdType begin, vtkIdType end)
-        {
-            vtkVector3<ValueType> vector;
-            for (vtkIdType i = begin; i < end; ++i)
-            {
-                v.Get(i, vector.GetData());
-                const auto projection = vector.Dot(los);
-                l.Set(i, 0, projection);
-            };
-        });
-
-        projectedData = output;
-    }
-};
-
-struct ResidualWorker
-{
-    double observationUnitFactor;
-    double modelUnitFactor;
-
-    vtkSmartPointer<vtkDataArray> residual;
-
-    template<typename Observation_t, typename Model_t>
-    void operator()(Observation_t * observation, Model_t * model)
-    {
-        VTK_ASSUME(observation->GetNumberOfComponents() == 1);
-        VTK_ASSUME(model->GetNumberOfComponents() == 1);
-        VTK_ASSUME(model->GetNumberOfTuples() == observation->GetNumberOfTuples());
-
-        using ObservationValue_t = typename vtkDataArrayAccessor<Observation_t>::APIType;
-        using ModelValue_t = typename vtkDataArrayAccessor<Model_t>::APIType;
-        using ResidualValue_t = std::common_type_t<ObservationValue_t, ModelValue_t>;
-
-        auto res = vtkSmartPointer<vtkAOSDataArrayTemplate<ResidualValue_t>>::New();
-        res->SetNumberOfValues(observation->GetNumberOfTuples());
-
-        vtkDataArrayAccessor<Observation_t> o(observation);
-        vtkDataArrayAccessor<Model_t> m(model);
-        vtkDataArrayAccessor<vtkAOSDataArrayTemplate<ResidualValue_t>> r(res);
-
-        const auto oUnit = static_cast<ObservationValue_t>(observationUnitFactor);
-        const auto mUnit = static_cast<ModelValue_t>(modelUnitFactor);
-
-        vtkSMPTools::For(0, res->GetNumberOfValues(),
-            [o, m, r, oUnit, mUnit] (vtkIdType begin, vtkIdType end)
-        {
-            for (vtkIdType i = begin; i < end; ++i)
-            {
-                const auto diff = static_cast<ResidualValue_t>(
-                    o.Get(i, 0) * oUnit
-                    - m.Get(i, 0) * mUnit);
-                r.Set(i, 0, diff);
-            }
-        });
-
-        residual = res;
-    }
-};
-
-}
-
 
 ResidualVerificationView::ResidualVerificationView(DataMapping & dataMapping, int index, QWidget * parent, Qt::WindowFlags flags)
     : AbstractRenderView(dataMapping, index, parent, flags)
-    , m_inSARLineOfSight{ 0, 0, 1 }
-    , m_interpolationMode{ InterpolationMode::observationToModel }
+    , m_residualHelper{ std::make_unique<DataSetResidualHelper>() }
+    , m_residualGeometrySource{ InputData::model }
     , m_observationUnitDecimalExponent{ 0 }
     , m_modelUnitDecimalExponent{ 0 }
-    , m_observationData{ nullptr }
-    , m_modelData{ nullptr }
-    , m_modelEventsDeferred{ false }
-    , m_implementation{ nullptr }
     , m_updateWatcher{ std::make_unique<QFutureWatcher<void>>() }
     , m_destructorCalled{ false }
 {
-    connect(m_updateWatcher.get(), &QFutureWatcher<void>::finished, this, &ResidualVerificationView::handleUpdateFinished);
-    m_attributeNamesLocations[residualIndex].first = "Residual"; // TODO add GUI option?
+    m_residualHelper->setGeometrySource(m_residualGeometrySource == InputData::observation
+        ? DataSetResidualHelper::InputData::Observation
+        : DataSetResidualHelper::InputData::Model);
+
+    connect(m_updateWatcher.get(), &QFutureWatcher<void>::finished,
+        this, &ResidualVerificationView::handleUpdateFinished);
 
     m_progressBar = new QProgressBar();
     m_progressBar->setRange(0, 0);
@@ -169,7 +69,6 @@ ResidualVerificationView::~ResidualVerificationView()
     }
 
     QList<AbstractVisualizedData *> toDelete;
-
     for (auto & vis : m_visualizations)
     {
         if (!vis)
@@ -181,11 +80,12 @@ ResidualVerificationView::~ResidualVerificationView()
     }
 
     emit beforeDeleteVisualizations(toDelete);
+    m_visualizations = {};
 
     if (m_residual)
     {
-        dataMapping().removeDataObjects({ m_residual.get() });
         dataSetHandler().removeExternalData({ m_residual.get() });
+        dataMapping().removeDataObjects({ m_residual.get() });
     }
 }
 
@@ -304,7 +204,7 @@ int ResidualVerificationView::subViewContaining(const AbstractVisualizedData & v
 
 bool ResidualVerificationView::isEmpty() const
 {
-    return !m_observationData && !m_modelData;
+    return !m_residualHelper->observationDataObject() && !m_residualHelper->modelDataObject();
 }
 
 void ResidualVerificationView::setObservationData(DataObject * observation)
@@ -323,12 +223,12 @@ void ResidualVerificationView::setModelData(DataObject * model)
 
 DataObject * ResidualVerificationView::observationData()
 {
-    return m_observationData;
+    return m_residualHelper->observationDataObject();
 }
 
 DataObject * ResidualVerificationView::modelData()
 {
-    return m_modelData;
+    return m_residualHelper->modelDataObject();
 }
 
 DataObject * ResidualVerificationView::residualData()
@@ -350,6 +250,8 @@ void ResidualVerificationView::setObservationUnitDecimalExponent(int exponent)
 
     m_observationUnitDecimalExponent = exponent;
 
+    m_residualHelper->setObservationScalarsScale(std::pow(10, exponent));
+
     emit unitDecimalExponentsChanged(m_observationUnitDecimalExponent, m_modelUnitDecimalExponent);
 }
 
@@ -367,38 +269,44 @@ void ResidualVerificationView::setModelUnitDecimalExponent(int exponent)
 
     m_modelUnitDecimalExponent = exponent;
 
+    m_residualHelper->setModelScalarsScale(std::pow(10, exponent));
+
     emit unitDecimalExponentsChanged(m_observationUnitDecimalExponent, m_modelUnitDecimalExponent);
 }
 
-void ResidualVerificationView::setInSARLineOfSight(const vtkVector3d & los)
+void ResidualVerificationView::setDeformationLineOfSight(const vtkVector3d & los)
 {
-    m_inSARLineOfSight = los;
+    m_residualHelper->setDeformationLineOfSight(los);
 
     emit lineOfSightChanged(los);
 }
 
-const vtkVector3d & ResidualVerificationView::inSARLineOfSight() const
+const vtkVector3d & ResidualVerificationView::deformationLineOfSight() const
 {
-    return m_inSARLineOfSight;
+    return m_residualHelper->deformationLineOfSight();
 }
 
-void ResidualVerificationView::setInterpolationMode(InterpolationMode mode)
+void ResidualVerificationView::setResidualGeometrySource(InputData geometrySource)
 {
-    if (m_interpolationMode == mode)
+    if (m_residualGeometrySource == geometrySource)
     {
         return;
     }
 
-    m_interpolationMode = mode;
+    m_residualGeometrySource = geometrySource;
+
+    m_residualHelper->setGeometrySource(geometrySource == InputData::observation
+        ? DataSetResidualHelper::InputData::Observation
+        : DataSetResidualHelper::InputData::Model);
 
     updateResidualAsync();
 
-    emit interpolationModeChanged(mode);
+    emit residualGeometrySourceChanged(geometrySource);
 }
 
-ResidualVerificationView::InterpolationMode ResidualVerificationView::interpolationMode() const
+ResidualVerificationView::InputData ResidualVerificationView::residualGeometrySource() const
 {
-    return m_interpolationMode;
+    return m_residualGeometrySource;
 }
 
 void ResidualVerificationView::waitForResidualUpdate()
@@ -412,7 +320,10 @@ void ResidualVerificationView::waitForResidualUpdate()
     QCoreApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
 }
 
-void ResidualVerificationView::setDataHelper(unsigned int subViewIndex, DataObject * dataObject, bool skipResidualUpdate)
+void ResidualVerificationView::setDataHelper(
+    unsigned int subViewIndex,
+    DataObject * dataObject,
+    bool skipResidualUpdate)
 {
     assert(subViewIndex != residualIndex);
 
@@ -421,24 +332,30 @@ void ResidualVerificationView::setDataHelper(unsigned int subViewIndex, DataObje
         return;
     }
 
-    setDataInternal(subViewIndex, dataObject, nullptr);
+    setInputDataInternal(subViewIndex, dataObject);
 
     vtkSmartPointer<vtkDataSet> dataSet = dataObject ? dataObject->dataSet() : nullptr;
     if (dataObject && !dataSet)
     {
-        dataSet = dataObject->processedOutputDataSet();
-        if (!dataSet)
-        {
-            qDebug() << "Unsupported data object (no data found):" << dataObject->name();
-        }
+        qDebug() << "Unsupported data object (no data found):" << dataObject->name();
     }
+    auto scalars = std::make_pair(QString(), IndexType::invalid);
     if (dataObject && dataSet)
     {
-        m_attributeNamesLocations[subViewIndex] = findDataSetAttributeName(*dataSet, subViewIndex);
+        scalars = findDataSetAttributeName(*dataSet, subViewIndex);
+    }
+
+    if (subViewIndex == observationIndex)
+    {
+        m_residualHelper->setObservationScalars(scalars.first, scalars.second);
+    }
+    else if (subViewIndex == modelIndex)
+    {
+        m_residualHelper->setModelScalars(scalars.first, scalars.second);
     }
     else
     {
-        m_attributeNamesLocations[subViewIndex] = std::pair<QString, bool>{};
+        assert(false);
     }
 
     if (!skipResidualUpdate)
@@ -499,40 +416,42 @@ void ResidualVerificationView::showDataObjectsImpl(const QList<DataObject *> & d
 
 void ResidualVerificationView::hideDataObjectsImpl(const QList<DataObject *> & dataObjects, int subViewIndex)
 {
+    // Ignore requests related to the residual
+    enum { numberOfViewsToCheck = numberOfViews - 1 };
+
     // check if this request is relevant
-    if (subViewIndex < 0)
+    bool relevant = false;
+    std::array<bool, numberOfViewsToCheck> hideSubViewObject = { false };
+    if (subViewIndex >= 0 && subViewIndex < numberOfViewsToCheck)
     {
-        if (dataObjects.toSet().intersect({ m_observationData, m_modelData }).isEmpty())
+        relevant = hideSubViewObject[subViewIndex] = dataObjects.contains(dataAt(subViewIndex));
+    }
+    else
+    {
+        for (unsigned int i = 0; i < numberOfViewsToCheck; ++i)
         {
-            return;
+            hideSubViewObject[i] = dataObjects.contains(dataAt(i));
+            relevant = relevant || hideSubViewObject[i];
         }
     }
-    else if (!dataObjects.contains(dataAt(static_cast<unsigned>(subViewIndex))))
+
+    if (!relevant)
     {
         return;
     }
 
     waitForResidualUpdate();
 
-    // no caching for now, just remove the object
-
-    if (subViewIndex >= 0)
+    // no caching for now, just remove the objects
+    for (unsigned int i = 0; i < numberOfViewsToCheck; ++i)
     {
-        setDataHelper(static_cast<unsigned>(subViewIndex), nullptr, true);
-    }
-    else
-    {
-        for (unsigned i = 0; i < numberOfViews; ++i)
+        if (hideSubViewObject[i])
         {
-            if (dataObjects.contains(dataAt(i)))
-            {
-                setDataHelper(i, nullptr, true);
-            }
+            setDataHelper(i, nullptr, true);
         }
     }
 
     updateResidualAsync();
-
     waitForResidualUpdate();
 }
 
@@ -541,7 +460,7 @@ QList<DataObject *> ResidualVerificationView::dataObjectsImpl(int subViewIndex) 
     if (subViewIndex == -1)
     {
         QList<DataObject *> objects;
-        for (unsigned i = 0; i < numberOfSubViews(); ++i)
+        for (unsigned int i = 0; i < numberOfSubViews(); ++i)
         {
             if (auto dataObject = dataAt(i))
             {
@@ -562,8 +481,8 @@ QList<DataObject *> ResidualVerificationView::dataObjectsImpl(int subViewIndex) 
 
 void ResidualVerificationView::prepareDeleteDataImpl(const QList<DataObject *> & dataObjects)
 {
-    const bool unsetObservation = dataObjects.contains(m_observationData);
-    const bool unsetModel = dataObjects.contains(m_modelData);
+    const bool unsetObservation = dataObjects.contains(m_residualHelper->observationDataObject());
+    const bool unsetModel = dataObjects.contains(m_residualHelper->modelDataObject());
 
     if (!unsetObservation && !unsetModel)
     {
@@ -616,6 +535,13 @@ void ResidualVerificationView::axesEnabledChangedEvent(bool enabled)
     implementation().setAxesVisibility(enabled);
 }
 
+void ResidualVerificationView::onCoordinateSystemChanged(const CoordinateSystemSpecification & spec)
+{
+    AbstractRenderView::onCoordinateSystemChanged(spec);
+
+    m_residualHelper->setTargetCoordinateSystem(spec);
+}
+
 void ResidualVerificationView::initialize()
 {
     if (m_implementation)
@@ -633,80 +559,84 @@ void ResidualVerificationView::initialize()
     }
 }
 
-void ResidualVerificationView::setDataInternal(unsigned int subViewIndex, DataObject * dataObject, std::unique_ptr<DataObject> ownedObject)
+void ResidualVerificationView::setInputDataInternal(unsigned int subViewIndex, DataObject * newData)
+{
+    assert(m_implementation);
+    assert(subViewIndex != residualIndex);
+
+    // Try to find a coordinate system that is supported by both data sets.
+    auto newTransformable = dynamic_cast<CoordinateTransformableDataObject *>(newData);
+    auto presentTransformable = dynamic_cast<CoordinateTransformableDataObject *>(
+        subViewIndex == observationIndex ? dataAt(modelIndex) : dataAt(observationIndex));
+
+    // Change the coordinate system only if it is not currently set or if the new data is not
+    // compatible with the current system.
+    // Meanwhile, make sure that already loaded data can also be shown in the new system.
+    if (newTransformable
+        && (!currentCoordinateSystem().isValid()
+            || (currentCoordinateSystem().type == CoordinateSystemType::unspecified)
+            || !newTransformable->canTransformTo(currentCoordinateSystem())))
+    {
+        auto targetCoords = [newTransformable, presentTransformable] ()
+        {
+            // Prefer local metric coordinates, fall back to global metric.
+            // If even this does not work, use the data set's current system, or just don't
+            // transform at all.
+
+            auto spec = CoordinateSystemSpecification(newTransformable->coordinateSystem());
+            spec.unitOfMeasurement = "km";
+            spec.type = CoordinateSystemType::metricLocal;
+            if (newTransformable->canTransformTo(spec)
+                && (!presentTransformable || presentTransformable->canTransformTo(spec)))
+            {
+                return spec;
+            }
+
+            spec.type = CoordinateSystemType::metricGlobal;
+            if (newTransformable->canTransformTo(spec)
+                && (!presentTransformable || presentTransformable->canTransformTo(spec)))
+            {
+                return spec;
+            }
+
+            spec = newTransformable->coordinateSystem();
+            if (spec.isValid()
+                && newTransformable->canTransformTo(spec)
+                && (!presentTransformable || presentTransformable->canTransformTo(spec)))
+            {
+                return spec;
+            }
+
+            // No way :(
+            spec = {};
+            return spec;
+        }();
+
+        setCurrentCoordinateSystem(targetCoords);
+    }
+
+    setDataAt(subViewIndex, newData);
+
+    updateVisualizationForSubView(subViewIndex, newData);
+}
+
+void ResidualVerificationView::setResidualDataInternal(std::unique_ptr<DataObject> newResidual)
 {
     assert(m_implementation);
 
-    assert(!dataObject || !ownedObject); // only one of them should be used in the interface
-    auto newData = dataObject ? dataObject : ownedObject.get();
-
-    if (subViewIndex != residualIndex)
+    m_oldResidualToDeleteAfterUpdate = std::move(m_residual);
+    if (m_oldResidualToDeleteAfterUpdate)
     {
-        // Try to find a coordinate system that is supported by both data sets.
-        auto newTransformable = dynamic_cast<CoordinateTransformableDataObject *>(newData);
-        auto presentTransformable = dynamic_cast<CoordinateTransformableDataObject *>(
-            subViewIndex == observationIndex ? dataAt(modelIndex) : dataAt(observationIndex));
-
-        // Change the coordinate system only if it is not currently set or if the new data is not
-        // compatible with the current system.
-        // Meanwhile, make sure that already loaded data can also be shown in the new system.
-        if (newTransformable
-            && (!currentCoordinateSystem().isValid()
-            || (currentCoordinateSystem().type == CoordinateSystemType::unspecified)
-            || !newTransformable->canTransformTo(currentCoordinateSystem())))
-        {
-            auto targetCoords = [newTransformable, presentTransformable] ()
-            {
-                // Prefer local metric coordinates, fall back to global metric.
-                // If even this does not work, use the data set's current system, or just don't
-                // transform at all.
-
-                auto spec = CoordinateSystemSpecification(newTransformable->coordinateSystem());
-                spec.unitOfMeasurement = "km";
-                spec.type = CoordinateSystemType::metricLocal;
-                if (newTransformable->canTransformTo(spec)
-                    && (!presentTransformable || presentTransformable->canTransformTo(spec)))
-                {
-                    return spec;
-                }
-
-                spec.type = CoordinateSystemType::metricGlobal;
-                if (newTransformable->canTransformTo(spec)
-                    && (!presentTransformable || presentTransformable->canTransformTo(spec)))
-                {
-                    return spec;
-                }
-
-                spec = newTransformable->coordinateSystem();
-                if (spec.isValid()
-                    && newTransformable->canTransformTo(spec)
-                    && (!presentTransformable || presentTransformable->canTransformTo(spec)))
-                {
-                    return spec;
-                }
-
-                // No way :(
-                spec = {};
-                return spec;
-            }();
-
-            setCurrentCoordinateSystem(targetCoords);
-        }
-
-        setDataAt(subViewIndex, dataObject);
+        dataMapping().removeDataObjects({ m_oldResidualToDeleteAfterUpdate.get() });
+        dataSetHandler().removeExternalData({ m_oldResidualToDeleteAfterUpdate.get() });
     }
-    else // owned residual data object. Update DataSetHandler and GUI accordingly
-    {
-        m_oldResidualToDeleteAfterUpdate = std::move(m_residual);
-        if (m_oldResidualToDeleteAfterUpdate)
-        {
-            dataMapping().removeDataObjects({ m_oldResidualToDeleteAfterUpdate.get() });
-            dataSetHandler().removeExternalData({ m_oldResidualToDeleteAfterUpdate.get() });
-        }
 
-        m_residual = std::move(ownedObject);
+    m_residual = std::move(newResidual);
+
+    if (m_residual)
+    {
         auto transformableResidual = dynamic_cast<CoordinateTransformableDataObject *>(m_residual.get());
-        auto transformableObservation = dynamic_cast<CoordinateTransformableDataObject *>(m_observationData);
+        auto transformableObservation = dynamic_cast<CoordinateTransformableDataObject *>(m_residualHelper->observationDataObject());
         if (transformableResidual && transformableObservation)
         {
             // Apply reference point from the observation data, set current coordinate system type
@@ -718,12 +648,15 @@ void ResidualVerificationView::setDataInternal(unsigned int subViewIndex, DataOb
             transformableResidual->specifyCoordinateSystem(spec);
         }
 
-        if (m_residual)
-        {
-            dataSetHandler().addExternalData({ m_residual.get() });
-        }
+        // Update UI/rendering for the newly created residual object
+        dataSetHandler().addExternalData({ m_residual.get() });
     }
 
+    updateVisualizationForSubView(residualIndex, m_residual.get());
+}
+
+void ResidualVerificationView::updateVisualizationForSubView(unsigned int subViewIndex, DataObject * newData)
+{
     auto & oldVis = m_visualizations[subViewIndex];
 
     if (oldVis)
@@ -755,19 +688,10 @@ void ResidualVerificationView::updateResidualAsync()
 {
     waitForResidualUpdate();    // prevent locking the mutex multiple times in the main thread
 
-    std::unique_lock<std::mutex> updateLock(m_updateMutex);
+    std::unique_lock<std::recursive_mutex> updateLock(m_updateMutex);
 
     if (m_destructorCalled)
     {
-        return;
-    }
-
-    if (!m_observationData || !m_modelData)
-    {
-        // handle the lock over, keep it locked until all update steps are done
-        m_updateMutexLock = std::move(updateLock);
-        // delete obsoleted residual data, update the UI
-        handleUpdateFinished();
         return;
     }
 
@@ -775,95 +699,52 @@ void ResidualVerificationView::updateResidualAsync()
     toolBar()->setEnabled(false);
     QCoreApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
 
-    assert(!m_newResidual);
+    assert(!m_residualHelper->residualDataObject());
 
-    // while updating the residual, we might add transformed vector data to the model data set
-    // make sure that this modification on the DataObject internals does not conflict with GUI events
-    if (m_modelData)
-    {
-        assert(!m_modelEventsDeferred);
-        m_modelData->deferEvents();
-        m_modelEventsDeferred = true;
-    }
+    // While updating the residual, we might add transformed vector data to the input data sets.
+    // Make sure that this modification on the DataObject internals does not conflict with GUI events.
+    // Lock all currently available data objects.
+    m_eventDeferrals[observationIndex] = ScopedEventDeferral{ m_residualHelper->observationDataObject() };
+    m_eventDeferrals[modelIndex] = ScopedEventDeferral{ m_residualHelper->modelDataObject() };
+    m_eventDeferrals[residualIndex] = ScopedEventDeferral{ m_residual.get() };
 
     m_updateMutexLock = std::move(updateLock);
-    auto future = QtConcurrent::run(this, &ResidualVerificationView::updateResidual);
+    auto future = QtConcurrent::run(this, &ResidualVerificationView::updateResidualInternal);
     m_updateWatcher->setFuture(future);
 }
 
 void ResidualVerificationView::handleUpdateFinished()
 {
-    std::unique_lock<std::mutex> lock = std::move(m_updateMutexLock);
+    const auto lock = std::move(m_updateMutexLock);
 
-    if (m_newResidual)
+    if (auto newResidual = m_residualHelper->takeResidualDataObject())
     {
-        auto computedResidual = m_newResidual;
-        m_newResidual = nullptr;
+        vtkSmartPointer<vtkDataSet> computedDataSet = newResidual->dataSet();
 
-        const bool residualIsImage = nullptr != vtkImageData::SafeDownCast(computedResidual);
-        assert(residualIsImage || vtkPolyData::SafeDownCast(computedResidual));
+        DEBUG_ONLY(const bool residualIsImage = nullptr != vtkImageData::SafeDownCast(computedDataSet);)
+        assert(residualIsImage || vtkPolyData::SafeDownCast(computedDataSet));
 
-
-        const bool reuseResidualObject = m_residual && m_residual->dataSet()->IsA(computedResidual->GetClassName());
-
-        vtkSmartPointer<vtkDataSet> targetDataSet;
-        if (reuseResidualObject)
-        {
-            targetDataSet = m_residual->dataSet();
-        }
-        else // create new Residual data object
-        {
-            targetDataSet.TakeReference(computedResidual->NewInstance());
-        }
-
-        // When creating a new residual data object, member structures need to be updated.
-        std::unique_ptr<DataObject> newlyCreatedResidual;
-        // In every case, the new geometry + data needs to be copied into the current residual data object
-        DataObject * upToDateResidual = nullptr;
+        const bool reuseResidualObject = m_residual && m_residual->dataSet()->IsA(computedDataSet->GetClassName());
 
         if (reuseResidualObject)
         {
-            upToDateResidual = m_residual.get();
+            const ScopedEventDeferral residualDeferal(*m_residual);
+            m_residual->dataSet()->CopyStructure(computedDataSet);
+            m_residual->dataSet()->CopyAttributes(computedDataSet);
         }
         else
         {
-            if (residualIsImage)
-            {
-                newlyCreatedResidual = std::make_unique<ImageDataObject>("Residual", static_cast<vtkImageData &>(*targetDataSet));
-            }
-            else
-            {
-                newlyCreatedResidual = std::make_unique<PolyDataObject>("Residual", static_cast<vtkPolyData &>(*targetDataSet));
-            }
-            upToDateResidual = newlyCreatedResidual.get();
-        }
-
-        {
-
-            ScopedEventDeferral residualDeferal(*upToDateResidual);
-
-            upToDateResidual->CopyStructure(*computedResidual);
-            upToDateResidual->dataSet()->CopyAttributes(computedResidual);
-        }
-
-        if (newlyCreatedResidual)
-        {
-            setDataInternal(residualIndex, nullptr, std::move(newlyCreatedResidual));
+            setResidualDataInternal(std::move(newResidual));
         }
     }
     else if (m_residual)
     {
         // just remove the old residual
 
-        setDataInternal(residualIndex, nullptr, nullptr);
+        setResidualDataInternal(nullptr);
     }
 
-    if (m_modelEventsDeferred)
-    {
-        assert(m_modelData);
-        m_modelEventsDeferred = false;
-        m_modelData->executeDeferredEvents();
-    }
+    m_eventDeferrals = {};
 
     updateGuiAfterDataChange();
 
@@ -871,208 +752,19 @@ void ResidualVerificationView::handleUpdateFinished()
     m_progressBar->hide();
 }
 
-void ResidualVerificationView::updateResidual()
+void ResidualVerificationView::updateResidualInternal()
 {
-    assert(!m_newResidual);
-
+    assert(!m_residualHelper->residualDataObject());
     assert(!m_updateMutex.try_lock());
 
-    const auto & observationAttributeName = m_attributeNamesLocations[observationIndex].first;
-    const bool useObservationCellData = m_attributeNamesLocations[observationIndex].second;
-    const auto & modelAttributeName = m_attributeNamesLocations[modelIndex].first;
-    const bool useModelCellData = m_attributeNamesLocations[modelIndex].second;
-
-    if (observationAttributeName.isEmpty() || modelAttributeName.isEmpty())
+    if (!m_residualHelper->updateResidual())
     {
-        qDebug() << "ResidualVerificationView::updateResidual: Cannot find suitable data attributes";
-
-        for (unsigned i = 0; i < numberOfViews; ++i)
+        if (m_residualHelper->isSetupComplete())
         {
-            if (m_attributeNamesLocations[i].first.isEmpty())
-            {
-                m_projectedAttributeNames = {};
-            }
+            // If the user provided all necessary data, the residual computation should not fail.
+            qDebug() << "Residual computation failed";
         }
-
-        return;
     }
-
-    if (!m_observationData->dataSet() || !m_modelData->dataSet())
-    {
-        // Projected attributes are added to the point/cell data of the DataObject::dataSet().
-        // If the data object does not have such a source data set, where should the projected
-        // data be added, so that it can be found by the color mapping?
-        qDebug() << "Input data is not supported (missing internal source data set)";
-        return;
-    }
-
-    auto & observationDS = *m_observationData->dataSet();
-    auto & modelDS = *m_modelData->dataSet();
-
-    auto transformedObservationCoords = dynamic_cast<CoordinateTransformableDataObject *>(m_observationData);
-    auto transformedModelCoords = dynamic_cast<CoordinateTransformableDataObject *>(m_modelData);
-    auto && coordinateSystem = currentCoordinateSystem();
-    const bool useTransformedCoordinates =
-        transformedObservationCoords && transformedModelCoords && coordinateSystem.isValid();
-
-    auto observationDSTransformedPtr = useTransformedCoordinates
-        ? transformedObservationCoords->coordinateTransformedDataSet(coordinateSystem)
-        : vtkSmartPointer<vtkDataSet>(m_observationData->dataSet());
-    auto modelDSTransformedPtr = useTransformedCoordinates
-        ? transformedModelCoords->coordinateTransformedDataSet(coordinateSystem)
-        : vtkSmartPointer<vtkDataSet>(m_modelData->dataSet());
-
-    if (!observationDSTransformedPtr || !modelDSTransformedPtr)
-    {
-        qDebug() << "Invalid input coordinates or data sets";
-        return;
-    }
-
-    auto & observationDSTransformed = *observationDSTransformedPtr;
-    auto & modelDSTransformed = *modelDSTransformedPtr;
-
-    const vtkSmartPointer<vtkDataArray> observationData = useObservationCellData
-        ? observationDS.GetCellData()->GetArray(observationAttributeName.toUtf8().data())
-        : observationDS.GetPointData()->GetArray(observationAttributeName.toUtf8().data());
-
-    const vtkSmartPointer<vtkDataArray> modelData = useModelCellData
-        ? modelDS.GetCellData()->GetArray(modelAttributeName.toUtf8().data())
-        : modelDS.GetPointData()->GetArray(modelAttributeName.toUtf8().data());
-
-
-    if (!observationData)
-    {
-        qDebug() << "Could not find valid observation data for residual computation (" << observationAttributeName + ")";
-        return;
-    }
-
-    if (!modelData)
-    {
-        qDebug() << "Could not find valid model data for residual computation (" << modelAttributeName + ")";
-        return;
-    }
-
-
-    // project displacement vectors to the line of sight vector, if required
-    // This also adds the projection result as scalars to the respective data set, so that it can be used
-    // in the visualization.
-    auto getProjectedDisp = [this] (vtkDataArray & displacement, unsigned int dataIndex, vtkDataSet & dataSet)
-        -> vtkSmartPointer<vtkDataArray> {
-
-        if (displacement.GetNumberOfComponents() == 1)
-        {
-            m_projectedAttributeNames[dataIndex] = "";
-            return &displacement;   // is already projected
-        }
-
-        if (displacement.GetNumberOfComponents() != 3)
-        {   // can't handle that
-            return nullptr;
-        }
-
-        using LosDispatcher = vtkArrayDispatch::DispatchByValueType<vtkArrayDispatch::Reals>;
-        ProjectToLineOfSightWorker losWorker;
-        losWorker.lineOfSight = m_inSARLineOfSight;
-        if (!LosDispatcher::Execute(&displacement, losWorker))
-        {
-            losWorker(&displacement);
-        }
-
-        auto projected = losWorker.projectedData;
-
-        auto projectedName = m_attributeNamesLocations[dataIndex].first + " (projected)";
-        m_projectedAttributeNames[dataIndex] = projectedName;
-        projected->SetName(projectedName.toUtf8().data());
-
-        if (m_attributeNamesLocations[dataIndex].second)    // use cell data?
-        {
-            dataSet.GetCellData()->AddArray(projected);
-        }
-        else
-        {
-            dataSet.GetPointData()->AddArray(projected);
-        }
-
-        return projected;
-    };
-
-
-    auto observationLosDisp = getProjectedDisp(*observationData, observationIndex, observationDS);
-    auto modelLosDisp = getProjectedDisp(*modelData, modelIndex, modelDS);
-    assert(observationLosDisp && modelLosDisp);
-
-
-    // Now interpolate one of the data arrays to the other's structure.
-    // Use the data sets transformed to the user-selected coordinate system.
-    if (m_interpolationMode == InterpolationMode::modelToObservation)
-    {
-        auto attributeName = QString::fromUtf8(modelLosDisp->GetName());
-        modelLosDisp = InterpolationHelper::interpolate(
-            observationDSTransformed, modelDSTransformed, attributeName, useModelCellData);
-    }
-    else
-    {
-        auto attributeName = QString::fromUtf8(observationLosDisp->GetName());
-        observationLosDisp = InterpolationHelper::interpolate(
-            modelDSTransformed, observationDSTransformed, attributeName, useObservationCellData);
-    }
-
-    if (!observationLosDisp || !modelLosDisp)
-    {
-        qDebug() << "Observation/Model interpolation failed";
-
-        return;
-    }
-
-
-    // expect line of sight displacements, matching to one of the structures here
-    assert(modelLosDisp->GetNumberOfComponents() == 1);
-    assert(observationLosDisp->GetNumberOfComponents() == 1);
-    assert(modelLosDisp->GetNumberOfTuples() == observationLosDisp->GetNumberOfTuples());
-
-
-    // compute the residual data
-
-    auto & referenceDataSet = m_interpolationMode == InterpolationMode::modelToObservation
-        ? observationDSTransformed
-        : modelDSTransformed;
-
-    const double observationUnitFactor = std::pow(10, m_observationUnitDecimalExponent);
-    const double modelUnitFactor = std::pow(10, m_modelUnitDecimalExponent);
-
-    using ResidualDispatcher = vtkArrayDispatch::Dispatch2ByValueType<
-        vtkArrayDispatch::Reals, vtkArrayDispatch::Reals>;
-    ResidualWorker residualWorker;
-    residualWorker.observationUnitFactor = observationUnitFactor;
-    residualWorker.modelUnitFactor = modelUnitFactor;
-    if (!ResidualDispatcher::Execute(observationLosDisp, modelLosDisp, residualWorker))
-    {
-        residualWorker(observationLosDisp.Get(), modelLosDisp.Get());
-    }
-    auto residualData = residualWorker.residual;
-    residualData->SetName(m_attributeNamesLocations[residualIndex].first.toUtf8().data());
-
-    assert(!m_newResidual);
-    m_newResidual = vtkSmartPointer<vtkDataSet>::Take(referenceDataSet.NewInstance());
-    m_newResidual->CopyStructure(&referenceDataSet);
-
-    const bool resultInCellData = m_interpolationMode == InterpolationMode::modelToObservation
-        ? m_attributeNamesLocations[observationIndex].second
-        : m_attributeNamesLocations[modelIndex].second;
-    const auto residualExpectedTuples = resultInCellData
-        ? m_newResidual->GetNumberOfCells()
-        : m_newResidual->GetNumberOfPoints();
-
-    if (residualData->GetNumberOfTuples() != residualExpectedTuples)
-    {
-        qDebug() << "Residual creation failed: Unexpected output size.";
-        return;
-    }
-
-    auto & resultAttributes = resultInCellData
-        ? static_cast<vtkDataSetAttributes &>(*m_newResidual->GetCellData())
-        : static_cast<vtkDataSetAttributes &>(*m_newResidual->GetPointData());
-    resultAttributes.SetScalars(residualData);
 }
 
 void ResidualVerificationView::updateGuiAfterDataChange()
@@ -1102,11 +794,11 @@ void ResidualVerificationView::updateGuiAfterDataChange()
             continue;
         }
 
-        auto attributeName = m_projectedAttributeNames[i];
-        if (attributeName.isEmpty())
-        {
-            attributeName = m_attributeNamesLocations[i].first;
-        }
+        const auto attributeName = i == 0
+            ? m_residualHelper->losObservationScalarsName()
+            : (i == 1
+                ? m_residualHelper->losModelScalarsName()
+                : m_residualHelper->residualDataObjectName());
 
         m_visualizations[i]->colorMapping().setCurrentScalarsByName(attributeName);
         m_visualizations[i]->colorMapping().setEnabled(true);
@@ -1116,13 +808,13 @@ void ResidualVerificationView::updateGuiAfterDataChange()
     updateGuiSelection();
 
     QList<DataObject *> validInputData;
-    if (m_observationData)
+    if (auto observation = m_residualHelper->observationDataObject())
     {
-        validInputData << m_observationData;
+        validInputData << observation;
     }
-    if (m_modelData)
+    if (auto model = m_residualHelper->modelDataObject())
     {
-        validInputData << m_modelData;
+        validInputData << model;
     }
     m_implementation->strategy2D().setInputData(validInputData);
 
@@ -1172,9 +864,9 @@ DataObject * ResidualVerificationView::dataAt(unsigned int i) const
     switch (i)
     {
     case observationIndex:
-        return m_observationData;
+        return m_residualHelper->observationDataObject();
     case modelIndex:
-        return m_modelData;
+        return m_residualHelper->modelDataObject();
     case residualIndex:
         return m_residual.get();
     }
@@ -1182,47 +874,38 @@ DataObject * ResidualVerificationView::dataAt(unsigned int i) const
     return nullptr;
 }
 
-bool ResidualVerificationView::setDataAt(unsigned int i, DataObject * dataObject)
+void ResidualVerificationView::setDataAt(unsigned int i, DataObject * dataObject)
 {
     switch (i)
     {
     case observationIndex:
-        if (m_observationData == dataObject)
-        {
-            return false;
-        }
-        m_observationData = dataObject;
+        m_residualHelper->setObservationDataObject(dataObject);
         break;
     case modelIndex:
-        if (m_modelData == dataObject)
-        {
-            return false;
-        }
-        m_modelData = dataObject;
+        m_residualHelper->setModelDataObject(dataObject);
         break;
     default:
         assert(false);
-        return false;
     }
-    return true;
 }
 
-std::pair<QString, bool> ResidualVerificationView::findDataSetAttributeName(vtkDataSet & dataSet, unsigned int inputType)
+std::pair<QString, IndexType> ResidualVerificationView::findDataSetAttributeName(
+    vtkDataSet & dataSet, unsigned int inputType)
 {
-    auto checkDefaultScalars = [] (vtkDataSet & dataSet) -> std::pair<QString, bool>
+    auto checkDefaultScalars = [] (vtkDataSet & dataSet) -> std::pair<QString, IndexType>
     {
         if (auto scalars = dataSet.GetPointData()->GetScalars())
         {
             if (const auto name = scalars->GetName())
             {
-                return std::make_pair(QString::fromUtf8(name), false);
+                return std::make_pair(QString::fromUtf8(name), IndexType::points);
             }
         }
         else if (auto firstArray = dataSet.GetPointData()->GetArray(0))
         {
             if (const auto name = firstArray->GetName())
             {
-                return std::make_pair(QString::fromUtf8(name), false);
+                return std::make_pair(QString::fromUtf8(name), IndexType::points);
             }
         }
 
@@ -1230,26 +913,26 @@ std::pair<QString, bool> ResidualVerificationView::findDataSetAttributeName(vtkD
         {
             if (const auto name = scalars->GetName())
             {
-                return std::make_pair(QString::fromUtf8(name), true);
+                return std::make_pair(QString::fromUtf8(name), IndexType::cells);
             }
         }
         else if (auto firstArray = dataSet.GetCellData()->GetArray(0))
         {
             if (const auto name = firstArray->GetName())
             {
-                return std::make_pair(QString::fromUtf8(name), true);
+                return std::make_pair(QString::fromUtf8(name), IndexType::cells);
             }
         }
         return{};
     };
 
-    auto checkDefaultVectors = [] (vtkDataSet & dataSet) -> std::pair<QString, bool>
+    auto checkDefaultVectors = [] (vtkDataSet & dataSet) -> std::pair<QString, IndexType>
     {
         if (auto scalars = dataSet.GetPointData()->GetVectors())
         {
             if (const auto name = scalars->GetName())
             {
-                return std::make_pair(QString::fromUtf8(name), false);
+                return std::make_pair(QString::fromUtf8(name), IndexType::points);
             }
         }
         else
@@ -1264,7 +947,7 @@ std::pair<QString, bool> ResidualVerificationView::findDataSetAttributeName(vtkD
 
                 if (const auto name = array->GetName())
                 {
-                    return std::make_pair(QString::fromUtf8(name), false);
+                    return std::make_pair(QString::fromUtf8(name), IndexType::points);
                 }
             }
         }
@@ -1273,7 +956,7 @@ std::pair<QString, bool> ResidualVerificationView::findDataSetAttributeName(vtkD
         {
             if (const auto name = scalars->GetName())
             {
-                return std::make_pair(QString::fromUtf8(name), true);
+                return std::make_pair(QString::fromUtf8(name), IndexType::cells);
             }
         }
         else
@@ -1288,11 +971,11 @@ std::pair<QString, bool> ResidualVerificationView::findDataSetAttributeName(vtkD
 
                 if (const auto name = array->GetName())
                 {
-                    return std::make_pair(QString::fromUtf8(name), false);
+                    return std::make_pair(QString::fromUtf8(name), IndexType::points);
                 }
             }
         }
-        return{};
+        return std::make_pair(QString(), IndexType::invalid);
     };
 
     if (inputType == observationIndex)
@@ -1303,23 +986,26 @@ std::pair<QString, bool> ResidualVerificationView::findDataSetAttributeName(vtkD
     if (inputType == modelIndex)
     {
         // Polygonal data is cell based, point and grid data is point based.
-        bool cellBasedData = false;
+        auto primaryLocation = IndexType::points;
         bool usePrimaryAttribute = true;
 
         if (auto poly = vtkPolyData::SafeDownCast(&dataSet))
         {
             if (auto polys = poly->GetPolys())
             {
-                cellBasedData = polys->GetNumberOfCells() > 0;
+                primaryLocation = polys->GetNumberOfCells() > 0 ? IndexType::cells : IndexType::points;
             }
         }
 
-        auto & primaryAttributes = cellBasedData
+        const auto secondaryLocation = primaryLocation == IndexType::points
+            ? IndexType::cells : IndexType::points;
+
+        auto & primaryAttributes = primaryLocation == IndexType::cells
             ? static_cast<vtkDataSetAttributes &>(*dataSet.GetCellData())
             : static_cast<vtkDataSetAttributes &>(*dataSet.GetPointData());
-        auto & secondaryAttributes = cellBasedData
-            ? static_cast<vtkDataSetAttributes &>(*dataSet.GetPointData())
-            : static_cast<vtkDataSetAttributes &>(*dataSet.GetCellData());
+        auto & secondaryAttributes = secondaryLocation == IndexType::cells
+            ? static_cast<vtkDataSetAttributes &>(*dataSet.GetCellData())
+            : static_cast<vtkDataSetAttributes &>(*dataSet.GetPointData());
 
         static const auto modelArrayNames = {
             "Deformation", "deformation"
@@ -1352,13 +1038,13 @@ std::pair<QString, bool> ResidualVerificationView::findDataSetAttributeName(vtkD
 
         if (!displacementData)
         {
-            return {};
+            return std::make_pair(QString(), IndexType::invalid);
         }
 
-        const bool useCellData = usePrimaryAttribute ? cellBasedData : !cellBasedData;
-
-        return std::make_pair(QString::fromUtf8(displacementData->GetName()), useCellData);
+        const auto location = usePrimaryAttribute ? primaryLocation : secondaryLocation;
+        return std::make_pair(QString::fromUtf8(displacementData->GetName()), location);
     }
 
-    return std::make_pair(QString("Residual"), true);
+    // Residual: location derived from source geometry when the residual is computed
+    return std::make_pair(QString("Residual"), IndexType::invalid);
 }

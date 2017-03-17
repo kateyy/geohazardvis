@@ -215,6 +215,8 @@ set(sources
     utility/DataExtent_print.hpp
     utility/DataSetFilter.h
     utility/DataSetFilter.cpp
+    utility/DataSetResidualHelper.h
+    utility/DataSetResidualHelper.cpp
     utility/font.h
     utility/font.cpp
     utility/InterpolationHelper.h

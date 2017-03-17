@@ -39,33 +39,34 @@ void ResidualViewConfigWidget::setCurrentView(ResidualVerificationView * view)
         return;
     }
 
-    auto boolToIMode = [] (bool checked)
+    auto indexToGeometrySource = [] (int index)
     {
-        return checked
-            ? ResidualVerificationView::InterpolationMode::modelToObservation
-            : ResidualVerificationView::InterpolationMode::observationToModel;
+        return index == 0
+            ? ResidualVerificationView::InputData::observation
+            : ResidualVerificationView::InputData::model;
     };
-    auto iModeToBool = [boolToIMode] (ResidualVerificationView::InterpolationMode mode)
+    auto geometrySourceToIndex = [indexToGeometrySource] (ResidualVerificationView::InputData source)
     {
-        return boolToIMode(true) == mode;
+        return indexToGeometrySource(0) == source ? 0 : 1;
     };
 
     connect(&view->dataSetHandler(), &DataSetHandler::dataObjectsChanged, this, &ResidualViewConfigWidget::updateComboBoxes);
 
-    m_ui->interpolationModeCheckBox->setChecked(iModeToBool(view->interpolationMode()));
-    m_viewConnects.emplace_back(connect(m_ui->interpolationModeCheckBox, &QCheckBox::toggled,
-    [view, boolToIMode] (bool checked)
+    m_ui->residualGeomtryCombo->setCurrentIndex(geometrySourceToIndex(view->residualGeometrySource()));
+    const auto comboIndexChanged = static_cast<void(QComboBox::*)(int)>(&QComboBox::currentIndexChanged);
+    m_viewConnects.emplace_back(connect(m_ui->residualGeomtryCombo, comboIndexChanged,
+    [view, indexToGeometrySource] (int index)
     {
-        view->setInterpolationMode(boolToIMode(checked));
+        view->setResidualGeometrySource(indexToGeometrySource(index));
     }));
-    m_viewConnects.emplace_back(connect(view, &ResidualVerificationView::interpolationModeChanged,
-    [this, iModeToBool] (ResidualVerificationView::InterpolationMode mode)
+    m_viewConnects.emplace_back(connect(view, &ResidualVerificationView::residualGeometrySourceChanged,
+    [this, geometrySourceToIndex] (ResidualVerificationView::InputData source)
     {
-        QSignalBlocker signalBlocker(m_ui->interpolationModeCheckBox);
-        m_ui->interpolationModeCheckBox->setChecked(iModeToBool(mode));
+        QSignalBlocker signalBlocker(m_ui->residualGeomtryCombo);
+        m_ui->residualGeomtryCombo->setCurrentIndex(geometrySourceToIndex(source));
     }));
 
-    auto && los = view->inSARLineOfSight();
+    auto && los = view->deformationLineOfSight();
 
     using LosType = decltype(los);
 
@@ -81,12 +82,12 @@ void ResidualViewConfigWidget::setCurrentView(ResidualVerificationView * view)
     {
         LosType los = { m_ui->losX->value(), m_ui->losY->value(), m_ui->losZ->value() };
 
-        if (view->inSARLineOfSight() == los)
+        if (view->deformationLineOfSight() == los)
         {
             return;
         }
 
-        view->setInSARLineOfSight(los);
+        view->setDeformationLineOfSight(los);
     };
 
     const auto qSpinBoxValueChanged = static_cast<void(QSpinBox::*)(int)>(&QSpinBox::valueChanged);

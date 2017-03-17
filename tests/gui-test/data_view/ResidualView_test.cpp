@@ -30,9 +30,17 @@ public:
     void SetUp() override
     {
         env = std::make_unique<TestEnv>();
+        view = nullptr;
     }
     void TearDown() override
     {
+        if (view)
+        {
+            view->waitForResidualUpdate();
+            view->close();
+            qApp->processEvents();
+        }
+
         env.reset();
     }
 
@@ -49,6 +57,8 @@ public:
         DataMapping dataMapping;
         SignalHelper signalHelper;
     };
+
+    ResidualVerificationView * view;
 
     std::unique_ptr<TestEnv> env;
 
@@ -85,12 +95,63 @@ public:
     }
 };
 
+TEST_F(ResidualView_test, ComputeResidual)
+{
+    auto ownedObservation = genPolyData("observation");
+    auto ownedModel = genPolyData("displacement vectors");
+    auto observation = ownedObservation.get();
+    auto model = ownedModel.get();
+    env->dataSetHandler.takeData(std::move(ownedObservation));
+    env->dataSetHandler.takeData(std::move(ownedModel));
+
+    auto observationValues = observation->dataSet()->GetCellData()->GetScalars();
+    auto modelValues = model->dataSet()->GetCellData()->GetScalars();
+    const auto numValues = observationValues->GetNumberOfTuples();
+    assert(numValues == modelValues->GetNumberOfValues()
+        && observationValues->GetNumberOfComponents() == 1);
+    for (vtkIdType i = 0; i < numValues; ++i)
+    {
+        observationValues->SetComponent(i, 0, static_cast<double>(i));
+        modelValues->SetComponent(i, 0, static_cast<double>(numValues - 1 - i));
+    }
+
+    auto residualView = env->dataMapping.createRenderView<ResidualVerificationView>();
+    view = residualView;
+    residualView->setResidualGeometrySource(ResidualVerificationView::InputData::model);
+    residualView->setObservationData(observation);
+    residualView->setModelData(model);
+    residualView->waitForResidualUpdate();
+
+    ASSERT_EQ(observation, residualView->observationData());
+    ASSERT_EQ(model, residualView->modelData());
+    auto residual = residualView->residualData();
+    ASSERT_TRUE(residual);
+    auto residualPolyDataObject = dynamic_cast<PolyDataObject *>(residual);
+    ASSERT_TRUE(residualPolyDataObject);
+    auto & sourcePoly = model->polyDataSet();
+    auto & residualPoly = residualPolyDataObject->polyDataSet();
+    ASSERT_EQ(sourcePoly.GetNumberOfPoints(), residualPoly.GetNumberOfPoints());
+    ASSERT_EQ(sourcePoly.GetNumberOfCells(), residualPoly.GetNumberOfCells());
+    ASSERT_EQ(sourcePoly.GetNumberOfPolys(), residualPoly.GetNumberOfPolys());
+
+    auto residualValues = residualPoly.GetCellData()->GetScalars();
+    ASSERT_TRUE(residualValues);
+    ASSERT_EQ(1, residualValues->GetNumberOfComponents());
+    ASSERT_EQ(numValues, residualValues->GetNumberOfTuples());
+    for (vtkIdType i = 0; i < numValues; ++i)
+    {
+        const auto r = static_cast<double>(i - (numValues - 1 - i));
+        ASSERT_EQ(r, residualValues->GetComponent(i, 0));
+    }
+}
+
 TEST_F(ResidualView_test, AbortLoadingDeletedData)
 {
     auto observation = genPolyData("observation");
     auto model = genPolyData("displacement vectors");
 
     auto residualView = env->dataMapping.createRenderView<ResidualVerificationView>();
+    view = residualView;
 
     env->signalHelper.emitRepeatedQueuedDelete(observation.get(), residualView);
     residualView->setObservationData(observation.get());
@@ -112,6 +173,7 @@ TEST_F(ResidualView_test, UnselectDeletedData)
 
     env->dataSetHandler.addExternalData({ observation.get(), model.get() });
     auto residualView = env->dataMapping.createRenderView<ResidualVerificationView>();
+    view = residualView;
 
     residualView->setObservationData(observation.get());
     residualView->setModelData(model.get());
@@ -132,6 +194,7 @@ TEST_F(ResidualView_test, UnselectHiddendData)
 
     env->dataSetHandler.addExternalData({ observation.get(), model.get() });
     auto residualView = env->dataMapping.createRenderView<ResidualVerificationView>();
+    view = residualView;
 
     residualView->setObservationData(observation.get());
     residualView->setModelData(model.get());
@@ -154,6 +217,7 @@ TEST_F(ResidualView_test, SwitchInputData)
 
     env->dataSetHandler.addExternalData({ obs1.get(), obs2.get() });
     auto residualView = env->dataMapping.createRenderView<ResidualVerificationView>();
+    view = residualView;
 
     residualView->setObservationData(obs1.get());
     
@@ -170,24 +234,28 @@ TEST_F(ResidualView_test, AddRemoveResidualToDataSetHandler)
 {
     auto ownedObservation = genPolyData("observation");
     auto ownedModel = genPolyData("displacement vectors");
+    auto observation = ownedObservation.get();
+    auto model = ownedModel.get();
+    env->dataSetHandler.takeData(std::move(ownedObservation));
+    env->dataSetHandler.takeData(std::move(ownedModel));
 
     {
         auto residualView = env->dataMapping.createRenderView<ResidualVerificationView>();
 
-        ASSERT_EQ(0, env->dataSetHandler.dataSets().size());
+        ASSERT_EQ(2, env->dataSetHandler.dataSets().size());
 
-        residualView->setObservationData(ownedObservation.get());
-        residualView->setModelData(ownedModel.get());
+        residualView->setObservationData(observation);
+        residualView->setModelData(model);
         residualView->waitForResidualUpdate();
 
-        ASSERT_EQ(1, env->dataSetHandler.dataSets().size());
-        ASSERT_EQ(residualView->residualData(), env->dataSetHandler.dataSets().front());
+        ASSERT_EQ(3, env->dataSetHandler.dataSets().size());
+        ASSERT_TRUE(env->dataSetHandler.dataSets().contains(residualView->residualData()));
 
         residualView->close();
         qApp->processEvents();
     }
 
-    ASSERT_EQ(0, env->dataSetHandler.dataSets().size());
+    ASSERT_EQ(2, env->dataSetHandler.dataSets().size());
 }
 
 TEST_F(ResidualView_test, CloseAppWhileResidualIsShown)
@@ -220,20 +288,25 @@ TEST_F(ResidualView_test, ProjectToLoS_TransformedCoordinateSystem)
         vtkVector2d(0, 0)
     );
 
-    auto observation = genPolyData("lineOfSightObservation");
+    auto ownedObservation = genPolyData("lineOfSightObservation");
+    auto ownedModel = genPolyData("dispVectorModel", 3);
+    auto observation = ownedObservation.get();
+    auto model = ownedModel.get();
+    env->dataSetHandler.takeData(std::move(ownedObservation));
+    env->dataSetHandler.takeData(std::move(ownedModel));
+
     observation->polyDataSet().GetPoints()->SetPoint(0, -37.083333, -54.483333, 0);
     observation->polyDataSet().GetPoints()->SetPoint(1, -37.083333, -54.493333, 0);
     observation->polyDataSet().GetPoints()->SetPoint(2, -37.073333, -54.493333, 0);
     observation->specifyCoordinateSystem(coordsSpec);
-    auto model = genPolyData("dispVectorModel", 3);
     model->polyDataSet().GetPoints()->DeepCopy(observation->polyDataSet().GetPoints());
     model->specifyCoordinateSystem(coordsSpec);
 
-    env->dataSetHandler.addExternalData({ observation.get(), model.get() });
     auto residualView = env->dataMapping.createRenderView<ResidualVerificationView>();
+    view = residualView;
 
-    residualView->setModelData(model.get());
-    residualView->setObservationData(observation.get());
+    residualView->setModelData(model);
+    residualView->setObservationData(observation);
     residualView->waitForResidualUpdate();
 
     auto residual = residualView->residualData();
@@ -248,7 +321,4 @@ TEST_F(ResidualView_test, ProjectToLoS_TransformedCoordinateSystem)
     {
         ASSERT_EQ(0.0, residualScalars->GetComponent(i, 0));
     }
-
-    residualView->close();
-    qApp->processEvents();
 }

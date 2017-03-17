@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>335</width>
-    <height>288</height>
+    <height>224</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -29,14 +29,7 @@
       <property name="bottomMargin">
        <number>0</number>
       </property>
-      <item row="0" column="0" colspan="2">
-       <widget class="QCheckBox" name="interpolationModeCheckBox">
-        <property name="text">
-         <string>Interpolate Model on Observation structure</string>
-        </property>
-       </widget>
-      </item>
-      <item row="3" column="0">
+      <item row="0" column="0">
        <widget class="QLabel" name="label">
         <property name="text">
          <string>&amp;Observation</string>
@@ -46,10 +39,10 @@
         </property>
        </widget>
       </item>
-      <item row="3" column="1">
+      <item row="0" column="1">
        <widget class="QComboBox" name="observationCombo"/>
       </item>
-      <item row="5" column="0">
+      <item row="1" column="0">
        <widget class="QLabel" name="label2">
         <property name="text">
          <string>&amp;Model</string>
@@ -59,10 +52,10 @@
         </property>
        </widget>
       </item>
-      <item row="5" column="1">
+      <item row="1" column="1">
        <widget class="QComboBox" name="modelCombo"/>
       </item>
-      <item row="7" column="0">
+      <item row="3" column="0">
        <widget class="QLabel" name="label_2">
         <property name="text">
          <string>&amp;Line of Sight</string>
@@ -72,7 +65,34 @@
         </property>
        </widget>
       </item>
-      <item row="7" column="1">
+      <item row="2" column="0">
+       <widget class="QLabel" name="label_5">
+        <property name="text">
+         <string>Residual &amp;Geometry</string>
+        </property>
+        <property name="buddy">
+         <cstring>residualGeomtryCombo</cstring>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1">
+       <widget class="QComboBox" name="residualGeomtryCombo">
+        <property name="currentIndex">
+         <number>1</number>
+        </property>
+        <item>
+         <property name="text">
+          <string>Copy from Observation</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Copy from Model</string>
+         </property>
+        </item>
+       </widget>
+      </item>
+      <item row="3" column="1">
        <widget class="QWidget" name="widget_3" native="true">
         <layout class="QHBoxLayout" name="horizontalLayout">
          <property name="leftMargin">
@@ -124,9 +144,6 @@
            <property name="toolTip">
             <string>Vertical</string>
            </property>
-           <property name="value">
-            <double>1.000000000000000</double>
-           </property>
            <property name="minimum">
             <double>-1.000000000000000</double>
            </property>
@@ -136,22 +153,25 @@
            <property name="singleStep">
             <double>0.010000000000000</double>
            </property>
+           <property name="value">
+            <double>1.000000000000000</double>
+           </property>
           </widget>
          </item>
         </layout>
        </widget>
       </item>
-      <item row="10" column="0">
+      <item row="4" column="0">
        <widget class="QLabel" name="label_3">
         <property name="text">
-         <string>O&amp;bservation Scale</string>
+         <string>Observation &amp;Scale</string>
         </property>
         <property name="buddy">
          <cstring>observationScale</cstring>
         </property>
        </widget>
       </item>
-      <item row="10" column="1">
+      <item row="4" column="1">
        <widget class="QSpinBox" name="observationScale">
         <property name="prefix">
          <string>· 10^</string>
@@ -167,17 +187,17 @@
         </property>
        </widget>
       </item>
-      <item row="12" column="0">
+      <item row="5" column="0">
        <widget class="QLabel" name="label_4">
         <property name="text">
-         <string>Model &amp;Scale</string>
+         <string>Model S&amp;cale</string>
         </property>
         <property name="buddy">
          <cstring>modelScale</cstring>
         </property>
        </widget>
       </item>
-      <item row="12" column="1">
+      <item row="5" column="1">
        <widget class="QSpinBox" name="modelScale">
         <property name="prefix">
          <string>· 10^</string>
@@ -190,10 +210,7 @@
         </property>
        </widget>
       </item>
-      <item row="13" column="0" colspan="2">
-       <widget class="QWidget" name="widget" native="true"/>
-      </item>
-      <item row="14" column="0" colspan="2">
+      <item row="6" column="0" colspan="2">
        <widget class="QPushButton" name="updateButton">
         <property name="text">
          <string>&amp;Update</string>
@@ -211,14 +228,14 @@
  <customwidgets>
   <customwidget>
    <class>DoubleSpinBox</class>
-   <extends>QLineEdit</extends>
+   <extends>QDoubleSpinBox</extends>
    <header>gui/widgets/DoubleSpinBox.h</header>
   </customwidget>
  </customwidgets>
  <tabstops>
-  <tabstop>interpolationModeCheckBox</tabstop>
   <tabstop>observationCombo</tabstop>
   <tabstop>modelCombo</tabstop>
+  <tabstop>residualGeomtryCombo</tabstop>
   <tabstop>losX</tabstop>
   <tabstop>losY</tabstop>
   <tabstop>losZ</tabstop>

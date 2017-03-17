@@ -18,16 +18,17 @@ public:
         vtkDataSet & baseDataSet, 
         vtkDataSet & sourceDataSet,
         const QString & sourceAttributeName, 
-        bool attributeInCellData);
+        bool attributeInCellData,
+        bool targetAttributeInCellData);
 
     // Fast image on image interpolation for images with matching structure
-    static vtkSmartPointer<vtkDataArray> interpolateImageOnImage(
+    static vtkSmartPointer<vtkDataArray> fastInterpolateImageOnImage(
         vtkImageData & baseImage,
         vtkImageData & sourceImage,
         const QString & sourceAttributeName);
 
     // Fast poly on poly interpolation for data sets with matching structure
-    static vtkSmartPointer<vtkDataArray> interpolatePolyOnPoly(
+    static vtkSmartPointer<vtkDataArray> fastInterpolatePolyOnPoly(
         vtkPolyData & basePoly,
         vtkPolyData & sourcePoly,
         const QString & sourceAttributeName,

@@ -7,6 +7,7 @@
 
 #include <vtkVector.h>
 
+#include <core/data_objects/DataObject.h>
 #include <gui/data_view/AbstractRenderView.h>
 
 
@@ -15,6 +16,7 @@ class QProgressBar;
 
 class vtkDataSet;
 
+class DataSetResidualHelper;
 class RendererImplementationResidual;
 class vtkCameraSynchronization;
 
@@ -26,9 +28,11 @@ class GUI_API ResidualVerificationView : public AbstractRenderView
 public:
     /** Visualization parameters  */
 
-    /** Convenience API to set the images for the use case specific sub-view.
-    These functions have the same effect as calling removeDataObject(currentImage) and
-    addDataObject(newImage) for the respective sub-views. */
+    /**
+     * Convenience API to set the images for the use case specific sub-view.
+     * These functions have the same effect as calling removeDataObject(currentImage) and
+     * addDataObject(newImage) for the respective sub-views.
+     */
     void setObservationData(DataObject * observation);
     void setModelData(DataObject * model);
 
@@ -41,17 +45,17 @@ public:
     int modelUnitDecimalExponent() const;
     void setModelUnitDecimalExponent(int exponent);
 
-    void setInSARLineOfSight(const vtkVector3d & los);
-    const vtkVector3d & inSARLineOfSight() const;
+    void setDeformationLineOfSight(const vtkVector3d & los);
+    const vtkVector3d & deformationLineOfSight() const;
 
-    enum class InterpolationMode
+    enum class InputData
     {
-        modelToObservation,
-        observationToModel
+        observation,
+        model
     };
 
-    void setInterpolationMode(InterpolationMode mode);
-    InterpolationMode interpolationMode() const;
+    void setResidualGeometrySource(InputData geometrySource);
+    InputData residualGeometrySource() const;
 
     /** Blocks until current residual computation finished. */
     void waitForResidualUpdate();
@@ -91,8 +95,10 @@ protected:
 
     void axesEnabledChangedEvent(bool enabled) override;
 
+    void onCoordinateSystemChanged(const CoordinateSystemSpecification & spec) override;
+
 signals:
-    void interpolationModeChanged(InterpolationMode mode);
+    void residualGeometrySourceChanged(InputData geometrySource);
     void lineOfSightChanged(const vtkVector3d & los);
     void unitDecimalExponentsChanged(int observationExponent, int modelExponent);
 
@@ -108,56 +114,49 @@ private:
 private:
     void initialize();
 
-    // common implementation for the public interface functions */
+    /** common implementation for the public interface functions */
     void setDataHelper(unsigned int subViewIndex, DataObject * dataObject, bool skipResidualUpdate = false);
-    /** Low level function, that won't trigger GUI updates.
-        dataObject and ownedDataObject: set only one of them, depending on whether this view owns the specific data object
-        Set none of them to clear the sub view. */
-    void setDataInternal(unsigned int subViewIndex, DataObject * dataObject, std::unique_ptr<DataObject> ownedObject);
+    /** Low level function, that won't trigger GUI updates. */
+    void setInputDataInternal(unsigned int subViewIndex, DataObject * newData);
+    void setResidualDataInternal(std::unique_ptr<DataObject> newResidual);
+    void updateVisualizationForSubView(unsigned int subViewIndex, DataObject * newData);
 
     void updateResidualAsync();
     void handleUpdateFinished();
-
-    /** Update the residual view, show a residual if possible, discard old visualization data 
-      * @param toDelete delete old visualization data after informing the GUI
-      * @return Old residual object that needs to be deleted after informing the GUI */
-    void updateResidual();
+    void updateResidualInternal();
 
     void updateGuiAfterDataChange();
 
     void updateGuiSelection();
 
     DataObject * dataAt(unsigned int i) const;
-    bool setDataAt(unsigned int i, DataObject * dataObject);
+    void setDataAt(unsigned int i, DataObject * dataObject);
 
-    static std::pair<QString, bool> findDataSetAttributeName(vtkDataSet & dataSet, unsigned int inputType);
+    static std::pair<QString, IndexType> findDataSetAttributeName(vtkDataSet & dataSet, unsigned int inputType);
 
 private:
+    std::unique_ptr<DataSetResidualHelper> m_residualHelper;
+
     QProgressBar * m_progressBar;
 
-    vtkVector3d m_inSARLineOfSight;
-    InterpolationMode m_interpolationMode;
+    InputData m_residualGeometrySource;
     int m_observationUnitDecimalExponent;
     int m_modelUnitDecimalExponent;
-
-    DataObject * m_observationData;
-    DataObject * m_modelData;
-    bool m_modelEventsDeferred;
-    std::unique_ptr<DataObject> m_residual;
 
     std::unique_ptr<RendererImplementationResidual> m_implementation;
     std::unique_ptr<vtkCameraSynchronization> m_cameraSync;
 
     std::array<std::unique_ptr<AbstractVisualizedData>, numberOfViews> m_visualizations;
-    std::array<std::pair<QString, bool>, numberOfViews> m_attributeNamesLocations;
-    std::array<QString, numberOfViews> m_projectedAttributeNames;
 
     std::unique_ptr<QFutureWatcher<void>> m_updateWatcher;
-    std::mutex m_updateMutex;
-    /** Lock the mutex in updateResidualAsync, move the lock here and unlock it only in 
-      * handleUpdateFinished. This way, only a single update invocation is possible at a time. */
-    std::unique_lock<std::mutex> m_updateMutexLock;
-    vtkSmartPointer<vtkDataSet> m_newResidual;
+    std::recursive_mutex m_updateMutex;
+    /**
+     * Lock the mutex in updateResidualAsync, move the lock here and unlock it only in 
+     * handleUpdateFinished. This way, only a single update invocation is possible at a time.
+     */
+    std::unique_lock<std::recursive_mutex> m_updateMutexLock;
+    std::array<ScopedEventDeferral, numberOfViews> m_eventDeferrals;
+    std::unique_ptr<DataObject> m_residual;
     std::unique_ptr<DataObject> m_oldResidualToDeleteAfterUpdate;
     std::vector<std::unique_ptr<AbstractVisualizedData>> m_visToDeleteAfterUpdate;
     bool m_destructorCalled;
