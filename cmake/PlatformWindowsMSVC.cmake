@@ -108,6 +108,12 @@ if(OPTION_DEBUG_ADDITIONAL_RUNTME_CHECKS)
         $<$<CONFIG:Debug>:      /RTCc /GS /sdl >
         $<$<CONFIG:RelNoOptimization>: /RTCc /GS /sdl >
     )
+    if (NOT MSVC_VERSION VERSION_LESS 1900)
+        list(APPEND DEFAULT_COMPILE_DEFS
+            $<$<CONFIG:Debug>:          _ALLOW_RTCc_IN_STL >
+            $<$<CONFIG:RelWithDebInfo>: _ALLOW_RTCc_IN_STL >
+        )
+    endif()
 endif()
 
 
