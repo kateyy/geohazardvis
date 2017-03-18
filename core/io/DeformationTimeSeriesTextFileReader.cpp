@@ -14,6 +14,7 @@
 #include <vtkPointData.h>
 #include <vtkPoints.h>
 #include <vtkPolyData.h>
+#include <vtkStreamingDemandDrivenPipeline.h>
 
 #include <core/CoordinateSystems.h>
 #include <core/data_objects/PointCloudDataObject.h>
@@ -312,6 +313,16 @@ auto DeformationTimeSeriesTextFileReader::readData() -> State
             array);
     }
 
+    if (!timestamps.empty())
+    {
+        bool okay;
+        const auto timeStep = timestamps[timestamps.size() / 2u][0].toDouble(&okay);
+        if (okay)
+        {
+            temporalDataSource->GetOutputInformation(0)->Set(
+                vtkStreamingDemandDrivenPipeline::UPDATE_TIME_STEP(), timeStep);
+        }
+    }
 
     // == Setup DataObject and Coordinate System Information ==
 

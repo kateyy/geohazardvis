@@ -73,8 +73,9 @@ void TemporalPipelineMediator::setVisualization(AbstractVisualizedData * visuali
         return;
     }
 
-    // Or just default to the first one
-    m_selection.selectedTimeStep = m_timeSteps.front();
+    // Or just select a default time step
+    m_selection.index = m_timeSteps.size() / 2;
+    m_selection.selectedTimeStep = m_timeSteps[m_selection.index];
     passSelectionToPipeline();
 
     // One time initialization: the temporal array was not visible before, so other components
