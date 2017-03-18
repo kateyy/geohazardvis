@@ -42,7 +42,7 @@ if(OPTION_Qt5Designer_plugins_deploy_dir)
 else()
     add_custom_command(TARGET ${deployTargetName} POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E echo
-            "Set OPTION_BUILD_QT_DESIGNER_PLUGINS in CMake to deploy Qt5 Designer plugins!")
+            "Set OPTION_Qt5Designer_plugins_deploy_dir in CMake to deploy Qt5 Designer plugins!")
 endif()
 
 function(add_designer_plugin CLASS_NAME)
