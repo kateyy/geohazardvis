@@ -54,7 +54,14 @@ ResidualVerificationView::ResidualVerificationView(DataMapping & dataMapping, in
     m_progressBar->hide();
     toolBar()->addWidget(progressBarContainer);
 
-    initialize();   // lazy initialize is not really needed for now
+    m_implementation = std::make_unique<RendererImplementationResidual>(*this);
+    m_implementation->activate(qvtkWidget());
+
+    m_cameraSync = std::make_unique<vtkCameraSynchronization>();
+    for (unsigned int i = 0; i < numberOfSubViews(); ++i)
+    {
+        m_cameraSync->add(m_implementation->renderer(i));
+    }
 
     updateTitle();
 }
@@ -334,15 +341,14 @@ void ResidualVerificationView::setDataHelper(
 
     setInputDataInternal(subViewIndex, dataObject);
 
-    vtkSmartPointer<vtkDataSet> dataSet = dataObject ? dataObject->dataSet() : nullptr;
-    if (dataObject && !dataSet)
-    {
-        qDebug() << "Unsupported data object (no data found):" << dataObject->name();
-    }
     auto scalars = std::make_pair(QString(), IndexType::invalid);
-    if (dataObject && dataSet)
+    if (dataObject)
     {
-        scalars = findDataSetAttributeName(*dataSet, subViewIndex);
+        scalars = findDataSetAttributeName(*dataObject, subViewIndex);
+        if (scalars.second == IndexType::invalid)
+        {
+            qDebug() << "Unsupported data object (no data found):" << dataObject->name();
+        }
     }
 
     if (subViewIndex == observationIndex)
@@ -377,7 +383,7 @@ RendererImplementation & ResidualVerificationView::implementation() const
 
 void ResidualVerificationView::initializeRenderContext()
 {
-    initialize();
+    assert(m_implementation);
 }
 
 std::pair<QString, std::vector<QString>> ResidualVerificationView::friendlyNameInternal() const
@@ -540,23 +546,6 @@ void ResidualVerificationView::onCoordinateSystemChanged(const CoordinateSystemS
     AbstractRenderView::onCoordinateSystemChanged(spec);
 
     m_residualHelper->setTargetCoordinateSystem(spec);
-}
-
-void ResidualVerificationView::initialize()
-{
-    if (m_implementation)
-    {
-        return;
-    }
-
-    m_implementation = std::make_unique<RendererImplementationResidual>(*this);
-    m_implementation->activate(qvtkWidget());
-
-    m_cameraSync = std::make_unique<vtkCameraSynchronization>();
-    for (unsigned int i = 0; i < numberOfSubViews(); ++i)
-    {
-        m_cameraSync->add(m_implementation->renderer(i));
-    }
 }
 
 void ResidualVerificationView::setInputDataInternal(unsigned int subViewIndex, DataObject * newData)
@@ -890,161 +879,109 @@ void ResidualVerificationView::setDataAt(unsigned int i, DataObject * dataObject
 }
 
 std::pair<QString, IndexType> ResidualVerificationView::findDataSetAttributeName(
-    vtkDataSet & dataSet, unsigned int inputType)
+    DataObject & dataObject, unsigned int inputType) const
 {
-    auto checkDefaultScalars = [] (vtkDataSet & dataSet) -> std::pair<QString, IndexType>
+    // Residual: location derived from source geometry when the residual is computed
+    if (inputType == residualIndex)
     {
-        if (auto scalars = dataSet.GetPointData()->GetScalars())
+        return std::make_pair(m_residualHelper->residualDataObjectName(), IndexType::invalid);
+    }
+
+    // If displacement vector data is used, it will be projected to line of sight displacements.
+    // The projected data needs to be stored in the underlaying data set to be usable in color mappings.
+    if (!dataObject.dataSet())
+    {
+        return std::make_pair(QString(), IndexType::invalid);
+    }
+
+    auto dataSet = dataObject.processedOutputDataSet();
+    if (!dataSet)
+    {
+        return std::make_pair(QString(), IndexType::invalid);
+    }
+
+    // Search default deformation attribute in the scalar association defined by the data object.
+    const auto primaryLocation = dataObject.defaultAttributeLocation();
+    IndexType secondaryLocation = IndexType::invalid;
+
+    // Polygonal data may also have useful attributes associated with points.
+    // For other data sets (images, point clouds), no secondary location is considered.
+    if (auto poly = vtkPolyData::SafeDownCast(dataSet))
+    {
+        if (primaryLocation == IndexType::cells)
         {
-            if (const auto name = scalars->GetName())
-            {
-                return std::make_pair(QString::fromUtf8(name), IndexType::points);
-            }
+            secondaryLocation = IndexType::points;
         }
-        else if (auto firstArray = dataSet.GetPointData()->GetArray(0))
+    }
+
+    auto extractAttributes = [dataSet] (IndexType location) -> vtkDataSetAttributes *
+    {
+        switch (location)
         {
-            if (const auto name = firstArray->GetName())
-            {
-                return std::make_pair(QString::fromUtf8(name), IndexType::points);
-            }
+        case IndexType::points: return dataSet->GetPointData();
+        case IndexType::cells: return dataSet->GetCellData();
+        default: return nullptr;
+        }
+    };
+
+    auto primaryAttributes = extractAttributes(primaryLocation);
+    auto secondaryAttributes = extractAttributes(secondaryLocation);
+
+    // Search deformation attribute by name first, than check if scalars or vectors are available.
+    // Always look in the primary attribute location first.
+
+    static const auto deformationAttributeNames = {
+        "Deformation", "deformation",
+        "Deformation Vectors", "deformation vectors",
+        "Deformation Vector", "deformation vector",
+        "Displacement Vectors", "displacement vectors",
+        "Displacement Vector", "displacement vector",
+        "U-", "u-"
+    };
+
+    auto searchValidAttribute = [] (vtkDataSetAttributes * attributes) -> QString
+    {
+        if (!attributes)
+        {
+            return{};
         }
 
-        if (auto scalars = dataSet.GetCellData()->GetScalars())
+        for (auto && name : deformationAttributeNames)
         {
-            if (const auto name = scalars->GetName())
+            if (attributes->HasArray(name))
             {
-                return std::make_pair(QString::fromUtf8(name), IndexType::cells);
+                return name;
             }
         }
-        else if (auto firstArray = dataSet.GetCellData()->GetArray(0))
+        if (auto scalars = attributes->GetScalars())
         {
-            if (const auto name = firstArray->GetName())
+            auto name = scalars->GetName();
+            if (name && name[0] != '\0')
             {
-                return std::make_pair(QString::fromUtf8(name), IndexType::cells);
+                return QString::fromUtf8(name);
+            }
+        }
+        if (auto vectors = attributes->GetVectors())
+        {
+            auto name = vectors->GetName();
+            if (name && name[0] != '\0')
+            {
+                return QString::fromUtf8(name);
             }
         }
         return{};
     };
 
-    auto checkDefaultVectors = [] (vtkDataSet & dataSet) -> std::pair<QString, IndexType>
+    auto name = searchValidAttribute(primaryAttributes);
+    if (!name.isEmpty())
     {
-        if (auto scalars = dataSet.GetPointData()->GetVectors())
-        {
-            if (const auto name = scalars->GetName())
-            {
-                return std::make_pair(QString::fromUtf8(name), IndexType::points);
-            }
-        }
-        else
-        {
-            for (int i = 0; i < dataSet.GetPointData()->GetNumberOfArrays(); ++i)
-            {
-                auto array = dataSet.GetPointData()->GetArray(i);
-                if (array->GetNumberOfComponents() != 3)
-                {
-                    continue;
-                }
-
-                if (const auto name = array->GetName())
-                {
-                    return std::make_pair(QString::fromUtf8(name), IndexType::points);
-                }
-            }
-        }
-
-        if (auto scalars = dataSet.GetCellData()->GetVectors())
-        {
-            if (const auto name = scalars->GetName())
-            {
-                return std::make_pair(QString::fromUtf8(name), IndexType::cells);
-            }
-        }
-        else
-        {
-            for (int i = 0; i < dataSet.GetCellData()->GetNumberOfArrays(); ++i)
-            {
-                auto array = dataSet.GetCellData()->GetArray(i);
-                if (array->GetNumberOfComponents() != 3)
-                {
-                    continue;
-                }
-
-                if (const auto name = array->GetName())
-                {
-                    return std::make_pair(QString::fromUtf8(name), IndexType::points);
-                }
-            }
-        }
-        return std::make_pair(QString(), IndexType::invalid);
-    };
-
-    if (inputType == observationIndex)
+        return std::make_pair(name, primaryLocation);
+    }
+    name = searchValidAttribute(secondaryAttributes);
+    if (!name.isEmpty())
     {
-        return checkDefaultScalars(dataSet);
+        return std::make_pair(name, secondaryLocation);
     }
 
-    if (inputType == modelIndex)
-    {
-        // Polygonal data is cell based, point and grid data is point based.
-        auto primaryLocation = IndexType::points;
-        bool usePrimaryAttribute = true;
-
-        if (auto poly = vtkPolyData::SafeDownCast(&dataSet))
-        {
-            if (auto polys = poly->GetPolys())
-            {
-                primaryLocation = polys->GetNumberOfCells() > 0 ? IndexType::cells : IndexType::points;
-            }
-        }
-
-        const auto secondaryLocation = primaryLocation == IndexType::points
-            ? IndexType::cells : IndexType::points;
-
-        auto & primaryAttributes = primaryLocation == IndexType::cells
-            ? static_cast<vtkDataSetAttributes &>(*dataSet.GetCellData())
-            : static_cast<vtkDataSetAttributes &>(*dataSet.GetPointData());
-        auto & secondaryAttributes = secondaryLocation == IndexType::cells
-            ? static_cast<vtkDataSetAttributes &>(*dataSet.GetCellData())
-            : static_cast<vtkDataSetAttributes &>(*dataSet.GetPointData());
-
-        static const auto modelArrayNames = {
-            "Deformation", "deformation"
-            "Displacement Vectors", "displacement vectors",
-            "U-"
-        };
-
-        auto findDisplacementData = [] (vtkDataSetAttributes & attributes) -> vtkAbstractArray *
-        {
-            for (auto nameIt = modelArrayNames.begin(); nameIt != modelArrayNames.end(); ++nameIt)
-            {
-                if (auto array = attributes.GetAbstractArray(*nameIt))
-                {
-                    return array;
-                }
-            }
-            if (auto vectors = attributes.GetVectors())
-            {
-                return vectors;
-            }
-            return attributes.GetScalars();
-        };
-
-        auto displacementData = findDisplacementData(primaryAttributes);
-        if (!displacementData)
-        {
-            usePrimaryAttribute = false;
-            displacementData = findDisplacementData(secondaryAttributes);
-        }
-
-        if (!displacementData)
-        {
-            return std::make_pair(QString(), IndexType::invalid);
-        }
-
-        const auto location = usePrimaryAttribute ? primaryLocation : secondaryLocation;
-        return std::make_pair(QString::fromUtf8(displacementData->GetName()), location);
-    }
-
-    // Residual: location derived from source geometry when the residual is computed
-    return std::make_pair(QString("Residual"), IndexType::invalid);
+    return std::make_pair(QString(), IndexType::invalid);
 }

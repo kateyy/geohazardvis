@@ -102,6 +102,36 @@ struct ResidualWorker
     }
 };
 
+vtkDataSetAttributes * extractAttributes(vtkDataSet * dataSet, IndexType location)
+{
+    if (!dataSet)
+    {
+        return nullptr;
+    }
+
+    switch (location)
+    {
+    case IndexType::points: return dataSet->GetPointData();
+    case IndexType::cells: return dataSet->GetCellData();
+    default: return nullptr;
+    }
+};
+
+vtkDataArray * extractAttribute(vtkDataSet * dataSet, IndexType location, const QString & name)
+{
+    if (!dataSet)
+    {
+        return nullptr;
+    }
+
+    auto attributes = extractAttributes(dataSet, location);
+    if (!attributes)
+    {
+        return nullptr;
+    }
+    return attributes->GetArray(name.toUtf8().data());
+};
+
 }
 
 
@@ -110,6 +140,7 @@ DataSetResidualHelper::ScalarDef::ScalarDef()
     , location{ IndexType::invalid }
     , scale{ 1.0 }
     , projectedName{}
+    , sourceArrayMTime{}
     , losDisplacements{}
 {
 }
@@ -134,9 +165,7 @@ DataSetResidualHelper::DataSetResidualHelper()
 {
 }
 
-DataSetResidualHelper::~DataSetResidualHelper()
-{
-}
+DataSetResidualHelper::~DataSetResidualHelper() = default;
 
 void DataSetResidualHelper::setObservationDataObject(DataObject * observationDataObject)
 {
@@ -327,29 +356,23 @@ bool DataSetResidualHelper::isSetupComplete() const
 
 bool DataSetResidualHelper::projectDisplacementsToLineOfSight()
 {
-    auto observationDS = m_observationDataObject ? m_observationDataObject->dataSet() : nullptr;
-    auto modelDS = m_modelDataObject ? m_modelDataObject->dataSet() : nullptr;
+    auto observationDS = m_observationDataObject ? m_observationDataObject->processedOutputDataSet() : nullptr;
+    auto modelDS = m_modelDataObject ? m_modelDataObject->processedOutputDataSet() : nullptr;
 
-    const vtkSmartPointer<vtkDataArray> observationData = observationDS
-        ? (m_observationScalars.location == IndexType::cells
-            ? observationDS->GetCellData()->GetArray(m_observationScalars.name.toUtf8().data())
-            : observationDS->GetPointData()->GetArray(m_observationScalars.name.toUtf8().data()))
-        : nullptr;
-
-    const vtkSmartPointer<vtkDataArray> modelData = modelDS
-        ? (m_modelScalars.location == IndexType::cells
-            ? modelDS->GetCellData()->GetArray(m_modelScalars.name.toUtf8().data())
-            : modelDS->GetPointData()->GetArray(m_modelScalars.name.toUtf8().data()))
-        : nullptr;
+    const vtkSmartPointer<vtkDataArray> observationData = extractAttribute(
+        observationDS, m_observationScalars.location, m_observationScalars.name);
+    const vtkSmartPointer<vtkDataArray> modelData = extractAttribute(
+        modelDS, m_modelScalars.location, m_modelScalars.name);
 
     if (observationDS && !observationData)
     {
-        qDebug() << "Could not find valid observation data for residual computation (" << m_observationScalars.name + ")";
+        qDebug() << "Residual: Could not find valid observation data for residual computation (" 
+            + m_observationScalars.name + ")";
     }
 
     if (modelDS && !modelData)
     {
-        qDebug() << "Could not find valid model data for residual computation (" << m_modelScalars.name + ")";
+        qDebug() << "Residual: Could not find valid model data for residual computation (" << m_modelScalars.name + ")";
     }
 
     if (!observationData && !modelData)
@@ -357,25 +380,58 @@ bool DataSetResidualHelper::projectDisplacementsToLineOfSight()
         return false;
     }
 
+    auto observationAttributeStorage = m_observationDataObject ? m_observationDataObject->dataSet() : nullptr;
+    auto modelAttributeStorage = m_modelDataObject ? m_modelDataObject->dataSet() : nullptr;
+    if (m_observationDataObject && !observationAttributeStorage)
+    {
+        qDebug() << "Residual: Unsupported input data object: " << m_observationDataObject->name();
+        return false;
+    }
+
+    if (m_modelDataObject && !modelAttributeStorage)
+    {
+        qDebug() << "Residual: Unsupported input data object: " << m_modelDataObject->name();
+        return false;
+    }
 
     // project displacement vectors to the line of sight vector, if required
     // This also adds the projection result as scalars to the respective data set, so that it can be used
     // in the visualization.
-    auto projectOrFetchDisplacement = [this] (vtkDataArray & displacement, vtkDataSet & dataSet,
-        ScalarDef & scalarDef) -> bool {
-
+    auto projectOrFetchDisplacement = [this] (vtkDataArray & displacement, ScalarDef & scalarDef,
+        vtkDataSet & attributeStorage) -> bool
+    {
         if (displacement.GetNumberOfComponents() == 1)
         {
-            scalarDef.projectedName = "";
+            scalarDef.projectedName = QString{};
+            scalarDef.sourceArrayMTime = {};
             scalarDef.losDisplacements = &displacement;  // is already projected
             return true;
         }
 
         if (displacement.GetNumberOfComponents() != 3)
         {   // can't handle that
+            scalarDef.projectedName = QString{};
+            scalarDef.sourceArrayMTime = {};
             scalarDef.losDisplacements = {};
             return false;
         }
+
+        scalarDef.sourceArrayMTime = displacement.GetMTime();
+
+        assert(!m_projectedAttributeSuffix.isEmpty());
+        const auto newProjectedName = scalarDef.name + m_projectedAttributeSuffix;
+        if (scalarDef.projectedName == newProjectedName)
+        {
+            if (scalarDef.losDisplacements
+                && (scalarDef.losDisplacements->GetNumberOfTuples() == displacement.GetNumberOfTuples())
+                && (scalarDef.losDisplacements->GetMTime() >= scalarDef.sourceArrayMTime))
+            {
+                // Reuse projected data, if the source array is not newer
+                return true;
+            }
+        }
+
+        scalarDef.projectedName = newProjectedName;
 
         using LosDispatcher = vtkArrayDispatch::DispatchByValueType<vtkArrayDispatch::Reals>;
         ProjectToLineOfSightWorker losWorker;
@@ -385,21 +441,18 @@ bool DataSetResidualHelper::projectDisplacementsToLineOfSight()
             losWorker(&displacement);
         }
 
-        auto projected = losWorker.projectedData;
-
-        scalarDef.projectedName = scalarDef.name + m_projectedAttributeSuffix;
-        projected->SetName(scalarDef.projectedName.toUtf8().data());
+        scalarDef.losDisplacements = losWorker.projectedData;
+        scalarDef.losDisplacements->SetName(scalarDef.projectedName.toUtf8().data());
 
         if (scalarDef.location == IndexType::cells)
         {
-            dataSet.GetCellData()->AddArray(projected);
+            attributeStorage.GetCellData()->AddArray(scalarDef.losDisplacements);
         }
         else
         {
-            dataSet.GetPointData()->AddArray(projected);
+            attributeStorage.GetPointData()->AddArray(scalarDef.losDisplacements);
         }
 
-        scalarDef.losDisplacements = projected;
         return true;
     };
 
@@ -409,12 +462,12 @@ bool DataSetResidualHelper::projectDisplacementsToLineOfSight()
 
     if (observationDS && observationData)
     {
-        observationValid =
-            projectOrFetchDisplacement(*observationData, *observationDS, m_observationScalars);
+        observationValid = projectOrFetchDisplacement(*observationData, m_observationScalars,
+            *observationAttributeStorage);
     }
     if (modelDS && modelData)
     {
-        modelValid = projectOrFetchDisplacement(*modelData, *modelDS, m_modelScalars);
+        modelValid = projectOrFetchDisplacement(*modelData, m_modelScalars, *modelAttributeStorage);
     }
 
     return observationValid && modelValid;
@@ -422,12 +475,9 @@ bool DataSetResidualHelper::projectDisplacementsToLineOfSight()
 
 bool DataSetResidualHelper::updateResidual()
 {
-    if (!m_observationScalars.losDisplacements || !m_modelScalars.losDisplacements)
+    if (!projectDisplacementsToLineOfSight())
     {
-        if (!projectDisplacementsToLineOfSight())
-        {
-            return false;
-        }
+        return false;
     }
 
     if (!isSetupComplete())
@@ -450,10 +500,10 @@ bool DataSetResidualHelper::updateResidual()
 
     auto observationDSTransformedPtr = useTransformedCoordinates
         ? transformableObservation->coordinateTransformedDataSet(m_targetCoordinateSystem)
-        : vtkSmartPointer<vtkDataSet>(m_observationDataObject->dataSet());
+        : vtkSmartPointer<vtkDataSet>(m_observationDataObject->processedOutputDataSet());
     auto modelDSTransformedPtr = useTransformedCoordinates
         ? transformableModel->coordinateTransformedDataSet(m_targetCoordinateSystem)
-        : vtkSmartPointer<vtkDataSet>(m_modelDataObject->dataSet());
+        : vtkSmartPointer<vtkDataSet>(m_modelDataObject->processedOutputDataSet());
 
     if (!observationDSTransformedPtr || !modelDSTransformedPtr)
     {

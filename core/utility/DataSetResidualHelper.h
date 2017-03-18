@@ -93,6 +93,7 @@ private:
         IndexType location;
         double scale;
         QString projectedName;
+        vtkMTimeType sourceArrayMTime;
         vtkSmartPointer<vtkDataArray> losDisplacements;
     };
 

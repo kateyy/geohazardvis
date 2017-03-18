@@ -112,8 +112,6 @@ private:
     };
 
 private:
-    void initialize();
-
     /** common implementation for the public interface functions */
     void setDataHelper(unsigned int subViewIndex, DataObject * dataObject, bool skipResidualUpdate = false);
     /** Low level function, that won't trigger GUI updates. */
@@ -132,7 +130,7 @@ private:
     DataObject * dataAt(unsigned int i) const;
     void setDataAt(unsigned int i, DataObject * dataObject);
 
-    static std::pair<QString, IndexType> findDataSetAttributeName(vtkDataSet & dataSet, unsigned int inputType);
+    std::pair<QString, IndexType> findDataSetAttributeName(DataObject & dataObject, unsigned int inputType) const;
 
 private:
     std::unique_ptr<DataSetResidualHelper> m_residualHelper;
