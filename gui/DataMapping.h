@@ -26,6 +26,7 @@ class GUI_API DataMapping : public QObject
 public:
     explicit DataMapping(DataSetHandler & dataSetHandler);
     ~DataMapping() override;
+    void cleanup();
 
     DataSetHandler & dataSetHandler() const;
     SelectionHandler & selectionHandler();

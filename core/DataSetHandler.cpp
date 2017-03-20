@@ -39,11 +39,21 @@ public:
 
 DataSetHandler::DataSetHandler()
     : QObject()
-    , d_ptr(std::make_unique<DataSetHandlerPrivate>())
+    , d_ptr{ std::make_unique<DataSetHandlerPrivate>() }
 {
 }
 
 DataSetHandler::~DataSetHandler() = default;
+
+void DataSetHandler::cleanup()
+{
+    QList<DataObject *> ownedData;
+    for (auto && data : d_ptr->dataSets)
+    {
+        ownedData << data.get();
+    }
+    deleteData(ownedData);
+}
 
 DataObject * DataSetHandler::takeData(std::unique_ptr<DataObject> dataObject)
 {

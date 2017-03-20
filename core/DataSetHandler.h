@@ -23,6 +23,7 @@ class CORE_API DataSetHandler : public QObject
 public:
     DataSetHandler();
     ~DataSetHandler() override;
+    void cleanup();
 
     /** Add data objects to the global data management.
         The DataSetHandler will take ownership of this data, so it can also delete it at any time. */

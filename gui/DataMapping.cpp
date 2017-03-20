@@ -26,6 +26,11 @@ DataMapping::DataMapping(DataSetHandler & dataSetHandler)
 
 DataMapping::~DataMapping()
 {
+    cleanup();
+}
+
+void DataMapping::cleanup()
+{
     // Close all views and give Qt the chance to correctly handle its hierarchies of ownerships.
     // E.g., when closing a 2D view with an active plot preview window, both views should be closed
     // after triggering closing of the original view.

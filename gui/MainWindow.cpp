@@ -251,6 +251,9 @@ MainWindow::~MainWindow()
     storeSettings();
     storeStyle();
 
+    m_dataMapping->cleanup();
+    m_dataSetHandler->cleanup();
+
     m_pluginManager.reset();
 
     disconnectAll(m_renderViewConnects);
