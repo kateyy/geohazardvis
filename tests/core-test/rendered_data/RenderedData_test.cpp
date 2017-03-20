@@ -8,6 +8,8 @@
 #include <vtkPolyData.h>
 #include <vtkPropCollection.h>
 
+#include <core/CoordinateSystems.h>
+#include <core/color_mapping/ColorMapping.h>
 #include <core/data_objects/PolyDataObject.h>
 #include <core/data_objects/ImageDataObject.h>
 #include <core/data_objects/VectorGrid3DDataObject.h>
@@ -176,4 +178,42 @@ TEST_F(RenderedData_test, RenderedVectorGrid3D_reportsVisibleBounds)
     const auto visibleBounds = genImageData<VectorGrid3DDataObject, 3>(dataBounds)->createRendered()->visibleBounds();
 
     ASSERT_EQ(dataBounds, visibleBounds);
+}
+
+TEST_F(RenderedData_test, RenderedPointCloudData_defaultColorMappingAndCoordinates)
+{
+    auto pointCloud = genPolyData(DataBounds({ 0, 10, 0, 10, 0, 0 }), VTK_VERTEX);
+    const auto dataCoordsSpec = ReferencedCoordinateSystemSpecification(
+        CoordinateSystemType::metricGlobal, "WGS 84", "UTM", "m", {}, vtkVector2d(0.5, 0.5));
+    pointCloud->specifyCoordinateSystem(dataCoordsSpec);
+
+    const auto numPoints = pointCloud->numberOfPoints();
+    auto scalars = vtkSmartPointer<vtkFloatArray>::New();
+    scalars->SetNumberOfValues(numPoints);
+    scalars->SetName("PointScalars");
+    pointCloud->polyDataSet().GetPointData()->SetScalars(scalars);
+
+    auto rendered = pointCloud->createRendered();
+
+    auto targetCoordsSpec = dataCoordsSpec;
+    targetCoordsSpec.type = CoordinateSystemType::metricLocal;
+    targetCoordsSpec.unitOfMeasurement = "km";
+
+    rendered->setDefaultCoordinateSystem(targetCoordsSpec);
+    auto viewProps = rendered->viewProps();
+    DataBounds renderedLocalKmBounds;
+    for (viewProps->InitTraversal(); auto prop = viewProps->GetNextProp();)
+    {
+        renderedLocalKmBounds.add(DataBounds(prop->GetBounds()));
+    }
+
+
+    ASSERT_TRUE(rendered->colorMapping().isEnabled());
+    ASSERT_STREQ(scalars->GetName(), rendered->colorMapping().currentScalarsName().toUtf8().data());
+
+    const auto expectedBounds = DataBounds({ -0.005, 0.005, -0.005, 0.005, 0.0, 0.0 });
+    for (size_t i = 0; i < 6; ++i)
+    {
+        ASSERT_FLOAT_EQ(expectedBounds[i], renderedLocalKmBounds[i]);
+    }
 }

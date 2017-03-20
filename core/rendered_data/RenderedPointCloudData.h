@@ -31,6 +31,7 @@ public:
 protected:
     vtkSmartPointer<vtkProp3DCollection> fetchViewProps3D() override;
 
+    void setupColorMapping(ColorMapping & colorMapping) override;
     void scalarsForColorMappingChangedEvent() override;
     void colorMappingGradientChangedEvent() override;
     void visibilityChangedEvent(bool visible) override;

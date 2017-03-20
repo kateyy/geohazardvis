@@ -6,6 +6,7 @@
 
 #include <vtkActor.h>
 #include <vtkAlgorithmOutput.h>
+#include <vtkPointData.h>
 #include <vtkPolyData.h>
 #include <vtkPolyDataMapper.h>
 #include <vtkProp3DCollection.h>
@@ -13,6 +14,7 @@
 
 #include <reflectionzeug/PropertyGroup.h>
 
+#include <core/color_mapping/ColorMapping.h>
 #include <core/data_objects/PointCloudDataObject.h>
 #include <core/color_mapping/ColorMappingData.h>
 #include <core/utility/DataExtent.h>
@@ -131,6 +133,36 @@ vtkActor * RenderedPointCloudData::mainActor()
     m_mainActor->SetProperty(renderProperty());
 
     return m_mainActor;
+}
+
+void RenderedPointCloudData::setupColorMapping(ColorMapping & colorMapping)
+{
+    RenderedData3D::setupColorMapping(colorMapping);
+
+    auto scalarsName = colorMapping.currentScalarsName();
+    do
+    {
+        auto data = pointCloudDataObject().processedOutputDataSet();
+        if (!data)
+        {
+            break;
+        }
+        auto scalars = data->GetPointData()->GetScalars();
+        if (!scalars)
+        {
+            break;
+        }
+        auto name = scalars->GetName();
+        if (!name)
+        {
+            break;
+        }
+        scalarsName = QString::fromUtf8(name);
+    } while (false);
+    if (!scalarsName.isEmpty())
+    {
+        colorMapping.setCurrentScalarsByName(scalarsName, true);
+    }
 }
 
 void RenderedPointCloudData::scalarsForColorMappingChangedEvent()
