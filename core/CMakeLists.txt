@@ -8,6 +8,7 @@ set(sources
     AbstractVisualizedData.h
     AbstractVisualizedData.cpp
     AbstractVisualizedData_private.h
+    AbstractVisualizedData_private.cpp
     ApplicationSettings.h
     ApplicationSettings.cpp
     CoordinateSystems.h
@@ -180,6 +181,7 @@ set(sources
 
     rendered_data/RenderedData.h
     rendered_data/RenderedData.cpp
+    rendered_data/RenderedData_private.h
     rendered_data/RenderedData3D.h
     rendered_data/RenderedData3D.cpp
     rendered_data/RenderedImageData.h

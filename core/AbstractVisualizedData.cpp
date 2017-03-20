@@ -13,10 +13,27 @@
 
 
 AbstractVisualizedData::AbstractVisualizedData(ContentType contentType, DataObject & dataObject)
-    : QObject()
-    , d_ptr{ std::make_unique<AbstractVisualizedData_private>(contentType, dataObject) }
+    : AbstractVisualizedData(std::make_unique<AbstractVisualizedData_private>(
+        *this, contentType, dataObject))
 {
-    connect(&dataObject, &DataObject::dataChanged, this, &AbstractVisualizedData::geometryChanged);
+}
+
+AbstractVisualizedData::AbstractVisualizedData(std::unique_ptr<AbstractVisualizedData_private> d_ptr)
+    : QObject()
+    , d_ptr{ std::move(d_ptr) }
+{
+    assert(this->d_ptr);
+    connect(&this->d_ptr->dataObject, &DataObject::dataChanged, this, &AbstractVisualizedData::geometryChanged);
+}
+
+AbstractVisualizedData_private & AbstractVisualizedData::dPtr()
+{
+    return *d_ptr;
+}
+
+const AbstractVisualizedData_private & AbstractVisualizedData::dPtr() const
+{
+    return *d_ptr;
 }
 
 AbstractVisualizedData::~AbstractVisualizedData()

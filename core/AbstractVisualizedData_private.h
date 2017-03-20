@@ -10,7 +10,7 @@
 #include <vtkInformationIntegerPointerKey.h>
 #include <vtkSmartPointer.h>
 
-#include <core/types.h>
+#include <core/AbstractVisualizedData.h>
 #include <core/color_mapping/ColorMapping.h>
 #include <core/utility/DataExtent.h>
 
@@ -25,8 +25,10 @@ class DataObject;
 class CORE_API AbstractVisualizedData_private
 {
 public:
-    AbstractVisualizedData_private(ContentType contentType, DataObject & dataObject)
-        : contentType{ contentType }
+    AbstractVisualizedData_private(AbstractVisualizedData & q_ptr,
+        ContentType contentType, DataObject & dataObject)
+        : q_ptr{ q_ptr }
+        , contentType{ contentType }
         , dataObject{ dataObject }
         , isVisible{ true }
         , colorMappingData{ nullptr }
@@ -38,7 +40,9 @@ public:
     {
     }
 
-    ~AbstractVisualizedData_private() = default;
+    virtual ~AbstractVisualizedData_private() = default;
+
+    AbstractVisualizedData & q_ptr;
 
     const ContentType contentType;
     DataObject & dataObject;
@@ -113,6 +117,3 @@ private:
     AbstractVisualizedData_private(const AbstractVisualizedData_private &) = delete;
     void operator=(const AbstractVisualizedData_private &) = delete;
 };
-
-
-vtkInformationKeyMacro(AbstractVisualizedData_private, VISUALIZED_DATA, IntegerPointer);

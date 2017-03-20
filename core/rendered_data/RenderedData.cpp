@@ -1,13 +1,9 @@
 #include "RenderedData.h"
+#include "RenderedData_private.h"
 
 #include <cassert>
 
-#include <vtkActor.h>
-#include <vtkOutlineFilter.h>
-#include <vtkPassThrough.h>
-#include <vtkPolyDataMapper.h>
-#include <vtkPropCollection.h>
-#include <vtkProperty.h>
+#include <vtkExecutive.h>
 
 #include <reflectionzeug/Property.h>
 #include <reflectionzeug/PropertyGroup.h>
@@ -20,16 +16,12 @@ using namespace reflectionzeug;
 
 
 RenderedData::RenderedData(ContentType contentType, CoordinateTransformableDataObject & dataObject)
-    : AbstractVisualizedData(contentType, dataObject)
-    , m_viewPropsInvalid{ true }
-    , m_representation{ Representation::content }
-    , m_outlineProperty{ vtkSmartPointer<vtkProperty>::New() }
-    , m_transformedCoordinatesOutput{ vtkSmartPointer<vtkPassThrough>::New() }
+    : AbstractVisualizedData(std::make_unique<RenderedData_private>(*this, contentType, dataObject))
 {
     const auto darkGray = 0.2;
-    m_outlineProperty->SetColor(darkGray, darkGray, darkGray);
+    dPtr().outlineProperty->SetColor(darkGray, darkGray, darkGray);
 
-    m_transformedCoordinatesOutput->SetInputConnection(dataObject.processedOutputPort());
+    dPtr().transformedCoordinatesOutput->SetInputConnection(dataObject.processedOutputPort());
 }
 
 RenderedData::~RenderedData() = default;
@@ -48,42 +40,52 @@ void RenderedData::setDefaultCoordinateSystem(const CoordinateSystemSpecificatio
 {
     if (transformableObject().canTransformTo(coordinateSystem))
     {
-        m_transformedCoordinatesOutput->SetInputConnection(
+        dPtr().transformedCoordinatesOutput->SetInputConnection(
             transformableObject().coordinateTransformedOutputPort(coordinateSystem));
+        dPtr().defaultCoordinateSystem = coordinateSystem;
     }
     else
     {
-        m_transformedCoordinatesOutput->SetInputConnection(
+        dPtr().transformedCoordinatesOutput->SetInputConnection(
             dataObject().processedOutputPort());
+        dPtr().defaultCoordinateSystem = CoordinateSystemSpecification();
     }
 
     invalidateVisibleBounds();
 }
 
+const CoordinateSystemSpecification & RenderedData::defaultCoordinateSystem() const
+{
+    return dPtr().defaultCoordinateSystem;
+}
+
 vtkAlgorithmOutput * RenderedData::transformedCoordinatesOutputPort()
 {
-    return m_transformedCoordinatesOutput->GetOutputPort();
+    return dPtr().transformedCoordinatesOutput->GetOutputPort();
 }
 
 vtkDataSet * RenderedData::transformedCoordinatesDataSet()
 {
-    m_transformedCoordinatesOutput->Update();
-    return vtkDataSet::SafeDownCast(m_transformedCoordinatesOutput->GetOutput());
+    if (dPtr().transformedCoordinatesOutput->GetExecutive()->Update() == 0)
+    {
+        return nullptr;
+    }
+    return vtkDataSet::SafeDownCast(dPtr().transformedCoordinatesOutput->GetOutput());
 }
 
 RenderedData::Representation RenderedData::representation() const
 {
-    return m_representation;
+    return dPtr().representation;
 }
 
 void RenderedData::setRepresentation(Representation representation)
 {
-    if (m_representation == representation)
+    if (dPtr().representation == representation)
     {
         return;
     }
 
-    m_representation = representation;
+    dPtr().representation = representation;
 
     representationChangedEvent(representation);
 
@@ -104,10 +106,10 @@ std::unique_ptr<PropertyGroup> RenderedData::createConfigGroup()
 
     group->addProperty<unsigned>("outlineWidth",
         [this] () {
-        return static_cast<unsigned>(m_outlineProperty->GetLineWidth());
+        return static_cast<unsigned>(dPtr().outlineProperty->GetLineWidth());
     },
         [this] (unsigned width) {
-        m_outlineProperty->SetLineWidth(static_cast<float>(width));
+        dPtr().outlineProperty->SetLineWidth(static_cast<float>(width));
         emit geometryChanged();
     })
         ->setOptions({
@@ -120,11 +122,11 @@ std::unique_ptr<PropertyGroup> RenderedData::createConfigGroup()
 
     group->addProperty<Color>("outlineColor",
         [this] () {
-        double * color = m_outlineProperty->GetColor();
+        double * color = dPtr().outlineProperty->GetColor();
         return Color(static_cast<int>(color[0] * 255), static_cast<int>(color[1] * 255), static_cast<int>(color[2] * 255));
     },
         [this] (const Color & color) {
-        m_outlineProperty->SetColor(color.red() / 255.0, color.green() / 255.0, color.blue() / 255.0);
+        dPtr().outlineProperty->SetColor(color.red() / 255.0, color.green() / 255.0, color.blue() / 255.0);
         emit geometryChanged();
     })
         ->setOption("title", "Outline Color");
@@ -134,38 +136,38 @@ std::unique_ptr<PropertyGroup> RenderedData::createConfigGroup()
 
 vtkSmartPointer<vtkPropCollection> RenderedData::viewProps()
 {
-    if (!m_viewPropsInvalid)
+    if (!dPtr().viewPropsInvalid)
     {
-        assert(m_viewProps);
-        return m_viewProps;
+        assert(dPtr().viewProps);
+        return dPtr().viewProps;
     }
 
-    m_viewPropsInvalid = false;
+    dPtr().viewPropsInvalid = false;
 
-    if (!m_viewProps)
+    if (!dPtr().viewProps)
     {
-        m_viewProps = vtkSmartPointer<vtkPropCollection>::New();
+        dPtr().viewProps = vtkSmartPointer<vtkPropCollection>::New();
     }
     else
     {
-        m_viewProps->RemoveAllItems();
+        dPtr().viewProps->RemoveAllItems();
     }
 
-    if (shouldShowOutline())
+    if (dPtr().shouldShowOutline())
     {
-        m_viewProps->AddItem(outlineActor());
+        dPtr().viewProps->AddItem(dPtr().outlineActor());
     }
 
-    if (shouldShowContent())
+    if (dPtr().shouldShowContent())
     {
         auto subClassProps = fetchViewProps();
         for (subClassProps->InitTraversal(); auto prop = subClassProps->GetNextProp();)
         {
-            m_viewProps->AddItem(prop);
+            dPtr().viewProps->AddItem(prop);
         }
     }
 
-    return m_viewProps;
+    return dPtr().viewProps;
 }
 
 vtkAlgorithmOutput * RenderedData::processedOutputPortInternal(unsigned int DEBUG_ONLY(port))
@@ -179,10 +181,11 @@ void RenderedData::visibilityChangedEvent(bool visible)
 {
     AbstractVisualizedData::visibilityChangedEvent(visible);
 
-    if (m_outlineActor)
+    if (dPtr().m_outlineActor)
     {
-        m_outlineActor->SetVisibility(visible 
-            && (m_representation == Representation::outline || m_representation == Representation::both));
+        dPtr().m_outlineActor->SetVisibility(visible
+            && (dPtr().representation == Representation::outline
+                || dPtr().representation == Representation::both));
     }
 }
 
@@ -192,43 +195,17 @@ void RenderedData::representationChangedEvent(Representation /*representation*/)
 
 void RenderedData::invalidateViewProps()
 {
-    m_viewPropsInvalid = true;
+    dPtr().viewPropsInvalid = true;
 
     emit viewPropCollectionChanged();
 }
 
-bool RenderedData::shouldShowContent() const
+RenderedData_private & RenderedData::dPtr()
 {
-    return isVisible()
-        && (m_representation == Representation::content
-            || m_representation == Representation::both);
+    return static_cast<RenderedData_private &>(AbstractVisualizedData::dPtr());
 }
 
-bool RenderedData::shouldShowOutline() const
+const RenderedData_private & RenderedData::dPtr() const
 {
-    return isVisible()
-        && (m_representation == Representation::outline
-            || m_representation == Representation::both);
-}
-
-vtkActor * RenderedData::outlineActor()
-{
-    if (m_outlineActor)
-    {
-        return m_outlineActor;
-    }
-
-    auto outline = vtkSmartPointer<vtkOutlineFilter>::New();
-    outline->SetInputConnection(transformedCoordinatesOutputPort());
-
-    auto mapper = vtkSmartPointer<vtkPolyDataMapper>::New();
-    mapper->SetInputConnection(outline->GetOutputPort());
-
-    setupInformation(*mapper->GetInformation(), *this);
-
-    m_outlineActor = vtkSmartPointer<vtkActor>::New();
-    m_outlineActor->SetMapper(mapper);
-    m_outlineActor->SetProperty(m_outlineProperty);
-
-    return m_outlineActor;
+    return static_cast<const RenderedData_private &>(AbstractVisualizedData::dPtr());
 }
