@@ -28,6 +28,7 @@
 #include <core/data_objects/GenericPolyDataObject.h>
 #include <core/rendered_data/RenderedData.h>
 #include <core/utility/DataExtent.h>
+#include <core/utility/types_utils.h>
 
 
 class Picker_private
@@ -229,11 +230,8 @@ void Picker::pick(const vtkVector2i & clickPosXY, vtkRenderer & renderer)
 
     if (!d_ptr->pickedObjectInfo.isIndexListEmpty() && colorMapping.isEnabled())
     {
-        auto attributes = d_ptr->pickedObjectInfo.indexType == IndexType::cells
-            ? static_cast<vtkDataSetAttributes *>(dataSet.GetCellData())
-            : static_cast<vtkDataSetAttributes *>(dataSet.GetPointData());
-
-        d_ptr->pickedScalarArray = attributes->GetArray(colorMappingData.scalarsName(visualization).toUtf8().data());
+        d_ptr->pickedScalarArray = IndexType_util(d_ptr->pickedObjectInfo.indexType).extractArray(
+            dataSet, colorMappingData.scalarsName(visualization));
 
         if (d_ptr->pickedScalarArray)
         {

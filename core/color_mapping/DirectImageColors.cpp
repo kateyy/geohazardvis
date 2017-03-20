@@ -11,10 +11,10 @@
 #include <vtkUnsignedCharArray.h>
 
 #include <core/AbstractVisualizedData.h>
-#include <core/types.h>
 #include <core/color_mapping/ColorMappingRegistry.h>
 #include <core/data_objects/DataObject.h>
 #include <core/utility/DataExtent.h>
+#include <core/utility/types_utils.h>
 
 
 namespace
@@ -120,7 +120,7 @@ vtkSmartPointer<vtkAlgorithm> DirectImageColors::createFilter(AbstractVisualized
     auto filter = vtkSmartPointer<vtkAssignAttribute>::New();
     filter->SetInputConnection(visualizedData.processedOutputPort(port));
     filter->Assign(m_dataArrayName.toUtf8().data(), vtkDataSetAttributes::SCALARS,
-        m_attributeLocation == IndexType::points ? vtkAssignAttribute::POINT_DATA : vtkAssignAttribute::CELL_DATA);
+        IndexType_util(m_attributeLocation).toVtkAssignAttribute_AttributeLocation());
 
     return filter;
 }

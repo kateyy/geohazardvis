@@ -16,6 +16,7 @@
 #include <core/data_objects/CoordinateTransformableDataObject.h>
 #include <core/utility/InterpolationHelper.h>
 #include <core/utility/vtkvectorhelper.h>
+#include <core/utility/types_utils.h>
 
 
 namespace
@@ -100,36 +101,6 @@ struct ResidualWorker
 
         residual = res;
     }
-};
-
-vtkDataSetAttributes * extractAttributes(vtkDataSet * dataSet, IndexType location)
-{
-    if (!dataSet)
-    {
-        return nullptr;
-    }
-
-    switch (location)
-    {
-    case IndexType::points: return dataSet->GetPointData();
-    case IndexType::cells: return dataSet->GetCellData();
-    default: return nullptr;
-    }
-};
-
-vtkDataArray * extractAttribute(vtkDataSet * dataSet, IndexType location, const QString & name)
-{
-    if (!dataSet)
-    {
-        return nullptr;
-    }
-
-    auto attributes = extractAttributes(dataSet, location);
-    if (!attributes)
-    {
-        return nullptr;
-    }
-    return attributes->GetArray(name.toUtf8().data());
 };
 
 }
@@ -359,10 +330,10 @@ bool DataSetResidualHelper::projectDisplacementsToLineOfSight()
     auto observationDS = m_observationDataObject ? m_observationDataObject->processedOutputDataSet() : nullptr;
     auto modelDS = m_modelDataObject ? m_modelDataObject->processedOutputDataSet() : nullptr;
 
-    const vtkSmartPointer<vtkDataArray> observationData = extractAttribute(
-        observationDS, m_observationScalars.location, m_observationScalars.name);
-    const vtkSmartPointer<vtkDataArray> modelData = extractAttribute(
-        modelDS, m_modelScalars.location, m_modelScalars.name);
+    const vtkSmartPointer<vtkDataArray> observationData = 
+        IndexType_util(m_observationScalars.location).extractArray(observationDS, m_observationScalars.name);
+    const vtkSmartPointer<vtkDataArray> modelData =
+        IndexType_util(m_modelScalars.location).extractArray(modelDS, m_modelScalars.name);
 
     if (observationDS && !observationData)
     {
@@ -443,14 +414,13 @@ bool DataSetResidualHelper::projectDisplacementsToLineOfSight()
 
         scalarDef.losDisplacements = losWorker.projectedData;
         scalarDef.losDisplacements->SetName(scalarDef.projectedName.toUtf8().data());
-
-        if (scalarDef.location == IndexType::cells)
+        if (auto attrs = IndexType_util(scalarDef.location).extractAttributes(attributeStorage))
         {
-            attributeStorage.GetCellData()->AddArray(scalarDef.losDisplacements);
+            attrs->AddArray(scalarDef.losDisplacements);
         }
         else
         {
-            attributeStorage.GetPointData()->AddArray(scalarDef.losDisplacements);
+            assert(false);
         }
 
         return true;
@@ -521,16 +491,16 @@ bool DataSetResidualHelper::updateResidual()
         auto attributeName = QString::fromUtf8(modelLosDisp->GetName());
         modelLosDisp = InterpolationHelper::interpolate(
             observationDSTransformed, modelDSTransformed, attributeName,
-            m_modelScalars.location == IndexType::cells,
-            m_observationScalars.location == IndexType::cells);
+            m_modelScalars.location,
+            m_observationScalars.location);
     }
     else
     {
         auto attributeName = QString::fromUtf8(observationLosDisp->GetName());
         observationLosDisp = InterpolationHelper::interpolate(
             modelDSTransformed, observationDSTransformed, attributeName,
-            m_observationScalars.location == IndexType::cells,
-            m_modelScalars.location == IndexType::cells);
+            m_observationScalars.location,
+            m_modelScalars.location);
     }
 
     if (!observationLosDisp || !modelLosDisp)
@@ -580,10 +550,14 @@ bool DataSetResidualHelper::updateResidual()
         return false;
     }
 
-    auto & resultAttributes = resultAttributeLocation == IndexType::cells
-        ? static_cast<vtkDataSetAttributes &>(*newResidual->GetCellData())
-        : static_cast<vtkDataSetAttributes &>(*newResidual->GetPointData());
-    resultAttributes.SetScalars(residualData);
+    if (auto resultAttributes = IndexType_util(resultAttributeLocation).extractAttributes(*newResidual))
+    {
+        resultAttributes->SetScalars(residualData);
+    }
+    else
+    {
+        assert(false);
+    }
 
     const auto & sourceDataObject = m_geometrySource == InputData::Observation
         ? *m_observationDataObject : *m_modelDataObject;

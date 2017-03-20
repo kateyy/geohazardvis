@@ -101,7 +101,7 @@ vtkSmartPointer<vtkAlgorithm> CentroidColorMapping::createFilter(
     auto rename = vtkSmartPointer<ArrayChangeInformationFilter>::New();
     rename->EnableRenameOn();
     rename->SetArrayName(s_centroidsArrayName);
-    rename->SetAttributeLocation(ArrayChangeInformationFilter::CELL_DATA);
+    rename->SetAttributeLocation(IndexType::cells);
     rename->SetAttributeType(vtkDataSetAttributes::SCALARS);
     rename->SetInputConnection(centroids->GetOutputPort());
 

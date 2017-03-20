@@ -109,7 +109,7 @@ vtkSmartPointer<vtkAlgorithm> SlopeAngleMapping::createFilter(AbstractVisualized
 
     auto unitSetter = vtkSmartPointer<ArrayChangeInformationFilter>::New();
     unitSetter->SetInputConnection(assignAttibute->GetOutputPort());
-    unitSetter->SetAttributeLocation(ArrayChangeInformationFilter::CELL_DATA);
+    unitSetter->SetAttributeLocation(IndexType::cells);
     unitSetter->SetAttributeType(vtkDataSetAttributes::SCALARS);
     unitSetter->EnableRenameOff();
     unitSetter->EnableSetUnitOn();

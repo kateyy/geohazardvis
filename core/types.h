@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cinttypes>
 #include <iosfwd>
 #include <vector>
 
@@ -14,7 +15,7 @@ class AbstractVisualizedData;
 class DataObject;
 
 
-enum class ContentType
+enum class ContentType : int32_t
 {
     Rendered3D,
     Rendered2D,
@@ -22,8 +23,8 @@ enum class ContentType
     invalid
 };
 
-/** Specify whether indices are related to points or to cells in the data set */
-enum class IndexType
+/** Specify whether indices are related to points or to cells in the data set. */
+enum class IndexType : int32_t
 {
     points,
     cells,

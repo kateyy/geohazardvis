@@ -127,7 +127,7 @@ vtkSmartPointer<vtkAlgorithm> GlyphMagnitudeColorMapping::createFilter(AbstractV
     setArrayName->EnableRenameOn();
     setArrayName->SetArrayName(s_normScalarsName);
     setArrayName->SetAttributeType(vtkDataSetAttributes::SCALARS);
-    setArrayName->SetAttributeLocation(ArrayChangeInformationFilter::POINT_DATA);
+    setArrayName->SetAttributeLocation(IndexType::points);
     setArrayName->SetInputConnection(assignVectors->GetOutputPort());
 
     m_filters[&visualizedData] = setArrayName;

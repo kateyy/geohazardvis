@@ -232,6 +232,8 @@ set(sources
     utility/ScalarBarActor.h
     utility/ScalarBarActor.cpp
     utility/type_traits.h
+    utility/types_utils.h
+    utility/types_utils.cpp
     utility/vtkcamerahelper.h
     utility/vtkcamerahelper.cpp
     utility/vtkCameraSynchronization.h

@@ -33,6 +33,7 @@
 #include <core/table_model/QVtkTableModelProfileData.h>
 #include <core/utility/DataExtent.h>
 #include <core/utility/macros.h>
+#include <core/utility/types_utils.h>
 #include <core/utility/vtkvectorhelper.h>
 
 
@@ -145,13 +146,9 @@ DataProfile2DDataObject::DataProfile2DDataObject(
         return;
     }
 
-    auto attributeData = (scalarsLocation == IndexType::points)
-        ? static_cast<vtkDataSetAttributes *>(inputData->GetPointData())
-        : static_cast<vtkDataSetAttributes *>(inputData->GetCellData());
-
     const auto c_scalarsName = scalarsName.toUtf8();
-    auto scalars = attributeData->GetArray(c_scalarsName.data());
-
+    const auto location = IndexType_util(scalarsLocation);
+    auto scalars = location.extractArray(inputData, c_scalarsName.data());
     if (scalars == nullptr || scalars->GetNumberOfComponents() < vectorComponent)
     {
         return;
@@ -159,9 +156,7 @@ DataProfile2DDataObject::DataProfile2DDataObject(
 
     // remove all other fields
     auto filterFields = vtkSmartPointer<vtkPassArrays>::New();
-    filterFields->AddArray(
-        scalarsLocation == IndexType::points ? vtkDataObject::POINT : vtkDataObject::CELL,
-        c_scalarsName.data());
+    filterFields->AddArray(location.toVtkAssignAttribute_AttributeLocation(), c_scalarsName.data());
     filterFields->UseFieldTypesOn();
     filterFields->AddFieldType(vtkDataObject::POINT);
     filterFields->AddFieldType(vtkDataObject::CELL);
@@ -171,8 +166,8 @@ DataProfile2DDataObject::DataProfile2DDataObject(
     // Do not discard or distort normal and vector arrays.
     // vtkRearrangeFields will remove the previous attribute assignment, if such exists
     auto unassignField = vtkSmartPointer<vtkRearrangeFields>::New();
-    const auto location = scalarsLocation == IndexType::points ? vtkRearrangeFields::POINT_DATA : vtkRearrangeFields::CELL_DATA;
-    unassignField->AddOperation(vtkRearrangeFields::MOVE, c_scalarsName.data(), location, location);
+    const auto rearrangeLoc = location.toVtkRearrangeFields_FieldLocation();
+    unassignField->AddOperation(vtkRearrangeFields::MOVE, c_scalarsName.data(), rearrangeLoc, rearrangeLoc);
     unassignField->SetInputConnection(filterFields->GetOutputPort());
 
     auto assignScalars = vtkSmartPointer<vtkAssignAttribute>::New();

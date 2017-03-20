@@ -11,6 +11,7 @@
 #include <vtkPointData.h>
 #include <vtkSmartPointer.h>
 
+#include <core/utility/types_utils.h>
 #include <core/utility/macros.h>
 
 
@@ -19,23 +20,12 @@ vtkStandardNewMacro(ArrayChangeInformationFilter);
 
 namespace
 {
+
 vtkDataArray * extractAttribute(vtkDataSet & dataSet,
-    ArrayChangeInformationFilter::AttributeLocations location, int attributeType,
+    IndexType location, int attributeType,
     vtkDataSetAttributes * & dsAttributes)
 {
-    dsAttributes = nullptr;
-
-    switch (location)
-    {
-    case ArrayChangeInformationFilter::AttributeLocations::POINT_DATA:
-        dsAttributes = dataSet.GetPointData();
-        break;
-    case ArrayChangeInformationFilter::AttributeLocations::CELL_DATA:
-        dsAttributes = dataSet.GetCellData();
-        break;
-    default:
-        return nullptr;
-    }
+    dsAttributes = IndexType_util(location).extractAttributes(dataSet);
 
     if (!dsAttributes)
     {
@@ -44,11 +34,12 @@ vtkDataArray * extractAttribute(vtkDataSet & dataSet,
 
     return dsAttributes->GetAttribute(attributeType);
 }
+
 }
 
 
 ArrayChangeInformationFilter::ArrayChangeInformationFilter()
-    : AttributeLocation{ AttributeLocations::POINT_DATA }
+    : AttributeLocation{ IndexType::points }
     , AttributeType{ vtkDataSetAttributes::SCALARS }
     , EnableRename{ true }
     , EnableSetUnit{ false }
@@ -68,9 +59,7 @@ int ArrayChangeInformationFilter::RequestInformation(
         return 0;
     }
 
-    const int fieldAssociation = this->AttributeLocation == POINT_DATA
-        ? vtkDataObject::FIELD_ASSOCIATION_POINTS
-        : vtkDataObject::FIELD_ASSOCIATION_CELLS;
+    const int fieldAssociation = IndexType_util(this->AttributeLocation).toVtkFieldAssociation();
 
     auto inInfo = inputVector[0]->GetInformationObject(0);
 

@@ -16,12 +16,12 @@
 #include <vtkPointData.h>
 
 #include <core/AbstractVisualizedData.h>
-#include <core/types.h>
 #include <core/CoordinateSystems.h>
 #include <core/data_objects/DataObject.h>
 #include <core/color_mapping/ColorMappingRegistry.h>
 #include <core/filters/AttributeArrayModifiedListener.h>
 #include <core/utility/DataExtent.h>
+#include <core/utility/types_utils.h>
 
 
 namespace
@@ -218,7 +218,7 @@ vtkSmartPointer<vtkAlgorithm> AttributeArrayComponentMapping::createFilter(Abstr
     auto assign = vtkSmartPointer<vtkAssignAttribute>::New();
     assign->SetInputConnection(visualizedData.processedOutputPort(port));
     assign->Assign(m_dataArrayName.toUtf8().data(), vtkDataSetAttributes::SCALARS,
-        attributeLocation == IndexType::points ? vtkAssignAttribute::POINT_DATA : vtkAssignAttribute::CELL_DATA);
+        IndexType_util(attributeLocation).toVtkAssignAttribute_AttributeLocation());
 
     auto modifiedListener = vtkSmartPointer<AttributeArrayModifiedListener>::New();
     modifiedListener->SetInputConnection(assign->GetOutputPort());
@@ -277,7 +277,7 @@ std::vector<ValueRange<>> AttributeArrayComponentMapping::updateBounds()
 
         for (auto visualizedData : m_visualizedData)
         {
-            const auto attributeLocation = scalarsAssociation(*visualizedData);
+            const auto attributeLocation = IndexType_util(scalarsAssociation(*visualizedData));
             if (attributeLocation == IndexType::invalid)
             {
                 continue;
@@ -285,12 +285,8 @@ std::vector<ValueRange<>> AttributeArrayComponentMapping::updateBounds()
 
             for (unsigned int i = 0; i < visualizedData->numberOfOutputPorts(); ++i)
             {
-                auto dataSet = visualizedData->processedOutputDataSet(i);
-                vtkDataArray * dataArray =
-                    attributeLocation == IndexType::cells ? dataSet->GetCellData()->GetArray(utf8Name.data())
-                    : (attributeLocation == IndexType::points ? dataSet->GetPointData()->GetArray(utf8Name.data())
-                    : nullptr);
-
+                auto dataArray = attributeLocation.extractArray(
+                    visualizedData->processedOutputDataSet(i), utf8Name.data());
                 if (!dataArray)
                 {
                     continue;

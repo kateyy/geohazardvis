@@ -20,6 +20,7 @@
 #include <core/utility/DataSetResidualHelper.h>
 #include <core/utility/macros.h>
 #include <core/utility/vtkCameraSynchronization.h>
+#include <core/utility/types_utils.h>
 #include <gui/DataMapping.h>
 #include <gui/data_view/RendererImplementationResidual.h>
 #include <gui/data_view/RenderViewStrategy2D.h>
@@ -904,8 +905,8 @@ std::pair<QString, IndexType> ResidualVerificationView::findDataSetAttributeName
     }
 
     // Search default deformation attribute in the scalar association defined by the data object.
-    const auto primaryLocation = dataObject.defaultAttributeLocation();
-    IndexType secondaryLocation = IndexType::invalid;
+    const auto primaryLocation = IndexType_util(dataObject.defaultAttributeLocation());
+    auto secondaryLocation = IndexType_util(IndexType::invalid);
 
     // Polygonal data may also have useful attributes associated with points.
     // For other data sets (images, point clouds), no secondary location is considered.
@@ -913,22 +914,12 @@ std::pair<QString, IndexType> ResidualVerificationView::findDataSetAttributeName
     {
         if (primaryLocation == IndexType::cells)
         {
-            secondaryLocation = IndexType::points;
+            secondaryLocation = IndexType_util(IndexType::points);
         }
     }
 
-    auto extractAttributes = [dataSet] (IndexType location) -> vtkDataSetAttributes *
-    {
-        switch (location)
-        {
-        case IndexType::points: return dataSet->GetPointData();
-        case IndexType::cells: return dataSet->GetCellData();
-        default: return nullptr;
-        }
-    };
-
-    auto primaryAttributes = extractAttributes(primaryLocation);
-    auto secondaryAttributes = extractAttributes(secondaryLocation);
+    auto primaryAttributes = primaryLocation.extractAttributes(dataSet);
+    auto secondaryAttributes = secondaryLocation.extractAttributes(dataSet);
 
     // Search deformation attribute by name first, than check if scalars or vectors are available.
     // Always look in the primary attribute location first.

@@ -21,23 +21,26 @@
 #include <core/filters/ImageBlankNonFiniteValuesFilter.h>
 #include <core/filters/SetMaskedPointScalarsToNaNFilter.h>
 #include <core/utility/DataExtent.h>
+#include <core/utility/types_utils.h>
 #include <core/utility/vtkvectorhelper.h>
 
 
 namespace
 {
 
-vtkDataArray * extractAttribute(const QString & name, bool attributeInCellData, vtkDataSet & dataSet)
+vtkDataArray * extractAttribute(const QString & name, const IndexType location, vtkDataSet & dataSet)
 {
-    auto & attributes = attributeInCellData
-        ? static_cast<vtkDataSetAttributes &>(*dataSet.GetCellData())
-        : static_cast<vtkDataSetAttributes &>(*dataSet.GetPointData());
+    auto attributes = IndexType_util(location).extractAttributes(dataSet);
+    if (!attributes)
+    {
+        return nullptr;
+    }
 
     if (name.isEmpty())
     {
-        return attributes.GetScalars();
+        return attributes->GetScalars();
     }
-    return attributes.GetArray(name.toUtf8().data());
+    return attributes->GetArray(name.toUtf8().data());
 };
 
 }
@@ -90,14 +93,14 @@ vtkSmartPointer<vtkDataArray> InterpolationHelper::fastInterpolateImageOnImage(
         }
     }
 
-    return extractAttribute(sourceAttributeName, false, sourceImage);
+    return extractAttribute(sourceAttributeName, IndexType::points, sourceImage);
 }
 
 vtkSmartPointer<vtkDataArray> InterpolationHelper::fastInterpolatePolyOnPoly(
     vtkPolyData & basePoly,
     vtkPolyData & sourcePoly,
     const QString & sourceAttributeName,
-    bool attributeInCellData)
+    IndexType location)
 {
     if (// Point coordinates are required.
         basePoly.GetNumberOfPoints() != sourcePoly.GetNumberOfPoints()
@@ -160,7 +163,7 @@ vtkSmartPointer<vtkDataArray> InterpolationHelper::fastInterpolatePolyOnPoly(
 
     }
 
-    return extractAttribute(sourceAttributeName, attributeInCellData, sourcePoly);
+    return extractAttribute(sourceAttributeName, location, sourcePoly);
 }
 
 
@@ -169,12 +172,16 @@ vtkSmartPointer<vtkDataArray> InterpolationHelper::interpolate(
     vtkDataSet & baseDataSet,
     vtkDataSet & sourceDataSet,
     const QString & sourceAttributeName,
-    bool sourceAttributeInCellData,
-    bool targetAttributeInCellData)
+    IndexType sourceLocation,
+    IndexType targetLocation)
 {
     if (&baseDataSet == &sourceDataSet)
     {
-        return extractAttribute(sourceAttributeName, sourceAttributeInCellData, sourceDataSet);
+        if (sourceLocation == targetLocation)
+        {
+            return extractAttribute(sourceAttributeName, sourceLocation, sourceDataSet);
+        }
+        return nullptr;
     }
 
     auto baseImage = vtkImageData::SafeDownCast(&baseDataSet);
@@ -193,9 +200,10 @@ vtkSmartPointer<vtkDataArray> InterpolationHelper::interpolate(
     auto basePoly = vtkPolyData::SafeDownCast(&baseDataSet);
     auto sourcePoly = vtkPolyData::SafeDownCast(&sourceDataSet);
 
-    if (basePoly && sourcePoly)
+    if (basePoly && sourcePoly && (sourceLocation == targetLocation))
     {
-        auto result = fastInterpolatePolyOnPoly(*basePoly, *sourcePoly, sourceAttributeName, sourceAttributeInCellData);
+        auto result = fastInterpolatePolyOnPoly(
+            *basePoly, *sourcePoly, sourceAttributeName, sourceLocation);
         if (result)
         {
             return result;
@@ -215,14 +223,14 @@ vtkSmartPointer<vtkDataArray> InterpolationHelper::interpolate(
     {
         auto assign = vtkSmartPointer<vtkAssignAttribute>::New();
         assign->Assign(sourceAttributeName.toUtf8().data(), vtkDataSetAttributes::SCALARS,
-            sourceAttributeInCellData ? vtkAssignAttribute::CELL_DATA : vtkAssignAttribute::POINT_DATA);
+            IndexType_util(sourceLocation).toVtkAssignAttribute_AttributeLocation());
         assign->SetInputConnection(sourceDataFilter->GetOutputPort());
         sourceDataFilter = assign;
     }
 
     // flatten polygonal data before interpolation
 
-    auto createFlattener = [](vtkAlgorithm * upstream) -> vtkSmartPointer<vtkAlgorithm>
+    auto createFlattener = [] (vtkAlgorithm * upstream) -> vtkSmartPointer<vtkAlgorithm>
     {
         auto flattenerTransform = vtkSmartPointer<vtkTransform>::New();
         flattenerTransform->Scale(1, 1, 0);
@@ -258,7 +266,7 @@ vtkSmartPointer<vtkDataArray> InterpolationHelper::interpolate(
     vtkSmartPointer<vtkAlgorithm> resultAlgorithm = probe;
 
     // For polygons: vtkPobeFilter creates point based values but values per centroid are required
-    if (basePoly && targetAttributeInCellData)
+    if (basePoly && (targetLocation == IndexType::cells))
     {
         auto pointToCellData = vtkSmartPointer<vtkPointDataToCellData>::New();
         pointToCellData->SetInputConnection(probe->GetOutputPort());
@@ -279,5 +287,5 @@ vtkSmartPointer<vtkDataArray> InterpolationHelper::interpolate(
         return{};
     }
 
-    return extractAttribute(sourceAttributeName, targetAttributeInCellData, *probedDataSet);
+    return extractAttribute(sourceAttributeName, targetLocation, *probedDataSet);
 }

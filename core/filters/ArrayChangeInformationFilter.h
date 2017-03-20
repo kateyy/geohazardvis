@@ -3,7 +3,7 @@
 #include <vtkDataSetAlgorithm.h>
 #include <vtkStdString.h>
 
-#include <core/core_api.h>
+#include <core/types.h>
 
 
 /** Renames current point data scalar array. */
@@ -13,17 +13,10 @@ public:
     static ArrayChangeInformationFilter * New();
     vtkTypeMacro(ArrayChangeInformationFilter, vtkDataSetAlgorithm);
 
-    enum AttributeLocations
-    {
-        POINT_DATA = 0,
-        CELL_DATA = 1,
-        NUM_ATTRIBUTE_LOCS
-    };
-
-    vtkGetMacro(AttributeLocation, AttributeLocations);
+    vtkGetMacro(AttributeLocation, IndexType);
     /** Set the location where to look for the attribute array.
     * This is POINT_DATA by default. */
-    vtkSetMacro(AttributeLocation, AttributeLocations);
+    vtkSetMacro(AttributeLocation, IndexType);
 
     vtkGetMacro(AttributeType, int);
     /** Set the attribute array to be modified.
@@ -70,7 +63,7 @@ protected:
         vtkInformationVector * outputVector) override;
 
 private:
-    AttributeLocations AttributeLocation;
+    IndexType AttributeLocation;
     int AttributeType;
 
     bool EnableRename;

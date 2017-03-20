@@ -2,6 +2,8 @@
 
 #include <cassert>
 
+#include <QDebug>
+
 #include <vtkAssignAttribute.h>
 #include <vtkCellData.h>
 #include <vtkDataArray.h>
@@ -14,11 +16,11 @@
 
 #include <core/AbstractVisualizedData.h>
 #include <core/CoordinateSystems.h>
-#include <core/types.h>
 #include <core/data_objects/DataObject.h>
 #include <core/color_mapping/ColorMappingRegistry.h>
 #include <core/filters/ArrayChangeInformationFilter.h>
 #include <core/utility/DataExtent.h>
+#include <core/utility/types_utils.h>
 
 
 namespace
@@ -123,12 +125,8 @@ VectorMagnitudeColorMapping::VectorMagnitudeColorMapping(
 
     // establish pipeline here, so that we have valid data whenever updateBounds() requests norm outputs
 
-    const auto assignLocation = attributeLocation == IndexType::points
-        ? vtkAssignAttribute::POINT_DATA
-        : vtkAssignAttribute::CELL_DATA;
-    const auto renameLocation = attributeLocation == IndexType::points
-        ? ArrayChangeInformationFilter::AttributeLocations::POINT_DATA
-        : ArrayChangeInformationFilter::AttributeLocations::CELL_DATA;
+    const auto assignLocation = IndexType_util(attributeLocation).toVtkAssignAttribute_AttributeLocation();
+    const auto renameLocation = IndexType_util(attributeLocation);
 
     for (auto vis : visualizedData)
     {
@@ -243,16 +241,13 @@ std::vector<ValueRange<>> VectorMagnitudeColorMapping::updateBounds()
         {
             filter->Update();
             auto dataSet = vtkDataSet::SafeDownCast(filter->GetOutputDataObject(0));
-            vtkDataArray * normData = nullptr;
-            if (m_attributeLocation == IndexType::cells)
+            auto attributes = IndexType_util(m_attributeLocation).extractAttributes(dataSet);
+            auto normData = attributes ? attributes->GetScalars() : nullptr;
+            if (!normData)
             {
-                normData = dataSet->GetCellData()->GetScalars();
+                qDebug() << "Missing vector norm array in " + filtersIt.first->dataObject().name();
+                continue;
             }
-            else if (m_attributeLocation == IndexType::points)
-            {
-                normData = dataSet->GetPointData()->GetScalars();
-            }
-            assert(normData);
 
             decltype(totalRange) range;
             normData->GetRange(range.data());

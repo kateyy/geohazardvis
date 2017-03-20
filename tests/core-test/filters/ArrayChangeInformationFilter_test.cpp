@@ -98,7 +98,7 @@ TEST_F(ArrayChangeInformationFilter_test, AttributeLocationAndType)
     inAttr->SetName("inNormals");
     inDs->GetCellData()->SetNormals(inAttr);
 
-    filter->SetAttributeLocation(ArrayChangeInformationFilter::CELL_DATA);
+    filter->SetAttributeLocation(IndexType::cells);
     filter->SetAttributeType(vtkDataSetAttributes::NORMALS);
     filter->SetArrayName("outNormals");
     filter->Update();
@@ -115,7 +115,7 @@ TEST_F(ArrayChangeInformationFilter_test, KeepActiveVectors)
     inAttr->SetName("inVectors");
     inDs->GetPointData()->SetVectors(inAttr);
 
-    filter->SetAttributeLocation(ArrayChangeInformationFilter::POINT_DATA);
+    filter->SetAttributeLocation(IndexType::points);
     filter->SetAttributeType(vtkDataSetAttributes::VECTORS);
     filter->SetArrayName("outVectors");
     filter->Update();
@@ -145,7 +145,7 @@ TEST_F(ArrayChangeInformationFilter_test, PassScalarInformation)
         inAttr->GetNumberOfComponents(),
         static_cast<int>(inAttr->GetNumberOfTuples()));
 
-    filter->SetAttributeLocation(ArrayChangeInformationFilter::POINT_DATA);
+    filter->SetAttributeLocation(IndexType::points);
     filter->SetAttributeType(vtkDataSetAttributes::SCALARS);
     filter->SetInputConnection(infoSource->GetOutputPort());
     filter->EnableRenameOff();
@@ -194,7 +194,7 @@ TEST_F(ArrayChangeInformationFilter_test, PassVectorInformation)
         inAttr->GetNumberOfComponents(),
         static_cast<int>(inAttr->GetNumberOfTuples()));
 
-    filter->SetAttributeLocation(ArrayChangeInformationFilter::POINT_DATA);
+    filter->SetAttributeLocation(IndexType::points);
     filter->SetAttributeType(vtkDataSetAttributes::VECTORS);
     filter->SetInputConnection(infoSource->GetOutputPort());
     filter->EnableRenameOff();
@@ -243,7 +243,7 @@ TEST_F(ArrayChangeInformationFilter_test, CheckWhichInformation_vtkAssignAttribu
         inAttr->GetNumberOfComponents(),
         static_cast<int>(inAttr->GetNumberOfTuples()));
 
-    filter->SetAttributeLocation(ArrayChangeInformationFilter::POINT_DATA);
+    filter->SetAttributeLocation(IndexType::points);
     filter->SetAttributeType(vtkDataSetAttributes::SCALARS);
     filter->SetInputConnection(infoSource->GetOutputPort());
     filter->EnableRenameOff();
@@ -313,7 +313,7 @@ TEST_F(ArrayChangeInformationFilter_test, CheckWhichInformation_vtkAssignAttribu
         inAttr->GetNumberOfComponents(),
         static_cast<int>(inAttr->GetNumberOfTuples()));
 
-    filter->SetAttributeLocation(ArrayChangeInformationFilter::POINT_DATA);
+    filter->SetAttributeLocation(IndexType::points);
     filter->SetAttributeType(vtkDataSetAttributes::SCALARS);
     filter->SetInputConnection(infoSource->GetOutputPort());
     filter->EnableRenameOff();
@@ -382,7 +382,7 @@ TEST_F(ArrayChangeInformationFilter_test, vtkAssignAttribute_CorrectNumberOfComp
         inAttr->GetNumberOfComponents(),
         static_cast<int>(inAttr->GetNumberOfTuples()));
 
-    filter->SetAttributeLocation(ArrayChangeInformationFilter::POINT_DATA);
+    filter->SetAttributeLocation(IndexType::points);
     filter->SetAttributeType(vtkDataSetAttributes::SCALARS);
     filter->SetInputConnection(infoSource->GetOutputPort());
     filter->EnableRenameOff();
