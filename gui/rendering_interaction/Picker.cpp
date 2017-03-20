@@ -22,10 +22,11 @@
 #include <vtkVector.h>
 #include <vtkWeakPointer.h>
 
+#include <core/CoordinateSystems.h>
 #include <core/types.h>
 #include <core/color_mapping/ColorMapping.h>
 #include <core/color_mapping/ColorMappingData.h>
-#include <core/data_objects/GenericPolyDataObject.h>
+#include <core/data_objects/DataObject.h>
 #include <core/rendered_data/RenderedData.h>
 #include <core/utility/DataExtent.h>
 #include <core/utility/types_utils.h>
@@ -43,10 +44,12 @@ public:
         pointPicker->PickFromListOn();
     }
 
-    void appendPolyDataInfo(QTextStream & stream, GenericPolyDataObject & polyData);
-    void appendGenericPositionInfo(QTextStream & stream, vtkDataSet & dataSet);
-    static void appendPositionInfo(QTextStream & stream, vtkIdType index, const vtkVector3d & position,
-        const QString & indexPrefix, const QString & coordinatePrefix);
+    void appendPolyDataInfo(QTextStream & stream, vtkPolyData & polyData, const QString & coordsUnit);
+    void appendGenericPositionInfo(QTextStream & stream, vtkDataSet & dataSet, const QString & coordsUnit);
+    static void appendPositionInfo(QTextStream & stream,
+        vtkIdType index, const vtkVector3d & position,
+        const QString & indexPrefix, const QString & coordinatePrefix,
+        const QString & valueSuffix);
 
     void appendScalarInfo(QTextStream & stream, int activeComponent, bool scalarsAreMapped);
 
@@ -159,9 +162,6 @@ void Picker::pick(const vtkVector2i & clickPosXY, vtkRenderer & renderer)
     stream << "Data Set: " << inputName << endl;
 
 
-    const auto polyData = dynamic_cast<GenericPolyDataObject *>(&visualization.dataObject());
-    const bool isPolyDataObject = polyData != nullptr;
-
     // no active color mapping -> pick default locations
     if (d_ptr->pickedObjectInfo.indexType == IndexType::invalid)
     {
@@ -196,8 +196,6 @@ void Picker::pick(const vtkVector2i & clickPosXY, vtkRenderer & renderer)
         return;
     }
 
-    auto & dataSet = *activePicker->GetDataSet();
-
     if (d_ptr->pickedObjectInfo.indexType == IndexType::cells)
     {
         d_ptr->pickedObjectInfo.setIndex(d_ptr->cellPicker->GetCellId());
@@ -218,14 +216,35 @@ void Picker::pick(const vtkVector2i & clickPosXY, vtkRenderer & renderer)
     // object type specific picking
     // ----------------------------
 
-    if (isPolyDataObject)
+    auto & dataSet = *activePicker->GetDataSet();
+    auto polyData = vtkPolyData::SafeDownCast(&dataSet);
+    const bool isPolyData = polyData != nullptr;
+    QString coordsUnit;
+    auto && spec = renderedData->defaultCoordinateSystem();
+    if (spec.isValid())
+    {
+        if (!spec.unitOfMeasurement.isEmpty())
+        {
+            coordsUnit = spec.unitOfMeasurement;
+            if (spec.type != CoordinateSystemType::geographic
+                && !coordsUnit.isEmpty())
+            {
+                coordsUnit.prepend(" ");
+            }
+        }
+        else if (spec.type == CoordinateSystemType::geographic)
+        {
+            coordsUnit = QChar(0x00B0); // degree
+        }
+    }
+    if (polyData)
     {
         // poly data: may have point or cell scalars
-        d_ptr->appendPolyDataInfo(stream, *polyData);
+        d_ptr->appendPolyDataInfo(stream, *polyData, coordsUnit);
     }
     else // point based data sets: images, volumes, volume slices, glyphs
     {
-        d_ptr->appendGenericPositionInfo(stream, dataSet);
+        d_ptr->appendGenericPositionInfo(stream, dataSet, coordsUnit);
     }
 
     if (!d_ptr->pickedObjectInfo.isIndexListEmpty() && colorMapping.isEnabled())
@@ -239,7 +258,7 @@ void Picker::pick(const vtkVector2i & clickPosXY, vtkRenderer & renderer)
         }
     }
 
-    if (!isPolyDataObject && !imageSlice)
+    if (!isPolyData && !imageSlice)
     {
         // TODO check how to match (resampled) glyph/volume slice indices with input data indices
         d_ptr->pickedObjectInfo.indexType = IndexType::invalid;
@@ -271,7 +290,8 @@ vtkDataArray * Picker::pickedScalarArray()
     return d_ptr->pickedScalarArray;
 }
 
-void Picker_private::appendPolyDataInfo(QTextStream & stream, GenericPolyDataObject & polyData)
+void Picker_private::appendPolyDataInfo(QTextStream & stream, vtkPolyData & polyData,
+    const QString & coordsUnit)
 {
     const auto pickedIndex = pickedObjectInfo.indices.front();
     vtkVector3d position;
@@ -279,8 +299,8 @@ void Picker_private::appendPolyDataInfo(QTextStream & stream, GenericPolyDataObj
 
     if (pickedObjectInfo.indexType == IndexType::cells)
     {
-        auto pickedCell = polyData.polyDataSet().GetCell(pickedIndex);
-        if (pickedCell->GetNumberOfPoints() != 3)
+        auto pickedCell = polyData.GetCell(pickedIndex);
+        if (!pickedCell || pickedCell->GetNumberOfPoints() != 3)
         {   // other than triangles not considered for now
             return;
         }
@@ -295,13 +315,15 @@ void Picker_private::appendPolyDataInfo(QTextStream & stream, GenericPolyDataObj
     }
     else
     {
-        polyData.processedOutputDataSet()->GetPoint(pickedIndex, position.GetData());
+        polyData.GetPoint(pickedIndex, position.GetData());
     }
 
-    appendPositionInfo(stream, pickedIndex, position, indexPrefix, coordinatePrefix);
+    appendPositionInfo(stream, pickedIndex, position, indexPrefix, coordinatePrefix, coordsUnit);
 }
 
-void Picker_private::appendGenericPositionInfo(QTextStream & stream, vtkDataSet & dataSet)
+void Picker_private::appendGenericPositionInfo(QTextStream & stream,
+    vtkDataSet & dataSet,
+    const QString & coordsUnit)
 {
     const auto pickedIndex = pickedObjectInfo.indices.front();
     vtkVector3d position;
@@ -321,11 +343,13 @@ void Picker_private::appendGenericPositionInfo(QTextStream & stream, vtkDataSet 
         coordinatePrefix = "Centroid";
     }
 
-    appendPositionInfo(stream, pickedIndex, position, indexPrefix, coordinatePrefix);
+    appendPositionInfo(stream, pickedIndex, position, indexPrefix, coordinatePrefix, coordsUnit);
 }
 
-void Picker_private::appendPositionInfo(QTextStream & stream, vtkIdType index, const vtkVector3d & position,
-    const QString & indexPrefix, const QString & coordinatePrefix)
+void Picker_private::appendPositionInfo(QTextStream & stream,
+    vtkIdType index, const vtkVector3d & position,
+    const QString & indexPrefix, const QString & coordinatePrefix,
+    const QString & valueSuffix)
 {
     stream
         << indexPrefix << (indexPrefix.isEmpty() ? "" : " ") << "Index: " << index << endl;
@@ -336,10 +360,11 @@ void Picker_private::appendPositionInfo(QTextStream & stream, vtkIdType index, c
             << coordinatePrefix << ":" << endl;
         coordinateIndent = "    ";
     }
+    stream.setRealNumberNotation(QTextStream::FixedNotation);
     stream
-        << coordinateIndent << "X = " << position[0] << endl
-        << coordinateIndent << "Y = " << position[1] << endl
-        << coordinateIndent << "Z = " << position[2];
+        << coordinateIndent << "X = " << position[0] << valueSuffix << endl
+        << coordinateIndent << "Y = " << position[1] << valueSuffix << endl
+        << coordinateIndent << "Z = " << position[2] << valueSuffix;
 }
 
 void Picker_private::appendScalarInfo(QTextStream & stream, int activeComponent, bool scalarsAreMapped)
