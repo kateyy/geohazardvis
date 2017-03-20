@@ -713,7 +713,8 @@ void ResidualVerificationView::handleUpdateFinished()
         DEBUG_ONLY(const bool residualIsImage = nullptr != vtkImageData::SafeDownCast(computedDataSet);)
         assert(residualIsImage || vtkPolyData::SafeDownCast(computedDataSet));
 
-        const bool reuseResidualObject = m_residual && m_residual->dataSet()->IsA(computedDataSet->GetClassName());
+        const bool reuseResidualObject = m_residual
+            && (m_residual->dataTypeName() == newResidual->dataTypeName());
 
         if (reuseResidualObject)
         {
