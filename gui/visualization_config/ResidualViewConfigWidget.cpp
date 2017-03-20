@@ -127,7 +127,7 @@ void ResidualViewConfigWidget::setCurrentView(ResidualVerificationView * view)
         m_ui->modelScale->setValue(m);
     }));
 
-    m_viewConnects.emplace_back(connect(m_ui->updateButton, &QAbstractButton::pressed, view, &ResidualVerificationView::update));
+    m_viewConnects.emplace_back(connect(m_ui->updateButton, &QAbstractButton::pressed, view, &ResidualVerificationView::updateResidual));
 
     updateComboBoxes();
 }

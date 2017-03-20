@@ -96,7 +96,7 @@ ResidualVerificationView::~ResidualVerificationView()
     }
 }
 
-void ResidualVerificationView::update()
+void ResidualVerificationView::updateResidual()
 {
     updateResidualAsync();
 }
