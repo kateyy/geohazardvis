@@ -98,6 +98,7 @@ protected:
     void onCoordinateSystemChanged(const CoordinateSystemSpecification & spec) override;
 
 signals:
+    void inputDataChanged();
     void residualGeometrySourceChanged(InputData geometrySource);
     void lineOfSightChanged(const vtkVector3d & los);
     void unitDecimalExponentsChanged(int observationExponent, int modelExponent);

@@ -97,6 +97,18 @@ void ResidualViewConfigWidget::setCurrentView(ResidualVerificationView * view)
     m_viewConnects.emplace_back(connect(m_ui->losY, qdSpinBoxValueChanged, viewSetLos));
     m_viewConnects.emplace_back(connect(m_ui->losZ, qdSpinBoxValueChanged, viewSetLos));
 
+    m_viewConnects.emplace_back(connect(view, &ResidualVerificationView::inputDataChanged,
+        [this, view] ()
+    {
+        const QSignalBlocker observationSignalBlocker(m_ui->observationCombo);
+        const QSignalBlocker modelSignalBlocker(m_ui->modelCombo);
+
+        m_ui->observationCombo->setCurrentIndex(
+            m_ui->observationCombo->findData(dataObjectPtrToVariant(view->observationData())));
+        m_ui->modelCombo->setCurrentIndex(
+            m_ui->modelCombo->findData(dataObjectPtrToVariant(view->modelData())));
+    }));
+
     m_viewConnects.emplace_back(connect(view, &ResidualVerificationView::lineOfSightChanged, uiSetLos));
 
 
@@ -108,8 +120,8 @@ void ResidualViewConfigWidget::setCurrentView(ResidualVerificationView * view)
     m_viewConnects.emplace_back(connect(view, &ResidualVerificationView::unitDecimalExponentsChanged,
     [this] (int o, int m)
     {
-        QSignalBlocker observationSignalBlocker(m_ui->observationScale);
-        QSignalBlocker modelSignalBlocker(m_ui->modelScale);
+        const QSignalBlocker observationSignalBlocker(m_ui->observationScale);
+        const QSignalBlocker modelSignalBlocker(m_ui->modelScale);
 
         m_ui->observationScale->setValue(o);
         m_ui->modelScale->setValue(m);

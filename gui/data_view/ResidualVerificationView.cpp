@@ -368,6 +368,8 @@ void ResidualVerificationView::setDataHelper(
     {
         updateResidualAsync();
     }
+
+    emit inputDataChanged();
 }
 
 unsigned int ResidualVerificationView::numberOfSubViews() const
