@@ -196,7 +196,7 @@ DataProfile2DDataObject::DataProfile2DDataObject(
     else if (inputPolyData && inputPolyData->GetPoints() && inputPolyData->GetPoints()->GetNumberOfPoints() > 0)
     {
         // Polygonal/triangular data
-        if (inputPolyData->GetPolys() && inputPolyData->GetPolys()->GetSize() > 0)
+        if (inputPolyData->GetPolys() && inputPolyData->GetPolys()->GetNumberOfCells() > 0)
         {
             // Cannot reuse PolyDataObject::cellCenters if transformed coordinates are used.
             // So keep it simple and compute the cell centers here on the fly.
@@ -213,7 +213,7 @@ DataProfile2DDataObject::DataProfile2DDataObject(
             m_outputTransformation->SetInputConnection(m_polyCentroidsSelector->GetOutputPort(1));
         }
         // Point cloud data
-        else if (inputPolyData->GetVerts() && inputPolyData->GetVerts()->GetSize() > 0)
+        else if (inputPolyData->GetVerts() && inputPolyData->GetVerts()->GetNumberOfCells() > 0)
         {
             m_polyPointsSelector = vtkSmartPointer<LineOnPointsSelector2D>::New();
             m_polyPointsSelector->SetSorting(LineOnPointsSelector2D::SortPoints);

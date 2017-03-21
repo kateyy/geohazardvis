@@ -26,7 +26,7 @@ vtkPlot * ChartXY::selectedPlot()
     {
         auto plot = this->GetPlot(i);
 
-        if (plot->GetSelection() && plot->GetSelection()->GetSize() > 0)
+        if (plot->GetSelection() && plot->GetSelection()->GetNumberOfValues() > 0)
         {
             result = plot;
             break;

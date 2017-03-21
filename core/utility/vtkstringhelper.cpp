@@ -34,12 +34,12 @@ QString vtkArrayToQString(vtkAbstractArray & data)
     {
         return QString::fromUtf8(
             chars->GetPointer(0),
-            static_cast<int>(chars->GetSize()));
+            static_cast<int>(chars->GetNumberOfValues()));
     }
 
     if (auto string = vtkStringArray::SafeDownCast(&data))
     {
-        if (string->GetSize() == 0)
+        if (string->GetNumberOfValues() == 0)
         {
             return{};
         }
