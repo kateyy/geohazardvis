@@ -48,7 +48,7 @@ vtkVector<ValueType, Size> stringToVector(const QString & s)
 
     stringToVector(s, result);
 
-    return;
+    return result;
 }
 
 template<typename ValueType, int Size>

@@ -37,6 +37,15 @@
 #include <core/utility/vtkvectorhelper.h>
 
 
+DataProfile2DDataObject::PreprocessingPipeline::PreprocessingPipeline(
+        vtkAlgorithm * head, vtkAlgorithm * tail)
+    : head{ head }
+    , tail{ tail }
+{
+}
+
+DataProfile2DDataObject::PreprocessingPipeline::~PreprocessingPipeline() = default;
+
 DataProfile2DDataObject::DataProfile2DDataObject(
     const QString & name,
     DataObject & sourceData,

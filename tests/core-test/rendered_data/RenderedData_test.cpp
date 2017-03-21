@@ -214,6 +214,6 @@ TEST_F(RenderedData_test, RenderedPointCloudData_defaultColorMappingAndCoordinat
     const auto expectedBounds = DataBounds({ -0.005, 0.005, -0.005, 0.005, 0.0, 0.0 });
     for (size_t i = 0; i < 6; ++i)
     {
-        ASSERT_FLOAT_EQ(expectedBounds[i], renderedLocalKmBounds[i]);
+        ASSERT_FLOAT_EQ(static_cast<float>(expectedBounds[i]), renderedLocalKmBounds[i]);
     }
 }

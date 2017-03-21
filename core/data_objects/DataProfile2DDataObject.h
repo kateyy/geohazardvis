@@ -23,13 +23,16 @@ class SimplePolyGeoCoordinateTransformFilter;
 
 
 /**
-* Probes the source data along a line defined by two points on the XY-plane and creates a plot for the interpolated data.
-*/
+ * Probes the source data along a line defined by two points on the XY-plane and creates a plot for
+ * the interpolated data.
+ */
 class CORE_API DataProfile2DDataObject : public DataObject
 {
 public:
     struct PreprocessingPipeline
     {
+        PreprocessingPipeline(vtkAlgorithm * head = nullptr, vtkAlgorithm * tail = nullptr);
+        ~PreprocessingPipeline();
         vtkSmartPointer<vtkAlgorithm> head;
         vtkSmartPointer<vtkAlgorithm> tail;
     };
@@ -37,13 +40,14 @@ public:
     /** Create profile with given specifications
      * @param name Object Name, see DataObject API
      * @param sourceData Source data object that will be probed. The DataObject will only be used
-        in the constructor, only shared VTK data sets are referenced later.
-     * @param scalarsName Scalars to probe in the source data object 
-     * @param scalarsLocation Specifies whether to probe point or cell scalars 
+     *  in the constructor, only shared VTK data sets are referenced later.
+     * @param scalarsName Scalars to probe in the source data object
+     * @param scalarsLocation Specifies whether to probe point or cell scalars
      * @param vectorComponent For multi component scalars/vectors, specify which component will be
-        extracted
+     *  extracted
      * @param preprocessingPipeline Optional preprocessing pipeline. Will be injected between the
-        processed/transformed output of the sourceData and the profile transformations. */
+     *  processed/transformed output of the sourceData and the profile transformations.
+     */
     DataProfile2DDataObject(
         const QString & name,
         DataObject & sourceData,
@@ -56,7 +60,10 @@ public:
     /** Not supported by this class as the parameters are not valid with the ctor. */
     std::unique_ptr<DataObject> newInstance(const QString & name, vtkDataSet * dataSet) const override;
 
-    /** @return whether valid scalar data was found in the constructor. Otherwise, just delete your instance.. */
+    /**
+     * @return whether valid scalar data was found in the constructor. Otherwise, just delete your
+     * instance..
+     */
     bool isValid() const;
 
     bool is3D() const override;
@@ -80,10 +87,12 @@ public:
     /** @return X,Y-coordinates for the second point */
     const vtkVector2d & profileLinePoint2() const;
     void setProfileLinePoints(const vtkVector2d & point1, const vtkVector2d & point2);
-    /** Convenience method to request the points to be transformed from their current coordinate 
-      * system to the coordinate system of the source data set.
-      * If the specified coordinate system is empty, not valid, or not supported, the points won't
-      * be transformed and used as is. */
+    /**
+     * Convenience method to request the points to be transformed from their current coordinate
+     * system to the coordinate system of the source data set.
+     * If the specified coordinate system is empty, not valid, or not supported, the points won't
+     * be transformed and used as is.
+     */
     void setPointsCoordinateSystem(const CoordinateSystemSpecification & coordsSpec);
     const CoordinateSystemSpecification & pointsCoordinateSystem() const;
 

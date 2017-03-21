@@ -124,8 +124,7 @@ DataBounds DataProfile2DContextPlot::updateVisibleBounds()
     assert(table);
     auto xAxis = vtkDataArray::FastDownCast(table->GetColumn(0));
     auto yAxis = vtkDataArray::FastDownCast(table->GetColumn(1));
-    const vtkIdType numValues = xAxis->GetNumberOfTuples();
-    assert(xAxis && yAxis && (numValues == yAxis->GetNumberOfTuples()));
+    assert(xAxis && yAxis && (xAxis->GetNumberOfTuples() == yAxis->GetNumberOfTuples()));
 
     ValueRange<> xRange, yRange;
     xAxis->GetRange(xRange.data());

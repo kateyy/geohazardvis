@@ -910,7 +910,7 @@ std::pair<QString, IndexType> ResidualVerificationView::findDataSetAttributeName
 
     // Polygonal data may also have useful attributes associated with points.
     // For other data sets (images, point clouds), no secondary location is considered.
-    if (auto poly = vtkPolyData::SafeDownCast(dataSet))
+    if (vtkPolyData::SafeDownCast(dataSet))
     {
         if (primaryLocation == IndexType::cells)
         {
