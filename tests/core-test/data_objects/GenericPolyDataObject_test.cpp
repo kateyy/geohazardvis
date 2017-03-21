@@ -87,6 +87,9 @@ TEST_F(GenericPolyDataObject_test, TransformCoords_PointCloud_m_to_km_metricGlob
         coordsKm->GetTypedTuple(i, pointKm.GetData());
         ASSERT_EQ(pointM / vtkVector3f(1000.f, 1000.f, 1.f), pointKm);
     }
+
+    const auto specFromPipeline = ReferencedCoordinateSystemSpecification::fromFieldData(*inKm->GetFieldData());
+    ASSERT_EQ(specKm, specFromPipeline);
 }
 
 TEST_F(GenericPolyDataObject_test, TransformCoords_PointCloud_m_to_km_metricLocal)
@@ -119,6 +122,9 @@ TEST_F(GenericPolyDataObject_test, TransformCoords_PointCloud_m_to_km_metricLoca
         coordsKm->GetTypedTuple(i, pointKm.GetData());
         ASSERT_EQ(pointM / vtkVector3f(1000.f, 1000.f, 1.f), pointKm);
     }
+
+    const auto specFromPipeline = ReferencedCoordinateSystemSpecification::fromFieldData(*inKm->GetFieldData());
+    ASSERT_EQ(specKm, specFromPipeline);
 }
 
 TEST_F(GenericPolyDataObject_test, TransformCoords_PointCloud_m_to_km_storedCoords_toLocal)
@@ -172,4 +178,7 @@ TEST_F(GenericPolyDataObject_test, TransformCoords_PointCloud_m_to_km_storedCoor
         coordsLocalKm->GetTypedTuple(i, pointLocalKm.GetData());
         ASSERT_EQ(pointLocalM / vtkVector3f(1000.f, 1000.f, 1.f), pointLocalKm);
     }
+
+    const auto specFromPipeline = ReferencedCoordinateSystemSpecification::fromFieldData(*localInKm->GetFieldData());
+    ASSERT_EQ(specLocalKm, specFromPipeline);
 }
