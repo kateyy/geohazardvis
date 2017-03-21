@@ -21,8 +21,6 @@ set(DEFAULT_COMPILE_DEFS_RELEASE
 
 
 set(DEFAULT_COMPILE_FLAGS
-    # -pthread      # -> use pthread library
-      # -pipe         # -> use pipes
       -Wall
       -Wextra
 
@@ -45,7 +43,6 @@ set(DEFAULT_COMPILE_FLAGS
       # -Wno-pointer-bool-conversion
       # -Wno-missing-braces
 
-      -fPIC         # -> use position independent code
       # -fms-extensions     # -> Enable full Microsoft Visual C++ compatibility
       # -fms-compatibility  # -> Accept some non-standard constructs supported by the Microsoft compiler
       -frtti
@@ -66,10 +63,6 @@ set(DEFAULT_COMPILE_FLAGS
         /MD
     >
 )
-
-if (CMAKE_VERSION VERSION_LESS 3.1)
-    list(APPEND DEFAULT_COMPILE_FLAGS -std=c++1y)
-endif()
 
 set(DEFAULT_LINKER_FLAGS_DEBUG
     ""

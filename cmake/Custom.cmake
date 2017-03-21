@@ -23,13 +23,19 @@ function(configure_cxx_target target)
 
     target_compile_options(${target} PRIVATE ${DEFAULT_COMPILE_FLAGS})
 
-    set_target_properties(${target}
-        PROPERTIES
-        LINKER_LANGUAGE CXX
-        DEBUG_POSTFIX                          "_d${DEBUG_POSTFIX}"
-        RELWITHDEBINFO_POSTFIX                 "_rd${DEBUG_POSTFIX}"
-        RELNOOPTIMIZATION_POSTFIX              "_rd0${DEBUG_POSTFIX}"
-        FOLDER                                 "${option_IDE_FOLDER}"
+    set_target_properties(${target} PROPERTIES
+        CXX_STANDARD                14
+        CXX_STANDARD_REQUIRED       ON
+        CXX_VISIBILITY_PRESET       "hidden"
+        LINKER_LANGUAGE             CXX
+        POSITION_INDEPENDENT_CODE   ON
+        VISIBILITY_INLINES_HIDDEN   ON
+
+        DEBUG_POSTFIX               "_d${DEBUG_POSTFIX}"
+        RELWITHDEBINFO_POSTFIX      "_rd${DEBUG_POSTFIX}"
+        RELNOOPTIMIZATION_POSTFIX   "_rd0${DEBUG_POSTFIX}"
+
+        FOLDER                      "${option_IDE_FOLDER}"
     )
 
     if (DEFAULT_LINKER_FLAGS_DEBUG OR DEFAULT_LINKER_FLAGS_RELEASE)
@@ -47,14 +53,6 @@ function(configure_cxx_target target)
         )
     else()
         target_link_libraries(${target} ${DEFAULT_LINKER_FLAGS})
-    endif()
-
-    if (NOT CMAKE_VERSION VERSION_LESS 3.1)
-        set_target_properties(${target}
-            PROPERTIES
-            CXX_STANDARD 14
-            CXX_STANDARD_REQUIRED ON
-        )
     endif()
 
     if (NOT option_NO_CPPCHECK)

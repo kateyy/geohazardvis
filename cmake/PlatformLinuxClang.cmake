@@ -54,10 +54,6 @@ set(DEFAULT_COMPILE_FLAGS
     -Wno-extra-semi
 )
 
-if (CMAKE_VERSION VERSION_LESS 3.1)
-    list(APPEND DEFAULT_COMPILE_FLAGS -std=c++14)
-endif()
-
 if (NOT CMAKE_CXX_COMPILER_VERSION VERSION_LESS 3.8)  # VERSION_GREATER_EQUAL available in CMake 3.7
     set(OPTION_CLANG_DEBUGGER gdb CACHE STRING "Debugger for that clang optimizes the DWARF debugging information")
     set_property(CACHE OPTION_CLANG_DEBUGGER PROPERTY STRINGS gdb lldb)

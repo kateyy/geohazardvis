@@ -1,13 +1,12 @@
-cmake_minimum_required(VERSION 2.8.12 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.3)
 
-foreach(p
-    CMP0053 # CMake 3.1
-    CMP0054 # CMake 3.1
-    )
-  if(POLICY ${p})
-    cmake_policy(SET ${p} NEW)
-  endif()
-endforeach()
+#foreach(p
+#    CMP???? # CMake ?.?
+#    )
+#  if(POLICY ${p})
+#    cmake_policy(SET ${p} NEW)
+#  endif()
+#endforeach()
 
 
 set(META_PROJECT_NAME           "GeohazardVis")
