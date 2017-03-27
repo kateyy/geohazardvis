@@ -57,7 +57,9 @@ if ((NOT DEFINED generatorIsMultiConfig AND DEFINED CMAKE_CONFIGURATION_TYPES)
 endif()
 
 
-project(${META_PROJECT_NAME} C CXX)
+project(${META_PROJECT_NAME}
+    VERSION ${META_VERSION_MAJOR}.${META_VERSION_MINOR}.${META_VERSION_PATCH}.0
+    LANGUAGES C CXX)
 
 
 # project() sets CMAKE_CONFIGURATION_TYPES only for multi-configuration generators.
@@ -106,6 +108,7 @@ include(CMakeDependentOption)
 include(cmake/Custom.cmake)
 include(cmake/GetGitRevisionDescription.cmake)
 include(cmake/GitDate.cmake)
+include(cmake/WriteBinaryVersionInfo.cmake)
 
 
 # PLATFORM AND ARCHITECTURE

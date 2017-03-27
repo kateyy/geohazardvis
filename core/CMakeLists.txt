@@ -333,6 +333,7 @@ target_link_libraries(${target}
 )
 
 configure_cxx_target(${target})
+writeBinaryVersionInfo(${target})
 
 generate_library_export_header(${target})
 

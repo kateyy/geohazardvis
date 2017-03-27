@@ -22,6 +22,7 @@ endif()
 
 configure_cxx_target(${target})
 setupProjectUserConfig(${target})
+writeBinaryVersionInfo(${target})
 
 install(TARGETS ${target}
     RUNTIME DESTINATION ${INSTALL_BIN}
