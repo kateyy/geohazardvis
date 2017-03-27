@@ -26,7 +26,7 @@ set(DEFAULT_COMPILE_FLAGS
     /Zc:forScope /Zc:inline /Zc:rvalueCast /Zc:wchar_t
     /GR /fp:precise /MP /W4
     /we4150 /we4172 /we4239 /we4390 /we4456 /we4457 /we4458 /we4700 /we4701 /we4703 /we4715 /we4717
-    /wd4127 /wd4251 /wd4351 /wd4505 /wd4661 /wd4718
+    /wd4127 /wd4251 /wd4351 /wd4505 /wd4661 /wd4714 /wd4718
 
     $<$<CONFIG:Debug>:             /MDd /Od /RTC1> # /Z* flag: see version specific flags
     $<$<CONFIG:Release>:           /MD  /O2 >
@@ -96,6 +96,7 @@ set(DEFAULT_COMPILE_FLAGS
     #   4700       -> uninitialized local variable 'name' used
     #   4701       -> Potentially uninitialized local variable 'name' used
     #   4703       -> Potentially uninitialized local pointer variable 'name' used
+    #   4714       -> function 'function' marked as __forceinline not inlined  (Qt5, Version 5.8?)
     #   4715       -> 'function' : not all control paths return a value
     #   4717       -> 'function' : recursive on all control paths, function will cause runtime stack overflow
     #   4718       -> 'function call' : recursive call has no side effects, deleting (QMapNode/qmap.h)
