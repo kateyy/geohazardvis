@@ -29,7 +29,7 @@ class SimplePolyGeoCoordinateTransformFilter;
 class CORE_API DataProfile2DDataObject : public DataObject
 {
 public:
-    struct PreprocessingPipeline
+    struct CORE_API PreprocessingPipeline
     {
         PreprocessingPipeline(vtkAlgorithm * head = nullptr, vtkAlgorithm * tail = nullptr);
         ~PreprocessingPipeline();
