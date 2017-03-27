@@ -4,6 +4,7 @@ message(STATUS ${target})
 
 set(sources
     ${CMAKE_CURRENT_BINARY_DIR}/${target}_api.h
+    ${CONFIG_FILE}
 
     AbstractVisualizedData.h
     AbstractVisualizedData.cpp
@@ -302,7 +303,10 @@ endif()
 
 
 source_group_by_path_and_type(${CMAKE_CURRENT_SOURCE_DIR} ${sources})
-source_group_by_path(${CMAKE_CURRENT_BINARY_DIR} ".*" "Generated" ${CMAKE_CURRENT_BINARY_DIR}/${target}_api.h)
+source_group_by_path(${CMAKE_CURRENT_BINARY_DIR} ".*" "Generated"
+    ${CMAKE_CURRENT_BINARY_DIR}/${target}_api.h
+    ${CONFIG_FILE}
+)
 source_group_by_path(${CMAKE_CURRENT_SOURCE_DIR} ".*" "" "CMakeLists.txt")
 
 add_library(${target} SHARED ${sources})

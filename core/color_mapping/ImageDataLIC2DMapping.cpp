@@ -15,13 +15,12 @@
 #include <vtkPointData.h>
 
 #include <core/AbstractVisualizedData.h>
+#include <core/config.h>
 #include <core/types.h>
 #include <core/color_mapping/ColorMappingRegistry.h>
 #include <core/data_objects/DataObject.h>
 #include <core/filters/NoiseImageSource.h>
 #include <core/utility/DataExtent.h>
-
-#include "config.h"
 
 #if VTK_RENDERING_BACKEND == 1
 #include <vtkOpenGLExtensionManager.h>

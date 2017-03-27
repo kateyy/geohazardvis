@@ -9,7 +9,7 @@
 
 #include <vtkGL2PSExporter.h>
 
-#include "config.h"
+#include <core/config.h>
 #if WIN32 && VTK_RENDERING_BACKEND == 1
 #include <vtkOpenGLRenderWindow.h>
 #include <vtkOpenGLExtensionManager.h>

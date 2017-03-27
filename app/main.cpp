@@ -10,8 +10,9 @@
 #include <cstdlib>
 #endif
 
+#include <core/config.h>
 #include "Application.h"
-#include "config.h"
+
 
 namespace
 {

@@ -224,7 +224,7 @@ set(VERSION_INFO_FILE ${PROJECT_BINARY_DIR}/vcs_commit_info.h)
 configure_file(cmake/vcs_commit_info.h.in ${VERSION_INFO_FILE})
 
 
-set(CONFIG_FILE ${PROJECT_BINARY_DIR}/config.h)
+set(CONFIG_FILE ${PROJECT_BINARY_DIR}/core/config.h)
 configure_file(cmake/config.h.in ${CONFIG_FILE})
 
 generate_cppcheck_suppressions()

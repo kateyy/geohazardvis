@@ -4,7 +4,7 @@
 #include <QDebug>
 #include <QDir>
 
-#include "config.h"
+#include <core/config.h>
 
 
 namespace

@@ -17,6 +17,7 @@
 #include <QtConcurrent/QtConcurrentRun>
 
 #include <core/ApplicationSettings.h>
+#include <core/config.h>
 #include <core/DataSetHandler.h>
 #include <core/RuntimeInfo.h>
 #include <core/VersionInfo.h>
@@ -43,8 +44,6 @@
 #include <gui/visualization_config/GlyphMappingChooser.h>
 #include <gui/visualization_config/RenderPropertyConfigWidget.h>
 #include <gui/visualization_config/RendererConfigWidget.h>
-
-#include "config.h"
 
 #if OPTION_ENABLE_TEXTURING
 #include <core/TextureManager.h>

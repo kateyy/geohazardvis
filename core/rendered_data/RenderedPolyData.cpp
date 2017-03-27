@@ -17,11 +17,10 @@
 
 #include <reflectionzeug/PropertyGroup.h>
 
+#include <core/config.h>
 #include <core/data_objects/PolyDataObject.h>
 #include <core/color_mapping/ColorMappingData.h>
 #include <core/utility/DataExtent.h>
-
-#include "config.h"
 
 #if OPTION_ENABLE_TEXTURING
 #include <vtkFieldData.h>

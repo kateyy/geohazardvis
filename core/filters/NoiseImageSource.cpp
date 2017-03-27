@@ -22,7 +22,7 @@
 #include <vtkRenderbuffer.h>
 #include <vtkTextureObject.h>
 
-#include "config.h"
+#include <core/config.h>
 
 #if VTK_RENDERING_BACKEND == 1
 #include <vtkShader2.h>

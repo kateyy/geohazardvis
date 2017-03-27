@@ -11,9 +11,8 @@
 #include <vtkPointData.h>
 #include <vtkSmartPointer.h>
 
+#include <core/config.h>
 #include <core/filters/NoiseImageSource.h>
-
-#include "config.h"
 
 #if VTK_RENDERING_BACKEND == 1
 #include <vtkOpenGLExtensionManager.h>

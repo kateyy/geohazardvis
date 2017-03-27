@@ -8,11 +8,10 @@
 
 #include <reflectionzeug/PropertyGroup.h>
 
+#include <core/config.h>
 #include <core/ThirdParty/ParaView/vtkGridAxes3DActor.h>
 #include <gui/data_view/AbstractRenderView.h>
 #include <gui/data_view/RendererImplementationBase3D.h>
-
-#include "config.h"
 
 #if VTK_RENDERING_BACKEND == 2
 #include <vtkFXAAOptions.h>
