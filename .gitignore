@@ -1,13 +1,14 @@
 build*/*
 screenshots*/*
+/*settings.ini
 simulation*/*
 testing*/*
+
 .codelite/*
 cmake-build-*/*
 /*.project
-/*.workspace
 .kdev4/*
 /*.kdev4
-/*settings.ini
+/.vscode/
+/*.workspace
 CMakeLists.txt.user
-
