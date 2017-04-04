@@ -11,6 +11,30 @@ if (MSVC)
         "Set to ON to install Debug instead of Release MSVC runtime libraries" OFF)
     set(CMAKE_INSTALL_DEBUG_LIBRARIES ${OPTION_INSTALL_DEBUG_MSVC_RUNTIME})
     set(CMAKE_INSTALL_DEBUG_LIBRARIES_ONLY ${OPTION_INSTALL_DEBUG_MSVC_RUNTIME})
+
+    # Fix OpenMP debug runtime deployment not directly supported by InstallRequiredSystemLibraries
+    if (OPTION_INSTALL_DEBUG_MSVC_RUNTIME AND X64)
+        macro(copyOpenMPDebugRuntime version)
+            find_file(vcomp${version}d_dll_location "vcomp${version}d.dll"
+                DOC "Location of vcomp${version}d.dll (Debug OpenMP runtim library to be deployed).")
+            if (NOT vcomp${version}d_dll_location)
+                message(WARNING "Cannot find OpenMP debug runtime for your platform and compiler version.")
+            else()
+                list(APPEND CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS ${vcomp${version}d_dll_location})
+            endif()
+        endmacro()
+
+        if(MSVC_VERSION VERSION_EQUAL 1800)     # MSVC 12 2013
+            copyOpenMPDebugRuntime(120)
+        elseif(MSVC_VERSION VERSION_EQUAL 1900) # MSVC 14 2015
+            copyOpenMPDebugRuntime(140)
+        else()
+            message(WARNING "Debug OpenMP deployment not supported for the current MSVC version (${MSVC_VERSION})")
+        endif()
+    else()
+        message(WARNING "Cannot deploy debug OpenMP runtime on non-x64 platform")
+    endif()
+
     include(InstallRequiredSystemLibraries)
 
 elseif (UNIX)
