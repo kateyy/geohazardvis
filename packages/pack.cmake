@@ -28,8 +28,7 @@ if(EXISTS "${CMAKE_ROOT}/Modules/CPack.cmake")
 
     set(package_name            ${META_PROJECT_NAME})
     set(package_description     ${META_PROJECT_DESCRIPTION})
-    set(package_vendor          ${META_AUTHOR_ORGANIZATION})
-    set(package_maintainer      ${META_AUTHOR_MAINTAINER})
+    set(package_vendor          "${META_AUTHOR_MAINTAINER} ${META_AUTHOR_MAINTAINER_EMAIL}")
 
 
     set(CMAKE_MODULE_PATH                   ${CMAKE_SOURCE_DIR}/packages/${project_name})

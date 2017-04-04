@@ -18,11 +18,12 @@ function(writeBinaryVersionInfo target)
             -D targetType=${targetType}
             -D targetRuntimeFileName=$<TARGET_FILE_NAME:${target}>
             -D PRODUCTNAME=${CMAKE_PROJECT_NAME}
+            -D FILEDESCRIPTION=${CMAKE_PROJECT_NAME}
             -D PROJECT_VERSION_MAJOR=${PROJECT_VERSION_MAJOR}
             -D PROJECT_VERSION_MINOR=${PROJECT_VERSION_MINOR}
             -D PROJECT_VERSION_PATCH=${PROJECT_VERSION_PATCH}
             -D PROJECT_VERSION_TWEAK=${PROJECT_VERSION_TWEAK}
-            -D META_AUTHOR_MAINTAINER=${META_AUTHOR_MAINTAINER}
+            -D LEGALCOPYRIGHT=${META_AUTHOR_MAINTAINER}
             -D GIT_SHA1=${GIT_SHA1}
             -D GIT_DATE=${GIT_DATE}
             -P ${scriptFile}
