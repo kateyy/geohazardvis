@@ -198,6 +198,13 @@ void AbstractRenderView::showDataObjects(
     initializeForFirstPaint();
 
     showDataObjectsImpl(possibleCompatibleObjects, incompatibleObjects, subViewIndex);
+
+    // QVTKOpenGLWidget: If the user opened an empty view and added data to it later on,
+    // vtkRenderView contents are not flushed to the widget (it remains blank).
+    // During showDataObjectsImpl() vtkRenderWindow::Render() followed by
+    // QVTKOpenGLWidget::update() are called multiple times, but it has still not the desired
+    // effect for some reason.
+    qvtkWidget().update();
 }
 
 void AbstractRenderView::hideDataObjects(const QList<DataObject *> & dataObjects, int subViewIndex)

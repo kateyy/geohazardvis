@@ -84,12 +84,18 @@ endfunction()
 
 set(VTK_COMPONENTS
     vtkChartsCore
-    vtkGUISupportQtOpenGL   # QVTKWidget2
     vtkInteractionWidgets
     vtkIOXML
     vtkRenderingAnnotation  # vtkCubeAxesActor, vtkScalarBarActor
     vtkViewsContext2D
 )
+
+if (OPTION_USE_QVTKOPENGLWIDGET)
+    list(APPEND VTK_COMPONENTS vtkGUISupportQt)       # QVTKOpenGLWidget
+else()
+    list(APPEND VTK_COMPONENTS vtkGUISupportQtOpenGL) # QVTKWidget2
+endif()
+
 
 find_package(VTK REQUIRED COMPONENTS ${VTK_COMPONENTS})
 
@@ -156,7 +162,7 @@ endif()
 
 # find additional VTK components
 message(STATUS "    Requested components: ${VTK_COMPONENTS}")
-find_package(VTK COMPONENTS ${VTK_COMPONENTS})
+find_package(VTK REQUIRED COMPONENTS ${VTK_COMPONENTS})
 
 # When using VTK kits, the provided library names are just interfaces to underlaying targets
 # Restore actual library target to get properties from them.
@@ -212,12 +218,15 @@ deploy_license_file("ParaView" "${PROJECT_SOURCE_DIR}/core/ThirdParty/ParaView/L
 
 #========= Qt5 =========
 
-set(PROJECT_QT_COMPONENTS Core Gui Widgets OpenGL Concurrent)
+set(PROJECT_QT_COMPONENTS Core Gui Widgets Concurrent)
+if (NOT OPTION_USE_QVTKOPENGLWIDGET)
+    list(APPEND PROJECT_QT_COMPONENTS OpenGL)
+endif()
 if (UNIX)
     # required for platform plugin deployment
     list(APPEND PROJECT_QT_COMPONENTS DBus Svg X11Extras)
 endif()
-find_package(Qt5 5.5 COMPONENTS ${PROJECT_QT_COMPONENTS})
+find_package(Qt5 5.5 REQUIRED COMPONENTS ${PROJECT_QT_COMPONENTS})
 
 find_program(Qt5QMake_PATH qmake
     DOC "Path to the qmake executable of the currently used Qt5 installation.")

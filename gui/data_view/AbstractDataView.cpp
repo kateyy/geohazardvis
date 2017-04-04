@@ -185,8 +185,10 @@ const DataSelection & AbstractDataView::selection() const
     return m_selection;
 }
 
-void AbstractDataView::showEvent(QShowEvent * /*event*/)
+void AbstractDataView::showEvent(QShowEvent * event)
 {
+    DockableWidget::showEvent(event);
+
     if (m_initialized)
     {
         return;
@@ -197,8 +199,10 @@ void AbstractDataView::showEvent(QShowEvent * /*event*/)
     m_initialized = true;
 }
 
-void AbstractDataView::focusInEvent(QFocusEvent * /*event*/)
+void AbstractDataView::focusInEvent(QFocusEvent * event)
 {
+    DockableWidget::focusInEvent(event);
+
     emit focused(this);
 }
 

@@ -270,7 +270,6 @@ vtkSmartPointer<vtkProperty> RenderedPolyData::createDefaultRenderProperty() con
     prop->SetInterpolationToFlat();
     prop->SetEdgeVisibility(true);
     prop->SetEdgeColor(0.1, 0.1, 0.1);
-    prop->SetLineWidth(1.2f);
     prop->SetBackfaceCulling(false);
     prop->SetLighting(false);
 

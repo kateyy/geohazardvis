@@ -31,6 +31,8 @@ option(OPTION_INSTALL_3RDPARTY_BINARIES "Include 3rdparty libraries (libzeug, VT
 option(OPTION_ENABLE_LIC2D "Integrate Line Integral Convolution representation for displacement volume slices." OFF)
 option(OPTION_ENABLE_TEXTURING "Enable texturing support for polygonal meshes." OFF)
 
+option(OPTION_USE_QVTKOPENGLWIDGET "Use QVTKOpenGLWidget instead of the older QVTKWidget2 to integrate VTK OpenGL contexts into the UI" ON)
+
 # Generate folders for IDE targets (e.g., VisualStudio solutions)
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 set_property(DIRECTORY PROPERTY VS_STARTUP_PROJECT ${META_PROJECT_NAME})

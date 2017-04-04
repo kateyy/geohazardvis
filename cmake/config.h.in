@@ -11,6 +11,8 @@
 #cmakedefine OPTION_ENABLE_LIC2D
 #cmakedefine OPTION_ENABLE_TEXTURING
 
+#cmakedefine OPTION_USE_QVTKOPENGLWIDGET
+
 
 namespace config
 {

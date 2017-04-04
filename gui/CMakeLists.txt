@@ -173,10 +173,12 @@ target_include_directories(${target} SYSTEM
         ${Qt5Gui_INCLUDE_DIRS} # disable warnings produced by Qt headers (GCC)
 )
 
+if (NOT OPTION_USE_QVTKOPENGLWIDGET)
+    target_link_libraries(${target} PUBLIC Qt5::OpenGL)
+endif()
 target_link_libraries(${target}
     PUBLIC
         Qt5::Widgets
-        Qt5::OpenGL
         Qt5::Concurrent
         core
 )

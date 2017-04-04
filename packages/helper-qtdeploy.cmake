@@ -18,9 +18,12 @@ endif()
 set(QT_DEPLOY_DIR ${CMAKE_BINARY_DIR}/qt_deploy)
 
 if (WIN32)
-    # deprecated Qt5 OpenGL module is not deployed by Qt anymore
-    get_target_property(QtOpenGL_release_location Qt5::OpenGL IMPORTED_LOCATION_RELEASE)
-    get_target_property(QtOpenGL_debug_location   Qt5::OpenGL IMPORTED_LOCATION_DEBUG)
+    if (OpenGL IN_LIST PROJECT_QT_COMPONENTS)
+        set(DeployQtOpenGL ON)
+        # deprecated Qt5 OpenGL module is not deployed by Qt anymore
+        get_target_property(QtOpenGL_release_location Qt5::OpenGL IMPORTED_LOCATION_RELEASE)
+        get_target_property(QtOpenGL_debug_location   Qt5::OpenGL IMPORTED_LOCATION_DEBUG)
+    endif()
 
     get_filename_component(_qtBinDir ${Qt5QMake_PATH} DIRECTORY)
 
@@ -53,11 +56,15 @@ if (WIN32)
             "${CMAKE_BINARY_DIR}/$<CONFIG>/${META_PROJECT_NAME}$<$<CONFIG:Debug>:_d>$<$<CONFIG:RelWithDebInfo>:_rd>$<$<CONFIG:RelNoOptimization>:_rd0>.exe"
             --dir "${QT_DEPLOY_DIR}"
             ${_windeployqtParams}
-        COMMAND ${CMAKE_COMMAND} -E copy
-            "$<$<NOT:$<CONFIG:Debug>>:${QtOpenGL_release_location}>$<$<CONFIG:DEBUG>:${QtOpenGL_debug_location}>"
-            "${QT_DEPLOY_DIR}"
         VERBATIM
     )
+    if (DeployQtOpenGL)
+        add_custom_command(TARGET PrepareQtDeploy POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy
+                "$<$<NOT:$<CONFIG:Debug>>:${QtOpenGL_release_location}>$<$<CONFIG:DEBUG>:${QtOpenGL_debug_location}>"
+                "${QT_DEPLOY_DIR}"
+        )
+    endif()
     set_target_properties(PrepareQtDeploy
         PROPERTIES
         FOLDER  "${IDE_FOLDER}"

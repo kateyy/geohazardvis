@@ -25,6 +25,7 @@ set(sources
     types.cpp
     VersionInfo.h
     VersionInfo.cpp
+    vtkCommandExt.h
 
     canvas_export/CanvasExporter.h
     canvas_export/CanvasExporter.cpp

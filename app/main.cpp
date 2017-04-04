@@ -11,6 +11,7 @@
 #endif
 
 #include <core/config.h>
+#include <gui/data_view/t_QVTKWidget.h>
 #include "Application.h"
 
 
@@ -132,6 +133,8 @@ int main(int argc, char** argv)
 #endif
 
     QCoreApplication::setApplicationName(config::metaProjectName);
+
+    t_QVTKWidget::initializeDefaultSurfaceFormat();
 
     Application app(argc, argv);
 

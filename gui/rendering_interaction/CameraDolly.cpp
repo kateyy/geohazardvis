@@ -19,6 +19,7 @@
 
 #include <core/AbstractVisualizedData.h>
 #include <core/types.h>
+#include <core/vtkCommandExt.h>
 #include <core/data_objects/DataObject.h>
 #include <core/utility/mathhelper.h>
 #include <core/utility/vtkcamerahelper.h>
@@ -280,7 +281,7 @@ void CameraDolly::moveToPoly(vtkPolyData & polyData, vtkIdType index, IndexType 
             TerrainCamera::setVerticalElevation(camera, intermediateElevation);
 
             m_renderer->ResetCameraClippingRange();
-            m_renderer->GetRenderWindow()->Render();
+            m_renderer->GetRenderWindow()->InvokeEvent(vtkCommandExt::ForceRepaintEvent);
 
             if (QTime::currentTime() > deadline)
             {
