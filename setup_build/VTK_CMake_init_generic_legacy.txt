@@ -1,15 +1,19 @@
+# Use this file with cmake to build VTK in an empty directory.
+#
+#   mkdir path_to_VTK_build
+#   cd path_to_VTK_build
+#   cmake -C "path_to_this_file/VTK_CMake_init.txt" -G "cmake_generator" path_to_VTK_sources
+#
+# On Windows, "cmake_generator" should be "Visual Studio 12 2013 Win64" or "Visual Studio 14 2015 Win64".
+# On Linux, this can be set to "Ninja" or left out to use the default (Makefiles)
+#
+# This generates a minimal VTK-CMake build as needed for this project.
+# VTK components required by optional components of this project are NOT included (see OPTION_ENABLE_* CMake flags).
+
 set(BUILD_DOCUMENTATION OFF CACHE BOOL "Build the VTK documentation")
 set(BUILD_EXAMPLES OFF CACHE BOOL "Build VTK examples.")
 set(BUILD_SHARED_LIBS ON CACHE BOOL "Build VTK with shared libraries.")
 set(BUILD_TESTING OFF CACHE BOOL "Build the testing tree.")
-
-set(CMAKE_CXX_FLAGS_RELEASE "/MD /O2 /Ob2 /D NDEBUG /GL /guard:cf" CACHE STRING "Flags used by the compiler during release builds.")
-set(CMAKE_C_FLAGS_RELEASE "/MD /O2 /Ob2 /D NDEBUG /GL /guard:cf" CACHE STRING "Flags used by the compiler during release builds.")
-set(CMAKE_EXE_LINKER_FLAGS_RELEASE "/INCREMENTAL:NO /LTCG /GUARD:CF" CACHE STRING "Flags used by the linker during release builds.")
-set(CMAKE_MODULE_LINKER_FLAGS_RELEASE "/INCREMENTAL:NO /LTCG /GUARD:CF" CACHE STRING "Flags used by the linker during release builds.")
-set(CMAKE_SHARED_LINKER_FLAGS_RELEASE "/INCREMENTAL:NO /LTCG /GUARD:CF" CACHE STRING "Flags used by the linker during release builds.")
-set(CMAKE_STATIC_LINKER_FLAGS_RELEASE "/LTCG" CACHE STRING "Flags used by the linker during release builds.")
-
 set(CMAKE_CXX_MP_FLAG ON CACHE BOOL "Build with /MP flag enabled")
 set(Module_vtkChartsCore ON CACHE BOOL "Request building vtkChartsCore")
 set(Module_vtkFiltersTexture OFF CACHE BOOL "Request building vtkFiltersTexture")
