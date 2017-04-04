@@ -11,7 +11,6 @@
 #
 #
 # Handled external dependencies:
-#   * OpenGL    -> OPENGL_INCLUDE_DIR, OPENGL_LIBRARIES
 #   * VTK       -> VTK_DEFINITIONS, VTK_LIBRARIES, VTK_INCLUDE_DIRS, (and some detailed options such as VTK_RENDERING_BACKEND)
 #   * Qt5       -> Qt5::* imported targets, PROJECT_QT_COMPONENTS
 #
@@ -37,8 +36,6 @@ set(THIRD_PARTY_SOURCE_DIR "${PROJECT_SOURCE_DIR}/ThirdParty")
 set(THIRD_PARTY_BUILD_DIR "${PROJECT_BINARY_DIR}/ThirdParty")
 include(ExternalProject)
 
-
-find_package(OpenGL REQUIRED)
 
 
 # helper functions
