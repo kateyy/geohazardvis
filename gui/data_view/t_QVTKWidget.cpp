@@ -206,10 +206,11 @@ bool t_QVTKWidget::event(QEvent * event)
             update();
             this->ToolTipWasShown = false;
             break;
+        default:
+            break;
         }
     }
 #endif
-
 
     return Superclass::event(event);
 }
