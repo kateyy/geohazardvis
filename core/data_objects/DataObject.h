@@ -24,6 +24,7 @@ class DataObjectPrivate;
 enum class IndexType;
 class QVtkTableModel;
 class RenderedData;
+class ScopedEventDeferral;
 
 
 /** Base class for data set representations. */
@@ -134,6 +135,8 @@ public:
      */
     void deferEvents();
     void executeDeferredEvents();
+    bool isDeferringEvents() const;
+    ScopedEventDeferral scopedEventDeferral();
 
     /** Mark attribute arrays that should not be visible to the user, e.g., in color or glyph mappings. */
     static vtkInformationIntegerKey * ARRAY_IS_AUXILIARY();

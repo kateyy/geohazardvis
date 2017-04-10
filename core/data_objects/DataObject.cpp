@@ -242,6 +242,16 @@ void DataObject::executeDeferredEvents()
     d_ptr->lockEventDeferrals().executeDeferredEvents();
 }
 
+bool DataObject::isDeferringEvents() const
+{
+    return d_ptr->lockEventDeferrals().isDeferringEvents();
+}
+
+ScopedEventDeferral DataObject::scopedEventDeferral()
+{
+    return ScopedEventDeferral(*this);
+}
+
 DataObject * DataObject::readPointer(vtkInformation & information)
 {
     static_assert(sizeof(int*) == sizeof(DataObject*), "");
