@@ -39,7 +39,7 @@ set(RUN_CPPCHECK OFF)
 
 if (OPTION_ADD_CPPCHECK_TARGETS AND (NOT CPPCHECK_EXECUTABLE OR NOT EXISTS ${CPPCHECK_EXECUTABLE}))
     message("Could not find cppcheck. Skipping cppcheck targets.")
-else()
+elseif(OPTION_ADD_CPPCHECK_TARGETS)
     # "cppcheck --version" -> "Cppcheck x.y.z"
     execute_process(COMMAND ${CPPCHECK_EXECUTABLE} --version
         RESULT_VARIABLE cppcheckVersionCheckResult
