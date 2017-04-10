@@ -14,8 +14,6 @@
 
 #include <vtkCommand.h>
 #include <vtkLookupTable.h>
-#include <vtkScalarBarRepresentation.h>
-#include <vtkScalarBarWidget.h>
 #include <vtkTextProperty.h>
 
 #include <core/AbstractVisualizedData.h>
@@ -37,7 +35,7 @@ ColorMappingChooser::ColorMappingChooser(QWidget * parent, Qt::WindowFlags flags
     , m_ui{ std::make_unique<Ui_ColorMappingChooser>() }
     , m_renderView{ nullptr }
     , m_mapping{ nullptr }
-    , m_movingColorLegend{ false }
+    , m_inAdjustLegendPosition{ false }
 {
     m_ui->setupUi(this);
 
@@ -46,7 +44,12 @@ ColorMappingChooser::ColorMappingChooser(QWidget * parent, Qt::WindowFlags flags
     m_ui->legendPositionComboBox->addItems({
         "left", "right", "top", "bottom", "user-defined position"
     });
-    m_ui->legendPositionComboBox->setCurrentIndex(3);
+    m_ui->legendPositionComboBox->setItemData(0, ColorBarRepresentation::posLeft);
+    m_ui->legendPositionComboBox->setItemData(1, ColorBarRepresentation::posRight);
+    m_ui->legendPositionComboBox->setItemData(2, ColorBarRepresentation::posTop);
+    m_ui->legendPositionComboBox->setItemData(3, ColorBarRepresentation::posBottom);
+    m_ui->legendPositionComboBox->setItemData(4, ColorBarRepresentation::posUserDefined);
+    m_ui->legendPositionComboBox->setCurrentIndex(4);
 
     rebuildGui();
 }
@@ -146,8 +149,10 @@ void ColorMappingChooser::setSelectedVisualization(AbstractVisualizedData * visu
                 subject->AddObserver(vtkCommand::ModifiedEvent, this, callback));
         };
 
-        addObserver(legend().GetPositionCoordinate(), &ColorMappingChooser::colorLegendPositionChanged);
-        addObserver(legend().GetPosition2Coordinate(), &ColorMappingChooser::colorLegendPositionChanged);
+        m_mappingConnections.emplace_back(connect(
+            &m_mapping->colorBarRepresentation(), &ColorBarRepresentation::positionChanged,
+            this, &ColorMappingChooser::colorLegendPositionChanged));
+
         addObserver(legend().GetTitleTextProperty(), &ColorMappingChooser::updateLegendTitleFont);
         addObserver(legend().GetLabelTextProperty(), &ColorMappingChooser::updateLegendLabelFont);
         addObserver(&legend(), &ColorMappingChooser::updateLegendConfig);
@@ -247,42 +252,25 @@ void ColorMappingChooser::guiResetMaxToData()
     m_ui->maxValueSpinBox->setValue(m_mapping->currentScalars().dataMaxValue());
 }
 
-void ColorMappingChooser::guiLegendPositionChanged(const QString & position)
+void ColorMappingChooser::guiLegendPositionChanged()
 {
     assert(m_mapping);
 
-    auto & scalarBarRepr = m_mapping->colorBarRepresentation().scalarBarRepresentation();;
+    if (m_inAdjustLegendPosition)
+    {
+        return;
+    }
 
-    m_movingColorLegend = true;
+    m_inAdjustLegendPosition = true;
 
-    if (position == "left")
-    {
-        scalarBarRepr.SetOrientation(1);
-        scalarBarRepr.SetPosition(0.01, 0.1);
-        scalarBarRepr.SetPosition2(0.17, 0.8);
-    }
-    else if (position == "right")
-    {
-        scalarBarRepr.SetOrientation(1);
-        scalarBarRepr.SetPosition(0.82, 0.1);
-        scalarBarRepr.SetPosition2(0.17, 0.8);
-    }
-    else if (position == "top")
-    {
-        scalarBarRepr.SetOrientation(0);
-        scalarBarRepr.SetPosition(0.01, 0.82);
-        scalarBarRepr.SetPosition2(0.98, 0.17);
-    }
-    else if (position == "bottom")
-    {
-        scalarBarRepr.SetOrientation(0);
-        scalarBarRepr.SetPosition(0.01, 0.01);
-        scalarBarRepr.SetPosition2(0.98, 0.17);
-    }
+    const auto position =
+        m_ui->legendPositionComboBox->currentData().value<ColorBarRepresentation::Position>();
+
+    m_mapping->colorBarRepresentation().setPosition(position);
 
     emit renderSetupChanged();
 
-    m_movingColorLegend = false;
+    m_inAdjustLegendPosition = false;
 }
 
 void ColorMappingChooser::guiLegendTitleChanged()
@@ -290,7 +278,7 @@ void ColorMappingChooser::guiLegendTitleChanged()
     assert(m_mapping);
 
     const auto uiTitle = m_ui->legendTitleEdit->text();
-    auto newTitle = uiTitle.isEmpty() ? m_ui->legendTitleEdit->placeholderText() : uiTitle;
+    const auto newTitle = uiTitle.isEmpty() ? m_ui->legendTitleEdit->placeholderText() : uiTitle;
 
     m_mapping->colorBarRepresentation().actor().SetTitle(newTitle.toUtf8().data());
 
@@ -299,10 +287,23 @@ void ColorMappingChooser::guiLegendTitleChanged()
 
 void ColorMappingChooser::colorLegendPositionChanged()
 {
-    if (!m_movingColorLegend)
+    if (m_inAdjustLegendPosition)
     {
-        m_ui->legendPositionComboBox->setCurrentText("user-defined position");
+        return;
     }
+
+    m_inAdjustLegendPosition = true;
+
+    const auto position = m_mapping->colorBarRepresentation().position();
+    const QSignalBlocker positionComboBlocker{ m_ui->legendPositionComboBox };
+    const QSignalBlocker aspectRatioBlocker{ m_ui->legendAspectRatio };
+    m_ui->legendPositionComboBox->setCurrentIndex(
+        m_ui->legendPositionComboBox->findData(position));
+    m_ui->legendAspectRatio->setValue(legend().GetAspectRatio());
+
+    emit renderSetupChanged();
+
+    m_inAdjustLegendPosition = false;
 }
 
 void ColorMappingChooser::updateLegendTitleFont()
@@ -319,9 +320,14 @@ void ColorMappingChooser::updateLegendLabelFont()
 
 void ColorMappingChooser::updateLegendConfig()
 {
-    m_ui->legendAspectRatio->setValue(legend().GetAspectRatio());
+    if (!m_inAdjustLegendPosition)
+    {
+        m_ui->legendPositionComboBox->setCurrentIndex(
+            m_ui->legendPositionComboBox->findData(m_mapping->colorBarRepresentation().position()));
+        m_ui->legendAspectRatio->setValue(legend().GetAspectRatio());
+    }
     m_ui->legendAlignTitleCheckBox->setChecked(legend().GetTitleAlignedWithColorBar());
-    m_ui->legendBackgroundCheckBox->setChecked(legend().GetDrawBackground() != 0);
+    m_ui->legendTransparentBackground->setChecked(legend().GetDrawBackground() != 1);
     m_ui->legendTickMarksCheckBox->setChecked(legend().GetDrawTickMarks() != 0);
     m_ui->legendTickLabelsCheckBox->setChecked(legend().GetDrawTickLabels() != 0);
     m_ui->legendSubTickMarksCheckBox->setChecked(legend().GetDrawSubTickMarks() != 0);
@@ -542,6 +548,7 @@ void ColorMappingChooser::setupGuiConnections()
 
     const auto && dSpinBoxValueChanged = static_cast<void(QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged);
     const auto && spinBoxValueChanged = static_cast<void(QSpinBox::*)(int)>(&QSpinBox::valueChanged);
+    const auto && comboBoxIndexChanged = static_cast<void(QComboBox::*)(int)>(&QComboBox::currentIndexChanged);
 
     m_guiConnections.emplace_back(connect(m_ui->scalarsGroupBox, &QGroupBox::toggled, m_mapping, &ColorMapping::setEnabled));
     m_guiConnections.emplace_back(connect(m_ui->componentSpinBox, spinBoxValueChanged, this, &ColorMappingChooser::guiComponentChanged));
@@ -551,7 +558,7 @@ void ColorMappingChooser::setupGuiConnections()
     m_guiConnections.emplace_back(connect(m_ui->maxLabel, &QLabel::linkActivated, this, &ColorMappingChooser::guiResetMaxToData));
     m_guiConnections.emplace_back(connect(m_ui->gradientComboBox, &QComboBox::currentTextChanged, this, &ColorMappingChooser::guiGradientSelectionChanged));
     m_guiConnections.emplace_back(connect(m_ui->nanColorButton, &QAbstractButton::pressed, this, &ColorMappingChooser::guiSelectNanColor));
-    m_guiConnections.emplace_back(connect(m_ui->legendPositionComboBox, &QComboBox::currentTextChanged, this, &ColorMappingChooser::guiLegendPositionChanged));
+    m_guiConnections.emplace_back(connect(m_ui->legendPositionComboBox, comboBoxIndexChanged, this, &ColorMappingChooser::guiLegendPositionChanged));
 
     m_guiConnections.emplace_back(connect(m_ui->legendTitleFontSize, spinBoxValueChanged, [this] (int fontSize) {
         auto property = legend().GetTitleTextProperty();
@@ -590,13 +597,14 @@ void ColorMappingChooser::setupGuiConnections()
         emit renderSetupChanged();
     }));
 
-    m_guiConnections.emplace_back(connect(m_ui->legendBackgroundCheckBox, &QAbstractButton::toggled, [this] (bool checked) {
-        bool currentlyOn = legend().GetDrawBackground();
-        if (currentlyOn == checked)
+    m_guiConnections.emplace_back(connect(m_ui->legendTransparentBackground,
+        &QAbstractButton::toggled, [this] (bool transparencyChecked) {
+        const bool currentlyOn = legend().GetDrawBackground();
+        if (currentlyOn != transparencyChecked)
         {
             return;
         }
-        legend().SetDrawBackground(checked);
+        legend().SetDrawBackground(!transparencyChecked);
         emit renderSetupChanged();
     }));
 
@@ -738,7 +746,7 @@ void ColorMappingChooser::updateGuiValueRanges()
         m_ui->legendAlignTitleCheckBox->setChecked(legend().GetTitleAlignedWithColorBar());
         m_ui->legendTitleFontSize->setValue(legend().GetTitleTextProperty()->GetFontSize());
         m_ui->legendLabelFontSize->setValue(legend().GetLabelTextProperty()->GetFontSize());
-        m_ui->legendBackgroundCheckBox->setChecked(legend().GetDrawBackground() != 0);
+        m_ui->legendTransparentBackground->setChecked(legend().GetDrawBackground() != 1);
 
         // setup GUI connections only if there is something to configure
         setupGuiConnections();

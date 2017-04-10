@@ -12,21 +12,24 @@ vtkStandardNewMacro(OrientedScalarBarActor);
 
 
 OrientedScalarBarActor::OrientedScalarBarActor()
+    : Superclass()
 {
+    this->DrawSubTickMarks = 0;
+
     this->TitleAlignedWithColorBar = true;
-    this->TitleTextProperty->SetFontSize(5);
+    this->TitleTextProperty->SetFontSize(7);
     this->TitleTextProperty->ShadowOff();
     this->TitleTextProperty->SetColor(0, 0, 0);
     this->TitleTextProperty->BoldOff();
     this->TitleTextProperty->ItalicOff();
 
-    this->LabelTextProperty->SetFontSize(5);
+    this->LabelTextProperty->SetFontSize(6);
     this->LabelTextProperty->ShadowOff();
     this->LabelTextProperty->SetColor(0, 0, 0);
     this->LabelTextProperty->BoldOff();
     this->LabelTextProperty->ItalicOff();
 
-    this->NumberOfLabels = 7;
+    this->NumberOfLabels = 3;
     this->AddRangeLabels = true;
     this->AddRangeAnnotations = false;
 }

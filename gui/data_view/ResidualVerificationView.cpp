@@ -844,8 +844,10 @@ void ResidualVerificationView::updateVisualizations()
                 ? m_residualHelper->losModelScalarsName()
                 : m_residualHelper->residualDataObjectName());
 
-        m_visualizations[i]->colorMapping().setCurrentScalarsByName(attributeName, true);
-        m_visualizations[i]->colorMapping().colorBarRepresentation().setVisible(true);
+        auto & colorMapping = m_visualizations[i]->colorMapping();
+        colorMapping.colorBarRepresentation().setPosition(ColorBarRepresentation::posBottom);
+        colorMapping.setCurrentScalarsByName(attributeName, true);
+        colorMapping.colorBarRepresentation().setVisible(true);
     }
 
     updateGuiSelection();

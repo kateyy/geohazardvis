@@ -50,7 +50,7 @@ private:
     void guiResetMinToData();
     void guiResetMaxToData();
     void guiSelectNanColor();
-    void guiLegendPositionChanged(const QString & position);
+    void guiLegendPositionChanged();
     void guiLegendTitleChanged();
 
     void rebuildGui();
@@ -89,8 +89,7 @@ private:
     ColorMapping * m_mapping;
 
     std::vector<QMetaObject::Connection> m_mappingConnections;
-    /** check if we are moving the actor or if the user interacts */
-    bool m_movingColorLegend;
+    bool m_inAdjustLegendPosition;
     /** Mapping from subject (color legend coordinate, text property, etc) to observer id */
     std::map<vtkWeakPointer<vtkObject>, unsigned long> m_colorLegendObserverIds;
     // connections for various parameters and signals related to the color mapping

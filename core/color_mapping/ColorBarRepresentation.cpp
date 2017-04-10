@@ -19,6 +19,8 @@
 ColorBarRepresentation::ColorBarRepresentation(ColorMapping & colorMapping)
     : m_colorMapping{ colorMapping }
     , m_isVisible{ false }
+    , m_position{ Position::posRight }
+    , m_inAdjustPosition{ false }
 {
     connect(&colorMapping, &ColorMapping::currentScalarsChanged, this, &ColorBarRepresentation::updateForChangedScalars);
 
@@ -96,6 +98,68 @@ void ColorBarRepresentation::setContext(vtkRenderWindowInteractor * interactor, 
     updateForChangedContext();
 }
 
+void ColorBarRepresentation::setPosition(const Position position)
+{
+    if (m_inAdjustPosition)
+    {
+        return;
+    }
+
+    const bool changed = position != m_position;
+
+    m_position = position;
+
+    auto & scalarBarRepr = scalarBarRepresentation();
+
+    m_inAdjustPosition = true;
+    switch (position)
+    {
+    case ColorBarRepresentation::Position::posLeft:
+        scalarBarRepr.SetOrientation(1);
+        scalarBarRepr.SetPosition(0.02, 0.05);
+        scalarBarRepr.SetPosition2(0.1, 0.5);
+        break;
+    case ColorBarRepresentation::Position::posRight:
+        scalarBarRepr.SetOrientation(1);
+        scalarBarRepr.SetPosition(0.9, 0.05);
+        scalarBarRepr.SetPosition2(0.1, 0.5);
+        break;
+    case ColorBarRepresentation::Position::posTop:
+        scalarBarRepr.SetOrientation(0);
+        scalarBarRepr.SetPosition(0.3, 0.85);
+        scalarBarRepr.SetPosition2(0.6, 0.1);
+        break;
+    case ColorBarRepresentation::Position::posBottom:
+        scalarBarRepr.SetOrientation(0);
+        scalarBarRepr.SetPosition(0.3, 0.01);
+        scalarBarRepr.SetPosition2(0.6, 0.1);
+        break;
+    case ColorBarRepresentation::Position::posUserDefined:
+        break;
+    }
+
+    if (changed)
+    {
+        emit positionChanged(m_position);
+    }
+
+    m_inAdjustPosition = false;
+}
+
+auto ColorBarRepresentation::position() const -> Position
+{
+    return m_position;
+}
+
+void ColorBarRepresentation::positionChangedEvent()
+{
+    if (m_inAdjustPosition)
+    {
+        return;
+    }
+    setPosition(Position::posUserDefined);
+}
+
 void ColorBarRepresentation::initialize()
 {
     if (m_widget)
@@ -121,6 +185,15 @@ void ColorBarRepresentation::initialize()
     m_widget->SetRepresentation(m_scalarBarRepresentation);
     m_widget->SetInteractor(m_interactor);
     m_widget->EnabledOff();
+
+
+    auto addObserver = [this] (vtkObject * subject, void(ColorBarRepresentation::* callback)())
+    {
+        subject->AddObserver(vtkCommand::ModifiedEvent, this, callback);
+    };
+
+    addObserver(m_actor->GetPositionCoordinate(), &ColorBarRepresentation::positionChangedEvent);
+    addObserver(m_actor->GetPosition2Coordinate(), &ColorBarRepresentation::positionChangedEvent);
 }
 
 void ColorBarRepresentation::updateForChangedScalars()
