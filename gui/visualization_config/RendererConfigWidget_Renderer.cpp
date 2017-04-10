@@ -132,7 +132,9 @@ std::unique_ptr<PropertyGroup> RendererConfigWidget::createPropertyGroupRenderer
     {
         root->addProperty<QString>("Title",
             [impl] () { return QString::fromUtf8(impl->titleWidget(0)->GetTextActor()->GetInput()); },
-            [impl, renderView] (const QString & title) {
+            [impl, renderView] (const QString & title)
+        {
+            impl->titleWidget(0)->SetEnabled(!title.isEmpty());
             impl->titleWidget(0)->GetTextActor()->SetInput(title.toUtf8().data());
             renderView->render();
         });
@@ -151,16 +153,23 @@ std::unique_ptr<PropertyGroup> RendererConfigWidget::createPropertyGroupRenderer
 
         for (unsigned i = 0; i < renderView->numberOfSubViews(); ++i)
         {
-            titlesGroup->addProperty<QString>("Title" + std::to_string(i),
-                [impl, i] () { return QString::fromUtf8(impl->titleWidget(i)->GetTextActor()->GetInput()); },
-                [impl, renderView, i] (const QString & title) {
+            titlesGroup->addProperty<QString>("Title" + std::to_string(i), [impl, i] ()
+            {
+                return QString::fromUtf8(impl->titleWidget(i)->GetTextActor()->GetInput());
+            },
+                [impl, renderView, i] (const QString & title)
+            {
+                impl->titleWidget(i)->SetEnabled(!title.isEmpty());
                 impl->titleWidget(i)->GetTextActor()->SetInput(title.toUtf8().data());
                 renderView->render();
             })
                 ->setOption("title", "Title " + std::to_string(i + 1));
 
             titlesGroup->addProperty<int>("TitleFontSize" + std::to_string(i),
-                [impl, i] () { return impl->titleWidget(i)->GetTextActor()->GetTextProperty()->GetFontSize(); },
+                [impl, i] ()
+            {
+                return impl->titleWidget(i)->GetTextActor()->GetTextProperty()->GetFontSize();
+            },
                 [impl, renderView, i] (const int & fontSize) {
                 impl->titleWidget(i)->GetTextActor()->GetTextProperty()->SetFontSize(fontSize);
                 renderView->render();
@@ -185,7 +194,7 @@ std::unique_ptr<PropertyGroup> RendererConfigWidget::createPropertyGroupRenderer
     })
         ->setOption("title", "Background Color");
 
-    bool is3DView = renderView->implementation().currentInteractionStrategy() == "3D terrain";
+    const bool is3DView = renderView->implementation().currentInteractionStrategy() == "3D terrain";
 
     auto cameraGroup = root->addGroup("Camera");
     {

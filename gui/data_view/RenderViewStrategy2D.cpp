@@ -28,6 +28,7 @@
 #include <core/data_objects/DataProfile2DDataObject.h>
 #include <core/filters/ExtractTimeStep.h>
 #include <core/rendered_data/RenderedData.h>
+#include <core/utility/GridAxes3DActor.h>
 #include <core/utility/qthelper.h>
 #include <core/utility/vtkvectorhelper.h>
 #include <gui/DataMapping.h>
@@ -135,6 +136,12 @@ void RenderViewStrategy2D::onActivateEvent()
 {
     initialize();
 
+    // Show axes labels only on the left and the bottom.
+    for (unsigned int i = 0; i < m_context.renderView().numberOfSubViews(); ++i)
+    {
+        m_context.axesActor(i)->SetLabelMask(vtkGridAxes3DActor::MIN_X | vtkGridAxes3DActor::MIN_Y);
+    }
+
     m_context.renderView().toolBar()->addActions(m_actions);
     m_context.renderView().setToolBarVisible(true);
 
@@ -171,6 +178,12 @@ void RenderViewStrategy2D::onDeactivateEvent()
     {
         // if currently plotting: disable interactivity with the line widget
         m_lineWidget->Off();
+    }
+
+    // Reset axes labels to defaults
+    for (unsigned int i = 0; i < m_context.renderView().numberOfSubViews(); ++i)
+    {
+        m_context.axesActor(i)->SetLabelMask(0xFF);
     }
 }
 

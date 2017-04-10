@@ -8,14 +8,9 @@
 
 #include <reflectionzeug/PropertyGroup.h>
 
-#include <core/config.h>
-#include <core/ThirdParty/ParaView/vtkGridAxes3DActor.h>
+#include <core/utility/GridAxes3DActor.h>
 #include <gui/data_view/AbstractRenderView.h>
 #include <gui/data_view/RendererImplementationBase3D.h>
-
-#if VTK_RENDERING_BACKEND == 2
-#include <vtkFXAAOptions.h>
-#endif
 
 
 using namespace reflectionzeug;
@@ -80,11 +75,11 @@ void RendererConfigWidget::createPropertyGroupRenderer2(PropertyGroup & root, Ab
         });
 
         axesGroup->addProperty<bool>("ShowLabels",
-            [impl] () { return impl->axesActor(0)->GetLabelMask() != 0; },
+            [impl] () { return impl->axesActor(0)->GetLabelsVisible(); },
             [impl, renderView] (bool visible) {
             for (unsigned int i = 0; i < renderView->numberOfSubViews(); ++i)
             {
-                impl->axesActor(i)->SetLabelMask(visible ? 0xFF : 0x00);
+                impl->axesActor(i)->SetLabelsVisible(visible);
             }
             renderView->render();
         })
@@ -135,124 +130,4 @@ void RendererConfigWidget::createPropertyGroupRenderer2(PropertyGroup & root, Ab
             renderView->render();
         });
     }
-
-#if VTK_RENDERING_BACKEND == 2
-    root.addProperty<bool>("FXAA",
-        [impl] () { return impl->renderer(0)->GetUseFXAA(); },
-        [impl] (bool enable)
-    {
-        for (unsigned i = 0; i < impl->renderView().numberOfSubViews(); ++i)
-        {
-            impl->renderer(i)->SetUseFXAA(enable);
-        }
-        impl->renderView().render();
-    })
-        ->setOptions({
-            { "title", "Enable FXAA" },
-            { "tooltip", "Anti-Aliasing smooths out the jagged edges of lines and polygons\n"
-            "The performance of FXAA (Fast approXimate Anti-Aliasing) depends only on the size of "
-            "the render window."}
-    });
-
-    auto fxaaOptionsGroup = root.addGroup("FXAAOptions");
-    fxaaOptionsGroup->setOption("title", "FXAA Options");
-
-    auto fxaaOptions = vtkSmartPointer<vtkFXAAOptions>::New();
-
-    fxaaOptionsGroup->addProperty<float>("RelativeContrastThreshold",
-        [impl] () { return impl->renderer(0)->GetFXAAOptions()->GetRelativeContrastThreshold(); },
-        [impl] (float threshold)
-    {
-        for (unsigned i = 0; i < impl->renderView().numberOfSubViews(); ++i)
-        {
-            impl->renderer(i)->GetFXAAOptions()->SetRelativeContrastThreshold(threshold);
-        }
-        impl->renderView().render();
-    })
-        ->setOptions({
-            { "title", "Relative Contrast Threshold" },
-            { "min", fxaaOptions->GetRelativeContrastThresholdMinValue() },
-            { "max", fxaaOptions->GetRelativeContrastThresholdMaxValue() },
-            { "step", 0.01f }
-    });
-
-    fxaaOptionsGroup->addProperty<float>("HardContrastThreshold",
-        [impl] () { return impl->renderer(0)->GetFXAAOptions()->GetHardContrastThreshold(); },
-        [impl] (float threshold)
-    {
-        for (unsigned i = 0; i < impl->renderView().numberOfSubViews(); ++i)
-        {
-            impl->renderer(i)->GetFXAAOptions()->SetHardContrastThreshold(threshold);
-        }
-        impl->renderView().render();
-    })
-        ->setOptions({
-            { "title", "Hard Contrast Threshold" },
-            { "min", fxaaOptions->GetHardContrastThresholdMinValue() },
-            { "max", fxaaOptions->GetHardContrastThresholdMaxValue() },
-            { "step", 0.01f }
-    });
-
-    fxaaOptionsGroup->addProperty<float>("SubpixelBlendLimit",
-        [impl] () { return impl->renderer(0)->GetFXAAOptions()->GetSubpixelBlendLimit(); },
-        [impl] (float threshold)
-    {
-        for (unsigned i = 0; i < impl->renderView().numberOfSubViews(); ++i)
-        {
-            impl->renderer(i)->GetFXAAOptions()->SetSubpixelBlendLimit(threshold);
-        }
-        impl->renderView().render();
-    })
-        ->setOptions({
-            { "title", "Subpixel Blend Limit" },
-            { "min", fxaaOptions->GetSubpixelBlendLimitMinValue() },
-            { "max", fxaaOptions->GetSubpixelBlendLimitMaxValue() },
-            { "step", 0.1f }
-    });
-
-    fxaaOptionsGroup->addProperty<float>("SubpixelContrastThreshold",
-        [impl] () { return impl->renderer(0)->GetFXAAOptions()->GetSubpixelContrastThreshold(); },
-        [impl] (float threshold)
-    {
-        for (unsigned i = 0; i < impl->renderView().numberOfSubViews(); ++i)
-        {
-            impl->renderer(i)->GetFXAAOptions()->SetSubpixelContrastThreshold(threshold);
-        }
-        impl->renderView().render();
-    })
-        ->setOptions({
-            { "title", "Subpixel Contrast Threshold" },
-            { "min", fxaaOptions->GetSubpixelContrastThresholdMinValue() },
-            { "max", fxaaOptions->GetSubpixelContrastThresholdMaxValue() },
-            { "step", 0.1f }
-    });
-
-    fxaaOptionsGroup->addProperty<bool>("UseHighQualityEndpoints",
-        [impl] () { return impl->renderer(0)->GetFXAAOptions()->GetUseHighQualityEndpoints(); },
-        [impl] (bool useHQAlg)
-    {
-        for (unsigned i = 0; i < impl->renderView().numberOfSubViews(); ++i)
-        {
-            impl->renderer(i)->GetFXAAOptions()->SetUseHighQualityEndpoints(useHQAlg);
-        }
-        impl->renderView().render();
-    })
-        ->setOption("title", "Use High Quality Endpoints");
-
-    fxaaOptionsGroup->addProperty<int>("EndpointSearchIterations",
-        [impl] () { return impl->renderer(0)->GetFXAAOptions()->GetEndpointSearchIterations(); },
-        [impl] (int numIterations)
-    {
-        for (unsigned i = 0; i < impl->renderView().numberOfSubViews(); ++i)
-        {
-            impl->renderer(i)->GetFXAAOptions()->SetEndpointSearchIterations(numIterations);
-        }
-        impl->renderView().render();
-    })
-        ->setOptions({
-            { "title", "Endpoint Search Iterations" },
-            { "min", fxaaOptions->GetEndpointSearchIterationsMinValue() },
-            { "max", fxaaOptions->GetEndpointSearchIterationsMaxValue() }
-    });
-#endif
 }

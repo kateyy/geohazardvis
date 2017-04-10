@@ -227,6 +227,8 @@ set(sources
     utility/DataSetResidualHelper.cpp
     utility/font.h
     utility/font.cpp
+    utility/GridAxes3DActor.h
+    utility/GridAxes3DActor.cpp
     utility/InterpolationHelper.h
     utility/InterpolationHelper.cpp
     utility/qthelper.h

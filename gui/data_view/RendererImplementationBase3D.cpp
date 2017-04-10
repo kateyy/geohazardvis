@@ -29,8 +29,8 @@
 #include <core/color_mapping/ColorMapping.h>
 #include <core/data_objects/DataObject.h>
 #include <core/rendered_data/RenderedData.h>
-#include <core/ThirdParty/ParaView/vtkGridAxes3DActor.h>
 #include <core/utility/font.h>
+#include <core/utility/GridAxes3DActor.h>
 #include <core/utility/vtkcamerahelper.h>
 #include <gui/data_view/AbstractRenderView.h>
 #include <gui/data_view/RenderViewStrategy.h>
@@ -373,7 +373,7 @@ vtkTextWidget * RendererImplementationBase3D::titleWidget(unsigned int subViewIn
     return m_viewportSetups[subViewIndex].titleWidget;
 }
 
-vtkGridAxes3DActor * RendererImplementationBase3D::axesActor(unsigned int subViewIndex)
+GridAxes3DActor * RendererImplementationBase3D::axesActor(unsigned int subViewIndex)
 {
     return m_viewportSetups[subViewIndex].axesActor;
 }
@@ -601,12 +601,12 @@ void RendererImplementationBase3D::removeFromBounds(RenderedData * renderedData,
     updateAxes();
 }
 
-vtkSmartPointer<vtkGridAxes3DActor> RendererImplementationBase3D::createAxes()
+vtkSmartPointer<GridAxes3DActor> RendererImplementationBase3D::createAxes()
 {
     double axesColor[3] = { 0, 0, 0 };
     double labelColor[3] = { 0, 0, 0 };
 
-    auto gridAxes = vtkSmartPointer<vtkGridAxes3DActor>::New();
+    auto gridAxes = vtkSmartPointer<GridAxes3DActor>::New();
     gridAxes->SetFaceMask(0xFF);
     gridAxes->GenerateGridOn();
     gridAxes->GenerateEdgesOn();

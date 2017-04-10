@@ -11,7 +11,6 @@
 
 class vtkCamera;
 class vtkGenericOpenGLRenderWindow;
-class vtkGridAxes3DActor;
 class vtkLightKit;
 class vtkPropCollection;
 class vtkRenderer;
@@ -21,18 +20,20 @@ class vtkScalarBarWidget;
 class vtkTextWidget;
 
 class CameraInteractorStyleSwitch;
+class GridAxes3DActor;
 class PickerHighlighterInteractorObserver;
 class RenderViewStrategy;
 class RenderedData;
 class RenderWindowCursorCallback;
 
 
-/** Base class for vtkRenderer based render views. 
-
-This class is NOT registered as a concrete RendererImplementation that can be used with the 
-RendererImplementationSwitch. Instead, setup instances of this class manually or register subclasses of it 
-(e.g., RendererImplementation3D).
-*/
+/**
+ * Base class for vtkRenderer based render views. 
+ *
+ * This class is NOT registered as a concrete RendererImplementation that can be used with the 
+ * RendererImplementationSwitch. Instead, setup instances of this class manually or register subclasses of it 
+ * (e.g., RendererImplementation3D).
+ */
 class GUI_API RendererImplementationBase3D : public RendererImplementation
 {
 public:
@@ -78,9 +79,9 @@ public:
 
     vtkTextWidget * titleWidget(unsigned int subViewIndex);
 
-    vtkGridAxes3DActor * axesActor(unsigned int subViewIndex);
+    GridAxes3DActor * axesActor(unsigned int subViewIndex);
 
-    static vtkSmartPointer<vtkGridAxes3DActor> createAxes();
+    static vtkSmartPointer<GridAxes3DActor> createAxes();
 
 protected:
     // per viewport objects
@@ -92,7 +93,7 @@ protected:
         std::map<RenderedData *, vtkSmartPointer<vtkPropCollection>> dataProps;
         DataBounds dataBounds;
 
-        vtkSmartPointer<vtkGridAxes3DActor> axesActor;
+        vtkSmartPointer<GridAxes3DActor> axesActor;
         vtkSmartPointer<vtkTextWidget> titleWidget;
     };
 
