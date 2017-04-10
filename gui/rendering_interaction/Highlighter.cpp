@@ -29,6 +29,7 @@
 #include <vtkVector.h>
 
 #include <core/AbstractVisualizedData.h>
+#include <core/OpenGLDriverFeatures.h>
 #include <core/types.h>
 
 
@@ -248,7 +249,7 @@ private:
         m_actor = vtkSmartPointer<vtkActor>::New();
         m_actor->GetProperty()->EdgeVisibilityOn();
         m_actor->GetProperty()->SetEdgeColor(1, 0, 0);
-        m_actor->GetProperty()->SetLineWidth(3);
+        m_actor->GetProperty()->SetLineWidth(OpenGLDriverFeatures::clampToMaxSupportedLineWidth(3.f));
         m_actor->PickableOff();
         m_actor->SetMapper(m_mapper);
 

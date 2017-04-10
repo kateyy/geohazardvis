@@ -19,6 +19,8 @@ set(sources
     DataSetHandler.cpp
     RuntimeInfo.h
     RuntimeInfo.cpp
+    OpenGLDriverFeatures.h
+    OpenGLDriverFeatures.cpp
     TemporalPipelineMediator.h
     TemporalPipelineMediator.cpp
     types.h
@@ -331,6 +333,7 @@ target_include_directories(${target} SYSTEM
 
 target_link_libraries(${target}
     PUBLIC
+        ${OPENGL_LIBRARIES}
         ${VTK_LIBRARIES}
         ${LIBZEUG_LIBRARIES}
         Qt5::Core

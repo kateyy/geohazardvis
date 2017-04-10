@@ -18,6 +18,7 @@
 #include <reflectionzeug/PropertyGroup.h>
 
 #include <core/config.h>
+#include <core/OpenGLDriverFeatures.h>
 #include <core/data_objects/PolyDataObject.h>
 #include <core/color_mapping/ColorMappingData.h>
 #include <core/utility/DataExtent.h>
@@ -140,9 +141,10 @@ std::unique_ptr<PropertyGroup> RenderedPolyData::createConfigGroup()
     })
         ->setOptions({
             { "title", "Edge Width" },
-            { "minimum", 1 },
-            { "maximum", std::numeric_limits<unsigned>::max() },
-            { "step", 1 },
+            { "minimum", 1u },
+            { "maximum", OpenGLDriverFeatures::clampToMaxSupportedLineWidth(
+                std::numeric_limits<unsigned>::max()) },
+            { "step", 1u },
             { "suffix", " pixel" }
     });
 

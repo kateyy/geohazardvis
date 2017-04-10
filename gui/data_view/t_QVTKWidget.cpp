@@ -9,6 +9,7 @@
 #include <vtkGenericOpenGLRenderWindow.h>
 #include <vtkNew.h>
 
+#include <core/OpenGLDriverFeatures.h>
 #include <core/vtkCommandExt.h>
 #include <core/utility/macros.h>
 
@@ -50,7 +51,11 @@ public:
 
     void Execute(vtkObject * DEBUG_ONLY(subject), unsigned long eventId, void * /*callData*/) VTK_OVERRIDE
     {
+#if defined(OPTION_USE_QVTKOPENGLWIDGET)
         assert(subject == this->Target->RenderWindow.Get());
+#else
+        assert(subject == this->Target->GetRenderWindow());
+#endif
 
         switch (eventId)
         {
@@ -89,8 +94,10 @@ void t_QVTKWidget::initializeDefaultSurfaceFormat()
 {
 #if defined(OPTION_USE_QVTKOPENGLWIDGET)
     auto format = QVTKOpenGLWidget::defaultFormat();
-    format.setProfile(QSurfaceFormat::CompatibilityProfile);
     format.setSamples(0);
+    // This is required for Intel HD 3000 (and similar?) broken Windows drivers.
+    format.setProfile(QSurfaceFormat::CompatibilityProfile);
+    format.setOption(QSurfaceFormat::DeprecatedFunctions, true);
     QSurfaceFormat::setDefaultFormat(format);
 #endif
 }
@@ -218,10 +225,14 @@ bool t_QVTKWidget::event(QEvent * event)
 #if defined(OPTION_USE_QVTKOPENGLWIDGET)
 void t_QVTKWidget::paintGL()
 {
+    OpenGLDriverFeatures::initializeInCurrentContext();
+
     if (!Superclass::GetRenderWindow())
     {
         return;
     }
     Superclass::paintGL();
+
+    OpenGLDriverFeatures::setFeaturesAfterPaintGL(this->RenderWindow);
 }
 #endif

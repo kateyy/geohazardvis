@@ -15,6 +15,7 @@
 
 #include <reflectionzeug/PropertyGroup.h>
 
+#include <core/OpenGLDriverFeatures.h>
 #include <core/data_objects/DataProfile2DDataObject.h>
 #include <core/context2D_data/vtkPlotCollection.h>
 #include <core/utility/DataExtent.h>
@@ -55,7 +56,7 @@ std::unique_ptr<PropertyGroup> DataProfile2DContextPlot::createConfigGroup()
         emit geometryChanged();
     });
 
-    auto prop_transparency = root->addProperty<unsigned char>("Transparency",
+    root->addProperty<unsigned char>("Transparency",
         [this] () {
         return static_cast<unsigned char>((1.0f - m_plotLine->GetPen()->GetOpacity() / 255.f) * 100);
     },
@@ -63,19 +64,22 @@ std::unique_ptr<PropertyGroup> DataProfile2DContextPlot::createConfigGroup()
         m_plotLine->GetPen()->SetOpacity(static_cast<unsigned char>(
             (100.f - transparency) / 100.f * 255.f));
         emit geometryChanged();
+    })->setOptions({
+        { "minimum", 0 },
+        { "maximum", 100 },
+        { "step", 1 },
+        { "suffix", " %" }
     });
-    prop_transparency->setOption("minimum", 0);
-    prop_transparency->setOption("maximum", 100);
-    prop_transparency->setOption("step", 1);
-    prop_transparency->setOption("suffix", " %");
 
-    auto prop_width = root->addProperty<float>("Width",
+    root->addProperty<float>("Width",
         [this] () { return m_plotLine->GetWidth(); },
         [this] (float width) {
         m_plotLine->SetWidth(width);
         emit geometryChanged();
+    })->setOptions({
+        { "minimum", 1.f },
+        { "maximum", OpenGLDriverFeatures::clampToMaxSupportedLineWidth(100.f) }
     });
-    prop_width->setOption("minimum", 0.001f);
 
     return root;
 }

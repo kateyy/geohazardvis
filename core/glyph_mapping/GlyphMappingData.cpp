@@ -20,6 +20,7 @@
 #include <reflectionzeug/Property.h>
 #include <reflectionzeug/PropertyGroup.h>
 
+#include <core/OpenGLDriverFeatures.h>
 #include <core/color_mapping/ColorMappingData.h>
 #include <core/data_objects/DataObject.h>
 #include <core/rendered_data/RenderedData.h>
@@ -267,9 +268,9 @@ std::unique_ptr<PropertyGroup> GlyphMappingData::createPropertyGroup()
         emit geometryChanged();
     })->setOptions({
         { "title", "Line Width" },
-        { "minimum", 1 },
-        { "maximum", 100 },
-        { "step", 1 }
+        { "minimum", 1u },
+        { "maximum", OpenGLDriverFeatures::clampToMaxSupportedLineWidth(100u) },
+        { "step", 1u }
     });
 
     return group;

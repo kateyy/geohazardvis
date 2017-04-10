@@ -8,6 +8,7 @@
 #include <reflectionzeug/Property.h>
 #include <reflectionzeug/PropertyGroup.h>
 
+#include <core/OpenGLDriverFeatures.h>
 #include <core/data_objects/CoordinateTransformableDataObject.h>
 #include <core/utility/macros.h>
 
@@ -114,9 +115,10 @@ std::unique_ptr<PropertyGroup> RenderedData::createConfigGroup()
     })
         ->setOptions({
             { "title", "Outline Width" },
-            { "minimum", 1 },
-            { "maximum", std::numeric_limits<unsigned>::max() },
-            { "step", 1 },
+            { "minimum", 1u },
+            { "maximum", OpenGLDriverFeatures::clampToMaxSupportedLineWidth(
+                std::numeric_limits<unsigned>::max()) },
+            { "step", 1u },
             { "suffix", " pixel" }
     });
 
