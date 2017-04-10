@@ -51,7 +51,7 @@ void ColorMapping::setVisualizedData(const std::vector<AbstractVisualizedData *>
         disconnect(&vis->dataObject(), &DataObject::attributeArraysChanged, this, &ColorMapping::updateAvailableScalars);
     }
 
-    const auto lastScalars = currentScalarsName();
+    const auto lastScalars = m_currentScalarsName;
     m_currentScalarsName.clear();
     releaseMappingData();
 
@@ -252,16 +252,16 @@ ColorMappingData * ColorMapping::scalarsByName(const QString & scalarsName)
 
 const ColorMappingData & ColorMapping::currentScalars() const
 {
-    if (!m_isEnabled || currentScalarsName().isEmpty())
+    if (!m_isEnabled || m_currentScalarsName.isEmpty())
     {
         return nullColorMapping();
     }
 
-    auto it = m_data.find(currentScalarsName());
+    auto it = m_data.find(m_currentScalarsName);
     assert(it != m_data.end());
     if (it == m_data.end())
     {
-        qDebug() << "Invalid scalars requested: " << currentScalarsName();
+        qDebug() << "Invalid scalars requested: " << m_currentScalarsName;
         return nullColorMapping();
     }
 

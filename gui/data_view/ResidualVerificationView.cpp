@@ -1,9 +1,11 @@
 #include <gui/data_view/ResidualVerificationView.h>
 
+#include <algorithm>
 #include <cassert>
 
 #include <QBoxLayout>
 #include <QProgressBar>
+#include <QTimer>
 #include <QToolBar>
 #include <QtConcurrent/QtConcurrent>
 
@@ -34,6 +36,7 @@ ResidualVerificationView::ResidualVerificationView(DataMapping & dataMapping, in
     , m_modelUnitDecimalExponent{ 0 }
     , m_updateWatcher{ std::make_unique<QFutureWatcher<void>>() }
     , m_inResidualUpdate{ false }
+    , m_deferringVisualizationUpdate{ false }
     , m_destructorCalled{ false }
 {
     m_residualHelper->setGeometrySource(m_residualGeometrySource == InputData::observation
@@ -770,6 +773,12 @@ void ResidualVerificationView::updateResidualInternal()
 
 void ResidualVerificationView::updateGuiAfterDataChange()
 {
+    cleanOldGuiData();
+    updateVisualizations();
+}
+
+void ResidualVerificationView::cleanOldGuiData()
+{
     if (!m_visToDeleteAfterUpdate.empty())
     {
         QList<AbstractVisualizedData *> toDelete;
@@ -787,6 +796,40 @@ void ResidualVerificationView::updateGuiAfterDataChange()
 
     m_visToDeleteAfterUpdate.clear();
     m_oldResidualToDeleteAfterUpdate.reset();
+
+}
+
+void ResidualVerificationView::updateVisualizations()
+{
+    auto timer = dynamic_cast<QTimer *>(sender());
+
+    // Check if there already is an update on the list. Don't refresh the visualizations twice.
+    if (!timer && m_deferringVisualizationUpdate)
+    {
+        return;
+    }
+
+    if (timer)
+    {
+        timer->deleteLater();
+    }
+
+    // Wait until locks on the current data are released.
+    const bool isLocked = std::any_of(m_visualizations.begin(), m_visualizations.end(),
+        [] (const std::unique_ptr<AbstractVisualizedData> & vis)
+    {
+        return vis && vis->dataObject().isDeferringEvents();
+    });
+    if (isLocked)
+    {
+        m_deferringVisualizationUpdate = true;
+        auto deferredUpdate = new QTimer(this);
+        connect(deferredUpdate, &QTimer::timeout, this, &ResidualVerificationView::updateVisualizations);
+        deferredUpdate->start();
+        return;
+    }
+
+    m_deferringVisualizationUpdate = false;
 
     for (unsigned int i = 0; i < numberOfSubViews(); ++i)
     {

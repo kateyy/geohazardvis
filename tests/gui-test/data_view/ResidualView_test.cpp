@@ -277,6 +277,38 @@ TEST_F(ResidualView_test, CloseAppWhileResidualIsShown)
     }
 }
 
+TEST_F(ResidualView_test, DeferVisualizationUpdateOnLockedData)
+{
+    env.reset();
+
+    auto ownedObservation = genPolyData("observation");
+    auto observationPtr = ownedObservation.get();
+    auto ownedModel = genPolyData("displacement vectors");
+    auto modelPtr = ownedModel.get();
+
+    {
+        MainWindow mainWindow;
+
+        auto residualView = mainWindow.dataMapping().createRenderView<ResidualVerificationView>();
+        {
+            const auto deferral = ownedModel->scopedEventDeferral();
+            residualView->setObservationData(observationPtr);
+            residualView->setModelData(modelPtr);
+            residualView->waitForResidualUpdate();
+
+            auto modelVis = residualView->visualizationFor(modelPtr);
+            ASSERT_TRUE(modelVis);
+            ASSERT_FALSE(modelVis->colorMapping().isEnabled());
+        }
+        qApp->processEvents();
+
+        auto modelVis = residualView->visualizationFor(modelPtr);
+        ASSERT_TRUE(modelVis);
+        ASSERT_TRUE(modelVis->colorMapping().isEnabled());
+        ASSERT_STREQ("displacement vectors", modelVis->colorMapping().currentScalarsName().toUtf8().data());
+    }
+}
+
 TEST_F(ResidualView_test, ProjectToLoS_TransformedCoordinateSystem)
 {
     const auto coordsSpec = ReferencedCoordinateSystemSpecification(

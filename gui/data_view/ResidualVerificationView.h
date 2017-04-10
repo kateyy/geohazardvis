@@ -124,6 +124,8 @@ private:
     void updateResidualInternal();
 
     void updateGuiAfterDataChange();
+    void cleanOldGuiData();
+    void updateVisualizations();
 
     void updateGuiSelection();
 
@@ -152,6 +154,7 @@ private:
     std::unique_ptr<DataObject> m_residual;
     std::unique_ptr<DataObject> m_oldResidualToDeleteAfterUpdate;
     std::vector<std::unique_ptr<AbstractVisualizedData>> m_visToDeleteAfterUpdate;
+    bool m_deferringVisualizationUpdate;
     bool m_destructorCalled;
 
 private:

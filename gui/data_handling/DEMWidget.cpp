@@ -598,8 +598,7 @@ void DEMWidget::configureDEMVisualization()
     demRendered->setRepresentation(RenderedData::Representation::both);
 
     const auto scalarsName = QString::fromUtf8(dem->scalars().GetName());
-    demRendered->colorMapping().setCurrentScalarsByName(scalarsName);
-    demRendered->setEnableShading(true);
+    demRendered->colorMapping().setCurrentScalarsByName(scalarsName, true);
 }
 
 void DEMWidget::configureMeshVisualization()
