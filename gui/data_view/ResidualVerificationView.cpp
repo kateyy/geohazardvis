@@ -33,6 +33,7 @@ ResidualVerificationView::ResidualVerificationView(DataMapping & dataMapping, in
     , m_observationUnitDecimalExponent{ 0 }
     , m_modelUnitDecimalExponent{ 0 }
     , m_updateWatcher{ std::make_unique<QFutureWatcher<void>>() }
+    , m_inResidualUpdate{ false }
     , m_destructorCalled{ false }
 {
     m_residualHelper->setGeometrySource(m_residualGeometrySource == InputData::observation
@@ -678,14 +679,23 @@ void ResidualVerificationView::updateVisualizationForSubView(unsigned int subVie
 
 void ResidualVerificationView::updateResidualAsync()
 {
-    waitForResidualUpdate();    // prevent locking the mutex multiple times in the main thread
+    assert(QThread::currentThread() == this->thread());
 
-    std::unique_lock<std::recursive_mutex> updateLock(m_updateMutex);
+    // Correctly handle cases where this function is called recursively by the event loop.
+    // Just wait until the previous update finished and update again, as requested.
+    if (m_inResidualUpdate)
+    {
+        // Wait until the update thread finished and rerun the event loop to handle the residual
+        // results. Only then continue with the new computation.
+        waitForResidualUpdate();
+    }
 
     if (m_destructorCalled)
     {
         return;
     }
+
+    m_inResidualUpdate = true;
 
     m_progressBar->show();
     toolBar()->setEnabled(false);
@@ -696,19 +706,17 @@ void ResidualVerificationView::updateResidualAsync()
     // While updating the residual, we might add transformed vector data to the input data sets.
     // Make sure that this modification on the DataObject internals does not conflict with GUI events.
     // Lock all currently available data objects.
+    m_eventDeferrals.resize(3);
     m_eventDeferrals[observationIndex] = ScopedEventDeferral{ m_residualHelper->observationDataObject() };
     m_eventDeferrals[modelIndex] = ScopedEventDeferral{ m_residualHelper->modelDataObject() };
     m_eventDeferrals[residualIndex] = ScopedEventDeferral{ m_residual.get() };
 
-    m_updateMutexLock = std::move(updateLock);
     auto future = QtConcurrent::run(this, &ResidualVerificationView::updateResidualInternal);
     m_updateWatcher->setFuture(future);
 }
 
 void ResidualVerificationView::handleUpdateFinished()
 {
-    const auto lock = std::move(m_updateMutexLock);
-
     if (auto newResidual = m_residualHelper->takeResidualDataObject())
     {
         vtkSmartPointer<vtkDataSet> computedDataSet = newResidual->dataSet();
@@ -733,22 +741,22 @@ void ResidualVerificationView::handleUpdateFinished()
     else if (m_residual)
     {
         // just remove the old residual
-
         setResidualDataInternal(nullptr);
     }
 
-    m_eventDeferrals = {};
+    m_eventDeferrals.clear();
 
     updateGuiAfterDataChange();
 
     toolBar()->setEnabled(true);
     m_progressBar->hide();
+
+    m_inResidualUpdate = false;
 }
 
 void ResidualVerificationView::updateResidualInternal()
 {
     assert(!m_residualHelper->residualDataObject());
-    assert(!m_updateMutex.try_lock());
 
     if (!m_residualHelper->updateResidual())
     {
@@ -793,8 +801,7 @@ void ResidualVerificationView::updateGuiAfterDataChange()
                 ? m_residualHelper->losModelScalarsName()
                 : m_residualHelper->residualDataObjectName());
 
-        m_visualizations[i]->colorMapping().setCurrentScalarsByName(attributeName);
-        m_visualizations[i]->colorMapping().setEnabled(true);
+        m_visualizations[i]->colorMapping().setCurrentScalarsByName(attributeName, true);
         m_visualizations[i]->colorMapping().colorBarRepresentation().setVisible(true);
     }
 

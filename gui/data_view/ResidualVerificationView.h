@@ -2,7 +2,6 @@
 
 #include <array>
 #include <memory>
-#include <mutex>
 #include <vector>
 
 #include <vtkVector.h>
@@ -148,13 +147,8 @@ private:
     std::array<std::unique_ptr<AbstractVisualizedData>, numberOfViews> m_visualizations;
 
     std::unique_ptr<QFutureWatcher<void>> m_updateWatcher;
-    std::recursive_mutex m_updateMutex;
-    /**
-     * Lock the mutex in updateResidualAsync, move the lock here and unlock it only in 
-     * handleUpdateFinished. This way, only a single update invocation is possible at a time.
-     */
-    std::unique_lock<std::recursive_mutex> m_updateMutexLock;
-    std::array<ScopedEventDeferral, numberOfViews> m_eventDeferrals;
+    bool m_inResidualUpdate;
+    std::vector<ScopedEventDeferral> m_eventDeferrals;
     std::unique_ptr<DataObject> m_residual;
     std::unique_ptr<DataObject> m_oldResidualToDeleteAfterUpdate;
     std::vector<std::unique_ptr<AbstractVisualizedData>> m_visToDeleteAfterUpdate;
