@@ -19,6 +19,16 @@ class vtkRenderWindowInteractor;
 class t_QVTKWidgetObserver;
 
 
+/**
+ * Qt Widget providing a OpenGL context and surface for VTK.
+ *
+ * The base class used for this widget is defined by CMake options:
+ *  - OPTION_USE_QVTKOPENGLWIDGET
+ *
+ * \note Call t_QVTKWidget::initializeDefaultSurfaceFormat() in your application main() before
+ *  creating a QApplication when using OpenGL features in VTK. This ensures that OpenGL context
+ *  features required by VTK are available.
+ */
 class GUI_API t_QVTKWidget : public t_QVTKWidget_superclass
 {
     Q_OBJECT

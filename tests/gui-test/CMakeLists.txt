@@ -36,5 +36,10 @@ target_link_libraries(${target}
         TestUtilities
 )
 
+target_compile_definitions(${target}
+    PRIVATE
+        TEST_WITH_OPENGL_SUPPORT
+)
+
 configure_cxx_target(${target} NO_CPPCHECK)
 setupProjectUserConfig(${target} GTEST_TARGET)
