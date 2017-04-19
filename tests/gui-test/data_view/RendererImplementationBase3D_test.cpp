@@ -7,7 +7,7 @@
 #include <core/DataSetHandler.h>
 #include <core/data_objects/PolyDataObject.h>
 #include <core/rendered_data/RenderedPolyData.h>
-#include <core/ThirdParty/ParaView/vtkGridAxes3DActor.h>
+#include <core/utility/GridAxes3DActor.h>
 #include <core/utility/vtkVector_print.h>
 #include <gui/DataMapping.h>
 #include <gui/data_view/AbstractRenderView.h>
