@@ -14,6 +14,7 @@ noExplicitConstructor:@PROJECT_SOURCE_DIR@/core/CoordinateSystems.h:37
 
 assertWithSideEffect:@PROJECT_SOURCE_DIR@/core/data_objects/ImageDataObject.cpp:118
 assertWithSideEffect:@PROJECT_SOURCE_DIR@/core/data_objects/VectorGrid3DDataObject.cpp:109
+assertWithSideEffect:@PROJECT_SOURCE_DIR@/core/rendered_data/RenderedData.cpp:143
 assertWithSideEffect:@PROJECT_SOURCE_DIR@/core/rendered_data/RenderedImageData.cpp:43
 assertWithSideEffect:@PROJECT_SOURCE_DIR@/core/types.cpp:198
 assertWithSideEffect:@PROJECT_SOURCE_DIR@/gui/data_view/ResidualVerificationView.cpp:704

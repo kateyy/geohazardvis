@@ -111,14 +111,20 @@ function(cppcheck_target target)
         list(APPEND _sources ${absoluteFilePath})
     endforeach()
 
-    set(_includes)
+    set(_relevantIncludes)
     foreach(_inc ${_rawIncludes})
-        if (_inc MATCHES "^${PROJECT_SOURCE_DIR}.*$")
-            list(APPEND _includes "-I;${_inc}")
+        if (_inc MATCHES "^(${PROJECT_SOURCE_DIR}|${PROJECT_BINARY_DIR}).*$"
+            AND NOT _inc MATCHES "^(${PROJECT_SOURCE_DIR}|${PROJECT_BINARY_DIR})/ThirdParty.*$")
+            list(APPEND _relevantIncludes ${_inc})
         endif()
     endforeach()
+    
+    set(_includes)
+    foreach(_inc ${_relevantIncludes})
+        list(APPEND _includes "-I;${_inc}")
+    endforeach()
 
-    set(cppcheckAllIncludes ${cppcheckAllIncludes} ${_includes} CACHE INTERNAL "" FORCE)
+    set(cppcheckAllIncludes ${cppcheckAllIncludes} ${_relevantIncludes} CACHE INTERNAL "" FORCE)
     set(cppcheckAllSources ${cppcheckAllSources} ${_sources} CACHE INTERNAL "" FORCE)
 
     add_custom_target( cppcheck_${target}
@@ -146,6 +152,7 @@ function(generate_cppcheck_suppressions)
 endfunction()
 
 
+set(CppCheckTargets_LISTS_FILE ${CMAKE_CURRENT_LIST_FILE})
 function(create_cppcheck_ALL_target)
 
     if (NOT RUN_CPPCHECK)
@@ -155,14 +162,19 @@ function(create_cppcheck_ALL_target)
     set(target cppcheck_ALL)
     
     list(REMOVE_DUPLICATES cppcheckAllIncludes)
+    set(_includes)
+    foreach(_inc ${cppcheckAllIncludes})
+        list(APPEND _includes "-I;${_inc}")
+    endforeach()
     list(REMOVE_DUPLICATES cppcheckAllSources)
 
     add_custom_target(cppcheck_ALL
         COMMAND ${CPPCHECK_EXECUTABLE}
             ${cppcheckParams}
-            ${cppcheckAllIncludes}
+            ${_includes}
             ${cppcheckAllSources}
         SOURCES
+            ${CppCheckTargets_LISTS_FILE}
             ${cppcheckSuppressionsFile_in}
     )
     source_group("" FILES ${cppcheckSuppressionsFile_in})
