@@ -1,5 +1,3 @@
-#define NOMINMAX
-
 #include "OpenGLDriverFeatures.h"
 
 #include <algorithm>
@@ -7,11 +5,13 @@
 #include <QDebug>
 #include <QString>
 
-#include <vtk_glew.h>
-#include <vtkGenericOpenGLRenderWindow.h>
-
 #include <core/config.h>
 
+#if VTK_RENDERING_BACKEND == 2
+#include <QOpenGLContext>
+#include <QOpenGLFunctions>
+#include <vtkGenericOpenGLRenderWindow.h>
+#endif
 
 namespace
 {
@@ -44,16 +44,31 @@ void OpenGLDriverFeatures::initializeInCurrentContext()
     {
         return;
     }
+
+#if VTK_RENDERING_BACKEND == 1
+
     pFeatures().isInitialized = true;
 
-#if VTK_RENDERING_BACKEND == 2
-    glGetIntegerv(GL_MAJOR_VERSION, &pFeatures().major);
-    glGetIntegerv(GL_MINOR_VERSION, &pFeatures().minor);
+#elif VTK_RENDERING_BACKEND == 2
 
-    pFeatures().vendor = QString::fromLatin1(reinterpret_cast<const char *>(glGetString(GL_VENDOR)));
-    pFeatures().renderer = QString::fromLatin1(reinterpret_cast<const char *>(glGetString(GL_RENDERER)));
+    const auto context = QOpenGLContext::currentContext();
+    const auto functions = context ? context->functions() : static_cast<QOpenGLFunctions *>(nullptr);
+    assert(functions);
+    if (!functions)
+    {
+        qDebug() << "[OpenGLDriverFeatures] OpenGL context or Qt OpenGL functions not initialized.";
+        return;
+    }
 
-    const auto error = glGetError();
+    pFeatures().isInitialized = true;
+    
+    auto & f = *functions;
+    f.glGetIntegerv(GL_MAJOR_VERSION, &pFeatures().major);
+    f.glGetIntegerv(GL_MINOR_VERSION, &pFeatures().minor);
+    pFeatures().vendor = QString::fromLatin1(reinterpret_cast<const char *>(f.glGetString(GL_VENDOR)));
+    pFeatures().renderer = QString::fromLatin1(reinterpret_cast<const char *>(f.glGetString(GL_RENDERER)));
+
+    const auto error = f.glGetError();
     if (error != GL_NO_ERROR)
     {
         qDebug() << "Error occurred while retrieving OpenGL context and driver information";
