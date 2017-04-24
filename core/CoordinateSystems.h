@@ -16,9 +16,9 @@
 class QDataStream;
 class vtkFieldData;
 class vtkInformation;
-class vtkInformationCharVectorMetaDataKey;
 class vtkInformationDoubleVectorMetaDataKey;
 class vtkInformationIntegerMetaDataKey;
+class vtkInformationStringMetaDataKey;
 
 
 struct CORE_API CoordinateSystemType
@@ -116,9 +116,9 @@ struct CORE_API CoordinateSystemSpecification
     static ReferencedCoordinateSystemSpecification fromFieldData(vtkFieldData & fieldData);
 
     static vtkInformationIntegerMetaDataKey * CoordinateSystemType_InfoKey();
-    static vtkInformationCharVectorMetaDataKey * GeographicCoordinateSystemName_InfoKey();
-    static vtkInformationCharVectorMetaDataKey * MetricCoordinateSystemName_InfoKey();
-    static vtkInformationCharVectorMetaDataKey * UnitOfMeasurement_InfoKey();
+    static vtkInformationStringMetaDataKey * GeographicCoordinateSystemName_InfoKey();
+    static vtkInformationStringMetaDataKey * MetricCoordinateSystemName_InfoKey();
+    static vtkInformationStringMetaDataKey * UnitOfMeasurement_InfoKey();
 
     CoordinateSystemSpecification(const CoordinateSystemSpecification &) = default;
     CoordinateSystemSpecification(CoordinateSystemSpecification &&) = default;

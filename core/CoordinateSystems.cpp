@@ -9,18 +9,18 @@
 #include <vtkFieldData.h>
 #include <vtkInformation.h>
 
-#include <core/filters/vtkInformationCharVectorMetaDataKey.h>
 #include <core/filters/vtkInformationDoubleVectorMetaDataKey.h>
 #include <core/filters/vtkInformationIntegerMetaDataKey.h>
+#include <core/filters/vtkInformationStringMetaDataKey.h>
 #include <core/utility/vtkstringhelper.h>
 #include <core/utility/vtkvarianthelper.h>
 #include <core/utility/vtkvectorhelper.h>
 
 
 vtkInformationKeyMacro(CoordinateSystemSpecification, CoordinateSystemType_InfoKey, IntegerMetaData);
-vtkInformationKeyMacro(CoordinateSystemSpecification, GeographicCoordinateSystemName_InfoKey, CharVectorMetaData);
-vtkInformationKeyMacro(CoordinateSystemSpecification, MetricCoordinateSystemName_InfoKey, CharVectorMetaData);
-vtkInformationKeyMacro(CoordinateSystemSpecification, UnitOfMeasurement_InfoKey, CharVectorMetaData);
+vtkInformationKeyMacro(CoordinateSystemSpecification, GeographicCoordinateSystemName_InfoKey, StringMetaData);
+vtkInformationKeyMacro(CoordinateSystemSpecification, MetricCoordinateSystemName_InfoKey, StringMetaData);
+vtkInformationKeyMacro(CoordinateSystemSpecification, UnitOfMeasurement_InfoKey, StringMetaData);
 vtkInformationKeyMacro(ReferencedCoordinateSystemSpecification, ReferencePointLatLong_InfoKey, DoubleVectorMetaData);
 vtkInformationKeyMacro(ReferencedCoordinateSystemSpecification, ReferencePointLocalRelative_InfoKey, DoubleVectorMetaData);
 
@@ -336,15 +336,15 @@ void CoordinateSystemSpecification::readFromInformation(vtkInformation & info)
     }
     if (info.Has(GeographicCoordinateSystemName_InfoKey()))
     {
-        geographicSystem = GeographicCoordinateSystemName_InfoKey()->GetQString(&info);
+        geographicSystem = QString::fromUtf8(info.Get(GeographicCoordinateSystemName_InfoKey()));
     }
     if (info.Has(MetricCoordinateSystemName_InfoKey()))
     {
-        globalMetricSystem = MetricCoordinateSystemName_InfoKey()->GetQString(&info);
+        globalMetricSystem = QString::fromUtf8(info.Get(MetricCoordinateSystemName_InfoKey()));
     }
     if (info.Has(UnitOfMeasurement_InfoKey()))
     {
-        unitOfMeasurement = UnitOfMeasurement_InfoKey()->GetQString(&info);
+        unitOfMeasurement = QString::fromUtf8(info.Get(UnitOfMeasurement_InfoKey()));
     }
 }
 
@@ -360,7 +360,7 @@ void CoordinateSystemSpecification::writeToInformation(vtkInformation & info) co
     }
     if (!geographicSystem.isEmpty())
     {
-        GeographicCoordinateSystemName_InfoKey()->SetQString(&info, geographicSystem);
+        info.Set(GeographicCoordinateSystemName_InfoKey(), geographicSystem.toUtf8().data());
     }
     else
     {
@@ -368,7 +368,7 @@ void CoordinateSystemSpecification::writeToInformation(vtkInformation & info) co
     }
     if (!globalMetricSystem.isEmpty())
     {
-        MetricCoordinateSystemName_InfoKey()->SetQString(&info, globalMetricSystem);
+        info.Set(MetricCoordinateSystemName_InfoKey(), globalMetricSystem.toUtf8().data());
     }
     else
     {
@@ -376,7 +376,7 @@ void CoordinateSystemSpecification::writeToInformation(vtkInformation & info) co
     }
     if (!unitOfMeasurement.isEmpty())
     {
-        UnitOfMeasurement_InfoKey()->SetQString(&info, unitOfMeasurement);
+        info.Set(UnitOfMeasurement_InfoKey(), unitOfMeasurement.toUtf8().data());
     }
     else
     {

@@ -142,14 +142,12 @@ set(sources
     filters/SimplePolyGeoCoordinateTransformFilter.cpp
     filters/TemporalDataSource.h
     filters/TemporalDataSource.cpp
-    filters/vtkInformationCharVectorKey.h
-    filters/vtkInformationCharVectorKey.cpp
-    filters/vtkInformationCharVectorMetaDataKey.h
-    filters/vtkInformationCharVectorMetaDataKey.cpp
     filters/vtkInformationDoubleVectorMetaDataKey.h
     filters/vtkInformationDoubleVectorMetaDataKey.cpp
     filters/vtkInformationIntegerMetaDataKey.h
     filters/vtkInformationIntegerMetaDataKey.cpp
+    filters/vtkInformationStringMetaDataKey.h
+    filters/vtkInformationStringMetaDataKey.cpp
 
     glyph_mapping/GlyphMapping.h
     glyph_mapping/GlyphMapping.cpp
