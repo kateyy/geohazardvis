@@ -269,8 +269,6 @@ set(thirdPartySources
     ThirdParty/ParaView/vtkGridAxesHelper.cxx
     ThirdParty/ParaView/vtkGridAxesPlane2DActor.h
     ThirdParty/ParaView/vtkGridAxesPlane2DActor.cxx
-    ThirdParty/ParaView/vtkPVGridAxes3DActor.h
-    ThirdParty/ParaView/vtkPVGridAxes3DActor.cxx
     ThirdParty/ParaView/vtkPVScalarBarActor.h
     ThirdParty/ParaView/vtkPVScalarBarActor.cxx
 )

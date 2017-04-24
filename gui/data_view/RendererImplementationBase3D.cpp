@@ -611,7 +611,6 @@ vtkSmartPointer<GridAxes3DActor> RendererImplementationBase3D::createAxes()
     gridAxes->GenerateGridOn();
     gridAxes->GenerateEdgesOn();
     gridAxes->GenerateTicksOn();
-    gridAxes->EnableLayerSupportOff();
 
     // we need to set a new vtkProperty object here, otherwise the changes will not apply to all faces/axes
     auto gridAxesProp = vtkSmartPointer<vtkProperty>::New();
