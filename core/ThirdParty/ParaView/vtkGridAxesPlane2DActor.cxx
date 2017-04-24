@@ -28,6 +28,10 @@
 #include "vtkRenderer.h"
 #include "vtkVectorOperators.h"
 
+// XXX GeohazardVis
+#include "vtkCellData.h"
+// XXX End GeohazardVis
+
 #include <algorithm>
 #include <cassert>
 
@@ -49,6 +53,10 @@ vtkGridAxesPlane2DActor::vtkGridAxesPlane2DActor(vtkGridAxesHelper* helper)
   , TickDirection(vtkGridAxesPlane2DActor::TICK_DIRECTION_BOTH)
   , Helper(helper)
   , HelperManagedExternally(helper != NULL)
+  // XXX GeohazardVis
+  , EdgeColor{0u, 0u, 0u}
+  , GridLineColor{178u, 178u, 178u}
+  // XXX End GeohazardVis
 {
   if (helper == NULL)
   {
@@ -190,6 +198,36 @@ void vtkGridAxesPlane2DActor::Update(vtkViewport* viewport)
   this->PolyDataPoints->Modified();
   this->PolyDataLines->Modified();
   this->PolyData->Modified();
+
+  // XXX GeohazardVis
+  vtkNew<vtkAOSDataArrayTemplate<unsigned char>> colors;
+  colors->SetName("lineColors");
+  colors->SetNumberOfComponents(3);
+  const auto numCells = this->PolyDataLines->GetNumberOfCells();
+  colors->SetNumberOfTuples(numCells);
+  const vtkIdType numEdges = this->GenerateEdges ? 4 : 0;
+  for (vtkIdType i = 0; i < numEdges && i < numCells; ++i)
+  {
+    const auto color = this->Helper->GetLabelVisibilities()[i]
+        ? this->EdgeColor
+        : this->GridLineColor;
+    colors->SetTypedComponent(i, 0, color[0]);
+    colors->SetTypedComponent(i, 1, color[1]);
+    colors->SetTypedComponent(i, 2, color[2]);
+  }
+  for (vtkIdType i = numEdges; i < numCells; ++i)
+  {
+    colors->SetTypedComponent(i, 0, this->GridLineColor[0]);
+    colors->SetTypedComponent(i, 1, this->GridLineColor[1]);
+    colors->SetTypedComponent(i, 2, this->GridLineColor[2]);
+  }
+  this->PolyData->GetCellData()->SetScalars(colors.Get());
+  this->Mapper->SetColorModeToDirectScalars();
+  this->Mapper->ScalarVisibilityOn();
+  this->Mapper->SetScalarModeToUseCellData();
+  this->Mapper->SelectColorArray("lineColors");
+  // XXX End GeohazardVis
+
   this->LineSegments.clear();
 
   this->Actor->SetUserMatrix(this->GetMatrix());

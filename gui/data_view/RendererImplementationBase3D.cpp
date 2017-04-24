@@ -532,15 +532,19 @@ void RendererImplementationBase3D::updateAxisLabelFormat(const CoordinateSystemS
 {
     static const auto degreeLabel = (QString("%g") + QChar(0x00B0)).toUtf8();
 
-    const auto label = spec.type == CoordinateSystemType::geographic
+    const auto labelXY = spec.type == CoordinateSystemType::geographic
         ? degreeLabel   // latitude/longitude
         : "%g km";      // Northing/Easting
+    const auto labelZ = spec.type == CoordinateSystemType::geographic
+        ? ""            // Elevation unit: not known
+        : "%g km";      // Elevation unit: assume same as horizontal coordinates
 
     for (unsigned i = 0; i < renderView().numberOfSubViews(); ++i)
     {
         auto axes = axesActor(i);
-        axes->SetPrintfAxisLabelFormat(0, label.data());
-        axes->SetPrintfAxisLabelFormat(1, label.data());
+        axes->SetPrintfAxisLabelFormat(0, labelXY.data());
+        axes->SetPrintfAxisLabelFormat(1, labelXY.data());
+        axes->SetPrintfAxisLabelFormat(2, labelZ);
     }
 }
 
@@ -603,31 +607,12 @@ void RendererImplementationBase3D::removeFromBounds(RenderedData * renderedData,
 
 vtkSmartPointer<GridAxes3DActor> RendererImplementationBase3D::createAxes()
 {
-    double axesColor[3] = { 0, 0, 0 };
-    double labelColor[3] = { 0, 0, 0 };
-
     auto gridAxes = vtkSmartPointer<GridAxes3DActor>::New();
-    gridAxes->SetFaceMask(0xFF);
-    gridAxes->GenerateGridOn();
-    gridAxes->GenerateEdgesOn();
-    gridAxes->GenerateTicksOn();
-
-    // we need to set a new vtkProperty object here, otherwise the changes will not apply to all faces/axes
-    auto gridAxesProp = vtkSmartPointer<vtkProperty>::New();
-    gridAxesProp->DeepCopy(gridAxes->GetProperty());
-
-    gridAxesProp->BackfaceCullingOff();
-    gridAxesProp->FrontfaceCullingOn();
-    gridAxesProp->SetColor(axesColor);
-
-    gridAxes->SetProperty(gridAxesProp);
 
     for (int i = 0; i < 3; ++i)
     {
         FontHelper::configureTextProperty(*gridAxes->GetLabelTextProperty(i));
         FontHelper::configureTextProperty(*gridAxes->GetTitleTextProperty(i));
-        gridAxes->GetLabelTextProperty(i)->SetColor(labelColor);
-        gridAxes->GetTitleTextProperty(i)->SetColor(labelColor);
     }
 
     // Will be shown when needed

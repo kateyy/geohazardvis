@@ -48,6 +48,14 @@ public:
   vtkTypeMacro(vtkGridAxesPlane2DActor, vtkProp3D);
   void PrintSelf(ostream& os, vtkIndent indent) VTK_OVERRIDE;
 
+  // XXX GeohazardVis
+  // Line colors are not set by the Property, but are set separately here for edges and grid lines.
+  vtkSetVector3Macro(EdgeColor, unsigned char);
+  vtkGetVector3Macro(EdgeColor, unsigned char);
+  vtkSetVector3Macro(GridLineColor, unsigned char);
+  vtkGetVector3Macro(GridLineColor, unsigned char);
+  // XXX End GeohazardVis
+
   //@{
   /**
    * Set the bounding box defining the grid space. This, together with the
@@ -213,6 +221,12 @@ protected:
 
   vtkSmartPointer<vtkGridAxesHelper> Helper;
   bool HelperManagedExternally;
+
+private:
+  // XXX GeohazardVis
+  unsigned char EdgeColor[3];
+  unsigned char GridLineColor[3];
+  // XXX End GeohazardVis
 
 private:
   vtkGridAxesPlane2DActor(const vtkGridAxesPlane2DActor&) VTK_DELETE_FUNCTION;

@@ -651,3 +651,65 @@ void vtkGridAxes2DActor::PrintSelf(ostream& os, vtkIndent indent)
 {
   this->Superclass::PrintSelf(os, indent);
 }
+
+// XXX GeohazardVis
+void vtkGridAxes2DActor::GetEdgeColor(unsigned char edgeColor[3]) const
+{
+  this->PlaneActor->GetEdgeColor(edgeColor);
+}
+
+unsigned char * vtkGridAxes2DActor::GetEdgeColor() const
+{
+  return this->PlaneActor->GetEdgeColor();
+}
+
+void vtkGridAxes2DActor::SetEdgeColor(unsigned char edgeColor[3])
+{
+  const auto mTime = this->PlaneActor->GetMTime();
+  this->PlaneActor->SetEdgeColor(edgeColor);
+  if (mTime != this->PlaneActor->GetMTime())
+  {
+    this->Modified();
+  }
+}
+
+void vtkGridAxes2DActor::SetEdgeColor(unsigned char r, unsigned char g, unsigned char b)
+{
+  const auto mTime = this->PlaneActor->GetMTime();
+  this->PlaneActor->SetEdgeColor(r, g, b);
+  if (mTime != this->PlaneActor->GetMTime())
+  {
+    this->Modified();
+  }
+}
+
+void vtkGridAxes2DActor::GetGridLineColor(unsigned char gridLineColor[3]) const
+{
+  this->PlaneActor->GetGridLineColor(gridLineColor);
+}
+
+unsigned char * vtkGridAxes2DActor::GetGridLineColor() const
+{
+  return this->PlaneActor->GetGridLineColor();
+}
+
+void vtkGridAxes2DActor::SetGridLineColor(unsigned char gridLineColor[3])
+{
+  const auto mTime = this->PlaneActor->GetMTime();
+  this->PlaneActor->SetGridLineColor(gridLineColor);
+  if (mTime != this->PlaneActor->GetMTime())
+  {
+    this->Modified();
+  }
+}
+
+void vtkGridAxes2DActor::SetGridLineColor(unsigned char r, unsigned char g, unsigned char b)
+{
+  const auto mTime = this->PlaneActor->GetMTime();
+  this->PlaneActor->SetGridLineColor(r, g, b);
+  if (mTime != this->PlaneActor->GetMTime())
+  {
+    this->Modified();
+  }
+}
+// XXX End GeohazardVis

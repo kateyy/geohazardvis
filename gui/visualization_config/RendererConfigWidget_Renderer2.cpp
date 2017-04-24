@@ -96,20 +96,6 @@ void RendererConfigWidget::createPropertyGroupRenderer2(PropertyGroup & root, Ab
         })
             ->setOption("title", "Grid Lines");
 
-        axesGroup->addProperty<bool>("foregroundGridLines",
-            [impl] () { return impl->axesActor(0)->GetProperty()->GetFrontfaceCulling() == 0; },
-            [impl, renderView] (bool v) {
-            for (unsigned int i = 0; i < renderView->numberOfSubViews(); ++i)
-            {
-                impl->axesActor(i)->GetProperty()->SetFrontfaceCulling(!v);
-                // render unique labels only if we skip foreground axes
-                // otherwise, we won't have any labels when rendering all axes
-                impl->axesActor(i)->SetLabelUniqueEdgesOnly(!v);
-            }
-            renderView->render();
-        })
-            ->setOption("title", "Foreground Grid Lines");
-
         axesGroup->addProperty<bool>("Ticks",
             [impl] () { return impl->axesActor(0)->GetGenerateTicks(); },
             [impl, renderView] (bool visible) {
