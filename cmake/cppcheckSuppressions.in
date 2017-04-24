@@ -4,7 +4,7 @@ purgedConfiguration
 toomanyconfigs
 unmatchedSuppression
 
-*:@CMAKE_BINARY_DIR@/ThirdParty/*
+*:@PROJECT_BINARY_DIR@/ThirdParty/*
 
 *:@PROJECT_SOURCE_DIR@/core/ThirdParty/ParaView/*
 

@@ -70,7 +70,7 @@ endif()
 
 
 set(cppcheckSuppressionsFile_in ${PROJECT_SOURCE_DIR}/cmake/cppcheckSuppressions.in)
-set(cppcheckSuppressionsFile ${CMAKE_BINARY_DIR}/cppcheckSuppressions.txt)
+set(cppcheckSuppressionsFile ${PROJECT_BINARY_DIR}/cppcheckSuppressions.txt)
 
 # https://arcanis.me/en/2015/10/17/cppcheck-and-clang-format/
 set(cppcheckParams

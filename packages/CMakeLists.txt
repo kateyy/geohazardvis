@@ -9,7 +9,7 @@ endif()
 
 
 # Create output directory
-file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/packages)
+file(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/packages)
 
 include(helper-qtdeploy.cmake)
 

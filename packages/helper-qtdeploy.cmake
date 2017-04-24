@@ -15,7 +15,7 @@ if (CMAKE_VERSION VERSION_LESS 3.0 OR NOT OPTION_INSTALL_3RDPARTY_BINARIES)
 endif()
 
 
-set(QT_DEPLOY_DIR ${CMAKE_BINARY_DIR}/qt_deploy)
+set(QT_DEPLOY_DIR ${PROJECT_BINARY_DIR}/qt_deploy)
 
 if (WIN32)
     if (OpenGL IN_LIST PROJECT_QT_COMPONENTS)
@@ -53,7 +53,7 @@ if (WIN32)
         DEPENDS ${META_PROJECT_NAME}
         COMMAND ${CMAKE_COMMAND} -E remove_directory "${QT_DEPLOY_DIR}"
         COMMAND ${_qtBinDir}/windeployqt
-            "${CMAKE_BINARY_DIR}/$<CONFIG>/${META_PROJECT_NAME}$<$<CONFIG:Debug>:_d>$<$<CONFIG:RelWithDebInfo>:_rd>$<$<CONFIG:RelNoOptimization>:_rd0>.exe"
+            "${PROJECT_BINARY_DIR}/$<CONFIG>/${META_PROJECT_NAME}$<$<CONFIG:Debug>:_d>$<$<CONFIG:RelWithDebInfo>:_rd>$<$<CONFIG:RelNoOptimization>:_rd0>.exe"
             --dir "${QT_DEPLOY_DIR}"
             ${_windeployqtParams}
         VERBATIM

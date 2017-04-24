@@ -67,7 +67,7 @@ function(setupProjectUserConfig TARGET)
     cmake_parse_arguments("option"
         "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
-    set(MSVC_LOCAL_DEBUGGER_WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+    set(MSVC_LOCAL_DEBUGGER_WORKING_DIRECTORY ${PROJECT_SOURCE_DIR})
 
     # prepend executable paths for 3rdparty libraries to configuration specific PATHs
 

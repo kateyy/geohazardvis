@@ -31,7 +31,7 @@ if(EXISTS "${CMAKE_ROOT}/Modules/CPack.cmake")
     set(package_vendor          "${META_AUTHOR_MAINTAINER} ${META_AUTHOR_MAINTAINER_EMAIL}")
 
 
-    set(CMAKE_MODULE_PATH                   ${CMAKE_SOURCE_DIR}/packages/${project_name})
+    set(CMAKE_MODULE_PATH                   ${PROJECT_SOURCE_DIR}/packages/${project_name})
 
 
     set(CPACK_PACKAGE_NAME                  "${package_name}")
@@ -41,11 +41,11 @@ if(EXISTS "${CMAKE_ROOT}/Modules/CPack.cmake")
     set(CPACK_PACKAGE_VERSION_MAJOR         "${META_VERSION_MAJOR}")
     set(CPACK_PACKAGE_VERSION_MINOR         "${META_VERSION_MINOR}")
     set(CPACK_PACKAGE_VERSION_PATCH         "${META_VERSION_PATCH}")
-    set(CPACK_RESOURCE_FILE_LICENSE         "${CMAKE_SOURCE_DIR}/LICENSE")
-    set(CPACK_RESOURCE_FILE_README          "${CMAKE_SOURCE_DIR}/README.md")
-    set(CPACK_RESOURCE_FILE_WELCOME         "${CMAKE_SOURCE_DIR}/README.md")
-    set(CPACK_PACKAGE_DESCRIPTION_FILE      "${CMAKE_SOURCE_DIR}/README.md")
-    #set(CPACK_PACKAGE_ICON                  "${CMAKE_SOURCE_DIR}/packages/logo.bmp")
+    set(CPACK_RESOURCE_FILE_LICENSE         "${PROJECT_SOURCE_DIR}/LICENSE")
+    set(CPACK_RESOURCE_FILE_README          "${PROJECT_SOURCE_DIR}/README.md")
+    set(CPACK_RESOURCE_FILE_WELCOME         "${PROJECT_SOURCE_DIR}/README.md")
+    set(CPACK_PACKAGE_DESCRIPTION_FILE      "${PROJECT_SOURCE_DIR}/README.md")
+    #set(CPACK_PACKAGE_ICON                  "${PROJECT_SOURCE_DIR}/packages/logo.bmp")
     set(CPACK_PACKAGE_RELOCATABLE           ON)
 
 
@@ -68,8 +68,8 @@ if(EXISTS "${CMAKE_ROOT}/Modules/CPack.cmake")
         set(CPACK_NSIS_INSTALL_ROOT "$PROGRAMFILES64")
     endif()
     #set(CPACK_NSIS_DISPLAY_NAME             "${package_name}-${META_VERSION}")
-    #set(CPACK_NSIS_MUI_ICON    "${CMAKE_SOURCE_DIR}/packages/logo.ico")
-    #set(CPACK_NSIS_MUI_UNIICON "${CMAKE_SOURCE_DIR}/packages/logo.ico")
+    #set(CPACK_NSIS_MUI_ICON    "${PROJECT_SOURCE_DIR}/packages/logo.ico")
+    #set(CPACK_NSIS_MUI_UNIICON "${PROJECT_SOURCE_DIR}/packages/logo.ico")
 
 
     # set(CPACK_PACKAGE_FILE_NAME "${package_name}-${CPACK_PACKAGE_VERSION}")

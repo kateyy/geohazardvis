@@ -66,17 +66,17 @@ function(configure_cxx_target target)
                 string(TOUPPER ${_config} _configUpper)
                 set_target_properties(${target}
                     PROPERTIES
-                    RUNTIME_OUTPUT_DIRECTORY_${_configUpper} "${CMAKE_BINARY_DIR}/${_config}/plugins"
-                    LIBRARY_OUTPUT_DIRECTORY_${_configUpper} "${CMAKE_BINARY_DIR}/${_config}/plugins"
-                    ARCHIVE_OUTPUT_DIRECTORY_${_configUpper} "${CMAKE_BINARY_DIR}/${_config}/plugins"
+                    RUNTIME_OUTPUT_DIRECTORY_${_configUpper} "${PROJECT_BINARY_DIR}/${_config}/plugins"
+                    LIBRARY_OUTPUT_DIRECTORY_${_configUpper} "${PROJECT_BINARY_DIR}/${_config}/plugins"
+                    ARCHIVE_OUTPUT_DIRECTORY_${_configUpper} "${PROJECT_BINARY_DIR}/${_config}/plugins"
                 )
             endforeach()
         else()
             set_target_properties(${target}
                 PROPERTIES
-                RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${INSTALL_PLUGINS_BIN}"
-                LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${INSTALL_PLUGINS_SHARED}"
-                ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${INSTALL_PLUGINS_LIB}"
+                RUNTIME_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/${INSTALL_PLUGINS_BIN}"
+                LIBRARY_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/${INSTALL_PLUGINS_SHARED}"
+                ARCHIVE_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/${INSTALL_PLUGINS_LIB}"
             )
         endif()
     endif()

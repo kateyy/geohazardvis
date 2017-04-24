@@ -43,7 +43,7 @@ function(get_git_head_revision _refspecvar _hashvar)
     if(ARGC EQUAL 3)
         set(GIT_PARENT_DIR ${ARGV2})
     else()
-        set(GIT_PARENT_DIR "${CMAKE_SOURCE_DIR}")
+        set(GIT_PARENT_DIR "${PROJECT_SOURCE_DIR}")
     endif()
 
     if(NOT EXISTS "${GIT_PARENT_DIR}/.git")
@@ -111,7 +111,7 @@ function(git_describe _var)
     #message(STATUS "Arguments to execute_process: ${ARGN}")
 
     execute_process(COMMAND "${GIT_EXECUTABLE}" describe ${hash} ${ARGN}
-        WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+        WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
         RESULT_VARIABLE res
         OUTPUT_VARIABLE out
         ERROR_QUIET
