@@ -149,6 +149,11 @@ void t_QVTKWidget::SetRenderWindow(vtkGenericOpenGLRenderWindow * renderWindow)
     if (windowChanged && previousWindow)
     {
         previousWindow->RemoveObserver(this->Observer);
+
+        if (renderWindow)
+        {
+            renderWindow->SetDPI(previousWindow->GetDPI());
+        }
     }
 
     Superclass::SetRenderWindow(renderWindow);
