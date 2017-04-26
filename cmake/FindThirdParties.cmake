@@ -310,7 +310,7 @@ else()
     endif()
 endif()
 
-if (WIN32)
+if (WIN32 OR OPTION_USE_SYSTEM_LIBZEUG)
     deploy_license_file("libzeug" "${libzeug_DIR}/LICENSE")
 else()
     deploy_license_file("libzeug" "${libzeug_DIR}/share/libzeug/LICENSE")
