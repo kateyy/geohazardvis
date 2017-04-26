@@ -156,6 +156,15 @@ if (OPTION_ENABLE_TEXTURING)
 endif()
 
 
+# Use better font rending/unicode support if available
+if (TARGET vtkRenderingFreeTypeFontConfig)
+    list(APPEND VTK_COMPONENTS vtkRenderingFreeTypeFontConfig)
+elseif(UNIX)
+    message("VTK is built without vtkRenderingFreeTypeFontConfig. "
+        "This limits font rendering to ASCII characters.")
+endif()
+
+
 # find additional VTK components
 message(STATUS "    Requested components: ${VTK_COMPONENTS}")
 find_package(VTK REQUIRED COMPONENTS ${VTK_COMPONENTS})
