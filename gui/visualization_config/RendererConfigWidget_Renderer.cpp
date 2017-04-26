@@ -134,18 +134,9 @@ std::unique_ptr<PropertyGroup> RendererConfigWidget::createPropertyGroupRenderer
             [impl] () { return QString::fromUtf8(impl->titleWidget(0)->GetTextActor()->GetInput()); },
             [impl, renderView] (const QString & title)
         {
-            impl->titleWidget(0)->SetEnabled(!title.isEmpty());
             impl->titleWidget(0)->GetTextActor()->SetInput(title.toUtf8().data());
             renderView->render();
         });
-
-        root->addProperty<int>("TitleFontSize",
-            [impl] () { return impl->titleWidget(0)->GetTextActor()->GetTextProperty()->GetFontSize(); },
-            [impl, renderView] (const int & fontSize) {
-            impl->titleWidget(0)->GetTextActor()->GetTextProperty()->SetFontSize(fontSize);
-            renderView->render();
-        })
-            ->setOption("title", "Title Font Size");
     }
     else
     {
@@ -159,22 +150,10 @@ std::unique_ptr<PropertyGroup> RendererConfigWidget::createPropertyGroupRenderer
             },
                 [impl, renderView, i] (const QString & title)
             {
-                impl->titleWidget(i)->SetEnabled(!title.isEmpty());
                 impl->titleWidget(i)->GetTextActor()->SetInput(title.toUtf8().data());
                 renderView->render();
             })
                 ->setOption("title", "Title " + std::to_string(i + 1));
-
-            titlesGroup->addProperty<int>("TitleFontSize" + std::to_string(i),
-                [impl, i] ()
-            {
-                return impl->titleWidget(i)->GetTextActor()->GetTextProperty()->GetFontSize();
-            },
-                [impl, renderView, i] (const int & fontSize) {
-                impl->titleWidget(i)->GetTextActor()->GetTextProperty()->SetFontSize(fontSize);
-                renderView->render();
-            })
-                ->setOption("title", "Font Size");
         }
     }
 

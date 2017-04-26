@@ -184,6 +184,7 @@ void ColorBarRepresentation::initialize()
     m_widget->SetScalarBarActor(m_actor);
     m_widget->SetRepresentation(m_scalarBarRepresentation);
     m_widget->SetInteractor(m_interactor);
+    m_widget->KeyPressActivationOff();
     m_widget->EnabledOff();
 
 

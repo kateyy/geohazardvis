@@ -7,10 +7,12 @@
 #include <QDebug>
 
 #include <vtkBoundingBox.h>
+#include <vtkCallbackCommand.h>
 #include <vtkCamera.h>
 #include <vtkGenericOpenGLRenderWindow.h>
 #include <vtkIdTypeArray.h>
 #include <vtkLightKit.h>
+#include <vtkMapper2D.h>
 #include <vtkProperty.h>
 #include <vtkProperty2D.h>
 #include <vtkRenderer.h>
@@ -423,7 +425,6 @@ void RendererImplementationBase3D::initialize()
         viewport.renderer = renderer;
         m_renderWindow->AddRenderer(renderer);
 
-
         auto titleWidget = vtkSmartPointer<vtkTextWidget>::New();
         viewport.titleWidget = titleWidget;
         titleWidget->SetDefaultRenderer(viewport.renderer);
@@ -442,6 +443,23 @@ void RendererImplementationBase3D::initialize()
         titleWidget->SetRepresentation(titleRepr);
         titleWidget->SetTextActor(titleActor);
         titleWidget->SelectableOff();
+        titleWidget->KeyPressActivationOff();
+
+        struct DisableWidgetIfEmptyCallback
+        {
+            static void impl(vtkObject *, unsigned long, void * clientData, void *)
+            {
+                auto textWidget = reinterpret_cast<vtkTextWidget *>(clientData);
+                const auto input = textWidget->GetTextActor()->GetInput();
+                const bool empty = input == nullptr || input[0] == 0;
+                textWidget->SetEnabled(!empty);
+            }
+        };
+        auto callback = vtkSmartPointer<vtkCallbackCommand>::New();
+        callback->SetClientData(titleWidget.GetPointer());
+        callback->SetCallback(&DisableWidgetIfEmptyCallback::impl);
+        titleWidget->GetTextActor()->AddObserver(vtkCommand::ModifiedEvent, callback);
+        DisableWidgetIfEmptyCallback::impl(nullptr, 0, titleWidget.GetPointer(), nullptr);
 
         viewport.axesActor = createAxes();
         renderer->AddViewProp(viewport.axesActor);
@@ -490,7 +508,6 @@ void RendererImplementationBase3D::assignInteractor()
     for (auto & viewportSetup : m_viewportSetups)
     {
         viewportSetup.titleWidget->SetInteractor(m_renderWindow->GetInteractor());
-        viewportSetup.titleWidget->On();
     }
 
     m_pickerHighlighter->SetInteractor(m_renderWindow->GetInteractor());
