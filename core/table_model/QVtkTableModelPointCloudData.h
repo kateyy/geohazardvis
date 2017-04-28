@@ -1,8 +1,11 @@
 #pragma once
 
+#include <vtkWeakPointer.h>
+
 #include <core/table_model/QVtkTableModel.h>
 
 
+class vtkDataArray;
 class GenericPolyDataObject;
 
 
@@ -25,8 +28,11 @@ public:
 protected:
     void resetDisplayData() override;
 
+    vtkDataArray * scalars() const;
+
 private:
     GenericPolyDataObject * m_data;
+    vtkWeakPointer<vtkDataArray> m_lastScalars;
 
 private:
     Q_DISABLE_COPY(QVtkTableModelPointCloudData)

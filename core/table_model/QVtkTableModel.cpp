@@ -61,6 +61,11 @@ void QVtkTableModel::rebuild()
         this, &QVtkTableModel::rebuild));
 }
 
+void QVtkTableModel::addDataObjectConnection(const QMetaObject::Connection & connection)
+{
+    m_dataObjectConnections.emplace_back(connection);
+}
+
 DataObject * QVtkTableModel::dataObject()
 {
     return m_dataObject;

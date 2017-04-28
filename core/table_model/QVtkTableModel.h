@@ -36,8 +36,14 @@ public:
 protected:
     virtual void resetDisplayData() = 0;
 
-private:
+    /**
+     * Rebuild all table contents.
+     * Useful to be connected to modified/changed events and signals. This must not be called
+     * inside data() etc. function that are called during table updates!
+     */
     void rebuild();
+    /** Add a Qt signal connection that will be disconnected in rebuild(). */
+    void addDataObjectConnection(const QMetaObject::Connection & connection);
 
 private:
     DataObject * m_dataObject;

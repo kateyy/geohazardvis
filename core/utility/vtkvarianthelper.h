@@ -2,7 +2,14 @@
 
 #include <type_traits>
 
+#include <vtkObject.h>
+#include <vtkVariant.h>
 #include <vtkVariantCast.h>
+
+#include <core/core_api.h>
+
+
+class QVariant;
 
 
 template<typename ValueType, typename = std::enable_if_t<std::is_arithmetic<ValueType>::value>>
@@ -18,6 +25,9 @@ int vtkTypeForValueType();
 
 template<typename T, typename = std::enable_if_t<std::is_enum<T>::value>, typename Underlying = std::underlying_type_t<T>>
 int vtkTypeForValueType();
+
+
+CORE_API QVariant vtkVariantToQVariant(const vtkVariant & variant);
 
 
 #include "vtkvarianthelper.hpp"

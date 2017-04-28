@@ -252,6 +252,7 @@ set(sources
     utility/vtkstringhelper.cpp
     utility/vtkvarianthelper.h
     utility/vtkvarianthelper.hpp
+    utility/vtkvarianthelper.cpp
     utility/vtkVector_print.h
     utility/vtkVector_print.cpp
     utility/vtkvectorhelper.h

@@ -2,8 +2,13 @@
 
 #include <cassert>
 
+#include <vtkDataArray.h>
+#include <vtkDataSet.h>
+#include <vtkPointData.h>
+
 #include <core/types.h>
 #include <core/data_objects/GenericPolyDataObject.h>
+#include <core/utility/vtkvarianthelper.h>
 
 
 QVtkTableModelPointCloudData::QVtkTableModelPointCloudData(QObject * parent)
@@ -24,9 +29,11 @@ int QVtkTableModelPointCloudData::rowCount(const QModelIndex &/*parent*/) const
     return static_cast<int>(m_data->numberOfPoints());
 }
 
-int QVtkTableModelPointCloudData::columnCount(const QModelIndex &/*parent*/) const
+int QVtkTableModelPointCloudData::columnCount(const QModelIndex & /*parent*/) const
 {
-    return 4;
+    auto s = scalars();
+    const int scalarColumns = s ? s->GetNumberOfComponents() : 0;
+    return 4 + scalarColumns;
 }
 
 QVariant QVtkTableModelPointCloudData::data(const QModelIndex &index, int role) const
@@ -58,7 +65,15 @@ QVariant QVtkTableModelPointCloudData::data(const QModelIndex &index, int role) 
     }
     }
 
-    return{};
+    const int scalarComponent = index.column() - 4;
+    auto s = scalars();
+    if (!s || s->GetNumberOfComponents() <= scalarComponent)
+    {
+        return{};
+    }
+    
+    return vtkVariantToQVariant(
+        s->GetVariantValue(pointId * s->GetNumberOfComponents() + scalarComponent));
 }
 
 QVariant QVtkTableModelPointCloudData::headerData(int section, Qt::Orientation orientation, int role) const
@@ -76,7 +91,38 @@ QVariant QVtkTableModelPointCloudData::headerData(int section, Qt::Orientation o
     case 3: return "z";
     }
 
-    return QVariant();
+    const int scalarComponent = section - 4;
+    auto s = scalars();
+    const auto numComponents = s->GetNumberOfComponents();
+    if (!s || numComponents <= scalarComponent)
+    {
+        return{};
+    }
+
+    QString componentName;
+    if (numComponents > 0 && numComponents <= 3)
+    {
+        componentName = QChar('x' + static_cast<char>(scalarComponent));
+    }
+    else if (numComponents > 3)
+    {
+        componentName = "(" + QString::number(scalarComponent) + ")";
+    }
+    
+    if (scalarComponent == 0)
+    {
+        auto name = QString::fromUtf8(s->GetName());
+        if (name.isEmpty())
+        {
+            name = "Scalars";
+        }
+        if (!componentName.isEmpty())
+        {
+            name += ": " + componentName;
+        }
+        return name;
+    }
+    return componentName;
 }
 
 bool QVtkTableModelPointCloudData::setData(const QModelIndex & index, const QVariant & value, int role)
@@ -118,4 +164,29 @@ IndexType QVtkTableModelPointCloudData::indexType() const
 void QVtkTableModelPointCloudData::resetDisplayData()
 {
     m_data = dynamic_cast<GenericPolyDataObject *>(dataObject());
+    if (!m_data)
+    {
+        m_lastScalars = nullptr;
+        return;
+    }
+    
+    auto dataSet = m_data ? m_data->processedOutputDataSet() : static_cast<vtkDataSet *>(nullptr);
+    if (!dataSet)
+    {
+        m_lastScalars = nullptr;
+    }
+    auto scalars = dataSet->GetPointData()->GetScalars();
+    if (!scalars || scalars->GetNumberOfTuples() != dataSet->GetNumberOfPoints())
+    {
+        m_lastScalars = nullptr;
+    }
+    m_lastScalars = scalars;
+
+    addDataObjectConnection(connect(m_data, &DataObject::attributeArraysChanged,
+        this, &QVtkTableModelPointCloudData::rebuild));
+}
+
+vtkDataArray * QVtkTableModelPointCloudData::scalars() const
+{
+    return m_lastScalars;
 }
