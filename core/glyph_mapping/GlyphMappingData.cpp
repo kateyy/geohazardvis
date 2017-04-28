@@ -1,7 +1,8 @@
 #include "GlyphMappingData.h"
 
-#include <cassert>
 #include <algorithm>
+#include <cassert>
+#include <limits>
 
 #include <vtkActor.h>
 #include <vtkAppendPolyData.h>
@@ -233,8 +234,9 @@ std::unique_ptr<PropertyGroup> GlyphMappingData::createPropertyGroup()
         setArrowLength(length);
         emit geometryChanged();
     })->setOptions({
-        { "title", "Arrow Length" },
-        { "minimum", 0.00001f },
+        { "title", "Glyph Length" },
+        { "minimum", -1.e6},
+        { "maximum", 1.e6},
         { "step", 0.1f }
     });
 

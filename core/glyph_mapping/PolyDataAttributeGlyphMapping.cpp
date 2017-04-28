@@ -24,9 +24,6 @@ const bool PolyDataAttributeGlyphMapping::s_registered = GlyphMappingRegistry::i
     s_name,
     newInstances);
 
-using namespace reflectionzeug;
-
-
 std::vector<std::unique_ptr<GlyphMappingData>> PolyDataAttributeGlyphMapping::newInstances(RenderedData & renderedData)
 {
     auto renderedPolyData = dynamic_cast<RenderedPolyData *>(&renderedData);

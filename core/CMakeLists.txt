@@ -158,6 +158,8 @@ set(sources
     glyph_mapping/GlyphMappingRegistry.cpp
     glyph_mapping/Grid3dGlyphMapping.h
     glyph_mapping/Grid3dGlyphMapping.cpp
+    glyph_mapping/PointCloudDataAttributeGlyphMapping.h
+    glyph_mapping/PointCloudDataAttributeGlyphMapping.cpp
     glyph_mapping/PolyDataAttributeGlyphMapping.h
     glyph_mapping/PolyDataAttributeGlyphMapping.cpp
 
