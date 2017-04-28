@@ -29,6 +29,7 @@ public:
     };
 
     const std::map<QString, const GradientData> & gradients() const;
+    const GradientData & gradient(const QString & name);
 
     const QString & defaultGradientName() const;
     void setDefaultGradientName(const QString & name);

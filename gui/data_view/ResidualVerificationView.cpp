@@ -1,7 +1,9 @@
 #include <gui/data_view/ResidualVerificationView.h>
 
 #include <algorithm>
+#include <array>
 #include <cassert>
+#include <cmath>
 
 #include <QBoxLayout>
 #include <QProgressBar>
@@ -11,6 +13,7 @@
 
 #include <vtkCellData.h>
 #include <vtkImageData.h>
+#include <vtkLookupTable.h>
 #include <vtkPointData.h>
 #include <vtkPolyData.h>
 
@@ -19,9 +22,11 @@
 #include <core/color_mapping/ColorMapping.h>
 #include <core/DataSetHandler.h>
 #include <core/data_objects/CoordinateTransformableDataObject.h>
+#include <core/utility/DataExtent.h>
 #include <core/utility/DataSetResidualHelper.h>
 #include <core/utility/macros.h>
 #include <core/utility/vtkCameraSynchronization.h>
+#include <core/utility/ScalarBarActor.h>
 #include <core/utility/types_utils.h>
 #include <gui/DataMapping.h>
 #include <gui/data_view/RendererImplementationResidual.h>
@@ -848,6 +853,12 @@ void ResidualVerificationView::updateVisualizations()
         colorMapping.colorBarRepresentation().setPosition(ColorBarRepresentation::posBottom);
         colorMapping.setCurrentScalarsByName(attributeName, true);
         colorMapping.colorBarRepresentation().setVisible(true);
+
+        if (i == 2)
+        {
+            colorMapping.setManualGradient(residualGradient());
+            colorMapping.colorBarRepresentation().actor().Modified();
+        }
     }
 
     updateGuiSelection();
@@ -1030,4 +1041,52 @@ std::pair<QString, IndexType> ResidualVerificationView::findDataSetAttributeName
     }
 
     return std::make_pair(QString(), IndexType::invalid);
+}
+
+vtkLookupTable & ResidualVerificationView::residualGradient()
+{
+    if (!m_residualGradient)
+    {
+        m_residualGradient = vtkSmartPointer<vtkLookupTable>::New();
+    }
+
+    if (m_residual && m_residual->dataSet())
+    {
+        if (auto res = m_residual->dataSet()->GetPointData()->GetScalars())
+        {
+            ValueRange<double> valueRange;
+            res->GetRange(valueRange.data());
+
+            // Blue for negative parts, red for positives
+            const double whitePos = std::max(0.0, std::min(1.0, valueRange.relativeOriginPosition()));
+            const int numColors = 255;
+            m_residualGradient->SetNumberOfTableValues(numColors);
+
+            const int numBlue = static_cast<int>(std::round(numColors * whitePos));
+            const int numRed = numColors - numBlue;
+            if (numBlue == 1)
+            {
+                m_residualGradient->SetTableValue(0, 0.0, 0.0, 1.0);
+            }
+            else for (int i = 0; i < numBlue; ++i)
+            {
+                const double s = static_cast<double>(i) / (numBlue - 1);
+                m_residualGradient->SetTableValue(i, s, s, 1.0);
+            }
+
+            if (numRed == 1)
+            {
+                m_residualGradient->SetTableValue(numColors - 1, 1.0, 0.0, 0.0);
+            }
+            else for (int i = 0; i < numRed; ++i)
+            {
+                const double s = 1.0 - static_cast<double>(i) / (numRed - 1);
+                m_residualGradient->SetTableValue(i + numBlue, 1.0, s, s);
+            }
+
+            m_residualGradient->BuildSpecialColors();
+        }
+    }
+
+    return *m_residualGradient;
 }

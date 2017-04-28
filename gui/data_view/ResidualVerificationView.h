@@ -14,6 +14,7 @@ template<typename T> class QFutureWatcher;
 class QProgressBar;
 
 class vtkDataSet;
+class vtkLookupTable;
 
 class DataSetResidualHelper;
 class RendererImplementationResidual;
@@ -132,7 +133,11 @@ private:
     DataObject * dataAt(unsigned int i) const;
     void setDataAt(unsigned int i, DataObject * dataObject);
 
-    std::pair<QString, IndexType> findDataSetAttributeName(DataObject & dataObject, unsigned int inputType) const;
+    std::pair<QString, IndexType> findDataSetAttributeName(
+        DataObject & dataObject,
+        unsigned int inputType) const;
+
+    vtkLookupTable & residualGradient();
 
 private:
     std::unique_ptr<DataSetResidualHelper> m_residualHelper;
@@ -147,6 +152,7 @@ private:
     std::unique_ptr<vtkCameraSynchronization> m_cameraSync;
 
     std::array<std::unique_ptr<AbstractVisualizedData>, numberOfViews> m_visualizations;
+    vtkSmartPointer<vtkLookupTable> m_residualGradient;
 
     std::unique_ptr<QFutureWatcher<void>> m_updateWatcher;
     bool m_inResidualUpdate;

@@ -20,6 +20,7 @@ ColorMapping::ColorMapping()
     : QObject()
     , m_isEnabled{ false }
     , m_glyphListener{ std::make_unique<GlyphColorMappingGlyphListener>() }
+    , m_useManualGradient{ false }
 {
     connect(m_glyphListener.get(), &GlyphColorMappingGlyphListener::glyphMappingChanged,
         this, &ColorMapping::updateAvailableScalars);
@@ -302,16 +303,40 @@ void ColorMapping::setGradient(const QString & gradientName)
 
     m_gradientName = gradientName;
 
-    auto & gradients = GradientResourceManager::instance().gradients();
-    assert(gradients.find(gradientName) != gradients.end());
+    auto lut = GradientResourceManager::instance().gradient(m_gradientName).lookupTable;
 
-    auto && originalLut = gradients.at(gradientName).lookupTable;
+    applyGradient(*lut);
+}
 
-    gradient()->SetTable(originalLut->GetTable());
-    gradient()->SetNanColor(originalLut->GetNanColor());
-    gradient()->SetUseAboveRangeColor(originalLut->GetUseAboveRangeColor());
-    gradient()->SetUseBelowRangeColor(originalLut->GetUseBelowRangeColor());
-    gradient()->BuildSpecialColors();
+void ColorMapping::setManualGradient(vtkLookupTable & gradient)
+{
+    m_useManualGradient = true;
+
+    applyGradient(gradient);
+}
+
+void ColorMapping::applyGradient(vtkLookupTable & gradient)
+{
+    auto ownGradient = this->gradient();
+    ownGradient->SetTable(gradient.GetTable());
+    ownGradient->SetNanColor(gradient.GetNanColor());
+    ownGradient->SetUseAboveRangeColor(gradient.GetUseAboveRangeColor());
+    ownGradient->SetUseBelowRangeColor(gradient.GetUseBelowRangeColor());
+    ownGradient->BuildSpecialColors();
+}
+
+void ColorMapping::setUseDefaultGradients()
+{
+    m_useManualGradient = false;
+
+    auto lut = GradientResourceManager::instance().gradient(m_gradientName).lookupTable;
+
+    applyGradient(*lut);
+}
+
+bool ColorMapping::usesManualGradient() const
+{
+    return m_useManualGradient;
 }
 
 bool ColorMapping::currentScalarsUseMappingLegend() const

@@ -23,6 +23,20 @@ auto GradientResourceManager::gradients() const -> const std::map<QString, const
     return m_gradients;
 }
 
+auto GradientResourceManager::gradient(const QString & name) -> const GradientData &
+{
+    assert(!m_gradients.empty());
+
+    auto it = m_gradients.find(name);
+    if (it == m_gradients.end())
+    {
+        qWarning() << "Requested gradient not found:" << name;
+        return defaultGradient();
+    }
+
+    return it->second;
+}
+
 const QString & GradientResourceManager::defaultGradientName() const
 {
     return m_defaultGradientName;
