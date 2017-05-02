@@ -1,6 +1,7 @@
 #include "RendererConfigWidget.h"
 
 #include <vtkAxis.h>
+#include <vtkChartLegend.h>
 #include <vtkChartXY.h>
 #include <vtkContextScene.h>
 #include <vtkContextView.h>
@@ -106,6 +107,20 @@ std::unique_ptr<PropertyGroup> RendererConfigWidget::createPropertyGroupPlot(
         impl->render();
     })
         ->setOption("title", "Chart Legend");
+
+    impl->chart()->GetLegend()->SetVerticalAlignment(vtkChartLegend::BOTTOM);
+    root->addProperty<bool>("ChartLegendOnTop",
+    [impl] ()
+    {
+        return impl->chart()->GetLegend()->GetVerticalAlignment() == vtkChartLegend::TOP;
+    },
+    [impl] (bool showOnTop)
+    {
+        impl->chart()->GetLegend()->SetVerticalAlignment(showOnTop
+            ? vtkChartLegend::TOP : vtkChartLegend::BOTTOM);
+        impl->render();
+    })
+        ->setOption("title", "Legend on top");
 
     //auto backgroundColor = root->addProperty<Color>("backgroundColor",
     //    [impl] () {
