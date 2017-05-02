@@ -16,6 +16,9 @@ public:
 
     void activate(t_QVTKWidget & qvtkWidget) override;
 
+    void setShowModel(bool showModel);
+    bool showModel() const;
+
     RenderViewStrategy2D & strategy2D();
 
 protected:
@@ -24,9 +27,14 @@ protected:
     RenderViewStrategy * strategyIfEnabled() const override;
 
 private:
+    void setupRenderers();
+
+private:
     bool m_isInitialized;
 
     std::unique_ptr<RenderViewStrategy2D> m_strategy;
+
+    bool m_showModel;
 
 private:
     Q_DISABLE_COPY(RendererImplementationResidual)

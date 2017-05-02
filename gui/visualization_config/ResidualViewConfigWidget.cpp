@@ -9,6 +9,7 @@
 #include <core/DataSetHandler.h>
 #include <core/utility/qthelper.h>
 #include <gui/data_view/ResidualVerificationView.h>
+#include <gui/data_view/RendererImplementationResidual.h>
 
 
 ResidualViewConfigWidget::ResidualViewConfigWidget(QWidget * parent)
@@ -125,6 +126,14 @@ void ResidualViewConfigWidget::setCurrentView(ResidualVerificationView * view)
 
         m_ui->observationScale->setValue(o);
         m_ui->modelScale->setValue(m);
+    }));
+
+    m_ui->showModelCheckBox->setChecked(view->implementationResidual().showModel());
+    m_viewConnects.emplace_back(connect(m_ui->showModelCheckBox, &QCheckBox::toggled,
+    [view] (const bool checked)
+    {
+        view->implementationResidual().setShowModel(checked);
+        view->render();
     }));
 
     m_viewConnects.emplace_back(connect(m_ui->updateButton, &QAbstractButton::pressed, view, &ResidualVerificationView::updateResidual));

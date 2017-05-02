@@ -4,6 +4,7 @@
 #include <cassert>
 
 #include <vtkRenderer.h>
+#include <vtkRenderWindow.h>
 
 #include <gui/data_view/AbstractRenderView.h>
 #include <gui/data_view/RenderViewStrategy2D.h>
@@ -12,6 +13,7 @@
 RendererImplementationResidual::RendererImplementationResidual(AbstractRenderView & renderView)
     : RendererImplementationBase3D(renderView)
     , m_isInitialized{ false }
+    , m_showModel{ true }
 {
 }
 
@@ -33,20 +35,27 @@ void RendererImplementationResidual::activate(t_QVTKWidget & qvtkWidget)
 
     m_strategy = std::make_unique<RenderViewStrategy2D>(*this);
     m_strategy->activate();
-
+    
     setSupportedInteractionStrategies({ m_strategy->name() }, m_strategy->name());
 
-    auto numberOfSubViews = m_renderView.numberOfSubViews();
+    setupRenderers();
+}
 
-    for (unsigned i = 0; i < numberOfSubViews; ++i)
+void RendererImplementationResidual::setShowModel(const bool showModel)
+{
+    if (showModel == m_showModel)
     {
-        auto ren = renderer(i);
-        ren->SetViewport(  // left to right placement
-            double(i) / double(numberOfSubViews), 0,
-            double(i + 1) / double(numberOfSubViews), 1);
+        return;
     }
 
-    m_isInitialized = true;
+    m_showModel = showModel;
+
+    setupRenderers();
+}
+
+bool RendererImplementationResidual::showModel() const
+{
+    return m_showModel;
 }
 
 RenderViewStrategy2D & RendererImplementationResidual::strategy2D()
@@ -67,4 +76,53 @@ unsigned int RendererImplementationResidual::subViewIndexAtPos(const QPoint pixe
 RenderViewStrategy * RendererImplementationResidual::strategyIfEnabled() const
 {
     return m_strategy.get();
+}
+
+void RendererImplementationResidual::setupRenderers()
+{
+    auto renWinPtr = renderWindow();
+    if (!renWinPtr)
+    {
+        return;
+    }
+    auto & renWin = *renWinPtr;
+
+    const unsigned int modelIndex = 1u;
+    const auto modelRenderer = renderer(modelIndex);
+    if (bool(renWin.HasRenderer(modelRenderer)) != m_showModel)
+    {
+        if (m_showModel)
+        {
+            renWin.AddRenderer(modelRenderer);
+        }
+        else
+        {
+            renWin.RemoveRenderer(modelRenderer);
+        }
+    }
+
+    const unsigned int numberOfSubViews = m_renderView.numberOfSubViews();
+    const unsigned int activeViews = numberOfSubViews - (m_showModel ? 0u : 1u);
+
+    for (unsigned i = 0u; i < numberOfSubViews; ++i)
+    {
+        unsigned visibleIndex = i;
+        if (!m_showModel)
+        {
+            if (i == modelIndex)
+            {
+                continue;
+            }
+            else if (i > modelIndex) // affects views right of the model view
+            {
+                visibleIndex -= 1u;
+            }
+        }
+
+        auto ren = renderer(i);
+        assert(ren);
+        ren->SetViewport(  // left to right placement
+            double(visibleIndex) / double(activeViews), 0,
+            double(visibleIndex + 1) / double(activeViews), 1);
+    }
 }

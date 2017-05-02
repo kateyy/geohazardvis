@@ -393,6 +393,12 @@ RendererImplementation & ResidualVerificationView::implementation() const
     return *m_implementation;
 }
 
+RendererImplementationResidual & ResidualVerificationView::implementationResidual() const
+{
+    assert(m_implementation);
+    return *m_implementation;
+}
+
 void ResidualVerificationView::initializeRenderContext()
 {
     assert(m_implementation);

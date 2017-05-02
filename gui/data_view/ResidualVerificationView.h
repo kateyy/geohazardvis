@@ -79,6 +79,8 @@ public:
     unsigned int numberOfSubViews() const override;
 
     RendererImplementation & implementation() const override;
+    /** Convenience method returning the concrete subclass of implementation() superclass API. */
+    RendererImplementationResidual & implementationResidual() const;
 
 protected:
     void initializeRenderContext() override;
