@@ -98,7 +98,10 @@ void GradientResourceManager::loadGradients()
 {
     m_gradients.clear();
 
+    // Gradient image visible in the UI
     const QSize gradientImageSize{ 200, 20 };
+    // Input data used for the
+    const QSize gradientLutSize{ 255, 1 };
 
     // navigate to the gradient directory
     QDir dir;
@@ -120,10 +123,12 @@ void GradientResourceManager::loadGradients()
                 continue;
             }
 
-            pixmap = pixmap.scaled(gradientImageSize);
+            const auto gradientImageScale = pixmap.scaled(gradientImageSize);
+            const auto gradientLutInput = pixmap.width() <= gradientLutSize.width()
+                ? pixmap : pixmap.scaled(gradientLutSize);
 
             m_gradients.emplace(fileInfo.baseName(),
-                GradientData({ buildLookupTable(pixmap), pixmap }));
+                GradientData({ buildLookupTable(gradientLutInput), gradientImageScale }));
         }
     }
 
