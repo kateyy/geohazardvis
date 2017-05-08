@@ -30,8 +30,9 @@ const char * unicodeFontFileName()
     vtkFreeTypeTools::GetInstance()->ForceCompiledFontsOff();
     return nullptr;
 
-#endif
+#else
     return nullptr;
+#endif
 }
 
 bool configureTextProperty(vtkTextProperty & textProperty)
