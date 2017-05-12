@@ -31,7 +31,7 @@ if (MSVC)
         else()
             message(WARNING "Debug OpenMP deployment not supported for the current MSVC version (${MSVC_VERSION})")
         endif()
-    else()
+    elseif(OPTION_INSTALL_DEBUG_MSVC_RUNTIME)
         message(WARNING "Cannot deploy debug OpenMP runtime on non-x64 platform")
     endif()
 
