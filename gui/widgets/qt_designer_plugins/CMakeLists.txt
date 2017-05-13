@@ -1,12 +1,12 @@
 
-message(STATUS "Qt Designer Plugins")
-
 option(OPTION_BUILD_QT_DESIGNER_PLUGINS "Build Qt Designer plugins for custom widgets." ON)
 mark_as_advanced(OPTION_BUILD_QT_DESIGNER_PLUGINS)
 
 if (NOT OPTION_BUILD_QT_DESIGNER_PLUGINS)
     return()
 endif()
+
+message(STATUS "Qt Designer Plugins")
 
 
 set(qt_component UiPlugin)
