@@ -2,6 +2,8 @@
 
 #include <array>
 
+#include <QCoreApplication>
+
 #include <vtkCellArray.h>
 #include <vtkCellData.h>
 #include <vtkFloatArray.h>
@@ -118,6 +120,46 @@ public:
         return profileData;
     }
 };
+
+/**
+ * The following three tests cover bugs that were cased by the new QVTKOpenGLWidget.
+ * However, they are still a good baseline for correct behavior of RenderView.
+ * (InitEmptyView, InitViewWithContents, SwitchImplementation)
+ */
+TEST_F(RenderView_test, InitEmptyView)
+{
+    auto view = env->dataMapping.createDefaultRenderViewType();
+    ASSERT_TRUE(dynamic_cast<RenderView *>(view));
+    view->show();
+    ASSERT_NO_THROW(qApp->processEvents());
+}
+
+TEST_F(RenderView_test, InitViewWithContents)
+{
+    auto ownedPoly = genPolyData();
+    auto poly = ownedPoly.get();
+    env->dataSetHandler.takeData(std::move(ownedPoly));
+    auto view = env->dataMapping.openInRenderView({ poly });
+    ASSERT_TRUE(dynamic_cast<RenderView *>(view));
+    view->show();
+    ASSERT_NO_THROW(qApp->processEvents());
+}
+
+TEST_F(RenderView_test, SwitchImplementation)
+{
+    auto ownedPoly = genPolyData();
+    auto poly = ownedPoly.get();
+    env->dataSetHandler.takeData(std::move(ownedPoly));
+    auto view = env->dataMapping.createDefaultRenderViewType();
+    ASSERT_TRUE(dynamic_cast<RenderView *>(view));
+    view->show();
+    ASSERT_NO_THROW(qApp->processEvents());
+
+    QList<DataObject *> incompatible;
+    view->showDataObjects({ poly }, incompatible);
+    ASSERT_TRUE(incompatible.isEmpty());
+    ASSERT_NO_THROW(qApp->processEvents());
+}
 
 TEST_F(RenderView_test, AbortLoadingDeletedData)
 {
