@@ -18,9 +18,17 @@ CanvasExporterRegistry & CanvasExporterRegistry::instance()
     return reg;
 }
 
-QStringList CanvasExporterRegistry::supportedFormatNames()
+const QStringList & CanvasExporterRegistry::supportedFormatNames()
 {
-    return instance().m_formatToExporter.keys();
+    auto & names = instance().m_formatNames;
+    if (!names.isEmpty())
+    {
+        return names;
+    }
+
+    names = instance().m_formatToExporter.keys();
+
+    return names;
 }
 
 std::unique_ptr<CanvasExporter> CanvasExporterRegistry::createExporter(const QString & formatName)

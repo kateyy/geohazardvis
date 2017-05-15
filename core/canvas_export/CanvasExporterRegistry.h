@@ -16,7 +16,7 @@ class CanvasExporter;
 class CORE_API CanvasExporterRegistry
 {
 public:
-    static QStringList supportedFormatNames();
+    static const QStringList & supportedFormatNames();
     static std::unique_ptr<CanvasExporter> createExporter(const QString & formatName);
 
     using ExporterConstructor = std::function<std::unique_ptr<CanvasExporter>()>;
@@ -29,4 +29,5 @@ private:
 
 private:
     QMap<QString, ExporterConstructor> m_formatToExporter;
+    QStringList m_formatNames;
 };

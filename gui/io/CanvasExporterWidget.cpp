@@ -1,6 +1,7 @@
 #include "CanvasExporterWidget.h"
 #include "ui_CanvasExporterWidget.h"
 
+#include <algorithm>
 #include <cassert>
 
 #include <QDebug>
@@ -27,7 +28,13 @@ CanvasExporterWidget::CanvasExporterWidget(QWidget * parent, Qt::WindowFlags f)
 
     connect(m_ui->fileFormatComboBox, &QComboBox::currentTextChanged, this, &CanvasExporterWidget::updateUiForFormat);
 
-    m_ui->fileFormatComboBox->addItems(CanvasExporterRegistry::supportedFormatNames());
+    auto && formats = CanvasExporterRegistry::supportedFormatNames();
+    m_ui->fileFormatComboBox->addItems(formats);
+    const auto pngIt = std::find(formats.begin(), formats.end(), "PNG");
+    if (pngIt != formats.end())
+    {
+        m_ui->fileFormatComboBox->setCurrentIndex(pngIt - formats.begin());
+    }
 
     m_ui->outputFolderEdit->setText("./screenshots");
     connect(m_ui->outputFolderButton, &QPushButton::clicked, [this] () {
