@@ -33,6 +33,8 @@ set(sources
     canvas_export/CanvasExporter.cpp
     canvas_export/CanvasExporterImages.h
     canvas_export/CanvasExporterImages.cpp
+    canvas_export/CanvasExporterJPEG.h
+    canvas_export/CanvasExporterJPEG.cpp
     canvas_export/CanvasExporterPNG.h
     canvas_export/CanvasExporterPNG.cpp
     canvas_export/CanvasExporterPS.h
