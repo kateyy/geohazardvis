@@ -1090,6 +1090,7 @@ vtkLookupTable & ResidualVerificationView::residualGradient()
                 m_residualGradient->SetTableValue(i + numBlue, 1.0, s, s);
             }
 
+            m_residualGradient->SetNanColor(1, 1, 1, 1);
             m_residualGradient->BuildSpecialColors();
         }
     }
