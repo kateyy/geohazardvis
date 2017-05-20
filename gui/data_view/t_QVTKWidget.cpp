@@ -8,6 +8,7 @@
 #include <QVTKInteractor.h>
 #include <vtkGenericOpenGLRenderWindow.h>
 #include <vtkNew.h>
+#include <vtkVersionMacros.h>
 
 #include <core/OpenGLDriverFeatures.h>
 #include <core/vtkCommandExt.h>
@@ -51,6 +52,11 @@ public:
 
     void Execute(vtkObject * DEBUG_ONLY(subject), unsigned long eventId, void * /*callData*/) VTK_OVERRIDE
     {
+        if (!this->Target)
+        {
+            return;
+        }
+
 #if defined(OPTION_USE_QVTKOPENGLWIDGET)
         assert(subject == this->Target->RenderWindow.Get());
 #else
@@ -75,6 +81,9 @@ public:
                 };
 
                 const SetUnsetBool setUnset{ this->InRepaint };
+#if VTK_CHECK_VERSION(8,0,0)
+                this->Target->renderVTK();
+#endif
                 this->Target->repaint();
             }
 #else
@@ -105,6 +114,7 @@ void t_QVTKWidget::initializeDefaultSurfaceFormat()
 #if defined(OPTION_USE_QVTKOPENGLWIDGET)
 t_QVTKWidget::t_QVTKWidget(QWidget * parent, Qt::WindowFlags f)
     : Superclass(parent, f)
+    , IsInitialized{ false }
     , ToolTipWasShown{ false }
     , Observer{ vtkSmartPointer<t_QVTKWidgetObserver>::New() }
 {
@@ -114,6 +124,7 @@ t_QVTKWidget::t_QVTKWidget(QWidget * parent, Qt::WindowFlags f)
 t_QVTKWidget::t_QVTKWidget(QWidget * parent, Qt::WindowFlags f)
     : Superclass(defaultQVTKFormat(), parent, nullptr, f)
     , Observer{ vtkSmartPointer<t_QVTKWidgetObserver>::New() }
+    , IsInitialized{ false }
 {
 #if defined(__linux__)
     auto renWin = GetRenderWindow();
@@ -191,6 +202,8 @@ vtkRenderWindow * t_QVTKWidget::GetRenderWindow()
 
 bool t_QVTKWidget::event(QEvent * event)
 {
+    initialize();
+
     if (event->type() == QEvent::ToolTip)
     {
         emit beforeTooltipPopup();
@@ -241,3 +254,17 @@ void t_QVTKWidget::paintGL()
     OpenGLDriverFeatures::setFeaturesAfterPaintGL(this->RenderWindow);
 }
 #endif
+
+void t_QVTKWidget::initialize()
+{
+    if (this->IsInitialized)
+    {
+        return;
+    }
+
+    this->IsInitialized = true;
+
+#if defined(OPTION_USE_QVTKOPENGLWIDGET) && VTK_CHECK_VERSION(8,0,0)
+    this->setEnableHiDPI(false);
+#endif
+}

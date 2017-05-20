@@ -72,7 +72,16 @@ protected:
 #endif
 
 private:
+    /**
+     * Initialization code that requires virtual function calls and can thus not be called in the
+     * constructor.
+     * It is executed with the first invocation of event().
+     */
+    void initialize();
+
+private:
 #if defined(OPTION_USE_QVTKOPENGLWIDGET)
+    bool IsInitialized;
     bool ToolTipWasShown;
 #endif
 

@@ -9,9 +9,11 @@
 #include <QWindow>
 
 #include <vtkGenericOpenGLRenderWindow.h>
+#include <vtkVersionMacros.h>
 
 #include <core/AbstractVisualizedData.h>
 #include <core/data_objects/CoordinateTransformableDataObject.h>
+#include <core/utility/macros.h>
 #include <gui/data_view/RendererImplementation.h>
 #include <gui/data_view/t_QVTKWidget.h>
 
@@ -449,10 +451,15 @@ void AbstractRenderView::initializeForFirstPaint()
         }
 
         const auto dpi = static_cast<int>(nativeParent->windowHandle()->screen()->logicalDotsPerInch());
-        if (dpi != renWin->GetDPI())
+        if (dpi == renWin->GetDPI())
         {
-            renWin->SetDPI(dpi);
+            return;
+
         }
+        renWin->SetDPI(dpi);
+#if defined (OPTION_USE_QVTKOPENGLWIDGET) && VTK_CHECK_VERSION(8,0,0)
+        renWin->Render();
+#endif
     };
 
     if (auto nativeParent = nativeParentWidget())
