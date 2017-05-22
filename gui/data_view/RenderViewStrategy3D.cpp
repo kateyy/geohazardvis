@@ -51,7 +51,7 @@ QList<DataObject *> RenderViewStrategy3D::filterCompatibleObjects(const QList<Da
 
 void RenderViewStrategy3D::updateImageWidgets()
 {
-    for (auto r : m_context.renderedData())
+    for (auto r : m_context.renderView().visualizations())
     {
         if (auto grid = dynamic_cast<RenderedVectorGrid3D *>(r))
         {

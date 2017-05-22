@@ -64,8 +64,6 @@ public:
 
     void setAxesVisibility(bool visible) override;
 
-    QList<RenderedData *> renderedData();
-
     CameraInteractorStyleSwitch * interactorStyleSwitch();
 
     vtkRenderWindow * renderWindow();

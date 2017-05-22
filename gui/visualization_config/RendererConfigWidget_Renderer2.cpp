@@ -58,8 +58,11 @@ void RendererConfigWidget::createPropertyGroupRenderer2(PropertyGroup & root, Ab
     auto axesGroup = root.addGroup("Axes");
     {
         axesGroup->addProperty<bool>("Visible",
-            std::bind(&AbstractRenderView::axesEnabled, renderView),
-            std::bind(&AbstractRenderView::setEnableAxes, renderView, std::placeholders::_1));
+            [renderView] () { return renderView->axesEnabled(); },
+            [renderView] (bool enabled) {
+            renderView->setEnableAxes(enabled);
+            renderView->render();
+        });
 
         axesGroup->addProperty<Color>("Color",
             [impl] () {

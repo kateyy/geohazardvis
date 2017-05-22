@@ -554,11 +554,6 @@ QList<AbstractVisualizedData *> ResidualVerificationView::visualizationsImpl(int
     return{};
 }
 
-void ResidualVerificationView::axesEnabledChangedEvent(bool enabled)
-{
-    implementation().setAxesVisibility(enabled);
-}
-
 void ResidualVerificationView::onCoordinateSystemChanged(const CoordinateSystemSpecification & spec)
 {
     AbstractRenderView::onCoordinateSystemChanged(spec);

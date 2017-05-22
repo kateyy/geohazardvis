@@ -293,7 +293,7 @@ void AbstractRenderView::setEnableAxes(bool enabled)
 
     m_axesEnabled = enabled;
 
-    axesEnabledChangedEvent(enabled);
+    implementation().setAxesVisibility(enabled);
 }
 
 bool AbstractRenderView::axesEnabled() const

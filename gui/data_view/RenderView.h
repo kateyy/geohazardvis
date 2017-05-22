@@ -48,8 +48,6 @@ protected:
 
     QList<AbstractVisualizedData *> visualizationsImpl(int subViewIndex) const override;
 
-    void axesEnabledChangedEvent(bool enabled) override;
-
 private:
     void updateImplementation(const QList<DataObject *> & contents);
 

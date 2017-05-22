@@ -169,10 +169,6 @@ protected:
         }
         return visList;
     }
-    void axesEnabledChangedEvent(bool enabled) override
-    {
-        m_impl->setAxesVisibility(!m_vis.empty() && enabled);
-    }
 
 private:
     std::unique_ptr<ImplT> m_impl;

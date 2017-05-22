@@ -128,8 +128,6 @@ protected:
     virtual void prepareDeleteDataImpl(const QList<DataObject *> & dataObjects) = 0;
     virtual QList<AbstractVisualizedData *> visualizationsImpl(int subViewIndex) const = 0;
 
-    virtual void axesEnabledChangedEvent(bool enabled) = 0;
-
 private:
     void initializeForFirstPaint();
 

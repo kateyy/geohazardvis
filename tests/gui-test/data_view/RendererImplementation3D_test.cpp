@@ -134,10 +134,6 @@ protected:
         }
         return visList;
     }
-    void axesEnabledChangedEvent(bool enabled) override
-    {
-        m_impl->setAxesVisibility(!m_vis.empty() && enabled);
-    }
 
 private:
     std::unique_ptr<TestRendererImplementation3D> m_impl;

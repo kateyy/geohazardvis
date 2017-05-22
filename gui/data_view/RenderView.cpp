@@ -74,11 +74,6 @@ void RenderView::visualizationSelectionChangedEvent(const VisualizationSelection
     updateGuiForSelectedData(selection.visualization);
 }
 
-void RenderView::axesEnabledChangedEvent(bool enabled)
-{
-    implementation().setAxesVisibility(enabled && !m_contents.empty());
-}
-
 void RenderView::updateImplementation(const QList<DataObject *> & contents)
 {
     implementation().deactivate(qvtkWidget());

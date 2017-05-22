@@ -95,8 +95,6 @@ protected:
     void prepareDeleteDataImpl(const QList<DataObject *> & dataObjects) override;
     QList<AbstractVisualizedData *> visualizationsImpl(int subViewIndex) const override;
 
-    void axesEnabledChangedEvent(bool enabled) override;
-
     void onCoordinateSystemChanged(const CoordinateSystemSpecification & spec) override;
 
 signals:

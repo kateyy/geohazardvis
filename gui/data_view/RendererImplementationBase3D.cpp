@@ -288,24 +288,8 @@ void RendererImplementationBase3D::setAxesVisibility(bool visible)
 {
     for (auto && viewport : m_viewportSetups)
     {
-        viewport.axesActor->SetVisibility(visible);
+        viewport.axesActor->SetVisibility(visible && !viewport.dataBounds.isEmpty());
     }
-
-    render();
-}
-
-QList<RenderedData *> RendererImplementationBase3D::renderedData()
-{
-    QList<RenderedData *> renderedList;
-    for (auto vis : m_renderView.visualizations())
-    {
-        if (auto rendered = dynamic_cast<RenderedData *>(vis))
-        {
-            renderedList << rendered;
-        }
-    }
-
-    return renderedList;
 }
 
 CameraInteractorStyleSwitch * RendererImplementationBase3D::interactorStyleSwitch()
@@ -519,16 +503,6 @@ void RendererImplementationBase3D::updateAxes()
 
     for (auto & viewportSetup : m_viewportSetups)
     {
-
-        // hide axes if we don't have visible objects
-        if (viewportSetup.dataBounds.isEmpty())
-        {
-            viewportSetup.axesActor->VisibilityOff();
-            continue;
-        }
-
-        viewportSetup.axesActor->SetVisibility(m_renderView.axesEnabled());
-
         auto gridBounds = viewportSetup.dataBounds;
 
         // for polygonal data (deltaZ > 0) and parallel projection in image interaction:
@@ -541,6 +515,8 @@ void RendererImplementationBase3D::updateAxes()
 
         viewportSetup.axesActor->SetGridBounds(gridBounds.data());
     }
+
+    setAxesVisibility(m_renderView.axesEnabled());
 
     resetClippingRanges();
 }
