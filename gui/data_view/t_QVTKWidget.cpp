@@ -4,6 +4,8 @@
 
 #include <QEvent>
 #include <QPointer>
+#include <QScreen>
+#include <QWindow>
 
 #include <QVTKInteractor.h>
 #include <vtkGenericOpenGLRenderWindow.h>
@@ -160,14 +162,11 @@ void t_QVTKWidget::SetRenderWindow(vtkGenericOpenGLRenderWindow * renderWindow)
     if (windowChanged && previousWindow)
     {
         previousWindow->RemoveObserver(this->Observer);
-
-        if (renderWindow)
-        {
-            renderWindow->SetDPI(previousWindow->GetDPI());
-        }
     }
 
     Superclass::SetRenderWindow(renderWindow);
+
+    this->updateRenderWindowDPI();
 
 #if !defined(OPTION_USE_QVTKOPENGLWIDGET)
     // QGLWidget::OpenGLInitContext is only called once when setting up the widget, but not after
@@ -210,6 +209,20 @@ bool t_QVTKWidget::event(QEvent * event)
 #if defined (OPTION_USE_QVTKOPENGLWIDGET)
         this->ToolTipWasShown = true;
 #endif
+    }
+    else if (event->type() == QEvent::Show)
+    {
+        disconnect(this->ScreenChangedConnection);
+        if (auto nativeParent = nativeParentWidget())
+        {
+            this->ScreenChangedConnection = connect(
+                nativeParent->windowHandle(), &QWindow::screenChanged,
+                [this] () {
+                this->updateRenderWindowDPI();
+                this->renderVTK();
+            });
+            this->updateRenderWindowDPI();
+        }
     }
 
 #if defined (OPTION_USE_QVTKOPENGLWIDGET)
@@ -254,6 +267,23 @@ void t_QVTKWidget::paintGL()
     OpenGLDriverFeatures::setFeaturesAfterPaintGL(this->RenderWindow);
 }
 #endif
+
+void t_QVTKWidget::updateRenderWindowDPI()
+{
+    auto renderWindow = this->Superclass::GetRenderWindow();
+    if (!renderWindow)
+    {
+        return;
+    }
+    if (auto nativeParent = this->nativeParentWidget())
+    {
+        const auto dpi = static_cast<int>(nativeParent->windowHandle()->screen()->logicalDotsPerInch());
+        renderWindow->SetDPI(dpi);
+#if defined(OPTION_USE_QVTKOPENGLWIDGET) && VTK_CHECK_VERSION(8,0,0)
+        this->OriginalDPI = dpi;
+#endif
+    }
+}
 
 void t_QVTKWidget::initialize()
 {

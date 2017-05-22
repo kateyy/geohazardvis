@@ -71,6 +71,8 @@ protected:
     void paintGL() override;
 #endif
 
+    void updateRenderWindowDPI();
+
 private:
     /**
      * Initialization code that requires virtual function calls and can thus not be called in the
@@ -85,6 +87,7 @@ private:
     bool ToolTipWasShown;
 #endif
 
+    QMetaObject::Connection ScreenChangedConnection;
     vtkSmartPointer<t_QVTKWidgetObserver> Observer;
     friend class t_QVTKWidgetObserver;
 

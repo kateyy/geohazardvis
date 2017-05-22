@@ -5,8 +5,6 @@
 #include <QDebug>
 #include <QLayout>
 #include <QMouseEvent>
-#include <QScreen>
-#include <QWindow>
 
 #include <vtkGenericOpenGLRenderWindow.h>
 #include <vtkVersionMacros.h>
@@ -440,32 +438,4 @@ void AbstractRenderView::initializeForFirstPaint()
 
     // let the subclass create a context first
     initializeRenderContext();
-
-    auto updateRenWinDpi = [this] () -> void
-    {
-        auto renWin = renderWindow();
-        auto nativeParent = nativeParentWidget();
-        if (!renWin || !nativeParent)
-        {
-            return;
-        }
-
-        const auto dpi = static_cast<int>(nativeParent->windowHandle()->screen()->logicalDotsPerInch());
-        if (dpi == renWin->GetDPI())
-        {
-            return;
-
-        }
-        renWin->SetDPI(dpi);
-#if defined (OPTION_USE_QVTKOPENGLWIDGET) && VTK_CHECK_VERSION(8,0,0)
-        renWin->Render();
-#endif
-    };
-
-    if (auto nativeParent = nativeParentWidget())
-    {
-        connect(nativeParent->windowHandle(), &QWindow::screenChanged, updateRenWinDpi);
-    }
-
-    updateRenWinDpi();
 }
