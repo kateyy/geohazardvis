@@ -160,6 +160,7 @@ signals:
     void geometryChanged();
 
 protected:
+    friend class AbstractVisualizedData_private;
     explicit AbstractVisualizedData(std::unique_ptr<AbstractVisualizedData_private> d_ptr);
     AbstractVisualizedData_private & dPtr();
     const AbstractVisualizedData_private & dPtr() const;
@@ -187,9 +188,6 @@ protected:
      * updateVisibleBounds() will be called again once visibleBounds() is called the next time.
      */
     void invalidateVisibleBounds();
-
-private:
-    void updatePipeline(unsigned int port);
 
 private:
     std::unique_ptr<AbstractVisualizedData_private> d_ptr;

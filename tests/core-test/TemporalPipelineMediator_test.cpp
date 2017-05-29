@@ -113,8 +113,9 @@ TEST_F(TemporalPipelineMediator_test, SelectTimeStepByIndex_subclassed)
     ASSERT_TRUE(upstreamAlgorithm);
     auto & outInfo = *upstreamAlgorithm->GetOutputInformation(0);
 
-    ASSERT_TRUE(outInfo.Has(vtkStreamingDemandDrivenPipeline::UPDATE_TIME_STEP()));
-    ASSERT_EQ(timeSteps()[index], outInfo.Get(vtkStreamingDemandDrivenPipeline::UPDATE_TIME_STEP()));
+    ASSERT_TRUE(outInfo.Has(vtkStreamingDemandDrivenPipeline::TIME_STEPS()));
+    ASSERT_EQ(1, outInfo.Length(vtkStreamingDemandDrivenPipeline::TIME_STEPS()));
+    ASSERT_EQ(timeSteps()[index], outInfo.Get(vtkStreamingDemandDrivenPipeline::TIME_STEPS(), 0));
 
     auto attribute = processedDataSet->GetPointData()->GetArray(attributeName());
     ASSERT_TRUE(attribute);
@@ -144,8 +145,9 @@ TEST_F(TemporalPipelineMediator_test, SelectTimeStepByIndex_injected)
     ASSERT_TRUE(upstreamAlgorithm);
     auto & outInfo = *upstreamAlgorithm->GetOutputInformation(0);
 
-    ASSERT_TRUE(outInfo.Has(vtkStreamingDemandDrivenPipeline::UPDATE_TIME_STEP()));
-    ASSERT_EQ(timeSteps()[index], outInfo.Get(vtkStreamingDemandDrivenPipeline::UPDATE_TIME_STEP()));
+    ASSERT_TRUE(outInfo.Has(vtkStreamingDemandDrivenPipeline::TIME_STEPS()));
+    ASSERT_EQ(1, outInfo.Length(vtkStreamingDemandDrivenPipeline::TIME_STEPS()));
+    ASSERT_EQ(timeSteps()[index], outInfo.Get(vtkStreamingDemandDrivenPipeline::TIME_STEPS(), 0));
 
     auto attribute = processedDataSet->GetPointData()->GetArray(attributeName());
     ASSERT_TRUE(attribute);

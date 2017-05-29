@@ -15,6 +15,7 @@
 #include <core/utility/DataExtent.h>
 
 
+class vtkPassThrough;
 class vtkScalarsToColors;
 
 class AbstractVisualizedData;
@@ -80,7 +81,16 @@ public:
         std::vector<DynamicPPStepType> dynamicStepTypes;
     };
     std::vector<PostProcessingSteps> postProcessingStepsPerPort;
-    std::vector<vtkSmartPointer<vtkAlgorithmOutput>> pipelineEndpointsPerPort;
+
+    /**
+     * Persistent processing pipeline end points.
+     * These vtkPassThrough's make sure that downstream algorithms can reliably connect to the
+     * visualization, no matter when the post processing pipeline is modified by other consumers.
+     * Thus, the output of the function must never be a post processing step that might get deleted
+     * at some point.
+     */
+    vtkAlgorithm * pipelineEndpointsAtPort(unsigned int port);
+    void updatePipeline(unsigned int port);
 
     const DataBounds & visibleBounds() const
     {
@@ -112,6 +122,7 @@ private:
 
     int m_nextProcessingStepId;
     std::vector<int> m_freedProcessingStepIds;
+    std::vector<vtkSmartPointer<vtkPassThrough>> m_pipelineEndpointsAtPort;
 
 private:
     AbstractVisualizedData_private(const AbstractVisualizedData_private &) = delete;
