@@ -3,7 +3,6 @@
 #include <algorithm>
 #include <cassert>
 #include <cmath>
-#include <limits>
 #include <utility>
 
 #include <QDebug>
@@ -20,6 +19,7 @@
 #include <core/AbstractVisualizedData.h>
 #include <core/data_objects/DataObject.h>
 #include <core/filters/ExtractTimeStep.h>
+#include <core/filters/TemporalDifferenceFilter.h>
 #include <core/utility/macros.h>
 
 
@@ -30,6 +30,24 @@ const AbstractVisualizedData::StaticProcessingStepCookie & extractTimeStepPPCook
 {
     static const auto cookie = AbstractVisualizedData::requestProcessingStepCookie();
     return cookie;
+}
+
+const AbstractVisualizedData::StaticProcessingStepCookie & temporalDifferencePPCookie()
+{
+    static const auto cookie = AbstractVisualizedData::requestProcessingStepCookie();
+    return cookie;
+}
+
+template<typename Value_T>
+size_t findNearestIndex(const std::vector<Value_T> & data, const Value_T value)
+{
+    const auto it = std::lower_bound(data.begin(), data.end(), value);
+    if (it == data.end())
+    {
+        return data.size() - 1u;
+    }
+
+    return static_cast<size_t>(it - data.begin());
 }
 
 }
@@ -74,8 +92,11 @@ void TemporalPipelineMediator::setVisualization(AbstractVisualizedData * visuali
     }
 
     // Or just select a default time step
-    m_selection.index = m_timeSteps.size() / 2;
-    m_selection.selectedTimeStep = m_timeSteps[m_selection.index];
+    m_selection.isTimeRange = true;
+    m_selection.beginIndex = 0u;
+    m_selection.beginTimeStep = m_timeSteps[0u];
+    m_selection.endIndex = m_timeSteps.size() / 2;
+    m_selection.endTimeStep = m_timeSteps[m_selection.endIndex];
     passSelectionToPipeline();
 
     // One time initialization: the temporal array was not visible before, so other components
@@ -95,7 +116,7 @@ void TemporalPipelineMediator::unregisterFromVisualization(AbstractVisualizedDat
         return;
     }
 
-    if (visualization == this->visualzation())
+    if (visualization == this->visualization())
     {
         setVisualization(nullptr);
     }
@@ -105,8 +126,9 @@ void TemporalPipelineMediator::unregisterFromVisualization(AbstractVisualizedDat
     const auto numPorts = visualization->numberOfOutputPorts();
     for (unsigned int port = 0; port < numPorts; ++port)
     {
-        bool portModified = visualization->erasePostProcessingStep(extractTimeStepPPCookie(), port);
-        modified = modified || portModified;
+        const bool extractModified = visualization->erasePostProcessingStep(extractTimeStepPPCookie(), port);
+        const bool diffModified = visualization->erasePostProcessingStep(temporalDifferencePPCookie(), port);
+        modified = modified || extractModified || diffModified;
     }
 
     if (modified)
@@ -115,17 +137,17 @@ void TemporalPipelineMediator::unregisterFromVisualization(AbstractVisualizedDat
     }
 }
 
-AbstractVisualizedData * TemporalPipelineMediator::visualzation()
+AbstractVisualizedData * TemporalPipelineMediator::visualization()
 {
     return m_visualization;
 }
 
-const AbstractVisualizedData * TemporalPipelineMediator::visualzation() const
+const AbstractVisualizedData * TemporalPipelineMediator::visualization() const
 {
     return m_visualization;
 }
 
-const std::vector<double> & TemporalPipelineMediator::timeSteps() const
+auto TemporalPipelineMediator::timeSteps() const -> const std::vector<TimeStep_t> &
 {
     return m_timeSteps;
 }
@@ -142,14 +164,12 @@ void TemporalPipelineMediator::selectTimeStepByIndex(size_t index)
     }
 
     if (!timeStepsChanged
-        && m_selection.index == index
-        && m_selection.selectedTimeStep == m_timeSteps[index])
+        && m_selection.equalsTimePoint(index, m_timeSteps[index]))
     {
         return;
     }
 
-    m_selection.index = index;
-    m_selection.selectedTimeStep = m_timeSteps[index];
+    m_selection.setTimePoint(index, m_timeSteps[index]);
 
     if (!m_visualization)
     {
@@ -161,37 +181,182 @@ void TemporalPipelineMediator::selectTimeStepByIndex(size_t index)
 
 size_t TemporalPipelineMediator::currentTimeStepIndex() const
 {
-    return m_selection.index;
+    return m_selection.endIndex;
 }
 
-double TemporalPipelineMediator::selectedTimeStep() const
+auto TemporalPipelineMediator::selectedTimeStep() const -> TimeStep_t
 {
-    return m_selection.selectedTimeStep;
+    return m_selection.endTimeStep;
 }
 
-double TemporalPipelineMediator::nullTimeStep()
+void TemporalPipelineMediator::selectTemporalDifferenceByIndex(size_t beginIndex, size_t endIndex)
 {
-    return std::numeric_limits<double>::quiet_NaN();
-}
+    const bool timeStepsChanged = updateTimeSteps();
 
-bool TemporalPipelineMediator::isValidTimeStep(double timeStep)
-{
-    return !std::isnan(timeStep);
-}
-
-double TemporalPipelineMediator::currentUpdateTimeStep(AbstractVisualizedData & visualization,
-    const unsigned int port)
-{
-    auto stepPtr = visualization.getPostProcessingStep(extractTimeStepPPCookie(), port);
-    if (!stepPtr)
+    if (beginIndex >= m_timeSteps.size() || endIndex >= m_timeSteps.size())
     {
-        return nullTimeStep();
+        qWarning() << "Invalid time step index:" << beginIndex << " or " << endIndex << ", have only" << m_timeSteps.size();
+        return;
     }
 
-    auto extractTimeStep = ExtractTimeStep::SafeDownCast(stepPtr->pipelineHead);
-    assert(extractTimeStep);
+    const SelectionInternal newSelection { true,
+        beginIndex, m_timeSteps[beginIndex],
+        endIndex, m_timeSteps[endIndex] };
 
-    return extractTimeStep->GetTimeStep();
+    if (!timeStepsChanged && newSelection == m_selection)
+    {
+        return;
+    }
+
+    m_selection = newSelection;
+
+    if (!m_visualization)
+    {
+        return;
+    }
+
+    passSelectionToPipeline();
+}
+
+auto TemporalPipelineMediator::differenceTimeSteps() const -> std::pair<TimeStep_t, TimeStep_t>
+{
+    return std::make_pair(m_selection.beginTimeStep, m_selection.endTimeStep);
+}
+
+std::pair<size_t, size_t> TemporalPipelineMediator::differenceTimeStepIndices() const
+{
+    return std::make_pair(m_selection.beginIndex, m_selection.endIndex);
+}
+
+vtkSmartPointer<vtkAlgorithm> TemporalPipelineMediator::TemporalSelection::createAlgorithm() const
+{
+    vtkSmartPointer<vtkAlgorithm> algorithm;
+
+    if (!isValid)
+    {
+        return algorithm;
+    }
+
+    if (isTimeRange)
+    {
+        algorithm = vtkSmartPointer<TemporalDifferenceFilter>::New();
+    }
+    else
+    {
+        algorithm = vtkSmartPointer<ExtractTimeStep>::New();
+    }
+
+    configureAlgorithmInternal(*algorithm, nullptr);
+    return algorithm;
+}
+
+void TemporalPipelineMediator::TemporalSelection::configureAlgorithm(vtkAlgorithm & algorithm,
+    bool * isValidAlgorithmPtr, bool * modifiedPtr) const
+{
+    if (!isValid)
+    {
+        assert(false);
+        return;
+    }
+
+    const bool isValidAlgorithm_l = isTimeRange
+            ? TemporalDifferenceFilter::SafeDownCast(&algorithm) != nullptr
+            : ExtractTimeStep::SafeDownCast(&algorithm) != nullptr;
+
+    if (isValidAlgorithm_l)
+    {
+        configureAlgorithmInternal(algorithm, modifiedPtr);
+    }
+    if (isValidAlgorithmPtr)
+    {
+        *isValidAlgorithmPtr = isValidAlgorithm_l;
+    }
+}
+
+void TemporalPipelineMediator::TemporalSelection::configureAlgorithmInternal(
+    vtkAlgorithm & algorithm, bool * modifiedPtr) const
+{
+    assert(isValid);
+
+    if (isTimeRange)
+    {
+        auto & diff = static_cast<TemporalDifferenceFilter &>(algorithm);
+        if (modifiedPtr)
+        {
+            *modifiedPtr = *modifiedPtr
+                || (diff.GetTimeStep0() != beginTimeStep)
+                || (diff.GetTimeStep1() != endTimeStep);
+        }
+        diff.SetTimeStep0(beginTimeStep);
+        diff.SetTimeStep1(endTimeStep);
+    }
+    else
+    {
+        auto & extract = static_cast<ExtractTimeStep &>(algorithm);
+        if (modifiedPtr)
+        {
+            *modifiedPtr = *modifiedPtr || (extract.GetTimeStep() != beginTimeStep);
+        }
+        extract.SetTimeStep(beginTimeStep);
+    }
+}
+
+auto TemporalPipelineMediator::currentPipelineSelection(AbstractVisualizedData & visualization,
+    const unsigned int port) -> TemporalSelection
+{
+    TemporalSelection selection {
+        false, false,
+        std::numeric_limits<TimeStep_t>::quiet_NaN(),
+        std::numeric_limits<TimeStep_t>::quiet_NaN()
+    };
+
+    auto extractStepPtr = visualization.getPostProcessingStep(extractTimeStepPPCookie(), port);
+    auto differenceStepPtr = visualization.getPostProcessingStep(temporalDifferencePPCookie(), port);
+
+    if (!extractStepPtr && !differenceStepPtr)
+    {
+        return selection;
+    }
+
+    if (!extractStepPtr == !differenceStepPtr)
+    {
+        assert(false);
+        qWarning() << "Unexpected pipeline setup "
+            << "(single time step extraction and temporal difference applied at the same time). "
+            << "Computing temporal difference only.";
+        visualization.erasePostProcessingStep(extractTimeStepPPCookie(), port);
+        extractStepPtr = nullptr;
+    }
+
+    if (extractStepPtr)
+    {
+        auto extactTimeStep = ExtractTimeStep::SafeDownCast(extractStepPtr->pipelineHead);
+        assert(extactTimeStep);
+        if (extactTimeStep)
+        {
+            selection.isValid = true;
+            selection.isTimeRange = false;
+            selection.beginTimeStep = selection.endTimeStep
+                = extactTimeStep->GetTimeStep();
+            return selection;
+        }
+    }
+
+    if (differenceStepPtr)
+    {
+        auto difference = TemporalDifferenceFilter::SafeDownCast(differenceStepPtr->pipelineHead);
+        assert(difference);
+        if (difference)
+        {
+            selection.isValid = true;
+            selection.isTimeRange = true;
+            selection.beginTimeStep = difference->GetTimeStep0();
+            selection.endTimeStep = difference->GetTimeStep1();
+            return selection;
+        }
+    }
+
+    return selection;
 }
 
 bool TemporalPipelineMediator::updateTimeSteps()
@@ -211,12 +376,15 @@ bool TemporalPipelineMediator::updateTimeSteps()
     const auto numPorts = m_visualization->numberOfOutputPorts();
     for (unsigned int port = 0; port < numPorts; ++port)
     {
-        auto ppStep = m_visualization->getPostProcessingStep(extractTimeStepPPCookie(), port);
-        if (!ppStep)
+        auto ppStep1 = m_visualization->getPostProcessingStep(extractTimeStepPPCookie(), port);
+        auto ppStep2 = m_visualization->getPostProcessingStep(temporalDifferencePPCookie(), port);
+        if (!ppStep1 && !ppStep2)
         {
             continue;
         }
+        assert(!ppStep1 != !ppStep2);
 
+        auto ppStep = ppStep1 ? ppStep1 : ppStep2;
         assert(ppStep->pipelineHead);
         upstreamAlgorithm = ppStep->pipelineHead->GetInputAlgorithm();
         assert(upstreamAlgorithm);
@@ -254,7 +422,7 @@ bool TemporalPipelineMediator::updateTimeSteps()
 
     m_pipelineModifiedTime = currentUpdateTime;
 
-    std::vector<double> timeSteps;
+    std::vector<TimeStep_t> pipelineTimeSteps;
 
     do
     {
@@ -269,16 +437,16 @@ bool TemporalPipelineMediator::updateTimeSteps()
             outInfo.Length(vtkStreamingDemandDrivenPipeline::TIME_STEPS()));
         const auto ptr = outInfo.Get(vtkStreamingDemandDrivenPipeline::TIME_STEPS());
 
-        timeSteps = std::vector<double>(ptr, ptr + numTimeSteps);
+        pipelineTimeSteps = std::vector<TimeStep_t>(ptr, ptr + numTimeSteps);
 
     } while (false);
 
-    if (m_timeSteps == timeSteps)
+    if (m_timeSteps == pipelineTimeSteps)
     {
         return false;
     }
 
-    std::swap(m_timeSteps, timeSteps);
+    std::swap(m_timeSteps, pipelineTimeSteps);
     return true;
 }
 
@@ -290,49 +458,81 @@ bool TemporalPipelineMediator::selectionFromPipeline()
         return false;
     }
 
-    bool hasPreviousTimeStep = false;
-    double previousTimeStep = {};
-    size_t previousTimeStepIndex = {};
+    bool hasPreviouSelection = false;
+    SelectionInternal previousSelection;
 
     const auto numPorts = m_visualization->numberOfOutputPorts();
 
-    // Check for previously injected processing steps
+    // Check for previously injected processing steps.
+    // Search only until finding the first port with temporal information.
     for (unsigned int port = 0; port < numPorts; ++port)
     {
-        auto stepPtr = m_visualization->getPostProcessingStep(extractTimeStepPPCookie(), port);
-        if (!stepPtr)
+        auto extractStepPtr = m_visualization->getPostProcessingStep(extractTimeStepPPCookie(), port);
+        auto differenceStepPtr = m_visualization->getPostProcessingStep(temporalDifferencePPCookie(), port);
+
+        if (!extractStepPtr && !differenceStepPtr)
         {
             continue;
         }
-        auto & step = *stepPtr;
-
-        assert(step.pipelineHead == step.pipelineTail);
-        auto algorithm = ExtractTimeStep::SafeDownCast(step.pipelineHead);
-        assert(algorithm);
-
-        hasPreviousTimeStep = true;
-
-        auto it = std::lower_bound(m_timeSteps.begin(), m_timeSteps.end(), algorithm->GetTimeStep());
-        if (it == m_timeSteps.end())
+        if (!extractStepPtr == !differenceStepPtr)
         {
-            previousTimeStepIndex = m_timeSteps.size() - 1u;
+            assert(false);
+            qWarning() << "Unexpected pipeline setup "
+                << "(single time step extraction and temporal difference applied at the same time). "
+                << "Computing temporal difference only.";
+            m_visualization->erasePostProcessingStep(extractTimeStepPPCookie(), port);
+            extractStepPtr = nullptr;
+        }
+
+        auto & step = extractStepPtr ? *extractStepPtr : *differenceStepPtr;
+        assert(step.pipelineHead == step.pipelineTail);
+        if (extractStepPtr)
+        {
+            if (auto algorithm = ExtractTimeStep::SafeDownCast(step.pipelineHead))
+            {
+                previousSelection.setTimePoint(0u, algorithm->GetTimeStep());
+            }
+        }
+        else /*if (differenceStepPtr)*/
+        {
+            if (auto algorithm = TemporalDifferenceFilter::SafeDownCast(step.pipelineHead))
+            {
+                previousSelection.isTimeRange = true;
+                previousSelection.beginTimeStep = algorithm->GetTimeStep0();
+                previousSelection.endTimeStep = algorithm->GetTimeStep1();
+            }
+        }
+
+        hasPreviouSelection = true;
+
+        // Find nearest matching time steps based on the update time steps.
+        previousSelection.beginIndex =
+            findNearestIndex(m_timeSteps, previousSelection.beginTimeStep);
+
+        if (previousSelection.beginTimeStep == previousSelection.endTimeStep)
+        {
+            previousSelection.endIndex = previousSelection.beginIndex;
         }
         else
         {
-            previousTimeStepIndex = static_cast<size_t>(it - m_timeSteps.begin());
+            previousSelection.endIndex =
+                findNearestIndex(m_timeSteps, previousSelection.endTimeStep);
         }
-        // in case there was no exact match
-        previousTimeStep = m_timeSteps[previousTimeStepIndex];
+
+        // Clamp update time step to actually available time steps.
+        previousSelection.beginTimeStep = m_timeSteps[previousSelection.beginIndex];
+        previousSelection.endTimeStep = m_timeSteps[previousSelection.endIndex];
+
+        // Assume same temporal data on all output ports
         break;
     }
 
-    if (!hasPreviousTimeStep)
+    if (!hasPreviouSelection)
     {
         return false;
     }
 
-    m_selection.index = previousTimeStepIndex;
-    m_selection.selectedTimeStep = previousTimeStep;
+    m_selection = previousSelection;
     // Make sure that all ports refer to the same time step
     passSelectionToPipeline();
 
@@ -348,36 +548,47 @@ void TemporalPipelineMediator::passSelectionToPipeline()
 
     bool modified = false;
 
+    // Make sure that exactly one (the currently requested) processing step is injected.
+    auto & ppCookieInUse = m_selection.isTimeRange
+        ? temporalDifferencePPCookie()
+        : extractTimeStepPPCookie();
+    auto & ppCookieToRemove = !m_selection.isTimeRange
+        ? temporalDifferencePPCookie()
+        : extractTimeStepPPCookie();
+
+    // Check on all visualization ports that a filter for the current setup is present, create one
+    // if necessary, and configure its parameters.
     const auto numPorts = m_visualization->numberOfOutputPorts();
+    const auto selection = m_selection.toTemporalSelection();
     for (unsigned int port = 0; port < numPorts; ++port)
     {
-        vtkSmartPointer<ExtractTimeStep> extractTimeStep;
+        auto ppStepPtr = m_visualization->getPostProcessingStep(ppCookieInUse, port);
+        m_visualization->erasePostProcessingStep(ppCookieToRemove, port);
 
-        auto ppStepPtr = m_visualization->getPostProcessingStep(extractTimeStepPPCookie(), port);
-        const bool needToInject = ppStepPtr == nullptr;
-        if (ppStepPtr)
-        {
-            extractTimeStep = ExtractTimeStep::SafeDownCast(ppStepPtr->pipelineHead);
-            assert(extractTimeStep && (ppStepPtr->pipelineHead == ppStepPtr->pipelineTail));
-        }
-        else
-        {
-            extractTimeStep = vtkSmartPointer<ExtractTimeStep>::New();
-        }
+        assert(!ppStepPtr || ppStepPtr->pipelineHead == ppStepPtr->pipelineTail);
 
-        modified = modified || (extractTimeStep->GetTimeStep() != m_selection.selectedTimeStep);
-        extractTimeStep->SetTimeStep(m_selection.selectedTimeStep);
+        vtkSmartPointer<vtkAlgorithm> newFilterToInject;
+        bool isValid = false;
+        if (auto previousFilter = ppStepPtr ? ppStepPtr->pipelineHead : nullptr)
+        {
+            selection.configureAlgorithm(*previousFilter, &isValid, &modified);
+        }
+        if (!isValid)
+        {
+            newFilterToInject = selection.createAlgorithm();
+            assert(newFilterToInject);
+        }
 
         // Inject the step if not done before
-        if (needToInject)
+        if (newFilterToInject)
         {
             modified = true;
             AbstractVisualizedData::PostProcessingStep ppStep;
             ppStep.visualizationPort = port;
-            ppStep.pipelineHead = extractTimeStep;
-            ppStep.pipelineTail = extractTimeStep;
+            ppStep.pipelineHead = newFilterToInject;
+            ppStep.pipelineTail = newFilterToInject;
             DEBUG_ONLY(const auto result =)
-                m_visualization->injectPostProcessingStep(extractTimeStepPPCookie(), ppStep);
+                m_visualization->injectPostProcessingStep(ppCookieInUse, ppStep);
             assert(result);
         }
     }
@@ -388,8 +599,52 @@ void TemporalPipelineMediator::passSelectionToPipeline()
     }
 }
 
-TemporalPipelineMediator::TimeStepSelection::TimeStepSelection()
-    : index{ 0 }
-    , selectedTimeStep{ 0.0 }
+TemporalPipelineMediator::SelectionInternal::SelectionInternal()
+    : SelectionInternal(false, 0u, 0.0, 0u, 0.0)
 {
+}
+
+TemporalPipelineMediator::SelectionInternal::SelectionInternal(
+    bool isTimeRange,
+    size_t beginIndex, TimeStep_t beginTimeStep,
+    size_t endIndex, TimeStep_t endTimeStep)
+    : isTimeRange{ isTimeRange }
+    , beginIndex{ beginIndex }
+    , beginTimeStep{ beginTimeStep }
+    , endIndex{ endIndex }
+    , endTimeStep{ endTimeStep }
+{
+}
+
+void TemporalPipelineMediator::SelectionInternal::setTimePoint(size_t index, TimeStep_t timeStep)
+{
+    isTimeRange = false;
+    beginIndex = endIndex = index;
+    beginTimeStep = endTimeStep = timeStep;
+}
+
+bool TemporalPipelineMediator::SelectionInternal::equalsTimePoint(size_t index, TimeStep_t timeStep) const
+{
+    return !isTimeRange
+        && beginIndex == index
+        && beginTimeStep == timeStep;
+}
+
+bool TemporalPipelineMediator::SelectionInternal::operator==(const SelectionInternal & other) const
+{
+    return isTimeRange == other.isTimeRange
+        && beginIndex == other.beginIndex
+        && beginTimeStep == other.beginTimeStep
+        && endIndex == other.endIndex
+        && endTimeStep == other.endTimeStep;
+}
+
+bool TemporalPipelineMediator::SelectionInternal::operator!=(const SelectionInternal & other) const
+{
+    return !(*this == other);
+}
+
+auto TemporalPipelineMediator::SelectionInternal::toTemporalSelection() const -> TemporalSelection
+{
+    return TemporalSelection{ true, isTimeRange, beginTimeStep, endTimeStep };
 }

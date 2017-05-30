@@ -26,7 +26,6 @@
 #include <core/color_mapping/ColorMapping.h>
 #include <core/color_mapping/ColorMappingData.h>
 #include <core/data_objects/DataProfile2DDataObject.h>
-#include <core/filters/ExtractTimeStep.h>
 #include <core/rendered_data/RenderedData.h>
 #include <core/utility/qthelper.h>
 #include <core/utility/vtkvectorhelper.h>
@@ -262,11 +261,10 @@ void RenderViewStrategy2D::startProfilePlot()
         DataProfile2DDataObject::PreprocessingPipeline ppPipeline;
 
         // Make sure the plot uses the time step that was set in the visualization
-        const auto timeStep = TemporalPipelineMediator::currentUpdateTimeStep(*visualization);
-        if (TemporalPipelineMediator::isValidTimeStep(timeStep))
+        const auto selection = TemporalPipelineMediator::currentPipelineSelection(*visualization);
+        if (selection.isValid && !selection.isTimeRange)
         {
-            auto timeStepExtractor = vtkSmartPointer<ExtractTimeStep>::New();
-            timeStepExtractor->SetTimeStep(timeStep);
+            auto timeStepExtractor = selection.createAlgorithm();
             ppPipeline.head = ppPipeline.tail = timeStepExtractor;
         }
 

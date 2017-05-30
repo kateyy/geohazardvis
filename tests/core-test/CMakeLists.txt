@@ -24,6 +24,7 @@ set(sources
     filters/PipelineInformationHelper.h
     filters/SimpleImageGeoCoordinateTransformFilter_test.cpp
     filters/TemporalDataSource_test.cpp
+    filters/TemporalDifferenceFilter_test.cpp
     io/BinaryFile_test.cpp
     io/DeformationTimeSeriesTextFileReader_test.cpp
     io/MatricesToVtk_test.cpp

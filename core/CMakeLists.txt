@@ -144,6 +144,8 @@ set(sources
     filters/SimplePolyGeoCoordinateTransformFilter.cpp
     filters/TemporalDataSource.h
     filters/TemporalDataSource.cpp
+    filters/TemporalDifferenceFilter.h
+    filters/TemporalDifferenceFilter.cpp
     filters/vtkInformationDoubleVectorMetaDataKey.h
     filters/vtkInformationDoubleVectorMetaDataKey.cpp
     filters/vtkInformationIntegerMetaDataKey.h
