@@ -31,7 +31,7 @@ CanvasExporterImages::CanvasExporterImages(vtkImageWriter * writer)
 {
     m_toImageFilter->SetInput(renderWindow());
     m_toImageFilter->SetInputBufferTypeToRGBA();
-    //m_toImageFilter->ReadFrontBufferOff();
+    m_toImageFilter->ReadFrontBufferOff();
 
     m_depthToUChar = vtkSmartPointer<vtkImageShiftScale>::New();
     m_depthToUChar->SetOutputScalarTypeToUnsignedChar();
@@ -47,6 +47,9 @@ bool CanvasExporterImages::write()
     m_toImageFilter->SetInput(nullptr); // the filter does not update its image after one successful export without this line
     m_toImageFilter->SetInput(renderWindow());
 
+    const auto previousSwapBuffers = renderWindow()->GetSwapBuffers();
+    renderWindow()->SwapBuffersOff();
+
     double valueScale = m_toImageFilter->GetInputBufferType() == VTK_ZBUFFER
         ? (double)std::numeric_limits<unsigned char>::max()
         : 1.0;
@@ -56,7 +59,7 @@ bool CanvasExporterImages::write()
     m_writer->SetFileName(verifiedFileName().toUtf8().data());
     m_writer->Write();
 
-    renderWindow()->Render();
+    renderWindow()->SetSwapBuffers(previousSwapBuffers);
 
     return true;
 }
