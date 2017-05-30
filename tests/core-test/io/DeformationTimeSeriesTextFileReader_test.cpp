@@ -162,7 +162,7 @@ TEST_F(DeformationTimeSeriesTextFileReader_test, readInformation)
 
     ASSERT_EQ(DeformationTimeSeriesTextFileReader::validInformation, reader.state());
     ASSERT_EQ(deformationUnit(), reader.deformationUnitString());
-    ASSERT_EQ(numberOfTimeStamps(), reader.numTimeSteps());
+    ASSERT_EQ(numberOfTimeStamps(), reader.numberOfDates());
 }
 
 TEST_F(DeformationTimeSeriesTextFileReader_test, readWith_UTM_WGS84_Coordinates)

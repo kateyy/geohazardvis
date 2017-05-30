@@ -32,7 +32,7 @@ DeformationTimeSeriesTextFileReader::DeformationTimeSeriesTextFileReader(const Q
     , m_coordinatesToUse{ Coordinate::UTM_WGS84 }
     , m_dataOffset{}
     , m_numColumnsBeforeDeformations{ -1 }
-    , m_numTimeSteps{ -1 }
+    , m_numDates{ -1 }
     , m_deformationUnitString{}
     , m_readPolyData{}
 {
@@ -51,7 +51,7 @@ DeformationTimeSeriesTextFileReader & DeformationTimeSeriesTextFileReader::opera
     m_dataOffset = other.m_dataOffset;
     m_coordinatesToUse = other.m_coordinatesToUse;
     m_numColumnsBeforeDeformations = other.m_numColumnsBeforeDeformations;
-    m_numTimeSteps = other.m_numTimeSteps;
+    m_numDates = other.m_numDates;
     m_deformationUnitString = other.m_deformationUnitString;
     m_readPolyData = std::move(other.m_readPolyData);
 
@@ -112,15 +112,15 @@ auto DeformationTimeSeriesTextFileReader::readData() -> State
         }
     }
 
-    if (m_numTimeSteps == 0)
+    if (m_numDates == 0)
     {
         return setState(validData);
     }
 
-    TextFileReader::StringVectors timestamps;
+    TextFileReader::StringVectors datesStrings;
     auto reader = TextFileReader(m_fileName);
     reader.seekTo(m_dataOffset);
-    auto && tsReadFlags = reader.read(timestamps, 1);
+    auto && tsReadFlags = reader.read(datesStrings, 1);
     if (tsReadFlags.testFlag(TextFileReader::invalidFile))
     {
         return setState(State::invalidFileName);
@@ -129,16 +129,16 @@ auto DeformationTimeSeriesTextFileReader::readData() -> State
         || tsReadFlags.testFlag(TextFileReader::eof)
         || tsReadFlags.testFlag(TextFileReader::mismatchingColumnCount)
         || tsReadFlags.testFlag(TextFileReader::invalidOffset)
-        || timestamps.size() != static_cast<size_t>(m_numTimeSteps)
-        || timestamps[0].size() != 1)
+        || datesStrings.size() != static_cast<size_t>(m_numDates)
+        || datesStrings[0].size() != 1)
     {
         return setState(State::missingData);
     }
 
-    assert(std::all_of(timestamps.cbegin(), timestamps.cend(),
-        [] (const decltype(timestamps)::value_type & column) { return column.size() == 1; }));
+    assert(std::all_of(datesStrings.cbegin(), datesStrings.cend(),
+        [] (const decltype(datesStrings)::value_type & column) { return column.size() == 1; }));
 
-    // ==> timestamps okay
+    // ==> dates okay
 
     TextFileReader::FloatVectors readDataColumns;
     auto && dataReadFlags = reader.read(readDataColumns);
@@ -148,7 +148,8 @@ auto DeformationTimeSeriesTextFileReader::readData() -> State
         return setState(invalidFileName);
     }
 
-    const auto expectedNumColumns = static_cast<decltype(readDataColumns.size())>(m_numColumnsBeforeDeformations + m_numTimeSteps);
+    const auto expectedNumColumns = static_cast<decltype(readDataColumns.size())>(
+        m_numColumnsBeforeDeformations + m_numDates);
 
     if (!dataReadFlags.testFlag(TextFileReader::successful))
     {
@@ -167,7 +168,7 @@ auto DeformationTimeSeriesTextFileReader::readData() -> State
         qWarning() << "File contains more data columns than expected.";
         qWarning() << "File name:" << m_fileName
             << "Expected columns (coordinates, attributes + deformations):"
-            << m_numColumnsBeforeDeformations << " + " << m_numTimeSteps
+            << m_numColumnsBeforeDeformations << " + " << m_numDates
             << ", but found" << readDataColumns.size() << "columns";
         readDataColumns.resize(expectedNumColumns);
     }
@@ -280,21 +281,22 @@ auto DeformationTimeSeriesTextFileReader::readData() -> State
         arrayName_DeformationTimeSeries());
 
     const auto deformationUnitUtf8 = m_deformationUnitString.toUtf8();
-    for (unsigned timeStepIdx = 0; timeStepIdx < static_cast<unsigned>(m_numTimeSteps); ++timeStepIdx)
+    for (unsigned timeStepIdx = 0; timeStepIdx < static_cast<unsigned>(m_numDates); ++timeStepIdx)
     {
-        const auto & timestampName = timestamps[timeStepIdx][0];
+        const auto & dateString = datesStrings[timeStepIdx][0];
         bool okay;
-        const auto timeStep = timestampName.toDouble(&okay);
+        const double timeStep = dateString.toDouble(&okay);
         if (!okay)
         {
-            qWarning() << "Time stamp is not a floating point value:" << timeStep;
+            qWarning() << "Expected floating point values for dates, but is not:" << timeStep
+                << "(at index" << timeStepIdx << ")";
             return setState(State::invalidFileFormat);
         }
 
         auto array = vtkSmartPointer<vtkFloatArray>::New();
-        // Pass original time step representation as string, so that the user is not confused by
-        // inexact floating point representations
-        array->GetInformation()->Set(TIME_STEP_STRING(), timestampName.toUtf8().data());
+        // Pass original date representation as string, so that the user is not confused if the
+        // VTK double representation does not exactly match the string in the file.
+        array->GetInformation()->Set(TIME_STEP_STRING(), dateString.toUtf8().data());
         array->SetNumberOfValues(numPoints);
         if (!deformationUnitUtf8.isEmpty())
         {
@@ -313,10 +315,10 @@ auto DeformationTimeSeriesTextFileReader::readData() -> State
             array);
     }
 
-    if (!timestamps.empty())
+    if (!datesStrings.empty())
     {
         bool okay;
-        const auto timeStep = timestamps[timestamps.size() / 2u][0].toDouble(&okay);
+        const double timeStep = datesStrings[datesStrings.size() / 2u][0].toDouble(&okay);
         if (okay)
         {
             temporalDataSource->GetOutputInformation(0)->Set(
@@ -440,8 +442,8 @@ auto DeformationTimeSeriesTextFileReader::readInformation() -> State
         return setState(State::invalidFileFormat);
     }
 
-    m_numTimeSteps = strings[1][0].toInt(&valueOkay);
-    if (!valueOkay || m_numTimeSteps < 0)
+    m_numDates = strings[1][0].toInt(&valueOkay);
+    if (!valueOkay || m_numDates < 0)
     {
         return setState(State::invalidFileFormat);
     }
@@ -474,9 +476,9 @@ void DeformationTimeSeriesTextFileReader::clear()
     *this = DeformationTimeSeriesTextFileReader();
 }
 
-int DeformationTimeSeriesTextFileReader::numTimeSteps() const
+int DeformationTimeSeriesTextFileReader::numberOfDates() const
 {
-    return m_numTimeSteps;
+    return m_numDates;
 }
 
 const QString & DeformationTimeSeriesTextFileReader::deformationUnitString()

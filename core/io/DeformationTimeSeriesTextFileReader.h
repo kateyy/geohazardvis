@@ -18,9 +18,11 @@ class DataObject;
 class CORE_API DeformationTimeSeriesTextFileReader
 {
 public:
-    /** Reference the original string representation of a time step.
-      * VTK stores time step as double, which might not result in the same representation the user
-      * would expect. */
+    /**
+     * Reference the original string representation of a timestamp.
+     * VTK stores time steps as double, which might not result in the same representation the user
+     * would expect.
+     */
     static vtkInformationStringKey * TIME_STEP_STRING();
 
 public:
@@ -48,31 +50,38 @@ public:
         AzimuthRange,
         LongitudeLatitude,
     };
-    /** Set the coordinates that will be used to define the geometry of the output data set.
-      * This is UTM_WGS84 by default.
-      * Other available coordinates will be appended as point data to the data set.
-      * If the selected coordinate type is not stored in the data set, State::missing data will be 
-      * set on this->state() */
+    /*
+     * Set the coordinates that will be used to define the geometry of the output data set.
+     * This is UTM_WGS84 by default.
+     * Other available coordinates will be appended as point data to the data set.
+     * If the selected coordinate type is not stored in the data set, State::missing data will be
+     * set on this->state()
+     */
     void setCoordinatesToUse(Coordinate coordinate);
     Coordinate coordinateToUse() const;
 
-    /** Read the whole file.
-      * This first calls readInformation if necessary and than reads the actual data. */
+    /**
+     * Read the whole file.
+     * This first calls readInformation if necessary and than reads the actual data.
+     */
     State readData();
     /** Read the header of the file */
     State readInformation();
 
-    /** Generate and return on instance of the best matching DataObject containing the read data.
-      * It is required to successfully call readFile() before.
-      * That is, this->state() has to have State::validData set.
-      * @return a valid DataObject instance if valid data was read before, or an empty pointer otherwise.*/
+    /**
+     * Generate and return on instance of the best matching DataObject containing the read data.
+     * It is required to successfully call readFile() before.
+     * That is, this->state() has to have State::validData set.
+     * @return a valid DataObject instance if valid data was read before, or an empty pointer
+     * otherwise.
+     */
     std::unique_ptr<DataObject> generateDataObject();
 
     /** Reset configurations, information and discard read data. */
     void clear();
 
     /** @return Number of employed dates */
-    int numTimeSteps() const;
+    int numberOfDates() const;
 
     /** @return Deformation measurement unit */
     const QString & deformationUnitString();
@@ -103,7 +112,7 @@ private:
 
     uint64_t m_dataOffset;
     int m_numColumnsBeforeDeformations;
-    int m_numTimeSteps;
+    int m_numDates;
     QString m_deformationUnitString;
 
     vtkSmartPointer<vtkPolyData> m_readPolyData;
