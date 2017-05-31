@@ -269,7 +269,7 @@ std::vector<ValueRange<>> AttributeArrayComponentMapping::updateBounds()
 {
     const auto utf8Name = m_dataArrayName.toUtf8();
 
-    auto bounds = decltype(updateBounds())(numDataComponents());
+    auto bounds = decltype(updateBounds())(static_cast<unsigned>(numDataComponents()));
 
     for (auto c = 0; c < numDataComponents(); ++c)
     {
@@ -310,7 +310,7 @@ std::vector<ValueRange<>> AttributeArrayComponentMapping::updateBounds()
             totalRange[0] = totalRange[1] = 0.0;
         }
 
-        bounds[c] = totalRange;
+        bounds[static_cast<unsigned>(c)] = totalRange;
     }
 
     return bounds;

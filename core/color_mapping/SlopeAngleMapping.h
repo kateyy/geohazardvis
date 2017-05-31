@@ -28,7 +28,7 @@ protected:
 private:
     static const bool s_isRegistered;
 
-    std::map<AbstractVisualizedData *, std::map<int, vtkSmartPointer<vtkAlgorithm>>> m_filters;
+    std::map<AbstractVisualizedData *, std::map<unsigned int, vtkSmartPointer<vtkAlgorithm>>> m_filters;
 
 private:
     Q_DISABLE_COPY(SlopeAngleMapping)

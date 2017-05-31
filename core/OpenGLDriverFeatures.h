@@ -23,8 +23,8 @@ public:
 
     static void printDebugInfo();
     static const QString & vendor();
-    static unsigned int openGLVersionMajor();
-    static unsigned int openGLVersionMinor();
+    static int openGLVersionMajor();
+    static int openGLVersionMinor();
 
     /**
      * @return Maximum supported line width that can safely be renderer with VTK on the current

@@ -76,7 +76,7 @@ std::pair<bool, unsigned int> DataObjectPrivate::injectPostProcessingStep(const 
     return std::make_pair(true, newId);
 }
 
-bool DataObjectPrivate::erasePostProcessingStep(unsigned int id)
+bool DataObjectPrivate::erasePostProcessingStep(const unsigned int id)
 {
     const auto it = std::find_if(m_postProcessingSteps.begin(), m_postProcessingSteps.end(),
         [id] (const std::pair<unsigned int, PostProcessingStep> & step)
@@ -156,7 +156,7 @@ unsigned int DataObjectPrivate::getNextProcessingStepId()
     return m_nextProcessingStepId++;
 }
 
-void DataObjectPrivate::releaseProcessingStepId(unsigned int id)
+void DataObjectPrivate::releaseProcessingStepId(const unsigned int id)
 {
     m_freedProcessingStepIds.push_back(id);
 }

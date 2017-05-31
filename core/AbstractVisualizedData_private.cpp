@@ -11,7 +11,7 @@ vtkInformationKeyMacro(AbstractVisualizedData_private, VISUALIZED_DATA, IntegerP
 vtkAlgorithm * AbstractVisualizedData_private::pipelineEndpointsAtPort(const unsigned int port)
 {
     m_pipelineEndpointsAtPort.resize(
-        std::max(m_pipelineEndpointsAtPort.size(), port + 1u));
+        std::max(m_pipelineEndpointsAtPort.size(), static_cast<size_t>(port + 1u)));
     auto & endpoint = m_pipelineEndpointsAtPort[port];
     if (!endpoint)
     {

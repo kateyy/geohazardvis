@@ -109,8 +109,8 @@ private:
      * processing steps. */
     vtkSmartPointer<vtkAlgorithm> m_processedPassThrough;
 
-    int m_nextProcessingStepId;
-    std::vector<int> m_freedProcessingStepIds;
+    unsigned int m_nextProcessingStepId;
+    std::vector<unsigned int> m_freedProcessingStepIds;
 
     std::map<QString, std::map<vtkWeakPointer<vtkObject>, unsigned long>> m_namedObserverIds;
 

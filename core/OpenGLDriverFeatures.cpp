@@ -103,12 +103,12 @@ const QString & OpenGLDriverFeatures::vendor()
     return pFeatures().vendor;
 }
 
-unsigned int OpenGLDriverFeatures::openGLVersionMajor()
+int OpenGLDriverFeatures::openGLVersionMajor()
 {
     return pFeatures().major;
 }
 
-unsigned int OpenGLDriverFeatures::openGLVersionMinor()
+int OpenGLDriverFeatures::openGLVersionMinor()
 {
     return pFeatures().minor;
 }

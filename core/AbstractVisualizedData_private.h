@@ -66,7 +66,7 @@ public:
 
         return m_nextProcessingStepId++;
     }
-    void releaseProcessingStepId(unsigned int id)
+    void releaseProcessingStepId(const unsigned int id)
     {
         m_freedProcessingStepIds.push_back(id);
     }
@@ -89,8 +89,8 @@ public:
      * Thus, the output of the function must never be a post processing step that might get deleted
      * at some point.
      */
-    vtkAlgorithm * pipelineEndpointsAtPort(unsigned int port);
-    void updatePipeline(unsigned int port);
+    vtkAlgorithm * pipelineEndpointsAtPort(const unsigned int port);
+    void updatePipeline(const unsigned int port);
 
     const DataBounds & visibleBounds() const
     {
@@ -120,8 +120,8 @@ private:
     DataBounds m_visibleBounds;
     bool m_visibleBoundsAreValid;
 
-    int m_nextProcessingStepId;
-    std::vector<int> m_freedProcessingStepIds;
+    unsigned int m_nextProcessingStepId;
+    std::vector<unsigned int> m_freedProcessingStepIds;
     std::vector<vtkSmartPointer<vtkPassThrough>> m_pipelineEndpointsAtPort;
 
 private:

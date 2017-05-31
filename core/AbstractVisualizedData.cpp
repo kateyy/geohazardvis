@@ -152,7 +152,8 @@ vtkAlgorithmOutput * AbstractVisualizedData::processedOutputPortInternal(unsigne
 std::pair<bool, unsigned int> AbstractVisualizedData::injectPostProcessingStep(const PostProcessingStep & postProcessingStep)
 {
     d_ptr->postProcessingStepsPerPort.resize(
-        std::max(d_ptr->postProcessingStepsPerPort.size(), postProcessingStep.visualizationPort + 1u));
+        std::max(d_ptr->postProcessingStepsPerPort.size(),
+            static_cast<size_t>(postProcessingStep.visualizationPort + 1u)));
     auto & dynamicStepsForPort =
         d_ptr->postProcessingStepsPerPort[postProcessingStep.visualizationPort].dynamicStepTypes;
 
@@ -182,7 +183,7 @@ bool AbstractVisualizedData::erasePostProcessingStep(const unsigned int id)
         }
 
         dynamicStepsForPort.erase(it);
-        d_ptr->updatePipeline(static_cast<int>(port));
+        d_ptr->updatePipeline(static_cast<unsigned int>(port));
         d_ptr->releaseProcessingStepId(id);
 
         return true;
@@ -203,7 +204,8 @@ bool AbstractVisualizedData::injectPostProcessingStep(
     const PostProcessingStep & postProcessingStep)
 {
     d_ptr->postProcessingStepsPerPort.resize(
-        std::max(d_ptr->postProcessingStepsPerPort.size(), postProcessingStep.visualizationPort + 1u));
+        std::max(d_ptr->postProcessingStepsPerPort.size(),
+            static_cast<size_t>(postProcessingStep.visualizationPort + 1u)));
     auto & staticStepsForPort =
         d_ptr->postProcessingStepsPerPort[postProcessingStep.visualizationPort].staticStepTypes;
 
