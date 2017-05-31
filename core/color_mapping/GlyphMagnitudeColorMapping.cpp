@@ -62,7 +62,7 @@ std::vector<std::unique_ptr<ColorMappingData>> GlyphMagnitudeColorMapping::newIn
         instances.push_back(std::make_unique<GlyphMagnitudeColorMapping>(
             visualizedData,
             it.first,
-            std::map<RenderedData3D *, GlyphMappingData *>({ it.second.begin(), it.second.end() })));
+            std::map<RenderedData3D *, GlyphMappingData *>(it.second.begin(), it.second.end())));
     }
 
     return instances;

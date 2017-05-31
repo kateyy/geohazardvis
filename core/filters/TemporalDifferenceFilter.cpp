@@ -48,7 +48,7 @@ struct DifferenceWorker
         {
             for (vtkIdType i = begin; i < end; ++i)
             {
-                for (vtkIdType c = 0; c < numComponents; ++c)
+                for (int c = 0; c < numComponents; ++c)
                 {
                     out.Set(i, c, inT1.Get(i, c) - inT0.Get(i, c));
                 }
@@ -221,7 +221,7 @@ bool TemporalDifferenceFilter::ComputeDifferences(vtkDataSet & input, vtkDataSet
             {
                 // Compute the difference for the current attribute
                 using Dispatcher = vtkArrayDispatch::Dispatch2BySameValueType<
-                    vtkArrayDispatch::AllTypes>;
+                    vtkArrayDispatch::Reals>;
                 DifferenceWorker worker;
                 // outData still contains t0 from the initialize loop.
                 // inData already contains the recently requested t1.
