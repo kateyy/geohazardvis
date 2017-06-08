@@ -65,8 +65,10 @@ void OpenGLDriverFeatures::initializeInCurrentContext()
     auto & f = *functions;
     f.glGetIntegerv(GL_MAJOR_VERSION, &pFeatures().major);
     f.glGetIntegerv(GL_MINOR_VERSION, &pFeatures().minor);
-    pFeatures().vendor = QString::fromLatin1(reinterpret_cast<const char *>(f.glGetString(GL_VENDOR)));
-    pFeatures().renderer = QString::fromLatin1(reinterpret_cast<const char *>(f.glGetString(GL_RENDERER)));
+    auto vendorString = reinterpret_cast<const char *>(f.glGetString(GL_VENDOR));
+    pFeatures().vendor = QString::fromLatin1(vendorString ? vendorString : "");
+    auto rendererString = reinterpret_cast<const char *>(f.glGetString(GL_RENDERER));
+    pFeatures().renderer = QString::fromLatin1(rendererString ? rendererString : "");
 
     const auto error = f.glGetError();
     if (error != GL_NO_ERROR)
