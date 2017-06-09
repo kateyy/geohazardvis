@@ -156,14 +156,17 @@ else()  # Visual Studio 14 2015 as minimum
     # https://connect.microsoft.com/VisualStudio/feedback/details/2992985
     # https://connect.microsoft.com/VisualStudio/feedback/details/2988420
     # https://connect.microsoft.com/VisualStudio/Feedback/Details/2984689
-    # Just to be safe, disable this optimizer until these bugs are fixed.
-    if (NOT CMAKE_CXX_COMPILER_VERSION VERSION_GREATER "19.0.24215.1")
+    # These bugs are fixed in current micro updates in Update 3, but apparently it's not that easy
+    # to check for the MSVC/optimizer version here. So just hope the updates are present.
+    option(OPTION_MSVC_DISABLE_D2SSAOPTIMIZER
+"Enable this option of your version of Visual Studio (not the compiler!) is older than 14.0.25431.01.
+This disables the new optimizer introduced in Visual Studio 2015 Update 3 (flag -d2SSAOptimizer-)
+which initially contained a lot of bugs." OFF)
+    mark_as_advanced(OPTION_MSVC_DISABLE_D2SSAOPTIMIZER)
+    if (OPTION_MSVC_DISABLE_D2SSAOPTIMIZER)
         message("Disabling new MSVC optimizer to workaround some bugs (-d2SSAOptimizer-).")
         list(APPEND DEFAULT_COMPILE_FLAGS -d2SSAOptimizer-)
-    else()
-        message(WARNING "Unknown MSVC 2015 compiler version. Please recheck bug reports regarding the new MSVC SSA Optimizer.")
     endif()
-
 endif()
 
 
