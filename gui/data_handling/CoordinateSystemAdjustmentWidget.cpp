@@ -358,7 +358,7 @@ ReferencedCoordinateSystemSpecification CoordinateSystemAdjustmentWidget::specFr
         uninitializeVector(spec.referencePointLatLong);
     }
 
-    if (m_ui->referencePointGlobalCheckBox->isChecked())
+    if (m_ui->referencePointLocalCheckBox->isChecked())
     {
         spec.referencePointLocalRelative.SetX(m_ui->refLocalRelativeEastingSpinBox->value());
         spec.referencePointLocalRelative.SetY(m_ui->refLocalRelativeNorthingSpinBox->value());

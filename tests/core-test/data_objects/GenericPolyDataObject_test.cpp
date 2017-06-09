@@ -24,6 +24,8 @@ public:
         coordsSpec.geographicSystem = "WGS 84";
         coordsSpec.globalMetricSystem = "UTM";
         coordsSpec.unitOfMeasurement = "m";
+        coordsSpec.referencePointLatLong = { 60, 70 };
+        coordsSpec.referencePointLocalRelative = { 0.5, 0.5 };
         return coordsSpec;
     }
 

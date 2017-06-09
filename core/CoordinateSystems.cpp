@@ -472,13 +472,14 @@ bool ReferencedCoordinateSystemSpecification::operator==(const ReferencedCoordin
         return false;
     }
 
-    if (!isReferencePointValid() && !other.isReferencePointValid())
-    {
-        return true;
-    }
-
-    return referencePointLatLong == other.referencePointLatLong
-        && referencePointLocalRelative == other.referencePointLocalRelative;
+    // For both vectors: either they are equal for both instances or they must be both undefined.
+    return
+        ((referencePointLatLong == other.referencePointLatLong)
+            || (!isVectorInitialized(referencePointLatLong)
+                && !isVectorInitialized(other.referencePointLatLong)))
+        && ((referencePointLocalRelative == other.referencePointLocalRelative)
+            || (!isVectorInitialized(referencePointLocalRelative)
+                && !isVectorInitialized(other.referencePointLocalRelative)));
 }
 
 bool ReferencedCoordinateSystemSpecification::operator!=(const ReferencedCoordinateSystemSpecification & other) const
