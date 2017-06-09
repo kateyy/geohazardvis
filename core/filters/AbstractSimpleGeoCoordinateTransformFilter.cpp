@@ -175,9 +175,7 @@ int AbstractSimpleGeoCoordinateTransformFilter<Superclass_t>::RequestInformation
     }
 
     DataBounds inBounds;
-    inData->GetBounds(inBounds.data());
-    
-    if (inBounds.isEmpty() && inInfo->Has(vtkDataObject::BOUNDING_BOX()))
+    if (inInfo->Has(vtkDataObject::BOUNDING_BOX()))
     {
         inInfo->Get(vtkDataObject::BOUNDING_BOX(), inBounds.data());
     }

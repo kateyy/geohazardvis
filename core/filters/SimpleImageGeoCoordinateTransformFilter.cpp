@@ -127,20 +127,6 @@ int SimpleImageGeoCoordinateTransformFilter::RequestData(vtkInformation * /*requ
     return this->InfoSetter->GetExecutive()->Update();
 }
 
-int SimpleImageGeoCoordinateTransformFilter::FillInputPortInformation(int /*port*/, vtkInformation * info)
-{
-    info->Set(vtkAlgorithm::INPUT_REQUIRED_DATA_TYPE(), "vtkImageData");
-
-    return 1;
-}
-
-int SimpleImageGeoCoordinateTransformFilter::FillOutputPortInformation(int /*port*/, vtkInformation * info)
-{
-    info->Set(vtkDataObject::DATA_TYPE_NAME(), "vtkImageData");
-
-    return 1;
-}
-
 void SimpleImageGeoCoordinateTransformFilter::SetFilterParameters(
     const vtkVector3d & constPreTranslate,
     const vtkVector3d & constScale,

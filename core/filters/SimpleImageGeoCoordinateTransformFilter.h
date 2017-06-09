@@ -15,7 +15,8 @@ class CORE_API SimpleImageGeoCoordinateTransformFilter :
     public AbstractSimpleGeoCoordinateTransformFilter<vtkImageAlgorithm>
 {
 public:
-    vtkTypeMacro(SimpleImageGeoCoordinateTransformFilter, AbstractSimpleGeoCoordinateTransformFilter);
+    vtkTypeMacro(SimpleImageGeoCoordinateTransformFilter,
+        AbstractSimpleGeoCoordinateTransformFilter<vtkImageAlgorithm>);
     static SimpleImageGeoCoordinateTransformFilter * New();
 
 protected:
@@ -33,12 +34,6 @@ protected:
     int RequestData(vtkInformation * request,
         vtkInformationVector ** inputVector,
         vtkInformationVector * outputVector) override;
-
-    int FillInputPortInformation(
-        int port, vtkInformation * info) override;
-
-    int FillOutputPortInformation(
-        int port, vtkInformation * info) override;
 
     void SetFilterParameters(
         const vtkVector3d & preTranslate,

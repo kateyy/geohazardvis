@@ -74,20 +74,6 @@ int SimplePolyGeoCoordinateTransformFilter::RequestData(vtkInformation * /*reque
     return this->InfoSetter->GetExecutive()->Update();
 }
 
-int SimplePolyGeoCoordinateTransformFilter::FillInputPortInformation(int /*port*/, vtkInformation * info)
-{
-    info->Set(vtkAlgorithm::INPUT_REQUIRED_DATA_TYPE(), "vtkPolyData");
-
-    return 1;
-}
-
-int SimplePolyGeoCoordinateTransformFilter::FillOutputPortInformation(int /*port*/, vtkInformation * info)
-{
-    info->Set(vtkDataObject::DATA_TYPE_NAME(), "vtkPolyData");
-
-    return 1;
-}
-
 void SimplePolyGeoCoordinateTransformFilter::SetFilterParameters(
     const vtkVector3d & preTranslate,
     const vtkVector3d & scale,
