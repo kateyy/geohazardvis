@@ -299,6 +299,36 @@ auto DataExtent<T, Dimensions>::add(const DataExtent & other) -> DataExtent &
 }
 
 template<typename T, size_t Dimensions>
+template<size_t Dimensions1>
+typename std::enable_if<(Dimensions1 == 1u), DataExtent<T, Dimensions> &>::type
+DataExtent<T, Dimensions>::add(const T value)
+{
+    if (m_extent[0u] > value)
+        m_extent[0u] = value;
+    if (m_extent[1u] < value)
+        m_extent[1u] = value;
+
+    return *this;
+}
+
+template<typename T, size_t Dimensions>
+template<size_t Dimensions1>
+typename std::enable_if<(Dimensions1 > 1u), DataExtent<T, Dimensions> &>::type
+DataExtent<T, Dimensions>::add(const vtkVector<T, Dimensions> & point)
+{
+    for (size_t i = 0u; i < Dimensions; ++i)
+    {
+        if (m_extent[2u * i] > point[static_cast<int>(i)])
+            m_extent[2u * i] = point[static_cast<int>(i)];
+
+        if (m_extent[2u * i + 1u] < point[static_cast<int>(i)])
+            m_extent[2u * i + 1u] = point[static_cast<int>(i)];
+    }
+
+    return *this;
+}
+
+template<typename T, size_t Dimensions>
 auto DataExtent<T, Dimensions>::sum(DataExtent other) const -> DataExtent
 {
     other.add(*this);
@@ -544,4 +574,20 @@ typename std::enable_if<(Dimensions1 == 1u), double>::type
 DataExtent<T, Dimensions>::relativeOriginPosition() const
 {
     return -min() / componentSize();
+}
+
+template<typename T, size_t Dimensions>
+template<size_t Dimensions1>
+typename std::enable_if<(Dimensions1 > 1u), vtkVector<double, Dimensions>>::type
+DataExtent<T, Dimensions>::relativePositionOf(const vtkVector<T, Dimensions> & point) const
+{
+    return (point - min()) / componentSize();
+}
+
+template<typename T, size_t Dimensions>
+template<size_t Dimensions1>
+typename std::enable_if<(Dimensions1 == 1u), double>::type
+DataExtent<T, Dimensions>::relativePositionOf(T point) const
+{
+    return (point - min()) / componentSize();
 }

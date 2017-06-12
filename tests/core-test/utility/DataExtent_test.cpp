@@ -166,8 +166,8 @@ TEST(DataExtent_test, convertTo_type)
 
 TEST(DataExtent_test, add)
 {
-    ASSERT_EQ(Bounds2({ 0., 1., 0., 1. }), Bounds2({ 0., 1., 0., 1. }).add({}));
-    ASSERT_EQ(Bounds2({ 1., 2., 1., 2. }), Bounds2({ 1., 2., 1., 2. }).add({}));
+    ASSERT_EQ(Bounds2({ 0., 1., 0., 1. }), Bounds2({ 0., 1., 0., 1. }).add(Bounds2{}));
+    ASSERT_EQ(Bounds2({ 1., 2., 1., 2. }), Bounds2({ 1., 2., 1., 2. }).add(Bounds2{}));
     ASSERT_EQ(Bounds2({ 0., 3., 0., 3. }), Bounds2({ 0., 1., 0., 1. }).add(Bounds2({ 2., 3., 2., 3. })));
     ASSERT_EQ(Bounds2({ 0., 4., 0., 4. }), Bounds2({ 0., 4., 0., 4. }).add(Bounds2({ 2., 3., 2., 3. })));
 }
@@ -178,6 +178,20 @@ TEST(DataExtent_test, sum)
     ASSERT_EQ(Bounds2({ 1., 2., 1., 2. }), Bounds2({ 1., 2., 1., 2. }).sum({}));
     ASSERT_EQ(Bounds2({ 0., 3., 0., 3. }), Bounds2({ 0., 1., 0., 1. }).sum(Bounds2({ 2., 3., 2., 3. })));
     ASSERT_EQ(Bounds2({ 0., 4., 0., 4. }), Bounds2({ 0., 4., 0., 4. }).sum(Bounds2({ 2., 3., 2., 3. })));
+}
+
+TEST(DataExtent_test, add_value)
+{
+    ASSERT_EQ(ValueRange<>({ 0., 1. }), ValueRange<>({ 0., 1. }).add(1.0));
+    ASSERT_EQ(ValueRange<>({ 0., 3. }), ValueRange<>({ 0., 1. }).add(3.0));
+    ASSERT_EQ(ValueRange<>({ 0., 4. }), ValueRange<>({ 2., 4. }).add(0.0));
+}
+
+TEST(DataExtent_test, add_point)
+{
+    ASSERT_EQ(Bounds2({ 0., 1., 0., 1. }), Bounds2({ 0., 1., 0., 1. }).add(Vec2{ 0.0, 1.0 }));
+    ASSERT_EQ(Bounds2({ 0., 3., 0., 3. }), Bounds2({ 0., 1., 0., 1. }).add(Vec2{ 3.0, 3.0 }));
+    ASSERT_EQ(Bounds2({ 2., 4., -1., 4. }), Bounds2({ 2., 4., 1., 4. }).add(Vec2{ 2.0, -1.0 }));
 }
 
 TEST(DataExtent_test, intersect)

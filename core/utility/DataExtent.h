@@ -84,6 +84,14 @@ public:
     DataExtent & add(const DataExtent & other);
     DataExtent sum(DataExtent other) const;
 
+    template<size_t Dimensions1 = Dimensions>
+    typename std::enable_if<(Dimensions1 == 1u), DataExtent &>::type
+        add(T value);
+
+    template<size_t Dimensions1 = Dimensions>
+    typename std::enable_if<(Dimensions1 > 1u), DataExtent &>::type
+        add(const vtkVector<T, Dimensions> & point);
+
     /** Returns a copy of this intersected by other. See intersect() */
     DataExtent intersection(DataExtent other) const;
     /** Minima per dimension are set to the highest value of this and other. The inverse is done
@@ -157,6 +165,14 @@ public:
     template<size_t Dimensions1 = Dimensions>
     typename std::enable_if<(Dimensions1 == 1u), double>::type
         relativeOriginPosition() const;
+
+    template<size_t Dimensions1 = Dimensions>
+    typename std::enable_if<(Dimensions1 > 1u), vtkVector<double, Dimensions>>::type
+        relativePositionOf(const vtkVector<T, Dimensions> & point) const;
+
+    template<size_t Dimensions1 = Dimensions>
+    typename std::enable_if<(Dimensions1 == 1u), double>::type
+        relativePositionOf(T point) const;
 
 private:
     array_t m_extent;
