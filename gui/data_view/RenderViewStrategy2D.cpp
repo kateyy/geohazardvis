@@ -385,6 +385,7 @@ void RenderViewStrategy2D::acceptProfilePlot()
     m_previewRenderer = nullptr;
     m_activeInputData.clear();
 
+    m_lineWidget->Off();
     m_lineWidget = nullptr;
     m_context.render();
 
@@ -404,6 +405,7 @@ void RenderViewStrategy2D::abortProfilePlot()
         m_previewRenderer->close();
         m_previewRenderer = nullptr;
 
+        m_lineWidget->Off();
         m_lineWidget = nullptr;
 
         // refresh for the removed line widget
