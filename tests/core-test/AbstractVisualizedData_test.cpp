@@ -229,7 +229,7 @@ TEST_F(AbstractVisualizedData_test, InjectPostProcessingStep_2Steps_Erase1)
     ASSERT_TRUE(result);
     ASSERT_NE(index1, index2);
 
-    vis->processedOutputDataSet();
+    ASSERT_TRUE(vis->processedOutputDataSet());
 
     ASSERT_TRUE(vis->erasePostProcessingStep(index1));
 
@@ -263,7 +263,7 @@ TEST_F(AbstractVisualizedData_test, InjectPostProcessingStep_2Steps_Erase1_Injec
     ASSERT_TRUE(result);
     ASSERT_NE(index1, index2);
 
-    vis->processedOutputDataSet();
+    ASSERT_TRUE(vis->processedOutputDataSet());
 
     ASSERT_TRUE(vis->erasePostProcessingStep(index1));
 
@@ -381,7 +381,7 @@ TEST_F(AbstractVisualizedData_test, InjectStaticPostProcessingStep_2Steps_Erase1
     ASSERT_TRUE(vis->injectPostProcessingStep(ppCookie1, ppStep1));
     ASSERT_TRUE(vis->injectPostProcessingStep(ppCookie2, ppStep2));
 
-    vis->processedOutputDataSet();
+    ASSERT_TRUE(vis->processedOutputDataSet());
 
     ASSERT_TRUE(vis->erasePostProcessingStep(ppCookie1, ppStep1.visualizationPort));
 
@@ -410,7 +410,7 @@ TEST_F(AbstractVisualizedData_test, InjectStaticPostProcessingStep_2Steps_Erase1
     ASSERT_TRUE(vis->injectPostProcessingStep(ppCookie1, ppStep1));
     ASSERT_TRUE(vis->injectPostProcessingStep(ppCookie2, ppStep2));
 
-    vis->processedOutputDataSet();
+    ASSERT_TRUE(vis->processedOutputDataSet());
 
     ASSERT_TRUE(vis->erasePostProcessingStep(ppCookie1, ppStep2.visualizationPort));
 

@@ -51,7 +51,6 @@ void CameraDolly::moveTo(AbstractVisualizedData & visualization, vtkIdType index
     }
 
     auto dataSet = visualization.processedOutputDataSet();
-
     if (!dataSet)
     {
         qDebug() << "[CameraDolly] No data output found in visualization output port";

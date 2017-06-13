@@ -5,6 +5,7 @@
 #include <QDebug>
 
 #include <vtkAlgorithmOutput.h>
+#include <vtkExecutive.h>
 #include <vtkPointData.h>
 #include <vtkPolyData.h>
 #include <vtkTransform.h>
@@ -197,7 +198,11 @@ vtkSmartPointer<vtkAlgorithm> GenericPolyDataObject::createTransformPipeline(
     vtkSmartPointer<vtkAlgorithm> localPipelineUpstream;
 
     // check if there are stored point coordinates
-    pipelineUpstream->GetProducer()->Update();
+    if (!pipelineUpstream->GetProducer()->GetExecutive()->Update())
+    {
+        qWarning() << "Error in pipeline update in" << name();
+        return{};
+    }
     auto upstreamPoly = vtkPolyData::SafeDownCast(pipelineUpstream->GetProducer()->GetOutputDataObject(0));
     if (upstreamPoly)
     {

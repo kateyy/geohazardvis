@@ -2,6 +2,8 @@
 
 #include <map>
 
+#include <QDebug>
+
 #include <vtkAssignAttribute.h>
 #include <vtkCellData.h>
 #include <vtkDataSet.h>
@@ -67,6 +69,11 @@ std::vector<std::unique_ptr<ColorMappingData>> DirectImageColors::newInstances(c
         for (unsigned int i = 0; i < vis->numberOfOutputPorts(); ++i)
         {
             auto dataSet = vis->processedOutputDataSet(i);
+            if (!dataSet)
+            {
+                qWarning() << "Pipeline failure in visualization of" << vis->dataObject().name();
+                continue;
+            }
 
             checkAddAttributeArrays(dataSet->GetCellData(), IndexType::cells);
             checkAddAttributeArrays(dataSet->GetPointData(), IndexType::points);

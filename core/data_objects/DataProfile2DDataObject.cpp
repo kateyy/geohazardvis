@@ -316,13 +316,23 @@ vtkIdType DataProfile2DDataObject::vectorComponent() const
 
 ValueRange<> DataProfile2DDataObject::scalarRange()
 {
+    auto dataSet = processedOutputDataSet();
+    if (!dataSet)
+    {
+        return{};
+    }
     // x-y-plot -> value range on the y axis
-    return ValueRange<>(&processedOutputDataSet()->GetBounds()[2]);
+    return ValueRange<>(&dataSet->GetBounds()[2]);
 }
 
 int DataProfile2DDataObject::numberOfScalars()
 {
-    return static_cast<int>(processedOutputDataSet()->GetNumberOfPoints());
+    auto dataSet = processedOutputDataSet();
+    if (!dataSet)
+    {
+        return{};
+    }
+    return static_cast<int>(dataSet->GetNumberOfPoints());
 }
 
 const vtkVector2d & DataProfile2DDataObject::profileLinePoint1() const

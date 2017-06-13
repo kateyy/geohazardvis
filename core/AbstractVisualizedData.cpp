@@ -5,6 +5,7 @@
 #include <vtkAlgorithm.h>
 #include <vtkAlgorithmOutput.h>
 #include <vtkDataSet.h>
+#include <vtkExecutive.h>
 #include <vtkLookupTable.h>
 
 #include <core/AbstractVisualizedData_private.h>
@@ -138,7 +139,10 @@ vtkAlgorithmOutput * AbstractVisualizedData::processedOutputPort(const unsigned 
 vtkDataSet * AbstractVisualizedData::processedOutputDataSet(unsigned int port)
 {
     auto alg = processedOutputPort(port)->GetProducer();
-    alg->Update();
+    if (!alg->GetExecutive()->Update())
+    {
+        return nullptr;
+    }
     return vtkDataSet::SafeDownCast(alg->GetOutputDataObject(0));
 }
 

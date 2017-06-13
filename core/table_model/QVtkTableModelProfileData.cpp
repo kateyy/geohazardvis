@@ -47,9 +47,14 @@ QVariant QVtkTableModelProfileData::data(const QModelIndex &index, int role) con
         return QVariant();
     }
 
+    auto processedData = m_data->processedOutputDataSet();
+    if (!processedData)
+    {
+        return{};
+    }
+
     std::array<double, 3> point;
-    m_data->processedOutputDataSet()->GetPoint(valueId, point.data());
-    
+    processedData->GetPoint(valueId, point.data());
     return point[positionOrValue];
 }
 

@@ -563,7 +563,7 @@ TEST_F(DataObject_test, InjectPostProcessingStep_2Steps_Erase1)
     ASSERT_TRUE(result);
     ASSERT_NE(index1, index2);
 
-    dataObject->processedOutputDataSet();
+    ASSERT_TRUE(dataObject->processedOutputDataSet());
 
     ASSERT_TRUE(dataObject->erasePostProcessingStep(index1));
 
@@ -596,7 +596,7 @@ TEST_F(DataObject_test, InjectPostProcessingStep_2Steps_Erase1_Inject)
     ASSERT_TRUE(result);
     ASSERT_NE(index1, index2);
 
-    dataObject->processedOutputDataSet();
+    ASSERT_TRUE(dataObject->processedOutputDataSet());
 
     ASSERT_TRUE(dataObject->erasePostProcessingStep(index1));
 

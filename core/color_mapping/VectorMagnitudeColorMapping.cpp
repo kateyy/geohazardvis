@@ -80,6 +80,11 @@ std::vector<std::unique_ptr<ColorMappingData>> VectorMagnitudeColorMapping::newI
         for (unsigned int i = 0; i < vis->numberOfOutputPorts(); ++i)
         {
             auto dataSet = vis->processedOutputDataSet(i);
+            if (!dataSet)
+            {
+                qWarning() << "Pipeline failure in visualization of" << vis->dataObject().name();
+                continue;
+            }
 
             checkAddAttributeArrays(vis, dataSet->GetCellData(), cellArrays);
             checkAddAttributeArrays(vis, dataSet->GetPointData(), pointArrays);

@@ -128,6 +128,11 @@ std::vector<std::unique_ptr<ColorMappingData>> AttributeArrayComponentMapping::n
         for (unsigned int i = 0; i < vis->numberOfOutputPorts(); ++i)
         {
             auto dataSet = vis->processedOutputDataSet(i);
+            if (!dataSet)
+            {
+                qWarning() << "Pipeline failure in visualization of" << vis->dataObject().name();
+                continue;
+            }
 
             // in case of conflicts, prefer point over cell arrays (as they probably have a higher precision)
             checkAttributeArrays(vis, dataSet->GetPointData(), IndexType::points, dataSet->GetNumberOfPoints(), arrayInfos);
@@ -285,8 +290,13 @@ std::vector<ValueRange<>> AttributeArrayComponentMapping::updateBounds()
 
             for (unsigned int i = 0; i < visualizedData->numberOfOutputPorts(); ++i)
             {
-                auto dataArray = attributeLocation.extractArray(
-                    visualizedData->processedOutputDataSet(i), utf8Name.data());
+                auto processedDataI = visualizedData->processedOutputDataSet(i);
+                if (!processedDataI)
+                {
+                    qWarning() << "Pipeline failure in visualization of" << visualizedData->dataObject().name();
+                    continue;
+                }
+                auto dataArray = attributeLocation.extractArray(processedDataI, utf8Name.data());
                 if (!dataArray)
                 {
                     continue;

@@ -12,6 +12,7 @@
 #include <vtkCharArray.h>
 #include <vtkCommand.h>
 #include <vtkDataSet.h>
+#include <vtkExecutive.h>
 #include <vtkFieldData.h>
 #include <vtkInformation.h>
 #include <vtkInformationIntegerKey.h>
@@ -149,7 +150,10 @@ vtkAlgorithmOutput * DataObject::processedOutputPort()
 vtkDataSet * DataObject::processedOutputDataSet()
 {
     auto producer = d_ptr->pipelineEndPoint();
-    producer->Update();
+    if (!producer->GetExecutive()->Update())
+    {
+        return nullptr;
+    }
     return vtkDataSet::SafeDownCast(producer->GetOutputDataObject(0));
 }
 

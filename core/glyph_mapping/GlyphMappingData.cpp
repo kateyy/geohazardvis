@@ -4,6 +4,8 @@
 #include <cassert>
 #include <limits>
 
+#include <QDebug>
+
 #include <vtkActor.h>
 #include <vtkAppendPolyData.h>
 #include <vtkArrowSource.h>
@@ -63,7 +65,7 @@ GlyphMappingData::GlyphMappingData(RenderedData & renderedData)
     , m_isVisible{ false }
     , m_actor{ vtkSmartPointer<vtkActor>::New() }
     , m_colorMappingData{ nullptr }
-    , m_isValid{ true }
+    , m_isValid{ false }
 {
     auto lineArrow = vtkSmartPointer<vtkLineSource>::New();
     lineArrow->SetPoint1(0.f, 0.f, 0.f);
@@ -83,7 +85,14 @@ GlyphMappingData::GlyphMappingData(RenderedData & renderedData)
     m_arrowGlyph->SetScaleModeToDataScalingOff();
     m_arrowGlyph->OrientOn();
     DataBounds bounds;
-    renderedData.dataObject().processedOutputDataSet()->GetBounds(bounds.data());
+    auto processedData = renderedData.dataObject().processedOutputDataSet();
+    if (!processedData)
+    {
+        qWarning() << "Pipeline failure in glyph mapping on data set"
+            << renderedData.dataObject().name();
+        return;
+    }
+    processedData->GetBounds(bounds.data());
     const double maxBoundsSize = maxComponent(bounds.componentSize());
     m_arrowGlyph->SetScaleFactor(maxBoundsSize * 0.1);
 
@@ -99,6 +108,8 @@ GlyphMappingData::GlyphMappingData(RenderedData & renderedData)
     m_actor->SetVisibility(m_isVisible);
     m_actor->PickableOff();
     m_actor->SetMapper(m_mapper);
+
+    m_isValid = true;
 }
 
 bool GlyphMappingData::isVisible() const

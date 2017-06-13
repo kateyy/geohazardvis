@@ -285,7 +285,10 @@ void RenderedImageData::visibilityChangedEvent(bool visible)
 DataBounds RenderedImageData::updateVisibleBounds()
 {
     DataBounds bounds;
-    processedOutputDataSet()->GetBounds(bounds.data());
+    if (auto processedData = processedOutputDataSet())
+    {
+        processedData->GetBounds(bounds.data());
+    }
     return bounds;
 }
 
