@@ -109,6 +109,10 @@ std::unique_ptr<PropertyGroup> RendererConfigWidget::createPropertyGroupRenderer
         {
             spec.unitOfMeasurement = "km";
         }
+        else if (spec.type == CoordinateSystemType::geographic)
+        {
+            spec.unitOfMeasurement.clear();
+        }
 
         if (!renderView->setCurrentCoordinateSystem(spec))
         {
