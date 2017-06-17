@@ -420,16 +420,16 @@ int GeographicTransformationFilter::RequestInformation(
 
     this->ReferencedTargetSpec =
         ReferencedCoordinateSystemSpecification(this->TargetCoordinateSystem,
-            this->SourceCoordinateSystem.referencePointLatLong,
-            this->SourceCoordinateSystem.referencePointLocalRelative);
+            this->SourceCoordinateSystem.referencePointLatLong);
 
     auto outInfo = outputVector->GetInformationObject(0);
     this->ReferencedTargetSpec.writeToInformation(*outInfo);
 
-    if (inInfo->Has(vtkDataObject::BOUNDING_BOX()))
+    // Remove information keys that are invalidated by this filter.
+    // For vtkImageData inputs, these values could already be computed, actually.
+    if (outInfo->Has(vtkDataObject::BOUNDING_BOX()))
     {
-        DataBounds bounds;
-        inInfo->Get(vtkDataObject::BOUNDING_BOX(), bounds.data());
+        outInfo->Remove(vtkDataObject::BOUNDING_BOX());
     }
     if (outInfo->Has(vtkDataObject::SPACING()))
     {

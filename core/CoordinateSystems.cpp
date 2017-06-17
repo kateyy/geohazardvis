@@ -22,7 +22,6 @@ vtkInformationKeyMacro(CoordinateSystemSpecification, GeographicCoordinateSystem
 vtkInformationKeyMacro(CoordinateSystemSpecification, MetricCoordinateSystemName_InfoKey, StringMetaData);
 vtkInformationKeyMacro(CoordinateSystemSpecification, UnitOfMeasurement_InfoKey, StringMetaData);
 vtkInformationKeyMacro(ReferencedCoordinateSystemSpecification, ReferencePointLatLong_InfoKey, DoubleVectorMetaData);
-vtkInformationKeyMacro(ReferencedCoordinateSystemSpecification, ReferencePointLocalRelative_InfoKey, DoubleVectorMetaData);
 
 
 namespace
@@ -423,7 +422,6 @@ ReferencedCoordinateSystemSpecification::ReferencedCoordinateSystemSpecification
     : CoordinateSystemSpecification()
 {
     uninitializeVector(referencePointLatLong);
-    uninitializeVector(referencePointLocalRelative);
 }
 
 ReferencedCoordinateSystemSpecification::ReferencedCoordinateSystemSpecification(
@@ -431,21 +429,17 @@ ReferencedCoordinateSystemSpecification::ReferencedCoordinateSystemSpecification
     const QString & geographicSystem,
     const QString & globalMetricSystem,
     const QString & unitOfMeasurement,
-    vtkVector2d referencePointLatLong,
-    vtkVector2d referencePointLocalRelative)
+    vtkVector2d referencePointLatLong)
     : CoordinateSystemSpecification(type, geographicSystem, globalMetricSystem, unitOfMeasurement)
     , referencePointLatLong{ referencePointLatLong }
-    , referencePointLocalRelative{ referencePointLocalRelative }
 {
 }
 
 ReferencedCoordinateSystemSpecification::ReferencedCoordinateSystemSpecification(
     CoordinateSystemSpecification unreferencedSpec,
-    vtkVector2d referencePointLatLong,
-    vtkVector2d referencePointLocalRelative)
+    vtkVector2d referencePointLatLong)
     : CoordinateSystemSpecification(unreferencedSpec)
     , referencePointLatLong{ referencePointLatLong }
-    , referencePointLocalRelative{ referencePointLocalRelative }
 {
 }
 
@@ -471,14 +465,9 @@ bool ReferencedCoordinateSystemSpecification::operator==(const ReferencedCoordin
         return false;
     }
 
-    // For both vectors: either they are equal for both instances or they must be both undefined.
-    return
-        ((referencePointLatLong == other.referencePointLatLong)
-            || (!isVectorInitialized(referencePointLatLong)
-                && !isVectorInitialized(other.referencePointLatLong)))
-        && ((referencePointLocalRelative == other.referencePointLocalRelative)
-            || (!isVectorInitialized(referencePointLocalRelative)
-                && !isVectorInitialized(other.referencePointLocalRelative)));
+    return (referencePointLatLong == other.referencePointLatLong)
+        || (!isVectorInitialized(referencePointLatLong)
+            && !isVectorInitialized(other.referencePointLatLong));
 }
 
 bool ReferencedCoordinateSystemSpecification::operator!=(const ReferencedCoordinateSystemSpecification & other) const
@@ -491,15 +480,10 @@ void ReferencedCoordinateSystemSpecification::readFromInformation(vtkInformation
     CoordinateSystemSpecification::readFromInformation(info);
 
     uninitializeVector(referencePointLatLong);
-    uninitializeVector(referencePointLocalRelative);
 
     if (info.Has(ReferencePointLatLong_InfoKey()))
     {
         referencePointLatLong = vtkVector2d(info.Get(ReferencePointLatLong_InfoKey()));
-    }
-    if (info.Has(ReferencePointLocalRelative_InfoKey()))
-    {
-        referencePointLocalRelative = vtkVector2d(info.Get(ReferencePointLocalRelative_InfoKey()));
     }
 }
 
@@ -515,14 +499,6 @@ void ReferencedCoordinateSystemSpecification::writeToInformation(vtkInformation 
     {
         info.Remove(ReferencePointLatLong_InfoKey());
     }
-    if (isVectorInitialized(referencePointLocalRelative))
-    {
-        info.Set(ReferencePointLocalRelative_InfoKey(), referencePointLocalRelative.GetData(), referencePointLocalRelative.GetSize());
-    }
-    else
-    {
-        info.Remove(ReferencePointLocalRelative_InfoKey());
-    }
 }
 
 ReferencedCoordinateSystemSpecification ReferencedCoordinateSystemSpecification::fromInformation(vtkInformation & information)
@@ -537,10 +513,8 @@ void ReferencedCoordinateSystemSpecification::readFromFieldData(vtkFieldData & f
     CoordinateSystemSpecification::readFromFieldData(fieldData);
 
     uninitializeVector(referencePointLatLong);
-    uninitializeVector(referencePointLocalRelative);
 
     readIfExists(fieldData, arrayName_geoReference(), referencePointLatLong);
-    readIfExists(fieldData, arrayName_relativeReference(), referencePointLocalRelative);
 }
 
 void ReferencedCoordinateSystemSpecification::writeToFieldData(vtkFieldData & fieldData) const
@@ -550,7 +524,6 @@ void ReferencedCoordinateSystemSpecification::writeToFieldData(vtkFieldData & fi
     const auto defaultValue = uninitializedVector<double, 2>();
 
     checkSetArray(fieldData, referencePointLatLong, defaultValue, arrayName_geoReference());
-    checkSetArray(fieldData, referencePointLocalRelative, defaultValue, arrayName_relativeReference());
 }
 
 ReferencedCoordinateSystemSpecification ReferencedCoordinateSystemSpecification::fromFieldData(vtkFieldData & fieldData)
@@ -607,18 +580,16 @@ std::ostream & operator<<(std::ostream & os, const CoordinateSystemSpecification
 QDataStream & operator<<(QDataStream & stream, const ReferencedCoordinateSystemSpecification & spec)
 {
     stream << static_cast<const CoordinateSystemSpecification &>(spec)
-        << spec.referencePointLatLong.GetX() << spec.referencePointLatLong.GetY()
-        << spec.referencePointLocalRelative.GetX() << spec.referencePointLocalRelative.GetY();
+        << spec.referencePointLatLong.GetX() << spec.referencePointLatLong.GetY();
     return stream;
 }
 
 QDataStream & operator>>(QDataStream & stream, ReferencedCoordinateSystemSpecification & spec)
 {
-    double refX = {}, refY = {}, localX = {}, localY = {};
+    double refX = {}, refY = {};
     stream >> static_cast<CoordinateSystemSpecification &>(spec)
-        >> refX >> refY >> localX >> localY;
+        >> refX >> refY;
     spec.referencePointLatLong = { refX, refY };
-    spec.referencePointLocalRelative = { localX, localY };
     return stream;
 }
 
@@ -629,9 +600,6 @@ std::ostream & operator<<(std::ostream & os, const ReferencedCoordinateSystemSpe
     os << static_cast<const CoordinateSystemSpecification &>(spec)
         << " (reference point, global: ["
         << spec.referencePointLatLong[0] << degree << " N, "
-        << spec.referencePointLatLong[1] << degree << " E], "
-        << "relative: ["
-        << spec.referencePointLocalRelative[0] << "x, "
-        << spec.referencePointLocalRelative[1] << "y])";
+        << spec.referencePointLatLong[1] << degree << " E], ";
     return os;
 }

@@ -729,12 +729,10 @@ ReferencedCoordinateSystemSpecification DEMWidget::targetCoordsTopoSpec()
         return spec;
     }
 
-    auto && referenceXY = topographyCenterXY();
-    spec.referencePointLatLong = { referenceXY.GetY(), referenceXY.GetX() };
-
     // The mesh template is assumed to have its origin (and highest density) at its center.
     // That's why the mesh center is always positioned on the point selected in the UI
-    spec.referencePointLocalRelative = { 0.5, 0.5 };
+    auto && referenceXY = topographyCenterXY();
+    spec.referencePointLatLong = { referenceXY.GetY(), referenceXY.GetX() };
 
     return spec;
 }

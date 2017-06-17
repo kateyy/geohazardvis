@@ -153,9 +153,7 @@ TEST_F(DataProfile2DDataObject_test, PlotIrregularPointCloudFromGlobalMetric)
     pointPolyData->GetPointData()->SetScalars(scalars);
     PointCloudDataObject pointCloud("Point Cloud", *pointPolyData);
     const auto coordsSpec = ReferencedCoordinateSystemSpecification(
-        CoordinateSystemType::metricGlobal, "WGS 84", "UTM", "km",
-        globalLatLong,
-        vtkVector2d{ 0.0, 0.0 });
+        CoordinateSystemType::metricGlobal, "WGS 84", "UTM", "km", globalLatLong);
     pointCloud.specifyCoordinateSystem(coordsSpec);
 
     DataProfile2DDataObject plot("Plot", pointCloud, "OnLine", IndexType::points, 0);

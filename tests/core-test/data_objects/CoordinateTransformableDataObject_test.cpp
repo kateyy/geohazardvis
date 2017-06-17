@@ -98,7 +98,6 @@ TEST(ReferencedCoordinateSystemSpecification_test, EqualIfBothInspecified)
     ASSERT_NE(spec1, spec2);
 
     spec1.referencePointLatLong = { 1.0, 2.0 };
-    spec1.referencePointLocalRelative = { 0.0, 1.0 };
     spec2 = spec1;
     ASSERT_EQ(spec1, spec2);
     spec2.referencePointLatLong = { 2.0, 3.0 };
@@ -121,11 +120,11 @@ TEST_F(CoordinateTransformableDataObject_test, TransformAppliedToVisibleBounds)
     const auto coordsSpec = ReferencedCoordinateSystemSpecification(
         CoordinateSystemType::geographic,
         "testSystem",
-        {}, {}, {}, {});
+        {}, {}, {});
     const auto targetCoordsSpec = ReferencedCoordinateSystemSpecification(
         CoordinateSystemType::geographic,
         "otherTestSystem",
-        {}, {}, {}, {});
+        {}, {}, {});
 
     auto data = genPolyData<TransformedPolyData>();
     data->specifyCoordinateSystem(coordsSpec);
@@ -153,7 +152,7 @@ TEST_F(CoordinateTransformableDataObject_test, ApplyCoordinateSystemFromFieldDat
         "testGeoSystem",
         "testMetricSystem",
         "",
-        { 100, 200 }, {0.2, 0.3});
+        { 100, 200 });
 
     coordsSpec.writeToFieldData(*dataSet->GetFieldData());
     
@@ -171,7 +170,7 @@ TEST_F(CoordinateTransformableDataObject_test, PersistentCoordsSpec_PolyData)
         "testGeoSystem",
         "testMetricSystem",
         "",
-        { 100, 200 }, { 0.2, 0.3 });
+        { 100, 200 });
 
     dataObject->specifyCoordinateSystem(coordsSpec);
 
@@ -197,7 +196,7 @@ TEST_F(CoordinateTransformableDataObject_test, PersistentCoordsSpec_ImageData)
         "testGeoSystem",
         "testMetricSystem",
         "",
-        { 100, 200 }, { 0.2, 0.3 });
+        { 100, 200 });
 
     dataObject.specifyCoordinateSystem(coordsSpec);
 
@@ -219,7 +218,7 @@ TEST_F(CoordinateTransformableDataObject_test, coordsPassToProcessedFieldData)
         "testGeoSystem",
         "testMetricSystem",
         "",
-        { 100, 200 }, { 0.2, 0.3 });
+        { 100, 200 });
 
     dataObject->specifyCoordinateSystem(coordsSpec);
 

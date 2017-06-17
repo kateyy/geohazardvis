@@ -46,8 +46,7 @@ public:
             "WGS 84",
             "UTM",
             {},
-            { dataBounds_WGS84().center()[1], dataBounds_WGS84().center()[0] },
-            { 0.5, 0.5 });
+            { dataBounds_WGS84().center()[1], dataBounds_WGS84().center()[0] });
         return spec;
     }
     static const ReferencedCoordinateSystemSpecification & dataSpec_WGS84_UTM()
@@ -57,8 +56,7 @@ public:
             "WGS 84",
             "UTM",
             "m",
-            { dataBounds_WGS84().center()[1], dataBounds_WGS84().center()[0] },
-            { 0.5, 0.5 });
+            { dataBounds_WGS84().center()[1], dataBounds_WGS84().center()[0] });
         return spec;
     }
     static const ReferencedCoordinateSystemSpecification & dataSpec_WGS84_UTM_local()
@@ -68,8 +66,7 @@ public:
             "WGS 84",
             "UTM",
             "m",
-            { dataBounds_WGS84().center()[1], dataBounds_WGS84().center()[0] },
-            { 0.5, 0.5 });
+            { dataBounds_WGS84().center()[1], dataBounds_WGS84().center()[0] });
         return spec;
     }
 

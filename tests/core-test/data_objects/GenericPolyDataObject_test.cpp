@@ -26,7 +26,6 @@ public:
         coordsSpec.globalMetricSystem = "UTM";
         coordsSpec.unitOfMeasurement = "m";
         coordsSpec.referencePointLatLong = { 60, 70 };
-        coordsSpec.referencePointLocalRelative = { 0.5, 0.5 };
         return coordsSpec;
     }
 
@@ -135,7 +134,6 @@ TEST_F(GenericPolyDataObject_test, TransformCoords_PointCloud_m_to_km_storedCoor
     auto specGlobalM = defaultCoordsSpec();
     specGlobalM.type = CoordinateSystemType::metricGlobal;
     specGlobalM.referencePointLatLong = { 40.0, 50.0 };
-    specGlobalM.referencePointLocalRelative = { 0.5, 0.5 };
     const int numPoints = 6;
     auto pointCloud = genPointCloud(numPoints, specGlobalM);
     auto coordsGlobalM = vtkFloatArray::FastDownCast(pointCloud->polyDataSet().GetPoints()->GetData());

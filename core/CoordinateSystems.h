@@ -142,12 +142,10 @@ struct CORE_API ReferencedCoordinateSystemSpecification : public CoordinateSyste
         const QString & geographicSystem,
         const QString & globalMetricSystem,
         const QString & unitOfMeasurement,
-        vtkVector2d referencePointLatLong,
-        vtkVector2d referencePointLocalRelative);
+        vtkVector2d referencePointLatLong);
     ReferencedCoordinateSystemSpecification(
         CoordinateSystemSpecification unreferencedSpec,
-        vtkVector2d referencePointLatLong,
-        vtkVector2d referencePointLocalRelative);
+        vtkVector2d referencePointLatLong);
     ~ReferencedCoordinateSystemSpecification() override = default;
 
     bool isReferencePointValid() const;
@@ -163,11 +161,6 @@ struct CORE_API ReferencedCoordinateSystemSpecification : public CoordinateSyste
      * defined by geographicCoordinateSystem.
      */
     vtkVector2d referencePointLatLong;
-    /**
-     * Relative position of the reference point within the data set bounds.
-     * X is the easting, Y is the northing of the data set.
-     */
-    vtkVector2d referencePointLocalRelative;
 
 
     void readFromInformation(vtkInformation & information) override;
@@ -179,7 +172,6 @@ struct CORE_API ReferencedCoordinateSystemSpecification : public CoordinateSyste
     static ReferencedCoordinateSystemSpecification fromFieldData(vtkFieldData & fieldData);
 
     static vtkInformationDoubleVectorMetaDataKey * ReferencePointLatLong_InfoKey();
-    static vtkInformationDoubleVectorMetaDataKey * ReferencePointLocalRelative_InfoKey();
 
     ReferencedCoordinateSystemSpecification(const ReferencedCoordinateSystemSpecification &) = default;
     ReferencedCoordinateSystemSpecification(ReferencedCoordinateSystemSpecification &&) = default;

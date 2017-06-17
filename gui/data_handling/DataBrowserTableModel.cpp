@@ -321,34 +321,10 @@ QVariant DataBrowserTableModel::data_dataObject(int row, int column, int role) c
                 {
                     return{};
                 }
-                QString toolTip = "Coordinate System: "
+                return "Coordinate System: "
                     + coordsSpec.geographicSystem + ", " + coordsSpec.globalMetricSystem
                     + (coordsSpec.type == CoordinateSystemType::metricLocal
                         ? " (Local coordinates)" : "");
-                const int maxlRef = 10000;
-                const int centerlRef = maxlRef / 2;
-                auto && lRef = coordsSpec.referencePointLocalRelative;
-                const auto lRefI = convertTo<int>(lRef * double(maxlRef));
-                toolTip += "\nReference Point within Data Set: ";
-                if (lRefI[0] == centerlRef && lRefI[1] == centerlRef)
-                {
-                    toolTip += "Center";
-                }
-                else
-                {
-                    const auto NRef = QString(lRefI[1] == 0 ? "North" : (lRefI[1] == maxlRef ? "South" : ""));
-                    const auto ERef = QString(lRefI[0] == 0 ? "East" : (lRefI[0] == maxlRef ? "West" : ""));
-                    if (!NRef.isEmpty() && !ERef.isEmpty())
-                    {
-                        toolTip += NRef + " " + ERef;
-                    }
-                    else
-                    {
-                        toolTip += QString::number(static_cast<int>(lRef[1] * 100.0)) + "% North, "
-                            + QString::number(static_cast<int>(lRef[0] * 100.0)) + "% East";
-                    }
-                }
-                return toolTip;
             }
         default:
             return{};

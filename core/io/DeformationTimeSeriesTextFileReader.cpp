@@ -344,7 +344,6 @@ auto DeformationTimeSeriesTextFileReader::readData() -> State
     ReferencedCoordinateSystemSpecification tempCoordsSpec;
     tempCoordsSpec.geographicSystem = "WGS 84";
     tempCoordsSpec.globalMetricSystem = "UTM";
-    tempCoordsSpec.referencePointLocalRelative = { 0.5, 0.5 };
 
     auto coordsArrayLongLat = dataArrays[coordArrayIdx(Coordinate::LongitudeLatitude)];
     auto coordsArrayUTMWGS84 = dataArrays[coordArrayIdx(Coordinate::UTM_WGS84)];

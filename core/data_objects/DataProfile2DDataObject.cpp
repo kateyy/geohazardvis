@@ -421,8 +421,7 @@ void DataProfile2DDataObject::updateLinePointsTransform()
     {
         const auto checkSpec = ReferencedCoordinateSystemSpecification(
             m_profileLinePointsCoordsSpec,
-            m_targetCoordsSpec.referencePointLatLong,
-            m_targetCoordsSpec.referencePointLocalRelative);
+            m_targetCoordsSpec.referencePointLatLong);
         if (!GeographicTransformationFilter::IsTransformationSupported(
             checkSpec,
             m_targetCoordsSpec))
@@ -444,8 +443,7 @@ void DataProfile2DDataObject::updateLinePoints()
     {
         const auto referencedSpec = ReferencedCoordinateSystemSpecification(
             m_profileLinePointsCoordsSpec,
-            m_targetCoordsSpec.referencePointLatLong,
-            m_targetCoordsSpec.referencePointLocalRelative);
+            m_targetCoordsSpec.referencePointLatLong);
         std::vector<vtkVector3d> points = {
             convertTo<3>(m_profileLinePoint1),
             convertTo<3>(m_profileLinePoint2) };

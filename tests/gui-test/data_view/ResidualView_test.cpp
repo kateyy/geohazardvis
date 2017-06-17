@@ -316,8 +316,7 @@ TEST_F(ResidualView_test, ProjectToLoS_TransformedCoordinateSystem)
         "WGS 84",
         "UTM",
         {},
-        vtkVector2d(-54.483333, -37.083333),
-        vtkVector2d(0, 0)
+        vtkVector2d(-54.483333, -37.083333)
     );
 
     auto ownedObservation = genPolyData("lineOfSightObservation");

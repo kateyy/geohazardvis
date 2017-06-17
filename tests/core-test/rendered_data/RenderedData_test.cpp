@@ -188,7 +188,7 @@ TEST_F(RenderedData_test, RenderedPointCloudData_defaultColorMappingAndCoordinat
         1, 1 }), VTK_VERTEX);
     const auto dataCoordsSpec = ReferencedCoordinateSystemSpecification(
         CoordinateSystemType::metricGlobal, "WGS 84", "UTM", "m",
-        { 30.0, 60.0 }, uninitializedVector<double, 2>());
+        { 30.0, 60.0 });
     pointCloud->specifyCoordinateSystem(dataCoordsSpec);
 
     const auto numPoints = pointCloud->numberOfPoints();
