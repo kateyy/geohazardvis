@@ -106,8 +106,6 @@ set(sources
     data_objects/VectorGrid3DDataObject.h
     data_objects/VectorGrid3DDataObject.cpp
 
-    filters/AbstractSimpleGeoCoordinateTransformFilter.h
-    filters/AbstractSimpleGeoCoordinateTransformFilter.cpp
     filters/ArrayChangeInformationFilter.h
     filters/ArrayChangeInformationFilter.cpp
     filters/AssignPointAttributeToCoordinatesFilter.h
@@ -142,10 +140,6 @@ set(sources
     filters/SetCoordinateSystemInformationFilter.cpp
     filters/SetMaskedPointScalarsToNaNFilter.h
     filters/SetMaskedPointScalarsToNaNFilter.cpp
-    filters/SimpleImageGeoCoordinateTransformFilter.h
-    filters/SimpleImageGeoCoordinateTransformFilter.cpp
-    filters/SimplePolyGeoCoordinateTransformFilter.h
-    filters/SimplePolyGeoCoordinateTransformFilter.cpp
     filters/TemporalDataSource.h
     filters/TemporalDataSource.cpp
     filters/TemporalDifferenceFilter.h
