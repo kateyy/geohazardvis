@@ -252,6 +252,11 @@ DataProfile2DDataObject::DataProfile2DDataObject(
     m_graphLine->SetNormal(0, 1, 0);
     m_graphLine->SetInputConnection(assign->GetOutputPort());
 
+    connect(&sourceData, &DataObject::dataChanged,
+        this, &DataProfile2DDataObject::sourceDataChanged);
+    connect(&sourceData, &DataObject::attributeArraysChanged,
+        this, &DataProfile2DDataObject::sourceDataChanged);
+
     m_isValid = true;
 }
 

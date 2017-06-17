@@ -36,6 +36,7 @@ protected:
 
 private:
     void updatePlot();
+    void updatePlotRedraw();
     void setPlotIsValid(bool isValid);
 
 private:

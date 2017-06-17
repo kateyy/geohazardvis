@@ -26,6 +26,8 @@ class LineOnPointsSelector2D;
  */
 class CORE_API DataProfile2DDataObject : public DataObject
 {
+    Q_OBJECT
+
 public:
     struct CORE_API PreprocessingPipeline
     {
@@ -93,6 +95,14 @@ public:
      */
     void setPointsCoordinateSystem(const CoordinateSystemSpecification & coordsSpec);
     const CoordinateSystemSpecification & pointsCoordinateSystem() const;
+
+signals:
+    /**
+     * Emitted when the source data values are modified.
+     * This does not necessarily mean that the profile values change, but updating might be useful.
+     * This is only emitted as long as the source DataObject instance exists.
+     */
+    void sourceDataChanged();
 
 protected:
     vtkAlgorithmOutput * processedOutputPortInternal() override;

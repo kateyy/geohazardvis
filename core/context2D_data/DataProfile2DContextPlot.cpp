@@ -16,8 +16,9 @@
 #include <reflectionzeug/PropertyGroup.h>
 
 #include <core/OpenGLDriverFeatures.h>
-#include <core/data_objects/DataProfile2DDataObject.h>
 #include <core/context2D_data/vtkPlotCollection.h>
+#include <core/data_objects/DataProfile2DDataObject.h>
+#include <core/reflectionzeug_extension/QStringProperty.h>
 #include <core/utility/DataExtent.h>
 
 
@@ -29,7 +30,10 @@ DataProfile2DContextPlot::DataProfile2DContextPlot(DataProfile2DDataObject & dat
     , m_plotLine{ vtkSmartPointer<vtkPlotLine>::New() }
     , m_title{ dataObject.scalarsName() }
 {
-    connect(&dataObject, &DataObject::dataChanged, this, &DataProfile2DContextPlot::updatePlot);
+    connect(&dataObject, &DataObject::dataChanged,
+        this, &DataProfile2DContextPlot::updatePlotRedraw);
+    connect(&dataObject, &DataProfile2DDataObject::sourceDataChanged,
+        this, &DataProfile2DContextPlot::updatePlotRedraw);
 }
 
 DataProfile2DContextPlot::~DataProfile2DContextPlot() = default;
@@ -38,10 +42,10 @@ std::unique_ptr<PropertyGroup> DataProfile2DContextPlot::createConfigGroup()
 {
     auto root = std::make_unique<PropertyGroup>();
 
-    root->addProperty<std::string>("Title",
-        [this] () { return title().toStdString(); },
-        [this] (const std::string & s) {
-        setTitle(QString::fromStdString(s));
+    root->addProperty<QString>("Title",
+        [this] () { return title(); },
+        [this] (const QString & s) {
+        setTitle(s);
         geometryChanged();
     });
 
@@ -195,6 +199,12 @@ void DataProfile2DContextPlot::updatePlot()
 
     setPlotIsValid(true);
     invalidateVisibleBounds();
+}
+
+void DataProfile2DContextPlot::updatePlotRedraw()
+{
+    updatePlot();
+    emit geometryChanged();
 }
 
 void DataProfile2DContextPlot::setPlotIsValid(bool isValid)
