@@ -126,6 +126,8 @@ set(sources
     filters/DEMToTopographyMesh.cpp
     filters/ExtractTimeStep.h
     filters/ExtractTimeStep.cpp
+    filters/GeographicTransformationFilter.h
+    filters/GeographicTransformationFilter.cpp
     filters/ImageBlankNonFiniteValuesFilter.h
     filters/ImageBlankNonFiniteValuesFilter.cpp
     filters/ImageMapToColors.h
@@ -233,6 +235,8 @@ set(sources
     utility/DataSetResidualHelper.cpp
     utility/font.h
     utility/font.cpp
+    utility/GeographicTransformationUtil.h
+    utility/GeographicTransformationUtil.cpp
     utility/GridAxes3DActor.h
     utility/GridAxes3DActor.cpp
     utility/InterpolationHelper.h
@@ -280,6 +284,7 @@ set(thirdPartySources
     ThirdParty/ParaView/vtkGridAxesPlane2DActor.cxx
     ThirdParty/ParaView/vtkPVScalarBarActor.h
     ThirdParty/ParaView/vtkPVScalarBarActor.cxx
+    ${PROJ4_INCLUDE_FILE}
 )
 
 if (${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang" OR ${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU")
@@ -316,6 +321,7 @@ source_group_by_path_and_type(${CMAKE_CURRENT_SOURCE_DIR} ${sources})
 source_group_by_path(${CMAKE_CURRENT_BINARY_DIR} ".*" "Generated"
     ${CMAKE_CURRENT_BINARY_DIR}/${target}_api.h
     ${CONFIG_FILE}
+    ${PROJ4_INCLUDE_FILE}
 )
 source_group_by_path(${CMAKE_CURRENT_SOURCE_DIR} ".*" "" "CMakeLists.txt")
 
@@ -336,6 +342,8 @@ target_include_directories(${target} SYSTEM
         ${Qt5Core_INCLUDE_DIRS} # disable warnings produced by Qt headers (GCC)
         ${VTK_INCLUDE_DIRS}
         ${LIBZEUG_INCLUDES}
+    PRIVATE
+        ${PROJ4_INCLUDE_DIR}    # Don't include proj.4 in public headers!
 )
 
 target_link_libraries(${target}
@@ -343,6 +351,7 @@ target_link_libraries(${target}
         ${VTK_LIBRARIES}
         ${LIBZEUG_LIBRARIES}
         Qt5::Core
+        ${PROJ4_LIBRARIES}
 )
 
 configure_cxx_target(${target})

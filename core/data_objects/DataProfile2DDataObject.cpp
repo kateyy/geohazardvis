@@ -9,7 +9,6 @@
 #include <vtkAlgorithmOutput.h>
 #include <vtkAssignAttribute.h>
 #include <vtkCellCenters.h>
-#include <vtkCellData.h>
 #include <vtkExecutive.h>
 #include <vtkImageData.h>
 #include <vtkLineSource.h>
@@ -24,12 +23,11 @@
 
 #include <core/data_objects/CoordinateTransformableDataObject.h>
 #include <core/context2D_data/DataProfile2DContextPlot.h>
+#include <core/filters/GeographicTransformationFilter.h>
 #include <core/filters/ImageBlankNonFiniteValuesFilter.h>
 #include <core/filters/LineOnCellsSelector2D.h>
 #include <core/filters/LineOnPointsSelector2D.h>
-#include <core/filters/SetCoordinateSystemInformationFilter.h>
 #include <core/filters/SetMaskedPointScalarsToNaNFilter.h>
-#include <core/filters/SimplePolyGeoCoordinateTransformFilter.h>
 #include <core/table_model/QVtkTableModelProfileData.h>
 #include <core/utility/DataExtent.h>
 #include <core/utility/macros.h>
@@ -133,7 +131,8 @@ DataProfile2DDataObject::DataProfile2DDataObject(
         }
     }
 
-    auto inputPolyData = vtkPolyData::SafeDownCast(processedInputData);
+    auto inputPolyData = m_inputIsImage ? static_cast<vtkPolyData *>(nullptr)
+        : vtkPolyData::SafeDownCast(processedInputData);
 
     if (!m_inputIsImage && !inputPolyData)
     {
@@ -420,31 +419,19 @@ void DataProfile2DDataObject::updateLinePointsTransform()
 
     if (m_profileLinePointsCoordsSpec.type != m_targetCoordsSpec.type)
     {
-        if (!SimplePolyGeoCoordinateTransformFilter::isConversionSupported(
-            m_profileLinePointsCoordsSpec.type,
-            m_targetCoordsSpec.type))
+        const auto checkSpec = ReferencedCoordinateSystemSpecification(
+            m_profileLinePointsCoordsSpec,
+            m_targetCoordsSpec.referencePointLatLong,
+            m_targetCoordsSpec.referencePointLocalRelative);
+        if (!GeographicTransformationFilter::IsTransformationSupported(
+            checkSpec,
+            m_targetCoordsSpec))
         {
             qWarning() << "Unsupported point coordinate system passed to DataProfile2DDataObject. "
                 "Line points won't be transformed at all.";
             return;
         }
     }
-
-    // A transformation of the line points is required and supported, so create and configure the filter.
-    if (!m_pointsTransformFilter)
-    {
-        m_pointsSetCoordsSpecFilter = vtkSmartPointer<SetCoordinateSystemInformationFilter>::New();
-        auto poly = vtkSmartPointer<vtkPolyData>::New();
-        auto points = vtkSmartPointer<vtkPoints>::New();
-        points->SetNumberOfPoints(2);
-        poly->SetPoints(points);
-        m_pointsSetCoordsSpecFilter->SetInputData(poly);
-
-        m_pointsTransformFilter = vtkSmartPointer<SimplePolyGeoCoordinateTransformFilter>::New();
-        m_pointsTransformFilter->SetInputConnection(m_pointsSetCoordsSpecFilter->GetOutputPort());
-    }
-
-    m_pointsTransformFilter->SetTargetCoordinateSystemType(m_targetCoordsSpec.type);
 
     transformPointsCheck.validate();
 }
@@ -453,31 +440,24 @@ void DataProfile2DDataObject::updateLinePoints()
 {
     vtkVector2d p1, p2;
 
-    if (m_doTransformPoints && m_pointsTransformFilter)
+    if (m_doTransformPoints)
     {
-        assert(m_pointsSetCoordsSpecFilter);
-        auto inPoly = vtkPolyData::SafeDownCast(m_pointsSetCoordsSpecFilter->GetInput());
-        assert(inPoly);
-        auto points = inPoly->GetPoints();
-        assert(points && points->GetNumberOfPoints() == 2);
-        points->SetPoint(0, convertTo<3>(m_profileLinePoint1).GetData());
-        points->SetPoint(1, convertTo<3>(m_profileLinePoint2).GetData());
-        points->Modified();
-        const auto referencedSpec = ReferencedCoordinateSystemSpecification(m_profileLinePointsCoordsSpec,
+        const auto referencedSpec = ReferencedCoordinateSystemSpecification(
+            m_profileLinePointsCoordsSpec,
             m_targetCoordsSpec.referencePointLatLong,
             m_targetCoordsSpec.referencePointLocalRelative);
-        m_pointsSetCoordsSpecFilter->SetCoordinateSystemSpec(referencedSpec);
-
-        DEBUG_ONLY(int result = )
-            m_pointsTransformFilter->GetExecutive()->Update();
-        assert(result);
-        auto outPoly = vtkPolyData::SafeDownCast(m_pointsTransformFilter->GetOutputDataObject(0));
-        assert(outPoly);
-        auto outPoints = outPoly->GetPoints();
-        assert(outPoints && outPoints->GetNumberOfPoints() == 2);
-
-        p1 = vtkVector2d(outPoints->GetPoint(0));
-        p2 = vtkVector2d(outPoints->GetPoint(1));
+        std::vector<vtkVector3d> points = {
+            convertTo<3>(m_profileLinePoint1),
+            convertTo<3>(m_profileLinePoint2) };
+        m_pointsTransform.setSourceSystem(referencedSpec);
+        m_pointsTransform.setTargetSystem(m_targetCoordsSpec);
+        if (!m_pointsTransform.transformPoints(points))
+        {
+            qWarning() << "Error while plot points for" << name();
+            return;
+        }
+        p1 = convertTo<2>(points[0]);
+        p2 = convertTo<2>(points[1]);
     }
     else
     {

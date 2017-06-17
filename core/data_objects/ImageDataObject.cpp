@@ -6,13 +6,12 @@
 #include <QDebug>
 
 #include <vtkCommand.h>
+#include <vtkDataArray.h>
 #include <vtkImageData.h>
 #include <vtkPointData.h>
-#include <vtkDataArray.h>
 
-#include <core/CoordinateSystems.h>
 #include <core/types.h>
-#include <core/filters/SimpleImageGeoCoordinateTransformFilter.h>
+#include <core/filters/GeographicTransformationFilter.h>
 #include <core/rendered_data/RenderedImageData.h>
 #include <core/table_model/QVtkTableModelImage.h>
 #include <core/utility/conversions.h>
@@ -153,34 +152,14 @@ vtkSmartPointer<vtkAlgorithm> ImageDataObject::createTransformPipeline(
     const CoordinateSystemSpecification & toSystem,
     vtkAlgorithmOutput * pipelineUpstream) const
 {
-    // Limited coordinate system support...
-    if (coordinateSystem().geographicSystem != "WGS 84"
-        || toSystem.geographicSystem != "WGS 84"
-        || coordinateSystem().globalMetricSystem != "UTM"
-        || toSystem.globalMetricSystem != "UTM")
+    if (!GeographicTransformationFilter::IsTransformationSupported(
+        coordinateSystem(), toSystem))
     {
         return{};
     }
 
-    if (!coordinateSystem().isReferencePointValid())
-    {   // If anything else than unit conversions is requested, a reference point is required.
-        auto equalExceptUnitCheck = toSystem;
-        equalExceptUnitCheck.unitOfMeasurement = coordinateSystem().unitOfMeasurement;
-        if (equalExceptUnitCheck != coordinateSystem())
-        {
-            return{};
-        }
-    }
-
-    if (!SimpleImageGeoCoordinateTransformFilter::isConversionSupported(
-        coordinateSystem().type, toSystem.type))
-    {
-        return{};
-    }
-
-    auto filter = vtkSmartPointer<SimpleImageGeoCoordinateTransformFilter>::New();
+    auto filter = vtkSmartPointer<GeographicTransformationFilter>::New();
     filter->SetInputConnection(pipelineUpstream);
-    filter->SetTargetCoordinateSystemType(toSystem.type);
-    filter->SetTargetMetricUnit(toSystem.unitOfMeasurement.toStdString());
+    filter->SetTargetCoordinateSystem(toSystem);
     return filter;
 }

@@ -12,6 +12,7 @@
 #include <core/data_objects/PointCloudDataObject.h>
 #include <core/utility/DataExtent.h>
 #include <core/utility/vtkvectorhelper.h>
+#include <core/utility/vtkVector_print.h>
 
 
 class GenericPolyDataObject_test : public ::testing::Test
@@ -87,7 +88,7 @@ TEST_F(GenericPolyDataObject_test, TransformCoords_PointCloud_m_to_km_metricGlob
     {
         coordsM->GetTypedTuple(i, pointM.GetData());
         coordsKm->GetTypedTuple(i, pointKm.GetData());
-        ASSERT_EQ(pointM / vtkVector3f(1000.f, 1000.f, 1.f), pointKm);
+        ASSERT_EQ(vtkVector3f(pointM * 0.001f), pointKm);
     }
 
     const auto specFromPipeline = ReferencedCoordinateSystemSpecification::fromFieldData(*inKm->GetFieldData());
@@ -122,7 +123,7 @@ TEST_F(GenericPolyDataObject_test, TransformCoords_PointCloud_m_to_km_metricLoca
     {
         coordsM->GetTypedTuple(i, pointM.GetData());
         coordsKm->GetTypedTuple(i, pointKm.GetData());
-        ASSERT_EQ(pointM / vtkVector3f(1000.f, 1000.f, 1.f), pointKm);
+        ASSERT_EQ(vtkVector3f(pointM * 0.001f), pointKm);
     }
 
     const auto specFromPipeline = ReferencedCoordinateSystemSpecification::fromFieldData(*inKm->GetFieldData());
@@ -133,7 +134,7 @@ TEST_F(GenericPolyDataObject_test, TransformCoords_PointCloud_m_to_km_storedCoor
 {
     auto specGlobalM = defaultCoordsSpec();
     specGlobalM.type = CoordinateSystemType::metricGlobal;
-    specGlobalM.referencePointLatLong = { 40.0, 50.0 }; // not directly used in this test, but must not be unspecified
+    specGlobalM.referencePointLatLong = { 40.0, 50.0 };
     specGlobalM.referencePointLocalRelative = { 0.5, 0.5 };
     const int numPoints = 6;
     auto pointCloud = genPointCloud(numPoints, specGlobalM);
@@ -178,7 +179,7 @@ TEST_F(GenericPolyDataObject_test, TransformCoords_PointCloud_m_to_km_storedCoor
     {
         coordsLocalM->GetTypedTuple(i, pointLocalM.GetData());
         coordsLocalKm->GetTypedTuple(i, pointLocalKm.GetData());
-        ASSERT_EQ(pointLocalM / vtkVector3f(1000.f, 1000.f, 1.f), pointLocalKm);
+        ASSERT_EQ(vtkVector3f(pointLocalM * 0.001f), pointLocalKm);
     }
 
     const auto specFromPipeline = ReferencedCoordinateSystemSpecification::fromFieldData(*localInKm->GetFieldData());

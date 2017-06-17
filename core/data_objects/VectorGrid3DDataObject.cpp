@@ -5,11 +5,12 @@
 
 #include <QDebug>
 
+#include <vtkDataArray.h>
 #include <vtkImageData.h>
 #include <vtkPointData.h>
-#include <vtkDataArray.h>
 
 #include <core/types.h>
+#include <core/filters/GeographicTransformationFilter.h>
 #include <core/rendered_data/RenderedVectorGrid3D.h>
 #include <core/table_model/QVtkTableModelVectorGrid3D.h>
 #include <core/utility/conversions.h>
@@ -143,4 +144,20 @@ bool VectorGrid3DDataObject::checkIfStructureChanged()
     }
 
     return superclassResult || changed;
+}
+
+vtkSmartPointer<vtkAlgorithm> VectorGrid3DDataObject::createTransformPipeline(
+    const CoordinateSystemSpecification & toSystem,
+    vtkAlgorithmOutput * pipelineUpstream) const
+{
+    if (!GeographicTransformationFilter::IsTransformationSupported(
+        coordinateSystem(), toSystem))
+    {
+        return{};
+    }
+
+    auto filter = vtkSmartPointer<GeographicTransformationFilter>::New();
+    filter->SetInputConnection(pipelineUpstream);
+    filter->SetTargetCoordinateSystem(toSystem);
+    return filter;
 }

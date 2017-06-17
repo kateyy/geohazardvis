@@ -32,7 +32,7 @@ public:
     {
         auto poly = vtkSmartPointer<vtkPolyData>::New();
         auto points = vtkSmartPointer<vtkPoints>::New();
-
+        points->SetDataTypeToDouble();
         points->InsertNextPoint(bounds.min().GetData());
         points->InsertNextPoint(bounds.min()[0], bounds.max()[1], bounds.min()[2]);
         points->InsertNextPoint(bounds.max().GetData());
@@ -182,9 +182,13 @@ TEST_F(RenderedData_test, RenderedVectorGrid3D_reportsVisibleBounds)
 
 TEST_F(RenderedData_test, RenderedPointCloudData_defaultColorMappingAndCoordinates)
 {
-    auto pointCloud = genPolyData(DataBounds({ 0, 10, 0, 10, 0, 0 }), VTK_VERTEX);
+    auto pointCloud = genPolyData(DataBounds({
+        210590.35, 211590.35, // 1km x 1km
+        3322575.90, 3323575.90,
+        1, 1 }), VTK_VERTEX);
     const auto dataCoordsSpec = ReferencedCoordinateSystemSpecification(
-        CoordinateSystemType::metricGlobal, "WGS 84", "UTM", "m", {}, vtkVector2d(0.5, 0.5));
+        CoordinateSystemType::metricGlobal, "WGS 84", "UTM", "m",
+        { 30.0, 60.0 }, uninitializedVector<double, 2>());
     pointCloud->specifyCoordinateSystem(dataCoordsSpec);
 
     const auto numPoints = pointCloud->numberOfPoints();
@@ -211,9 +215,10 @@ TEST_F(RenderedData_test, RenderedPointCloudData_defaultColorMappingAndCoordinat
     ASSERT_TRUE(rendered->colorMapping().isEnabled());
     ASSERT_STREQ(scalars->GetName(), rendered->colorMapping().currentScalarsName().toUtf8().data());
 
-    const auto expectedBounds = DataBounds({ -0.005, 0.005, -0.005, 0.005, 0.0, 0.0 });
+    const auto expectedBounds = DataBounds({ 0.0, 1.0, 0.0, 1.0, 0.001, 0.001 });
     for (size_t i = 0; i < 6; ++i)
     {
-        ASSERT_FLOAT_EQ(static_cast<float>(expectedBounds[i]), renderedLocalKmBounds[i]);
+        ASSERT_NEAR(static_cast<float>(expectedBounds[i]), renderedLocalKmBounds[i],
+            0.01); // max delta = 1cm
     }
 }

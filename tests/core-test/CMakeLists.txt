@@ -14,12 +14,14 @@ set(sources
     context2D_data/DataProfile2DContextPlot_test.cpp
     data_objects/CoordinateTransformableDataObject_test.cpp
     data_objects/DataObject_test.cpp
+    data_objects/DataProfile2DDataObject_test.cpp
     data_objects/GenericPolyDataObject_test.cpp
     data_objects/ImageDataObject_test.cpp
     filters/ArrayChangeInformationFilter_test.cpp
     filters/AssignPointAttributeToCoordinatesFilter_test.cpp
     filters/DEMImageNormals_test.cpp
     filters/DEMToTopographyMesh_test.cpp
+    filters/GeographicTransformationFilter_test.cpp
     filters/PipelineInformationHelper.cpp
     filters/PipelineInformationHelper.h
     filters/SimpleImageGeoCoordinateTransformFilter_test.cpp

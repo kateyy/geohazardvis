@@ -1,0 +1,8 @@
+// Generated file, do not modify!
+// When using proj.4, do not directly include proj.4 headers, but this file instead.
+// It will always link to the correct proj.4 API include file for the current setup.
+// Do not include this file in headers to reduce namespace pollution.
+
+#pragma once
+
+#include <@proj4_package_include_file@>

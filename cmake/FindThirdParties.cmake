@@ -2,7 +2,8 @@
 # FindThirdParties.cmake
 #
 # This module finds required third party packages.
-# Include it in the top CMakeLists.txt file of the project to include third party variables in the project scope!
+# Include it in the top CMakeLists.txt file of the project to include third party variables in the
+# project scope!
 #
 # Module Dependencies:
 #   * ExternalProjectMapBuild.cmake
@@ -11,13 +12,19 @@
 #
 #
 # Handled external dependencies:
-#   * VTK       -> VTK_DEFINITIONS, VTK_LIBRARIES, VTK_INCLUDE_DIRS, (and some detailed options such as VTK_RENDERING_BACKEND)
-#   * Qt5       -> Qt5::* imported targets, PROJECT_QT_COMPONENTS
+#   * VTK    -> VTK_DEFINITIONS, VTK_LIBRARIES, VTK_INCLUDE_DIRS, (and some detailed options such
+#               as VTK_RENDERING_BACKEND)
+#   * Qt5    -> Qt5::* imported targets, PROJECT_QT_COMPONENTS
+#   * proj.4 -> PROJ4_INCLUDE_FILE links the a generated include file that include proj.4.
+#               By default, the proj.4 version packaged with VTK is used.
+#               If OPTION_USE_PROJ4_FROM_VTK is disabled, PROJ4_FOUND, PROJ4_INCLUDE_DIR and
+#               PROJ4_LIBRARIES will be defined.
 #
 #
 # Packages either handled as ExternalProject (default) or by find_package
 #   OPTION_USE_SYSTEM_*     - ON: find_package(*), OFF: build as external project
-#   OPTION_*_GIT_REPOSITORY - if OPTION_USE_SYSTEM_* is OFF: adjust the source git folder or URL for the package
+#   OPTION_*_GIT_REPOSITORY - if OPTION_USE_SYSTEM_* is OFF: adjust the source git folder or URL
+#                             for the package
 #
 #   * libzeug   -> LIBZEUG_INCLUDES, LIBZEUG_LIBRARIES
 #
@@ -26,9 +33,9 @@
 #
 #
 # Third party packaging: OPTION_INSTALL_3RDPARTY_BINARIES
-#   Enable this option (default) to include third party runtime libraries packages and installations.
-#   This requires CMake scripts that are partly quite specific for the each package/OS, so please
-#   double check if the package actually runs on the relevant platform.
+#   Enable this option (default) to include third party runtime libraries packages and
+#   installations. This requires CMake scripts that are partly quite specific for the each
+#   package/OS, so please double check if the package actually runs on the relevant platform.
 #
 
 
@@ -165,9 +172,40 @@ elseif(UNIX)
 endif()
 
 
+#== proj.4 == (prefer VTK's bundled proj.4)
+option(OPTION_USE_PROJ4_FROM_VTK "Link to proj.4 bundled with VTK. \
+This only works if VTK_DIR links to a VTK build directory, because VTK does not install its \
+proj.4 library." ON)
+mark_as_advanced(OPTION_USE_PROJ4_FROM_VTK)
+if (OPTION_USE_PROJ4_FROM_VTK)
+    list(APPEND VTK_COMPONENTS vtklibproj4)
+    set(proj4_package_include_file "vtk_libproj4.h")
+else()
+    find_package(PROJ4 REQUIRED)
+    set(proj4_package_include_file "proj_api.h")
+endif()
+# NOTE: PROJ4_INCLUDE_FILE should be added to the core library.
+set(PROJ4_INCLUDE_FILE "${PROJECT_BINARY_DIR}/core/ThirdParty/proj4_include.h")
+configure_file(${PROJECT_SOURCE_DIR}/cmake/proj4_include.h.in ${PROJ4_INCLUDE_FILE})
+
+
 # find additional VTK components
 message(STATUS "    Requested components: ${VTK_COMPONENTS}")
 find_package(VTK REQUIRED COMPONENTS ${VTK_COMPONENTS})
+
+if (OPTION_USE_PROJ4_FROM_VTK)
+    set(proj4_includes_exist 0)
+    foreach(inc ${vtklibproj4_INCLUDE_DIRS})
+        if (EXISTS "${inc}/vtklibproj4/src/proj_api.h")
+            set(proj4_includes_exist 1)
+            break()
+        endif()
+    endforeach()
+    if (NOT proj4_includes_exist)
+        message(FATAL_ERROR "Could not find PROJ.4 includes in VTK include directories. \
+See OPTION_USE_PROJ4_FROM_VTK")
+    endif()
+endif()
 
 # When using VTK kits, the provided library names are just interfaces to underlaying targets
 # Restore actual library target to get properties from them.

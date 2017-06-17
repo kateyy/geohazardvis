@@ -451,8 +451,7 @@ ReferencedCoordinateSystemSpecification::ReferencedCoordinateSystemSpecification
 
 bool ReferencedCoordinateSystemSpecification::isReferencePointValid() const
 {
-    return isVectorInitialized(referencePointLatLong)
-        && isVectorInitialized((referencePointLocalRelative));
+    return isVectorInitialized(referencePointLatLong);
 }
 
 bool ReferencedCoordinateSystemSpecification::operator==(const CoordinateSystemSpecification & unreferencedSpec) const

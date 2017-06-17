@@ -43,6 +43,10 @@ protected:
 
     bool checkIfStructureChanged() override;
 
+    vtkSmartPointer<vtkAlgorithm> createTransformPipeline(
+        const CoordinateSystemSpecification & toSystem,
+        vtkAlgorithmOutput * pipelineUpstream) const override;
+
 private:
     std::array<int, 6> m_extent;
 

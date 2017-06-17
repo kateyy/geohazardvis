@@ -7,6 +7,7 @@
 #include <core/types.h>
 #include <core/data_objects/DataObject.h>
 #include <core/utility/DataExtent_fwd.h>
+#include <core/utility/GeographicTransformationUtil.h>
 
 
 class vtkAlgorithm;
@@ -15,11 +16,8 @@ class vtkTransformPolyDataFilter;
 class vtkWarpScalar;
 
 enum class IndexType;
-class CoordinateTransformableDataObject;
 class LineOnCellsSelector2D;
 class LineOnPointsSelector2D;
-class SetCoordinateSystemInformationFilter;
-class SimplePolyGeoCoordinateTransformFilter;
 
 
 /**
@@ -118,8 +116,7 @@ private:
     CoordinateSystemSpecification m_profileLinePointsCoordsSpec;
     ReferencedCoordinateSystemSpecification m_targetCoordsSpec;
     bool m_doTransformPoints;
-    vtkSmartPointer<SetCoordinateSystemInformationFilter> m_pointsSetCoordsSpecFilter;
-    vtkSmartPointer<SimplePolyGeoCoordinateTransformFilter> m_pointsTransformFilter;
+    GeographicTransformationUtil m_pointsTransform;
 
     // extraction from vtkImageData
     bool m_inputIsImage;
