@@ -37,6 +37,9 @@ public:
     bool operator!=(const T other[ValueCount]) const;
     bool operator!=(const DataExtent & other) const;
 
+    bool isApprox(const T other[ValueCount], T absError) const;
+    bool isApprox(const DataExtent & other, T absError) const;
+
     template<size_t Dimensions1 = Dimensions>
     typename std::enable_if<(Dimensions1 == 1u), T>::type
         center() const;

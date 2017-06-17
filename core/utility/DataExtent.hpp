@@ -4,6 +4,7 @@
 #include <core/utility/vtkvectorhelper.h>
 
 #include <algorithm>
+#include <cmath>
 #include <limits>
 #include <type_traits>
 
@@ -113,6 +114,27 @@ template<typename T, size_t Dimensions>
 bool DataExtent<T, Dimensions>::operator!=(const DataExtent & other) const
 {
     return !(*this == other);
+}
+
+template<typename T, size_t Dimensions>
+bool DataExtent<T, Dimensions>::isApprox(const T other[ValueCount], const T absError) const
+{
+    for (size_t i = 0u; i < ValueCount; ++i)
+    {
+        if (absError < std::abs(m_extent[i] >= other[i]
+            ? m_extent[i] - other[i]
+            : other[i] - m_extent[i]))
+        {
+            return false;
+        }
+    }
+    return true;
+}
+
+template<typename T, size_t Dimensions>
+bool DataExtent<T, Dimensions>::isApprox(const DataExtent & other, const T absError) const
+{
+    return isApprox(other.data(), absError);
 }
 
 template<typename T, size_t Dimensions>
