@@ -20,6 +20,14 @@
 namespace
 {
 
+struct SetUnsetBool
+{
+    explicit SetUnsetBool(bool & value)  : value{ value } { value = true; }
+    ~SetUnsetBool() { value = false; }
+private:
+    bool & value;
+};
+
 #if !defined(OPTION_USE_QVTKOPENGLWIDGET)
 QGLFormat defaultQVTKFormat()
 {
@@ -74,14 +82,6 @@ public:
             // you may get infinite recursion."
             if (!this->InRepaint)
             {
-                struct SetUnsetBool
-                {
-                    explicit SetUnsetBool(bool & value)  : value{ value } { value = true; }
-                    ~SetUnsetBool() { value = false; }
-                private:
-                    bool & value;
-                };
-
                 const SetUnsetBool setUnset{ this->InRepaint };
 #if VTK_CHECK_VERSION(8,0,0)
                 this->Target->renderVTK();
@@ -118,6 +118,7 @@ t_QVTKWidget::t_QVTKWidget(QWidget * parent, Qt::WindowFlags f)
     : Superclass(parent, f)
     , IsInitialized{ false }
     , ToolTipWasShown{ false }
+    , InSetRenderWindow{ false }
     , Observer{ vtkSmartPointer<t_QVTKWidgetObserver>::New() }
 {
     this->Observer->SetTarget(this);
@@ -127,6 +128,8 @@ t_QVTKWidget::t_QVTKWidget(QWidget * parent, Qt::WindowFlags f)
     : Superclass(defaultQVTKFormat(), parent, nullptr, f)
     , Observer{ vtkSmartPointer<t_QVTKWidgetObserver>::New() }
     , IsInitialized{ false }
+    , InSetRenderWindow{ false }
+
 {
 #if defined(__linux__)
     auto renWin = GetRenderWindow();
@@ -152,6 +155,8 @@ vtkRenderWindowInteractor * t_QVTKWidget::GetInteractorBase()
 
 void t_QVTKWidget::SetRenderWindow(vtkGenericOpenGLRenderWindow * renderWindow)
 {
+    const SetUnsetBool setResetInSetRenderWindow{ this->InSetRenderWindow };
+
 #if defined(OPTION_USE_QVTKOPENGLWIDGET)
     vtkSmartPointer<vtkRenderWindow> previousWindow = this->RenderWindow;
 #else
@@ -219,7 +224,13 @@ bool t_QVTKWidget::event(QEvent * event)
                 nativeParent->windowHandle(), &QWindow::screenChanged,
                 [this] () {
                 this->updateRenderWindowDPI();
-                this->renderVTK();
+                auto currentRenWin = vtkGenericOpenGLRenderWindow::SafeDownCast(this->Superclass::GetRenderWindow());
+                if (currentRenWin
+                    && currentRenWin->GetReadyForRendering()
+                    && !this->InSetRenderWindow)
+                {
+                    this->renderVTK();
+                }
             });
             this->updateRenderWindowDPI();
         }

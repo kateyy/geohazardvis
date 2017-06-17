@@ -82,10 +82,11 @@ private:
     void initialize();
 
 private:
-#if defined(OPTION_USE_QVTKOPENGLWIDGET)
     bool IsInitialized;
+#if defined(OPTION_USE_QVTKOPENGLWIDGET)
     bool ToolTipWasShown;
 #endif
+    bool InSetRenderWindow;
 
     QMetaObject::Connection ScreenChangedConnection;
     vtkSmartPointer<t_QVTKWidgetObserver> Observer;
