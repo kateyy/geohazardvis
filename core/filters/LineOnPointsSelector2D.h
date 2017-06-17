@@ -85,6 +85,7 @@ private:
     bool PassDistanceToLine;
     vtkMTimeType InputPointsMTime;
     double ApproxGridSpacing;
+    double GridSpacingStandardDeviation;
 
 public:
     LineOnPointsSelector2D(const LineOnPointsSelector2D &) = delete;

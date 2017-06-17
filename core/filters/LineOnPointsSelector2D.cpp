@@ -37,6 +37,7 @@ LineOnPointsSelector2D::LineOnPointsSelector2D()
     , PassDistanceToLine{ true }
     , InputPointsMTime{}
     , ApproxGridSpacing{ 0.0 }
+    , GridSpacingStandardDeviation{ 0.0 }
 {
     this->SetNumberOfInputPorts(1);
     this->SetNumberOfOutputPorts(2);
@@ -113,7 +114,8 @@ int LineOnPointsSelector2D::RequestData(vtkInformation * request,
         auto neighbors = vtkSmartPointer<vtkIdList>::New();
         neighbors->SetNumberOfIds(2);
         vtkVector3d point, neighbor;
-        double overallAvgDistance = 0.0;
+        double meanDistance = 0.0;
+        const double inv_numInputPoints = 1.0 / static_cast<double>(numInputPoints);
 
         auto neighborhoodDistances = std::vector<double>(static_cast<size_t>(numInputPoints));
 
@@ -126,18 +128,24 @@ int LineOnPointsSelector2D::RequestData(vtkInformation * request,
             assert(point == vtkVector3d(points.GetPoint(neighbors->GetId(0))));
 
             points.GetPoint(neighbors->GetId(1), neighbor.GetData());
-            const auto distance = (point - neighbor).Norm();
-            overallAvgDistance += distance;
+            const double distance = (point - neighbor).Norm();
+            meanDistance += distance * inv_numInputPoints;
             neighborhoodDistances[static_cast<size_t>(i)] = distance;
         }
 
-        overallAvgDistance /= static_cast<double>(numInputPoints);
+        this->GridSpacingStandardDeviation = std::sqrt(std::accumulate(
+            neighborhoodDistances.begin(), neighborhoodDistances.end(), 0.0,
+            [meanDistance, inv_numInputPoints] (const double lastResult, double d)
+        {
+            d = d - meanDistance;
+            return lastResult + inv_numInputPoints * d * d;
+        }));
 
         // Search for points that have neighbors in an assumed grid.
         // Distances shouldn't variate too much and the minimum distance should be near the
         // grid spacing.
 
-        const size_t numPointsToConsider = std::min(size_t(1u), neighborhoodDistances.size() / 2u);
+        const size_t numPointsToConsider = std::max(size_t(1u), neighborhoodDistances.size() / 2u);
         const auto midIt = neighborhoodDistances.begin() + numPointsToConsider;
         std::partial_sort(neighborhoodDistances.begin(), midIt, neighborhoodDistances.end());
 
@@ -183,7 +191,8 @@ int LineOnPointsSelector2D::RequestData(vtkInformation * request,
         distancesToLine->SetName("DistanceToLine");
     }
 
-    const auto maxAllowedDistance = 2.0 * this->ApproxGridSpacing;
+    const double maxAllowedDistance =
+        0.5 * this->ApproxGridSpacing + this->GridSpacingStandardDeviation;
 
     auto extractedPoints = vtkSmartPointer<vtkPoints>::New();
     std::vector<vtkIdType> extractedPointIds;
@@ -205,7 +214,8 @@ int LineOnPointsSelector2D::RequestData(vtkInformation * request,
         }
 
         const double t = positionOnLine(point2d);
-        if (t < 0 || t > 1)
+        static const double e = 5.e-7;
+        if (t < 0.0 - e || t > 1.0 + e)
         {
             continue;
         }
