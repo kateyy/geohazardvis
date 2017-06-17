@@ -1,9 +1,9 @@
 #pragma once
 
-#include <QMap>
-
 #include <core/core_api.h>
 
+
+template <class Key, class T> class QMap;
 class QString;
 class DataObject;
 class ImageDataObject;

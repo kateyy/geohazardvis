@@ -5,7 +5,7 @@
 
 class vtkAlgorithm;
 class vtkAssignAttribute;
-class vtkImageMapToColors;
+class ImageMapToColors;
 class vtkImageProperty;
 class vtkImageSlice;
 class vtkImageSliceMapper;
@@ -62,7 +62,7 @@ private:
     bool m_isShadingEnabled;
 
     vtkSmartPointer<ArrayChangeInformationFilter> m_copyScalarsFilter;
-    vtkSmartPointer<vtkImageMapToColors> m_imageScalarsToColors;
+    vtkSmartPointer<ImageMapToColors> m_imageScalarsToColors;
     QMetaObject::Connection m_updateComponentConnection;
 
     vtkSmartPointer<vtkAlgorithm> m_colorMappingFilter;

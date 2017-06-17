@@ -7,15 +7,12 @@
 #include <QMap>
 #include <QString>
 
+#include <vtkBMPWriter.h>
 #include <vtkDataArray.h>
 #include <vtkDataSet.h>
-#include <vtkPointData.h>
-
-#include <vtkImageMapToColors.h>
-#include <vtkLookupTable.h>
-
-#include <vtkBMPWriter.h>
 #include <vtkJPEGWriter.h>
+#include <vtkLookupTable.h>
+#include <vtkPointData.h>
 #include <vtkPNGWriter.h>
 #include <vtkXMLImageDataWriter.h>
 #include <vtkXMLPolyDataWriter.h>
@@ -24,6 +21,7 @@
 #include <core/data_objects/PointCloudDataObject.h>
 #include <core/data_objects/PolyDataObject.h>
 #include <core/data_objects/VectorGrid3DDataObject.h>
+#include <core/filters/ImageMapToColors.h>
 #include <core/utility/DataExtent.h>
 
 
@@ -136,7 +134,7 @@ bool Exporter::exportImageFormat(ImageDataObject & image, const QString & fileNa
     }
     else
     {
-        auto toUChar = vtkSmartPointer<vtkImageMapToColors>::New();
+        auto toUChar = vtkSmartPointer<ImageMapToColors>::New();
         toUChar->SetInputData(image.dataSet());
 
         auto lut = vtkSmartPointer<vtkLookupTable>::New();

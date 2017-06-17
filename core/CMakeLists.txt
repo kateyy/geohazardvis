@@ -128,6 +128,8 @@ set(sources
     filters/ExtractTimeStep.cpp
     filters/ImageBlankNonFiniteValuesFilter.h
     filters/ImageBlankNonFiniteValuesFilter.cpp
+    filters/ImageMapToColors.h
+    filters/ImageMapToColors.cpp
     filters/ImagePlaneWidget.h
     filters/ImagePlaneWidget.cpp
     filters/LineOnCellsSelector2D.h

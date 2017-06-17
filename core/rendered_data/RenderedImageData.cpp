@@ -4,7 +4,6 @@
 
 #include <vtkAssignAttribute.h>
 #include <vtkDataSet.h>
-#include <vtkImageMapToColors.h>
 #include <vtkImageSliceMapper.h>
 #include <vtkImageSlice.h>
 #include <vtkImageProperty.h>
@@ -22,6 +21,7 @@
 #include <core/filters/DEMApplyShadingToColors.h>
 #include <core/filters/DEMImageNormals.h>
 #include <core/filters/DEMShadingFilter.h>
+#include <core/filters/ImageMapToColors.h>
 #include <core/utility/DataExtent.h>
 
 
@@ -311,7 +311,7 @@ void RenderedImageData::initializePipeline()
     m_copyScalarsFilter->EnableRenameOn();
     m_copyScalarsFilter->SetArrayName(mappedColorsName.data());
 
-    m_imageScalarsToColors = vtkSmartPointer<vtkImageMapToColors>::New();
+    m_imageScalarsToColors = vtkSmartPointer<ImageMapToColors>::New();
     m_imageScalarsToColors->SetInputConnection(m_copyScalarsFilter->GetOutputPort());
 
     m_assignElevationsForNormalComputation = vtkSmartPointer<vtkAssignAttribute>::New();
