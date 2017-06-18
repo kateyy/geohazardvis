@@ -33,7 +33,7 @@
 namespace
 {
 
-template<unsigned ModifyComponents>
+template<int ModifyComponents>
 struct ArrayScaleShiftWorker
 {
     vtkVector<double, ModifyComponents> Scale;
@@ -42,7 +42,7 @@ struct ArrayScaleShiftWorker
     template<typename CoordsArrayType>
     void operator()(CoordsArrayType * coordinates)
     {
-        static_assert(3 >= ModifyComponents, "");
+        static_assert(1 <= ModifyComponents && ModifyComponents <= 3, "");
         VTK_ASSUME(coordinates->GetNumberOfComponents() == 3);
         vtkDataArrayAccessor<CoordsArrayType> coords(coordinates);
         using ValueType = typename vtkDataArrayAccessor<CoordsArrayType>::APIType;
@@ -65,7 +65,7 @@ struct ArrayScaleShiftWorker
     }
 };
 
-template<unsigned ModifyComponents>
+template<int ModifyComponents>
 void scaleShiftArray(vtkDataArray & array,
     const vtkVector<double, ModifyComponents> & scale, const vtkVector<double, ModifyComponents> & shift)
 {
@@ -79,12 +79,12 @@ void scaleShiftArray(vtkDataArray & array,
     }
 }
 
-template<unsigned int ModifyComponents>
+template<int ModifyComponents>
 void scaleShiftDataSet(vtkDataSet & dataSet,
     const vtkVector<double, ModifyComponents> & scale,
     const vtkVector<double, ModifyComponents> & shift)
 {
-    static_assert(ModifyComponents <= 3, "");
+    static_assert(1 <= ModifyComponents && ModifyComponents <= 3, "");
     if (auto pointSet = vtkPointSet::SafeDownCast(&dataSet))
     {
         auto pointCoords = pointSet->GetPoints()->GetData();
@@ -98,7 +98,7 @@ void scaleShiftDataSet(vtkDataSet & dataSet,
         std::array<double, 3> spacing, origin;
         image->GetSpacing(spacing.data());
         image->GetOrigin(origin.data());
-        for (unsigned int i = 0; i < ModifyComponents; ++i)
+        for (int i = 0; i < ModifyComponents; ++i)
         {
             spacing[i] *= scale[i];
             origin[i] = origin[i] * scale[i] + shift[i];
@@ -246,7 +246,7 @@ private:
     projPJ m_pj;
 };
 
-template<unsigned int ModifyComponents>
+template<int ModifyComponents>
 void convertMetricHorizontalUnit(vtkDataSet & dataSet, const QString & inUnit, const QString & outUnit)
 {
     const double scaleFactor = mathhelper::scaleFactorForMetricUnits(inUnit, outUnit);

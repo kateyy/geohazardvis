@@ -75,12 +75,6 @@ const char * arrayName_geoReference()
     return name;
 }
 
-const char * arrayName_relativeReference()
-{
-    static const char * const name = "CoordinateSystem_LocalRelativeReferencePoint";
-    return name;
-}
-
 template<typename ValueType, int NumComponents = 1, typename = std::enable_if_t<!std::is_enum<ValueType>::value>>
 void checkSetArray(vtkFieldData & fieldData, const vtkTuple<ValueType, NumComponents> & value,
     const vtkTuple<ValueType, NumComponents> & nullValue, const char * arrayName)

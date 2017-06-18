@@ -11,7 +11,6 @@ endif()
 
 list(APPEND DEFAULT_COMPILE_DEFS
     LINUX                     # Linux system
-    _GLIBCXX_DEBUG
 )
 
 set(DEFAULT_COMPILE_FLAGS
