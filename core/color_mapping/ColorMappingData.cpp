@@ -1,6 +1,7 @@
 #include "ColorMappingData.h"
 
 #include <algorithm>
+#include <array>
 #include <cassert>
 
 #include <vtkAlgorithm.h>
@@ -87,6 +88,26 @@ bool ColorMappingData::isTemporalAttribute() const
 int ColorMappingData::numDataComponents() const
 {
     return m_numDataComponents;
+}
+
+QString ColorMappingData::componentName(const int component) const
+{
+    assert(0 <= component && component < m_numDataComponents);
+    if (component < 0 || component >= m_numDataComponents)
+    {
+        return{};
+    }
+    if (m_numDataComponents > 3)
+    {
+        return QString::number(component + 1);
+    }
+    if (m_numDataComponents == 1)
+    {
+        return{};
+    }
+
+    static const std::array<QString, 3> xyz = { "x", "y", "z" };
+    return xyz[static_cast<size_t>(component)];
 }
 
 int ColorMappingData::dataComponent() const

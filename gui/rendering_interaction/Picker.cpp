@@ -51,7 +51,7 @@ public:
         const QString & indexPrefix, const QString & coordinatePrefix,
         const QString & valueSuffix);
 
-    void appendScalarInfo(QTextStream & stream, int activeComponent, bool scalarsAreMapped);
+    void appendScalarInfo(QTextStream & stream, const ColorMappingData & colorData);
 
 
     vtkSmartPointer<vtkPropPicker> propPicker;
@@ -254,7 +254,7 @@ void Picker::pick(const vtkVector2i & clickPosXY, vtkRenderer & renderer)
 
         if (d_ptr->pickedScalarArray)
         {
-            d_ptr->appendScalarInfo(stream, colorMappingData.dataComponent(), colorMappingData.mapsScalarsToColors());
+            d_ptr->appendScalarInfo(stream, colorMappingData);
         }
     }
 
@@ -367,7 +367,7 @@ void Picker_private::appendPositionInfo(QTextStream & stream,
         << coordinateIndent << "Z = " << position[2] << valueSuffix;
 }
 
-void Picker_private::appendScalarInfo(QTextStream & stream, int activeComponent, bool scalarsAreMapped)
+void Picker_private::appendScalarInfo(QTextStream & stream, const ColorMappingData & colorData)
 {
     assert(pickedScalarArray && !pickedObjectInfo.isIndexListEmpty());
     auto & scalars = *pickedScalarArray;
@@ -385,18 +385,18 @@ void Picker_private::appendScalarInfo(QTextStream & stream, int activeComponent,
         ? "Cell"
         : "Point";
 
-    if (scalarsAreMapped)
+    if (colorData.mapsScalarsToColors())
     {
-        assert(activeComponent >= 0);
+        assert(colorData.dataComponent() >= 0);
 
         stream << endl << endl << locationString << R"( Attribute: ")" << QString::fromUtf8(scalars.GetName()) << '\"';
         if (tuple.size() > 1)
         {
-            stream << " (active component: " << activeComponent + 1 << ")";
+            stream << " (active component: " << colorData.componentName(colorData.dataComponent()) << ")";
             for (size_t i = 0; i < tuple.size(); ++i)
             {
-                stream << endl << "[" << i + 1 << "] " << tuple[i] << unitStr;
-                if (i == static_cast<size_t>(activeComponent))
+                stream << endl << "[" << colorData.componentName(int(i)) << "] " << tuple[i] << unitStr;
+                if (i == static_cast<size_t>(colorData.dataComponent()))
                 {
                     stream << " *";
                 }
@@ -404,7 +404,7 @@ void Picker_private::appendScalarInfo(QTextStream & stream, int activeComponent,
         }
         else
         {
-            stream << endl << "Value: " << tuple[activeComponent] << unitStr;
+            stream << endl << "Value: " << tuple[colorData.dataComponent()] << unitStr;
         }
     }
     else if (tuple.size() == 3 || tuple.size() == 4)

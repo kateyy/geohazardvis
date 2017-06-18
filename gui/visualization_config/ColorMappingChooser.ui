@@ -37,21 +37,21 @@
        <bool>true</bool>
       </property>
       <layout class="QFormLayout" name="formLayout">
+       <item row="0" column="0" colspan="2">
+        <widget class="QComboBox" name="scalarsComboBox"/>
+       </item>
        <item row="1" column="0">
         <widget class="QLabel" name="componentLabel">
          <property name="text">
           <string>&amp;Component</string>
          </property>
          <property name="buddy">
-          <cstring>componentSpinBox</cstring>
+          <cstring>componentComboBox</cstring>
          </property>
         </widget>
        </item>
-       <item row="0" column="0" colspan="2">
-        <widget class="QComboBox" name="scalarsComboBox"/>
-       </item>
        <item row="1" column="1">
-        <widget class="QSpinBox" name="componentSpinBox"/>
+        <widget class="QComboBox" name="componentComboBox"/>
        </item>
        <item row="2" column="0">
         <widget class="QLabel" name="maxLabel">

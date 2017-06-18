@@ -14,6 +14,8 @@ public:
     QString scalarsName(AbstractVisualizedData & vis) const override;
     IndexType scalarsAssociation(AbstractVisualizedData & vis) const override;
 
+    QString componentName(int component) const override;
+
     vtkSmartPointer<vtkAlgorithm> createFilter(AbstractVisualizedData & visualizedData, unsigned int port = 0) override;
     bool usesFilter() const override;
 

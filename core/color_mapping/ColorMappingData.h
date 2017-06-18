@@ -62,6 +62,7 @@ public:
     virtual bool isTemporalAttribute() const;
 
     int numDataComponents() const;
+    virtual QString componentName(int component) const;
     int dataComponent() const;
     void setDataComponent(int component);
 

@@ -41,10 +41,14 @@ std::vector<std::unique_ptr<ColorMappingData>> AttributeArrayComponentMapping::n
         explicit ArrayInfo(int comp = 0)
             : numComponents{ comp }
             , isTemporal{ false }
+            , componentNamesCheck{ cnUnchecked }
         {
         }
         int numComponents;
         bool isTemporal;
+        enum ComponentNameCheck { cnUnchecked, cnSet, cnInvalid };
+        ComponentNameCheck componentNamesCheck;
+        std::vector<QString> componentNames;
         std::map<AbstractVisualizedData *, IndexType> attributeLocations;
     };
 
@@ -104,6 +108,32 @@ std::vector<std::unique_ptr<ColorMappingData>> AttributeArrayComponentMapping::n
                 continue;
             }
 
+            if (arrayInfo.componentNamesCheck != ArrayInfo::cnInvalid)
+            {
+                std::vector<QString> componentNames;
+                for (int comp = 0; comp < currentNumComp; ++comp)
+                {
+                    const char * compName = dataArray->GetComponentName(comp);
+                    if (!compName || compName[0] == 0)
+                    {
+                        componentNames.clear();
+                        break;
+                    }
+                    componentNames.push_back(QString::fromUtf8(compName));
+                }
+                if (arrayInfo.componentNamesCheck == ArrayInfo::cnUnchecked)
+                {
+                    arrayInfo.componentNames = componentNames;
+                    arrayInfo.componentNamesCheck = ArrayInfo::cnSet;
+                }
+                else if (arrayInfo.componentNames != componentNames)
+                {
+                    qDebug() << "Array named" << name << "found with inconsistent component names. Falling back to defaults.";
+                    arrayInfo.componentNamesCheck = ArrayInfo::cnInvalid;
+                    arrayInfo.componentNames.clear();
+                }
+            }
+
             arrayInfo.isTemporal = arrayInfo.isTemporal ||
                 (0 != dataArray->GetInformation()->Has(vtkDataObject::DATA_TIME_STEP()));
 
@@ -144,11 +174,17 @@ std::vector<std::unique_ptr<ColorMappingData>> AttributeArrayComponentMapping::n
     for (const auto & pair : arrayInfos)
     {
         const auto & arrayInfo = pair.second;
+
+        static const std::vector<QString> emptyStringVec;
+        const auto & componentNames = arrayInfo.componentNamesCheck == ArrayInfo::cnSet
+            ? arrayInfo.componentNames : emptyStringVec;
+
         auto mapping = std::make_unique<AttributeArrayComponentMapping>(
             supportedData,
             pair.first,
             arrayInfo.numComponents,
             arrayInfo.isTemporal,
+            componentNames,
             arrayInfo.attributeLocations);
         if (mapping->isValid())
         {
@@ -165,10 +201,12 @@ AttributeArrayComponentMapping::AttributeArrayComponentMapping(
     const QString & dataArrayName,
     int numDataComponents,
     bool isTemporalAttribute,
+    const std::vector<QString> & componentNames,
     const std::map<AbstractVisualizedData *, IndexType> & attributeLocations)
     : ColorMappingData(visualizedData, numDataComponents)
     , m_dataArrayName{ dataArrayName }
     , m_isTemporalAttribute{ isTemporalAttribute }
+    , m_componentNames{ componentNames }
     , m_attributeLocations(attributeLocations)
 {
     assert(!visualizedData.empty());
@@ -199,6 +237,15 @@ IndexType AttributeArrayComponentMapping::scalarsAssociation(AbstractVisualizedD
 bool AttributeArrayComponentMapping::isTemporalAttribute() const
 {
     return m_isTemporalAttribute;
+}
+
+QString AttributeArrayComponentMapping::componentName(const int component) const
+{
+    if (component < 0 || static_cast<size_t>(component) >= m_componentNames.size())
+    {
+        return ColorMappingData::componentName(component);
+    }
+    return m_componentNames[static_cast<size_t>(component)];
 }
 
 vtkSmartPointer<vtkAlgorithm> AttributeArrayComponentMapping::createFilter(AbstractVisualizedData & visualizedData, unsigned int port)

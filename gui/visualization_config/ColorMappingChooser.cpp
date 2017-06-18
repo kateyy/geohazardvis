@@ -191,13 +191,11 @@ void ColorMappingChooser::guiGradientSelectionChanged()
     emit renderSetupChanged();
 }
 
-void ColorMappingChooser::guiComponentChanged(int guiComponent)
+void ColorMappingChooser::guiComponentChanged(int index)
 {
     assert(m_mapping);
 
-    auto component = guiComponent - 1;
-
-    m_mapping->currentScalars().setDataComponent(component);
+    m_mapping->currentScalars().setDataComponent(index);
 
     updateGuiValueRanges();
 
@@ -551,7 +549,7 @@ void ColorMappingChooser::setupGuiConnections()
     const auto && comboBoxIndexChanged = static_cast<void(QComboBox::*)(int)>(&QComboBox::currentIndexChanged);
 
     m_guiConnections.emplace_back(connect(m_ui->scalarsGroupBox, &QGroupBox::toggled, m_mapping, &ColorMapping::setEnabled));
-    m_guiConnections.emplace_back(connect(m_ui->componentSpinBox, spinBoxValueChanged, this, &ColorMappingChooser::guiComponentChanged));
+    m_guiConnections.emplace_back(connect(m_ui->componentComboBox, comboBoxIndexChanged, this, &ColorMappingChooser::guiComponentChanged));
     m_guiConnections.emplace_back(connect(m_ui->minValueSpinBox, dSpinBoxValueChanged, this, &ColorMappingChooser::guiMinValueChanged));
     m_guiConnections.emplace_back(connect(m_ui->maxValueSpinBox, dSpinBoxValueChanged, this, &ColorMappingChooser::guiMaxValueChanged));
     m_guiConnections.emplace_back(connect(m_ui->minLabel, &QLabel::linkActivated, this, &ColorMappingChooser::guiResetMinToData));
@@ -683,7 +681,8 @@ void ColorMappingChooser::updateGuiValueRanges()
 {
     discardGuiConnections();
 
-    int numComponents = 0, currentComponent = 0;
+    int currentComponent = 0;
+    std::vector<QString> componentNames;
     double min = 0, max = 0;
     double currentMin = 0, currentMax = 0;
 
@@ -692,7 +691,10 @@ void ColorMappingChooser::updateGuiValueRanges()
     if (m_mapping && m_mapping->scalarsAvailable())
     {
         auto & scalars = m_mapping->currentScalars();
-        numComponents = scalars.numDataComponents();
+        for (int i = 0; i < scalars.numDataComponents(); ++i)
+        {
+            componentNames.push_back(scalars.componentName(i));
+        }
         currentComponent = scalars.dataComponent();
         min = scalars.dataMinValue();
         max = scalars.dataMaxValue();
@@ -717,9 +719,12 @@ void ColorMappingChooser::updateGuiValueRanges()
         decimals = std::max(0, -stepLogI + 3);
     }
 
-    m_ui->componentSpinBox->setMinimum(1);
-    m_ui->componentSpinBox->setMaximum(numComponents);
-    m_ui->componentSpinBox->setValue(currentComponent + 1);
+    m_ui->componentComboBox->clear();
+    for (auto && name : componentNames)
+    {
+        m_ui->componentComboBox->addItem(name);
+    }
+    m_ui->componentComboBox->setCurrentIndex(currentComponent);
     m_ui->minValueSpinBox->setMinimum(min);
     m_ui->minValueSpinBox->setMaximum(max);
     m_ui->minValueSpinBox->setSingleStep(step);
@@ -731,12 +736,12 @@ void ColorMappingChooser::updateGuiValueRanges()
     m_ui->maxValueSpinBox->setDecimals(decimals);
     m_ui->maxValueSpinBox->setValue(currentMax);
 
-    m_ui->componentLabel->setText("component (" + QString::number(numComponents) + ")");
+    m_ui->componentLabel->setText("component (" + QString::number(componentNames.size()) + ")");
     QString resetLink = enableRangeGui ? "resetToData" : "";
     m_ui->minLabel->setText(R"(min (data: <a href=")" + resetLink + R"(">)" + QString::number(min) + "</a>)");
     m_ui->maxLabel->setText(R"(max (data: <a href=")" + resetLink + R"(">)" + QString::number(max) + "</a>)");
 
-    m_ui->componentSpinBox->setEnabled(numComponents > 1);
+    m_ui->componentComboBox->setEnabled(componentNames.size() > 1);
     m_ui->minValueSpinBox->setEnabled(enableRangeGui);
     m_ui->maxValueSpinBox->setEnabled(enableRangeGui);
 

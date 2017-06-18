@@ -122,6 +122,12 @@ IndexType DirectImageColors::scalarsAssociation(AbstractVisualizedData & /*vis*/
     return m_attributeLocation;
 }
 
+QString DirectImageColors::componentName(int /*component*/) const
+{
+    static const QString rgb = "RGB";
+    return rgb;
+}
+
 vtkSmartPointer<vtkAlgorithm> DirectImageColors::createFilter(AbstractVisualizedData & visualizedData, unsigned int port)
 {
     auto filter = vtkSmartPointer<vtkAssignAttribute>::New();
