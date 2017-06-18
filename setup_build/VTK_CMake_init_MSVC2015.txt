@@ -21,6 +21,7 @@ set(Module_vtkRenderingAnnotation ON CACHE BOOL "Request building vtkRenderingAn
 set(Module_vtkRenderingContextOpenGL2 ON CACHE BOOL "Request building vtkRenderingContextOpenGL2")
 set(Module_vtkRenderingLICOpenGL2 OFF CACHE BOOL "Request building vtkRenderingLICOpenGL2")
 set(Module_vtkViewsContext2D ON CACHE BOOL "Request building vtkViewsContext2D")
+set(Module_vtklibproj4 ON CACHE BOOL "Request building vtklibproj4")
 set(VTK_BUILD_QT_DESIGNER_PLUGIN OFF CACHE BOOL "Build the VTK Qt plugin for the Qt Designer.")
 set(VTK_ENABLE_KITS ON CACHE BOOL "Build VTK using kits instead of modules.")
 set(VTK_Group_Imaging OFF CACHE BOOL "Request building Imaging modules")
