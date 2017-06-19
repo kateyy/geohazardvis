@@ -185,9 +185,10 @@ void DataMapping::openInTable(DataObject * dataObject)
     QCoreApplication::processEvents();
 }
 
-AbstractRenderView * DataMapping::openInRenderView(const QList<DataObject *> & dataObjects)
+AbstractRenderView * DataMapping::openInRenderView(const QList<DataObject *> & dataObjects,
+    const OpenFlags openFlags)
 {
-    auto renderView = createRenderView<RenderView>();
+    auto renderView = createRenderView<RenderView>(openFlags);
 
     const bool viewStillOpen = addToRenderView(dataObjects, renderView);
 
@@ -201,7 +202,10 @@ AbstractRenderView * DataMapping::openInRenderView(const QList<DataObject *> & d
     return renderView;
 }
 
-bool DataMapping::addToRenderView(const QList<DataObject *> & dataObjects, AbstractRenderView * renderView, unsigned int subViewIndex)
+bool DataMapping::addToRenderView(const QList<DataObject *> & dataObjects,
+    AbstractRenderView * renderView,
+    const unsigned int subViewIndex,
+    const OpenFlags openFlagsForFallbackView)
 {
     assert(containsUnique(m_renderViews, renderView));
     assert(subViewIndex < renderView->numberOfSubViews());
@@ -220,15 +224,15 @@ bool DataMapping::addToRenderView(const QList<DataObject *> & dataObjects, Abstr
     // there is something the current view couldn't handle
     if (!incompatibleObjects.isEmpty() && askForNewRenderView(renderView->friendlyName(), incompatibleObjects))
     {
-        openInRenderView(incompatibleObjects);
+        openInRenderView(incompatibleObjects, openFlagsForFallbackView);
     }
 
     return true;
 }
 
-AbstractRenderView * DataMapping::createDefaultRenderViewType()
+AbstractRenderView * DataMapping::createDefaultRenderViewType(const OpenFlags openFlags)
 {
-    auto renderView = createRenderView<RenderView>();
+    auto renderView = createRenderView<RenderView>(openFlags);
 
     setFocusedRenderView(renderView);
 
@@ -364,7 +368,8 @@ void DataMapping::deleteLaterFrom(View_t * view, Vector_t & vector)
     viewOwnership.release()->deleteLater();
 }
 
-void DataMapping::addRenderView(std::unique_ptr<AbstractRenderView> ownedRenderView)
+void DataMapping::addRenderView(std::unique_ptr<AbstractRenderView> ownedRenderView,
+    const OpenFlags openFlags)
 {
     assert(ownedRenderView);
     auto renderView = ownedRenderView.get();
@@ -376,7 +381,7 @@ void DataMapping::addRenderView(std::unique_ptr<AbstractRenderView> ownedRenderV
 
     m_selectionHandler->addRenderView(renderView);
 
-    emit renderViewCreated(renderView);
+    emit renderViewCreated(renderView, openFlags);
 }
 
 bool DataMapping::askForNewRenderView(const QString & rendererName, const QList<DataObject *> & relevantObjects)

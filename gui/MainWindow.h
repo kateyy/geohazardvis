@@ -7,7 +7,7 @@
 
 #include <QMainWindow>
 
-#include <gui/gui_api.h>
+#include <gui/DataMapping.h>
 
 
 class QByteArray;
@@ -18,7 +18,6 @@ class AbstractRenderView;
 class CanvasExporterWidget;
 class ColorMappingChooser;
 class DataBrowser;
-class DataMapping;
 class DataSetHandler;
 class GlyphMappingChooser;
 class GuiPluginManager;
@@ -67,7 +66,7 @@ private:
     FileLoadResults openFilesSync(const QStringList & fileNames);
     void prependRecentFiles(const QStringList & filePaths, const QStringList & invalid = QStringList());
 
-    void addRenderView(AbstractRenderView * renderView);
+    void addRenderView(AbstractRenderView * renderView, DataMapping::OpenFlags openFlags);
     void addTableView(TableView * tableView, QDockWidget * dockTabifyPartner = nullptr);
 
     void showDEMWidget();

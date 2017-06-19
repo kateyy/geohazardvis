@@ -191,9 +191,6 @@ QList<DataObject *> RenderViewStrategy2D::filterCompatibleObjects(const QList<Da
     return compatible;
 }
 
-#include <vtkInformation.h>
-#include <core/utility/vtkpipelinehelper.h>
-
 void RenderViewStrategy2D::startProfilePlot()
 {
     assert(m_state == State::notPlotting || m_state == State::plotting);
@@ -328,7 +325,7 @@ void RenderViewStrategy2D::startProfilePlot()
 
     if (creatingNewRenderer)
     {
-        m_previewRenderer = dataMapping().openInRenderView(profiles);
+        m_previewRenderer = dataMapping().openInRenderView(profiles, DataMapping::PlaceBelow);
     }
     else
     {

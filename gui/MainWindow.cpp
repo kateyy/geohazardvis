@@ -158,7 +158,8 @@ MainWindow::MainWindow()
         dialog.exec();
     });
     connect(m_ui->actionNew_Render_View, &QAction::triggered,
-        m_dataMapping.get(), &DataMapping::createDefaultRenderViewType);
+        std::bind(&DataMapping::createDefaultRenderViewType,
+            m_dataMapping.get(), DataMapping::NoFlags));
     connect(m_ui->actionExit, &QAction::triggered, qApp, &QApplication::quit);
 
 
@@ -303,9 +304,15 @@ void MainWindow::dropEvent(QDropEvent * event)
     openFiles(fileNames);
 }
 
-void MainWindow::addRenderView(AbstractRenderView * renderView)
+void MainWindow::addRenderView(AbstractRenderView * renderView,
+    const DataMapping::OpenFlags openFlags)
 {
-    addDockWidget(Qt::DockWidgetArea::TopDockWidgetArea, renderView->dockWidgetParent());
+    const Qt::Orientation orientation = openFlags.testFlag(DataMapping::PlaceBelow)
+        ? Qt::Vertical : Qt::Horizontal;
+
+    addDockWidget(Qt::DockWidgetArea::TopDockWidgetArea,
+        renderView->dockWidgetParent(),
+        orientation);
 
     m_renderViewConnects.emplace_back(connect(renderView, &AbstractDataView::selectionChanged,
         [this] (AbstractDataView * renderView, const DataSelection & selection)
