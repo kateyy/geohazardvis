@@ -137,7 +137,7 @@ double PolyDataObject::cellCenterComponent(vtkIdType cellId, int component, bool
     auto cellCentersChecked = cellCenters();
     if (!cellCentersChecked)
     {
-        return;
+        return{};
     }
     auto & centroids = *cellCentersChecked->GetPoints()->GetData();
 

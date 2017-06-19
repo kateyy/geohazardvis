@@ -1,6 +1,7 @@
 #include <core/utility/InterpolationHelper.h>
 
 #include <algorithm>
+#include <limits>
 
 #include <QString>
 
@@ -11,6 +12,7 @@
 #include <vtkImageData.h>
 #include <vtkPointData.h>
 #include <vtkPointDataToCellData.h>
+#include <vtkPointInterpolator.h>
 #include <vtkPolyData.h>
 #include <vtkProbeFilter.h>
 #include <vtkSmartPointer.h>
@@ -260,9 +262,33 @@ vtkSmartPointer<vtkDataArray> InterpolationHelper::interpolate(
 
     // now probe: at least one of the data sets is a polygonal one here
 
-    auto probe = vtkSmartPointer<vtkProbeFilter>::New();
-    probe->SetInputConnection(baseDataFilter->GetOutputPort());
-    probe->SetSourceConnection(sourceDataFilter->GetOutputPort());
+    vtkSmartPointer<vtkAlgorithm> probe;
+    // Interpolation between point base data set?
+    // vtkProbeFilter always tries to find closest cells, which is quite bad for point clouds
+    // that only define one cell containing all points.
+    // vtkPointInterpolator interpolates on point coordinates only.
+    if (sourcePoly
+        && sourcePoly->GetNumberOfVerts() == sourcePoly->GetNumberOfCells()
+        && (sourceImage
+            || (sourcePoly
+                && sourcePoly->GetNumberOfVerts() == sourcePoly->GetNumberOfCells())))
+
+    {
+        auto pointProbe = vtkSmartPointer<vtkPointInterpolator>::New();
+        pointProbe->SetNullPointsStrategyToNullValue();
+        pointProbe->SetNullValue(std::numeric_limits<double>::quiet_NaN());
+        pointProbe->SetInputConnection(baseDataFilter->GetOutputPort());
+        pointProbe->SetSourceConnection(sourceDataFilter->GetOutputPort());
+        probe = pointProbe;
+    }
+    else
+    {
+        auto cellProbe = vtkSmartPointer<vtkProbeFilter>::New();
+        cellProbe->SetInputConnection(baseDataFilter->GetOutputPort());
+        cellProbe->SetSourceConnection(sourceDataFilter->GetOutputPort());
+        probe = cellProbe;
+    }
+    assert(probe);
 
     vtkSmartPointer<vtkAlgorithm> resultAlgorithm = probe;
 

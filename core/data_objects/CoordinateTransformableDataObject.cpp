@@ -162,7 +162,6 @@ vtkSmartPointer<vtkDataSet> CoordinateTransformableDataObject::coordinateTransfo
     {
         return nullptr;
     }
-
     if (!port->GetProducer()->GetExecutive()->Update())
     {
         return nullptr;

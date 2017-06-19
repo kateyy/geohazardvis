@@ -87,6 +87,7 @@ endfunction()
 
 set(VTK_COMPONENTS
     vtkChartsCore
+    vtkFiltersPoints
     vtkInteractionWidgets
     vtkIOXML
     vtkRenderingAnnotation  # vtkCubeAxesActor, vtkScalarBarActor
