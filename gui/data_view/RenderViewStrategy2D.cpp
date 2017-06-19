@@ -259,7 +259,7 @@ void RenderViewStrategy2D::startProfilePlot()
 
         // Make sure the plot uses the time step that was set in the visualization
         const auto selection = TemporalPipelineMediator::currentPipelineSelection(*visualization);
-        if (selection.isValid && !selection.isTimeRange)
+        if (selection.isValid)
         {
             auto timeStepExtractor = selection.createAlgorithm();
             ppPipeline.head = ppPipeline.tail = timeStepExtractor;
