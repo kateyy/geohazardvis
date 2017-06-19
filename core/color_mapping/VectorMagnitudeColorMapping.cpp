@@ -8,6 +8,7 @@
 #include <vtkCellData.h>
 #include <vtkDataArray.h>
 #include <vtkDataSet.h>
+#include <vtkExecutive.h>
 #include <vtkInformation.h>
 #include <vtkMapper.h>
 #include <vtkPassThrough.h>
@@ -244,7 +245,10 @@ std::vector<ValueRange<>> VectorMagnitudeColorMapping::updateBounds()
     {
         for (const auto & filter : filtersIt.second)
         {
-            filter->Update();
+            if (!filter->GetExecutive()->Update())
+            {
+                continue;
+            }
             auto dataSet = vtkDataSet::SafeDownCast(filter->GetOutputDataObject(0));
             auto attributes = IndexType_util(m_attributeLocation).extractAttributes(dataSet);
             auto normData = attributes ? attributes->GetScalars() : nullptr;

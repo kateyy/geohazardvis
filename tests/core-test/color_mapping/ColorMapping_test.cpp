@@ -3,6 +3,7 @@
 #include <vector>
 
 #include <vtkCamera.h>
+#include <vtkExecutive.h>
 #include <vtkImageData.h>
 #include <vtkPointData.h>
 #include <vtkSmartPointer.h>
@@ -114,7 +115,7 @@ TEST_F(ColorMapping_test, DirectImageColors_renders_uchar)
     windowToImage->SetInput(renWin);
     windowToImage->SetInputBufferTypeToRGBA();
     windowToImage->ReadFrontBufferOff();
-    windowToImage->Update();
+    ASSERT_TRUE(windowToImage->GetExecutive()->Update());
 
     auto renderedImage = windowToImage->GetOutput();
     auto renderedColors = vtkUnsignedCharArray::FastDownCast(renderedImage->GetPointData()->GetScalars());

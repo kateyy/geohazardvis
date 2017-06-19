@@ -1,19 +1,18 @@
 #include "RenderedVectorGrid3D.h"
 
-#include <vtkProp3DCollection.h>
-#include <vtkLookupTable.h>
-
-#include <vtkDataArray.h>
-#include <vtkImageData.h>
-#include <vtkPointData.h>
-
 #include <vtkAssignAttribute.h>
-#include <vtkExtractVOI.h>
 #include <vtkCellPicker.h>
+#include <vtkDataArray.h>
+#include <vtkExecutive.h>
+#include <vtkExtractVOI.h>
+#include <vtkImageData.h>
 #include <vtkImageMapToColors.h>
 #include <vtkImageReslice.h>
 #include <vtkInformation.h>
+#include <vtkLookupTable.h>
+#include <vtkPointData.h>
 #include <vtkPolyDataMapper.h>
+#include <vtkProp3DCollection.h>
 #include <vtkProperty.h>
 #include <vtkTexture.h>
 
@@ -262,8 +261,10 @@ std::unique_ptr<PropertyGroup> RenderedVectorGrid3D::createConfigGroup()
 vtkImageData * RenderedVectorGrid3D::resampledDataSet()
 {
     initializePipeline();
-
-    m_extractVOI->Update();
+    if (!m_extractVOI->GetExecutive()->Update())
+    {
+        return nullptr;
+    }
     return m_extractVOI->GetOutput();
 }
 

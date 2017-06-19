@@ -4,6 +4,7 @@
 #include <QDebug>
 #include <QMessageBox>
 
+#include <vtkExecutive.h>
 #include <vtkPassArrays.h>
 #include <vtkPolyData.h>
 #include <vtkProperty.h>
@@ -424,8 +425,10 @@ std::unique_ptr<PolyDataObject> DEMWidget::saveRelease()
     {
         auto meshCleanup = createMeshCleanupFilter();
         meshCleanup->SetInputConnection(m_demToTopoFilter->GetOutputPort(0));
-        meshCleanup->Update();
-        surface = vtkPolyData::SafeDownCast(meshCleanup->GetOutput());
+        if (meshCleanup->GetExecutive()->Update())
+        {
+            surface = vtkPolyData::SafeDownCast(meshCleanup->GetOutput());
+        }
     }
     else
     {

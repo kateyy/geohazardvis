@@ -10,6 +10,7 @@
 #include <vtkCell.h>
 #include <vtkCellCenters.h>
 #include <vtkCellData.h>
+#include <vtkExecutive.h>
 #include <vtkMath.h>
 #include <vtkPointData.h>
 #include <vtkPolyDataNormals.h>
@@ -49,8 +50,10 @@ IndexType PolyDataObject::defaultAttributeLocation() const
 vtkPolyData * PolyDataObject::cellCenters()
 {
     setupCellCenters();
-
-    m_cellCenters->Update();
+    if (!m_cellCenters->GetExecutive()->Update())
+    {
+        return nullptr;
+    }
     return m_cellCenters->GetOutput();
 }
 
@@ -126,7 +129,17 @@ bool PolyDataObject::is2p5D()
 
 double PolyDataObject::cellCenterComponent(vtkIdType cellId, int component, bool * validIdPtr)
 {
-    auto & centroids = *cellCenters()->GetPoints()->GetData();
+    if (validIdPtr)
+    {
+        *validIdPtr = false;
+    }
+
+    auto cellCentersChecked = cellCenters();
+    if (!cellCentersChecked)
+    {
+        return;
+    }
+    auto & centroids = *cellCentersChecked->GetPoints()->GetData();
 
     const auto isValid = cellId < centroids.GetNumberOfTuples()
         && component < centroids.GetNumberOfComponents();
@@ -152,7 +165,12 @@ bool PolyDataObject::setCellCenterComponent(vtkIdType cellId, int component, dou
     auto cell = ds.GetCell(cellId);
     auto pointIds = cell->GetPointIds();
 
-    auto centers = cellCenters()->GetPoints();
+    auto cellCentersChecked = cellCenters();
+    if (!cellCentersChecked)
+    {
+        return false;
+    }
+    auto centers = cellCentersChecked->GetPoints();
     assert(centers);
     auto vertices = ds.GetPoints();
 
@@ -253,7 +271,12 @@ bool PolyDataObject::setCellNormalComponent(vtkIdType cellId, int component, dou
 
     // use rotation axis, apply it at the polygon center
     std::array<double, 3> center;
-    cellCenters()->GetPoint(cellId, center.data());
+    auto cellCentersChecked = cellCenters();
+    if (!cellCentersChecked)
+    {
+        return false;
+    }
+    cellCentersChecked->GetPoint(cellId, center.data());
     auto rotation = vtkSmartPointer<vtkTransform>::New();
     rotation->Translate(center.data());
     rotation->RotateWXYZ(vtkMath::DegreesFromRadians(angleRad), rotationAxis.data());

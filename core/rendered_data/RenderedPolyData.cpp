@@ -8,6 +8,7 @@
 #include <vtkAlgorithmOutput.h>
 #include <vtkCellCenters.h>
 #include <vtkDoubleArray.h>
+#include <vtkExecutive.h>
 #include <vtkPolyData.h>
 #include <vtkPolyDataMapper.h>
 #include <vtkPolyDataNormals.h>
@@ -88,7 +89,10 @@ vtkAlgorithmOutput * RenderedPolyData::transformedCellCenterOutputPort()
 
 vtkDataSet * RenderedPolyData::transformedCellCenterDataSet()
 {
-    m_transformedCellCenters->Update();
+    if (!m_transformedCellCenters->GetExecutive()->Update())
+    {
+        return nullptr;
+    }
     return m_transformedCellCenters->GetOutput();
 }
 

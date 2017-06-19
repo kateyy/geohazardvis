@@ -4,6 +4,7 @@
 
 #include <vtkAlgorithmOutput.h>
 #include <vtkDataSet.h>
+#include <vtkExecutive.h>
 #include <vtkPassThrough.h>
 
 #include <core/filters/SetCoordinateSystemInformationFilter.h>
@@ -162,7 +163,10 @@ vtkSmartPointer<vtkDataSet> CoordinateTransformableDataObject::coordinateTransfo
         return nullptr;
     }
 
-    port->GetProducer()->Update();
+    if (!port->GetProducer()->GetExecutive()->Update())
+    {
+        return nullptr;
+    }
     return vtkDataSet::SafeDownCast(port->GetProducer()->GetOutputDataObject(0));
 }
 

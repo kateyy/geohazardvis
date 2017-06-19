@@ -37,6 +37,10 @@ std::vector<std::unique_ptr<GlyphMappingData>> PolyDataAttributeGlyphMapping::ne
     // find 3D-vector data, skip the "centroid" attribute array
 
     auto centroids = renderedPolyData->transformedCellCenterDataSet();
+    if (!centroids)
+    {
+        return{};
+    }
 
     auto pointData = centroids->GetPointData();
     const vtkIdType numPoints = centroids->GetNumberOfPoints();

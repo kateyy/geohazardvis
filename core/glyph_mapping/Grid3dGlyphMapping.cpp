@@ -34,7 +34,12 @@ std::vector<std::unique_ptr<GlyphMappingData>> Grid3dGlyphMapping::newInstances(
         return{};
     }
 
-    auto pointData = renderedGrid->resampledDataSet()->GetPointData();
+    auto resampledChecked = renderedGrid->resampledDataSet();
+    if (!resampledChecked)
+    {
+        return{};
+    }
+    auto pointData = resampledChecked->GetPointData();
     std::vector<vtkDataArray *> vectorArrays;
     for (int i = 0; auto a = pointData->GetArray(i); ++i)
     {
@@ -108,7 +113,12 @@ vtkAlgorithmOutput * Grid3dGlyphMapping::vectorDataOutputPort()
 
 void Grid3dGlyphMapping::updateArrowLength()
 {
-    double cellSpacing = m_renderedGrid.resampledDataSet()->GetSpacing()[0];
+    auto resampledChecked = m_renderedGrid.resampledDataSet();
+    if (!resampledChecked)
+    {
+        return;
+    }
+    double cellSpacing = resampledChecked->GetSpacing()[0];
     arrowGlyph()->SetScaleFactor(0.75 * cellSpacing);
 
     emit geometryChanged();

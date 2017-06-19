@@ -7,6 +7,7 @@
 #include <vtkAssignAttribute.h>
 #include <vtkCellData.h>
 #include <vtkDataArray.h>
+#include <vtkExecutive.h>
 #include <vtkImageData.h>
 #include <vtkPointData.h>
 #include <vtkPointDataToCellData.h>
@@ -279,7 +280,10 @@ vtkSmartPointer<vtkDataArray> InterpolationHelper::interpolate(
         resultAlgorithm = maskedToNaN;
     }
 
-    resultAlgorithm->Update();
+    if (!resultAlgorithm->GetExecutive()->Update())
+    {
+        return{};
+    }
 
     auto probedDataSet = vtkDataSet::SafeDownCast(resultAlgorithm->GetOutputDataObject(0));
     if (!probedDataSet)

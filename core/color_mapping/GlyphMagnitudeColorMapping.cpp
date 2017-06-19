@@ -4,6 +4,7 @@
 
 #include <vtkAssignAttribute.h>
 #include <vtkDataSet.h>
+#include <vtkExecutive.h>
 #include <vtkLookupTable.h>
 #include <vtkMapper.h>
 #include <vtkPassThrough.h>
@@ -170,7 +171,10 @@ std::vector<ValueRange<>> GlyphMagnitudeColorMapping::updateBounds()
         // access lazily created filters
         auto && filter = createFilter(*mapping.first);
         assert(filter && filter->GetNumberOfInputConnections(0) > 0);
-        filter->Update();
+        if (!filter->GetExecutive()->Update())
+        {
+            continue;
+        }
 
         // At this pipeline stage, initial cell attributes are associated with the intermediate
         // point geometry.
