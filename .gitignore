@@ -11,4 +11,5 @@ cmake-build-*/*
 /*.kdev4
 /.vscode/
 /*.workspace
+/x64/*
 CMakeLists.txt.user

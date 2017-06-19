@@ -2,9 +2,10 @@
 
 #include <algorithm>
 #include <cassert>
+#include <list>
 #include <memory>
-#include <vector>
 #include <utility>
+#include <vector>
 
 #include <vtkInformation.h>
 #include <vtkInformationIntegerPointerKey.h>
@@ -80,7 +81,27 @@ public:
             std::unique_ptr<AbstractVisualizedData::PostProcessingStep>> staticStepTypes;
         std::vector<DynamicPPStepType> dynamicStepTypes;
     };
-    std::vector<PostProcessingSteps> postProcessingStepsPerPort;
+
+// There seems to be a bug in VS 2017's std::vector not consistently using move semantics.
+#if defined(_MSC_VER) && _MSC_VER >= 1910 && _MSC_FULL_VER <= 191025019
+    template<typename T>
+    class IndexableList : public std::list<T>
+    {
+    public:
+        using std::list<T>::list;
+
+        T & operator[](const size_t index)
+        {
+            assert(this->size() > index);
+            return *std::next(begin(), index);
+        }
+    };
+
+    using PostProcessingStepsVector = IndexableList<PostProcessingSteps>;
+#else
+    using PostProcessingStepsVector = std::vector<PostProcessingSteps>;
+#endif
+    PostProcessingStepsVector postProcessingStepsPerPort;
 
     /**
      * Persistent processing pipeline end points.

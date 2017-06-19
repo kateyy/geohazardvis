@@ -52,6 +52,8 @@ function(setupProjectUserConfig TARGET)
         set(MSVC_TOOLS_VERSION 12.0)
     elseif(MSVC_VERSION EQUAL 1900)
         set(MSVC_TOOLS_VERSION 14.0)
+    elseif(MSVC_VERSION EQUAL 1910)
+        set(MSVC_TOOLS_VERSION 15.0)
     endif()
 
     if(NOT MSVC_TOOLS_VERSION)

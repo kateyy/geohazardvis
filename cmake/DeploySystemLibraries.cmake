@@ -28,6 +28,8 @@ if (MSVC)
             copyOpenMPDebugRuntime(120)
         elseif(MSVC_VERSION VERSION_EQUAL 1900) # MSVC 14 2015
             copyOpenMPDebugRuntime(140)
+        elseif(MSVC_VERSION VERSION_EQUAL 1910) # MSVC 15 2017 (same runtime as MSVC 2015)
+            copyOpenMPDebugRuntime(140)
         else()
             message(WARNING "Debug OpenMP deployment not supported for the current MSVC version (${MSVC_VERSION})")
         endif()
