@@ -22,6 +22,7 @@ vtkInformationKeyMacro(CoordinateSystemSpecification, GeographicCoordinateSystem
 vtkInformationKeyMacro(CoordinateSystemSpecification, MetricCoordinateSystemName_InfoKey, StringMetaData);
 vtkInformationKeyMacro(CoordinateSystemSpecification, UnitOfMeasurement_InfoKey, StringMetaData);
 vtkInformationKeyMacro(ReferencedCoordinateSystemSpecification, ReferencePointLatLong_InfoKey, DoubleVectorMetaData);
+vtkInformationKeyMacro(ReferencedCoordinateSystemSpecification, ReferencePointLocalRelative_InfoKey, DoubleVectorMetaData);
 
 
 namespace

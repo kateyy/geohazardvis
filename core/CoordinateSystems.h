@@ -172,6 +172,7 @@ struct CORE_API ReferencedCoordinateSystemSpecification : public CoordinateSyste
     static ReferencedCoordinateSystemSpecification fromFieldData(vtkFieldData & fieldData);
 
     static vtkInformationDoubleVectorMetaDataKey * ReferencePointLatLong_InfoKey();
+    static vtkInformationDoubleVectorMetaDataKey * ReferencePointLocalRelative_InfoKey();
 
     ReferencedCoordinateSystemSpecification(const ReferencedCoordinateSystemSpecification &) = default;
     ReferencedCoordinateSystemSpecification(ReferencedCoordinateSystemSpecification &&) = default;
