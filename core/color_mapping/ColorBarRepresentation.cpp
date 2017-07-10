@@ -195,6 +195,10 @@ void ColorBarRepresentation::initialize()
 
     addObserver(m_actor->GetPositionCoordinate(), &ColorBarRepresentation::positionChangedEvent);
     addObserver(m_actor->GetPosition2Coordinate(), &ColorBarRepresentation::positionChangedEvent);
+
+    const auto pos = m_position;
+    m_position = posUserDefined;
+    setPosition(pos);
 }
 
 void ColorBarRepresentation::updateForChangedScalars()

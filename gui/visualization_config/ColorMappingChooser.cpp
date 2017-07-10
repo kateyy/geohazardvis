@@ -153,6 +153,10 @@ void ColorMappingChooser::setSelectedVisualization(AbstractVisualizedData * visu
             &m_mapping->colorBarRepresentation(), &ColorBarRepresentation::positionChanged,
             this, &ColorMappingChooser::colorLegendPositionChanged));
 
+        m_mappingConnections.emplace_back(connect(
+            &m_mapping->colorBarRepresentation(), &ColorBarRepresentation::colorBarVisibilityChanged,
+            this, &ColorMappingChooser::updateScalarsSelection));
+
         addObserver(legend().GetTitleTextProperty(), &ColorMappingChooser::updateLegendTitleFont);
         addObserver(legend().GetLabelTextProperty(), &ColorMappingChooser::updateLegendLabelFont);
         addObserver(&legend(), &ColorMappingChooser::updateLegendConfig);
