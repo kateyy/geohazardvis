@@ -96,6 +96,7 @@ signals:
     void renderViewCreated(AbstractRenderView * renderView, OpenFlags openFlags);
     void focusedRenderViewChanged(AbstractRenderView * renderView);
     void tableViewCreated(TableView * tableView, QDockWidget * dockTabifyPartner);
+    void viewToFrontRequested(QDockWidget * dataView);
 
 private:
     void focusNextRenderView();

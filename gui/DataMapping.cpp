@@ -154,33 +154,36 @@ void DataMapping::openInTable(DataObject * dataObject)
     {
         return view->dataObject() == dataObject;
     });
-    auto table = tableIt != m_tableViews.end() ? tableIt->get() : static_cast<TableView *>(nullptr);
-
-    if (!table)
+    
+    if (auto table = tableIt != m_tableViews.end()
+        ? tableIt->get() : static_cast<TableView *>(nullptr))
     {
-        auto ownedTable = std::make_unique<TableView>(*this, m_nextTableIndex++);
-        table = ownedTable.get();
-        m_tableViews.push_back(std::move(ownedTable));
-        connect(table, &TableView::closed, this, &DataMapping::tableClosed);
-
-        table->showDataObject(*dataObject);
-
-        // find the first existing docked table, and tabify with it
-        QDockWidget * tabMaster = nullptr;
-        for (auto && other : m_tableViews)
-        {
-            if (other->hasDockWidgetParent())
-            {
-                tabMaster = other->dockWidgetParent();
-                assert(tabMaster);
-                break;
-            }
-        }
-
-        emit tableViewCreated(table, tabMaster);
-
-        m_selectionHandler->addTableView(table);
+        emit viewToFrontRequested(table->dockWidgetParent());
+        return;
     }
+
+    auto ownedTable = std::make_unique<TableView>(*this, m_nextTableIndex++);
+    auto table = ownedTable.get();
+    m_tableViews.push_back(std::move(ownedTable));
+    connect(table, &TableView::closed, this, &DataMapping::tableClosed);
+
+    table->showDataObject(*dataObject);
+
+    // find the first existing docked table, and tabify with it
+    QDockWidget * tabMaster = nullptr;
+    for (auto && other : m_tableViews)
+    {
+        if (other->hasDockWidgetParent())
+        {
+            tabMaster = other->dockWidgetParent();
+            assert(tabMaster);
+            break;
+        }
+    }
+
+    emit tableViewCreated(table, tabMaster);
+
+    m_selectionHandler->addTableView(table);
     
     QCoreApplication::processEvents();
 }

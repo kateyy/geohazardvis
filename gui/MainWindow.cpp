@@ -74,6 +74,7 @@ MainWindow::MainWindow()
     m_dataMapping = std::make_unique<DataMapping>(*m_dataSetHandler);
     connect(m_dataMapping.get(), &DataMapping::renderViewCreated, this, &MainWindow::addRenderView);
     connect(m_dataMapping.get(), &DataMapping::tableViewCreated, this, &MainWindow::addTableView);
+    connect(m_dataMapping.get(), &DataMapping::viewToFrontRequested, this, &MainWindow::tabbedDockWidgetToFront);
 
 #if OPTION_ENABLE_TEXTURING
     TextureManager::initialize();
