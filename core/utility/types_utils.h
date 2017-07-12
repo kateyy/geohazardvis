@@ -10,6 +10,18 @@ class vtkDataSet;
 class vtkDataSetAttributes;
 
 
+/**
+ * Extract data set attributes by location and name.
+ *
+ * IndexType is used in many contexts to define the association/location of an attribute in a data
+ * set (points/cells). This utility class simplifies retrieval of attributes based on a IndexType.
+ *
+ * Furthermore, conversions from various enums defining attribute association/location in VTK
+ * classes to IndexType are provided here. These enums usually support more locations than
+ * currently targeted by IndexType (e.g., vtkDataObject::FIELD_ASSOCIATION_POINTS_THEN_CELLS).
+ * These are mapped to IndexType::invalid, as they have no meaning in implementations that use
+ * IndexType.
+ */
 struct CORE_API IndexType_util
 {
     IndexType value;
