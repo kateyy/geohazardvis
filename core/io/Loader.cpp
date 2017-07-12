@@ -2,7 +2,6 @@
 
 #include <algorithm>
 #include <cassert>
-#include <set>
 
 #include <QFileInfo>
 #include <QDebug>
@@ -15,7 +14,6 @@
 #include <vtkPointData.h>
 #include <vtkPolyData.h>
 #include <vtkImageReader2.h>
-#include <vtkImageReader2Collection.h>
 #include <vtkImageReader2Factory.h>
 #include <vtkNew.h>
 #include <vtkXMLImageDataReader.h>
@@ -25,132 +23,9 @@
 #include <core/data_objects/ImageDataObject.h>
 #include <core/data_objects/VectorGrid3DDataObject.h>
 #include <core/io/DeformationTimeSeriesTextFileReader.h>
+#include <core/io/io_helper.h>
 #include <core/io/MetaTextFileReader.h>
 
-
-namespace
-{
-const std::map<QString, QStringList> & vtkImageFormats()
-{
-    static const auto _vtkImageFormats = [] () {
-        std::map<QString, QStringList> m;
-
-        auto readers = vtkSmartPointer<vtkImageReader2Collection>::New();
-        vtkImageReader2Factory::GetRegisteredReaders(readers);
-        for (readers->InitTraversal(); auto reader = readers->GetNextItem();)
-        {
-            QString desc = QString::fromUtf8(reader->GetDescriptiveName());
-            QStringList exts = QString::fromUtf8(reader->GetFileExtensions()).split(" ", QString::SkipEmptyParts);
-            std::for_each(exts.begin(), exts.end(), [] (QString & ext) { ext.remove('.'); });
-            m.emplace(desc, exts);
-        }
-
-        return m;
-    }();
-
-    return _vtkImageFormats;
-}
-
-const QSet<QString> & vtkImageFileExts()
-{
-    static const auto _vtkImageFileExts = [] () {
-        QSet<QString> exts;
-        for (const auto & f_exts : vtkImageFormats())
-        {
-            exts += f_exts.second.toSet();
-        }
-        return exts;
-    }();
-
-    return _vtkImageFileExts;
-}
-}
-
-const QString & Loader::fileFormatFilters(Category category)
-{
-    static const auto _fileFormatFilters = [] () {
-        std::map<Category, QString> m;
-
-        const auto & maps = fileFormatExtensionMaps();
-        for (auto && categoryMap : maps)
-        {
-            QString filters;
-            if (categoryMap.second.size() > 1)
-            {
-                filters = "All Supported Files (";
-                // remove duplicates, sort alphabetically
-                std::set<QString> allExts;
-                for (const auto & it : categoryMap.second)
-                {
-                    for (const auto & ext : it.second)
-                    {
-                        allExts.insert(ext);
-                    }
-                }
-
-                for (const auto & ext : allExts)
-                {
-                    filters += "*." + ext + " ";
-                }
-
-                filters.truncate(filters.length() - 1);
-                filters += ");;";
-            }
-
-            for (auto && it : categoryMap.second)
-            {
-                filters += it.first + " (";
-                for (const auto & ext : it.second)
-                {
-                    filters += "*." + ext + " ";
-                }
-                filters.truncate(filters.length() - 1);
-                filters += ");;";
-            }
-
-            filters.truncate(filters.length() - 2);
-
-            m.emplace(categoryMap.first, filters);
-        }
-
-        return m;
-    }();
-
-    return _fileFormatFilters.at(category);
-}
-
-const std::map<QString, QStringList> & Loader::fileFormatExtensions(Category category)
-{
-    return fileFormatExtensionMaps().at(category);
-}
-
-const std::map<Loader::Category, std::map<QString, QStringList>> & Loader::fileFormatExtensionMaps()
-{
-    static const auto _fileFormatExtensionMaps = [] () {
-        std::map<Category, std::map<QString, QStringList>> m = {
-            { Category::CSV, { { "CSV Files", { "txt", "csv" } } } },
-            { Category::PolyData, { { "VTK XML PolyData Files", { "vtp" } } } },
-            { Category::Image2D, {
-                { "VTK XML Image Files", { "vti" } },
-                { "Digital Elevation Model", { "dem" } }
-            } },
-            { Category::Volume, { { "VTK XML Image Files", { "vti" } } } }
-        };
-
-        auto && _vtkImageFormats = vtkImageFormats();
-        m[Category::Image2D].insert(_vtkImageFormats.begin(), _vtkImageFormats.end());
-
-        auto & _all = m[Category::all];
-        for (const auto & perCategory : m)
-        {
-            _all.insert(perCategory.second.begin(), perCategory.second.end());
-        }
-
-        return m;
-    }();
-
-    return _fileFormatExtensionMaps;
-}
 
 std::unique_ptr<DataObject> Loader::readFile(const QString & filename)
 {
@@ -311,7 +186,8 @@ std::unique_ptr<DataObject> Loader::readFile(const QString & filename)
         return std::move(instance);
     }
 
-    if (vtkImageFileExts().contains(ext))
+    auto && vtkImageExts = io::fileFormatExtensions(io::Category::VTKImageFormats);
+    if (vtkImageExts.find(ext) != vtkImageExts.end())
     {
         vtkSmartPointer<vtkImageReader2> reader;
         reader.TakeReference(

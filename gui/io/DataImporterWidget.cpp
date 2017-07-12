@@ -11,9 +11,10 @@
 #include <vtkPolyData.h>
 
 #include <core/data_objects/PolyDataObject.h>
-#include <core/io/TextFileReader.h>
+#include <core/io/io_helper.h>
 #include <core/io/Loader.h>
 #include <core/io/MatricesToVtk.h>
+#include <core/io/TextFileReader.h>
 #include <core/utility/qthelper.h>
 
 
@@ -234,9 +235,9 @@ void DataImporterWidget::clearData()
 
 QString DataImporterWidget::getOpenFileDialog(const QString & title, bool requestPolyData)
 {
-    auto && filters = Loader::fileFormatFilters(requestPolyData
-        ? Loader::Category::PolyData
-        : Loader::Category::CSV);
+    auto && filters = io::fileFormatFilters(requestPolyData
+        ? io::Category::PolyData
+        : io::Category::CSV);
 
     const auto fileName = QFileDialog::getOpenFileName(this, title, m_lastOpenFolder, filters);
     if (fileName.isEmpty())

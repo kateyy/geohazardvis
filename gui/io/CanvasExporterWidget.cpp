@@ -8,19 +8,19 @@
 #include <QDateTime>
 #include <QDir>
 #include <QFileDialog>
-
 #include <QMessageBox>
 
 #include <core/canvas_export/CanvasExporter.h>
 #include <core/canvas_export/CanvasExporterRegistry.h>
+#include <core/io/io_helper.h>
 #include <gui/data_view/AbstractRenderView.h>
 #include <gui/propertyguizeug_extension/ColorEditorRGB.h>
 
 
 CanvasExporterWidget::CanvasExporterWidget(QWidget * parent, Qt::WindowFlags f)
     : QDialog(parent, f)
-    , m_ui(std::make_unique<Ui_CanvasExporterWidget>())
-    , m_renderView(nullptr)
+    , m_ui{ std::make_unique<Ui_CanvasExporterWidget>() }
+    , m_renderView{ nullptr }
 {
     m_ui->setupUi(this);
     m_ui->exporterSettingsBrowser->addEditorPlugin<ColorEditorRGB>();
@@ -164,9 +164,7 @@ QString CanvasExporterWidget::fileNameWithTimeStamp() const
 {
     const QString timestamp = QDateTime::currentDateTime().toString("yyyy-MM-dd HH-mm-ss.zzzz");
     QString baseName = timestamp + " " + m_renderView->windowTitle();
-    //
-    baseName.replace(QRegExp(R"([<>:"/\|?*])"), "_");
-
+    baseName = io::normalizeFileName(baseName);
     return baseName;
 }
 

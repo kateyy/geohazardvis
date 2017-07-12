@@ -14,9 +14,9 @@
 #include <vtkPointData.h>
 
 #include <core/data_objects/ImageDataObject.h>
-#include <core/io/TextFileReader.h>
-#include <core/io/Loader.h>
+#include <core/io/io_helper.h>
 #include <core/io/MatricesToVtk.h>
+#include <core/io/TextFileReader.h>
 #include <core/utility/qthelper.h>
 
 
@@ -141,7 +141,7 @@ void GridDataImporterWidget::clearData()
 
 QString GridDataImporterWidget::getOpenFileDialog(const QString & title)
 {
-    auto && filters = Loader::fileFormatFilters(Loader::Category::CSV);
+    auto && filters = io::fileFormatFilters(io::Category::CSV);
 
     const auto fileName = QFileDialog::getOpenFileName(this, title, m_lastOpenFolder, filters);
     if (fileName.isEmpty())

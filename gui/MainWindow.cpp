@@ -23,6 +23,7 @@
 #include <core/VersionInfo.h>
 #include <core/data_objects/CoordinateTransformableDataObject.h>
 #include <core/io/Exporter.h>
+#include <core/io/io_helper.h>
 #include <core/io/Loader.h>
 #include <core/rendered_data/RenderedData.h>
 #include <core/ThirdParty/dark_fusion_style.hpp>
@@ -35,9 +36,9 @@
 #include <gui/data_view/AbstractRenderView.h>
 #include <gui/data_view/ResidualVerificationView.h>
 #include <gui/data_view/TableView.h>
+#include <gui/io/CanvasExporterWidget.h>
 #include <gui/io/DataImporterWidget.h>
 #include <gui/io/GridDataImporterWidget.h>
-#include <gui/io/CanvasExporterWidget.h>
 #include <gui/plugin/GuiPluginInterface.h>
 #include <gui/plugin/GuiPluginManager.h>
 #include <gui/visualization_config/ColorMappingChooser.h>
@@ -270,7 +271,7 @@ MainWindow::~MainWindow()
 
 QStringList MainWindow::dialog_inputFileName()
 {
-    const auto fileNames = QFileDialog::getOpenFileNames(this, "", m_lastOpenFolder, Loader::fileFormatFilters());
+    const auto fileNames = QFileDialog::getOpenFileNames(this, "", m_lastOpenFolder, io::fileFormatFilters());
 
     if (fileNames.isEmpty())
     {

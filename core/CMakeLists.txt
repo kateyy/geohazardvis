@@ -172,6 +172,8 @@ set(sources
     io/DeformationTimeSeriesTextFileReader.cpp
     io/Exporter.h
     io/Exporter.cpp
+    io/io_helper.h
+    io/io_helper.cpp
     io/Loader.h
     io/Loader.hpp
     io/Loader.cpp
