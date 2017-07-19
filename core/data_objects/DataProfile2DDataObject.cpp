@@ -183,6 +183,13 @@ DataProfile2DDataObject::DataProfile2DDataObject(
         vtkAssignAttribute::POINT_DATA);
     assignScalars->SetInputConnection(unassignField->GetOutputPort());
 
+    // After probing, only pass the required scalar array, remove point masks etc.
+    auto removeAuxArrays = vtkSmartPointer<vtkPassArrays>::New();
+    removeAuxArrays->UseFieldTypesOn();
+    removeAuxArrays->AddFieldType(vtkDataObject::POINT);
+    removeAuxArrays->AddFieldType(vtkDataObject::CELL);
+    removeAuxArrays->AddArray(vtkDataObject::POINT, c_scalarsName.data());
+
     if (m_inputIsImage)
     {
         m_probeLine = vtkSmartPointer<vtkLineSource>::New();
@@ -199,7 +206,9 @@ DataProfile2DDataObject::DataProfile2DDataObject(
         auto invalidToNaN = vtkSmartPointer<SetMaskedPointScalarsToNaNFilter>::New();
         invalidToNaN->SetInputConnection(imageProbe->GetOutputPort());
 
-        m_outputTransformation->SetInputConnection(invalidToNaN->GetOutputPort());
+        removeAuxArrays->SetInputConnection(invalidToNaN->GetOutputPort());
+
+        m_outputTransformation->SetInputConnection(removeAuxArrays->GetOutputPort());
     }
     else if (inputPolyData && inputPolyData->GetPoints() && inputPolyData->GetPoints()->GetNumberOfPoints() > 0)
     {
@@ -218,7 +227,9 @@ DataProfile2DDataObject::DataProfile2DDataObject(
             m_polyCentroidsSelector->SetInputConnection(assignScalars->GetOutputPort());
             m_polyCentroidsSelector->SetCellCentersConnection(polygonCenters->GetOutputPort());
 
-            m_outputTransformation->SetInputConnection(m_polyCentroidsSelector->GetOutputPort(1));
+            removeAuxArrays->SetInputConnection(m_polyCentroidsSelector->GetOutputPort(1));
+
+            m_outputTransformation->SetInputConnection(removeAuxArrays->GetOutputPort());
         }
         // Point cloud data
         else if (inputPolyData->GetVerts() && inputPolyData->GetVerts()->GetNumberOfCells() > 0)
