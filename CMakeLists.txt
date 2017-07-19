@@ -14,7 +14,7 @@ set(META_PROJECT_DESCRIPTION    "")
 set(META_AUTHOR_ORGANIZATION    "")
 set(META_AUTHOR_DOMAIN          "https://github.com/kateyy/geohazardvis")
 set(META_AUTHOR_MAINTAINER      "Karsten Tausche")
-set(META_AUTHOR_MAINTAINER_EMAIL "karsten.tausche@student.hpi.de")
+set(META_AUTHOR_MAINTAINER_EMAIL "geodev@posteo.org")
 set(META_VERSION_MAJOR          "0")
 set(META_VERSION_MINOR          "2")
 set(META_VERSION_PATCH          "1")
@@ -211,7 +211,7 @@ endif()
 # Install the project meta files
 #install(FILES geohazardvis-config.cmake DESTINATION ${INSTALL_ROOT})
 #install(FILES AUTHORS DESTINATION               ${INSTALL_ROOT})
-#install(FILES LICENSE DESTINATION               ${INSTALL_ROOT})
+install(FILES LICENSE DESTINATION               ${INSTALL_ROOT})
 
 
 include(cmake/FindThirdParties.cmake)
