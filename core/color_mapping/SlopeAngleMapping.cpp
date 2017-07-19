@@ -7,6 +7,7 @@
 #include <vtkArrayCalculator.h>
 #include <vtkMath.h>
 #include <vtkMapper.h>
+#include <vtkVersionMacros.h>
 
 #include <core/AbstractVisualizedData.h>
 #include <core/types.h>
@@ -15,6 +16,7 @@
 #include <core/filters/ArrayChangeInformationFilter.h>
 #include <core/utility/type_traits.h>
 #include <core/utility/DataExtent.h>
+#include <core/utility/macros.h>
 
 
 namespace
@@ -94,7 +96,11 @@ vtkSmartPointer<vtkAlgorithm> SlopeAngleMapping::createFilter(AbstractVisualized
     calculator->SetInputConnection(visualizedData.processedOutputPort(port));
     calculator->AddScalarVariable("z", "Normals", 2);
     calculator->SetResultArrayName(arrayName.data());
+#if VTK_CHECK_VERSION(8,1,0)
+    calculator->SetAttributeTypeToCellData();
+#else
     calculator->SetAttributeModeToUseCellData();
+#endif
     static const auto fun = "acos(z) * 180 / " + [] () {
         std::stringstream piStr;
         piStr.precision(16);

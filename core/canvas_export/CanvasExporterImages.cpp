@@ -7,9 +7,12 @@
 #include <vtkImageShiftScale.h>
 #include <vtkImageWriter.h>
 #include <vtkRenderWindow.h>
+#include <vtkVersionMacros.h>
 #include <vtkWindowToImageFilter.h>
 
 #include <reflectionzeug/PropertyGroup.h>
+
+#include <core/utility/macros.h>
 
 
 using namespace reflectionzeug;
@@ -78,12 +81,23 @@ std::unique_ptr<PropertyGroup> CanvasExporterImages::createPropertyGroup()
             { zBuffer, "Depth Buffer" } }
     );
 
+#if VTK_CHECK_VERSION(8,1,0)
+    group->addProperty<int>("Magnification",
+        [this] () { return m_toImageFilter->GetScale()[0]; },
+        [this] (int value) { m_toImageFilter->SetScale(value); })
+        ->setOptions({
+            { "minimum", 1 },
+            { "maximum", 100000 }
+        });
+#else
     auto prop_magnification = group->addProperty<int>("Magnification",
         [this] () { return m_toImageFilter->GetMagnification(); },
-        [this] (int value) { m_toImageFilter->SetMagnification(value); }
-    );
-    prop_magnification->setOption("minimum", m_toImageFilter->GetMagnificationMinValue());
-    prop_magnification->setOption("maximum", m_toImageFilter->GetMagnificationMaxValue());
+        [this] (int value) { m_toImageFilter->SetMagnification(value); })
+        ->setOptions({
+            { "minimum", m_toImageFilter->GetMagnificationMinValue() },
+            { "maximum", m_toImageFilter->GetMagnificationMaxValue() }
+        });
+#endif
 
     return group;
 }
