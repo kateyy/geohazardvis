@@ -293,6 +293,7 @@ if (${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang" OR ${CMAKE_CXX_COMPILER_ID} STREQU
 endif()
 
 list(APPEND sources ${thirdPartySources})
+list(APPEND sources ${THIRD_PARTY_INFO_HEADER})
 
 if (OPTION_ENABLE_LIC2D)
     list(APPEND sources
@@ -320,6 +321,7 @@ source_group_by_path(${CMAKE_CURRENT_BINARY_DIR} ".*" "Generated"
     ${CMAKE_CURRENT_BINARY_DIR}/${target}_api.h
     ${CONFIG_FILE}
     ${PROJ4_INCLUDE_FILE}
+    ${THIRD_PARTY_INFO_HEADER}
 )
 source_group_by_path(${CMAKE_CURRENT_SOURCE_DIR} ".*" "" "CMakeLists.txt")
 

@@ -77,9 +77,35 @@ function(get_source_dir_from_build PACKAGE_NAME BUILD_DIR _SOURCE_DIR)
     endforeach()
 endfunction()
 
+set(THIRD_PARTY_PACKAGES "" CACHE INTERNAL "")
 function(deploy_license_file PACKAGE_NAME FILE_PATH)
     install(FILES ${FILE_PATH} DESTINATION ${INSTALL_THIRDPARTY_LICENSES}
         RENAME "${PACKAGE_NAME}.txt")
+    list(APPEND THIRD_PARTY_PACKAGES "${PACKAGE_NAME}")
+    set(THIRD_PARTY_PACKAGES ${THIRD_PARTY_PACKAGES} CACHE INTERNAL "")
+endfunction()
+
+function(set_third_party_info name sha1 rev date)
+    set(THIRD_PARTY_${name}_hasInfo TRUE CACHE INTERNAL "")
+    set(THIRD_PARTY_${name}_sha1 ${sha1} CACHE INTERNAL "")
+    set(THIRD_PARTY_${name}_rev ${rev} CACHE INTERNAL "")
+    set(THIRD_PARTY_${name}_date ${date} CACHE INTERNAL "")
+endfunction()
+
+function(write_third_party_config_file outputFileName)
+    set(THIRD_PARTY_NAME_STRINGS)
+    foreach(name ${THIRD_PARTY_PACKAGES})
+        if (THIRD_PARTY_${name}_hasInfo)
+            string(APPEND THIRD_PARTY_STRUCT_INITS
+                "    { \"${name}\", true, \"${THIRD_PARTY_${name}_sha1}\", \
+\"${THIRD_PARTY_${name}_rev}\", \"${THIRD_PARTY_${name}_date}\" },\n")
+        else()
+            string(APPEND THIRD_PARTY_STRUCT_INITS
+                "    { \"${name}\", false, {}, {}, {} },\n")
+        endif()
+    endforeach()
+    list(LENGTH THIRD_PARTY_PACKAGES NUM_THIRD_PARTIES)
+    configure_file(${PROJECT_SOURCE_DIR}/cmake/third_party_info.h.in ${outputFileName})
 endfunction()
 
 
@@ -255,6 +281,7 @@ if (VTK_SOURCE_DIR)
         get_git_commit_date(${VTK_GIT_SHA1} VTK_GIT_DATE ${VTK_SOURCE_DIR})
     endif()
     deploy_license_file("VTK" "${VTK_SOURCE_DIR}/Copyright.txt")
+    set_third_party_info("VTK" ${VTK_GIT_SHA1} ${VTK_GIT_REV} ${VTK_GIT_DATE})
 endif()
 # Some components of ParaView are used
 deploy_license_file("ParaView" "${PROJECT_SOURCE_DIR}/core/ThirdParty/ParaView/License_v1.2_ParaViewOnly.txt")

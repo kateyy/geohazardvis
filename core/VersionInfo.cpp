@@ -5,6 +5,14 @@
 #include <vtkVersionMacros.h>
 
 #include "vcs_commit_info.h"
+#include "third_party_info.h"
+
+
+namespace
+{
+    QStringList l_thirdPartiesWithVersionInfo;
+    QStringList l_otherThirdParties;
+}
 
 
 const VersionInfo & VersionInfo::projectInfo()
@@ -14,35 +22,62 @@ const VersionInfo & VersionInfo::projectInfo()
 
 const VersionInfo & VersionInfo::versionInfoFor(const QString & thirdPartyName)
 {
-    static const std::map<QString, VersionInfo> infos = {
-        { QString(), VersionInfo(
+    static const std::map<QString, VersionInfo> infos = [] () {
+        std::map<QString, VersionInfo> map = { { QString(), VersionInfo(
             PROJECT_VERSION_MAJOR, PROJECT_VERSION_MINOR, PROJECT_VERSION_PATCH,
             PROJECT_MAINTAINER_EMAIL,
             GIT_SHA1, GIT_REV, GIT_DATE)
-        },
-        { "VTK", VersionInfo(
-            VTK_MAJOR_VERSION, VTK_MINOR_VERSION, VTK_BUILD_VERSION,
-            "",
-            VTK_GIT_SHA1, VTK_GIT_REV, VTK_GIT_DATE)
+        }};
+        for (const auto & info : thirdPartyInfos)
+        {
+            if (info.hasGitInfo)
+            {
+                l_thirdPartiesWithVersionInfo.push_back(info.name);
+                map.emplace(info.name, VersionInfo(info.gitSha1, info.gitRev, info.gitDate));
+            }
+            else
+            {
+                l_otherThirdParties.push_back(info.name);
+            }
         }
-    };
+        auto & vtkInfo = map.at("VTK");
+        vtkInfo.major = VTK_MAJOR_VERSION;
+        vtkInfo.minor = VTK_MINOR_VERSION;
+        vtkInfo.patch = VTK_BUILD_VERSION;
+        return map;
+    }();
+
     return infos.at(thirdPartyName);
 }
 
-const QStringList & VersionInfo::supportedThirdParties()
+const QStringList & VersionInfo::thirdPartiesWithVersionInfo()
 {
-    static const QStringList list = { "VTK" };
-    return list;
+    versionInfoFor({});
+    return l_thirdPartiesWithVersionInfo;
 }
 
-VersionInfo::VersionInfo(int major, int minor, int patch, const char * maintainerEmail, const char * sha1, const char * rev, const char * date)
+const QStringList & VersionInfo::otherThirdParties()
+{
+    versionInfoFor({});
+    return l_otherThirdParties;
+}
+
+VersionInfo::VersionInfo(
+    int major, int minor, int patch,
+    const QString & maintainerEmail,
+    const QString & sha1, const QString & rev, const QString & date)
     : major{ major }
     , minor{ minor }
     , patch{ patch }
-    , maintainerEmail{ QString::fromLatin1(maintainerEmail) }
-    , gitSHA1{ QString::fromLatin1(sha1) }
-    , gitRevision{ QString::fromLatin1(rev) }
-    , gitCommitDateString{ QString::fromLatin1(date) }
-    , gitCommitDate{ QDateTime::fromString(QString::fromLatin1(date), Qt::ISODate) }
+    , maintainerEmail{ maintainerEmail }
+    , gitSHA1{ sha1 }
+    , gitRevision{ rev }
+    , gitCommitDateString{ date }
+    , gitCommitDate{ QDateTime::fromString(date, Qt::ISODate) }
+{
+}
+
+VersionInfo::VersionInfo(const QString & sha1, const QString & rev, const QString & date)
+    : VersionInfo(-1, -1, -1, QString(), sha1, rev, date)
 {
 }

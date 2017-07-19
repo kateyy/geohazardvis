@@ -120,11 +120,11 @@ MainWindow::MainWindow()
             .arg(projectInfo.patch)
             .arg(projectInfo.gitRevision)
             .arg(projectInfo.gitCommitDate.date().toString());
-        for (auto && thirdParty : VersionInfo::supportedThirdParties())
+        for (auto && thirdParty : VersionInfo::thirdPartiesWithVersionInfo())
         {
             auto && info = VersionInfo::versionInfoFor(thirdParty);
             infoString += QString(
-                "%1 (Version %2.%3.%4)\n"
+                " - %1 (Version %2.%3.%4)\n"
                 "\tRevision: %5\n"
                 "\tDate: %6\n")
                 .arg(thirdParty)
@@ -134,6 +134,11 @@ MainWindow::MainWindow()
                 .arg(info.gitRevision)
                 .arg(info.gitCommitDate.date().toString());
         }
+        for (auto && thirdParty : VersionInfo::otherThirdParties())
+        {
+            infoString += " - " + thirdParty + "\n";
+        }
+        infoString += "\n";
         infoString += QString(R"(Plese refer to the ")") + config::installThirdPartyLicensePath +
             R"(" folder in the appplication folder for further information and licenses.)";
         QMessageBox::about(this, config::metaProjectName, infoString);

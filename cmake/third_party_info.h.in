@@ -1,0 +1,19 @@
+#pragma once
+
+#include <array>
+
+#include <QString>
+
+
+struct ThirdPartyVersionInfo
+{
+    QString name;
+    bool hasGitInfo;
+    QString gitSha1;
+    QString gitRev;
+    QString gitDate;
+};
+
+static const std::array<ThirdPartyVersionInfo, @NUM_THIRD_PARTIES@> thirdPartyInfos = {{
+@THIRD_PARTY_STRUCT_INITS@
+}};

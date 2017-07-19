@@ -223,7 +223,7 @@ string(SUBSTRING "${GIT_SHA1}" 0 12 GIT_REV)
 get_git_commit_date(${GIT_SHA1} GIT_DATE)
 set(GIT_REVISION_FILE ${PROJECT_BINARY_DIR}/revision)
 set(VERSION_INFO_FILE ${PROJECT_BINARY_DIR}/vcs_commit_info.h)
-# Write git information for this project and supported third parties
+# Write git information for this project
 configure_file(cmake/vcs_commit_info.h.in ${VERSION_INFO_FILE})
 
 
@@ -266,5 +266,8 @@ if (OPTION_BUILD_TOOLS)
     set(IDE_FOLDER ${IDE_TOOLS_FOLDER})
     add_subdirectory("tools")
 endif()
+
+set(THIRD_PARTY_INFO_HEADER "${CMAKE_BINARY_DIR}/third_party_info.h")
+write_third_party_config_file(${THIRD_PARTY_INFO_HEADER})
 
 create_cppcheck_ALL_target()

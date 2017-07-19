@@ -20,10 +20,12 @@ public:
 
     static const VersionInfo & projectInfo();
     static const VersionInfo & versionInfoFor(const QString & thirdPartyName);
-    static const QStringList & supportedThirdParties();
+    static const QStringList & thirdPartiesWithVersionInfo();
+    static const QStringList & otherThirdParties();
 
 private:
     VersionInfo(int major, int minor, int patch,
-        const char * maintainerEmail,
-        const char * sha1, const char * rev, const char * date);
+        const QString & maintainerEmail,
+        const QString & sha1, const QString & rev, const QString & date);
+    VersionInfo(const QString & sha1, const QString & rev, const QString & date);
 };
