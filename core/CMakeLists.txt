@@ -183,6 +183,8 @@ set(sources
     io/MatricesToVtk.cpp
     io/TextFileReader.h
     io/TextFileReader.cpp
+    io/TextFileWriter.h
+    io/TextFileWriter.cpp
     io/types.h
 
     reflectionzeug_extension/QStringProperty.h

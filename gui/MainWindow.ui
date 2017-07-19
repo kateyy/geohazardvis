@@ -47,6 +47,7 @@
     <addaction name="actionImport_CSV_Triangle_Mesh"/>
     <addaction name="actionImport_CSV_Grid_Data"/>
     <addaction name="actionExportDataset"/>
+    <addaction name="actionExport_to_CSV"/>
     <addaction name="menuRecent_Files"/>
     <addaction name="separator"/>
     <addaction name="actionExit"/>
@@ -215,6 +216,11 @@
   <action name="actionReset_Window_Layout">
    <property name="text">
     <string>Reset Window &amp;Layout</string>
+   </property>
+  </action>
+  <action name="actionExport_to_CSV">
+   <property name="text">
+    <string>E&amp;xport to CSV...</string>
    </property>
   </action>
  </widget>

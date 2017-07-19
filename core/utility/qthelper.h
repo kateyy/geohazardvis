@@ -1,5 +1,6 @@
 #pragma once
 
+#include <type_traits>
 #include <vector>
 
 #include <QMetaObject>
@@ -28,6 +29,30 @@ CORE_API void disconnectAll(std::vector<QMetaObject::Connection> && connections)
 
 CORE_API QVariant dataObjectPtrToVariant(DataObject * dataObject);
 CORE_API DataObject * variantToDataObjectPtr(const QVariant & variant);
+
+
+/*
+ * QString::number and QByteArray::number do not provide overloads for long and unsigned long.
+ * QtNumberType dispatches to the matching int type: (unsigned) long long or (unsigned) int.
+ */
+template<typename NumberType>
+struct QtNumberType
+{
+    static_assert(std::is_integral<NumberType>::value
+        || std::is_floating_point<NumberType>::value, "");
+    using type = NumberType;
+};
+template<typename NumberType> using QtNumberType_t = typename QtNumberType<NumberType>::type;
+template<>
+struct QtNumberType<long>
+{
+    using type = std::conditional_t<sizeof(long) == sizeof(int), int, long long>;
+};
+template<>
+struct QtNumberType<unsigned long>
+{
+    using type = std::make_unsigned_t<QtNumberType<long>::type>;
+};
 
 
 /**

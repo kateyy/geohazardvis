@@ -61,6 +61,8 @@ set(sources
 
     io/CanvasExporterWidget.h
     io/CanvasExporterWidget.cpp
+    io/CSVExporterWidget.h
+    io/CSVExporterWidget.cpp
     io/DataImporterWidget.h
     io/DataImporterWidget.cpp
     io/GridDataImporterWidget.h
@@ -137,6 +139,7 @@ set(UIs
     io/CanvasExporterWidget.ui
     io/DataImporterWidget.ui
     io/GridDataImporterWidget.ui
+    io/CSVExporterWidget.ui
 
     visualization_config/ColorMappingChooser.ui
     visualization_config/GlyphMappingChooser.ui

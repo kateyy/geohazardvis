@@ -71,6 +71,7 @@ private:
 
     void showDEMWidget();
     void dialog_exportDataSet();
+    void dialog_exportToCSV();
     QStringList dialog_inputFileName();
     void updateWindowTitle();
     void handleAsyncLoadFinished();

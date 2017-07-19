@@ -37,6 +37,7 @@
 #include <gui/data_view/ResidualVerificationView.h>
 #include <gui/data_view/TableView.h>
 #include <gui/io/CanvasExporterWidget.h>
+#include <gui/io/CSVExporterWidget.h>
 #include <gui/io/DataImporterWidget.h>
 #include <gui/io/GridDataImporterWidget.h>
 #include <gui/plugin/GuiPluginInterface.h>
@@ -97,6 +98,7 @@ MainWindow::MainWindow()
         }
     });
     connect(m_ui->actionExportDataset, &QAction::triggered, this, &MainWindow::dialog_exportDataSet);
+    connect(m_ui->actionExport_to_CSV, &QAction::triggered, this, &MainWindow::dialog_exportToCSV);
     connect(m_ui->actionClear_Recent_Files, &QAction::triggered, [this] () {
         m_recentFileList.clear();
         prependRecentFiles({});
@@ -496,6 +498,32 @@ void MainWindow::dialog_exportDataSet()
     }
 
     setWindowTitle(oldName);
+}
+
+void MainWindow::dialog_exportToCSV()
+{
+    auto toExport = m_dataBrowser->selectedDataObjects();
+    if (toExport.isEmpty())
+    {
+        QMessageBox::information(this, "Data Set Export", "Please select datasets to export in the data browser!");
+        return;
+    }
+
+    CSVExporterWidget exporter;
+    exporter.setShowCancelAllButton(toExport.size() > 1);
+    exporter.setDir(m_lastExportFolder);
+
+    for (auto dataObject : toExport)
+    {
+        exporter.setDataObject(dataObject);
+        exporter.exec();
+        if (exporter.allCanceled())
+        {
+            break;
+        }
+    }
+
+    m_lastExportFolder = exporter.dir();
 }
 
 void MainWindow::showDEMWidget()
