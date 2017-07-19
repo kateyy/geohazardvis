@@ -36,23 +36,6 @@ const std::map<QString, QStringList> & vtkImageFormats()
     return _vtkImageFormats;
 }
 
-const std::set<QString> & vtkImageFileExts()
-{
-    static const auto imgExts = [] () {
-        std::set<QString> exts;
-        for (const auto & f_exts : vtkImageFormats())
-        {
-            for (auto && ext : f_exts.second)
-            {
-                exts.insert(ext);
-            }
-        }
-        return exts;
-    }();
-
-    return imgExts;
-}
-
 const std::map<Category, std::map<QString, QStringList>> & fileFormatExtensionMaps()
 {
     static const auto _fileFormatExtensionMaps = [] () {
