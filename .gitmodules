@@ -1,3 +1,6 @@
 [submodule "data"]
 	path = data
 	url = https://github.com/kateyy/geohazardvis_data.git
+[submodule "plugins/modeling_pCDM"]
+	path = plugins/modeling_pCDM
+	url = https://github.com/kateyy/geohazardvis_modeling_pCDM.git
