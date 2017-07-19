@@ -4,5 +4,5 @@ Name=GeohazardVis
 Comment=
 Exec=bash -c '"$(dirname "$1")"/GeohazardVis.sh' dummy %k
 Icon=
-Terminal=true
+Terminal=false
 Categories=Application;
