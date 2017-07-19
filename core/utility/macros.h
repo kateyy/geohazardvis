@@ -22,7 +22,9 @@
 
 // Boolean expression checking if VTK version is at least MAJOR.MINOR.BUILD
 // This requires to include vtkVersionMacros.h BEFORE this header.
+#ifdef VTK_MAJOR_VERSION
 #define VTK_CHECK_VERSION(MAJOR, MINOR, BUILD) \
     (VTK_MAJOR_VERSION > MAJOR \
     || (VTK_MAJOR_VERSION == MAJOR && VTK_MINOR_VERSION > MINOR) \
     || (VTK_MAJOR_VERSION == MAJOR && VTK_MINOR_VERSION == MINOR && VTK_BUILD_VERSION >= BUILD))
+#endif
