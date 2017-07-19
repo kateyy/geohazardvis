@@ -1,10 +1,10 @@
-geohazardvis
+GeohazardVis
 =======
 
 ### Dependencies
 
 The following dev-libraries and programs need to be provided for correct CMake configuration:
-* C++11 compatible compiler (minimum: Windows: Visual Studio 2013, Linux: gcc 4.9)
+* C++14 compatible compiler (minimum: Windows: Visual Studio 2015, Linux: gcc 4.9)
 * CMake (>= 3.3): http://www.cmake.org/
 * Qt5 (>= 5.5): http://www.qt.io/
 * VTK (>= 7.1): http://www.vtk.org/
