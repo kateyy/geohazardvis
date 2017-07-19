@@ -5,6 +5,8 @@ message(STATUS ${target})
 set(sources
     ${CMAKE_CURRENT_BINARY_DIR}/${target}_api.h
 
+    AboutProjectDialog.h
+    AboutProjectDialog.cpp
     DataMapping.h
     DataMapping.cpp
     MainWindow.h
@@ -128,6 +130,7 @@ set(sources
 )
 
 set(UIs
+    AboutProjectDialog.ui
     MainWindow.ui
 
     data_view/TableView.ui

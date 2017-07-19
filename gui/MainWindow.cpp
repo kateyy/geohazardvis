@@ -38,7 +38,6 @@
 #include <core/config.h>
 #include <core/DataSetHandler.h>
 #include <core/RuntimeInfo.h>
-#include <core/VersionInfo.h>
 #include <core/data_objects/CoordinateTransformableDataObject.h>
 #include <core/io/Exporter.h>
 #include <core/io/io_helper.h>
@@ -47,6 +46,7 @@
 #include <core/ThirdParty/dark_fusion_style.hpp>
 #include <core/utility/qthelper.h>
 
+#include <gui/AboutProjectDialog.h>
 #include <gui/DataMapping.h>
 #include <gui/SelectionHandler.h>
 #include <gui/data_handling/CoordinateSystemAdjustmentWidget.h>
@@ -122,44 +122,7 @@ MainWindow::MainWindow()
         prependRecentFiles({});
     });
     connect(m_ui->actionAbout, &QAction::triggered, [this] () {
-        auto && projectInfo = VersionInfo::projectInfo();
-        auto infoString = QString(
-            "Maintainer contact:\n"
-            "\t%1\n"
-            "\n"
-            "Project Version: %2.%3.%4\n"
-            "\tRevision: %5\n"
-            "\tDate: %6\n"
-            "\n"
-            "Third Party Libraries:\n")
-            .arg(projectInfo.maintainerEmail)
-            .arg(projectInfo.major)
-            .arg(projectInfo.minor)
-            .arg(projectInfo.patch)
-            .arg(projectInfo.gitRevision)
-            .arg(projectInfo.gitCommitDate.date().toString());
-        for (auto && thirdParty : VersionInfo::thirdPartiesWithVersionInfo())
-        {
-            auto && info = VersionInfo::versionInfoFor(thirdParty);
-            infoString += QString(
-                " - %1 (Version %2.%3.%4)\n"
-                "\tRevision: %5\n"
-                "\tDate: %6\n")
-                .arg(thirdParty)
-                .arg(info.major)
-                .arg(info.minor)
-                .arg(info.patch)
-                .arg(info.gitRevision)
-                .arg(info.gitCommitDate.date().toString());
-        }
-        for (auto && thirdParty : VersionInfo::otherThirdParties())
-        {
-            infoString += " - " + thirdParty + "\n";
-        }
-        infoString += "\n";
-        infoString += QString(R"(Plese refer to the ")") + config::installThirdPartyLicensePath +
-            R"(" folder in the appplication folder for further information and licenses.)";
-        QMessageBox::about(this, config::metaProjectName, infoString);
+        AboutProjectDialog().exec();
     });
     connect(m_ui->actionAbout_Qt, &QAction::triggered, [this] () { QMessageBox::aboutQt(this); });
     connect(m_ui->actionApply_Digital_Elevation_Model, &QAction::triggered, this, &MainWindow::showDEMWidget);

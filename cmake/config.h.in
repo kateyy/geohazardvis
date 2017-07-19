@@ -42,6 +42,9 @@ namespace config
 //
 
 const char * const metaProjectName = "@META_PROJECT_NAME@";
+const char * const metaProjectDomain = "@META_AUTHOR_DOMAIN@";
+const char * const metaProjectMaintainer = "@META_AUTHOR_MAINTAINER@";
+const char * const metaProjectMaintainerEmail = "@META_AUTHOR_MAINTAINER_EMAIL@";
 const char * const installDataRelativePath = "@INSTALL_DATA@";
 const char * const installBinRelativePath = "@INSTALL_BIN@";
 const char * const installPluginsSharedRelativePath = "@INSTALL_PLUGINS_SHARED@";
