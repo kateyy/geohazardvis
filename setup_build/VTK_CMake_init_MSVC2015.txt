@@ -12,6 +12,7 @@ set(CMAKE_STATIC_LINKER_FLAGS_RELEASE "/LTCG" CACHE STRING "Flags used by the li
 
 set(CMAKE_CXX_MP_FLAG ON CACHE BOOL "Build with /MP flag enabled")
 set(Module_vtkChartsCore ON CACHE BOOL "Request building vtkChartsCore")
+set(Module_vtkFiltersPoints ON CACHE BOOL "Request building vtkFiltersPoints")
 set(Module_vtkFiltersTexture OFF CACHE BOOL "Request building vtkFiltersTexture")
 set(Module_vtkGUISupportQt ON CACHE BOOL "Request building vtkGUISupportQt")
 set(Module_vtkInteractionWidgets ON CACHE BOOL "Request building vtkInteractionWidgets")
