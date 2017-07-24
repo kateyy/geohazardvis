@@ -76,13 +76,11 @@ if (NOT DEFINED generatorIsMultiConfig)
 endif()
 
 # reject invalid build types to prevent unexpected build behavior
-if (NOT generatorIsMultiConfig AND CMAKE_BUILD_TYPE)
-    list(FIND ACCEPTED_CONFIGURATION_TYPES ${CMAKE_BUILD_TYPE} _currentBuildTypeIndex)
-    if (_currentBuildTypeIndex EQUAL -1)
-        message(WARNING "Rejecting invalid CMAKE_BUILD_TYPE: \"${CMAKE_BUILD_TYPE}\"")
-        unset(CMAKE_BUILD_TYPE CACHE)
-        set(_resetBuildType TRUE)
-    endif()
+if (NOT generatorIsMultiConfig AND CMAKE_BUILD_TYPE
+    AND NOT CMAKE_BUILD_TYPE IN_LIST ACCEPTED_CONFIGURATION_TYPES)
+    message(WARNING "Rejecting invalid CMAKE_BUILD_TYPE: \"${CMAKE_BUILD_TYPE}\"")
+    unset(CMAKE_BUILD_TYPE CACHE)
+    set(_resetBuildType TRUE)
 endif()
 
 # Initialize CMAKE_BUILD_TYPE or CMAKE_CONFIGURATION_TYPES depending on current generator type
