@@ -359,9 +359,9 @@ MainWindow::FileLoadResults MainWindow::openFilesSync(const QStringList & fileNa
     }
 
     QList<DataObject *> selection;
-    for (const auto & data : newData)
+    for (const auto & dataObject : newData)
     {
-        selection.push_back(data.get());
+        selection.push_back(dataObject.get());
     }
 
     m_dataSetHandler->takeData(std::move(newData));

@@ -103,7 +103,7 @@ public:
     friend void swap(TextFileWriter & lhs, TextFileWriter & rhs);
 
 private:
-    TextFileWriter(std::nullptr_t);
+    explicit TextFileWriter(std::nullptr_t);
 
     void resetOutput();
     QIODevice * output();
