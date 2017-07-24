@@ -43,6 +43,7 @@ public:
     void setDataMapping(DataMapping * dataMapping);
 
     void setSelectedData(DataObject * dataObject);
+    void setSelectedData(const QList<DataObject *> & dataObjects);
     QList<DataObject *> selectedDataObjects() const;
     QList<DataObject *> selectedDataSets() const;
     QList<DataObject *> selectedAttributeVectors() const;

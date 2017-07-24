@@ -358,7 +358,16 @@ MainWindow::FileLoadResults MainWindow::openFilesSync(const QStringList & fileNa
         results.success << fileName;
     }
 
+    QList<DataObject *> selection;
+    for (const auto & data : newData)
+    {
+        selection.push_back(data.get());
+    }
+
     m_dataSetHandler->takeData(std::move(newData));
+
+    QApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
+    m_dataBrowser->setSelectedData(selection);
 
     return results;
 }
@@ -423,6 +432,8 @@ void MainWindow::prependRecentFiles(const QStringList & filePaths, const QString
 
 void MainWindow::openFiles(const QStringList & fileNames)
 {
+    QApplication::processEvents();
+
     auto watcher = std::make_unique<QFutureWatcher<FileLoadResults>>();
     auto watcherPtr = watcher.get();
     connect(watcherPtr, &QFutureWatcher<FileLoadResults>::finished, this, &MainWindow::handleAsyncLoadFinished);
@@ -435,7 +446,6 @@ void MainWindow::openFiles(const QStringList & fileNames)
         QtConcurrent::run(this, &MainWindow::openFilesSync, fileNames));
 
     updateWindowTitle();
-    QApplication::processEvents();
 }
 
 void MainWindow::dialog_exportDataSet()

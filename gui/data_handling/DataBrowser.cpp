@@ -87,16 +87,37 @@ void DataBrowser::setDataMapping(DataMapping * dataMapping)
 
 void DataBrowser::setSelectedData(DataObject * dataObject)
 {
-    const int row = m_tableModel->rowForDataObject(dataObject);
+    setSelectedData(QList<DataObject *>{ dataObject });
+}
 
-    auto currentSelection = m_ui->dataTableView->selectionModel()->selectedRows();
-    if (currentSelection.size() == 1 && currentSelection.first().row() == row)
+void DataBrowser::setSelectedData(const QList<DataObject *> & dataObjects)
+{
+    QList<int> rows;
+    for (auto && object : dataObjects)
     {
-        return;
+        rows.push_back(m_tableModel->rowForDataObject(object));
+    }
+    const auto currentSelection = m_ui->dataTableView->selectionModel()->selectedRows();
+    if (rows.size() == currentSelection.size())
+    {
+        bool allEqual = true;
+        for (int i = 0; allEqual && i < rows.size(); ++i)
+        {
+            allEqual = rows[i] == currentSelection[i].row();
+        }
+        if (allEqual)
+        {
+            return;
+        }
     }
 
     m_ui->dataTableView->clearSelection();
-    m_ui->dataTableView->selectRow(m_tableModel->rowForDataObject(dataObject));
+    for (auto && row : rows)
+    {
+        m_ui->dataTableView->selectionModel()->select(
+            m_ui->dataTableView->model()->index(row, 0),
+            QItemSelectionModel::Select | QItemSelectionModel::Rows);
+    }
 }
 
 bool DataBrowser::eventFilter(QObject * /*obj*/, QEvent * ev)
