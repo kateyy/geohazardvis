@@ -38,6 +38,15 @@ public:
     const QString & fileName() const;
     void setFileName(const QString & fileName);
 
+    /**
+     * Value delimiter character(s). Defaults to space (' ').
+     *
+     * If this is set to a space, multiple consecutive spaces are merged and treated as a single
+     * separator.
+     */
+    QChar delimiter() const;
+    void setDelimiter(QChar delimiter);
+
     template<typename T>
     using Vector_t = std::vector<std::vector<T>>;
     using FloatVectors = Vector_t<float>;
@@ -108,6 +117,7 @@ private:
 private:
     std::unique_ptr<ImplBase> m_implementation;
     QString m_fileName;
+    QChar m_delimiter;
 
 private:
     Q_DISABLE_COPY(TextFileReader)

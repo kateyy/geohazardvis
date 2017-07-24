@@ -83,18 +83,22 @@ public:
         return fileName;
     }
 
-    static const QString & defaultContentString()
+    static QString defaultContentString(const char * delimiterStr = nullptr)
     {
-        static const QString content = [] ()
+        QString content;
+        QTextStream stream(&content);
+        if (delimiterStr)
         {
-            QString c;
-            QTextStream stream(&c);
-
+            const QString delimiter(delimiterStr);
+            stream << "-1.0" << delimiter << "1.0\r\n";
+            stream << "NaN" << delimiter << "2.0\n\n";
+        }
+        else
+        {
+            // Default: 3-4 spaces
             stream << "   -1.0    1.0\r\n";
             stream << "    NaN    2.0\n\n";
-            return c;
-        }();
-
+        }
         return content;
     }
     static const TextFileReader::FloatVectors & defaultContent()
@@ -205,4 +209,19 @@ TEST_F(TextFileReader_test, ReportInvalidFile_QByteArray)
     const auto result = TestQtTextFileReader(testFileName()).read(data, 3);
     ASSERT_FALSE(result.testFlag(TextFileReader::successful));
     ASSERT_TRUE(result.testFlag(TextFileReader::invalidFile));
+}
+
+TEST_F(TextFileReader_test, SemicolonDelimiter_qFile_QByteArray)
+{
+    createTestFile(defaultContentString(";"));
+
+    TextFileReader::FloatVectors data;
+    auto reader = TestQtTextFileReader(testFileName());
+    reader.setDelimiter(';');
+    const auto result = reader.read(data);
+
+    ASSERT_TRUE(result.testFlag(TextFileReader::successful));
+    ASSERT_TRUE(result.testFlag(TextFileReader::eof));
+
+    ASSERT_TRUE(checkEqual(defaultContent(), data));
 }

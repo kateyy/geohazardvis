@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
- #include "GridDataImporterWidget.h"
+#include "GridDataImporterWidget.h"
 #include "ui_GridDataImporterWidget.h"
 
 #include <array>
@@ -37,6 +37,20 @@
 #include <core/io/TextFileReader.h>
 #include <core/utility/qthelper.h>
 
+
+namespace
+{
+
+template<typename Data_t>
+auto read(const QString & fileName, const QString & delimiterStr, Data_t & data)
+    -> decltype(std::declval<TextFileReader>().read(data))
+{
+    auto reader = TextFileReader(fileName);
+    reader.setDelimiter(delimiterStr.isEmpty() ? QChar(' ') : delimiterStr[0]);
+    return reader.read(data);
+}
+
+}
 
 GridDataImporterWidget::GridDataImporterWidget(QWidget * parent, Qt::WindowFlags flags)
     : QDialog(parent, flags)
@@ -99,7 +113,7 @@ void GridDataImporterWidget::openImageDataFile()
     m_ui->imageFileEdit->setText(fileName);
 
     m_imageDataVector.clear();
-    const auto result = TextFileReader(fileName).read(m_imageDataVector);
+    const auto result = read(fileName, m_ui->delimiterEdit->text(), m_imageDataVector);
     if (!result.testFlag(TextFileReader::successful))
     {
         QMessageBox::warning(this, "Read Error", "Cannot open the specified file.");

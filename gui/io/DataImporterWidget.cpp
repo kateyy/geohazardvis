@@ -16,10 +16,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
- #include "DataImporterWidget.h"
+#include "DataImporterWidget.h"
 #include "ui_DataImporterWidget.h"
 
 #include <cassert>
+#include <utility>
 
 #include <QFileDialog>
 #include <QFileInfo>
@@ -34,6 +35,21 @@
 #include <core/io/MatricesToVtk.h>
 #include <core/io/TextFileReader.h>
 #include <core/utility/qthelper.h>
+
+
+namespace
+{
+
+template<typename Data_t>
+auto read(const QString & fileName, const QString & delimiterStr, Data_t & data)
+    -> decltype(std::declval<TextFileReader>().read(data))
+{
+    auto reader = TextFileReader(fileName);
+    reader.setDelimiter(delimiterStr.isEmpty() ? QChar(' ') : delimiterStr[0]);
+    return reader.read(data);
+}
+
+}
 
 
 DataImporterWidget::DataImporterWidget(QWidget * parent, bool showNonCsvTypesTabs, Qt::WindowFlags flags)
@@ -124,7 +140,7 @@ void DataImporterWidget::openPointCoords()
     m_ui->coordsFileEdit->setText(fileName);
 
     m_coordinateData.clear();
-    const auto result = TextFileReader(fileName).read(m_coordinateData);
+    const auto result = read(fileName, m_ui->delimiterEdit->text(), m_coordinateData);
     if (!result.testFlag(TextFileReader::successful))
     {
         QMessageBox::warning(this, "Read Error", "Cannot open the specified point coordinates file.");
@@ -144,7 +160,7 @@ void DataImporterWidget::openTriangleIndices()
     m_ui->indicesFileEdit->setText(fileName);
 
     m_indexData.clear();
-    const auto result = TextFileReader(fileName).read(m_indexData);
+    const auto result = read(fileName, m_ui->delimiterEdit->text(), m_indexData);
     if (!result.testFlag(TextFileReader::successful))
     {
         QMessageBox::warning(this, "Read Error", "Cannot open the specified triangle index file.");

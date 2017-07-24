@@ -90,7 +90,9 @@ private:
 namespace
 {
 
-std::unique_ptr<TextFileReader::ImplBase> instantiateImpl(TextFileReader & reader, TextFileReader::ImplementationID DEBUG_ONLY(id))
+std::unique_ptr<TextFileReader::ImplBase> instantiateImpl(
+    TextFileReader & reader,
+    TextFileReader::ImplementationID DEBUG_ONLY(id))
 {
     assert(id == TextFileReader::ImplementationID::Qt);
     return std::make_unique<ImplementationQt>(reader);
@@ -107,6 +109,7 @@ TextFileReader::TextFileReader(const QString & fileName)
 TextFileReader::TextFileReader(ImplementationID implId, const QString & fileName)
     : m_implementation{ instantiateImpl(*this, implId) }
     , m_fileName{ fileName }
+    , m_delimiter{ ' ' }
 {
     m_implementation->setFileName(m_fileName);
 }
@@ -114,6 +117,7 @@ TextFileReader::TextFileReader(ImplementationID implId, const QString & fileName
 TextFileReader::TextFileReader(std::nullptr_t)
     : m_implementation{}
     , m_fileName{}
+    , m_delimiter{}
 {
 }
 
@@ -155,6 +159,16 @@ void TextFileReader::setFileName(const QString & fileName)
     m_fileName = fileName;
 
     m_implementation->setFileName(fileName);
+}
+
+QChar TextFileReader::delimiter() const
+{
+    return m_delimiter;
+}
+
+void TextFileReader::setDelimiter(const QChar delimiter)
+{
+    m_delimiter = delimiter;
 }
 
 auto TextFileReader::stateFlags() const -> StateFlags
@@ -215,16 +229,18 @@ struct qFile_QByteArray_Worker
 
     static StateFlags read(
         QFile & file,
+        QChar delimiter,
         std::vector<std::vector<T>> & ioVectors,
         size_t numberOfLines);
 
-    static bool checkValue(const QByteArray & readValue, T & checkedValue);
+    static bool checkValue(const QStringRef & readValue, T & checkedValue);
 };
 
 
 template<typename T>
 auto qFile_QByteArray_Worker<T>::read(
     QFile & file,
+    const QChar delimiter,
     std::vector<std::vector<T>> & ioVectors,
     size_t numberOfLines) -> StateFlags
 {
@@ -245,39 +261,40 @@ auto qFile_QByteArray_Worker<T>::read(
     // Assume empty lines only at the end of the file, not in between data lines
     bool assumeAtEnd = false;
 
+    // Treat multiple consecutive whitespace delimiters as a single delimiter. This does not apply
+    // for all other delimiter characters.
+    const auto splitBehavior = delimiter == ' '
+        ? QString::SkipEmptyParts
+        : QString::KeepEmptyParts;
+
     while (!file.atEnd())
     {
-        auto line = file.readLine();
-        size_t choppedChars = 0;
-        for (int i = 1; i <= 2 && i <= line.size(); ++i)
-        {
-            const auto c = line.at(line.size() - i);
-            if (c == '\n' || c == '\r')
-            {
-                ++choppedChars;
-            }
-        }
-        line.chop(static_cast<int>(choppedChars));
-
-        const auto items = line.split(' ');
+        const auto lineData = QString(file.readLine());
+        // Remove whitespace from the start and end, including end-of-line characters.
+        const auto line = QStringRef(&lineData).trimmed();
+        // Split according delimiter/split specification.
+        // QStringRef::split returns itself in a vector if its referenced string is empty.
+        // This is not really useful for the following loop, so check that case.
+        const auto items = line.isEmpty()
+            ? decltype(line.split(delimiter, splitBehavior))()
+            : line.split(delimiter, splitBehavior);
 
         size_t currentColumn = 0;
 
         for (auto && input : items)
         {
-            if (input.isEmpty())
-            {
-                continue;
-            }
+            assert(!input.isNull());
             if (assumeAtEnd)
             {
                 // don't expect data after once reading an empty line
-                return setFlags(stateFlags, StateFlag::mismatchingColumnCount | (file.atEnd() ? StateFlag::eof : StateFlag::unset));
+                return setFlags(stateFlags, StateFlag::mismatchingColumnCount
+                    | (file.atEnd() ? StateFlag::eof : StateFlag::unset));
             }
 
             if (!checkValue(input, checkedValue))
             {
-                return setFlags(stateFlags, StateFlag::invalidValue | (file.atEnd() ? StateFlag::eof : StateFlag::unset));
+                return setFlags(stateFlags, StateFlag::invalidValue
+                    | (file.atEnd() ? StateFlag::eof : StateFlag::unset));
             }
 
             if (ioVectors.size() <= currentColumn)
@@ -290,7 +307,8 @@ auto qFile_QByteArray_Worker<T>::read(
                 else
                 {
                     // don't allow later lines to have more values than the first line
-                    return setFlags(stateFlags, StateFlag::mismatchingColumnCount | (file.atEnd() ? StateFlag::eof : StateFlag::unset));
+                    return setFlags(stateFlags, StateFlag::mismatchingColumnCount
+                        | (file.atEnd() ? StateFlag::eof : StateFlag::unset));
                 }
             }
 
@@ -335,35 +353,41 @@ auto qFile_QByteArray_Worker<T>::read(
         return setFlags(stateFlags, StateFlag::eof);
     }
 
-    return setFlags(stateFlags, StateFlag::successful | (file.atEnd() ? StateFlag::eof : StateFlag::unset));
+    return setFlags(stateFlags, StateFlag::successful
+        | (file.atEnd() ? StateFlag::eof : StateFlag::unset));
 }
 
 
-template<typename T>
-bool qFile_QByteArray_Worker<T>::checkValue(const QByteArray & readValue, ValueType & checkedValue)
+template<>
+bool qFile_QByteArray_Worker<float>::checkValue(const QStringRef & readValue, ValueType & checkedValue)
 {
     if (readValue == "NaN")
     {
         checkedValue = std::numeric_limits<ValueType>::quiet_NaN();
         return true;
     }
-
     bool validConversion = false;
-    if (std::is_same<ValueType, float>::value)
-    {
-        checkedValue = static_cast<ValueType>(readValue.toFloat(&validConversion));
-    }
-    else
-    {
-        checkedValue = static_cast<ValueType>(readValue.toDouble(&validConversion));
-    }
+    checkedValue = readValue.toFloat(&validConversion);
     return validConversion;
 }
 
 template<>
-bool qFile_QByteArray_Worker<QString>::checkValue(const QByteArray & readValue, ValueType & checkedValue)
+bool qFile_QByteArray_Worker<double>::checkValue(const QStringRef & readValue, ValueType & checkedValue)
 {
-    checkedValue = readValue;
+    if (readValue == "NaN")
+    {
+        checkedValue = std::numeric_limits<ValueType>::quiet_NaN();
+        return true;
+    }
+    bool validConversion = false;
+    checkedValue = readValue.toDouble(&validConversion);
+    return validConversion;
+}
+
+template<>
+bool qFile_QByteArray_Worker<QString>::checkValue(const QStringRef & readValue, ValueType & checkedValue)
+{
+    checkedValue = readValue.toString();
     return true;
 }
 
@@ -373,21 +397,24 @@ void ImplementationQt::read(FloatVectors & floatIOVectors, size_t numberOfLines)
 {
     using ValueType = std::remove_reference_t<decltype(floatIOVectors)>::value_type::value_type;
 
-    m_stateFlags = qFile_QByteArray_Worker<ValueType>::read(file, floatIOVectors, numberOfLines);
+    m_stateFlags = qFile_QByteArray_Worker<ValueType>::read(
+        file, m_reader.delimiter(), floatIOVectors, numberOfLines);
 }
 
 void ImplementationQt::read(DoubleVectors & doubleIOVectors, size_t numberOfLines)
 {
     using ValueType = std::remove_reference_t<decltype(doubleIOVectors)>::value_type::value_type;
 
-    m_stateFlags = qFile_QByteArray_Worker<ValueType>::read(file, doubleIOVectors, numberOfLines);
+    m_stateFlags = qFile_QByteArray_Worker<ValueType>::read(
+        file, m_reader.delimiter(), doubleIOVectors, numberOfLines);
 }
 
 void ImplementationQt::read(StringVectors & stringIOVectors, size_t numberOfLines)
 {
     using ValueType = std::remove_reference_t<decltype(stringIOVectors)>::value_type::value_type;
 
-    m_stateFlags = qFile_QByteArray_Worker<ValueType>::read(file, stringIOVectors, numberOfLines);
+    m_stateFlags = qFile_QByteArray_Worker<ValueType>::read(
+        file, m_reader.delimiter(), stringIOVectors, numberOfLines);
 }
 
 uint64_t ImplementationQt::filePos()
