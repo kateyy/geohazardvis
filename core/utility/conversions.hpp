@@ -18,36 +18,64 @@
 
 #include <core/utility/conversions.h>
 
+#include <QStringRef>
+#include <QVector>
+
+
+namespace
+{
+
+/*
+ * Container type agnostic internal functions:
+ */
+
+
+template<typename ValueType, size_t Size>
+inline void carrayToString(const ValueType * a,
+    const QString & separator, const QString & prefix, const QString & suffix,
+    QString & s)
+{
+    for (size_t i = 0u; i < Size; ++i)
+    {
+        s += prefix + QString::number(a[i]) + suffix + separator;
+    }
+    s.remove(s.length() - separator.length(), separator.length());
+}
+
+template<typename ValueType, size_t Size>
+inline bool stringToCArray(const QString & s, ValueType * resultArray)
+{
+    const auto parts = s.splitRef(" ");
+    const auto numParts = static_cast<size_t>(parts.size());
+    if (numParts < Size)
+    {
+        return false;
+    }
+    for (size_t i = 0u; i < Size; ++i)
+    {
+        resultArray[i] = static_cast<ValueType>(parts[static_cast<int>(i)].toDouble());
+    }
+    return true;
+}
+
+}
+
 
 template<typename ValueType, size_t Size>
 QString arrayToString(const std::array<ValueType, Size> & a,
     const QString & separator, const QString & prefix, const QString & suffix)
 {
     QString s;
-    for (size_t i = 0u; i < Size; ++i)
-    {
-        s += prefix + QString::number(a[i]) + suffix + separator;
-    }
-
-    s.remove(s.length() - separator.length(), separator.length());
-
+    carrayToString<ValueType, Size>(a.data(), separator, prefix, suffix, s);
     return s;
 }
 
 template<typename ValueType, size_t Size>
 void stringToArray(const QString & s, std::array<ValueType, Size> & resultArray)
 {
-    const auto parts = s.split(" ");
-    const auto numParts = static_cast<size_t>(parts.size());
-    if (numParts < Size)
+    if (!stringToCArray<ValueType, Size>(s, resultArray.data()))
     {
         resultArray = {};
-        return;
-    }
-
-    for (size_t i = 0u; i < numParts; ++i)
-    {
-        resultArray[i] = static_cast<ValueType>(parts[static_cast<int>(i)].toDouble());
     }
 }
 
@@ -63,17 +91,17 @@ template<typename ValueType, int Size>
 vtkVector<ValueType, Size> stringToVector(const QString & s)
 {
     vtkVector<ValueType, Size> result;
-
     stringToVector(s, result);
-
     return result;
 }
 
 template<typename ValueType, int Size>
 void stringToVector(const QString & s, vtkVector<ValueType, Size> & resultVector)
 {
-    const auto array = stringToArray<ValueType, static_cast<size_t>(Size)>(s);
-    resultVector = reinterpret_cast<const vtkVector<ValueType, Size> &>(array);
+    if (!stringToCArray<ValueType, Size>(s, resultVector.GetData()))
+    {
+        resultVector = {};
+    }
 }
 
 template<typename ValueType>
@@ -86,9 +114,7 @@ template<typename ValueType>
 vtkVector2<ValueType> stringToVector2(const QString & s)
 {
     vtkVector2<ValueType> result;
-
     stringToVector2(s, result);
-
     return result;
 }
 
@@ -118,7 +144,7 @@ template<typename ValueType, int Size>
 QString vectorToString(const vtkVector<ValueType, Size> & vector,
     const QString & separator, const QString & prefix, const QString & suffix)
 {
-    return arrayToString(
-        reinterpret_cast<const std::array<ValueType, static_cast<size_t>(Size)> &>(vector),
-        separator, prefix, suffix);
+    QString s;
+    carrayToString<ValueType, Size>(vector.GetData(), separator, prefix, suffix, s);
+    return s;
 }

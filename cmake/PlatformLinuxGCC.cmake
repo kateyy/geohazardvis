@@ -17,18 +17,16 @@ set(DEFAULT_COMPILE_FLAGS
       -fexceptions
 
       -pthread      # -> use pthread library
-    # -no-rtti      # -> disable c++ rtti
       -Wall         # ->
       -Wextra       # ->
-    # -Werror       # ->
 
-    # -Wreturn-type
-    # -Wfloat-equal
-    # -Wshadow
       -Wcast-align
       -Wconversion
+    # -Wfloat-equal
+    # -Wshadow
 
-      -Werror=return-type # -> missing returns in functions and methods are handled as errors which stops the compilation
+      -Werror=return-type     # -> missing returns in functions and methods
+      -Werror=strict-aliasing # -> Undefined behavior: https://stackoverflow.com/a/12861635
 )
 
 set(DEFAULT_LINKER_FLAGS "-pthread")

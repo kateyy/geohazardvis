@@ -222,7 +222,7 @@ int LineOnPointsSelector2D::RequestData(vtkInformation * request,
     {
         vtkVector3d point;
         pointCoords.GetTuple(pointId, point.GetData());
-        auto && point2d = reinterpret_cast<vtkVector2d &>(point);
+        const vtkVector2d point2d(point.GetData());
 
         const double distance = distanceToLine(point2d);
 

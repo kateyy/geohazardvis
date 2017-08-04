@@ -18,6 +18,7 @@
 
 #include "GeographicTransformationFilter.h"
 
+#include <array>
 #include <cassert>
 #include <cmath>
 
@@ -71,13 +72,15 @@ struct ArrayScaleShiftWorker
         vtkSMPTools::For(0, coordinates->GetNumberOfTuples(), [coords, scale, shift]
         (const vtkIdType begin, const vtkIdType end)
         {
-            vtkVector3<ValueType> dataVec;
-            auto & vec = reinterpret_cast<vtkVector<ValueType, ModifyComponents> &>(dataVec);
+            std::array<ValueType, 3> vec;
             for (vtkIdType i = begin; i < end; ++i)
             {
-                coords.Get(i, dataVec.GetData());
-                vec = vec * scale + shift;
-                coords.Set(i, dataVec.GetData());
+                coords.Get(i, vec.data());
+                for (int c = 0; c < ModifyComponents; ++c)
+                {
+                    vec[c] = vec[c] * scale[c] + shift[c];
+                }
+                coords.Set(i, vec.data());
             }
         });
     }
