@@ -30,6 +30,7 @@
 #include <gui/gui_api.h>
 
 
+class vtkContext2DScalarBarActor;
 class vtkLookupTable;
 class vtkObject;
 
@@ -37,7 +38,6 @@ class AbstractRenderView;
 class AbstractVisualizedData;
 class ColorMapping;
 class DataObject;
-class OrientedScalarBarActor;
 class Ui_ColorMappingChooser;
 
 
@@ -97,7 +97,7 @@ private:
     void updateTitle();
     void updateGuiValueRanges();
 
-    OrientedScalarBarActor & legend();
+    vtkContext2DScalarBarActor & legend();
 
 private:
     std::unique_ptr<Ui_ColorMappingChooser> m_ui;

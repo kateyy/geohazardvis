@@ -29,7 +29,8 @@
 
 
 class ColorMapping;
-class OrientedScalarBarActor;
+class vtkContext2DScalarBarActor;
+class vtkPVScalarBarRepresentation;
 class vtkScalarBarActor;
 class vtkScalarBarRepresentation;
 class vtkScalarBarWidget;
@@ -51,10 +52,15 @@ public:
     explicit ColorBarRepresentation(ColorMapping & colorMapping);
     ~ColorBarRepresentation() override;
 
-    OrientedScalarBarActor & actor();
-    /** Convenience function returning actor() as a base class reference. */
-    vtkScalarBarActor & actorBase();
+    /** @return Scalar bar actor as its concrete class. */
+    vtkContext2DScalarBarActor & actorContext2D();
+    /** Convenience method returning general base class of actorContext2D() */
+    vtkScalarBarActor & actor();
+    /** @return Widget allowing users to drag and resize the color bar. */
     vtkScalarBarWidget & widget();
+    /** @return Visual representation of the scalar bar. */
+    vtkPVScalarBarRepresentation & scalarBarRepresentationPV();
+    /** Convenience method returning the general base class of scalarBarRepresentationPV() */
     vtkScalarBarRepresentation & scalarBarRepresentation();
 
     /**
@@ -84,6 +90,7 @@ protected:
 
 private:
     void initialize();
+    void applyPosition();
 
     void updateForChangedScalars();
     void updateVisibility();
@@ -93,8 +100,8 @@ private:
     ColorMapping & m_colorMapping;
     std::vector<QMetaObject::Connection> m_visualizationsVisibilitesConnections;
 
-    vtkSmartPointer<OrientedScalarBarActor> m_actor;
-    vtkSmartPointer<vtkScalarBarRepresentation> m_scalarBarRepresentation;
+    vtkSmartPointer<vtkContext2DScalarBarActor> m_actor;
+    vtkSmartPointer<vtkPVScalarBarRepresentation> m_scalarBarRepresentation;
     vtkSmartPointer<vtkScalarBarWidget> m_widget;
     bool m_isVisible;
     Position m_position;

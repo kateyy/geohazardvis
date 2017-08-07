@@ -21,21 +21,24 @@
 #include <algorithm>
 #include <cassert>
 
+#include <vtkCommand.h>
 #include <vtkProperty2D.h>
 #include <vtkRenderer.h>
 #include <vtkRenderWindowInteractor.h>
-#include <vtkScalarBarRepresentation.h>
 #include <vtkScalarBarWidget.h>
+#include <vtkTextProperty.h>
 
 #include <core/AbstractVisualizedData.h>
 #include <core/color_mapping/ColorMapping.h>
+#include <core/ThirdParty/ParaView/vtkContext2DScalarBarActor.h>
+#include <core/ThirdParty/ParaView/vtkPVScalarBarRepresentation.h>
 #include <core/utility/font.h>
 #include <core/utility/qthelper.h>
-#include <core/utility/ScalarBarActor.h>
 
 
 ColorBarRepresentation::ColorBarRepresentation(ColorMapping & colorMapping)
-    : m_colorMapping{ colorMapping }
+    : QObject()
+    , m_colorMapping{ colorMapping }
     , m_isVisible{ false }
     , m_position{ Position::posRight }
     , m_inAdjustPosition{ false }
@@ -59,18 +62,16 @@ ColorBarRepresentation::ColorBarRepresentation(ColorMapping & colorMapping)
 
 ColorBarRepresentation::~ColorBarRepresentation() = default;
 
-OrientedScalarBarActor & ColorBarRepresentation::actor()
+vtkContext2DScalarBarActor & ColorBarRepresentation::actorContext2D()
 {
     initialize();
-
     assert(m_actor);
-
     return *m_actor;
 }
 
-vtkScalarBarActor & ColorBarRepresentation::actorBase()
+vtkScalarBarActor & ColorBarRepresentation::actor()
 {
-    return actor();
+    return actorContext2D();
 }
 
 vtkScalarBarWidget & ColorBarRepresentation::widget()
@@ -82,13 +83,16 @@ vtkScalarBarWidget & ColorBarRepresentation::widget()
     return *m_widget;
 }
 
-vtkScalarBarRepresentation & ColorBarRepresentation::scalarBarRepresentation()
+vtkPVScalarBarRepresentation & ColorBarRepresentation::scalarBarRepresentationPV()
 {
     initialize();
-
     assert(m_scalarBarRepresentation);
-
     return *m_scalarBarRepresentation;
+}
+
+vtkScalarBarRepresentation & ColorBarRepresentation::scalarBarRepresentation()
+{
+    return scalarBarRepresentationPV();
 }
 
 bool ColorBarRepresentation::isVisible() const
@@ -127,10 +131,28 @@ void ColorBarRepresentation::setPosition(const Position position)
 
     m_position = position;
 
-    auto & scalarBarRepr = scalarBarRepresentation();
-
     m_inAdjustPosition = true;
-    switch (position)
+
+    applyPosition();
+
+    if (changed)
+    {
+        emit positionChanged(m_position);
+    }
+
+    m_inAdjustPosition = false;
+}
+
+void ColorBarRepresentation::applyPosition()
+{
+    if (!m_scalarBarRepresentation)
+    {
+        return;
+    }
+
+    auto & scalarBarRepr = *m_scalarBarRepresentation;
+
+    switch (m_position)
     {
     case ColorBarRepresentation::Position::posLeft:
         scalarBarRepr.SetOrientation(1);
@@ -155,13 +177,6 @@ void ColorBarRepresentation::setPosition(const Position position)
     case ColorBarRepresentation::Position::posUserDefined:
         break;
     }
-
-    if (changed)
-    {
-        emit positionChanged(m_position);
-    }
-
-    m_inAdjustPosition = false;
 }
 
 auto ColorBarRepresentation::position() const -> Position
@@ -185,15 +200,32 @@ void ColorBarRepresentation::initialize()
         return;
     }
 
-    m_actor = vtkSmartPointer<OrientedScalarBarActor>::New();
+    m_actor = vtkSmartPointer<vtkContext2DScalarBarActor>::New();
     m_actor->VisibilityOff();
     m_actor->SetLookupTable(m_colorMapping.scalarsToColors());
     m_actor->SetTitle(m_colorMapping.currentScalarsName().toUtf8().data());
+    m_actor->SetRangeLabelFormat("%.3g");
+    m_actor->SetLabelFormat(m_actor->GetRangeLabelFormat());
+    m_actor->AutomaticLabelFormatOff();
     FontHelper::configureTextProperty(*m_actor->GetTitleTextProperty());
     FontHelper::configureTextProperty(*m_actor->GetLabelTextProperty());
     FontHelper::configureTextProperty(*m_actor->GetAnnotationTextProperty());
 
-    m_scalarBarRepresentation = vtkSmartPointer<vtkScalarBarRepresentation>::New();
+    m_actor->GetTitleTextProperty()->SetFontSize(12);
+    m_actor->GetTitleTextProperty()->ShadowOff();
+    m_actor->GetTitleTextProperty()->SetColor(0, 0, 0);
+    m_actor->GetTitleTextProperty()->BoldOff();
+    m_actor->GetTitleTextProperty()->ItalicOff();
+
+    m_actor->GetLabelTextProperty()->SetFontSize(10);
+    m_actor->GetLabelTextProperty()->ShadowOff();
+    m_actor->GetLabelTextProperty()->SetColor(0, 0, 0);
+    m_actor->GetLabelTextProperty()->BoldOff();
+    m_actor->GetLabelTextProperty()->ItalicOff();
+
+    m_actor->SetNumberOfLabels(3);
+
+    m_scalarBarRepresentation = vtkSmartPointer<vtkPVScalarBarRepresentation>::New();
     m_scalarBarRepresentation->SetScalarBarActor(m_actor);
     m_scalarBarRepresentation->SetShowBorderToActive();
     m_scalarBarRepresentation->GetBorderProperty()->SetColor(0, 0, 0);
@@ -205,6 +237,7 @@ void ColorBarRepresentation::initialize()
     m_widget->KeyPressActivationOff();
     m_widget->EnabledOff();
 
+    applyPosition();
 
     auto addObserver = [this] (vtkObject * subject, void(ColorBarRepresentation::* callback)())
     {

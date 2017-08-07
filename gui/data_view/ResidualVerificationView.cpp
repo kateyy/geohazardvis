@@ -34,6 +34,7 @@
 #include <vtkLookupTable.h>
 #include <vtkPointData.h>
 #include <vtkPolyData.h>
+#include <vtkScalarBarActor.h>
 
 #include <core/AbstractVisualizedData.h>
 #include <core/color_mapping/ColorBarRepresentation.h>
@@ -44,7 +45,6 @@
 #include <core/utility/DataSetResidualHelper.h>
 #include <core/utility/macros.h>
 #include <core/utility/vtkCameraSynchronization.h>
-#include <core/utility/ScalarBarActor.h>
 #include <core/utility/types_utils.h>
 #include <gui/DataMapping.h>
 #include <gui/data_view/RendererImplementationResidual.h>

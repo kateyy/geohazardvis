@@ -247,8 +247,6 @@ set(sources
     utility/mathhelper.cpp
     utility/memory.h
     utility/memory.hpp
-    utility/ScalarBarActor.h
-    utility/ScalarBarActor.cpp
     utility/type_traits.h
     utility/types_utils.h
     utility/types_utils.cpp
@@ -272,6 +270,10 @@ set(sources
 set(thirdPartySources
     ThirdParty/alphanum.hpp
     ThirdParty/dark_fusion_style.hpp
+    ThirdParty/ParaView/vtkBoundingRectContextDevice2D.h
+    ThirdParty/ParaView/vtkBoundingRectContextDevice2D.cxx
+    ThirdParty/ParaView/vtkContext2DScalarBarActor.h
+    ThirdParty/ParaView/vtkContext2DScalarBarActor.cxx
     ThirdParty/ParaView/vtkGridAxes2DActor.h
     ThirdParty/ParaView/vtkGridAxes2DActor.cxx
     ThirdParty/ParaView/vtkGridAxes3DActor.h
@@ -280,8 +282,8 @@ set(thirdPartySources
     ThirdParty/ParaView/vtkGridAxesHelper.cxx
     ThirdParty/ParaView/vtkGridAxesPlane2DActor.h
     ThirdParty/ParaView/vtkGridAxesPlane2DActor.cxx
-    ThirdParty/ParaView/vtkPVScalarBarActor.h
-    ThirdParty/ParaView/vtkPVScalarBarActor.cxx
+    ThirdParty/ParaView/vtkPVScalarBarRepresentation.h
+    ThirdParty/ParaView/vtkPVScalarBarRepresentation.cxx
     ${PROJ4_INCLUDE_FILE}
 )
 

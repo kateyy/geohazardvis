@@ -41,8 +41,8 @@
 #include <core/color_mapping/ColorMapping.h>
 #include <core/color_mapping/GradientResourceManager.h>
 #include <core/ThirdParty/alphanum.hpp>
+#include <core/ThirdParty/ParaView/vtkContext2DScalarBarActor.h>
 #include <core/utility/qthelper.h>
-#include <core/utility/ScalarBarActor.h>
 #include <core/utility/macros.h>
 
 #include <gui/data_view/AbstractRenderView.h>
@@ -316,10 +316,10 @@ void ColorMappingChooser::colorLegendPositionChanged()
 
     const auto position = m_mapping->colorBarRepresentation().position();
     const QSignalBlocker positionComboBlocker{ m_ui->legendPositionComboBox };
-    const QSignalBlocker aspectRatioBlocker{ m_ui->legendAspectRatio };
+    const QSignalBlocker widthBlocker{ m_ui->legendWidthSpinBox };
     m_ui->legendPositionComboBox->setCurrentIndex(
         m_ui->legendPositionComboBox->findData(position));
-    m_ui->legendAspectRatio->setValue(legend().GetAspectRatio());
+    m_ui->legendWidthSpinBox->setValue(legend().GetScalarBarThickness());
 
     emit renderSetupChanged();
 
@@ -344,15 +344,12 @@ void ColorMappingChooser::updateLegendConfig()
     {
         m_ui->legendPositionComboBox->setCurrentIndex(
             m_ui->legendPositionComboBox->findData(m_mapping->colorBarRepresentation().position()));
-        m_ui->legendAspectRatio->setValue(legend().GetAspectRatio());
+        m_ui->legendWidthSpinBox->setValue(legend().GetScalarBarThickness());
     }
-    m_ui->legendAlignTitleCheckBox->setChecked(legend().GetTitleAlignedWithColorBar());
     m_ui->legendTransparentBackground->setChecked(legend().GetDrawBackground() != 1);
     m_ui->legendTickMarksCheckBox->setChecked(legend().GetDrawTickMarks() != 0);
     m_ui->legendTickLabelsCheckBox->setChecked(legend().GetDrawTickLabels() != 0);
-    m_ui->legendSubTickMarksCheckBox->setChecked(legend().GetDrawSubTickMarks() != 0);
     m_ui->legendNumLabelsSpinBox->setValue(legend().GetNumberOfLabels());
-    m_ui->legendRangeLabelsCheckBox->setChecked(legend().GetAddRangeLabels() != 0);
 }
 
 void ColorMappingChooser::updateNanColorButtonStyle(const QColor & color)
@@ -602,18 +599,10 @@ void ColorMappingChooser::setupGuiConnections()
         emit renderSetupChanged();
     }));
 
-    m_guiConnections.emplace_back(connect(m_ui->legendAspectRatio, dSpinBoxValueChanged, [this] () {
-        legend().SetAspectRatio(m_ui->legendAspectRatio->value());
-        emit renderSetupChanged();
-    }));
-
-    m_guiConnections.emplace_back(connect(m_ui->legendAlignTitleCheckBox, &QAbstractButton::toggled, [this] (bool checked) {
-        bool currentlyAligned = legend().GetTitleAlignedWithColorBar();
-        if (currentlyAligned == checked)
-        {
-            return;
-        }
-        legend().SetTitleAlignedWithColorBar(checked);
+    m_guiConnections.emplace_back(connect(m_ui->legendWidthSpinBox, spinBoxValueChanged,
+    [this] (int width)
+    {
+            legend().SetScalarBarThickness(width);
         emit renderSetupChanged();
     }));
 
@@ -638,23 +627,15 @@ void ColorMappingChooser::setupGuiConnections()
         emit renderSetupChanged();
     }));
 
-    m_guiConnections.emplace_back(connect(m_ui->legendTickMarksCheckBox, &QCheckBox::toggled, [this] (bool checked) {
+    m_guiConnections.emplace_back(connect(m_ui->legendTickMarksCheckBox, &QCheckBox::toggled,
+    [this] (bool checked)
+    {
         legend().SetDrawTickMarks(checked);
         emit renderSetupChanged();
     }));
 
     m_guiConnections.emplace_back(connect(m_ui->legendTickLabelsCheckBox, &QCheckBox::toggled, [this] (bool checked) {
         legend().SetDrawTickLabels(checked);
-        emit renderSetupChanged();
-    }));
-
-    m_guiConnections.emplace_back(connect(m_ui->legendSubTickMarksCheckBox, &QCheckBox::toggled, [this] (bool checked) {
-        legend().SetDrawSubTickMarks(checked);
-        emit renderSetupChanged();
-    }));
-
-    m_guiConnections.emplace_back(connect(m_ui->legendRangeLabelsCheckBox, &QCheckBox::toggled, [this] (bool checked) {
-        legend().SetAddRangeLabels(checked);
         emit renderSetupChanged();
     }));
 
@@ -770,7 +751,6 @@ void ColorMappingChooser::updateGuiValueRanges()
 
     if (m_mapping)
     {
-        m_ui->legendAlignTitleCheckBox->setChecked(legend().GetTitleAlignedWithColorBar());
         m_ui->legendTitleFontSize->setValue(legend().GetTitleTextProperty()->GetFontSize());
         m_ui->legendLabelFontSize->setValue(legend().GetLabelTextProperty()->GetFontSize());
         m_ui->legendTransparentBackground->setChecked(legend().GetDrawBackground() != 1);
@@ -780,8 +760,8 @@ void ColorMappingChooser::updateGuiValueRanges()
     }
 }
 
-OrientedScalarBarActor & ColorMappingChooser::legend()
+vtkContext2DScalarBarActor & ColorMappingChooser::legend()
 {
     assert(m_mapping);
-    return m_mapping->colorBarRepresentation().actor();
+    return m_mapping->colorBarRepresentation().actorContext2D();
 }
