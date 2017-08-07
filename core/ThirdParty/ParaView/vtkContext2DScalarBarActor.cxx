@@ -1089,7 +1089,21 @@ bool vtkContext2DScalarBarActor::Paint(vtkContext2D* painter)
   rect->InsertNextPoint(0, 00);
   rect->InsertNextPoint(200, 40);
 
-  int* displayPosition = this->PositionCoordinate->GetComputedDisplayValue(this->CurrentViewport);
+
+  // XXX GeohazardVis
+  // Fix for viewports with origin != (0,0)
+  // Apparently, the shift defined by the viewport is applied twice: by the
+  // scene and by the coordinate computations in this class here.
+  // Quick work-around: remove the shift once:
+  const int* vpOrigin = this->CurrentViewport->GetOrigin();
+  const int* shiftedDisplayPosition = this->PositionCoordinate->GetComputedDisplayValue(
+    this->CurrentViewport);
+  // XXX End GeohazardVis
+
+  int displayPosition[2] = {
+    shiftedDisplayPosition[0] - vpOrigin[0],
+    shiftedDisplayPosition[1] - vpOrigin[1]
+  };
 
   // Ensure that the scene held by the Axis is the current renderer
   // so that things like tile scale and DPI are correct.
@@ -1101,6 +1115,13 @@ bool vtkContext2DScalarBarActor::Paint(vtkContext2D* painter)
 
   double size[2];
   this->GetSize(size, painter);
+  // XXX GeohazardVis
+  if (this->Orientation == VTK_ORIENT_HORIZONTAL)
+  {
+    size[0] -= vpOrigin[0];
+    size[1] -= vpOrigin[1];
+  }
+  // XXX End GeohazardVis
 
   // Scale only the scalar bar length.
   if (this->Orientation == VTK_ORIENT_VERTICAL)
