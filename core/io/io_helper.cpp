@@ -147,11 +147,35 @@ const std::map<QString, QStringList> & fileFormatExtensions(Category category)
     return fileFormatExtensionMaps().at(category);
 }
 
+namespace
+{
+    const auto fileNameInvalidChars = QString(R"([<>:"/\|?*])");
+}
+
 QString normalizeFileName(const QString & fileName, const QString & replaceString)
 {
     auto result = fileName;
-    result.replace(QRegExp(R"([<>:"/\|?*])"), replaceString);
+    result.replace(QRegExp(fileNameInvalidChars), replaceString);
     return result;
+}
+
+bool isFileNameNormalized(const QString & fileName, QChar * firstInvalidChar)
+{
+    for (int i = 0; i < fileName.length(); ++i)
+    {
+        for (int j = 0; j < fileNameInvalidChars.length(); ++j)
+        {
+            if (fileName[i] == fileNameInvalidChars[j])
+            {
+                if (firstInvalidChar)
+                {
+                    *firstInvalidChar = fileName[i];
+                }
+                return false;
+            }
+        }
+    }
+    return true;
 }
 
 }

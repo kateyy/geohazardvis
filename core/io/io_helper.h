@@ -48,5 +48,6 @@ CORE_API const std::map<QString, QStringList> & fileFormatExtensions(Category ca
 
 /** Replace characters not representable in the current OS's file system logic. */
 CORE_API QString normalizeFileName(const QString & fileName, const QString & replaceString = "_");
+CORE_API bool isFileNameNormalized(const QString & fileName, QChar * firstInvalidChar = nullptr);
 
 }
