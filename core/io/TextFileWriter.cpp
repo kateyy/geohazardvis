@@ -289,8 +289,8 @@ private:
     {
         DataArrayValueWriter(QIODevice & output, vtkDataArray & array)
             : ValueWriter<vtkDataArray>(output, array)
-            , m_okay{ false }
             , m_component{ 0 }
+            , m_okay{ false }
         {
         }
         bool writeValue(const vtkIdType tupleIndex, const int componentIndex) override
