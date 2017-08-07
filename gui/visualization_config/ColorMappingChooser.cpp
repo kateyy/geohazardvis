@@ -346,7 +346,6 @@ void ColorMappingChooser::updateLegendConfig()
             m_ui->legendPositionComboBox->findData(m_mapping->colorBarRepresentation().position()));
         m_ui->legendWidthSpinBox->setValue(legend().GetScalarBarThickness());
     }
-    m_ui->legendTransparentBackground->setChecked(legend().GetDrawBackground() != 1);
     m_ui->legendTickMarksCheckBox->setChecked(legend().GetDrawTickMarks() != 0);
     m_ui->legendTickLabelsCheckBox->setChecked(legend().GetDrawTickLabels() != 0);
     m_ui->legendNumLabelsSpinBox->setValue(legend().GetNumberOfLabels());
@@ -606,17 +605,6 @@ void ColorMappingChooser::setupGuiConnections()
         emit renderSetupChanged();
     }));
 
-    m_guiConnections.emplace_back(connect(m_ui->legendTransparentBackground,
-        &QAbstractButton::toggled, [this] (bool transparencyChecked) {
-        const bool currentlyOn = legend().GetDrawBackground();
-        if (currentlyOn != transparencyChecked)
-        {
-            return;
-        }
-        legend().SetDrawBackground(!transparencyChecked);
-        emit renderSetupChanged();
-    }));
-
     m_guiConnections.emplace_back(connect(m_ui->legendNumLabelsSpinBox, spinBoxValueChanged, [this] () {
         legend().SetNumberOfLabels(m_ui->legendNumLabelsSpinBox->value());
         emit renderSetupChanged();
@@ -753,7 +741,6 @@ void ColorMappingChooser::updateGuiValueRanges()
     {
         m_ui->legendTitleFontSize->setValue(legend().GetTitleTextProperty()->GetFontSize());
         m_ui->legendLabelFontSize->setValue(legend().GetLabelTextProperty()->GetFontSize());
-        m_ui->legendTransparentBackground->setChecked(legend().GetDrawBackground() != 1);
 
         // setup GUI connections only if there is something to configure
         setupGuiConnections();
