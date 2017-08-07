@@ -161,7 +161,7 @@ void ColorBarRepresentation::applyPosition()
         break;
     case ColorBarRepresentation::Position::posRight:
         scalarBarRepr.SetOrientation(1);
-        scalarBarRepr.SetPosition(0.9, 0.05);
+        scalarBarRepr.SetPosition(0.85, 0.05);
         scalarBarRepr.SetPosition2(0.1, 0.5);
         break;
     case ColorBarRepresentation::Position::posTop:
