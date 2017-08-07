@@ -193,6 +193,18 @@ void ColorBarRepresentation::positionChangedEvent()
     setPosition(Position::posUserDefined);
 }
 
+void ColorBarRepresentation::sizeChangedEvent()
+{
+    if (m_inAdjustPosition)
+    {
+        return;
+    }
+    const double * lengthCoord = m_scalarBarRepresentation->GetPosition2();
+    const int axis = m_scalarBarRepresentation->GetOrientation() == VTK_ORIENT_HORIZONTAL
+        ? 0 : 1;
+    m_actor->SetScalarBarLength(lengthCoord[axis]);
+}
+
 void ColorBarRepresentation::initialize()
 {
     if (m_widget)
@@ -245,7 +257,7 @@ void ColorBarRepresentation::initialize()
     };
 
     addObserver(m_actor->GetPositionCoordinate(), &ColorBarRepresentation::positionChangedEvent);
-    addObserver(m_actor->GetPosition2Coordinate(), &ColorBarRepresentation::positionChangedEvent);
+    addObserver(m_actor->GetPosition2Coordinate(), &ColorBarRepresentation::sizeChangedEvent);
 
     const auto pos = m_position;
     m_position = posUserDefined;

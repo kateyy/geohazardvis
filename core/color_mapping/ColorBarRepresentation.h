@@ -87,6 +87,7 @@ signals:
 
 protected:
     virtual void positionChangedEvent();
+    virtual void sizeChangedEvent();
 
 private:
     void initialize();
