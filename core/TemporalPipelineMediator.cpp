@@ -492,7 +492,7 @@ bool TemporalPipelineMediator::selectionFromPipeline()
         {
             continue;
         }
-        if (!extractStepPtr == !differenceStepPtr)
+        if ((extractStepPtr != nullptr) && (differenceStepPtr != nullptr))
         {
             assert(false);
             qWarning() << "Unexpected pipeline setup "

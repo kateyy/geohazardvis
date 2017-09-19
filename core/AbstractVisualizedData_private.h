@@ -101,7 +101,7 @@ public:
     };
 
 // There seems to be a bug in VS 2017's std::vector not consistently using move semantics.
-#if defined(_MSC_VER) && _MSC_VER >= 1910 && _MSC_FULL_VER <= 191025019
+#if defined(_MSC_VER) && _MSC_VER >= 1910 /*&& _MSC_FULL_VER <= 191125508*/
     template<typename T>
     class IndexableList : public std::list<T>
     {
