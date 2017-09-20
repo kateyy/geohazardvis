@@ -135,7 +135,6 @@ void t_QVTKWidget::initializeDefaultSurfaceFormat()
 t_QVTKWidget::t_QVTKWidget(QWidget * parent, Qt::WindowFlags f)
     : Superclass(parent, f)
     , IsInitialized{ false }
-    , ToolTipWasShown{ false }
     , InSetRenderWindow{ false }
     , Observer{ vtkSmartPointer<t_QVTKWidgetObserver>::New() }
 {
@@ -229,9 +228,6 @@ bool t_QVTKWidget::event(QEvent * event)
     if (event->type() == QEvent::ToolTip)
     {
         emit beforeTooltipPopup();
-#if defined (OPTION_USE_QVTKOPENGLWIDGET)
-        this->ToolTipWasShown = true;
-#endif
     }
     else if (event->type() == QEvent::Show)
     {
@@ -253,31 +249,6 @@ bool t_QVTKWidget::event(QEvent * event)
             this->updateRenderWindowDPI();
         }
     }
-
-#if defined (OPTION_USE_QVTKOPENGLWIDGET)
-    else if (this->ToolTipWasShown)
-    {
-        // Tool tips are implemented as child widgets. When leaving the widget, this child widget
-        // is removed. In some cases, this leads to artifacts when the widget layout is refreshed.
-        // Events are emitted as follows:
-        //      Leave (-> layout refresh), ChildRemoved (-> tool tip gone)
-        // In most cases, updating on Leave fixes the rendering errors. But in some cases, the
-        // widget update seems to be triggered later on. This is fixed by calling update() in Enter
-        // again (which is not optimal, but works for most cases).
-        switch (event->type())
-        {
-        case QEvent::Leave:
-            update();
-            break;
-        case QEvent::Enter:
-            update();
-            this->ToolTipWasShown = false;
-            break;
-        default:
-            break;
-        }
-    }
-#endif
 
     return Superclass::event(event);
 }
