@@ -30,6 +30,7 @@
 
 #include <vtkAlgorithmOutput.h>
 #include <vtkCamera.h>
+#include <vtkColorSeries.h>
 #include <vtkCommand.h>
 #include <vtkLineRepresentation.h>
 #include <vtkLineWidget2.h>
@@ -43,6 +44,7 @@
 #include <core/TemporalPipelineMediator.h>
 #include <core/color_mapping/ColorMapping.h>
 #include <core/color_mapping/ColorMappingData.h>
+#include <core/context2D_data/DataProfile2DContextPlot.h>
 #include <core/data_objects/DataProfile2DDataObject.h>
 #include <core/rendered_data/RenderedData.h>
 #include <core/utility/qthelper.h>
@@ -350,6 +352,14 @@ void RenderViewStrategy2D::startProfilePlot()
         QList<DataObject *> incompatible;
         m_previewRenderer->showDataObjects(profiles, incompatible);
         assert(incompatible.isEmpty());
+    }
+    auto colorSeries = vtkSmartPointer<vtkColorSeries>::New();
+    colorSeries->SetColorScheme(vtkColorSeries::BREWER_QUALITATIVE_SET1);
+    for (int i = 0; i < profiles.size(); ++i)
+    {
+        if (auto plot = dynamic_cast<DataProfile2DContextPlot *>(m_previewRenderer->visualizationFor(profiles[i]))) {
+            plot->setColor(colorSeries->GetColorRepeating(i));
+        }
     }
 
     if (!m_previewRenderer) // in case the user closed the view again

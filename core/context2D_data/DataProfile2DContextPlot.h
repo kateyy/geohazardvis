@@ -20,6 +20,8 @@
 
 #include <QString>
 
+#include <vtkColor.h>
+
 #include <core/context2D_data/Context2DData.h>
 
 
@@ -40,6 +42,9 @@ public:
     ~DataProfile2DContextPlot() override;
 
     std::unique_ptr<reflectionzeug::PropertyGroup> createConfigGroup() override;
+
+    void setColor(const vtkColor3ub & color);
+    vtkColor3ub color() const;
 
     DataProfile2DDataObject & profileData();
     const DataProfile2DDataObject & profileData() const;

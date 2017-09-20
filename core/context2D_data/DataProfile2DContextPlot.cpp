@@ -69,12 +69,12 @@ std::unique_ptr<PropertyGroup> DataProfile2DContextPlot::createConfigGroup()
 
     root->addProperty<Color>("Color",
         [this] () {
-        unsigned char rgb[3];
-        m_plotLine->GetColor(rgb);
+        const auto rgb = color();
         return Color(rgb[0], rgb[1], rgb[2], m_plotLine->GetPen()->GetOpacity());
     },
         [this] (const Color & color) {
-        m_plotLine->SetColor((unsigned char)(color.red()), (unsigned char)(color.green()), (unsigned char)(color.blue()), (unsigned char)(color.alpha()));
+        setColor(vtkColor3ub((unsigned char)(color.red()), (unsigned char)(color.green()), (unsigned char)(color.blue())));
+        m_plotLine->GetPen()->SetOpacity((unsigned char)color.alpha());
         emit geometryChanged();
     });
 
@@ -104,6 +104,18 @@ std::unique_ptr<PropertyGroup> DataProfile2DContextPlot::createConfigGroup()
     });
 
     return root;
+}
+
+void DataProfile2DContextPlot::setColor(const vtkColor3ub & color)
+{
+    m_plotLine->SetColor(color[0], color[1], color[2], 0xFF);
+}
+
+vtkColor3ub DataProfile2DContextPlot::color() const
+{
+    vtkColor3ub c;
+    m_plotLine->GetColor(c.GetData());
+    return c;
 }
 
 DataProfile2DDataObject & DataProfile2DContextPlot::profileData()
