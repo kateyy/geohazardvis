@@ -586,7 +586,10 @@ bool DataSetResidualHelper::updateResidual()
         ? transformableObservation : transformableModel)
     {
         auto trResidual = static_cast<CoordinateTransformableDataObject *>(m_residualDataObject.get());
-        trResidual->specifyCoordinateSystem(transformableSource->coordinateSystem());
+        // Write target coordinate system, pass through source reference point.
+        const auto targetSpec = ReferencedCoordinateSystemSpecification(m_targetCoordinateSystem,
+            transformableSource->coordinateSystem().referencePointLatLong);
+        trResidual->specifyCoordinateSystem(targetSpec);
     }
 
     return m_residualDataObject != nullptr;

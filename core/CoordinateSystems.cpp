@@ -586,7 +586,9 @@ QDataStream & operator>>(QDataStream & stream, CoordinateSystemSpecification & s
 
 std::ostream & operator<<(std::ostream & os, const CoordinateSystemSpecification & spec)
 {
-    os << spec.type << " (" << spec.geographicSystem.toStdString() << ", " << spec.globalMetricSystem.toStdString() << ")";
+    os << spec.type << " (" << spec.geographicSystem.toStdString()
+        << ", " << spec.globalMetricSystem.toStdString()
+        << "), unit: \"" << spec.unitOfMeasurement.toStdString() << "\"";
     return os;
 }
 
@@ -611,7 +613,7 @@ std::ostream & operator<<(std::ostream & os, const ReferencedCoordinateSystemSpe
     static const auto degree = static_cast<unsigned char>(248);
 
     os << static_cast<const CoordinateSystemSpecification &>(spec)
-        << " (reference point, global: ["
+        << ", reference point, global: ["
         << spec.referencePointLatLong[0] << degree << " N, "
         << spec.referencePointLatLong[1] << degree << " E], ";
     return os;

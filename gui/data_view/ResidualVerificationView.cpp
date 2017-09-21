@@ -655,19 +655,6 @@ void ResidualVerificationView::setResidualDataInternal(std::unique_ptr<DataObjec
 
     if (m_residual)
     {
-        auto transformableResidual = dynamic_cast<CoordinateTransformableDataObject *>(m_residual.get());
-        auto transformableObservation = dynamic_cast<CoordinateTransformableDataObject *>(m_residualHelper->observationDataObject());
-        if (transformableResidual && transformableObservation)
-        {
-            // Apply reference point from the observation data, set current coordinate system type
-            // to the current view system.
-            auto spec = transformableObservation->coordinateSystem();
-            auto && renderSpec = currentCoordinateSystem();
-            spec.type = renderSpec.type;
-            spec.unitOfMeasurement = renderSpec.unitOfMeasurement;
-            transformableResidual->specifyCoordinateSystem(spec);
-        }
-
         // Update UI/rendering for the newly created residual object
         dataSetHandler().addExternalData({ m_residual.get() });
     }

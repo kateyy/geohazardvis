@@ -143,6 +143,8 @@ bool CoordinateTransformableDataObject::specifyCoordinateSystem(
         return true;
     }
 
+    m_pipelines.clear();
+
     const ScopedEventDeferral deferral(*this);
 
     m_coordsSetter->SetCoordinateSystemSpec(spec);
@@ -156,8 +158,6 @@ bool CoordinateTransformableDataObject::specifyCoordinateSystem(
     }
 
     emit coordinateSystemChanged();
-
-    m_pipelines.clear();
 
     return true;
 }
@@ -223,8 +223,13 @@ vtkAlgorithm * CoordinateTransformableDataObject::transformFilter(const Coordina
         {
             return nullptr;
         }
+        const auto unitIt = metricIt->find(toSystem.unitOfMeasurement);
+        if (unitIt == metricIt->end())
+        {
+            return nullptr;
+        }
 
-        return *metricIt;
+        return *unitIt;
     }();
 
     if (currentAlgorithm)
@@ -244,7 +249,7 @@ vtkAlgorithm * CoordinateTransformableDataObject::transformFilter(const Coordina
     }
 
     auto newAlgorithm = createTransformPipeline(toSystem, processedOutputPort());
-    m_pipelines[toSystem.type][toSystem.geographicSystem][toSystem.globalMetricSystem] = newAlgorithm;
+    m_pipelines[toSystem.type][toSystem.geographicSystem][toSystem.globalMetricSystem][toSystem.unitOfMeasurement] = newAlgorithm;
 
     return newAlgorithm;
 }
