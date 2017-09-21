@@ -354,20 +354,12 @@ MainWindow::FileLoadResults MainWindow::openFilesSync(const QStringList & fileNa
             continue;
         }
 
-        newData.push_back(std::move(dataObject));
+        results.newData << dataObject.get();
         results.success << fileName;
-    }
-
-    QList<DataObject *> selection;
-    for (const auto & dataObject : newData)
-    {
-        selection.push_back(dataObject.get());
+        newData.push_back(std::move(dataObject));
     }
 
     m_dataSetHandler->takeData(std::move(newData));
-
-    QApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
-    m_dataBrowser->setSelectedData(selection);
 
     return results;
 }
@@ -671,6 +663,11 @@ void MainWindow::handleAsyncLoadFinished()
                 }
             }
             QMessageBox::critical(this, "File error", msg);
+        }
+
+        if (!results.newData.isEmpty())
+        {
+            m_dataBrowser->setSelectedData(results.newData);
         }
 
         m_loadWatchers.erase(toDeleteIt);

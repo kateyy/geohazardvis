@@ -76,6 +76,7 @@ protected:
 private:
     struct FileLoadResults
     {
+        QList<DataObject *> newData;
         QStringList success;
         QStringList notFound;
         QStringList notSupported;
