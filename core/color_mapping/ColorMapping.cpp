@@ -213,7 +213,18 @@ void ColorMapping::setCurrentScalarsByName(const QString & scalarsName, bool ena
     updateCurrentMappingState(scalarsName, enableColorMapping);
 }
 
-void ColorMapping::updateCurrentMappingState(const QString & scalarsName, bool enabled)
+void ColorMapping::setCurrentScalarsByName(const QString & scalarsName, bool enableColorMapping, int component)
+{
+    if (m_currentScalarsName == scalarsName && m_isEnabled == enableColorMapping
+        && currentScalars().dataComponent() == component)
+    {
+        return;
+    }
+
+    updateCurrentMappingState(scalarsName, enableColorMapping, component);
+}
+
+void ColorMapping::updateCurrentMappingState(const QString & scalarsName, bool enabled, int component)
 {
     auto & oldScalars = currentScalars();
     oldScalars.deactivate();
@@ -228,6 +239,10 @@ void ColorMapping::updateCurrentMappingState(const QString & scalarsName, bool e
     m_isEnabled = enabled;
 
     auto & scalars = currentScalars();
+    if (component >= 0)
+    {
+        scalars.setDataComponent(component);
+    }
     scalars.activate();
 
     emit currentScalarsChanged();

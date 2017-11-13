@@ -72,6 +72,7 @@ public:
     const QString & currentScalarsName() const;
     void setCurrentScalarsByName(const QString & scalarsName);
     void setCurrentScalarsByName(const QString & scalarsName, bool enableColorMapping);
+    void setCurrentScalarsByName(const QString & scalarsName, bool enableColorMapping, int component);
     const ColorMappingData & currentScalars() const;
     ColorMappingData & currentScalars();
 
@@ -124,7 +125,7 @@ private:
     /** Reread the data set list provided by the DataSetHandler for new/deleted data */
     void updateAvailableScalars();
 
-    void updateCurrentMappingState(const QString & scalarsName, bool enabled);
+    void updateCurrentMappingState(const QString & scalarsName, bool enabled, int component = -1);
 
     ColorMappingData & nullColorMapping() const;
     void releaseMappingData();
