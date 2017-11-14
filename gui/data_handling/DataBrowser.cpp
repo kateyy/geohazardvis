@@ -363,6 +363,7 @@ void DataBrowser::evaluateItemViewClick(const QModelIndex & index, const QPoint 
         {
             return menuAssignDataToIndexes(position, dataObject);
         }
+        return;
     }
     case 2:
         return removeFile();

@@ -21,7 +21,7 @@ set(DEFAULT_COMPILE_FLAGS
       -Wextra       # ->
 
       -Wcast-align
-      -Wconversion
+    # -Wconversion
     # -Wfloat-equal
     # -Wshadow
 

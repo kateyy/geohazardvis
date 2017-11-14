@@ -344,6 +344,7 @@ QVariant DataBrowserTableModel::data_dataObject(int row, int column, int role) c
                     + (coordsSpec.type == CoordinateSystemType::metricLocal
                         ? " (Local coordinates)" : "");
             }
+            return{};
         default:
             return{};
         }
@@ -373,6 +374,7 @@ QVariant DataBrowserTableModel::data_dataObject(int row, int column, int role) c
                 + QString::number(std::abs(ref.GetY())) + degreeSign + (ref.GetY() >= 0 ? "E" : "W")
                 : QString();
         }
+        return{};
     case s_colDimensions:
         if (dataTypeName == "Polygonal Mesh")
         {

@@ -42,7 +42,7 @@ QVariant vtkVariantToQVariant(const vtkVariant & variant)
     {
     case VTK_STRING: return QString::fromStdString(variant.ToString());
     case VTK_UNICODE_STRING: return QString::fromStdString(variant.ToString());
-    case VTK_OBJECT: vtkObjectToUIntType(variant.ToVTKObject());
+    case VTK_OBJECT: return vtkObjectToUIntType(variant.ToVTKObject());
     case VTK_CHAR: return variant.ToChar();
     case VTK_SIGNED_CHAR: return variant.ToSignedChar();
     case VTK_UNSIGNED_CHAR: return variant.ToUnsignedChar();
