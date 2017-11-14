@@ -355,6 +355,10 @@ else()
             -P ${PROJECT_SOURCE_DIR}/cmake/ExternalProjectMapBuild.cmake
         INSTALL_COMMAND ""
         CMAKE_CACHE_ARGS ${_cmakeCacheArgs}
+        USES_TERMINAL_DOWNLOAD 1
+        USES_TERMINAL_UPDATE 1
+        USES_TERMINAL_CONFIGURE 1
+        USES_TERMINAL_BUILD 1
     )
 
     set(LIBZEUG_INCLUDES ${libzeug_DIR}/include)
@@ -491,6 +495,10 @@ if (OPTION_BUILD_TESTS)
                 -DBUILD_GTEST:bool=OFF
                 # without setting this explicitly the test/mock subproject don't install correctly
                 -DCMAKE_INSTALL_PREFIX:path=${GTEST_INSTALL_DIR}
+            USES_TERMINAL_DOWNLOAD 1
+            USES_TERMINAL_UPDATE 1
+            USES_TERMINAL_CONFIGURE 1
+            USES_TERMINAL_BUILD 1
         )
     endif()
 
