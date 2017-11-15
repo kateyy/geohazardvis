@@ -33,7 +33,7 @@
 #include <gui/DataMapping.h>
 #include <gui/data_handling/CoordinateSystemAdjustmentWidget.h>
 #include <gui/data_handling/DataBrowserTableModel.h>
-#include <gui/data_view/AbstractRenderView.h>
+#include <gui/data_view/ResidualVerificationView.h>
 
 
 DataBrowser::DataBrowser(QWidget* parent, Qt::WindowFlags f)
@@ -328,6 +328,52 @@ void DataBrowser::menuAssignDataToIndexes(const QPoint & position, DataObject * 
     assignMenu->popup(position);
 }
 
+void DataBrowser::menuOpenInResidualSubview(const QPoint & position, DataObject * dataObject,
+    ResidualVerificationView * residualView)
+{
+    // Special handling of the residual view: the clicked data object can either be shown
+    // is observation or as model data. It does, however, not make sense to pass multiple
+    // objects to the view.
+    // TODO handling that much specialized logic here is not really nice.
+    auto handlePopupClick = [residualView, dataObject] (const bool observation)
+    {
+        const auto currentData = observation
+            ? residualView->observationData()
+            : residualView->modelData();
+
+        auto newData = currentData != dataObject
+            ? dataObject                            // show event
+            : static_cast<DataObject *>(nullptr);   // hide event
+
+        if (observation)
+        {
+            residualView->setObservationData(newData);
+        }
+        else
+        {
+            residualView->setModelData(newData);
+        }
+    };
+
+    const QString title = "Show in Residual View";
+    auto residualViewPopup = new QMenu(title, this);
+    residualViewPopup->setAttribute(Qt::WA_DeleteOnClose);
+
+    auto titleA = residualViewPopup->addAction(title);
+    titleA->setEnabled(false);
+    auto titleFont = titleA->font();
+    titleFont.setBold(true);
+    titleA->setFont(titleFont);
+
+    residualViewPopup->addSeparator();
+    auto observationAction = residualViewPopup->addAction("as Observation Data");
+    auto modelAction = residualViewPopup->addAction("as Model Data");
+    connect(observationAction, &QAction::triggered, std::bind(handlePopupClick, true));
+    connect(modelAction, &QAction::triggered, std::bind(handlePopupClick, false));
+
+    residualViewPopup->popup(position);
+}
+
 void DataBrowser::removeFile()
 {
     const auto && selection = selectedDataObjects();
@@ -351,22 +397,34 @@ void DataBrowser::evaluateItemViewClick(const QModelIndex & index, const QPoint 
     switch (index.column())
     {
     case 0:
-        return showTable();
+        showTable();
+        return;
     case 1:
     {
         auto dataObject = m_tableModel->dataObjectAt(index);
-        if (dataObject && dataObject->dataSet())
+        if (!dataObject)
         {
-            return changeRenderedVisibility(dataObject);
+            return;
         }
-        if (dataObject /* && !dataObject->dataSet() */)
+
+        if (auto residualView = dynamic_cast<ResidualVerificationView *>(
+            m_dataMapping->focusedRenderView()))
         {
-            return menuAssignDataToIndexes(position, dataObject);
+            menuOpenInResidualSubview(position, dataObject, residualView);
+            return;
         }
+
+        if (dataObject->dataSet())
+        {
+            changeRenderedVisibility(dataObject);
+            return;
+        }
+        menuAssignDataToIndexes(position, dataObject);
         return;
     }
     case 2:
-        return removeFile();
+        removeFile();
+        return;
     }
 }
 

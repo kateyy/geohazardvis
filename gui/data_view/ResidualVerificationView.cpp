@@ -24,6 +24,7 @@
 #include <cmath>
 
 #include <QBoxLayout>
+#include <QMessageBox>
 #include <QProgressBar>
 #include <QTimer>
 #include <QToolBar>
@@ -361,6 +362,18 @@ void ResidualVerificationView::setDataHelper(
     bool skipResidualUpdate)
 {
     assert(subViewIndex != residualIndex);
+
+    if (m_residual && (dataObject == m_residual.get()))
+    {
+        if (QMessageBox::question(this, "Residual View",
+            "You selected the computed residual data as input for the residual view. "
+            "Did you intend to visualize it in another view instead?",
+            QMessageBox::Yes, QMessageBox::Abort) == QMessageBox::Yes)
+        {
+            dataMapping().openInRenderView({ m_residual.get() });
+        }
+        return;
+    }
 
     if (dataAt(subViewIndex) == dataObject)
     {

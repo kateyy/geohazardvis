@@ -30,6 +30,7 @@ class AbstractRenderView;
 class DataBrowserTableModel;
 class DataObject;
 class DataMapping;
+class ResidualVerificationView;
 
 
 class DataBrowser : public QWidget
@@ -64,6 +65,8 @@ private:
     void changeRenderedVisibility(DataObject * clickedObject);
 
     void menuAssignDataToIndexes(const QPoint & position, DataObject * clickedData);
+    void menuOpenInResidualSubview(const QPoint & position, DataObject * dataObject,
+        ResidualVerificationView * residualView);
 
     /** unload selected objects, free all data/settings, close views if empty */
     void removeFile();
