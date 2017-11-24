@@ -44,7 +44,8 @@ enum Category
  * is added.
  */
 CORE_API const QString & fileFormatFilters(Category category = Category::all);
-CORE_API const std::map<QString, QStringList> & fileFormatExtensions(Category category = Category::all);
+CORE_API const std::map<QString, QStringList> & fileFormatExtensionLists(Category category = Category::all);
+CORE_API QStringList fileFormatExtensions(Category category = Category::all);
 
 /** Replace characters not representable in the current OS's file system logic. */
 CORE_API QString normalizeFileName(const QString & fileName, const QString & replaceString = "_");

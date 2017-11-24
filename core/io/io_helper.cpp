@@ -142,9 +142,20 @@ const QString & fileFormatFilters(const Category category)
     return _fileFormatFilters.at(category);
 }
 
-const std::map<QString, QStringList> & fileFormatExtensions(Category category)
+const std::map<QString, QStringList> & fileFormatExtensionLists(Category category)
 {
     return fileFormatExtensionMaps().at(category);
+}
+
+QStringList fileFormatExtensions(Category category)
+{
+    auto && lists = fileFormatExtensionMaps().at(category);
+    QStringList result;
+    for (auto && l : lists)
+    {
+        result = result + l.second;
+    }
+    return result;
 }
 
 namespace

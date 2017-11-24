@@ -205,7 +205,7 @@ std::unique_ptr<DataObject> Loader::readFile(const QString & filename)
     }
 
     auto && vtkImageExts = io::fileFormatExtensions(io::Category::VTKImageFormats);
-    if (vtkImageExts.find(ext) != vtkImageExts.end())
+    if (vtkImageExts.contains(ext))
     {
         vtkSmartPointer<vtkImageReader2> reader;
         reader.TakeReference(
