@@ -51,12 +51,12 @@ std::unique_ptr<DataObject> Loader::readFile(const QString & filename)
         QFile f(filename);
         if (!f.exists())
         {
-            qDebug() << "Loader: trying to open non-existing file: " << filename;
+            qWarning() << "Loader: trying to open non-existing file: " << filename;
             return nullptr;
         }
         if (!f.open(QIODevice::ReadOnly))
         {
-            qDebug() << "Loader: cannot open file for read-only access: " << filename;
+            qWarning() << "Loader: cannot open file for read-only access: " << filename;
             return nullptr;
         }
     }
@@ -94,7 +94,7 @@ std::unique_ptr<DataObject> Loader::readFile(const QString & filename)
 
             if (!image)
             {
-                qDebug() << "Invalid VTK image file: " << filename;
+                qWarning() << "Invalid VTK image file: " << filename;
                 return nullptr;
             }
         }
@@ -110,7 +110,7 @@ std::unique_ptr<DataObject> Loader::readFile(const QString & filename)
 
             if (!image)
             {
-                qDebug() << "Invalid DEM file: " << filename;
+                qWarning() << "Invalid DEM file: " << filename;
                 return nullptr;
             }
         }
@@ -149,7 +149,7 @@ std::unique_ptr<DataObject> Loader::readFile(const QString & filename)
             return std::make_unique<VectorGrid3DDataObject>(dataSetName, *image);
 
         default:
-            qDebug() << "VTK image data format not supported.";
+            qWarning() << "VTK image data format not supported.";
             return nullptr;
         }
     }
@@ -167,7 +167,7 @@ std::unique_ptr<DataObject> Loader::readFile(const QString & filename)
 
         if (!polyData)
         {
-            qDebug() << "Invalid VTK PolyData file: " << filename;
+            qWarning() << "Invalid VTK PolyData file: " << filename;
             return nullptr;
         }
 
@@ -198,7 +198,7 @@ std::unique_ptr<DataObject> Loader::readFile(const QString & filename)
         auto instance = GenericPolyDataObject::createInstance(dataSetName, *polyData);
         if (!instance)
         {
-            qDebug() << "Invalid VTK PolyData file: " << filename;
+            qWarning() << "Invalid VTK PolyData file: " << filename;
             return nullptr;
         }
         return std::move(instance);
@@ -213,7 +213,7 @@ std::unique_ptr<DataObject> Loader::readFile(const QString & filename)
 
         if (!reader)
         {
-            qDebug() << "Unsupported image format: " << filename;
+            qWarning() << "Unsupported image format: " << filename;
             return nullptr;
         }
 
@@ -226,7 +226,7 @@ std::unique_ptr<DataObject> Loader::readFile(const QString & filename)
 
         if (!image)
         {
-            qDebug() << "Invalid image file: " << filename;
+            qWarning() << "Invalid image file: " << filename;
             return nullptr;
         }
 
@@ -247,12 +247,12 @@ std::unique_ptr<DataObject> Loader::readFile(const QString & filename)
         {
             if (deformationReader.readData() != DeformationTimeSeriesTextFileReader::validData)
             {
-                qDebug() << "Invalid deformation file: " << filename;
+                qWarning() << "Invalid deformation file: " << filename;
                 return nullptr;
             }
             return deformationReader.generateDataObject();
         }
-        qDebug() << "Text file not recognized as valid deformation time series file.";
+        qWarning() << "Text file not recognized as valid deformation time series file.";
     }
 
     // handle all other files as our text file format

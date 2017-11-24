@@ -337,11 +337,11 @@ MainWindow::FileLoadResults MainWindow::openFilesSync(const QStringList & fileNa
 
     for (auto && fileName : fileNames)
     {
-        qDebug() << " <" << fileName;
+        qWarning() << " <" << fileName;
 
         if (!QFileInfo(fileName).exists())
         {
-            qDebug() << "\t\t File does not exist!";
+            qWarning() << "\t\t File does not exist!";
             results.notFound << fileName;
             continue;
         }

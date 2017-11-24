@@ -122,7 +122,7 @@ std::unique_ptr<DataObject> MatricesToVtk::loadGrid2D(const QString & name, cons
         || dimensions[1] != static_cast<int>(inputData.at(0).size())
         || dimensions[2] != 1)
     {
-        qDebug() << "Image data specification and the size of the provided data set do not match.";
+        qWarning() << "Image data specification and the size of the provided data set do not match.";
         return nullptr;
     }
 
@@ -148,7 +148,7 @@ std::unique_ptr<DataObject> MatricesToVtk::loadGrid3D(const QString & name, cons
 
     if (data[0].size() > (size_t)std::numeric_limits<vtkIdType>::max())
     {
-        qDebug() << "cannot read data set (too large to count with vtkIdType, " + QString::number(sizeof(vtkIdType)) + ")";
+        qWarning() << "cannot read data set (too large to count with vtkIdType, " + QString::number(sizeof(vtkIdType)) + ")";
         return nullptr;
     }
 
@@ -156,7 +156,7 @@ std::unique_ptr<DataObject> MatricesToVtk::loadGrid3D(const QString & name, cons
 
     if (numPoints == 0)
     {
-        qDebug() << "Empty data set";
+        qWarning() << "Empty data set";
         return nullptr;
     }
 
@@ -220,7 +220,7 @@ std::unique_ptr<DataObject> MatricesToVtk::loadGrid3D(const QString & name, cons
 
     if (axis[2] == -1)
     {
-        qDebug() << "Cannot determine 3D grid memory layout.";
+        qWarning() << "Cannot determine 3D grid memory layout.";
         return nullptr;
     }
     assert(std::all_of(axis.begin(), axis.end(), [] (int axis)
@@ -263,7 +263,7 @@ std::unique_ptr<DataObject> MatricesToVtk::loadGrid3D(const QString & name, cons
 
     if (extent[axis[2]] < 1 || (numPoints != extent[0] * extent[1] * extent[2]))
     {
-        qDebug() << "cannot read incomplete grid data set";
+        qWarning() << "cannot read incomplete grid data set";
         return nullptr;
     }
 
@@ -430,7 +430,7 @@ vtkSmartPointer<vtkPolyData> MatricesToVtk::parseIndexedTriangles(
         
         if (ix >= nbVertices || iy >= nbVertices || iz >= nbVertices)
         {
-            qDebug() << "Invalid triangle point indices:" << ix << iy << iz
+            qWarning() << "Invalid triangle point indices:" << ix << iy << iz
                 << "Number of points:" << nbVertices;
             return{};
         }

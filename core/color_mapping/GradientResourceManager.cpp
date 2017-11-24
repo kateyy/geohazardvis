@@ -119,7 +119,7 @@ void GradientResourceManager::loadGradients()
             QPixmap pixmap;
             if (!pixmap.load(fileInfo.absoluteFilePath()))
             {
-                qDebug() << "Unsupported file in gradient directory:" << fileInfo.fileName();
+                qWarning() << "Unsupported file in gradient directory:" << fileInfo.fileName();
                 continue;
             }
 
@@ -138,11 +138,11 @@ void GradientResourceManager::loadGradients()
         const auto fallbackMsg = "; only a fall-back gradient will be available\n\t(searching in " + m_gradientsDir + ")";
         if (dirNotFound)
         {
-            qDebug() << "gradient directory does not exist" + fallbackMsg;
+            qWarning() << "gradient directory does not exist" + fallbackMsg;
         }
         else
         {
-            qDebug() << "gradient directory is empty" + fallbackMsg;
+            qWarning() << "gradient directory is empty" + fallbackMsg;
         }
 
         m_defaultGradientName = "fallback gradient";

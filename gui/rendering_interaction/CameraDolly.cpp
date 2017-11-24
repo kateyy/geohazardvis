@@ -64,14 +64,14 @@ void CameraDolly::moveTo(AbstractVisualizedData & visualization, vtkIdType index
 
     if (visualization.numberOfOutputPorts() == 0)
     {
-        qDebug() << "[CameraDolly] Visualization has no outputs";
+        qWarning() << "[CameraDolly] Visualization has no outputs";
         return;
     }
 
     auto dataSet = visualization.processedOutputDataSet();
     if (!dataSet)
     {
-        qDebug() << "[CameraDolly] No data output found in visualization output port";
+        qWarning() << "[CameraDolly] No data output found in visualization output port";
         return;
     }
 
@@ -84,7 +84,7 @@ void CameraDolly::moveTo(DataObject & dataObject, vtkIdType index, IndexType ind
 
     if (!dataSet)
     {
-        qDebug() << "No data found in data object: " << dataObject.name();
+        qWarning() << "No data found in data object: " << dataObject.name();
         return;
     }
 
@@ -125,7 +125,7 @@ void CameraDolly::moveToPoly(vtkPolyData & polyData, vtkIdType index, IndexType 
         assert(cell);
         if (!cell)
         {
-            qDebug() << "[CameraDolly] Cell not found in data set: " + QString::number(index);
+            qWarning() << "[CameraDolly] Cell not found in data set: " + QString::number(index);
             return;
         }
 
@@ -140,7 +140,7 @@ void CameraDolly::moveToPoly(vtkPolyData & polyData, vtkIdType index, IndexType 
         auto normals = polyData.GetPointData()->GetNormals();
         if (!normals)
         {
-            qDebug() << "[CameraDolly] No point normals found in poly data set";
+            qWarning() << "[CameraDolly] No point normals found in poly data set";
             return;
         }
 

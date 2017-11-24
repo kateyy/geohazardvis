@@ -66,7 +66,7 @@ public:
         m_handle = dlopen(filePath.toUtf8().data(), RTLD_LAZY);
         if (!m_handle)
         {
-            qDebug() << dlerror();
+            qCritical() << dlerror();
             return;
         }
 
@@ -177,7 +177,7 @@ bool GuiPluginManager::loadLibrary(const QString & filePath, GuiPluginInterface 
     if (!library->isValid())
     {
         // Loading failed. Destroy library object and return failure.
-        qDebug() << "Loading plugin from " << filePath << " failed.";
+        qCritical() << "Loading plugin from " << filePath << " failed.";
 
         return false;
     }

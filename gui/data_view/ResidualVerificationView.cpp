@@ -388,7 +388,7 @@ void ResidualVerificationView::setDataHelper(
         scalars = findDataSetAttributeName(*dataObject, subViewIndex);
         if (scalars.second == IndexType::invalid)
         {
-            qDebug() << "Unsupported data object (no data found):" << dataObject->name();
+            qWarning() << "Unsupported data object (no data found):" << dataObject->name();
         }
     }
 
@@ -449,14 +449,14 @@ void ResidualVerificationView::showDataObjectsImpl(const QList<DataObject *> & d
 {
     if (subViewIndex == residualIndex)
     {
-        qDebug() << "Manually settings a residual is not supported in the ResidualVerificationView.";
+        qWarning() << "Manually settings a residual is not supported in the ResidualVerificationView.";
         incompatibleObjects = dataObjects;
         return;
     }
 
     if (dataObjects.size() > 1)
     {
-        qDebug() << "Multiple objects per sub-view not supported in the ResidualVerificationView.";
+        qWarning() << "Multiple objects per sub-view not supported in the ResidualVerificationView.";
     }
 
     for (int i = 1; i < dataObjects.size(); ++i)
@@ -790,7 +790,7 @@ void ResidualVerificationView::updateResidualInternal()
         if (m_residualHelper->isSetupComplete())
         {
             // If the user provided all necessary data, the residual computation should not fail.
-            qDebug() << "Residual computation failed";
+            qCritical() << "Residual computation failed";
         }
     }
 }

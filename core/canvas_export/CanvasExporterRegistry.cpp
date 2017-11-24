@@ -73,7 +73,7 @@ bool CanvasExporterRegistry::registerImplementation(const ExporterConstructor & 
     {
         if (instance().m_formatToExporter.contains(format))
         {
-            qDebug() << "File format name already used:" << format;
+            qWarning() << "File format name already used:" << format;
             okay = false;
             continue;
         }

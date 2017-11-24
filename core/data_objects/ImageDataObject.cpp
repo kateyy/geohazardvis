@@ -54,7 +54,7 @@ ImageDataObject::ImageDataObject(const QString & name, vtkImageData & dataSet)
 
     if (spacingChanged)
     {
-        qDebug() << "Fixing invalid image spacing in " << name << "(" +
+        qWarning() << "Fixing invalid image spacing in " << name << "(" +
             vector3ToString(vtkVector3d(dataSet.GetSpacing())) + " to " + vector3ToString(spacing) + ")";
         dataSet.SetSpacing(spacing.GetData());
     }

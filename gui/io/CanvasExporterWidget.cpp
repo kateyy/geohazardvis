@@ -134,7 +134,7 @@ CanvasExporter * CanvasExporterWidget::currentExporter()
 
     if (!exporter)
     {
-        qDebug() << "CanvasExporterWidget: Selected file format" << format << "is not supported.";
+        qWarning() << "CanvasExporterWidget: Selected file format" << format << "is not supported.";
     }
 
     return exporter;
@@ -144,7 +144,7 @@ CanvasExporter * CanvasExporterWidget::currentExporterConfigured()
 {
     if (!m_renderView)
     {
-        qDebug() << "CanvasExporterWidget: not capturing screenshot, no render view set";
+        qWarning() << "CanvasExporterWidget: not capturing screenshot, no render view set";
         return nullptr;
     }
 
@@ -172,7 +172,7 @@ QString CanvasExporterWidget::currentExportFolder() const
 
     if (!QDir().mkpath(exportFolder))
     {
-        qDebug() << "CanvasExporterWidget: cannot create output folder: " + exportFolder;
+        qWarning() << "CanvasExporterWidget: cannot create output folder: " + exportFolder;
     }
 
     return exportFolder;
@@ -188,7 +188,7 @@ QString CanvasExporterWidget::fileNameWithTimeStamp() const
 
 void CanvasExporterWidget::saveScreenshotTo(CanvasExporter & exporter, const QString & fileName) const
 {
-    qDebug() << "exporting image to: " << fileName;
+    qWarning() << "exporting image to: " << fileName;
 
     exporter.setOutputFileName(fileName);
     exporter.setRenderWindow(m_renderView->renderWindow());

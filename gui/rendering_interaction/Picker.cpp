@@ -134,7 +134,7 @@ void Picker::pick(const vtkVector2i & clickPosXY, vtkRenderer & renderer)
 
     if (!abstractMapper)
     {
-        qDebug() << "Unknown object picked at: " + QString::number(clickPosXY[0]) + " " + QString::number(clickPosXY[1]);
+        qWarning() << "Unknown object picked at: " + QString::number(clickPosXY[0]) + " " + QString::number(clickPosXY[1]);
         return;
     }
 
@@ -143,7 +143,7 @@ void Picker::pick(const vtkVector2i & clickPosXY, vtkRenderer & renderer)
     d_ptr->pickedObjectInfo.visualization = AbstractVisualizedData::readPointer(mapperInfo);
     if (!d_ptr->pickedObjectInfo.visualization)
     {
-        qDebug() << "no visualization referenced in mapper";
+        qWarning() << "no visualization referenced in mapper";
         return;
     }
 

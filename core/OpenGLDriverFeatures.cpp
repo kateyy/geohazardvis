@@ -74,7 +74,7 @@ void OpenGLDriverFeatures::initializeInCurrentContext()
     assert(functions);
     if (!functions)
     {
-        qDebug() << "[OpenGLDriverFeatures] OpenGL context or Qt OpenGL functions not initialized.";
+        qCritical() << "[OpenGLDriverFeatures] OpenGL context or Qt OpenGL functions not initialized.";
         return;
     }
 
@@ -91,7 +91,7 @@ void OpenGLDriverFeatures::initializeInCurrentContext()
     const auto error = f.glGetError();
     if (error != GL_NO_ERROR)
     {
-        qDebug() << "Error occurred while retrieving OpenGL context and driver information";
+        qCritical() << "Error occurred while retrieving OpenGL context and driver information";
     }
     printDebugInfo();
 

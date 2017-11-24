@@ -272,7 +272,7 @@ std::vector<ValueRange<>> VectorMagnitudeColorMapping::updateBounds()
             auto normData = attributes ? attributes->GetScalars() : nullptr;
             if (!normData)
             {
-                qDebug() << "Missing vector norm array in " + filtersIt.first->dataObject().name();
+                qWarning() << "Missing vector norm array in " + filtersIt.first->dataObject().name();
                 continue;
             }
 

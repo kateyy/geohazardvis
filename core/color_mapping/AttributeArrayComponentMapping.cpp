@@ -101,12 +101,12 @@ std::vector<std::unique_ptr<ColorMappingData>> AttributeArrayComponentMapping::n
             const vtkIdType tupleCount = dataArray->GetNumberOfTuples();
             if (expectedTupleCount > tupleCount)
             {
-                qDebug() << "Not enough tuples in array" << name << ":" << tupleCount << ", expected" << expectedTupleCount << ", location" << attributeLocation << "(skipping)";
+                qWarning() << "Not enough tuples in array" << name << ":" << tupleCount << ", expected" << expectedTupleCount << ", location" << attributeLocation << "(skipping)";
                 continue;
             }
             else if (expectedTupleCount < tupleCount)
             {
-                qDebug() << "Too many tuples in array" << name << ":" << tupleCount << ", expected" << expectedTupleCount << ", location" << attributeLocation << "(ignoring superfluous data)";
+                qWarning() << "Too many tuples in array" << name << ":" << tupleCount << ", expected" << expectedTupleCount << ", location" << attributeLocation << "(ignoring superfluous data)";
             }
 
             auto & arrayInfo = arrayInfos[name];
@@ -116,13 +116,13 @@ std::vector<std::unique_ptr<ColorMappingData>> AttributeArrayComponentMapping::n
 
             if (lastNumComp && lastNumComp != currentNumComp)
             {
-                qDebug() << "Array named" << name << "found with different number of components (" << lastNumComp << "," << dataArray->GetNumberOfComponents() << ")";
+                qWarning() << "Array named" << name << "found with different number of components (" << lastNumComp << "," << dataArray->GetNumberOfComponents() << ")";
                 continue;
             }
             const auto lastLocationIt = arrayInfo.attributeLocations.find(vis);
             if (lastLocationIt != arrayInfo.attributeLocations.end() && lastLocationIt->second != attributeLocation)
             {
-                qDebug() << "Array named" << name << "found in different attribute locations in the same data set";
+                qWarning() << "Array named" << name << "found in different attribute locations in the same data set";
                 continue;
             }
 
@@ -146,7 +146,7 @@ std::vector<std::unique_ptr<ColorMappingData>> AttributeArrayComponentMapping::n
                 }
                 else if (arrayInfo.componentNames != componentNames)
                 {
-                    qDebug() << "Array named" << name << "found with inconsistent component names. Falling back to defaults.";
+                    qWarning() << "Array named" << name << "found with inconsistent component names. Falling back to defaults.";
                     arrayInfo.componentNamesCheck = ArrayInfo::cnInvalid;
                     arrayInfo.componentNames.clear();
                 }

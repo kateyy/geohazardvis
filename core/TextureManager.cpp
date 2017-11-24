@@ -68,7 +68,7 @@ vtkImageData * TextureManager::imageFromFile(const QString & fileName)
     QFileInfo info(fileName);
     if (!info.exists())
     {
-        qDebug() << "Texure file not found: " << fileName;
+        qWarning() << "Texture file not found: " << fileName;
         return nullptr;
     }
     
@@ -77,7 +77,7 @@ vtkImageData * TextureManager::imageFromFile(const QString & fileName)
     vtkImageReader2 * reader = vtkImageReader2Factory::CreateImageReader2(utf8FN.data());
     if (!reader)
     {
-        qDebug() << "Unsupported image file: " << fileName;
+        qWarning() << "Unsupported image file: " << fileName;
         return nullptr;
     }
 
@@ -88,7 +88,7 @@ vtkImageData * TextureManager::imageFromFile(const QString & fileName)
 
     if (!image)
     {
-        qDebug() << "Error reading image file: " << fileName;
+        qWarning() << "Error reading image file: " << fileName;
         return nullptr;
     }
 

@@ -146,7 +146,7 @@ void AbstractRenderView::showDataObjects(
     assert(subViewIndex < numberOfSubViews());
     if (subViewIndex >= numberOfSubViews())
     {
-        qDebug() << "Trying to AbstractRenderView::showDataObjects on sub-view" << subViewIndex << "while having only" << numberOfSubViews() << "views.";
+        qWarning() << "Trying to AbstractRenderView::showDataObjects on sub-view" << subViewIndex << "while having only" << numberOfSubViews() << "views.";
         return;
     }
 
@@ -230,7 +230,7 @@ void AbstractRenderView::hideDataObjects(const QList<DataObject *> & dataObjects
     assert(subViewIndex < 0 || static_cast<unsigned>(subViewIndex) < numberOfSubViews());
     if (subViewIndex >= 0 && static_cast<unsigned>(subViewIndex) >= numberOfSubViews())
     {
-        qDebug() << "Trying to AbstractRenderView::hideDataObjects on sub-view" << subViewIndex << "while having only" << numberOfSubViews() << "views.";
+        qWarning() << "Trying to AbstractRenderView::hideDataObjects on sub-view" << subViewIndex << "while having only" << numberOfSubViews() << "views.";
         return;
     }
 
@@ -253,7 +253,7 @@ QList<DataObject *> AbstractRenderView::dataObjects(int subViewIndexOrAll) const
     assert(subViewIndexOrAll >= -1); // -1 means all view, all smaller numbers are invalid
     if (subViewIndexOrAll >= int(numberOfSubViews()))
     {
-        qDebug() << "Trying to AbstractRenderView::dataObjects on sub-view" << subViewIndexOrAll << "while having only" << numberOfSubViews() << "views.";
+        qWarning() << "Trying to AbstractRenderView::dataObjects on sub-view" << subViewIndexOrAll << "while having only" << numberOfSubViews() << "views.";
         return{};
     }
 

@@ -355,13 +355,13 @@ bool DataSetResidualHelper::projectDisplacementsToLineOfSight()
 
     if (observationDS && !observationData)
     {
-        qDebug() << "Residual: Could not find valid observation data for residual computation (" 
+        qWarning() << "Residual: Could not find valid observation data for residual computation (" 
             + m_observationScalars.name + ")";
     }
 
     if (modelDS && !modelData)
     {
-        qDebug() << "Residual: Could not find valid model data for residual computation (" << m_modelScalars.name + ")";
+        qWarning() << "Residual: Could not find valid model data for residual computation (" << m_modelScalars.name + ")";
     }
 
     if (!observationData && !modelData)
@@ -373,13 +373,13 @@ bool DataSetResidualHelper::projectDisplacementsToLineOfSight()
     auto modelAttributeStorage = m_modelDataObject ? m_modelDataObject->dataSet() : nullptr;
     if (m_observationDataObject && !observationAttributeStorage)
     {
-        qDebug() << "Residual: Unsupported input data object: " << m_observationDataObject->name();
+        qWarning() << "Residual: Unsupported input data object: " << m_observationDataObject->name();
         return false;
     }
 
     if (m_modelDataObject && !modelAttributeStorage)
     {
-        qDebug() << "Residual: Unsupported input data object: " << m_modelDataObject->name();
+        qWarning() << "Residual: Unsupported input data object: " << m_modelDataObject->name();
         return false;
     }
 
@@ -495,7 +495,7 @@ bool DataSetResidualHelper::updateResidual()
 
     if (!observationDSTransformedPtr || !modelDSTransformedPtr)
     {
-        qDebug() << "Invalid input coordinates or data sets";
+        qWarning() << "Invalid input coordinates or data sets";
         return false;
     }
 
@@ -523,7 +523,7 @@ bool DataSetResidualHelper::updateResidual()
 
     if (!observationLosDisp || !modelLosDisp)
     {
-        qDebug() << "Observation/Model interpolation failed";
+        qWarning() << "Observation/Model interpolation failed";
 
         return false;
     }
@@ -564,7 +564,7 @@ bool DataSetResidualHelper::updateResidual()
 
     if (residualData->GetNumberOfTuples() != residualExpectedTuples)
     {
-        qDebug() << "Residual creation failed: Unexpected output size.";
+        qWarning() << "Residual creation failed: Unexpected output size.";
         return false;
     }
 

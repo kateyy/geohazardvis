@@ -67,7 +67,7 @@ QVariant vtkVariantToQVariant(const vtkVariant & variant)
     case VTK_FLOAT: return variant.ToFloat();
     case VTK_DOUBLE: return variant.ToDouble();
     default:
-        qDebug() << "vtkVariantToQVariant: Unhandled vtkVariant type: " << variant.GetType();
+        qWarning() << "vtkVariantToQVariant: Unhandled vtkVariant type: " << variant.GetType();
         return {};
     }
 }

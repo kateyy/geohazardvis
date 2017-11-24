@@ -833,7 +833,7 @@ bool DEMWidget::updatePreviewDataObject()
 
     if (!newDataSet)
     {
-        qDebug() << "DEMWidget: mesh transformation did not succeed";
+        qWarning() << "DEMWidget: mesh transformation did not succeed";
         return false;
     }
 

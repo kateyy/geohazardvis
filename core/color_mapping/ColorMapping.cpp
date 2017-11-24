@@ -295,7 +295,7 @@ const ColorMappingData & ColorMapping::currentScalars() const
     assert(it != m_data.end());
     if (it == m_data.end())
     {
-        qDebug() << "Invalid scalars requested: " << m_currentScalarsName;
+        qWarning() << "Invalid scalars requested: " << m_currentScalarsName;
         return nullColorMapping();
     }
 
