@@ -72,6 +72,29 @@ if (WIN32)
 
 elseif(UNIX)
 
+    # Putting UNIX deployment into a function to be able to safely abort it.
+function(deploy_qt_for_unix)
+
+    # Check Qt plugins first: if related CMake modules are not available, we should skip everything else here
+    # NOTE: For Qt downloaded+installed from their website, the Qt5::Gui component lists all the
+    # input, platform, etc. plugins. in Qt5Gui_PLUGINS. On the packaged Qt5 versions (e.g., in
+    # Ubuntu 17.10), Qt5Gui_PLUGINS is empty, and no CMake modules are available that would
+    # facilitate plugin deployment.
+    # TODO: All that stuff could be manually deployed, too. But that's error-prone and hard to maintain.
+    set(_allPlugins)
+    foreach(_component ${PROJECT_QT_COMPONENTS})
+        list(APPEND _allPlugins ${Qt5${_component}_PLUGINS})
+    endforeach()
+
+    if (NOT Qt5::QXcbGlxIntegrationPlugin IN_LIST _allPlugins)
+        message(WARNING "Binary deployment if Qt5 plugins is not supported with your Qt \
+installation. If you require a self-contained binary package, consider switching to a manual Qt \
+installation downloaded from https://www1.qt.io/download-open-source/
+See notes in helper-qtdeploy.cmake for details of this problem.
+SKIPPING DEPLOYMENT OF Qt LIBRARIES AND PLUGINS!")
+        return()
+    endif()
+
     # qt.conf: setup deploy folder structure
     install(FILES qt.conf.linux
         DESTINATION ${INSTALL_BIN}
@@ -108,11 +131,6 @@ elseif(UNIX)
             CONFIGURATIONS Debug
             RENAME ${_locationDebugTruncated}
         )
-    endforeach()
-
-    set(_allPlugins)
-    foreach(_component ${PROJECT_QT_COMPONENTS})
-        list(APPEND _allPlugins ${Qt5${_component}_PLUGINS})
     endforeach()
 
     # Plugins: copy as is [can't check what is actually needed]
@@ -191,6 +209,10 @@ elseif(UNIX)
         DESTINATION ${INSTALL_SHARED}
         RENAME ${_XcbQpa_pathTruncated}
     )
+endfunction()
+
+    deploy_qt_for_unix()
+
 endif()
 
 function(deployQtBinariesForTarget TARGET_NAME)
