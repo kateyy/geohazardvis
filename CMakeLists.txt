@@ -1,12 +1,13 @@
 cmake_minimum_required(VERSION 3.3)
 
-#foreach(p
-#    CMP???? # CMake ?.?
-#    )
-#  if(POLICY ${p})
-#    cmake_policy(SET ${p} NEW)
-#  endif()
-#endforeach()
+foreach(p
+    CMP0065 # CMake 3.4
+    CMP0071 # CMake 3.10
+    )
+  if(POLICY ${p})
+    cmake_policy(SET ${p} NEW)
+  endif()
+endforeach()
 
 
 set(META_PROJECT_NAME           "GeohazardVis")
