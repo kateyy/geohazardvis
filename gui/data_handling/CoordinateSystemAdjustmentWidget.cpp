@@ -107,7 +107,6 @@ CoordinateSystemAdjustmentWidget::CoordinateSystemAdjustmentWidget(
     , m_autoSetReferencePointMenu{ std::make_unique<QMenu>() }
 {
     m_ui->setupUi(this);
-    setFixedSize(size());
 
     m_ui->coordinateSystemTypeCombo->clear();
 

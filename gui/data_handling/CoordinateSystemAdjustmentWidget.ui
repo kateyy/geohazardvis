@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>552</width>
-    <height>438</height>
+    <width>604</width>
+    <height>528</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -244,16 +244,16 @@ Relative Position of (0; 0):</string>
              <verstretch>0</verstretch>
             </sizepolicy>
            </property>
-           <property name="suffix" stdset="0">
+           <property name="suffix">
             <string>°</string>
            </property>
-           <property name="decimals" stdset="0">
+           <property name="decimals">
             <number>6</number>
            </property>
-           <property name="minimum" stdset="0">
+           <property name="minimum">
             <double>-90.000000000000000</double>
            </property>
-           <property name="maximum" stdset="0">
+           <property name="maximum">
             <double>90.000000000000000</double>
            </property>
           </widget>
@@ -276,16 +276,16 @@ Relative Position of (0; 0):</string>
              <verstretch>0</verstretch>
             </sizepolicy>
            </property>
-           <property name="suffix" stdset="0">
+           <property name="suffix">
             <string>°</string>
            </property>
-           <property name="decimals" stdset="0">
+           <property name="decimals">
             <number>6</number>
            </property>
-           <property name="minimum" stdset="0">
+           <property name="minimum">
             <double>-180.000000000000000</double>
            </property>
-           <property name="maximum" stdset="0">
+           <property name="maximum">
             <double>180.000000000000000</double>
            </property>
           </widget>
@@ -336,7 +336,7 @@ Relative Position of (0; 0):</string>
  <customwidgets>
   <customwidget>
    <class>DoubleSpinBox</class>
-   <extends>QLineEdit</extends>
+   <extends>QDoubleSpinBox</extends>
    <header>gui/widgets/DoubleSpinBox.h</header>
   </customwidget>
  </customwidgets>
