@@ -50,13 +50,13 @@ public:
     vtkGetMacro(ArrayName, vtkStdString);
     vtkSetMacro(ArrayName, vtkStdString);
 
-    /** Toggle whether to modify the array unit. Requires VTK version 7.1.0 or newer */
+    /** Toggle whether to modify the array unit. */
     vtkBooleanMacro(EnableSetUnit, bool);
     vtkGetMacro(EnableSetUnit, bool);
     vtkSetMacro(EnableSetUnit, bool);
 
     vtkGetMacro(ArrayUnit, vtkStdString);
-    /** Set the vtkDataArray::UNITS_LABEL on the array. This requires VTK version 7.1.0 or newer */
+    /** Set the vtkDataArray::UNITS_LABEL on the array. */
     vtkSetMacro(ArrayUnit, vtkStdString);
 
 

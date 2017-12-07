@@ -39,9 +39,11 @@
 #include <vtkTrivialProducer.h>
 #include <vtkVector.h>
 
+#include <core/CoordinateSystems.h>
 #include <core/filters/ImageBlankNonFiniteValuesFilter.h>
 #include <core/filters/SetMaskedPointScalarsToNaNFilter.h>
 #include <core/utility/DataExtent.h>
+#include <core/utility/mathhelper.h>
 #include <core/utility/types_utils.h>
 #include <core/utility/vtkvectorhelper.h>
 
@@ -168,6 +170,26 @@ vtkSmartPointer<vtkDataArray> InterpolationHelper::fastInterpolatePolyOnPoly(
         }
     }
 
+    // TODO This should be exposed to the class interface/or even the UI
+    // Default maximum distance if units of the data sets are not known
+    double epsilon = 1.e-4;
+
+    // Consider the units of measurement, if they are known for both data sets.
+    const auto baseUnit = CoordinateSystemSpecification::fromFieldData(*basePoly.GetFieldData()).unitOfMeasurement;
+    const auto sourceUnit = CoordinateSystemSpecification::fromFieldData(*sourcePoly.GetFieldData()).unitOfMeasurement;
+    if (!baseUnit.isEmpty() && !sourceUnit.isEmpty())
+    {
+        if (QString(baseUnit) != QString(sourceUnit)) // different unit -> fail
+        {
+            return {};
+        }
+        if (mathhelper::isValidMetricUnit(baseUnit))
+        {   // TODO This should be exposed to the class interface/or even the UI
+            // Allow 10 cm derivation for metric coordinates
+            epsilon = mathhelper::scaleFactorForMetricUnits("dm", baseUnit);
+        }
+    }
+
     const auto numPoints = basePoly.GetNumberOfPoints();
     for (vtkIdType i = 0; i < numPoints; ++i)
     {
@@ -175,7 +197,6 @@ vtkSmartPointer<vtkDataArray> InterpolationHelper::fastInterpolatePolyOnPoly(
         basePoly.GetPoint(i, basePoint.GetData());
         sourcePoly.GetPoint(i, sourcePoint.GetData());
 
-        const double epsilon = 10.e-5;
         // Check if the individual components are close enough, don't compute expensive root.
         if (maxComponent(abs(basePoint - sourcePoint)) > epsilon)
         {
