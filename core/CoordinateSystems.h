@@ -32,6 +32,7 @@
 
 
 class QDataStream;
+class vtkDataSet;
 class vtkFieldData;
 class vtkInformation;
 class vtkInformationDoubleVectorMetaDataKey;
@@ -119,6 +120,18 @@ struct CORE_API CoordinateSystemSpecification
     bool operator==(const ReferencedCoordinateSystemSpecification & referencedSpec) const;
     bool operator!=(const ReferencedCoordinateSystemSpecification & referencedSpec) const;
 
+    /**
+     * Read/write the specification to a information object.
+     *
+     * This is useful to make the spec available during pipeline update steps. Therefore, pass the
+     * information object of a data set, i.e., dataSet->GetInformation().
+     *
+     * NOTE: It may be useful to store the specs in the information object of the data array of the
+     * point coordinate of a vtkPointSet, i.e., aPointSet->GetPoints()->GetData()->GetInformation()
+     * These information, however, will be discarded by algorithms that modify the coordinates of
+     * the data set. In that case, the specs need to be stored in the data set information directly,
+     * or in its field data.
+     */
     virtual void readFromInformation(vtkInformation & information);
     virtual void writeToInformation(vtkInformation & information) const;
     static CoordinateSystemSpecification fromInformation(vtkInformation & information);
@@ -131,7 +144,17 @@ struct CORE_API CoordinateSystemSpecification
      */
     virtual void readFromFieldData(vtkFieldData & fieldData);
     virtual void writeToFieldData(vtkFieldData & fieldData) const;
-    static ReferencedCoordinateSystemSpecification fromFieldData(vtkFieldData & fieldData);
+    static CoordinateSystemSpecification fromFieldData(vtkFieldData & fieldData);
+
+    /**
+     * Convenience function that combines writeToFieldData and writeToInformation.
+     * writeToFieldData is called in any case. writeToFieldData is relevant only for vtkPointSet
+     * subclasses. For these, information are written to the information of the current point
+     * coordinate array. This will only happen if the points are initialized already.
+     * 
+     * @see: Note at readFromInformation()
+     */
+    virtual void writeToDataSet(vtkDataSet & dataSet) const;
 
     static vtkInformationIntegerMetaDataKey * CoordinateSystemType_InfoKey();
     static vtkInformationStringMetaDataKey * GeographicCoordinateSystemName_InfoKey();

@@ -26,6 +26,7 @@
 #include <vtkCharArray.h>
 #include <vtkFieldData.h>
 #include <vtkInformation.h>
+#include <vtkPointSet.h>
 
 #include <core/filters/vtkInformationDoubleVectorMetaDataKey.h>
 #include <core/filters/vtkInformationIntegerMetaDataKey.h>
@@ -424,7 +425,23 @@ void CoordinateSystemSpecification::writeToFieldData(vtkFieldData & fieldData) c
     checkSetArray(fieldData, unitOfMeasurement, arrayName_unitOfMeasurement());
 }
 
-ReferencedCoordinateSystemSpecification CoordinateSystemSpecification::fromFieldData(vtkFieldData & fieldData)
+void CoordinateSystemSpecification::writeToDataSet(vtkDataSet & dataSet) const
+{
+    writeToFieldData(*dataSet.GetFieldData());
+    // For data set types that support it, write the specs to the information of the underlaying
+    // data array.
+    if (auto pointSet = vtkPointSet::SafeDownCast(&dataSet))
+    {
+        if (auto points = pointSet->GetPoints())
+        {
+            assert(points->GetData() && points->GetData()->GetInformation());
+            writeToInformation(*points->GetData()->GetInformation());
+        }
+    }
+}
+
+
+CoordinateSystemSpecification CoordinateSystemSpecification::fromFieldData(vtkFieldData & fieldData)
 {
     ReferencedCoordinateSystemSpecification spec;
     spec.readFromFieldData(fieldData);

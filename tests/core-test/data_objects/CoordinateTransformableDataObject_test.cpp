@@ -95,6 +95,17 @@ public:
         return poly;
     }
 
+    static const ReferencedCoordinateSystemSpecification & testSpec()
+    {
+        static const auto coordsSpec = ReferencedCoordinateSystemSpecification(
+            CoordinateSystemType::geographic,
+            "testGeoSystem",
+            "testMetricSystem",
+            "",
+            { 100, 200 });
+        return coordsSpec;
+    }
+
     template<typename T = PolyDataObject>
     static std::unique_ptr<T> genPolyData()
     {
@@ -102,7 +113,7 @@ public:
     }
 };
 
-TEST(ReferencedCoordinateSystemSpecification_test, EqualIfBothInspecified)
+TEST(ReferencedCoordinateSystemSpecification_test, EqualIfBothUnspecified)
 {
     ReferencedCoordinateSystemSpecification spec1;
     spec1.type = CoordinateSystemType::geographic;
@@ -165,32 +176,18 @@ TEST_F(CoordinateTransformableDataObject_test, ApplyCoordinateSystemFromFieldDat
 {
     auto dataSet = genPolyDataSet();
 
-    const auto coordsSpec = ReferencedCoordinateSystemSpecification(
-        CoordinateSystemType::geographic,
-        "testGeoSystem",
-        "testMetricSystem",
-        "",
-        { 100, 200 });
-
-    coordsSpec.writeToFieldData(*dataSet->GetFieldData());
+    testSpec().writeToFieldData(*dataSet->GetFieldData());
     
     PolyDataObject polyData("poly", *dataSet);
 
-    ASSERT_EQ(coordsSpec, polyData.coordinateSystem());
+    ASSERT_EQ(testSpec(), polyData.coordinateSystem());
 }
 
 TEST_F(CoordinateTransformableDataObject_test, PersistentCoordsSpec_PolyData)
 {
     auto dataObject = genPolyData();
 
-    const auto coordsSpec = ReferencedCoordinateSystemSpecification(
-        CoordinateSystemType::geographic,
-        "testGeoSystem",
-        "testMetricSystem",
-        "",
-        { 100, 200 });
-
-    dataObject->specifyCoordinateSystem(coordsSpec);
+    dataObject->specifyCoordinateSystem(testSpec());
 
     const auto fileName = QDir(TestEnvironment::testDirPath()).filePath("PersistentCoordsSpec.vtp");
 
@@ -198,7 +195,7 @@ TEST_F(CoordinateTransformableDataObject_test, PersistentCoordsSpec_PolyData)
     auto readDataObject = Loader::readFile<CoordinateTransformableDataObject>(fileName);
     ASSERT_TRUE(readDataObject);
 
-    ASSERT_EQ(coordsSpec, readDataObject->coordinateSystem());
+    ASSERT_EQ(testSpec(), readDataObject->coordinateSystem());
 }
 
 TEST_F(CoordinateTransformableDataObject_test, PersistentCoordsSpec_ImageData)
@@ -209,14 +206,7 @@ TEST_F(CoordinateTransformableDataObject_test, PersistentCoordsSpec_ImageData)
     
     ImageDataObject dataObject("image", *imageDataSet);
 
-    const auto coordsSpec = ReferencedCoordinateSystemSpecification(
-        CoordinateSystemType::geographic,
-        "testGeoSystem",
-        "testMetricSystem",
-        "",
-        { 100, 200 });
-
-    dataObject.specifyCoordinateSystem(coordsSpec);
+    dataObject.specifyCoordinateSystem(testSpec());
 
     const auto fileName = QDir(TestEnvironment::testDirPath()).filePath("PersistentCoordsSpec.vti");
 
@@ -224,25 +214,68 @@ TEST_F(CoordinateTransformableDataObject_test, PersistentCoordsSpec_ImageData)
     auto readDataObject = Loader::readFile<CoordinateTransformableDataObject>(fileName);
     ASSERT_TRUE(readDataObject);
 
-    ASSERT_EQ(coordsSpec, readDataObject->coordinateSystem());
+    ASSERT_EQ(testSpec(), readDataObject->coordinateSystem());
+}
+
+TEST_F(CoordinateTransformableDataObject_test, SpecifyCoordsToFieldData)
+{
+    auto dataObject = genPolyData();
+
+    dataObject->specifyCoordinateSystem(testSpec());
+    auto dataSet = dataObject->dataSet();
+    ASSERT_TRUE(dataSet);
+    const auto storedSpec =
+        ReferencedCoordinateSystemSpecification::fromFieldData(*dataSet->GetFieldData());
+
+    ASSERT_EQ(testSpec(), storedSpec);
+}
+
+TEST_F(CoordinateTransformableDataObject_test, SpecifyCoordsToInformation)
+{
+    auto dataObject = genPolyData();
+
+    dataObject->specifyCoordinateSystem(testSpec());
+    auto dataSet = vtkPointSet::SafeDownCast(dataObject->dataSet());
+    ASSERT_TRUE(dataSet);
+    auto points = dataSet->GetPoints();
+    ASSERT_TRUE(points);
+    const auto storedSpec =
+        ReferencedCoordinateSystemSpecification::fromInformation(*points->GetData()->GetInformation());
+
+    ASSERT_EQ(testSpec(), storedSpec);
 }
 
 TEST_F(CoordinateTransformableDataObject_test, coordsPassToProcessedFieldData)
 {
     auto dataObject = genPolyData();
 
-    const auto coordsSpec = ReferencedCoordinateSystemSpecification(
-        CoordinateSystemType::geographic,
-        "testGeoSystem",
-        "testMetricSystem",
-        "",
-        { 100, 200 });
-
-    dataObject->specifyCoordinateSystem(coordsSpec);
+    dataObject->specifyCoordinateSystem(testSpec());
 
     auto processedDataSet = dataObject->processedOutputDataSet();
     ASSERT_TRUE(processedDataSet);
     const auto passedSpec = ReferencedCoordinateSystemSpecification::fromFieldData(*processedDataSet->GetFieldData());
 
-    ASSERT_EQ(coordsSpec, passedSpec);
+    ASSERT_EQ(testSpec(), passedSpec);
+}
+
+/**
+ * This test demonstrates a rather impractical consequence of the pipeline architecture:
+ * Coordinate system specification stored in the information of the data array storing the points
+ * of a vtkPolyData are not passed through by the pipeline. Thus, downstream can only rely on specs
+ * in the field data.
+ */
+TEST_F(CoordinateTransformableDataObject_test, coords_NOT_PassedToProcessedInformation)
+{
+    auto dataObject = genPolyData();
+
+    dataObject->specifyCoordinateSystem(testSpec());
+
+    auto processedDataSet = vtkPointSet::SafeDownCast(dataObject->processedOutputDataSet());
+    ASSERT_TRUE(processedDataSet);
+    auto points = processedDataSet->GetPoints();
+    ASSERT_TRUE(points);
+    const auto passedSpec =
+        ReferencedCoordinateSystemSpecification::fromInformation(*points->GetData()->GetInformation());
+
+    ASSERT_EQ(ReferencedCoordinateSystemSpecification(), passedSpec);
 }

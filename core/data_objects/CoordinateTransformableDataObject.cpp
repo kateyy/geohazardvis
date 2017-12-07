@@ -154,7 +154,7 @@ bool CoordinateTransformableDataObject::specifyCoordinateSystem(
     // e.g., in the Exporter.
     if (auto ds = dataSet())
     {
-        m_coordsSetter->GetCoordinateSystemSpec().writeToFieldData(*ds->GetFieldData());
+        m_coordsSetter->GetCoordinateSystemSpec().writeToDataSet(*ds);
     }
 
     emit coordinateSystemChanged();

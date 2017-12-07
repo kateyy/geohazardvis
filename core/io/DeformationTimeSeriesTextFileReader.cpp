@@ -410,7 +410,7 @@ auto DeformationTimeSeriesTextFileReader::readData() -> State
         }
     }
 
-    dataObjectCoordinateSystem.writeToFieldData(*m_readPolyData->GetFieldData());
+    dataObjectCoordinateSystem.writeToDataSet(*m_readPolyData);
 
     auto & pointData = *m_readPolyData->GetPointData();
     for (const auto & array : dataArrays)
