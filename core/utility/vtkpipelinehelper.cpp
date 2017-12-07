@@ -19,6 +19,7 @@
 #include "vtkpipelinehelper.h"
 
 #include <iostream>
+#include <vector>
 
 #include <vtkAlgorithm.h>
 
@@ -40,12 +41,12 @@ PrintHelper print(vtkAlgorithm * pipelineEnd)
 
 std::ostream & operator<<(std::ostream & os, vtkpipelinehelper::PrintHelper pipelinePrintHelper)
 {
-    auto upstream = pipelinePrintHelper.algorithm;
+    std::vector<vtkAlgorithm *> algorithms;
 
-    unsigned n = 0;
-    while (upstream)
+    for (auto upstream = pipelinePrintHelper.algorithm;
+        upstream != nullptr;)
     {
-        ++n;
+        algorithms.push_back(upstream);
 
         if (upstream->GetNumberOfInputPorts() == 0)
         {
@@ -55,25 +56,19 @@ std::ostream & operator<<(std::ostream & os, vtkpipelinehelper::PrintHelper pipe
         upstream = upstream->GetInputAlgorithm();
     }
 
-    upstream = pipelinePrintHelper.algorithm;
-
-    int i = n;
-    while (upstream)
+    for (size_t i = 0; i < algorithms.size(); ++i)
     {
-        os << '[' << i << '/' << n << "] ";
-        --i;
+        os << '[' << i + 1 << '/' << algorithms.size() << "] ";
+
+        auto upstream = algorithms[algorithms.size() - 1u - i];
 
         upstream->Print(os);
+
         const auto ports = upstream->GetNumberOfInputPorts();
-        if (ports == 0)
-        {
-            break;
-        }
         if (ports > 1)
         {
             os << "Warning: Multiple input ports (" << ports <<  "), only following the first one." << std::endl;
         }
-        upstream = upstream->GetInputAlgorithm();
     }
 
     return os;

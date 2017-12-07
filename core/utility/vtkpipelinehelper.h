@@ -34,10 +34,30 @@ struct PrintHelper
     vtkAlgorithm * algorithm;
 };
 
+/**
+ * Print the upstream pipeline of the supplied algorithm.
+ * 
+ * This will traverse upstream algorithms until reaching an algorithm that has no input. From there
+ * on up to down, Print(std::cout) is called on all algorithms up to the one passed as parameter.
+ * This traverses only the input at port 0 of each algorithm. A warning is printed if more inputs
+ * exists, but they are not traversed.
+ * For example:
+ * using namespace vtkpipelinehelper;
+ * printPipeline(myAlgorihtm);
+ */
 CORE_API void printPipeline(vtkAlgorithm * pipelineEnd);
+/**
+ * Construct a dummy object that allows to print pipeline information to an arbitrary output stream.
+ * For example:
+ * using namespace vtkpipelinehelper;
+ * std::cout << print(myAlgorihtm) << std::endl;
+ */
 CORE_API PrintHelper print(vtkAlgorithm * pipelineEnd);
 
 
 }
 
+/**
+ * Utility function intended to be used in conjunction with vtkpipelinehelper::print;
+ */
 CORE_API std::ostream & operator<<(std::ostream & os, vtkpipelinehelper::PrintHelper pipelinePrintHelper);
