@@ -185,11 +185,15 @@ void CoordinateSystemAdjustmentWidget::updateInfoText()
 
     m_ui->coordinateValueRangesEdit->setPlainText(coordsRangesText);
 
+    bool anyRefPointQuicklySupported = false;
     for (int i = 0; i < RefPointQuicklyNumValues; ++i)
     {
         const auto actionType = static_cast<RefPointQuickly>(i);
-        m_refPointQuickSetActions[i]->setVisible(refPointQuicklySupports(actionType, currentType));
+        const bool supported = refPointQuicklySupports(actionType, currentType);
+        anyRefPointQuicklySupported |= supported;
+        m_refPointQuickSetActions[i]->setVisible(supported);
     }
+    m_ui->autoSetReferencePointButton->setEnabled(anyRefPointQuicklySupported);
 
     // Geographic systems always have to use degrees as unit, metric systems are in *m;
     m_ui->unitEdit->setReadOnly(currentType == CoordinateSystemType::geographic);
