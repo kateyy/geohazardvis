@@ -1006,13 +1006,15 @@ std::pair<QString, IndexType> ResidualVerificationView::findDataSetAttributeName
     // Search deformation attribute by name first, than check if scalars or vectors are available.
     // Always look in the primary attribute location first.
 
-    static const auto deformationAttributeNames = {
-        "Deformation", "deformation",
-        "Deformation Vectors", "deformation vectors",
-        "Deformation Vector", "deformation vector",
-        "Displacement Vectors", "displacement vectors",
-        "Displacement Vector", "displacement vector",
-        "U-", "u-"
+    static const QStringList deformationAttributeNames = {
+        "deformation",
+        "displacement",
+        "los-displacement",
+        "deformation vectors",
+        "deformation vector",
+        "displacement vectors",
+        "displacement vector",
+        "u-"
     };
 
     auto searchValidAttribute = [] (vtkDataSetAttributes * attributes) -> QString
@@ -1024,9 +1026,19 @@ std::pair<QString, IndexType> ResidualVerificationView::findDataSetAttributeName
 
         for (auto && name : deformationAttributeNames)
         {
-            if (attributes->HasArray(name))
+            for (int i = 0; i < attributes->GetNumberOfArrays(); ++i)
             {
-                return name;
+                auto array = attributes->GetAbstractArray(i);
+                const auto arrayCName = array ? array->GetName() : static_cast<const char*>(nullptr);
+                if (!arrayCName)
+                {
+                    continue;
+                }
+                auto arrayName = QString::fromUtf8(arrayCName);
+                if (arrayName.toLower() == name)
+                {
+                    return arrayName;
+                }
             }
         }
         if (auto scalars = attributes->GetScalars())
