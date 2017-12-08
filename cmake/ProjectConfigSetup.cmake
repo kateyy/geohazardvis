@@ -54,9 +54,9 @@ function(setupProjectUserConfig TARGET)
         set(MSVC_TOOLS_VERSION 14.0)
     elseif(NOT MSVC_VERSION LESS 1910 AND MSVC_VERSION LESS 1920)
         # Add MSVC_VERSION values here that use MSVC_TOOLS_VERSION 15.0 in their *.vcxproj files.
-        set(MSVC_VERSION_15_KNOWN_VERSIONS 1910 1911)
+        set(MSVC_VERSION_15_KNOWN_VERSIONS 1910 1912)
         if (NOT MSVC_VERSION IN_LIST MSVC_VERSION_15_KNOWN_VERSIONS)
-            message(WARNING "Unknown Visual Studio version (${MSVC_VERSION}). Assuming MSVC_TOOLS_VERSION=15.0.\
+            message(WARNING "Unknown Visual Studio version (${MSVC_VERSION}). Assuming MSVC_TOOLS_VERSION=15.0. \
 Adjust ProjectConfigSetup.cmake to fix the check or silence this warning.")
         endif()
         set(MSVC_TOOLS_VERSION 15.0)

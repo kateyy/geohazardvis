@@ -30,6 +30,12 @@ if(OPTION_BUILD_TESTS AND GTEST_FOUND)
 
     set(TEST_MAIN_CPP_FILEPATH "${CMAKE_CURRENT_SOURCE_DIR}/test-main.cpp")
 
+    # This is for an incompatibility between Google Test 1.8.0 and MSVC 15 2017 version 15.5
+    # See https://github.com/google/googletest/issues/1318
+    if (MSVC AND MSVC_VERSION VERSION_GREATER 1411)
+        add_definitions(/D_SILENCE_TR1_NAMESPACE_DEPRECATION_WARNING)
+    endif()
+
     # Tests
     add_test_without_ctest(core-test)
     add_test_without_ctest(gui-test)

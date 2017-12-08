@@ -26,11 +26,14 @@ if (MSVC)
 
         if(MSVC_VERSION VERSION_EQUAL 1800)     # MSVC 12 2013
             copyOpenMPDebugRuntime(120)
-        elseif(MSVC_VERSION VERSION_EQUAL 1900) # MSVC 14 2015
-            copyOpenMPDebugRuntime(140)
-        elseif(MSVC_VERSION VERSION_EQUAL 1910) # MSVC 15 2017 (same runtime as MSVC 2015)
-            copyOpenMPDebugRuntime(140)
-        elseif(MSVC_VERSION VERSION_EQUAL 1911) # MSVC 15 2017 (same runtime as MSVC 2015)
+        elseif(MSVC_VERSION VERSION_EQUAL 1900  # MSVC 14 2015
+            OR (NOT MSVC_VERSION VERSION_LESS 1900  # MSVC 15 2017 (same runtime as MSVC 2015)
+            AND NOT MSVC_VERSION VERSION_GREATER 1999))  # just a random assumption...
+            if (MSVC_VERSION VERSION_GREATER 1912)
+                message(WARNING "Unkown MSVC version (${MSVC_VERSION}). \
+Assuming that it uses the same debug OpenMP runtime as MSVC 14 2015 and MSVC 15 2017.
+If you deploy debug executables, please recheck if OpenMP is correctly deployed, and adjust the warning here.")
+            endif()
             copyOpenMPDebugRuntime(140)
         else()
             message(WARNING "Debug OpenMP deployment not supported for the current MSVC version (${MSVC_VERSION})")

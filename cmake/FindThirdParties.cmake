@@ -509,6 +509,11 @@ if (OPTION_BUILD_TESTS)
         set(GMOCK_INCLUDE_DIR ${GTEST_INCLUDE_DIR})
         set(GMOCK_LIBRARIES ${_gmockLib})
 
+        set(gtestCXXFlags ${CMAKE_CXX_FLAGS})
+        if (MSVC AND MSVC_VERSION VERSION_GREATER 1911) # For features deprecated in VS2017 v15.5
+            set(gtestCXXFlags "${gtestCXXFlags} /D_SILENCE_TR1_NAMESPACE_DEPRECATION_WARNING")
+        endif()
+
         ExternalProject_Add(gtest
             PREFIX ${GTEST_BUILD_DIR}
             SOURCE_DIR ${GTEST_SOURCE_DIR}
@@ -522,6 +527,7 @@ if (OPTION_BUILD_TESTS)
             CMAKE_CACHE_ARGS
                 -Dgtest_force_shared_crt:bool=ON
                 -DCMAKE_CXX_COMPILER:filepath=${CMAKE_CXX_COMPILER}
+                -DCMAKE_CXX_FLAGS:string=${gtestCXXFlags}
                 -DCMAKE_C_COMPILER:filepath=${CMAKE_C_COMPILER}
                 -DBUILD_GMOCK:bool=ON
                 -DBUILD_GTEST:bool=OFF
