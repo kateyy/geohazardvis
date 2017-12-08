@@ -37,6 +37,9 @@
      <property name="wordWrap">
       <bool>false</bool>
      </property>
+     <attribute name="horizontalHeaderHighlightSections">
+      <bool>false</bool>
+     </attribute>
      <attribute name="horizontalHeaderMinimumSectionSize">
       <number>30</number>
      </attribute>
