@@ -130,42 +130,46 @@ QTableWidgetSetRowsWorker::~QTableWidgetSetRowsWorker()
     }
 }
 
-void QTableWidgetSetRowsWorker::addRow(const QString & title, const QString & text)
+void QTableWidgetSetRowsWorker::addRow(const QString & title, const QString & text, int index)
 {
-    addRow({ title, text });
+    addRow({ title, text }, index);
 }
 
-void QTableWidgetSetRowsWorker::addRow(const std::vector<QString> & items)
+void QTableWidgetSetRowsWorker::addRow(const std::vector<QString> & items, int index)
 {
     const auto cols = static_cast<int>(std::min(
         static_cast<size_t>(std::numeric_limits<int>::max()), items.size()));
     m_columnCount = std::max(m_columnCount, cols);
-    m_rows.emplace_back(items);
+    m_rows.emplace(
+        m_rows.begin() + std::max(0, std::min(m_columnCount, index)),
+        items);
 }
 
-void QTableWidgetSetRowsWorker::addRow(std::vector<QString> && items)
+void QTableWidgetSetRowsWorker::addRow(std::vector<QString> && items, int index)
 {
     const auto cols = static_cast<int>(std::min(
         static_cast<size_t>(std::numeric_limits<int>::max()), items.size()));
     m_columnCount = std::max(m_columnCount, cols);
-    m_rows.emplace_back(std::forward<std::vector<QString>>(items));
+    m_rows.emplace(
+        m_rows.begin() + std::max(0, std::min(m_columnCount, index)),
+        std::forward<std::vector<QString>>(items));
 }
 
-QTableWidgetSetRowsWorker & QTableWidgetSetRowsWorker::operator()(const QString & title, const QString & text)
+QTableWidgetSetRowsWorker & QTableWidgetSetRowsWorker::operator()(const QString & title, const QString & text, int index)
 {
-    addRow(title, text);
+    addRow(title, text, index);
     return *this;
 }
 
-QTableWidgetSetRowsWorker & QTableWidgetSetRowsWorker::operator()(const std::vector<QString> & items)
+QTableWidgetSetRowsWorker & QTableWidgetSetRowsWorker::operator()(const std::vector<QString> & items, int index)
 {
-    addRow(items);
+    addRow(items, index);
     return *this;
 }
 
-QTableWidgetSetRowsWorker & QTableWidgetSetRowsWorker::operator()(std::vector<QString> && items)
+QTableWidgetSetRowsWorker & QTableWidgetSetRowsWorker::operator()(std::vector<QString> && items, int index)
 {
-    addRow(std::forward<std::vector<QString>>(items));
+    addRow(std::forward<std::vector<QString>>(items), index);
     return *this;
 }
 

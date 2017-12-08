@@ -101,7 +101,7 @@ MainWindow::MainWindow()
 #endif
 
     connect(m_ui->actionOpen, &QAction::triggered, [this] () { openFiles(dialog_inputFileName()); });
-    connect(m_ui->actionImport_CSV_Triangle_Mesh, &QAction::triggered, [this] () {
+    connect(m_ui->actionImport_CSV_Points_Or_Mesh, &QAction::triggered, [this] () {
         DataImporterWidget importer(this);
         if (importer.exec() == QDialog::Accepted)
         {

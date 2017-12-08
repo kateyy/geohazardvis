@@ -86,13 +86,18 @@ public:
     explicit QTableWidgetSetRowsWorker(QTableWidget & table);
     ~QTableWidgetSetRowsWorker();
 
-    void addRow(const QString & title, const QString & text);
-    void addRow(const std::vector<QString> & items);
-    void addRow(std::vector<QString> && items);
+    /**
+     * Add a row that will be added to the table widget.
+     * @param index is optional. If set to a positive value, it designates the position of the new
+     * row. Otherwise, the row will be appended to the end of the current list.
+     */
+    void addRow(const QString & title, const QString & text, int index = -1);
+    void addRow(const std::vector<QString> & items, int index = -1);
+    void addRow(std::vector<QString> && items, int index = -1);
 
-    QTableWidgetSetRowsWorker & operator()(const QString & title, const QString & text);
-    QTableWidgetSetRowsWorker & operator()(const std::vector<QString> & items);
-    QTableWidgetSetRowsWorker & operator()(std::vector<QString> && items);
+    QTableWidgetSetRowsWorker & operator()(const QString & title, const QString & text, int index = -1);
+    QTableWidgetSetRowsWorker & operator()(const std::vector<QString> & items, int index = -1);
+    QTableWidgetSetRowsWorker & operator()(std::vector<QString> && items, int index = -1);
 
     const std::vector<std::vector<QString>> & rows() const;
 

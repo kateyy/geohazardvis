@@ -29,7 +29,7 @@
      <x>0</x>
      <y>0</y>
      <width>1164</width>
-     <height>26</height>
+     <height>29</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -44,7 +44,7 @@
      <addaction name="actionClear_Recent_Files"/>
     </widget>
     <addaction name="actionOpen"/>
-    <addaction name="actionImport_CSV_Triangle_Mesh"/>
+    <addaction name="actionImport_CSV_Points_Or_Mesh"/>
     <addaction name="actionImport_CSV_Grid_Data"/>
     <addaction name="actionExportDataset"/>
     <addaction name="actionExport_to_CSV"/>
@@ -185,9 +185,9 @@
     <string>Open Export &amp;Folder</string>
    </property>
   </action>
-  <action name="actionImport_CSV_Triangle_Mesh">
+  <action name="actionImport_CSV_Points_Or_Mesh">
    <property name="text">
-    <string>Import &amp;CSV Triangle Mesh...</string>
+    <string>Import &amp;CSV Point Clout / Triangle Mesh...</string>
    </property>
   </action>
   <action name="actionClear_Recent_Files">

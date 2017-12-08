@@ -27,23 +27,32 @@
 
 
 class DataObject;
-class PolyDataObject;
+class GenericPolyDataObject;
 class Ui_DataImporterWidget;
 
 
 class GUI_API DataImporterWidget : public QDialog
 {
 public:
-    /** @param showNonCsvTypesTabs Set whether to show an additional tab for importing additional data types (single polygonal files).
-        This option allows to use the widget as generalized importer widget for arbitrary file types. */
-    explicit DataImporterWidget(QWidget * parent = nullptr, bool showNonCsvTypesTabs = false, Qt::WindowFlags flags = {});
+    /**
+     * @param showNonCsvTypesTabs Set whether to show an additional tab for importing additional
+     *  data types (single polygonal files). This option allows to use the widget as generalized
+     *  importer widget for arbitrary file types.
+     */
+    explicit DataImporterWidget(QWidget * parent = nullptr,
+        bool showNonCsvTypesTabs = false,
+        Qt::WindowFlags flags = {});
     ~DataImporterWidget() override;
 
-    /** Release ownership and return the loaded poly data object.
-    * @return A valid object, only if the dialog was executed and its result is QDialog::Accepted */
-    std::unique_ptr<PolyDataObject> releaseLoadedPolyData();
-    /** Convenience method to access the loaded poly data as its base class pointer.
-    * @see releaseLoadedPolyData */
+    /**
+     * Release ownership and return the loaded poly data object.
+     * @return A valid object, only if the dialog was executed and its result is QDialog::Accepted
+     */
+    std::unique_ptr<GenericPolyDataObject> releaseLoadedPolyData();
+    /**
+     * Convenience method to access the loaded poly data as its base class pointer.
+     * @see releaseLoadedPolyData
+     */
     std::unique_ptr<DataObject> releaseLoadedData();
 
     const QString & openFileDirectory() const;
@@ -64,6 +73,8 @@ private:
     void updateSummary();
     bool importToPolyData();
 
+    void updatePointFileAttributesTable();
+
     void clearData();
 
     QString getOpenFileDialog(const QString & title, bool requestPolyData);
@@ -76,7 +87,7 @@ private:
     int m_importDataType;
     io::InputVector m_coordinateData;
     io::InputVector m_indexData;
-    std::unique_ptr<PolyDataObject> m_polyData;
+    std::unique_ptr<GenericPolyDataObject> m_polyData;
 
 private:
     Q_DISABLE_COPY(DataImporterWidget)
