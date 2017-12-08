@@ -67,3 +67,24 @@ QString vtkArrayToQString(vtkAbstractArray & data)
 
     return{};
 }
+
+bool isStringIsAcceptable(const QString & string)
+{
+    return isStringIsAcceptable(string.toUtf8().data());
+}
+
+bool isStringIsAcceptable(const char * const string, size_t length)
+{
+    if (!string)
+    {
+        return false;
+    }
+    for (size_t i = 0; (length == 0 || i < length) && string[i] != '\0'; ++i)
+    {
+        if (string[i] < -1 /*|| string[i] > 255*/)
+        {
+            return false;
+        }
+    }
+    return true;
+}

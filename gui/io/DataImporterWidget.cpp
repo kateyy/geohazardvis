@@ -41,6 +41,7 @@
 #include <core/io/MatricesToVtk.h>
 #include <core/io/TextFileReader.h>
 #include <core/utility/qthelper.h>
+#include <core/utility/vtkstringhelper.h>
 
 
 namespace
@@ -307,11 +308,27 @@ bool DataImporterWidget::importToPolyData()
                     "Please set one or remove the line.").arg(i + 1));
             return false;
         }
+        if (!isStringIsAcceptable(name))
+        {
+            QMessageBox::information(this, "Point Attributes",
+                QString("The point attribute name \"%1\" contains unsupported characters. "
+                    "Please note that some characters such as the degree sign (%2) can currently "
+                    "not be used.").arg(name).arg(QString(QChar(0x00B0))));
+            return false;
+        }
         if (spec.isEmpty())
         {
             QMessageBox::information(this, "Point Attributes",
                 QString("The point attribute \"%1\" in row %2 has no columns associated. "
                     "Please set at least one or remove the line.").arg(name).arg(i + 1));
+            return false;
+        }
+        if (!isStringIsAcceptable(unit))
+        {
+            QMessageBox::information(this, "Point Attributes",
+                QString("The unit symbol \"%1\" contains unsupported characters. "
+                    "Please note that some characters such as the degree sign (%2) can currently "
+                    "not be used.").arg(unit).arg(QString(QChar(0x00B0))));
             return false;
         }
         std::vector<int> columns;
