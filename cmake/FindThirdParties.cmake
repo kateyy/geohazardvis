@@ -428,7 +428,7 @@ if (OPTION_INSTALL_3RDPARTY_BINARIES)
         set(_vtkDeployFiles)
         if (WIN32)
             # Windows: VTK build tree contains separated folders for each configuration
-            foreach(libName ${_vtkBuiltInLibraries})
+            foreach(_libName ${_vtkBuiltInLibraries})
                 list(APPEND _vtkDeployFiles "${VTK_DIR}/bin/$<$<STREQUAL:$<CONFIG>,RelNoOptimization>:RelWithDebInfo>$<$<NOT:$<STREQUAL:$<CONFIG>,RelNoOptimization>>:$<CONFIG>>/${_libName}-${VTK_MAJOR_VERSION}.${VTK_MINOR_VERSION}.dll")
             endforeach()
         elseif(UNIX)
