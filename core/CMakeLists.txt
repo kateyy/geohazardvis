@@ -79,6 +79,8 @@ set(sources
     context2D_data/Context2DData.cpp
     context2D_data/DataProfile2DContextPlot.h
     context2D_data/DataProfile2DContextPlot.cpp
+    context2D_data/PlotPointsAndLine.h
+    context2D_data/PlotPointsAndLine.cpp
     context2D_data/vtkContextItemCollection.h
     context2D_data/vtkContextItemCollection.cpp
     context2D_data/vtkPlotCollection.h

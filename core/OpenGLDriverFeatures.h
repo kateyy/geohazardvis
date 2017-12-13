@@ -45,6 +45,14 @@ public:
     static int openGLVersionMinor();
 
     /**
+     * Check whether the system is running with broken Intel drivers, e.g. Intel HD 3000 and
+     * similar on Windows.
+     * Some workarounds are applied in the application, so that most rendering features will be
+     * available even on such systems.
+     */
+    static bool isBrokenIntelDriver();
+
+    /**
      * @return Maximum supported line width that can safely be renderer with VTK on the current
      * renderer. This is used to prevent VTK from using geometry shaders on Intel HD 3000 etc.
      * If there is no limit on the current platform, 0.f is returned.

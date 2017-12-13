@@ -116,6 +116,7 @@ void OpenGLDriverFeatures::printDebugInfo()
     qDebug().noquote().nospace() << "Version:  " << pFeatures().major << "." << pFeatures().minor;
     qDebug().noquote().nospace() << "Vendor:   " << pFeatures().vendor;
     qDebug().noquote().nospace() << "Renderer: " << pFeatures().renderer;
+    qDebug().noquote().nospace() << "Applying workarounds for broken drivers: " << pFeatures().applyIntelHD2k_3kHack;
 }
 
 const QString & OpenGLDriverFeatures::vendor()
@@ -131,6 +132,11 @@ int OpenGLDriverFeatures::openGLVersionMajor()
 int OpenGLDriverFeatures::openGLVersionMinor()
 {
     return pFeatures().minor;
+}
+
+bool OpenGLDriverFeatures::isBrokenIntelDriver()
+{
+    return pFeatures().applyIntelHD2k_3kHack;
 }
 
 float OpenGLDriverFeatures::maxSupportedLineWidth()

@@ -25,9 +25,8 @@
 #include <core/context2D_data/Context2DData.h>
 
 
-class vtkPlot;
-
 class DataProfile2DDataObject;
+class PlotPointsAndLine;
 
 
 /**
@@ -63,7 +62,7 @@ private:
     void setPlotIsValid(bool isValid);
 
 private:
-    vtkSmartPointer<vtkPlot> m_plotLine;
+    vtkSmartPointer<PlotPointsAndLine> m_plotLine;
 
     QString m_title;
 

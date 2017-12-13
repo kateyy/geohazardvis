@@ -124,9 +124,17 @@ void t_QVTKWidget::initializeDefaultSurfaceFormat()
 #if defined(OPTION_USE_QVTKOPENGLWIDGET)
     auto format = QVTKOpenGLWidget::defaultFormat();
     format.setSamples(0);
+
     // This is required for Intel HD 3000 (and similar?) broken Windows drivers.
-    format.setProfile(QSurfaceFormat::CompatibilityProfile);
+    // However, using the compatibility profile brakes some features of the VTK rendering system on
+    // Windows, e.g., vtkPlotPoints markers (whatever...).
+    // Seems that Intel users must live with such drawbacks.
+    if (OpenGLDriverFeatures::isBrokenIntelDriver())
+    {
+        format.setProfile(QSurfaceFormat::CompatibilityProfile);
+    }
     format.setOption(QSurfaceFormat::DeprecatedFunctions, true);
+
     QSurfaceFormat::setDefaultFormat(format);
 #endif
 }

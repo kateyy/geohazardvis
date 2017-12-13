@@ -205,7 +205,7 @@ void RendererImplementationPlot::onSetSelection(const VisualizationSelection & s
     // That's a safe cast only if the visualization is contained in m_plots (which needs to be
     // checked anyways).
     const auto & plots = m_plots.value(static_cast<Context2DData *>(selection.visualization));
-    if (!plots)
+    if (!plots || plots->GetNumberOfItems() == 0)
     {
         return;
     }
@@ -384,7 +384,7 @@ void RendererImplementationPlot::fetchContextItems(Context2DData * data)
     while (auto item = data->plots()->GetNextPlot(it))
     {
         items->AddItem(item);
-        m_chart->AddItem(item);
+        m_chart->AddPlot(item);
     }
 
     render();
