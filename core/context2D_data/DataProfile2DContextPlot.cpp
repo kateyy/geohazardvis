@@ -23,7 +23,6 @@
 
 #include <vtkCellData.h>
 #include <vtkDataSet.h>
-#include <vtkFloatArray.h>
 #include <vtkPen.h>
 #include <vtkPointData.h>
 #include <vtkPointSet.h>
@@ -304,16 +303,12 @@ void DataProfile2DContextPlot::updatePlot()
 
     plotYValues->SetName(m_title.toUtf8().data());
 
-    auto table = vtkSmartPointer<vtkTable>::New();
-    auto xAxis = vtkSmartPointer<vtkFloatArray>::New();
+    auto profilePoints = profileDataSet->GetPoints()->GetData();
+    auto xAxis = vtkSmartPointer<vtkDataArray>::Take(profilePoints->NewInstance());
     xAxis->SetNumberOfValues(numPoints);
     xAxis->SetName(profileData().abscissa().toUtf8().data());
-    auto profilePoints = profileDataSet->GetPoints()->GetData();
-    for (vtkIdType i = 0; i < numPoints; ++i)
-    {
-        xAxis->SetValue(i, static_cast<float>(profilePoints->GetComponent(i, 0)));
-    }
-
+    xAxis->CopyComponent(0, profilePoints, 0);
+    auto table = vtkSmartPointer<vtkTable>::New();
     table->AddColumn(xAxis);
     table->AddColumn(plotYValues);
 
