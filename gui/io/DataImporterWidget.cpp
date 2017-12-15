@@ -558,10 +558,13 @@ void DataImporterWidget::updatePointFileAttributesTable()
     }
     auto unusedInfoHeader = new QTableWidgetItem("Unused File Columns");
     unusedInfoHeader->setFlags({});
-    auto unuesdInfoItem = new QTableWidgetItem(unusedColumnsString);
-    unuesdInfoItem->setFlags({});
+    auto unusedInfoColumns = new QTableWidgetItem(unusedColumnsString);
+    unusedInfoColumns->setFlags({});
+    auto unusedInfoUnitSymbol = new QTableWidgetItem();
+    unusedInfoUnitSymbol->setFlags({});
     table->setItem(newRowCount - 1, 0, unusedInfoHeader);
-    table->setItem(newRowCount - 1, 1, unuesdInfoItem);
+    table->setItem(newRowCount - 1, 1, unusedInfoColumns);
+    table->setItem(newRowCount - 1, 2, unusedInfoUnitSymbol);
 }
 
 void DataImporterWidget::clearData()
