@@ -310,16 +310,21 @@ void ResidualVerificationView::setModelUnitDecimalExponent(int exponent)
     emit unitDecimalExponentsChanged(m_observationUnitDecimalExponent, m_modelUnitDecimalExponent);
 }
 
-void ResidualVerificationView::setDeformationLineOfSight(const vtkVector3d & los)
+void ResidualVerificationView::setDeformationLineOfSight(double incidenceAngleDeg, double satelliteHeadingDeg)
 {
-    m_residualHelper->setDeformationLineOfSight(los);
+    m_residualHelper->setDeformationLineOfSight(incidenceAngleDeg, satelliteHeadingDeg);
 
-    emit lineOfSightChanged(los);
+    emit lineOfSightChanged(incidenceAngleDeg, satelliteHeadingDeg);
 }
 
-const vtkVector3d & ResidualVerificationView::deformationLineOfSight() const
+double ResidualVerificationView::losIncidenceAngleDegrees() const
 {
-    return m_residualHelper->deformationLineOfSight();
+    return m_residualHelper->losIncidenceAngleDegrees();
+}
+
+double ResidualVerificationView::losSatelliteHeadingDegrees() const
+{
+    return m_residualHelper->losSatelliteHeadingDegrees();
 }
 
 void ResidualVerificationView::setResidualGeometrySource(InputData geometrySource)

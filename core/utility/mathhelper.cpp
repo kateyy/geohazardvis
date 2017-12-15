@@ -23,6 +23,9 @@
 
 #include <QDebug>
 
+#include <vtkMath.h>
+#include <vtkVector.h>
+
 
 namespace
 {
@@ -142,6 +145,34 @@ double scaleFactorForMetricUnits(const QString & from, const QString & to)
 bool isValidMetricUnit(const QString & unit)
 {
     return unitsExponents().find(unit.left(unit.length() - 1)) != unitsExponents().end();
+}
+
+void losVectorToSatelliteAngles(
+    const vtkVector3d & losVectorUnNorm,
+    double & incidenceAngleDegrees, double & satelliteHeadingDegrees)
+{
+    const auto losVector = losVectorUnNorm.Normalized();
+    // Derived from DataSetResidualHelper::satelliteAnglesToLOSVector
+    const double satelliteHeadingRad = std::acos(losVector.GetZ());
+    satelliteHeadingDegrees = vtkMath::DegreesFromRadians(satelliteHeadingRad);
+    const double incidenceAngleRad = std::acos(-losVector.GetX() / std::sin(satelliteHeadingRad));
+    // If the losVector is (0, 0, 1), it does not express an incidence angle, so just leave it as is
+    if (!std::isinf(incidenceAngleRad))
+    {
+        incidenceAngleDegrees = vtkMath::DegreesFromRadians(incidenceAngleRad);
+    }
+}
+
+vtkVector3d satelliteAnglesToLOSVector(
+    const double incidenceAngleDegrees, const double satelliteHeadingDegrees)
+{
+    const double incidenceAngleRad = vtkMath::RadiansFromDegrees(incidenceAngleDegrees);
+    const double satelliteHeadingRad = vtkMath::RadiansFromDegrees(satelliteHeadingDegrees);
+    const double sinSatelliteHeading = std::sin(satelliteHeadingRad);
+    return vtkVector3d(
+        -sinSatelliteHeading * std::cos(incidenceAngleRad),
+        sinSatelliteHeading * std::sin(incidenceAngleRad),
+        std::cos(satelliteHeadingRad));
 }
 
 }

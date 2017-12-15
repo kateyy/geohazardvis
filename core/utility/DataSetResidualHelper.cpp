@@ -33,8 +33,9 @@
 
 #include <core/data_objects/CoordinateTransformableDataObject.h>
 #include <core/utility/InterpolationHelper.h>
-#include <core/utility/vtkvectorhelper.h>
+#include <core/utility/mathhelper.h>
 #include <core/utility/types_utils.h>
+#include <core/utility/vtkvectorhelper.h>
 
 
 namespace
@@ -149,7 +150,8 @@ DataSetResidualHelper::DataSetResidualHelper()
     , m_residualDataObject{}
     , m_geometrySource{ InputData::Observation }
     , m_targetCoordinateSystem{}
-    , m_lineOfSight{ 0.0, 0.0, 1.0 }
+    , m_losIncidenceAngleDegrees{ 0.0 }
+    , m_losSatelliteHeadingDegrees{ 0.0 }
     , m_projectedAttributeSuffix{ " (projected)" }
 {
 }
@@ -305,20 +307,27 @@ const CoordinateSystemSpecification & DataSetResidualHelper::targetCoordinateSys
     return m_targetCoordinateSystem;
 }
 
-void DataSetResidualHelper::setDeformationLineOfSight(const vtkVector3d & lineOfSight)
+void DataSetResidualHelper::setDeformationLineOfSight(double incidenceAngleDeg, double satelliteHeadingDeg)
 {
-    if (m_lineOfSight == lineOfSight)
+    if (m_losIncidenceAngleDegrees == incidenceAngleDeg
+        && m_losSatelliteHeadingDegrees == satelliteHeadingDeg)
     {
         return;
     }
 
     invalidateResults();
-    m_lineOfSight = lineOfSight;
+    m_losIncidenceAngleDegrees = incidenceAngleDeg;
+    m_losSatelliteHeadingDegrees = satelliteHeadingDeg;
 }
 
-const vtkVector3d & DataSetResidualHelper::deformationLineOfSight() const
+double DataSetResidualHelper::losIncidenceAngleDegrees() const
 {
-    return m_lineOfSight;
+    return m_losIncidenceAngleDegrees;
+}
+
+double DataSetResidualHelper::losSatelliteHeadingDegrees() const
+{
+    return m_losSatelliteHeadingDegrees;
 }
 
 void DataSetResidualHelper::setProjectedAttributeNameSuffix(const QString & suffix)
@@ -348,14 +357,14 @@ bool DataSetResidualHelper::projectDisplacementsToLineOfSight()
     auto observationDS = m_observationDataObject ? m_observationDataObject->processedOutputDataSet() : nullptr;
     auto modelDS = m_modelDataObject ? m_modelDataObject->processedOutputDataSet() : nullptr;
 
-    const vtkSmartPointer<vtkDataArray> observationData = 
+    const vtkSmartPointer<vtkDataArray> observationData =
         IndexType_util(m_observationScalars.location).extractArray(observationDS, m_observationScalars.name);
     const vtkSmartPointer<vtkDataArray> modelData =
         IndexType_util(m_modelScalars.location).extractArray(modelDS, m_modelScalars.name);
 
     if (observationDS && !observationData)
     {
-        qWarning() << "Residual: Could not find valid observation data for residual computation (" 
+        qWarning() << "Residual: Could not find valid observation data for residual computation ("
             + m_observationScalars.name + ")";
     }
 
@@ -424,7 +433,8 @@ bool DataSetResidualHelper::projectDisplacementsToLineOfSight()
 
         using LosDispatcher = vtkArrayDispatch::DispatchByValueType<vtkArrayDispatch::Reals>;
         ProjectToLineOfSightWorker losWorker;
-        losWorker.lineOfSight = m_lineOfSight;
+        losWorker.lineOfSight = mathhelper::satelliteAnglesToLOSVector(
+            m_losIncidenceAngleDegrees, m_losSatelliteHeadingDegrees);
         if (!LosDispatcher::Execute(&displacement, losWorker))
         {
             losWorker(&displacement);

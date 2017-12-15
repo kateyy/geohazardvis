@@ -22,6 +22,7 @@
 
 
 class QString;
+class vtkVector3d;
 
 
 namespace mathhelper
@@ -34,6 +35,22 @@ bool CORE_API circleLineIntersection(double radius, double P0[2], double P1[2], 
 
 double CORE_API scaleFactorForMetricUnits(const QString & from, const QString & to);
 bool CORE_API isValidMetricUnit(const QString & unit);
+
+/**
+ * Compute incidence angle (alpha, in degrees) and satellite heading (theta, in degrees)
+ * from the line-of-sight vector.
+ * @param losVector Input line-of-sight vector. Will be normalized.
+ * @param incidenceAngleDegrees Output incidence angle ("alpha") in degrees
+ * @param satelliteHeadingDegrees Output satellite heading ("theta") in degrees
+ */
+void CORE_API losVectorToSatelliteAngles(const vtkVector3d & losVector,
+    double & incidenceAngleDegrees, double & satelliteHeadingDegrees);
+
+/**
+ * Compute the line-of-sight vector based on incidence angle and satellite heading, both in
+ * degrees.
+ */
+vtkVector3d CORE_API satelliteAnglesToLOSVector(double incidenceAngleDegrees, double satelliteHeadingDegrees);
 
 }
 

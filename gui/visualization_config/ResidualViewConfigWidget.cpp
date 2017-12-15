@@ -19,12 +19,11 @@
 #include "ResidualViewConfigWidget.h"
 #include "ui_ResidualViewConfigWidget.h"
 
-#include <type_traits>
-
 #include <core/data_objects/ImageDataObject.h>
 #include <core/data_objects/PolyDataObject.h>
 
 #include <core/DataSetHandler.h>
+#include <core/utility/mathhelper.h>
 #include <core/utility/qthelper.h>
 #include <gui/data_view/ResidualVerificationView.h>
 #include <gui/data_view/RendererImplementationResidual.h>
@@ -85,36 +84,63 @@ void ResidualViewConfigWidget::setCurrentView(ResidualVerificationView * view)
         m_ui->residualGeomtryCombo->setCurrentIndex(geometrySourceToIndex(source));
     }));
 
-    auto && los = view->deformationLineOfSight();
+    const double incidenceAngleDeg = view->losIncidenceAngleDegrees();
+    const double satelliteHeadingDeg = view->losSatelliteHeadingDegrees();
 
-    using LosType = decltype(los);
-
-    auto uiSetLos = [this] (LosType los)
+    auto uiSetLos = [this] (const double incidenceAngleDeg, const double satelliteHeadingDeg)
     {
-        m_ui->losX->setValue(los.GetX());
-        m_ui->losY->setValue(los.GetY());
-        m_ui->losZ->setValue(los.GetZ());
+        const auto signalBlockers = {
+            QSignalBlocker(m_ui->losX), QSignalBlocker(m_ui->losY), QSignalBlocker(m_ui->losZ),
+            QSignalBlocker(m_ui->satelliteAlphaSpinBox), QSignalBlocker(m_ui->satelliteThetaSpinBox)
+        };
+
+        m_ui->satelliteAlphaSpinBox->setValue(incidenceAngleDeg);
+        m_ui->satelliteThetaSpinBox->setValue(satelliteHeadingDeg);
+
+        // Modify the UI LOS-vector only if it's input is disabled. If the user is currently
+        // entering the LOS-vector directly, changing the UI values would just kill usability.
+        // After every changed value, the whole vector would be normalized, leading to simply
+        // wrong/unintended values.
+        if (!m_ui->losRadioButton->isChecked())
+        {
+            const auto los = mathhelper::satelliteAnglesToLOSVector(incidenceAngleDeg, satelliteHeadingDeg);
+            m_ui->losX->setValue(los.GetX());
+            m_ui->losY->setValue(los.GetY());
+            m_ui->losZ->setValue(los.GetZ());
+        }
     };
-    uiSetLos(los);
+    uiSetLos(incidenceAngleDeg, satelliteHeadingDeg);
 
     auto viewSetLos = [this, view] ()
     {
-        LosType los = { m_ui->losX->value(), m_ui->losY->value(), m_ui->losZ->value() };
+        // Fetch LOS from angles or LOS-vector. If computing the angles from the vector, fetch the
+        // current angles first, as the LOS-vector may not express an incidence angle (0, 0, 1).
+        double inc = m_ui->satelliteAlphaSpinBox->value();
+        double heading = m_ui->satelliteThetaSpinBox->value();
+        if (m_ui->losRadioButton->isChecked())
+        {
+            vtkVector3d los = {
+                m_ui->losX->value(),
+                m_ui->losY->value(),
+                m_ui->losZ->value(),
+            };
+            mathhelper::losVectorToSatelliteAngles(los, inc, heading);
+        }
 
-        if (view->deformationLineOfSight() == los)
+        if (view->losIncidenceAngleDegrees() == inc
+            && view->losSatelliteHeadingDegrees() == heading)
         {
             return;
         }
 
-        view->setDeformationLineOfSight(los);
+        view->setDeformationLineOfSight(inc, heading);
     };
 
-    const auto qSpinBoxValueChanged = static_cast<void(QSpinBox::*)(int)>(&QSpinBox::valueChanged);
-    const auto qdSpinBoxValueChanged = static_cast<void(QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged);
-
-    m_viewConnects.emplace_back(connect(m_ui->losX, qdSpinBoxValueChanged, viewSetLos));
-    m_viewConnects.emplace_back(connect(m_ui->losY, qdSpinBoxValueChanged, viewSetLos));
-    m_viewConnects.emplace_back(connect(m_ui->losZ, qdSpinBoxValueChanged, viewSetLos));
+    m_viewConnects.emplace_back(connect(m_ui->losX, &QDoubleSpinBox::editingFinished, viewSetLos));
+    m_viewConnects.emplace_back(connect(m_ui->losY, &QDoubleSpinBox::editingFinished, viewSetLos));
+    m_viewConnects.emplace_back(connect(m_ui->losZ, &QDoubleSpinBox::editingFinished, viewSetLos));
+    m_viewConnects.emplace_back(connect(m_ui->satelliteAlphaSpinBox, &QDoubleSpinBox::editingFinished, viewSetLos));
+    m_viewConnects.emplace_back(connect(m_ui->satelliteThetaSpinBox, &QDoubleSpinBox::editingFinished, viewSetLos));
 
     m_viewConnects.emplace_back(connect(view, &ResidualVerificationView::inputDataChanged,
         [this, view] ()
@@ -130,7 +156,7 @@ void ResidualViewConfigWidget::setCurrentView(ResidualVerificationView * view)
 
     m_viewConnects.emplace_back(connect(view, &ResidualVerificationView::lineOfSightChanged, uiSetLos));
 
-
+    const auto qSpinBoxValueChanged = static_cast<void(QSpinBox::*)(int)>(&QSpinBox::valueChanged);
     m_viewConnects.emplace_back(connect(m_ui->observationScale, qSpinBoxValueChanged,
         view, &ResidualVerificationView::setObservationUnitDecimalExponent));
     m_viewConnects.emplace_back(connect(m_ui->modelScale, qSpinBoxValueChanged,

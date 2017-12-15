@@ -63,8 +63,17 @@ public:
     int modelUnitDecimalExponent() const;
     void setModelUnitDecimalExponent(int exponent);
 
-    void setDeformationLineOfSight(const vtkVector3d & los);
-    const vtkVector3d & deformationLineOfSight() const;
+    /**
+     * Specify the line-of-sight of the observing satellite by its incidence angle (alpha) and
+     * heading (theta), both in degrees.
+     *
+     * A line-of-sight vector will be derived from these angles, and displacement vectors of model
+     * or observation data will be transformed to LOS-displacements based on this vector.
+     * Both angles default to 0 degrees, which is a LOS-vector of (0, 0, 1).
+     */
+    void setDeformationLineOfSight(double incidenceAngleDeg, double satelliteHeadingDeg);
+    double losIncidenceAngleDegrees() const;
+    double losSatelliteHeadingDegrees() const;
 
     enum class InputData
     {
@@ -118,7 +127,7 @@ protected:
 signals:
     void inputDataChanged();
     void residualGeometrySourceChanged(InputData geometrySource);
-    void lineOfSightChanged(const vtkVector3d & los);
+    void lineOfSightChanged(double incidenceAngleDegrees, double satelliteHeadingDegrees);
     void unitDecimalExponentsChanged(int observationExponent, int modelExponent);
 
 private:

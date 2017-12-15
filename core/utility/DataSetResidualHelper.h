@@ -74,8 +74,17 @@ public:
     void setTargetCoordinateSystem(const CoordinateSystemSpecification & spec);
     const CoordinateSystemSpecification & targetCoordinateSystem() const;
 
-    void setDeformationLineOfSight(const vtkVector3d & lineOfSight);
-    const vtkVector3d & deformationLineOfSight() const;
+    /**
+     * Specify the line-of-sight of the observing satellite by its incidence angle (alpha) and
+     * heading (theta), both in degrees.
+     *
+     * A line-of-sight vector will be derived from these angles, and displacement vectors of model
+     * or observation data will be transformed to LOS-displacements based on this vector.
+     * Both angles default to 0 degrees, which is a LOS-vector of (0, 0, 1).
+     */
+    void setDeformationLineOfSight(double incidenceAngleDeg, double satelliteHeadingDeg);
+    double losIncidenceAngleDegrees() const;
+    double losSatelliteHeadingDegrees() const;
 
     void setProjectedAttributeNameSuffix(const QString & suffix);
     const QString & projectedAttributeNameSuffix() const;
@@ -125,6 +134,7 @@ private:
 
     InputData m_geometrySource;
     CoordinateSystemSpecification m_targetCoordinateSystem;
-    vtkVector3d m_lineOfSight;
+    double m_losIncidenceAngleDegrees;
+    double m_losSatelliteHeadingDegrees;
     QString m_projectedAttributeSuffix;
 };
